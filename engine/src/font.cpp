@@ -169,16 +169,16 @@ bool MCFontCreateWithHandle(MCSysFontHandle p_handle, MCFontRef& r_font)
     if (t_font_struct == nil)
         return false;
     
-    MCNewAutoNameRef t_name;
+    MCNameRef t_name;
     uint2 t_size, t_style;
     Boolean t_printer;
-    if (!MCdispatcher->getfontlist()->getfontstructinfo(&t_name, t_size, t_style, t_printer, t_font_struct))
+    if (!MCdispatcher->getfontlist()->getfontstructinfo(t_name, t_size, t_style, t_printer, t_font_struct))
         return false;
     
     // The returned style is not the same as the MCFont* style values
     t_style = 0;
     
-    return MCFontCreateWithFontStruct(*t_name, t_style, t_size, t_font_struct, r_font);
+    return MCFontCreateWithFontStruct(t_name, t_style, t_size, t_font_struct, r_font);
 }
 
 MCFontRef MCFontRetain(MCFontRef self)

@@ -104,7 +104,7 @@ compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 	// Otherwise fetch both as reals.
 	double x, y;
 	x = t_self_is_integer ? (double)self -> integer : self -> real;
-	y = t_self_is_integer ? (double)p_other_self -> integer : p_other_self -> real;
+	y = t_other_self_is_integer ? (double)p_other_self -> integer : p_other_self -> real;
 
 	// TODO: Handle nan / infinity / etc.
 		

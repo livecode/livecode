@@ -104,7 +104,7 @@ MCFontnode::MCFontnode(MCSysFontHandle p_handle)
 {
     coretext_get_font_name(p_handle, reqname);
     reqsize = coretext_get_font_size(p_handle);
-    reqstyle = FA_DEFAULT_STYLE;
+    reqstyle = FA_DEFAULT_STYLE | FA_SYSTEM_FONT;
     
     font = new MCFontStruct;
     font->size = reqsize;
@@ -127,15 +127,22 @@ void MCFontnode::calculatemetrics()
 
 MCFontnode::~MCFontnode()
 {
-    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
-	coretext_font_destroy(font -> fid);
-	MCNameDelete(reqname);
-	delete font;
+    MCNameDelete(reqname);
+    
+    // Don't delete the fontstruct for system fonts (it is still cached elsewhere)
+    if ((reqstyle & FA_SYSTEM_FONT) == 0)
+    {
+        // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+        coretext_font_destroy(font -> fid);
+        delete font;
+    }
 }
 
 MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size, uint2 style)
 {
-	if (!MCNameIsEqualTo(fname, reqname))
+	if (reqstyle & FA_SYSTEM_FONT)
+        return NULL;
+    if (!MCNameIsEqualTo(fname, reqname))
 		return NULL;
 	if (size == 0)
 		return font;
@@ -153,8 +160,7 @@ MCFontlist::~MCFontlist()
 {
 	while (fonts != NULL)
 	{
-		MCFontnode *fptr = fonts->remove
-		                   (fonts);
+		MCFontnode *fptr = fonts->remove(fonts);
 		delete fptr;
 	}
 }

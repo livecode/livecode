@@ -83,58 +83,6 @@ extern "C" MC_DLLEXPORT void MCCharStoreCharOf(MCStringRef p_value, index_t p_in
     MCCharStoreCharRangeOf(p_value, p_index, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
-{
-    uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
-    
-    if (t_count == 0)
-        return;
-    
-    if (t_start + t_count > MCStringGetLength(x_target))
-        return;
-    
-    t_start += t_count;
-    
-    MCAutoStringRef t_string;
-    if (!MCStringMutableCopy(x_target, &t_string))
-        return;
-    
-    if (!MCStringInsert(*t_string, t_start, p_value))
-        return;
-    
-    MCAutoStringRef t_new_string;
-    if (!MCStringCopy(*t_string, &t_new_string))
-        return;
-    
-    MCValueAssign(x_target, *t_new_string);
-}
-
-extern "C" MC_DLLEXPORT void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
-{
-    uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
-    
-    if (t_count == 0)
-        return;
-    
-    if (t_start + t_count > MCStringGetLength(x_target))
-        return;
-    
-    MCAutoStringRef t_string;
-    if (!MCStringMutableCopy(x_target, &t_string))
-        return;
-    
-    if (!MCStringInsert(*t_string, t_start, p_value))
-        return;
-    
-    MCAutoStringRef t_new_string;
-    if (!MCStringCopy(*t_string, &t_new_string))
-        return;
-    
-    MCValueAssign(x_target, *t_new_string);
-}
-
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsInRange(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, MCRange p_range, uindex_t& r_output)
 {
     uindex_t t_offset;

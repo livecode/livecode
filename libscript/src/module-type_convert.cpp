@@ -24,7 +24,7 @@ static bool MCProperListCombine(void *context, MCValueRef p_value)
 
 extern "C" MC_DLLEXPORT void MCTypeConvertExecSplitStringByDelimiter(MCStringRef p_target, MCStringRef p_delimiter, MCProperListRef& r_output)
 {
-    if (!MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareCaseless, r_output))
+    if (!MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareExact, r_output))
 		return;
 }
 

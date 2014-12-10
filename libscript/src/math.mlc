@@ -40,8 +40,8 @@ public foreign handler MCMathEvalMaxNumber(in Left as number, in Right as number
 public foreign handler MCMathEvalRandomReal(out Value as double) as undefined binds to "<builtin>"
 
 public foreign handler MCMathEvalConvertBase(in Operand as string, in Source as int, in Target as int, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCMathEvalConvertFromBase(in Operand as string, in Source as int, out Value as int) as undefined binds to "<builtin>"
-public foreign handler MCMathEvalConvertToBase(in Operand as int, in Target as int, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertToBase10(in Operand as string, in Source as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertFromBase10(in Operand as int, in Target as int, out Value as string) as undefined binds to "<builtin>"
 
 --
 
@@ -224,18 +224,57 @@ end syntax
 
 /*
 Summary:    Converts the base of <Operand>
-Operand:    An expression that evaluates to an integer.
-From:       An expression that evaluates to an integer.
-To:         An expression that evaluates to an integer.
-output:     A string representation of the value of <Operand> when interpreted as a number in base <From>, converted to base <To>.
+Operand:    An expression that evaluates to a string.
+Source:     An expression that evaluates to an integer.
+output:     <Operand> converted to base 10.
+
+Description:
+Interprets a string in the desired base and converts it to decimal.
+
+>*Note:* The source base must be an integer between 2 and 32.
 */
 
-syntax BaseConvert is postfix operator with precedence 1
-    <Operand: Expression> "converted" ["from" "base" <Source: Expression> ] ["to" "base" <Target: Expression> ]
+syntax BaseConvertFrom is left binary operator with precedence 1
+    <Operand: Expression> "converted" "from" "base" <Source: Expression>
+begin
+    MCMathEvalConvertToBase10(Operand, Source, output)
+end syntax
+
+/*
+Summary:    Converts the base of <Operand>
+Operand:    An expression that evaluates to an integer.
+Target:     An expression that evaluates to an integer.
+output:     A string representation of <Operand> in base <Target>.
+
+Description:
+Converts a decimal into the desired base, and returns a string representation.
+
+>*Note:* The destination base must be an integer between 2 and 32.
+*/
+
+syntax BaseConvertTo is left binary operator with precedence 1
+    <Operand: Expression> "converted" "to" "base" <Target: Expression>
+begin
+    MCMathEvalConvertFromBase10(Operand, Target, output)
+end syntax
+
+/*
+Summary:    Converts the base of <Operand>
+Operand:    An expression that evaluates to a string.
+Source:     An expression that evaluates to an integer.
+Target:     An expression that evaluates to an integer.
+output:     A string representation <Operand> interpreted as a number in base <From>, converted to base <To>.
+
+Description:
+Interprets a string in the desired source base and converts it to the desired target base, and returns a string representation.
+
+>*Note:* The source and destination bases must be integers between 2 and 32.
+*/
+
+syntax BaseConvert is left binary operator with precedence 1
+    <Operand: Expression> "converted" "from" "base" <Source: Expression> "to" "base" <Target: Expression>
 begin
     MCMathEvalConvertBase(Operand, Source, Target, output)
-    MCMathEvalConvertFromBase(Operand, Target, output)
-    MCMathEvalConvertToBase(Operand, Source, output)
 end syntax
 
 --

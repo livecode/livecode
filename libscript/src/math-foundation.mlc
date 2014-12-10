@@ -1,73 +1,53 @@
 module com.livecode.mathfoundation
 
---
+public foreign handler MCMathFoundationExecRoundRealToNearest(inout Target as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationExecRoundNumberToNearest(inout Target as number) as undefined binds to "<builtin>"
 
-foreign handler ExecRoundRealToNearest(inout Target as real) as undefined binds to "<builtin>"
-foreign handler ExecRoundNumberToNearest(inout Target as number) as undefined binds to "<builtin>"
-foreign handler ExecRoundRealDown(inout Target as real) as undefined binds to "<builtin>"
-foreign handler ExecRoundNumberDown(inout Target as number) as undefined binds to "<builtin>"
-foreign handler ExecRoundRealUp(inout Target as real) as undefined binds to "<builtin>"
-foreign handler ExecRoundNumberUp(inout Target as number) as undefined binds to "<builtin>"
-foreign handler EvalFloorOfReal(in Target as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalFloorOfNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
-foreign handler EvalCeilOfReal(in Target as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalCeilOfNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalRoundedRealToNearest(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalRoundedNumberToNearest(in Target as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathFoundationEvalFloorReal(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalFloorNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalCeilingReal(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalCeilingNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
 
 --
 
-public constant pi = 3.14159265358979323846
+//public constant pi = 3.14159265358979323846
 
 --
 
 /*
-Rounds towards zero for negative numbers.
+Summary:    Rounds <Target> to the nearest integer.
+Target:     An expression that evaluates to a numeric container.
 
-Summary:    Rounds <Target> to the nearest integer, i.e. the greatest integer less than 
-            or equal to <Target>, or the least integer greater than or equal to <Target> 
-            depending on which is closest.
-            If <Target> is exactly halfway between two integers, rounds to the one with greatest
-            absolute value.
-
-Target:     An expression that evaluates to a number.
+Description:
+Replaces <Target> with the greatest integer less than or equal to <Target>, or the least integer greater than or equal to <Target> depending on which is closest. If <Target> is exactly halfway between two integers, rounds to the one with greatest absolute value.
 
 */
 
 syntax RoundToNearest is statement
     "round" <Target: Expression>
 begin 
-    ExecRoundRealToNearest(Target)
-    ExecRoundNumberToNearest(Target)
+    MCMathFoundationExecRoundRealToNearest(Target)
+    MCMathFoundationExecRoundNumberToNearest(Target)
 end syntax
 
-/* 
+/*
 Summary:    Rounds <Target> to the nearest integer.
-            If <Target> is exactly halfway between two integers, rounds to the greatest integer less than <Target>.
 Target:     An expression that evaluates to a number.
+output:		The rounded value of <Target>
 
+Description:
+Return the greatest integer less than or equal to <Target>, or the least integer greater than or equal to <Target> depending on which is closest. If <Target> is exactly halfway between two integers, returns the one with greatest absolute value.
 
-Round half down
 */
 
-syntax RoundDown is statement
-    "round" <Target: Expression> "down"
+syntax RoundedToNearest is prefix operator with precedence 1
+    "the" "rounded" "of" <Target: Expression>
 begin 
-    ExecRoundRealDown(Target)
-    ExecRoundNumberDown(Target)
-end syntax
-
-/* 
-Summary:    Rounds <Target> to the least integer greater than or equal to <Target>.
-            If <Target> is exactly halfway between two integers, rounds to the least integer greater than <Target>.
-Target:     An expression that evaluates to a number.
-
-Round half up
-*/
-
-syntax RoundUp is statement
-    "round" <Target: Expression> "up"
-begin 
-    ExecRoundRealUp(Target)
-    ExecRoundNumberUp(Target)
+    MCMathFoundationEvalRoundedRealToNearest(Target, output)
+    MCMathFoundationEvalRoundedNumberToNearest(Target, output)
 end syntax
 
 --
@@ -83,8 +63,8 @@ output:     The greatest integer less than or equal to <Target>.
 syntax FloorOperator is prefix operator with precedence 1
     "the" "floor" "of" <Target: Expression>
 begin
-    EvalFloorOfReal(Target, output)
-    EvalFloorOfNumber(Target, output)
+    MCMathFoundationEvalFloorReal(Target, output)
+    MCMathFoundationEvalFloorNumber(Target, output)
 end syntax
 
 /* 
@@ -97,8 +77,8 @@ output:     The least integer greater than or equal to <Target>.
 syntax CeilOperator is prefix operator with precedence 1
     "the" "ceiling" "of" <Target: Expression>
 begin
-    EvalCeilOfReal(Target, output)
-    EvalCeilOfNumber(Target, output)
+    MCMathFoundationEvalCeilingReal(Target, output)
+    MCMathFoundationEvalCeilingNumber(Target, output)
 end syntax
 
 end module

@@ -4,26 +4,25 @@ This library consists of the operations on bytes included in the standard librar
 
 module com.livecode.byte
 
-public foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
 
-public foreign handler EvalOffsetOfBytes(in IsLast as bool, in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
-public foreign handler EvalOffsetOfBytesBefore(in IsLast as bool, in Needle as data, in Before as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
-public foreign handler EvalOffsetOfBytesAfter(in IsFirst as bool, in Needle as data, in After as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytes(in IsLast as bool, in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as bool, in Needle as data, in Before as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytesAfter(in IsFirst as bool, in Needle as data, in After as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
 
-public foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
 
-public foreign handler EvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalIsInBytes(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalBeginsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalEndsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalIsInBytes(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalBeginsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalEndsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
 
-public foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
-public foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
 
-public foreign handler StoreBeforeByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
-public foreign handler StoreAfterByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteRepeatForEachByte(inout Iterator as optional pointer, out Iterand as data, in Container as data) as bool binds to "<builtin>"
 
 --
 
@@ -42,7 +41,7 @@ Example:
 syntax CountBytesOf is prefix operator with precedence 1
 	"the" "number" "of" "bytes" "in" <Target: Expression>
 begin
-	EvalNumberOfBytesIn(Target, output)
+	MCByteEvalNumberOfBytesIn(Target, output)
 end syntax
 
 --
@@ -63,7 +62,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 syntax ByteOffset is prefix operator with precedence 1
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfBytes(IsLast, Needle, Target, output)
+    MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
 end syntax
 
 /*
@@ -82,7 +81,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 syntax ByteOffsetAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
-	EvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
+	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
 
 /*
@@ -102,7 +101,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 syntax ByteOffsetBefore is prefix operator with precedence 1
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" "bytes" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
+    MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
 
 /*
@@ -118,7 +117,7 @@ Description:
 syntax IsAmongTheBytesOf is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
-    EvalIsInBytes(Needle, Target, output)
+    MCByteEvalIsInBytes(Needle, Target, output)
 end syntax
 
 --
@@ -136,7 +135,7 @@ Description:
 syntax ContainsBytes is neutral binary operator with precedence 1
     <Target: Expression> "contains" <Needle: Expression>
 begin
-    EvalContainsBytes(Target, Needle, output)
+    MCByteEvalContainsBytes(Target, Needle, output)
 end syntax
 
 /*
@@ -152,7 +151,7 @@ Description:
 syntax BeginsWithBytes is neutral binary operator with precedence 1
     <Target: Expression> "begins" "with" <Needle: Expression>
 begin
-    EvalBeginsWithBytes(Target, Needle, output)
+    MCByteEvalBeginsWithBytes(Target, Needle, output)
 end syntax
 
 /*
@@ -168,7 +167,7 @@ Description:
 syntax EndsWithBytes is neutral binary operator with precedence 1
     <Target: Expression> "ends" "with" <Needle: Expression>
 begin
-    EvalEndsWithBytes(Target, Needle, output)
+    MCByteEvalEndsWithBytes(Target, Needle, output)
 end syntax
 
 --
@@ -191,8 +190,8 @@ Either locates the byte at the given index for use as the target container of an
 syntax SingletonByteOf is prefix operator with precedence 1
 	"byte" <Index: Expression> "of" <Target: Expression>
 begin
-	FetchByteOf(Index, Target, output)
-	StoreByteOf(input, Index, Target)
+	MCByteFetchByteOf(Index, Target, output)
+	MCByteStoreByteOf(input, Index, Target)
 end syntax
 
 /*
@@ -215,8 +214,14 @@ Either locates the bytes between the given indices for use as the target contain
 syntax RangeByteOf is prefix operator with precedence 1
 	"byte" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
-	FetchByteRangeOf(Start, Finish, Target, output)
-	StoreByteRangeOf(input, Start, Finish, Target)
+	MCByteFetchByteRangeOf(Start, Finish, Target, output)
+	MCByteStoreByteRangeOf(input, Start, Finish, Target)
+end syntax
+
+syntax RepeatForEachByte is iterator
+    "byte" <Iterand: Expression>
+begin
+    MCByteRepeatForEachByte(iterator, Iterand, container)
 end syntax
 
 --

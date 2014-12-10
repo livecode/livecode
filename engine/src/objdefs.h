@@ -562,6 +562,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FA_LINK               (1UL << 14)
 #define FA_FONT               (1UL << 15)  // to mark a font change in paragraph HTML
 
+// Font is special and should be ignored for font lookups, etc
+#define FA_SYSTEM_FONT        (1UL << 31)
+
 #define STYLE_LENGTH           256
 
 typedef struct

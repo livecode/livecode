@@ -611,6 +611,64 @@ bool MCProperListIsEqualTo(MCProperListRef self, MCProperListRef p_other)
     return __MCProperListIsEqualTo(self, p_other);
 }
 
+bool MCProperListBeginsWithList(MCProperListRef self, MCProperListRef p_prefix)
+{
+    // If the list is indirect, get the contents.
+    MCProperListRef t_contents;
+    if (!__MCProperListIsIndirect(self))
+        t_contents = self;
+    else
+        t_contents = self -> contents;
+    
+    // If the other list is indirect, get its contents.
+    MCProperListRef t_other_contents;
+    if (!__MCProperListIsIndirect(p_prefix))
+        t_other_contents = p_prefix;
+    else
+        t_other_contents = p_prefix -> contents;
+    
+    if (t_other_contents -> length > t_contents -> length)
+        return false;
+    
+    for(uindex_t i = 0; i < t_other_contents -> length; i++)
+    {
+        if (!MCValueIsEqualTo(t_contents -> list[i], t_other_contents -> list[i]))
+            return false;
+    }
+    
+    // If we get here it means all values in the p_prefix are the same as their equivalents in self.
+    return true;
+}
+
+bool MCProperListEndsWithList(MCProperListRef self, MCProperListRef p_suffix)
+{
+    // If the list is indirect, get the contents.
+    MCProperListRef t_contents;
+    if (!__MCProperListIsIndirect(self))
+        t_contents = self;
+    else
+        t_contents = self -> contents;
+    
+    // If the other list is indirect, get its contents.
+    MCProperListRef t_other_contents;
+    if (!__MCProperListIsIndirect(p_suffix))
+        t_other_contents = p_suffix;
+    else
+        t_other_contents = p_suffix -> contents;
+    
+    if (t_other_contents -> length > t_contents -> length)
+        return false;
+    
+    for(uindex_t i = 1; i <= t_other_contents -> length; i++)
+    {
+        if (!MCValueIsEqualTo(t_contents -> list[t_contents -> length - i], t_other_contents -> list[t_other_contents -> length - i]))
+            return false;
+    }
+    
+    // If we get here it means all values in the p_suffix are the same as their equivalents in self.
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void __MCProperListDestroy(__MCProperList *self)

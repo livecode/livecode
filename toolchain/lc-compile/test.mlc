@@ -7,17 +7,63 @@ public handler test()
     variable tDelimiter as string
     put newline into tDelimiter
 	
-	testRepeat(tResults)
+	variable tNumber
+	put the abs of -5.5 into tNumber
+	testLog("Math", "ABS", tNumber is 5.5, tResults)
 	
-    testLogic(tResults)
+	-- test test
+	testLog("__Test", "Fail", false, tResults)
+	testLog("__Test", "Succeed", true, tResults)
+	
+	-- structural
+	testRepeat(tResults)
+	testLogicStructural(tResults)
+	
+	--com.livecode.array
+	testArray(tResults)	
+	
+	--com.livecode.typeconvert
+	testTypeConvert(tResults)
+	
+	--com.livecode.list
     testList(tResults)
-    testSort(tResults)
+    
+	--com.livecode.arithmetic
     testArithmetic(tResults)
-	testChar(tResults)
+    	
+	--com.livecode.bitwise	
 	testBitwise(tResults)
-	testArray(tResults)
+	
+	--com.livecode.char
+	testChar(tResults)
+		
+	--com.livecode.logic
+    testLogic(tResults)
+    
+	--com.livecode.math
+	testMath(tResults)
+	
+	--com.livecode.mathfoundation
+	testMathFoundation(tResults)
+	
+	--com.livecode.sort
+    testSort(tResults)
+    
+	--com.livecode.string
 	testString(tResults)
+	
+	--com.livecode.type
+	testType(tResults)
+	
+	--com.livecode.binary
+	--com.livecode.byte
+	--com.livecode.item
+	--com.livecode.line
+	--com.livecode.segmentchunk
 
+	// put fails at the end
+	sort tResults in descending order
+	
     variable tResultString as string
     put the empty string into tResultString
     combine tResults with tDelimiter into tResultString
@@ -33,12 +79,112 @@ public handler testLog(in pModule as string, in pTest as string, in pResult as b
         put "FAILURE" into tStringResult
     end if
 
-    push pModule & "_" & pTest & ":" && tStringResult onto xResults
+    push tStringResult && ":" && pModule & "_" & pTest onto xResults
 end handler
 
 public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as bool
 	put "a" into tVar
 	return tResult
+end handler
+
+public handler testType(inout xResults as list)
+
+end handler
+
+public handler testMathFoundation(inout xResults as list)
+
+	variable tNum as number
+	variable tNumReal as double
+	put -5.5 into tNum
+	put 5.5 into tNumReal
+	
+	testLog("MathFoundation", "FloorNum", the floor of tNum is -6, xResults)
+	testLog("MathFoundation", "FloorReal", the floor of tNum is 5, xResults)
+	
+	testLog("MathFoundation", "CeilNum", the ceiling of tNum is -5, xResults)
+	testLog("MathFoundation", "CeilReal", the ceiling of tNum is 6, xResults)
+	
+	round tNum
+	round tNumReal
+	
+	testLog("MathFoundation", "RoundToNearestNum", tNum is -6, xResults)
+	testLog("MathFoundation", "RoundToNearestReal", tNumReal is 6, xResults)
+	
+	testLog("MathFoundation", "RoundedToNearest", the rounded of 4.5 is 5, xResults)
+
+end handler
+
+public handler testMath(inout xResults as list)
+
+	testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
+	testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
+	
+	--testLog("Math", "Sin", the sin of pi / 2 is 1, xResults)
+	--testLog("Math", "Cos", the cos of pi is -1, xResults)
+	--testLog("Math", "Tan", the tan of pi / 4 is 1, xResults)
+
+	testLog("Math", "Exp", the exp of 3 > 20, xResults)
+	testLog("Math", "Exp", the exp of 3 < 20.1, xResults)
+	
+	testLog("Math", "Ln", the natural log of 55 > 4, xResults)
+	testLog("Math", "Ln", the natural log of 55 < 4.01, xResults)
+	
+	testLog("Math", "ExpLog", the abs of ((the natural log of the exp of 3) - 3) < 0.00000000001, xResults)
+	testLog("Math", "LogExp", the abs of ((the exp of the natural log of 80) - 80) < 0.00000000001, xResults)
+	
+	testLog("Math", "Trunc", the trunc of 5.5 is 5, xResults)
+	
+	testLog("Math", "Abs", the abs of 5.5 is 5.5, xResults)
+	testLog("Math", "Abs", the abs of -5.5 is 5.5, xResults)
+	
+	variable tNum
+	put any number into tNum
+	testLog("Math", "Random", tNum >= 0, xResults)
+	testLog("Math", "Random", tNum <= 1, xResults)
+	
+	testLog("Math", "Random", tNum is not any number, xResults)
+
+	variable tLeft as integer
+	variable tRight as integer
+	
+	put 4 into tLeft
+	put 5 into tRight
+	
+	testLog("Math", "Min", the min of 3 and 5 is 3, xResults)
+	testLog("Math", "Min", the min of 5.5 and 5.4 is 5.4, xResults)
+	
+	testLog("Math", "MinInt", the min of tLeft and tRight is tLeft, xResults)
+	testLog("Math", "MinInt", the min of tRight and tLeft is tLeft, xResults)
+	
+	testLog("Math", "Max", the max of 3 and 5 is 5, xResults)
+	testLog("Math", "Max", the max of 5.5 and 5.4 is 5.5, xResults)
+	
+	testLog("Math", "MaxInt", the max of tLeft and tRight is tRight, xResults)
+	testLog("Math", "MaxInt", the max of tRight and tLeft is tRight, xResults)
+
+	testLog("Math", "ConvertFromBase", ("6A" converted from base 16) is 106, xResults)
+	testLog("Math", "ConvertFromBase", ("1001010" converted from base 2) is 74, xResults)
+	
+	testLog("Math", "ConvertToBase", (7 converted to base 2) is "111", xResults)
+	testLog("Math", "ConvertToBase", (500 converted to base 12) is "358", xResults)
+	
+	testLog("Math", "ConvertFromBaseToBase", ("1122" converted from base 4 to base 14) is "66", xResults)
+
+end handler
+
+public handler testTypeConvert(inout xResults as list)
+	variable tString as string
+	put "a,b,c,d,e" into tString
+	
+	variable tList as list
+	split tString by "," into tList
+	
+	testLog("TypeConvert", "Split", tList is ["a","b", "c", "d", "e"], xResults)
+	
+	combine tList with "," into tString
+	
+	testLog("TypeConvert", "Combine", tString is "a,b,c,d,e", xResults)
+	
 end handler
 
 public handler testRepeat(inout xResults as list)
@@ -135,6 +281,34 @@ public handler testArray(inout xResults as list)
 	
 	testLog("Array", "ElementOf", tArray["key1"] is "value1", xResults)
 
+    variable tNewArray as array
+    put the empty array into tNewArray
+    put 1 into tNewArray["abc"]
+    put 2 into tNewArray["def"]
+    put 3 into tNewArray["ghi"]
+
+	variable tString as string
+	put "" into tString
+	
+	variable tKey as string
+    repeat for each key tKey in tNewArray
+        put tKey after tString
+    end repeat
+    
+    testLog("Array", "RepeatForEachKey1", tString contains "abc", xResults)
+    testLog("Array", "RepeatForEachKey1", tString contains "def", xResults)
+    testLog("Array", "RepeatForEachKey1", tString contains "ghi", xResults)
+
+	variable tSum as number
+	put 0 into tSum
+	
+	variable tElement
+    repeat for each element tElement in tNewArray
+        add tElement to tSum
+    end repeat
+    
+    testLog("Array", "RepeatForEachElement", tSum is 6, xResults)
+
 end handler
 
 public handler testBitwise(inout xResults as list)
@@ -170,8 +344,9 @@ public handler testLogic(inout xResults as list)
     testLog("Logic", "Is", not true is false, xResults)
     testLog("Logic", "Is", not false is true, xResults)
     
-    // test boolean short circuit
-    
+end handler
+
+public handler testLogicStructural(inout xResults as list)
     variable tString as string
     put the empty string into tString
     if (false and boolWithSideEffect(true, tString)) then
@@ -207,7 +382,6 @@ public handler testLogic(inout xResults as list)
     end if		
     
     testLog("Logic", "OrShortCut", tString2 is "a", xResults)	
-    
 end handler
 
 public handler testChar(inout xResults as list)
@@ -343,7 +517,6 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "TimesReal", tLeftReal * tRightReal is 20, xResults)
 	testLog("Arithmetic", "TimesNum", 10 * 2 is 20, xResults)
 	
-	
 	testLog("Arithmetic", "DivideInt", tLeft / tRight is 5, xResults)
 	testLog("Arithmetic", "DivideReal", tLeftReal / tRightReal is 5, xResults)
 	testLog("Arithmetic", "DivideNum", 10 / 2 is 5, xResults)
@@ -376,6 +549,13 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "LessThanOrEqualToInt", not tLeft <= tRight, xResults)
 	testLog("Arithmetic", "LessThanOrEqualToNum", 1 <= 1, xResults)
 	testLog("Arithmetic", "LessThanOrEqualToNum", not 2 <= 1, xResults)
+    
+    testLog("Arithmetic", "CrossTypeComparison", tLeft > 5, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeftReal > 5, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeft >= 10, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeftReal >= 10, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeftReal <= tLeft, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeft <= tLeftReal, xResults)
 	
 end handler
 
@@ -399,9 +579,16 @@ public handler testList(inout xResults as list)
     testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
    	testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
 
+    testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
+
+	testLog("List", "Begins", tTestList begins with [tTestList[1], tTestList[2]], xResults)
+	testLog("List", "Ends", tTestList ends with element 3 to -1 of tTestList, xResults)
+
     variable tSubList as list
     put element -2 to -1 of tTestList into tSubList
-    testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
+
+	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
+	testLog("List", "IsNot", tSubList is not [2, "abcd", 1], xResults)
 
     testLog("List", "IsIn", "abcd" is in tSubList, xResults)
     testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)

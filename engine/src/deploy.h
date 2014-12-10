@@ -69,6 +69,9 @@ struct MCDeployParameters
 
 	// The output path for the new executable.
 	MCStringRef output;
+    
+    // The list of modules to include.
+    MCArrayRef modules;
 	
 	
 	MCDeployParameters()
@@ -89,25 +92,27 @@ struct MCDeployParameters
 		payload			= MCValueRetain(kMCEmptyString);
 		spill			= MCValueRetain(kMCEmptyString);
 		output			= MCValueRetain(kMCEmptyString);
+        modules         = MCValueRetain(kMCEmptyArray);
 	}
 	
 	~MCDeployParameters()
 	{
-			MCValueRelease(engine);
-			MCValueRelease(engine_x86);
-			MCValueRelease(engine_ppc);
-			MCValueRelease(version_info);
-			MCValueRelease(stackfile);
-			MCValueRelease(auxillary_stackfiles);
-			MCValueRelease(externals);
-			MCValueRelease(startup_script);
-			MCValueRelease(redirects);
-			MCValueRelease(app_icon);
-			MCValueRelease(doc_icon);
-			MCValueRelease(manifest);
-			MCValueRelease(payload);
-			MCValueRelease(spill);
-			MCValueRelease(output);
+        MCValueRelease(engine);
+        MCValueRelease(engine_x86);
+        MCValueRelease(engine_ppc);
+        MCValueRelease(version_info);
+        MCValueRelease(stackfile);
+        MCValueRelease(auxillary_stackfiles);
+        MCValueRelease(externals);
+        MCValueRelease(startup_script);
+        MCValueRelease(redirects);
+        MCValueRelease(app_icon);
+        MCValueRelease(doc_icon);
+        MCValueRelease(manifest);
+        MCValueRelease(payload);
+        MCValueRelease(spill);
+        MCValueRelease(output);
+        MCValueRelease(modules);
 	}
 	
 	// Creates using an array of parameters
@@ -331,6 +336,7 @@ enum MCDeployError
 	kMCDeployErrorNoEngine,
 	kMCDeployErrorNoStackfile,
 	kMCDeployErrorNoAuxStackfile,
+    kMCDeployErrorNoModule,
 	kMCDeployErrorNoOutput,
 	kMCDeployErrorNoSpill,
 	kMCDeployErrorNoPayload,
