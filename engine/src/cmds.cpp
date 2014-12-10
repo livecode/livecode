@@ -2475,17 +2475,17 @@ Parse_stat MCWait::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 		if (condition == RF_FOR)
+		{
 			if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_MILLISECS) == PS_NORMAL)
 				units = F_MILLISECS;
+			else if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_SECONDS) == PS_NORMAL
+			         || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_SECOND) == PS_NORMAL)
+				units = F_SECONDS;
+			else if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_TICKS) == PS_NORMAL)
+				units = F_TICKS;
 			else
-				if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_SECONDS) == PS_NORMAL
-				        || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_SECOND) == PS_NORMAL)
-					units = F_SECONDS;
-				else
-					if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_TICKS) == PS_NORMAL)
-						units = F_TICKS;
-					else
-						units = F_TICKS;
+				units = F_TICKS;
+		}
 		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 		{
 			sp.skip_token(SP_MOVE, TT_UNDEFINED, MM_MESSAGES);
