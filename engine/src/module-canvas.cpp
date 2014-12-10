@@ -1016,11 +1016,6 @@ __MCCanvasTransformImpl *MCCanvasTransformGet(MCCanvasTransformRef p_transform)
 	return (__MCCanvasTransformImpl*)MCValueGetExtraBytesPtr(p_transform);
 }
 
-void MCCanvasTransformGetMCGAffineTransform(MCCanvasTransformRef p_transform, MCGAffineTransform &r_transform)
-{
-	r_transform = *MCCanvasTransformGet(p_transform);
-}
-
 //////////
 
 // special case for scale parameters, which may have one or two values
@@ -1421,7 +1416,7 @@ void MCCanvasTransformSetTranslation(MCCanvasPointRef p_translation, MCCanvasTra
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, const MCGAffineTransform &p_transform)
 {
-	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(*MCCanvasTransformGet(x_transform), p_transform), x_transform);
+	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(p_transform, *MCCanvasTransformGet(x_transform)), x_transform);
 }
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, MCCanvasTransformRef p_transform)
@@ -2572,10 +2567,18 @@ void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef
 
 void MCCanvasGradientTransform(MCCanvasGradientRef &x_gradient, const MCGAffineTransform &p_transform)
 {
-	MCCanvasGradientSetTransform(x_gradient, MCGAffineTransformConcat(*MCCanvasTransformGet(MCCanvasGradientGet(x_gradient)->transform), p_transform));
+	MCCanvasTransformRef t_transform;
+	t_transform = MCValueRetain(MCCanvasGradientGet(x_gradient)->transform);
+	
+	MCCanvasTransformConcat(t_transform, p_transform);
+	
+	if (!MCErrorIsPending())
+		MCCanvasGradientSetTransform(t_transform, x_gradient);
+	
+	MCValueRelease(t_transform);
 }
 
-void MCCanvasGradientTransform(MCCanvasGradientRef &x_gradient, MCCanvasTransformRef &p_transform)
+void MCCanvasGradientTransform(MCCanvasGradientRef &x_gradient, MCCanvasTransformRef p_transform)
 {
 	MCCanvasGradientTransform(x_gradient, *MCCanvasTransformGet(p_transform));
 }
