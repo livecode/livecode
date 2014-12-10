@@ -25,8 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCFontnode : public MCDLlist
 {
 	MCNameRef reqname;
-	uint2 reqsize;
-	uint2 reqstyle;
+	uint32_t reqsize;
+	uint32_t reqstyle;
 	MCFontStruct *font;
 public:
     
