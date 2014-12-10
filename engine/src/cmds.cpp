@@ -2083,6 +2083,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
+		{
 			if (of == NULL && chunktype == CT_FIELD)
 			{
 				MCperror->add
@@ -2091,6 +2092,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 			}
 			else
 				break;
+		}
 		if (sp.lookup(SP_SORT, te) == PS_NORMAL)
 		{
 			switch (te->which)
