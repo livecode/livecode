@@ -40,12 +40,12 @@ void MCTypeEvalIntAsReal(integer_t p_target, real64_t r_output)
     r_output = p_target;
 }
 
-extern "C" void MCTypeEvalIsEmpty(MCValueRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCTypeEvalIsEmpty(MCValueRef p_target, bool& r_output)
 {
     //r_output = p_target != kMCNull && MCValueIsEmpty(p_target);
 }
 
-extern "C" void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_output)
 {
     bool t_empty;
     MCTypeEvalIsEmpty(p_target, t_empty);
@@ -53,12 +53,12 @@ extern "C" void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_output)
     r_output = !t_empty;
 }
 
-extern "C" void MCTypeEvalIsDefined(MCValueRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCTypeEvalIsDefined(MCValueRef p_target, bool& r_output)
 {
     r_output = p_target == kMCNull;
 }
 
-extern "C" void MCTypeEvalIsNotDefined(MCValueRef p_target, bool p_is_not, bool& r_output)
+extern "C" MC_DLLEXPORT void MCTypeEvalIsNotDefined(MCValueRef p_target, bool p_is_not, bool& r_output)
 {
     bool t_defined;
     MCTypeEvalIsDefined(p_target, t_defined);

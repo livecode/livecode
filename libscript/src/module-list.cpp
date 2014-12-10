@@ -346,22 +346,22 @@ extern "C" bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& r_iter
     return true;
 }
 
-extern "C" void MCListEvalBeginsWith(MCProperListRef p_list, MCProperListRef p_prefix, bool& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalBeginsWith(MCProperListRef p_list, MCProperListRef p_prefix, bool& r_output)
 {
     r_output = MCProperListBeginsWithList(p_list, p_prefix);
 }
 
-extern "C" void MCListEvalEndsWith(MCProperListRef p_list, MCProperListRef p_suffix, bool& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalEndsWith(MCProperListRef p_list, MCProperListRef p_suffix, bool& r_output)
 {
     r_output = MCProperListEndsWithList(p_list, p_suffix);
 }
 
-extern "C" void MCListEvalIsEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalIsEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
 {
     r_output = MCProperListIsEqualTo(p_left, p_right);
 }
 
-extern "C" void MCListEvalIsNotEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalIsNotEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
 {
     r_output = !MCProperListIsEqualTo(p_left, p_right);
 }

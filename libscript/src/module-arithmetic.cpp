@@ -432,17 +432,17 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalEqualToNumber(MCNumberRef p_left, M
     r_output = MCNumberFetchAsReal(p_left) == MCNumberFetchAsReal(p_right);
 }
 
-extern "C" void MCArithmeticEvalNotEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
 {
     r_output = p_left != p_right;
 }
 
-extern "C" void MCArithmeticEvalNotEqualToReal(double p_left, double p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToReal(double p_left, double p_right, bool& r_output)
 {
     r_output = p_left != p_right;
 }
 
-extern "C" void MCArithmeticEvalNotEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
 {
     r_output = MCNumberFetchAsReal(p_left) != MCNumberFetchAsReal(p_right);
 }
