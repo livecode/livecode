@@ -3214,20 +3214,6 @@ void MCRename::compile(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MW-2012-02-01: [[ Bug 9647 ]] New implementation of replace to fix the flaws
-//   in the old implementation.
-// MW-2012-03-22: [[ Bug ]] Use uint8_t rather than char, otherwise we get
-//   comparison issues on some platforms (where char is signed!).
-
-// Special case replacing a char with another char when case-sensitive is true.
-static void replace_char_with_char(uint8_t *p_chars, uindex_t p_char_count, uint8_t p_from, uint8_t p_to)
-{
-	// Simplest case, just substitute from for to.
-	for(uindex_t i = 0; i < p_char_count; i++)
-		if (p_chars[i] == p_from)
-			p_chars[i] = p_to;
-}
-
 // Special case replacing a char with another char when case-sensitive is false.
 static void replace_char_with_char_caseless(uint8_t *p_chars, uindex_t p_char_count, uint8_t p_from, uint8_t p_to)
 {
