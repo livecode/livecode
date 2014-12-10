@@ -4709,7 +4709,7 @@ void MCCanvasPop(uintptr_t p_cookie)
     MCValueRelease(t_canvas);
 }
 
-extern "C" void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
+extern "C" MC_DLLEXPORT void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
 {
     r_canvas = MCValueRetain(s_current_canvas);
 }
