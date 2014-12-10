@@ -205,6 +205,11 @@ MCDelayedObjectId::SetName (MCNameRef p_name)
 const MCObjectId *
 MCDelayedObjectId::Resolve (void) const
 {
+	MCObject *t_obj = Get();
+
+	if (!t_obj)
+		return NULL;
+
 	return &(Get()->GetObjectId());
 }
 
