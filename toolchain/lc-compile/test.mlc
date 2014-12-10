@@ -407,6 +407,13 @@ public handler testChar(inout xResults as list)
 	
 	testLog("Char", "AfterCharOf", tString is "abcdeabcdeabcde", xResults)
 
+	
+	testLog("Char", "BeginsWithEmpty", tString begins with "", xResults)
+	testLog("Char", "BeginsWith", tString begins with "abcd", xResults)
+	
+	testLog("Char", "EndsWithEmpty", tString ends with "", xResults)
+	testLog("Char", "EndsWith", tString ends with "bcde", xResults)
+
 	variable tOffset as integer
 	put the first offset of "abcde" in tString into tOffset
 	

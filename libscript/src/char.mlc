@@ -53,6 +53,8 @@ Example:
 	
 Description:
 >*Note:* The number of chars returns the number of codeunits of the target string. It does not perform any grapheme boundary analysis.
+
+Tags: Strings
 */
 
 syntax CountCharsOf is prefix operator with precedence 1
@@ -76,6 +78,8 @@ Description:
 Either locates the char at the given index for use as the target container of another operation, or evaluates the char at the given index as the source of another operation.
 
 >*Note:* It is an error if <Index> is out of range.
+
+Tags: Strings
 */
 
 syntax SingletonCharOf is prefix operator with precedence 3
@@ -101,6 +105,7 @@ Either locates the chars between the given indices for use as the target contain
 
 >*Note:* It is an error if either <Start> or <Finish> are out of range.
 
+Tags: Strings
 */
 
 syntax RangeCharOf is prefix operator with precedence 3
@@ -120,6 +125,8 @@ output:             True if <Needle> is among the chars of <Target>, and false o
 
 Description:
 >*Note:* It is an error if <Needle> evaluates to a string consisting of more than one char.
+
+Tags: Strings
 */
 
 syntax CharIsIn is neutral binary operator with precedence 1
@@ -154,6 +161,7 @@ Example:
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of <Target> and the first (respectively last) occurrence of <Needle>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in <Target>, then the output is 0.
 
+Tags: Strings
 */
 
 syntax CharOffset is prefix operator with precedence 1
@@ -178,6 +186,7 @@ Example:
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of the substring of <Target> beginning at char <After> + 1, and the first (respectively last) occurrence of <Needle> in the substring. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in the given substring of <Target>, then the output is 0.
 
+Tags: Strings
 */
 
 syntax CharOffsetAfter is prefix operator with precedence 1
@@ -208,6 +217,7 @@ Example:
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of <Target>, and the first (respectively last) occurrence of <Needle> in the substring of <Target> ending at char <Before> - 1. If neither first or last is specified, then the last offset is found. If <Needle> does not occur in the given substring of <Target>, then the output is 0.
 
+Tags: Strings
 */
 
 syntax CharOffsetBefore is prefix operator with precedence 1
@@ -228,6 +238,7 @@ Description:
 
 >*Note:* Since "" is a substring of every string, every string contains the empty string.
 
+Tags: Strings
 */
 
 syntax ContainsChars is neutral binary operator with precedence 1
@@ -244,11 +255,20 @@ Prefix: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
 output:             Returns true if <Source> begins with <Prefix>.
 
+Example:
+	variable tVar as string
+	variable tResult as string
+	put "abcde" into tVar
+	if tVar begins with "abc" then
+		put "success" into tResult
+	end if	
+
 Description:
 <Source> begins with <Prefix> if and only if the chars of <Prefix> occur as an initial subsequence of the chars of <Source>.
 
 >*Note:* Since "" is an initial substring of every string, every string begins with the empty string.
 
+Tags: Strings
 */
 
 syntax BeginsWithString is neutral binary operator with precedence 1
@@ -263,11 +283,20 @@ Suffix: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
 output:             Returns true if <Source> ends with <Suffix>.
 
+Example:
+	variable tVar as string
+	variable tResult as string
+	put "abcde" into tVar
+	if tVar ends with "cde" then
+		put "success" into tResult
+	end if	
+	
 Description:
 <Source> ends with <Suffix> if and only if the chars of <Suffix> occur as a final subsequence of the chars of <Source>.
 
 >*Note:* Since "" is a final substring of every string, every string ends with the empty string.
 
+Tags: Strings
 */
 
 syntax EndsWithString is neutral binary operator with precedence 1
@@ -293,6 +322,7 @@ Example:
 Description:
 Use the <newline> constant to add new lines to a string variable.
 
+Tags: Strings
 */
 
 syntax NewLineCharacter is expression
@@ -320,6 +350,8 @@ Example:
 
 Description:
 The repeat for each form is more efficient that the alternative formation using repeat **tCount** times.
+
+Tags: Strings, Control structures
 */
 
 syntax RepeatForEachChar is iterator
