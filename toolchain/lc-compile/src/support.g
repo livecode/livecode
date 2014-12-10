@@ -258,6 +258,8 @@
     Error_NonAssignableExpressionUsedForOutContext
     Error_NonEvaluatableExpressionUsedForInContext
     Error_SyntaxNotAllowedInThisContext
+    Error_ParameterMustHaveHighLevelType
+    Error_VariableMustHaveHighLevelType
 
 --------------------------------------------------------------------------------
 
@@ -577,5 +579,8 @@
 'action' Error_IterateSyntaxMethodArgumentsDontConform(Position: POS)
 'action' Error_IterateSyntaxMethodMustReturnBoolean(Position: POS)
 'action' Error_PhraseSyntaxMethodMustReturnAValue(Position: POS)
+
+'action' Error_ParameterMustHaveHighLevelType(Position: POS)
+'action' Error_VariableMustHaveHighLevelType(Position: POS)
 
 --------------------------------------------------------------------------------

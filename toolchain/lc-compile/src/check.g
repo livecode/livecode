@@ -18,6 +18,9 @@
         
         -- Check that all the uses of syntax are appropriate to context.
         CheckInvokes(Module)
+        
+        -- Check that appropriate types are used in appropriate places.
+        CheckDeclaredTypes(Module)
 
         -- Check the syntax definitions are all correct.
         CheckSyntaxDefinitions(Module)
@@ -1330,6 +1333,58 @@
     'rule' GetExpressionPosition(invoke(Position, _, _) -> Position):
     'rule' GetExpressionPosition(nil -> Position)
         GetUndefinedPosition(-> Position)
+
+--------------------------------------------------------------------------------
+
+'sweep' CheckDeclaredTypes(ANY)
+
+    'rule' CheckDeclaredTypes(DEFINITION'variable(Position, _, _, Type)):
+        -- Variable types must be high-level
+        (|
+            IsHighLevelType(Type)
+        ||
+            Error_VariableMustHaveHighLevelType(Position)
+        |)
+        
+    'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(_, _, _, Signature, _)):
+        -- Foreign handler signatures can contain any type so no need to
+        -- check anything here.
+        
+    'rule' CheckDeclaredTypes(PARAMETER'parameter(Position, _, _, Type)):
+        (|
+            IsHighLevelType(Type)
+        ||
+            Error_ParameterMustHaveHighLevelType(Position)
+        |)
+        
+    'rule' CheckDeclaredTypes(STATEMENT'variable(Position, _, Type)):
+        -- Variable types must be high-level
+        (|
+            IsHighLevelType(Type)
+        ||
+            Error_VariableMustHaveHighLevelType(Position)
+        |)
+
+'condition' IsHighLevelType(TYPE)
+
+    'rule' IsHighLevelType(any(_)):
+    'rule' IsHighLevelType(undefined(_)):
+    'rule' IsHighLevelType(named(_, Id)):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> Type
+        IsHighLevelType(Type)
+    'rule' IsHighLevelType(optional(_, Type)):
+        IsHighLevelType(Type)
+    'rule' IsHighLevelType(record(_, _, _)):
+    'rule' IsHighLevelType(pointer(_)):
+    'rule' IsHighLevelType(boolean(_)):
+    'rule' IsHighLevelType(integer(_)):
+    'rule' IsHighLevelType(real(_)):
+    'rule' IsHighLevelType(number(_)):
+    'rule' IsHighLevelType(string(_)):
+    'rule' IsHighLevelType(data(_)):
+    'rule' IsHighLevelType(array(_)):
+    'rule' IsHighLevelType(list(_, _)):
 
 --------------------------------------------------------------------------------
 
