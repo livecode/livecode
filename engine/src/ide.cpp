@@ -359,8 +359,6 @@ Parse_stat MCIdeScriptFlush::parse(MCScriptPoint& p_script)
   Parse_stat t_status;
 	t_status = PS_NORMAL;
 
-	MCChunk *t_target;
-	t_target = NULL;
 	if (t_status == PS_NORMAL)
 		t_status = parse_target(p_script, f_target);
 
