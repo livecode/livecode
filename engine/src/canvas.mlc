@@ -1174,7 +1174,7 @@ begin
 end syntax
 
 syntax CanvasEndLayer is statement
-	"endlayer" "on" <mCanvas: Expression>
+	"end" "layer" "on" <mCanvas: Expression>
 begin
 	MCCanvasEndLayer(mCanvas)
 end syntax
