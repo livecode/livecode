@@ -3214,18 +3214,6 @@ void MCRename::compile(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Special case replacing a char with another char when case-sensitive is false.
-static void replace_char_with_char_caseless(uint8_t *p_chars, uindex_t p_char_count, uint8_t p_from, uint8_t p_to)
-{
-	// Lowercase the from char.
-	p_from = MCS_tolower(p_from);
-	
-	// Now substitute from for to, taking making sure its a caseless compare.
-	for(uindex_t i = 0; i < p_char_count; i++)
-		if (MCS_tolower(p_chars[i]) == p_from)
-			p_chars[i] = p_to;
-}
-
 // General replace case, rebuilds the input string in 'output' replacing each
 // occurance of from with to.
 static bool replace_general(const MCString& p_input, const MCString& p_from, const MCString& p_to, bool p_caseless, char*& r_output, uindex_t& r_output_length)
