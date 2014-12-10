@@ -1058,8 +1058,8 @@ static void __emit_position(MCScriptModuleBuilderRef self, uindex_t p_address, u
     }
     
     self -> module . positions[self -> module . position_count - 1] . address = p_address;
-    self -> module . positions[self -> module . position_count - 1] . address = p_file;
-    self -> module . positions[self -> module . position_count - 1] . address = p_line;
+    self -> module . positions[self -> module . position_count - 1] . file = p_file;
+    self -> module . positions[self -> module . position_count - 1] . line = p_line;
 }
 
 void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)

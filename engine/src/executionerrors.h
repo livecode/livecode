@@ -2612,6 +2612,16 @@ enum Exec_errors
     // MW-2014-10-23: Improve the error message you get from 'start using <name>'
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
+    
+    // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
+    // {EE-0844} extension: error occured with domain
+    EE_EXTENSION_ERROR_DOMAIN,
+    // {EE-0845} extension: error occured with description
+    EE_EXTENSION_ERROR_DESCRIPTION,
+    // {EE-0846} extension: error occured with file
+    EE_EXTENSION_ERROR_FILE,
+    // {EE-0847} extension: error occured with line
+    EE_EXTENSION_ERROR_LINE,
 };
 
 extern const char *MCexecutionerrors;

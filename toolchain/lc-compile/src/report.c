@@ -149,6 +149,9 @@ DEFINE_ERROR(NonAssignableExpressionUsedForOutContext, "Non-container expression
 DEFINE_ERROR(NonEvaluatableExpressionUsedForInContext, "Non-evaluatable expression used for in context")
 DEFINE_ERROR(SyntaxNotAllowedInThisContext, "This syntax is not allowed for this module type")
 
+DEFINE_ERROR(VariableMustHaveHighLevelType, "Inappropriate type for variable")
+DEFINE_ERROR(ParameterMustHaveHighLevelType, "Inappropriate type for parameter")
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void yyerror(const char *p_text)

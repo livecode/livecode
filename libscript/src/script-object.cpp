@@ -1,6 +1,22 @@
 #include "script.h"
 #include "script-private.h"
 
+#include "foundation-auto.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCTypeInfoRef kMCScriptInParameterNotDefinedErrorTypeInfo;
+MCTypeInfoRef kMCScriptOutParameterNotDefinedErrorTypeInfo;
+MCTypeInfoRef kMCScriptVariableUsedBeforeDefinedErrorTypeInfo;
+MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
+MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
+MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
+MCTypeInfoRef kMCScriptNotABooleanValueErrorTypeInfo;
+MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
+MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
+MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
+MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCBuiltinModule
@@ -14,6 +30,23 @@ static MCScriptModuleRef s_builtin_module = nil;
 static MCScriptModuleRef *s_builtin_modules = nil;
 static uindex_t s_builtin_module_count = 0;
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
+
+static bool MCScriptCreateNamedErrorType(MCNameRef p_name, MCStringRef p_message, MCTypeInfoRef &r_error_type)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCErrorTypeInfoCreate(MCNAME("runtime"), p_message, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_error_type = MCValueRetain(*t_named_type);
+	return true;
+}
 
 bool MCScriptInitialize(void)
 {
@@ -187,6 +220,21 @@ bool MCScriptInitialize(void)
             return false;
         
         MCValueRelease(t_stream);
+    }
+    
+    // This block creates all the default errors
+    {
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.InParameterNotDefinedError"), MCSTR("In parameters must be defined before calling"), kMCScriptInParameterNotDefinedErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.OutParameterNotDefinedError"), MCSTR("Out parameters must be defined before returning"), kMCScriptOutParameterNotDefinedErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.VariableUsedBeforeDefinedError"), MCSTR("Variables must be defined before being used"), kMCScriptVariableUsedBeforeDefinedErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ReturnValueTypeError"), MCSTR("Value is not of correct type for return"), kMCScriptInvalidReturnValueErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.VariableValueTypeError"), MCSTR("Value is not of correct type for assignment to variable"), kMCScriptInvalidVariableValueErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ArgumentValueTypeError"), MCSTR("Value is not of correct type for passing as argument"), kMCScriptInvalidArgumentValueErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.NotABooleanValueError"), MCSTR("Value is not a boolean"), kMCScriptNotABooleanValueErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.WrongNumberOfArgumentsError"), MCSTR("Wrong number of arguments passed to handler"), kMCScriptWrongNumberOfArgumentsErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCSTR("Unable to bind foreign handler"), kMCScriptForeignHandlerBindingErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.PolymorphicHandlerBindingError"), MCSTR("Unable to bind appropriate handler"), kMCScriptMultiInvokeBindingErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.TypeBindingError"), MCSTR("Attempt to use an unbound named type"), kMCScriptTypeBindingErrorTypeInfo);
     }
 
     return true;
