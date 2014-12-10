@@ -1111,7 +1111,7 @@ enum
 
 enum
 {
-	kMCValueCustomHeaderSize = 12
+	kMCValueCustomHeaderSize = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uintptr_t)
 };
 
 struct MCValueCustomCallbacks
