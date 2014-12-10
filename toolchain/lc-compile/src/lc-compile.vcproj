@@ -226,6 +226,20 @@
 			<File
 				RelativePath=".\grammar.g"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="lc-bootstrap-compile"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="lc-bootstrap-compile"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\grammar_full.g"
@@ -292,10 +306,6 @@
 				</File>
 				<File
 					RelativePath=".\_G_\gen.tab.c"
-					>
-				</File>
-				<File
-					RelativePath=".\_G_\gen.y"
 					>
 				</File>
 				<File

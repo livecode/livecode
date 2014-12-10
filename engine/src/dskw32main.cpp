@@ -181,7 +181,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		csptr++;
 	}
 
-	if (!MCInitialize() || !MCScriptInitialize())
+    extern bool MCCanvasModuleInitialize();
+	if (!MCInitialize() || !MCCanvasModuleInitialize() || !MCScriptInitialize())
 		exit(-1);
 	
     // Ensure the command line variable gets set

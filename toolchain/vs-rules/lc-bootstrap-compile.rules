@@ -10,7 +10,7 @@
 			CommandLine="$(SolutionDir)_build\windows\$(ConfigurationName)\lc-bootstrap-compile.exe -bootstrap -template &quot;$(SolutionDir)toolchain\lc-compile\src\grammar.g&quot; -output &quot;$(SolutionDir)toolchain\lc-compile\src\grammar_full.g&quot; &quot;$(SolutionDir)libscript\src\string.mlc&quot; &quot;$(SolutionDir)libscript\src\binary.mlc&quot; &quot;$(SolutionDir)libscript\src\arithmetic.mlc&quot; &quot;$(SolutionDir)libscript\src\bitwise.mlc&quot; &quot;$(SolutionDir)libscript\src\byte.mlc&quot; &quot;$(SolutionDir)libscript\src\char.mlc&quot; &quot;$(SolutionDir)libscript\src\list.mlc&quot; &quot;$(SolutionDir)libscript\src\type-convert.mlc&quot; &quot;$(SolutionDir)libscript\src\logic.mlc&quot; &quot;$(SolutionDir)libscript\src\sort.mlc&quot; &quot;$(SolutionDir)libscript\src\array.mlc&quot; &quot;$(SolutionDir)engine\src\canvas.mlc&quot;"
 			Outputs="grammar_full.g"
 			AdditionalDependencies="$(SolutionDir)libscript\src\*.mlc"
-			FileExtensions="*.g;*.mlc"
+			FileExtensions="*.ignored"
 			ExecutionDescription="lc-bootstrap-compile"
 			>
 			<Properties>
