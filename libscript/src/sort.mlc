@@ -29,6 +29,8 @@ Example:
 
 Description:
 Text sort is performed by comparing string elements on a codepoint by codepoint basis. Non-string elements come after all string elements in the sort order. The sort is stable, so that non-string elements are not re-ordered relative to each other.
+
+Tags: Sorting
 */
 
 syntax SortListAscendingText is statement
@@ -56,6 +58,7 @@ Example:
 Description:
 Text sort is performed by comparing string elements on a codepoint by codepoint basis. Non-string elements come after all string elements in the sort order. The sort is stable, so that non-string elements are not re-ordered relative to each other.
 
+Tags: Sorting
 */
 
 syntax SortListDescendingText is statement
@@ -73,6 +76,8 @@ Target:         An expression that evaluates to a list of binary data.
 
 Description:
 Binary sort is performed by comparing data elements on a byte by byte basis. Non-data elements come after all data elements in the sort order. The sort is stable, so that non-data elements are not re-ordered relative to each other.
+
+Tags: Sorting
 */
 
 syntax SortListAscendingBinary is statement
@@ -88,6 +93,8 @@ Target:         An expression that evaluates to a list of binary data.
 
 Description:
 Binary sort is performed by comparing data elements on a byte by byte basis. Non-data elements come after all data elements in the sort order. The sort is stable, so that non-data elements are not re-ordered relative to each other.
+
+Tags: Sorting
 */
 
 syntax SortListDescendingBinary is statement
@@ -116,6 +123,8 @@ Example:
     
 Description:
 Numeric sort is performed by comparing numeric elements by cardinality. Non-numeric elements come after all numeric elements in the sort order. The sort is stable, so that non-numeric elements are not re-ordered relative to each other.
+
+Tags: Sorting
 */
 
 syntax SortListAscendingNumeric is statement
@@ -143,6 +152,7 @@ Example:
 Description:
 Numeric sort is performed by comparing numeric elements by cardinality. Non-numeric elements come after all numeric elements in the sort order. The sort is stable, so that non-numeric elements are not re-ordered relative to each other.
 
+Tags: Sorting
 */
 
 syntax SortListDescendingNumeric is statement

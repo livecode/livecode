@@ -82,6 +82,8 @@ Description:
 Adds the number <Value> to <Target>.
 
 >*Note:* It is a syntax error if <Target> does not evaluate to a variable.
+
+Tags: Math
 */
 
 syntax AddNumberTo is statement
@@ -108,6 +110,7 @@ Subtracts the number <Value> from <Target>.
 
 >*Note:* It is a syntax error if <Target> does not evaluate to a variable.
 
+Tags: Math
 */
 
 syntax SubtractNumberFrom is statement
@@ -132,6 +135,8 @@ Description:
 Multiplies the number <Target> by <Value>.
 
 >*Note:* It is a syntax error if <Target> does not evaluate to a variable.
+
+Tags: Math
 */
 
 syntax MultiplyNumberBy is statement
@@ -165,6 +170,7 @@ Divides the number <Target> by <Value>.
 
 >*Note:* It is a syntax error if <Target> does not evaluate to a variable.
 
+Tags: Math
 */
 
 syntax DivideNumberBy is statement
@@ -182,9 +188,14 @@ Summary:    Unary plus operator.
 Operand:    An expression that evaluates to a number.
 output:     The result of evaluating <Operand>.
 
+Example:
+	variable tVar as number
+	put +5 into tVar -- tVar contains 5
+
 Description: 
 The unary plus operator is a no-op on the predefined numeric types.
 
+Tags: Math
 */
 
 syntax PlusUnaryOperator is prefix operator with precedence 1
@@ -200,6 +211,11 @@ Summary:    Unary minus operator.
 Operand:    An expression that evaluates to a number.
 output:     The negated result of evaluating <Operand>.
 
+Example:
+	variable tVar as number
+	put -(5 + 4) into tVar -- tVar contains -9
+
+Tags: Math
 */
 
 syntax MinusUnaryOperator is prefix operator with precedence 1
@@ -217,6 +233,12 @@ Summary:    Binary plus operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
 output:     The result of adding the numbers <Left> and <Right>.
+
+Example:
+	variable tVar as integer
+	put 5 + 4 + 3 into tVar -- tVar contains 12
+
+Tags: Math
 */
 
 syntax PlusOperator is left binary operator with precedence 2
@@ -232,6 +254,12 @@ Summary:    Binary minus operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
 output:     The result of subtracting the number <Right> from <Left>.
+
+Example:
+	variable tVar as integer
+	put 5 - 3 - 1 into tVar -- tVar contains 1
+	
+Tags: Math
 */
 
 syntax MinusOperator is left binary operator with precedence 2
@@ -247,6 +275,13 @@ Summary:    Binary multiplication operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
 output:     The result of multiplying the numbers <Left> and <Right>.
+
+Example:
+	variable tVar as number
+	put 3 * 5 into tVar -- tVar contains 15
+	
+Tags: Math
+
 */
 
 syntax TimesOperator is left binary operator with precedence 1
@@ -262,6 +297,12 @@ Summary:    Binary division operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
 output:     The result of dividing the number <Left> by <Right>.
+
+Example:
+	variable tVar as number
+	put 3 / 5 into tVar -- tVar contains 0.6
+	
+Tags: Math
 */
 
 syntax OverOperator is left binary operator with precedence 1
@@ -278,10 +319,18 @@ end syntax
 Summary:    Mod operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     The remainder on dividing <Left> by <Right>.
+output:     <Left> mod <Right>.
+
+Example:
+	variable tVar as number
+	put 4^((7 - 1)/2) mod 7 into tVar -- tVar contains 1
+	
+Description:
+Returns the remainder on dividing <Left> by <Right>
+
 */
 
-syntax ModOperator is neutral binary operator with precedence 1
+syntax ModOperator is neutral binary operator with precedence 4
     <Left: Expression> "mod" <Right: Expression>
 begin
     MCArithmeticEvalIntegerModInteger(Left, Right, output)
@@ -310,7 +359,7 @@ successive values of x wrap y cycle through the sequence 1, 2, ..., y.
 
 */
 
-syntax WrapOperator is neutral binary operator with precedence 1
+syntax WrapOperator is neutral binary operator with precedence 4
     <Left: Expression> "wrap" <Right: Expression>
 begin
     MCArithmeticEvalIntegerWrapInteger(Left, Right, output)

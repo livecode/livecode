@@ -7,10 +7,6 @@ public handler test()
     variable tDelimiter as string
     put newline into tDelimiter
 	
-	variable tNumber
-	put the abs of -5.5 into tNumber
-	testLog("Math", "ABS", tNumber is 5.5, tResults)
-	
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
 	testLog("__Test", "Succeed", true, tResults)
@@ -99,10 +95,10 @@ public handler testMathFoundation(inout xResults as list)
 	put 5.5 into tNumReal
 	
 	testLog("MathFoundation", "FloorNum", the floor of tNum is -6, xResults)
-	testLog("MathFoundation", "FloorReal", the floor of tNum is 5, xResults)
+	testLog("MathFoundation", "FloorReal", the floor of tNumReal is 5, xResults)
 	
 	testLog("MathFoundation", "CeilNum", the ceiling of tNum is -5, xResults)
-	testLog("MathFoundation", "CeilReal", the ceiling of tNum is 6, xResults)
+	testLog("MathFoundation", "CeilReal", the ceiling of tNumReal is 6, xResults)
 	
 	round tNum
 	round tNumReal
@@ -119,9 +115,9 @@ public handler testMath(inout xResults as list)
 	testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
 	testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
 	
-	--testLog("Math", "Sin", the sin of pi / 2 is 1, xResults)
-	--testLog("Math", "Cos", the cos of pi is -1, xResults)
-	--testLog("Math", "Tan", the tan of pi / 4 is 1, xResults)
+	testLog("Math", "Sin", the sin of pi / 2 is 1, xResults)
+	testLog("Math", "Cos", the cos of pi is -1, xResults)
+	testLog("Math", "Tan", (the tan of pi / 4) - 1  < 0.00000000001, xResults)
 
 	testLog("Math", "Exp", the exp of 3 > 20, xResults)
 	testLog("Math", "Exp", the exp of 3 < 20.1, xResults)
@@ -253,33 +249,33 @@ public handler testArray(inout xResults as list)
 	put "value2" into tArray["key2"]
 	put "value3" into tArray["key3"]
 	
-	testLog("Array", "Count", the number of elements in tArray is 3, xResults)
+	testLog("Array", "CountElementsOf", the number of elements in tArray is 3, xResults)
 	
 	variable tKeys as list
 	put the keys of tArray into tKeys
 	
-	testLog("Array", "CountKeysOf", the number of elements in tKeys is 3, xResults)
+	testLog("Array", "KeysOfCount", the number of elements in tKeys is 3, xResults)
 
 	variable tKeysString as string
 	combine tKeys with "," into tKeysString
 	
-	testLog("Array", "KeysOf", tKeysString contains "key1", xResults)
-	testLog("Array", "KeysOf", tKeysString contains "key2", xResults)
-	testLog("Array", "KeysOf", tKeysString contains "key3", xResults)
+	testLog("Array", "KeysOf1", tKeysString contains "key1", xResults)
+	testLog("Array", "KeysOf2", tKeysString contains "key2", xResults)
+	testLog("Array", "KeysOf3", tKeysString contains "key3", xResults)
 		
 	variable tElements as list
 	put the elements of tArray into tElements
 	
-	testLog("Array", "CountElementssOf", the number of elements in tElements is 3, xResults)
+	testLog("Array", "ElementssOfCount", the number of elements in tElements is 3, xResults)
 	
-	testLog("Array", "ElementsOf", "value1" is in tElements, xResults)
-	testLog("Array", "ElementsOf", "value2" is in tElements, xResults)
-	testLog("Array", "ElementsOf", "value3" is in tElements, xResults)
+	testLog("Array", "ElementsOf1", "value1" is in tElements, xResults)
+	testLog("Array", "ElementsOf2", "value2" is in tElements, xResults)
+	testLog("Array", "ElementsOf3", "value3" is in tElements, xResults)
 		
 	--testLog("Array", "IsAmongTheKeys", "key1" is among the keys of tArray, xResults)
 	--testLog("Array", "IsAmongTheElements", "value1" is among the keys of tArray, xResults)
 	
-	testLog("Array", "ElementOf", tArray["key1"] is "value1", xResults)
+	testLog("Array", "SingletonElementOf", tArray["key1"] is "value1", xResults)
 
     variable tNewArray as array
     put the empty array into tNewArray
@@ -296,8 +292,8 @@ public handler testArray(inout xResults as list)
     end repeat
     
     testLog("Array", "RepeatForEachKey1", tString contains "abc", xResults)
-    testLog("Array", "RepeatForEachKey1", tString contains "def", xResults)
-    testLog("Array", "RepeatForEachKey1", tString contains "ghi", xResults)
+    testLog("Array", "RepeatForEachKey2", tString contains "def", xResults)
+    testLog("Array", "RepeatForEachKey3", tString contains "ghi", xResults)
 
 	variable tSum as number
 	put 0 into tSum
@@ -323,7 +319,8 @@ public handler testBitwise(inout xResults as list)
 	put 3 bitwise xor 6 into tVar
 	testLog("Bitwise", "BitwiseXor", tVar is 5, xResults)
 	
-	--put bitwise not 0 into tVar
+	put bitwise not 5 into tVar
+	testLog("Bitwise", "BitwiseNot", tVar is - 6, xResults)
 
 	put 7 shifted by 2 bitwise into tVar 
 	testLog("Bitwise", "BitwiseShift", tVar is 28, xResults)
@@ -410,6 +407,12 @@ public handler testChar(inout xResults as list)
 	put "abcde" after char 5 of tString
 	
 	testLog("Char", "AfterCharOf", tString is "abcdeabcdeabcde", xResults)
+	
+	testLog("Char", "BeginsWithEmpty", tString begins with "", xResults)
+	testLog("Char", "BeginsWith", tString begins with "abcd", xResults)
+	
+	testLog("Char", "EndsWithEmpty", tString ends with "", xResults)
+	testLog("Char", "EndsWith", tString ends with "bcde", xResults)
 
 	variable tOffset as integer
 	put the first offset of "abcde" in tString into tOffset
@@ -525,7 +528,7 @@ public handler testArithmetic(inout xResults as list)
 	put 1 into tOne
 	
 	testLog("Arithmetic", "ModInt", tLeft mod (tRight + tOne) is 1, xResults)
-	testLog("Arithmetic", "ModNum", 5 mod 3 is 2, xResults)
+	testLog("Arithmetic", "ModNum", 4^((7-1)/2) mod 7 is 1, xResults)
 	
 	testLog("Arithmetic", "Wrap", 5 wrap 3 is 2, xResults)
 	testLog("Arithmetic", "Wrap", -3 wrap 3 is -3, xResults)
@@ -576,8 +579,20 @@ public handler testList(inout xResults as list)
    	testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
 	testLog("List", "TailOf", the tail of tTestList is 1, xResults)
 
-    testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
-   	testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
+	variable tNewList as list
+	put [1,2,3] into tNewList
+	push 0 onto front of tNewList
+	testLog("List", "PushOntoListFront", tNewList[1] is 0, xResults)
+	push 4 onto back of tNewList
+	testLog("List", "PushOntoListBack", tNewList[-1] is 4, xResults)
+	push 5 onto tNewList
+	testLog("List", "PushOntoList", tNewList[-1] is 5, xResults)
+	
+	put "A" into element 2 of tNewList
+    testLog("List", "ElementOf", element 2 of tNewList is "A", xResults)
+   	testLog("List", "ElementRangeOf1", element 2 of element 3 to -1 of tTestList is 1, xResults)
+	put "ABC" into element 2 to 4 of tNewList
+	testLog("List", "ElementRangeOf2", element -3 of tNewList is "ABC", xResults)
 
     testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
 
@@ -588,7 +603,7 @@ public handler testList(inout xResults as list)
     put element -2 to -1 of tTestList into tSubList
 
 	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
-	testLog("List", "IsNot", tSubList is not [2, "abcd", 1], xResults)
+	testLog("List", "IsNot", tSubList is not ["Abcd", 1], xResults)
 
     testLog("List", "IsIn", "abcd" is in tSubList, xResults)
     testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
@@ -596,17 +611,39 @@ public handler testList(inout xResults as list)
     variable tString as string
     pop front of tSubList into tString
 
-    testLog("List", "Pop", tString is "abcd", xResults)
-    testLog("List", "Pop", the number of elements in tSubList is 1, xResults)
+    testLog("List", "PopList1", tString is "abcd", xResults)
+    testLog("List", "PopList2", the number of elements in tSubList is 1, xResults)
 
+	variable tElt as number
+	pop front of tNewList into tElt
+	testLog("List", "PopFromFront", tElt is 0, xResults)
+	pop back of tNewList into tElt
+	testLog("List", "PopFromBack", tElt is 5, xResults)
+	
     splice tTestList after element 1 of tSubList
 
-    testLog("List", "SpliceAfter", the number of elements in tSubList is 5, xResults)
-    testLog("List", "SpliceAfter", the tail of tSubList is 1, xResults)
-    testLog("List", "SpliceAfter", tSubList contains tTestList, xResults)
+    testLog("List", "SpliceAfter1", the number of elements in tSubList is 5, xResults)
+    testLog("List", "SpliceAfter2", the tail of tSubList is 1, xResults)
+    testLog("List", "SpliceAfter3", tSubList contains tTestList, xResults)
 
 	put "ZZZZ" into tTestList[1]
 	testLog("List", "SingletonElement", tTestList[1] is "ZZZZ", xResults)
+
+	variable tList as list
+	put [1,2,3] into tList
+	
+	splice tList into element 1 to 3 of tList
+	testLog("List", "SpliceIntoRange", tList is [1,2,3], xResults)
+	splice element 1 to 2 of tList into element 1 of tList
+	testLog("List", "SpliceIntoElement", tList is [1,2,2,3], xResults)
+	
+	splice tList before element 1 of tList
+	testLog("List", "SpliceBefore", tList is [1,2,2,3,1,2,2,3], xResults)
+	
+	variable tAnotherList as list
+	put [1,2,3] into tAnotherList	
+	put tAnotherList into element 1 to 2 of tAnotherList 
+	testLog("List", "ElementRangeOf3", element -2 of tAnotherList is [1,2,3], xResults)
 
 end handler
 

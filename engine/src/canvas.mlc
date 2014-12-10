@@ -470,6 +470,7 @@ end syntax
 
 public foreign handler MCCanvasGradientStopMake(in pOffset as CanvasFloat, in pColor as Color, out rStop as GradientStop) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientMakeWithRamp(in pType as integer, in pRamp as list, out rGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientReturnType(in pType as integer) as integer binds to "<builtin>"
 
 syntax MakeGradientStop is prefix operator with precedence 4
 	"gradient" "stop" "at" <mOffset: Expression> "with" <mColor: Expression>
@@ -488,6 +489,7 @@ constant kGradientTypeSqrtXY is 6
 syntax GradientType is phrase
 	( "linear" <mType=0> | "radial" <mType=1> | "conical" <mType=2> | "diamond" <mType=3> | "spiral" <mType=4> | "xy" <mType=5> | "sqrtxy" <mType=6> )
 begin
+	MCCanvasGradientReturnType(mType)
 end syntax
 
 syntax MakeGradientWithRamp is prefix operator with precedence 4
@@ -1174,7 +1176,7 @@ begin
 end syntax
 
 syntax CanvasEndLayer is statement
-	"endlayer" "on" <mCanvas: Expression>
+	"end" "layer" "on" <mCanvas: Expression>
 begin
 	MCCanvasEndLayer(mCanvas)
 end syntax

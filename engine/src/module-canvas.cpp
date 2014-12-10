@@ -440,7 +440,7 @@ bool MCProperListToRectangle(MCProperListRef p_list, MCGRectangle &r_rectangle)
 		t_success = MCProperListFetchAsArrayOfReal(p_list, 4, t_rect);
 		
 	if (t_success)
-		r_rectangle = MCGRectangleMake(t_rect[0], t_rect[1], t_rect[2], t_rect[3]);
+		r_rectangle = MCGRectangleMake(t_rect[0], t_rect[1], t_rect[2] - t_rect[0], t_rect[3] - t_rect[1]);
 	else
 		MCCanvasThrowError(kMCCanvasRectangleListFormatErrorTypeInfo);
 	
@@ -2354,6 +2354,13 @@ bool MCCanvasGradientCheckStopOrder(MCProperListRef p_ramp)
 	return true;
 }
 
+//////////
+
+integer_t MCCanvasGradientReturnType(integer_t p_type)
+{
+	return p_type;
+}
+
 // Constructor
 
 void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient)
@@ -2638,6 +2645,32 @@ void MCCanvasGradientSetTransform(MCCanvasTransformRef p_transform, MCCanvasGrad
 
 // Operators
 
+// TODO - replace this with a binary search :)
+bool MCProperListGetGradientStopInsertionPoint(MCProperListRef p_list, MCCanvasGradientStopRef p_stop, uindex_t &r_index)
+{
+	uindex_t t_length;
+	t_length = MCProperListGetLength(p_list);
+	
+	MCCanvasFloat t_offset;
+	t_offset = MCCanvasGradientStopGet(p_stop)->offset;
+	
+	for (uindex_t i = 0; i < t_length; i++)
+	{
+		MCCanvasGradientStopRef t_stop;
+		if (!MCProperListFetchGradientStopAt(p_list, i, t_stop))
+			return false;
+		if (t_offset < MCCanvasGradientStopGet(p_stop)->offset)
+		{
+			r_index = i;
+			return true;
+		}
+	}
+	
+	r_index = t_length;
+	
+	return true;
+}
+
 void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef &x_gradient)
 {
 	if (!MCCanvasPaintEnsureGradient(x_gradient))
@@ -2658,26 +2691,19 @@ void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef
 	__MCCanvasGradientImpl t_gradient;
 	t_gradient = *MCCanvasGradientGet(x_gradient);
 	
-	if (MCProperListGetLength(t_gradient.ramp) > 0)
-	{
-		MCCanvasGradientStopRef t_last_stop;
-		/* UNCHECKED */ MCProperListFetchGradientStopAt(t_gradient.ramp, MCProperListGetLength(t_gradient.ramp) - 1, t_last_stop);
-		
-		if (t_new_stop->offset < MCCanvasGradientStopGet(t_last_stop)->offset)
-		{
-			// TODO - throw stop order error
-			return;
-		}
-	}
-	
 	MCProperListRef t_mutable_ramp;
 	t_mutable_ramp = nil;
 	
 	if (t_success)
 		t_success = MCProperListMutableCopy(t_gradient.ramp, t_mutable_ramp);
 	
+	uindex_t t_index;
+	
 	if (t_success)
-		t_success = MCProperListPushElementOntoBack(t_mutable_ramp, p_stop);
+		t_success = MCProperListGetGradientStopInsertionPoint(t_mutable_ramp, p_stop, t_index);
+	
+	if (t_success)
+		t_success = MCProperListInsertElement(t_mutable_ramp, p_stop, t_index);
 	
 	MCProperListRef t_new_ramp;
 	t_new_ramp = nil;
@@ -4530,7 +4556,7 @@ void MCCanvasEndLayer(MCCanvasRef p_canvas)
 	if (!MCCanvasPropertiesPop(*t_canvas))
 		return;
 
-	MCGContextRestore(t_canvas->context);
+	MCGContextEnd(t_canvas->context);
 }
 
 void MCCanvasFill(MCCanvasRef p_canvas)
@@ -4857,28 +4883,28 @@ bool MCCanvasThrowError(MCTypeInfoRef p_error_type)
 void MCCanvasErrorsInitialize()
 {
 	kMCCanvasRectangleListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.RectangleListFormatError"), MCSTR("Rectangle parameter must be a list of 4 numbers"), kMCCanvasRectangleListFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.RectangleListFormatError"), MCSTR("Rectangle parameter must be a list of 4 numbers."), kMCCanvasRectangleListFormatErrorTypeInfo);
 	
 	kMCCanvasPointListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.PointListFormatError"), MCSTR("Point parameter must be a list of 2 numbers"), kMCCanvasPointListFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.PointListFormatError"), MCSTR("Point parameter must be a list of 2 numbers."), kMCCanvasPointListFormatErrorTypeInfo);
 	
 	kMCCanvasColorListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ColorListFormatError"), MCSTR("Color parameter must be a list of 3 or 4 numbers between 0 and 1"), kMCCanvasColorListFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ColorListFormatError"), MCSTR("Color parameter must be a list of 3 or 4 numbers between 0 and 1."), kMCCanvasColorListFormatErrorTypeInfo);
 	
 	kMCCanvasScaleListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ScaleListFormatError"), MCSTR("Scale parameter must be a list of 1 or 2 numbers"), kMCCanvasScaleListFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ScaleListFormatError"), MCSTR("Scale parameter must be a list of 1 or 2 numbers."), kMCCanvasScaleListFormatErrorTypeInfo);
 
 	kMCCanvasTranslationListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TranslationListFormatError"), MCSTR("Translation parameter must be a list of 2 numbers"), kMCCanvasTranslationListFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TranslationListFormatError"), MCSTR("Translation parameter must be a list of 2 numbers."), kMCCanvasTranslationListFormatErrorTypeInfo);
 
 	kMCCanvasSkewListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.SkewListFormatError"), MCSTR("Skew parameter must be a list of 2 numbers"), kMCCanvasSkewListFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.SkewListFormatError"), MCSTR("Skew parameter must be a list of 2 numbers."), kMCCanvasSkewListFormatErrorTypeInfo);
 
 	kMCCanvasRadiiListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.RadiiListFormatError"), MCSTR("Radii parameter must be a list of 2 numbers"), kMCCanvasRadiiListFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.RadiiListFormatError"), MCSTR("Radii parameter must be a list of 2 numbers."), kMCCanvasRadiiListFormatErrorTypeInfo);
 	
 	kMCCanvasImageSizeListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageSizeListFormatError"), MCSTR("image size parameter must be a list of 2 integers greater than 0"), kMCCanvasImageSizeListFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageSizeListFormatError"), MCSTR("image size parameter must be a list of 2 integers greater than 0."), kMCCanvasImageSizeListFormatErrorTypeInfo);
 	
 	kMCCanvasSolidPaintTypeErrorTypeInfo = nil;
 	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.SolidPaintTypeError"), MCSTR("Paint parameter must be of type solid paint."), kMCCanvasSolidPaintTypeErrorTypeInfo);

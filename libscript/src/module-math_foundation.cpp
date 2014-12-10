@@ -79,3 +79,8 @@ extern "C" MC_DLLEXPORT void MCMathFoundationEvalCeilingNumber(MCNumberRef p_tar
     if (!MCNumberCreateWithReal(t_target, r_output))
         return;
 }
+
+extern "C" MC_DLLEXPORT void MCMathFoundationEvalPi(double& r_output)
+{
+    r_output = 3.141592653589793238462643;
+}

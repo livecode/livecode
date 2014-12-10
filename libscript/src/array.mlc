@@ -1,3 +1,7 @@
+/*  
+This library consists of the operations on arrays included in the standard library of modular LiveCode.
+*/
+
 module com.livecode.array
 
 public foreign handler MCArrayEvalKeysOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
@@ -40,10 +44,12 @@ Example:
 	combine tKeys with "," into tKeysString 
 	// tKeysString is "key1,key2,key3"
 
-References:com.livecode.sort
-
 Description:
 >*Note:* The resulting list is not necessarily ordered in any way. Use the <com.livecode.sort> library to sort the keys.  
+
+References: com.livecode.sort
+
+Tags: Arrays
 */
 
 syntax KeysOf is prefix operator with precedence 2
@@ -70,10 +76,12 @@ Example:
 	
 	// tElements is [1, 2, 3]
 	
-References:com.livecode.sort
-
 Description:
 >*Note:* The resulting list is not necessarily ordered in any way. Use the <com.livecode.sort> library to sort the elements.
+
+References: com.livecode.sort.library
+
+Tags: Arrays
 */
 
 syntax ElementsOf is prefix operator with precedence 2
@@ -97,6 +105,11 @@ Example:
 	
 	variable tVar as integer
 	put the number of elements in tArray into tVar -- tVar contains 3
+	
+Description:
+The number of elements in tArray returns the number of key-value pairs stored in the array.
+
+Tags: Arrays
 */
 
 syntax CountElementsOf is prefix operator with precedence 1
@@ -113,6 +126,23 @@ Needle:         An expression which evaluates to an integer, string, or list of 
 Target:         An expression which evaluates to an array.
 output:         Returns true if <Needle> can be found among the keys of <Target>.
 
+Example:
+	variable tArray as array
+	put "value" into tArray["key"]
+	
+	variable tIsAmong as bool
+	put "key" is among the keys of tArray into tIsAmong -- tIsAmong is true
+
+Description:
+The keys of an array are case insensitive. Thus
+``` tVar is among the keys of tArray``` 
+is not equivalent to 
+``` tVar is in (the keys of tArray) ```
+as the latter list operation *is* case sensitive.
+
+References: com.livecode.list.IsInElements
+
+Tags: Arrays
 */
                 
 syntax AmongKeysOf is neutral binary operator with precedence 1
@@ -129,6 +159,20 @@ Summary:        Determines if an array contains a given element
 Needle:         Any expression.
 Target:         An expression which evaluates to an array.
 output:         Returns true if <Needle> can be found among the elements of <Target>.
+
+Example:
+	variable tArray as array
+	put "value" into tArray["key"]
+	
+	variable tIsAmong as bool
+	put "value" is among the elements of tArray into tIsAmong -- tIsAmong is true
+
+Description:
+Elements are compared using the default comparison for that type. Thus for a string, ```tString```, 
+```tString is among the elements of tArray``` 
+is a case sensitive search.
+
+Tags: Arrays
 
 */
                 
@@ -156,6 +200,8 @@ Example:
 
 Description:     
 Either locates the element container with the given key for use as the target container of another operation, or evaluates the element with the given key as the source of another operation.
+
+Tags: Arrays
 */
 
 syntax SingletonElementOf is postfix operator with precedence 1
@@ -180,6 +226,7 @@ Example:
 Description:
 Use ```the empty array``` to initialise an array variable.
 
+Tags: Arrays
 */
 
 syntax EmptyArray is expression
@@ -210,6 +257,11 @@ Example:
     end repeat
 
     // tSum is 6
+    
+Description:
+Use repeat for each element to iterate over the elements of an array in no particular order.
+
+Tags: Arrays
 */
 
 syntax RepeatForEachElement is iterator
@@ -239,6 +291,11 @@ Example:
 
     variable tBool as bool
     put tString contains "abc" into tBool -- tBool is true
+        
+Description:
+Use repeat for each key to iterate over the keys of an array in no particular order.
+
+Tags: Arrays
 */
 
 syntax RepeatForEachKey is iterator
