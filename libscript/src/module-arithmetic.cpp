@@ -414,7 +414,7 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusNumber(MCNumberRef p_operand, 
     if (MCNumberIsInteger(p_operand))
         MCNumberCreateWithInteger(-MCNumberFetchAsInteger(p_operand), r_output);
     else
-        MCNumberCreateWithInteger(-MCNumberFetchAsReal(p_operand), r_output);
+        MCNumberCreateWithReal(-MCNumberFetchAsReal(p_operand), r_output);
 }
 
 extern "C" MC_DLLEXPORT void MCArithmeticEvalEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
