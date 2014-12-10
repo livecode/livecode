@@ -814,11 +814,11 @@
             Error_IterateSyntaxMethodMustReturnBoolean(Position)
         |)
         
-    'rule' CheckSyntaxMethodReturnType(Position, phrase, Type):
+    /*'rule' CheckSyntaxMethodReturnType(Position, phrase, Type):
         [|
             where(Type -> undefined(_))
             Error_PhraseSyntaxMethodMustReturnAValue(Position)
-        |]
+        |]*/
 
     'rule' CheckSyntaxMethodReturnType(Position, statement, _):
         -- statement syntax methods can return anything they want
