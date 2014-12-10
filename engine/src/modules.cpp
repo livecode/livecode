@@ -14,11 +14,10 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-
+#include "prefix.h"
 
 // This file exists only to hold a reference to every other built-in module
 // to simplify the linking process for Win32
-
 
 extern "C"
 {

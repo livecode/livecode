@@ -122,6 +122,8 @@ static void full_main(int argc, char *argv[])
 void* g_builtin_modules[1] = {NULL};
 unsigned int g_builtin_module_count = 0;
 
+extern int yydebug;
+
 int main(int argc, char *argv[])
 {
     //extern int yydebug;
@@ -137,7 +139,7 @@ int main(int argc, char *argv[])
         argc -= 1;
         argv += 1;
         
-        //yydebug = 1;
+        yydebug = 1;
     }
     
     InitializeFiles();

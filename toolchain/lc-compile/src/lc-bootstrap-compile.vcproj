@@ -70,7 +70,7 @@
 				Name="VCCLCompilerTool"
 				ExecutionBucket="8"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(SolutionDir)toolchain\lc-compile\src&quot;"
-				PreprocessorDefinitions="YY_NO_UNISTD_H=1"
+				PreprocessorDefinitions="YY_NO_UNISTD_H=1;YYDEBUG=1"
 				WarningLevel="0"
 				UndefinePreprocessorDefinitions="min"
 			/>
@@ -164,7 +164,7 @@
 				Name="VCCLCompilerTool"
 				ExecutionBucket="6"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(SolutionDir)toolchain\lc-compile\src&quot;"
-				PreprocessorDefinitions="YY_NO_UNISTD_H=1"
+				PreprocessorDefinitions="YY_NO_UNISTD_H=1 YYDEBUG=1"
 				WarningLevel="0"
 				UndefinePreprocessorDefinitions="min"
 			/>
@@ -316,10 +316,6 @@
 				</File>
 				<File
 					RelativePath=".\_GG_\gen.tab.c"
-					>
-				</File>
-				<File
-					RelativePath=".\_GG_\gen.y"
 					>
 				</File>
 				<File

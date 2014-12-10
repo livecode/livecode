@@ -16,6 +16,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "prefix.h"
+
 #include "module-canvas.h"
 #include "module-canvas-internal.h"
 
@@ -5038,8 +5040,8 @@ void MCCanvasStringsFinalize()
 		MCValueRelease(s_path_command_map[i]);
 }
 
-template <typename T, MCNameRef *N, int C>
-bool _mcenumfromstring(MCStringRef p_string, T &r_value)
+template <typename T, int C>
+bool _mcenumfromstring(MCNameRef *N, MCStringRef p_string, T &r_value)
 {
 	for (uint32_t i = 0; i < C; i++)
 	{
@@ -5053,8 +5055,8 @@ bool _mcenumfromstring(MCStringRef p_string, T &r_value)
 	return false;
 }
 
-template <typename T, MCNameRef *N, int C>
-bool _mcenumtostring(T p_value, MCStringRef &r_string)
+template <typename T, int C>
+bool _mcenumtostring(MCNameRef *N, T p_value, MCStringRef &r_string)
 {
 	if (p_value >= C)
 		return false;
@@ -5063,66 +5065,67 @@ bool _mcenumtostring(T p_value, MCStringRef &r_string)
 		return false;
 	
 	r_string = MCValueRetain(MCNameGetString(N[p_value]));
+    return true;
 }
 
 bool MCCanvasBlendModeFromString(MCStringRef p_string, MCGBlendMode &r_blend_mode)
 {
-	return _mcenumfromstring<MCGBlendMode, s_blend_mode_map, kMCGBlendModeCount>(p_string, r_blend_mode);
+	return _mcenumfromstring<MCGBlendMode, kMCGBlendModeCount>(s_blend_mode_map, p_string, r_blend_mode);
 }
 
 bool MCCanvasBlendModeToString(MCGBlendMode p_blend_mode, MCStringRef &r_string)
 {
-	return _mcenumtostring<MCGBlendMode, s_blend_mode_map, kMCGBlendModeCount>(p_blend_mode, r_string);
+	return _mcenumtostring<MCGBlendMode, kMCGBlendModeCount>(s_blend_mode_map, p_blend_mode, r_string);
 }
 
 bool MCCanvasGradientTypeFromString(MCStringRef p_string, MCGGradientFunction &r_type)
 {
-	return _mcenumfromstring<MCGGradientFunction, s_gradient_type_map, kMCGGradientFunctionCount>(p_string, r_type);
+	return _mcenumfromstring<MCGGradientFunction, kMCGGradientFunctionCount>(s_gradient_type_map, p_string, r_type);
 }
 
 bool MCCanvasGradientTypeToString(MCGGradientFunction p_type, MCStringRef &r_string)
 {
-	return _mcenumtostring<MCGGradientFunction, s_gradient_type_map, kMCGGradientFunctionCount>(p_type, r_string);
+	return _mcenumtostring<MCGGradientFunction, kMCGGradientFunctionCount>(s_gradient_type_map, p_type, r_string);
 }
 
 bool MCCanvasEffectTypeToString(MCCanvasEffectType p_type, MCStringRef &r_string)
 {
-	return _mcenumtostring<MCCanvasEffectType, s_effect_type_map, _MCCanvasEffectTypeCount>(p_type, r_string);
+	return _mcenumtostring<MCCanvasEffectType, _MCCanvasEffectTypeCount>(s_effect_type_map, p_type, r_string);
 }
 
 bool MCCanvasEffectTypeFromString(MCStringRef p_string, MCCanvasEffectType &r_type)
 {
-	return _mcenumfromstring<MCCanvasEffectType, s_effect_type_map, kMCGFillRuleCount>(p_string, r_type);
+	return _mcenumfromstring<MCCanvasEffectType, kMCGFillRuleCount>(s_effect_type_map, p_string, r_type);
 }
 
 bool MCCanvasFillRuleToString(MCGFillRule p_fill_rule, MCStringRef &r_string)
 {
-	return _mcenumtostring<MCGFillRule, s_canvas_fillrule_map, kMCGFillRuleCount>(p_fill_rule, r_string);
+	return _mcenumtostring<MCGFillRule, kMCGFillRuleCount>(s_canvas_fillrule_map, p_fill_rule, r_string);
 }
 
 bool MCCanvasFillRuleFromString(MCStringRef p_string, MCGFillRule &r_fill_rule)
 {
-	return _mcenumfromstring<MCGFillRule, s_canvas_fillrule_map, kMCGFillRuleCount>(p_string, r_fill_rule);
+	return _mcenumfromstring<MCGFillRule, kMCGFillRuleCount>(s_canvas_fillrule_map, p_string, r_fill_rule);
 }
 
 bool MCCanvasImageFilterToString(MCGImageFilter p_filter, MCStringRef &r_string)
 {
-	return _mcenumtostring<MCGImageFilter, s_image_filter_map, kMCGImageFilterCount>(p_filter, r_string);
+	return _mcenumtostring<MCGImageFilter, kMCGImageFilterCount>(s_image_filter_map, p_filter, r_string);
 }
 
 bool MCCanvasImageFilterFromString(MCStringRef p_string, MCGImageFilter &r_filter)
 {
-	return _mcenumfromstring<MCGImageFilter, s_image_filter_map, kMCGImageFilterCount>(p_string, r_filter);
+	return _mcenumfromstring<MCGImageFilter, kMCGImageFilterCount>(s_image_filter_map, p_string, r_filter);
 }
 
 bool MCCanvasPathCommandToString(MCGPathCommand p_command, MCStringRef &r_string)
 {
-	return _mcenumtostring<MCGPathCommand, s_path_command_map, kMCGPathCommandCount>(p_command, r_string);
+	return _mcenumtostring<MCGPathCommand, kMCGPathCommandCount>(s_path_command_map, p_command, r_string);
 }
 
 bool MCCanvasPathCommandFromString(MCStringRef p_string, MCGPathCommand &r_command)
 {
-	return _mcenumfromstring<MCGPathCommand, s_path_command_map, kMCGPathCommandCount>(p_string, r_command);
+	return _mcenumfromstring<MCGPathCommand, kMCGPathCommandCount>(s_path_command_map, p_string, r_command);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

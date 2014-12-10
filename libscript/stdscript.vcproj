@@ -173,10 +173,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\module-helper.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\module-list.cpp"
 				>
 			</File>
