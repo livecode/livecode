@@ -253,33 +253,33 @@ public handler testArray(inout xResults as list)
 	put "value2" into tArray["key2"]
 	put "value3" into tArray["key3"]
 	
-	testLog("Array", "Count", the number of elements in tArray is 3, xResults)
+	testLog("Array", "CountElementsOf", the number of elements in tArray is 3, xResults)
 	
 	variable tKeys as list
 	put the keys of tArray into tKeys
 	
-	testLog("Array", "CountKeysOf", the number of elements in tKeys is 3, xResults)
+	testLog("Array", "KeysOfCount", the number of elements in tKeys is 3, xResults)
 
 	variable tKeysString as string
 	combine tKeys with "," into tKeysString
 	
-	testLog("Array", "KeysOf", tKeysString contains "key1", xResults)
-	testLog("Array", "KeysOf", tKeysString contains "key2", xResults)
-	testLog("Array", "KeysOf", tKeysString contains "key3", xResults)
+	testLog("Array", "KeysOf1", tKeysString contains "key1", xResults)
+	testLog("Array", "KeysOf2", tKeysString contains "key2", xResults)
+	testLog("Array", "KeysOf3", tKeysString contains "key3", xResults)
 		
 	variable tElements as list
 	put the elements of tArray into tElements
 	
-	testLog("Array", "CountElementssOf", the number of elements in tElements is 3, xResults)
+	testLog("Array", "ElementssOfCount", the number of elements in tElements is 3, xResults)
 	
-	testLog("Array", "ElementsOf", "value1" is in tElements, xResults)
-	testLog("Array", "ElementsOf", "value2" is in tElements, xResults)
-	testLog("Array", "ElementsOf", "value3" is in tElements, xResults)
+	testLog("Array", "ElementsOf1", "value1" is in tElements, xResults)
+	testLog("Array", "ElementsOf2", "value2" is in tElements, xResults)
+	testLog("Array", "ElementsOf3", "value3" is in tElements, xResults)
 		
 	--testLog("Array", "IsAmongTheKeys", "key1" is among the keys of tArray, xResults)
 	--testLog("Array", "IsAmongTheElements", "value1" is among the keys of tArray, xResults)
 	
-	testLog("Array", "ElementOf", tArray["key1"] is "value1", xResults)
+	testLog("Array", "SingletonElementOf", tArray["key1"] is "value1", xResults)
 
     variable tNewArray as array
     put the empty array into tNewArray
@@ -296,8 +296,8 @@ public handler testArray(inout xResults as list)
     end repeat
     
     testLog("Array", "RepeatForEachKey1", tString contains "abc", xResults)
-    testLog("Array", "RepeatForEachKey1", tString contains "def", xResults)
-    testLog("Array", "RepeatForEachKey1", tString contains "ghi", xResults)
+    testLog("Array", "RepeatForEachKey2", tString contains "def", xResults)
+    testLog("Array", "RepeatForEachKey3", tString contains "ghi", xResults)
 
 	variable tSum as number
 	put 0 into tSum
