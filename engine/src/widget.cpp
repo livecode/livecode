@@ -45,6 +45,8 @@
 
 #include "widget-events.h"
 
+#include "module-canvas.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
@@ -118,6 +120,9 @@ MCWidget* MCWidget::createInstanceOfKind(MCNameRef p_kind)
     t_widget = new MCWidget(p_kind);
     t_widget->m_instance = t_instance;
     
+    // Widget has now been created
+    t_widget->OnCreate();
+    
     return t_widget;
 }
 
@@ -167,7 +172,7 @@ Boolean MCWidget::kdown(MCStringRef p_key_string, KeySym p_key)
 	if (MCwidgeteventmanager->event_kdown(this, p_key_string, p_key))
 		return True;
 
-	return MCObject::kdown(p_key_string, p_key);
+	return MCControl::kdown(p_key_string, p_key);
 }
 
 Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
@@ -175,7 +180,7 @@ Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
 	if (MCwidgeteventmanager->event_kup(this, p_key_string, p_key))
         return True;
     
-    return False;
+    return MCControl::kup(p_key_string, p_key);
 }
 
 Boolean MCWidget::mdown(uint2 p_which)
@@ -196,9 +201,12 @@ Boolean MCWidget::mdown(uint2 p_which)
 		setstate(True, CS_MFOCUSED);
 		if (p_which == Button1)
 			start(True);
+        else
+            message_with_args(MCM_mouse_down, p_which);
 		break;
 
 	default:
+        message_with_args(MCM_mouse_down, p_which);
 		break;	
 	}
 
@@ -418,6 +426,10 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_UNICODE_TOOL_TIP:
 		case P_LAYER_MODE:
             
+        // Development mode only
+        case P_REV_AVAILABLE_HANDLERS:
+        case P_REV_AVAILABLE_VARIABLES:
+    
         case P_KIND:
 			return MCControl::getprop(ctxt, p_part_id, p_which, p_index, p_effective, r_value);
             
@@ -742,17 +754,15 @@ void MCWidget::OnDetach()
     CallHandler(MCNAME("OnDetach"), nil, 0);
 }
 
-MCDC* g_widget_paint_dc;
-
 void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
     if (m_native_layer)
         m_native_layer->OnPaint(p_dc, p_rect);
-    else
-        CallHandler(MCNAME("OnPaint"), nil, 0);
-    
-    g_widget_paint_dc = p_dc;
+
+    uintptr_t t_cookie;
+    MCCanvasPush(((MCGraphicsContext*)p_dc)->getgcontextref(), t_cookie);
     CallHandler(MCNAME("OnPaint"), nil, 0);
+    MCCanvasPop(t_cookie);
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
@@ -1163,6 +1173,15 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
         else
             MCValueRelease(t_retval);
     }
+    else
+    {
+        MCErrorRef t_error;
+        
+        if (MCErrorCatch(t_error))
+            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
+        else
+            MCLog("Failed to execute handler %@", p_name);
+    }
     
 	MCwidgetobject = t_old_widget_object;
     
@@ -1206,7 +1225,10 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void MCWidgetExecRedrawAll(void)
+typedef struct __MCPressedState* MCPressedStateRef;
+MCTypeInfoRef kMCPressedState;
+
+extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
 {
     if (MCwidgetobject == nil)
         return; // TODO - throw an error.
@@ -1214,4 +1236,122 @@ extern "C" void MCWidgetExecRedrawAll(void)
     MCwidgetobject -> layer_redrawall();
 }
 
+extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    MCRectangle t_rect;
+    MCGRectangle t_grect;
+    t_rect = MCwidgetobject -> getrect();
+    
+    // Absolute rectangle
+    t_grect = MCGRectangleMake(t_rect.x, t_rect.y, t_rect.width, t_rect.height);
+    MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    MCRectangle t_rect;
+    MCGRectangle t_grect;
+    t_rect = MCwidgetobject -> getrect();
+    
+    // Adjust for the parent's rect
+    MCRectangle t_parent_rect;
+    t_parent_rect = MCwidgetobject->getparent()->getrect();
+    t_rect.x -= t_parent_rect.x;
+    t_rect.y -= t_parent_rect.y;
+    
+    t_grect = MCGRectangleMake(t_rect.x, t_rect.y, t_rect.width, t_rect.height);
+    MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    MCRectangle t_rect;
+    MCGRectangle t_grect;
+    t_rect = MCwidgetobject -> getrect();
+    
+    // Only the size is wanted
+    t_grect = MCGRectangleMake(0, 0, t_rect.width, t_rect.height);
+    MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    // TODO - coordinate transform
+    
+    coord_t t_x, t_y;
+    if (p_current)
+        MCwidgeteventmanager->GetAsynchronousMousePosition(t_x, t_y);
+    else
+        MCwidgeteventmanager->GetSynchronousMousePosition(t_x, t_y);
+    
+    MCRectangle t_rect = MCwidgetobject->getrect();
+    t_x -= t_rect.x;
+    t_y -= t_rect.y;
+    
+    MCGPoint t_gpoint;
+    t_gpoint = MCGPointMake(t_x, t_y);
+    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPointRef& r_point)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    // TODO - coordinate transforms
+    
+    coord_t t_x, t_y;
+    if (p_current)
+        MCwidgeteventmanager->GetAsynchronousClickPosition(t_x, t_y);
+    else
+        MCwidgeteventmanager->GetSynchronousClickPosition(t_x, t_y);
+    
+    MCRectangle t_rect = MCwidgetobject->getrect();
+    t_x -= t_rect.x;
+    t_y -= t_rect.y;
+    
+    MCGPoint t_gpoint;
+    t_gpoint = MCGPointMake(t_x, t_y);
+    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetMouseButtonState(uinteger_t p_index, MCPressedStateRef r_state)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    // TODO: implement
+    MCAssert(false);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointWithinRect(MCCanvasPointRef p_point, MCCanvasRectangleRef p_rect, bool& r_within)
+{
+    MCGPoint t_p;
+    MCGRectangle t_r;
+    MCCanvasPointGetMCGPoint(p_point, t_p);
+    MCCanvasRectangleGetMCGRectangle(p_rect, t_r);
+    
+    r_within = (t_r.origin.x <= t_p.x && t_p.x < t_r.origin.x+t_r.size.width)
+        && (t_r.origin.y <= t_p.y && t_p.y < t_r.origin.y+t_r.size.height);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointRef p_point, MCCanvasRectangleRef p_rect, bool& r_not_within)
+{
+    bool t_within;
+    MCWidgetEvalIsPointWithinRect(p_point, p_rect, t_within);
+    r_not_within = !t_within;
+}
