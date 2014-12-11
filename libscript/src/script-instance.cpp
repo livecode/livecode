@@ -1115,7 +1115,13 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 {
                     if (MCTypeInfoIsForeign(t_resolved_return_type . type))
                     {
-                        if (!MCForeignValueCreateAndRelease(t_resolved_return_type . named_type, t_result, (MCForeignValueRef&)t_result_value))
+                        const MCForeignTypeDescriptor *t_descriptor;
+                        t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_return_type . type);
+                        
+                        // If the foreign value has a bridge type, then import.
+                        if (t_descriptor -> bridgetype != kMCNullTypeInfo)
+                            t_success = t_descriptor -> doimport(t_result, true, t_result_value);
+                        else if (!MCForeignValueCreateAndRelease(t_resolved_return_type . named_type, t_result, (MCForeignValueRef&)t_result_value))
                             t_success = false;
                     }
                     else
@@ -1174,12 +1180,27 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 {
                     // Otherwise, we build a foreign value out of it.
                     // Foreign out or in-out parameters are indirect...
-                    if (!MCForeignValueCreateAndRelease(t_types[i] . named_type, *(void**)t_args[i], (MCForeignValueRef&)t_out_values[i]))
+                    
+                    // If the foreign value has a bridge type, then import.
+                    if (t_descriptor -> bridgetype != kMCNullTypeInfo)
                     {
-                        // If that failed, finalize the contents.
-                        t_descriptor -> finalize(t_args[i]);
-                        t_success = false;
-                        t_out_arg_index = i;
+                        if (!t_descriptor -> doimport(*(void**)t_args[i], true, t_out_values[i]))
+                        {
+                            // If that failed, finalize the contents.
+                            t_descriptor -> finalize(t_args[i]);
+                            t_success = false;
+                            t_out_arg_index = i;
+                        }
+                    }
+                    else
+                    {
+                        if (!MCForeignValueCreateAndRelease(t_types[i] . named_type, *(void**)t_args[i], (MCForeignValueRef&)t_out_values[i]))
+                        {
+                            // If that failed, finalize the contents.
+                            t_descriptor -> finalize(t_args[i]);
+                            t_success = false;
+                            t_out_arg_index = i;
+                        }
                     }
                 }
             }
