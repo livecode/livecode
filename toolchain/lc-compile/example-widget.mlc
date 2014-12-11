@@ -3,9 +3,11 @@ widget com.livecode.widget.example
 
 // ---------- Properties ---------- //
 
-//property fillColor get getFillColor set setFillColor
-//property hoverFillColor get getHoverFillColor set setHoverFillColor
+property fillColor get getFillColor set setFillColor
+property hoverFillColor get getHoverFillColor set setHoverFillColor
 //property clickFillColor get getClickFillColor set setClickFillColor
+
+property mouseHiliteRadius get mMouseHiliteRadius set mMouseHiliteRadius
 
 
 // ---------- Private instance variables ---------- //
@@ -108,12 +110,20 @@ private handler getHoverFillColor() as string
 	return colorToString(mHoverFillColor)
 end handler
 
+private handler getClickFillColor() as string
+	return colorToString(mClickFillColor)
+end handler
+
 private handler setFillColor(in pFillColor as string) as undefined
 	put stringToColor(pFillColor) into mFillColor
 end handler
 
 private handler setHoverFillColor(in pHoverFillColor as string) as undefined
 	put stringToColor(pHoverFillColor) into mHoverFillColor
+end handler
+
+private handler setClickFillColor(in pClickFillColor as string) as undefined
+	put stringToColor(pClickFillColor) into mClickFillColor
 end handler
 
 end widget

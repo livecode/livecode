@@ -74,6 +74,7 @@ MCObjectPropertyTable MCWidget::kPropertyTable =
 
 MCWidget::MCWidget(MCNameRef p_kind) :
   m_kind(p_kind),
+  m_module(nil),
   m_instance(nil),
   m_native_layer(nil)
 {
@@ -83,6 +84,7 @@ MCWidget::MCWidget(MCNameRef p_kind) :
 MCWidget::MCWidget(const MCWidget& p_other) :
   MCControl(p_other),
   m_kind(MCValueRetain(p_other.m_kind)),
+  m_module(nil),
   m_instance(nil),
   m_native_layer(nil)
 {
@@ -118,6 +120,7 @@ MCWidget* MCWidget::createInstanceOfKind(MCNameRef p_kind)
     // Create the widget and set its instance
     MCWidget* t_widget;
     t_widget = new MCWidget(p_kind);
+    t_widget->m_module = t_module;
     t_widget->m_instance = t_instance;
     
     // Widget has now been created
@@ -440,7 +443,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     MCNewAutoNameRef t_name_for_prop;
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
-    if (CallGetProp(*t_name_for_prop, p_index, r_value.valueref_value))
+    if (CallGetProp(ctxt, *t_name_for_prop, p_index, r_value.valueref_value))
     {
         r_value.type = kMCExecValueTypeValueRef;
         return true;
@@ -549,7 +552,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, &t_value);
     if (!ctxt.HasError())
     {
-        if (CallSetProp(*t_name_for_prop, nil, *t_value))
+        if (CallSetProp(ctxt, *t_name_for_prop, nil, *t_value))
             return true;
     }
     
@@ -559,7 +562,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 
 bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
 {
-    if (CallGetProp(p_prop_name, nil, r_value.valueref_value))
+    if (CallGetProp(ctxt, p_prop_name, nil, r_value.valueref_value))
     {
         r_value.type = kMCExecValueTypeValueRef;
         return true;
@@ -575,7 +578,7 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, &t_value);
     if (!ctxt.HasError())
     {
-        if (CallSetProp(p_prop_name, nil, *t_value))
+        if (CallSetProp(ctxt, p_prop_name, nil, *t_value))
             return true;
     }
     
@@ -1212,17 +1215,23 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
 	return t_success;
 }
 
-bool MCWidget::CallGetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef& r_value)
+bool MCWidget::CallGetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef p_key, MCValueRef& r_value)
 {
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
-	
+
     // Invoke event handler.
     bool t_success;
     t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
     
 	MCwidgetobject = t_old_widget_object;
+    
+    if (t_success)
+    {
+        // Convert to a script type
+        t_success = MCEngineConvertToScriptType(ctxt, r_value);
+    }
     
     if (!t_success)
     {
@@ -1241,12 +1250,20 @@ bool MCWidget::CallGetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef& r_
 	return t_success;
 }
 
-bool MCWidget::CallSetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef p_value)
+bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef p_key, MCValueRef p_value)
 {
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
-	
+    
+    // Convert to the appropriate type
+    MCTypeInfoRef t_gettype, t_settype;
+    if (!MCScriptQueryPropertyOfModule(m_module, p_property, t_gettype, t_settype))
+        return false;
+    
+    if (!MCEngineConvertFromScriptType(ctxt, t_settype, p_value))
+        return false;
+    
     // Invoke event handler.
     bool t_success;
     t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
