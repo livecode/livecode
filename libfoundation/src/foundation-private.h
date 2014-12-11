@@ -94,6 +94,7 @@ struct __MCTypeInfo: public __MCValue
         struct
         {
             MCValueCustomCallbacks callbacks;
+            MCTypeInfoRef base;
         } custom;
         struct
         {
@@ -534,6 +535,7 @@ bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_desc
 
 bool __MCStreamInitialize(void);
 void __MCStreamFinalize(void);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
