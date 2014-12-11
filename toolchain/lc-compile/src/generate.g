@@ -125,7 +125,7 @@
 
     'rule' GenerateManifestRequires(namelist(Head, Tail)):
         GenerateManifestRequires(Tail)
-        OutputWriteI("  <requires name=\"", Head, "\">\n")
+        OutputWriteI("  <requires name=\"", Head, "\"/>\n")
     
     'rule' GenerateManifestRequires(nil):
         -- do nothing
