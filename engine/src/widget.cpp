@@ -172,7 +172,7 @@ Boolean MCWidget::kdown(MCStringRef p_key_string, KeySym p_key)
 	if (MCwidgeteventmanager->event_kdown(this, p_key_string, p_key))
 		return True;
 
-	return MCObject::kdown(p_key_string, p_key);
+	return MCControl::kdown(p_key_string, p_key);
 }
 
 Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
@@ -180,7 +180,7 @@ Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
 	if (MCwidgeteventmanager->event_kup(this, p_key_string, p_key))
         return True;
     
-    return False;
+    return MCControl::kup(p_key_string, p_key);
 }
 
 Boolean MCWidget::mdown(uint2 p_which)
@@ -201,9 +201,12 @@ Boolean MCWidget::mdown(uint2 p_which)
 		setstate(True, CS_MFOCUSED);
 		if (p_which == Button1)
 			start(True);
+        else
+            message_with_args(MCM_mouse_down, p_which);
 		break;
 
 	default:
+        message_with_args(MCM_mouse_down, p_which);
 		break;	
 	}
 
@@ -423,6 +426,10 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_UNICODE_TOOL_TIP:
 		case P_LAYER_MODE:
             
+        // Development mode only
+        case P_REV_AVAILABLE_HANDLERS:
+        case P_REV_AVAILABLE_VARIABLES:
+    
         case P_KIND:
 			return MCControl::getprop(ctxt, p_part_id, p_which, p_index, p_effective, r_value);
             

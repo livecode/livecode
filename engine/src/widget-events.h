@@ -126,6 +126,9 @@ private:
     uinteger_t allocateTouchSlot();
     bool findTouchSlot(uinteger_t p_id, uinteger_t& r_which);
     void freeTouchSlot(uinteger_t p_which);
+    
+    // Indicates whether the given widget is in run mode or not
+    bool widgetIsInRunMode(MCWidget*);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__
