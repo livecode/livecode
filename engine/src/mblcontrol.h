@@ -41,6 +41,8 @@ enum MCNativeControlProperty
 	kMCNativeControlPropertyOpaque,
 	kMCNativeControlPropertyAlpha,
 	kMCNativeControlPropertyBackgroundColor,
+    kMCNativeControlPropertyIgnoreVoiceOverSensitivity,
+    
 	
 	// Browser / Text view properties
 	kMCNativeControlPropertyDataDetectorTypes,
