@@ -81,6 +81,10 @@
             QueryMetadata(Metadata, "version" -> VersionString)
             OutputWriteS("  <version>", VersionString, "</version>\n")
         |]
+        [|
+            QueryMetadata(Metadata, "author" -> AuthorString)
+            OutputWriteS("  <author>", AuthorString, "</author>\n")
+        |]
         (|
             where(Kind -> widget)
             OutputWrite("  <type>widget</type>\n")

@@ -1,6 +1,10 @@
 widget com.livecode.widget.example
 
 
+metadata version is "0.1.0"
+metadata author is "Fraser J. Gordon"
+
+
 // ---------- Properties ---------- //
 
 property fillColor get getFillColor set setFillColor
