@@ -3443,6 +3443,46 @@ const char *MCParagraph::getmetadataatindex(uint2 si)
 	return bptr->getmetadata();
 }
 
+// SN-2014-12-02: [[ Bug 14117 ]] Sort out whether the paragraph has a paragraph metadata
+//  or several block metadata
+void MCParagraph::checkmetadata()
+{
+    MCBlock* t_block;
+    
+    // No block? We are done
+    if (blocks == NULL)
+        return;
+    
+    bool t_has_paragraph_metadata;
+    t_has_paragraph_metadata = true;
+    
+    t_block = blocks;
+    while (t_block -> next() != blocks && t_has_paragraph_metadata)
+    {
+        t_has_paragraph_metadata =
+            t_block -> next() -> getmetadata()
+            && strcmp(t_block -> next() -> getmetadata(), t_block -> getmetadata()) == 0;
+        
+        t_block = t_block -> next();
+    }
+    
+    // Nothing to do if all the paragraph's block don't have the same metadata
+    if (!t_has_paragraph_metadata)
+        return;
+    
+    setmetadata(blocks -> getmetadata());
+    
+    // Remove all the blocks metadata
+    t_block = blocks;
+    do
+    {
+        t_block -> setatts(P_METADATA, (void*)"");
+        t_block = t_block -> next();
+    }
+    while (t_block != blocks);
+}
+    
+
 // This method returns the state of a given block flag in the specified range.
 // If the flag is the same on all the range, the state is returned in 'state'
 // and true is the result. Otherwise, false is the result.

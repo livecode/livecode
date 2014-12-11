@@ -2289,6 +2289,9 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 	//   paragraph - in particular if the input string was empty.
 	if (ctxt . paragraphs == nil)
 		importparagraph(ctxt . paragraphs, nil);
+    
+    // SN-2014-12-02: [[ Bug 14117 ]] Check the metadata for the last paragraph of the list.
+    ctxt . paragraphs -> prev() -> checkmetadata();
 	
 	return ctxt . paragraphs;
 }
