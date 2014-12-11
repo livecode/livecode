@@ -66,6 +66,9 @@ public foreign handler MCArithmeticEvalNotEqualToInteger(in Left as int, in Righ
 public foreign handler MCArithmeticEvalNotEqualToReal(in Left as double, in Right as double, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalNotEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
 
+public foreign handler MCArithmeticEvalNumberFormattedAsString(in Target as number, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalStringParsedAsNumber(in Target as string, out Value as number) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -379,6 +382,10 @@ Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
 
 Returns: 	True if <Left> is less than <Right>, and false otherwise.
+
+Description:
+
+Tags: Math
 */
 
 syntax NumberIsLessThanNumber is neutral binary operator with precedence 3
@@ -393,6 +400,10 @@ Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
 
 Returns: 	True if <Left> is less than or equal to <Right>, and false otherwise.
+
+Description:
+
+Tags: Math
 */
 
 
@@ -410,6 +421,10 @@ Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
 
 Returns: 	True if <Left> is equal to <Right>, and false otherwise.
+
+Description:
+
+Tags: Math
 */
 
 syntax NumberIsEqualToNumber is neutral binary operator with precedence 4
@@ -418,16 +433,95 @@ begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
 end syntax
 
+/*
+Summary:    Determines if <Left> is <Right>.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is equal to <Right>, and false otherwise.
+
+Description:
+Identical to the <NumberIsEqualToNumber> operator.
+
+References: NumberIsEqualToNumber (operator)
+
+Tags: Math
+*/
+
 syntax NumberIsNumber is neutral binary operator with precedence 5
     <Left: Expression> "is" <Right: Expression>
 begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
 end syntax
 
+/*
+Summary:    Determines if <Left> is not <Right>.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is not equal to <Right>, and false otherwise.
+
+Description:
+Returns the opposite of the <NumberIsNumber> operator.
+
+References: NumberIsNumber (operator)
+
+Tags: Math
+*/
+
+
 syntax NumberIsNotNumber is neutral binary operator with precedence 5
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCArithmeticEvalNotEqualToNumber(Left, Right, output)
+end syntax
+
+
+/*
+Summary:	Formats a numeric value as a string
+
+Operand:	An expression that evaluates to a number.
+
+Returns:	<Operand> formatted as a string.
+
+Example:
+	variable tString as string
+	variable tNum as number
+	put 5 into tNum
+	put tNum formatted as string into tString -- tString contains "5"
+
+Description:
+Use <NumberFormattedAsString> when you want to manipulate a numeric value as text.
+*/
+
+syntax NumberFormattedAsString is postfix operator with precedence 1
+    <Operand: Expression> "formatted" "as" "string"
+begin
+    MCArithmeticEvalNumberFormattedAsString(Operand, output)
+end syntax
+
+/*
+Summary:	Parses a string as an number
+
+Operand:	An expression that evaluates to a string.
+
+Returns:	<Operand> parsed as a number.
+
+Example:
+	variable tString as string
+	variable tNum as number
+	put "5.6" into tString
+	put tString parsed as number into tNum -- tNum contains 5.6
+
+Description:
+Use <StringParsedAsNumber> when you want to interpret text numerically.
+
+>*Note:* Any input which cannot be parsed as a number will cause an error to be thrown.
+*/
+syntax StringParsedAsNumber is postfix operator with precedence 1
+    <Operand: Expression> "parsed" "as" "number"
+begin
+    MCArithmeticEvalStringParsedAsNumber(Operand, output)
 end syntax
 
 end module

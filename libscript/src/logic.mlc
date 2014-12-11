@@ -6,6 +6,9 @@ public foreign handler MCLogicEvalNot(in Operand as bool, out Value as bool) as 
 public foreign handler MCLogicEvalIsEqualTo(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCLogicEvalIsNotEqualTo(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
 
+public foreign handler MCLogicEvalBoolFormattedAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCLogicEvalStringParsedAsBool(in Target as string, out Value as bool) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -69,8 +72,8 @@ end syntax
 /*
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
-Left:       An expression which evaluates to a bool.
-Right:      An expression which evaluates to a bool.
+Left:       An expression which evaluates to a boolean value.
+Right:      An expression which evaluates to a boolean value.
 
 
 Returns: 	Returns true if <Left> evaluates to the same value as <Right>.
@@ -91,8 +94,8 @@ end syntax
 /*
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
-Left:       An expression which evaluates to a bool.
-Right:      An expression which evaluates to a bool.
+Left:       An expression which evaluates to a boolean value.
+Right:      An expression which evaluates to a boolean value.
 
 
 Returns: 	Returns true if <Left> evaluates to the opposite boolean value as <Right>.
@@ -108,6 +111,53 @@ syntax BooleanIsNotEqualToBoolean is neutral binary operator with precedence 5
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCLogicEvalIsNotEqualTo(Left, Right, output)
+end syntax
+
+/*
+Summary:	Formats a boolean value as a string
+
+Operand:	An expression that evaluates to a boolean value.
+
+Returns:	"true" or "false"
+
+Example:
+	variable tString as string
+	variable tBool as boolean
+	put (false is not not true) is false into tBool
+	put tBool formatted as string into tString -- tString contains "true"
+
+Description:
+Use <BooleanFormattedAsString> when you want to manipulate a boolean value as text.
+*/
+
+syntax BooleanFormattedAsString is postfix operator with precedence 1
+    <Operand: Expression> "formatted" "as" "string"
+begin
+    MCLogicEvalBoolFormattedAsString(Operand, output)
+end syntax
+
+/*
+Summary:	Parses a string as a boolean value
+
+Operand:	An expression that evaluates to a string.
+
+Returns:	true or false
+
+Example:
+	variable tString as string
+	variable tBool as boolean
+	put "false" into tString
+	put tString parsed as boolean into tBool -- tBool contains false
+
+Description:
+Use <StringParsedAsBoolean> when you want to determine if a string contains "true" or "false"
+
+>*Note:* Only the strings "true" and "false" will parse to give a boolean value. Any other input will cause an error to be thrown.
+*/
+syntax StringParsedAsBoolean is postfix operator with precedence 1
+    <Operand: Expression> "parsed" "as" "boolean"
+begin
+    MCLogicEvalStringParsedAsBool(Operand, output)
 end syntax
 
 end module

@@ -35,7 +35,7 @@ Summary:            Counts the number of chars in <Target>.
 
 Target: 			An expression which evaluates to a string.
 
-Returns:				The number of chars in <Target>.
+Returns:			The number of chars in <Target>.
 
 Example: 			
 
@@ -340,8 +340,8 @@ begin
 end syntax
 
 /*
-Summary:        Repeat over the elements of a list
-Iterand:        An expression of the form 'tVar in tList'
+Summary:        Repeat over the chars of a string
+Iterand:        An expression of the form 'tChar in tString'
 
 Example:
 	variable tString as string
@@ -357,7 +357,7 @@ Example:
     // tReversed is "desserts"
 
 Description:
-The repeat for each form is more efficient that the alternative formation using repeat **tCount** times.
+Use repeat for each to perform an operation on each char of a string.
 
 Tags: Strings, Control structures
 */

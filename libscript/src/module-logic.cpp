@@ -30,3 +30,19 @@ extern "C" MC_DLLEXPORT void MCLogicEvalIsNotEqualTo(bool p_left, bool p_right, 
 {
     r_result = (p_left != p_right);
 }
+
+extern "C" MC_DLLEXPORT void MCLogicEvalBooleanFormattedAsString(bool p_operand, MCStringRef& r_output)
+{
+    r_output = MCValueRetain(p_operand ? kMCTrueString : kMCFalseString);
+}
+
+extern "C" MC_DLLEXPORT void MCLogicEvalStringParsedAsBoolean(MCStringRef p_operand, bool& r_output)
+{
+    if (MCStringIsEqualTo(p_operand, kMCTrueString, kMCStringOptionCompareCaseless))
+        r_output = true;
+    else if (MCStringIsEqualTo(p_operand, kMCFalseString, kMCStringOptionCompareCaseless))
+        r_output = false;
+    else
+        // Throw
+        return;
+}

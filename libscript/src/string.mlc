@@ -290,7 +290,7 @@ end syntax
 
 /* 
 
-Summary: 		Designates the string consisting of zero chars
+Summary: 		Designates the string of length zero.
 
 Example:
 	variable tVar as string
