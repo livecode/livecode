@@ -440,7 +440,11 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     MCNewAutoNameRef t_name_for_prop;
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
-    // CallGetProp
+    if (CallGetProp(*t_name_for_prop, p_index, r_value.valueref_value))
+    {
+        r_value.type = kMCExecValueTypeValueRef;
+        return true;
+    }
     
     // No properties handled for now.
     return false;
@@ -541,7 +545,13 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     MCNewAutoNameRef t_name_for_prop;
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
-    // CallSetProp
+    MCAutoValueRef t_value;
+    MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, &t_value);
+    if (!ctxt.HasError())
+    {
+        if (CallSetProp(*t_name_for_prop, nil, *t_value))
+            return true;
+    }
     
     // No properties handled for now.
     return false;
@@ -549,7 +559,11 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 
 bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
 {
-    // CallGetProp(p_prop_name, nil, ...)
+    if (CallGetProp(p_prop_name, nil, r_value.valueref_value))
+    {
+        r_value.type = kMCExecValueTypeValueRef;
+        return true;
+    }
     
     // Not handled for now.
     return false;
@@ -557,7 +571,13 @@ bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 
 bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
 {
-    // CallSetProp(p_prop_name, nil, ...)
+    MCAutoValueRef t_value;
+    MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, &t_value);
+    if (!ctxt.HasError())
+    {
+        if (CallSetProp(p_prop_name, nil, *t_value))
+            return true;
+    }
     
     // Not handled for now.
     return false;
@@ -1177,8 +1197,12 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
     {
         MCErrorRef t_error;
         
+        // TODO: handle
         if (MCErrorCatch(t_error))
+        {
             MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
+            MCValueRelease(t_error);
+        }
         else
             MCLog("Failed to execute handler %@", p_name);
     }
@@ -1200,6 +1224,20 @@ bool MCWidget::CallGetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef& r_
     
 	MCwidgetobject = t_old_widget_object;
     
+    if (!t_success)
+    {
+        MCErrorRef t_error;
+        
+        // TODO: handle
+        if (MCErrorCatch(t_error))
+        {
+            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
+            MCValueRelease(t_error);
+        }
+        else
+            MCLog("Failed to execute property getter for %@", p_property);
+    }
+    
 	return t_success;
 }
 
@@ -1214,6 +1252,20 @@ bool MCWidget::CallSetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef p_v
     t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
     
 	MCwidgetobject = t_old_widget_object;
+    
+    if (!t_success)
+    {
+        MCErrorRef t_error;
+        
+        // TODO: handle
+        if (MCErrorCatch(t_error))
+        {
+            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
+            MCValueRelease(t_error);
+        }
+        else
+            MCLog("Failed to execute property setter for %@", p_property);
+    }
     
 	return t_success;
 }
