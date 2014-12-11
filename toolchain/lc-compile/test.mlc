@@ -57,16 +57,41 @@ public handler test()
 	--com.livecode.line
 	--com.livecode.segmentchunk
 
-	// put fails at the end
-	sort tResults in descending order
-	
-    variable tResultString as string
-    put the empty string into tResultString
-    combine tResults with tDelimiter into tResultString
-
-    return tResultString
+    return newline & testSummary (tResults)
 end handler
 
+/*
+Summary: Summarises the results of a test into a string
+
+Parameters:
+pResults: The list of test results
+*/
+public handler testSummary(in pResults as list)
+    variable tSuccessCount as integer
+    variable tFailureCount as integer
+    variable tSummaryItems as list
+
+    put 0 into tSuccessCount
+    put 0 into tFailureCount
+    put the empty list into tSummaryItems
+
+    variable tReport as string
+    repeat for each element tReport in pResults
+        if tReport begins with "SUCCESS" then
+            add 1 to tSuccessCount
+            next repeat
+        end if
+        add 1 to tFailureCount
+        push tReport onto tSummaryItems
+    end repeat
+
+    push (tFailureCount converted to base 10) && "TESTS FAILED (" & (tSuccessCount converted to base 10) && "PASSED)" onto tSummaryItems
+
+    variable tSummaryString as string
+    combine tSummaryItems with newline into tSummaryString
+
+    return tSummaryString
+end handler
 
 /*
 Summary: Logs the result of a test to the <xResults> list
