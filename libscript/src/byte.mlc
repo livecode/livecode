@@ -31,11 +31,11 @@ Summary:            Counts the number of bytes in <Target>.
 
 Target: 			An expression which evaluates to binary data.
 
-Example: 			
+Returns: 			The number of bytes in <Target>
 
-	repeat with x = 1 to the number of bytes in tData
-		// do something
-	end repeat
+Description:
+
+Tags: Binary
 */
 
 syntax CountBytesOf is prefix operator with precedence 1
@@ -53,11 +53,12 @@ Summary:            Finds the first or last occurrence of <Needle> within <Targe
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 
-Returns: 	Returns the offset of <Needle> in <Target>.
+Returns: 			Returns the offset of <Needle> in <Target>.
 
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of bytes between the first byte of <Target> and the first (respectively last) occurrence of <Needle>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in <Target>, then the output is 0.
 
+Tags: Binary
 */
 
 syntax ByteOffset is prefix operator with precedence 1
@@ -74,10 +75,12 @@ Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 After:              An expression which evaluates to a valid integer index of Target.
 
-Returns: 	Returns the offset of <Needle> after index <After> in <Target>.
+Returns: 			Returns the offset of <Needle> after index <After> in <Target>.
                     
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of bytes between byte <After> of <Target> and the first (respectively last) occurrence of <Needle> after <After>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur after <After> in <Target>, then the output is 0.
+
+Tags: Binary
 */
 
 syntax ByteOffsetAfter is prefix operator with precedence 1
@@ -94,11 +97,12 @@ Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 After:              An expression which evaluates to a valid integer index of Target.
 
-Returns: 	Returns the offset of <Needle> before index <Before> in <Target>.
+Returns: 			Returns the offset of <Needle> before index <Before> in <Target>.
                     
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of bytes between the first byte of <Target> and the first (respectively last) occurrence of <Needle> before <Before>. If neither first or last is specified, then the last offset is found. If <Needle> does not occur before <Before> in <Target>, then the output is 0.
 
+Tags: Binary
 */
 
 syntax ByteOffsetBefore is prefix operator with precedence 1
@@ -112,10 +116,12 @@ Summary:            Determines whether <Needle> is in <Target>.
 Needle: 			An expression which evaluates to a single byte of binary data.
 Target: 			An expression which evaluates to binary data.
 
-Returns: 	True if <Needle> is among the bytes of <Target>, and false otherwise.
+Returns: 			True if <Needle> is among the bytes of <Target>, and false otherwise.
 
 Description:
 >*Note:* It is an error if <Needle> evaluates to data consisting of more than one byte.
+
+Tags: Binary
 */
 
 syntax IsAmongTheBytesOf is neutral binary operator with precedence 1
@@ -131,10 +137,12 @@ Summary:            Determines whether <Needle> contains <Target>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 
-Returns: 	True if the bytes of <Needle> occur as a subsequence of the bytes of <Target>, and false otherwise.
+Returns: 			True if the bytes of <Needle> occur as a subsequence of the bytes of <Target>, and false otherwise.
 
 Description:
 >*Note:* Since the empty data is a subsequence of every sequence of bytes, every sequence of bytes contains the empty data.
+
+Tags: Binary
 */
 
 syntax ContainsBytes is neutral binary operator with precedence 1
@@ -148,10 +156,12 @@ Summary:            Determines whether <Target> begins with <Needle>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 
-Returns: 	True if the bytes of <Needle> occur as an initial subsequence of the bytes of <Target>, and false otherwise.
+Returns: 			True if the bytes of <Needle> occur as an initial subsequence of the bytes of <Target>, and false otherwise.
 
 Description:
 >*Note:* Since the empty data is an initial subsequence of every sequence of bytes, every sequence of bytes begins with the empty data.
+
+Tags: Binary
 */
 
 syntax BeginsWithBytes is neutral binary operator with precedence 1
@@ -165,10 +175,12 @@ Summary:            Determines whether <Target> ends with <Needle>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 
-Returns: 	True if the bytes of <Needle> occur as a final subsequence of the bytes of <Target>, and false otherwise.
+Returns: 			True if the bytes of <Needle> occur as a final subsequence of the bytes of <Target>, and false otherwise.
 
 Description:
 >*Note:* Since the empty data is a final subsequence of every sequence of bytes, every sequence of bytes ends with the empty data.
+
+Tags: Binary
 */
 
 syntax EndsWithBytes is neutral binary operator with precedence 1
@@ -185,13 +197,12 @@ Summary:            Designates the byte of data at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to binary data.
 
-Example: 			put the empty data into byte 5 of tData // Locates byte 5 and removes it from tData
-Example: 			get byte 5 of tData // Evaluates byte 5
-
 Description:
 Either locates the byte at the given index for use as the target container of another operation, or evaluates the byte at the given index as the source of another operation.
 
 >*Note:* It is an error if <Index> is out of range.
+
+Tags: Binary
 */
 
 syntax SingletonByteOf is prefix operator with precedence 1
@@ -208,14 +219,13 @@ Summary:            Designates the bytes of data between indices <Start> and <Fi
 Start:              An expression which evaluates to a valid integer index of <Target>.
 Finish:             An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to binary data.
-                    
-Example: 			put tBytes into byte 5 to 10 of tData // Locates bytes 5 to 10 and replace them with tBytes
-Example: 			get byte 5 to 10 of tData // Evaluates bytes 5 to 10
 
 Description:
 Either locates the bytes between the given indices for use as the target container of another operation, or evaluates the bytes at the given indices as the source of another operation.
 
 >*Note:* It is an error if either <Start> or <Finish> are out of range.
+
+Tags: Binary
 */
 
 syntax RangeByteOf is prefix operator with precedence 1
@@ -224,6 +234,16 @@ begin
 	MCByteFetchByteRangeOf(Start, Finish, Target, output)
 	MCByteStoreByteRangeOf(input, Start, Finish, Target)
 end syntax
+
+/*
+Summary:        Repeat over the bytes of some data
+Iterand:        An expression of the form 'tVar in tData'
+
+Description:
+Use repeat for each to perform an operation on each byte of some data.
+
+Tags: Binary, Control structures
+*/
 
 syntax RepeatForEachByte is iterator
     "byte" <Iterand: Expression>

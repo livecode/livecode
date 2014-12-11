@@ -219,7 +219,7 @@ end syntax
 
 /* 
 
-Summary: 		Designates the array with zero elements
+Summary: 		Designates the array with no elements.
 
 Example:
 	variable tVar as array
@@ -299,7 +299,7 @@ Example:
 Description:
 Use repeat for each key to iterate over the keys of an array in no particular order.
 
-Tags: Arrays
+Tags: Arrays, Control structures
 */
 
 syntax RepeatForEachKey is iterator

@@ -24,13 +24,11 @@ Summary:            Prepends <Source> bytes to <Target> bytes.
 
 Source: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to a binary container.
-
-Example: 			
-	variable tData as data
-	variable tPrefixData as data
-	...
-	put tPrefixData before tData
 	
+Description:
+Use to insert bytes into data without replacement. Can be used either with a chunk expression to insert at a specified location, or without to prepend to the target data.
+
+Tags: Binary
 */
 
 syntax PutBytesBefore is statement
@@ -45,9 +43,12 @@ Summary:            Appends <Source> bytes to <Target> bytes.
 Source: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to a binary container.
 
-Example: 			put tSuffixData after tData
-
 Related: 			PutBytesAfter
+
+Description:
+Use to insert bytes into data without replacement. Can be used either with a chunk expression to insert at a specified location, or without to append to the target data.
+
+Tags: Binary
 */
 
 syntax PutBytesAfter is statement
@@ -66,7 +67,10 @@ Right: 				An expression which evaluates to binary data.
 
 Returns:			Binary data consisting of the value of the left hand expression with the value of the right hand expression appended to the end.
 
-Example: 			put tLeft & tRight into tConcatenated
+Description:
+The result consists of the bytes of <Left> followed by those of <Right>.
+
+Tags: Binary
 */
 
 syntax ConcatenateBytes is left binary operator with precedence 2
@@ -83,9 +87,12 @@ Summary:    Determines whether <Left> and <Right> are equal or not.
 Left:       An expression which evaluates to binary data.
 Right:      An expression which evaluates to binary data.
 
-
 Returns: 	Returns true if the result of evaluating <Left> is the same as that of <Right>, and false otherwise.
 
+Description:
+Performs a byte by byte comparison of <Left> and <Right>, returning false if there is any difference.
+
+Tags: Binary
 */
 
 syntax DataIsData is neutral binary operator with precedence 5
@@ -100,9 +107,12 @@ Summary:    Determines whether <Left> and <Right> are equal or not.
 Left:       An expression which evaluates to binary data.
 Right:      An expression which evaluates to binary data.
 
-
 Returns: 	Returns false if the result of evaluating <Left> is the same as that of <Right>, and true otherwise.
 
+Description:
+Performs a byte by byte comparison of <Left> and <Right>, returning true if there is any difference.
+
+Tags: Binary
 */
 
 syntax DataIsNotData is neutral binary operator with precedence 5
@@ -118,8 +128,12 @@ Left:       An expression which evaluates to binary data.
 Right:      An expression which evaluates to binary data.
 
 
-Returns: 	Returns true if <Left> and <Right> are not equal, and the first byte in <Right> that is not equal to the
-            corresponding byte in <Left> is of greater value.
+Returns: 	True if <Left> is less than <Right>, and false otherwise.
+
+Description:
+<Left> is less than <Right> if they are not equal, and the first byte in <Right> that is not equal to the corresponding byte in <Left> is of greater value.
+            
+Tags: Binary
 */
 
 syntax DataIsLessThanData is neutral binary operator with precedence 3
@@ -135,8 +149,12 @@ Left:       An expression which evaluates to binary data.
 Right:      An expression which evaluates to binary data.
 
 
-Returns: 	Returns true if <Left> and <Right> are not equal, and the first byte in <Left> that is not equal to the
-            corresponding byte in <Right> is of greater value.
+Returns: 	True if <Left> is greater than <Right>, and false otherwise.
+
+Description:
+<Left> is greater than <Right> if they are not equal, and the first byte in <Left> that is not equal to the corresponding byte in <Right> is of greater value.
+
+Tags: Binary
 */
 
 syntax DataIsGreaterThanData is neutral binary operator with precedence 3
@@ -146,6 +164,23 @@ begin
 end syntax
 
 --
+
+/* 
+
+Summary: 		Designates data of length 0.
+
+Example:
+	variable tVar as data
+	variable tCount as number
+	put the empty data into tVar
+	put the number of bytes in tVar into tCount -- tCount is 0
+	
+Description:
+Use ```the empty data``` to initialise a data variable.
+
+Tags: Binary
+
+*/
 
 syntax EmptyData is expression
 	"the" "empty" "data"
