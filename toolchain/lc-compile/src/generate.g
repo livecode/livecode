@@ -142,9 +142,19 @@
 
     'rule' GenerateManifestDefinitions(property(_, public, Name, Getter, Setter)):
         QuerySymbolId(Getter -> GetInfo)
-        GetInfo'Type -> GetType
+        GetInfo'Type -> GetDefType
+        (|
+            where(GetDefType -> handler(_, signature(_, GetType)))
+        ||
+            where(GetDefType -> GetType)
+        |)
         QuerySymbolId(Setter -> SetInfo)
-        SetInfo'Type -> SetType
+        SetInfo'Type -> SetDefType
+        (|
+            where(SetDefType -> handler(_, signature(parameterlist(parameter(_, _, _, SetType), _), _)))
+        ||
+            where(SetDefType -> SetType)
+        |)
         GenerateManifestPropertyDefinition(Name, GetType, SetType)
 
     'rule' GenerateManifestDefinitions(event(_, public, Name, Signature)):
