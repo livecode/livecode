@@ -35,6 +35,8 @@ void bootstrap_main(int argc, char *argv[])
            SetTemplateFile(argv[++i]);
         else if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
             SetOutputFile(argv[++i]);
+        else if (strcmp(argv[i], "-modulepath") == 0 && i + 1 < argc)
+            SetImportedModuleDir(argv[++i]);
         else
             AddFile(argv[i]);
     }

@@ -13,30 +13,35 @@
 'root'
     Parse(-> Modules)
     (|
-        IsBootstrapCompile()
-        BootstrapCompile(Modules)
+        ErrorsDidOccur()
     ||
-        Compile(Modules)
+        (|
+            IsBootstrapCompile()
+            BootstrapCompile(Modules)
+        ||
+            Compile(Modules)
+        |)
     |)
 
 ---------
 
 'action' Compile(MODULELIST)
 
-    'rule' Compile(modulelist(Head, Imports)):
+    'rule' Compile(Modules):
         InitializeBind
-        Bind(Head, Imports)
-        CheckModules(modulelist(Head, nil))
+        BindModules(Modules, Modules)
+        CheckModules(Modules)
         (|
             ErrorsDidOccur()
         ||
+            where(Modules -> modulelist(Head, _))
             Generate(Head)
         |)
 
 'action' BootstrapCompile(MODULELIST)
 
     'rule' BootstrapCompile(Modules):
-        BootstrapBindModules(Modules)
+        BindModules(Modules, Modules)
         CheckModules(Modules)
         (|
             ErrorsDidOccur()
@@ -45,21 +50,29 @@
             GenerateSyntaxRules()
         |)
 
-'action' BootstrapBindModules(MODULELIST)
+'action' BindModules(MODULELIST, MODULELIST)
 
-    'rule' BootstrapBindModules(modulelist(Head, Tail)):
+    'rule' BindModules(modulelist(Head, Tail), Imports):
         InitializeBind
         
-        Bind(Head, nil)
-        BootstrapBindModules(Tail)
+        (|
+            Head'Kind -> import
+        ||
+            Bind(Head, Imports)
+        |)
+        BindModules(Tail, Imports)
         
-    'rule' BootstrapBindModules(nil):
+    'rule' BindModules(nil, _):
         -- empty
 
 'action' CheckModules(MODULELIST)
 
     'rule' CheckModules(modulelist(Head, Tail)):
-        Check(Head)
+        (|
+            Head'Kind -> import
+        ||
+            Check(Head)
+        |)
         CheckModules(Tail)
         
     'rule' CheckModules(nil):
@@ -70,7 +83,11 @@
     'rule' GenerateSyntaxForModules(modulelist(Head, Tail)):
         InitializeSyntax
         
-        GenerateSyntax(Head)
+        (|
+            Head'Kind -> import
+        ||
+            GenerateSyntax(Head)
+        |)
         GenerateSyntaxForModules(Tail)
 
     'rule' GenerateSyntaxForModules(nil):
@@ -192,11 +209,7 @@
         Id'Name -> Name
         GetStringOfNameLiteral(Name -> NameString)
         (|
-            (|
-                IsBootstrapCompile()
-            ||
-                AddImportedModuleFile(NameString)
-            |)
+            AddImportedModuleFile(NameString)
         ||
             Error_UnableToFindImportedModule(Position, Name)
         |)

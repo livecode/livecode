@@ -114,11 +114,13 @@
 
     'rule' FindModuleInList(Name, modulelist(Head, Rest) -> Head):
         Head'Name -> Id
+        Head'Kind -> import
         Id'Name -> ModName
         eq(Name, ModName)
         
     'rule' FindModuleInList(Name, modulelist(_, Rest) -> Found):
         FindModuleInList(Name, Rest -> Found)
+
 
 'action' QueryId(ID -> MEANING)
 
