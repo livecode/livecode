@@ -516,6 +516,12 @@
 
     'rule' GenerateExportedDefinitions(foreignhandler(_, public, Id, _, _)):
         GenerateExportedDefinition(Id)
+
+    'rule' GenerateExportedDefinitions(property(_, _, Id, _, _)):
+        GenerateExportedDefinition(Id)
+
+    'rule' GenerateExportedDefinitions(event(_, _, Id, _)):
+        GenerateExportedDefinition(Id)
         
     'rule' GenerateExportedDefinitions(syntax(_, _, Id, _, _, _)):
         GenerateExportedDefinition(Id)
