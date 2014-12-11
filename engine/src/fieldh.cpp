@@ -129,9 +129,9 @@ bool MCField::doexport(MCFieldExportFlags p_flags, uint32_t p_part_id, int32_t p
 // and finish, invoking the callback for each and every requested event.
 bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCFieldExportCallback p_callback, void *p_context)
 {
-	// If the null range is requested, there is nothing to do.
-	if (p_start_index == p_finish_index)
-		return true;
+	// If the null range is requested, only export if there are attributes.
+    bool t_empty_range;
+    t_empty_range = p_start_index == p_finish_index;
 
 	// Fetch the paragraphs
 	MCParagraph *t_paragraphs;
@@ -205,6 +205,10 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 				compute_paragraph_number(t_numbering, t_paragraph -> getliststyle(), t_paragraph -> getlistdepth(), t_paragraph -> getlistindex());
 	}
 
+    // Abort if this is the empty range and there are no paragraph attributes
+    if (t_empty_range && !(t_first_paragraph->hasattrs()))
+        return true;
+    
 	// Now loop through the paragraphs, starting at the one that has been
 	// identified as the first.
 	MCParagraph *t_paragraph;
