@@ -354,7 +354,10 @@ return 1;
 					m_selected_index_path = [[NSIndexPath alloc] initWithIndex:0];
 				}
 				m_selected_index_path = [NSIndexPath indexPathForRow:[[m_selected_index objectAtIndex:0] intValue] inSection:0];
-				[tableView scrollToRowAtIndexPath: m_selected_index_path atScrollPosition: UITableViewScrollPositionMiddle animated:NO];				
+        
+                // PM-2014-12-11: [[ Bug 12899 ]] Scroll only if there is a record
+                if ([tableView numberOfRowsInSection:0] > 0)
+                    [tableView scrollToRowAtIndexPath: m_selected_index_path atScrollPosition: UITableViewScrollPositionMiddle animated:NO];				
 				m_bar_visible = true;
 			}
 		}

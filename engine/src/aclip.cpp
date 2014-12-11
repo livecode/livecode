@@ -867,6 +867,11 @@ void MCAudioClip::stop(Boolean abort)
 #endif
 }
 
+bool MCAudioClip::isPlaying()
+{
+    return MCPlatformSoundIsPlaying(s_current_sound);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  SAVING AND LOADING

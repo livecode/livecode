@@ -3615,9 +3615,17 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	if (lptr == NULL)
 		lptr = lines;
     
+    // FG-2014-12-03: [[ Bug 11688 ]] Hidden paragraphs have a zero height
+    if (gethidden())
+    {
+        lptr = NULL;
+        return True;
+    }
+    
     // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    // FG-2014-11-03: [[ Bug 11688 ]] Take all of the top margin into account
     if (attrs != nil)
-        theight -= attrs -> space_above;
+        theight -= computetopmargin();
     
 	do
 	{
@@ -3632,8 +3640,9 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
     
     // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
     // There is no failure for this paragraph if only the space below does not fit in the field
+    // FG-2014-12-03: [[ Bug 11688 ]] Take all of the bottom margin into account
     if (attrs != nil)
-        theight = MCU_max(((int32_t)theight) - attrs -> space_below, 0);
+        theight = MCU_max(((int32_t)theight) - computebottommargin(), 0);
     
 	return True;
 }
@@ -3645,6 +3654,19 @@ Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
 {
 	if (lptr == NULL)
 		lptr = lines;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    // FG-2014-12-03: [[ Bug 11688 ]] Hidden paragraphs have a zero height
+    if (gethidden())
+    {
+        lptr = NULL;
+        return True;
+    }
+    
+    // FG-2014-11-03: [[ Bug 11688 ]] Take all of the top margin into account
+    if (attrs != nil)
+        theight -= computetopmargin();
+    
 	do
 	{
 		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
@@ -3658,6 +3680,13 @@ Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
 	}
 	while (lptr != lines);
 	lptr = NULL;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
+    // There is no failure for this paragraph if only the space below does not fit in the field
+    // FG-2014-12-03: [[ Bug 11688 ]] Take all of the bottom margin into account
+    if (attrs != nil)
+        theight = MCU_max(((int32_t)theight) - computebottommargin(), 0);
+    
 	return True;
 }
 

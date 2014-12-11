@@ -627,7 +627,9 @@ static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped
             // MW-2014-06-25: [[ Bug 12370 ]] The engine expects keyCode to be the mapped key whenever
             //   the mapped key is ASCII. If the mapped key is not ASCII then the keyCode reflects
             //   the raw (US English) keycode.
-            if (isascii(r_native_char[0]))
+            // SN-2014-12-08: [[ Bug 14067 ]] Avoid to use the native char instead of the key code
+            // the numeric keypad keys.
+            if (isascii(r_native_char[0]) && (p_key_code < kMCPlatformKeyCodeKeypadSpace || p_key_code > kMCPlatformKeyCodeKeypadEqual))
                 r_key_code = r_native_char[0];
             else
                 r_key_code = p_key_code;
@@ -800,7 +802,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	if (MCactivefield == nil)
 		return;
 	
-	MCRedrawLockScreen();
+    // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
+    //  text input, inside an MCWait loop
+//	MCRedrawLockScreen();
 	
 	int32_t t_r_si, t_r_ei;
 	t_r_si = 0;
@@ -930,7 +934,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	MCactivefield -> setcompositioncursoroffset(t_s_si - t_r_si);
 	MCactivefield -> seltext(t_s_si, t_s_ei, True);
 	
-	MCRedrawUnlockScreen();
+    // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
+    //  text input, inside an MCWait loop
+//	MCRedrawUnlockScreen();
 }
 
 static void synthesize_key_press(MCPlatformWindowRef p_window, char p_char, KeySym p_sym)
@@ -1293,7 +1299,11 @@ void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
 {
     if (MCacptr != nil)
+    {
         MCscreen -> addtimer(MCacptr, MCM_internal, 0);
+        // PM-2014-12-09: [[ Bug 14176 ]] Release and nullify the sound once it is done
+        MCacptr->stop(True);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
