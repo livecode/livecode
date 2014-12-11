@@ -2031,7 +2031,7 @@ static void __rebuild_library_handler_list(void)
         }
 }
 
-static bool __convert_from_script_type(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value)
+bool MCEngineConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value)
 {
     MCValueRef t_new_value;
     t_new_value = nil;
@@ -2087,7 +2087,7 @@ static bool __convert_from_script_type(MCExecContext& ctxt, MCTypeInfoRef p_type
         t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_type . named_type);
         if (t_descriptor -> bridgetype == kMCNullTypeInfo)
             return false;
-        if (!__convert_from_script_type(ctxt, t_descriptor -> bridgetype, x_value))
+        if (!MCEngineConvertFromScriptType(ctxt, t_descriptor -> bridgetype, x_value))
             return false;
         if (!t_descriptor -> doexport(x_value, false, t_new_value))
             return false;
@@ -2100,9 +2100,9 @@ static bool __convert_from_script_type(MCExecContext& ctxt, MCTypeInfoRef p_type
     return true;
 }
 
-static bool __convert_to_script_type(MCExecContext& ctxt, MCValueRef p_value)
+bool MCEngineConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
 {
-    switch(MCValueGetTypeCode(p_value))
+    switch(MCValueGetTypeCode(x_value))
     {
         // Script understands all of these types so no conversion necessary.
         case kMCValueTypeCodeNull:
@@ -2289,7 +2289,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
             MCTypeInfoRef t_arg_type;
             t_arg_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
             
-            if (!__convert_from_script_type(*MCECptr, t_arg_type, t_value))
+            if (!MCEngineConvertFromScriptType(*MCECptr, t_arg_type, t_value))
             {
                 MCValueRelease(t_value);
                 t_success = false;
@@ -2327,7 +2327,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
                 MCContainer *t_container;
                 if (t_param -> evalcontainer(*MCECptr, t_container))
                 {
-                    if (!__convert_to_script_type(*MCECptr, t_arguments[i]) ||
+                    if (!MCEngineConvertToScriptType(*MCECptr, t_arguments[i]) ||
                         !t_container -> set(*MCECptr, t_arguments[i]))
                         t_success = false;
                     delete t_container;
@@ -2338,7 +2338,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
         }
         
         if (t_success &&
-            !__convert_to_script_type(*MCECptr, t_result))
+            !MCEngineConvertToScriptType(*MCECptr, t_result))
         {
             t_success = false;
         }

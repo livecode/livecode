@@ -3864,6 +3864,9 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition);
 
 void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_extensions);
 
+bool MCEngineConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value);
+bool MCEngineConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value);
+
 ///////////
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;
