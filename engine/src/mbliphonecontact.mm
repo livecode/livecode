@@ -1075,6 +1075,11 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 		
 		if (m_success)
 			m_success = nil != (t_done_button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(handleUpdateContactDone)]);
+        
+        // PM-2014-12-10: [[ Bug 13169 ]] Add a Cancel button to allow dismissing mobileUpdateContact
+        if (m_success)
+            m_success = nil != (m_update_contact.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(handleUpdateContactCancel)]);
+        
 		if (m_success)
 			m_success = nil != (t_items = [NSArray arrayWithObject: t_done_button]);
 		
@@ -1110,6 +1115,13 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 {
 	m_running = false;
 }
+
+// PM-2014-12-10: [[ Bug 13169 ]] If Cancel button is pressed return to the app
+-(void) handleUpdateContactCancel
+{
+    m_running = false;
+}
+
 
 // Dismisses the picker when users are done creating a contact or adding the displayed person properties to an existing contact. 
 - (void)unknownPersonViewController:(ABUnknownPersonViewController *)unknownPersonView didResolveToPerson:(ABRecordRef)person
