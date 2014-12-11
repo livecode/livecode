@@ -638,8 +638,8 @@ static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped
             //   the raw (US English) keycode.
             // SN-2014-12-08: [[ Bug 14067 ]] Avoid to use the native char instead of the key code
             // the numeric keypad keys.
-            if (isascii(r_native_char[0]) && (p_key_code < kMCPlatformKeyCodeKeypadSpace || p_key_code > kMCPlatformKeyCodeKeypadEqual))
-                r_key_code = r_native_char[0];
+            if (isascii(t_native_char) && (p_key_code < kMCPlatformKeyCodeKeypadSpace || p_key_code > kMCPlatformKeyCodeKeypadEqual))
+                r_key_code = t_native_char;
             else
                 r_key_code = p_key_code;
             
