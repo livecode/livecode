@@ -66,7 +66,7 @@ bool addrinfo_lookup(const char *p_name, const char *p_port, int p_socktype, str
 	t_hints.ai_socktype = p_socktype;
 	// specify IPv4 addresses only
 	t_hints.ai_family = AF_INET;
-	t_hints.ai_flags = AI_ADDRCONFIG;
+	t_hints.ai_flags = 0;
 
 	int t_status;
 

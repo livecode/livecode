@@ -1651,8 +1651,9 @@ void MCField::GetFormattedHeightOfCharChunk(MCExecContext& ctxt, uint32_t p_part
         int4 maxy = 0;
         do
         {
-            if (maxy != 0)
-                maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
+            // FG-2014-12-03: [[ Bug 11688 ]] The margins get counted twice...
+            //if (maxy != 0)
+            //    maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
             maxy += sptr->getyextent(ei, fixedheight);
             ei -= sptr->gettextlengthcr();
             sptr = sptr->next();
