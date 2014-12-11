@@ -36,6 +36,9 @@ static void EnsureSetIndexInRange(long p_index)
 
 void PushEmptySet(void)
 {
+    // Pushing the empty set starts processing, so we reset the stack.
+    s_set_count = 0;
+    
     EnsureRoomInSetStack();
     
     s_sets[s_set_count++] = 0;
