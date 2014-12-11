@@ -1245,6 +1245,9 @@
         
     'rule' GetExpressionAtIndex(expressionlist(_, Tail), Index -> Head):
         GetExpressionAtIndex(Tail, Index - 1 -> Head)
+        
+    'rule' GetExpressionAtIndex(nil, Index -> nil):
+        -- off the end!
 
 ----
 
