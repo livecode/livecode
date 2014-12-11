@@ -282,7 +282,7 @@ static bool __MCStreamEqual(MCValueRef p_value, MCValueRef p_other_value)
 
 static hash_t __MCStreamHash(MCValueRef p_value)
 {
-	return (hash_t)p_value;
+	return (hash_t) MCHashPointer (p_value);
 }
 
 static bool __MCStreamDescribe(MCValueRef p_value, MCStringRef& r_desc)

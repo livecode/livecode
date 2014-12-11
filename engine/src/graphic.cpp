@@ -840,7 +840,7 @@ bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_coun
 {
 	r_points = NULL;
 	r_point_count = 0;
-	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0);
+	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
 	return (true);
 }
 
@@ -896,7 +896,7 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 		tRadius = rect.height;
 	else
 		tRadius = rect.width;
-	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle);
+	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
 	return (true);
 }
 

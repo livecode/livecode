@@ -1012,7 +1012,15 @@ void __MCValueFinalize(void)
         {
             __MCValue *t_value;
             t_value = s_value_pools[i] . values;
-            s_value_pools[i] . values = *(__MCValue **)t_value;
+
+#ifdef HAVE_VALGRIND
+			/* Valgrind support */
+			/* The first few bytes of the buffer actually contain the
+			 * address of the following buffer. */
+			VALGRIND_MAKE_MEM_DEFINED(t_value, sizeof (__MCValue *));
+#endif /* HAVE_VALGRIND */
+
+			s_value_pools[i] . values = *(__MCValue **)t_value;
 			s_value_pools[i] . count -= 1;
             MCMemoryDelete(t_value);
         }

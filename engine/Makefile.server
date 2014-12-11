@@ -21,7 +21,7 @@ CUSTOM_DEPS=libkernel-server.a
 
 CUSTOM_LIBS=pcre png jpeg z foundation gif graphics skia kernel-server
 CUSTOM_STATIC_LIBS=curl icudata icui18n icuio icule iculx icuuc customssl customcrypto $(MODE_STATIC_LIBS)
-CUSTOM_DYNAMIC_LIBS=dl m pthread rt
+CUSTOM_DYNAMIC_LIBS=dl m pthread ffi rt
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \

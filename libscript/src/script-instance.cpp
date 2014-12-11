@@ -1094,6 +1094,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     
     // If the arg index reached arity, then everything is setup.
     MCValueRef t_result_value;
+    t_result_value = nil;
     if (t_success)
     {
         uint8_t t_result[64];
@@ -1134,8 +1135,6 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
         else
             t_success = false;
     }
-    else
-        t_result_value = nil;
     
     MCValueRef t_out_values[16];
     uindex_t t_out_arg_index;

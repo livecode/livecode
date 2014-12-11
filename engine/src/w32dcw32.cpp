@@ -562,7 +562,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					else
 					{
 						t_argument = sptr;
-						while (t_char != '\0' && iswspace(t_char))
+						// SN-2014-11-19: [[ Bug 14058 ]] We consider the characters which are NOT a space
+						while (t_char != '\0' && !iswspace(t_char))
 						{
 							t_char = MCStringGetCharAtIndex(*t_cmdline, ++sptr);
 							t_argument_length += 1;

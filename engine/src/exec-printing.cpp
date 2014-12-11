@@ -624,8 +624,9 @@ void MCPrintingExecPrintRectOfCard(MCExecContext& ctxt, MCCard *p_card, MCPoint 
 	t_src_rect . x = p_from . x;
 	t_src_rect . y = p_from . y;
     // SN-2014-11-03: [[ Bug 13913 ]] Use the correct coordinates
-	t_src_rect . width = p_from . x - p_to . x;
-	t_src_rect . height = p_from . y - p_to . y;
+    // SN-2014-11-13: [[ Bug 13913 ]] Really, the right coordinates should be used...
+    t_src_rect . width = p_to . x - p_from . x;
+    t_src_rect . height = p_to . y - p_from . y;
 	
 	MCprinter -> LayoutCard(p_card, &t_src_rect);
 

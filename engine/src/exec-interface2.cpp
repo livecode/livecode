@@ -3428,6 +3428,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
     }
     // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
     r_mark . text = MCValueRetain(kMCEmptyString);
+    r_mark . start = r_mark . finish = 0;
 }
 
 void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, Boolean wholechunk, MCMarkedText& r_mark)
@@ -3451,6 +3452,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, Bool
     
     // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
     r_mark . text = MCValueRetain(kMCEmptyString);
+    r_mark . start = r_mark . finish = 0;
     ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
 }
 
