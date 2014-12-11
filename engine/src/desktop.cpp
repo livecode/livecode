@@ -1293,7 +1293,11 @@ void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
 {
     if (MCacptr != nil)
+    {
         MCscreen -> addtimer(MCacptr, MCM_internal, 0);
+        // PM-2014-12-09: [[ Bug 14176 ]] Release and nullify the sound once it is done
+        MCacptr->stop(True);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
