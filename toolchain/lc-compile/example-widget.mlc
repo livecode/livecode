@@ -3,6 +3,7 @@ widget com.livecode.widget.example
 
 metadata version is "0.1.0"
 metadata author is "Fraser J. Gordon"
+metadata title is "Example Widget"
 
 
 // ---------- Properties ---------- //

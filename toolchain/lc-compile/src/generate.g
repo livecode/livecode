@@ -85,6 +85,10 @@
             QueryMetadata(Metadata, "author" -> AuthorString)
             OutputWriteS("  <author>", AuthorString, "</author>\n")
         |]
+        [|
+            QueryMetadata(Metadata, "title" -> TitleString)
+            OutputWriteS("  <title>", TitleString, "</title>\n")
+        |]
         (|
             where(Kind -> widget)
             OutputWrite("  <type>widget</type>\n")
