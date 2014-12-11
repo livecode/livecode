@@ -128,6 +128,8 @@ static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGR
 		// Unsupported
 		MCAssert(false);
 		return kMCCustomPrinterImageNone;
+	default:
+		MCUnreachable();
 	}
 }
 

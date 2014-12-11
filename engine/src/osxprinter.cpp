@@ -940,7 +940,8 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 	}
 	
     MCAutoStringRef t_document_name_str;
-	if (!MCStringCreateWithCString(GetJobName(), &t_document_name_str))
+    // SN-2014-11-25: [[ Bug 14006 ]] GetJobName might return NULL, in which case we get an empty string, not an error
+    if (GetJobName() == NULL || !MCStringCreateWithCString(GetJobName(), &t_document_name_str))
         t_document_name_str = MCdefaultstackptr -> gettitletext();
 	
 	CFStringRef t_cf_document;

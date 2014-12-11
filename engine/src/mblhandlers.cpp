@@ -3190,7 +3190,8 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
         t_success = MCParseParameters(p_parameters, "x", &(&t_label));
     
     intenum_t t_indicator;
-    if (t_success)
+    // PM-2014-11-21: [[ Bug 14068 ]] Nil check to prevent a crash
+    if (t_success && p_parameters)
         t_success = MCBusyIndicatorTypeFromString(*t_indicator_string);
     
     int32_t t_opacity = -1;
@@ -6454,6 +6455,11 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 
 	if (t_success)
 		MCNativeControlExecDo(ctxt, *t_control_name, *t_property, t_params . Ptr(), t_params . Size());
+
+    
+    // SN-2014-11-20: [[ Bug 14062 ]] Cleanup the memory
+    for (uint32_t i = 0; i < t_params . Size(); ++i)
+        MCValueRelease(t_params[i]);\
 	
 	return ES_NORMAL;
 }

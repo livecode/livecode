@@ -804,16 +804,12 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 // MW-2014-05-22: [[ Bug 12468 ]] Make sure we use the appropriate store when
                 //   selection is requested from another app.
                 MCGdkTransferStore *t_store;
-                if (t_event->selection.selection == GDK_SELECTION_PRIMARY)
-                {
-                    if (ownsselection())
-                        t_store = m_Selection_store;
-                }
-                else if (t_event->selection.selection == GDK_SELECTION_CLIPBOARD)
-                {
-                    if (ownsclipboard())
-                        t_store = m_Clipboard_store;
-                }
+				if (t_event->selection.selection == GDK_SELECTION_PRIMARY &&
+				    ownsselection())
+					t_store = m_Selection_store;
+				else if (t_event->selection.selection == GDK_SELECTION_CLIPBOARD &&
+				         ownsclipboard())
+					t_store = m_Clipboard_store;
                 else
                     t_store = nil;
                 

@@ -1011,12 +1011,18 @@
         GenerateInvoke_EvaluateArgumentForOut(ContextReg, Expr)
         GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
         
+    'rule' GenerateInvoke_EvaluateArguments(_, nil, _):
+        -- do nothing.
+
     'rule' GenerateInvoke_EvaluateArguments(_, nil, nil):
         -- do nothing.
 
 -- In arguments are simple, just evaluate the expr into a register attached to the
 -- node.
 'action' GenerateInvoke_EvaluateArgumentForIn(INT, EXPRESSION)
+
+    'rule' GenerateInvoke_EvaluateArgumentForIn(ContextReg, nil):
+        -- do nothing for nil arguments.
 
     'rule' GenerateInvoke_EvaluateArgumentForIn(ContextReg, Expr):
         EmitCreateRegister(-> ResultReg)
@@ -1039,6 +1045,9 @@
         EmitCreateRegister(-> ResultReg)
         EmitAttachRegisterToExpression(ResultReg, Slot)
         
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, nil):
+        -- do nothing for nil arguments
+
     'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, _):
         Fatal_InternalInconsistency("Invalid expression for out argument not checked properly!")
 
@@ -1065,6 +1074,9 @@
         EmitAttachRegisterToExpression(ResultReg, Slot)
         GenerateExpressionInRegister(ResultReg, ContextReg, Slot)
         
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, nil):
+        -- do nothing for nil arguments
+
     'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, _):
         Fatal_InternalInconsistency("Invalid expression for inout argument not checked properly!")
 
@@ -1080,6 +1092,9 @@
         -- out and inout are the same
         GenerateInvoke_AssignArgument(ContextReg, Expr)
         GenerateInvoke_AssignArguments(ContextReg, SigRest, ArgRest)
+
+    'rule' GenerateInvoke_AssignArguments(_, nil, _):
+        -- do nothing.
 
     'rule' GenerateInvoke_AssignArguments(_, nil, nil):
         -- do nothing.
@@ -1147,8 +1162,11 @@
         EmitContinueInvoke(Reg)
         GenerateInvoke_EmitInvokeArguments(Tail)
 
+    'rule' GenerateInvoke_EmitInvokeArguments(expressionlist(nil, Tail)):
+        -- do nothing
+
     'rule' GenerateInvoke_EmitInvokeArguments(nil):
-        -- do nothings
+        -- do nothing
 
 ----
 

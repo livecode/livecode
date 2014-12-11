@@ -80,7 +80,8 @@ SOURCES=\
 	sysunxthreads.cpp, stacktile.cpp \
 	native-layer.cpp native-layer-x11.cpp \
 	widget.cpp widget-events.cpp \
-	linux-theme.cpp
+	linux-theme.cpp \
+	mcstring.cpp
 
 linuxstubs.cpp: src/linux.stubs ../util/weak_stub_maker.pl
 #	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp

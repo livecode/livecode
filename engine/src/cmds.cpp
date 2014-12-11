@@ -496,12 +496,12 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
 	return stat;
 #endif /* MCDo */
 
+    MCAutoStringRef t_script;
+    if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
+        return;
+    
     if (browser)
     {
-        MCAutoStringRef t_script;
-        if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
-            return;
-        
         MCLegacyExecDoInBrowser(ctxt, *t_script);
         return;        
     }
@@ -512,27 +512,22 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
         if (!ctxt . EvalExprAsStringRef(alternatelang, EE_DO_BADLANG, &t_language))
             return;
         
-		MCAutoStringRef t_script;
-        if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
-            return;
-        
         MCScriptingExecDoAsAlternateLanguage(ctxt, *t_script, *t_language);
         return;
 	}
     
     if (debug)
 	{
-		MCAutoStringRef t_script;
-        if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
-            return;
-
 		MCDebuggingExecDebugDo(ctxt, *t_script, line, pos);
         return;
 	}
     
-    MCAutoStringRef t_script;
-    if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
+    // AL-2014-11-17: [[ Bug 14044 ]] Do in caller not implemented
+    if (caller)
+    {
+        MCEngineExecDoInCaller(ctxt, *t_script, line, pos);
         return;
+    }
 
 	MCEngineExecDo(ctxt, *t_script, line, pos);
 }
