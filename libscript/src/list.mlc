@@ -49,7 +49,8 @@ public foreign handler MCListRepeatForEachElement(inout Iterator as optional poi
 /*
 Summary:        Returns the first element of <Target>.
 Target:         An expression which evaluates to a list.
-output:			The first element of <Target>
+
+Returns:			The first element of <Target>
 
 Example:
 	variable tVar as list
@@ -64,7 +65,7 @@ Example:
 Description:
 Returns the first element of the list <Target> without modifying <Target>.
 ```	the head of tVar```
-is equivalent to 
+is equivalent to using the <IndexedElementOfList> operator with index 1
 ```	tVar[1]```
 	
 References: IndexedElementOfList(operator)
@@ -81,7 +82,8 @@ end syntax
 /* 
 Summary:        Returns the last element of <Target>.
 Target:         An expression which evaluates to a list.
-output:			The last element of <Target>
+
+Returns:			The last element of <Target>
 
 Example:
 	variable tVar as list
@@ -97,7 +99,7 @@ Example:
 Description:
 Returns the first element of the list <Target> without modifying <Target>.
 ```	the tail of tVar```
-is equivalent to 
+is equivalent to using the <IndexedElementOfList> operator with index -1
 ```	tVar[-1]```
 
 References: IndexedElementOfList(operator)
@@ -180,7 +182,8 @@ end syntax
 /*
 Summary:        Returns the number of elements in <Target>
 Target:         An expression which evaluates to a list.
-output:			The number of elements in the list <Target>.
+
+Returns:			The number of elements in the list <Target>.
 
 Example:
 	variable tVar as list
@@ -206,7 +209,8 @@ end syntax
 Summary:        Determines if a given element is in <Target>
 Needle:         Any expression.
 Target:         An expression which evaluates to a list.
-output:         Returns true if <Needle> can be found among the elements of <Target>.
+
+Returns: 	Returns true if <Needle> can be found among the elements of <Target>.
 
 Example:
 	variable tList as list
@@ -231,7 +235,8 @@ end syntax
 Summary:        Determines if <Target> contains <Needle> as a subsequence.
 Needle:         Any expression which evaluates to a list.
 Target:         An expression which evaluates to a list.
-output:         Returns true if <Target> contains <Needle>.
+
+Returns: 	Returns true if <Target> contains <Needle>.
 
 Example:
 	variable tList as list
@@ -263,7 +268,8 @@ end syntax
 Summary:            Determines whether <Source> begins with <Prefix>
 Prefix: 			An expression which evaluates to a list.
 Source: 			An expression which evaluates to a list.
-output:             Returns true if <Source> begins with <Prefix>.
+
+Returns: 	 Returns true if <Source> begins with <Prefix>.
 
 Example:
 	variable tVar as list
@@ -292,7 +298,8 @@ end syntax
 Summary:            Determines whether <Source> ends with <Suffix>
 Prefix: 			An expression which evaluates to a list.
 Source: 			An expression which evaluates to a list.
-output:             Returns true if <Source> ends with <Suffix>.
+
+Returns: 	Returns true if <Source> ends with <Suffix>.
 
 Example:
 	variable tVar as list
@@ -325,7 +332,8 @@ Summary:    Determines whether <Left> and <Right> are equal or not.
 Left:       An expression which evaluates to a list.
 Right:      An expression which evaluates to a list.
 
-output:     Returns true if <Left> is identical to <Right>.
+
+Returns: 	Returns true if <Left> is identical to <Right>.
 
 Example:
 	variable tList as list
@@ -354,7 +362,8 @@ Summary:    Determines whether <Left> and <Right> are equal or not.
 Left:       An expression which evaluates to a list.
 Right:      An expression which evaluates to a list.
 
-output:     Returns true if <Left> is not identical to <Right>.
+
+Returns: 	Returns true if <Left> is not identical to <Right>.
 
 Example:
 	variable tList as list

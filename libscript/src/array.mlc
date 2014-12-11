@@ -27,7 +27,8 @@ public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional pointe
 /* 
 Summary:        Returns the keys of an array.
 Target:         An expression which evaluates to an array.
-output:         A list whose elements are the keys of <Target>. 
+
+Returns: 	A list whose elements are the keys of <Target>. 
 
 Example:
 	variable tArray as array
@@ -47,7 +48,7 @@ Example:
 Description:
 >*Note:* The resulting list is not necessarily ordered in any way. Use the <com.livecode.sort> library to sort the keys.  
 
-References: com.livecode.sort
+References: com.livecode.sort(library)
 
 Tags: Arrays
 */
@@ -61,7 +62,8 @@ end syntax
 /* 
 Summary:        Returns the elements of an array.
 Target:         An expression which evaluates to an array.
-output:         A list whose elements are the elements of <Target>. 
+
+Returns: 	A list whose elements are the elements of <Target>. 
 
 Example:
 	variable tArray as array
@@ -79,7 +81,7 @@ Example:
 Description:
 >*Note:* The resulting list is not necessarily ordered in any way. Use the <com.livecode.sort> library to sort the elements.
 
-References: com.livecode.sort.library
+References: com.livecode.sort(library)
 
 Tags: Arrays
 */
@@ -124,7 +126,8 @@ end syntax
 Summary:        Determines if an array has a given key
 Needle:         An expression which evaluates to an integer, string, or list of integers.
 Target:         An expression which evaluates to an array.
-output:         Returns true if <Needle> can be found among the keys of <Target>.
+
+Returns: 	Returns true if <Needle> can be found among the keys of <Target>.
 
 Example:
 	variable tArray as array
@@ -138,9 +141,9 @@ The keys of an array are case insensitive. Thus
 ``` tVar is among the keys of tArray``` 
 is not equivalent to 
 ``` tVar is in (the keys of tArray) ```
-as the latter list operation *is* case sensitive.
+as the latter <IsInList> operation *is* case sensitive.
 
-References: com.livecode.list.IsInElements
+References: IsInList (operator)
 
 Tags: Arrays
 */
@@ -158,7 +161,8 @@ end syntax
 Summary:        Determines if an array contains a given element
 Needle:         Any expression.
 Target:         An expression which evaluates to an array.
-output:         Returns true if <Needle> can be found among the elements of <Target>.
+
+Returns: 	Returns true if <Needle> can be found among the elements of <Target>.
 
 Example:
 	variable tArray as array

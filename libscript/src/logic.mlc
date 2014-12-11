@@ -13,7 +13,8 @@ Summary:    Returns the boolean-logical value of the expression '<Left> and <Rig
 
 Left:       An expression that evaluates to a boolean value
 Right:      An expression that evaluates to a boolean value
-output:     If the left hand expression evaluates to false, the value of the expression is false.
+
+Returns: 	If the left hand expression evaluates to false, the value of the expression is false.
             Otherwise, the operator evaluates to the value of the right hand expression.
             Note that the right hand expression is only evaluated if the left hand expression is true.
 */
@@ -29,7 +30,8 @@ Summary:    Returns the boolean-logical value of the expression '<Left> or <Righ
 
 Left:       An expression that evaluates to a boolean value
 Right:      An expression that evaluates to a boolean value
-output:     If the left hand expression evaluates to true, the value of the expression is true.
+
+Returns: 	If the left hand expression evaluates to true, the value of the expression is true.
             Otherwise, the operator evaluates to the value of the right hand expression.
             Note that the right hand expression is only evaluated if the left hand expression is false.
 */
@@ -44,7 +46,8 @@ output:     If the left hand expression evaluates to true, the value of the expr
 Summary:    Returns the boolean-logical value of the expression 'not <Operand>'
 
 Operand:    An expression that evaluates to a boolean value
-output:     If the operand expression evaluates to true, the value of the expression is false. 
+
+Returns: 	If the operand expression evaluates to true, the value of the expression is false. 
             Otherwise, the value of the expression is true.
 
 Example:
@@ -69,7 +72,8 @@ Summary:    Determines whether <Left> and <Right> are equal or not.
 Left:       An expression which evaluates to a bool.
 Right:      An expression which evaluates to a bool.
 
-output:     Returns true if <Left> evaluates to the same value as <Right>.
+
+Returns: 	Returns true if <Left> evaluates to the same value as <Right>.
 
 Example:
 	variable tBool is bool
@@ -90,7 +94,8 @@ Summary:    Determines whether <Left> and <Right> are equal or not.
 Left:       An expression which evaluates to a bool.
 Right:      An expression which evaluates to a bool.
 
-output:     Returns true if <Left> evaluates to the opposite boolean value as <Right>.
+
+Returns: 	Returns true if <Left> evaluates to the opposite boolean value as <Right>.
 
 Example:
 	variable tBool is bool

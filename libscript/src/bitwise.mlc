@@ -18,7 +18,8 @@ Summary:        Performs a bitwise AND operation on the binary representations o
 
 Left:           An expression which evaluates to an integer.
 Right:          An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of the bitwise AND operation.
+
+Returns: 	The integer whose binary representation is the result of the bitwise AND operation.
 
 Example:
 	variable tVar as number
@@ -42,7 +43,8 @@ Summary:        Performs a bitwise OR operation on the binary representations of
 
 Left:           An expression which evaluates to an integer.
 Right:          An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of the bitwise OR operation.
+
+Returns: 	The integer whose binary representation is the result of the bitwise OR operation.
                 
 
 Example:
@@ -66,7 +68,8 @@ Summary:        Performs a bitwise XOR operation on the binary representations o
 
 Left:           An expression which evaluates to an integer.
 Right:          An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of the bitwise XOR operation.
+
+Returns: 	The integer whose binary representation is the result of the bitwise XOR operation.
 
 Example:
 	variable tVar as number
@@ -88,7 +91,8 @@ end syntax
 Summary:        Performs a bitwise NOT operation on the binary representation of <Operand>.
 
 Operand:        An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of the bitwise NOT operation.
+
+Returns: 	The integer whose binary representation is the result of the bitwise NOT operation.
 
 Example:
 	variable tVar as number
@@ -113,7 +117,8 @@ Summary:       Shifts the bits of <Operand> left or right.
 
 Operand:        An expression which evaluates to an integer.
 Shift:          An expression which evaluates to an integer.
-output:         The result of bit-shifting <Operand> by <Shift> places.
+
+Returns: 	The result of bit-shifting <Operand> by <Shift> places.
 
 Example:
 	variable tVar

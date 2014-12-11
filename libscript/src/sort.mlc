@@ -1,3 +1,7 @@
+/*
+This library consists of the sorting operations provided by the standard library of modular LiveCode
+*/
+
 module com.livecode.sort
 
 public foreign handler MCSortExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"

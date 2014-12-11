@@ -49,7 +49,8 @@ public foreign handler MCMathEvalConvertFromBase10(in Operand as int, in Target 
 Summary:    Binary exponentiation operation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     The result of raising <Left> to the power <Right>.
+
+Returns: 	The result of raising <Left> to the power <Right>.
 
 Example:
 	variable tVar as number
@@ -160,7 +161,8 @@ end syntax
 /*
 Summary:    Exponentiation operator.
 Operand:    An expression that evaluates to a number.
-output:     e to the power of <Operand>
+
+Returns: 	e to the power of <Operand>
 
 Example:
 	variable tVar as number
@@ -180,7 +182,8 @@ end syntax
 /*
 Summary:    Truncation operator.
 Operand:    An expression that evaluates to a number.
-output:     <Operand> truncated.
+
+Returns: 	<Operand> truncated.
 
 Example:
 	variable tVar as number
@@ -202,7 +205,8 @@ end syntax
 /*
 Summary:    Absolute value operator.
 Operand:    An expression that evaluates to a number.
-output:     The absolute value of <Operand>.
+
+Returns: 	The absolute value of <Operand>.
             
 Example:
 	variable tVar as number
@@ -224,7 +228,8 @@ end syntax
 
 /*
 Summary:    Generates a pseudo-random number.
-output:     A real between 0.0 and 1.0.
+
+Returns: 	A real between 0.0 and 1.0.
             
 Example:
 	variable tVar as number
@@ -246,7 +251,8 @@ end syntax
 Summary:    Min operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     The value of <Left>, if it is less than the value of <Right>, and the value of <Right> otherwise.
+
+Returns: 	The value of <Left>, if it is less than the value of <Right>, and the value of <Right> otherwise.
 
 Tags: Math
 */
@@ -261,7 +267,8 @@ end syntax
 Summary:    Max operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     The value of <Left>, if it is greater than the value of <Right>, and the value of <Right> otherwise.
+
+Returns: 	The value of <Left>, if it is greater than the value of <Right>, and the value of <Right> otherwise.
 
 Tags: Math
 */
@@ -278,7 +285,8 @@ end syntax
 Summary:    Converts the base of <Operand>
 Operand:    An expression that evaluates to a string.
 Source:     An expression that evaluates to an integer.
-output:     <Operand> converted to base 10.
+
+Returns: <Operand> converted to base 10.
 
 Description:
 Interprets a string in the desired base and converts it to decimal.
@@ -298,7 +306,8 @@ end syntax
 Summary:    Converts the base of <Operand>
 Operand:    An expression that evaluates to an integer.
 Target:     An expression that evaluates to an integer.
-output:     A string representation of <Operand> in base <Target>.
+
+Returns: 	A string representation of <Operand> in base <Target>.
 
 Description:
 Converts a decimal into the desired base, and returns a string representation.
@@ -319,7 +328,8 @@ Summary:    Converts the base of <Operand>
 Operand:    An expression that evaluates to a string.
 Source:     An expression that evaluates to an integer.
 Target:     An expression that evaluates to an integer.
-output:     A string representation <Operand> interpreted as a number in base <From>, converted to base <To>.
+
+Returns: 	A string representation <Operand> interpreted as a number in base <From>, converted to base <To>.
 
 Description:
 Interprets a string in the desired source base and converts it to the desired target base, and returns a string representation.

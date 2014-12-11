@@ -63,7 +63,8 @@ Summary:            Concatenates <Left> and <Right>.
 
 Left: 				An expression which evaluates to binary data.
 Right: 				An expression which evaluates to binary data.
-output: 			Binary data consisting of the value of the left hand expression with the value of the right hand expression appended to the end.
+
+Returns:			Binary data consisting of the value of the left hand expression with the value of the right hand expression appended to the end.
 
 Example: 			put tLeft & tRight into tConcatenated
 */
@@ -82,7 +83,8 @@ Summary:    Determines whether <Left> and <Right> are equal or not.
 Left:       An expression which evaluates to binary data.
 Right:      An expression which evaluates to binary data.
 
-output:     Returns true if the result of evaluating <Left> is the same as that of <Right>, and false otherwise.
+
+Returns: 	Returns true if the result of evaluating <Left> is the same as that of <Right>, and false otherwise.
 
 */
 
@@ -98,7 +100,8 @@ Summary:    Determines whether <Left> and <Right> are equal or not.
 Left:       An expression which evaluates to binary data.
 Right:      An expression which evaluates to binary data.
 
-output:     Returns false if the result of evaluating <Left> is the same as that of <Right>, and true otherwise.
+
+Returns: 	Returns false if the result of evaluating <Left> is the same as that of <Right>, and true otherwise.
 
 */
 
@@ -114,7 +117,8 @@ Summary:    Determines whether <Left> is less than <Right> under a byte by byte 
 Left:       An expression which evaluates to binary data.
 Right:      An expression which evaluates to binary data.
 
-output:     Returns true if <Left> and <Right> are not equal, and the first byte in <Right> that is not equal to the
+
+Returns: 	Returns true if <Left> and <Right> are not equal, and the first byte in <Right> that is not equal to the
             corresponding byte in <Left> is of greater value.
 */
 
@@ -130,7 +134,8 @@ Summary:    Determines whether <Left> is greater than <Right> under a byte by by
 Left:       An expression which evaluates to binary data.
 Right:      An expression which evaluates to binary data.
 
-output:     Returns true if <Left> and <Right> are not equal, and the first byte in <Left> that is not equal to the
+
+Returns: 	Returns true if <Left> and <Right> are not equal, and the first byte in <Left> that is not equal to the
             corresponding byte in <Right> is of greater value.
 */
 
