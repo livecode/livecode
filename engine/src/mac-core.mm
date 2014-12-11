@@ -14,6 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "asl.h"
 #include <Cocoa/Cocoa.h>
 #include <Carbon/Carbon.h>
 
@@ -732,6 +733,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
     //   WebViews from working.    
     // SN-2014-10-02: [[ Bug 13555 ]] We want the event to be sent in case it passes through
     //   the modal session.
+    asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCPlatformWaitForEvent %f", p_duration);
     t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
                                  untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
                                     inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode

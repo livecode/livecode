@@ -14,6 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "asl.h"
 #include "platform.h"
 
 #include "core.h"
@@ -781,8 +782,13 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	if (duration < 0.0)
 		duration = 0.0;
+    
+    asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait duration (1): %f", duration);
+    asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait curtime (1): %f", curtime);
 	
 	real8 exittime = curtime + duration;
+    
+    asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait exittime (1): %f", exittime);
 	
 	Boolean abort = False;
 	Boolean reset = False;
@@ -792,6 +798,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+        asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait done (1): %d", done);
+        
 		// IM-2014-03-13: [[ revBrowserCEF ]] call additional runloop callbacks
 		DoRunloopActions();
 		
@@ -826,14 +834,20 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		
 		// Get the time now
 		curtime = MCS_time();
+        
+        asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait curtime (2): %f, exittime: %f, eventtime: %f", curtime, exittime, eventtime);
 		
 		// And work out how long to sleep for.
 		real8 t_sleep;
 		t_sleep = 0.0;
-		if (curtime >= exittime)
+        if (curtime >= exittime) {
 			done = True;
-		else if (!done && eventtime > curtime)
+            asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait done changed (1.1): %d", done);
+        }
+        else if (!done && eventtime > curtime) {
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
+            asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait t_sleep changed (1.1): %f", t_sleep);
+        }
 		
 #ifndef FEATURE_PLATFORM_RECORDER
 #ifdef FEATURE_QUICKTIME_EFFECTS
@@ -843,13 +857,16 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			extern void MCQTHandleRecord(void);
 			MCQTHandleRecord();
 			t_sleep = MCMin(0.1, t_sleep);
+            asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait t_sleep changed (1.2): %f", t_sleep);
 		}
 #endif
 #endif
 		
 		// IM-2014-06-25: [[ Bug 12671 ]] If there are runloop actions then set a timeout instead of waiting for the next event
-		if (HasRunloopActions())
+        if (HasRunloopActions()) {
 			t_sleep = MCMin(0.01, t_sleep);
+            asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait t_sleep changed (1.3): %f", t_sleep);
+        }
 		
         // MW-2014-07-16: [[ Bug 12799 ]] If polling sockets does something then don't wait for long.
         extern Boolean MCS_handle_sockets();
@@ -859,10 +876,15 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
         //  the call to read()
         if (MCS_handle_sockets())
         {
-            if (anyevent)
+            if (anyevent) {
                 done = True;
+                asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait done changed (1.2): %d", done);
+            }
             t_sleep = 0.0;
+            asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait t_sleep changed (1.3): %f", t_sleep);
         }
+        
+         asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait t_sleep (2): %f", t_sleep);
         
 		// Wait for t_sleep seconds and collect at most one event. If an event
 		// is collected and anyevent is True, then we are done.
@@ -877,6 +899,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			abort = True;
 			break;
 		}
+        
+         asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "MCScreenDC::wait done (end of loop): %d", done);
 	}
 	while(!done);
 	

@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "asl.h"
 
 #include "globdefs.h"
 #include "objdefs.h"
@@ -2781,6 +2782,7 @@ IO_stat MCRead::readuntil(IO_handle stream, int4 pindex, uint4 count,
 				break;
 			}
 			else
+                asl_log(NULL, NULL, ASL_LEVEL_NOTICE, "mcread::readuntil %f", READ_INTERVAL);
 				if (MCscreen->wait(READ_INTERVAL, False, True))
 				{
 					MCeerror->add
