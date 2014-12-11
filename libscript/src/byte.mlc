@@ -52,7 +52,8 @@ Summary:            Finds the first or last occurrence of <Needle> within <Targe
 
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
-output:             Returns the offset of <Needle> in <Target>.
+
+Returns: 	Returns the offset of <Needle> in <Target>.
 
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of bytes between the first byte of <Target> and the first (respectively last) occurrence of <Needle>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in <Target>, then the output is 0.
@@ -72,7 +73,8 @@ Summary:            Finds the first or last occurrence of <Needle> after a speci
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 After:              An expression which evaluates to a valid integer index of Target.
-output:             Returns the offset of <Needle> after index <After> in <Target>.
+
+Returns: 	Returns the offset of <Needle> after index <After> in <Target>.
                     
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of bytes between byte <After> of <Target> and the first (respectively last) occurrence of <Needle> after <After>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur after <After> in <Target>, then the output is 0.
@@ -91,7 +93,8 @@ Summary:            Finds the first or last occurrence of <Needle> before a spec
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 After:              An expression which evaluates to a valid integer index of Target.
-output:             Returns the offset of <Needle> before index <Before> in <Target>.
+
+Returns: 	Returns the offset of <Needle> before index <Before> in <Target>.
                     
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of bytes between the first byte of <Target> and the first (respectively last) occurrence of <Needle> before <Before>. If neither first or last is specified, then the last offset is found. If <Needle> does not occur before <Before> in <Target>, then the output is 0.
@@ -108,7 +111,8 @@ end syntax
 Summary:            Determines whether <Needle> is in <Target>.
 Needle: 			An expression which evaluates to a single byte of binary data.
 Target: 			An expression which evaluates to binary data.
-output:             True if <Needle> is among the bytes of <Target>, and false otherwise.
+
+Returns: 	True if <Needle> is among the bytes of <Target>, and false otherwise.
 
 Description:
 >*Note:* It is an error if <Needle> evaluates to data consisting of more than one byte.
@@ -126,7 +130,8 @@ end syntax
 Summary:            Determines whether <Needle> contains <Target>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
-output:             True if the bytes of <Needle> occur as a subsequence of the bytes of <Target>, and false otherwise.
+
+Returns: 	True if the bytes of <Needle> occur as a subsequence of the bytes of <Target>, and false otherwise.
 
 Description:
 >*Note:* Since the empty data is a subsequence of every sequence of bytes, every sequence of bytes contains the empty data.
@@ -142,7 +147,8 @@ end syntax
 Summary:            Determines whether <Target> begins with <Needle>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
-output:             True if the bytes of <Needle> occur as an initial subsequence of the bytes of <Target>, and false otherwise.
+
+Returns: 	True if the bytes of <Needle> occur as an initial subsequence of the bytes of <Target>, and false otherwise.
 
 Description:
 >*Note:* Since the empty data is an initial subsequence of every sequence of bytes, every sequence of bytes begins with the empty data.
@@ -158,7 +164,8 @@ end syntax
 Summary:            Determines whether <Target> ends with <Needle>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
-output:             True if the bytes of <Needle> occur as a final subsequence of the bytes of <Target>, and false otherwise.
+
+Returns: 	True if the bytes of <Needle> occur as a final subsequence of the bytes of <Target>, and false otherwise.
 
 Description:
 >*Note:* Since the empty data is a final subsequence of every sequence of bytes, every sequence of bytes ends with the empty data.

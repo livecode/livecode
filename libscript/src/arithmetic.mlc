@@ -170,7 +170,8 @@ end syntax
 /*
 Summary:    Unary plus operator.
 Operand:    An expression that evaluates to a number.
-output:     The result of evaluating <Operand>.
+
+Returns: 	The result of evaluating <Operand>.
 
 Example:
 	variable tVar as number
@@ -191,7 +192,8 @@ end syntax
 /*
 Summary:    Unary minus operator.
 Operand:    An expression that evaluates to a number.
-output:     The negated result of evaluating <Operand>.
+
+Returns: 	The negated result of evaluating <Operand>.
 
 Example:
 	variable tVar as number
@@ -212,7 +214,8 @@ end syntax
 Summary:    Binary plus operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     The result of adding the numbers <Left> and <Right>.
+
+Returns: 	The result of adding the numbers <Left> and <Right>.
 
 Example:
 	variable tVar as number
@@ -231,7 +234,8 @@ end syntax
 Summary:    Binary minus operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     The result of subtracting the number <Right> from <Left>.
+
+Returns: 	The result of subtracting the number <Right> from <Left>.
 
 Example:
 	variable tVar as number
@@ -250,7 +254,8 @@ end syntax
 Summary:    Binary multiplication operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     The result of multiplying the numbers <Left> and <Right>.
+
+Returns: 	The result of multiplying the numbers <Left> and <Right>.
 
 Example:
 	variable tVar as number
@@ -270,7 +275,8 @@ end syntax
 Summary:    Binary division operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     The result of dividing the number <Left> by <Right>.
+
+Returns: 	The result of dividing the number <Left> by <Right>.
 
 Example:
 	variable tVar as number
@@ -291,7 +297,8 @@ end syntax
 Summary:    Mod operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     <Left> mod <Right>.
+
+Returns: <Left> mod <Right>.
 
 Example:
 	variable tVar as number
@@ -312,7 +319,8 @@ end syntax
 Summary:    Wrap operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:		If x >= 0, then x wrap y returns ((x-1) mod abs(y)) + 1.
+
+Returns:		If x >= 0, then x wrap y returns ((x-1) mod abs(y)) + 1.
 			If x < 0, then x wrap y returns -((x-1) mod abs(y)) + 1.
 			
 Example:
@@ -341,7 +349,8 @@ end syntax
 Summary:    Greater than relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     True if <Left> is greater than <Right>, and false otherwise.
+
+Returns: 	True if <Left> is greater than <Right>, and false otherwise.
 */
 
 syntax NumberIsGreaterThanNumber is neutral binary operator with precedence 3
@@ -354,7 +363,8 @@ end syntax
 Summary:    Greater than or equal to relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     True if <Left> is greater than or equal to <Right>, and false otherwise.
+
+Returns: 	True if <Left> is greater than or equal to <Right>, and false otherwise.
 */
 
 syntax NumberIsGreaterThanOrEqualToNumber is neutral binary operator with precedence 3
@@ -367,7 +377,8 @@ end syntax
 Summary:    Less than relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     True if <Left> is less than <Right>, and false otherwise.
+
+Returns: 	True if <Left> is less than <Right>, and false otherwise.
 */
 
 syntax NumberIsLessThanNumber is neutral binary operator with precedence 3
@@ -380,7 +391,8 @@ end syntax
 Summary:    Less than or equal to relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     True if <Left> is less than or equal to <Right>, and false otherwise.
+
+Returns: 	True if <Left> is less than or equal to <Right>, and false otherwise.
 */
 
 
@@ -396,7 +408,8 @@ end syntax
 Summary:    Equal to relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
-output:     True if <Left> is equal to <Right>, and false otherwise.
+
+Returns: 	True if <Left> is equal to <Right>, and false otherwise.
 */
 
 syntax NumberIsEqualToNumber is neutral binary operator with precedence 4

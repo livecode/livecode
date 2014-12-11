@@ -67,6 +67,21 @@ public handler test()
     return tResultString
 end handler
 
+
+/*
+Summary: Logs the result of a test to the <xResults> list
+
+Parameters:
+pModule: The name of the module this test comes from.
+pTest: The name of the test.
+pResult: The result of the test
+xResults: The ongoing list of test results
+
+Description:
+Pushes either the string "SUCCESS : <pModule>_<pTest>" or the string "FAILURE : <pModule>_<pTest>" onto the results list,
+depending on the value of <pResult>
+
+*/
 public handler testLog(in pModule as string, in pTest as string, in pResult as boolean, inout xResults as list)
     variable tStringResult as string
     if pResult then
