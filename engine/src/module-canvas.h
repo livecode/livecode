@@ -23,8 +23,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO - move to MCImageRep wrapper library
+#include "imagebitmap.h"
+#include "image.h"
+#include "image_rep.h"
 
-struct MCGImageFrame
+/*struct MCGImageFrame
 {
 	MCGImageRef image;
 	
@@ -42,7 +45,7 @@ struct MCImageBitmap
 	
 	bool has_transparency;
 	bool has_alpha;
-};
+};*/
 
 class MCImageRep;
 

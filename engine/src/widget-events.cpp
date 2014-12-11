@@ -325,6 +325,30 @@ MCWidget* MCWidgetEventManager::GetMouseWidget() const
     return m_mouse_focus;
 }
 
+void MCWidgetEventManager::GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const
+{
+    r_x = m_mouse_x;
+    r_y = m_mouse_y;
+}
+
+void MCWidgetEventManager::GetSynchronousClickPosition(coord_t& r_x, coord_t& r_y) const
+{
+    r_x = m_click_x;
+    r_y = m_click_y;
+}
+
+void MCWidgetEventManager::GetAsynchronousMousePosition(coord_t& r_x, coord_t& r_y) const
+{
+    r_x = MCmousex;
+    r_y = MCmousey;
+}
+
+void MCWidgetEventManager::GetAsynchronousClickPosition(coord_t& r_x, coord_t& r_y) const
+{
+    r_x = MCclicklocx;
+    r_y = MCclicklocy;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCWidgetEventManager::mouseMove(MCWidget* p_widget, coord_t p_x, coord_t p_y)
