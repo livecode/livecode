@@ -1,17 +1,13 @@
-/* 
-This module specifies the syntax for the basic type operations available in modular LiveCode 
-*/
-
 module com.livecode.type
 
-public foreign handler EvalBoolAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
-public foreign handler EvalRealAsString(in Target as real, out Value as string) as undefined binds to "<builtin>"
-public foreign handler EvalIntAsString(in Target as int, out Value as string) as undefined binds to "<builtin>"
-public foreign handler EvalIntAsReal(in Target as int, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalStringAsBool(in Target as string, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalStringAsReal(in Target as string, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalStringAsInt(in Target as string, out Value as int) as undefined binds to "<builtin>"
+/*
+public foreign handler MCTypeEvalBoolFormattedAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalStringParsedAsBool(in Target as string, out Value as bool) as undefined binds to "<builtin>"
 
+public foreign handler MCTypeEvalNumberFormattedAsString(in Target as number, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalStringParsedAsReal(in Target as string, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalStringParsedAsInt(in Target as string, out Value as number) as undefined binds to "<builtin>"
+*/
 public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCTypeEvalIsDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
@@ -30,7 +26,7 @@ Example:    put true as string into tVar // tVar contains the string "true"
 
 /*
 syntax AsString is postfix operator with precedence 1
-	<Target: Expression> "as" "string"
+	<Target: Expression> "formatted" "as" "string"
 begin
 	EvalBoolAsString(Target, output)
 	EvalIntAsString(Target, output)
@@ -96,13 +92,13 @@ Target:     Any expression
 output:     Returns true if the given expression <Target> evaluates to the empty value of that type, and false otherwise.
 
 */
-
+/*
 syntax IsEmpty is postfix operator with precedence 1
     <Target: Expression> "is" "empty"
 begin
     MCTypeEvalIsEmpty(Target, output)
 end syntax
-
+*/
 /*
 Summary:    Determines whether <Target> is empty or not.
 
@@ -110,13 +106,13 @@ Target:     Any expression
 output:     Returns false if the given expression <Target> evaluates to the empty value of that type, and true otherwise.
 
 */
-
+/*
 syntax IsNotEmpty is postfix operator with precedence 1
 	<Target: Expression> "is not" "empty"
 begin
 	MCTypeEvalIsNotEmpty(Target, output)
 end syntax
-
+*/
 --
 
 /*
@@ -126,13 +122,13 @@ Target:     Any expression
 output:     Returns true if the given expression <Target> is defined, and false if not.
 
 */
-
+/*
 syntax IsDefined is postfix operator with precedence 1
 	<Target: Expression> "is" "defined"
 begin
 	MCTypeEvalIsDefined(Target, output)
 end syntax
-
+*/
 /*
 Summary:    Determines whether <Target> is defined or not.
 
@@ -140,13 +136,13 @@ Target:     Any expression
 output:     Returns false if the given expression <Target> is defined, and true if not.
 
 */
-
+/*
 syntax IsNotDefined is postfix operator with precedence 1
 	<Target: Expression> "is not" "defined"
 begin
 	MCTypeEvalIsNotDefined(Target, output)
 end syntax
-
+*/
 --
 
 end module

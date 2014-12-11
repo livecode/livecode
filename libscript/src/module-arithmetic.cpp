@@ -446,3 +446,22 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToNumber(MCNumberRef p_left
 {
     r_output = MCNumberFetchAsReal(p_left) != MCNumberFetchAsReal(p_right);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberFormattedAsString(MCNumberRef p_operand, MCStringRef& r_output)
+{
+    MCStringFormat(r_output, "%f", MCNumberFetchAsReal(p_operand));
+}
+
+extern "C" MC_DLLEXPORT void MCArithmeticEvalStringParsedAsNumber(MCStringRef p_operand, MCNumberRef& r_output)
+{
+    double t_converted;
+    if (!MCTypeConvertStringToReal(p_operand, t_converted))
+        return;
+    
+    if (!MCNumberCreateWithReal(t_converted, r_output))
+        return;
+}
+
+
