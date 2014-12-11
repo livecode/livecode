@@ -389,14 +389,16 @@ public foreign handler MCCanvasPatternMakeWithTranslatedImage(in pImage as Image
 public foreign handler MCCanvasPatternMakeWithImageTranslatedWithList(in pImage as Image, in pTranslation as list, out rPattern as Pattern) as undefined binds to "<builtin>"
 
 syntax MakePattern is prefix operator with precedence 4
-	"pattern" "with" <mImage: Expression> [ ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: Expression> | "translated" "by" <mTranslation: Expression> | "rotated" "by" <mRadians: Expression> ) ]
+	"pattern" "with" <mImage: Expression>
 begin
 	MCCanvasPatternMakeWithImage(mImage, output)
+end syntax
+
+syntax MakeTransformedPattern is prefix operator with precedence 4
+	"pattern" "with" <mImage: Expression> ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: Expression> | "translated" "by" <mTranslation: Expression> | "rotated" "by" <mRadians: Expression> )
+begin
 	MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
-//	MCCanvasPatternMakeWithScaledImage(mImage, mScale[0], mScale[0], output)
-//	MCCanvasPatternMakeWithScaledImage(mImage, mScale[0], mScale[1], output)
 	MCCanvasPatternMakeWithImageScaledWithList(mImage, mScale, output)
-// 	MCCanvasPatternMakeWithTranslatedImage(mImage, mTranslation[0], mTranslation[1], output)
 	MCCanvasPatternMakeWithImageTranslatedWithList(mImage, mTranslation, output)
 	MCCanvasPatternMakeWithRotatedImage(mImage, mRadians, output)
 end syntax
