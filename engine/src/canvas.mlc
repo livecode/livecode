@@ -4,44 +4,44 @@ This module specifies the syntax definitions and bindings for canvas drawing ope
 
 module com.livecode.canvas
 
-type CanvasFloat is float
+public type CanvasFloat is float
 
 // Point
-foreign type Point binds to "kMCCanvasPointTypeInfo"
+public foreign type Point binds to "kMCCanvasPointTypeInfo"
 
 // Rectangle
-foreign type Rectangle binds to "kMCCanvasRectangleTypeInfo"
+public foreign type Rectangle binds to "kMCCanvasRectangleTypeInfo"
 
 // Transform
-foreign type Transform binds to "kMCCanvasTransformTypeInfo"
+public foreign type Transform binds to "kMCCanvasTransformTypeInfo"
 
 // Color
-foreign type Color binds to "kMCCanvasColorTypeInfo"
+public foreign type Color binds to "kMCCanvasColorTypeInfo"
 
 // Paint (supertype of pattern, gradient, solidpaint)
-foreign type Paint binds to "kMCCanvasPaintTypeInfo"
+public foreign type Paint binds to "kMCCanvasPaintTypeInfo"
 
 // Solid Paint
-foreign type SolidPaint binds to "kMCCanvasSolidPaintTypeInfo"
+public foreign type SolidPaint binds to "kMCCanvasSolidPaintTypeInfo"
 
 // Pattern
-foreign type Pattern binds to "kMCCanvasPatternTypeInfo"
+public foreign type Pattern binds to "kMCCanvasPatternTypeInfo"
 
 // Gradient
-foreign type Gradient binds to "kMCCanvasGradientTypeInfo"
-foreign type GradientStop binds to "kMCCanvasGradientStopTypeInfo"
+public foreign type Gradient binds to "kMCCanvasGradientTypeInfo"
+public foreign type GradientStop binds to "kMCCanvasGradientStopTypeInfo"
 
 // Image
-foreign type Image binds to "kMCCanvasImageTypeInfo"
+public foreign type Image binds to "kMCCanvasImageTypeInfo"
 
 // Path
-foreign type Path binds to "kMCCanvasPathTypeInfo"
+public foreign type Path binds to "kMCCanvasPathTypeInfo"
 
 // Effect
-foreign type Effect binds to "kMCCanvasEffectTypeInfo"
+public foreign type Effect binds to "kMCCanvasEffectTypeInfo"
 
 // Canvas
-foreign type Canvas binds to "kMCCanvasTypeInfo"
+public foreign type Canvas binds to "kMCCanvasTypeInfo"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rectangle
