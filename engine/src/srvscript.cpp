@@ -375,37 +375,25 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	// If the file isn't open yet, open it
 	if (t_file -> script == NULL)
 	{
-		// Attempt to open the file
-        MCSystemFileHandle *t_handle;
-        t_handle = MCsystem -> OpenFile(t_file -> filename, kMCOpenFileModeRead, true);
+		MCAutoDataRef t_file_contents;
 
-		if (t_handle == NULL)
+		if (!MCS_loadbinaryfile (t_file->filename,
+								 &t_file_contents))
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
 			return false;
 		}
-		
-		// If the file was successfully memory-mapped, then use the direct pointer,
-		// otherwise just load it all into memory.
-		t_file -> script = (char *)t_handle -> GetFilePointer();
-		if (t_file -> script != NULL)
-			t_file -> handle = t_handle;
-		else
-		{
-			int32_t t_length;
-			t_length = (int32_t)t_handle -> GetFileSize();
-			t_file -> script = new char[t_length + 1];
-			
-			uint32_t t_read;
-			t_handle -> Read(t_file -> script, t_length, t_read);
-			
-			t_file -> script[t_length] = '\0';
-			
-			t_handle -> Close();
-			
-			t_file -> handle = NULL;
-		}
-		
+
+		uindex_t t_length;
+		t_length = MCDataGetLength (*t_file_contents);
+		t_file -> script = new char[t_length + 1];
+
+		MCMemoryCopy (t_file -> script,
+					  MCDataGetBytePtr (*t_file_contents),
+					  t_length);
+		/* Ensure trailing nul */
+		t_file -> script[t_length] = 0;
+
 		m_files = t_file;
 	}
 	

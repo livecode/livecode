@@ -1294,6 +1294,8 @@ void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
     // Make sure download progress is updated 
     MCPlatformBreakWait();
     t_player -> redrawcontroller();
+    // PM-2014-11-20: [[ Bug 14035 ]] Make sure movie frames are shown
+    t_player -> layer_redrawall();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

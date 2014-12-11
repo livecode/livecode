@@ -138,37 +138,7 @@ const char *dbtypestrings[] = {
 DATABASERECList databaselist;
 DBList connectionlist;
 
-static int computehash(char *keystr)
-{
-	unsigned int value = 0;
-	int length = strlen(keystr);
-	const char *sptr = keystr;
-	while (length--){
-		value += tolower(*sptr++);
-		value = value * 3;
-	}
-	return value & 96000 -1;
-}
-
 #define simpleparse(a,b,c) (((b > a) | (c < a))?True:False)
-
-static char * _strrev(char * str)
-{
-	int SmallIndex = 0;
-	int BigIndex = strlen(str) - 1;
-	
-	while (SmallIndex < BigIndex) {
-		char Temp = str[SmallIndex];
-		
-		str[SmallIndex] = str[BigIndex];
-		str[BigIndex] = Temp;
-		
-		SmallIndex++;
-		BigIndex--;
-	}
-	
-	return str;
-	}
 
 static char *strlwr(char *str)
 {
@@ -183,9 +153,6 @@ static char *strlwr(char *str)
 void REVDB_Init(char *args[], int nargs, char **retstring,
 		   Bool *pass, Bool *error)
 {
-	static Bool littlecheat = False;
-	int passkey = 0;
-
 	*error = False;
 	*pass = False;
 
@@ -306,7 +273,7 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
 		t_last_component = strrchr(GetExternalFolder(), '/');
 		if (t_last_component != NULL)
 		{
-			sprintf(t_driver_path, "%.*s/drivers/%s", t_last_component - GetExternalFolder(), GetExternalFolder(), t_driver_name);
+			sprintf(t_driver_path, "%.*s/drivers/%s", (int) (t_last_component - GetExternalFolder()), GetExternalFolder(), t_driver_name);
 			t_database_rec = DoLoadDatabaseDriver(t_driver_path);
 		}
 		if (t_database_rec == NULL)
@@ -359,7 +326,6 @@ void REVDB_QUIT()
 		break;
 	}
 	connlist->clear();
-	DATABASEREC *databaserec = NULL;
 	DATABASERECList::iterator theIterator2;
 	for (theIterator2 = databaselist.begin(); theIterator2 != databaselist.end(); theIterator2++){
 		DATABASEREC *tdatabaserec = (DATABASEREC *)(*theIterator2);
@@ -459,12 +425,6 @@ void processInputArray(char *p_variable_name, char *p_key_name, ExternalString &
 	int t_return_value;
 
 	GetVariableEx(t_adjusted_variable_name, t_adjusted_key_name == NULL ? "" : t_adjusted_key_name, &t_value, &t_return_value);
-
-	char *t_value_data;
-	t_value_data = (char *)t_value . buffer;
-
-	int t_value_length;
-	t_value_length = t_value . length;
 
 	r_value = t_value;
 }
@@ -768,7 +728,7 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 		}
 
 		// check access permissions of known database types
-		int t_dbtype_index;
+		size_t t_dbtype_index;
 		for (t_dbtype_index = 0; t_dbtype_index < REVDB_DATABASETYPECOUNT; t_dbtype_index++)
 		{
 			if (util_stringcompare(REVDBdatabasetypestrings[t_dbtype_index], dbtype, strlen(dbtype)) == 0)
@@ -844,7 +804,7 @@ void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Boo
 	}
 
 	*error = False;
-	int connectionid = atoi(*args);
+	unsigned int connectionid = strtoul (*args, NULL, 10);
 
 	if (!connectionlist . find(connectionid))
 	{	
@@ -1024,8 +984,6 @@ void REVDB_ConnectionErr(char *args[], int nargs, char **retstring, Bool *pass, 
 /// Otherwise the number of affected rows is returned. This will be 0 for any query that is not SELECT, INSERT, UPDATE or DELETE.
 void REVDB_Execute(char *p_arguments[], int p_argument_count, char **p_return_string, Bool *p_pass, Bool *p_error)
 {
-	char *result = NULL;
-
 	*p_error = True;
 	*p_pass = False;
 
@@ -2085,7 +2043,7 @@ void REVDB_Connections(char *args[], int nargs, char **retstring,
 	{
 		result = (char *)malloc(connlist->size() * INTSTRSIZE);
 		result[0] = '\0';
-		int numconnections = 0;
+		DBObjectList::size_type numconnections = 0;
 		for (theIterator = connlist->begin(); theIterator != connlist->end(); theIterator++)
 		{
 			DBConnection *curconnection = (DBConnection *)(*theIterator);
