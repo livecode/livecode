@@ -645,13 +645,18 @@ static void RemoveFirstTermFromSyntaxNode(SyntaxNodeRef p_node, long *r_lmode, l
     else if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
         int i;
-		p_node -> left_trimmed = 1;
-        *r_lmode = p_node -> concatenate . operands[0] -> descent . lmode;
-        *r_rmode = p_node -> concatenate . operands[0] -> descent . rmode;
-        FreeSyntaxNode(p_node -> concatenate . operands[0]);
-        for(i = 1; i < p_node -> concatenate . operand_count; i++)
-            p_node -> concatenate . operands[i - 1] = p_node -> concatenate . operands[i];
-        p_node -> concatenate . operand_count -= 1;
+        if (p_node -> concatenate . operands[0] -> kind != kSyntaxNodeKindAlternate)
+        {
+            p_node -> left_trimmed = 1;
+            *r_lmode = p_node -> concatenate . operands[0] -> descent . lmode;
+            *r_rmode = p_node -> concatenate . operands[0] -> descent . rmode;
+            FreeSyntaxNode(p_node -> concatenate . operands[0]);
+            for(i = 1; i < p_node -> concatenate . operand_count; i++)
+                p_node -> concatenate . operands[i - 1] = p_node -> concatenate . operands[i];
+            p_node -> concatenate . operand_count -= 1;
+        }
+        else
+            RemoveFirstTermFromSyntaxNode(p_node -> concatenate . operands[0], r_lmode, r_rmode);
     }
     else
         assert(0);
@@ -668,10 +673,15 @@ static void RemoveLastTermFromSyntaxNode(SyntaxNodeRef p_node, long *r_lmode, lo
     else if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
         p_node -> right_trimmed = 1;
-        *r_lmode = p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1] -> descent . lmode;
-        *r_rmode = p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1] -> descent . rmode;
-        FreeSyntaxNode(p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1]);
-        p_node -> concatenate . operand_count -= 1;
+        if (p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1] -> kind != kSyntaxNodeKindAlternate)
+        {
+            *r_lmode = p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1] -> descent . lmode;
+            *r_rmode = p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1] -> descent . rmode;
+            FreeSyntaxNode(p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1]);
+            p_node -> concatenate . operand_count -= 1;
+        }
+        else
+            RemoveLastTermFromSyntaxNode(p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1], r_lmode, r_rmode);
     }
     else
         assert(0);
