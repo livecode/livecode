@@ -826,22 +826,22 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
     
     const CGFloat ButtonHeight = ButtonMinHeight;
     
+    // SN-2014-11-28: [[ Bug 14098 ]] OK and Cancel buttons were inverted.
+    // Update frame for the Cancel button
+    NSRect cancelRect = { { ButtonSideMargin,
+        ButtonBottomMargin },
+        { ButtonWidth, ButtonHeight } };
+    [mCancelButton setButtonType: NSMomentaryLightButton];
+    [mCancelButton setFrame:cancelRect];
+    [mCancelButton setNeedsDisplay:YES];
+    
     // Update frame for the OK button
-    NSRect okRect = { { ButtonSideMargin,
+    NSRect okRect = { { cancelRect.origin.x + ButtonWidth + ButtonSpacing,
         ButtonBottomMargin },
         { ButtonWidth, ButtonHeight } };
     [mOkButton setButtonType: NSMomentaryLightButton];
     [mOkButton setFrame:okRect];
     [mOkButton setNeedsDisplay:YES];
-    
-    // Update frame for the cancel button
-    NSRect cancelRect = { { okRect.origin.x + ButtonWidth + ButtonSpacing,
-        ButtonBottomMargin },
-        { ButtonWidth, ButtonHeight } };
-    
-    [mCancelButton setButtonType: NSMomentaryLightButton];
-    [mCancelButton setFrame:cancelRect];
-    [mCancelButton setNeedsDisplay:YES];
     
     const CGFloat Y = ButtonBottomMargin + ButtonHeight + ButtonTopMargin;
     NSRect pickerCVRect = { { 0.0, Y },
@@ -912,11 +912,6 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
 
 void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
 {
-	uint32_t t_red, t_green, t_blue;
-	t_red = p_color.red;
-	t_green = p_color.green;
-	t_blue = p_color.blue;
-	
     // SN-2014-10-20: [[ Bug 13628 ]] Update to use the Cocoa picker
     NSColorPanel *t_colorPicker;
     
@@ -924,6 +919,14 @@ void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
     [NSColorPanel setPickerMask: NSColorPanelAllModesMask];
     
     t_colorPicker = [NSColorPanel sharedColorPanel];
+    
+    // SN-2014-11-28: [[ Bug 14098 ]] Make use of the initial colour
+    CGFloat t_divider = UINT16_MAX;
+    NSColor* t_initial_color = [NSColor colorWithRed:(CGFloat)p_color.red / t_divider
+                                               green:(CGFloat)p_color.green / t_divider
+                                                blue:(CGFloat)p_color.blue / t_divider
+                                               alpha:1];
+    [t_colorPicker setColor:t_initial_color];
     
     NSView* t_pickerView;
     t_pickerView = [t_colorPicker contentView];

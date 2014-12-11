@@ -955,7 +955,8 @@ void MCMetaContext::executegroup(MCMark *p_group_mark)
 					
 					// Render all marks from the bottom up to and including the current mark - clipped
 					// by the dst bounds.
-					for(MCMark *t_raster_mark = f_state_stack -> root -> group . head; t_raster_mark != t_mark -> next; t_raster_mark = t_raster_mark -> next)
+                    // PM-2014-11-25: [[ Bug 14093 ]] nil-check to prevent a crash
+					for(MCMark *t_raster_mark = f_state_stack -> root -> group . head; t_raster_mark != t_mark -> next && t_raster_mark != NULL; t_raster_mark = t_raster_mark -> next)
 						if (mark_indirect(t_gfx_context, t_raster_mark, t_mark, t_dst_clip))
 							break;
 				}

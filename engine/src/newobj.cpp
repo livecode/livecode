@@ -836,10 +836,10 @@ MCExpression *MCN_new_function(int2 which)
 
 	MCExpression *t_new_function;
 	t_new_function = MCModeNewFunction(which);
-	if (t_new_function != NULL)
-		return t_new_function;
 
-	return new MCFunction;
+    // SN-2014-11-25: [[ Bug 14088 ]] A NULL pointer is returned if no function exists.
+    //  (that avoids to get a MCFunction which does not implement eval_ctxt).
+	return t_new_function;
 }
 
 MCExpression *MCN_new_operator(int2 which)

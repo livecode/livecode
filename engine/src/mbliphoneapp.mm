@@ -206,6 +206,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	
 	m_keyboard_activation_pending = false;
     m_keyboard_is_visible = false;
+    m_is_remote_notification = false;
 	
     m_pending_push_notification = nil;
     m_pending_local_notification = nil;
@@ -323,6 +324,15 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	Class t_cls = NSClassFromString(@"UILocalNotification");
     if (t_cls)
     {
+#ifdef __IPHONE_8_0
+        // PM-2014-11-14: [[ Bug 13927 ]] From iOS 8 we have to ask for user permission for local notifications
+        if ([UIApplication instancesRespondToSelector:@selector(registerUserNotificationSettings:)])
+        {
+            UIUserNotificationSettings *t_local_settings;
+            t_local_settings = [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound categories:nil];
+            [[UIApplication sharedApplication] registerUserNotificationSettings:t_local_settings];
+        }
+#endif
         UILocalNotification *t_notification = [p_launchOptions objectForKey: UIApplicationLaunchOptionsLocalNotificationKey];
         if (t_notification)
         {
@@ -407,6 +417,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
             }
             if (t_allowed_notifications != UIUserNotificationTypeNone)
             {
+                m_is_remote_notification = true;
                 UIUserNotificationSettings *t_push_settings;
                 t_push_settings = [UIUserNotificationSettings settingsForTypes: t_allowed_notifications categories:nil];
                 [[UIApplication sharedApplication] registerUserNotificationSettings: t_push_settings];
@@ -426,12 +437,14 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
                                                object: nil];
 }
 
-// MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (push) notification settings.
+// MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (local or remote) notification settings.
 //  Call registerForRemoteNotifications to finish off push notification registration process. (Will send didRegisterForRemoteNotificationsWithDeviceToken which will be handled as before.)
+// PM-2014-11-14: [[ Bug 13927 ]] Call registerForRemoteNotifications only if didRegisterUserNotificationSettings was called after successully registering *remote* notification settings
 #ifdef __IPHONE_8_0
 - (void)application: (UIApplication *)p_application didRegisterUserNotificationSettings: (UIUserNotificationSettings *)p_notificationSettings
 {
-    [p_application registerForRemoteNotifications];
+    if (m_is_remote_notification)
+        [p_application registerForRemoteNotifications];
 }
 #endif
 

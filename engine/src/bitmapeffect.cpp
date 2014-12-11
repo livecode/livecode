@@ -908,6 +908,38 @@ static void MCBitmapEffectsSetUIntProperty(MCBitmapEffect& x_effect, MCBitmapEff
             }
         }
             break;
+            
+        // AL-2014-11-25: [[ Bug 14092 ]] Can't set glow range property
+        case kMCBitmapEffectPropertyRange:
+        {
+            p_uint = MCU_min(p_uint, (uint4)255);
+            if (p_uint != x_effect . glow . range)
+            {
+                x_effect . glow . range = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+    }
+}
+
+static void MCBitmapEffectsSetBooleanProperty(MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, bool p_setting, bool& x_dirty)
+{
+    switch (p_prop)
+    {
+        // AL-2014-11-25: [[ Bug 14092 ]] Can't set shadow knockout property
+        case kMCBitmapEffectPropertyKnockOut:
+        {
+            if (p_setting != x_effect . shadow . knockout)
+            {
+                x_effect . shadow . knockout = p_setting;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        default:
+            break;
     }
 }
 
@@ -932,13 +964,22 @@ static void MCBitmapEffectStoreProperty(MCExecContext& ctxt, MCBitmapEffect& x_e
         case kMCBitmapEffectPropertySpread:
         case kMCBitmapEffectPropertyDistance:
         case kMCBitmapEffectPropertyAngle:
+        // AL-2014-11-25: [[ Bug 14092 ]] Can't set glow range property
+        case kMCBitmapEffectPropertyRange:
         {
             uinteger_t t_value;
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeUInt, &t_value);
             MCBitmapEffectsSetUIntProperty(x_effect, p_prop, t_value, r_dirty);
         }
             break;
-            
+        // AL-2014-11-25: [[ Bug 14092 ]] Can't set shadow knockout property
+        case kMCBitmapEffectPropertyKnockOut:
+        {
+            bool t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeBool, &t_value);
+            MCBitmapEffectsSetBooleanProperty(x_effect, p_prop, t_value, r_dirty);
+        }
+            break;
         default:
             break;
     }

@@ -608,23 +608,12 @@ MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef unresolved_self, uindex
 }
 
 bool
-MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef unresolved_self,
-                              MCTypeInfoRef unresolved_other)
+MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef self,
+                              MCTypeInfoRef other)
 {
-	MCTypeInfoRef self, other;
-	self = __MCTypeInfoResolve(unresolved_self);
-	other = __MCTypeInfoResolve(unresolved_other);
-
 	MCAssert(MCTypeInfoIsRecord (self));
 	MCAssert(MCTypeInfoIsRecord (other));
-
-	MCTypeInfoRef t_base = self;
-	while (t_base != kMCNullTypeInfo)
-	{
-		if (t_base == other) return true;
-		t_base = MCRecordTypeInfoGetBaseType(t_base);
-	}
-	return false;
+	return MCTypeInfoConforms(self, other);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -814,6 +803,7 @@ MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self)
     if (__MCTypeInfoGetExtendedTypeCode(self) != kMCTypeInfoTypeIsNamed)
         return self;
     
+	MCAssert (self -> named . typeinfo != nil);
     return self -> named . typeinfo;
 }
 

@@ -78,25 +78,53 @@ bool MCContactAddProperty(MCArrayRef p_contact, MCNameRef p_property, MCStringRe
 }
 
 bool MCContactAddPropertyWithLabel(MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCValueRef p_value)
-{   
+{
+    bool t_success;
 	MCValueRef t_element;
 	MCValueRef t_array;
-	if (!MCArrayFetchValue(p_contact, false, p_property, t_array) ||
-		!MCValueIsArray(t_array) ||
-		!MCArrayFetchValue((MCArrayRef)t_array, false, p_label, t_array))
-		return false;
+    // SN-2014-11-17: [[ Bug 14016 ]] Creates the properties array, if it does not exist for this contact.
+	if (!MCArrayFetchValue(p_contact, false, p_property, t_array) || !MCValueIsArray(t_array) || !MCArrayIsMutable((MCArrayRef)t_array))
+    {
+        MCAutoArrayRef t_property_array;
+       
+        t_success = MCArrayCreateMutable(&t_property_array);
+        
+        if (t_success)
+            t_success = MCArrayStoreValue(p_contact, false, p_property, *t_property_array);
+        
+        // Fetch the array (no need to release).
+        if (t_success)
+            t_success = MCArrayFetchValue(p_contact, false, p_property, t_array);
+    }
+    
+    // SN-2014-11-17:[[ Bug 14016 ]] Create the labels array of this property, if it does not exist already.
+    if (t_success && (!MCArrayFetchValue((MCArrayRef)t_array, false, p_label, t_element) || !MCValueIsArray(t_element) || !MCArrayIsMutable((MCArrayRef)t_element)))
+    {
+        MCAutoArrayRef t_label_array;
+        
+        if (t_success)
+            t_success = MCArrayCreateMutable(&t_label_array);
+        
+        if (t_success)
+            t_success = MCArrayStoreValue((MCArrayRef)t_array, false, p_label, *t_label_array);
+        
+        // Fetch the array (no need to release).
+        if (t_success)
+            t_success = MCArrayFetchValue((MCArrayRef)t_array, false, p_label, t_element);
+    }
 	
+    // Stop here if we don't have the element where to store the value.
+    if (!t_success)
+        return false;
+    
 	uindex_t t_index = 1;
-	if (!MCValueIsArray(t_array))
+	if (!MCValueIsArray(t_element))
 		t_index = 1;
 	else
-		t_index = MCArrayGetCount((MCArrayRef)t_array) + 1;
+		t_index = MCArrayGetCount((MCArrayRef)t_element) + 1;
 	
-    MCAutoArrayRef t_copied_array;
-    if (MCArrayCopy((MCArrayRef) t_array, &t_copied_array))
-        return MCArrayStoreValueAtIndex(*t_copied_array, t_index, p_value);
     
-    return false;
+    return MCArrayStoreValueAtIndex((MCArrayRef)t_element, t_index, p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

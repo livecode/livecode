@@ -810,8 +810,11 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
             case kMCNativeControlActionExecute:
                 if (p_argument_count == 1)
                 {
+                    // SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef
                     MCAutoStringRef t_string;
-                    &t_string = MCValueRetain((MCStringRef)p_arguments[0]);
+                    if (!ctxt . ConvertToString(p_arguments[0], &t_string))
+                        break;
+                    
                     ((void(*)(MCExecContext&, MCNativeControlPtr*, MCStringRef))t_info -> exec_method)(ctxt, &t_control, *t_string);
                     return;
                 }
@@ -823,8 +826,12 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
                 {
                     MCAutoStringRef t_url;
                     MCAutoStringRef t_text;
-                    &t_url = MCValueRetain((MCStringRef)p_arguments[0]);
-                    &t_text = MCValueRetain((MCStringRef)p_arguments[1]);
+                    
+                    // SN-2014-11-20: [[ Bug 14062 ]] Convert the arguments (that could for example be a NameRef)
+                    if (!ctxt . ConvertToString(p_arguments[0], &t_url)
+                            || !ctxt . ConvertToString(p_arguments[1], &t_text))
+                        break;
+                    
                     ((void(*)(MCExecContext&, MCNativeControlPtr*, MCStringRef, MCStringRef))t_info -> exec_method)(ctxt, &t_control, *t_url, *t_text);
                     return;
                 }
@@ -836,11 +843,13 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
                 {
                     integer_t t_start;
                     integer_t t_end;
-                    if (MCU_stoi4((MCStringRef)p_arguments[0], t_start) && MCU_stoi4((MCStringRef)p_arguments[1], t_end))
-                    {
-                        ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t))t_info -> exec_method)(ctxt, &t_control, t_start, t_end);
-                        return;
-                    }
+                    // SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef)
+                    if (!ctxt . ConvertToInteger(p_arguments[0], t_start)
+                            || ctxt . ConvertToInteger(p_arguments[1], t_end))
+                        break;
+                    
+                    ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t))t_info -> exec_method)(ctxt, &t_control, t_start, t_end);
+                    return;
                 }
                     break;
             //other
@@ -848,7 +857,8 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
             case kMCNativeControlActionSnapshotExactly:
             {
                 integer_t t_time;
-                if (MCU_stoi4((MCStringRef)p_arguments[0], t_time))
+                // SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef)
+                if (ctxt . ConvertToInteger(p_arguments[0], t_time))
                 {
                     if (p_argument_count == 1)
                     {
@@ -859,7 +869,8 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
                     {
                         integer_t t_max_width;
                         integer_t t_max_height;
-                        if (MCU_stoi4((MCStringRef)p_arguments[1], t_max_width) && MCU_stoi4((MCStringRef)p_arguments[2], t_max_height))
+                        // SN-2014-11-20: [[ Bug 14062 ]] Convert the arguments (that could for example be a NameRef)
+                        if (ctxt . ConvertToInteger(p_arguments[1], t_max_width) && ctxt . ConvertToInteger(p_arguments[2], t_max_height))
                         {
                             ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, &t_control, t_time, &t_max_width, &t_max_height);
                             return;

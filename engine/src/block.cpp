@@ -38,6 +38,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+static MCRectangle
+MCBlockMakeRectangle(double x, double y,
+                     double width, double height)
+{
+	MCRectangle p_result;
+	p_result.x = lrint(x);
+	p_result.y = lrint(y);
+	p_result.width = lrint(width);
+	p_result.height = lrint(height);
+	return p_result;
+}
+
 // Default MCBlock constructor - makes a block with everything initialized
 // to zero.
 MCBlock::MCBlock(void)
@@ -701,18 +713,11 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	// MW-2013-12-19: [[ Bug 11606 ]] Track the width of the text within the block as a float
 	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
 	//   (otherwise you get drift as the accumulated width the block calculates is different
-	//    from the width of the text that is drawn).
+	//    from the width of the text that is drawn). 
 
 	coord_t t_width_float;
 	t_width_float = 0;
 
-	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
-	//   positioning issues.
-	coord_t t_last_break_width;
-	t_last_break_width = 0;
-	uint2 t_last_break_i;
-	t_last_break_i = m_index;
-	
 	findex_t i;
 	i = m_index;
 	
@@ -755,7 +760,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
             }
 			
 			if (t_this_char == '\t' ||
-				t_next_char == -1 ||
+				t_next_char == CODEPOINT_NONE ||
 				MCUnicodeCanBreakBetween(t_this_char, t_next_char))
 			{
 				t_can_break = true;
@@ -963,11 +968,6 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the vGrid setting from the owning paragraph.
 	if (parent -> getvgrid())
 	{
-		// MW-2012-02-09: [[ ParaStyles ]] Fetch the padding setting from the owning paragraph.
-		// MW-2012-03-19: [[ Bug 10069 ]] Use the horiztonal padding value here.
-		int32_t t_padding;
-		t_padding = parent -> gethpadding();
-
         MCRectangle t_cell_clip;
         t_cell_clip = dc->getclip();
         dc -> save();
@@ -984,10 +984,10 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 					t_next_tab = -1;
             }
 			else*/
-				t_next_tab = -1;
+				t_next_tab = UINDEX_MAX;
 
 			findex_t t_next_index;
-			if (t_next_tab == -1)
+			if (t_next_tab == UINDEX_MAX)
 				t_next_index = start + length;
 			else
 				t_next_index = t_next_tab;
@@ -1033,13 +1033,13 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 					// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
 					parent -> getparent() -> setforeground(dc, DI_BORDER, False, True);
 					parent -> getparent() -> adjustpixmapoffset(dc, DI_BORDER);
-					MCRectangle trect = { x - 1, y - t_ascent, t_width + 3, t_ascent + t_descent };
+					MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 3, t_ascent + t_descent);
 					dc->drawrect(trect);
 					parent -> getparent() -> setforeground(dc, DI_FORE, False, True);
 				}
 				else if ((style & FA_3D_BOX) != 0)
 				{
-					MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+					MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 					parent -> getparent() -> draw3d(dc, trect, ETCH_RAISED, 1);
 					parent -> getparent() -> setforeground(dc, DI_FORE, False, True);
 				}
@@ -1047,7 +1047,7 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 			x += t_width;
 
-			if (t_next_tab != -1)
+			if (t_next_tab != UINDEX_MAX)
 			{
 				x = p_cell_right;
 				t_next_index = parent->IncrementIndex(t_next_index);
@@ -1369,7 +1369,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 			// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
 			f->setforeground(dc, DI_BORDER, False, True);
 			f->adjustpixmapoffset(dc, DI_BORDER);
-			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+			MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 			
 			// MW-2014-03-11: [[ Bug 11882 ]] Ensure we use miter join for drawing the border.
 			dc->setlineatts(1, LineSolid, CapButt, JoinMiter);
@@ -1380,7 +1380,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 		}
 		else if (fontstyle & FA_3D_BOX)
 		{
-			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+			MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 			f->draw3d(dc, trect, ETCH_RAISED, 1);
 			f->setforeground(dc, DI_FORE, False, True);
 		}
@@ -2318,9 +2318,6 @@ uint32_t MCBlock::measureattrs(void)
 
 bool MCBlock::GetFirstLineBreak(findex_t& r_index)
 {
-	findex_t t_index;
-	t_index = m_index;
-
 	uindex_t t_offset;
     // AL-2014-08-21: [[ Bug 13247 ]] Don't repeatedly search to the end of the paragraph to find line break.
     //  The search should only be in the range of the block.

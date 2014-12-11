@@ -1110,14 +1110,29 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 			bool useShort = false;
 			uinteger_t whichValue = PTR_VALUE;
 			const char *end;
-
+            const char_t *prefix_zero;
+            prefix_zero = nil;
+            
+            bool t_zero_pad;
+            t_zero_pad = false;
+            
             *dptr++ = *t_native_format++;
             while (*t_native_format == '-' || *t_native_format == '#' || *t_native_format == '0'
                 || *t_native_format == ' ' || *t_native_format == '+')
+            {
+                // AL-2014-11-19: [[ Bug 14059 ]] Record position of last zero.
+                if (*t_native_format == '0')
+                    prefix_zero = t_native_format;
                 *dptr++ = *t_native_format++;
+            }
             if (isdigit((uint1)*t_native_format))
 			{
                 width = strtol((const char*)t_native_format, (char **)&end, 10);
+                
+                // AL-2014-11-19: [[ Bug 14059 ]] If last zero was immediately before the first non-zero digit then pad with zeroes.
+                if (prefix_zero == t_native_format - 1)
+                    t_zero_pad = true;
+                
                 t_native_format = (char_t*)end;
 			}
             else if (*t_native_format == '*')
@@ -1244,7 +1259,13 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                         
                         // If the width sub-specifier is greater than the grapheme length of the string, then pad appropriately
                         if (width > t_range . length)
-                            t_success = MCStringAppendFormat(*t_result, "%*s%@", width - t_range . length, "", *t_string);
+                        {
+                            // AL-2014-11-19: [[ Bug 14059 ]] Pad with zeroes if the appropriate specifier flag was used
+                            if (t_zero_pad)
+                                t_success = MCStringAppendFormat(*t_result, "%0*s%@", width - t_range . length, "", *t_string);
+                            else
+                                t_success = MCStringAppendFormat(*t_result, "%*s%@", width - t_range . length, "", *t_string);
+                        }
                         else
                             t_success = MCStringAppendFormat(*t_result, "%@", *t_string);
                     }

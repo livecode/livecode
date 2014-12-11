@@ -455,6 +455,8 @@ void MCFilesEvalQueryRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MC
 		{
 			ctxt.SetTheResultToValue(*t_error);
 			r_string = MCValueRetain(kMCEmptyString);
+            // SN-2014-11-18: [[ Bug 14052 ]] Assign the empty string to the type as well.
+            r_type = MCValueRetain(kMCEmptyString);
 		}
 		else
 			ctxt.SetTheResultToEmpty();
@@ -1312,7 +1314,8 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 				MCStringAppendNativeChar(x_buffer, (char)t_bytes.Bytes()[0]);
 				t_codeunit_added = 1;
 			}
-			else
+            // SN-2014-12-02: [[ Bug 14135 ]] Do not wait if reading empty may occur
+			else if (!p_empty_allowed)
 				MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
 			break;
 
@@ -1335,8 +1338,9 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 
 				MCStringAppendChar(x_buffer, t_codeunit);
 				t_codeunit_added = 1;
-			}
-			else
+            }
+            // SN-2014-12-02: [[ Bug 14135 ]] Do not wait if reading empty may occur
+			else if (!p_empty_allowed)
 				MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
             break;
                 
@@ -1356,7 +1360,8 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
                 
                 t_codeunit_added = MCStringGetLength(*t_string);
             }
-            else
+            // SN-2014-12-02: [[ Bug 14135 ]] Do not wait if reading empty may occur
+            else if (!p_empty_allowed)
                 MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
             break;
                 
@@ -1435,8 +1440,9 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 					if (r_stat == IO_NORMAL)
 						MCS_putback(t_bytes . Bytes()[t_bytes_read - 1], p_stream);
 				}
-			}
-			else
+            }
+            // SN-2014-12-02: [[ Bug 14135 ]] Do not wait if reading empty may occur
+			else if (!p_empty_allowed)
 				MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
 
 			break;
