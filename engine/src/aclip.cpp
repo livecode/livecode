@@ -869,7 +869,10 @@ void MCAudioClip::stop(Boolean abort)
 
 bool MCAudioClip::isPlaying()
 {
+#if defined FEATURE_PLATFORM_AUDIO
     return MCPlatformSoundIsPlaying(s_current_sound);
+#endif
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
