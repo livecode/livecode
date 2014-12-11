@@ -991,7 +991,7 @@ MCExternalError MCExternalVariable::AppendInteger(MCExternalValueOptions p_optio
 {
     MCAutoStringRef t_string;
     
-    if (!MCStringFormat(&t_string, "%d", *(int32_t *)p_value))
+    if (!MCStringFormat(&t_string, "%d", p_value))
         return kMCExternalErrorOutOfMemory;
     
 	return AppendString(p_options, *t_string);
@@ -1000,7 +1000,7 @@ MCExternalError MCExternalVariable::AppendInteger(MCExternalValueOptions p_optio
 MCExternalError MCExternalVariable::AppendCardinal(MCExternalValueOptions p_options, uint32_t p_value)
 {
     MCAutoStringRef t_string;
-	if (!MCStringFormat(&t_string, "%u", *(uint32_t *)p_value))
+	if (!MCStringFormat(&t_string, "%u", p_value))
         return kMCExternalErrorOutOfMemory;
     
 	return AppendString(p_options, *t_string);
