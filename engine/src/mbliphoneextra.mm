@@ -967,6 +967,22 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef /* MCHandleIsVoiceOverRunning */ LEGACY_EXEC
+// PM-2014-12-08: [[ Bug 13659 ]] New function to detect if Voice Over is turned on (iOS only)
+static Exec_stat MCHandleIsVoiceOverRunning(void *context, MCParameter *p_parameters)
+{
+    MCresult -> sets(UIAccessibilityIsVoiceOverRunning() ? MCtruestring : MCfalsestring);
+    return ES_NORMAL;
+    
+}
+#endif /* MCHandleIsVoiceOverRunning */
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+bool MCSystemGetIsVoiceOverRunning(bool &r_is_vo_running)
+{
+    r_is_vo_running = UIAccessibilityIsVoiceOverRunning();
+    return true;
+}
 
 #ifdef /* MCHandleCurrentLocaleIphone */ LEGACY_EXEC
 static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
@@ -1854,6 +1870,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {true, "mobilePickTime", MCHandlePickTime, nil},
     {true, "mobilePickDateAndTime", MCHandlePickDateAndTime, nil},
     {true, "mobilePick", MCHandlePick, nil},
+<<<<<<< HEAD
     
     {false, "iphoneSetKeyboardType", MCHandleSetKeyboardType, nil},
     {false, "iphoneSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
@@ -1878,6 +1895,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
     {false, "iphoneCurrentLocale", MCHandleCurrentLocale, nil},
     {false, "mobileCurrentLocale", MCHandleCurrentLocale, nil},
+
+    // PM-2014-12-05: [[ Bug 13659 ]] Detect if Voice Over is enabled
+    {false, "mobileIsVoiceOverRunning", MCHandleIsVoiceOverRunning, nil},
+    {false, "iphoneIsVoiceOverRunning", MCHandleIsVoiceOverRunning, nil},
     
     {false, "iphonePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
     {false, "iphonePausePlayingOnChannel", MCHandlePausePlayingOnChannel},

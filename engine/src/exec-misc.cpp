@@ -89,6 +89,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(Misc, DisableRemoteControl, 0)
 MC_EXEC_DEFINE_GET_METHOD(Misc, RemoteControlEnabled, 1)
 MC_EXEC_DEFINE_SET_METHOD(Misc, RemoteControlDisplayProperties, 1)
 
+// SN-2014-12-11: [[ Merge-6.7.2-rc-4 ]]
+MC_EXEC_DEFINE_GET_METHOD(Misc, IsVoiceOverRunning, 1)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCExecEnumTypeElementInfo _kMCMiscStatusBarStyleElementInfo[] =
@@ -361,6 +364,17 @@ void MCMiscExecLibUrlSetSSLVerification(MCExecContext& ctxt, bool p_enabled)
 {
     extern void MCS_seturlsslverification(bool enabled);
     MCS_seturlsslverification(p_enabled);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running)
+{
+    if (MCSystemGetIsVoiceOverRunning(r_is_vo_running))
+        return;
+
+    ctxt . Throw();
 }
 
 //////////////////////////////////////////////////////////////////////

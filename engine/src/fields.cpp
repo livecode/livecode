@@ -1885,8 +1885,10 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 		getstack()->kfocusset(this);
 		if (!(state & CS_KFOCUSED))
 			return ES_NORMAL;
-	}
-	else
+    }
+    // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+    //  if it is Focusable
+	else if (flags & F_TRAVERSAL_ON)
 		MCactivefield = this;
 	removecursor();
 	

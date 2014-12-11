@@ -782,6 +782,13 @@ bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data
     return true;
 }
 
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+bool MCSystemGetIsVoiceOverRunning(bool& r_is_vo_running)
+{
+    // Not implemented on Android
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)

@@ -477,6 +477,9 @@ bool MCSystemDisableRemoteControl();
 bool MCSystemGetRemoteControlEnabled(bool& r_enabled);
 bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_array);
 
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+bool MCSystemGetIsVoiceOverRunning(bool& r_is_vo_running);
+
 enum MCMiscStatusBarStyle
 {
     kMCMiscStatusBarStyleDefault,

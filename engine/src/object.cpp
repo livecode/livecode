@@ -510,11 +510,13 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 		if (message_with_valueref_args(MCM_arrow_key, MCSTR("down")) == ES_NORMAL)
 			return True;
 		break;
-	default:
+    default:
 		MCAutoStringRef t_string;
 			
 		// Special keys as their number converted to a string, the rest by value
-		if (key > 0x7F && (key & XK_Class_mask) == XK_Class_compat)
+        // SN-2014-12-08: [[ Bug 12681 ]] Avoid to print the keycode in case we have a
+        // numeric keypad keycode.
+        if (key > 0x7F && (key & XK_Class_mask) == XK_Class_compat && (key < XK_KP_Space || key > XK_KP_Equal))
 			/* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
             else if (MCmodifierstate & MS_CONTROL)
             /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
