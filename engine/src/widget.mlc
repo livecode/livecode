@@ -1,14 +1,10 @@
 module com.livecode.widget
 
-public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
-
-
-// "Borrowed" from canvas.mlc
-foreign type Point binds to "kMCCanvasPointTypeInfo"
-foreign type Rectangle binds to "kMCCanvasRectangleTypeInfo"
-
+use com.livecode.canvas
 
 // ---------- Widget commands ---------- //
+
+public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
 
 syntax RedrawAll is statement
   "redraw" "all"
