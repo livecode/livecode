@@ -2218,7 +2218,7 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
     {
         MCAutoStringRef t_stringref;
         MCString* t_string;
-        t_string = (MCString*)t_string;
+        t_string = (MCString*)p_value;
         if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), 2 * t_string->getlength(), kMCStringEncodingUTF16, false, &t_stringref))
             return kMCExternalErrorOutOfMemory;
         
