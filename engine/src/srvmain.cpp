@@ -412,7 +412,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator);
 
 		MCAutoStringRef tmp_s_server_home;
-		/* UNCHECKED */ MCStringCopySubstring(s_server_home, MCRangeMake(0, t_last_separator - 1), &tmp_s_server_home);
+        // SN-2014-12-08: [[ Bug 14001 ]] The path to the externals goes up to the last separator, not one character before.
+        /* UNCHECKED */ MCStringCopySubstring(s_server_home, MCRangeMake(0, t_last_separator), &tmp_s_server_home);
 		s_server_home = MCValueRetain(*tmp_s_server_home);
 	}
 
