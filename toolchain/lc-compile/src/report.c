@@ -91,6 +91,8 @@ static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
 #define DEFINE_ERROR_S(Name, Message) \
 void Error_##Name(long p_position, const char *p_string) { _ErrorS(p_position, Message, p_string); }
 
+DEFINE_ERROR_I(UnableToFindImportedModule, "Unable to find imported module '%s'");
+
 DEFINE_ERROR_S(MalformedToken, "Illegal token '%s'");
 DEFINE_ERROR(MalformedSyntax, "Syntax error");
 DEFINE_ERROR_I(IdentifierPreviouslyDeclared, "Identifier '%s' already declared");

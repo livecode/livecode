@@ -13,14 +13,19 @@
 -- The purpose of the 'Bind' phase is to ensure every Id is assigned either a
 -- reference to the definingid() for its meaning, or the actual meaning if it is
 -- the defining id.
-'action' Bind(MODULE)
+'action' Bind(MODULE, MODULELIST)
 
-    'rule' Bind(Module:module(Position, Kind, Name, _, Imports, Definitions)):
+    'rule' Bind(Module:module(Position, Kind, Name, _, Imports, Definitions), ImportedModules):
         DefineModuleId(Name)
+
+        -- Make sure all the imported modules are bound
+        BindImports(Imports, ImportedModules)
 
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.
         EnterScope
+        -- Import all the used modules
+        DeclareImports(Imports, ImportedModules)
         -- Declare the predefined ids
         DeclarePredefinedIds
         -- Assign the defining id to all top-level names.
@@ -33,6 +38,89 @@
         Define(Name, Definitions)
         
         --DumpBindings(Module)
+
+'action' BindImports(IMPORT, MODULELIST)
+
+    'rule' BindImports(sequence(Left, Right), Imports):
+        BindImports(Left, Imports)
+        BindImports(Right, Imports)
+        
+    'rule' BindImports(import(_, Id), Imports):
+        Id'Name -> Name
+        FindModuleInList(Name, Imports -> Module)
+        Module'Name -> ModuleId
+        (|
+            QueryId(ModuleId -> module(Info))
+        ||
+            DefineModuleId(ModuleId)
+            Bind(Module, Imports)
+        |)
+        
+    'rule' BindImports(nil, _):
+        -- do nothing
+--
+
+'action' DeclareImports(IMPORT, MODULELIST)
+
+    'rule' DeclareImports(sequence(Left, Right), Imports):
+        DeclareImports(Left, Imports)
+        DeclareImports(Right, Imports)
+        
+    'rule' DeclareImports(import(_, Id), Imports):
+        Id'Name -> Name
+        FindModuleInList(Name, Imports -> Module)
+        Module'Definitions -> Definitions
+        DeclareImportedDefinitions(Definitions)
+        
+    'rule' DeclareImports(nil, _):
+        -- do nothing
+        
+'action' DeclareImportedDefinitions(DEFINITION)
+
+    'rule' DeclareImportedDefinitions(sequence(Left, Right)):
+        DeclareImportedDefinitions(Left)
+        DeclareImportedDefinitions(Right)
+        
+    'rule' DeclareImportedDefinitions(type(Position, _, Name, _)):
+        DeclareId(Name)
+
+    'rule' DeclareImportedDefinitions(constant(Position, _, Name, _)):
+        DeclareId(Name)
+    
+    'rule' DeclareImportedDefinitions(variable(Position, _, Name, _)):
+        DeclareId(Name)
+    
+    'rule' DeclareImportedDefinitions(handler(Position, _, Name, _, _, _)):
+        DeclareId(Name)
+    
+    'rule' DeclareImportedDefinitions(foreignhandler(Position, _, Name, _, _)):
+        DeclareId(Name)
+    
+    'rule' DeclareImportedDefinitions(property(Position, _, Name, _, _)):
+        DeclareId(Name)
+    
+    'rule' DeclareImportedDefinitions(event(Position, _, Name, _)):
+        DeclareId(Name)
+
+    'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _)):
+        DeclareId(Name)
+
+    'rule' DeclareImportedDefinitions(nil):
+        -- do nothing
+
+--
+
+'action' FindModuleInList(NAME, MODULELIST -> MODULE)
+
+    'rule' FindModuleInList(Name, modulelist(Head, Rest) -> Head):
+        Head'Name -> Id
+        Id'Name -> ModName
+        eq(Name, ModName)
+        
+    'rule' FindModuleInList(Name, modulelist(_, Rest) -> Found):
+        FindModuleInList(Name, Rest -> Found)
+
+'action' QueryId(ID -> MEANING)
 
 --------------------------------------------------------------------------------
 

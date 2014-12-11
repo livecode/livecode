@@ -86,13 +86,18 @@ static void full_main(int argc, char *argv[])
     int i;
 	
 	// If there is no filename, error.
-    if (argc != 1 && argc != 3 && argc != 5)
+    if (argc != 1 && argc != 3 && argc != 5 && argc != 7)
     {
         fprintf(stderr, "Invalid arguments\n");
         return 1;
     }
     
     i = 0;
+    if (strcmp(argv[i], "-modulepath") == 0 && i + 1 < argc)
+    {
+        SetImportedModuleDir(argv[++i]);
+        i++;
+    }
     if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
     {
         SetOutputFile(argv[++i]);
@@ -139,7 +144,9 @@ int main(int argc, char *argv[])
         argc -= 1;
         argv += 1;
         
+#ifdef _DEBUG
         yydebug = 1;
+#endif
     }
     
     InitializeFiles();

@@ -23,20 +23,20 @@
 
 'action' Compile(MODULELIST)
 
-    'rule' Compile(Modules):
-        BindModules(Modules)
-        CheckModules(Modules)
+    'rule' Compile(modulelist(Head, Imports)):
+        InitializeBind
+        Bind(Head, Imports)
+        CheckModules(modulelist(Head, nil))
         (|
             ErrorsDidOccur()
         ||
-            where(Modules -> modulelist(Module, _))
-            Generate(Module)
+            Generate(Head)
         |)
 
 'action' BootstrapCompile(MODULELIST)
 
     'rule' BootstrapCompile(Modules):
-        BindModules(Modules)
+        BootstrapBindModules(Modules)
         CheckModules(Modules)
         (|
             ErrorsDidOccur()
@@ -45,15 +45,15 @@
             GenerateSyntaxRules()
         |)
 
-'action' BindModules(MODULELIST)
+'action' BootstrapBindModules(MODULELIST)
 
-    'rule' BindModules(modulelist(Head, Tail)):
+    'rule' BootstrapBindModules(modulelist(Head, Tail)):
         InitializeBind
         
-        Bind(Head)
-        BindModules(Tail)
+        Bind(Head, nil)
+        BootstrapBindModules(Tail)
         
-    'rule' BindModules(nil):
+    'rule' BootstrapBindModules(nil):
         -- empty
 
 'action' CheckModules(MODULELIST)
@@ -126,6 +126,34 @@
         "end" "library" OptionalSeparator
         END_OF_UNIT
 
+    'rule' Module(-> module(Position, import, Name, nil, Imports, Definitions)):
+        OptionalSeparator
+        "import" "module" @(-> Position) Identifier(-> Name) Separator
+        Imports(-> Imports)
+        ImportDefinitions(-> Definitions)
+        "end" "module" OptionalSeparator
+        END_OF_UNIT
+
+'nonterm' ImportDefinitions(-> DEFINITION)
+
+    'rule' ImportDefinitions(-> sequence(Left, Right)):
+        ImportDefinition(-> Left) Separator
+        ImportDefinitions(-> Right)
+        
+    'rule' ImportDefinitions(-> nil):
+        -- done!
+        
+'nonterm' ImportDefinition(-> DEFINITION)
+
+    'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
+        "foreign" @(-> Position) "type" Identifier(-> Id)
+    
+    'rule' ImportDefinition(-> handler(Position, public, Id, Signature, nil, nil)):
+        "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
+
+    'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
+        "foreign" "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
+
 --------------------------------------------------------------------------------
 -- Metadata Syntax
 --------------------------------------------------------------------------------
@@ -161,8 +189,18 @@
 'action' ExpandImports(POS, IDLIST -> IMPORT)
 
     'rule' ExpandImports(Position, idlist(Id, nil) -> import(Position, Id)):
-        -- empty
-        
+        Id'Name -> Name
+        GetStringOfNameLiteral(Name -> NameString)
+        (|
+            (|
+                IsBootstrapCompile()
+            ||
+                AddImportedModuleFile(NameString)
+            |)
+        ||
+            Error_UnableToFindImportedModule(Position, Name)
+        |)
+
     'rule' ExpandImports(Position, idlist(Id, Tail) -> sequence(import(Position, Id), ExpandedTail)):
         ExpandImports(Position, Tail -> ExpandedTail)
 
@@ -946,6 +984,7 @@
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier
+        Id'Meaning <- nil
         
     'rule' Identifier(-> Id):
         "iterator" @(-> Position)
@@ -962,6 +1001,7 @@
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier
+        Id'Meaning <- nil
 
 'nonterm' IdentifierList(-> IDLIST)
 

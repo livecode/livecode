@@ -177,6 +177,9 @@ bool MCScriptCopyHandlersOfModule(MCScriptModuleRef module, /* copy */ MCProperL
 // Query the signature of the given handler.
 bool MCScriptQueryHandlerOfModule(MCScriptModuleRef module, MCNameRef handler, /* get */ MCTypeInfoRef& r_signature);
 
+// Emit an interface definition for the module.
+bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef module, MCStreamRef stream);
+
 // Retain a module.
 MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef module);
 

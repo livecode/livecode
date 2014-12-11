@@ -1369,6 +1369,7 @@
 
     'rule' IsHighLevelType(any(_)):
     'rule' IsHighLevelType(undefined(_)):
+    'rule' IsHighLevelType(foreign(_, _)):
     'rule' IsHighLevelType(named(_, Id)):
         QuerySymbolId(Id -> Info)
         Info'Type -> Type

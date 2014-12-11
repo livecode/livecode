@@ -1374,6 +1374,10 @@
         EmitDestroyRegister(IgnoredReg)
         GenerateInvoke_AssignArguments(Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
+        
+    'rule' GenerateExpressionInRegister(_, _, Expr):
+        print(Expr)
+        eq(0, 1)
 
 ----
 
@@ -1448,72 +1452,112 @@
         |)
 
 
+'action' ResolveType(TYPE -> TYPE)
+
+    'rule' ResolveType(optional(_, Base) -> Base):
+    'rule' ResolveType(ThisType:named(_, Id) -> Base):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> Type
+        (|
+            where(Type -> named(_, _))
+            ResolveType(Type -> Base)
+        ||
+            where(Type -> optional(_, _))
+            ResolveType(Type -> Base)
+        ||
+            where(Type -> foreign(_, _))
+            where(ThisType -> Base)
+        ||
+            where(Type -> handler(_, _))
+            where(ThisType -> Base)
+        ||
+            where(Type -> record(_, _, _))
+            where(ThisType -> Base)
+        ||
+            where(Type -> Base)
+        |)
+    'rule' ResolveType(Type -> Type):
+        -- do nothing
+
 'action' GenerateType(TYPE -> INT)
 
-    'rule' GenerateType(optional(_, Base) -> Index):
-        GenerateType(Base -> BaseTypeIndex)
+    'rule' GenerateType(Type -> Index):
+        ResolveType(Type -> ActualType)
+        GenerateBaseType(ActualType -> BaseTypeIndex)
+        (|
+            IsTypeOptional(Type)
+            EmitOptionalType(BaseTypeIndex -> Index)
+        ||
+            where(BaseTypeIndex -> Index)
+        |)
+
+'action' GenerateBaseType(TYPE -> INT)
+
+    'rule' GenerateBaseType(optional(_, Base) -> Index):
+        GenerateBaseType(Base -> BaseTypeIndex)
         EmitOptionalType(BaseTypeIndex -> Index)
 
-    'rule' GenerateType(named(_, Id) -> Index):
+    'rule' GenerateBaseType(Type:named(_, Id) -> Index):
+        ResolveType(Type -> DefinedType)
         QuerySymbolId(Id -> Info)
         Info'Index -> DefinedIndex
         EmitDefinedType(DefinedIndex -> Index)
         
-    'rule' GenerateType(foreign(_, Binding) -> Index):
+    'rule' GenerateBaseType(foreign(_, Binding) -> Index):
         EmitForeignType(Binding -> Index)
 
-    'rule' GenerateType(record(_, Base, Fields) -> Index):
+    'rule' GenerateBaseType(record(_, Base, Fields) -> Index):
         GenerateType(Base -> BaseTypeIndex)
         EmitBeginRecordType(BaseTypeIndex)
         GenerateRecordTypeFields(Fields)
         EmitEndRecordType(-> Index)
 
-    'rule' GenerateType(handler(_, signature(Parameters, ReturnType)) -> Index):
+    'rule' GenerateBaseType(handler(_, signature(Parameters, ReturnType)) -> Index):
         GenerateType(ReturnType -> ReturnTypeIndex)
         EmitBeginHandlerType(ReturnTypeIndex)
         GenerateHandlerTypeParameters(Parameters)
         EmitEndHandlerType(-> Index)
 
-    'rule' GenerateType(opaque(_, _, _) -> Index):
+    'rule' GenerateBaseType(opaque(_, _, _) -> Index):
         -- TODO
         EmitUndefinedType(-> Index)
 
-    'rule' GenerateType(any(_) -> Index):
+    'rule' GenerateBaseType(any(_) -> Index):
         EmitAnyType(-> Index)
-    'rule' GenerateType(undefined(_) -> Index):
+    'rule' GenerateBaseType(undefined(_) -> Index):
         EmitUndefinedType(-> Index)
 
-    'rule' GenerateType(boolean(_) -> Index):
+    'rule' GenerateBaseType(boolean(_) -> Index):
         EmitBooleanType(-> Index)
-    'rule' GenerateType(integer(_) -> Index):
+    'rule' GenerateBaseType(integer(_) -> Index):
         EmitIntegerType(-> Index)
-    'rule' GenerateType(real(_) -> Index):
+    'rule' GenerateBaseType(real(_) -> Index):
         EmitRealType(-> Index)
-    'rule' GenerateType(number(_) -> Index):
+    'rule' GenerateBaseType(number(_) -> Index):
         EmitNumberType(-> Index)
-    'rule' GenerateType(string(_) -> Index):
+    'rule' GenerateBaseType(string(_) -> Index):
         EmitStringType(-> Index)
-    'rule' GenerateType(data(_) -> Index):
+    'rule' GenerateBaseType(data(_) -> Index):
         EmitDataType(-> Index)
-    'rule' GenerateType(array(_) -> Index):
+    'rule' GenerateBaseType(array(_) -> Index):
         EmitArrayType(-> Index)
-    'rule' GenerateType(list(_, _) -> Index):
+    'rule' GenerateBaseType(list(_, _) -> Index):
         EmitListType(-> Index)
         
-    'rule' GenerateType(pointer(_) -> Index):
+    'rule' GenerateBaseType(pointer(_) -> Index):
         EmitPointerType(-> Index)
-    'rule' GenerateType(bool(_) -> Index):
+    'rule' GenerateBaseType(bool(_) -> Index):
         EmitBoolType(-> Index)
-    'rule' GenerateType(int(_) -> Index):
+    'rule' GenerateBaseType(int(_) -> Index):
         EmitIntType(-> Index)
-    'rule' GenerateType(uint(_) -> Index):
+    'rule' GenerateBaseType(uint(_) -> Index):
         EmitUIntType(-> Index)
-    'rule' GenerateType(float(_) -> Index):
+    'rule' GenerateBaseType(float(_) -> Index):
         EmitFloatType(-> Index)
-    'rule' GenerateType(double(_) -> Index):
+    'rule' GenerateBaseType(double(_) -> Index):
         EmitDoubleType(-> Index)
 
-    'rule' GenerateType(Type -> 0):
+    'rule' GenerateBaseType(Type -> 0):
         print(Type)
         Fatal_InternalInconsistency("attempt to generate uncoded type")
 
@@ -1562,6 +1606,7 @@
         Info'Parent -> ModuleId
         QueryModuleId(ModuleId -> ModuleInfo)
         ModuleInfo'Index -> ModuleIndex
+
         ne(ModuleIndex, 0)
 
 'condition' IsExternalId(ID)

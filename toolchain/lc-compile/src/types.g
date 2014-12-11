@@ -31,6 +31,7 @@
     nil
 
 'type' MODULEKIND
+    import
     module
     library
     widget
