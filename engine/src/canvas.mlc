@@ -252,14 +252,14 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasTransformGetScale(in pTransform as Transform, out rScaleXY as Point) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetScale(in pScaleX as Point, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetScaleAsList(in pTransform as Transform, out rScaleXY as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetScaleAsList(in pScaleX as list, inout xTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformGetRotation(in pTransform as Transform, out rRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformSetRotation(in pRotation as CanvasFloat, inout xTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformGetSkew(in pTransform as Transform, out rSkewXY as Point) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetSkew(in pSkewXY as Point, inout xTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformGetTranslation(in pTransform as Transform, out rTransXY as Point) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetTranslation(in pTransXY as Point, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetSkewAsList(in pTransform as Transform, out rSkewXY as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetSkewAsList(in pSkewXY as list, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetTranslationAsList(in pTransform as Transform, out rTransXY as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetTranslationAsList(in pTransXY as list, inout xTransform as Transform) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasTransformGetMatrix(in pTransform as Transform, out rMatrix as array) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformSetMatrix(in pMatrix as array, inout xTransform as Transform) as undefined binds to "<builtin>"
@@ -269,8 +269,8 @@ public foreign handler MCCanvasTransformGetInverse(in pTransform as Transform, o
 syntax ScaleTransformProperty is prefix operator with precedence 4
 	"the" "scale" "of" <mTransform: Expression>
 begin
-	MCCanvasTransformGetScale(mTransform, output)
-	MCCanvasTransformSetScale(input, mTransform)
+	MCCanvasTransformGetScaleAsList(mTransform, output)
+	MCCanvasTransformSetScaleAsList(input, mTransform)
 end syntax
 
 syntax RotationTransformProperty is prefix operator with precedence 4
@@ -283,15 +283,15 @@ end syntax
 syntax SkewTransformProperty is prefix operator with precedence 4
 	"the" "skew" "of" <mTransform: Expression>
 begin
-	MCCanvasTransformGetSkew(mTransform, output)
-	MCCanvasTransformSetSkew(input, mTransform)
+	MCCanvasTransformGetSkewAsList(mTransform, output)
+	MCCanvasTransformSetSkewAsList(input, mTransform)
 end syntax
 
 syntax TranslationTransformProperty is prefix operator with precedence 4
 	"the" "translation" "of" <mTransform: Expression>
 begin
-	MCCanvasTransformGetTranslation(mTransform, output)
-	MCCanvasTransformSetTranslation(input, mTransform)
+	MCCanvasTransformGetTranslationAsList(mTransform, output)
+	MCCanvasTransformSetTranslationAsList(input, mTransform)
 end syntax
 
 

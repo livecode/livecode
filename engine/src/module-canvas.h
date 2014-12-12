@@ -242,14 +242,14 @@ extern "C" MC_DLLEXPORT void MCCanvasTransformGetMatrix(MCCanvasTransformRef p_t
 extern "C" MC_DLLEXPORT void MCCanvasTransformSetMatrix(MCArrayRef p_matrix, MCCanvasTransformRef &x_transform);
 extern "C" MC_DLLEXPORT void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTransformRef &r_transform);
 // T = Tscale * Trotate * Tskew * Ttranslate
-extern "C" MC_DLLEXPORT void MCCanvasTransformGetScale(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_scale);
-extern "C" MC_DLLEXPORT void MCCanvasTransformSetScale(MCCanvasPointRef p_scale, MCCanvasTransformRef &x_transform);
+extern "C" MC_DLLEXPORT void MCCanvasTransformGetScaleAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_scale);
+extern "C" MC_DLLEXPORT void MCCanvasTransformSetScaleAsList(MCProperListRef p_scale, MCCanvasTransformRef &x_transform);
 extern "C" MC_DLLEXPORT void MCCanvasTransformGetRotation(MCCanvasTransformRef p_transform, MCCanvasFloat &r_rotation);
 extern "C" MC_DLLEXPORT void MCCanvasTransformSetRotation(MCCanvasFloat p_rotation, MCCanvasTransformRef &x_transform);
-extern "C" MC_DLLEXPORT void MCCanvasTransformGetSkew(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_skew);
-extern "C" MC_DLLEXPORT void MCCanvasTransformSetSkew(MCCanvasPointRef p_skew, MCCanvasTransformRef &x_transform);
-extern "C" MC_DLLEXPORT void MCCanvasTransformGetTranslation(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_translation);
-extern "C" MC_DLLEXPORT void MCCanvasTransformSetTranslation(MCCanvasPointRef p_translation, MCCanvasTransformRef &x_transform);
+extern "C" MC_DLLEXPORT void MCCanvasTransformGetSkewAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_skew);
+extern "C" MC_DLLEXPORT void MCCanvasTransformSetSkewAsList(MCProperListRef p_skew, MCCanvasTransformRef &x_transform);
+extern "C" MC_DLLEXPORT void MCCanvasTransformGetTranslationAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_translation);
+extern "C" MC_DLLEXPORT void MCCanvasTransformSetTranslationAsList(MCProperListRef p_translation, MCCanvasTransformRef &x_transform);
 
 // Operations
 extern "C" MC_DLLEXPORT void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform_a, MCCanvasTransformRef p_transform_b);
