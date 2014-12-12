@@ -41,6 +41,7 @@ extern "C"
     extern builtin_module_descriptor __com_livecode_type_module_info;
     extern builtin_module_descriptor __com_livecode_typeconvert_module_info;
     extern builtin_module_descriptor __com_livecode_canvas_module_info;
+    extern builtin_module_descriptor __com_livecode_engine_module_info;
     extern builtin_module_descriptor __com_livecode_widget_module_info;
     
     builtin_module_descriptor* g_builtin_modules[] =
@@ -63,6 +64,7 @@ extern "C"
         &__com_livecode_type_module_info,
         &__com_livecode_typeconvert_module_info,
         &__com_livecode_canvas_module_info,
+        &__com_livecode_engine_module_info,
         &__com_livecode_widget_module_info,
     };
     
@@ -81,6 +83,7 @@ extern "C"
     extern void (*MCStringEvalConcatenate)();
     extern void (*MCTypeConvertExecSplitStringByDelimiter)();
     extern void (*MCWidgetExecRedrawAll)();
+    extern void (*MCEngineExecResolveScriptObject)();
     extern void (*MCCanvasThisCanvas)();
     
     // Pull in a reference to all of the module-*.cpp objects too
@@ -100,6 +103,25 @@ extern "C"
         &MCTypeConvertExecSplitStringByDelimiter,
         &MCWidgetExecRedrawAll,
         &MCCanvasThisCanvas,
+        &MCEngineExecResolveScriptObject,
     };
     
+}
+
+extern bool MCCanvasModuleInitialize(void);
+extern bool MCEngineModuleInitialize(void);
+bool MCModulesInitialize(void)
+{
+    if (!MCCanvasModuleInitialize())
+        return false;
+    if (!MCEngineModuleInitialize())
+        return false;
+}
+
+extern bool MCCanvasModuleFinalize(void);
+extern bool MCEngineModuleFinalize(void);
+void MCModulesFinalize(void)
+{
+    MCEngineModuleFinalize();
+    MCCanvasModuleFinalize();
 }

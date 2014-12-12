@@ -12,6 +12,7 @@ GLOBAL_PACKAGES=\
 GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
 	$(SOLUTION_DIR)/libfoundation/include \
+	$(SOLUTION_DIR)/libscript/include \
 	$(SOLUTION_DIR)/lcidlc/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \

@@ -1,6 +1,7 @@
 module com.livecode.widget
 
 use com.livecode.canvas
+use com.livecode.engine
 
 // ---------- Widget commands ---------- //
 
@@ -12,12 +13,18 @@ begin
   MCWidgetExecRedrawAll()
 end syntax
 
-
 // ---------- External properties of widgets ---------- //
 
+public foreign handler MCWidgetGetScriptObject(out rObject as ScriptObject) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetFrame(out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetBounds(out rRect as Rectangle) as undefined binds to "<builtin>"
+
+syntax MyScriptObject is expression
+  "my" "script" "object"
+begin
+    MCWidgetGetScriptObject(output)
+end syntax
 
 syntax MyRectangle is expression
   "my" "rectangle"

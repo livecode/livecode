@@ -409,6 +409,30 @@ MCRecordDecodeFromArray(MCArrayRef array,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool
+MCRecordIterate(MCRecordRef record,
+                uintptr_t& x_iterator,
+                MCNameRef& r_field_name,
+                MCValueRef& r_field_value)
+{
+	MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo (record);
+	uindex_t t_num_fields = MCRecordTypeInfoGetFieldCount (t_typeinfo);
+    
+    /* If the iterator parameter has reached the field count then we are
+     * done. */
+    if (x_iterator >= (uintptr_t)t_num_fields)
+        return false;
+    
+    r_field_name = MCRecordTypeInfoGetFieldName (t_typeinfo, x_iterator);
+    r_field_value = record -> fields[x_iterator];
+    
+    x_iterator += 1;
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCRecordDestroy(__MCRecord *self)
 {
     MCTypeInfoRef t_resolved_typeinfo;

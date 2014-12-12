@@ -735,7 +735,7 @@
         EmitDeferLabel(-> AlternateLabel)
         EmitDeferLabel(-> EndIfLabel)
         EmitPosition(Position)
-        GenerateExpression(Context, Condition -> ResultRegister)
+        GenerateExpression(Result, Context, Condition -> ResultRegister)
         EmitJumpIfFalse(ResultRegister, AlternateLabel)
         EmitDestroyRegister(ResultRegister)
         GenerateBody(Result, Context, Consequent)
@@ -761,7 +761,7 @@
         --   if count == 0 then return false
         --   count -= 1
         --   return true
-        GenerateExpression(Context, Count -> CountRegister)
+        GenerateExpression(Result, Context, Count -> CountRegister)
         EmitDeferLabel(-> RepeatHead)
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
@@ -787,7 +787,7 @@
         
         EmitPosition(Position)
         EmitResolveLabel(RepeatHead)
-        GenerateExpression(Context, Condition -> ContinueRegister)
+        GenerateExpression(Result, Context, Condition -> ContinueRegister)
         EmitJumpIfFalse(ContinueRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
         GenerateBody(Result, Context, Body)
@@ -802,7 +802,7 @@
         
         EmitPosition(Position)
         EmitResolveLabel(RepeatHead)
-        GenerateExpression(Context, Condition -> ContinueRegister)
+        GenerateExpression(Result, Context, Condition -> ContinueRegister)
         EmitJumpIfTrue(ContinueRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
         GenerateBody(Result, Context, Body)
@@ -821,14 +821,14 @@
         EmitPushRepeatLabels(RepeatNext, RepeatTail)
         
         EmitPosition(Position)
-        GenerateExpression(Context, Start -> CounterRegister)
-        GenerateExpression(Context, Finish -> LimitRegister)
+        GenerateExpression(Result, Context, Start -> CounterRegister)
+        GenerateExpression(Result, Context, Finish -> LimitRegister)
         (|
             where(Step -> nil)
             EmitCreateRegister(-> StepRegister)
             EmitAssignInteger(StepRegister, 1)
         ||
-            GenerateExpression(Context, Step -> StepRegister)
+            GenerateExpression(Result, Context, Step -> StepRegister)
         |)
 
         EmitResolveLabel(RepeatHead)
@@ -868,14 +868,14 @@
         EmitPushRepeatLabels(RepeatNext, RepeatTail)
         
         EmitPosition(Position)
-        GenerateExpression(Context, Start -> CounterRegister)
-        GenerateExpression(Context, Finish -> LimitRegister)
+        GenerateExpression(Result, Context, Start -> CounterRegister)
+        GenerateExpression(Result, Context, Finish -> LimitRegister)
         (|
             where(Step -> nil)
             EmitCreateRegister(-> StepRegister)
             EmitAssignInteger(StepRegister, -1)
         ||
-            GenerateExpression(Context, Step -> StepRegister)
+            GenerateExpression(Result, Context, Step -> StepRegister)
         |)
 
         EmitResolveLabel(RepeatHead)
@@ -911,11 +911,11 @@
         EmitPosition(Position)
         EmitCreateRegister(-> IteratorReg)
         EmitAssignUndefined(IteratorReg)
-        GenerateExpression(Context, Container -> TargetReg)
+        GenerateExpression(Result, Context, Container -> TargetReg)
         
         EmitResolveLabel(RepeatHead)
         GenerateDefinitionGroupForInvokes(IteratorInvokes, iterate, Arguments -> Index, Signature)
-        GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
+        GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
         EmitCreateRegister(-> ContinueReg)
         EmitBeginInvoke(Index, Context, ContinueReg)
         EmitContinueInvoke(IteratorReg)
@@ -925,7 +925,7 @@
 
         EmitJumpIfFalse(ContinueReg, RepeatTail)
         
-        GenerateInvoke_AssignArguments(Context, Signature, Arguments)
+        GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
         
         EmitDestroyRegister(ContinueReg)
@@ -952,39 +952,45 @@
         
     'rule' GenerateBody(Result, Context, return(Position, Value)):
         EmitPosition(Position)
-        GenerateExpression(Context, Value -> ReturnReg)
+        GenerateExpression(Result, Context, Value -> ReturnReg)
         EmitReturn(ReturnReg)
         
     'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):
         EmitPosition(Position)
-        GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
+        GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Result)
 
     'rule' GenerateBody(Result, Context, put(Position, Source, Target)):
         EmitPosition(Position)
-        GenerateInvoke_EvaluateArgumentForIn(Context, Source)
-        GenerateInvoke_EvaluateArgumentForOut(Context, Target)
+        GenerateInvoke_EvaluateArgumentForIn(Result, Context, Source)
+        GenerateInvoke_EvaluateArgumentForOut(Result, Context, Target)
         EmitGetRegisterAttachedToExpression(Source -> SrcReg)
         EmitGetRegisterAttachedToExpression(Target -> DstReg)
         EmitAssign(DstReg, SrcReg)
-        GenerateInvoke_AssignArgument(Context, Target)
+        GenerateInvoke_AssignArgument(Result, Context, Target)
         GenerateInvoke_FreeArgument(Source)
         GenerateInvoke_FreeArgument(Target)
+        EmitAssignUndefined(Result)
+        
+    'rule' GenerateBody(Result, Context, get(Position, Value)):
+        GenerateExpression(Result, Context, Value -> Reg)
+        EmitAssign(Result, Reg)
 
     'rule' GenerateBody(Result, Context, invoke(Position, Invokes, Arguments)):
         EmitPosition(Position)
         GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
-        GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
+        GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
         EmitBeginInvoke(Index, Context, Result)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke()
-        GenerateInvoke_AssignArguments(Context, Signature, Arguments)
+        GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
         
     'rule' GenerateBody(Result, Context, throw(Position, Error)):
         EmitPosition(Position)
-        GenerateExpression(Context, Error -> Reg)
+        GenerateExpression(Result, Context, Error -> Reg)
         GenerateBeginBuiltinInvoke("Throw", Context, Reg)
         EmitDestroyRegister(Reg)
+        EmitAssignUndefined(Result)
         
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
@@ -1011,111 +1017,111 @@
 -- For 'out' arguments the expression is not evaluated, but if the expr is an invoke
 -- then its arguments are evaluated ready for the corresponding assign-invoke.
 --
-'action' GenerateInvoke_EvaluateArguments(INT, INVOKESIGNATURE, EXPRESSIONLIST)
+'action' GenerateInvoke_EvaluateArguments(INT, INT, INVOKESIGNATURE, EXPRESSIONLIST)
 
-    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(in, _, SigRest), expressionlist(Expr, ArgRest)):
-        GenerateInvoke_EvaluateArgumentForIn(ContextReg, Expr)
-        GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
+    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(in, _, SigRest), expressionlist(Expr, ArgRest)):
+        GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr)
+        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, ArgRest)
         
-    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(inout, _, SigRest), expressionlist(Expr, ArgRest)):
-        GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Expr)
-        GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
+    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(inout, _, SigRest), expressionlist(Expr, ArgRest)):
+        GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, Expr)
+        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, ArgRest)
 
-    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(out, _, SigRest), expressionlist(Expr, ArgRest)):
-        GenerateInvoke_EvaluateArgumentForOut(ContextReg, Expr)
-        GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
+    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(out, _, SigRest), expressionlist(Expr, ArgRest)):
+        GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, Expr)
+        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, ArgRest)
         
-    'rule' GenerateInvoke_EvaluateArguments(_, nil, _):
+    'rule' GenerateInvoke_EvaluateArguments(_, _, nil, _):
         -- do nothing.
 
-    'rule' GenerateInvoke_EvaluateArguments(_, nil, nil):
+    'rule' GenerateInvoke_EvaluateArguments(_, _, nil, nil):
         -- do nothing.
 
 -- In arguments are simple, just evaluate the expr into a register attached to the
 -- node.
-'action' GenerateInvoke_EvaluateArgumentForIn(INT, EXPRESSION)
+'action' GenerateInvoke_EvaluateArgumentForIn(INT, INT, EXPRESSION)
 
-    'rule' GenerateInvoke_EvaluateArgumentForIn(ContextReg, nil):
+    'rule' GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, nil):
         -- do nothing for nil arguments.
 
-    'rule' GenerateInvoke_EvaluateArgumentForIn(ContextReg, Expr):
-        EmitCreateRegister(-> ResultReg)
-        EmitAttachRegisterToExpression(ResultReg, Expr)
-        GenerateExpressionInRegister(ResultReg, ContextReg, Expr)
+    'rule' GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr):
+        EmitCreateRegister(-> OutputReg)
+        EmitAttachRegisterToExpression(OutputReg, Expr)
+        GenerateExpressionInRegister(ResultReg, ContextReg, Expr, OutputReg)
 
 -- Out arguments are a little bit trickier. If the expr is an invoke then we must
 -- evaluate its arguments, but do no more. Otherwise, it has to be something we
 -- can store in (i.e. slot). If it is neither of these things then our compiler has
 -- not checked things properly!
-'action' GenerateInvoke_EvaluateArgumentForOut(INT, EXPRESSION)
+'action' GenerateInvoke_EvaluateArgumentForOut(INT, INT, EXPRESSION)
 
-    'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
-        EmitCreateRegister(-> ResultReg)
-        EmitAttachRegisterToExpression(ResultReg, Invoke)
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, Invoke:invoke(_, Invokes, Arguments)):
+        EmitCreateRegister(-> OutputReg)
+        EmitAttachRegisterToExpression(OutputReg, Invoke)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
-        GenerateInvoke_EvaluateArguments(ContextReg, Signature, Arguments)
+        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, Signature, Arguments)
 
-    'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, Slot:slot(_, _)):
-        EmitCreateRegister(-> ResultReg)
-        EmitAttachRegisterToExpression(ResultReg, Slot)
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, Slot:slot(_, _)):
+        EmitCreateRegister(-> OutputReg)
+        EmitAttachRegisterToExpression(OutputReg, Slot)
         
-    'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, nil):
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, nil):
         -- do nothing for nil arguments
 
-    'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, _):
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, _):
         Fatal_InternalInconsistency("Invalid expression for out argument not checked properly!")
 
 -- Inout arguments are a combination of 'in' and 'out'. If the expr is an invoke then
 -- we must evaluate its arguments and call its evaluate side. Otherwise the expr has to
 -- be a slot which we must also evaluate. Anything else is an inconsistency.
-'action' GenerateInvoke_EvaluateArgumentForInOut(INT, EXPRESSION)
+'action' GenerateInvoke_EvaluateArgumentForInOut(INT, INT, EXPRESSION)
 
-    'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitCreateRegister(-> OutputReg)
         EmitAttachRegisterToExpression(OutputReg, Invoke)
         GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
-        GenerateInvoke_EvaluateArguments(ContextReg, Signature, Arguments)
+        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, Signature, Arguments)
         EmitCreateRegister(-> IgnoredResultReg)
         EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitContinueInvoke(OutputReg)
         EmitEndInvoke()
         EmitDestroyRegister(IgnoredResultReg)
-        GenerateInvoke_AssignArguments(ContextReg, Signature, Arguments)
+        GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
 
-    'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Slot:slot(_, _)):
-        EmitCreateRegister(-> ResultReg)
-        EmitAttachRegisterToExpression(ResultReg, Slot)
-        GenerateExpressionInRegister(ResultReg, ContextReg, Slot)
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, Slot:slot(_, _)):
+        EmitCreateRegister(-> OutputReg)
+        EmitAttachRegisterToExpression(OutputReg, Slot)
+        GenerateExpressionInRegister(ResultReg, ContextReg, Slot, OutputReg)
         
-    'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, nil):
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, nil):
         -- do nothing for nil arguments
 
-    'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, _):
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, _):
         Fatal_InternalInconsistency("Invalid expression for inout argument not checked properly!")
 
 ----
 
-'action' GenerateInvoke_AssignArguments(INT, INVOKESIGNATURE, EXPRESSIONLIST)
+'action' GenerateInvoke_AssignArguments(INT, INT, INVOKESIGNATURE, EXPRESSIONLIST)
 
-    'rule' GenerateInvoke_AssignArguments(ContextReg, invokesignature(in, _, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_AssignArguments(ResultReg, ContextReg, invokesignature(in, _, SigRest), expressionlist(Expr, ArgRest)):
         -- nothing to do for in arguments
-        GenerateInvoke_AssignArguments(ContextReg, SigRest, ArgRest)
+        GenerateInvoke_AssignArguments(ResultReg, ContextReg, SigRest, ArgRest)
         
-    'rule' GenerateInvoke_AssignArguments(ContextReg, invokesignature(_, _, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_AssignArguments(ResultReg, ContextReg, invokesignature(_, _, SigRest), expressionlist(Expr, ArgRest)):
         -- out and inout are the same
-        GenerateInvoke_AssignArgument(ContextReg, Expr)
-        GenerateInvoke_AssignArguments(ContextReg, SigRest, ArgRest)
+        GenerateInvoke_AssignArgument(ResultReg, ContextReg, Expr)
+        GenerateInvoke_AssignArguments(ResultReg, ContextReg, SigRest, ArgRest)
 
-    'rule' GenerateInvoke_AssignArguments(_, nil, _):
+    'rule' GenerateInvoke_AssignArguments(_, _, nil, _):
         -- do nothing.
 
-    'rule' GenerateInvoke_AssignArguments(_, nil, nil):
+    'rule' GenerateInvoke_AssignArguments(_, _, nil, nil):
         -- do nothing.
         
-'action' GenerateInvoke_AssignArgument(INT, EXPRESSION)
+'action' GenerateInvoke_AssignArgument(INT, INT, EXPRESSION)
 
-    'rule' GenerateInvoke_AssignArgument(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
+    'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
         [|
@@ -1127,9 +1133,9 @@
             EmitEndInvoke()
             EmitDestroyRegister(IgnoredResultReg)
         |]
-        GenerateInvoke_AssignArguments(ContextReg, Signature, Arguments)
+        GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
         
-    'rule' GenerateInvoke_AssignArgument(ContextReg, Slot:slot(_, Id)):
+    'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Slot:slot(_, Id)):
         EmitGetRegisterAttachedToExpression(Slot -> InputReg)
         QuerySymbolId(Id -> Info)
         Info'Kind -> Kind
@@ -1293,20 +1299,20 @@
 
 ----
 
-'action' GenerateCallInRegister(INT, INT, POS, ID, EXPRESSIONLIST)
+'action' GenerateCallInRegister(INT, INT, POS, ID, EXPRESSIONLIST, INT)
 
-    'rule' GenerateCallInRegister(ResultRegister, Context, Position, Handler, Arguments):
+    'rule' GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output):
         QuerySymbolId(Handler -> Info)
         Info'Index -> Index
         Info'Kind -> Kind
         Info'Type -> handler(_, signature(HandlerSig, _))
         GenerateCall_GetInvokeSignature(HandlerSig -> InvokeSig)
 
-        GenerateInvoke_EvaluateArguments(Context, InvokeSig, Arguments)
-        EmitBeginInvoke(Index, Context, ResultRegister)
+        GenerateInvoke_EvaluateArguments(Result, Context, InvokeSig, Arguments)
+        EmitBeginInvoke(Index, Context, Output)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke
-        GenerateInvoke_AssignArguments(Context, InvokeSig, Arguments)
+        GenerateInvoke_AssignArguments(Result, Context, InvokeSig, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
 
 'action' GenerateCall_GetInvokeSignature(PARAMETERLIST -> INVOKESIGNATURE)
@@ -1319,77 +1325,80 @@
 
 ----
 
-'action' GenerateExpression(INT, EXPRESSION -> INT)
+'action' GenerateExpression(INT, INT, EXPRESSION -> INT)
 
-    'rule' GenerateExpression(Context, Expr -> Reg):
-        EmitCreateRegister(-> Reg)
-        GenerateExpressionInRegister(Reg, Context, Expr)
+    'rule' GenerateExpression(Result, Context, Expr -> Output):
+        EmitCreateRegister(-> Output)
+        GenerateExpressionInRegister(Result, Context, Expr, Output)
 
-'action' GenerateExpressionInRegister(INT, INT, EXPRESSION)
+'action' GenerateExpressionInRegister(INT, INT, EXPRESSION, INT)
 
-    'rule' GenerateExpressionInRegister(Result, Context, undefined(_)):
-        EmitAssignUndefined(Result)
+    'rule' GenerateExpressionInRegister(Result, Context, undefined(_), Output):
+        EmitAssignUndefined(Output)
 
-    'rule' GenerateExpressionInRegister(Result, Context, true(_)):
-        EmitAssignTrue(Result)
+    'rule' GenerateExpressionInRegister(Result, Context, true(_), Output):
+        EmitAssignTrue(Output)
         
-    'rule' GenerateExpressionInRegister(Result, Context, false(_)):
-        EmitAssignFalse(Result)
+    'rule' GenerateExpressionInRegister(Result, Context, false(_), Output):
+        EmitAssignFalse(Output)
         
-    'rule' GenerateExpressionInRegister(Result, Context, integer(_, Value)):
-        EmitAssignInteger(Result, Value)
+    'rule' GenerateExpressionInRegister(Result, Context, integer(_, Value), Output):
+        EmitAssignInteger(Output, Value)
         
-    'rule' GenerateExpressionInRegister(Result, Context, real(_, Value)):
-        EmitAssignReal(Result, Value)
+    'rule' GenerateExpressionInRegister(Result, Context, real(_, Value), Output):
+        EmitAssignReal(Output, Value)
         
-    'rule' GenerateExpressionInRegister(Result, Context, string(_, Value)):
-        EmitAssignString(Result, Value)
+    'rule' GenerateExpressionInRegister(Result, Context, string(_, Value), Output):
+        EmitAssignString(Output, Value)
         
-    'rule' GenerateExpressionInRegister(Result, Context, slot(_, Id)):
+    'rule' GenerateExpressionInRegister(Result, Context, slot(_, Id), Output):
         QuerySymbolId(Id -> Info)
         Info'Kind -> Kind
         Info'Index -> Index
-        EmitFetchVar(Kind, Result, Index)
+        EmitFetchVar(Kind, Output, Index)
         
-    'rule' GenerateExpressionInRegister(Result, Context, logicalor(_, Left, Right)):
+    'rule' GenerateExpressionInRegister(Result, Context, result(_), Output):
+        EmitAssign(Output, Result)
+        
+    'rule' GenerateExpressionInRegister(Result, Context, logicalor(_, Left, Right), Output):
         EmitDeferLabel(-> ShortLabel)
-        GenerateExpressionInRegister(Result, Context, Left)
+        GenerateExpressionInRegister(Result, Context, Left, Output)
         EmitJumpIfTrue(Result, ShortLabel)
-        GenerateExpressionInRegister(Result, Context, Right)
+        GenerateExpressionInRegister(Result, Context, Right, Output)
         EmitResolveLabel(ShortLabel)
 
-    'rule' GenerateExpressionInRegister(Result, Context, logicaland(_, Left, Right)):
+    'rule' GenerateExpressionInRegister(Result, Context, logicaland(_, Left, Right), Output):
         EmitDeferLabel(-> ShortLabel)
-        GenerateExpressionInRegister(Result, Context, Left)
+        GenerateExpressionInRegister(Result, Context, Left, Output)
         EmitJumpIfFalse(Result, ShortLabel)
-        GenerateExpressionInRegister(Result, Context, Right)
+        GenerateExpressionInRegister(Result, Context, Right, Output)
         EmitResolveLabel(ShortLabel)
 
-    'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _)):
+    'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _), Output):
         -- TODO
     
-    'rule' GenerateExpressionInRegister(Result, Context, list(Position, List)):
-        GenerateExpressionList(Context, List -> ListRegs)
-        EmitBeginAssignList(Result)
+    'rule' GenerateExpressionInRegister(Result, Context, list(Position, List), Output):
+        GenerateExpressionList(Result, Context, List -> ListRegs)
+        EmitBeginAssignList(Output)
         GenerateAssignList(ListRegs)
         EmitEndAssignList()
     
-    'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments)):
-        GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
+    'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments), Output):
+        GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output)
     
-    'rule' GenerateExpressionInRegister(Result, Context, invoke(_, Invokes, Arguments)):
+    'rule' GenerateExpressionInRegister(Result, Context, invoke(_, Invokes, Arguments), Output):
         GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
-        GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
+        GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
         EmitCreateRegister(-> IgnoredReg)
         EmitBeginInvoke(Index, Context, IgnoredReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
-        EmitContinueInvoke(Result)
+        EmitContinueInvoke(Output)
         EmitEndInvoke()
         EmitDestroyRegister(IgnoredReg)
-        GenerateInvoke_AssignArguments(Context, Signature, Arguments)
+        GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
         
-    'rule' GenerateExpressionInRegister(_, _, Expr):
+    'rule' GenerateExpressionInRegister(_, _, Expr, _):
         print(Expr)
         eq(0, 1)
 
@@ -1438,13 +1447,13 @@
     'rule' EmitDestroyRegisterList(nil):
         -- nothing
 
-'action' GenerateExpressionList(INT, EXPRESSIONLIST -> INTLIST)
+'action' GenerateExpressionList(INT, INT, EXPRESSIONLIST -> INTLIST)
 
-    'rule' GenerateExpressionList(Context, expressionlist(Head, Tail) -> intlist(HeadReg, TailRegs)):
-        GenerateExpression(Context, Head -> HeadReg)
-        GenerateExpressionList(Context, Tail -> TailRegs)
+    'rule' GenerateExpressionList(Result, Context, expressionlist(Head, Tail) -> intlist(HeadReg, TailRegs)):
+        GenerateExpression(Result, Context, Head -> HeadReg)
+        GenerateExpressionList(Result, Context, Tail -> TailRegs)
         
-    'rule' GenerateExpressionList(_, nil -> nil)
+    'rule' GenerateExpressionList(_, _, nil -> nil)
         -- nothing
 
 --------------------------------------------------------------------------------
@@ -1639,7 +1648,7 @@
         QuerySymbolId(Id -> Info)
         Info'Parent -> ModuleId
 
-'action' QuerySymbolId(ID -> SYMBOLINFO)
+'condition' QuerySymbolId(ID -> SYMBOLINFO)
 
     'rule' QuerySymbolId(Id -> Info):
         QueryId(Id -> symbol(Info))
