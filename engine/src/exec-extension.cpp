@@ -712,7 +712,14 @@ static bool __script_try_to_convert_to_data(MCExecContext& ctxt, MCValueRef& x_v
     // If we now have a string, then we can make it data.
     if (t_is_string)
     {
-        // todo
+        MCDataRef t_data;
+        if (!MCDataConvertStringToData((MCStringRef)x_value, t_data))
+            return false;
+        
+        MCValueRelease(x_value);
+        x_value = t_data;
+        r_converted = true;
+        return true;
     }
     
     // We failed to convert.
