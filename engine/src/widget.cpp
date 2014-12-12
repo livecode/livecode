@@ -1230,7 +1230,7 @@ bool MCWidget::CallGetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
     if (t_success)
     {
         // Convert to a script type
-        t_success = MCEngineConvertToScriptType(ctxt, r_value);
+        t_success = MCExtensionConvertToScriptType(ctxt, r_value);
     }
     
     if (!t_success)
@@ -1261,7 +1261,7 @@ bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
     if (!MCScriptQueryPropertyOfModule(m_module, p_property, t_gettype, t_settype))
         return false;
     
-    if (!MCEngineConvertFromScriptType(ctxt, t_settype, p_value))
+    if (!MCExtensionConvertFromScriptType(ctxt, t_settype, p_value))
         return false;
     
     // Invoke event handler.
