@@ -1,7 +1,7 @@
 ###############################################################################
 # Engine Targets
 
-.PHONY: libopenssl liburlcache libstubs libfoundation libcore
+.PHONY: libopenssl liburlcache libstubs libfoundation libcore libscript
 .PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libgraphics libskia
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
@@ -40,6 +40,9 @@ libskia:
 
 libfoundation:
 	$(MAKE) -C ./libfoundation libfoundation
+
+libscript:
+	$(MAKE) -C ./libscript libscript
 
 revsecurity:
 	$(MAKE) -C ./thirdparty/libopenssl -f Makefile.revsecurity revsecurity

@@ -1,0 +1,37 @@
+NAME=libscript
+TYPE=archive
+
+include ../rules/environment.linux.makefile
+
+SOURCES=\
+	module-arithmetic.cpp \
+	module-array.cpp \
+	module-binary.cpp \
+	module-bitwise.cpp \
+	module-byte.cpp \
+	module-char.cpp \
+	module-encoding.cpp \
+	module-file.cpp \
+	module-list.cpp \
+	module-logic.cpp \
+	module-map.cpp \
+	module-math.cpp \
+	module-math_foundation.cpp \
+	module-sort.cpp \
+	module-string.cpp \
+	module-type_convert.cpp \
+	module-type.cpp \
+	module-url.cpp \
+	script-builder.cpp \
+	script-instance.cpp \
+	script-module.cpp \
+	script-object.cpp \
+	script-package.cpp
+
+CUSTOM_DEFINES=TARGET_PLATFORM_LINUX
+
+CUSTOM_INCLUDES=./src ../engine/src
+
+CUSTOM_CCFLAGS=-fno-exceptions -fno-rtti
+
+include ../rules/archive.linux.makefile

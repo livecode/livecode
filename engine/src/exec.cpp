@@ -358,18 +358,8 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
     if (!ConvertToString(p_value, &t_string))
         return false;
     
-    // Strings always convert to data as native characters
-    uindex_t t_native_length;
-    if (MCStringIsNative(*t_string))
-    {
-        const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
-        return MCDataCreateWithBytes(t_data, t_native_length, r_data);
-    }
-    
-    char_t *t_native_chars;
-    MCMemoryNewArray(MCStringGetLength(*t_string), t_native_chars);
-    t_native_length = MCStringGetNativeChars(*t_string, MCRangeMake(0, UINDEX_MAX), t_native_chars);
-    return MCDataCreateWithBytesAndRelease((byte_t *)t_native_chars, t_native_length, r_data);
+    // AL-2014-12-12: [[ Bug 14208 ]] Implement a specific function to aid conversion to data
+    return MCDataConvertStringToData(*t_string, r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)

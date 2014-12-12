@@ -1851,6 +1851,9 @@ MC_DLLEXPORT uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, 
 // Nativize self
 MC_DLLEXPORT void MCStringNativize(MCStringRef string);
 
+// Create a native copy of p_string
+bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy);
+
 // Maps from a codepoint (character) range to a code unit (StringRef) range
 MC_DLLEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
 
@@ -2184,6 +2187,8 @@ MC_DLLEXPORT extern MCDataRef kMCEmptyData;
 MC_DLLEXPORT bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 MC_DLLEXPORT bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 
+MC_DLLEXPORT bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data);
+
 MC_DLLEXPORT bool MCDataIsEmpty(MCDataRef p_data);
 
 MC_DLLEXPORT uindex_t MCDataGetLength(MCDataRef p_data);
@@ -2438,6 +2443,8 @@ MC_DLLEXPORT bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValu
 MC_DLLEXPORT bool MCRecordEncodeAsArray(MCRecordRef record, MCArrayRef & r_array);
 MC_DLLEXPORT bool MCRecordDecodeFromArray(MCArrayRef array, MCTypeInfoRef p_typeinfo, MCRecordRef & r_record);
 
+MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCNameRef& r_field, MCValueRef& r_value);
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  HANDLER DEFINITIONS

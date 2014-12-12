@@ -1980,8 +1980,8 @@ int main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-    extern bool MCCanvasModuleInitialize(void);
-	if (!MCInitialize() || !MCCanvasModuleInitialize() || !MCScriptInitialize())
+    extern bool MCModulesInitialize();
+	if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
     
 	// On OSX, argv and envp are encoded as UTF8
@@ -2032,6 +2032,9 @@ int main(int argc, char *argv[], char *envp[])
 	// Drain the autorelease pool.
 	[t_pool release];
 	
+    extern void MCModulesFinalize(void);
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
 	
 	return 0;

@@ -47,6 +47,8 @@
 
 #include "module-canvas.h"
 
+#include "module-engine.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
@@ -1230,7 +1232,7 @@ bool MCWidget::CallGetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
     if (t_success)
     {
         // Convert to a script type
-        t_success = MCEngineConvertToScriptType(ctxt, r_value);
+        t_success = MCExtensionConvertToScriptType(ctxt, r_value);
     }
     
     if (!t_success)
@@ -1261,7 +1263,7 @@ bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
     if (!MCScriptQueryPropertyOfModule(m_module, p_property, t_gettype, t_settype))
         return false;
     
-    if (!MCEngineConvertFromScriptType(ctxt, t_settype, p_value))
+    if (!MCExtensionConvertFromScriptType(ctxt, t_settype, p_value))
         return false;
     
     // Invoke event handler.
@@ -1300,15 +1302,33 @@ MCTypeInfoRef kMCPressedState;
 extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
 {
     if (MCwidgetobject == nil)
-        return; // TODO - throw an error.
+    {
+        MCErrorThrowGeneric(); // TODO - throw an error
+        return;
+    }
     
     MCwidgetobject -> layer_redrawall();
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCErrorThrowGeneric(); // TODO - throw an error
+        return;
+    }
+    
+    if (!MCScriptObjectCreate(MCwidgetobject, 0, r_script_object))
+        return;
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
-        return; // TODO - throw an error.
+    {
+        MCErrorThrowGeneric(); // TODO - throw an error
+        return;
+    }
     
     MCRectangle t_rect;
     MCGRectangle t_grect;
@@ -1322,7 +1342,10 @@ extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
 extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
-        return; // TODO - throw an error.
+    {
+        MCErrorThrowGeneric(); // TODO - throw an error
+        return;
+    }
     
     MCRectangle t_rect;
     MCGRectangle t_grect;
@@ -1341,7 +1364,10 @@ extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
 extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
-        return; // TODO - throw an error.
+    {
+        MCErrorThrowGeneric(); // TODO - throw an error
+        return;
+    }
     
     MCRectangle t_rect;
     MCGRectangle t_grect;
@@ -1355,7 +1381,10 @@ extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
 extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
 {
     if (MCwidgetobject == nil)
-        return; // TODO - throw an error.
+    {
+        MCErrorThrowGeneric(); // TODO - throw an error
+        return;
+    }
     
     // TODO - coordinate transform
     
@@ -1377,7 +1406,10 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPo
 extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPointRef& r_point)
 {
     if (MCwidgetobject == nil)
-        return; // TODO - throw an error.
+    {
+        MCErrorThrowGeneric(); // TODO - throw an error
+        return;
+    }
     
     // TODO - coordinate transforms
     
@@ -1399,7 +1431,10 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
 extern "C" MC_DLLEXPORT void MCWidgetGetMouseButtonState(uinteger_t p_index, MCPressedStateRef r_state)
 {
     if (MCwidgetobject == nil)
-        return; // TODO - throw an error.
+    {
+        MCErrorThrowGeneric(); // TODO - throw an error
+        return;
+    }
     
     // TODO: implement
     MCAssert(false);

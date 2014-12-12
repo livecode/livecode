@@ -181,6 +181,25 @@ bool MCProperListFetchAsArrayOfReal(MCProperListRef p_list, uindex_t p_size, rea
 	return true;
 }
 
+bool MCProperListCreateWithArrayOfReal(const real64_t *p_reals, uindex_t p_size, MCProperListRef &r_list)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCAutoNumberRefArray t_numbers;
+	
+	if (t_success)
+		t_success = t_numbers.New(p_size);
+	
+	for (uindex_t i = 0; t_success && i < p_size; i++)
+		t_success = MCNumberCreateWithReal(p_reals[i], t_numbers[i]);
+	
+	if (t_success)
+		t_success = MCProperListCreate((MCValueRef*)*t_numbers, p_size, r_list);
+	
+	return t_success;
+}
+
 bool MCProperListFetchAsArrayOfInteger(MCProperListRef p_list, uindex_t p_size, integer_t *r_integers)
 {
 	if (p_size != MCProperListGetLength(p_list))
@@ -654,6 +673,15 @@ bool MCProperListToPoint(MCProperListRef p_list, MCGPoint &r_point)
 	r_point = MCGPointMake(t_point[0], t_point[1]);
 	
 	return true;
+}
+
+bool MCProperListFromPoint(const MCGPoint &p_point, MCProperListRef &r_list)
+{
+	real64_t t_point[2];
+	t_point[0] = p_point.x;
+	t_point[1] = p_point.y;
+	
+	return MCProperListCreateWithArrayOfReal(t_point, 2, r_list);
 }
 
 // Constructors
@@ -1299,7 +1327,7 @@ MCGAffineTransform MCCanvasTransformCompose(const MCGPoint &p_scale, MCCanvasFlo
 	return t_transform;
 }
 
-void MCCanvasTransformGetScale(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_scale)
+void MCCanvasTransformGetScaleAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_scale)
 {
 	MCGPoint t_scale, t_skew, t_translation;
 	MCCanvasFloat t_rotation;
@@ -1310,10 +1338,10 @@ void MCCanvasTransformGetScale(MCCanvasTransformRef p_transform, MCCanvasPointRe
 		return;
 	}
 	
-	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_scale, r_scale);
+	/* UNCHECKED */ MCProperListFromPoint(t_scale, r_scale);
 }
 
-void MCCanvasTransformSetScale(MCCanvasPointRef p_scale, MCCanvasTransformRef &x_transform)
+void MCCanvasTransformSetScaleAsList(MCProperListRef p_scale, MCCanvasTransformRef &x_transform)
 {
 	MCGPoint t_scale, t_skew, t_translation;
 	MCCanvasFloat t_rotation;
@@ -1324,7 +1352,10 @@ void MCCanvasTransformSetScale(MCCanvasPointRef p_scale, MCCanvasTransformRef &x
 		return;
 	}
 	
-	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(*MCCanvasPointGet(p_scale), t_rotation, t_skew, t_translation), x_transform);
+	if (!MCProperListToScale(p_scale, t_scale))
+		return;
+		
+	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, t_skew, t_translation), x_transform);
 }
 
 void MCCanvasTransformGetRotation(MCCanvasTransformRef p_transform, MCCanvasFloat &r_rotation)
@@ -1354,7 +1385,7 @@ void MCCanvasTransformSetRotation(MCCanvasFloat p_rotation, MCCanvasTransformRef
 	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, MCCanvasAngleToRadians(p_rotation), t_skew, t_translation), x_transform);
 }
 
-void MCCanvasTransformGetSkew(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_skew)
+void MCCanvasTransformGetSkewAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_skew)
 {
 	MCGPoint t_scale, t_skew, t_translation;
 	MCCanvasFloat t_rotation;
@@ -1365,10 +1396,10 @@ void MCCanvasTransformGetSkew(MCCanvasTransformRef p_transform, MCCanvasPointRef
 		return;
 	}
 	
-	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_skew, r_skew);
+	/* UNCHECKED */ MCProperListFromPoint(t_skew, r_skew);
 }
 
-void MCCanvasTransformSetSkew(MCCanvasPointRef p_skew, MCCanvasTransformRef &x_transform)
+void MCCanvasTransformSetSkewAsList(MCProperListRef p_skew, MCCanvasTransformRef &x_transform)
 {
 	MCGPoint t_scale, t_skew, t_translation;
 	MCCanvasFloat t_rotation;
@@ -1379,10 +1410,13 @@ void MCCanvasTransformSetSkew(MCCanvasPointRef p_skew, MCCanvasTransformRef &x_t
 		return;
 	}
 	
-	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, *MCCanvasPointGet(p_skew), t_translation), x_transform);
+	if (!MCProperListToSkew(p_skew, t_skew))
+		return;
+	
+	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, t_skew, t_translation), x_transform);
 }
 
-void MCCanvasTransformGetTranslation(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_translation)
+void MCCanvasTransformGetTranslationAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_translation)
 {
 	MCGPoint t_scale, t_skew, t_translation;
 	MCCanvasFloat t_rotation;
@@ -1393,10 +1427,10 @@ void MCCanvasTransformGetTranslation(MCCanvasTransformRef p_transform, MCCanvasP
 		return;
 	}
 	
-	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_translation, r_translation);
+	/* UNCHECKED */ MCProperListFromPoint(t_translation, r_translation);
 }
 
-void MCCanvasTransformSetTranslation(MCCanvasPointRef p_translation, MCCanvasTransformRef &x_transform)
+void MCCanvasTransformSetTranslationAsList(MCProperListRef p_translation, MCCanvasTransformRef &x_transform)
 {
 	MCGPoint t_scale, t_skew, t_translation;
 	MCCanvasFloat t_rotation;
@@ -1407,7 +1441,10 @@ void MCCanvasTransformSetTranslation(MCCanvasPointRef p_translation, MCCanvasTra
 		return;
 	}
 	
-	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, t_skew, *MCCanvasPointGet(p_translation)), x_transform);
+	if (!MCProperListToTranslation(p_translation, t_translation))
+		return;
+	
+	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, t_skew, t_translation), x_transform);
 }
 
 //////////
