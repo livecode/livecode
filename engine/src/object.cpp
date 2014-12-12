@@ -509,7 +509,7 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 	case XK_Down:
 		if (message_with_valueref_args(MCM_arrow_key, MCSTR("down")) == ES_NORMAL)
 			return True;
-		break;
+        break;
     default:
 		MCAutoStringRef t_string;
 			

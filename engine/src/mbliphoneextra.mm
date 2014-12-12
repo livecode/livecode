@@ -1870,7 +1870,6 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {true, "mobilePickTime", MCHandlePickTime, nil},
     {true, "mobilePickDateAndTime", MCHandlePickDateAndTime, nil},
     {true, "mobilePick", MCHandlePick, nil},
-<<<<<<< HEAD
     
     {false, "iphoneSetKeyboardType", MCHandleSetKeyboardType, nil},
     {false, "iphoneSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
