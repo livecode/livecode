@@ -1123,6 +1123,27 @@ void MCStringNativize(MCStringRef self)
     __MCStringNativize(self);
 }
 
+bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy)
+{
+    // AL-2014-12-12: [[ Bug 14208 ]] Implement a native copy function to aid conversion to data
+    if (MCStringIsNative(p_string))
+        return MCStringCopy(p_string, r_copy);
+    
+    MCStringRef t_string;
+    t_string = nil;
+    
+    if (!MCStringMutableCopy(p_string, t_string))
+        return false;
+    
+    __MCStringNativize(t_string);
+    
+    __MCStringMakeImmutable(t_string);
+    t_string -> flags &= ~kMCStringFlagIsMutable;
+    
+    r_copy = t_string;
+    return true;
+}
+
 bool MCStringIsNative(MCStringRef self)
 {
     if (__MCStringIsIndirect(self))

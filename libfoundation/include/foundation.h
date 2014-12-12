@@ -1538,6 +1538,9 @@ uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars
 // Nativize self
 void MCStringNativize(MCStringRef string);
 
+// Create a native copy of p_string
+bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy);
+
 // Maps from a codepoint (character) range to a code unit (StringRef) range
 bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
 
@@ -1857,6 +1860,8 @@ extern MCDataRef kMCEmptyData;
 
 bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+
+bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data);
 
 bool MCDataIsEmpty(MCDataRef p_data);
 
