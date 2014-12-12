@@ -2438,6 +2438,8 @@ MC_DLLEXPORT bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValu
 MC_DLLEXPORT bool MCRecordEncodeAsArray(MCRecordRef record, MCArrayRef & r_array);
 MC_DLLEXPORT bool MCRecordDecodeFromArray(MCArrayRef array, MCTypeInfoRef p_typeinfo, MCRecordRef & r_record);
 
+MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCNameRef& r_field, MCValueRef& r_value);
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  HANDLER DEFINITIONS
