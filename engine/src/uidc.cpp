@@ -1202,7 +1202,10 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
     if (stime < eventtime)
         eventtime = stime;
     
-    if (nmessages > 0 && messages[0] . time < eventtime)
+    // SN-2014-12-12: [[ Bug 13360 ]] We don't want to change the eventtime if the message is not forced to be dispatched nor internal
+    if (nmessages > 0
+            && (dispatch || messages[0] . id == 0)
+            && messages[0] . time < eventtime)
         eventtime = messages[0] . time;
     
     return t_handled;
