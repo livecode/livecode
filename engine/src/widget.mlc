@@ -1,11 +1,116 @@
 module com.livecode.widget
 
+use com.livecode.canvas
+
+// ---------- Widget commands ---------- //
+
 public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
 
 syntax RedrawAll is statement
   "redraw" "all"
 begin
   MCWidgetExecRedrawAll()
+end syntax
+
+
+// ---------- External properties of widgets ---------- //
+
+public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetFrame(out rRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetBounds(out rRect as Rectangle) as undefined binds to "<builtin>"
+
+syntax MyRectangle is expression
+  "my" "rectangle"
+begin
+    MCWidgetGetRectangle(output)
+end syntax
+
+syntax MyFrame is expression
+  "my" "frame"
+begin
+    MCWidgetGetFrame(output)
+end syntax
+
+syntax MyBounds is expression
+  "my" "bounds"
+begin
+    MCWidgetGetBounds(output)
+end syntax
+
+
+
+// ---------- Synchronous and asynchronous ("current") event information ---------- //
+
+//foreign type PressedState binds to "kMCPressedState"
+
+public foreign handler MCWidgetGetMousePosition(in pCurrent as bool, out rLocation as Point) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetClickPosition(in pCurrent as bool, out rLocation as Point) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetMouseButtonState(in pIndex as uint, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetModifierKeys(in pCurrent as bool, out rKeys as list) as undefined binds to "<builtin>"
+
+syntax TheMouseLocation is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "mouse" "position"
+begin
+    MCWidgetGetMousePosition(IsCurrent, output)
+end syntax
+
+syntax TheClickLocation is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "position"
+begin
+    MCWidgetGetClickPosition(IsCurrent, output)
+end syntax
+
+syntax MouseButtonName is phrase
+    ( "primary" <Index=1> | "secondary" <Index=2> | "left" <Index=1> | "right" <Index=2> | "middle" <Index=3> )
+begin
+end syntax
+
+syntax TheMouseButtonState is expression
+  "the" <Index: MouseButtonName> "mouse" "button"
+begin
+    MCWidgetGetMouseButtonState(Index, output)
+end syntax
+
+syntax TheModifierKeys is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "modifier" "keys"
+begin
+    MCWidgetGetModifierKeys(IsCurrent, output)
+end syntax
+
+
+// ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
+
+public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as bool, out rPressed as bool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as bool, out rNotPressed as bool) as undefined binds to "<builtin>"
+
+syntax IsPressed is postfix operator with precedence 5
+  <mState: Expression> "is" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
+begin
+    MCWidgetEvalStateIsPressed(mState, Currently, output)
+end syntax
+
+syntax IsNotPressed is postfix operator with precedence 5
+  <mState: Expression> "is not" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
+begin
+    MCWidgetEvalStateIsNotPressed(mState, Currently, output)
+end syntax
+
+
+// ---------- Syntactic sugar for points and rects ---------- //
+
+public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as bool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as bool) as undefined binds to "<builtin>"
+
+syntax IsPointWithinRect is neutral binary operator with precedence 5
+  <mPoint: Expression> "is" "within" <mRect: Expression>
+begin
+    MCWidgetEvalIsPointWithinRect(mPoint, mRect, output)
+end syntax
+
+syntax IsPointNotWithinRect is neutral binary operator with precedence 5
+  <mPoint: Expression> "is not" "within" <mRect: Expression>
+begin
+    MCWidgetEvalIsPointNotWithinRect(mPoint, mRect, output)
 end syntax
 
 end module

@@ -45,6 +45,8 @@
 
 #include "widget-events.h"
 
+#include "module-canvas.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
@@ -72,6 +74,7 @@ MCObjectPropertyTable MCWidget::kPropertyTable =
 
 MCWidget::MCWidget(MCNameRef p_kind) :
   m_kind(p_kind),
+  m_module(nil),
   m_instance(nil),
   m_native_layer(nil)
 {
@@ -81,6 +84,7 @@ MCWidget::MCWidget(MCNameRef p_kind) :
 MCWidget::MCWidget(const MCWidget& p_other) :
   MCControl(p_other),
   m_kind(MCValueRetain(p_other.m_kind)),
+  m_module(nil),
   m_instance(nil),
   m_native_layer(nil)
 {
@@ -116,7 +120,11 @@ MCWidget* MCWidget::createInstanceOfKind(MCNameRef p_kind)
     // Create the widget and set its instance
     MCWidget* t_widget;
     t_widget = new MCWidget(p_kind);
+    t_widget->m_module = t_module;
     t_widget->m_instance = t_instance;
+    
+    // Widget has now been created
+    t_widget->OnCreate();
     
     return t_widget;
 }
@@ -167,7 +175,7 @@ Boolean MCWidget::kdown(MCStringRef p_key_string, KeySym p_key)
 	if (MCwidgeteventmanager->event_kdown(this, p_key_string, p_key))
 		return True;
 
-	return MCObject::kdown(p_key_string, p_key);
+	return MCControl::kdown(p_key_string, p_key);
 }
 
 Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
@@ -175,7 +183,7 @@ Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
 	if (MCwidgeteventmanager->event_kup(this, p_key_string, p_key))
         return True;
     
-    return False;
+    return MCControl::kup(p_key_string, p_key);
 }
 
 Boolean MCWidget::mdown(uint2 p_which)
@@ -196,9 +204,12 @@ Boolean MCWidget::mdown(uint2 p_which)
 		setstate(True, CS_MFOCUSED);
 		if (p_which == Button1)
 			start(True);
+        else
+            message_with_args(MCM_mouse_down, p_which);
 		break;
 
 	default:
+        message_with_args(MCM_mouse_down, p_which);
 		break;	
 	}
 
@@ -418,6 +429,10 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_UNICODE_TOOL_TIP:
 		case P_LAYER_MODE:
             
+        // Development mode only
+        case P_REV_AVAILABLE_HANDLERS:
+        case P_REV_AVAILABLE_VARIABLES:
+    
         case P_KIND:
 			return MCControl::getprop(ctxt, p_part_id, p_which, p_index, p_effective, r_value);
             
@@ -428,7 +443,11 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     MCNewAutoNameRef t_name_for_prop;
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
-    // CallGetProp
+    if (CallGetProp(ctxt, *t_name_for_prop, p_index, r_value.valueref_value))
+    {
+        r_value.type = kMCExecValueTypeValueRef;
+        return true;
+    }
     
     // No properties handled for now.
     return false;
@@ -529,7 +548,13 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     MCNewAutoNameRef t_name_for_prop;
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
-    // CallSetProp
+    MCAutoValueRef t_value;
+    MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, &t_value);
+    if (!ctxt.HasError())
+    {
+        if (CallSetProp(ctxt, *t_name_for_prop, nil, *t_value))
+            return true;
+    }
     
     // No properties handled for now.
     return false;
@@ -537,7 +562,11 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 
 bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
 {
-    // CallGetProp(p_prop_name, nil, ...)
+    if (CallGetProp(ctxt, p_prop_name, nil, r_value.valueref_value))
+    {
+        r_value.type = kMCExecValueTypeValueRef;
+        return true;
+    }
     
     // Not handled for now.
     return false;
@@ -545,7 +574,13 @@ bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 
 bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
 {
-    // CallSetProp(p_prop_name, nil, ...)
+    MCAutoValueRef t_value;
+    MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, &t_value);
+    if (!ctxt.HasError())
+    {
+        if (CallSetProp(ctxt, p_prop_name, nil, *t_value))
+            return true;
+    }
     
     // Not handled for now.
     return false;
@@ -742,17 +777,15 @@ void MCWidget::OnDetach()
     CallHandler(MCNAME("OnDetach"), nil, 0);
 }
 
-MCDC* g_widget_paint_dc;
-
 void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
     if (m_native_layer)
         m_native_layer->OnPaint(p_dc, p_rect);
-    else
-        CallHandler(MCNAME("OnPaint"), nil, 0);
-    
-    g_widget_paint_dc = p_dc;
+
+    uintptr_t t_cookie;
+    MCCanvasPush(((MCGraphicsContext*)p_dc)->getgcontextref(), t_cookie);
     CallHandler(MCNAME("OnPaint"), nil, 0);
+    MCCanvasPop(t_cookie);
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
@@ -1163,38 +1196,93 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
         else
             MCValueRelease(t_retval);
     }
+    else
+    {
+        MCErrorRef t_error;
+        
+        // TODO: handle
+        if (MCErrorCatch(t_error))
+        {
+            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
+            MCValueRelease(t_error);
+        }
+        else
+            MCLog("Failed to execute handler %@", p_name);
+    }
     
 	MCwidgetobject = t_old_widget_object;
     
 	return t_success;
 }
 
-bool MCWidget::CallGetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef& r_value)
+bool MCWidget::CallGetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef p_key, MCValueRef& r_value)
 {
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
-	
+
     // Invoke event handler.
     bool t_success;
     t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
     
 	MCwidgetobject = t_old_widget_object;
     
+    if (t_success)
+    {
+        // Convert to a script type
+        t_success = MCEngineConvertToScriptType(ctxt, r_value);
+    }
+    
+    if (!t_success)
+    {
+        MCErrorRef t_error;
+        
+        // TODO: handle
+        if (MCErrorCatch(t_error))
+        {
+            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
+            MCValueRelease(t_error);
+        }
+        else
+            MCLog("Failed to execute property getter for %@", p_property);
+    }
+    
 	return t_success;
 }
 
-bool MCWidget::CallSetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef p_value)
+bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef p_key, MCValueRef p_value)
 {
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
-	
+    
+    // Convert to the appropriate type
+    MCTypeInfoRef t_gettype, t_settype;
+    if (!MCScriptQueryPropertyOfModule(m_module, p_property, t_gettype, t_settype))
+        return false;
+    
+    if (!MCEngineConvertFromScriptType(ctxt, t_settype, p_value))
+        return false;
+    
     // Invoke event handler.
     bool t_success;
     t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
     
 	MCwidgetobject = t_old_widget_object;
+    
+    if (!t_success)
+    {
+        MCErrorRef t_error;
+        
+        // TODO: handle
+        if (MCErrorCatch(t_error))
+        {
+            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
+            MCValueRelease(t_error);
+        }
+        else
+            MCLog("Failed to execute property setter for %@", p_property);
+    }
     
 	return t_success;
 }
@@ -1206,7 +1294,10 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void MCWidgetExecRedrawAll(void)
+typedef struct __MCPressedState* MCPressedStateRef;
+MCTypeInfoRef kMCPressedState;
+
+extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
 {
     if (MCwidgetobject == nil)
         return; // TODO - throw an error.
@@ -1214,4 +1305,122 @@ extern "C" void MCWidgetExecRedrawAll(void)
     MCwidgetobject -> layer_redrawall();
 }
 
+extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    MCRectangle t_rect;
+    MCGRectangle t_grect;
+    t_rect = MCwidgetobject -> getrect();
+    
+    // Absolute rectangle
+    t_grect = MCGRectangleMake(t_rect.x, t_rect.y, t_rect.width, t_rect.height);
+    MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    MCRectangle t_rect;
+    MCGRectangle t_grect;
+    t_rect = MCwidgetobject -> getrect();
+    
+    // Adjust for the parent's rect
+    MCRectangle t_parent_rect;
+    t_parent_rect = MCwidgetobject->getparent()->getrect();
+    t_rect.x -= t_parent_rect.x;
+    t_rect.y -= t_parent_rect.y;
+    
+    t_grect = MCGRectangleMake(t_rect.x, t_rect.y, t_rect.width, t_rect.height);
+    MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    MCRectangle t_rect;
+    MCGRectangle t_grect;
+    t_rect = MCwidgetobject -> getrect();
+    
+    // Only the size is wanted
+    t_grect = MCGRectangleMake(0, 0, t_rect.width, t_rect.height);
+    MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    // TODO - coordinate transform
+    
+    coord_t t_x, t_y;
+    if (p_current)
+        MCwidgeteventmanager->GetAsynchronousMousePosition(t_x, t_y);
+    else
+        MCwidgeteventmanager->GetSynchronousMousePosition(t_x, t_y);
+    
+    MCRectangle t_rect = MCwidgetobject->getrect();
+    t_x -= t_rect.x;
+    t_y -= t_rect.y;
+    
+    MCGPoint t_gpoint;
+    t_gpoint = MCGPointMake(t_x, t_y);
+    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPointRef& r_point)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    // TODO - coordinate transforms
+    
+    coord_t t_x, t_y;
+    if (p_current)
+        MCwidgeteventmanager->GetAsynchronousClickPosition(t_x, t_y);
+    else
+        MCwidgeteventmanager->GetSynchronousClickPosition(t_x, t_y);
+    
+    MCRectangle t_rect = MCwidgetobject->getrect();
+    t_x -= t_rect.x;
+    t_y -= t_rect.y;
+    
+    MCGPoint t_gpoint;
+    t_gpoint = MCGPointMake(t_x, t_y);
+    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetMouseButtonState(uinteger_t p_index, MCPressedStateRef r_state)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    // TODO: implement
+    MCAssert(false);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointWithinRect(MCCanvasPointRef p_point, MCCanvasRectangleRef p_rect, bool& r_within)
+{
+    MCGPoint t_p;
+    MCGRectangle t_r;
+    MCCanvasPointGetMCGPoint(p_point, t_p);
+    MCCanvasRectangleGetMCGRectangle(p_rect, t_r);
+    
+    r_within = (t_r.origin.x <= t_p.x && t_p.x < t_r.origin.x+t_r.size.width)
+        && (t_r.origin.y <= t_p.y && t_p.y < t_r.origin.y+t_r.size.height);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointRef p_point, MCCanvasRectangleRef p_rect, bool& r_not_within)
+{
+    bool t_within;
+    MCWidgetEvalIsPointWithinRect(p_point, p_rect, t_within);
+    r_not_within = !t_within;
+}

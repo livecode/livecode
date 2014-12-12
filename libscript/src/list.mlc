@@ -650,7 +650,7 @@ end syntax
 
 /* 
 
-Summary: 		Designates the list of zero elements
+Summary: 		Designates the list of length zero.
 
 Example:
 	variable tVar as list
@@ -690,9 +690,9 @@ Example:
     // tRelist is the same as tList
 
 Description:
-The repeat for each form is more efficient that the alternative formation using repeat **tCount** times.
+Use repeat for each to perform an operation on each element of a list.
 
-Tags: Lists
+Tags: Lists, Control structures
 */
 
 syntax RepeatForEachElementOfList is iterator

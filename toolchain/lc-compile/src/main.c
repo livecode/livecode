@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -34,6 +35,8 @@ void bootstrap_main(int argc, char *argv[])
            SetTemplateFile(argv[++i]);
         else if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
             SetOutputFile(argv[++i]);
+        else if (strcmp(argv[i], "-modulepath") == 0 && i + 1 < argc)
+            SetImportedModuleDir(argv[++i]);
         else
             AddFile(argv[i]);
     }
@@ -81,35 +84,107 @@ void bootstrap_main(int argc, char *argv[])
 
 extern int OutputFileAsC;
 
+/* Print some sort of helpful message if the user doesn't pass sane arguments */
+static void
+usage(int status)
+{
+    fprintf(stderr,
+"Usage: lc-compile -output OUTFILE [-manifest MANIFEST] [--] MLCFILE\n"
+"       lc-compile -outputc OUTFILE [-manifest MANIFEST] [--] MLCFILE\n"
+"\n"
+"Compile a Modular LiveCode source file.\n"
+"\n"
+"Options:\n"
+"  -modulepath PATH    Path to directory containing module interface files.\n"
+"  -output  OUTFILE    Filename for bytecode output.\n"
+"  -outputc OUTFILE    Filename for C source code output.\n"
+"  -manifest MANIFEST  Filename for generated manifest.\n"
+"  -h, -help           Print this message.\n"
+"  --                  Treat all remaining arguments as filenames.\n"
+"\n"
+"Report bugs to <http://quality.runrev.com/>\n"
+            );
+    exit (status);
+}
+
 static void full_main(int argc, char *argv[])
 {
-    int i;
-	
+    /* Process options. */
+    int have_input_file = 0;
+    int end_of_args = 0;
+    int argi;
+
+    /* FIXME maybe we should use getopt? */
+    for (argi = 0; argi < argc; ++argi)
+    {
+        const char *opt = argv[argi];
+        const char *optarg = (argi + 1 < argc) ? argv[argi+1] : NULL;
+        if (!end_of_args)
+        {
+            if (0 == strcmp(opt, "-modulepath") && optarg)
+            {
+                SetImportedModuleDir(argv[++argi]);
+                continue;
+            }
+            if (0 == strcmp(opt, "-output") && optarg)
+            {
+                SetOutputFile(argv[++argi]);
+                continue;
+            }
+            if (0 == strcmp(opt, "-outputc") && optarg)
+            {
+                SetOutputFile(argv[++argi]);
+                OutputFileAsC = 1;
+                continue;
+            }
+            if (0 == strcmp(opt, "-manifest") && optarg)
+            {
+                SetManifestOutputFile(argv[++argi]);
+                continue;
+            }
+            if (0 == strcmp(opt, "-h") || 0 == strcmp(opt, "-help"))
+            {
+                usage(0);
+                continue;
+            }
+            if (0 == strcmp(opt, "--"))
+            {
+                end_of_args = 1;
+                continue;
+            }
+
+            /* Detect unrecognized arguments */
+            if ('-' == opt[0])
+            {
+                fprintf(stderr, "ERROR: Invalid option '%s'.\n\n",
+                        argv[argi]);
+                usage(1);
+            }
+        }
+
+        /* Accept only one input file */
+        if (!have_input_file)
+        {
+            AddFile(opt);
+            have_input_file = 1;
+            continue;
+        }
+        else
+        {
+            fprintf(stderr, "WARNING: Ignoring multiple input filenames.\n");
+            continue;
+        }
+
+        break; /* Doesn't match any option */
+    }
+
 	// If there is no filename, error.
-    if (argc != 1 && argc != 3 && argc != 5)
+    if (!have_input_file)
     {
-        fprintf(stderr, "Invalid arguments\n");
-        return 1;
+        fprintf(stderr, "ERROR: You must specify an input filename.\n\n");
+        usage(1);
     }
-    
-    i = 0;
-    if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
-    {
-        SetOutputFile(argv[++i]);
-        i++;
-    }
-    else if (strcmp(argv[i], "-outputc") == 0 && i + 1 < argc)
-    {
-        SetOutputFile(argv[++i]);
-        OutputFileAsC = 1;
-        i++;
-    }
-    if (strcmp(argv[i], "-manifest") == 0 && i + 1 < argc)
-    {
-        SetManifestOutputFile(argv[++i]);
-        i++;
-    }
-    AddFile(argv[i]);
+
     if (MoveToNextFile())
     {
         yyExtend();
@@ -139,7 +214,9 @@ int main(int argc, char *argv[])
         argc -= 1;
         argv += 1;
         
+#ifdef _DEBUG
         yydebug = 1;
+#endif
     }
     
     InitializeFiles();

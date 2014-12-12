@@ -2886,7 +2886,7 @@ void MCCanvasPathMakeWithEllipse(MCCanvasPointRef p_center, MCCanvasFloat p_radi
 	if (!MCGPathCreateMutable(t_path))
 		return;
 	
-	MCGPathAddEllipse(t_path, *MCCanvasPointGet(p_center), MCGSizeMake(p_radius_x, p_radius_y), 0);
+	MCGPathAddEllipse(t_path, *MCCanvasPointGet(p_center), MCGSizeMake(2*p_radius_x, 2*p_radius_y), 0);
 	if (MCGPathIsValid(t_path))
 		MCCanvasPathMakeWithMCGPath(t_path, r_path);
 	

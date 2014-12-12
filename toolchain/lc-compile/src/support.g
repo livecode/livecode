@@ -14,6 +14,7 @@
     AdvanceCurrentPositionToNextLine
     GetColumnOfCurrentPosition
     GetUndefinedPosition
+    AddImportedModuleFile
 
     InitializeLiterals
     FinalizeLiterals
@@ -209,6 +210,7 @@
     ErrorsDidOccur
     Fatal_OutOfMemory
     Fatal_InternalInconsistency
+    Error_UnableToFindImportedModule
     Error_MalformedToken
     Error_MalformedSyntax
     Error_IdentifierPreviouslyDeclared
@@ -280,6 +282,8 @@
 'action' GetColumnOfCurrentPosition(Position: POS -> Column: INT)
 
 'action' GetUndefinedPosition(-> Position: POS)
+
+'condition' AddImportedModuleFile(Name: STRING)
 
 --------------------------------------------------------------------------------
 
@@ -525,6 +529,9 @@
 
 'action' Fatal_OutOfMemory()
 'action' Fatal_InternalInconsistency(Message: STRING)
+
+'action' Error_UnableToFindImportedModule(Position: POS, Name: NAME)
+
 'action' Error_MalformedToken(Position: POS, Token: STRING)
 'action' Error_MalformedSyntax(Position: POS)
 'action' Error_IdentifierPreviouslyDeclared(Position: POS, Identifier: NAME, PreviousPosition: POS)

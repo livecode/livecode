@@ -141,11 +141,19 @@ Boolean MCWidgetEventManager::event_kup(MCWidget* p_widget, MCStringRef p_text, 
 
 Boolean MCWidgetEventManager::event_mdown(MCWidget* p_widget, uint2 p_which)
 {
+    // Prevent the IDE from breaking
+    if (!widgetIsInRunMode(p_widget))
+        return p_widget->MCControl::mdown(p_which);
+    
     return mouseDown(p_widget, p_which);
 }
 
 Boolean MCWidgetEventManager::event_mup(MCWidget* p_widget, uint2 p_which, bool p_release)
 {
+    // Prevent the IDE from breaking
+    if (!widgetIsInRunMode(p_widget))
+        return p_widget->MCControl::mup(p_which, p_release);
+    
     if (p_release)
         return mouseRelease(p_widget, p_which);
     else
@@ -157,6 +165,9 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     // Cursor position has changed
     m_mouse_x = p_x;
     m_mouse_y = p_y;
+    
+    if (!widgetIsInRunMode(p_widget))
+        return False;
     
     // Do a quick bounds test on the targeted widget. If this fails, the widget
     // wasn't the target of the mouse focus event.
@@ -222,12 +233,20 @@ void MCWidgetEventManager::event_mdrag(MCWidget* p_widget)
 
 Boolean MCWidgetEventManager::event_doubledown(MCWidget* p_widget, uint2 p_which)
 {
+    // Prevent the IDE from breaking
+    if (!widgetIsInRunMode(p_widget))
+        return p_widget->MCControl::doubledown(p_which);
+    
     // Because we do gesture recognition ourselves, treat this as a normal click
     return event_mdown(p_widget, p_which);
 }
 
 Boolean MCWidgetEventManager::event_doubleup(MCWidget* p_widget, uint2 p_which)
 {
+    // Prevent the IDE from breaking
+    if (!widgetIsInRunMode(p_widget))
+        return p_widget->MCControl::doubleup(p_which);
+    
     // Because we do gesture recognition ourselves, treat this as a normal click
     return event_mup(p_widget, p_which, false);
 }
@@ -325,6 +344,30 @@ MCWidget* MCWidgetEventManager::GetMouseWidget() const
     return m_mouse_focus;
 }
 
+void MCWidgetEventManager::GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const
+{
+    r_x = m_mouse_x;
+    r_y = m_mouse_y;
+}
+
+void MCWidgetEventManager::GetSynchronousClickPosition(coord_t& r_x, coord_t& r_y) const
+{
+    r_x = m_click_x;
+    r_y = m_click_y;
+}
+
+void MCWidgetEventManager::GetAsynchronousMousePosition(coord_t& r_x, coord_t& r_y) const
+{
+    r_x = MCmousex;
+    r_y = MCmousey;
+}
+
+void MCWidgetEventManager::GetAsynchronousClickPosition(coord_t& r_x, coord_t& r_y) const
+{
+    r_x = MCclicklocx;
+    r_y = MCclicklocy;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCWidgetEventManager::mouseMove(MCWidget* p_widget, coord_t p_x, coord_t p_y)
@@ -373,6 +416,9 @@ bool MCWidgetEventManager::mouseDown(MCWidget* p_widget, uinteger_t p_which)
     // Mouse button is down
     m_mouse_buttons |= (1 << p_which);
     
+    if (!widgetIsInRunMode(p_widget))
+        return false;
+    
     // If the widget handles clicks or mouse down events, accept the event
     bool t_accepted;
     t_accepted = false;
@@ -395,6 +441,9 @@ bool MCWidgetEventManager::mouseUp(MCWidget* p_widget, uinteger_t p_which)
 {
     // Mouse button is no longer down
     m_mouse_buttons &= ~(1 << p_which);
+    
+    if (!widgetIsInRunMode(p_widget))
+        return false;
     
     // If the widget wants click gestures, process it as such
     bool t_accepted;
@@ -478,6 +527,9 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
     // Mouse button is no longer down
     m_mouse_buttons &= ~(1 << p_which);
     
+    if (!widgetIsInRunMode(p_widget))
+        return false;
+    
     // Send a mouse release event if the widget handles it
     bool t_accepted;
     t_accepted = false;
@@ -492,6 +544,9 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
 
 bool MCWidgetEventManager::mouseScroll(MCWidget* p_widget, real32_t p_delta_x, real32_t p_delta_y)
 {
+    if (!widgetIsInRunMode(p_widget))
+        return false;
+    
     // TODO: this should probably be conditional on handing the event
     p_widget->OnMouseScroll(p_delta_x, p_delta_y);
     return true;
@@ -512,6 +567,9 @@ bool MCWidgetEventManager::keyDown(MCWidget* p_widget, MCStringRef p_string, Key
     
     // Ignore if send to the wrong widget
     if (p_widget != m_keyboard_focus)
+        return false;
+    
+    if (!widgetIsInRunMode(p_widget))
         return false;
     
     // Does the widget want key press events?
@@ -540,6 +598,9 @@ bool MCWidgetEventManager::keyUp(MCWidget* p_widget, MCStringRef p_string, KeySy
     if (p_widget != m_keyboard_focus)
         return false;
     
+    if (!widgetIsInRunMode(p_widget))
+        return false;
+    
     // If the widget handles key press events, treat this as handled (even
     // though we don't send another message to say the key has been released)
     return p_widget->handlesKeyPress();
@@ -563,6 +624,9 @@ void MCWidgetEventManager::touchBegin(MCWidget* p_widget, uinteger_t p_id, coord
     m_touches[t_slot].m_widget = p_widget;
     m_touches[t_slot].m_x = p_x;
     m_touches[t_slot].m_y = p_y;
+    
+    if (!widgetIsInRunMode(p_widget))
+        return;
     
     // Send an event to the widget
     if (p_widget->handlesTouches())
@@ -599,6 +663,9 @@ void MCWidgetEventManager::touchMove(MCWidget* p_widget, uinteger_t p_id, coord_
         m_touches[t_slot].m_x = p_x;
         m_touches[t_slot].m_y = p_y;
         
+        if (!widgetIsInRunMode(p_widget))
+            return;
+        
         // Send a move event
         if (p_widget->handlesTouches())
             p_widget->OnTouchMove(p_id, p_x, p_y, 0, 0);
@@ -619,6 +686,9 @@ void MCWidgetEventManager::touchEnd(MCWidget* p_widget, uinteger_t p_id, coord_t
     // Update touch status
     m_touches[t_slot].m_x = p_x;
     m_touches[t_slot].m_y = p_y;
+    
+    if (!widgetIsInRunMode(p_widget))
+        return;
     
     // Send a touch finish event
     if (p_widget->handlesTouches())
@@ -644,6 +714,9 @@ void MCWidgetEventManager::touchCancel(MCWidget* p_widget, uinteger_t p_id, coor
     m_touches[t_slot].m_x = p_x;
     m_touches[t_slot].m_y = p_y;
     
+    if (!widgetIsInRunMode(p_widget))
+        return;
+    
     // Send a touch cancel event
     if (p_widget->handlesTouches())
         p_widget->OnTouchCancel(p_id);
@@ -659,6 +732,9 @@ void MCWidgetEventManager::touchCancel(MCWidget* p_widget, uinteger_t p_id, coor
 
 void MCWidgetEventManager::touchEnter(MCWidget* p_widget, uinteger_t p_id)
 {
+    if (!widgetIsInRunMode(p_widget))
+        return;
+    
     if (p_widget->handlesTouches())
         p_widget->OnTouchEnter(p_id);
     else if (p_id == 1)
@@ -669,6 +745,9 @@ void MCWidgetEventManager::touchEnter(MCWidget* p_widget, uinteger_t p_id)
 
 void MCWidgetEventManager::touchLeave(MCWidget* p_widget, uinteger_t p_id)
 {
+    if (!widgetIsInRunMode(p_widget))
+        return;
+    
     if (p_widget->handlesTouches())
         p_widget->OnTouchLeave(p_id);
     else if (p_id == 1)
@@ -716,4 +795,12 @@ void MCWidgetEventManager::freeTouchSlot(uinteger_t p_which)
 {
     // Mark as free by clearing the widget pointer for the event
     m_touches[p_which].m_widget = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWidgetEventManager::widgetIsInRunMode(MCWidget* p_widget)
+{
+    Tool t_tool = p_widget->getstack()->gettool(p_widget);
+    return t_tool == T_BROWSE || t_tool == T_HELP;
 }

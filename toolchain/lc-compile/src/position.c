@@ -84,6 +84,50 @@ void yyGetPos(long *r_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char *ImportedModuleDir = NULL;
+
+void SetImportedModuleDir(const char *p_dir)
+{
+    ImportedModuleDir = p_dir;
+}
+
+int AddImportedModuleFile(const char *p_name)
+{
+    char t_path[4096];
+    if (ImportedModuleDir != NULL)
+        sprintf(t_path, "%s/%s.lci", ImportedModuleDir, p_name);
+    else
+        sprintf(t_path, "%s.lci", p_name);
+    
+    FILE *t_file;
+    t_file = fopen(t_path, "r");
+    if (t_file == NULL)
+        return 0;
+    
+    fclose(t_file);
+    
+    AddFile(t_path);
+    
+    return 1;
+}
+
+FILE *OpenImportedModuleFile(const char *p_name)
+{
+    char t_path[4096];
+
+    if (ImportedModuleDir == NULL)
+        return NULL;
+    
+    sprintf(t_path, "%s/%s.lci", ImportedModuleDir, p_name);
+    
+    FILE *t_file;
+    t_file = fopen(t_path, "w");
+    
+    return t_file;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct File
 {
     FileRef next;

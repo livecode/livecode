@@ -206,14 +206,15 @@ private:
     //////////
 	
 	bool CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t p_param_count, MCValueRef* r_retval = NULL);
-	bool CallGetProp(MCNameRef p_property_name, MCNameRef p_key, MCValueRef& r_value);
-	bool CallSetProp(MCNameRef p_property_name, MCNameRef p_key, MCValueRef value);
+	bool CallGetProp(MCExecContext& ctxt, MCNameRef p_property_name, MCNameRef p_key, MCValueRef& r_value);
+	bool CallSetProp(MCExecContext& ctxt, MCNameRef p_property_name, MCNameRef p_key, MCValueRef value);
     
     // Private constructor - widgets must be created via createInstanceOfKind
     MCWidget(MCNameRef p_kind);
     
     // The kind and script instance for this widget
     MCNameRef m_kind;
+    MCScriptModuleRef m_module;
     MCScriptInstanceRef m_instance;
     
     // The native layer(s) belonging to this widget

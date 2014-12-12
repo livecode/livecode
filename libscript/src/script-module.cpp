@@ -5,6 +5,7 @@
 #include "script-private.h"
 
 #include <stddef.h>
+#include <stdarg.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -34,6 +35,7 @@ MC_PICKLE_END_RECORD()
 MC_PICKLE_BEGIN_RECORD(MCScriptHandlerType)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptHandlerTypeParameter, parameters, parameter_count)
     MC_PICKLE_UINDEX(return_type)
+    MC_PICKLE_ARRAY_OF_NAMEREF(parameter_names, parameter_name_count)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptRecordTypeField)
@@ -881,6 +883,169 @@ MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef self, uindex
     if (self -> definition_name_count > 0)
         return self -> definition_names[p_index];
     return kMCEmptyName;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static int s_current_indent = 0;
+
+static void __write(MCStreamRef stream, int p_indent, bool p_newline, const char *p_format, va_list p_args)
+{
+    MCAutoStringRef t_formatted_string;
+    MCStringFormatV(&t_formatted_string, p_format, p_args);
+    MCAutoStringRef t_string;
+    MCStringFormat(&t_string, "%.*s%@%s", p_indent * 2, "          ", *t_formatted_string, p_newline ? "\n" : "");
+    MCAutoStringRefAsUTF8String t_utf8_string;
+    t_utf8_string . Lock(*t_string);
+    MCStreamWrite(stream, *t_utf8_string, t_utf8_string . Size());
+}
+
+static void __enterln(MCStreamRef stream, const char *format, ...)
+{
+    va_list t_args;
+    va_start(t_args, format);
+    __write(stream, s_current_indent, true, format, t_args);
+    va_end(t_args);
+    s_current_indent += 1;
+}
+
+static void __leaveln(MCStreamRef stream, const char *format, ...)
+{
+    s_current_indent -= 1;
+    va_list t_args;
+    va_start(t_args, format);
+    __write(stream, s_current_indent, true, format, t_args);
+    va_end(t_args);
+}
+
+static void __writeln(MCStreamRef stream, const char *format, ...)
+{
+    va_list t_args;
+    va_start(t_args, format);
+    __write(stream, s_current_indent, true, format, t_args);
+    va_end(t_args);
+}
+
+static void def_to_name(MCScriptModuleRef self, uindex_t p_index, MCStringRef& r_string)
+{
+    MCScriptDefinition *t_def;
+    t_def = self -> definitions[p_index];
+    if (t_def -> kind == kMCScriptDefinitionKindExternal)
+    {
+        MCScriptExternalDefinition *t_ext_def;
+        t_ext_def = static_cast<MCScriptExternalDefinition *>(t_def);
+        
+        MCStringFormat(r_string, "%@", /*self -> dependencies[self -> imported_definitions[t_ext_def -> index] . module] . name, */self -> imported_definitions[t_ext_def -> index] . name);
+    }
+    else
+        MCStringFormat(r_string, "%@", self -> definition_names[p_index]);
+}
+
+static void type_to_string(MCScriptModuleRef self, uindex_t p_type, MCStringRef& r_string)
+{
+    MCScriptType *t_type;
+    t_type = self -> types[p_type];
+    switch(t_type -> kind)
+    {
+        case kMCScriptTypeKindDefined:
+            def_to_name(self, static_cast<MCScriptDefinedType *>(t_type) -> index, r_string);
+            break;
+        case kMCScriptTypeKindOptional:
+        {
+            MCAutoStringRef t_target_name;
+            type_to_string(self, static_cast<MCScriptOptionalType *>(t_type) -> type, &t_target_name);
+            MCStringFormat(r_string, "optional %@", *t_target_name);
+        }
+        break;
+        case kMCScriptTypeKindHandler:
+        {
+            MCAutoStringRef t_sig;
+            MCScriptHandlerType *t_htype;
+            t_htype = static_cast<MCScriptHandlerType *>(t_type);
+            MCStringCreateMutable(0, &t_sig);
+            MCStringAppendChar(*t_sig, '(');
+            for(uindex_t i = 0; i < t_htype -> parameter_count; i++)
+            {
+                if (i != 0)
+                    MCStringAppendNativeChars(*t_sig, (const char_t *)", ", 2);
+                static const char *s_mode_strings[] = {"in", "out", "inout"};
+                MCAutoStringRef t_ptype;
+                type_to_string(self, t_htype -> parameters[i] . type, &t_ptype);
+                MCStringAppendFormat(*t_sig, "%s %@ as %@", s_mode_strings[t_htype -> parameters[i] . mode], t_htype -> parameter_names[i], *t_ptype);
+            }
+            MCAutoStringRef t_rtype;
+            type_to_string(self, t_htype -> return_type, &t_rtype);
+            MCStringAppendFormat(*t_sig, ") as %@", *t_rtype);
+            MCStringCopy(*t_sig, r_string);
+        }
+        break;
+        default:
+            __MCScriptUnreachable__("inappropriate type found in definition");
+            break;
+    }
+}
+
+bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
+{
+    __enterln(stream, "import module %@", self -> name);
+    for(uindex_t i = 0; i < self -> dependency_count; i++)
+    {
+        if (MCNameIsEqualTo(self -> dependencies[i] . name, MCNAME("__builtin__")))
+            continue;
+        
+        MCStringRef t_string;
+        t_string = MCNameGetString(self -> dependencies[i] . name);
+        
+        __writeln(stream, "use %@", self -> dependencies[i] . name);
+    }
+    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+    {
+        MCNameRef t_def_name;
+        MCScriptDefinition *t_def;
+        t_def_name = self -> exported_definitions[i] . name;
+        t_def = self -> definitions[self -> exported_definitions[i] . index];
+        switch(t_def -> kind)
+        {
+            case kMCScriptDefinitionKindType:
+            {
+                MCScriptType *t_type;
+                t_type = self -> types[static_cast<MCScriptTypeDefinition *>(t_def) -> type];
+                switch(t_type -> kind)
+                {
+                    case kMCScriptTypeKindForeign:
+                        __writeln(stream, "foreign type %@", t_def_name);
+                        break;
+                }
+            }
+            break;
+            case kMCScriptDefinitionKindVariable:
+            {
+                MCAutoStringRef t_type_string;
+                type_to_string(self, static_cast<MCScriptVariableDefinition *>(t_def) -> type, &t_type_string);
+                __writeln(stream, "variable %@ as %@", t_def_name, *t_type_string);
+            }
+            break;
+            case kMCScriptDefinitionKindHandler:
+            {
+                MCAutoStringRef t_sig;
+                type_to_string(self, static_cast<MCScriptHandlerDefinition *>(t_def) -> type, &t_sig);
+                __writeln(stream, "handler %@%@", t_def_name, *t_sig);
+            }
+            break;
+            case kMCScriptDefinitionKindForeignHandler:
+            {
+                MCAutoStringRef t_sig;
+                type_to_string(self, static_cast<MCScriptForeignHandlerDefinition *>(t_def) -> type, &t_sig);
+                __writeln(stream, "foreign handler %@%@", t_def_name, *t_sig);
+            }
+            break;
+            default:
+                break;
+        }
+    }
+    __leaveln(stream, "end module");
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

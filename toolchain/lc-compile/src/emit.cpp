@@ -232,13 +232,12 @@ void EmitEndModule(void)
         FILE *t_output;
         t_output = OpenOutputFile();
         
+        const char *t_module_string;
+        GetStringOfNameLiteral(s_module_name, &t_module_string);
         if (OutputFileAsC)
         {
-            const char *t_string;
-            GetStringOfNameLiteral(s_module_name, &t_string);
-            
             char *t_modified_string;
-            t_modified_string = strdup(t_string);
+            t_modified_string = strdup(t_module_string);
             for(int i = 0; t_modified_string[i] != '\0'; i++)
                 if (t_modified_string[i] == '.')
                     t_modified_string[i] = '_';
@@ -261,6 +260,27 @@ void EmitEndModule(void)
             fwrite(t_buffer, 1, t_size, t_output);
             fclose(t_output);
         }
+        
+        MCStreamRef t_stream;
+        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
+        MCScriptModuleRef t_module;
+        MCScriptCreateModuleFromStream(t_stream, t_module);
+        MCValueRelease(t_stream);
+        MCStreamRef t_output_stream;
+        MCMemoryOutputStreamCreate(t_output_stream);
+        MCScriptWriteInterfaceOfModule(t_module, t_output_stream);
+        MCScriptReleaseModule(t_module);
+        void *t_inf_buffer;
+        size_t t_inf_size;
+        MCMemoryOutputStreamFinish(t_output_stream, t_inf_buffer, t_inf_size);
+        MCValueRelease(t_output_stream);
+        FILE *t_import;
+        t_import = OpenImportedModuleFile(t_module_string);
+        if (t_import != NULL)
+        {
+            fwrite(t_inf_buffer, 1, t_inf_size, t_import);
+            fclose(t_import);
+        }
     }
 
     free(t_buffer);
@@ -272,15 +292,15 @@ void EmitModuleDependency(NameRef p_name, long& r_index)
 {
     uindex_t t_index;
     MCScriptAddDependencyToModule(s_builder, to_mcnameref(p_name), t_index);
-    r_index = t_index;
+    r_index = t_index + 1;
     
-    MCLog("[Emit] ModuleDependency(%@ -> 0)", to_mcnameref(p_name), t_index);
+    MCLog("[Emit] ModuleDependency(%@ -> 0)", to_mcnameref(p_name), t_index + 1);
 }
 
 void EmitImportedType(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindType, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindType, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -289,7 +309,7 @@ void EmitImportedType(long p_module_index, NameRef p_name, long p_type_index, lo
 void EmitImportedConstant(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindConstant, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindConstant, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedConstant(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -298,7 +318,7 @@ void EmitImportedConstant(long p_module_index, NameRef p_name, long p_type_index
 void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindVariable, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindVariable, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedVariable(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -307,7 +327,7 @@ void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index
 void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindHandler, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindHandler, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedHandler(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -316,7 +336,7 @@ void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index,
 void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindSyntax, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindSyntax, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedSyntax(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);

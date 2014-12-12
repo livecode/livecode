@@ -68,6 +68,14 @@ public:
     // Returns the widget that the mouse is currently focused on
     MCWidget* GetMouseWidget() const;
     
+    // Returns the synchronous mouse/click coordinates
+    void GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
+    void GetSynchronousClickPosition(coord_t& r_x, coord_t& r_y) const;
+    
+    // Returns the asynchronous ("current") mouse/click coordinates
+    void GetAsynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
+    void GetAsynchronousClickPosition(coord_t& r_x, coord_t& r_y) const;
+    
 private:
     
     // State of the input devices at the last point an event was received
@@ -118,6 +126,9 @@ private:
     uinteger_t allocateTouchSlot();
     bool findTouchSlot(uinteger_t p_id, uinteger_t& r_which);
     void freeTouchSlot(uinteger_t p_which);
+    
+    // Indicates whether the given widget is in run mode or not
+    bool widgetIsInRunMode(MCWidget*);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__

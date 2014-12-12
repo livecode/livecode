@@ -499,7 +499,8 @@ void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef self, MCScript
     MCScriptHandlerType *t_type;
     t_type = static_cast<MCScriptHandlerType *>(self -> current_type);
     
-    if (!MCMemoryResizeArray(t_type -> parameter_count + 1, t_type -> parameters, t_type -> parameter_count))
+    if (!MCMemoryResizeArray(t_type -> parameter_count + 1, t_type -> parameters, t_type -> parameter_count) ||
+        !MCMemoryResizeArray(t_type -> parameter_name_count + 1, t_type -> parameter_names, t_type -> parameter_name_count))
     {
         self -> valid = false;
         return;
@@ -508,6 +509,7 @@ void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef self, MCScript
     t_type -> parameters[t_type -> parameter_count - 1] . mode = p_mode;
     //t_type -> parameters[t_type -> parameter_count - 1] . name = MCValueRetain(p_name);
     t_type -> parameters[t_type -> parameter_count - 1] . type = p_type;
+    t_type -> parameter_names[t_type -> parameter_name_count - 1] = MCValueRetain(p_name);
 }
 
 void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_new_type)
