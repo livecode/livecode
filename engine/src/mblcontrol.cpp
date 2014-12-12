@@ -186,6 +186,8 @@ static struct {const char *name; MCNativeControlProperty property;} s_native_con
 	{"opaque", kMCNativeControlPropertyOpaque},
 	{"alpha", kMCNativeControlPropertyAlpha},
 	{"backgroundColor", kMCNativeControlPropertyBackgroundColor},
+    // PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over
+    {"ignoreVoiceOverSensitivity", kMCNativeControlPropertyIgnoreVoiceOverSensitivity},
 	
 	{"dataDetectorTypes", kMCNativeControlPropertyDataDetectorTypes},
 	
