@@ -364,6 +364,8 @@
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
 		4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD2D10CE927700FA2262 /* iquantize_new.cpp */; };
 		4DD9D74F1A3AE4580006366D /* exec-extension.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD9D74E1A3AE4580006366D /* exec-extension.cpp */; };
+		4DD9D7671A3B1EA10006366D /* engine.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4DD9D7661A3B185A0006366D /* engine.mlc */; };
+		4DD9D7871A3B22E60006366D /* module-engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD9D7861A3B22E60006366D /* module-engine.cpp */; };
 		4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
 		4DDB66721413A02000E5C84C /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
@@ -2079,6 +2081,8 @@
 		4DD54D69134F594E00981610 /* mblspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblspec.cpp; path = src/mblspec.cpp; sourceTree = "<group>"; };
 		4DD54D6A134F594E00981610 /* mblstack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblstack.cpp; path = src/mblstack.cpp; sourceTree = "<group>"; };
 		4DD9D74E1A3AE4580006366D /* exec-extension.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-extension.cpp"; path = "src/exec-extension.cpp"; sourceTree = "<group>"; };
+		4DD9D7661A3B185A0006366D /* engine.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = engine.mlc; path = src/engine.mlc; sourceTree = "<group>"; };
+		4DD9D7861A3B22E60006366D /* module-engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-engine.cpp"; path = "src/module-engine.cpp"; sourceTree = "<group>"; };
 		4DDB66531413990400E5C84C /* sysunxdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxdate.cpp; path = src/sysunxdate.cpp; sourceTree = "<group>"; };
 		4DDB66541413990400E5C84C /* sysw32network.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32network.cpp; path = src/sysw32network.cpp; sourceTree = "<group>"; };
 		4DDB66551413990400E5C84C /* sysw32region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32region.cpp; path = src/sysw32region.cpp; sourceTree = "<group>"; };
@@ -3123,12 +3127,14 @@
 		4D79B7291A275A7C00DD750C /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				4DD9D7661A3B185A0006366D /* engine.mlc */,
 				4D79B8AA1A37104800DD750C /* widget.mlc */,
 				4D79B7301A275ADE00DD750C /* canvas.mlc */,
 				4D79B8E71A375E8700DD750C /* modules.cpp */,
 				4D79B72E1A275AA500DD750C /* module-canvas.cpp */,
 				E8A1AD001A27799B0078F401 /* module-canvas.h */,
 				E8A1AD031A27817E0078F401 /* module-canvas-internal.h */,
+				4DD9D7861A3B22E60006366D /* module-engine.cpp */,
 			);
 			name = Modules;
 			sourceTree = "<group>";
@@ -5129,6 +5135,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D79B7321A275B2900DD750C /* canvas.mlc in Sources */,
+				4DD9D7871A3B22E60006366D /* module-engine.cpp in Sources */,
+				4DD9D7671A3B1EA10006366D /* engine.mlc in Sources */,
 				4D79B8AD1A37118900DD750C /* widget.mlc in Sources */,
 				7210DD551A374F6700C23D23 /* module-canvas.cpp in Sources */,
 				4D79B89D1A36058300DD750C /* image_rep_densitymapped.cpp in Sources */,

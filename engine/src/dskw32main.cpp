@@ -205,8 +205,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			++csptr;
 	}
 
-    extern bool MCCanvasModuleInitialize();
-	if (!MCInitialize() || !MCCanvasModuleInitialize() || !MCScriptInitialize())
+    extern bool MCModulesInitialize();
+	if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
 	
     // Ensure the command line variable gets set
@@ -313,6 +313,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	g_mainthread_errno = _errno();
 	int r = X_close();
 
+    extern void MCModulesFinalize();
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
 
 	if (t_tsf_mgr != nil)
