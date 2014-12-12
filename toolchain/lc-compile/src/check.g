@@ -1371,9 +1371,13 @@
     'rule' IsHighLevelType(undefined(_)):
     'rule' IsHighLevelType(foreign(_, _)):
     'rule' IsHighLevelType(named(_, Id)):
-        QuerySymbolId(Id -> Info)
-        Info'Type -> Type
-        IsHighLevelType(Type)
+        (|
+            QuerySymbolId(Id -> Info)
+            Info'Type -> Type
+            IsHighLevelType(Type)
+        || 
+            QueryId(Id -> error)
+        |)
     'rule' IsHighLevelType(optional(_, Type)):
         IsHighLevelType(Type)
     'rule' IsHighLevelType(record(_, _, _)):
@@ -1446,6 +1450,6 @@
     'rule' QueryId(Id -> Meaning):
         Id'Meaning -> Meaning
         
-'action' QuerySymbolId(ID -> SYMBOLINFO)
+'condition' QuerySymbolId(ID -> SYMBOLINFO)
 
 --------------------------------------------------------------------------------

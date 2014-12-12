@@ -672,6 +672,9 @@
 
     'rule' Statement(-> put(Position, Source, Target)):
         "set" @(-> Position) Expression(-> Target) "to" Expression(-> Source)
+        
+    'rule' Statement(-> get(Position, Value)):
+        "get" @(-> Position) Expression(-> Value)
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
@@ -824,6 +827,9 @@
 
     'rule' TermExpression(-> slot(Position, Name)):
         Identifier(-> Name) @(-> Position)
+        
+    'rule' TermExpression(-> result(Position)):
+        "the" @(-> Position) "result"
 
     --'rule' TermExpression(-> as(Position, Value, Type)):
     --    TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
