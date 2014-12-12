@@ -2761,13 +2761,13 @@ uint32_t MCImage::getcompression()
 
 MCString MCImage::getrawdata()
 {
-	if (m_rep == nil || (m_rep->GetType() != kMCImageRepResident && m_rep->GetType() != kMCImageRepReferenced))
+	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
 		return MCString(nil, 0);
-    
+
 	void *t_data;
 	uindex_t t_size;
     static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
-    
+
     return MCString((char*)t_data, t_size);
 }
 
