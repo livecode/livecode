@@ -903,10 +903,10 @@ void MCPlatformBeginColorDialog(const char *p_title, const MCColor& p_color)
     
     // SN-2014-11-28: [[ Bug 14098 ]] Make use of the initial colour
     CGFloat t_divider = UINT16_MAX;
-    NSColor* t_initial_color = [NSColor colorWithSRGBRed:(CGFloat)p_color.red / t_divider
-                                                   green:(CGFloat)p_color.green / t_divider
-                                                    blue:(CGFloat)p_color.blue / t_divider
-                                                   alpha:1];
+    NSColor* t_initial_color = [NSColor colorWithCalibratedRed:(CGFloat)p_color.red / t_divider
+                                                         green:(CGFloat)p_color.green / t_divider
+                                                          blue:(CGFloat)p_color.blue / t_divider
+                                                         alpha:1];
     [t_colorPicker setColor:t_initial_color];
     
     NSView* t_pickerView;
