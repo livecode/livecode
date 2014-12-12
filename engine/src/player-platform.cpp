@@ -2612,7 +2612,8 @@ void MCPlayer::moviefinished(void)
 {
     // PM-2014-08-06: [[ Bug 13104 ]] Set rate to zero when movie finish
     rate = 0.0;
-    timer(MCM_play_stopped, nil);
+    // PM-2014-12-02: [[ Bug 14141 ]] Delay the playStopped message to prevent IDE hang in case where the player's filename is set in the playStopped message (AVFoundation does not like nested callbacks)
+    MCscreen -> delaymessage(this, MCM_play_stopped);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)

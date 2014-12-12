@@ -458,6 +458,8 @@ Boolean MChidebackdrop = False;
 Boolean MCraisewindows = False;
 
 uint4 MCmajorosversion = 0;
+// PM-2014-12-08: [[ Bug 13659 ]] Toggle the value of ignoreVoiceOverSensitivity property of iOS native controls
+Boolean MCignorevoiceoversensitivity = False;
 
 MCTheme *MCcurtheme = NULL;
 
