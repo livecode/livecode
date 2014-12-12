@@ -333,8 +333,8 @@ extern "C" MC_DLLEXPORT void MCListEvalEmpty(MCProperListRef& r_output)
 
 extern "C" bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCProperListRef p_list)
 {
-    uindex_t t_offset;
-    t_offset = (uindex_t)x_iterator;
+    uintptr_t t_offset;
+    t_offset = (uintptr_t)x_iterator;
     
     if (t_offset == MCProperListGetLength(p_list))
         return false;

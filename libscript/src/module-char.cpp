@@ -153,8 +153,8 @@ extern "C" MC_DLLEXPORT void MCCharEvalNewlineCharacter(MCStringRef& r_output)
 // Will result in tChar containing the value it had at the point of end repeat.
 extern "C" MC_DLLEXPORT bool MCCharRepeatForEachChar(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
 {
-    uindex_t t_offset;
-    t_offset = (uindex_t)x_iterator;
+    uintptr_t t_offset;
+    t_offset = (uintptr_t)x_iterator;
     
     if (t_offset == MCStringGetLength(p_string))
         return false;

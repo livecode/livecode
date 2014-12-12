@@ -147,8 +147,8 @@ extern "C" MC_DLLEXPORT void MCByteStoreByteOf(MCDataRef p_value, index_t p_inde
 
 extern "C" MC_DLLEXPORT bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRef& r_iterand, MCDataRef p_data)
 {
-    uindex_t t_offset;
-    t_offset = (uindex_t)x_iterator;
+    uintptr_t t_offset;
+    t_offset = (uintptr_t)x_iterator;
     
     if (t_offset == MCDataGetLength(p_data))
         return false;
