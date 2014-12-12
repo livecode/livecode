@@ -2083,6 +2083,7 @@
 		4DD9D74E1A3AE4580006366D /* exec-extension.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-extension.cpp"; path = "src/exec-extension.cpp"; sourceTree = "<group>"; };
 		4DD9D7661A3B185A0006366D /* engine.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = engine.mlc; path = src/engine.mlc; sourceTree = "<group>"; };
 		4DD9D7861A3B22E60006366D /* module-engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-engine.cpp"; path = "src/module-engine.cpp"; sourceTree = "<group>"; };
+		4DD9D7891A3B3BFB0006366D /* module-engine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "module-engine.h"; path = "src/module-engine.h"; sourceTree = "<group>"; };
 		4DDB66531413990400E5C84C /* sysunxdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxdate.cpp; path = src/sysunxdate.cpp; sourceTree = "<group>"; };
 		4DDB66541413990400E5C84C /* sysw32network.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32network.cpp; path = src/sysw32network.cpp; sourceTree = "<group>"; };
 		4DDB66551413990400E5C84C /* sysw32region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32region.cpp; path = src/sysw32region.cpp; sourceTree = "<group>"; };
@@ -3135,6 +3136,7 @@
 				E8A1AD001A27799B0078F401 /* module-canvas.h */,
 				E8A1AD031A27817E0078F401 /* module-canvas-internal.h */,
 				4DD9D7861A3B22E60006366D /* module-engine.cpp */,
+				4DD9D7891A3B3BFB0006366D /* module-engine.h */,
 			);
 			name = Modules;
 			sourceTree = "<group>";

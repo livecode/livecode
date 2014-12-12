@@ -51,7 +51,25 @@ static bool s_last_message_was_handled = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_object_id)
+bool MCScriptObjectCreate(MCObject *p_object, uint32_t p_part_id, MCScriptObjectRef& r_script_object)
+{
+    MCScriptObjectRef t_script_object;
+    if (!MCValueCreateCustom(kMCEngineScriptObjectTypeInfo, sizeof(__MCScriptObjectImpl), t_script_object))
+        return false;
+    
+    __MCScriptObjectImpl *t_script_object_imp;
+    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(t_script_object);
+    t_script_object_imp -> handle = p_object != nil ? p_object -> gethandle() : nil;
+    t_script_object_imp -> part_id = p_part_id;
+    
+    r_script_object = t_script_object;
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_object_id)
 {
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
     
@@ -90,18 +108,13 @@ extern "C" MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_objec
     
     // Now build our script object.
     MCScriptObjectRef t_script_object;
-    if (!MCValueCreateCustom(kMCEngineScriptObjectTypeInfo, sizeof(__MCScriptObjectImpl), t_script_object))
+    if (MCScriptObjectCreate(t_object, t_part_id, t_script_object))
         return nil;
-    
-    __MCScriptObjectImpl *t_script_object_imp;
-    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(t_script_object);
-    t_script_object_imp -> handle = t_object != nil ? t_object -> gethandle() : nil;
-    t_script_object_imp -> part_id = t_part_id;
     
     return t_script_object;
 }
 
-extern "C" void MCEngineEvalScriptObjectExists(MCScriptObjectRef p_object, bool& r_exists)
+extern "C" MC_DLLEXPORT void MCEngineEvalScriptObjectExists(MCScriptObjectRef p_object, bool& r_exists)
 {
     __MCScriptObjectImpl *t_script_object_imp;
     t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
@@ -112,7 +125,7 @@ extern "C" void MCEngineEvalScriptObjectExists(MCScriptObjectRef p_object, bool&
         r_exists = false;
 }
 
-extern "C" void MCEngineEvalScriptObjectDoesNotExist(MCScriptObjectRef p_object, bool& r_not_exists)
+extern "C" MC_DLLEXPORT void MCEngineEvalScriptObjectDoesNotExist(MCScriptObjectRef p_object, bool& r_not_exists)
 {
     bool t_exists;
     MCEngineEvalScriptObjectExists(p_object, t_exists);
@@ -135,7 +148,7 @@ static Properties parse_property_name(MCStringRef p_name)
 	return P_CUSTOM;
 }
 
-extern "C" MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object)
+extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object)
 {
     __MCScriptObjectImpl *t_script_object_imp;
     t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
@@ -181,7 +194,7 @@ extern "C" MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStringRef p_proper
     return t_value_ref;
 }
 
-extern "C" void MCEngineExecSetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef p_value)
+extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef p_value)
 {
     __MCScriptObjectImpl *t_script_object_imp;
     t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
@@ -224,7 +237,7 @@ extern "C" void MCEngineExecSetPropertyOfScriptObject(MCStringRef p_property, MC
     }
 }
 
-extern "C" MCValueRef MCEngineExecDispatchToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
 {
     __MCScriptObjectImpl *t_script_object_imp;
     t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
@@ -297,17 +310,17 @@ cleanup:
     return t_result;
 }
 
-extern "C" MCValueRef MCEngineExecDispatchToScriptObject(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object)
+extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObject(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object)
 {
     return MCEngineExecDispatchToScriptObjectWithArguments(p_is_function, p_message, p_object, kMCEmptyProperList);
 }
 
-extern "C" void MCEngineEvalMessageWasHandled(bool& r_handled)
+extern "C" MC_DLLEXPORT void MCEngineEvalMessageWasHandled(bool& r_handled)
 {
     r_handled = s_last_message_was_handled;
 }
 
-extern "C" void MCEngineEvalMessageWasNotHandled(bool& r_not_handled)
+extern "C" MC_DLLEXPORT void MCEngineEvalMessageWasNotHandled(bool& r_not_handled)
 {
     bool t_handled;
     MCEngineEvalMessageWasHandled(t_handled);
