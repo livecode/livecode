@@ -3088,6 +3088,10 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             
             mark(ctxt, false, false, t_new_mark);
             
+            // SN-2014-12-15: [[ Bug 14211 ]] mark() can throw errors
+            if (ctxt . HasError())
+                return;
+            
             if (!isdatachunk())
                 MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
             else
