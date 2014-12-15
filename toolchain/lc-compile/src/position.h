@@ -27,7 +27,7 @@ void yyGetPos(PositionRef *r_result);
 void InitializeFiles(void);
 void FinalizeFiles(void);
 
-void SetImportedModuleDir(const char *dir);
+void AddImportedModuleDir(const char *dir);
 int AddImportedModuleFile(const char *name);
     
 void AddFile(const char *filename);
@@ -40,8 +40,10 @@ int GetCurrentFile(FileRef *r_file);
 
 void SetOutputFile(const char *filename);
 void SetManifestOutputFile(const char *filename);
+void SetInterfaceOutputFile(const char *filename);
 void SetTemplateFile(const char *filename);
 FILE *OpenOutputFile(void);
+FILE *OpenInterfaceOutputFile(void);
 FILE *OpenManifestOutputFile(void);
 FILE *OpenTemplateFile(void);
 FILE *OpenImportedModuleFile(const char *module);

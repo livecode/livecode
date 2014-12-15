@@ -36,7 +36,7 @@ void bootstrap_main(int argc, char *argv[])
         else if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
             SetOutputFile(argv[++i]);
         else if (strcmp(argv[i], "-modulepath") == 0 && i + 1 < argc)
-            SetImportedModuleDir(argv[++i]);
+            AddImportedModuleDir(argv[++i]);
         else
             AddFile(argv[i]);
     }
@@ -89,8 +89,8 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: lc-compile -output OUTFILE [-manifest MANIFEST] [--] MLCFILE\n"
-"       lc-compile -outputc OUTFILE [-manifest MANIFEST] [--] MLCFILE\n"
+"Usage: lc-compile -output OUTFILE [-interface INTFILE] [-manifest MANIFEST] [--] MLCFILE\n"
+"       lc-compile -outputc OUTFILE [-interface INTFILE] [-manifest MANIFEST] [--] MLCFILE\n"
 "\n"
 "Compile a Modular LiveCode source file.\n"
 "\n"
@@ -98,6 +98,7 @@ usage(int status)
 "  -modulepath PATH    Path to directory containing module interface files.\n"
 "  -output  OUTFILE    Filename for bytecode output.\n"
 "  -outputc OUTFILE    Filename for C source code output.\n"
+"  -interface INTFILE  Filename for the generated interface file.\n"
 "  -manifest MANIFEST  Filename for generated manifest.\n"
 "  -h, -help           Print this message.\n"
 "  --                  Treat all remaining arguments as filenames.\n"
@@ -123,7 +124,7 @@ static void full_main(int argc, char *argv[])
         {
             if (0 == strcmp(opt, "-modulepath") && optarg)
             {
-                SetImportedModuleDir(argv[++argi]);
+                AddImportedModuleDir(argv[++argi]);
                 continue;
             }
             if (0 == strcmp(opt, "-output") && optarg)
@@ -135,6 +136,11 @@ static void full_main(int argc, char *argv[])
             {
                 SetOutputFile(argv[++argi]);
                 OutputFileAsC = 1;
+                continue;
+            }
+            if (0 == strcmp(opt, "-interface") && optarg)
+            {
+                SetInterfaceOutputFile(argv[++argi]);
                 continue;
             }
             if (0 == strcmp(opt, "-manifest") && optarg)
