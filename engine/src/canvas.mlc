@@ -63,12 +63,37 @@ public foreign handler MCCanvasRectangleSetWidth(in pWidth as CanvasFloat, inout
 public foreign handler MCCanvasRectangleGetHeight(in pRect as Rectangle, out rHeight as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRectangleSetHeight(in pHeight as CanvasFloat, inout xRect as Rectangle) as undefined binds to "<builtin>"
 
+/*
+Summary:	Creates a new rectangle value from the given list of values, interpreted as the left, top, right and bottom extents of the rectangle.
+
+mRect:		an expression which evaluates to a list of 4 numbers.
+
+Example:
+	variable tRect
+	put rectangle [50, 50, 150, 100] into tRect
+
+*/
+
 syntax MakeRect is prefix operator with precedence 4
 	"rectangle" <mRect: Expression>
 begin
 	//MCCanvasRectangleMakeWithLTRB(mRect[0], mRect[1], mRect[2], mRect[3], output)
     MCCanvasRectangleMakeWithList(mRect, output)
 end syntax
+
+/*
+Summary:	The left edge of a rectangle value.
+
+mRect:		An expression which evaluates to a rectangle.
+
+Example:
+	variable tLeft
+	put the left of tRect into tLeft
+	subtract 10 from tLeft
+	set the left of tRect to tLeft
+
+Notes:		Setting the left of a rectangle will reposition it without altering the width or height.
+*/
 
 syntax LeftRectangleProperty is prefix operator with precedence 4
 	"the" ( "left" | "x" ) "of" <mRect:Expression>
@@ -77,12 +102,40 @@ begin
 	MCCanvasRectangleSetLeft(input, mRect)
 end syntax
 
+/*
+Summary:	The top edge of a rectangle value.
+
+mRect:		An expression which evaluates to a rectangle.
+
+Example:
+	variable tTop
+	put the top of tRect into tTop
+	subtract 10 from tTop
+	set the top of tRect to tTop
+
+Notes:		Setting the top of a rectangle will reposition it without altering the width or height.
+*/
+
 syntax TopRectangleProperty is prefix operator with precedence 4
 	"the" ( "top" | "y" ) "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetTop(mRect, output)
 	MCCanvasRectangleSetTop(input, mRect)
 end syntax
+
+/*
+Summary:	The right edge of a rectangle value.
+
+mRect:		An expression which evaluates to a rectangle.
+
+Example:
+	variable tRight
+	put the right of tRect into tRight
+	add 10 to tRight
+	set the right of tRect to tRight
+
+Notes:		Setting the right of a rectangle will reposition it without altering the width or height.
+*/
 
 syntax RightRectangleProperty is prefix operator with precedence 4
 	"the" "right" "of" <mRect:Expression>
@@ -91,6 +144,20 @@ begin
 	MCCanvasRectangleSetRight(input, mRect)
 end syntax
 
+/*
+Summary:	The bottom edge of a rectangle value.
+
+mRect:		An expression which evaluates to a rectangle.
+
+Example:
+	variable tBottom
+	put the bottom of tRect into tBottom
+	add 10 to tBottom
+	set the bottom of tRect to tBottom
+
+Notes:		Setting the bottom of a rectangle will reposition it without altering the width or height.
+*/
+
 syntax BottomRectangleProperty is prefix operator with precedence 4
 	"the" "bottom" "of" <mRect:Expression>
 begin
@@ -98,12 +165,40 @@ begin
 	MCCanvasRectangleSetBottom(input, mRect)
 end syntax
 
+/*
+Summary:	The width of a rectangle value.
+
+mRect:		An expression which evaluates to a rectangle.
+
+Example:
+	variable tWidth
+	put the width of tRect into tWidth
+	add 10 to tWidth
+	set the width of tRect to tWidth
+
+Notes:		Setting the width of a rectangle will resize it without moving the left edge, expanding or contracting from the right.
+*/
+
 syntax WidthRectangleProperty is prefix operator with precedence 4
 	"the" "width" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetWidth(mRect, output)
 	MCCanvasRectangleSetWidth(input, mRect)
 end syntax
+
+/*
+Summary:	The height of a rectangle value.
+
+mRect:		An expression which evaluates to a rectangle.
+
+Example:
+	variable tHeight
+	put the height of tRect into tHeight
+	add 10 to tHeight
+	set the height of tRect to tHeight
+
+Notes:		Setting the height of a rectangle will resize it without moving the top edge, expanding or contracting from the bottom.
+*/
 
 syntax HeightRectangleProperty is prefix operator with precedence 4
 	"the" "height" "of" <mRect:Expression>
@@ -124,11 +219,34 @@ public foreign handler MCCanvasPointSetX(in pX as CanvasFloat, inout xPoint as P
 public foreign handler MCCanvasPointGetY(in pPoint as Point, out rY as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPointSetY(in pY as CanvasFloat, inout xPoint as Point) as undefined binds to "<builtin>"
 
+/*
+Summary:	Creates a new point value from the given list of values, interpreted as the x and y coordinates of the point.
+
+mPoint:		an expression which evaluates to a list of 2 numbers.
+
+Example:
+	variable tPoint
+	put point [50, 100] into tPoint
+
+*/
+
 syntax MakePoint is prefix operator with precedence 4
 	"point" <mPoint: Expression>
 begin
 	MCCanvasPointMakeWithList(mPoint, output)
 end syntax
+
+/*
+Summary:	The x coordinate of a point value.
+
+mPoint:		An expression which evaluates to a point.
+
+Example:
+	variable tX
+	put the x of tPoint into tX
+	add 10 to tX
+	set the x of tPoint to tX
+*/
 
 syntax PointXProperty is prefix operator with precedence 4
 	"the" "x" "of" <mPoint: Expression>
@@ -136,6 +254,18 @@ begin
 	MCCanvasPointGetX(mPoint, output)
 	MCCanvasPointSetX(input, mPoint)
 end syntax
+
+/*
+Summary:	The y coordinate of a point value.
+
+mPoint:		An expression which evaluates to a point.
+
+Example:
+	variable tY
+	put the y of tPoint into tY
+	add 10 to tY
+	set the y of tPoint to tY
+*/
 
 syntax PointYProperty is prefix operator with precedence 4
 	"the" "y" "of" <mPoint: Expression>
@@ -152,6 +282,21 @@ end syntax
 public foreign handler MCCanvasColorMakeRGBA(in pRed as CanvasFloat, in pGreen as CanvasFloat, in pBlue as CanvasFloat, in pAlpha as CanvasFloat, out rColor as Color) as undefined binds to "<builtin>"
 public foreign handler MCCanvasColorMakeWithList(in pParts as list, out rColor as Color) as undefined binds to "<builtin>"
 //public foreign handler MCCanvasColorMakeWithString(in pList as string, out rColor as Color)
+
+/*
+Summary:	Creates a new color value from the given list of values, interpreted as the red, green, blue, and (optional) alpha components of the color.
+
+mPoint:		an expression which evaluates to a list of 3 or 4 numbers.
+
+Example:
+	variable tColor
+	// Set tColor to opaque red
+	put color [1.0, 0.0, 0.0] into tColor
+	// Set tColor to partially transparent cyan
+	put color [0.0, 1.0, 1.0, 0.75] into tColor
+
+Notes:		The component value denotes the intensity of that component, expressed as a real number between 0 and 1. The alpha component represents the opacity of the color. If the alpha component is not specified then it is assumed to be 1 (fully opaque).
+*/
 
 syntax MakeColor is prefix operator with precedence 4
 	"color" <mVal: Expression>
@@ -176,12 +321,42 @@ public foreign handler MCCanvasColorSetBlue(in pBlue as CanvasFloat, inout xColo
 public foreign handler MCCanvasColorGetAlpha(in pColor as Color, out rAlpha as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasColorSetAlpha(in pAlpha as CanvasFloat, inout xColor as Color) as undefined binds to "<builtin>"
 
+/*
+Summary:	The red component of a color value.
+
+mColor:		An expression which evaluates to a color.
+
+Example:
+	variable tRed
+	// Store the old red value
+	put the red of tColor into tRed
+	// Invert the intensity of the red color component
+	set the red of tColor to 1.0 - tRed
+
+Notes:		The component value denotes the intensity of that component, expressed as a real number between 0 and 1.
+*/
+
 syntax RedColorProperty is prefix operator with precedence 4
 	"the" "red" "of" <mColor: Expression>
 begin
 	MCCanvasColorGetRed(mColor, output)
 	MCCanvasColorSetRed(input, mColor)
 end syntax
+
+/*
+Summary:	The green component of a color value.
+
+mColor:		An expression which evaluates to a color.
+
+Example:
+	variable tGreen
+	// Store the old green value
+	put the green of tColor into tGreen
+	// Remove any green component from the color
+	set the green of tColor to 0
+
+Notes:		The component value denotes the intensity of that component, expressed as a real number between 0 and 1.
+*/
 
 syntax GreenColorProperty is prefix operator with precedence 4
 	"the" "green" "of" <mColor: Expression>
@@ -190,12 +365,42 @@ begin
 	MCCanvasColorSetGreen(input, mColor)
 end syntax
 
+/*
+Summary:	The blue component of a color value.
+
+mColor:		An expression which evaluates to a color.
+
+Example:
+	variable tBlue
+	// Store the old blue value
+	put the blue of tColor into tBlue
+	// Set the blue component of the color to full intensity
+	set the blue of tColor to 1
+
+Notes:		The component value denotes the intensity of that component, expressed as a real number between 0 and 1.
+*/
+
 syntax BlueColorProperty is prefix operator with precedence 4
 	"the" "blue" "of" <mColor: Expression>
 begin
 	MCCanvasColorGetBlue(mColor, output)
 	MCCanvasColorSetBlue(input, mColor)
 end syntax
+
+/*
+Summary:	The alpha component of a color value.
+
+mColor:		An expression which evaluates to a color.
+
+Example:
+	variable tAlpha
+	// Store the old alpha value
+	put the alpha of tColor into tAlpha
+	// Make the color semi-transparent
+	set the alpha of tColor to 0.5
+
+Notes:		The alpha value represents the opacity of the color, expressed as a real number between 0 (fully transparent) and 1 (fully opaque).
+*/
 
 syntax AlphaColorProperty is prefix operator with precedence 4
 	"the" "alpha" "of" <mColor: Expression>
@@ -218,31 +423,76 @@ public foreign handler MCCanvasTransformMakeTranslationWithList(in pParts as lis
 public foreign handler MCCanvasTransformMakeWithMatrixValues(in pA as CanvasFloat, in pB as CanvasFloat, in pC as CanvasFloat, in pD as CanvasFloat, in pTX as CanvasFloat, in pTY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeWithMatrixArray(in pMatrix as array, out rTransform as Transform) as undefined binds to "<builtin>"
 
+/*
+Summary:	Returns the identity transform.
+
+Example:
+	variable tTransform
+	put the identity transform into tTransform
+
+Notes:		The identity transform represents a coordinate transformation where the set of coordinates remain the same after it is applied. This can be useful when specifying that coordinates should not be altered, or as a starting point when combining transforms to produce a more complex one.
+*/
+
 syntax MakeIdentityTransform is expression
-//	"the" "identity" "transform"
-	"identity" "transform"
+	"the" "identity" "transform"
+//	"identity" "transform"
 begin
 	MCCanvasTransformMakeIdentity(output)
 end syntax
 
+/*
+Summary:	Creates a new scaling transform from the given list of values, interpreted as the x-axis scale and y-axis scale, or as a uniform scale when only a single value is given.
+
+mScale:		An expression which evaluates to a list of 1 or 2 numbers
+
+Example:
+	variable tTransform
+	// Create x2 uniformly scaling transform
+	put transform with scale 2 into tTransform
+	// Create transform which only scales in the direction of the x axis
+	put transform with scale [ 2, 1 ] into tTransform
+
+*/
+
 syntax MakeScaleTransform is prefix operator with precedence 4
 	"transform" "with" "scale" <mScale: Expression>
 begin
-//	MCCanvasTransformMakeScale(mScale[0], mScale[0], output)
-//	MCCanvasTransformMakeScale(mScale[0], mScale[1], output)
     MCCanvasTransformMakeScaleWithList(mScale, output)
 end syntax
 
+/*
+Summary:	Creates a new rotation transform representing a rotation by the given number of degrees.
+
+mDegrees:	An expression which evaluates to a number
+
+Example:
+	variable tTransform
+	// Create 30 degree rotation transform
+	put transform with rotation by 30 into tTransform
+
+*/
+
 syntax MakeRotationTranform is prefix operator with precedence 4
-	"transform" "with" "rotation" "by" <mRadians: Expression>
+	"transform" "with" "rotation" "by" <mDegrees: Expression>
 begin
-	MCCanvasTransformMakeRotation(mRadians, output)
+	MCCanvasTransformMakeRotation(mDegrees, output)
 end syntax
+
+/*
+Summary:		Creates a new translation transform from the given list of values, interpreted as the x and y offsets of the translation.
+
+mTranslation:	An expression which evaluates to a list of 2 numbers
+
+Example:
+	variable tTransform
+	// Create translation transform to offset coordinates by 50,100
+	put transform with translation [50,100] into tTransform
+
+*/
 
 syntax MakeTranslationTransform is prefix operator with precedence 4
 	"transform" "with" "translation" <mTranslation: Expression>
 begin
-	//MCCanvasTransformMakeTranslation(mTranslation[0], mTranslation[1], output)
     MCCanvasTransformMakeTranslationWithList(mTranslation, output)
 end syntax
 
@@ -266,12 +516,40 @@ public foreign handler MCCanvasTransformSetMatrix(in pMatrix as array, inout xTr
 
 public foreign handler MCCanvasTransformGetInverse(in pTransform as Transform, out rInverse as Transform) as undefined binds to "<builtin>"
 
+/*
+Summary:		The scale component of a transform, as a list of 2 numbers (the x and y scales).
+
+mTransform:		An expression which evaluates to a transform
+
+Example:
+	variable tScale
+	// Store the old scale component
+	put the scale of tTransform into tScale
+	// Modify the scale by adding 1 to the x scale value
+	set the scale of tTransform to [item 1 of tScale + 1, item 2 of tScale]
+
+*/
+
 syntax ScaleTransformProperty is prefix operator with precedence 4
 	"the" "scale" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetScaleAsList(mTransform, output)
 	MCCanvasTransformSetScaleAsList(input, mTransform)
 end syntax
+
+/*
+Summary:		The rotation component of a transform, as a number (in degrees).
+
+mTransform:		An expression which evaluates to a transform
+
+Example:
+variable tRotation
+// Store the old rotation component
+put the rotation of tTransform into tRotation
+// Double the rotation
+set the rotation of tTransform to tRotation * 2
+
+*/
 
 syntax RotationTransformProperty is prefix operator with precedence 4
 	"the" "rotation" "of" <mTransform: Expression>
@@ -280,12 +558,40 @@ begin
 	MCCanvasTransformSetRotation(input, mTransform)
 end syntax
 
+/*
+Summary:		The skew component of a transform, as a list of 2 numbers (the x and y skew values).
+
+mTransform:		An expression which evaluates to a transform
+
+Example:
+variable tSkew
+// Store the old skew component
+put the skew of tTransform into tSkew
+// Remove the skew
+set the skew of tTransform to [0,0]
+
+*/
+
 syntax SkewTransformProperty is prefix operator with precedence 4
 	"the" "skew" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetSkewAsList(mTransform, output)
 	MCCanvasTransformSetSkewAsList(input, mTransform)
 end syntax
+
+/*
+Summary:		The translation component of a transform, as a list of 2 numbers (the x and y offset values).
+
+mTransform:		An expression which evaluates to a transform
+
+Example:
+variable tTranslation
+// Store the old translation component
+put the translation of tTransform into tTranslation
+// Adjust the offset of the transformation
+set the translation of tTransform to [item 1 of tTranslation + tLeft, item 2 of tTranslation + tTop]
+
+*/
 
 syntax TranslationTransformProperty is prefix operator with precedence 4
 	"the" "translation" "of" <mTransform: Expression>
@@ -294,6 +600,24 @@ begin
 	MCCanvasTransformSetTranslationAsList(input, mTransform)
 end syntax
 
+/*
+Summary:		The matrix values of a transform, as an array with 3x3 multi-dimensional keys ranging from 0,0 to 2,2.
+
+mTransform:		An expression which evaluates to a transform.
+
+Example:
+	variable tMatrix
+	// Get the current transform matrix
+	put the matrix of tTransform into tMatrix
+	// Directly set the components
+	put 2.5 into tMatrix[0,0]
+	put 0 into tMatrix[1,0]
+	put 0 into tMatrix[0,1]
+	put 2.5 into tMatrix[1,1]
+	// Update the transform with the new values
+	set the matrix of tTransform to tMatrix
+
+*/
 
 syntax MatrixTransformProperty is prefix operator with precedence 4
 	"the" "matrix" "of" <mTransform: Expression>
@@ -301,6 +625,22 @@ begin
 	MCCanvasTransformGetMatrix(mTransform, output)
 	MCCanvasTransformSetMatrix(input, mTransform)
 end syntax
+
+/*
+Summary:		The inverse of a transform, as a transform value.
+
+mTransform:		An expression which evaluates to a transform.
+
+Example:
+	variable tInverse
+	// Get the inverse of the current transform
+	put the inverse of tTransform into tInverse
+	// Combine the transform with its inverse to produce the identity transform
+	concat tTransform with tInverse
+
+Notes:
+	The inverse of a transform matrix is the transform that reverses the effect of the original. Combining a transform with its inverse will produce the identity transform.
+*/
 
 syntax InverseTransformProperty is prefix operator with precedence 4
 	"the" "inverse" "of" <mTransform: Expression>
@@ -318,6 +658,32 @@ public foreign handler MCCanvasTransformScaleWithList(inout xTransform as Transf
 public foreign handler MCCanvasTransformRotate(inout xTransform as Transform, in pRadians as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformTranslate(inout xTransform as Transform, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformTranslateWithList(inout xTransform as Transform, in pParts as list) as undefined binds to "<builtin>"
+
+/*
+Summary:		Concatenate transform a with transform b.
+
+mTransformA:	An expression which evaluates to a transform.
+mTransformB:	An expression which evaluates to a transform.
+
+Example:
+	variable tTransform
+	variable tScale
+	variable tRotation
+	// Create a new scaling transform
+	put transform with scale [5,10] into tScale
+	// Create a new rotation transform
+	put transform with rotation by 30 into tRotation
+	// Create a transform representing a scale followed by a rotation
+	put tScale into tTransform
+	concat tTransform with tRotation
+
+	// Create a transform representing a rotation followed by a scale
+	put tRotation into tTransform
+	concat tTransform with tScale
+
+Notes:
+	Concatenating transforms modifies the original transform to produce a single transform that is the equivalent of applying the original transform followed by the other. Changing the order of concatenation will result in a transform with different effects.
+*/
 
 syntax ConcatTransform is statement
 	"concat" <mTransformA: Expression> "with" <mTransformB: Expression>

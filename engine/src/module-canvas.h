@@ -466,7 +466,7 @@ extern "C" MC_DLLEXPORT void MCCanvasRotate(MCCanvasRef p_canvas, MCCanvasFloat 
 extern "C" MC_DLLEXPORT void MCCanvasTranslate(MCCanvasRef p_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y);
 extern "C" MC_DLLEXPORT void MCCanvasTranslateWithList(MCCanvasRef p_canvas, MCProperListRef p_translation);
 extern "C" MC_DLLEXPORT void MCCanvasSaveState(MCCanvasRef p_canvas);
-extern "C" MC_DLLEXPORT void MCCanvasRestore(MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasRestoreState(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasBeginLayer(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasEndLayer(MCCanvasRef p_canvas);
