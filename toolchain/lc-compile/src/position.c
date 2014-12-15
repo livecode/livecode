@@ -101,7 +101,8 @@ int AddImportedModuleFile(const char *p_name)
     FILE *t_file;
     if (ImportedModuleDirCount > 0)
     {
-        for(int i = 0; i < ImportedModuleDirCount; i++)
+		int i;
+        for(i = 0; i < ImportedModuleDirCount; i++)
         {
             sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
             t_file = fopen(t_path, "r");
