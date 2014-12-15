@@ -207,18 +207,18 @@ COMPILE_CPPFLAGS=$(CPPFLAGS) \
 # We can't do much about warnings that occur in the generate source
 # code, so don't bother outputting them.
 COMPILE_stage_CFLAGS=$(CFLAGS)
-COMPILE_CFLAGS=$(CFLAGS) -Wall
+COMPILE_CFLAGS=$(CFLAGS) -Wall -std=gnu90
 
 COMPILE_CXXFLAGS=$(CXXFLAGS) -Wall
 
 COMPILE_LDFLAGS=$(LDFLAGS) \
 	-L$(BUILD_DIR) \
-	-L$(top_srcdir)/prebuilt/linux/$(ARCH)/x64_64
+	-L$(top_srcdir)/prebuilt/lib/linux/$(ARCH)
 
 COMPILE_LDLIBS=$(LDLIBS) \
 	-lscript \
 	-lfoundation \
-	-licudata -licuuc -licui18n \
+	-licui18n -licuuc -licudata \
 	-ldl \
 	-lffi
 

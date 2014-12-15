@@ -7,7 +7,7 @@
 		<CustomBuildRule
 			Name="MLC (for built-in)"
 			DisplayName="MLC (for built-in)"
-			CommandLine="$(SolutionDir)_build\windows\$(ConfigurationName)\lc-compile.exe -outputc generated\$(InputName).c [inputs]"
+			CommandLine="$(SolutionDir)_build\windows\$(ConfigurationName)\lc-compile.exe -modulepath $(SolutionDir)toolchain\lc-compile\generated\modules -outputc generated\$(InputName).c [inputs]"
 			Outputs="generated\$(InputName).c"
 			FileExtensions="*.mlc"
 			ExecutionDescription="Running lc-compile for &quot;$(InputName)&quot;..."

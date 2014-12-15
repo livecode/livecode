@@ -1247,25 +1247,14 @@ void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTrans
 
 // T = Tscale * Trotate * Tskew * Ttranslate
 
-MCGAffineTransform MCCanvasTransformCompose(const MCGPoint &p_scale, MCCanvasFloat p_rotation, const MCGPoint &p_skew, const MCGPoint &p_translation)
-{
-	MCGAffineTransform t_transform;
-	t_transform = MCGAffineTransformMakeScale(p_scale.x, p_scale.y);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeRotation(MCCanvasRadiansToDegrees(p_rotation)), t_transform);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeSkew(p_skew.x, p_skew.y), t_transform);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeTranslation(p_translation.x, p_translation.y), t_transform);
-	
-	return t_transform;
-}
-
 // Ttranslate:
 // / 1 0 tx \
 // | 0 1 ty |
 // \ 0 0  1 /
 
 // Tscale * Trotate * Tskew:
-// / a  c \   / 1  Skew \   / Cos(r) -Sin(r) \   / ScaleX       0 \   / -ScaleX * Skew * Sin(r) + ScaleX * Cos(r)   ScaleY * Skew * Cos(r) + ScaleY * Sin(r) \
-// \ b  d / = \ 0     1 / * \ Sin(r)  Cos(r) / * \      0  ScaleY / = \ -ScaleX * Sin(r)                            ScaleY * Cos(r)                          /
+// / a  c \   / ScaleX       0 \   /  Cos(r)  Sin(r) \   / 1  Skew \   /  ScaleX * Cos(r)   ScaleX * Skew * Cos(r) + ScaleX * Sin(r) \
+// \ b  d / = \      0  ScaleY / * \ -Sin(r)  Cos(r) / * \ 0     1 / = \ -ScaleY * Sin(r)  -ScaleY * Skew * Sin(r) + ScaleY * Cos(r) /
 
 bool MCCanvasTransformDecompose(const MCGAffineTransform &p_transform, MCGPoint &r_scale, MCCanvasFloat &r_rotation, MCGPoint &r_skew, MCGPoint &r_translation)
 {
@@ -1274,37 +1263,37 @@ bool MCCanvasTransformDecompose(const MCGAffineTransform &p_transform, MCGPoint 
 	
 	t_trans = MCGPointMake(p_transform.tx, p_transform.ty);
 	
+	// if a == 0, take r to be pi/2 radians
+	if (p_transform.a == 0)
+	{
+		t_r = M_PI / 2;
+		// b == -ScaleY, c == ScaleX
+		t_scale = MCGPointMake(p_transform.c, -p_transform.b);
+		// d = -ScaleY * Skew => Skew = d / -ScaleY => Skew = d / b
+		if (p_transform.b == 0)
+			return false;
+		t_skew = p_transform.d / p_transform.b;
+	}
 	// if b == 0, take r to be 0 radians
-	if (p_transform.b == 0)
+	else if (p_transform.b == 0)
 	{
 		t_r = 0;
 		// a == ScaleX, d == ScaleY
 		t_scale = MCGPointMake(p_transform.a, p_transform.d);
-		// c = ScaleY * Skew => Skew = c / ScaleY => Skew = c / d
-		if (p_transform.d == 0)
+		// c == ScaleX * Skew => Skew == c / ScaleX => Skew = c / a
+		if (p_transform.a == 0)
 			return false;
-		t_skew = p_transform.c / p_transform.d;
-	}
-	// if d == 0, take r to be -pi / 2 radians
-	else if (p_transform.d == 0)
-	{
-		t_r = M_PI / 2;
-		// b == -ScaleX, c == ScaleY
-		t_scale = MCGPointMake(-p_transform.b, p_transform.c);
-		// a == -ScaleX * Skew => Skew == a / -ScaleX => Skew = a / b
-		if (p_transform.b == 0)
-			return false;
-		t_skew = p_transform.a / p_transform.b;
+		t_skew = p_transform.c / p_transform.a;
 	}
 	else
 	{
-		// Skew^2 + (a/b - c/d) * Skew + (1 + a/b * c/d) = 0
-		MCGFloat t_a_div_b, t_c_div_d;
-		t_a_div_b = p_transform.a / p_transform.b;
-		t_c_div_d = p_transform.c / p_transform.d;
+		// Skew^2 + (-c/a - d/b) * Skew + (c/a * d/b - 1) = 0
+		MCGFloat t_c_div_a, t_d_div_b;
+		t_c_div_a = p_transform.c / p_transform.a;
+		t_d_div_b = p_transform.d / p_transform.b;
 		
 		MCGFloat t_x1, t_x2;
-		if (!MCSolveQuadraticEqn(1, t_a_div_b - t_c_div_d, 1 + t_a_div_b * t_c_div_d, t_x1, t_x2))
+		if (!MCSolveQuadraticEqn(1, -t_c_div_a -t_d_div_b, t_c_div_a * t_d_div_b - 1, t_x1, t_x2))
 			return false;
 		
 		// choose skew with smallest absolute value
@@ -1313,21 +1302,29 @@ bool MCCanvasTransformDecompose(const MCGAffineTransform &p_transform, MCGPoint 
 		else
 			t_skew = t_x2;
 		
-		// Tan(r) = c/d - Skew
-		t_r = atan(t_c_div_d - t_skew);
+		// Tan(r) = c/a -Skew
+		t_r = atan(t_c_div_a - t_skew);
 		
-		t_scale = MCGPointMake(-p_transform.b / sinf(t_r), p_transform.d / cosf(t_r));
+		t_scale = MCGPointMake(p_transform.a / cosf(t_r), -p_transform.b / sinf(t_r));
 	}
 	
 	r_scale = t_scale;
-	r_rotation = -t_r; // calculations assume y increases upwards producing a rotation in the wrong direction, so take the negative.
+	r_rotation = t_r;
 	r_skew = MCGPointMake(t_skew, 0);
 	r_translation = t_trans;
 	
-	MCGAffineTransform t_test_trans;
-	t_test_trans = MCCanvasTransformCompose(r_scale, r_rotation, r_skew, r_translation);
-	
 	return true;
+}
+
+MCGAffineTransform MCCanvasTransformCompose(const MCGPoint &p_scale, MCCanvasFloat p_rotation, const MCGPoint &p_skew, const MCGPoint &p_translation)
+{
+	MCGAffineTransform t_transform;
+	t_transform = MCGAffineTransformMakeScale(p_scale.x, p_scale.y);
+	t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeRotation(p_rotation));
+	t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeSkew(p_skew.x, p_skew.y));
+	t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeTranslation(p_translation.x, p_translation.y));
+	
+	return t_transform;
 }
 
 void MCCanvasTransformGetScaleAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_scale)
@@ -4336,7 +4333,7 @@ void MCCanvasSaveState(MCCanvasRef p_canvas)
 	MCGContextSave(t_canvas->context);
 }
 
-void MCCanvasRestoreState(MCCanvasRef p_canvas)
+void MCCanvasRestore(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -4461,9 +4458,7 @@ void MCCanvasFill(MCCanvasRef p_canvas)
 	t_canvas = MCCanvasGet(p_canvas);
 	
 	MCCanvasApplyChanges(*t_canvas);
-	MCGContextBegin(t_canvas->context, false);
 	MCGContextFill(t_canvas->context);
-	MCGContextEnd(t_canvas->context);
 }
 
 void MCCanvasStroke(MCCanvasRef p_canvas)
@@ -4472,9 +4467,7 @@ void MCCanvasStroke(MCCanvasRef p_canvas)
 	t_canvas = MCCanvasGet(p_canvas);
 	
 	MCCanvasApplyChanges(*t_canvas);
-	MCGContextBegin(t_canvas->context, false);
 	MCGContextStroke(t_canvas->context);
-	MCGContextEnd(t_canvas->context);
 }
 
 void MCCanvasClipToRect(MCCanvasRectangleRef &p_rect, MCCanvasRef p_canvas)

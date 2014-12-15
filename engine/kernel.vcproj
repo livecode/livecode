@@ -8106,6 +8106,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\engine.mlc"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-canvas-internal.h"
 				>
 			</File>
@@ -8115,6 +8119,14 @@
 			</File>
 			<File
 				RelativePath=".\src\module-canvas.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-engine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-engine.h"
 				>
 			</File>
 			<File
@@ -8130,6 +8142,26 @@
 				>
 				<File
 					RelativePath=".\generated\canvas.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\generated\engine.c"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"

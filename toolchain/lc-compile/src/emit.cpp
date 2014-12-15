@@ -275,7 +275,9 @@ void EmitEndModule(void)
         MCMemoryOutputStreamFinish(t_output_stream, t_inf_buffer, t_inf_size);
         MCValueRelease(t_output_stream);
         FILE *t_import;
-        t_import = OpenImportedModuleFile(t_module_string);
+        t_import = OpenInterfaceOutputFile();
+        if (t_import == NULL)
+            t_import = OpenImportedModuleFile(t_module_string);
         if (t_import != NULL)
         {
             fwrite(t_inf_buffer, 1, t_inf_size, t_import);

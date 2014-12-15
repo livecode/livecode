@@ -43,10 +43,10 @@ MCBlockMakeRectangle(double x, double y,
                      double width, double height)
 {
 	MCRectangle p_result;
-	p_result.x = lrint(x);
-	p_result.y = lrint(y);
-	p_result.width = lrint(width);
-	p_result.height = lrint(height);
+	p_result.x = int2(x);
+	p_result.y = int2(y);
+	p_result.width = uint2(width);
+	p_result.height = uint2(height);
 	return p_result;
 }
 
