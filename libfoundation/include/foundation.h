@@ -1852,7 +1852,7 @@ MC_DLLEXPORT uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, 
 MC_DLLEXPORT void MCStringNativize(MCStringRef string);
 
 // Create a native copy of p_string
-bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy);
+MC_DLLEXPORT bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy);
 
 // Maps from a codepoint (character) range to a code unit (StringRef) range
 MC_DLLEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
