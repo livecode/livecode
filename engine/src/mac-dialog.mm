@@ -840,11 +840,8 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
     {
         NSColor *t_color;
         
-        // Do not calibrate the colour. As stated in the doc for -colorUsingColorSpace
-        //   "The new NSColor object. This method converts the receiver's color to an equivalent
-        //    one in the new color space. Although the new color might have different component
-        //    values, it looks the same as the original."
-        t_color = [mColorPanel color];
+        // PM-2014-12-15: [[ Bug 14210 ]] Use calibrated color space to prevent throwing an exception when adjusting the colors in the color slider tab of property inspector
+        t_color = [ [mColorPanel color] colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
         
         // Convert the value from to a colour component value.
         s_color_dialog_color . red   = (uint2) ([t_color redComponent] * UINT16_MAX);
