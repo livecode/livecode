@@ -2456,7 +2456,7 @@ bool MCStringFirstIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, M
     if (self_native)
         self_chars = self -> native_chars + p_range . offset;
     else
-        self_chars = self -> chars + p_range . length;
+        self_chars = self -> chars + p_range . offset;
     
     // AL-2014-09-05: [[ Bug 13352 ]] Crash due to not taking into account p_after by adjusting length of string.
     t_result = MCUnicodeFirstIndexOf(self_chars, p_range . length, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
