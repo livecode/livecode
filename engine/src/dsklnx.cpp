@@ -2077,6 +2077,17 @@ public:
         else
             t_tilde_path = p_path;
 
+        // SN-2014-12-16: [[ Bug 14001 ]] Resolving the path was different for Linux server
+#ifdef _SERVER
+        if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
+        {
+            MCAutoStringRef t_folder;
+            return GetCurrentFolder(&t_folder) &&
+                    MCStringFormat(r_resolved_path, "%@/%@", *t_folder, *t_tilde_path);
+        }
+        else
+            return MCStringCopy(*t_tilde_path, r_resolved_path);
+#else
         // IM-2012-07-23
         // Keep (somewhat odd) semantics of the original function for now
         if (!MCS_lnx_is_link(*t_tilde_path))
@@ -2108,6 +2119,7 @@ public:
         }
         else
             return MCStringCopy(*t_newname, r_resolved_path);
+#endif
     }
 
     virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
