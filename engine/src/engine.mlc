@@ -11,6 +11,7 @@ public foreign handler MCEngineExecDispatchToScriptObject(in pIsFunction as bool
 public foreign handler MCEngineExecDispatchToScriptObjectWithArguments(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject, in pArguments as optional list) as any binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as bool) as undefined binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as bool) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScript(in pScript as string) as any binds to "<builtin>"
 
 syntax ResolveScriptObject is statement
     "resolve" "script" "object" <Object: Expression>
@@ -59,6 +60,12 @@ syntax MessageWasNotHandled is expression
     "the" "message" "was" "not" "handled"
 begin
     MCEngineEvalMessageWasNotHandled(output)
+end syntax
+
+syntax ExecuteScript is statement
+    "execute" "script" <Script: Expression>
+begin
+    MCEngineExecExecuteScript(Script)
 end syntax
 
 end module

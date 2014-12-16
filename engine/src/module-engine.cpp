@@ -30,6 +30,7 @@
 #include "chunk.h"
 #include "scriptpt.h"
 #include "param.h"
+#include "card.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +66,15 @@ bool MCScriptObjectCreate(MCObject *p_object, uint32_t p_part_id, MCScriptObject
     r_script_object = t_script_object;
     
     return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCEngineThrowScriptError(void)
+{
+    // TODO: Process MCeerror and such.
+    MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("script error"), nil);
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,8 +189,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStrin
 
     if (ctxt . HasError())
     {
-        // TODO: Process MCeerror and such.
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("script error"), nil);
+        MCEngineThrowScriptError();
         return nil;
     }
     
@@ -231,8 +240,7 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
     
     if (ctxt . HasError())
     {
-        // TODO: Process MCeerror and such.
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("script error"), nil);
+        MCEngineThrowScriptError();
         return;
     }
 }
@@ -286,8 +294,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArgumen
     t_stat = t_script_object_imp -> handle -> Get() -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
     if (t_stat == ES_ERROR)
     {
-        // TODO: Process MCeerror and such.
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("script error"), nil);
+        MCEngineThrowScriptError();
         goto cleanup;
     }
     
@@ -325,6 +332,29 @@ extern "C" MC_DLLEXPORT void MCEngineEvalMessageWasNotHandled(bool& r_not_handle
     bool t_handled;
     MCEngineEvalMessageWasHandled(t_handled);
     r_not_handled = !t_handled;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT MCValueRef MCEngineExecExecuteScript(MCStringRef p_script)
+{
+    MCStack *t_stack;
+    t_stack = MCdefaultstackptr;
+    if (t_stack == nil)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
+        return nil;
+    }
+    
+    Exec_stat t_stat;
+    t_stat = t_stack -> getcurcard() -> domess(p_script);
+    if (t_stat == ES_ERROR)
+    {
+        MCEngineThrowScriptError();
+        return nil;
+    }
+    
+    return MCValueRetain(MCresult -> getvalueref());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
