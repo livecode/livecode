@@ -1,6 +1,8 @@
 widget com.livecode.example.clock
 
 use com.livecode.canvas
+use com.livecode.engine
+use com.livecode.widget
 
 --------
 
