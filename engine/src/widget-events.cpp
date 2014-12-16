@@ -162,12 +162,16 @@ Boolean MCWidgetEventManager::event_mup(MCWidget* p_widget, uint2 p_which, bool 
 
 Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_y)
 {
-    // Cursor position has changed
-    m_mouse_x = p_x;
-    m_mouse_y = p_y;
-    
     if (!widgetIsInRunMode(p_widget))
         return False;
+    
+    // Did the mouse position change?
+    bool t_pos_changed;
+    t_pos_changed = !(p_x == m_mouse_x && p_y == m_mouse_y);
+    
+    // Update the mouse position
+    m_mouse_x = p_x;
+    m_mouse_y = p_y;
     
     // Do a quick bounds test on the targeted widget. If this fails, the widget
     // wasn't the target of the mouse focus event.
@@ -199,7 +203,7 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
         m_mouse_focus = p_widget;
         mouseEnter(p_widget);
     }
-    else
+    else if (t_pos_changed)
     {
         // Mouse has moved within this widget
         mouseMove(p_widget, p_x, p_y);
@@ -211,10 +215,9 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
 
 void MCWidgetEventManager::event_munfocus(MCWidget* p_widget)
 {
-    // TODO: cancel events for held mouse buttons
-    
-    // Widget has lost focus
-    m_mouse_focus = nil;
+    // Widget has lost focus iff there are no mouse buttons held
+    if (m_mouse_buttons == 0)
+        m_mouse_focus = nil;
 }
 
 void MCWidgetEventManager::event_mdrag(MCWidget* p_widget)
@@ -538,6 +541,9 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
         p_widget->OnMouseCancel(p_which);
         t_accepted = true;
     }
+    
+    // Release implies loss of mouse focus
+    m_mouse_focus = nil;
     
     return t_accepted;
 }

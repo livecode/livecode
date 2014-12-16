@@ -445,14 +445,8 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     MCNewAutoNameRef t_name_for_prop;
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
-    if (CallGetProp(ctxt, *t_name_for_prop, p_index, r_value.valueref_value))
-    {
-        r_value.type = kMCExecValueTypeValueRef;
-        return true;
-    }
-    
-    // No properties handled for now.
-    return false;
+    // Forward to the custom property handler
+    return getcustomprop(ctxt, nil, *t_name_for_prop, r_value);
 }
 
 bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value)
@@ -550,32 +544,34 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     MCNewAutoNameRef t_name_for_prop;
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
-    MCAutoValueRef t_value;
-    MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, &t_value);
-    if (!ctxt.HasError())
-    {
-        if (CallSetProp(ctxt, *t_name_for_prop, nil, *t_value))
-            return true;
-    }
-    
-    // No properties handled for now.
-    return false;
+    // Forward to the custom property handler
+    return setcustomprop(ctxt, nil, *t_name_for_prop, p_value);
 }
 
 bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
 {
+    // Treat as a normal custom property if not a widget property
+    MCTypeInfoRef t_getter, t_setter;
+    if (p_set_name != nil || !MCScriptQueryPropertyOfModule(m_module, p_prop_name, t_getter, t_setter))
+        return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, r_value);
+    
     if (CallGetProp(ctxt, p_prop_name, nil, r_value.valueref_value))
     {
         r_value.type = kMCExecValueTypeValueRef;
         return true;
     }
     
-    // Not handled for now.
+    // Property handler failed
     return false;
 }
 
 bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
 {
+    // Treat as a normal custom property if not a widget property
+    MCTypeInfoRef t_getter, t_setter;
+    if (p_set_name != nil || !MCScriptQueryPropertyOfModule(m_module, p_prop_name, t_getter, t_setter))
+        return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_value);
+    
     MCAutoValueRef t_value;
     MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, &t_value);
     if (!ctxt.HasError())
@@ -584,7 +580,7 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
             return true;
     }
     
-    // Not handled for now.
+    // Property handler failed
     return false;
 }
 
@@ -688,24 +684,30 @@ bool MCWidget::inEditMode()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// TODO: all of these should be cached
+
 bool MCWidget::handlesMouseDown() const
 {
-    return true;
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnMouseDown"), t_signature);
 }
 
 bool MCWidget::handlesMouseUp() const
 {
-    return true;
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnMouseUp"), t_signature);
 }
 
 bool MCWidget::handlesMouseRelease() const
 {
-    return true;
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnMouseRelease"), t_signature);
 }
 
 bool MCWidget::handlesKeyPress() const
 {
-    return true;
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnKeyPress"), t_signature);
 }
 
 bool MCWidget::handlesTouches() const
@@ -715,7 +717,8 @@ bool MCWidget::handlesTouches() const
 
 bool MCWidget::wantsClicks() const
 {
-    return true;
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnClick"), t_signature);
 }
 
 bool MCWidget::wantsTouches() const
@@ -725,7 +728,8 @@ bool MCWidget::wantsTouches() const
 
 bool MCWidget::wantsDoubleClicks() const
 {
-    return true;
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnDoubleClick"), t_signature);
 }
 
 bool MCWidget::waitForDoubleClick() const
@@ -735,7 +739,8 @@ bool MCWidget::waitForDoubleClick() const
 
 bool MCWidget::isDragSource() const
 {
-    return true;
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnDragStart"), t_signature);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
