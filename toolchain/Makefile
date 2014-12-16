@@ -504,3 +504,53 @@ $(GRAMMAR_output): $(GRAMMAR_inputs) $(GRAMMAR_template)
 lci: $(COMPILE_stagedir)/stamp-lci
 
 .PHONY: lci mlc-clean
+
+################################################################
+# Test runner
+################################################################
+
+########## Configuration
+
+TEST_sources = \
+	test.cpp \
+	module-helper.cpp
+
+TEST_CPPFLAGS = $(CPPFLAGS) \
+	-I$(top_srcdir)/libfoundation/include \
+	-I$(top_srcdir)/libscript/include \
+	-I$(COMPILE_srcdir)
+
+TEST_CXXFLAGS = $(CXXFLAGS) -Wall -g -O3
+
+TEST_LDFLAGS = $(LDFLAGS) \
+	-L$(BUILD_DIR) \
+	-L$(top_srcdir)/prebuilt/lib/linux/$(ARCH)
+
+TEST_LDLIBS = $(LDLIBS) \
+	-lstdscript -lfoundation \
+	-licui18n -licuuc -licudata \
+	-ldl -lffi
+
+########## Directories & output executable
+
+TEST_exe = $(BUILD_DIR)/lc-test
+
+TEST_srcdir = lc-compile/src
+TEST_objdir = $(CACHE_DIR)lc-test
+
+########## C++ compilation rules
+
+TEST_objs = $(patsubst %.cpp,$(TEST_objdir)/%.o,$(TEST_sources))
+
+$(TEST_objdir)/%.o: $(TEST_srcdir)/%.cpp
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(TEST_CPPFLAGS) $(TEST_CXXFLAGS) -c -o $@ $<
+$(TEST_exe): $(TEST_objs)
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(TEST_LDFLAGS) -o $@ $^ $(TEST_LDLIBS)
+
+########## Convenience targets
+
+lc-test: $(TEST_exe)
+
+.PHONY: lc-test

@@ -186,6 +186,7 @@ revandroid: libexternalv1
 
 .PHONY: lc-compile lc-bootstrap-compile lc-compile-clean
 .PHONY: libstdscript
+.PHONY: lc-test
 
 ########## Standard script library
 libstdscript: lc-compile
@@ -200,6 +201,10 @@ lc-bootstrap-compile: libscript libfoundation
 
 lc-compile-clean:
 	$(MAKE) -C ./toolchain clean
+
+########## Test runner
+lc-test: libstdscript libfoundation
+	$(MAKE) -C ./toolchain lc-test
 
 ###############################################################################
 # All Targets
