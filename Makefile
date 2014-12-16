@@ -17,12 +17,12 @@ libexternal:
 libexternalv1:
 	$(MAKE) -C ./libexternalv1 libexternalv1
 
-libz: 
+libz:
 	$(MAKE) -C ./thirdparty/libz libz
-	
+
 libjpeg:
 	$(MAKE) -C ./thirdparty/libjpeg libjpeg
-	
+
 libpcre:
 	$(MAKE) -C ./thirdparty/libpcre libpcre
 
@@ -46,14 +46,14 @@ libscript:
 
 revsecurity:
 	$(MAKE) -C ./thirdparty/libopenssl -f Makefile.revsecurity revsecurity
-	
+
 libgraphics: libskia
 	$(MAKE) -C ./libgraphics libgraphics
 
 kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libgraphics
 
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
-	
+
 kernel-standalone: kernel
 	$(MAKE) -C ./engine -f Makefile.kernel-standalone libkernel-standalone
 
