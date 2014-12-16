@@ -450,11 +450,9 @@ SCRIPT_mlc = $(shell cat $(SCRIPT_mlc_list) | grep -v '^\#')
 ########## engine MLC
 
 ENGINE_mlcdir = $(top_srcdir)/engine/src
+ENGINE_mlc_list = $(top_srcdir)/engine/libkernel-modules.list
 
-ENGINE_mlc = \
-	canvas.mlc \
-	engine.mlc \
-	widget.mlc
+ENGINE_mlc = $(shell cat $(ENGINE_mlc_list) | grep -v '^\#')
 
 ########## LCI compilation
 
