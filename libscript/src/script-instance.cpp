@@ -810,7 +810,7 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
     MCAutoStringRef t_function;
     MCAutoStringRef t_calling;
     if (!__split_binding(t_rest, ':', &t_language) ||
-        !__split_binding(t_rest, '@', &t_library) ||
+        !__split_binding(t_rest, '>', &t_library) ||
         !__split_binding(t_rest, '.', &t_class) ||
         !MCStringDivideAtChar(t_rest, '!', kMCStringOptionCompareExact, &t_function, &t_calling))
     {
