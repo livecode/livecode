@@ -16,6 +16,7 @@ MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
 MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
+MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -233,17 +234,18 @@ bool MCScriptInitialize(void)
     
     // This block creates all the default errors
     {
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.InParameterNotDefinedError"), MCSTR("In parameters must be defined before calling"), kMCScriptInParameterNotDefinedErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.OutParameterNotDefinedError"), MCSTR("Out parameters must be defined before returning"), kMCScriptOutParameterNotDefinedErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.VariableUsedBeforeDefinedError"), MCSTR("Variables must be defined before being used"), kMCScriptVariableUsedBeforeDefinedErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ReturnValueTypeError"), MCSTR("Value is not of correct type for return"), kMCScriptInvalidReturnValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.VariableValueTypeError"), MCSTR("Value is not of correct type for assignment to variable"), kMCScriptInvalidVariableValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ArgumentValueTypeError"), MCSTR("Value is not of correct type for passing as argument"), kMCScriptInvalidArgumentValueErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.InParameterNotDefinedError"), MCSTR("In parameters must be defined before calling - parameter %{parameter} of %{module}.%{handler}"), kMCScriptInParameterNotDefinedErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.OutParameterNotDefinedError"), MCSTR("Out parameters must be defined before returning - parameter %{parameter} of %{module}.%{handler}"), kMCScriptOutParameterNotDefinedErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.VariableUsedBeforeDefinedError"), MCSTR("Variables must be defined before being used - variable %{variable} in %{module}.%{handler}"), kMCScriptVariableUsedBeforeDefinedErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ReturnValueTypeError"), MCSTR("Value is not of correct type for return - expected type %{type} when returning from %{module}.%{handler}"), kMCScriptInvalidReturnValueErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.VariableValueTypeError"), MCSTR("Value is not of correct type for assignment to variable - expected type %{type} for assigning to variable %{variable} in %{module}.%{handler}"), kMCScriptInvalidVariableValueErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ArgumentValueTypeError"), MCSTR("Value is not of correct type for passing as argument - expected type %{type} for passing to parameter %{parameter} of %{module}.%{handler}"), kMCScriptInvalidArgumentValueErrorTypeInfo);
         MCScriptCreateNamedErrorType(MCNAME("livecode.lang.NotABooleanValueError"), MCSTR("Value is not a boolean"), kMCScriptNotABooleanValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.WrongNumberOfArgumentsError"), MCSTR("Wrong number of arguments passed to handler"), kMCScriptWrongNumberOfArgumentsErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCSTR("Unable to bind foreign handler"), kMCScriptForeignHandlerBindingErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.WrongNumberOfArgumentsError"), MCSTR("Wrong number of arguments passed to handler %{module}.%{handler}"), kMCScriptWrongNumberOfArgumentsErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCSTR("Unable to bind foreign handler %{module}.%{handler}"), kMCScriptForeignHandlerBindingErrorTypeInfo);
         MCScriptCreateNamedErrorType(MCNAME("livecode.lang.PolymorphicHandlerBindingError"), MCSTR("Unable to bind appropriate handler"), kMCScriptMultiInvokeBindingErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.TypeBindingError"), MCSTR("Attempt to use an unbound named type"), kMCScriptTypeBindingErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.TypeBindingError"), MCSTR("Attempt to use unbound named type %{type}"), kMCScriptTypeBindingErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.NoMatchingHandlerError"), MCSTR("No matching handler for arguments with types (%{types}) - possible handlers (%{handlers})"), kMCScriptNoMatchingHandlerErrorTypeInfo);
     }
 
     return true;

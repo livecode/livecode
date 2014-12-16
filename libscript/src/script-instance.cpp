@@ -156,7 +156,7 @@ bool MCScriptThrowInvalidValueForParameterError(MCScriptModuleRef module, MCName
 
 bool MCScriptThrowInvalidValueForResultError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidReturnValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "type", p_expected_type, "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidReturnValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
 }
 
 bool MCScriptThrowInParameterNotDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
@@ -181,12 +181,12 @@ bool MCScriptThrowGlobalVariableUsedBeforeDefinedError(MCScriptModuleRef p_modul
 
 bool MCScriptThrowInvalidValueForLocalVariableError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "variable", MCScriptGetNameOfLocalVariableInModule(p_module, p_handler, p_index), "type", p_expected_type, "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "variable", MCScriptGetNameOfLocalVariableInModule(p_module, p_handler, p_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
 }
 
 bool MCScriptThrowInvalidValueForGlobalVariableError(MCScriptModuleRef p_module, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, p_module -> name, "variable",  MCScriptGetNameOfGlobalVariableInModule(p_module, p_index), "type", p_expected_type, "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, p_module -> name, "variable",  MCScriptGetNameOfGlobalVariableInModule(p_module, p_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
 }
 
 bool MCScriptThrowNotABooleanError(MCValueRef p_value)
@@ -202,7 +202,7 @@ bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef p_modul
 
 bool MCScriptThrowInvalidValueForArgumentError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_arg_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidArgumentValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_definition), MCScriptGetNameOfParameterInModule(p_module, p_definition, p_arg_index), "type", p_expected_type, "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidArgumentValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_definition), "parameter", MCScriptGetNameOfParameterInModule(p_module, p_definition, p_arg_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
 }
 
 bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition)
@@ -212,26 +212,40 @@ bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef p_module,
 
 bool MCScriptThrowUnableToResolveTypeError(MCTypeInfoRef p_type)
 {
-    return MCErrorCreateAndThrow(kMCScriptTypeBindingErrorTypeInfo, "type", p_type, nil);
+    return MCErrorCreateAndThrow(kMCScriptTypeBindingErrorTypeInfo, "type", MCNamedTypeInfoGetName(p_type), nil);
 }
 
 bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, MCProperListRef p_arguments)
 {
-    MCAutoProperListRef t_handlers;
-    if (!MCProperListCreateMutable(&t_handlers))
+    MCAutoListRef t_handlers;
+    if (!MCListCreateMutable(',', &t_handlers))
         return false;
     
-    MCScriptDefinitionGroupDefinition *t_group;
+    /* MCScriptDefinitionGroupDefinition *t_group;
     t_group = static_cast<MCScriptDefinitionGroupDefinition *>(p_definition);
     for(uindex_t i = 0; i < t_group -> handler_count; i++)
     {
+        // TODO: Resolve definitions correctly.
         MCNameRef t_name;
         t_name = MCScriptGetNameOfDefinitionInModule(p_module, p_module -> definitions[i]);
-        if (!MCProperListPushElementOntoBack(*t_handlers, t_name))
+        if (!MCListAppend(*t_handlers, t_name))
             return false;
-    }
+    } */
     
-    return MCErrorCreateAndThrow(nil);
+    MCAutoListRef t_types;
+    if (!MCListCreateMutable(',', &t_types))
+        return false;
+    
+    for(uindex_t i = 0; i < MCProperListGetLength(p_arguments); i++)
+        if (!MCListAppend(*t_types, MCNamedTypeInfoGetName(MCValueGetTypeInfo(MCProperListFetchElementAtIndex(p_arguments, i)))))
+            return false;
+    
+    MCAutoStringRef t_handler_list, t_type_list;
+    if (!MCListCopyAsString(*t_handlers, &t_handler_list) ||
+        !MCListCopyAsString(*t_types, &t_type_list))
+        return false;
+    
+    return MCErrorCreateAndThrow(kMCScriptNoMatchingHandlerErrorTypeInfo, "handlers", *t_handler_list, "types", *t_type_list, nil);
 }
 
 ///////////

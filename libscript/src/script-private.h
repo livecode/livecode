@@ -21,6 +21,7 @@ extern MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
