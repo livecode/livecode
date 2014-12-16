@@ -866,7 +866,7 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         }
 #else
         if (MCStringIsEmpty(*t_library))
-            p_handler -> function = dlsym(RTLD_MAIN_ONLY, MCStringGetCString(*t_function));
+			p_handler -> function = dlsym(NULL, MCStringGetCString(*t_function));
         else
         {
             MCAutoStringRefAsUTF8String t_utf8_library;
