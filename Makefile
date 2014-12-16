@@ -50,7 +50,7 @@ revsecurity:
 libgraphics: libskia
 	$(MAKE) -C ./libgraphics libgraphics
 
-kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libgraphics
+kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript libgraphics
 
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
 
@@ -60,20 +60,20 @@ kernel-standalone: kernel
 kernel-development: kernel
 	$(MAKE) -C ./engine -f Makefile.kernel-development libkernel-development
 
-kernel-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libgraphics
+kernel-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript libgraphics
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
-development: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel kernel-development revsecurity
+development: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript kernel kernel-development revsecurity
 	$(MAKE) -C ./engine -f Makefile.development engine-community
 
-standalone: libz libgif libjpeg libpcre libpng libopenssl libfoundation kernel revsecurity kernel-standalone revsecurity
+standalone: libz libgif libjpeg libpcre libpng libopenssl libfoundation libstdscript kernel revsecurity kernel-standalone revsecurity
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
-installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel revsecurity
+installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript kernel revsecurity
 
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libgraphics kernel-server revsecurity
+server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript libgraphics kernel-server revsecurity
 	$(MAKE) -C ./engine -f Makefile.server server-community
 
 ###############################################################################
