@@ -138,11 +138,6 @@ static void full_main(int argc, char *argv[])
                 OutputFileAsC = 1;
                 continue;
             }
-            if (0 == strcmp(opt, "-interface") && optarg)
-            {
-                SetInterfaceOutputFile(argv[++argi]);
-                continue;
-            }
             if (0 == strcmp(opt, "-manifest") && optarg)
             {
                 SetManifestOutputFile(argv[++argi]);

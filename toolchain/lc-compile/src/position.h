@@ -40,10 +40,8 @@ int GetCurrentFile(FileRef *r_file);
 
 void SetOutputFile(const char *filename);
 void SetManifestOutputFile(const char *filename);
-void SetInterfaceOutputFile(const char *filename);
 void SetTemplateFile(const char *filename);
 FILE *OpenOutputFile(void);
-FILE *OpenInterfaceOutputFile(void);
 FILE *OpenManifestOutputFile(void);
 FILE *OpenTemplateFile(void);
 FILE *OpenImportedModuleFile(const char *module);

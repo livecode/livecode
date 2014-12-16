@@ -795,7 +795,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${BUILT_PRODUCTS_DIR}/lc-compile\" -output \"${SRCROOT}/test.lcm\" \"${SRCROOT}/test.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\ncp \"${BUILT_PRODUCTS_DIR}/lc-compile\" \"${SRCROOT}/lc-compile\"\ncp \"${BUILT_PRODUCTS_DIR}/lc-test\" \"${SRCROOT}/lc-test\"";
+			shellScript = "\"${BUILT_PRODUCTS_DIR}/lc-compile\" -modulepath \"${BUILT_PRODUCTS_DIR}/modules\" -output \"${SRCROOT}/test.lcm\" \"${SRCROOT}/test.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\ncp \"${BUILT_PRODUCTS_DIR}/lc-compile\" \"${SRCROOT}/lc-compile\"\ncp \"${BUILT_PRODUCTS_DIR}/lc-test\" \"${SRCROOT}/lc-test\"";
 		};
 		4D6F072A19CC38B200DDC6E0 /* Gentle */ = {
 			isa = PBXShellScriptBuildPhase;

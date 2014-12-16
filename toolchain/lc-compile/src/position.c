@@ -99,10 +99,8 @@ int AddImportedModuleFile(const char *p_name)
 {
     char t_path[4096];
 	FILE *t_file;
-
-    if (ImportedModuleDir != NULL)
-        sprintf(t_path, "%s/%s.lci", ImportedModuleDir, p_name);
-
+    
+    t_file = NULL;
     if (ImportedModuleDirCount > 0)
     {
 		int i;
@@ -133,24 +131,14 @@ int AddImportedModuleFile(const char *p_name)
 FILE *OpenImportedModuleFile(const char *p_name)
 {
     char t_path[4096];
-<<<<<<< HEAD
     FILE *t_file;
 
-    if (ImportedModuleDir == NULL)
+    if (ImportedModuleDirCount == 0)
         return NULL;
-    
-    sprintf(t_path, "%s/%s.lci", ImportedModuleDir, p_name);
-	
-=======
-    
-    // If there is more than one modulepath, you have to use -interface
-    if (ImportedModuleDirCount > 1)
-        return NULL;
-    
+
+    // Use the first modulepath to write the interface file into.
     sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
     
-    FILE *t_file;
->>>>>>> 29dfbc9a8ecd6db96b23b6da5a2a902b789dcffd
     t_file = fopen(t_path, "w");
     
     return t_file;
@@ -173,7 +161,6 @@ static unsigned int s_next_file_index;
 static const char *s_template_file = NULL;
 static const char *s_output_file = NULL;
 static const char *s_manifest_output_file = NULL;
-static const char *s_interface_output_file = NULL;
 
 void InitializeFiles(void)
 {
@@ -290,11 +277,6 @@ void SetOutputFile(const char *p_output)
     s_output_file = p_output;
 }
 
-void SetInterfaceOutputFile(const char *p_output)
-{
-    s_interface_output_file = p_output;
-}
-
 void SetManifestOutputFile(const char *p_output)
 {
     s_manifest_output_file = p_output;
@@ -310,13 +292,6 @@ FILE *OpenOutputFile(void)
     if (s_output_file == NULL)
         return NULL;
     return fopen(s_output_file, "wb");
-}
-
-FILE *OpenInterfaceOutputFile(void)
-{
-    if (s_interface_output_file == NULL)
-        return NULL;
-    return fopen(s_interface_output_file, "w");
 }
 
 FILE *OpenManifestOutputFile(void)
