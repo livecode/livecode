@@ -27,7 +27,10 @@ extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, M
 {
     // Error if there is more than one char in needle.
     if (MCStringGetLength(p_needle) == 1)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("needle must be a single char"), nil);
         return;
+    }
     
     uindex_t t_dummy;
     r_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, kMCStringOptionCompareExact, t_dummy);
@@ -38,11 +41,11 @@ extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_f
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCStringGetLength(p_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCStringGetLength(p_target))
-        return;
+    }
     
     if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
@@ -53,11 +56,11 @@ extern "C" MC_DLLEXPORT void MCCharStoreCharRangeOf(MCStringRef p_value, index_t
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCStringGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCStringGetLength(x_target))
-        return;
+    }
     
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -112,12 +115,18 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfChars(bool p_is_last, MCStringRef
 
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(p_after, UINDEX_MAX), r_output);
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_after, p_after, t_start, t_count);
+    
+    MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
 
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, uindex_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, p_before), r_output);
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_before, p_before, t_start, t_count);
+    
+    MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, t_start), r_output);
 }
 
 extern "C" MC_DLLEXPORT void MCCharEvalContains(MCStringRef p_source, MCStringRef p_needle, bool& r_result)

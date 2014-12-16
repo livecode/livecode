@@ -28,7 +28,10 @@ extern "C" MC_DLLEXPORT void MCStringEvalConcatenate(MCStringRef p_left, MCStrin
 extern "C" MC_DLLEXPORT void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
-    MCStringEvalConcatenate(p_source, x_target, &t_string);
+    MCStringEvalConcatenate(p_source, x_target == (MCStringRef)kMCNull ? kMCEmptyString : x_target, &t_string);
+    
+    if (MCErrorIsPending())
+        return;
     
     MCValueAssign(x_target, *t_string);
 }
@@ -37,6 +40,9 @@ extern "C" MC_DLLEXPORT void MCStringExecPutStringAfter(MCStringRef p_source, MC
 {
     MCAutoStringRef t_string;
     MCStringEvalConcatenate(x_target == (MCStringRef)kMCNull ? kMCEmptyString : x_target, p_source, &t_string);
+    
+    if (MCErrorIsPending())
+        return;
     
     MCValueAssign(x_target, *t_string);
 }

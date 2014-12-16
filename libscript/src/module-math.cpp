@@ -251,16 +251,16 @@ extern "C" MC_DLLEXPORT void MCMathEvalRandomReal(double& r_output)
 
 extern "C" MC_DLLEXPORT void MCMathEvalConvertToBase10(MCStringRef p_operand, integer_t p_source_base, integer_t& r_output)
 {
-    // p_source_base must be an integer between 2 and 32
+    if (p_source_base < 2 || p_source_base > 32)
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("source base must be between 2 and 32"), nil);
+    
     bool t_negative;
     uinteger_t t_result;
     bool t_error;
     if (MCMathConvertToBase10(p_operand, p_source_base, t_negative, t_result, t_error))
     {
         if ((t_negative && t_result > INTEGER_MAX) || (!t_negative && t_result > abs(INTEGER_MIN)))
-        {
-            // overflow
-        }
+            MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("integer overflow"), nil);
         else
             r_output = t_negative ? -t_result : t_result;
     }
@@ -268,7 +268,9 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertToBase10(MCStringRef p_operand, in
 
 extern "C" MC_DLLEXPORT void MCMathEvalConvertFromBase10(integer_t p_operand, integer_t p_dest_base, MCStringRef& r_output)
 {
-    // p_dest_base must be an integer between 2 and 32
+    if (p_dest_base < 2 || p_dest_base > 32)
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("destination base must be between 2 and 32"), nil);
+    
     if (p_operand < 0)
     {
         if (MCMathConvertFromBase10(-p_operand, true, p_dest_base, r_output))
@@ -285,7 +287,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertFromBase10(integer_t p_operand, in
 
 extern "C" MC_DLLEXPORT void MCMathEvalConvertBase(MCStringRef p_operand, integer_t p_source_base, integer_t p_dest_base, MCStringRef& r_output)
 {
-    // p_source_base and p_dest_base must be integers between 2 and 32
+    
+    if (p_source_base < 2 || p_source_base > 32)
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("source base must be between 2 and 32"), nil);
+    
+    if (p_dest_base < 2 || p_dest_base > 32)
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("destination base must be between 2 and 32"), nil);
+    
     bool t_negative;
     uinteger_t t_result;
     bool t_error;
@@ -295,7 +303,9 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertBase(MCStringRef p_operand, intege
             return;
     }
     
-//    ctxt . Throw();
+    // If t_error is false then we failed because of a memory error, so no need to throw
+    if (t_error)
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("integer overflow, or invalid character in source"), nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

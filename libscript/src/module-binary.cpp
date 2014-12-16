@@ -34,7 +34,10 @@ extern "C" MC_DLLEXPORT void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDa
 extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
-    MCBinaryEvalConcatenateBytes(p_source, x_target, &t_data);
+    MCBinaryEvalConcatenateBytes(p_source, x_target == (MCDataRef)kMCNull ? kMCEmptyData : x_target, &t_data);
+    
+    if (MCErrorIsPending())
+        return;
     
     MCValueAssign(x_target, *t_data);
 }
@@ -42,7 +45,10 @@ extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDa
 extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
-    MCBinaryEvalConcatenateBytes(x_target, p_source, &t_data);
+    MCBinaryEvalConcatenateBytes(x_target == (MCDataRef)kMCNull ? kMCEmptyData : x_target, p_source, &t_data);
+    
+    if (MCErrorIsPending())
+        return;
     
     MCValueAssign(x_target, *t_data);
 }
