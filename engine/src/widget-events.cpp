@@ -86,6 +86,8 @@ MCWidgetEventManager::MCWidgetEventManager() :
 void MCWidgetEventManager::event_open(MCWidget* p_widget)
 {
     p_widget->OnOpen();
+    if (MCcurtool != T_BROWSE)
+        p_widget -> OnToolChanged(MCcurtool);
 }
 
 void MCWidgetEventManager::event_close(MCWidget* p_widget)

@@ -6,11 +6,32 @@ use com.livecode.engine
 // ---------- Widget commands ---------- //
 
 public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecScheduleTimerIn(in pTime as double) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecCancelTimer() as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalInEditMode(out rInEditMode as bool) as undefined binds to "<builtin>"
 
 syntax RedrawAll is statement
   "redraw" "all"
 begin
   MCWidgetExecRedrawAll()
+end syntax
+
+syntax ScheduleTimerIn is statement
+  "schedule" "timer" "in" <Time: Expression> "seconds"
+begin
+  MCWidgetExecScheduleTimerIn(Time)
+end syntax
+
+syntax CancelTimer is statement
+  "cancel" "timer"
+begin
+  MCWidgetExecCancelTimer()
+end syntax
+
+syntax IsEditMode is expression
+  "in" "edit" "mode"
+begin
+  MCWidgetEvalInEditMode(output)
 end syntax
 
 // ---------- External properties of widgets ---------- //

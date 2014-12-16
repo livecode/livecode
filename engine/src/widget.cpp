@@ -314,7 +314,12 @@ MCObject* MCWidget::hittest(int32_t x, int32_t y)
 
 void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
-    MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
+    if (p_message == MCM_internal)
+    {
+        OnTimer();
+    }
+    else
+        MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
 }
 
 void MCWidget::setrect(const MCRectangle& p_rectangle)
@@ -866,6 +871,11 @@ void MCWidget::OnToolChanged(Tool p_new_tool)
     if (m_native_layer)
         m_native_layer->OnToolChanged(p_new_tool);
     
+    if (p_new_tool == T_BROWSE)
+        CallHandler(MCNAME("OnStopEditing"), nil, 0);
+    else if (p_new_tool != T_BROWSE)
+        CallHandler(MCNAME("OnStartEditing"), nil, 0);
+    
     fprintf(stderr, "MCWidget::OnToolChanged\n");
 }
 
@@ -875,6 +885,11 @@ void MCWidget::OnLayerChanged()
         m_native_layer->OnLayerChanged();
     
     CallHandler(MCNAME("OnLayerChanged"), nil, 0);
+}
+
+void MCWidget::OnTimer()
+{
+    CallHandler(MCNAME("OnTimer"), nil, 0);
 }
 
 void MCWidget::OnMouseEnter()
@@ -1301,26 +1316,60 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct __MCPressedState* MCPressedStateRef;
-MCTypeInfoRef kMCPressedState;
+static bool MCWidgetThrowNoCurrentWidgetError(void)
+{
+    // TODO: Make this a proper error.
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
 {
     if (MCwidgetobject == nil)
     {
-        // TODO - throw an error
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+        MCWidgetThrowNoCurrentWidgetError();
         return;
     }
     
     MCwidgetobject -> layer_redrawall();
 }
 
+extern "C" MC_DLLEXPORT void MCWidgetExecScheduleTimerIn(double p_after)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCscreen -> cancelmessageobject(MCwidgetobject, MCM_internal);
+    MCscreen -> addtimer(MCwidgetobject, MCM_internal, (uint4)(p_after * 1000));
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetExecCancelTimer(void)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCscreen -> cancelmessageobject(MCwidgetobject, MCM_internal);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
+{
+    r_in_edit_mode = MCcurtool != T_BROWSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+        MCWidgetThrowNoCurrentWidgetError();
         return;
     }
     
@@ -1332,7 +1381,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+        MCWidgetThrowNoCurrentWidgetError();
         return;
     }
     
@@ -1349,7 +1398,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+        MCWidgetThrowNoCurrentWidgetError();
         return;
     }
     
@@ -1371,7 +1420,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+        MCWidgetThrowNoCurrentWidgetError();
         return;
     }
     
@@ -1388,7 +1437,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPo
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+        MCWidgetThrowNoCurrentWidgetError();
         return;
     }
     
@@ -1413,7 +1462,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+        MCWidgetThrowNoCurrentWidgetError();
         return;
     }
     
@@ -1434,11 +1483,16 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
     /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct __MCPressedState* MCPressedStateRef;
+MCTypeInfoRef kMCPressedState;
+
 extern "C" MC_DLLEXPORT void MCWidgetGetMouseButtonState(uinteger_t p_index, MCPressedStateRef r_state)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
+        MCWidgetThrowNoCurrentWidgetError();
         return;
     }
     

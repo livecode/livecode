@@ -136,6 +136,10 @@ private:
     void OnToolChanged(Tool p_new_tool);
     void OnLayerChanged();
     
+    ////////// Simple timer events
+    
+    void OnTimer();
+    
     ////////// Basic mouse events
     
     void OnMouseEnter();
