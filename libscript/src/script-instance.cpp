@@ -253,9 +253,9 @@ bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScrip
     return MCErrorThrowGeneric(nil);
 }
 
-bool MCScriptThrowUserError(MCValueRef value)
+bool MCScriptThrowUserError(MCValueRef p_value)
 {
-    return MCErrorThrowGeneric(nil);
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", p_value, nil);
 }
 
 ///////////
