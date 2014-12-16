@@ -116,10 +116,11 @@ bool MCModulesInitialize(void)
         return false;
     if (!MCEngineModuleInitialize())
         return false;
+    return true;
 }
 
-extern bool MCCanvasModuleFinalize(void);
-extern bool MCEngineModuleFinalize(void);
+extern void MCCanvasModuleFinalize(void);
+extern void MCEngineModuleFinalize(void);
 void MCModulesFinalize(void)
 {
     MCEngineModuleFinalize();

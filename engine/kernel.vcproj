@@ -6382,6 +6382,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-extension.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-files.cpp"
 				>
 			</File>
