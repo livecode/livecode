@@ -457,6 +457,8 @@ extern "C" MC_DLLEXPORT void MCCanvasGetStippled(MCCanvasRef p_canvas, bool &r_s
 extern "C" MC_DLLEXPORT void MCCanvasSetStippled(bool p_stippled, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetImageResizeQualityAsString(MCCanvasRef p_canvas, MCStringRef &r_quality);
 extern "C" MC_DLLEXPORT void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width);
+extern "C" MC_DLLEXPORT void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas);
 
 // Operations
 extern "C" MC_DLLEXPORT void MCCanvasTransform(MCCanvasRef p_canvas, MCCanvasTransformRef p_transform);

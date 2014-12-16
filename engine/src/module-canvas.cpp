@@ -4123,6 +4123,20 @@ void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef p_
 		t_canvas->paint_changed = true;
 }
 
+void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	t_canvas->props().stroke_width = p_stroke_width;
+	t_canvas->stroke_width_changed = true;
+}
+
+void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width)
+{
+	r_stroke_width = MCCanvasGetProps(p_canvas).stroke_width;
+}
+
 //////////
 
 void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint)
@@ -4267,6 +4281,12 @@ void MCCanvasApplyChanges(__MCCanvasImpl &x_canvas)
 		MCGContextSetStrokePaintStyle(x_canvas.context, t_style);
 		x_canvas.stippled_changed = false;
 	}
+    
+    if (x_canvas . stroke_width_changed)
+    {
+        MCGContextSetStrokeWidth(x_canvas.context, x_canvas.props().stroke_width);
+        x_canvas.stroke_width_changed = false;
+    }
 }
 
 //////////
@@ -4333,7 +4353,7 @@ void MCCanvasSaveState(MCCanvasRef p_canvas)
 	MCGContextSave(t_canvas->context);
 }
 
-void MCCanvasRestore(MCCanvasRef p_canvas)
+void MCCanvasRestoreState(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -4605,6 +4625,10 @@ void MCCanvasPop(uintptr_t p_cookie)
 extern "C" MC_DLLEXPORT void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
 {
     r_canvas = MCValueRetain(s_current_canvas);
+}
+
+extern "C" MC_DLLEXPORT void MCCanvasPretendToAssignToThisCanvas(MCCanvasRef p_canvas)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

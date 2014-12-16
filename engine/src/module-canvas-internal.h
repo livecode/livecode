@@ -143,6 +143,7 @@ struct MCCanvasProperties
 	MCGBlendMode blend_mode;
 	bool stippled;
 	MCGImageFilter image_filter;
+    MCGFloat stroke_width;
 };
 
 struct __MCCanvasImpl
@@ -153,6 +154,7 @@ struct __MCCanvasImpl
 	bool opacity_changed : 1;
 	bool blend_mode_changed : 1;
 	bool stippled_changed : 1;
+    bool stroke_width_changed : 1;
 	
 	MCCanvasProperties *prop_stack;
 	uint32_t prop_max;

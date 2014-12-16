@@ -1412,6 +1412,8 @@ public foreign handler MCCanvasGetStippled(in pCanvas as Canvas, out rStippled a
 public foreign handler MCCanvasSetStippled(in pStippled as boolean, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetImageResizeQualityAsString(in pCanvas as Canvas, out rQuality as string) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetImageResizeQualityAsString(in pQuality as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetStrokeWidth(in pCanvas as Canvas, out rStrokeWidth as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetStrokeWidth(in pStrokeWidth as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 syntax CanvasPaintProperty is prefix operator with precedence 4
 	"the" "paint" "of" <mCanvas: Expression>
@@ -1460,6 +1462,13 @@ syntax CanvasImageResizeQuality is prefix operator with precedence 4
 begin
 	MCCanvasGetImageResizeQualityAsString(mCanvas, output)
 	MCCanvasSetImageResizeQualityAsString(input, mCanvas)
+end syntax
+
+syntax CanvasStrokeWidth is prefix operator with precedence 4
+	"the" "stroke" "width" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetStrokeWidth(mCanvas, output)
+	MCCanvasSetStrokeWidth(input, mCanvas)
 end syntax
 
 //////////
@@ -1546,14 +1555,14 @@ begin
 end syntax
 
 syntax CanvasFill is statement
-	"fill" ( <mPath: Expression> "on" ) <mCanvas: Expression>
+	"fill" [ <mPath: Expression> "on" ] <mCanvas: Expression>
 begin
 	MCCanvasFill(mCanvas)
 	MCCanvasFillPath(mPath, mCanvas)
 end syntax
 
 syntax CanvasStroke is statement
-	"stroke" ( <mPath: Expression> "on" ) <mCanvas: Expression>
+	"stroke" [ <mPath: Expression> "on" ] <mCanvas: Expression>
 begin
 	MCCanvasStroke(mCanvas)
 	MCCanvasStrokePath(mPath, mCanvas)
@@ -1611,11 +1620,13 @@ end syntax
 ////////////////////////////////////////////////////////////////////////////////
 
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 syntax ThisCanvas is expression
     "this" "canvas"
 begin
     MCCanvasThisCanvas(output)
+    MCCanvasPretendToAssignThisCanvas(input)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
