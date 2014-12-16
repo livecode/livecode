@@ -182,9 +182,24 @@ revandroid: libexternalv1
 	$(MAKE) -C ./revmobile revandroid
 
 ###############################################################################
+# MLC Targets
+
+.PHONY: lc-compile lc-bootstrap-compile lc-compile-clean
+
+########## Compiler
+lc-compile: libscript libfoundation
+	$(MAKE) -C ./toolchain lc-compile
+
+lc-bootstrap-compile: libscript libfoundation
+	$(MAKE) -C ./toolchain bootstrap
+
+lc-compile-clean:
+	$(MAKE) -C ./toolchain clean
+
+###############################################################################
 # All Targets
 
-.PHONY: all clean
+.PHONY: all bootstrap clean
 .DEFAULT_GOAL := all
 
 all: revzip server-revzip
@@ -193,6 +208,10 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
+all: lc-bootstrap-compile
+
+bootstrap: lc-bootstrap-compile
 
 clean:
 	@rm -r _build/linux _cache/linux
+clean: lc-compile-clean
