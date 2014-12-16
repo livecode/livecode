@@ -984,10 +984,15 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 {
                     // The source type is not foreign - so the source and target are
                     // compatible valuerefs.
+                    
                     if (t_modes[t_arg_index] == kMCHandlerTypeFieldModeIn)
                     {
-                        // For in mode, we just use it direct.
-                        t_argument = t_value;
+                        // For in mode, we just use it direct - but change to nil if
+                        // kMCNull.
+                        if (t_value != kMCNull)
+                            t_argument = t_value;
+                        else
+                            t_argument = nil;
                     
                         // Nothing to free.
                         t_arg_new[t_arg_index] = false;
@@ -995,7 +1000,10 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     else
                     {
                         // For inout mode, we must copy.
-                        t_argument = MCValueRetain(t_value);
+                        if (t_value != kMCNull)
+                            t_argument = MCValueRetain(t_value);
+                        else
+                            t_argument = nil;
                         
                         // Need to release the argument
                         t_arg_new[t_arg_index] = true;
@@ -1126,7 +1134,13 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                             t_success = false;
                     }
                     else
+                    {
                         t_result_value = *(MCValueRef *)t_result;
+                        
+                        // If the return value is nil, then map to null.
+                        if (t_result_value == nil)
+                            t_result_value = MCValueRetain(kMCNull);
+                    }
                 }
                 else
                     t_result_value = MCValueRetain(kMCNull);
