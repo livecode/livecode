@@ -844,14 +844,9 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         
         
 #ifdef _WIN32
-        // If we are using the default module then symbols will be mangled cdecl
-        // on windows - i.e. prepend _.
         if (MCStringIsEmpty(*t_library))
         {
-            MCAutoStringRef t_mangled_function;
-            if (!MCStringFormat(&t_mangled_function, "_%@", t_function))
-                return false;
-            p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(*t_mangled_function));
+            p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(*t_function));
         }
         else
         {
@@ -866,7 +861,11 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         }
 #else
         if (MCStringIsEmpty(*t_library))
-            p_handler -> function = dlsym(RTLD_MAIN_ONLY, MCStringGetCString(*t_function));
+        {
+            void* t_self;
+            t_self = dlopen(NULL, 0);
+            p_handler -> function = dlsym(t_self, MCStringGetCString(*t_function));
+        }
         else
         {
             MCAutoStringRefAsUTF8String t_utf8_library;
@@ -901,7 +900,7 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
     }
     
 #ifdef _WIN32
-    r_abi = (ffi_abi)t_cc;
+    r_abi = t_cc == 0 ? FFI_DEFAULT_ABI : (ffi_abi)t_cc;
 #else
     r_abi = FFI_DEFAULT_ABI;
 #endif

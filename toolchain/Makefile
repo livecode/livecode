@@ -4,7 +4,7 @@ include $(top_srcdir)/rules/environment.linux.makefile
 
 all: lc-compile
 
-clean: gentle-clean lc-compile-clean mlc-clean
+clean: gentle-clean lc-compile-clean
 
 .PHONY: all clean
 
@@ -207,9 +207,9 @@ COMPILE_CPPFLAGS=$(CPPFLAGS) \
 # We can't do much about warnings that occur in the generate source
 # code, so don't bother outputting them.
 COMPILE_stage_CFLAGS=$(CFLAGS)
-COMPILE_CFLAGS=$(CFLAGS) -Wall -std=gnu90
+COMPILE_CFLAGS=$(CFLAGS) -Wall -std=gnu90 -g
 
-COMPILE_CXXFLAGS=$(CXXFLAGS) -Wall
+COMPILE_CXXFLAGS=$(CXXFLAGS) -Wall -g
 
 COMPILE_LDFLAGS=$(LDFLAGS) \
 	-L$(BUILD_DIR) \
@@ -223,13 +223,12 @@ COMPILE_LDLIBS=$(LDLIBS) \
 	-lffi
 
 ifeq ($(STAGE),)
-    # During final builds, turn on debugging and optimisation.  If we
-    # use them in early steps, it adds additional noise that screws up
-    # the bootstrap verification (because the debugging symbols
-    # contain different _stageN directory names).
-    COMPILE_stage_CFLAGS += -g -O3
-    COMPILE_CFLAGS += -g -O3
-    COMPILE_CXXFLAGS += -g -O3
+    # During final builds, turn on debugging and optimisation for the
+    # generated sources.  If we use them in early steps, it adds
+    # additional noise that screws up the bootstrap verification
+    # (because the debugging symbols contain different _stageN
+    # directory names).
+    COMPILE_stage_CFLAGS += -g
 else
     # Generating a build ID messes up the bootstrap verification
     # (because each binary has a UUID embedded in it).
@@ -432,7 +431,6 @@ lc-compile: $(COMPILE_target)
 
 lc-compile-clean:
 	-rm -rf $(COMPILE_srcdir)/_stage* $(COMPILE_objdir)
-	-rm -rf $(COMPILE)
 	-rm -f $(BUILD_DIR)/lc-compile{,stage*}
 
 .PHONY: lc-compile lc-compile-clean
@@ -442,35 +440,19 @@ lc-compile-clean:
 # Modular LiveCode files
 ################################################################
 
-MODULEDIR=$(BUILD_DIR)/modules
-
 ########## libscript MLC
 
 SCRIPT_mlcdir = $(top_srcdir)/libscript/src
+SCRIPT_mlc_list = $(top_srcdir)/libscript/libstdscript-modules.list
 
-SCRIPT_mlc = \
-	arithmetic.mlc \
-	array.mlc \
-	binary.mlc \
-	bitwise.mlc \
-	byte.mlc \
-	char.mlc \
-	list.mlc \
-	logic.mlc \
-	math-foundation.mlc \
-	math.mlc \
-	sort.mlc \
-	string.mlc \
-	type-convert.mlc
+SCRIPT_mlc = $(shell cat $(SCRIPT_mlc_list) | grep -v '^\#')
 
 ########## engine MLC
 
 ENGINE_mlcdir = $(top_srcdir)/engine/src
+ENGINE_mlc_list = $(top_srcdir)/engine/libkernel-modules.list
 
-ENGINE_mlc = \
-	canvas.mlc \
-	engine.mlc \
-	widget.mlc
+ENGINE_mlc = $(shell cat $(ENGINE_mlc_list) | grep -v '^\#')
 
 ########## LCI compilation
 
@@ -482,11 +464,11 @@ ALL_mlc = \
 	$(addprefix $(SCRIPT_mlcdir)/,$(SCRIPT_mlc)) \
 	$(addprefix $(ENGINE_mlcdir)/,$(ENGINE_mlc))
 
-$(COMPILE_stagedir)/stamp-lci: $(ALL_mlc)
-	$(MKDIR_P) $(MODULEDIR) $(dir $@)
+$(COMPILE_stagedir)/stamp-lci: $(ALL_mlc) $(SCRIPT_mlc_list)
+	$(MKDIR_P) $(MODULE_DIR) $(dir $@)
 	@for mlcfile in $(ALL_mlc); do \
-	    echo $(LC_COMPILE) -modulepath $(MODULEDIR) $$mlcfile ; \
-	    $(LC_COMPILE) -modulepath $(MODULEDIR) $$mlcfile || exit $$?; \
+	    echo $(LC_COMPILE) -modulepath $(MODULE_DIR) $$mlcfile ; \
+	    $(LC_COMPILE) -modulepath $(MODULE_DIR) $$mlcfile || exit $$?; \
 	done
 	touch $@
 
@@ -512,13 +494,60 @@ $(GRAMMAR_output): $(COMPILE_stagedir)/stamp-lci
 $(GRAMMAR_output): $(GRAMMAR_inputs) $(GRAMMAR_template)
 	$(MKDIR_P) $(dir $@)
 	$(LC_COMPILE) -bootstrap -template $(GRAMMAR_template) \
-	    -modulepath $(MODULEDIR) -output $(GRAMMAR_output) $(GRAMMAR_inputs) > /dev/null
+	    -modulepath $(MODULE_DIR) -output $(GRAMMAR_output) $(GRAMMAR_inputs) > /dev/null
 
 ########## Convenience targets
 
 lci: $(COMPILE_stagedir)/stamp-lci
 
-mlc-clean:
-	-rm -rf $(MODULEDIR)
-
 .PHONY: lci mlc-clean
+
+################################################################
+# Test runner
+################################################################
+
+########## Configuration
+
+TEST_sources = \
+	test.cpp \
+	module-helper.cpp
+
+TEST_CPPFLAGS = $(CPPFLAGS) \
+	-I$(top_srcdir)/libfoundation/include \
+	-I$(top_srcdir)/libscript/include \
+	-I$(COMPILE_srcdir)
+
+TEST_CXXFLAGS = $(CXXFLAGS) -Wall -g -O3
+
+TEST_LDFLAGS = $(LDFLAGS) \
+	-L$(BUILD_DIR) \
+	-L$(top_srcdir)/prebuilt/lib/linux/$(ARCH)
+
+TEST_LDLIBS = $(LDLIBS) \
+	-lstdscript -lfoundation \
+	-licui18n -licuuc -licudata \
+	-ldl -lffi
+
+########## Directories & output executable
+
+TEST_exe = $(BUILD_DIR)/lc-test
+
+TEST_srcdir = lc-compile/src
+TEST_objdir = $(CACHE_DIR)lc-test
+
+########## C++ compilation rules
+
+TEST_objs = $(patsubst %.cpp,$(TEST_objdir)/%.o,$(TEST_sources))
+
+$(TEST_objdir)/%.o: $(TEST_srcdir)/%.cpp
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(TEST_CPPFLAGS) $(TEST_CXXFLAGS) -c -o $@ $<
+$(TEST_exe): $(TEST_objs)
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(TEST_LDFLAGS) -o $@ $^ $(TEST_LDLIBS)
+
+########## Convenience targets
+
+lc-test: $(TEST_exe)
+
+.PHONY: lc-test

@@ -451,7 +451,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
     // Forward to the custom property handler
-    return getcustomprop(ctxt, nil, *t_name_for_prop, r_value);
+    return getcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, r_value);
 }
 
 bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value)
@@ -550,14 +550,14 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
     // Forward to the custom property handler
-    return setcustomprop(ctxt, nil, *t_name_for_prop, p_value);
+    return setcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, p_value);
 }
 
 bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
 {
     // Treat as a normal custom property if not a widget property
     MCTypeInfoRef t_getter, t_setter;
-    if (p_set_name != nil || !MCScriptQueryPropertyOfModule(m_module, p_prop_name, t_getter, t_setter))
+    if (!MCNameIsEmpty(p_set_name) || !MCScriptQueryPropertyOfModule(m_module, p_prop_name, t_getter, t_setter))
         return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, r_value);
     
     if (CallGetProp(ctxt, p_prop_name, nil, r_value.valueref_value))
@@ -574,7 +574,7 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 {
     // Treat as a normal custom property if not a widget property
     MCTypeInfoRef t_getter, t_setter;
-    if (p_set_name != nil || !MCScriptQueryPropertyOfModule(m_module, p_prop_name, t_getter, t_setter))
+    if (!MCNameIsEmpty(p_set_name) || !MCScriptQueryPropertyOfModule(m_module, p_prop_name, t_getter, t_setter))
         return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_value);
     
     MCAutoValueRef t_value;

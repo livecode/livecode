@@ -1,37 +1,12 @@
-NAME=libscript
-TYPE=archive
+all: libscript libstdscript
+clean: libstdscript-clean
 
-include ../rules/environment.linux.makefile
+libscript:
+	$(MAKE) -f Makefile.libscript libscript
 
-SOURCES=\
-	module-arithmetic.cpp \
-	module-array.cpp \
-	module-binary.cpp \
-	module-bitwise.cpp \
-	module-byte.cpp \
-	module-char.cpp \
-	module-encoding.cpp \
-	module-file.cpp \
-	module-list.cpp \
-	module-logic.cpp \
-	module-map.cpp \
-	module-math.cpp \
-	module-math_foundation.cpp \
-	module-sort.cpp \
-	module-string.cpp \
-	module-type_convert.cpp \
-	module-type.cpp \
-	module-url.cpp \
-	script-builder.cpp \
-	script-instance.cpp \
-	script-module.cpp \
-	script-object.cpp \
-	script-package.cpp
+libstdscript:
+	$(MAKE) -f Makefile.libstdscript libstdscript
 
-CUSTOM_DEFINES=TARGET_PLATFORM_LINUX
-
-CUSTOM_INCLUDES=./src ../engine/src
-
-CUSTOM_CCFLAGS=-fno-exceptions -fno-rtti
-
-include ../rules/archive.linux.makefile
+.PHONY: all clean
+.PHONY: libscript
+.PHONY: libstdscript libstdscript-clean

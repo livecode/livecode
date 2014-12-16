@@ -88,6 +88,6 @@ $(CACHE_DIR)/%.o: %.s
 	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
 
 clean:
-	rm $(OBJECTS)
-	rm $(TARGET_PATH)
+	-rm -f $(OBJECTS)
+	-rm -f $(TARGET_PATH)
 
