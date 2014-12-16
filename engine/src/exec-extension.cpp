@@ -354,12 +354,12 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
 
 static bool MCExtensionThrowUnrepresentableValueError(MCValueRef p_value)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unrepresentable value"), nil);
 }
 
 static bool MCExtensionThrowTypeConversionError(MCTypeInfoRef p_type, MCValueRef p_value)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("cannot convert value"), nil);
 }
 
 // This methods translates a value from the extension world to one which is

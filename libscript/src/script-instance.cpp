@@ -128,27 +128,27 @@ bool MCHandlerTypeInfoConformsToPropertySetter(MCTypeInfoRef typeinfo)
 
 bool MCScriptThrowAttemptToSetReadOnlyPropertyError(MCScriptModuleRef module, MCNameRef property)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorThrowGeneric(nil);
 }
 
 bool MCScriptThrowInvalidValueForPropertyError(MCScriptModuleRef module, MCNameRef property, MCTypeInfoRef type, MCValueRef value)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorThrowGeneric(nil);
 }
 
 bool MCScriptThrowWrongNumberOfArgumentsForHandlerError(MCScriptModuleRef module, MCNameRef handler, uindex_t expected, uindex_t provided)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorThrowGeneric(nil);
 }
 
 bool MCScriptThrowNoValueProvidedForInParameterError(MCScriptModuleRef module, MCNameRef handler, MCNameRef parameter)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorThrowGeneric(nil);
 }
 
 bool MCScriptThrowInvalidValueForParameterError(MCScriptModuleRef module, MCNameRef handler, MCNameRef parameter, MCTypeInfoRef type, MCValueRef value)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorThrowGeneric(nil);
 }
 
 //////////
@@ -250,12 +250,12 @@ bool MCScriptThrowUnableToResolveTypeError(MCTypeInfoRef p_type)
 
 bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, MCProperListRef p_arguments)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorThrowGeneric(nil);
 }
 
 bool MCScriptThrowUserError(MCValueRef value)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorThrowGeneric(nil);
 }
 
 ///////////
@@ -833,7 +833,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     {
         MCMemoryDeleteArray(t_ffi_arg_types);
         MCMemoryDelete(t_cif);
-        return MCErrorThrowGeneric();
+        return MCErrorThrowGeneric(nil);
     }
     
     p_handler -> function_argtypes = t_ffi_arg_types;

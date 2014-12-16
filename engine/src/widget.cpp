@@ -1303,7 +1303,8 @@ extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorThrowGeneric(); // TODO - throw an error
+        // TODO - throw an error
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
         return;
     }
     
@@ -1314,7 +1315,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorThrowGeneric(); // TODO - throw an error
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
         return;
     }
     
@@ -1326,7 +1327,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorThrowGeneric(); // TODO - throw an error
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
         return;
     }
     
@@ -1343,7 +1344,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorThrowGeneric(); // TODO - throw an error
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
         return;
     }
     
@@ -1365,7 +1366,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorThrowGeneric(); // TODO - throw an error
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
         return;
     }
     
@@ -1382,7 +1383,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPo
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorThrowGeneric(); // TODO - throw an error
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
         return;
     }
     
@@ -1407,7 +1408,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorThrowGeneric(); // TODO - throw an error
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
         return;
     }
     
@@ -1432,7 +1433,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMouseButtonState(uinteger_t p_index, MCP
 {
     if (MCwidgetobject == nil)
     {
-        MCErrorThrowGeneric(); // TODO - throw an error
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no current widget"), nil);
         return;
     }
     

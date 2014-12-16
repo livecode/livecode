@@ -108,7 +108,7 @@ extern "C" MC_DLLEXPORT MCScriptObjectRef MCEngineExecResolveScriptObject(MCStri
     
     // Now build our script object.
     MCScriptObjectRef t_script_object;
-    if (MCScriptObjectCreate(t_object, t_part_id, t_script_object))
+    if (!MCScriptObjectCreate(t_object, t_part_id, t_script_object))
         return nil;
     
     return t_script_object;
@@ -156,7 +156,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStrin
         !t_script_object_imp -> handle -> Exists())
     {
         // TODO: Throw script object doesn't exist error.
-        MCErrorThrowGeneric();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
         return nil;
     }
     
@@ -180,7 +180,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStrin
     if (ctxt . HasError())
     {
         // TODO: Process MCeerror and such.
-        MCErrorThrowGeneric();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("script error"), nil);
         return nil;
     }
     
@@ -202,7 +202,7 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
         !t_script_object_imp -> handle -> Exists())
     {
         // TODO: Throw script object doesn't exist error.
-        MCErrorThrowGeneric();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
         return;
     }
     
@@ -232,7 +232,7 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
     if (ctxt . HasError())
     {
         // TODO: Process MCeerror and such.
-        MCErrorThrowGeneric();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("script error"), nil);
         return;
     }
 }
@@ -245,7 +245,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArgumen
         !t_script_object_imp -> handle -> Exists())
     {
         // TODO: Throw script object doesn't exist error.
-        MCErrorThrowGeneric();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
         return nil;
     }
     
@@ -286,8 +286,8 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArgumen
     t_stat = t_script_object_imp -> handle -> Get() -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
     if (t_stat == ES_ERROR)
     {
-        // TODO: Wind up error stack as appropriate.
-        MCErrorThrowGeneric();
+        // TODO: Process MCeerror and such.
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("script error"), nil);
         goto cleanup;
     }
     
