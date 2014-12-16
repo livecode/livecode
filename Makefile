@@ -224,6 +224,6 @@ all: lc-test
 bootstrap: lc-bootstrap-compile
 
 clean:
-	@rm -r _build/linux _cache/linux
+	-rm -rf _build/linux _cache/linux
 	-rm -rf `find . -type d -name _mlc`
 clean: lc-compile-clean
