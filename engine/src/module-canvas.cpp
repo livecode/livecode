@@ -4000,7 +4000,7 @@ static bool __MCCanvasEqual(MCValueRef p_left, MCValueRef p_right)
 
 static hash_t __MCCanvasHash(MCValueRef p_canvas)
 {
-	return (hash_t)p_canvas;
+	return MCHashPointer (p_canvas);
 }
 
 static bool __MCCanvasDescribe(MCValueRef p_canvas, MCStringRef &r_description)
