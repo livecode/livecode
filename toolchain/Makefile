@@ -207,9 +207,9 @@ COMPILE_CPPFLAGS=$(CPPFLAGS) \
 # We can't do much about warnings that occur in the generate source
 # code, so don't bother outputting them.
 COMPILE_stage_CFLAGS=$(CFLAGS)
-COMPILE_CFLAGS=$(CFLAGS) -Wall -std=gnu90
+COMPILE_CFLAGS=$(CFLAGS) -Wall -std=gnu90 -g
 
-COMPILE_CXXFLAGS=$(CXXFLAGS) -Wall
+COMPILE_CXXFLAGS=$(CXXFLAGS) -Wall -g
 
 COMPILE_LDFLAGS=$(LDFLAGS) \
 	-L$(BUILD_DIR) \
@@ -223,13 +223,12 @@ COMPILE_LDLIBS=$(LDLIBS) \
 	-lffi
 
 ifeq ($(STAGE),)
-    # During final builds, turn on debugging and optimisation.  If we
-    # use them in early steps, it adds additional noise that screws up
-    # the bootstrap verification (because the debugging symbols
-    # contain different _stageN directory names).
-    COMPILE_stage_CFLAGS += -g -O3
-    COMPILE_CFLAGS += -g -O3
-    COMPILE_CXXFLAGS += -g -O3
+    # During final builds, turn on debugging and optimisation for the
+    # generated sources.  If we use them in early steps, it adds
+    # additional noise that screws up the bootstrap verification
+    # (because the debugging symbols contain different _stageN
+    # directory names).
+    COMPILE_stage_CFLAGS += -g
 else
     # Generating a build ID messes up the bootstrap verification
     # (because each binary has a UUID embedded in it).
