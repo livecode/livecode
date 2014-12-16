@@ -447,21 +447,9 @@ MODULEDIR=$(BUILD_DIR)/modules
 ########## libscript MLC
 
 SCRIPT_mlcdir = $(top_srcdir)/libscript/src
+SCRIPT_mlc_list = $(top_srcdir)/libscript/libstdscript-modules.list
 
-SCRIPT_mlc = \
-	arithmetic.mlc \
-	array.mlc \
-	binary.mlc \
-	bitwise.mlc \
-	byte.mlc \
-	char.mlc \
-	list.mlc \
-	logic.mlc \
-	math-foundation.mlc \
-	math.mlc \
-	sort.mlc \
-	string.mlc \
-	type-convert.mlc
+SCRIPT_mlc = $(shell cat $(SCRIPT_mlc_list) | grep -v '^\#')
 
 ########## engine MLC
 
@@ -482,7 +470,7 @@ ALL_mlc = \
 	$(addprefix $(SCRIPT_mlcdir)/,$(SCRIPT_mlc)) \
 	$(addprefix $(ENGINE_mlcdir)/,$(ENGINE_mlc))
 
-$(COMPILE_stagedir)/stamp-lci: $(ALL_mlc)
+$(COMPILE_stagedir)/stamp-lci: $(ALL_mlc) $(SCRIPT_mlc_list)
 	$(MKDIR_P) $(MODULEDIR) $(dir $@)
 	@for mlcfile in $(ALL_mlc); do \
 	    echo $(LC_COMPILE) -modulepath $(MODULEDIR) $$mlcfile ; \
