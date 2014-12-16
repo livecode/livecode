@@ -32,6 +32,7 @@ endif
 
 BUILD_DIR=$(SOLUTION_DIR)/_build/linux/$(ARCH)/$(MODE)
 CACHE_DIR=$(SOLUTION_DIR)/_cache/linux/$(ARCH)/$(MODE)/$(NAME)
+MODULE_DIR=$(SOLUTION_DIR)/_build/modules
 PRODUCT_DIR=$(BUILD_DIR)
 
 PREBUILT_LIB_DIR=$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)

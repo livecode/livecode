@@ -4,7 +4,7 @@ include $(top_srcdir)/rules/environment.linux.makefile
 
 all: lc-compile
 
-clean: gentle-clean lc-compile-clean mlc-clean
+clean: gentle-clean lc-compile-clean
 
 .PHONY: all clean
 
@@ -442,8 +442,6 @@ lc-compile-clean:
 # Modular LiveCode files
 ################################################################
 
-MODULEDIR=$(BUILD_DIR)/modules
-
 ########## libscript MLC
 
 SCRIPT_mlcdir = $(top_srcdir)/libscript/src
@@ -471,10 +469,10 @@ ALL_mlc = \
 	$(addprefix $(ENGINE_mlcdir)/,$(ENGINE_mlc))
 
 $(COMPILE_stagedir)/stamp-lci: $(ALL_mlc) $(SCRIPT_mlc_list)
-	$(MKDIR_P) $(MODULEDIR) $(dir $@)
+	$(MKDIR_P) $(MODULE_DIR) $(dir $@)
 	@for mlcfile in $(ALL_mlc); do \
-	    echo $(LC_COMPILE) -modulepath $(MODULEDIR) $$mlcfile ; \
-	    $(LC_COMPILE) -modulepath $(MODULEDIR) $$mlcfile || exit $$?; \
+	    echo $(LC_COMPILE) -modulepath $(MODULE_DIR) $$mlcfile ; \
+	    $(LC_COMPILE) -modulepath $(MODULE_DIR) $$mlcfile || exit $$?; \
 	done
 	touch $@
 
@@ -500,13 +498,10 @@ $(GRAMMAR_output): $(COMPILE_stagedir)/stamp-lci
 $(GRAMMAR_output): $(GRAMMAR_inputs) $(GRAMMAR_template)
 	$(MKDIR_P) $(dir $@)
 	$(LC_COMPILE) -bootstrap -template $(GRAMMAR_template) \
-	    -modulepath $(MODULEDIR) -output $(GRAMMAR_output) $(GRAMMAR_inputs) > /dev/null
+	    -modulepath $(MODULE_DIR) -output $(GRAMMAR_output) $(GRAMMAR_inputs) > /dev/null
 
 ########## Convenience targets
 
 lci: $(COMPILE_stagedir)/stamp-lci
-
-mlc-clean:
-	-rm -rf $(MODULEDIR)
 
 .PHONY: lci mlc-clean
