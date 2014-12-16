@@ -253,7 +253,7 @@ void EmitEndModule(void)
             
             const char *t_name;
             GetStringOfNameLiteral(s_module_name, &t_name);
-            fprintf(t_output, MC_AS_C_PREFIX "\nMODULE_SECTION volatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_string, t_name);
+            fprintf(t_output, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_string, t_name);
         }
         else if (t_output != NULL)
         {
