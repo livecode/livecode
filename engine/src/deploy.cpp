@@ -282,10 +282,12 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script);
 
     // Now add the modules, if any.
+    uindex_t t_module_file_count;
 	MCDeployFileRef *t_module_files;
+    t_module_file_count = 0;
 	t_module_files = nil;
 	if (t_success)
-		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . modules), t_module_files);
+		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . modules), t_module_files, t_module_file_count);
     if (t_success)
         for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules) && t_success; i++)
         {
@@ -296,6 +298,23 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
             if (t_success)
                 t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[i]);
         }
+    
+    // TEMPORARY - Iterator through all loaded extensions and add them to the list.
+    if (t_success)
+    {
+        extern bool MCEngineIterateExtensionFilenames(uintptr_t& x_iterator, MCStringRef& r_filename);
+        MCStringRef t_filename;
+        uintptr_t t_iterator;
+        t_iterator = 0;
+        while(t_success && MCEngineIterateExtensionFilenames(t_iterator, t_filename))
+        {
+            t_success = MCMemoryResizeArray(t_module_file_count + 1, t_module_files, t_module_file_count);
+            if (t_success && !MCDeployFileOpen(t_filename, kMCOpenFileModeRead, t_module_files[t_module_file_count - 1]))
+                t_success = MCDeployThrow(kMCDeployErrorNoModule);
+            if (t_success)
+                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[t_module_file_count - 1]);
+        }
+    }
     
 	// Now a digest
 	if (t_success)
