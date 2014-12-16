@@ -32,14 +32,107 @@ static MCErrorRef s_out_of_memory_error = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCErrorFormatMessage(MCStringRef p_format, MCArrayRef p_info, MCStringRef& r_message)
+{
+    MCAutoStringRef t_message;
+    if (!MCStringCreateMutable(0, &t_message))
+        return false;
+    
+    uindex_t t_limit;
+    t_limit = MCStringGetLength(p_format);
+    
+    uindex_t t_index;
+    t_index = 0;
+    while(t_index < t_limit)
+    {
+        unichar_t t_char;
+        t_char = MCStringGetCharAtIndex(p_format, t_index);
+        
+        // If the sequence is '%{' and there is at least one more char after
+        // the '%{' then assume it is a key index.
+        if (t_char == '%' &&
+            t_index + 2 < t_limit &&
+            MCStringGetCharAtIndex(p_format, t_index + 1) == '{')
+        {
+            MCAutoStringRef t_key_string;
+            if (!MCStringCreateMutable(0, &t_key_string))
+                return false;
+            
+            t_index += 2;
+            while(t_index < t_limit)
+            {
+                t_char = MCStringGetCharAtIndex(p_format, t_index);
+                if (t_char == '}')
+                    break;
+                
+                if (!MCStringAppendChar(*t_key_string, t_char))
+                    return false;
+                
+                t_index += 1;
+            }
+            
+            // If it is a well-formed %{...} sequence then process it as a key
+            // of the info array. Otherwise just append the accumulated string.
+            if (t_char == '}')
+            {
+                MCNewAutoNameRef t_key;
+                if (!MCNameCreate(*t_key_string, &t_key))
+                    return false;
+                
+                MCValueRef t_value;
+                if (p_info != nil &&
+                    MCArrayFetchValue(p_info, false, *t_key, t_value))
+                {
+                    MCAutoStringRef t_formatted_value;
+                    if (!MCStringFormat(&t_formatted_value, "%@", t_value))
+                        return false;
+                    
+                    if (!MCStringAppend(*t_message, *t_formatted_value))
+                        return false;
+                }
+            }
+            else
+            {
+                if (!MCStringAppend(*t_message, *t_key_string))
+                    return false;
+            }
+        }
+        else if (t_char == '%' &&
+                 t_index + 1 < t_limit &&
+                 MCStringGetCharAtIndex(p_format, t_index + 1) == '%')
+        {
+            if (!MCStringAppendChar(*t_message, '%'))
+                return false;
+            
+            t_index += 1;
+        }
+        else
+        {
+            if (!MCStringAppendChar(*t_message, t_char))
+                return false;
+        }
+        
+        t_index += 1;
+    }
+    
+    r_message = MCValueRetain(*t_message);
+    
+    return true;
+}
+
 bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_error)
 {
     __MCError *self;
     if (!__MCValueCreate(kMCValueTypeCodeError, self))
         return false;
     
+    if (!MCErrorFormatMessage(MCErrorTypeInfoGetMessage(p_typeinfo), p_info, self -> message))
+    {
+        MCValueRelease(self);
+        return false;
+    }
+        
     self -> typeinfo = MCValueRetain(p_typeinfo);
-    self -> message = MCValueRetain(MCErrorTypeInfoGetMessage(p_typeinfo));
     if (p_info != nil)
         self -> info = MCValueRetain(p_info);
     
@@ -134,6 +227,46 @@ bool MCErrorIsPending(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCErrorCreateAndThrow(MCTypeInfoRef p_error_type, ...)
+{
+    MCAutoArrayRef t_info;
+    if (!MCArrayCreateMutable(&t_info))
+        return false;
+    
+    va_list t_args;
+    va_start(t_args, p_error_type);
+    for(;;)
+    {
+        const char *t_key;
+        t_key = va_arg(t_args, const char *);
+        if (t_key == nil)
+            break;
+        
+        MCValueRef t_value;
+        t_value = va_arg(t_args, MCValueRef);
+        
+        // If a value is nil, then it means don't include it.
+        if (t_value == nil)
+            continue;
+        
+        MCNewAutoNameRef t_name;
+        if (!MCNameCreateWithNativeChars((const char_t *)t_key, strlen(t_key), &t_name))
+            return false;
+        
+        if (!MCArrayStoreValue(*t_info, true, *t_name, t_value))
+            return false;
+    }
+    va_end(t_args);
+    
+    MCAutoErrorRef t_error;
+    if (!MCErrorCreate(p_error_type, *t_info, &t_error))
+        return false;
+    
+    return MCErrorThrow(*t_error);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCErrorThrowOutOfMemory(void)
 {
     if (s_out_of_memory_error == nil &&
@@ -150,16 +283,9 @@ bool MCErrorThrowOutOfMemory(void)
     return false;
 }
 
-bool MCErrorThrowGeneric(void)
+bool MCErrorThrowGeneric(MCStringRef p_reason)
 {
-    MCErrorRef t_error;
-    if (!MCErrorCreate(kMCGenericErrorTypeInfo, nil, t_error))
-        return false;
-    
-    MCErrorThrow(t_error);
-    MCValueRelease(t_error);
-    
-    return false;
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", p_reason, nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +324,7 @@ bool __MCErrorInitialize(void)
         return false;
     
     MCAutoTypeInfoRef t_ge_typeinfo;
-    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("unknown"), &t_ge_typeinfo))
+    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("%{reason}"), &t_ge_typeinfo))
         return false;
     if (!MCNamedTypeInfoCreate(MCNAME("livecode.lang.GenericError"), kMCGenericErrorTypeInfo))
         return false;

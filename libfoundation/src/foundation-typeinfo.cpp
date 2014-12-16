@@ -313,7 +313,7 @@ MCTypeInfoRef MCNamedTypeInfoGetBoundTypeInfo(MCTypeInfoRef self)
 bool MCNamedTypeInfoBind(MCTypeInfoRef self, MCTypeInfoRef p_target)
 {
     if (self -> named . typeinfo != nil)
-        return MCErrorThrowGeneric();
+        return MCErrorThrowGeneric(nil);
     
     self -> named . typeinfo = MCValueRetain(p_target);
     
@@ -323,7 +323,7 @@ bool MCNamedTypeInfoBind(MCTypeInfoRef self, MCTypeInfoRef p_target)
 bool MCNamedTypeInfoUnbind(MCTypeInfoRef self)
 {
     if (self -> named . typeinfo == nil)
-        return MCErrorThrowGeneric();
+        return MCErrorThrowGeneric(nil);
     
     MCValueRelease(self -> named . typeinfo);
     self -> named . typeinfo = nil;
@@ -334,7 +334,7 @@ bool MCNamedTypeInfoUnbind(MCTypeInfoRef self)
 bool MCNamedTypeInfoResolve(MCTypeInfoRef self, MCTypeInfoRef& r_bound_type)
 {
     if (self -> named . typeinfo == nil)
-        return MCErrorThrowGeneric();
+        return MCErrorThrowGeneric(nil);
     
     r_bound_type = self -> named . typeinfo;
     

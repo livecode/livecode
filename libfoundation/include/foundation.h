@@ -2474,6 +2474,11 @@ MC_DLLEXPORT MCValueRef MCErrorGetTargetAtLevel(MCErrorRef error, uindex_t level
 MC_DLLEXPORT uindex_t MCErrorGetRowAtLevel(MCErrorRef error, uindex_t row);
 MC_DLLEXPORT uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column);
 
+// Create and throw an error. The arguments are used to build the info dictionary.
+// They should be a sequence of pairs (const char *key, MCValueRef value), and finish
+// with nil.
+MC_DLLEXPORT bool MCErrorCreateAndThrow(MCTypeInfoRef typeinfo, ...);
+    
 // Throw the given error code (local to the current thread).
 MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
 
@@ -2490,7 +2495,8 @@ MC_DLLEXPORT MCErrorRef MCErrorPeek(void);
 MC_DLLEXPORT bool MCErrorThrowOutOfMemory(void);
 
 // Throw a generic runtime error (one that hasn't had a class made for it yet).
-MC_DLLEXPORT bool MCErrorThrowGeneric(void);
+// The message argument is optional (nil if no message).
+MC_DLLEXPORT bool MCErrorThrowGeneric(MCStringRef message);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
