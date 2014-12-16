@@ -1,0 +1,112 @@
+widget com.livecode.example.clock
+
+use com.livecode.canvas
+
+--------
+
+variable sCurrentTime as list
+
+--------
+
+handler ConvertStringListToNumberList(inout pList as list)
+  variable tIndex
+  repeat with tIndex from 1 up to the number of elements in pList
+    put (element tIndex of pList) parsed as number into element tIndex of pList
+  end repeat
+end handler
+
+handler ComputeNextTimer()
+  execute script "return 1- (the long seconds - round(the long seconds - 0.5))"
+  return the result
+end handler
+
+handler GetTimeComponents() as list
+  execute script "convert the long time to dateItems; return item 4 to -2 of it;"
+  
+  variable tList
+  split the result by "," into tList
+  
+  ConvertStringListToNumberList(tList)
+
+  return tList
+end handler
+
+--------
+
+public handler OnOpen()
+  put GetTimeComponents() into sCurrentTime
+  schedule timer in ComputeNextTimer() seconds
+end handler
+
+public handler OnClose()
+  cancel timer
+end handler
+
+public handler OnTimer()
+  put GetTimeComponents() into sCurrentTime
+  schedule timer in ComputeNextTimer() seconds
+  redraw all
+end handler
+
+public handler OnPaint()
+    scale this canvas by [ (the width of my bounds) / 2, (the height of my bounds) / 2 ]
+    translate this canvas by [ 1, 1 ]
+    rotate this canvas by -90
+
+    variable tFacePath as Path
+    put circle path centered at point [0, 0] with radius 0.95 into tFacePath
+
+    -- Draw the background
+    set the paint of this canvas to solid paint with color [1, 1, 1]
+    fill tFacePath on this canvas
+
+    -- Draw the surround
+    set the stroke width of this canvas to 0.1
+    set the paint of this canvas to solid paint with color [0, 0, 0]
+    stroke tFacePath on this canvas
+
+    -- Draw the second hand
+    save state of this canvas
+    set the stroke width of this canvas to 0.025
+    set the paint of this canvas to solid paint with color [1, 0, 0]
+    rotate this canvas by 360 * (element 3 of sCurrentTime) / 60
+    move to point [0, 0] on this canvas
+    line to point [0.80, 0] on this canvas
+    stroke this canvas
+    restore state of this canvas
+
+    -- Draw the minute hand
+    save state of this canvas
+    set the stroke width of this canvas to 0.025
+    rotate this canvas by 360 * (element 2 of sCurrentTime) / 60
+    move to point [0, 0] on this canvas
+    line to point [0.80, 0] on this canvas
+    stroke this canvas
+    restore state of this canvas
+
+    -- Draw the hour hand
+    save state of this canvas
+    set the stroke width of this canvas to 0.05
+    rotate this canvas by 360 * (element 1 of sCurrentTime) / 12
+    move to point [0, 0] on this canvas
+    line to point [0.60, 0] on this canvas
+    stroke this canvas
+    restore state of this canvas
+
+    -- Draw the center nub
+    fill circle path centered at point [0, 0] with radius 0.1 on this canvas
+end handler
+
+--
+
+public handler OnStartEditing()
+  cancel timer
+end handler
+
+public handler OnStopEditing()
+  schedule timer in ComputeNextTimer() seconds
+end handler
+
+--------
+
+end widget
