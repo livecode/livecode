@@ -43,6 +43,5 @@ extern "C" MC_DLLEXPORT void MCLogicEvalStringParsedAsBoolean(MCStringRef p_oper
     else if (MCStringIsEqualTo(p_operand, kMCFalseString, kMCStringOptionCompareCaseless))
         r_output = false;
     else
-        // Throw
-        return;
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("string must be either \"true\" or \"false\""), nil);
 }

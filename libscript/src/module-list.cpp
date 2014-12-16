@@ -50,8 +50,6 @@ extern "C" MC_DLLEXPORT void MCListExecPushSingleElementOnto(MCValueRef p_value,
         return;
     
     MCValueAssign(x_target, *t_immutable);
-    
-//    ctxt . Throw();
 }
 
 extern "C" MC_DLLEXPORT void MCListExecPopElementInto(bool p_is_front, MCProperListRef& x_source, MCValueRef& r_output)
@@ -76,8 +74,6 @@ extern "C" MC_DLLEXPORT void MCListExecPopElementInto(bool p_is_front, MCProperL
         return;
     
     MCValueAssign(x_source, *t_immutable);
-    
-//    ctxt . Throw();
 }
 
 extern "C" MC_DLLEXPORT void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
@@ -102,11 +98,11 @@ extern "C" MC_DLLEXPORT void MCListFetchElementOf(index_t p_index, MCProperListR
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(p_target, p_index, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(p_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(p_target))
-        return;
+    }
     
     r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, t_start));
 }
@@ -116,11 +112,11 @@ extern "C" MC_DLLEXPORT void MCListStoreElementOf(MCValueRef p_value, index_t p_
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(x_target))
-        return;
+    }
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -141,11 +137,11 @@ extern "C" MC_DLLEXPORT void MCListFetchElementRangeOf(index_t p_start, index_t 
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(p_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(p_target))
-        return;
+    }
     
     MCProperListCopySublist(p_target, MCRangeMake(t_start, t_count), r_output);
 }
@@ -155,11 +151,11 @@ extern "C" MC_DLLEXPORT void MCListStoreElementRangeOf(MCValueRef p_value, index
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(x_target))
-        return;
+    }
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -191,11 +187,11 @@ extern "C" MC_DLLEXPORT void MCListStoreAfterElementOf(MCValueRef p_value, index
     t_start += t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(x_target))
-        return;
+    }
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -215,11 +211,11 @@ extern "C" MC_DLLEXPORT void MCListStoreBeforeElementOf(MCValueRef p_value, inde
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
 
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(x_target))
-        return;
+    }
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -241,11 +237,11 @@ extern "C" MC_DLLEXPORT void MCListSpliceIntoElementRangeOf(MCProperListRef p_li
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(x_target))
-        return;
+    }
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -271,11 +267,11 @@ extern "C" MC_DLLEXPORT void MCListSpliceBeforeElementOf(MCProperListRef p_list,
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(x_target))
-        return;
+    }
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -295,11 +291,11 @@ extern "C" MC_DLLEXPORT void MCListSpliceAfterElementOf(MCProperListRef p_list, 
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCProperListGetLength(x_target))
-        return;
+    }
     
     t_start += t_count;
     
