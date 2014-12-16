@@ -818,6 +818,8 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         return false;
     }
     
+    MCValueRelease(t_rest);
+    
     int t_cc;
     if (!MCStringIsEmpty(*t_calling))
     {
@@ -855,7 +857,8 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         {
             HMODULE t_module;
 			MCAutoStringRefAsWString t_library_wstr;
-			/* UNCHECKED */ t_library_wstr.Lock(*t_library);
+			if (!t_library_wstr.Lock(*t_library))
+                return false;
             t_module = LoadLibraryW(*t_library_wstr);
             if (t_module == nil)
                 return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
@@ -866,8 +869,11 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
             p_handler -> function = dlsym(RTLD_MAIN_ONLY, MCStringGetCString(*t_function));
         else
         {
+            MCAutoStringRefAsUTF8String t_utf8_library;
+            if (!t_utf8_library.Lock(*t_library))
+                return false;
             void *t_module;
-            t_module = dlopen(MCStringGetCString(*t_library), RTLD_LAZY);
+            t_module = dlopen(*t_utf8_library, RTLD_LAZY);
             if (t_module == nil)
                 return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
             p_handler -> function = dlsym(t_module, MCStringGetCString(*t_function));
