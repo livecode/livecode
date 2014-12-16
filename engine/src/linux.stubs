@@ -476,7 +476,6 @@ gtk libgtk-x11-2.0.so.0
 	gtk_widget_set_size_request: (pointer, integer, integer) -> ()
 	gtk_socket_get_type: () -> (integer)
 	gtk_socket_new: () -> (pointer)
-	gtk_fixed_put: (pointer, pointer, integer, integer) -> ()
 	gtk_socket_add_id: (pointer, integer) -> ()
 	gtk_widget_hide: (pointer) -> ()
 	gtk_widget_show: (pointer) -> ()
@@ -504,7 +503,6 @@ gtk libgtk-x11-2.0.so.0
 	gtk_menu_new: () -> (pointer)
 	gtk_combo_box_new: () -> (pointer)
 	gtk_combo_box_new_with_entry: () -> (pointer)
-	gtk_fixed_get_type: (pointer) -> (pointer)
 	gtk_fixed_put: (pointer, pointer, integer, integer) -> ()
 	gtk_menu_item_new: () -> (pointer)
 
