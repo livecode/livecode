@@ -978,6 +978,8 @@
     'rule' GenerateBody(Result, Context, invoke(Position, Invokes, Arguments)):
         EmitPosition(Position)
         GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
+        print(Signature)
+        print(Arguments)
         GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
         EmitBeginInvoke(Index, Context, Result)
         GenerateInvoke_EmitInvokeArguments(Arguments)
@@ -1019,22 +1021,23 @@
 --
 'action' GenerateInvoke_EvaluateArguments(INT, INT, INVOKESIGNATURE, EXPRESSIONLIST)
 
-    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(in, _, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(in, Index, SigRest), Args):
+        print(Index)
+        GetExpressionAtIndex(Args, Index -> Expr)
         GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr)
-        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, ArgRest)
+        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, Args)
         
-    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(inout, _, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(inout, Index, SigRest), Args):
+        GetExpressionAtIndex(Args, Index -> Expr)
         GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, Expr)
-        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, ArgRest)
+        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, Args)
 
-    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(out, _, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(out, Index, SigRest), Args):
+        GetExpressionAtIndex(Args, Index -> Expr)
         GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, Expr)
-        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, ArgRest)
+        GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, Args)
         
     'rule' GenerateInvoke_EvaluateArguments(_, _, nil, _):
-        -- do nothing.
-
-    'rule' GenerateInvoke_EvaluateArguments(_, _, nil, nil):
         -- do nothing.
 
 -- In arguments are simple, just evaluate the expr into a register attached to the
@@ -1104,19 +1107,18 @@
 
 'action' GenerateInvoke_AssignArguments(INT, INT, INVOKESIGNATURE, EXPRESSIONLIST)
 
-    'rule' GenerateInvoke_AssignArguments(ResultReg, ContextReg, invokesignature(in, _, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_AssignArguments(ResultReg, ContextReg, invokesignature(in, Index, SigRest), Args):
         -- nothing to do for in arguments
-        GenerateInvoke_AssignArguments(ResultReg, ContextReg, SigRest, ArgRest)
+        GetExpressionAtIndex(Args, Index -> Expr)
+        GenerateInvoke_AssignArguments(ResultReg, ContextReg, SigRest, Args)
         
-    'rule' GenerateInvoke_AssignArguments(ResultReg, ContextReg, invokesignature(_, _, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_AssignArguments(ResultReg, ContextReg, invokesignature(_, Index, SigRest), Args):
         -- out and inout are the same
+        GetExpressionAtIndex(Args, Index -> Expr)
         GenerateInvoke_AssignArgument(ResultReg, ContextReg, Expr)
-        GenerateInvoke_AssignArguments(ResultReg, ContextReg, SigRest, ArgRest)
+        GenerateInvoke_AssignArguments(ResultReg, ContextReg, SigRest, Args)
 
     'rule' GenerateInvoke_AssignArguments(_, _, nil, _):
-        -- do nothing.
-
-    'rule' GenerateInvoke_AssignArguments(_, _, nil, nil):
         -- do nothing.
         
 'action' GenerateInvoke_AssignArgument(INT, INT, EXPRESSION)
@@ -1183,7 +1185,7 @@
         GenerateInvoke_EmitInvokeArguments(Tail)
 
     'rule' GenerateInvoke_EmitInvokeArguments(expressionlist(nil, Tail)):
-        -- do nothing
+        GenerateInvoke_EmitInvokeArguments(Tail)
 
     'rule' GenerateInvoke_EmitInvokeArguments(nil):
         -- do nothing
@@ -1306,7 +1308,7 @@
         Info'Index -> Index
         Info'Kind -> Kind
         Info'Type -> handler(_, signature(HandlerSig, _))
-        GenerateCall_GetInvokeSignature(HandlerSig -> InvokeSig)
+        GenerateCall_GetInvokeSignature(HandlerSig, 0 -> InvokeSig)
 
         GenerateInvoke_EvaluateArguments(Result, Context, InvokeSig, Arguments)
         EmitBeginInvoke(Index, Context, Output)
@@ -1315,12 +1317,12 @@
         GenerateInvoke_AssignArguments(Result, Context, InvokeSig, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
 
-'action' GenerateCall_GetInvokeSignature(PARAMETERLIST -> INVOKESIGNATURE)
+'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT -> INVOKESIGNATURE)
 
-    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest) -> invokesignature(Mode, 0, InvokeRest)):
-        GenerateCall_GetInvokeSignature(ParamRest -> InvokeRest)
+    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest), Index -> invokesignature(Mode, Index, InvokeRest)):
+        GenerateCall_GetInvokeSignature(ParamRest, Index + 1 -> InvokeRest)
     
-    'rule' GenerateCall_GetInvokeSignature(nil -> nil):
+    'rule' GenerateCall_GetInvokeSignature(nil, _ -> nil):
         -- do nothing
 
 ----
