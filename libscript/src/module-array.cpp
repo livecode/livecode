@@ -65,8 +65,6 @@ extern "C" MC_DLLEXPORT void MCArrayEvalKeysOf(MCArrayRef p_target, MCProperList
         MCArrayApply(p_target, list_array_keys, t_list) &&
         MCProperListCopyAndRelease(t_list, r_output))
         return;
-
-    // ctxt . Throw()
 }
 
 extern "C" MC_DLLEXPORT void MCArrayEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)
@@ -76,8 +74,6 @@ extern "C" MC_DLLEXPORT void MCArrayEvalElementsOf(MCArrayRef p_target, MCProper
         MCArrayApply(p_target, list_array_elements, t_list) &&
         MCProperListCopyAndRelease(t_list, r_output))
         return;
-    
-    // ctxt . Throw()
 }
 
 extern "C" MC_DLLEXPORT void MCArrayEvalNumberOfElementsIn(MCArrayRef p_target, uindex_t& r_output)
@@ -93,7 +89,8 @@ extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_needle
 extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     MCNewAutoNameRef t_key;
-    create_key_for_array(p_needle, p_target, &t_key);
+    if (!create_key_for_array(p_needle, p_target, &t_key))
+        return;
     
     MCValueRef t_value;
     t_value = nil;
@@ -108,13 +105,18 @@ extern "C" MC_DLLEXPORT void MCArrayFetchElementOfCaseless(MCArrayRef p_target, 
 {
     MCNewAutoNameRef t_key;
     
-    if (create_key_for_array(p_key, p_target, &t_key) &&
-        MCArrayFetchValue(p_target, MCArrayIsCaseSensitive(p_target), *t_key, r_output))
-    {
-        MCValueRetain(r_output);
+    if (!create_key_for_array(p_key, p_target, &t_key))
         return;
-        
+    
+    MCValueRef t_value;
+    t_value = nil;
+    if (!MCArrayFetchValue(p_target, MCArrayIsCaseSensitive(p_target), *t_key, t_value))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("array key does not exist"), nil);
+        return;
     }
+    
+    r_output = MCValueRetain(t_value);
 }
 
 extern "C" MC_DLLEXPORT void MCArrayStoreElementOfCaseless(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)

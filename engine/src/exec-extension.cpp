@@ -94,6 +94,40 @@ static void __rebuild_library_handler_list(void)
         }
 }
 
+bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_module)
+{
+    if (!MCScriptEnsureModuleIsUsable(p_module))
+    {
+        MCresult -> sets("module is not usable");
+        return false;
+    }
+    
+    MCScriptInstanceRef t_instance;
+    t_instance = nil;
+    if (MCScriptIsModuleALibrary(p_module))
+    {
+        if (!MCScriptCreateInstanceOfModule(p_module, t_instance))
+        {
+            MCresult -> sets("could not instantiate module");
+            return false;
+        }
+    }
+    
+    MCLoadedExtension *t_ext;
+    /* UNCHECKED */ MCMemoryNew(t_ext);
+    
+    t_ext -> filename = MCValueRetain(p_filename);
+    t_ext -> module = MCScriptRetainModule(p_module);
+    t_ext -> instance = t_instance;
+    
+    t_ext -> next = MCextensions;
+    MCextensions = t_ext;
+    
+    MCextensionschanged = true;
+    
+    return true;
+}
+
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
 {
     MCAutoStringRef t_resolved_filename;
@@ -120,36 +154,11 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     
     MCValueRelease(t_stream);
     
-    if (!MCScriptEnsureModuleIsUsable(t_module))
-    {
-        ctxt . SetTheResultToStaticCString("module is not usable");
-        MCScriptReleaseModule(t_module);
-        return;
-    }
+    MCEngineAddExtensionFromModule(*t_resolved_filename, t_module);
     
-    MCScriptInstanceRef t_instance;
-    t_instance = nil;
-    if (MCScriptIsModuleALibrary(t_module))
-    {
-        if (!MCScriptCreateInstanceOfModule(t_module, t_instance))
-        {
-            ctxt . SetTheResultToStaticCString("could not instantiate module");
-            MCScriptReleaseModule(t_module);
-            return;
-        }
-    }
+    MCScriptReleaseModule(t_module);
     
-    MCLoadedExtension *t_ext;
-    /* UNCHECKED */ MCMemoryNew(t_ext);
-    
-    t_ext -> filename = MCValueRetain(*t_resolved_filename);
-    t_ext -> module = t_module;
-    t_ext -> instance = t_instance;
-    
-    t_ext -> next = MCextensions;
-    MCextensions = t_ext;
-    
-    MCextensionschanged = true;
+    return;
 }
 
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
@@ -196,6 +205,21 @@ void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_list)
         ctxt . Throw();
         return;
     }
+}
+
+bool MCEngineIterateExtensionFilenames(uintptr_t& x_iterator, MCStringRef& r_filename)
+{
+    if (x_iterator == 0)
+        x_iterator = (uintptr_t)MCextensions;
+    else
+        x_iterator = (uintptr_t)(((MCLoadedExtension *)x_iterator) -> next);
+    
+    if (x_iterator == 0)
+        return false;
+    
+    r_filename = ((MCLoadedExtension *)x_iterator) -> filename;
+    
+    return true;
 }
 
 Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_parameters)
@@ -354,12 +378,12 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
 
 static bool MCExtensionThrowUnrepresentableValueError(MCValueRef p_value)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unrepresentable value"), nil);
 }
 
 static bool MCExtensionThrowTypeConversionError(MCTypeInfoRef p_type, MCValueRef p_value)
 {
-    return MCErrorThrowGeneric();
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("cannot convert value"), nil);
 }
 
 // This methods translates a value from the extension world to one which is

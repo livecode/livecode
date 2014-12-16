@@ -302,6 +302,13 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             MCresult -> sets("failed to load module");
             return false;
         }
+        
+        extern bool MCEngineAddExtensionFromModule(MCStringRef name, MCScriptModuleRef module);
+        if (!MCEngineAddExtensionFromModule(MCNameGetString(MCScriptGetNameOfModule(t_module)), t_module))
+        {
+            MCScriptReleaseModule(t_module);
+            return false;
+        }
     }
     break;
 

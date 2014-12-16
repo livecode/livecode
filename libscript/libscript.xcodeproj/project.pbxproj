@@ -57,7 +57,6 @@
 		4D79B6E31A27405600DD750C /* type.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B67E1A273BA000DD750C /* type.mlc */; };
 		4D79B8ED1A375F4700DD750C /* type-convert.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B67D1A273BA000DD750C /* type-convert.mlc */; };
 		4DDA20451A136FF4001B0CA2 /* script-builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA20441A136FF4001B0CA2 /* script-builder.cpp */; };
-		4DDA20701A139BC0001B0CA2 /* script-test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA206F1A139BC0001B0CA2 /* script-test.cpp */; };
 		5DDE27B91A37909500D5ABD2 /* math-foundation.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6781A273BA000DD750C /* math-foundation.mlc */; };
 		766113441A2F298E0042DE7F /* list.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6751A273BA000DD750C /* list.mlc */; };
 		766113891A31FB640042DE7F /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766113881A31FB640042DE7F /* module-array.cpp */; };
@@ -198,7 +197,6 @@
 		4D79B6B11A273C4E00DD750C /* lc-compile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "lc-compile.xcodeproj"; path = "../toolchain/lc-compile/lc-compile.xcodeproj"; sourceTree = "<group>"; };
 		4DDA20441A136FF4001B0CA2 /* script-builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-builder.cpp"; path = "src/script-builder.cpp"; sourceTree = "<group>"; };
 		4DDA20661A139BA1001B0CA2 /* libscript-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "libscript-test"; sourceTree = BUILT_PRODUCTS_DIR; };
-		4DDA206F1A139BC0001B0CA2 /* script-test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-test.cpp"; path = "src/script-test.cpp"; sourceTree = "<group>"; };
 		7210DCA31A37102F00C23D23 /* module-helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-helper.cpp"; path = "src/module-helper.cpp"; sourceTree = "<group>"; };
 		766113881A31FB640042DE7F /* module-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-array.cpp"; path = "src/module-array.cpp"; sourceTree = "<group>"; };
 		7661138C1A31FDFD0042DE7F /* array.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = array.mlc; path = src/array.mlc; sourceTree = "<group>"; };
@@ -281,7 +279,6 @@
 				4D21B60019E3DFED00B64BEF /* script-package.cpp */,
 				4D21B60219E3DFF800B64BEF /* script-instance.cpp */,
 				4DDA20441A136FF4001B0CA2 /* script-builder.cpp */,
-				4DDA206F1A139BC0001B0CA2 /* script-test.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -571,7 +568,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4DDA20701A139BC0001B0CA2 /* script-test.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
