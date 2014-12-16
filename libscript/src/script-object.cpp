@@ -88,10 +88,11 @@ bool MCScriptInitialize(void)
         MCScriptAddTypeToModule(t_builder, MCNAME("any"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
-        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        uindex_t t_null_type_index;
+        MCScriptAddDefinitionToModule(t_builder, t_null_type_index);
         MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCNullTypeInfo"), t_type_index);
-        MCScriptAddTypeToModule(t_builder, MCNAME("undefined"), t_type_index, t_def_index);
-        MCScriptAddExportToModule(t_builder, t_def_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("undefined"), t_type_index, t_null_type_index);
+        MCScriptAddExportToModule(t_builder, t_null_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
         MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCBooleanTypeInfo"), t_type_index);
@@ -103,10 +104,11 @@ bool MCScriptInitialize(void)
         MCScriptAddTypeToModule(t_builder, MCNAME("number"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
-        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        uindex_t t_string_type_index;
+        MCScriptAddDefinitionToModule(t_builder, t_string_type_index);
         MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCStringTypeInfo"), t_type_index);
-        MCScriptAddTypeToModule(t_builder, MCNAME("string"), t_type_index, t_def_index);
-        MCScriptAddExportToModule(t_builder, t_def_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("string"), t_type_index, t_string_type_index);
+        MCScriptAddExportToModule(t_builder, t_string_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
         MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCDataTypeInfo"), t_type_index);
@@ -202,6 +204,13 @@ bool MCScriptInitialize(void)
         MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("step"), t_double_type_def);
         MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
         MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatDownToIterate"), t_type_index, MCSTR("MCScriptBuiltinRepeatDownToIterate"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_null_type_index);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("reason"), t_string_type_index);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("Throw"), t_type_index, MCSTR("MCScriptBuiltinThrow"), t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         ////

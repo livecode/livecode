@@ -523,12 +523,6 @@ enum MCScriptBytecodeOp
     // build a list. (This will be replaced by an invoke when variadic bindings are
     // implemented).
     kMCScriptBytecodeOpAssignList,
-    // Error throwing
-    //   throw <reg>
-    // Reg is a register containing the value to throw. (This opcode will be replaced
-    // by an invoke when automatic exception handling is added to foreign handler
-    // declarations).
-    kMCScriptBytecodeOpThrow,
 };
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);
