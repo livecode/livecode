@@ -36,9 +36,9 @@ extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseNot(integer_t p_operand, intege
     r_output = ~((int32_t)p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseShift(integer_t p_operand, integer_t p_shift, integer_t& r_output)
+extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseShift(integer_t p_operand, bool p_is_right, integer_t p_shift, integer_t& r_output)
 {
-    if (p_shift < 0)
+    if (p_shift < 0 != p_is_right)
         // truncate towards 0
         r_output = (integer_t)(p_operand >> abs(p_shift));
     else
