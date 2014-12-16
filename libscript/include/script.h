@@ -208,6 +208,9 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef prope
 // Call a handler of an instance.
 bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
+// Call a handler of an instance if found, it doesn't throw an error if not.
+bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct MCScriptModuleBuilder *MCScriptModuleBuilderRef;

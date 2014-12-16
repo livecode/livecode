@@ -431,24 +431,17 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     return true;
 }
 
-bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
+static bool MCScriptCallHandlerOfInstanceDirect(MCScriptInstanceRef self, MCScriptHandlerDefinition *p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
-    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
-    
-    // Lookup the definition (throws if not found).
-    MCScriptHandlerDefinition *t_definition;
-    if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_handler, t_definition))
-        return false;
-    
     // Get the signature of the handler.
     MCTypeInfoRef t_signature;
-    t_signature = self -> module -> types[t_definition -> type] -> typeinfo;
+    t_signature = self -> module -> types[p_handler -> type] -> typeinfo;
     
     // Check the number of arguments.
     uindex_t t_required_param_count;
     t_required_param_count = MCHandlerTypeInfoGetParameterCount(t_signature);
     if (t_required_param_count != p_argument_count)
-        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(self -> module, t_definition, p_argument_count);
+        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(self -> module, p_handler, p_argument_count);
     
     // Check the types of the arguments.
     for(uindex_t i = 0; i < t_required_param_count; i++)
@@ -459,21 +452,49 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
         if (t_mode != kMCHandlerTypeFieldModeOut)
         {
             if (p_arguments[i] == nil)
-                return MCScriptThrowNoValueProvidedForInParameterError(self -> module, p_handler, nil);
+                return MCScriptThrowInParameterNotDefinedError(self -> module, p_handler, i);
             
             MCTypeInfoRef t_type;
             t_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
             
             if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_arguments[i]), t_type))
-                return MCScriptThrowInvalidValueForArgumentError(self -> module, t_definition, i, t_type, p_arguments[i]);
+                return MCScriptThrowInvalidValueForArgumentError(self -> module, p_handler, i, t_type, p_arguments[i]);
         }
     }
     
     // Now the input argument array is appropriate, we can just call the handler.
-    if (!MCScriptCallHandlerOfInstanceInternal(self, t_definition, p_arguments, p_argument_count, r_value))
+    if (!MCScriptCallHandlerOfInstanceInternal(self, p_handler, p_arguments, p_argument_count, r_value))
         return false;
     
     return true;
+}
+
+bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
+{
+    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
+    
+    // Lookup the definition (throws if not found).
+    MCScriptHandlerDefinition *t_definition;
+    if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_handler, t_definition))
+        return MCErrorThrowGeneric(MCSTR("handler not found"));
+    
+    return MCScriptCallHandlerOfInstanceDirect(self, t_definition, p_arguments, p_argument_count, r_value);
+}
+
+
+bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef self, MCNameRef p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
+{
+    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
+    
+    // Lookup the definition (throws if not found).
+    MCScriptHandlerDefinition *t_definition;
+    if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_handler, t_definition))
+    {
+        r_value = MCValueRetain(kMCNull);
+        return true;
+    }
+    
+    return MCScriptCallHandlerOfInstanceDirect(self, t_definition, p_arguments, p_argument_count, r_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
