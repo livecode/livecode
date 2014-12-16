@@ -27,7 +27,10 @@ extern "C" MC_DLLEXPORT void MCByteEvalIsAmongTheBytesOf(MCDataRef p_needle, MCD
 {
     // Error if there is more than one byte.
     if (MCDataGetLength(p_needle) != 1)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("needle must be a single byte"), nil);
         return;
+    }
     
     bool t_found = MCDataContains(p_target, p_needle);
     
@@ -100,11 +103,11 @@ extern "C" MC_DLLEXPORT void MCByteFetchByteRangeOf(index_t p_start, index_t p_f
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCDataGetLength(p_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCDataGetLength(p_target))
-        return;
+    }
     
     if (!MCDataCopyRange(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
@@ -115,11 +118,11 @@ extern "C" MC_DLLEXPORT void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0)
+    if (t_count == 0 || t_start + t_count > MCDataGetLength(x_target))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
-    
-    if (t_start + t_count > MCDataGetLength(x_target))
-        return;
+    }
     
     MCAutoDataRef t_data;
     if (!MCDataMutableCopy(x_target, &t_data))

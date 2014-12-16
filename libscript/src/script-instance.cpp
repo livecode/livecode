@@ -756,13 +756,157 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 	return true;
 }
 
+// This method resolves the binding string in the foreign function. The format is:
+//   [lang:][library@][class.]function[!calling]
+//
+// lang - one of c, cpp, objc or java. If not present, it is taken to be c.
+// library - the library to load the symbol from. If not present, it is taken to be the
+//   main executable.
+// class - only valid for cpp, objc, or java. If not present, it is taken to be no class.
+// function - the name of the function or method.
+// calling - the calling convention, if not present it is taken to be the platform default.
+//
+// The calling conventions are:
+//   default (sysv on 32-bit unix intel, unix64 on 64-bit unix intel, win64 on 64-bit windows, cdelc on 32-bit windows)
+//   stdcall (windows 32-bit)
+//   thiscall (windows 32-bit)
+//   fastcall (windows 32-bit)
+//   cdecl (windows 32-bit)
+//   pascal (windows 32-bit)
+//   register (windows 32-bit)
+// If a windows calling convention is specified, it is taken to be 'default' on
+// other platforms.
+//
+
+static bool __split_binding(MCStringRef& x_string, codepoint_t p_char, MCStringRef& r_field)
+{
+    MCStringRef t_head, t_tail;
+    if (!MCStringDivideAtChar(x_string, p_char, kMCStringOptionCompareExact, t_head, t_tail))
+        return false;
+    
+    if (!MCStringIsEmpty(t_tail))
+    {
+        r_field = t_head;
+        MCValueRelease(x_string);
+        x_string = t_tail;
+    }
+    else
+    {
+        MCValueRelease(x_string);
+        x_string = t_head;
+    }
+    
+    return true;
+}
+
+static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefinition *p_handler, ffi_abi& r_abi)
+{
+    MCStringRef t_rest;
+    t_rest = MCValueRetain(p_handler -> binding);
+    
+    MCAutoStringRef t_language;
+    MCAutoStringRef t_library;
+    MCAutoStringRef t_class;
+    MCAutoStringRef t_function;
+    MCAutoStringRef t_calling;
+    if (!__split_binding(t_rest, ':', &t_language) ||
+        !__split_binding(t_rest, '@', &t_library) ||
+        !__split_binding(t_rest, '.', &t_class) ||
+        !MCStringDivideAtChar(t_rest, '!', kMCStringOptionCompareExact, &t_function, &t_calling))
+    {
+        MCValueRelease(t_rest);
+        return false;
+    }
+    
+    int t_cc;
+    if (!MCStringIsEmpty(*t_calling))
+    {
+        static const char *s_callconvs[] = { "default", "sysv", "stdcall", "thiscall", "fastcall", "cdecl", "pascal", "register", nil};
+        for(t_cc = 0; s_callconvs[t_cc] != nil; t_cc++)
+            if (MCStringIsEqualToCString(*t_calling, s_callconvs[t_cc], kMCStringOptionCompareCaseless))
+                break;
+        if (s_callconvs[t_cc] == nil)
+            return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unknown calling convention"), nil);
+    }
+    else
+        t_cc = 0;
+    
+    if (MCStringIsEmpty(*t_function))
+        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no function specified in binding string"), nil);
+    
+    if (MCStringIsEmpty(*t_language) ||
+        MCStringIsEqualToCString(*t_language, "c", kMCStringOptionCompareExact))
+    {
+        if (!MCStringIsEmpty(*t_class))
+            return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("class not allowed in c binding string"), nil);
+        
+        
+#ifdef _WIN32
+        // If we are using the default module then symbols will be mangled cdecl
+        // on windows - i.e. prepend _.
+        if (MCStringIsEmpty(*t_library))
+        {
+            MCStringRef t_mangled_function;
+            if (!MCStringFormat(&t_mangled_function, "_%@", t_function))
+                return false;
+            p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(*t_mangled_function));
+        }
+        else
+        {
+            HMODULE t_module;
+            t_module = LoadLibraryA(MCStringGetCString(*t_library));
+            if (t_module == nil)
+                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
+            p_handler -> function = GetProcAddress(t_module, MCStringGetCString(*t_function))
+        }
+#else
+        if (MCStringIsEmpty(*t_library))
+            p_handler -> function = dlsym(RTLD_MAIN_ONLY, MCStringGetCString(*t_function));
+        else
+        {
+            void *t_module;
+            t_module = dlopen(MCStringGetCString(*t_library), RTLD_LAZY);
+            if (t_module == nil)
+                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
+            p_handler -> function = dlsym(t_module, MCStringGetCString(*t_function));
+        }
+#endif
+    }
+    else if (MCStringIsEqualToCString(*t_language, "cpp", kMCStringOptionCompareExact))
+    {
+        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("c++ binding not implemented yet"), nil);
+    }
+    else if (MCStringIsEqualToCString(*t_language, "objc", kMCStringOptionCompareExact))
+    {
+#if !defined(_MACOSX) && !defined(_IOS_MOBILE)
+        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("objc binding not supported on this platform"), nil);
+#endif
+        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("objc binding not implemented yet"), nil);
+    }
+    else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
+    {
+#if !defined(_ANDROID_MOBILE)
+        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not supported on this platform"), nil);
+#else
+        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not implemented yet"), nil);
+#endif
+    }
+    
+#ifdef _WIN32
+    r_abi = (ffi_abi)t_cc;
+#else
+    r_abi = FFI_DEFAULT_ABI;
+#endif
+    
+    return true;
+}
+
 static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler)
 {
-#ifdef _WIN32
-	p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(p_handler -> binding));
-#else
-    p_handler -> function = dlsym(RTLD_DEFAULT, MCStringGetCString(p_handler -> binding));
-#endif
+    ffi_abi t_abi;
+    if (!MCScriptResolveForeignFunctionBinding(p_handler, t_abi))
+        return false;
+    
     if (p_handler -> function == nil)
         return MCScriptThrowUnableToResolveForeignHandlerError(p_instance -> module, p_handler);
     
@@ -829,7 +973,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     }
     
     if (!t_success ||
-        ffi_prep_cif(t_cif, FFI_DEFAULT_ABI, t_arity, t_ffi_return_type, t_ffi_arg_types) != FFI_OK)
+        ffi_prep_cif(t_cif, t_abi, t_arity, t_ffi_return_type, t_ffi_arg_types) != FFI_OK)
     {
         MCMemoryDeleteArray(t_ffi_arg_types);
         MCMemoryDelete(t_cif);

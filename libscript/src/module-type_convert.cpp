@@ -19,13 +19,19 @@
 static bool MCProperListCombine(void *context, MCValueRef p_value)
 {
     MCListRef t_list = *(MCListRef *)context;
+    
+    if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("cannot combine list with non-string elements"), nil);
+        return false;
+    }
+    
     return MCListAppend(t_list, p_value);
 }
 
 extern "C" MC_DLLEXPORT void MCTypeConvertExecSplitStringByDelimiter(MCStringRef p_target, MCStringRef p_delimiter, MCProperListRef& r_output)
 {
-    if (!MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareExact, r_output))
-		return;
+    MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareExact, r_output);
 }
 
 extern "C" MC_DLLEXPORT void MCTypeConvertExecCombineListWithDelimiter(MCProperListRef p_target, MCStringRef p_delimiter, MCStringRef& r_output)
