@@ -89,16 +89,18 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: lc-compile -output OUTFILE [-interface INTFILE] [-manifest MANIFEST] [--] MLCFILE\n"
-"       lc-compile -outputc OUTFILE [-interface INTFILE] [-manifest MANIFEST] [--] MLCFILE\n"
+"Usage: lc-compile {-modulepath PATH} -output OUTFILE [-manifest MANIFEST] [--] MLCFILE\n"
+"       lc-compile {-modulepath PATH} -outputc OUTFILE [-manifest MANIFEST] [--] MLCFILE\n"
 "\n"
 "Compile a Modular LiveCode source file.\n"
 "\n"
 "Options:\n"
 "  -modulepath PATH    Path to directory containing module interface files.\n"
+"                      More than one modulepath may be specified, they are searched"
+"                      in order."
+"                      The first modulepath is used to output the interface file."
 "  -output  OUTFILE    Filename for bytecode output.\n"
 "  -outputc OUTFILE    Filename for C source code output.\n"
-"  -interface INTFILE  Filename for the generated interface file.\n"
 "  -manifest MANIFEST  Filename for generated manifest.\n"
 "  -h, -help           Print this message.\n"
 "  --                  Treat all remaining arguments as filenames.\n"
