@@ -116,7 +116,6 @@ extern "C" void EmitFetchGlobal(long reg, long var);
 extern "C" void EmitStoreGlobal(long reg, long var);
 extern "C" void EmitReturn(long reg);
 extern "C" void EmitReturnNothing(void);
-extern "C" void EmitThrow(long reg);
 extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
 extern "C" void EmitDetachRegisterFromExpression(long expr);
 extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
@@ -1084,12 +1083,6 @@ void EmitReturnNothing(void)
     EmitAssignUndefined(t_reg);
     EmitReturn(t_reg);
     EmitDestroyRegister(t_reg);
-}
-
-void EmitThrow(long reg)
-{
-    MCScriptEmitThrowInModule(s_builder, reg);
-    MCLog("[Emit] Throw(%ld)", reg);
 }
 
 ////////

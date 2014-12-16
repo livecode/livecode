@@ -990,7 +990,8 @@
     'rule' GenerateBody(Result, Context, throw(Position, Error)):
         EmitPosition(Position)
         GenerateExpression(Result, Context, Error -> Reg)
-        GenerateBeginBuiltinInvoke("Throw", Context, Reg)
+        GenerateBeginBuiltinInvoke("Throw", Context, Result)
+        EmitContinueInvoke(Reg)
         EmitDestroyRegister(Reg)
         EmitAssignUndefined(Result)
         
