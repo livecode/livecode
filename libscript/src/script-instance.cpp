@@ -846,7 +846,7 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         // on windows - i.e. prepend _.
         if (MCStringIsEmpty(*t_library))
         {
-            MCStringRef t_mangled_function;
+            MCAutoStringRef t_mangled_function;
             if (!MCStringFormat(&t_mangled_function, "_%@", t_function))
                 return false;
             p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(*t_mangled_function));
@@ -854,10 +854,12 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         else
         {
             HMODULE t_module;
-            t_module = LoadLibraryA(MCStringGetCString(*t_library));
+			MCAutoStringRefAsWString t_library_wstr;
+			/* UNCHECKED */ t_library_wstr.Lock(*t_library);
+            t_module = LoadLibraryW(*t_library_wstr);
             if (t_module == nil)
                 return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
-            p_handler -> function = GetProcAddress(t_module, MCStringGetCString(*t_function))
+            p_handler -> function = GetProcAddress(t_module, MCStringGetCString(*t_function));
         }
 #else
         if (MCStringIsEmpty(*t_library))
