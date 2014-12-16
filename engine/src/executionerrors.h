@@ -2612,6 +2612,10 @@ enum Exec_errors
     // MW-2014-10-23: Improve the error message you get from 'start using <name>'
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
+    
+    // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
+    // {EE-0844} hostnameToAddress: callbacks are not allowed on server
+    EE_HOSTNAME_BADMESSAGE,
 };
 
 extern const char *MCexecutionerrors;

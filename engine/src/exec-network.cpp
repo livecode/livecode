@@ -229,6 +229,15 @@ void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname,
 		ctxt.LegacyThrow(EE_NETWORK_NOPERM);
 		return;
 	}
+    
+    // SN-2014-12-16: [[ Bug 14181 ]] We don't accept callback messages on server
+#ifdef _SERVER
+    if (!MCNameIsEmpty(p_message))
+    {
+        ctxt.LegacyThrow(EE_HOSTNAME_BADMESSAGE);
+        return;
+    }
+#endif
 
 	MCAutoListRef t_list;
     if (MCS_ntoa(p_hostname, ctxt.GetObject(), p_message, &t_list))
