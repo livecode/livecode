@@ -52,6 +52,9 @@ MCBlock::MCBlock(void)
     tabpos = 0;
     direction_level = 0;
 
+    // SN-2014-12-16: [[ Bug 14227 ]] Make sure to initialise the segment to nil.
+    segment = nil;
+
 	// MW-2012-02-14: [[ FontRefs ]] The font for the block starts off nil.
 	m_font = nil;
 }
@@ -105,6 +108,9 @@ MCBlock::MCBlock(const MCBlock &bref) : MCDLlist(bref)
     origin = 0;
     tabpos = 0;
     direction_level = bref.direction_level;
+
+    // SN-2014-12-16: [[ Bug 14227 ]] Make sure to initialise the segment to nil.
+    segment = nil;
 
 	// MW-2012-02-14: [[ FontRefs ]] The font for the block starts off nil.
 	m_font = nil;
