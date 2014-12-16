@@ -185,6 +185,11 @@ revandroid: libexternalv1
 # MLC Targets
 
 .PHONY: lc-compile lc-bootstrap-compile lc-compile-clean
+.PHONY: libstdscript
+
+########## Standard script library
+libstdscript: lc-compile
+	$(MAKE) -C ./libscript libstdscript
 
 ########## Compiler
 lc-compile: libscript libfoundation
@@ -209,9 +214,11 @@ all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgres
 all: development standalone installer server
 all: revpdfprinter revandroid
 all: lc-bootstrap-compile
+all: lc-test
 
 bootstrap: lc-bootstrap-compile
 
 clean:
 	@rm -r _build/linux _cache/linux
+	-rm -rf `find . -type d -name _mlc`
 clean: lc-compile-clean

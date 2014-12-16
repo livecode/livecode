@@ -98,3 +98,8 @@ prebuilt/lib
 prebuilt/build
 prebuilt/packaged
 prebuilt/fetched
+
+# Stamp files and generated C files
+###################################
+stamp-mlc*
+_mlc
