@@ -319,7 +319,10 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
         OnTimer();
     }
     else
-        MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
+    {
+        MCControl::timer(p_message, p_parameters);
+        //MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
+    }
 }
 
 void MCWidget::setrect(const MCRectangle& p_rectangle)
@@ -566,7 +569,8 @@ bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
         return true;
     }
     
-    // Property handler failed
+    MCExtensionCatchError(ctxt);
+    
     return false;
 }
 
@@ -583,9 +587,10 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     {
         if (CallSetProp(ctxt, p_prop_name, nil, *t_value))
             return true;
+        
+        MCExtensionCatchError(ctxt);
     }
     
-    // Property handler failed
     return false;
 }
 
@@ -1209,7 +1214,7 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
     // Invoke event handler.
     bool t_success;
     MCValueRef t_retval;
-    t_success = MCScriptCallHandlerOfInstance(m_instance, p_name, x_parameters, p_param_count, t_retval);
+    t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_name, x_parameters, p_param_count, t_retval);
     
     if (t_success)
     {
@@ -1220,16 +1225,11 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
     }
     else
     {
-        MCErrorRef t_error;
-        
-        // TODO: handle
-        if (MCErrorCatch(t_error))
-        {
-            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
-            MCValueRelease(t_error);
-        }
-        else
-            MCLog("Failed to execute handler %@", p_name);
+        MCExecContext ctxt(this, nil, nil);
+        MCExtensionCatchError(ctxt);
+        if (MCerrorptr == NULL)
+            MCerrorptr = this;
+        senderror();
     }
     
 	MCwidgetobject = t_old_widget_object;
@@ -1254,21 +1254,7 @@ bool MCWidget::CallGetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
         // Convert to a script type
         t_success = MCExtensionConvertToScriptType(ctxt, r_value);
     }
-    
-    if (!t_success)
-    {
-        MCErrorRef t_error;
-        
-        // TODO: handle
-        if (MCErrorCatch(t_error))
-        {
-            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
-            MCValueRelease(t_error);
-        }
-        else
-            MCLog("Failed to execute property getter for %@", p_property);
-    }
-    
+
 	return t_success;
 }
 
@@ -1291,21 +1277,7 @@ bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
     t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
     
 	MCwidgetobject = t_old_widget_object;
-    
-    if (!t_success)
-    {
-        MCErrorRef t_error;
-        
-        // TODO: handle
-        if (MCErrorCatch(t_error))
-        {
-            MCLog(MCStringGetCString(MCErrorGetMessage(t_error)), 0);
-            MCValueRelease(t_error);
-        }
-        else
-            MCLog("Failed to execute property setter for %@", p_property);
-    }
-    
+
 	return t_success;
 }
 

@@ -5401,6 +5401,8 @@ void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_p
 bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value);
 bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value);
 
+Exec_stat MCExtensionCatchError(MCExecContext& ctxt);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> struct MCExecValueTraits

@@ -342,30 +342,33 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
             MCValueRelease(t_arguments[i]);
     
     // If we failed, then catch the error and create a suitable MCerror unwinding.
-    if (!t_success)
-    {
-        MCErrorRef t_error;
-        if (!MCErrorCatch(t_error))
-        {
-            MCLog("Error state indicated with no error having been thrown", 0);
-            return ES_ERROR;
-        }
-        
-        MCECptr -> LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(t_error));
-        MCECptr -> LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(t_error));
-        if (MCErrorGetDepth(t_error) > 0)
-        {
-            MCECptr -> LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(t_error, 0));
-            MCECptr -> LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(t_error, 0));
-        }
-        
-        MCValueRelease(t_error);
-    }
+    if (t_success)
+        return ES_NORMAL;
     
-    return t_success ? ES_NORMAL : ES_ERROR;
+    return MCExtensionCatchError(*MCECptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCExtensionCatchError(MCExecContext& ctxt)
+{
+    MCAutoErrorRef t_error;
+    if (!MCErrorCatch(&t_error))
+    {
+        MCLog("Error state indicated with no error having been thrown", 0);
+        return ES_ERROR;
+    }
+    
+    ctxt . LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(*t_error));
+    ctxt . LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(*t_error));
+    if (MCErrorGetDepth(*t_error) > 0)
+    {
+        ctxt . LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(*t_error, 0));
+        ctxt . LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(*t_error, 0));
+    }
+    
+    return ES_ERROR;
+}
 
 static bool __script_try_to_convert_to_boolean(MCExecContext& ctxt, bool p_optional, MCValueRef& x_value, bool& r_converted);
 static bool __script_try_to_convert_to_number(MCExecContext& ctxt, bool p_optional, MCValueRef& x_value, bool& r_converted);
