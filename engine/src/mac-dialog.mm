@@ -706,36 +706,6 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// SN-2014-10-20: [[ Bug 13628 ]] ColorDelegate to react when the colour picker window is closed
-@interface com_runrev_livecode_MCColorPanelDelegate: NSObject<NSWindowDelegate>
-{
-    NSButton *mCancelButton;
-    NSButton *mOkButton;
-    NSView   *mColorPickerView;
-    NSView   *mUpdatedView;
-    NSColorPanel *mColorPanel;
-    
-    MCPlatformDialogResult mResult;
-    MCColor mColorPicked;
-}
-
--(id)   initWithColorPanel: (NSColorPanel*)p_panel
-               contentView: (NSView*) p_view;
--(void) dealloc;
--(void) windowWillClose: (NSNotification *)notification;
--(void) windowDidResize:(NSNotification *)notification;
--(void) getColor;
-//-(void) changeColor:(id)sender;
--(void) pickerCancelClicked;
--(void) pickerOkClicked;
--(void) relayout;
-
-@end
-
-@compatibility_alias MCColorPanelDelegate com_runrev_livecode_MCColorPanelDelegate;
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCPlatformDialogResult s_color_dialog_result = kMCPlatformDialogResultContinue;
 static MCColor s_color_dialog_color;
 // SN-2014-10-20 [[ Bub 13628 ]] Added a static delegate for the colour picker
@@ -870,7 +840,11 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
     {
         NSColor *t_color;
         
-        t_color = [[mColorPanel color] colorUsingColorSpaceName: NSCalibratedRGBColorSpace];
+        // Do not calibrate the colour. As stated in the doc for -colorUsingColorSpace
+        //   "The new NSColor object. This method converts the receiver's color to an equivalent
+        //    one in the new color space. Although the new color might have different component
+        //    values, it looks the same as the original."
+        t_color = [mColorPanel color];
         
         // Convert the value from to a colour component value.
         s_color_dialog_color . red   = (uint2) ([t_color redComponent] * UINT16_MAX);
@@ -929,10 +903,10 @@ void MCPlatformBeginColorDialog(const char *p_title, const MCColor& p_color)
     
     // SN-2014-11-28: [[ Bug 14098 ]] Make use of the initial colour
     CGFloat t_divider = UINT16_MAX;
-    NSColor* t_initial_color = [NSColor colorWithRed:(CGFloat)p_color.red / t_divider
-                                               green:(CGFloat)p_color.green / t_divider
-                                                blue:(CGFloat)p_color.blue / t_divider
-                                               alpha:1];
+    NSColor* t_initial_color = [NSColor colorWithCalibratedRed:(CGFloat)p_color.red / t_divider
+                                                         green:(CGFloat)p_color.green / t_divider
+                                                          blue:(CGFloat)p_color.blue / t_divider
+                                                         alpha:1];
     [t_colorPicker setColor:t_initial_color];
     
     NSView* t_pickerView;

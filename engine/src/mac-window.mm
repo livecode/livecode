@@ -773,12 +773,19 @@ static bool s_lock_responder_change = false;
 static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoint_t& r_mapped, codepoint_t& r_unmapped)
 {
 	MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], r_key_code);
-	
-    // MW-2014-06-26: [[ Bug 12681 ]] Special case numeric keypad keys so they are processed
-    //   in the correct way.
-    if (r_key_code > 0xff00 && r_key_code <= 0xffff &&
-        (r_key_code < kMCPlatformKeyCodeKeypadSpace || r_key_code > kMCPlatformKeyCodeKeypadEqual || r_key_code == kMCPlatformKeyCodeKeypadEnter
-         ))
+    
+    // SN-2014-12-08: [[ Bug 14067 ]] If the key pressed was a numpad key, then we
+    // do not produce a mapped char. That will allow a different treatment, as we
+    // do not want to use the numeric value of the native char to get the rawKeyDown
+    // parameter.
+    if (([event modifierFlags] & NSNumericPadKeyMask) != 0)
+    {
+        MCMacMapNSStringToCodepoint([event characters], r_unmapped);
+        r_mapped = r_unmapped;
+        return;
+    }
+    
+    if (r_key_code > 0xff00 && r_key_code <= 0xffff)
     {
         r_mapped = r_unmapped = 0xffffffffU;
         return;
