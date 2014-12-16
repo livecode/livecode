@@ -431,7 +431,6 @@ lc-compile: $(COMPILE_target)
 
 lc-compile-clean:
 	-rm -rf $(COMPILE_srcdir)/_stage* $(COMPILE_objdir)
-	-rm -rf $(COMPILE)
 	-rm -f $(BUILD_DIR)/lc-compile{,stage*}
 
 .PHONY: lc-compile lc-compile-clean
