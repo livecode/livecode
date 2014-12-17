@@ -1792,13 +1792,14 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasFontMake(in pName as string, in pBold as bool, in pItalic as bool, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMake(in pName as string, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMakeWithStyle(in pName as string, in pBold as bool, in pItalic as bool, out rFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontMakeWithSize(in pName as string, in pBold as bool, in pItalic as bool, in pSize as int, out rFont as Font) as undefined binds to "<builtin>"
 
 syntax FontMake is prefix operator with precedence 4
-	"font" <mName: Expression> <mBold=false> <mItalic=false>
+	"font" <mName: Expression>
 begin
-	MCCanvasFontMake(mName, mBold, mItalic, output)
+	MCCanvasFontMake(mName, output)
 end syntax
 
 syntax FontMakeWithSize is prefix operator with precedence 4
@@ -1810,13 +1811,13 @@ end syntax
 syntax FontMakeWithStyle is expression
 	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style"
 begin
-	MCCanvasFontMake(mName, mBold, mItalic, output)
+	MCCanvasFontMakeWithStyle(mName, mBold, mItalic, output)
 end syntax
 
 syntax FontMakeWithStyleAndSize is prefix operator with precedence 4
 	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style" "at" "size" <mSize: Expression>
 begin
-	MCCanvasFontMake(mName, mBold, mItalic, output)
+	MCCanvasFontMakeWithStyle(mName, mBold, mItalic, output)
 	MCCanvasFontMakeWithSize(mName, mBold, mItalic, mSize, output)
 end syntax
 
