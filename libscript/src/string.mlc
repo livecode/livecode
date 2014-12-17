@@ -219,7 +219,7 @@ The ```is``` operator is case sensitive.
 Tags: Strings
 */
 
-syntax StringIsString is neutral binary operator with precedence 5
+syntax StringIsString is neutral binary operator with precedence 7
     <Left: Expression> "is" <Right: Expression>
 begin
     MCStringEvalIsEqualTo(Left, Right, output)
@@ -240,7 +240,7 @@ The ```is not``` operator is case sensitive.
 Tags: Strings
 */
 
-syntax StringIsNotString is neutral binary operator with precedence 5
+syntax StringIsNotString is neutral binary operator with precedence 7
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCStringEvalIsNotEqualTo(Left, Right, output)
@@ -261,7 +261,7 @@ Description:
 Tags: Strings
 */
 
-syntax StringIsLessThanString is neutral binary operator with precedence 3
+syntax StringIsLessThanString is neutral binary operator with precedence 5
     <Left: Expression> "<" <Right: Expression>
 begin
     MCStringEvalIsLessThan(Left, Right, output)
@@ -281,7 +281,7 @@ Description:
 Tags: Strings
 */
 
-syntax StringIsGreaterThanString is neutral binary operator with precedence 3
+syntax StringIsGreaterThanString is neutral binary operator with precedence 5
     <Left: Expression> ">" <Right: Expression>
 begin
     MCStringEvalIsGreaterThan(Left, Right, output)

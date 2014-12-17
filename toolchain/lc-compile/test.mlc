@@ -14,6 +14,7 @@ public handler test()
 	-- structural
 	testRepeat(tResults)
 	testLogicStructural(tResults)
+    testPrecedence(tResults)
 
     --com.livecode.type
     testType(tResults)
@@ -131,6 +132,20 @@ public handler testType(inout xResults as list)
     variable tVar
     testLog("Type", "IsNotDefined", tVar is not defined, xResults)
 
+    variable tString as string
+    put "" into tString
+    testLog("Type", "IsDefined", tString is defined, xResults)
+    testLog("Type", "IsEmpty", tString is empty, xResults)
+
+    put "a" after tString
+    testLog("Type", "IsNotEmpty", tString is not empty, xResults)
+
+end handler
+
+public handler testPrecedence(inout xResults as list)
+
+    testLog("Precedence", "Tan,Over,LessThan", the tan of pi / 4 < 0.00000000001, xResults)
+
 end handler
 
 public handler testMathFoundation(inout xResults as list)
@@ -155,9 +170,9 @@ public handler testMath(inout xResults as list)
 	testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
 	testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
 	
-	testLog("Math", "Sin", the sin of pi / 2 is 1, xResults)
+	testLog("Math", "Sin", the sin of (pi / 2) is 1, xResults)
 	testLog("Math", "Cos", the cos of pi is -1, xResults)
-	testLog("Math", "Tan", (the tan of pi / 4) - 1  < 0.00000000001, xResults)
+	testLog("Math", "Tan", (the tan of (pi / 4) - 1) < 0.00000000001, xResults)
 
 	testLog("Math", "Exp", the exp of 3 > 20, xResults)
 	testLog("Math", "Exp", the exp of 3 < 20.1, xResults)

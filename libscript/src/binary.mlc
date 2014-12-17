@@ -95,7 +95,7 @@ Performs a byte by byte comparison of <Left> and <Right>, returning false if the
 Tags: Binary
 */
 
-syntax DataIsData is neutral binary operator with precedence 5
+syntax DataIsData is neutral binary operator with precedence 7
     <Left: Expression> "is" <Right: Expression>
 begin
     MCBinaryEvalIsEqualTo(Left, Right, output)
@@ -115,7 +115,7 @@ Performs a byte by byte comparison of <Left> and <Right>, returning true if ther
 Tags: Binary
 */
 
-syntax DataIsNotData is neutral binary operator with precedence 5
+syntax DataIsNotData is neutral binary operator with precedence 7
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCBinaryEvalIsNotEqualTo(Left, Right, output)
@@ -136,7 +136,7 @@ Description:
 Tags: Binary
 */
 
-syntax DataIsLessThanData is neutral binary operator with precedence 3
+syntax DataIsLessThanData is neutral binary operator with precedence 5
     <Left: Expression> "<" <Right: Expression>
 begin
     MCBinaryEvalIsLessThan(Left, Right, output)
@@ -157,7 +157,7 @@ Description:
 Tags: Binary
 */
 
-syntax DataIsGreaterThanData is neutral binary operator with precedence 3
+syntax DataIsGreaterThanData is neutral binary operator with precedence 5
     <Left: Expression> ">" <Right: Expression>
 begin
     MCBinaryEvalIsGreaterThan(Left, Right, output)

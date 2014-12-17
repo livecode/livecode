@@ -31,6 +31,7 @@
 #include "scriptpt.h"
 #include "param.h"
 #include "card.h"
+#include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -346,8 +347,13 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecExecuteScript(MCStringRef p_scrip
         return nil;
     }
     
+    MCRedrawLockScreen();
+    
     Exec_stat t_stat;
     t_stat = t_stack -> getcurcard() -> domess(p_script);
+    
+    MCRedrawUnlockScreen();
+    
     if (t_stat == ES_ERROR)
     {
         MCEngineThrowScriptError();

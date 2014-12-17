@@ -247,41 +247,11 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.redirects, i + 1, t_val);
 			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeRedirect, (MCStringRef)t_val);
 		}
-			
-	// Now we add the main stack
-	if (t_success)
-		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
-
-	// Now we add the auxillary stackfiles, if any
-	MCDeployFileRef *t_aux_stackfiles;
-	t_aux_stackfiles = nil;
-	if (t_success)
-		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . auxillary_stackfiles), t_aux_stackfiles);
-	if (t_success)
-		for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles) && t_success; i++)
-		{
-			MCValueRef t_val;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxillary_stackfiles, i + 1, t_val);
-			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCOpenFileModeRead, t_aux_stackfiles[i]))
-				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
-			if (t_success)
-				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
-		}
-	
-	// Now add the externals, if any
-	if (t_success)
-		for(uint32_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
-		{
-			MCValueRef t_val;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.externals, i + 1, t_val);
-			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeExternal, (MCStringRef)t_val);
-		}
-			
-	// Now add the startup script, if any.
-	if (t_success && (!MCStringIsEmpty(p_params . startup_script)))
-		t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script);
-
-    // Now add the modules, if any.
+    
+    ////////
+    
+    // Add all the modules before the stacks, this is so that widgets can resolve
+    // themselves on load.
     uindex_t t_module_file_count;
 	MCDeployFileRef *t_module_files;
     t_module_file_count = 0;
@@ -315,6 +285,41 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
                 t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[t_module_file_count - 1]);
         }
     }
+    
+    ////////
+    
+	// Now we add the main stack
+	if (t_success)
+		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
+
+	// Now we add the auxillary stackfiles, if any
+	MCDeployFileRef *t_aux_stackfiles;
+	t_aux_stackfiles = nil;
+	if (t_success)
+		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . auxillary_stackfiles), t_aux_stackfiles);
+	if (t_success)
+		for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles) && t_success; i++)
+		{
+			MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxillary_stackfiles, i + 1, t_val);
+			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCOpenFileModeRead, t_aux_stackfiles[i]))
+				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
+			if (t_success)
+				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
+		}
+	
+	// Now add the externals, if any
+	if (t_success)
+		for(uint32_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
+		{
+			MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.externals, i + 1, t_val);
+			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeExternal, (MCStringRef)t_val);
+		}
+			
+	// Now add the startup script, if any.
+	if (t_success && (!MCStringIsEmpty(p_params . startup_script)))
+		t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script);
     
 	// Now a digest
 	if (t_success)
