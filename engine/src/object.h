@@ -120,6 +120,7 @@ struct MCObjectVisitor
 	virtual bool OnParagraph(MCParagraph *p_paragraph);
 	virtual bool OnBlock(MCBlock *p_block);
 	virtual bool OnStyledText(MCStyledText *p_styled_text);
+    virtual bool OnWidget(MCWidget *p_widget);
 };
 
 #define OBJECT_EXTRA_ARRAYPROPS		(1U << 0)
@@ -802,6 +803,10 @@ public:
 	}
     
     MCRectangle measuretext(MCStringRef p_text, bool p_is_unicode);
+    
+    // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
+    //   a widget.
+    bool haswidgets(void);
     
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }

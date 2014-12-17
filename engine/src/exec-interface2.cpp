@@ -560,7 +560,8 @@ void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, 
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
-	if (count < 2 || version < 2400 || version > 7000)
+    // MW-2014-12-17: [[ Widgets ]] Allow versions up to 8000 to be set.
+	if (count < 2 || version < 2400 || version > 8000)
 	{
 		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
 		return;

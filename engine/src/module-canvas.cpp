@@ -3961,10 +3961,15 @@ void MCCanvasFontMakeWithSize(MCStringRef p_name, bool p_bold, bool p_italic, in
 	/* UNCHECKED */ MCCanvasFontCreate(p_name, MCFontStyleMake(p_bold, p_italic), p_size, r_font);
 }
 
-void MCCanvasFontMake(MCStringRef p_name, bool p_bold, bool p_italic, MCCanvasFontRef &r_font)
+void MCCanvasFontMakeWithStyle(MCStringRef p_name, bool p_bold, bool p_italic, MCCanvasFontRef &r_font)
 {
 	// TODO - confirm default font size - make configurable?
 	/* UNCHECKED */ MCCanvasFontCreate(p_name, MCFontStyleMake(p_bold, p_italic), 12, r_font);
+}
+
+void MCCanvasFontMake(MCStringRef p_name, MCCanvasFontRef &r_font)
+{
+	MCCanvasFontMakeWithStyle(p_name, false, false, r_font);
 }
 
 // Properties
@@ -4047,6 +4052,31 @@ void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font)
 	
 	MCCanvasFontGetProps(x_font, t_name, t_style, t_size);
 	MCCanvasFontSetProps(x_font, t_name, t_style, p_size);
+}
+
+// Operations
+
+MCCanvasRectangleRef MCCanvasFontMeasureTextWithTransform(MCStringRef p_text, MCCanvasFontRef p_font, const MCGAffineTransform &p_transform)
+{
+	MCFontRef t_font;
+	t_font = MCCanvasFontGetMCFont(p_font);
+	
+	MCGRectangle t_bounds;
+	t_bounds.origin.x = 0;
+	t_bounds.size.width = MCFontMeasureTextFloat(t_font, p_text, p_transform);
+	t_bounds.origin.y = -MCFontGetAscent(t_font);
+	t_bounds.size.height = MCFontGetDescent(t_font) + MCFontGetAscent(t_font);
+	
+	MCCanvasRectangleRef t_rect;
+	if (!MCCanvasRectangleCreateWithMCGRectangle(t_bounds, t_rect))
+		return nil;
+	
+	return t_rect;
+}
+
+MCCanvasRectangleRef MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font)
+{
+	return MCCanvasFontMeasureTextWithTransform(p_text, p_font, MCGAffineTransformMakeIdentity());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4931,6 +4961,14 @@ void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_align, MCCanvasRect
 	integer_t t_h_aligh, t_v_align;
 	MCCanvasAlignmentSplit(p_align, t_h_aligh, t_v_align);
 	MCCanvasFillTextAligned(p_text, t_h_aligh, t_v_align, p_rect, p_canvas);
+}
+
+MCCanvasRectangleRef MCCanvasMeasureText(MCStringRef p_text, MCCanvasRef p_canvas)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	return MCCanvasFontMeasureTextWithTransform(p_text, t_canvas->props().font, MCGContextGetDeviceTransform(t_canvas->context));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

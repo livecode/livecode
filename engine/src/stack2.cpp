@@ -3385,6 +3385,24 @@ MCRectangle MCStack::getvisiblerect(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCStack::substackhaswidgets(void)
+{
+	if (substacks != NULL)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+            if (t_stack -> haswidgets())
+                return true;
+			t_stack = (MCStack *)t_stack->next();
+		}
+		while(t_stack != substacks);
+	}
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCStack::foreachchildstack(MCStackForEachCallback p_callback, void *p_context)
 {
 	bool t_continue;
