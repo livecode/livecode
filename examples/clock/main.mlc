@@ -1,9 +1,9 @@
 -- Place our widget in the 'com.livecode.example' namespace.
-widget com.livecode.extensions.alilloyd.clock
+widget com.livecode.widgets.example.clock
 
+metadata title is "Clock"
+metadata author is "LiveCode Ltd"
 metadata version is "1.0.0"
-metadata author is "Mark Waddingham"
-metadata title is "Clock Widget"
 
 -- We use syntax from the canvas, engine and widget modules.
 use com.livecode.canvas
@@ -17,15 +17,6 @@ use com.livecode.widget
 variable sCurrentTime as list
 
 --------
-
--- There are no default conversions between types, so if we want
--- a list of strings to be a list of numbers, we must convert explicitly
-handler ConvertStringListToNumberList(inout pList as list)
-  variable tIndex
-  repeat with tIndex from 1 up to the number of elements in pList
-    put (element tIndex of pList) parsed as number into element tIndex of pList
-  end repeat
-end handler
 
 -- This handler returns the amount of time until the seconds change.
 handler ComputeNextTimer() as number
@@ -48,7 +39,7 @@ handler GetTimeComponents() as list
   
   -- Now convert the three element list of strings to a three element
   -- list of numbers.
-  ConvertStringListToNumberList(tList)
+  put tList parsed as list of number into tList
 
   -- Return our converted list.
   return tList

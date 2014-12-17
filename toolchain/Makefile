@@ -2,7 +2,7 @@ top_srcdir=..
 
 include $(top_srcdir)/rules/environment.linux.makefile
 ifeq ($(MODE),debug)
-    CFLAGS += -D_DEBUG
+    CFLAGS += -D_DEBUG -DYYDEBUG=1
 endif
 
 all: lc-compile

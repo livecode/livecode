@@ -223,7 +223,6 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
-all: lc-bootstrap-compile
 all: lc-test
 
 bootstrap: lc-bootstrap-compile

@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
         argc -= 1;
         argv += 1;
         
-#ifdef _DEBUG
+#ifdef YYDEBUG
         yydebug = 1;
 #endif
     }

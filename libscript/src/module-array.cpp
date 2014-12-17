@@ -141,7 +141,7 @@ extern "C" MC_DLLEXPORT void MCArrayEvalEmpty(MCArrayRef& r_output)
     r_output = MCValueRetain(kMCEmptyArray);
 }
 
-extern "C" bool MCArrayRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCArrayRef p_array)
+extern "C" bool MC_DLLEXPORT MCArrayRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCArrayRef p_array)
 {
     MCValueRef t_value;
     // If this is a numerical array, do it in order
@@ -173,7 +173,7 @@ extern "C" bool MCArrayRepeatForEachElement(void*& x_iterator, MCValueRef& r_ite
     return true;
 }
 
-extern "C" bool MCArrayRepeatForEachKey(void*& x_iterator, MCStringRef& r_iterand, MCArrayRef p_array)
+extern "C" bool MC_DLLEXPORT MCArrayRepeatForEachKey(void*& x_iterator, MCStringRef& r_iterand, MCArrayRef p_array)
 {
     MCNameRef t_key;
     MCValueRef t_value;
