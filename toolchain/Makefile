@@ -4,9 +4,11 @@ include $(top_srcdir)/rules/environment.linux.makefile
 
 all: lc-compile
 
+check: lc-test-check
+
 clean: gentle-clean lc-compile-clean
 
-.PHONY: all clean
+.PHONY: all check clean
 
 ################################################################
 # Bootstrap build phase control
@@ -552,3 +554,25 @@ $(TEST_exe): $(TEST_objs)
 lc-test: $(TEST_exe)
 
 .PHONY: lc-test
+
+################################################################
+# Tests
+################################################################
+
+LC_TEST = $(TEST_exe)
+
+CHECK_mlc = lc-compile/test.mlc
+
+CHECK_lcm = $(patsubst %.mlc,$(MODULE_DIR)/%.lcm,$(CHECK_mlc))
+
+$(MODULE_DIR)/%.lcm: %.mlc $(LC_COMPILE)
+	$(MKDIR_P) $(dir $@)
+	$(LC_COMPILE) -modulepath $(MODULE_DIR) -output $@ $<
+
+lc-test-check: $(CHECK_lcm) $(LC_TEST)
+	for test_lcm in $(CHECK_lcm); do \
+	    echo "$(LC_TEST) $$test_lcm"; \
+	    $(LC_TEST) $$test_lcm || exit $$? ; \
+	done
+
+.PHONY: lc-test-check;
