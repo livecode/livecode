@@ -1376,14 +1376,14 @@
     'rule' GenerateExpressionInRegister(Result, Context, logicalor(_, Left, Right), Output):
         EmitDeferLabel(-> ShortLabel)
         GenerateExpressionInRegister(Result, Context, Left, Output)
-        EmitJumpIfTrue(Result, ShortLabel)
+        EmitJumpIfTrue(Output, ShortLabel)
         GenerateExpressionInRegister(Result, Context, Right, Output)
         EmitResolveLabel(ShortLabel)
 
     'rule' GenerateExpressionInRegister(Result, Context, logicaland(_, Left, Right), Output):
         EmitDeferLabel(-> ShortLabel)
         GenerateExpressionInRegister(Result, Context, Left, Output)
-        EmitJumpIfFalse(Result, ShortLabel)
+        EmitJumpIfFalse(Output, ShortLabel)
         GenerateExpressionInRegister(Result, Context, Right, Output)
         EmitResolveLabel(ShortLabel)
 
