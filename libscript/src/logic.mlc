@@ -1,3 +1,7 @@
+/*
+This library consists of the logical operations included in the standard library of LiveCode Builder.
+*/
+
 module com.livecode.logic
 
 //foreign handler MCLogicEvalAnd(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"

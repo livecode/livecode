@@ -1,6 +1,7 @@
-/*  
-This module specifies the syntax definitions and bindings for operations on binary data in modular LiveCode.
+/*
+This library consists of the operations on strings included in the standard library of LiveCode Builder.
 */
+
 
 module com.livecode.string
 

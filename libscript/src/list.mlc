@@ -1,5 +1,5 @@
 /*  
-This library consists of the operations on lists included in the standard library of modular LiveCode.
+This library consists of the operations on lists included in the standard library of LiveCode Builder.
 */
 
 module com.livecode.list
@@ -673,7 +673,7 @@ end syntax
 
 /*
 Summary:        Repeat over the elements of a list
-Iterand:        An expression of the form 'tVar in tList'
+Iterand:        Any variable of appropriate type.
 
 Example:
     variable tList as list
@@ -690,7 +690,8 @@ Example:
     // tRelist is the same as tList
 
 Description:
-Use repeat for each to perform an operation on each element of a list.
+Use repeat for each to perform an operation on each element of a list. On each iteration, the Iterand will contain the next element of the list being iterated over.
+>*Note:* If <Iterand> is typed, then an error will be thrown if the list being iterated over contains any elements of a different type.
 
 Tags: Lists, Control structures
 */

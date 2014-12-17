@@ -1,5 +1,5 @@
 /* 
-This library consists of the operations for performing complex type conversion in modular LiveCode 
+This library consists of the operations for performing complex type conversion in LiveCode Builder.
 */
 
 module com.livecode.typeconvert

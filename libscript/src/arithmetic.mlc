@@ -1,5 +1,5 @@
 /*  
-This library consists of the basic arithmetic operations of standard library of modular LiveCode.
+This library consists of the basic arithmetic operations of standard library of LiveCode Builder.
 */
 
 module com.livecode.arithmetic
