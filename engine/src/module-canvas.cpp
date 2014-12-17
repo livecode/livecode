@@ -18,8 +18,15 @@
 
 #include "prefix.h"
 
+#include "image.h"
+#include "widget.h"
+
 #include "module-canvas.h"
 #include "module-canvas-internal.h"
+
+//////////
+
+extern MCWidget *MCwidgetobject;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1592,7 +1599,7 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
 	
-	if (!MCImageRepCreateWithPath(p_path, t_image_rep))
+	if (!MCImageGetFileRepForStackContext(p_path, MCwidgetobject->getstack(), t_image_rep))
 	{
 		// TODO - throw image rep error
 		return;
@@ -2426,16 +2433,17 @@ void MCCanvasGradientTransformToPoints(const MCGAffineTransform &p_transform, MC
 
 bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
 {
-	MCGPoint t_src[3], t_dst[3];
-	t_src[0] = MCGPointMake(0, 0);
-	t_src[1] = MCGPointMake(0, 1);
-	t_src[2] = MCGPointMake(1, 0);
+	MCGAffineTransform t_transform;
+	t_transform . a = p_to . x - p_from . x;
+	t_transform . b = p_to . y - p_from . y;
+	t_transform . c = p_via . x - p_from . x;
+	t_transform . d = p_via . y - p_from . y;
+	t_transform . tx = p_from . x;
+	t_transform . ty = p_from . y;
 	
-	t_dst[0] = p_from;
-	t_dst[1] = p_to;
-	t_dst[2] = p_via;
+	r_transform = t_transform;
 	
-	return MCGAffineTransformFromPoints(t_src, t_dst, r_transform);
+	return true;
 }
 
 void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCGAffineTransform &r_transform)
