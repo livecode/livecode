@@ -2,47 +2,20 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-void MCTypeEvalBoolAsString(bool p_target, MCStringRef& r_output)
+static bool MCTypeValueIsEmpty(MCValueRef p_value)
 {
-    r_output = MCValueRetain(p_target ? kMCTrueString : kMCFalseString);
-}
-
-void MCTypeEvalRealAsString(double p_target, MCStringRef& r_output)
-{
-    MCStringFormat(r_output, "%f", p_target);
-}
-
-void MCTypeEvalIntAsString(integer_t p_target, MCStringRef& r_output)
-{
-    MCStringFormat(r_output, "%d", p_target);
-}
-
-void MCTypeEvalStringAsBool(MCStringRef p_target, bool& r_output)
-{
-    if (!MCTypeConvertStringToBool(p_target, r_output))
-        return;
-}
-
-void MCTypeEvalStringAsReal(MCStringRef p_target, real64_t& r_output)
-{
-    if (!MCTypeConvertStringToReal(p_target, r_output))
-        return;
-}
-
-void MCTypeEvalStringAsInt(MCStringRef p_target, integer_t& r_output)
-{
-    if (!MCTypeConvertStringToLongInteger(p_target, r_output))
-        return;
-}
-
-void MCTypeEvalIntAsReal(integer_t p_target, real64_t r_output)
-{
-    r_output = p_target;
+    return p_value != kMCNull &&
+    (p_value == kMCEmptyName ||
+    (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray && MCArrayIsEmpty((MCArrayRef)p_value)) ||
+    (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringIsEmpty((MCStringRef)p_value)) ||
+    (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName && MCNameIsEmpty((MCNameRef)p_value)) ||
+    (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value)) ||
+    (MCValueGetTypeCode(p_value) == kMCValueTypeCodeList && MCListIsEmpty((MCListRef)p_value)));
 }
 
 extern "C" MC_DLLEXPORT void MCTypeEvalIsEmpty(MCValueRef p_target, bool& r_output)
 {
-    //r_output = p_target != kMCNull && MCValueIsEmpty(p_target);
+    r_output = MCTypeValueIsEmpty(p_target);
 }
 
 extern "C" MC_DLLEXPORT void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_output)
@@ -53,12 +26,12 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_o
     r_output = !t_empty;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsDefined(MCValueRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCTypeEvalIsDefined(MCValueRef *p_target, bool& r_output)
 {
-    r_output = p_target == kMCNull;
+    r_output = p_target != nil;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsNotDefined(MCValueRef p_target, bool p_is_not, bool& r_output)
+extern "C" MC_DLLEXPORT void MCTypeEvalIsNotDefined(MCValueRef *p_target, bool& r_output)
 {
     bool t_defined;
     MCTypeEvalIsDefined(p_target, t_defined);
