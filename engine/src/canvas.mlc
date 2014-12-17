@@ -103,7 +103,14 @@ Tags:		Canvas
 */
 
 syntax RectanglePropertyLeft is prefix operator with precedence 4
-	"the" ( "left" | "x" ) "of" <mRect:Expression>
+	"the" "left" "of" <mRect:Expression>
+begin
+	MCCanvasRectangleGetLeft(mRect, output)
+	MCCanvasRectangleSetLeft(input, mRect)
+end syntax
+
+syntax RectanglePropertyX is prefix operator with precedence 4
+	"the" "x" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetLeft(mRect, output)
 	MCCanvasRectangleSetLeft(input, mRect)
@@ -129,7 +136,14 @@ Tags:		Canvas
 */
 
 syntax RectanglePropertyTop is prefix operator with precedence 4
-	"the" ( "top" | "y" ) "of" <mRect:Expression>
+	"the" "top" "of" <mRect:Expression>
+begin
+	MCCanvasRectangleGetTop(mRect, output)
+	MCCanvasRectangleSetTop(input, mRect)
+end syntax
+
+syntax RectanglePropertyY is prefix operator with precedence 4
+	"the" "y" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetTop(mRect, output)
 	MCCanvasRectangleSetTop(input, mRect)
