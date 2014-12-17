@@ -2151,6 +2151,10 @@ Boolean MCPlayer::prepare(const char *options)
 	setloudness();
 	
 	MCresult -> clear(False);
+    
+    // PM-2014-12-17: [[ Bug 14232 ]] Update the result in case a filename is invalid or the file is corrupted
+    if (hasinvalidfilename())
+        MCresult->sets("could not create movie reference");
 	
 	ok = True;
 	

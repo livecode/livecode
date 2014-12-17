@@ -158,6 +158,7 @@ private:
     bool m_finished : 1;
     bool m_loaded : 1;
     bool m_stepped : 1;
+    bool m_has_invalid_filename : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -682,9 +683,13 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     {
         if(p_is_url)
             [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+        // PM-2014-12-17: [[ Bug 14232 ]] If we reach here it means the filename is invalid
+        m_has_invalid_filename = true;
         [t_player release];
         return;
     }
+    
+    m_has_invalid_filename = false;
     
     // Reset this to false when loading a new movie, so as the first frame of the new movie to be displayed
     m_loaded = false;
@@ -1087,6 +1092,9 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
                 t_size . width = 306;
                 t_size . height = 244;
             }
+            // PM-2014-12-17: [[ Bug 14232 ]] Check if the file is corrupted
+            if (t_size . width == 0 && t_size . height == 0)
+                m_has_invalid_filename = true;
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, t_size . width, t_size . height);
 		}
         break;
@@ -1142,6 +1150,10 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
             //TODO
 		case kMCPlatformPlayerPropertyLoop:
 			*(bool *)r_value = m_looping;
+			break;
+        // PM-2014-12-17: [[ Bug 14232 ]] Read-only property that indicates if a filename is invalid or if the file is corrupted
+        case kMCPlatformPlayerPropertyInvalidFilename:
+			*(bool *)r_value = m_has_invalid_filename;
 			break;
 	}
 }
