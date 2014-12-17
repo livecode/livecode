@@ -2081,11 +2081,7 @@ Boolean MCPlayer::prepare(const char *options)
 	if (state & CS_PREPARED)
 		return True;
     
-    // Fixes the issue of invisible player being created by script
-	//if (!hasfilename())
-        //return True;
-    
-	if (!opened)
+   	if (!opened)
 		return False;
     
 	if (m_platform_player == nil)
