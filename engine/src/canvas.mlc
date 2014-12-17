@@ -1862,6 +1862,16 @@ begin
 	MCCanvasFontSetSize(input, mFont)
 end syntax
 
+// Operations
+
+public foreign handler MCCanvasFontMeasureText(in pText as string, in pFont as Font) as Rectangle binds to "<builtin>"
+
+syntax FontOperationMeasureText is statement
+	"measure" <mText: Expression> "with" <mFont: Expression>
+begin
+	MCCanvasFontMeasureText(mText, mFont)
+end syntax
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Canvas
@@ -1990,6 +2000,7 @@ public foreign handler MCCanvasCurveThroughPoints(in pThroughA as Point, in pThr
 public foreign handler MCCanvasClosePath(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFillText(in pText as string, in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFillTextAligned(in pText as string, in pAlignment as int, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasMeasureText(in pText as string, in pCanvas as Canvas) as Rectangle binds to "<builtin>"
 
 syntax TransformCanvas is statement
 	"transform" <mCanvas: Expression> "by" <mTransform: Expression>
@@ -2116,6 +2127,12 @@ syntax CanvasOperationFillTextAligned is statement
 	"fill" "text" <mText: Expression> "at" <mAlignment: CanvasTextAlignment> "of" <mRect: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasFillTextAligned(mText, mAlignment, mRect, mCanvas)
+end syntax
+
+syntax CanvasOperationMeasureText is statement
+	"measure" <mText: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasMeasureText(mText, mCanvas)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
