@@ -1430,11 +1430,13 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 {
     x_frame -> address = x_next_bytecode - x_frame -> instance -> module -> bytecode;
     
+    MCLog("Invoke %@", MCScriptGetNameOfDefinitionInModule(p_instance -> module, p_handler));
+    
 	if (p_handler -> kind == kMCScriptDefinitionKindHandler)
 	{
 		MCScriptHandlerDefinition *t_handler;
 		t_handler = MCScriptDefinitionAsHandler(p_handler);
-		
+        
 		return MCScriptPerformScriptInvoke(x_frame, x_next_bytecode, p_instance, t_handler, p_arguments, p_arity);
 	}
 	else if (p_handler -> kind == kMCScriptDefinitionKindForeignHandler)
@@ -2201,7 +2203,7 @@ extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatDownToIterate(double p_count
     return p_counter + p_step;
 }
 
-extern "C" void MCScriptBuiltinThrow(MCStringRef p_reason)
+extern "C" void MC_DLLEXPORT MCScriptBuiltinThrow(MCStringRef p_reason)
 {
     MCErrorThrowGeneric(p_reason);
 }
