@@ -1,5 +1,5 @@
 -- Place our widget in the 'com.livecode.example' namespace.
-widget com.livecode.example.clock
+widget com.livecode.extensions.example.clock
 
 -- We use syntax from the canvas, engine and widget modules.
 use com.livecode.canvas

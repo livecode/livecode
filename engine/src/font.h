@@ -49,6 +49,10 @@ bool MCFontCreateWithHandle(MCSysFontHandle, MCFontRef& r_font);
 MCFontRef MCFontRetain(MCFontRef font);
 void MCFontRelease(MCFontRef font);
 
+MCNameRef MCFontGetName(MCFontRef font);
+MCFontStyle MCFontGetStyle(MCFontRef font);
+int32_t MCFontGetSize(MCFontRef font);
+
 bool MCFontHasPrinterMetrics(MCFontRef font);
 
 coord_t MCFontGetAscent(MCFontRef font);
@@ -67,8 +71,8 @@ MCGFloat MCFontMeasureTextFloat(MCFontRef font, MCStringRef p_text, const MCGAff
 int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
 
-void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break);
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl, bool p_can_break);
+void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break);
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl, bool p_can_break);
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);
 

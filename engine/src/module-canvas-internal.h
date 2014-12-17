@@ -131,7 +131,15 @@ struct __MCCanvasEffectImpl
 	MCCanvasFloat angle;
 };
 
-__MCCanvasEffectImpl *MCCanvasEffectGet(MCCanvasEffectRef);
+__MCCanvasEffectImpl *MCCanvasEffectGet(MCCanvasEffectRef p_effect);
+
+// Font opaque type
+struct __MCCanvasFontImpl
+{
+	MCFontRef font;
+};
+
+__MCCanvasFontImpl *MCCanvasFontGet(MCCanvasFontRef p_font);
 
 // Canvas
 struct MCCanvasProperties
@@ -144,6 +152,7 @@ struct MCCanvasProperties
 	bool stippled;
 	MCGImageFilter image_filter;
     MCGFloat stroke_width;
+	MCCanvasFontRef font;
 };
 
 struct __MCCanvasImpl

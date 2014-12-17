@@ -292,6 +292,7 @@ MCTypeInfoRef kMCCanvasGradientTypeInfo;
 MCTypeInfoRef kMCCanvasGradientStopTypeInfo;
 MCTypeInfoRef kMCCanvasPathTypeInfo;
 MCTypeInfoRef kMCCanvasEffectTypeInfo;
+MCTypeInfoRef kMCCanvasFontTypeInfo;
 MCTypeInfoRef kMCCanvasTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,6 +318,7 @@ MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
 
 MCCanvasTransformRef kMCCanvasIdentityTransform = nil;
 MCCanvasColorRef kMCCanvasColorBlack = nil;
+MCCanvasFontRef kMCCanvasFont12PtHelvetica = nil;
 
 void MCCanvasConstantsInitialize();
 void MCCanvasConstantsFinalize();
@@ -3824,6 +3826,231 @@ void MCCanvasEffectSetAngle(MCCanvasFloat p_angle, MCCanvasEffectRef &x_effect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Font
+
+static void __MCCanvasFontDestroy(MCValueRef p_value)
+{
+	MCFontRelease(MCCanvasFontGet((MCCanvasFontRef)p_value)->font);
+}
+
+static bool __MCCanvasFontCopy(MCValueRef p_value, bool p_release, MCValueRef &r_copy)
+{
+	if (p_release)
+		r_copy = p_value;
+	else
+		r_copy = MCValueRetain(p_value);
+	
+	return true;
+}
+
+static bool __MCCanvasFontEqual(MCValueRef p_left, MCValueRef p_right)
+{
+	if (p_left == p_right)
+		return true;
+	
+	// TODO - compare fonts
+	return false;
+}
+
+static hash_t __MCCanvasFontHash(MCValueRef p_value)
+{
+	// TODO - compute font hash
+	return MCHashPointer(MCCanvasFontGetMCFont((MCCanvasFontRef)p_value));
+}
+
+static bool __MCCanvasFontDescribe(MCValueRef p_value, MCStringRef &r_string)
+{
+	return false;
+}
+
+bool MCCanvasFontCreateWithMCFont(MCFontRef p_font, MCCanvasFontRef &r_font)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCCanvasFontRef t_font;
+	t_font = nil;
+	
+	if (t_success)
+		t_success = MCValueCreateCustom(kMCCanvasFontTypeInfo, sizeof(__MCCanvasFontImpl), t_font);
+	
+	if (t_success)
+	{
+		__MCCanvasFontImpl *t_impl;
+		t_impl = MCCanvasFontGet(t_font);
+		
+		t_impl->font = MCFontRetain(p_font);
+		
+		t_success = MCValueInter(t_font, r_font);
+	}
+	
+	MCValueRelease(t_font);
+	
+	return t_success;
+}
+
+bool MCCanvasFontCreate(MCStringRef p_name, MCFontStyle p_style, int32_t p_size, MCCanvasFontRef &r_font)
+{
+	MCNewAutoNameRef t_name;
+	if (!MCNameCreate(p_name, &t_name))
+		return false;
+	
+	MCFontRef t_font;
+	if (!MCFontCreate(*t_name, p_style, p_size, t_font))
+	{
+		// TODO - throw font creation error
+		return false;
+	}
+	
+	bool t_success;
+	t_success = MCCanvasFontCreateWithMCFont(t_font, r_font);
+	
+	MCFontRelease(t_font);
+	
+	return t_success;
+}
+
+__MCCanvasFontImpl *MCCanvasFontGet(MCCanvasFontRef p_font)
+{
+	return (__MCCanvasFontImpl*)MCValueGetExtraBytesPtr(p_font);
+}
+
+MCFontRef MCCanvasFontGetMCFont(MCCanvasFontRef p_font)
+{
+	return MCCanvasFontGet(p_font)->font;
+}
+
+static inline MCFontStyle MCFontStyleMake(bool p_bold, bool p_italic)
+{
+	return (p_bold ? kMCFontStyleBold : 0) | (p_italic ? kMCFontStyleItalic : 0);
+}
+
+static inline bool MCFontStyleIsBold(MCFontStyle p_style)
+{
+	return p_style & kMCFontStyleBold;
+}
+
+static inline bool MCFontStyleIsItalic(MCFontStyle p_style)
+{
+	return p_style & kMCFontStyleItalic;
+}
+
+static inline MCFontStyle MCFontStyleSetFlag(MCFontStyle p_style, MCFontStyle p_flag, bool p_set)
+{
+	return (p_style & ~p_flag) | (p_set ? p_flag : 0);
+}
+
+//////////
+
+bool MCCanvasFontGetDefault(MCCanvasFontRef &r_font)
+{
+	if (kMCCanvasFont12PtHelvetica == nil)
+	{
+		if (!MCCanvasFontCreate(MCSTR("Helvetica"), 0, 12, kMCCanvasFont12PtHelvetica))
+			return false;
+	}
+	
+	r_font = MCValueRetain(kMCCanvasFont12PtHelvetica);
+	
+	return true;
+}
+
+// Constructors
+void MCCanvasFontMakeWithSize(MCStringRef p_name, bool p_bold, bool p_italic, integer_t p_size, MCCanvasFontRef &r_font)
+{
+	/* UNCHECKED */ MCCanvasFontCreate(p_name, MCFontStyleMake(p_bold, p_italic), p_size, r_font);
+}
+
+void MCCanvasFontMake(MCStringRef p_name, bool p_bold, bool p_italic, MCCanvasFontRef &r_font)
+{
+	// TODO - confirm default font size - make configurable?
+	/* UNCHECKED */ MCCanvasFontCreate(p_name, MCFontStyleMake(p_bold, p_italic), 12, r_font);
+}
+
+// Properties
+
+void MCCanvasFontGetProps(MCCanvasFontRef p_font, MCStringRef &r_name, MCFontStyle &r_style, int32_t &r_size)
+{
+	MCFontRef t_font;
+	t_font = MCCanvasFontGetMCFont(p_font);
+	
+	r_name = MCNameGetString(MCFontGetName(t_font));
+	r_style = MCFontGetStyle(t_font);
+	r_size = MCFontGetSize(t_font);
+}
+
+void MCCanvasFontSetProps(MCCanvasFontRef &x_font, MCStringRef p_name, MCFontStyle p_style, int32_t p_size)
+{
+	MCCanvasFontRef t_font;
+	if (!MCCanvasFontCreate(p_name, p_style, p_size, t_font))
+		return;
+	
+	MCValueAssign(x_font, t_font);
+	MCValueRelease(t_font);
+}
+
+void MCCanvasFontGetName(MCCanvasFontRef p_font, MCNameRef &r_name)
+{
+	r_name = MCValueRetain(MCFontGetName(MCCanvasFontGetMCFont(p_font)));
+}
+
+void MCCanvasFontSetName(MCStringRef p_name, MCCanvasFontRef &x_font)
+{
+	MCStringRef t_name;
+	MCFontStyle t_style;
+	int32_t t_size;
+	
+	MCCanvasFontGetProps(x_font, t_name, t_style, t_size);
+	MCCanvasFontSetProps(x_font, p_name, t_style, t_size);
+}
+
+void MCCanvasFontGetBold(MCCanvasFontRef p_font, bool &r_bold)
+{
+	r_bold = MCFontStyleIsBold(MCFontGetStyle(MCCanvasFontGetMCFont(p_font)));
+}
+
+void MCCanvasFontSetBold(bool p_bold, MCCanvasFontRef &x_font)
+{
+	MCStringRef t_name;
+	MCFontStyle t_style;
+	int32_t t_size;
+	
+	MCCanvasFontGetProps(x_font, t_name, t_style, t_size);
+	MCCanvasFontSetProps(x_font, t_name, MCFontStyleSetFlag(t_style, kMCFontStyleBold, p_bold), t_size);
+}
+
+void MCCanvasFontGetItalic(MCCanvasFontRef p_font, bool &r_italic)
+{
+	r_italic = MCFontStyleIsItalic(MCFontGetStyle(MCCanvasFontGetMCFont(p_font)));
+}
+
+void MCCanvasFontSetItalic(bool p_italic, MCCanvasFontRef &x_font)
+{
+	MCStringRef t_name;
+	MCFontStyle t_style;
+	int32_t t_size;
+	
+	MCCanvasFontGetProps(x_font, t_name, t_style, t_size);
+	MCCanvasFontSetProps(x_font, t_name, MCFontStyleSetFlag(t_style, kMCFontStyleItalic, p_italic), t_size);
+}
+
+void MCCanvasFontGetSize(MCCanvasFontRef p_font, uinteger_t &r_size)
+{
+	r_size = MCFontGetSize(MCCanvasFontGetMCFont(p_font));
+}
+
+void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font)
+{
+	MCStringRef t_name;
+	MCFontStyle t_style;
+	int32_t t_size;
+	
+	MCCanvasFontGetProps(x_font, t_name, t_style, t_size);
+	MCCanvasFontSetProps(x_font, t_name, t_style, p_size);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Canvas
 
 void MCCanvasDirtyProperties(__MCCanvasImpl &p_canvas)
@@ -3836,31 +4063,37 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 	bool t_success;
 	t_success = true;
 	
-	MCCanvasProperties t_properties;
-	t_properties.antialias = true;
-	t_properties.blend_mode = kMCGBlendModeSourceOver;
-	t_properties.fill_rule = kMCGFillRuleEvenOdd;
-	t_properties.opacity = 1.0;
-	t_properties.paint = nil;
-	t_properties.stippled = false;
-	t_properties.image_filter = kMCGImageFilterMedium;
-	
 	MCCanvasSolidPaintRef t_black_paint;
 	t_black_paint = nil;
+	
+	MCCanvasFontRef t_default_font;
+	t_default_font = nil;
+	
+	if (t_success)
+		t_success = MCCanvasFontGetDefault(t_default_font);
 	
 	if (t_success)
 		t_success = MCCanvasSolidPaintCreateWithColor(kMCCanvasColorBlack, t_black_paint);
 	
 	if (t_success)
 	{
-		// TODO - check this cast to supertype?
-		t_properties.paint = (MCCanvasPaintRef)t_black_paint;
+		p_properties.antialias = true;
+		p_properties.blend_mode = kMCGBlendModeSourceOver;
+		p_properties.fill_rule = kMCGFillRuleEvenOdd;
+		p_properties.opacity = 1.0;
+		p_properties.paint = nil;
+		p_properties.stippled = false;
+		p_properties.image_filter = kMCGImageFilterMedium;
+		p_properties.font = t_default_font;
 		
-		p_properties = t_properties;
+		// TODO - check this cast to supertype?
+		p_properties.paint = (MCCanvasPaintRef)t_black_paint;
 	}
 	else
 	{
 		// TODO - throw error
+		MCValueRelease(t_black_paint);
+		MCValueRelease(t_default_font);
 	}
 	
 	return t_success;
@@ -3876,6 +4109,7 @@ bool MCCanvasPropertiesCopy(MCCanvasProperties &p_src, MCCanvasProperties &p_dst
 	t_properties.stippled = p_src.stippled;
 	t_properties.image_filter = p_src.image_filter;
 	t_properties.paint = MCValueRetain(p_src.paint);
+	t_properties.font = MCValueRetain(p_src.font);
 	
 	p_dst = t_properties;
 	
@@ -3885,6 +4119,7 @@ bool MCCanvasPropertiesCopy(MCCanvasProperties &p_src, MCCanvasProperties &p_dst
 void MCCanvasPropertiesClear(MCCanvasProperties &p_properties)
 {
 	MCValueRelease(p_properties.paint);
+	MCValueRelease(p_properties.font);
 	MCMemoryClear(&p_properties, sizeof(MCCanvasProperties));
 }
 
@@ -4135,6 +4370,16 @@ void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas)
 void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width)
 {
 	r_stroke_width = MCCanvasGetProps(p_canvas).stroke_width;
+}
+
+void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font)
+{
+	r_font = MCValueRetain(MCCanvasGetProps(p_canvas).font);
+}
+
+void MCCanvasSetFont(MCCanvasFontRef p_font, MCCanvasRef p_canvas)
+{
+	MCValueAssign(MCCanvasGetProps(p_canvas).font, p_font);
 }
 
 //////////
@@ -4602,6 +4847,92 @@ void MCCanvasClosePath(MCCanvasRef p_canvas)
 	MCGContextCloseSubpath(t_canvas->context);
 }
 
+void MCCanvasFillText(MCStringRef p_text, MCCanvasPointRef p_point, MCCanvasRef p_canvas)
+{
+	MCGPoint t_point;
+	t_point = *MCCanvasPointGet(p_point);
+	
+	MCGContextRef t_context;
+	t_context = MCCanvasGet(p_canvas)->context;
+	
+	MCFontRef t_font;
+	t_font = MCCanvasFontGetMCFont(MCCanvasGetProps(p_canvas).font);
+
+	MCCanvasApplyChanges(*MCCanvasGet(p_canvas));
+	MCFontDrawText(t_context, t_point.x, t_point.y, p_text, t_font, false, false);
+}
+
+void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_halign, integer_t p_valign, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
+{
+	MCFontRef t_font;
+	t_font = MCCanvasFontGetMCFont(MCCanvasGetProps(p_canvas).font);
+	
+	MCGContextRef t_context;
+	t_context = MCCanvasGet(p_canvas)->context;
+	
+	MCGRectangle t_rect;
+	t_rect = *MCCanvasRectangleGet(p_rect);
+	
+	int32_t t_text_width;
+	t_text_width = MCFontMeasureText(t_font, p_text, MCGContextGetDeviceTransform(t_context));
+	
+	int32_t t_x;
+	switch(p_halign)
+	{
+		case -1:
+			t_x = 0;
+			break;
+		case 0:
+			t_x = (t_rect . size . width - t_text_width) / 2;
+			break;
+		case 1:
+			t_x = t_rect . size . width - t_text_width;
+			break;
+		default:
+			assert(false);
+			break;
+	}
+	
+	int32_t t_y;
+	switch(p_valign)
+	{
+		case -1:
+			t_y = MCFontGetAscent(t_font);
+			break;
+		case 0:
+			t_y = (t_rect . size . height - (MCFontGetAscent(t_font) + MCFontGetDescent(t_font))) / 2 + MCFontGetAscent(t_font);
+			break;
+		case 1:
+			t_y = t_rect . size . height - MCFontGetDescent(t_font);
+			break;
+		default:
+			assert(false);
+			break;
+	}
+	
+	MCCanvasApplyChanges(*MCCanvasGet(p_canvas));
+	MCFontDrawText(t_context, t_rect.origin.x + t_x, t_rect.origin.y + t_y, p_text, t_font, false, false);
+}
+
+void MCCanvasAlignmentEvaluate(integer_t p_h_align, integer_t p_v_align, integer_t &r_align)
+{
+	// range of h/v align is -1, 0, 1 so shift to 0,1,2 and combine
+	r_align = (p_h_align + 1) | ((p_v_align + 1) << 2);
+}
+
+void MCCanvasAlignmentSplit(integer_t p_align, integer_t &r_h_align, integer_t &r_v_align)
+{
+	r_h_align = (0x3 & p_align) - 1;
+	r_v_align = (0x3 & (p_align >> 2)) - 1;
+}
+
+void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_align, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
+{
+	integer_t t_h_aligh, t_v_align;
+	MCCanvasAlignmentSplit(p_align, t_h_aligh, t_v_align);
+	MCCanvasFillTextAligned(p_text, t_h_aligh, t_v_align, p_rect, p_canvas);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCCanvasRef s_current_canvas = nil;
@@ -4753,6 +5084,16 @@ static MCValueCustomCallbacks kMCCanvasEffectCustomValueCallbacks =
 	__MCCanvasEffectDescribe,
 };
 
+static MCValueCustomCallbacks kMCCanvasFontCustumValueCallbacks =
+{
+	false,
+	__MCCanvasFontDestroy,
+	__MCCanvasFontCopy,
+	__MCCanvasFontEqual,
+	__MCCanvasFontHash,
+	__MCCanvasFontDescribe,
+};
+
 static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
 {
 	true,
@@ -4785,6 +5126,7 @@ void MCCanvasTypesInitialize()
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasGradientStopCustomValueCallbacks, MCNAME("com.livecode.canvas.GradientStop"), kMCCanvasGradientStopTypeInfo);
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasPathCustomValueCallbacks, MCNAME("com.livecode.canvas.Path"), kMCCanvasPathTypeInfo);
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasEffectCustomValueCallbacks, MCNAME("com.livecode.canvas.Effect"), kMCCanvasEffectTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasFontCustumValueCallbacks, MCNAME("com.livecode.canvas.Font"), kMCCanvasFontTypeInfo);
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasCustomValueCallbacks, MCNAME("com.livecode.canvas.Canvas"), kMCCanvasTypeInfo);
 }
 
@@ -4799,6 +5141,7 @@ void MCCanvasTypesFinalize()
 	MCValueRelease(kMCCanvasGradientStopTypeInfo);
 	MCValueRelease(kMCCanvasPathTypeInfo);
 	MCValueRelease(kMCCanvasEffectTypeInfo);
+	MCValueRelease(kMCCanvasFontTypeInfo);
 	MCValueRelease(kMCCanvasTypeInfo);
 }
 
@@ -4876,6 +5219,9 @@ void MCCanvasConstantsInitialize()
 {
 	/* UNCHECKED */ MCCanvasTransformCreateWithMCGAffineTransform(MCGAffineTransformMakeIdentity(), kMCCanvasIdentityTransform);
 	/* UNCHECKED */ MCCanvasColorCreateWithRGBA(0, 0, 0, 1, kMCCanvasColorBlack);
+	// Defer creation until after initialize
+	kMCCanvasFont12PtHelvetica = nil;
+//	/* UNCHECKED */ MCCanvasFontCreate(MCNAME("Helvetica"), 0, 12, kMCCanvasFont12PtHelvetica);
 }
 
 void MCCanvasConstantsFinalize()

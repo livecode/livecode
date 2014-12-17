@@ -17,8 +17,9 @@
 #ifndef _MODULE_CANVAS_H_
 #define _MODULE_CANVAS_H_
 
-#include <foundation.h>
-#include <graphics.h>
+#include "foundation.h"
+#include "graphics.h"
+#include "font.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -106,6 +107,7 @@ typedef struct __MCCanvasGradient *MCCanvasGradientRef;
 typedef struct __MCCanvasGradientStop *MCCanvasGradientStopRef;
 typedef struct __MCCanvasPath *MCCanvasPathRef;
 typedef struct __MCCanvasEffect *MCCanvasEffectRef;
+typedef struct __MCCanvasFont *MCCanvasFontRef;
 typedef struct __MCCanvas *MCCanvasRef;
 
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasRectangleTypeInfo;
@@ -120,12 +122,13 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPathTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasEffectTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasFontTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTypeInfo;
 
 // Constant refs
 extern MCCanvasTransformRef kMCCanvasIdentityTransform;
-
 extern MCCanvasColorRef kMCCanvasColorBlack;
+//extern MCCanvasFontRef kMCCanvasFont12PtHelvetica;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Canvas Errors
@@ -168,6 +171,9 @@ MCGPathRef MCCanvasPathGetMCGPath(MCCanvasPathRef p_path);
 
 bool MCCanvasEffectCreateWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
+bool MCCanvasFontCreateWithMCFont(MCFontRef p_font, MCCanvasFontRef &r_font);
+MCFontRef MCCanvasFontGetMCFont(MCCanvasFontRef p_font);
+bool MCCanvasFontGetDefault(MCFontRef &r_font);
 
 extern "C" MC_DLLEXPORT bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas);
 
@@ -440,7 +446,27 @@ extern "C" MC_DLLEXPORT void MCCanvasEffectSetAngle(MCCanvasFloat p_angle, MCCan
 
 //////////
 
+// Font
+
+// Constructors
+extern "C" MC_DLLEXPORT void MCCanvasFontMake(MCStringRef p_name, bool p_bold, bool p_italic, MCCanvasFontRef &r_font);
+extern "C" MC_DLLEXPORT void MCCanvasFontMakeWithSize(MCStringRef p_name, bool p_bold, bool p_italic, integer_t p_size, MCCanvasFontRef &r_font);
+
+// Properties
+extern "C" MC_DLLEXPORT void MCCanvasFontGetName(MCCanvasFontRef p_font, MCStringRef &r_name);
+extern "C" MC_DLLEXPORT void MCCanvasFontSetName(MCStringRef p_name, MCCanvasFontRef &x_font);
+extern "C" MC_DLLEXPORT void MCCanvasFontGetBold(MCCanvasFontRef p_font, bool &r_bold);
+extern "C" MC_DLLEXPORT void MCCanvasFontSetBold(bool p_bold, MCCanvasFontRef &x_font);
+extern "C" MC_DLLEXPORT void MCCanvasFontGetItalic(MCCanvasFontRef p_font, bool &r_italic);
+extern "C" MC_DLLEXPORT void MCCanvasFontSetItalic(bool p_italic, MCCanvasFontRef &x_font);
+extern "C" MC_DLLEXPORT void MCCanvasFontGetSize(MCCanvasFontRef p_font, uinteger_t &r_size);
+extern "C" MC_DLLEXPORT void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font);
+
+//////////
+
 // Canvas
+
+extern "C" MC_DLLEXPORT void MCCanvasAlignmentEvaluate(integer_t p_h_align, integer_t p_v_align, integer_t &r_align);
 
 // Properties
 extern "C" MC_DLLEXPORT void MCCanvasGetPaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint);
@@ -459,6 +485,8 @@ extern "C" MC_DLLEXPORT void MCCanvasGetImageResizeQualityAsString(MCCanvasRef p
 extern "C" MC_DLLEXPORT void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width);
 extern "C" MC_DLLEXPORT void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font);
+extern "C" MC_DLLEXPORT void MCCanvasSetFont(MCCanvasFontRef p_font, MCCanvasRef p_canvas);
 
 // Operations
 extern "C" MC_DLLEXPORT void MCCanvasTransform(MCCanvasRef p_canvas, MCCanvasTransformRef p_transform);
@@ -484,6 +512,8 @@ extern "C" MC_DLLEXPORT void MCCanvasLineTo(MCCanvasPointRef p_point, MCCanvasRe
 extern "C" MC_DLLEXPORT void MCCanvasCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasClosePath(MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_align, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasFillText(MCStringRef p_text, MCCanvasPointRef p_point, MCCanvasRef p_canvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 
