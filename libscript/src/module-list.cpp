@@ -327,7 +327,7 @@ extern "C" MC_DLLEXPORT void MCListEvalEmpty(MCProperListRef& r_output)
     r_output = MCValueRetain(kMCEmptyProperList);
 }
 
-extern "C" bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCProperListRef p_list)
+extern "C" MC_DLLEXPORT bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCProperListRef p_list)
 {
     uintptr_t t_offset;
     t_offset = (uintptr_t)x_iterator;

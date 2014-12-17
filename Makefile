@@ -206,6 +206,11 @@ lc-compile-clean:
 lc-test: libstdscript libfoundation
 	$(MAKE) -C ./toolchain lc-test
 
+########## Tests
+lc-test-check: lc-test
+	$(MAKE) -C ./toolchain lc-test-check
+.PHONY: mlc-check
+
 ###############################################################################
 # All Targets
 
@@ -222,6 +227,8 @@ all: lc-bootstrap-compile
 all: lc-test
 
 bootstrap: lc-bootstrap-compile
+
+check: lc-test-check
 
 clean:
 	-rm -rf _build/linux _cache/linux
