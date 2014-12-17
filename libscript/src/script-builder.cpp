@@ -1143,6 +1143,8 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         t_operands[t_address_index] = (1 << 31) | t_encoded_target_address;
     }
     
+    uindex_t t_pos_address_offset;
+    t_pos_address_offset = self -> module . bytecode_count;
     for(uindex_t i = 0; i < self -> instruction_count; i++)
     {
         MCScriptBytecodeOp t_op;
@@ -1154,7 +1156,7 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         t_arity = self -> instructions[i] . arity;
         t_operands = &self -> operands[self -> instructions[i] . operands];
         
-        __emit_position(self, t_address, self -> instructions[i] . file, self -> instructions[i] . line);
+        __emit_position(self, t_pos_address_offset + t_address, self -> instructions[i] . file, self -> instructions[i] . line);
         
         __emit_bytecode_byte(self, t_op | (MCMin(t_arity, 15) << 4));
         
