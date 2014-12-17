@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "font.h"
 #include "stacksecurity.h"
+#include "widget.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -390,7 +391,10 @@ static bool unpickle_object_from_stream(IO_handle p_stream, uint32_t p_version, 
 		break;
 		case OT_MCEPS:
 			t_object = new MCEPS;
-		break;
+        break;
+        case OT_WIDGET:
+            t_object = new MCWidget;
+        break;
 		case OT_MAGNIFY:
 			t_object = new MCMagnify;
 		break;

@@ -82,10 +82,30 @@ int main(int argc, char *argv[])
     if (t_success)
         t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("test"), nil, 0, t_result);
     
-    if (t_success)
-        MCLog("Executed test with result %@", t_result);
+	MCAutoStringRef t_message;
+	MCErrorRef t_error;
+	if (t_success)
+	{
+		/* UNCHECKED */ MCStringFormat (&t_message,
+		                                "Executed test with result %@\n",
+		                                t_result);
+	}
+	else if (MCErrorCatch (t_error))
+	{
+		/* UNCHECKED */ MCStringFormat (&t_message,
+		                                "Failed to execute test: %@\n",
+		                                MCErrorGetMessage (t_error));
+	}
+	else
+	{
+		/* UNCHECKED */ MCStringCopy(MCSTR("Failed to execute test: unknown error\n"),
+		                             &t_message);
+	}
+	MCAutoStringRefAsCString t_sys;
+	t_sys.Lock(*t_message);
+	printf("%s", *t_sys);
 
     MCFinalize();
     
-    return 0;
+	return t_success ? 0 : 1;
 }

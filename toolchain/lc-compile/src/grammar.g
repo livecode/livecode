@@ -976,7 +976,8 @@
         INTEGER_LITERAL(-> Value) @(-> Position)
 
     'rule' Constant(-> integer(Position, Value)):
-        "-" INTEGER_LITERAL(-> Value) @(-> Position)
+        "-" INTEGER_LITERAL(-> PositiveValue) @(-> Position)
+        where(-PositiveValue -> Value)
 
     'rule' Constant(-> integer(Position, Value)):
         "+" INTEGER_LITERAL(-> Value) @(-> Position)

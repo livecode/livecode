@@ -26,7 +26,7 @@
 class MCWidget: public MCControl
 {
 public:
-	
+	MCWidget(void);
 	MCWidget(const MCWidget& p_other);
 	virtual ~MCWidget(void);
 
@@ -63,7 +63,7 @@ public:
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	virtual IO_stat load(IO_handle stream, const char *version);
+	virtual IO_stat load(IO_handle stream, uint32_t p_version);
 
 	virtual MCControl *clone(Boolean p_attach, Object_pos p_position, bool invisible);
 
@@ -102,8 +102,8 @@ public:
     // Needed by the native layer code
     MCNativeLayer* getNativeLayer() const;
     
-    // Creates a new widget of the given kind
-    static MCWidget* createInstanceOfKind(MCNameRef p_kind);
+    // Bind a widget to a kind and rep.
+    void bind(MCNameRef p_kind, MCValueRef p_rep);
     
 protected:
     
@@ -128,8 +128,8 @@ private:
     void OnVisibilityChanged(bool p_visible);
     void OnHitTest(const MCRectangle& p_intersect, bool& r_inside);
     void OnBoundsTest(const MCRectangle& r_bounds_rect, bool& r_inside);
-    void OnSave(class MCWidgetSerializer& p_stream);
-    void OnLoad(class MCWidgetSerializer& p_stream);
+    void OnSave(MCValueRef& r_array);
+    void OnLoad(MCValueRef array);
     void OnCreate();
     void OnDestroy();
     void OnParentPropChanged();
@@ -213,13 +213,13 @@ private:
 	bool CallGetProp(MCExecContext& ctxt, MCNameRef p_property_name, MCNameRef p_key, MCValueRef& r_value);
 	bool CallSetProp(MCExecContext& ctxt, MCNameRef p_property_name, MCNameRef p_key, MCValueRef value);
     
-    // Private constructor - widgets must be created via createInstanceOfKind
-    MCWidget(MCNameRef p_kind);
-    
     // The kind and script instance for this widget
     MCNameRef m_kind;
-    MCScriptModuleRef m_module;
     MCScriptInstanceRef m_instance;
+    
+    // The rep of the widget - this is non-nil if the widget kind is unresolved
+    // after loading.
+    MCValueRef m_rep;
     
     // The native layer(s) belonging to this widget
     MCNativeLayer* m_native_layer;

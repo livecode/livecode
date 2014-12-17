@@ -165,10 +165,12 @@ bool MCScriptInitialize(void)
         
         ////
         
-        uindex_t t_bool_type_def, t_uint_type_def, t_double_type_def;
+        uindex_t t_bool_type_def, t_uint_type_def, t_double_type_def, t_string_type_def, t_null_type_def;
         MCScriptAddDefinedTypeToModule(t_builder, t_bool_type_index, t_bool_type_def);
         MCScriptAddDefinedTypeToModule(t_builder, t_uint_type_index, t_uint_type_def);
         MCScriptAddDefinedTypeToModule(t_builder, t_double_type_index, t_double_type_def);
+        MCScriptAddDefinedTypeToModule(t_builder, t_null_type_index, t_null_type_def);
+        MCScriptAddDefinedTypeToModule(t_builder, t_string_type_index, t_string_type_def);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
         MCScriptBeginHandlerTypeInModule(t_builder, t_bool_type_def);
@@ -210,8 +212,8 @@ bool MCScriptInitialize(void)
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptBeginHandlerTypeInModule(t_builder, t_null_type_index);
-        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("reason"), t_string_type_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_null_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("reason"), t_string_type_def);
         MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
         MCScriptAddForeignHandlerToModule(t_builder, MCNAME("Throw"), t_type_index, MCSTR("MCScriptBuiltinThrow"), t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);

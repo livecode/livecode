@@ -111,6 +111,13 @@ void MCScriptReleaseInstance(MCScriptInstanceRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCScriptModuleRef MCScriptGetModuleOfInstance(MCScriptInstanceRef self)
+{
+    return self -> module;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCHandlerTypeInfoConformsToPropertyGetter(MCTypeInfoRef typeinfo)
 {
     return MCHandlerTypeInfoGetParameterCount(typeinfo) == 0 &&
