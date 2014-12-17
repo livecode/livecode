@@ -39,7 +39,8 @@
 #include "font.h"
 #include "chunk.h"
 #include "graphicscontext.h"
-
+#include "mcio.h"
+#include "system.h"
 #include "globals.h"
 #include "context.h"
 
@@ -74,61 +75,63 @@ MCObjectPropertyTable MCWidget::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWidget::MCWidget(MCNameRef p_kind) :
-  m_kind(p_kind),
-  m_module(nil),
-  m_instance(nil),
-  m_native_layer(nil)
+MCWidget::MCWidget(void)
 {
-    ;
+    m_kind = MCValueRetain(kMCEmptyName);
+    m_instance = nil;
+    m_native_layer = nil;
+    m_rep = nil;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
-  MCControl(p_other),
-  m_kind(MCValueRetain(p_other.m_kind)),
-  m_module(nil),
-  m_instance(nil),
-  m_native_layer(nil)
+  MCControl(p_other)
 {
-    ;
+    m_kind = MCValueRetain(kMCEmptyName);
+    m_instance = nil;
+    m_native_layer = nil;
+    m_rep = nil;
 }
 
 MCWidget::~MCWidget(void)
 {
-    ;
+    OnDestroy();
+    if (m_instance != nil)
+        MCScriptReleaseInstance(m_instance);
+    if (m_rep != nil)
+        MCValueRelease(m_rep);
+    MCValueRelease(m_kind);
 }
 
-#include "mcio.h"
-#include "system.h"
-
-MCWidget* MCWidget::createInstanceOfKind(MCNameRef p_kind)
+void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
 {
-    // Attempt to look-up the module for the given kind and ensure that all of
-    // its dependencies have been satisfied.
+    // Assign the kind.
+    MCValueAssign(m_kind, p_kind);
+    
+    // Attempt to find the module and build an instance (lookup module is a get
+    // whereas creating an instance is a copy).
     MCScriptModuleRef t_module;
-    if (!MCScriptLookupModule(p_kind, t_module) || !MCScriptEnsureModuleIsUsable(t_module))
-        return nil;
-    
-    // Create a new instance of the given module
     MCScriptInstanceRef t_instance;
-    if (!MCScriptCreateInstanceOfModule(t_module, t_instance))
-        t_instance = nil;
-    
-    MCScriptReleaseModule(t_module);
-    
-    if (t_instance == nil)
-        return nil;
-    
-    // Create the widget and set its instance
-    MCWidget* t_widget;
-    t_widget = new MCWidget(p_kind);
-    t_widget->m_module = t_module;
-    t_widget->m_instance = t_instance;
-    
-    // Widget has now been created
-    t_widget->OnCreate();
-    
-    return t_widget;
+    if (MCScriptLookupModule(p_kind, t_module) &&
+        MCScriptEnsureModuleIsUsable(t_module) &&
+        MCScriptCreateInstanceOfModule(t_module, t_instance))
+    {
+        // Set the instance.
+        m_instance = t_instance;
+        
+        // Now create.
+        OnCreate();
+        
+        // Now load the rep.
+        if (p_rep != nil)
+            OnLoad(p_rep);
+    }
+    else
+    {
+        // There is no module, or the module is not usable, so just store the
+        // kind and the rep.
+        if (p_rep != nil)
+            m_rep = MCValueRetain(p_rep);
+    }
 }
 
 Chunk_term MCWidget::gettype(void) const
@@ -560,7 +563,7 @@ bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 {
     // Treat as a normal custom property if not a widget property
     MCTypeInfoRef t_getter, t_setter;
-    if (!MCNameIsEmpty(p_set_name) || !MCScriptQueryPropertyOfModule(m_module, p_prop_name, t_getter, t_setter))
+    if (m_instance == nil || !MCNameIsEmpty(p_set_name) || !MCScriptQueryPropertyOfModule(MCScriptGetModuleOfInstance(m_instance), p_prop_name, t_getter, t_setter))
         return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, r_value);
     
     if (CallGetProp(ctxt, p_prop_name, nil, r_value.valueref_value))
@@ -578,7 +581,7 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 {
     // Treat as a normal custom property if not a widget property
     MCTypeInfoRef t_getter, t_setter;
-    if (!MCNameIsEmpty(p_set_name) || !MCScriptQueryPropertyOfModule(m_module, p_prop_name, t_getter, t_setter))
+    if (m_instance == nil || !MCNameIsEmpty(p_set_name) || !MCScriptQueryPropertyOfModule(MCScriptGetModuleOfInstance(m_instance), p_prop_name, t_getter, t_setter))
         return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_value);
     
     MCAutoValueRef t_value;
@@ -612,14 +615,68 @@ Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter 
 	return MCControl::handle(p_type, p_method, p_parameters, p_passing_object);
 }
 
-IO_stat MCWidget::load(IO_handle p_stream, const char *version)
+IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
 {
-	return IO_ERROR;
+	IO_stat t_stat;
+    
+	if ((t_stat = MCObject::load(p_stream, p_version)) != IO_NORMAL)
+		return t_stat;
+    
+    MCNewAutoNameRef t_kind;
+    if ((t_stat = IO_read_nameref_new(&t_kind, p_stream, true)) != IO_NORMAL)
+        return t_stat;
+    
+    MCAutoValueRef t_rep;
+    if ((t_stat = IO_read_valueref_new(&t_rep, p_stream)) != IO_NORMAL)
+        return t_stat;
+    
+    if (t_stat == IO_NORMAL)
+    {
+        MCValueRef t_actual_rep;
+        if (*t_rep != kMCNull)
+            t_actual_rep = *t_rep;
+        else
+            t_actual_rep = nil;
+        
+        bind(*t_kind, t_actual_rep);
+    }
+    
+    return t_stat;
 }
 
 IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
 {
-	return IO_ERROR;
+    // Make the widget generate a rep.
+    MCValueRef t_rep;
+    t_rep = nil;
+    OnSave(t_rep);
+    
+    // If the rep is nil, then an error must have been thrown, so we still
+    // save, but without any state for this widget.
+    if (t_rep == nil)
+        t_rep = MCValueRetain(kMCNull);
+    
+    // The state of the IO.
+    IO_stat t_stat;
+    
+    // First the widget code.
+    if ((t_stat = IO_write_uint1(OT_WIDGET, p_stream)) != IO_NORMAL)
+        return t_stat;
+    
+    // Save the object state.
+	if ((t_stat = MCObject::save(p_stream, p_part, p_force_ext)) != IO_NORMAL)
+		return t_stat;
+    
+    // Now the widget kind.
+    if ((t_stat = IO_write_nameref_new(m_kind, p_stream, true)) != IO_NORMAL)
+        return t_stat;
+    
+    // Now the widget's rep.
+    if ((t_stat = IO_write_valueref_new(t_rep, p_stream)) != IO_NORMAL)
+        return t_stat;
+    
+    // We are done.
+    return t_stat;
 }
 
 MCControl *MCWidget::clone(Boolean p_attach, Object_pos p_position, bool invisible)
@@ -628,6 +685,14 @@ MCControl *MCWidget::clone(Boolean p_attach, Object_pos p_position, bool invisib
 	t_new_widget = new MCWidget(*this);
 	if (p_attach)
 		t_new_widget -> attach(p_position, invisible);
+    
+    MCAutoValueRef t_rep;
+    OnSave(&t_rep);
+    if (*t_rep == nil)
+        t_rep = kMCNull;
+    
+    t_new_widget -> bind(m_kind, *t_rep);
+    
 	return t_new_widget;
 }
 
@@ -701,59 +766,89 @@ bool MCWidget::inEditMode()
 
 bool MCWidget::handlesMouseDown() const
 {
+    if (m_instance == nil)
+        return false;
+    
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnMouseDown"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseDown"), t_signature);
 }
 
 bool MCWidget::handlesMouseUp() const
 {
+    if (m_instance == nil)
+        return false;
+    
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnMouseUp"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseUp"), t_signature);
 }
 
 bool MCWidget::handlesMouseRelease() const
 {
+    if (m_instance == nil)
+        return false;
+    
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnMouseRelease"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseRelease"), t_signature);
 }
 
 bool MCWidget::handlesKeyPress() const
 {
+    if (m_instance == nil)
+        return false;
+    
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnKeyPress"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnKeyPress"), t_signature);
 }
 
 bool MCWidget::handlesTouches() const
 {
+    if (m_instance == nil)
+        return false;
+    
     return false;
 }
 
 bool MCWidget::wantsClicks() const
 {
+    if (m_instance == nil)
+        return false;
+    
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnClick"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnClick"), t_signature);
 }
 
 bool MCWidget::wantsTouches() const
 {
+    if (m_instance == nil)
+        return false;
+    
     return false;
 }
 
 bool MCWidget::wantsDoubleClicks() const
 {
+    if (m_instance == nil)
+        return false;
+    
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnDoubleClick"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnDoubleClick"), t_signature);
 }
 
 bool MCWidget::waitForDoubleClick() const
 {
+    if (m_instance == nil)
+        return false;
+    
     return false;
 }
 
 bool MCWidget::isDragSource() const
 {
+    if (m_instance == nil)
+        return false;
+    
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(m_module, MCNAME("OnDragStart"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnDragStart"), t_signature);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -849,14 +944,28 @@ void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
     r_hit = maskrect(p_intersect);
 }
 
-void MCWidget::OnSave(class MCWidgetSerializer& p_stream)
+void MCWidget::OnSave(MCValueRef& r_array)
 {
     fprintf(stderr, "MCWidget::OnSave\n");
+    
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    t_params[0] = nil;
+    CallHandler(MCNAME("OnSave"), t_params.Ptr(), t_params.Size());
+
+    r_array = t_params[0];
+    t_params[0] = nil;
 }
 
-void MCWidget::OnLoad(class MCWidgetSerializer& p_stream)
+void MCWidget::OnLoad(MCValueRef p_array)
 {
     fprintf(stderr, "MCWidget::OnLoad\n");
+    
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    t_params[0] = MCValueRetain(p_array);
+    
+    CallHandler(MCNAME("OnLoad"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnCreate()
@@ -1210,6 +1319,9 @@ void MCWidget::OnDoubleClick(coord_t p_x, coord_t p_y, uinteger_t p_button)
 
 bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t p_param_count, MCValueRef* r_retval)
 {
+    if (m_instance == nil)
+        return true;
+    
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
@@ -1242,6 +1354,12 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
 
 bool MCWidget::CallGetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef p_key, MCValueRef& r_value)
 {
+    if (m_instance == nil)
+    {
+        r_value = MCValueRetain(kMCNull);
+        return true;
+    }
+    
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
@@ -1263,13 +1381,18 @@ bool MCWidget::CallGetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
 
 bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef p_key, MCValueRef p_value)
 {
+    if (m_instance == nil)
+    {
+        return true;
+    }
+    
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
     
     // Convert to the appropriate type
     MCTypeInfoRef t_gettype, t_settype;
-    if (!MCScriptQueryPropertyOfModule(m_module, p_property, t_gettype, t_settype))
+    if (!MCScriptQueryPropertyOfModule(MCScriptGetModuleOfInstance(m_instance), p_property, t_gettype, t_settype))
         return false;
     
     // TODO: Fix this - we should really throw a read-only property error here, but
