@@ -4093,7 +4093,7 @@ void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanva
 
 void MCCanvasDirtyProperties(__MCCanvasImpl &p_canvas)
 {
-	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = p_canvas.stippled_changed = true;
+	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = p_canvas.stippled_changed = p_canvas.stroke_width_changed = true;
 }
 
 bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
@@ -4122,6 +4122,7 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 		p_properties.paint = nil;
 		p_properties.stippled = false;
 		p_properties.image_filter = kMCGImageFilterMedium;
+		p_properties.stroke_width = 0;
 		p_properties.font = t_default_font;
 		
 		// TODO - check this cast to supertype?
@@ -4147,6 +4148,7 @@ bool MCCanvasPropertiesCopy(MCCanvasProperties &p_src, MCCanvasProperties &p_dst
 	t_properties.stippled = p_src.stippled;
 	t_properties.image_filter = p_src.image_filter;
 	t_properties.paint = MCValueRetain(p_src.paint);
+	t_properties.stroke_width = p_src.stroke_width;
 	t_properties.font = MCValueRetain(p_src.font);
 	
 	p_dst = t_properties;
