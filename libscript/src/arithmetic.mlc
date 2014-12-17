@@ -69,6 +69,8 @@ public foreign handler MCArithmeticEvalNotEqualToNumber(in Left as number, in Ri
 public foreign handler MCArithmeticEvalNumberFormattedAsString(in Target as number, out Value as string) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalStringParsedAsNumber(in Target as string, out Value as number) as undefined binds to "<builtin>"
 
+public foreign handler MCArithmeticEvalListOfStringParsedAsListOfNumber(in Target as list, out Value as list) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -522,6 +524,30 @@ syntax StringParsedAsNumber is postfix operator with precedence 1
     <Operand: Expression> "parsed" "as" "number"
 begin
     MCArithmeticEvalStringParsedAsNumber(Operand, output)
+end syntax
+
+/*
+Summary:	Parses a list of strings as a list of numbers
+
+Operand:	An expression that evaluates to a list of strings.
+
+Returns:	<Operand> parsed as a list of numbers.
+
+Example:
+	variable tListOfString as list
+	variable tListOfNum as list
+	split "1,2,3,4" by "," into tListOfString
+	put tListOfString parsed as list of number into tNum -- tListOfNum contains [ 1, 2, 3, 4 ]
+
+Description:
+Use <ListOfStringParsedAsListOfNumber> when you want to interpret pieces of text numerically.
+
+>*Note:* Any input list which contain elements which cannot be parsed as numbers will cause an error to be thrown.
+*/
+syntax ListOfStringParsedAsListOfNumber is postfix operator with precedence 1
+    <Operand: Expression> "parsed" "as" "list" "of" "number"
+begin
+    MCArithmeticEvalListOfStringParsedAsListOfNumber(Operand, output)
 end syntax
 
 end module

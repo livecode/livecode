@@ -464,4 +464,30 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalStringParsedAsNumber(MCStringRef p_
         return;
 }
 
-
+extern "C" MC_DLLEXPORT void MCArithmeticEvalListOfStringParsedAsListOfNumber(MCProperListRef p_list_of_string, MCProperListRef& r_output)
+{
+    MCAutoProperListRef t_output;
+    if (!MCProperListCreateMutable(&t_output))
+        return;
+    
+    for(uindex_t i = 0; i < MCProperListGetLength(p_list_of_string); i++)
+    {
+        MCValueRef t_element;
+        t_element = MCProperListFetchElementAtIndex(p_list_of_string, i);
+        if (MCValueGetTypeCode(t_element) != kMCValueTypeCodeString)
+        {
+            MCErrorThrowGeneric(MCSTR("not a list of string"));
+            return;
+        }
+        
+        MCAutoNumberRef t_number;
+        MCArithmeticEvalStringParsedAsNumber((MCStringRef)t_element, &t_number);
+        if (MCErrorIsPending())
+            return;
+        if (!MCProperListPushElementOntoBack(*t_output, *t_number))
+            return;
+    }
+    
+    if (!MCProperListCopy(*t_output, r_output))
+        return;
+}
