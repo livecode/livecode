@@ -2077,26 +2077,35 @@ public:
         else
             t_tilde_path = p_path;
 
+        MCAutoStringRef t_newname;
+
+        // IM-2012-07-23
+        // Keep (somewhat odd) semantics of the original function for now
+        if (MCS_lnx_is_link(*t_tilde_path))
+        {
+            if (!MCS_lnx_readlink(*t_tilde_path, &t_newname))
+                return false;
+        }
+        // SN-2014-12-17: [[ Bug 14001 ]] We want the server to solve symlinks, but not to
+        //  stop if the file is not a link (we need the full path in MCcmd for instance).
+        else
+#ifdef _SERVER
+            t_newname = *t_tilde_path;
+#else
+            return MCStringCopy(*t_tilde_path, r_resolved_path);
+#endif
+
         // SN-2014-12-16: [[ Bug 14001 ]] Resolving the path was different for Linux server
 #ifdef _SERVER
-        if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
+        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
         {
             MCAutoStringRef t_folder;
             return GetCurrentFolder(&t_folder) &&
-                    MCStringFormat(r_resolved_path, "%@/%@", *t_folder, *t_tilde_path);
+                    MCStringFormat(r_resolved_path, "%@/%@", *t_folder, *t_newname);
         }
         else
-            return MCStringCopy(*t_tilde_path, r_resolved_path);
+            return MCStringCopy(*t_newname, r_resolved_path);
 #else
-        // IM-2012-07-23
-        // Keep (somewhat odd) semantics of the original function for now
-        if (!MCS_lnx_is_link(*t_tilde_path))
-            return MCStringCopy(*t_tilde_path, r_resolved_path);
-
-        MCAutoStringRef t_newname;
-        if (!MCS_lnx_readlink(*t_tilde_path, &t_newname))
-            return false;
-
         if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
         {
             MCAutoStringRef t_resolved;
