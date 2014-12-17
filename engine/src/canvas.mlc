@@ -40,6 +40,9 @@ public foreign type Path binds to "kMCCanvasPathTypeInfo"
 // Effect
 public foreign type Effect binds to "kMCCanvasEffectTypeInfo"
 
+// Font
+public foreign type Font binds to "kMCCanvasFontTypeInfo"
+
 // Canvas
 public foreign type Canvas binds to "kMCCanvasTypeInfo"
 
@@ -1785,7 +1788,90 @@ end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Font
+
+// Constructors
+
+public foreign handler MCCanvasFontMake(in pName as string, in pBold as bool, in pItalic as bool, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMakeWithSize(in pName as string, in pBold as bool, in pItalic as bool, in pSize as int, out rFont as Font) as undefined binds to "<builtin>"
+
+syntax FontMake is prefix operator with precedence 4
+	"font" <mName: Expression> <mBold=false> <mItalic=false>
+begin
+	MCCanvasFontMake(mName, mBold, mItalic, output)
+end syntax
+
+syntax FontMakeWithSize is prefix operator with precedence 4
+	"font" <mName: Expression> <mBold=false> <mItalic=false> "at" "size" <mSize: Expression>
+begin
+	MCCanvasFontMakeWithSize(mName, mBold, mItalic, mSize, output)
+end syntax
+
+syntax FontMakeWithStyle is expression
+	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style"
+begin
+	MCCanvasFontMake(mName, mBold, mItalic, output)
+end syntax
+
+syntax FontMakeWithStyleAndSize is prefix operator with precedence 4
+	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style" "at" "size" <mSize: Expression>
+begin
+	MCCanvasFontMake(mName, mBold, mItalic, output)
+	MCCanvasFontMakeWithSize(mName, mBold, mItalic, mSize, output)
+end syntax
+
+//////////
+
+// Properties
+
+public foreign handler MCCanvasFontGetName(in pFont as Font, out rName as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetName(in pName as string, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetBold(in pFont as Font, out rBold as bool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetBold(in pBold as bool, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetItalic(in pFont as Font, out rItalic as bool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetItalic(in pItalic as bool, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetSize(in pFont as Font, out rSize as int) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetSize(in pSize as int, inout xFont as Font) as undefined binds to "<builtin>"
+
+syntax FontPropertyName is prefix operator with precedence 4
+	"the" "name" "of" <mFont:Expression>
+begin
+	MCCanvasFontGetName(mFont, output)
+	MCCanvasFontSetName(input, mFont)
+end syntax
+
+syntax FontPropertyBold is prefix operator with precedence 4
+	"the" "bold" "of" <mFont:Expression>
+begin
+	MCCanvasFontGetBold(mFont, output)
+	MCCanvasFontSetBold(input, mFont)
+end syntax
+
+syntax FontPropertyItalic is prefix operator with precedence 4
+	"the" "italic" "of" <mFont:Expression>
+begin
+	MCCanvasFontGetItalic(mFont, output)
+	MCCanvasFontSetItalic(input, mFont)
+end syntax
+
+syntax FontPropertySize is prefix operator with precedence 4
+	"the" "size" "of" <mFont:Expression>
+begin
+	MCCanvasFontGetSize(mFont, output)
+	MCCanvasFontSetSize(input, mFont)
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Canvas
+
+public foreign handler MCCanvasAlignmentEvaluate(in pHAlign as int, pVAlign as int, out rAlign as int) as undefined binds to "<builtin>"
+
+syntax CanvasTextAlignment is phrase
+	( "top left" <mHAlign=-1> <mVAlign=-1> | "top" <mHAlign=0> <mVAlign=-1> | "top right" <mHAlign=1> <mVAlign=-1> | "left" <mHAlign=-1> <mVAlign=0> | "center" <mHAlign=0> <mVAlign=0> | "right" <mHAlign=1> <mVAlign=0> | "bottom left" <mHAlign=-1> <mVAlign=1> | "bottom" <mHAlign=0> <mVAlign=1> | "bottom right" <mHAlign=1> <mVAlign=1> )
+begin
+	MCCanvasAlignmentEvaluate(mHAlign, mVAlign, output)
+end syntax
 
 // Properties
 
@@ -1805,6 +1891,8 @@ public foreign handler MCCanvasGetImageResizeQualityAsString(in pCanvas as Canva
 public foreign handler MCCanvasSetImageResizeQualityAsString(in pQuality as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetStrokeWidth(in pCanvas as Canvas, out rStrokeWidth as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetStrokeWidth(in pStrokeWidth as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetFont(in pCanvas as Canvas, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetFont(in pFont as Font, in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 syntax CanvasPaintProperty is prefix operator with precedence 4
 	"the" "paint" "of" <mCanvas: Expression>
@@ -1862,6 +1950,13 @@ begin
 	MCCanvasSetStrokeWidth(input, mCanvas)
 end syntax
 
+syntax CanvasPropertyFont is prefix operator with precedence 4
+	"the" "font" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetFont(mCanvas, output)
+	MCCanvasSetFont(input, mCanvas)
+end syntax
+
 //////////
 
 // Operations
@@ -1892,6 +1987,8 @@ public foreign handler MCCanvasLineTo(in pPoint as Point, in pCanvas as Canvas) 
 public foreign handler MCCanvasCurveThroughPoint(in pThrough as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasClosePath(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFillText(in pText as string, in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFillTextAligned(in pText as string, in pAlignment as int, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 syntax TransformCanvas is statement
 	"transform" <mCanvas: Expression> "by" <mTransform: Expression>
@@ -2006,6 +2103,18 @@ syntax CanvasClosePath is statement
 	"close" "path" "on" <mCanvas: Expression>
 begin
 	MCCanvasClosePath(mCanvas)
+end syntax
+
+syntax CanvasOperationFillText is statement
+	"fill" "text" <mText: Expression> "at" <mPoint: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasFillText(mText, mPoint, mCanvas)
+end syntax
+
+syntax CanvasOperationFillTextAligned is statement
+	"fill" "text" <mText: Expression> "at" <mAlignment: CanvasTextAlignment> "of" <mRect: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasFillTextAligned(mText, mAlignment, mRect, mCanvas)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
