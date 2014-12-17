@@ -17,6 +17,8 @@ MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
+MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
+MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -246,6 +248,8 @@ bool MCScriptInitialize(void)
         MCScriptCreateNamedErrorType(MCNAME("livecode.lang.PolymorphicHandlerBindingError"), MCSTR("Unable to bind appropriate handler"), kMCScriptMultiInvokeBindingErrorTypeInfo);
         MCScriptCreateNamedErrorType(MCNAME("livecode.lang.TypeBindingError"), MCSTR("Attempt to use unbound named type %{type}"), kMCScriptTypeBindingErrorTypeInfo);
         MCScriptCreateNamedErrorType(MCNAME("livecode.lang.NoMatchingHandlerError"), MCSTR("No matching handler for arguments with types (%{types}) - possible handlers (%{handlers})"), kMCScriptNoMatchingHandlerErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.CannotSetReadOnlyPropertyError"), MCSTR("Cannot set read-only property %{module}.%{property}"), kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.PropertyValueTypeError"), MCSTR("Value is not of correct type for setting property - expected type %{type} for setting property %{module}.%{property}"), kMCScriptInvalidPropertyValueErrorTypeInfo);
     }
 
     return true;

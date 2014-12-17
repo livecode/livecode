@@ -126,33 +126,15 @@ bool MCHandlerTypeInfoConformsToPropertySetter(MCTypeInfoRef typeinfo)
 
 ///////////
 
-bool MCScriptThrowAttemptToSetReadOnlyPropertyError(MCScriptModuleRef module, MCNameRef property)
+bool MCScriptThrowAttemptToSetReadOnlyPropertyError(MCScriptModuleRef p_module, MCNameRef p_property)
 {
-    return MCErrorThrowGeneric(nil);
+    return MCErrorCreateAndThrow(kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo, "module", p_module -> name, "property", p_property, nil);
 }
 
-bool MCScriptThrowInvalidValueForPropertyError(MCScriptModuleRef module, MCNameRef property, MCTypeInfoRef type, MCValueRef value)
+bool MCScriptThrowInvalidValueForPropertyError(MCScriptModuleRef p_module, MCNameRef p_property, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorThrowGeneric(nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidPropertyValueErrorTypeInfo, "module", p_module -> name, "property", p_property, "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
 }
-
-bool MCScriptThrowWrongNumberOfArgumentsForHandlerError(MCScriptModuleRef module, MCNameRef handler, uindex_t expected, uindex_t provided)
-{
-    return MCErrorThrowGeneric(nil);
-}
-
-bool MCScriptThrowNoValueProvidedForInParameterError(MCScriptModuleRef module, MCNameRef handler, MCNameRef parameter)
-{
-    return MCErrorThrowGeneric(nil);
-}
-
-bool MCScriptThrowInvalidValueForParameterError(MCScriptModuleRef module, MCNameRef handler, MCNameRef parameter, MCTypeInfoRef type, MCValueRef value)
-{
-    return MCErrorThrowGeneric(nil);
-}
-
-//////////
-
 
 bool MCScriptThrowInvalidValueForResultError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {

@@ -22,6 +22,8 @@ extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
