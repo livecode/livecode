@@ -1,15 +1,21 @@
+-- Place our widget in the 'com.livecode.example' namespace.
 widget com.livecode.example.clock
 
+-- We use syntax from the canvas, engine and widget modules.
 use com.livecode.canvas
 use com.livecode.engine
 use com.livecode.widget
 
 --------
 
+-- We store the current time as a 3 element list:
+--   [ hour, minute, seconds]
 variable sCurrentTime as list
 
 --------
 
+-- There are no default conversions between types, so if we want
+-- a list of strings to be a list of numbers, we must convert explicitly
 handler ConvertStringListToNumberList(inout pList as list)
   variable tIndex
   repeat with tIndex from 1 up to the number of elements in pList
@@ -17,57 +23,92 @@ handler ConvertStringListToNumberList(inout pList as list)
   end repeat
 end handler
 
-handler ComputeNextTimer()
+-- This handler returns the amount of time until the seconds change.
+handler ComputeNextTimer() as number
+  -- Use the 'execute script' command to run arbitrary scripting language
+  -- code.
   execute script "return 1- (the long seconds - round(the long seconds - 0.5))"
   return the result
 end handler
 
+-- This handler returns the current time as a list of three numbers.
 handler GetTimeComponents() as list
+  -- Use 'execute script' to fetch the time using scripting language code.
   execute script "convert the long time to dateItems; return item 4 to -2 of it;"
   
+  -- The scripting language code above will give us the information we
+  -- want as a string list of three numbers so first split it into a three
+  -- element list of strings.
   variable tList
   split the result by "," into tList
   
+  -- Now convert the three element list of strings to a three element
+  -- list of numbers.
   ConvertStringListToNumberList(tList)
 
+  -- Return our converted list.
   return tList
 end handler
 
 --------
 
+-- The 'OnOpen' event handler is called when the card the widget is on becomes
+-- current.
 public handler OnOpen()
+  -- Fetch the current time so the clock draws correctly.
   put GetTimeComponents() into sCurrentTime
+
+  -- Schedule a timer to update the current time when the seconds
+  -- change. This will dispatch an OnTimer event.
   schedule timer in ComputeNextTimer() seconds
 end handler
 
+-- The 'OnClose' event handler is called when the card the widget is on ceases
+-- to be current.
 public handler OnClose()
+  -- When we close, cancel any pending timer.
   cancel timer
 end handler
 
+-- The 'OnTimer' event handler is called when the timer scheduled with
+-- 'schedule timer' fires.
 public handler OnTimer()
+  -- The seconds have changed so fetch the new time.
   put GetTimeComponents() into sCurrentTime
-  schedule timer in ComputeNextTimer() seconds
+
+  -- Mark our entire canvas as needing redrawn.
   redraw all
+
+  -- Schedule a timer for the next change in seconds.
+  schedule timer in ComputeNextTimer() seconds
 end handler
 
+-- The 'OnPaint' event handler is called whenever the widget needs to redraw
+-- its canvas.
 public handler OnPaint()
+    -- First manipulate the transform of the canvas so we can assume we are
+    -- rendering our clock into the rect (-1, -1, 1, 1), oriented so that
+    -- a rotation of 0 degrees is straight up.
     scale this canvas by [ (the width of my bounds) / 2, (the height of my bounds) / 2 ]
     translate this canvas by [ 1, 1 ]
     rotate this canvas by -90
 
+    -- Make a circular path for the face (so we can fill and stroke).
     variable tFacePath as Path
     put circle path centered at point [0, 0] with radius 0.95 into tFacePath
 
-    -- Draw the background
+    -- Draw the face by filling the face path with white.
     set the paint of this canvas to solid paint with color [1, 1, 1]
     fill tFacePath on this canvas
 
-    -- Draw the surround
+    -- Draw the surround by stroking the face path with a line of thickness
+    -- 0.1.
     set the stroke width of this canvas to 0.1
     set the paint of this canvas to solid paint with color [0, 0, 0]
     stroke tFacePath on this canvas
 
-    -- Draw the second hand
+    -- Draw the second hand in red. Notice that we rotate the canvas appropriately
+    -- so we can just assume the second hand points straight up.
     save state of this canvas
     set the stroke width of this canvas to 0.025
     set the paint of this canvas to solid paint with color [1, 0, 0]
@@ -77,7 +118,7 @@ public handler OnPaint()
     stroke this canvas
     restore state of this canvas
 
-    -- Draw the minute hand
+    -- Draw the minute hand in black.
     save state of this canvas
     set the stroke width of this canvas to 0.025
     rotate this canvas by 360 * (element 2 of sCurrentTime) / 60
@@ -86,7 +127,7 @@ public handler OnPaint()
     stroke this canvas
     restore state of this canvas
 
-    -- Draw the hour hand
+    -- Draw the hour hand in black, but shorter than the other hands.
     save state of this canvas
     set the stroke width of this canvas to 0.05
     rotate this canvas by 360 * (element 1 of sCurrentTime) / 12
@@ -95,16 +136,22 @@ public handler OnPaint()
     stroke this canvas
     restore state of this canvas
 
-    -- Draw the center nub
+    -- Finally draw the circular nub in the middle to cover the ends
+    -- of the hands.
     fill circle path centered at point [0, 0] with radius 0.1 on this canvas
 end handler
 
 --
 
+-- The 'OnStartEditing' event handler is called when edit mode is entered.
+-- As we don't really want things to update during edit mode, we cancel
+-- any pending timer.
 public handler OnStartEditing()
   cancel timer
 end handler
 
+-- The 'OnStopEditing' event handler is called when browse mode is entered.
+-- As the widget is now 'running' again, we restart the timer.
 public handler OnStopEditing()
   schedule timer in ComputeNextTimer() seconds
 end handler
