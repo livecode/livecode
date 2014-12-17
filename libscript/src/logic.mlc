@@ -65,7 +65,7 @@ Tags: Logic
 	
 */
 
-syntax LogicNot is prefix operator with precedence 3
+syntax LogicNot is prefix operator with precedence 6
     "not" <Operand: Expression>
 begin
     MCLogicEvalNot(Operand, output)
@@ -89,7 +89,7 @@ Example:
 Tags: Logic
 */
 
-syntax BooleanIsEqualToBoolean is neutral binary operator with precedence 5
+syntax BooleanIsEqualToBoolean is neutral binary operator with precedence 7
     <Left: Expression> "is" <Right: Expression>
 begin
     MCLogicEvalIsEqualTo(Left, Right, output)
@@ -111,7 +111,7 @@ Example:
 Tags: Logic
 */
 
-syntax BooleanIsNotEqualToBoolean is neutral binary operator with precedence 5
+syntax BooleanIsNotEqualToBoolean is neutral binary operator with precedence 7
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCLogicEvalIsNotEqualTo(Left, Right, output)

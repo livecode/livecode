@@ -80,7 +80,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectangleMake is prefix operator with precedence 4
+syntax RectangleMake is prefix operator with precedence 2
 	"rectangle" <mRect: Expression>
 begin
     MCCanvasRectangleMakeWithList(mRect, output)
@@ -105,14 +105,14 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyLeft is prefix operator with precedence 4
+syntax RectanglePropertyLeft is prefix operator with precedence 2
 	"the" "left" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetLeft(mRect, output)
 	MCCanvasRectangleSetLeft(input, mRect)
 end syntax
 
-syntax RectanglePropertyX is prefix operator with precedence 4
+syntax RectanglePropertyX is prefix operator with precedence 2
 	"the" "x" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetLeft(mRect, output)
@@ -138,14 +138,14 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyTop is prefix operator with precedence 4
+syntax RectanglePropertyTop is prefix operator with precedence 2
 	"the" "top" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetTop(mRect, output)
 	MCCanvasRectangleSetTop(input, mRect)
 end syntax
 
-syntax RectanglePropertyY is prefix operator with precedence 4
+syntax RectanglePropertyY is prefix operator with precedence 2
 	"the" "y" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetTop(mRect, output)
@@ -171,7 +171,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyRight is prefix operator with precedence 4
+syntax RectanglePropertyRight is prefix operator with precedence 2
 	"the" "right" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetRight(mRect, output)
@@ -197,7 +197,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyBottom is prefix operator with precedence 4
+syntax RectanglePropertyBottom is prefix operator with precedence 2
 	"the" "bottom" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetBottom(mRect, output)
@@ -223,7 +223,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyWidth is prefix operator with precedence 4
+syntax RectanglePropertyWidth is prefix operator with precedence 2
 	"the" "width" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetWidth(mRect, output)
@@ -249,7 +249,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyHeight is prefix operator with precedence 4
+syntax RectanglePropertyHeight is prefix operator with precedence 2
 	"the" "height" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetHeight(mRect, output)
@@ -282,7 +282,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax PointMake is prefix operator with precedence 4
+syntax PointMake is prefix operator with precedence 2
 	"point" <mPoint: Expression>
 begin
 	MCCanvasPointMakeWithList(mPoint, output)
@@ -304,7 +304,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax PointPropertyX is prefix operator with precedence 4
+syntax PointPropertyX is prefix operator with precedence 2
 	"the" "x" "of" <mPoint: Expression>
 begin
 	MCCanvasPointGetX(mPoint, output)
@@ -327,7 +327,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax PointPropertyY is prefix operator with precedence 4
+syntax PointPropertyY is prefix operator with precedence 2
 	"the" "y" "of" <mPoint: Expression>
 begin
 	MCCanvasPointGetY(mPoint, output)
@@ -1451,13 +1451,13 @@ public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as
 public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
 // TODO - add image frame index property?
 
-syntax ImageWidthProperty is prefix operator with precedence 4
+syntax ImageWidthProperty is prefix operator with precedence 2
 	"the" "width" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetWidth(mImage, output)
 end syntax
 
-syntax ImageHeightProperty is prefix operator with precedence 4
+syntax ImageHeightProperty is prefix operator with precedence 2
 	"the" "height" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetHeight(mImage, output)
