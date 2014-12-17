@@ -34,7 +34,9 @@ public:
 	virtual const char *gettypestring(void);
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const;
-
+    
+	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
+    
 	virtual void open(void);
 	virtual void close(void);
 

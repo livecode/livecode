@@ -1,89 +1,9 @@
 module com.livecode.type
 
-/*
-public foreign handler MCTypeEvalBoolFormattedAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalStringParsedAsBool(in Target as string, out Value as bool) as undefined binds to "<builtin>"
-
-public foreign handler MCTypeEvalNumberFormattedAsString(in Target as number, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalStringParsedAsReal(in Target as string, out Value as number) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalStringParsedAsInt(in Target as string, out Value as number) as undefined binds to "<builtin>"
-*/
 public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsNotDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-
---
-
-/*
-Summary:    Converts <Target> to a string.
-Target:     An expression that evaluates to a bool, real, or integer.
-output:     The converted value if there is a valid conversion from the type of <Target> to a string.
-            Bools, ints and reals always have valid conversions to strings.
-
-Example:    put true as string into tVar // tVar contains the string "true"
-*/
-
-/*
-syntax AsString is postfix operator with precedence 1
-	<Target: Expression> "formatted" "as" "string"
-begin
-	EvalBoolAsString(Target, output)
-	EvalIntAsString(Target, output)
-	EvalRealAsString(Target, output)
-end syntax
-*/
-
-/*
-Summary:    Converts <Target> to a real.
-
-Target:     An expression that evaluates to an integer, or a string.
-output:     The converted value if there is a valid conversion from the type of <Target> to a real.
-            An int always has a valid conversion to a real. 
-            A string has a valid conversions to a real if it consists of digits, and optionally a leading minus sign, a decimal point, and an "E" or "e" for exponential notation.
-
-Example:    put "8.0" as real into tVar // tVar contains the real number 8.0
-*/
-/*
-syntax AsReal is postfix operator with precedence 1
-	<Target: Expression> "as" "real"
-begin
-	EvalIntAsReal(Target, output)
-	EvalStringAsReal(Target, output)
-end syntax
-*/
-/*
-Summary:    Converts <Target> to an integer.
-
-Target:     An expression that evaluates to a string.
-output:     The converted value if there is a valid conversion the string <Target> to an int.
-            A string has a valid conversion to an int if it consists of digits, and optionally a leading minus sign, and if the resulting integer is within the valid range for a 32-bit integer.
-Example:    put "8" as integer into tVar // tVar contains the integer 8
-*/
-/*
-syntax AsInt is postfix operator with precedence 1
-	<Target: Expression> "as" "int"
-begin
-	EvalStringAsInt(Target, output)
-end syntax
-*/
-
-/*
-Summary:    Converts <Target> to a bool, if there is a valid conversion.
-Target:     An expression that evaluates to a string.
-output:     The converted value if there is a valid conversion the string <Target> to an bool.
-            A string has a valid conversion to a bool if it evaluates to the string "true" or the string "false"
-
-Example:    put "true" as bool into tVar // tVar contains the boolean value true
-*/
-/*
-syntax AsBool is postfix operator with precedence 1
-	<Target: Expression> "as" "bool"
-begin
-	EvalStringAsBool(Target, output)
-end syntax
-*/
---
+public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
 
 /*
 Summary:    Determines whether <Target> is empty or not.
@@ -92,13 +12,13 @@ Target:     Any expression
 output:     Returns true if the given expression <Target> evaluates to the empty value of that type, and false otherwise.
 
 */
-/*
+
 syntax IsEmpty is postfix operator with precedence 1
     <Target: Expression> "is" "empty"
 begin
     MCTypeEvalIsEmpty(Target, output)
 end syntax
-*/
+
 /*
 Summary:    Determines whether <Target> is empty or not.
 
@@ -106,13 +26,13 @@ Target:     Any expression
 output:     Returns false if the given expression <Target> evaluates to the empty value of that type, and true otherwise.
 
 */
-/*
+
 syntax IsNotEmpty is postfix operator with precedence 1
 	<Target: Expression> "is not" "empty"
 begin
 	MCTypeEvalIsNotEmpty(Target, output)
 end syntax
-*/
+
 --
 
 /*
@@ -122,13 +42,13 @@ Target:     Any expression
 output:     Returns true if the given expression <Target> is defined, and false if not.
 
 */
-/*
+
 syntax IsDefined is postfix operator with precedence 1
 	<Target: Expression> "is" "defined"
 begin
 	MCTypeEvalIsDefined(Target, output)
 end syntax
-*/
+
 /*
 Summary:    Determines whether <Target> is defined or not.
 
@@ -136,13 +56,13 @@ Target:     Any expression
 output:     Returns false if the given expression <Target> is defined, and true if not.
 
 */
-/*
+
 syntax IsNotDefined is postfix operator with precedence 1
 	<Target: Expression> "is not" "defined"
 begin
 	MCTypeEvalIsNotDefined(Target, output)
 end syntax
-*/
+
 --
 
 end module

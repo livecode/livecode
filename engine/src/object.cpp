@@ -53,6 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scrolbar.h"
 #include "styledtext.h"
 #include "flst.h"
+#include "widget.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -4958,6 +4959,25 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
     return t_bounds;
 }
 
+struct MCHasWidgetsObjectVisitor: public MCObjectVisitor
+{
+    bool found_widget;
+    
+    bool OnWidget(MCWidget *p_widget)
+    {
+        found_widget = true;
+        return false;
+    }
+};
+
+bool MCObject::haswidgets(void)
+{
+    MCHasWidgetsObjectVisitor t_visitor;
+    t_visitor . found_widget = false;
+    visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
+    return t_visitor . found_widget;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
@@ -5034,6 +5054,11 @@ bool MCObjectVisitor::OnPlayer(MCPlayer *p_player)
 bool MCObjectVisitor::OnStyledText(MCStyledText *p_styled_text)
 {
 	return OnObject(p_styled_text);
+}
+
+bool MCObjectVisitor::OnWidget(MCWidget *p_widget)
+{
+	return OnControl(p_widget);
 }
 
 bool MCObjectVisitor::OnParagraph(MCParagraph *p_paragraph)

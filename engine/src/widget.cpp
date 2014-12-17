@@ -149,6 +149,11 @@ const MCObjectPropertyTable *MCWidget::getpropertytable(void) const
 	return &kPropertyTable;
 }
 
+bool MCWidget::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnWidget(this);
+}
+
 void MCWidget::open(void)
 {
 	MCControl::open();
@@ -909,12 +914,12 @@ void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
         m_native_layer->OnGeometryChanged(p_old_rect);
     
     MCAutoValueRefArray t_params;
-    t_params.New(4);
+    t_params.New(0);
     
-    MCNumberCreateWithReal(rect.x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    /*MCNumberCreateWithReal(rect.x, reinterpret_cast<MCNumberRef&>(t_params[0]));
     MCNumberCreateWithReal(rect.y, reinterpret_cast<MCNumberRef&>(t_params[1]));
     MCNumberCreateWithReal(rect.width, reinterpret_cast<MCNumberRef&>(t_params[2]));
-    MCNumberCreateWithReal(rect.height, reinterpret_cast<MCNumberRef&>(t_params[3]));
+    MCNumberCreateWithReal(rect.height, reinterpret_cast<MCNumberRef&>(t_params[3]));*/
     
     CallHandler(MCNAME("OnGeometryChanged"), t_params.Ptr(), t_params.Size());
 }
@@ -1022,10 +1027,10 @@ void MCWidget::OnMouseLeave()
 void MCWidget::OnMouseMove(coord_t p_x, coord_t p_y)
 {
     MCAutoValueRefArray t_params;
-    t_params.New(2);
+    t_params.New(0);
     
-    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
-    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    //MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    //MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
     
     CallHandler(MCNAME("OnMouseMove"), t_params.Ptr(), t_params.Size());
 }
@@ -1033,9 +1038,9 @@ void MCWidget::OnMouseMove(coord_t p_x, coord_t p_y)
 void MCWidget::OnMouseCancel(uinteger_t p_button)
 {
     MCAutoValueRefArray t_params;
-    t_params.New(1);
+    t_params.New(0);
     
-    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    //MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[0]));
     
     CallHandler(MCNAME("OnMouseCancel"), t_params.Ptr(), t_params.Size());
 }
@@ -1043,11 +1048,11 @@ void MCWidget::OnMouseCancel(uinteger_t p_button)
 void MCWidget::OnMouseDown(coord_t p_x, coord_t p_y , uinteger_t p_button)
 {
     MCAutoValueRefArray t_params;
-    t_params.New(3);
+    t_params.New(0);
     
-    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
-    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
-    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    //MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    //MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    //MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
     
     CallHandler(MCNAME("OnMouseDown"), t_params.Ptr(), t_params.Size());
 }
@@ -1055,11 +1060,11 @@ void MCWidget::OnMouseDown(coord_t p_x, coord_t p_y , uinteger_t p_button)
 void MCWidget::OnMouseUp(coord_t p_x, coord_t p_y, uinteger_t p_button)
 {
     MCAutoValueRefArray t_params;
-    t_params.New(3);
+    t_params.New(0);
     
-    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
-    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
-    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    //MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    //MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    //MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
     
     CallHandler(MCNAME("OnMouseUp"), t_params.Ptr(), t_params.Size());
 }

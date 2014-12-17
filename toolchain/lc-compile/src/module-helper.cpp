@@ -79,6 +79,7 @@ extern void (*MCMathEvalRealToPowerOfReal)();
 extern void (*MCMathFoundationExecRoundRealToNearest)();
 extern void (*MCSortExecSortListAscendingText)();
 extern void (*MCStringEvalConcatenate)();
+extern void (*MCTypeEvalIsEmpty)();
 extern void (*MCTypeConvertExecSplitStringByDelimiter)();
 
 // Pull in a reference to all of the module-*.cpp objects too
@@ -96,6 +97,7 @@ void *g_builtin_ptrs[] =
     &MCMathFoundationExecRoundRealToNearest,
     &MCSortExecSortListAscendingText,
     &MCStringEvalConcatenate,
+    &MCTypeEvalIsEmpty,
     &MCTypeConvertExecSplitStringByDelimiter
 };
     

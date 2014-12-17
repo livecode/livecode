@@ -80,8 +80,9 @@ static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The followi
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
 static const char *newheader7000 = "REVO7000";
+static const char *newheader8000 = "REVO8000";
 
-#define MAX_STACKFILE_VERSION 7000
+#define MAX_STACKFILE_VERSION 8000
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1070,9 +1071,20 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
     }
     else
     {
+        // MW-2014-12-17: [[ Widgets ]] Force writing out as 8.0 version stack if it
+        //   contains widgets, and only write out as 8.0 if it contains widgets.
+        uint32_t t_old_stackfileversion;
+        t_old_stackfileversion = MCstackfileversion;
+        if (sptr -> haswidgets() || sptr -> substackhaswidgets())
+            MCstackfileversion = 8000;
+        else if (MCstackfileversion == 8000)
+            MCstackfileversion = 7000;
+        
         stat = dosavestack(sptr, p_fname);
-
+        
         MCLogicalFontTableFinish();
+        
+        MCstackfileversion = t_old_stackfileversion;
     }
     
 	return stat;
@@ -1206,11 +1218,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	}
 	MCValueAssign(MCfiletype, oldfiletype);
 	MCString errstring = "Error writing stack (disk full?)";
-	
+    
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-	if (MCstackfileversion >= 7000)
+    if (MCstackfileversion >= 8000)
+		t_header = newheader8000, t_header_size = 8;
+	else if (MCstackfileversion >= 7000)
 		t_header = newheader7000, t_header_size = 8;
 	else if (MCstackfileversion >= 5500)
 		t_header = newheader5500, t_header_size = 8;
