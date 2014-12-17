@@ -2172,7 +2172,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
+extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
 {
     if (*x_count == 0)
         return false;
@@ -2181,22 +2181,22 @@ extern "C" bool MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
     return true;
 }
 
-extern "C" bool MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
 {
     return p_counter <= p_limit;
 }
 
-extern "C" double MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" bool MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
 {
     return p_counter >= p_limit;
 }
 
-extern "C" double MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }

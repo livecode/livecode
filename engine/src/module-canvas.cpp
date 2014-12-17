@@ -4074,9 +4074,9 @@ MCCanvasRectangleRef MCCanvasFontMeasureTextWithTransform(MCStringRef p_text, MC
 	return t_rect;
 }
 
-MCCanvasRectangleRef MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font)
+void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect)
 {
-	return MCCanvasFontMeasureTextWithTransform(p_text, p_font, MCGAffineTransformMakeIdentity());
+	r_rect = MCCanvasFontMeasureTextWithTransform(p_text, p_font, MCGAffineTransformMakeIdentity());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

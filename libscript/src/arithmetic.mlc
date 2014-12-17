@@ -229,7 +229,7 @@ Example:
 Tags: Math
 */
 
-syntax PlusOperator is left binary operator with precedence 2
+syntax PlusOperator is left binary operator with precedence 4
     <Left: Expression> "+" <Right: Expression>
 begin
     MCArithmeticEvalNumberPlusNumber(Left, Right, output)
@@ -249,7 +249,7 @@ Example:
 Tags: Math
 */
 
-syntax MinusOperator is left binary operator with precedence 2
+syntax MinusOperator is left binary operator with precedence 4
     <Left: Expression> "-" <Right: Expression>
 begin
     MCArithmeticEvalNumberMinusNumber(Left, Right, output)
@@ -270,7 +270,7 @@ Tags: Math
 
 */
 
-syntax TimesOperator is left binary operator with precedence 1
+syntax TimesOperator is left binary operator with precedence 3
     <Left: Expression> "*" <Right: Expression>
 begin
     MCArithmeticEvalNumberTimesNumber(Left, Right, output)
@@ -290,7 +290,7 @@ Example:
 Tags: Math
 */
 
-syntax OverOperator is left binary operator with precedence 1
+syntax OverOperator is left binary operator with precedence 3
     <Left: Expression> "/" <Right: Expression>
 begin
     MCArithmeticEvalNumberOverNumber(Left, Right, output)
@@ -314,7 +314,7 @@ Returns the remainder on dividing <Left> by <Right>
 
 */
 
-syntax ModOperator is neutral binary operator with precedence 4
+syntax ModOperator is neutral binary operator with precedence 3
     <Left: Expression> "mod" <Right: Expression>
 begin
     MCArithmeticEvalNumberModNumber(Left, Right, output)
@@ -342,7 +342,7 @@ successive values of x wrap y cycle through the sequence 1, 2, ..., y.
 
 */
 
-syntax WrapOperator is neutral binary operator with precedence 4
+syntax WrapOperator is neutral binary operator with precedence 3
     <Left: Expression> "wrap" <Right: Expression>
 begin
     MCArithmeticEvalNumberWrapNumber(Left, Right, output)
@@ -358,7 +358,7 @@ Right:      An expression that evaluates to a number.
 Returns: 	True if <Left> is greater than <Right>, and false otherwise.
 */
 
-syntax NumberIsGreaterThanNumber is neutral binary operator with precedence 3
+syntax NumberIsGreaterThanNumber is neutral binary operator with precedence 5
     <Left: Expression> ">" <Right: Expression>
 begin
     MCArithmeticEvalNumberIsGreaterThanNumber(Left, Right, output)
@@ -372,7 +372,7 @@ Right:      An expression that evaluates to a number.
 Returns: 	True if <Left> is greater than or equal to <Right>, and false otherwise.
 */
 
-syntax NumberIsGreaterThanOrEqualToNumber is neutral binary operator with precedence 3
+syntax NumberIsGreaterThanOrEqualToNumber is neutral binary operator with precedence 5
     <Left: Expression> ">=" <Right: Expression>
 begin
     MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
@@ -390,7 +390,7 @@ Description:
 Tags: Math
 */
 
-syntax NumberIsLessThanNumber is neutral binary operator with precedence 3
+syntax NumberIsLessThanNumber is neutral binary operator with precedence 5
     <Left: Expression> "<" <Right: Expression>
 begin
     MCArithmeticEvalNumberIsLessThanNumber(Left, Right, output)
@@ -409,7 +409,7 @@ Tags: Math
 */
 
 
-syntax NumberIsLessThanOrEqualToNumber is neutral binary operator with precedence 3
+syntax NumberIsLessThanOrEqualToNumber is neutral binary operator with precedence 5
     <Left: Expression> "<=" <Right: Expression>
 begin
     MCArithmeticEvalNumberIsLessThanOrEqualToNumber(Left, Right, output)
@@ -429,7 +429,7 @@ Description:
 Tags: Math
 */
 
-syntax NumberIsEqualToNumber is neutral binary operator with precedence 4
+syntax NumberIsEqualToNumber is neutral binary operator with precedence 6
     <Left: Expression> "=" <Right: Expression>
 begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
@@ -450,7 +450,7 @@ References: NumberIsEqualToNumber (operator)
 Tags: Math
 */
 
-syntax NumberIsNumber is neutral binary operator with precedence 5
+syntax NumberIsNumber is neutral binary operator with precedence 7
     <Left: Expression> "is" <Right: Expression>
 begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
@@ -472,7 +472,7 @@ Tags: Math
 */
 
 
-syntax NumberIsNotNumber is neutral binary operator with precedence 5
+syntax NumberIsNotNumber is neutral binary operator with precedence 7
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCArithmeticEvalNotEqualToNumber(Left, Right, output)

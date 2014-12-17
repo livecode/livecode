@@ -458,7 +458,10 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalStringParsedAsNumber(MCStringRef p_
 {
     double t_converted;
     if (!MCTypeConvertStringToReal(p_operand, t_converted))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("input string is not a number"), nil);
         return;
+    }
     
     if (!MCNumberCreateWithReal(t_converted, r_output))
         return;

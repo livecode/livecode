@@ -350,7 +350,7 @@ In particular, this means that comparison between string elements is case sensit
 Tags: Lists
 */
 
-syntax ListIsList is neutral binary operator with precedence 5
+syntax ListIsList is neutral binary operator with precedence 7
     <Left: Expression> "is" <Right: Expression>
 begin
     MCListEvalIsEqualTo(Left, Right, output)
@@ -379,7 +379,7 @@ In particular, this means that comparison between string elements is case sensit
 Tags: Lists
 */
 
-syntax ListIsNotList is neutral binary operator with precedence 5
+syntax ListIsNotList is neutral binary operator with precedence 7
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCListEvalIsNotEqualTo(Left, Right, output)

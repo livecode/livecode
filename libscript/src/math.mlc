@@ -62,7 +62,7 @@ Example:
 Tags: Math
 */
 
-syntax PowOperator is left binary operator with precedence 2
+syntax PowOperator is left binary operator with precedence 1
     <Left: Expression> "^" <Right: Expression>
 begin
     MCMathEvalNumberToPowerOfNumber(Left, Right, output)
@@ -260,7 +260,7 @@ Returns: 	The value of <Left>, if it is less than the value of <Right>, and the 
 Tags: Math
 */
 
-syntax MinOperator is prefix operator with precedence 1
+syntax MinOperator is prefix operator with precedence 5
     "the" "min" "of" <Left: Expression> "and" <Right: Expression>
 begin
     MCMathEvalMinNumber(Left, Right, output)
@@ -276,7 +276,7 @@ Returns: 	The value of <Left>, if it is greater than the value of <Right>, and t
 Tags: Math
 */
 
-syntax MaxOperator is prefix operator with precedence 1
+syntax MaxOperator is prefix operator with precedence 5
     "the" "max" "of" <Left: Expression> "and" <Right: Expression>
 begin
     MCMathEvalMaxNumber(Left, Right, output)

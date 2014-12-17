@@ -28,7 +28,7 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_o
 
 extern "C" MC_DLLEXPORT void MCTypeEvalIsDefined(MCValueRef *p_target, bool& r_output)
 {
-    r_output = p_target != nil;
+    r_output = (p_target != nil && *p_target != kMCNull);
 }
 
 extern "C" MC_DLLEXPORT void MCTypeEvalIsNotDefined(MCValueRef *p_target, bool& r_output)
