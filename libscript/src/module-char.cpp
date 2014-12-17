@@ -26,7 +26,7 @@ extern "C" MC_DLLEXPORT void MCCharEvalNumberOfCharsIn(MCStringRef p_target, ind
 extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
     // Error if there is more than one char in needle.
-    if (MCStringGetLength(p_needle) == 1)
+    if (MCStringGetLength(p_needle) != 1)
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("needle must be a single char"), nil);
         return;
