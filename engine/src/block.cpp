@@ -364,7 +364,8 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
     // SN-2014-12-04: [[ Bug 14149 ]] Add the F_HAS_TAB flag, for legacy saving
     if (MCstackfileversion < 7000)
     {
-        if (segment && segment != segment -> next())
+        // PM-2014-12-17: [[ Bug 14251 ]] NULL check for parent of segment
+        if (segment && segment -> GetParent() != NULL && segment != segment -> next())
             flags |= F_HAS_TAB;
     }
 	
