@@ -180,6 +180,8 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
             MCMemoryDelete(t_ext);
             
             MCextensionschanged = true;
+            
+            break;
         }
 }
 
@@ -317,6 +319,8 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
                         t_success = false;
                     delete t_container;
                 }
+                else
+                    t_param -> set_argument(*MCECptr, t_arguments[i]);
             }
             
             t_param = t_param -> getnext();
