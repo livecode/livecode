@@ -455,6 +455,8 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	if (t_error != nil)
 	{
 		[t_new_movie release];
+        m_movie = nil;
+        [m_view setMovie:nil];
 		return;
 	}
 	

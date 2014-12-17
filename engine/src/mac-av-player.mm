@@ -429,6 +429,9 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
+    // PM_2014-12-17: [[ Bug 14233]] Now currentItem can be nil, if setting an empty or invalid filename
+    if ([m_player currentItem] == nil)
+        return;
     CVImageBufferRef t_image;
     CMTime t_output_time = [m_player currentItem] . currentTime;
     
@@ -568,7 +571,8 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
         
-        if (!CVDisplayLinkIsRunning(t_player -> m_display_link))
+        // PM_2014-12-17: [[ Bug 14233]] Now currentItem can be nil, if setting an empty or invalid filename
+        if (!CVDisplayLinkIsRunning(t_player -> m_display_link) && t_player -> m_player.currentItem != nil)
         {
             CVDisplayLinkStart(t_player -> m_display_link);
         }
@@ -641,6 +645,8 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         m_player_item_video_output = nil;
         [m_view setPlayer: nil];
         uint4 t_zero_time = 0;
+        // PM-2014-12-17: [[ Bug 14233 ]] Setting the filename to empty should reset the currentItem
+        [m_player replaceCurrentItemWithPlayerItem:nil];
         SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_zero_time);
         return;
     }
@@ -683,6 +689,8 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         if(p_is_url)
             [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
         [t_player release];
+        // PM-2014-12-17: [[ Bug 14233 ]] Setting an invalid filename should reset a previously opened movie
+        [m_player replaceCurrentItemWithPlayerItem:nil];
         return;
     }
     

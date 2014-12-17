@@ -1429,7 +1429,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     m_is_attached = true;
                     m_should_attach = false;
                 }
-
+               
                 dirty = wholecard = True;
             }
             break;
@@ -2082,8 +2082,8 @@ Boolean MCPlayer::prepare(const char *options)
 		return True;
     
     // Fixes the issue of invisible player being created by script
-	if (!hasfilename())
-        return True;
+	//if (!hasfilename())
+        //return True;
     
 	if (!opened)
 		return False;
@@ -2096,8 +2096,15 @@ Boolean MCPlayer::prepare(const char *options)
 	else
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
 	
+    if (!hasfilename())
+        return True;
+    
 	MCRectangle t_movie_rect;
 	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
+    
+    // PM-2014-12-17: [[ Bug 14233 ]] If an invalid filename is used then keep the previous dimensions of the player rect instead of displaying only the controller
+    if (t_movie_rect . height == 0 && t_movie_rect . width == 0)
+        return False;
 	
 	MCRectangle trect = resize(t_movie_rect);
 	
@@ -2193,7 +2200,7 @@ void MCPlayer::detachplayer()
 
 Boolean MCPlayer::playstart(const char *options)
 {
-	if (!prepare(options))
+	if (!prepare(options) || !hasfilename())
 		return False;
     
     // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
