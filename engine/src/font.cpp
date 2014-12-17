@@ -210,6 +210,21 @@ void MCFontRelease(MCFontRef self)
 	MCMemoryDelete(self);
 }
 
+MCNameRef MCFontGetName(MCFontRef self)
+{
+	return self->name;
+}
+
+MCFontStyle MCFontGetStyle(MCFontRef self)
+{
+	return self->style;
+}
+
+int32_t MCFontGetSize(MCFontRef self)
+{
+	return self->size;
+}
+
 bool MCFontHasPrinterMetrics(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
@@ -475,7 +490,7 @@ struct font_draw_text_context
     MCGContextRef m_gcontext;
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the x-offset.
     MCGFloat x;
-    int32_t y;
+    MCGFloat y;
     bool rtl;
 };
 
@@ -495,13 +510,13 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
     ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
 }
 
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break)
+void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
 	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font, p_rtl, p_can_break);
 }
 
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;
