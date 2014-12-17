@@ -40,6 +40,10 @@ public foreign handler MCWidgetGetScriptObject(out rObject as ScriptObject) as u
 public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetFrame(out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetBounds(out rRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetWidth(out rWidth as real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetSetWidth(in pWidth as real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetHeight(out rHeight as real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetSetHeight(in pHeight as real) as undefined binds to "<builtin>"
 
 syntax MyScriptObject is expression
   "my" "script" "object"
@@ -65,6 +69,19 @@ begin
     MCWidgetGetBounds(output)
 end syntax
 
+syntax MyWidth is expression
+  "my" "width"
+begin
+    MCWidgetGetWidth(output)
+    MCWidgetSetWidth(input)
+end syntax
+
+syntax MyHeight is expression
+  "my" "height"
+begin
+    MCWidgetGetHeight(output)
+    MCWidgetSetHeight(input)
+end syntax
 
 
 // ---------- Synchronous and asynchronous ("current") event information ---------- //

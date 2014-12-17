@@ -1559,6 +1559,54 @@ extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
     MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
 }
 
+extern "C" MC_DLLEXPORT void MCWidgetGetWidth(MCNumberRef& r_width)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCNumberCreateWithReal(MCwidgetobject->getrect().width, r_width);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetHeight(MCNumberRef& r_height)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCNumberCreateWithReal(MCwidgetobject->getrect().height, r_height);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetSetWidth(MCNumberRef p_width)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCRectangle t_rect = MCwidgetobject->getrect();
+    t_rect.width = MCNumberFetchAsReal(p_width);
+    MCwidgetobject->setrect(t_rect);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetSetHeight(MCNumberRef p_height)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCRectangle t_rect = MCwidgetobject->getrect();
+    t_rect.height = MCNumberFetchAsReal(p_height);
+    MCwidgetobject->setrect(t_rect);
+}
+
 extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
 {
     if (MCwidgetobject == nil)
