@@ -1,7 +1,7 @@
 -- Place our widget in the 'com.livecode.example' namespace.
-widget com.livecode.extensions.example.clock
+widget com.livecode.extensions.alilloyd.clock
 
-metadata version is "0.1.0"
+metadata version is "1.0.0"
 metadata author is "Mark Waddingham"
 metadata title is "Clock Widget"
 
