@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 		/* UNCHECKED */ MCStringCopy(MCSTR("Failed to execute test: unknown error\n"),
 		                             &t_message);
 	}
-	MCAutoStringRefAsSysString t_sys;
+	MCAutoStringRefAsCString t_sys;
 	t_sys.Lock(*t_message);
 	printf("%s", *t_sys);
 

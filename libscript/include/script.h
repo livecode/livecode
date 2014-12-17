@@ -200,6 +200,9 @@ MCScriptInstanceRef MCScriptRetainInstance(MCScriptInstanceRef instance);
 // Release a instance.
 void MCScriptReleaseInstance(MCScriptInstanceRef instance);
 
+// Get the module of an instance.
+MCScriptModuleRef MCScriptGetModuleOfInstance(MCScriptInstanceRef instance);
+
 // Get a property of an instance.
 bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef& r_value);
 // Set a property of an instance.
