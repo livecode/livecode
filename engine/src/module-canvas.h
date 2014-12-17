@@ -464,7 +464,7 @@ extern "C" MC_DLLEXPORT void MCCanvasFontGetSize(MCCanvasFontRef p_font, uintege
 extern "C" MC_DLLEXPORT void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font);
 
 // Operations
-extern "C" MC_DLLEXPORT MCCanvasRectangleRef MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);
 
 //////////
 

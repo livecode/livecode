@@ -1864,12 +1864,12 @@ end syntax
 
 // Operations
 
-public foreign handler MCCanvasFontMeasureText(in pText as string, in pFont as Font) as Rectangle binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureText(in pText as string, in pFont as Font, out pRect as Rectangle) as undefined binds to "<builtin>"
 
-syntax FontOperationMeasureText is statement
-	"measure" <mText: Expression> "with" <mFont: Expression>
+syntax FontOperationMeasureText is prefix operator with precedence 4
+  "the" "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
 begin
-	MCCanvasFontMeasureText(mText, mFont)
+	MCCanvasFontMeasureText(mText, mFont, output)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
