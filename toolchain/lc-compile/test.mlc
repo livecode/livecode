@@ -14,7 +14,10 @@ public handler test()
 	-- structural
 	testRepeat(tResults)
 	testLogicStructural(tResults)
-	
+
+    --com.livecode.type
+    testType(tResults)
+
 	--com.livecode.array
 	testArray(tResults)	
 	
@@ -124,6 +127,9 @@ public handler boolWithSideEffect(in tResult as boolean, inout tVar as string) a
 end handler
 
 public handler testType(inout xResults as list)
+
+    variable tVar
+    testLog("Type", "IsNotDefined", tVar is not defined, xResults)
 
 end handler
 
@@ -639,8 +645,8 @@ public handler testList(inout xResults as list)
 	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
 	testLog("List", "IsNot", tSubList is not ["Abcd", 1], xResults)
 
-    testLog("List", "IsIn", "abcd" is in tSubList, xResults)
-    testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
+    --testLog("List", "IsIn", "abcd" is in tSubList, xResults)
+    --testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
 
     variable tString as string
     pop front of tSubList into tString

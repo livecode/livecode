@@ -81,6 +81,7 @@ extern "C"
     extern void (*MCMathEvalRealToPowerOfReal)();
     extern void (*MCSortExecSortListAscendingText)();
     extern void (*MCStringEvalConcatenate)();
+    extern void (*MCTypeEvalIsDefined)();
     extern void (*MCTypeConvertExecSplitStringByDelimiter)();
     extern void (*MCWidgetExecRedrawAll)();
     extern void (*MCEngineExecResolveScriptObject)();
@@ -100,6 +101,7 @@ extern "C"
         &MCMathEvalRealToPowerOfReal,
         &MCSortExecSortListAscendingText,
         &MCStringEvalConcatenate,
+        &MCTypeEvalIsDefined,
         &MCTypeConvertExecSplitStringByDelimiter,
         &MCWidgetExecRedrawAll,
         &MCCanvasThisCanvas,
