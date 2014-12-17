@@ -520,6 +520,7 @@ TEST_CPPFLAGS = $(CPPFLAGS) \
 TEST_CXXFLAGS = $(CXXFLAGS) -Wall -g -O3
 
 TEST_LDFLAGS = $(LDFLAGS) \
+	-rdynamic \
 	-L$(BUILD_DIR) \
 	-L$(top_srcdir)/prebuilt/lib/linux/$(ARCH)
 
