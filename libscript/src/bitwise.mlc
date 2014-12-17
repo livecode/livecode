@@ -1,5 +1,5 @@
 /*  
-This module specifies the bitwise operations on integers included in the standard library of modular LiveCode.
+This module specifies the bitwise operations on integers included in the standard library of LiveCode Builder.
 */
 
 module com.livecode.bitwise

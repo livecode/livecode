@@ -1,5 +1,5 @@
 /*  
-This library consists of the operations on arrays included in the standard library of modular LiveCode.
+This library consists of the operations on arrays included in the standard library of LiveCode Builder.
 */
 
 module com.livecode.array
@@ -243,7 +243,7 @@ end syntax
 
 /*
 Summary:        Repeat over the elements of an array.
-Iterand:        An expression of the form 'tVar in tArray'
+Iterand:        Any variable of appropriate type.
 
 Example:
     variable tArray as array
@@ -263,7 +263,9 @@ Example:
     // tSum is 6
     
 Description:
-Use repeat for each element to iterate over the elements of an array in no particular order.
+Use repeat for each element to iterate over the elements of an array in no particular order. On each iteration, the <Iterand> will contain the next element of the array being iterated over.
+
+>*Note:* If <Iterand> is typed, then an error will be thrown if the array being iterated over contains any elements of a different type.
 
 Tags: Arrays
 */
@@ -276,7 +278,7 @@ end syntax
 
 /*
 Summary:        Repeat over the keys of an array.
-Iterand:        An expression of the form 'tVar in tArray'
+Iterand:        A string container.
 
 Example:
     variable tArray as array
@@ -297,7 +299,7 @@ Example:
     put tString contains "abc" into tBool -- tBool is true
         
 Description:
-Use repeat for each key to iterate over the keys of an array in no particular order.
+Use repeat for each key to iterate over the keys of an array in no particular order. On each iteration, the <Iterand> will contain the next key of the array being iterated over.
 
 Tags: Arrays, Control structures
 */

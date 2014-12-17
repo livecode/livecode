@@ -1,3 +1,7 @@
+/*
+This library consists of the foundational mathematical operations included in the standard library of LiveCode Builder.
+*/
+
 module com.livecode.mathfoundation
 
 public foreign handler MCMathFoundationExecRoundRealToNearest(inout Target as double) as undefined binds to "<builtin>"

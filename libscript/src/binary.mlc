@@ -1,5 +1,5 @@
 /*  
-This library consists of the operations on binary strings provided by the standard library of modular LiveCode.
+This library consists of the operations on binary strings provided by the standard library of LiveCode Builder.
 */
 
 module com.livecode.binary

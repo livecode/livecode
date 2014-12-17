@@ -1,3 +1,6 @@
+/*
+This library consists of the mathematical operations included in the standard library of LiveCode Builder.
+*/
 
 module com.livecode.math
 

@@ -1,5 +1,5 @@
 /*  
-This library consists of the operations on bytes included in the standard library of modular LiveCode.
+This library consists of the operations on bytes included in the standard library of LiveCode Builder.
 */
 
 module com.livecode.byte
@@ -95,7 +95,7 @@ Summary:            Finds the first or last occurrence of <Needle> before a spec
 
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
-After:              An expression which evaluates to a valid integer index of Target.
+Before:              An expression which evaluates to a valid integer index of Target.
 
 Returns: 			Returns the offset of <Needle> before index <Before> in <Target>.
                     
@@ -237,10 +237,10 @@ end syntax
 
 /*
 Summary:        Repeat over the bytes of some data
-Iterand:        An expression of the form 'tVar in tData'
+Iterand:        A binary data container.
 
 Description:
-Use repeat for each to perform an operation on each byte of some data.
+Use repeat for each to perform an operation on each byte of some data. On each iteration, the <Iterand> will contain the next char of the string being iterated over.
 
 Tags: Binary, Control structures
 */
