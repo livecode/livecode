@@ -62,6 +62,17 @@ property animate            get mAnimate            set setAnimate
 property label              get mLabel              set setLabel
 property textFont           get mTextFont           set setTextFont
 property textSize           get mTextSize           set setTextSize
+property iconPath           get mIconPath           set setIconPath
+
+
+// Event declarations
+//
+//	These declare the events that the widget will generate - it is these
+//	events that get dispatched to the script attached to a widget instance.
+//
+//	As this is an example button, we'll declare a "click" event
+//
+//event 
 
 
 // Event handlers
@@ -84,6 +95,8 @@ public handler OnCreate() as undefined
 	put 10.0 into mCornerRadius
 	put 3.0 into mBorderWidth
 	put 1.0 into mScale
+	put 0.0 into mRotation
+	put 0.5 into mRotationDelta
 	put -0.001 into mScaleDelta
 	put false into mPressed
 	put false into mHover
@@ -150,19 +163,88 @@ public handler OnPaint() as undefined
 	set the paint of this canvas to mPaint
 	fill tInnerRectPath on this canvas
 	
+	// Create the font used for drawing the text. Inherit font information
+	// from the canvas if the properties aren't explicitly defined.
+	variable tTextFontName as string
+	variable tTextFontSize as real
+	variable tTextFont as optional Font
+	if mTextFont is defined then
+		put mTextFont into tTextFontName
+	else
+		put the name of the font of this canvas into tTextFontName
+	end if
+	if mTextSize is defined then
+		put mTextSize into tTextFontSize
+	else
+		put the size of the font of this canvas into tTextFontSize
+	end if
+	put font tTextFontName at size tTextFontSize into tTextFont
+	
+	// The position of the icon and label depend on their sizes. First,
+	// calculate the bounds of each and the padding between them.
+	variable tIconRect as Rectangle
+	variable tLabelRect as Rectangle
+	variable tPadding as real
+	if mIconImage is defined then
+		put rectangle [ 0, 0, the width of mIconImage, the height of mIconImage ] into tIconRect
+	else
+		put rectangle [ 0, 0, 0, 0 ] into tIconRect
+	end if
+	if mLabel is defined then
+		put the bounds of text mLabel with tTextFont into tLabelRect
+	else
+		put rectangle [ 0, 0, 0, 0 ] into tLabelRect
+	end if
+	if (the width of tIconRect) > 0 and (the width of tLabelRect) > 0 then
+		put 10 into tPadding
+	else
+		put 0 into tPadding
+	end if
+	
+	// Next, position each rectangle correctly
+	variable tTotalWidth as real
+	variable tTotalHeight as real
+	variable tXOffset as real
+	variable tYOffset as real
+	put (the width of tIconRect) + tPadding + (the width of tLabelRect) into tTotalWidth
+	put the max of (the height of tIconRect) and (the height of tLabelRect) into tTotalHeight
+	put ((the width of tInnerRect) - tTotalWidth)/2 into tXOffset
+	put ((the height of tInnerRect) - tTotalHeight)/2 into tYOffset
+	set the top of tIconRect to tYOffset
+	set the top of tLabelRect to 0
+	set the height of tLabelRect to the height of tInnerRect
+	set the left of tIconRect to tXOffset
+	set the left of tLabelRect to tXOffset + (the width of tIconRect) + tPadding
+	
+	// Draw the icon
+	if mIconImage is defined then
+		// We're going to mess with the canvas, so save its state
+		save state of this canvas
+	
+		// Translate to the center of the icon
+		translate this canvas by [ (the x of tIconRect) + (the width of tIconRect)/2, (the y of tIconRect) + (the height of tIconRect)/2 ]
+		
+		// Rotate the canvas according to the animation parameters
+		if mAnimate and not in edit mode then
+			rotate this canvas by mRotation
+		end if
+	
+		// Draw the icon at the correct location (adjusted for the 
+		// previous translation).
+		set the left of tIconRect to -(the width of tIconRect)/2
+		set the top of tIconRect to -(the height of tIconRect)/2
+		draw mIconImage into tIconRect of this canvas
+		
+		// Restore the canvas transform
+		restore state of this canvas
+	end if
+	
 	// Draw the label
 	if mLabel is defined then
-		// Always dr
 		set the paint of this canvas to solid paint with color [ 0, 0, 0 ]
-		if mTextFont is defined then
-			if mTextSize is defined then
-				set the font of this canvas to font mTextFont at size mTextSize
-			else
-				set the font of this canvas to font mTextFont
-			end if
-		end if
+		fill text mLabel at center of tLabelRect on this canvas
 	end if
-	fill text mLabel at center of my bounds on this canvas
+
 end handler
 
 public handler OnMouseEnter() as undefined
@@ -181,13 +263,21 @@ public handler OnMouseDown() as undefined
 end handler
 
 public handler OnMouseUp() as undefined
+	// The widget is no longer pressed
 	put false into mPressed
 	updatePaint(mPaintStyle)
+	
+	// A mouse up event (as opposed to a cancel) means that the button has
+	// been clicked. Send a message to the script so it can handle it.
+	dispatch "buttonClicked" to my script object
 end handler
 
 public handler OnTimer() as undefined
 	// Set the new scale factor for the widget
 	add mScaleDelta to mScale
+	
+	// Set the new rotation for the icon
+	add mRotationDelta to mRotation
 	
 	// If the widget is too small or too large, reverse the pulse direction
 	if mScale > 1.0 or mScale < 0.9 then
@@ -225,11 +315,15 @@ private variable mBorderWidth       as real
 private variable mAnimate           as boolean
 private variable mScale             as real
 private variable mScaleDelta        as real
+private variable mRotation          as real
+private variable mRotationDelta     as real
 private variable mPressed           as boolean
 private variable mHover             as boolean
 private variable mLabel             as optional string
 private variable mTextFont          as optional string
 private variable mTextSize          as optional integer
+private variable mIconPath          as optional string
+private variable mIconImage         as optional Image
 
 
 // Private handlers
@@ -438,6 +532,11 @@ end handler
 private handler setTextSize(in pTextSize as integer) as undefined
 	put pTextSize into mTextSize
 	redraw all
+end handler
+
+private handler setIconPath(in pIconPath as string) as undefined
+	put pIconPath into mIconPath
+	put image from file pIconPath into mIconImage
 end handler
 
 end widget

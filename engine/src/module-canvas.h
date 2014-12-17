@@ -512,6 +512,7 @@ extern "C" MC_DLLEXPORT void MCCanvasClipToRect(MCCanvasRectangleRef p_rect, MCC
 extern "C" MC_DLLEXPORT void MCCanvasAddPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasDrawImage(MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasDrawRectOfImage(MCCanvasRectangleRef p_src_rect, MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasDrawImage(MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasMoveTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasLineTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasRef p_canvas);

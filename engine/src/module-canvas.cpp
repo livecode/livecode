@@ -4002,9 +4002,9 @@ void MCCanvasFontSetProps(MCCanvasFontRef &x_font, MCStringRef p_name, MCFontSty
 	MCValueRelease(t_font);
 }
 
-void MCCanvasFontGetName(MCCanvasFontRef p_font, MCNameRef &r_name)
+void MCCanvasFontGetName(MCCanvasFontRef p_font, MCStringRef &r_name)
 {
-	r_name = MCValueRetain(MCFontGetName(MCCanvasFontGetMCFont(p_font)));
+	r_name = MCValueRetain(MCNameGetString(MCFontGetName(MCCanvasFontGetMCFont(p_font))));
 }
 
 void MCCanvasFontSetName(MCStringRef p_name, MCCanvasFontRef &x_font)

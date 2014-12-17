@@ -1430,7 +1430,7 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 {
     x_frame -> address = x_next_bytecode - x_frame -> instance -> module -> bytecode;
     
-    MCLog("Invoke %@", MCScriptGetNameOfDefinitionInModule(p_instance -> module, p_handler));
+    // MCLog("Invoke %@", MCScriptGetNameOfDefinitionInModule(p_instance -> module, p_handler));
     
 	if (p_handler -> kind == kMCScriptDefinitionKindHandler)
 	{
