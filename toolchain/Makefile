@@ -257,6 +257,8 @@ else
     COMPILE_target=$(COMPILE_exe)
 endif
 
+# Make sure to rebuild when the libraries are updated
+$(COMPILE_exe): $(BUILD_DIR)/libfoundation.a $(BUILD_DIR)/libscript.a
 
 ########## Rules for directories
 
@@ -540,6 +542,9 @@ TEST_exe = $(BUILD_DIR)/lc-test
 
 TEST_srcdir = lc-compile/src
 TEST_objdir = $(CACHE_DIR)lc-test
+
+# Make sure to rebuild when the libraries are updated
+$(TEST_exe): $(BUILD_DIR)/libfoundation.a $(BUILD_DIR)/libstdscript.a
 
 ########## C++ compilation rules
 
