@@ -541,6 +541,11 @@ public:
     
 	//////////
 	
+    // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
+    bool substackhaswidgets();
+    
+	//////////
+    
 	void setgeom();
 	
 	//////////
