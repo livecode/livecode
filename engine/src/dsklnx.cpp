@@ -57,6 +57,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <pwd.h>
 #include <fcntl.h>
 
+// SN-2014-12-17: [[ Bug 14220 ]] Server should not wait put rather poll
+#include <poll.h>
+
 #include <libgnome/gnome-url.h>
 #include <libgnome/gnome-program.h>
 #include <libgnome/gnome-init.h>
@@ -231,11 +234,25 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
             if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
                 break;
             MCU_play();
+
+            // SN-2014-12-17: [[ Bug 14220 ]] The server wasn't waiting pre-7.0
+#ifdef _SERVER
+            pollfd t_poll_fd;
+            t_poll_fd . fd = fd;
+            t_poll_fd . events = POLLIN;
+            t_poll_fd . revents = 0;
+
+            int t_result;
+            t_result = poll(&t_poll_fd, 1, -1);
+            if (t_result != 1)
+                break;
+#else
             if (MCscreen->wait(READ_INTERVAL, False, True))
             {
                 MCshellfd = -1;
                 return IO_ERROR;
             }
+#endif
         }
         else
             size += amount;
