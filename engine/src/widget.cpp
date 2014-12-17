@@ -1269,7 +1269,10 @@ bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
     if (!MCScriptQueryPropertyOfModule(m_module, p_property, t_gettype, t_settype))
         return false;
     
-    if (!MCExtensionConvertFromScriptType(ctxt, t_settype, p_value))
+    // TODO: Fix this - we should really throw a read-only property error here, but
+    //   instead we'll let MCScriptSetPropertyOfInstance do it.
+    if (t_settype != nil &&
+        !MCExtensionConvertFromScriptType(ctxt, t_settype, p_value))
         return false;
     
     // Invoke event handler.
