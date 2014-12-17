@@ -1514,10 +1514,16 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
             
             // If the value is undefined, and the param type doesn't take an optional
             // argument - then this method is no good.
-            if (t_value_type == kMCNullTypeInfo && !t_resolved_param_type . is_optional)
+            if (t_resolved_value_type . named_type == kMCNullTypeInfo)
             {
-                t_score = UINDEX_MAX;
-                break;
+                if (!t_resolved_param_type . is_optional)
+                {
+                    t_score = UINDEX_MAX;
+                    break;
+                }
+                
+                // The value is undefined and the parameter is optional.
+                continue;
             }
              
             // If the resolved types are the same, then this is a score of 0 for
@@ -1526,7 +1532,7 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
                 continue;
             
             // If the types don't conform, then this method is no good.
-            if (!MCTypeInfoConforms(t_value_type, t_param_type))
+            if (!MCResolvedTypeInfoConforms(t_resolved_value_type, t_resolved_param_type))
             {
                 t_score = UINDEX_MAX;
                 break;

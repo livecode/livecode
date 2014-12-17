@@ -53,6 +53,8 @@ use com.livecode.widget
 //
 property primaryColor       get getPrimaryColor     set setPrimaryColor
 property secondaryColor     get getSecondaryColor   set setSecondaryColor
+property textColor          get getTextColor        set setTextColor
+property borderColor        get getBorderColor      set setBorderColor
 property paintStyle         get mPaintStyle         set setPaintStyle
 property cornerRadius       get mCornerRadius       set setCornerRadius
 property borderWidth        get mBorderWidth        set setBorderWidth
@@ -77,12 +79,14 @@ public handler OnCreate() as undefined
 	put "linear gradient" into mPaintStyle
 	put color [ 0.7, 0.7, 1.0 ] into mPrimaryColor
 	put color [ 0.5, 0.5, 1.0 ] into mSecondaryColor
-	put color [ 1.0, 0.0, 0.0 ] into mBorderColor
+	put color [ 0.0, 0.0, 0.0 ] into mTextColor
+	put color [ 0.7, 0.1, 0.1 ] into mBorderColor
 	put 10.0 into mCornerRadius
 	put 3.0 into mBorderWidth
 	put 1.0 into mScale
 	put -0.001 into mScaleDelta
 	put false into mPressed
+	put false into mHover
 	put "Example Button" into mLabel
 	
 	// Set the paint correctly for this widget
@@ -116,15 +120,6 @@ public handler OnPaint() as undefined
 	subtract 2*mBorderWidth from the height of tInnerRect
 	put rounded rectangle path of tInnerRect with radius mCornerRadius into tInnerRectPath
 	
-	// Create the inner rectangle by scaling and rotating the outer path
-	/*variable tScaleFactorX as real
-	variable tScaleFactorY as real
-	put ((the x of my bounds) - 2*mBorderWidth) / (the x of my bounds) into tScaleFactorX
-	put ((the y of my bounds) - 2*mBorderWidth) / (the y of my bounds) into tScaleFactorY
-	put tOuterRectPath into tInnerRectPath
-	translate tInnerRectPath by [ mBorderWidth, mBorderWidth ]
-	scale tInnerRectPath by [ tScaleFactorX, tScaleFactorY ]*/
-	
 	// Scale the canvas according to the animation settings
 	//
 	//	"this canvas" is the drawing canvas that is currently active - 
@@ -138,10 +133,13 @@ public handler OnPaint() as undefined
 		scale this canvas by [ mScale, mScale ]
 	end if
 	
-	// Draw the outer rectangle using the fill color
+	// Draw the outer rectangle using the fill color, darkening when clicked
+	// and lightening it when hovered.
 	variable tBorderColor
 	if mPressed then
-		put multiplyColor(mBorderColor, 0.5) into tBorderColor
+		put multiplyColor(mBorderColor, 0.75) into tBorderColor
+	else if mHover then
+		put multiplyColor(mBorderColor, 1.50) into tBorderColor
 	else
 		put mBorderColor into tBorderColor
 	end if
@@ -153,23 +151,28 @@ public handler OnPaint() as undefined
 	fill tInnerRectPath on this canvas
 	
 	// Draw the label
-	set the paint of this canvas to solid paint with color [ 0, 0, 0 ]
-	if mTextFont is defined then
-		if mTextSize is defined then
-			set the font of this canvas to font mTextFont at size mTextSize
-		else
-			set the font of this canvas to font mTextFont
+	if mLabel is defined then
+		// Always dr
+		set the paint of this canvas to solid paint with color [ 0, 0, 0 ]
+		if mTextFont is defined then
+			if mTextSize is defined then
+				set the font of this canvas to font mTextFont at size mTextSize
+			else
+				set the font of this canvas to font mTextFont
+			end if
 		end if
 	end if
 	fill text mLabel at center of my bounds on this canvas
 end handler
 
 public handler OnMouseEnter() as undefined
-
+	put true into mHover
+	redraw all
 end handler
 
 public handler OnMouseLeave() as undefined
-
+	put false into mHover
+	redraw all
 end handler
 
 public handler OnMouseDown() as undefined
@@ -215,6 +218,7 @@ private variable mPaintStyle        as string
 private variable mPaint             as Paint
 private variable mPrimaryColor      as Color
 private variable mSecondaryColor    as Color
+private variable mTextColor         as Color
 private variable mBorderColor       as Color
 private variable mCornerRadius      as real
 private variable mBorderWidth       as real
@@ -222,6 +226,7 @@ private variable mAnimate           as boolean
 private variable mScale             as real
 private variable mScaleDelta        as real
 private variable mPressed           as boolean
+private variable mHover             as boolean
 private variable mLabel             as optional string
 private variable mTextFont          as optional string
 private variable mTextSize          as optional integer
@@ -273,9 +278,9 @@ private handler stringToColor(in pString as string) as Color
 	//	and strings (or between any other types - integers and boolean
 	//	values are distinct too).
 	//
-	put element 1 of tComponentList parsed as number into tRed
-	put element 2 of tComponentList parsed as number into tGreen
-	put element 3 of tComponentList parsed as number into tBlue
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
 
 	// Use the alpha component, if specified
 	//
@@ -284,7 +289,7 @@ private handler stringToColor(in pString as string) as Color
 	//	statements do not exist).
 	//
 	if tComponentCount is 4 then
-		put element 4 of tComponentList parsed as number into tAlpha
+		put (element 4 of tComponentList) parsed as number into tAlpha
 	else
 		put 1.0 into tAlpha
 	end if
@@ -300,9 +305,9 @@ private handler colorToString(in pColor as Color) as string
 	variable tString as string
 
 	// Convert the numeric color component values into a string
-	put the red of pColor formatted as string into tString
-	put "," & the green of pColor formatted as string after tString
-	put "," & the blue of pColor formatted as string after tString
+	put ((the red of pColor) formatted as string) into tString
+	put "," & ((the green of pColor) formatted as string) after tString
+	put "," & ((the blue of pColor) formatted as string) after tString
 
 	return tString
 end handler
@@ -311,6 +316,7 @@ private handler updatePaint(in pStyle as string) as undefined
 	// Switch statements are not currently implemented so a chain of "if"
 	// statements needs to be used instead.
 	if pStyle is "solid color" then
+		// Darken the button when pressed
 		if mPressed then
 			put solid paint with multiplyColor(mPrimaryColor, 0.5) into mPaint
 		else
@@ -321,7 +327,8 @@ private handler updatePaint(in pStyle as string) as undefined
 		// complicated and have the gradient run from the top left to
 		// the bottom right of the widget.
 		//
-		// First, set up the basic ramp
+		// First, set up the basic ramp. If the button is pressed,
+		// reverse the direction of the two colors.
 		variable tStops as list
 		if mPressed then
 			put [ gradient stop at 0.0 with mSecondaryColor, gradient stop at 1.0 with mPrimaryColor ] into tStops
@@ -375,6 +382,24 @@ end handler
 private handler setSecondaryColor(in pColor as string) as undefined
 	put stringToColor(pColor) into mSecondaryColor
 	updatePaint(mPaintStyle)
+end handler
+
+private handler getTextColor() as string
+	return colorToString(mTextColor)
+end handler
+
+private handler setTextColor(in pColor as string) as undefined
+	put stringToColor(pColor) into mTextColor
+	redraw all
+end handler
+
+private handler getBorderColor() as string
+	return colorToString(mBorderColor)
+end handler
+
+private handler setBorderColor(in pColor as string) as undefined
+	put stringToColor(pColor) into mBorderColor
+	redraw all
 end handler
 
 private handler setPaintStyle(in pStyle as string) as undefined
