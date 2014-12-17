@@ -1,0 +1,419 @@
+// Widget declaration
+//
+//	Widgets are named using reverse-DNS notation so if, for example, your
+//	domain is "www.example.com", you might name your widget:
+//		com.example.widgets.my_awesome_widget
+//
+widget com.livecode.widgets.example.button
+
+
+// Widget metadata
+//
+//	Currently, three metadata tokens are recognised:
+//
+//	  author 	- the name of the person who created the widget
+//	  version 	- the release number for this widget
+//	  title		- human-readable name for the widget
+//
+metadata author     is "LiveCode Ltd"
+metadata version    is "1.0.0"
+metadata title      is "Example Button"
+
+
+// Dependency declarations
+//
+//	These lines specify the names of other modules that this widget depends
+//	on. Both of these modules are built into the engine - dependencies on
+//	other external modules do not currently function.
+use com.livecode.canvas
+use com.livecode.widget
+
+
+// Property declarations
+//
+//	Each publically-accessible property of your widget is declared here.
+//	In addition to the name of the property, handlers for property
+//	getting and setting can be specified (if your property is simple,
+//	either or both of these can simply be the name of the instance
+//	variable to modify).
+//
+//	Currently, a setter for the property is mandatory though this
+//	restriction will be relaxed in the near future to allow for
+//	read-only properties.
+//
+//	Types for properties are inferred from the return type of the
+//	getter, the parameter type of the setter or the declared type of
+//	the variable. These types should be the same as they are used to
+//	create the property inspector for your widget.
+//
+//	Properties (along with events) are the interface between LiveCode
+//	Builder and LiveCode Script so you need to ensure that any types
+//	returned from your getters or accepted by your setters are usable
+//	from Script (e.g. "pointer" is not valid).
+//
+property primaryColor       get getPrimaryColor     set setPrimaryColor
+property secondaryColor     get getSecondaryColor   set setSecondaryColor
+property paintStyle         get mPaintStyle         set setPaintStyle
+property cornerRadius       get mCornerRadius       set setCornerRadius
+property borderWidth        get mBorderWidth        set setBorderWidth
+property animate            get mAnimate            set setAnimate
+property label              get mLabel              set setLabel
+property textFont           get mTextFont           set setTextFont
+property textSize           get mTextSize           set setTextSize
+
+
+// Event handlers
+//
+//	These handlers are called automatically by the engine in response to
+//	events such as mouse movement, keyboard input or a redraw request.
+//
+//	For a list of all the events sent by the engine and details of their
+//	purpose, take a look at SkeletonWidget.mlc
+//
+//	As the event handlers must be accessible to the engine, they should be
+//	declared as public.
+public handler OnCreate() as undefined
+	// Set default values for all of the instance variables
+	put "linear gradient" into mPaintStyle
+	put color [ 0.7, 0.7, 1.0 ] into mPrimaryColor
+	put color [ 0.5, 0.5, 1.0 ] into mSecondaryColor
+	put color [ 1.0, 0.0, 0.0 ] into mBorderColor
+	put 10.0 into mCornerRadius
+	put 3.0 into mBorderWidth
+	put 1.0 into mScale
+	put -0.001 into mScaleDelta
+	put false into mPressed
+	put "Example Button" into mLabel
+	
+	// Set the paint correctly for this widget
+	updatePaint(mPaintStyle)
+	
+	// Enable animation
+	setAnimate(true)
+end handler
+
+public handler OnPaint() as undefined
+	// Create a rounded rectangle path at the size of this widget
+	//
+	//	"my bounds" is a rectangle with an origin at 0,0 and with a 
+	//	width and height equal to the width and height of the widget.
+	//	
+	//	There also exists "my frame" which is the position and size of
+	//	the widget relative to its parent and "my rectangle" which is
+	//	the same but relative to the containing card.
+	//
+	variable tOuterRectPath as Path
+	put rounded rectangle path of my bounds with radius mCornerRadius into tOuterRectPath
+	
+	// The inner rectangle is more bothersome as it needs to be reduced by
+	// the border width on all four sides
+	variable tInnerRect as Rectangle
+	variable tInnerRectPath as Path
+	put my bounds into tInnerRect
+	add mBorderWidth to the x of tInnerRect
+	add mBorderWidth to the y of tInnerRect
+	subtract 2*mBorderWidth from the width of tInnerRect
+	subtract 2*mBorderWidth from the height of tInnerRect
+	put rounded rectangle path of tInnerRect with radius mCornerRadius into tInnerRectPath
+	
+	// Create the inner rectangle by scaling and rotating the outer path
+	/*variable tScaleFactorX as real
+	variable tScaleFactorY as real
+	put ((the x of my bounds) - 2*mBorderWidth) / (the x of my bounds) into tScaleFactorX
+	put ((the y of my bounds) - 2*mBorderWidth) / (the y of my bounds) into tScaleFactorY
+	put tOuterRectPath into tInnerRectPath
+	translate tInnerRectPath by [ mBorderWidth, mBorderWidth ]
+	scale tInnerRectPath by [ tScaleFactorX, tScaleFactorY ]*/
+	
+	// Scale the canvas according to the animation settings
+	//
+	//	"this canvas" is the drawing canvas that is currently active - 
+	//	it is set up automatically before the call to OnPaint.
+	//
+	variable tAnimate as boolean
+	put (mAnimate and not in edit mode) into tAnimate
+	if tAnimate then
+		// A translation will be required to keep things centred
+		translate this canvas by [ 0.5*(1-mScale)*(the width of my bounds), 0.5*(1-mScale)*(the height of my bounds) ]
+		scale this canvas by [ mScale, mScale ]
+	end if
+	
+	// Draw the outer rectangle using the fill color
+	variable tBorderColor
+	if mPressed then
+		put multiplyColor(mBorderColor, 0.5) into tBorderColor
+	else
+		put mBorderColor into tBorderColor
+	end if
+	set the paint of this canvas to solid paint with tBorderColor
+	fill tOuterRectPath on this canvas
+	
+	// Draw the inner rectangle using the cached paint
+	set the paint of this canvas to mPaint
+	fill tInnerRectPath on this canvas
+	
+	// Draw the label
+	set the paint of this canvas to solid paint with color [ 0, 0, 0 ]
+	if mTextFont is defined then
+		if mTextSize is defined then
+			set the font of this canvas to font mTextFont at size mTextSize
+		else
+			set the font of this canvas to font mTextFont
+		end if
+	end if
+	fill text mLabel at center of my bounds on this canvas
+end handler
+
+public handler OnMouseEnter() as undefined
+
+end handler
+
+public handler OnMouseLeave() as undefined
+
+end handler
+
+public handler OnMouseDown() as undefined
+	put true into mPressed
+	updatePaint(mPaintStyle)
+end handler
+
+public handler OnMouseUp() as undefined
+	put false into mPressed
+	updatePaint(mPaintStyle)
+end handler
+
+public handler OnTimer() as undefined
+	// Set the new scale factor for the widget
+	add mScaleDelta to mScale
+	
+	// If the widget is too small or too large, reverse the pulse direction
+	if mScale > 1.0 or mScale < 0.9 then
+		put -mScaleDelta into mScaleDelta
+	end if
+	
+	// Timers are one-shot and need re-triggered
+	schedule timer in 1/60 seconds
+	
+	// Update the widget
+	redraw all
+end handler
+
+public handler OnGeometryChanged() as undefined
+	// Update the paint so the gradient is scaled correctly
+	updatePaint(mPaintStyle)
+end handler
+
+
+// Private instance variables
+//
+//	These variables are private to the widget (i.e they cannot be accessed
+//	by code outside the widget). Each copy ("instance") of the widget has
+//	its own copy of these variables - they are not shared between widgets
+//	of the same type.
+//
+private variable mPaintStyle        as string
+private variable mPaint             as Paint
+private variable mPrimaryColor      as Color
+private variable mSecondaryColor    as Color
+private variable mBorderColor       as Color
+private variable mCornerRadius      as real
+private variable mBorderWidth       as real
+private variable mAnimate           as boolean
+private variable mScale             as real
+private variable mScaleDelta        as real
+private variable mPressed           as boolean
+private variable mLabel             as optional string
+private variable mTextFont          as optional string
+private variable mTextSize          as optional integer
+
+
+// Private handlers
+//
+//	These handlers are not accessible to code outside the widget.
+//
+//	Although the "private" keyword is used on these handlers, it is not
+//	strictly necessary - handlers and variables are private by default
+//	and need to be explicitly declared as public.
+//
+private handler stringToColor(in pString as string) as Color
+	variable tRed as real
+	variable tGreen as real
+	variable tBlue as real
+	variable tAlpha as real
+
+	// Split the input string into its components
+	//
+	//	In LiveCode Builder, "list" is now a proper type and it is not
+	//	necessary to use a particular character as an item separator.
+	//
+	//	This line of code converts a Script-style comma-delimited list
+	//	into a "proper" list.
+	//
+	//	The chunk type to use for lists is "element".
+	//
+	variable tComponentList as list
+	split pString by "," into tComponentList
+
+	// Check that the number of components is correct.
+	// 
+	//	Note that in LiveCode Builder, the type of a variable need not
+	//	be specified - it defaults to "optional any" indicating that
+	//	the variable can hold any type (or even nothing at all).
+	//
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentList is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	// Interpret the RGB components of the color
+	//
+	//	LiveCode Builder does not automatically convert between numbers
+	//	and strings (or between any other types - integers and boolean
+	//	values are distinct too).
+	//
+	put element 1 of tComponentList parsed as number into tRed
+	put element 2 of tComponentList parsed as number into tGreen
+	put element 3 of tComponentList parsed as number into tBlue
+
+	// Use the alpha component, if specified
+	//
+	//	"if" statements work as they do in LiveCode Script except that
+	//	the "end if" clause is always mandatory (i.e single-line "if"
+	//	statements do not exist).
+	//
+	if tComponentCount is 4 then
+		put element 4 of tComponentList parsed as number into tAlpha
+	else
+		put 1.0 into tAlpha
+	end if
+
+	// Create the color using a list of component values
+	//
+	//	The [ ... ] syntax is used to create a list.
+	//
+	return color [ tRed, tGreen, tBlue, tAlpha ]
+end handler
+
+private handler colorToString(in pColor as Color) as string
+	variable tString as string
+
+	// Convert the numeric color component values into a string
+	put the red of pColor formatted as string into tString
+	put "," & the green of pColor formatted as string after tString
+	put "," & the blue of pColor formatted as string after tString
+
+	return tString
+end handler
+
+private handler updatePaint(in pStyle as string) as undefined
+	// Switch statements are not currently implemented so a chain of "if"
+	// statements needs to be used instead.
+	if pStyle is "solid color" then
+		if mPressed then
+			put solid paint with multiplyColor(mPrimaryColor, 0.5) into mPaint
+		else
+			put solid paint with mPrimaryColor into mPaint
+		end if
+	else if pStyle is "linear gradient" then
+		// Linear gradients have directions. We're going to be
+		// complicated and have the gradient run from the top left to
+		// the bottom right of the widget.
+		//
+		// First, set up the basic ramp
+		variable tStops as list
+		if mPressed then
+			put [ gradient stop at 0.0 with mSecondaryColor, gradient stop at 1.0 with mPrimaryColor ] into tStops
+		else
+			put [ gradient stop at 0.0 with mPrimaryColor, gradient stop at 1.0 with mSecondaryColor ] into tStops
+		end if
+		put linear gradient with ramp tStops into mPaint
+		
+		// Set the "to" and "via" points to get the diagonal gradient
+		variable tWidth as real
+		variable tHeight as real
+		put the width of my bounds into tWidth
+		put the height of my bounds into tHeight
+		scale mPaint by [ tWidth, tHeight ]
+	else
+		throw "Unknown paint style set"
+	end if
+	
+	// Paint was updated successfully
+	put pStyle into mPaintStyle
+	
+	// A re-draw will be required
+	redraw all
+end handler
+
+private handler multiplyColor(in pColor as Color, in pFactor as real) as Color
+	variable tRed as real
+	variable tGreen as real
+	variable tBlue as real
+	variable tAlpha as real
+	put (the red of pColor) * pFactor into tRed
+	put (the green of pColor) * pFactor into tGreen
+	put (the blue of pColor) * pFactor into tBlue
+	put the alpha of pColor into tAlpha
+	return color [ tRed, tGreen, tBlue, tAlpha ]
+end handler
+
+private handler getPrimaryColor() as string
+	return colorToString(mPrimaryColor)
+end handler
+
+private handler setPrimaryColor(in pColor as string) as undefined
+	put stringToColor(pColor) into mPrimaryColor
+	updatePaint(mPaintStyle)
+end handler
+
+private handler getSecondaryColor() as string
+	return colorToString(mSecondaryColor)
+end handler
+
+private handler setSecondaryColor(in pColor as string) as undefined
+	put stringToColor(pColor) into mSecondaryColor
+	updatePaint(mPaintStyle)
+end handler
+
+private handler setPaintStyle(in pStyle as string) as undefined
+	updatePaint(pStyle)
+end handler
+
+private handler setCornerRadius(in pRadius as real) as undefined
+	put pRadius into mCornerRadius
+	redraw all
+end handler
+
+private handler setBorderWidth(in pWidth as real) as undefined
+	put pWidth into mBorderWidth
+	redraw all
+end handler
+
+private handler setAnimate(in pAnimate as boolean) as undefined
+	put pAnimate into mAnimate
+	if mAnimate then
+		schedule timer in 1/60 seconds
+	else
+		cancel timer
+	end if
+end handler
+
+private handler setLabel(in pLabel as string) as undefined
+	put pLabel into mLabel
+	redraw all
+end handler
+
+private handler setTextFont(in pTextFont as string) as undefined
+	put pTextFont into mTextFont
+	redraw all
+end handler
+
+private handler setTextSize(in pTextSize as integer) as undefined
+	put pTextSize into mTextSize
+	redraw all
+end handler
+
+end widget
+
