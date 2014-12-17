@@ -18,8 +18,15 @@
 
 #include "prefix.h"
 
+#include "image.h"
+#include "widget.h"
+
 #include "module-canvas.h"
 #include "module-canvas-internal.h"
+
+//////////
+
+extern MCWidget *MCwidgetobject;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1592,7 +1599,7 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
 	
-	if (!MCImageRepCreateWithPath(p_path, t_image_rep))
+	if (!MCImageGetFileRepForStackContext(p_path, MCwidgetobject->getstack(), t_image_rep))
 	{
 		// TODO - throw image rep error
 		return;
@@ -2426,16 +2433,17 @@ void MCCanvasGradientTransformToPoints(const MCGAffineTransform &p_transform, MC
 
 bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
 {
-	MCGPoint t_src[3], t_dst[3];
-	t_src[0] = MCGPointMake(0, 0);
-	t_src[1] = MCGPointMake(0, 1);
-	t_src[2] = MCGPointMake(1, 0);
+	MCGAffineTransform t_transform;
+	t_transform . a = p_to . x - p_from . x;
+	t_transform . b = p_to . y - p_from . y;
+	t_transform . c = p_via . x - p_from . x;
+	t_transform . d = p_via . y - p_from . y;
+	t_transform . tx = p_from . x;
+	t_transform . ty = p_from . y;
 	
-	t_dst[0] = p_from;
-	t_dst[1] = p_to;
-	t_dst[2] = p_via;
+	r_transform = t_transform;
 	
-	return MCGAffineTransformFromPoints(t_src, t_dst, r_transform);
+	return true;
 }
 
 void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCGAffineTransform &r_transform)
@@ -4085,7 +4093,7 @@ void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanva
 
 void MCCanvasDirtyProperties(__MCCanvasImpl &p_canvas)
 {
-	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = p_canvas.stippled_changed = true;
+	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = p_canvas.stippled_changed = p_canvas.stroke_width_changed = true;
 }
 
 bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
@@ -4114,6 +4122,7 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 		p_properties.paint = nil;
 		p_properties.stippled = false;
 		p_properties.image_filter = kMCGImageFilterMedium;
+		p_properties.stroke_width = 0;
 		p_properties.font = t_default_font;
 		
 		// TODO - check this cast to supertype?
@@ -4139,6 +4148,7 @@ bool MCCanvasPropertiesCopy(MCCanvasProperties &p_src, MCCanvasProperties &p_dst
 	t_properties.stippled = p_src.stippled;
 	t_properties.image_filter = p_src.image_filter;
 	t_properties.paint = MCValueRetain(p_src.paint);
+	t_properties.stroke_width = p_src.stroke_width;
 	t_properties.font = MCValueRetain(p_src.font);
 	
 	p_dst = t_properties;
