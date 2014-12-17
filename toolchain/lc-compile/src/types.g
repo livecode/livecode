@@ -14,7 +14,7 @@
     EXPRESSION EXPRESSIONLIST
     INVOKELIST INVOKEINFO INVOKESIGNATURE INVOKEMETHODTYPE INVOKEMETHODLIST
     SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM
-    ID IDLIST
+    ID IDLIST OPTIONALID
     INTLIST
     NAMELIST
     MEANING
@@ -56,7 +56,7 @@
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
-    property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: ID)
+    property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
     event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)
     syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
     nil
@@ -281,6 +281,10 @@
 
 'type' NAMELIST
     namelist(Name: NAME, Rest: NAMELIST)
+    nil
+
+'type' OPTIONALID
+    id(Id: ID)
     nil
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)

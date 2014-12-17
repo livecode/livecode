@@ -442,8 +442,16 @@
 'nonterm' PropertyDefinition(-> DEFINITION)
 
     'rule' PropertyDefinition(-> property(Position, public, Name, Getter, Setter)):
-        "property" @(-> Position) Identifier(-> Name) "get" Identifier(-> Getter) "set" Identifier(-> Setter)
+        "property" @(-> Position) Identifier(-> Name) "get" Identifier(-> Getter) OptionalSetClause(-> Setter)
         
+'nonterm' OptionalSetClause(-> OPTIONALID)
+
+    'rule' OptionalSetClause(-> id(Setter)):
+        "set" Identifier(-> Setter)
+        
+    'rule' OptionalSetClause(-> nil):
+        -- nothing
+
 ---------- Event
 
 'nonterm' EventDefinition(-> DEFINITION)

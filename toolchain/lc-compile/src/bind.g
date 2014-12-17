@@ -311,10 +311,13 @@
         Apply(Parameters)
         LeaveScope
 
-    'rule' Apply(DEFINITION'property(_, _, _, Getter, Setter)):
+    'rule' Apply(DEFINITION'property(_, _, _, Getter, OptSetter)):
         -- Resolve the getter and setter ids
         ApplyId(Getter)
-        ApplyId(Setter)
+        [|
+            where(OptSetter -> id(Setter))
+            ApplyId(Setter)
+        |]
         
     'rule' Apply(DEFINITION'event(_, _, _, signature(Parameters, Type))):
         Apply(Type)
@@ -686,10 +689,13 @@
     'rule' DumpBindings(DEFINITION'foreignhandler(_, _, Name, Signature, _)):
         DumpId("foreign handler", Name)
         DumpBindings(Signature)
-    'rule' DumpBindings(DEFINITION'property(_, _, Name, Getter, Setter)):
+    'rule' DumpBindings(DEFINITION'property(_, _, Name, Getter, OptionalSetter)):
         DumpId("property", Name)
         DumpId("property getter", Getter)
-        DumpId("property setter", Setter)
+        [|
+            where(OptionalSetter -> id(Setter))
+            DumpId("property setter", Setter)
+        |]
     'rule' DumpBindings(DEFINITION'event(_, _, Name, Signature)):
         DumpId("event", Name)
         DumpBindings(Signature)

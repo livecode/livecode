@@ -60,9 +60,12 @@
     'rule' CheckBindings(DEFINITION'constant(Position, _, _, Value)):
         /* BD1 */ CheckBindingsOfConstantExpression(Value)
 
-    'rule' CheckBindings(DEFINITION'property(Position, _, _, Getter, Setter)):
+    'rule' CheckBindings(DEFINITION'property(Position, _, _, Getter, OptionalSetter)):
         /* BD2 */ CheckBindingIsVariableOrHandlerId(Getter)
-        /* BD2 */ CheckBindingIsVariableOrHandlerId(Setter)
+        [|
+            where(OptionalSetter -> id(Setter))
+            /* BD2 */ CheckBindingIsVariableOrHandlerId(Setter)
+        |]
 
     --
 

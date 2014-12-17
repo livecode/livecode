@@ -148,7 +148,7 @@
     'rule' GenerateManifestDefinitions(foreignhandler(_, public, Name, Signature, _)):
         GenerateManifestHandlerDefinition(Name, Signature)
 
-    'rule' GenerateManifestDefinitions(property(_, public, Name, Getter, Setter)):
+    'rule' GenerateManifestDefinitions(property(_, public, Name, Getter, OptionalSetter)):
         QuerySymbolId(Getter -> GetInfo)
         GetInfo'Type -> GetDefType
         (|
@@ -156,12 +156,17 @@
         ||
             where(GetDefType -> GetType)
         |)
-        QuerySymbolId(Setter -> SetInfo)
-        SetInfo'Type -> SetDefType
         (|
-            where(SetDefType -> handler(_, signature(parameterlist(parameter(_, _, _, SetType), _), _)))
+            where(OptionalSetter -> id(Setter))
+            QuerySymbolId(Setter -> SetInfo)
+            SetInfo'Type -> SetDefType
+            (|
+                where(SetDefType -> handler(_, signature(parameterlist(parameter(_, _, _, SetType), _), _)))
+            ||
+                where(SetDefType -> SetType)
+            |)
         ||
-            where(SetDefType -> SetType)
+            where(TYPE'nil -> SetType)
         |)
         GenerateManifestPropertyDefinition(Name, GetType, SetType)
 
@@ -303,8 +308,11 @@
         Id'Name -> Name
         OutputWriteI("  <property name=\"", Name, "\" get=\"")
         GenerateManifestType(GetType)
-        OutputWrite("\" set=\"")
-        GenerateManifestType(SetType)
+        [|
+            ne(SetType, nil)
+            OutputWrite("\" set=\"")
+            GenerateManifestType(SetType)
+        |]
         OutputWrite("\"/>\n")
 
 'condition' IsNameInList(NAME, NAMELIST)
@@ -602,14 +610,19 @@
         Info'Index -> DefIndex
         EmitForeignHandlerDefinition(DefIndex, Position, Name, TypeIndex, Binding)
         
-    'rule' GenerateDefinitions(property(Position, _, Id, Getter, Setter)):
+    'rule' GenerateDefinitions(property(Position, _, Id, Getter, OptionalSetter)):
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
         Info'Index -> DefIndex
         QuerySymbolId(Getter -> GetInfo)
         GetInfo'Index -> GetIndex
-        QuerySymbolId(Setter -> SetInfo)
-        SetInfo'Index -> SetIndex
+        (|
+            where(OptionalSetter -> id(Setter))
+            QuerySymbolId(Setter -> SetInfo)
+            SetInfo'Index -> SetIndex
+        ||
+            where(-1 -> SetIndex)
+        |)
         EmitPropertyDefinition(DefIndex, Position, Name, GetIndex, SetIndex)
         
     'rule' GenerateDefinitions(event(Position, _, Id, Signature)):
@@ -978,8 +991,6 @@
     'rule' GenerateBody(Result, Context, invoke(Position, Invokes, Arguments)):
         EmitPosition(Position)
         GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
-        print(Signature)
-        print(Arguments)
         GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
         EmitBeginInvoke(Index, Context, Result)
         GenerateInvoke_EmitInvokeArguments(Arguments)
@@ -1023,7 +1034,6 @@
 'action' GenerateInvoke_EvaluateArguments(INT, INT, INVOKESIGNATURE, EXPRESSIONLIST)
 
     'rule' GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, invokesignature(in, Index, SigRest), Args):
-        print(Index)
         GetExpressionAtIndex(Args, Index -> Expr)
         GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr)
         GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, SigRest, Args)
