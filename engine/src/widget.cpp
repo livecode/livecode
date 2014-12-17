@@ -124,6 +124,14 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
         // Now load the rep.
         if (p_rep != nil)
             OnLoad(p_rep);
+        
+        // If we are open, then open.
+        if (opened != 0)
+        {
+            OnOpen();
+            if (MCcurtool != T_BROWSE)
+                OnToolChanged(MCcurtool);
+        }
     }
     else
     {
@@ -724,20 +732,32 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 	}
 
-    MCGContextRef t_gcontext;
-    t_gcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
+    if (m_instance != nil)
+    {
+        MCGContextRef t_gcontext;
+        t_gcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
+        
+        MCGContextSave(t_gcontext);
+        MCGContextSetShouldAntialias(t_gcontext, true);
+        MCGContextTranslateCTM(t_gcontext, rect . x, rect . y);
+        
+        uintptr_t t_cookie;
+        MCCanvasPush(t_gcontext, t_cookie);
+        MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
+        MCCanvasPop(t_cookie);
+        
+        MCGContextRestore(t_gcontext);
+    }
+    else
+    {
+        setforeground(dc, DI_BACK, False);
+        dc->setbackground(MCscreen->getwhite());
+        dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
+        dc->fillrect(dirty);
+        dc->setbackground(MCzerocolor);
+        dc->setfillstyle(FillSolid, nil, 0, 0);
+    }
     
-	MCGContextSave(t_gcontext);
-	MCGContextSetShouldAntialias(t_gcontext, true);
-	MCGContextTranslateCTM(t_gcontext, rect . x, rect . y);
-    
-    uintptr_t t_cookie;
-    MCCanvasPush(t_gcontext, t_cookie);
-    MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
-    MCCanvasPop(t_cookie);
-    
-	MCGContextRestore(t_gcontext);
-	
 	if (!p_isolated)
 	{
 		dc -> end();
