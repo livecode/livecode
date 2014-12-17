@@ -1,6 +1,10 @@
 -- Place our widget in the 'com.livecode.example' namespace.
 widget com.livecode.extensions.example.clock
 
+metadata version is "0.1.0"
+metadata author is "Mark Waddingham"
+metadata title is "Clock Widget"
+
 -- We use syntax from the canvas, engine and widget modules.
 use com.livecode.canvas
 use com.livecode.engine
