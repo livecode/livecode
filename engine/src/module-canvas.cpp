@@ -5019,7 +5019,7 @@ extern "C" MC_DLLEXPORT void MCCanvasNewCanvasWithSize(MCProperListRef p_list, M
 		return;
 
     MCGContextRef t_gcontext;
-    if (!MCGContextCreate(ceil(t_scale . x), ceil(t_scale . y), true, t_gcontext))
+    if (!MCGContextCreate(ceil(t_scale . x), ceil(t_scale . y), false, t_gcontext))
     {
         MCErrorThrowGeneric(MCSTR("could not create gcontext"));
         return;
@@ -5049,7 +5049,24 @@ extern "C" MC_DLLEXPORT void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canvas, 
     void *t_pixels;
     t_pixels = MCGContextGetPixelPtr(t_canvas -> context);
     
-    if (!MCDataCreateWithBytes((const byte_t *)t_pixels, t_width * t_height * sizeof(uint32_t), r_data))
+    uint32_t t_pixel_count;
+    t_pixel_count = t_width * t_height;
+    
+    uint32_t *t_my_pixels, *t_data_ptr;
+    t_my_pixels = new uint32_t[t_pixel_count];
+    memcpy(t_my_pixels, t_pixels, t_pixel_count * sizeof(uint32_t));
+    
+    t_data_ptr = t_my_pixels;
+#if (kMCGPixelFormatNative != kMCGPixelFormatARGB)
+    while (t_pixel_count--)
+    {
+        uint8_t t_r, t_g, t_b, t_a;
+        MCGPixelUnpackNative(*t_data_ptr, t_r, t_g, t_b, t_a);
+        *t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
+    }
+#endif
+    
+    if (!MCDataCreateWithBytesAndRelease((byte_t *)t_my_pixels, t_width * t_height * sizeof(uint32_t), r_data))
         return;
 }
 

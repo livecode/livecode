@@ -218,28 +218,39 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
         return;
     }
     
+    MCValueRef t_value_copy;
+    t_value_copy = MCValueRetain(p_value);
+    
     // Make sure the value is something the script world can understand.
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-    if (!MCExtensionConvertToScriptType(ctxt, p_value))
+    if (!MCExtensionConvertToScriptType(ctxt, t_value_copy))
+    {
+        MCValueRelease(t_value_copy);
         return;
+    }
     
 	Properties t_prop;
 	t_prop = parse_property_name(p_property);
     
 	MCExecValue t_value;
     t_value . type = kMCExecValueTypeValueRef;
-    t_value . valueref_value = p_value;
+    t_value . valueref_value = t_value_copy;
     
     if (t_prop == P_CUSTOM)
     {
         MCNewAutoNameRef t_propset_name, t_propset_key;
         t_propset_name = t_script_object_imp -> handle -> Get() -> getdefaultpropsetname();
         if (!MCNameCreate(p_property, &t_propset_key))
+        {
+            MCValueRelease(t_value_copy);
             return;
+        }
         t_script_object_imp -> handle -> Get() -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
     }
     else
         t_script_object_imp -> handle -> Get() -> setprop(ctxt, t_script_object_imp -> part_id, t_prop, nil, False, t_value);
+    
+    MCValueRelease(t_value_copy);
     
     if (ctxt . HasError())
     {
