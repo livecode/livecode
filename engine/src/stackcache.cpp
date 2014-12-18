@@ -27,340 +27,360 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define UINDEX_MAX UINT32_MAX
-#define UINDEX_MIN UINT32_MIN
-#define UINTPTR_MAX UINT32_MAX
-#define UINTPTR_MIN UINT32_MIN
-
-class MCStackIdCache
+template<typename K>
+class MCStackCache
 {
 public:
-	MCStackIdCache(void);
-	~MCStackIdCache(void);
-	
-	void CacheObject(MCObject *object);
-	void UncacheObject(MCObject *object);
-	MCObject *FindObject(uint32_t id);
-	
-	bool RehashBuckets(uindex_t p_new_count);
+	MCStackCache (void);
+	virtual ~MCStackCache (void);
+
+	virtual bool CacheObject (MCObject *object);
+	virtual void UncacheObject (MCObject *object);
+	MCObject *FindObject (const K & key) const;
+
+	bool RehashBuckets (uindex_t p_new_count);
+
+protected:
+	virtual hash_t KeyHash (const K & key) const = 0;
+	virtual compare_t KeyCompare (const K &, const K &) const = 0;
+	virtual void ObjectGetKey (MCObject *object, K & key) const = 0;
 
 private:
-	static hash_t HashId(uint32_t id);
+	uindex_t FindBucket (const K & key, hash_t hash) const;
+	uindex_t FindBucketIfExists (const K & key, hash_t hash) const;
+	uindex_t FindBucketAfterRehash (const K & key, hash_t hash) const;
 
-	uindex_t FindBucket(uint32_t id, hash_t hash);
-	uindex_t FindBucketIfExists(uint32_t id, hash_t hash);
-	uindex_t FindBucketAfterRehash(uint32_t id, hash_t hash);
-	
 	uindex_t m_capacity_idx;
 	uindex_t m_count;
 	uintptr_t *m_buckets;
+
+	static const uindex_t kNOTFOUND = UINDEX_MAX;
+	static const uintptr_t kUNUSED = UINTPTR_MIN;
+	static const uintptr_t kDELETED = UINTPTR_MAX;
 };
 
 // Prime numbers. Values above 100 have been adjusted up so that the
 // malloced block size will be just below a multiple of 512; values
 // above 1200 have been adjusted up to just below a multiple of 4096.
- const uindex_t __kMCValueHashTableSizes[] = {
-    0, 3, 7, 13, 23, 41, 71, 127, 191, 251, 383, 631, 1087, 1723,
-    2803, 4523, 7351, 11959, 19447, 31231, 50683, 81919, 132607,
-    214519, 346607, 561109, 907759, 1468927, 2376191, 3845119,
-    6221311, 10066421, 16287743, 26354171, 42641881, 68996069,
-    111638519, 180634607, 292272623, 472907251,
+
+const uindex_t __kMCValueHashTableSizes[] = {
+	0, 3, 7, 13, 23, 41, 71, 127, 191, 251, 383, 631, 1087, 1723,
+	2803, 4523, 7351, 11959, 19447, 31231, 50683, 81919, 132607,
+	214519, 346607, 561109, 907759, 1468927, 2376191, 3845119,
+	6221311, 10066421, 16287743, 26354171, 42641881, 68996069,
+	111638519, 180634607, 292272623, 472907251,
 #ifdef __HUGE__
-    765180413UL, 1238087663UL, 2003267557UL, 3241355263UL, 5244622819UL,
+	765180413UL, 1238087663UL, 2003267557UL, 3241355263UL, 5244622819UL,
 #if 0
-    8485977589UL, 13730600407UL, 22216578047UL, 35947178479UL,
-    58163756537UL, 94110934997UL, 152274691561UL, 246385626107UL,
-    398660317687UL, 645045943807UL, 1043706260983UL, 1688752204787UL,
-    2732458465769UL, 4421210670577UL, 7153669136377UL,
-    11574879807461UL, 18728548943849UL, 30303428750843UL
+	8485977589UL, 13730600407UL, 22216578047UL, 35947178479UL,
+	58163756537UL, 94110934997UL, 152274691561UL, 246385626107UL,
+	398660317687UL, 645045943807UL, 1043706260983UL, 1688752204787UL,
+	2732458465769UL, 4421210670577UL, 7153669136377UL,
+	11574879807461UL, 18728548943849UL, 30303428750843UL
 #endif
 #endif
 };
 
 const uindex_t __kMCValueHashTableCapacities[] = {
-    0, 3, 6, 11, 19, 32, 52, 85, 118, 155, 237, 390, 672, 1065,
-    1732, 2795, 4543, 7391, 12019, 19302, 31324, 50629, 81956,
-    132580, 214215, 346784, 561026, 907847, 1468567, 2376414,
-    3844982, 6221390, 10066379, 16287773, 26354132, 42641916,
-    68996399, 111638327, 180634415, 292272755,
+	0, 3, 6, 11, 19, 32, 52, 85, 118, 155, 237, 390, 672, 1065,
+	1732, 2795, 4543, 7391, 12019, 19302, 31324, 50629, 81956,
+	132580, 214215, 346784, 561026, 907847, 1468567, 2376414,
+	3844982, 6221390, 10066379, 16287773, 26354132, 42641916,
+	68996399, 111638327, 180634415, 292272755,
 #ifdef __HUGE__
-    472907503UL, 765180257UL, 1238087439UL, 2003267722UL, 3241355160UL,
+	472907503UL, 765180257UL, 1238087439UL, 2003267722UL, 3241355160UL,
 #if 0
-    5244622578UL, 8485977737UL, 13730600347UL, 22216578100UL,
-    35947178453UL, 58163756541UL, 94110935011UL, 152274691274UL,
-    246385626296UL, 398660317578UL, 645045943559UL, 1043706261135UL,
-    1688752204693UL, 2732458465840UL, 4421210670552UL,
-    7153669136706UL, 11574879807265UL, 18728548943682UL
+	5244622578UL, 8485977737UL, 13730600347UL, 22216578100UL,
+	35947178453UL, 58163756541UL, 94110935011UL, 152274691274UL,
+	246385626296UL, 398660317578UL, 645045943559UL, 1043706261135UL,
+	1688752204693UL, 2732458465840UL, 4421210670552UL,
+	7153669136706UL, 11574879807265UL, 18728548943682UL
 #endif
 #endif
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-MCStackIdCache::MCStackIdCache(void)
+template <typename K>
+MCStackCache<K>::MCStackCache (void)
+	: m_capacity_idx (0), m_count (0), m_buckets (NULL)
 {
-	m_capacity_idx = 0;
-	m_count = 0;
-	m_buckets = nil;
 }
 
-MCStackIdCache::~MCStackIdCache(void)
+template <typename K>
+MCStackCache<K>::~MCStackCache (void)
 {
-	MCMemoryDeleteArray(m_buckets);
+	MCMemoryDeleteArray (m_buckets);
 }
 
-void MCStackIdCache::CacheObject(MCObject *p_object)
+template <typename K>
+bool
+MCStackCache<K>::CacheObject (MCObject *p_object)
 {
-	if (p_object -> getinidcache())
-		return;
-	
-	uint32_t t_id;
-	t_id = p_object -> getid();
-	
+	MCAssert (p_object != NULL);
+
+	K t_key;
 	hash_t t_hash;
-	t_hash = HashId(t_id);
-	
 	uindex_t t_target_slot;
-	t_target_slot = FindBucket(t_id, t_hash);
-	
-	if (t_target_slot == UINDEX_MAX)
+
+	ObjectGetKey (p_object, t_key);
+	t_hash = KeyHash (t_key);
+	t_target_slot = FindBucket (t_key, t_hash);
+
+	if (t_target_slot == kNOTFOUND) /* Grow hashtable */
 	{
-		if (!RehashBuckets(1))
-			return;
-		
-		t_target_slot = FindBucketAfterRehash(t_id, t_hash);
+		if (!RehashBuckets (1)) return false;
+		t_target_slot = FindBucketAfterRehash (t_key, t_hash);
 	}
-	
-	if (t_target_slot == UINDEX_MAX)
+
+	if (t_target_slot == kNOTFOUND) /* No room in hashtable */
+		return false;
+
+	m_buckets[t_target_slot] = reinterpret_cast<uintptr_t>(p_object);
+	++m_count;
+
+	return true;
+}
+
+template <typename K>
+void
+MCStackCache<K>::UncacheObject (MCObject *p_object)
+{
+	MCAssert (p_object != NULL);
+
+	K t_key;
+	hash_t t_hash;
+	uindex_t t_target_slot;
+
+	ObjectGetKey (p_object, t_key);
+	t_hash = KeyHash (t_key);
+	t_target_slot = FindBucketIfExists (t_key, t_hash);
+
+	if (t_target_slot == kNOTFOUND) /* Not found in hashtable */
 		return;
 
-	p_object -> setinidcache(true);
-	m_buckets[t_target_slot] = (uintptr_t)p_object;
-	m_count += 1;
+	m_buckets[t_target_slot] = kDELETED;
 }
 
-void MCStackIdCache::UncacheObject(MCObject *p_object)
-{
-	if (!p_object -> getinidcache())
-		return;
-	
-	uint32_t t_id;
-	t_id = p_object -> getid();
-	
-	hash_t t_hash;
-	t_hash = HashId(t_id);
-	
-	uindex_t t_target_slot;
-	t_target_slot = FindBucketIfExists(t_id, t_hash);
-	
-	if (t_target_slot != UINDEX_MAX)
-	{
-		p_object -> setinidcache(false);
-		m_buckets[t_target_slot] = UINTPTR_MAX;
-		m_count -= 1;
-	}
-}
-
-MCObject *MCStackIdCache::FindObject(uint32_t p_id)
+template <typename K>
+MCObject *
+MCStackCache<K>::FindObject (const K & t_key) const
 {
 	hash_t t_hash;
-	t_hash = HashId(p_id);
-	
 	uindex_t t_target_slot;
-	t_target_slot = FindBucketIfExists(p_id, t_hash);
-	
-	if (t_target_slot != UINDEX_MAX)
-		return (MCObject *)m_buckets[t_target_slot];
-	
-	return nil;
+
+	t_hash = KeyHash (t_key);
+	t_target_slot = FindBucketIfExists (t_key, t_hash);
+
+	if (t_target_slot == kNOTFOUND) /* Not found in hashtable */
+		return NULL;
+
+	return reinterpret_cast<MCObject *>(m_buckets[t_target_slot]);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-hash_t MCStackIdCache::HashId(uint32_t h)
+template <typename K>
+uindex_t
+MCStackCache<K>::FindBucket (const K & p_key,
+                               hash_t p_hash) const
 {
-	h ^= (h >> 20) ^ (h >> 12);
-    return h ^ (h >> 7) ^ (h >> 4);
-}
+	uindex_t t_capacity, t_h1, t_target_slot;
 
-uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash)
-{
-	uindex_t t_capacity;
 	t_capacity = __kMCValueHashTableSizes[m_capacity_idx];
-	
-	uindex_t t_h1;
-#if defined(__ARM__) && 0 // TODO
-	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
-#else
+	if (t_capacity == 0) return kNOTFOUND;
+
+	/* FIXME do something sensible on ARM ?? */
 	t_h1 = p_hash % t_capacity;
-#endif
-	
-	uindex_t t_probe;
-	t_probe = t_h1;
 
-	uindex_t t_target_slot;
-	t_target_slot = UINDEX_MAX;
+	t_target_slot = kNOTFOUND;
 
-	for(uindex_t i = 0; i < t_capacity; i++)
+	for (uindex_t i = 0; i < t_capacity; ++i)
 	{
+		/* Compute the trial insertion position, wrapping around */
+		uindex_t t_probe;
+		t_probe = (t_h1 + i) % t_capacity;
+
 		uintptr_t t_bucket;
 		t_bucket = m_buckets[t_probe];
-		if (t_bucket == UINTPTR_MIN)
-		{
-			if (t_target_slot == UINDEX_MAX)
+
+		if (t_bucket == kDELETED)
+		{ /* Previously deleted entry. Still need to check that key not present */
+			if (t_target_slot == kNOTFOUND)
+				t_target_slot = t_probe;
+		}
+		else if (t_bucket == kUNUSED)
+		{ /* Bucket has not yet been filled. */
+			if (t_target_slot == kNOTFOUND)
 				t_target_slot = t_probe;
 			break;
 		}
-		else if (t_bucket == UINTPTR_MAX)
-		{
-			if (t_target_slot == UINDEX_MAX)
-				t_target_slot = t_probe;
-		}
 		else
-		{
-			if (p_id == ((MCObject *)t_bucket) -> getid())
+		{ /* Bucket is full. Check the key */
+			K t_key;
+			ObjectGetKey (reinterpret_cast<MCObject *>(t_bucket), t_key);
+			if (0 == KeyCompare (t_key, p_key))
 				return t_probe;
 		}
-
-		t_probe += 1;
-
-		if (t_capacity <= t_probe)
-			t_probe -= t_capacity;
 	}
 
 	return t_target_slot;
 }
 
-uindex_t MCStackIdCache::FindBucketIfExists(uint32_t p_id, hash_t p_hash)
+template <typename K>
+uindex_t
+MCStackCache<K>::FindBucketIfExists (const K & p_key,
+                                       hash_t p_hash) const
 {
-	uindex_t t_capacity;
-	t_capacity = __kMCValueHashTableSizes[m_capacity_idx];
+	uindex_t t_bucket = FindBucket (p_key, p_hash);
 
-	uindex_t t_h1;
-#if defined(__ARM__) && 0 // TODO
-	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
-#else
-	t_h1 = p_hash % t_capacity;
-#endif
+	if (t_bucket == kNOTFOUND) return kNOTFOUND;
 
-	uindex_t t_probe;
-	t_probe = t_h1;
+	/* Requested key is not currently in the hash table */
+	if (m_buckets[t_bucket] == kUNUSED ||
+	    m_buckets[t_bucket] == kDELETED)
+		return kNOTFOUND;
 
-	for(uindex_t i = 0; i < t_capacity; i++)
-	{
-		uintptr_t t_bucket;
-		t_bucket = m_buckets[t_probe];
-
-		if (t_bucket == UINTPTR_MIN)
-			return UINDEX_MAX;
-
-		if (t_bucket != UINTPTR_MAX &&
-			((MCObject *)t_bucket) -> getid() == p_id)
-			return t_probe;
-
-		t_probe += 1;
-
-		if (t_capacity <= t_probe)
-			t_probe -= t_capacity;
-	}
-
-	return UINDEX_MAX;
+	return t_bucket;
 }
 
-uindex_t MCStackIdCache::FindBucketAfterRehash(uint32_t p_id, hash_t p_hash)
+template <typename K>
+uindex_t
+MCStackCache<K>::FindBucketAfterRehash (const K & p_key,
+                                          hash_t p_hash) const
 {
-	uindex_t t_capacity;
-	t_capacity = __kMCValueHashTableSizes[m_capacity_idx];
-
-	uindex_t t_h1;
-#if defined(__ARM__) && 0 // TODO
-	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
-#else
-	t_h1 = p_hash % t_capacity;
-#endif
-
-	uindex_t t_probe;
-	t_probe = t_h1;
-
-	for(uindex_t i = 0; i < t_capacity; i++)
-	{
-		uintptr_t t_bucket;
-		t_bucket = m_buckets[t_probe];
-
-		if (t_bucket == UINTPTR_MIN)
-			return t_probe;
-
-		t_probe += 1;
-
-		if (t_capacity <= t_probe)
-			t_probe -= t_capacity;
-	}
-
-	return UINDEX_MAX;
+	return FindBucket (p_key, p_hash);
 }
 
-bool MCStackIdCache::RehashBuckets(uindex_t p_new_item_count)
+template <typename K>
+bool
+MCStackCache<K>::RehashBuckets (uindex_t p_new_item_count)
 {
-	uindex_t t_new_capacity_idx;
-	t_new_capacity_idx = m_capacity_idx;
-	if (p_new_item_count != 0)
-	{
-		// If we are shrinking we just shrink down to the level needed by the currently
-		// used buckets.
-		if (p_new_item_count < 0)
-			p_new_item_count = 0;
-
-		// Work out the smallest possible capacity greater than the requested capacity.
-		uindex_t t_new_capacity_req;
-		t_new_capacity_req = m_count + p_new_item_count;
-		for(t_new_capacity_idx = 0; t_new_capacity_idx < 64; t_new_capacity_idx++)
-			if (t_new_capacity_req <= __kMCValueHashTableCapacities[t_new_capacity_idx])
-				break;
-	}
-
-	// Fetch the old capacity and table.
+	/* Keep the old capacity and table */
 	uindex_t t_old_capacity;
 	uintptr_t *t_old_buckets;
 	t_old_capacity = __kMCValueHashTableSizes[m_capacity_idx];
 	t_old_buckets = m_buckets;
 
-	// Create the new table.
+	/* Compute the new capacity and create the new table */
+	uindex_t t_new_capacity_idx;
 	uindex_t t_new_capacity;
 	uintptr_t *t_new_buckets;
+
+	t_new_capacity_idx = m_capacity_idx;
+	if (p_new_item_count != 0)
+	{
+		uindex_t t_required_capacity;
+
+		/* If shrinking, always shrink to the level needed by the
+		 * current contents. */
+		if (p_new_item_count < 0)
+			t_required_capacity = m_count;
+		else
+			t_required_capacity = m_count + p_new_item_count;
+
+		/* Work out the smallest possible capacity greater than the
+		 * requested capacity */
+		for (t_new_capacity_idx = 0;
+		     (t_new_capacity_idx < 64 &&
+		      t_required_capacity <= __kMCValueHashTableCapacities[t_new_capacity_idx]);
+		     ++t_new_capacity_idx);
+	}
+
 	t_new_capacity = __kMCValueHashTableSizes[t_new_capacity_idx];
-	if (!MCMemoryNewArray(t_new_capacity, t_new_buckets))
+	if (!MCMemoryNewArray (t_new_capacity, t_new_buckets))
 		return false;
 
-	// Update the vars.
+	/* Update the variables */
 	m_capacity_idx = t_new_capacity_idx;
 	m_buckets = t_new_buckets;
 
-	// Now rehash the values from the old table.
-	for(uindex_t i = 0; i < t_old_capacity; i++)
+	/* Rehash values from old table */
+	for (uindex_t i = 0; i < t_old_capacity; ++i)
 	{
-		if (t_old_buckets[i] != UINTPTR_MIN && t_old_buckets[i] != UINTPTR_MAX)
-		{
-			uint32_t t_id;
-			t_id = ((MCObject *)t_old_buckets[i]) -> getid();
-			
-			hash_t t_hash;
-			t_hash = HashId(t_id);
-			
-			uindex_t t_target_slot;
-			t_target_slot = FindBucketAfterRehash(t_id, t_hash);
+		/* Skip empty or deleted buckets */
+		if (t_old_buckets[i] == kUNUSED || t_old_buckets[i] == kDELETED)
+			continue;
 
-			// This assertion should never trigger - something is very wrong if it does!
-			MCAssert(t_target_slot != UINDEX_MAX);
+		K t_key;
+		hash_t t_hash;
+		uindex_t t_target_slot;
 
-			m_buckets[t_target_slot] = t_old_buckets[i];
-		}
+		ObjectGetKey (reinterpret_cast<MCObject *>(t_old_buckets[i]), t_key);
+		t_hash = KeyHash (t_key);
+		t_target_slot = FindBucketAfterRehash (t_key, t_hash);
+
+		/* There should always be enough space for a new entry at this point! */
+		MCAssert (t_target_slot != kNOTFOUND);
+
+		m_buckets[t_target_slot] = t_old_buckets[i];
 	}
 
-	// Delete the old table.
-	MCMemoryDeleteArray(t_old_buckets);
+	/* Delete the old table */
+	MCMemoryDeleteArray (t_old_buckets);
 
-	// We are done!
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCStackIdCache : public MCStackCache<uint32_t>
+{
+protected:
+	virtual hash_t KeyHash (const uint32_t & key) const;
+	virtual compare_t KeyCompare (const uint32_t &, const uint32_t &) const;
+	virtual void ObjectGetKey (MCObject *object, uint32_t & key) const;
+};
+
+hash_t
+MCStackIdCache::KeyHash (const uint32_t & key) const
+{
+	uint32_t h;
+	h = key;
+	h ^= (h >> 20) ^ (h >> 12);
+	h ^= (h >> 7) ^ (h >> 4);
+	return h;
+}
+
+compare_t
+MCStackIdCache::KeyCompare (const uint32_t & a,
+                            const uint32_t & b) const
+{
+	return (a - b);
+}
+
+void
+MCStackIdCache::ObjectGetKey (MCObject *object,
+                              uint32_t & key) const
+{
+	key = object->getid ();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCStackUuidCache : public MCStackCache<MCUuid>
+{
+protected:
+	virtual hash_t KeyHash (const MCUuid & key) const;
+	virtual compare_t KeyCompare (const MCUuid &, const MCUuid &) const;
+	virtual void ObjectGetKey (MCObject *object, MCUuid & key) const;
+};
+
+hash_t
+MCStackUuidCache::KeyHash (const MCUuid & key) const
+{
+	return MCHashBytes (&key, sizeof(key));
+}
+
+compare_t
+MCStackUuidCache::KeyCompare (const MCUuid & a,
+                              const MCUuid & b) const
+{
+	return MCUuidCompare (a, b);
+}
+
+void
+MCStackUuidCache::ObjectGetKey (MCObject *object,
+                                MCUuid & key) const
+{
+	MCAssert (object->HasUuid ());
+	object->GetUuid (key);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -368,7 +388,12 @@ bool MCStackIdCache::RehashBuckets(uindex_t p_new_item_count)
 
 void MCStack::cacheobjectbyid(MCObject *p_object)
 {
+	if (p_object->getinidcache ())
+		return;
+
     MCThreadMutexLock(m_id_cache_lock);
+
+	/* Attempt to create caches */
 	if (m_id_cache == nil)
 	{
 		m_id_cache = new MCStackIdCache;
@@ -378,19 +403,53 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 			m_id_cache = nil;
 		}
 	}
-		
-	if (m_id_cache != nil)
-		m_id_cache -> CacheObject(p_object);
+	if (m_uuid_cache == nil)
+	{
+		m_uuid_cache = new MCStackUuidCache;
+		if (!m_uuid_cache -> RehashBuckets (1))
+		{
+			delete m_uuid_cache;
+			m_uuid_cache = nil;
+		}
+	}
+
+	/* Only attempt to cache objects if both caches are present. */
+	if (m_id_cache != nil && m_uuid_cache != nil)
+	{
+		bool t_success = true;
+		if (t_success)
+			t_success = m_id_cache->CacheObject (p_object);
+		if (t_success && p_object->HasUuid ())
+			t_success = m_uuid_cache->CacheObject (p_object);
+
+		/* Either populate both caches or neither */
+		if (!t_success)
+		{
+			m_id_cache->UncacheObject (p_object);
+			if (p_object->HasUuid())
+				m_uuid_cache->UncacheObject (p_object);
+		}
+
+		p_object->setinidcache (t_success);
+	}
     MCThreadMutexUnlock(m_id_cache_lock);
 }
 
 void MCStack::uncacheobjectbyid(MCObject *p_object)
 {
-	if (m_id_cache == nil)
+	/* Require both caches to be present */
+	if (m_id_cache == nil || m_uuid_cache == nil)
+		return;
+	if (!p_object->getinidcache ())
 		return;
 		
     MCThreadMutexLock(m_id_cache_lock);
 	m_id_cache -> UncacheObject(p_object);
+
+	if (p_object->HasUuid())
+		m_uuid_cache -> UncacheObject(p_object);
+
+	p_object->setinidcache (false);
     MCThreadMutexUnlock(m_id_cache_lock);
 }
 
@@ -407,10 +466,27 @@ MCObject *MCStack::findobjectbyid(uint32_t p_id)
     return t_object;
 }
 
+MCObject *
+MCStack::findobjectbyuuid (const MCUuid & p_uuid)
+{
+	if (m_uuid_cache == nil)
+		return nil;
+
+	MCThreadMutexLock (m_id_cache_lock);
+	MCObject *t_object;
+	t_object = m_uuid_cache -> FindObject (p_uuid);
+	MCThreadMutexUnlock (m_id_cache_lock);
+
+	return t_object;
+}
+
 void MCStack::freeobjectidcache(void)
 {
     MCThreadMutexLock(m_id_cache_lock);
 	delete m_id_cache;
+	m_id_cache = nil;
+	delete m_uuid_cache;
+	m_uuid_cache = nil;
     MCThreadMutexUnlock(m_id_cache_lock);
 }
 

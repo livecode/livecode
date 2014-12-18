@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "globals.h"
+#include "objectid.h"
 
 enum {
     MAC_SHADOW,
@@ -191,6 +192,8 @@ class MCObject : public MCDLlist
 {
 protected:
 	uint4 obj_id;
+	MCUuid uuid;
+	bool have_uuid;
 	MCObject *parent;
 	MCNameRef _name;
 	uint4 flags;
@@ -410,6 +413,26 @@ public:
 	Exec_stat changeid(uint32_t new_id);
 #endif
 
+	////////// UUIDS
+
+	/* Returns false until the object has had a UUID allocated to it. */
+	bool HasUuid(void) const { return have_uuid; }
+	/* Returns false unless the object has a UUID and it matches the specified
+	 * p_uuid. */
+	bool HasUuid(const MCUuid &) const;
+	/* Obtain the object's UUID.  If it does not yet have one,
+	 * attempts to allocate a pseudorandomly-generated UUID.  Returns
+	 * false on failure. */
+	bool GetUuid(MCUuid &);
+	/* Obtain the object's UUID, if it has one.  If not, returns
+	 * false.  Note: this can be interpreted as failing to allocate a
+	 * UUID because the object is const. */
+	bool GetUuid(MCUuid &) const;
+	/* Set the UUID of the object to a specific value. */
+	bool SetUuid(const MCUuid &);
+
+	//////////
+
 	uint4 getid() const
 	{
 		return obj_id;
@@ -421,6 +444,10 @@ public:
 	void setid(uint4 inid)
 	{
 		obj_id = inid;
+	}
+	void setaltid(uint4 p_id)
+	{
+		altid = p_id;
 	}
 
 	// Returns true if the object has not been named.
@@ -1188,6 +1215,57 @@ private:
 	void mapfont(void);
 	void unmapfont(void);
 
+	////////// OBJECT ID MANAGEMENT
+protected:
+	/* MCConcreteObjectId is an MCObjectId that's permanently and directly
+	 * associated with a particular MCObject instance.  The accessors
+	 * operate directly on the associated MCObject.  The lifetime of an
+	 * MCConcreteObjectId instance is tied to its associated MCObject. */
+	class MCConcreteObjectId: public MCObjectId
+	{
+	public:
+		virtual MCObject *Get (void) const
+		{ return &m_owner; }
+
+		virtual void SetUuid (const MCUuid & p_uuid)
+		{ m_owner.SetUuid (p_uuid); }
+		virtual bool HasUuid (void) const
+		{ return m_owner.HasUuid (); }
+		virtual bool GetUuid (MCUuid & r_uuid) const
+		{ return m_owner.GetUuid (r_uuid); }
+
+		virtual void SetId (id_t p_id);
+		virtual bool HasId (void) const
+		{ return (0 != m_owner.getid ()); }
+		virtual id_t GetId (void) const
+		{ return m_owner.getid (); }
+
+		virtual void SetName (MCNameRef p_name)
+		{ m_owner.setname (p_name); }
+		virtual bool HasName (void) const
+		{ return !m_owner.hasname (kMCEmptyName); }
+		virtual MCNameRef GetName (void) const
+		{ return m_owner.getname (); }
+
+	protected:
+		MCConcreteObjectId (MCObject & p_owner)
+			: m_owner (p_owner)
+		{}
+
+		MCObject & m_owner;
+
+		friend class MCObject;
+	};
+
+private:
+	MCConcreteObjectId _id;
+
+public:
+	/* Get the MCObject's concrete object ID instance */
+	virtual const MCObjectId & GetObjectId (void) const { return _id; };
+
+	//////////
+
 	friend class MCObjectHandle;
 	friend class MCEncryptedStack;
 };
@@ -1236,4 +1314,7 @@ public:
 		return (MCObjectList *)MCDLlist::remove((MCDLlist *&)list);
 	}
 };
+
+////////////////////////////////////////////////////////////////
+
 #endif

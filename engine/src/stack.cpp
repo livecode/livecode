@@ -207,6 +207,7 @@ MCObjectPropertyTable MCStack::kPropertyTable =
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStack::MCStack()
+	: _id(*this)
 {
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
@@ -277,6 +278,7 @@ MCStack::MCStack()
 
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+	m_uuid_cache = nil;
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
@@ -299,7 +301,8 @@ MCStack::MCStack()
 	view_init();
 }
 
-MCStack::MCStack(const MCStack &sref) : MCObject(sref)
+MCStack::MCStack(const MCStack &sref)
+	: MCObject(sref), _id(*this)
 {
 	obj_id = sref.obj_id;
 
@@ -357,6 +360,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+	m_uuid_cache = nil;
 	
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);

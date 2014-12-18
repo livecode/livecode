@@ -66,4 +66,9 @@ void MCUuidToBytes(const MCUuid& uuid, uint8_t r_bytes[16]);
 // Decode a UUID from an endian-invariant sequence of bytes.
 void MCUuidFromBytes(uint8_t bytes[16], MCUuid& r_uuid);
 
+/* Compare two UUIDs. Returns an integer less than, equal to, or
+ * greater than zero if p_uuid_a is considered to be respectively less
+ * than, equal to or greater than p_uuid_b. */
+compare_t MCUuidCompare (const MCUuid & p_uuid_a, const MCUuid & p_uuid_b);
+
 #endif

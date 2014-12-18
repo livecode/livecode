@@ -56,6 +56,7 @@ typedef struct _Mnemonic Mnemonic;
 struct MCStackModeData;
 
 class MCStackIdCache;
+class MCStackUuidCache;
 
 // MCStackSurface is an interim abstraction that should be rolled into the Window
 // abstraction at some point - it represents a display rendering target.
@@ -213,6 +214,7 @@ protected:
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
+	MCStackUuidCache *m_uuid_cache;
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     MCThreadMutexRef m_id_cache_lock;
@@ -736,6 +738,10 @@ public:
 	void removecontrol(MCControl *cptr);
 	void appendcard(MCCard *cptr);
 	void removecard(MCCard *cptr);
+
+	/* Get an object by UUID, searching relative to this stack. */
+	MCObject *GetObjectByUuid(const MCUuid &);
+
 	MCObject *getsubstackobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
 	MCObject *getsubstackobjname(Chunk_term type, MCNameRef);
@@ -866,6 +872,8 @@ public:
 	void cacheobjectbyid(MCObject *object);
 	void uncacheobjectbyid(MCObject *object);
 	MCObject *findobjectbyid(uint32_t object);
+	/* Find an object by UUID */
+	MCObject *findobjectbyuuid(const MCUuid &);
 	void freeobjectidcache(void);
 
 	// MW-2013-11-07: [[ Bug 11393 ]] This returns true if the stack should use device-independent
@@ -1219,5 +1227,37 @@ private:
 	
 	bool mode_openasdialog(void);
 	void mode_closeasdialog(void);
+
+	////////// OBJECT ID MANAGEMENT
+protected:
+	/* MCConcreteStackId is a special version of MCConcreteObjectId
+	 * that's needed because stacks are identified by altid rather
+	 * than by id. */
+	class MCConcreteStackId: public MCObject::MCConcreteObjectId
+	{
+	public:
+		virtual void SetId (id_t p_id)
+		{ m_owner.setaltid (p_id); }
+		virtual bool HasId (void) const
+		{ return (0 != m_owner.getaltid ()); }
+		virtual id_t GetId (void) const
+		{ return m_owner.getaltid (); }
+
+	private:
+		MCConcreteStackId (MCObject & p_owner)
+			: MCConcreteObjectId(p_owner)
+		{}
+
+		friend class MCStack;
+	};
+
+private:
+	MCConcreteStackId _id;
+
+public:
+	/* Get the stack's concrete object ID instance */
+	virtual const MCObjectId & GetObjectId (void) const { return _id; };
+
+	//////////
 };
 #endif

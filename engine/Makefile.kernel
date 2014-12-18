@@ -28,6 +28,7 @@ SOURCES=\
 	itransform.cpp keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
 	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp \
 	object.cpp objptr.cpp operator.cpp paragraf.cpp param.cpp \
+	objectid.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
 	region.cpp \
