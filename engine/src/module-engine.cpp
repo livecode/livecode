@@ -33,6 +33,8 @@
 #include "card.h"
 #include "redraw.h"
 
+#include "module-engine.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct __MCScriptObject *MCScriptObjectRef;
