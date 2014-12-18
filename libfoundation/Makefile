@@ -7,6 +7,7 @@ SOURCES= \
 	foundation-array.cpp \
 	foundation-bidi.cpp \
 	foundation-core.cpp \
+	foundation-custom.cpp \
 	foundation-data.cpp \
 	foundation-debug.cpp \
 	foundation-error.cpp \
