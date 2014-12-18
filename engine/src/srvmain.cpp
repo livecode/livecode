@@ -405,14 +405,14 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	else if (MCsystem -> FolderExists(MCSTR(HOME_FOLDER)))
 		s_server_home = MCSTR(HOME_FOLDER);
 	else
-	{
-		s_server_home = MCValueRetain(MCcmd);
-
+    {
+        // SN-2014-12-16: [[ Bug 14001 ]] We can use MCcmd, no need to copy it into s_server_home
 		uindex_t t_last_separator;
-		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator);
+        MCStringLastIndexOfChar(MCcmd, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator);
 
 		MCAutoStringRef tmp_s_server_home;
-		/* UNCHECKED */ MCStringCopySubstring(s_server_home, MCRangeMake(0, t_last_separator - 1), &tmp_s_server_home);
+        // SN-2014-12-08: [[ Bug 14001 ]] The path to the externals goes up to the last separator, not one character before.
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_separator), &tmp_s_server_home);
 		s_server_home = MCValueRetain(*tmp_s_server_home);
 	}
 
@@ -422,7 +422,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	if (MCS_getenv(MCSTR("GATEWAY_INTERFACE"), &t_env))
 		s_server_cgi = true;
 	else
-		s_server_cgi = false;
+        s_server_cgi = false;
 	
 	if (!X_open(argc, argv, envp))
 		return False;

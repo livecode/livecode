@@ -636,10 +636,21 @@ static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped
             // MW-2014-06-25: [[ Bug 12370 ]] The engine expects keyCode to be the mapped key whenever
             //   the mapped key is ASCII. If the mapped key is not ASCII then the keyCode reflects
             //   the raw (US English) keycode.
-            if (isascii(t_native_char))
+            // SN-2014-12-08: [[ Bug 14067 ]] Avoid to use the native char instead of the key code
+            // the numeric keypad keys.
+            if (isascii(t_native_char) && (p_key_code < kMCPlatformKeyCodeKeypadSpace || p_key_code > kMCPlatformKeyCodeKeypadEqual))
                 r_key_code = t_native_char;
             else
                 r_key_code = p_key_code;
+            
+            return;
+        }
+        // SN-2014-12-05: [[ Bug 14162 ]] We can have unicode chars being typed.
+        // We keep the given keycode (the codepoint) as the key code in these conditions.
+        else
+        {
+            /* UNCHECKED */ MCStringCreateWithChars(&t_unicode_char, 1, r_native_char);
+            r_key_code = p_key_code;
             
             return;
         }
@@ -803,7 +814,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	if (MCactivefield == nil)
 		return;
 	
-	MCRedrawLockScreen();
+    // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
+    //  text input, inside an MCWait loop
+//	MCRedrawLockScreen();
 	
 	int32_t t_r_si, t_r_ei;
 	t_r_si = 0;
@@ -930,7 +943,25 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     else
     {
         MCStringCreateWithChars(p_chars, p_char_count, &t_string);
-        MCactivefield -> finsertnew(FT_IMEINSERT, *t_string, True);
+        
+        // SN-2014-12-05: [[ Bug 14162 ]] In case the character is a Unicode alphanumeric char,
+        // then that's not a combining char - and it deserves its (raw)Key(Down|Up) messages
+        uint32_t t_codepoint;
+        t_codepoint = MCStringGetCodepointAtIndex(*t_string, 0);
+        if (p_char_count == 1 && MCUnicodeIsAlnum(t_codepoint))
+        {
+            MCAutoStringRef t_mapped_char;
+            MCPlatformKeyCode t_mapped_key_code;
+
+            map_key_to_engine(s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
+
+            MCdispatcher -> wkdown(p_window, *t_string, *p_chars);
+
+            MCKeyMessageAppend(s_pending_key_up, *p_chars, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+            MCKeyMessageNext(s_pending_key_down);
+        }
+        else
+            MCactivefield -> finsertnew(FT_IMEINSERT, *t_string, True);
     }
 	
 	// And update the selection range.
@@ -941,7 +972,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	MCactivefield -> setcompositioncursoroffset(t_s_si - t_r_si);
 	MCactivefield -> seltext(t_s_si, t_s_ei, True);
 	
-	MCRedrawUnlockScreen();
+    // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
+    //  text input, inside an MCWait loop
+//	MCRedrawUnlockScreen();
 }
 
 static void synthesize_key_press(MCPlatformWindowRef p_window, char p_char, KeySym p_sym)
@@ -1303,7 +1336,11 @@ void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
 {
     if (MCacptr != nil)
+    {
         MCscreen -> addtimer(MCacptr, MCM_internal, 0);
+        // PM-2014-12-09: [[ Bug 14176 ]] Release and nullify the sound once it is done
+        MCacptr->stop(True);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

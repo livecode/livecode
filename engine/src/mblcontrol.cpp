@@ -216,6 +216,8 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{"opaque", P_OPAQUE},
 	{"alpha", P_ALPHA},
 	{"backgroundColor", P_BACKGROUND_COLOR},
+    // PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over
+    {"ignoreVoiceOverSensitivity", P_IGNORE_VOICE_OVER_SENSITIVITY},
 	
 	{"dataDetectorTypes", P_DATA_DETECTOR_TYPES},
 	
@@ -260,7 +262,7 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{"autoplay", P_SHOULD_AUTOPLAY},
 	{"looping", P_LOOPING},
 	
-	{"playbackstate", P_PLAYBACK_STATE},
+    {"playbackstate", P_PLAYBACK_STATE},
     
     // MM-2013-02-21: [[ Bug 10632 ]] Added playRate property for native player.
     {"playrate", P_PLAY_RATE},

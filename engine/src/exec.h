@@ -1502,7 +1502,8 @@ public:
     bool ConvertToData(MCValueRef p_value, MCDataRef& r_data);
     bool ConvertToName(MCValueRef p_value, MCNameRef& r_data);
 	bool ConvertToNumber(MCValueRef value, MCNumberRef& r_number);
-	bool ConvertToArray(MCValueRef value, MCArrayRef& r_array);
+    // SN-2014-12-03: [[ Bug 14147 ]] Some conversions to an array might not accept a string
+	bool ConvertToArray(MCValueRef value, MCArrayRef& r_array, bool p_strict = false);
     
     bool ConvertToBool(MCValueRef value, bool& r_bool);
 	bool ConvertToInteger(MCValueRef value, integer_t& r_integer);
@@ -5395,6 +5396,8 @@ void MCMiscExecEnableRemoteControl(MCExecContext& ctxt);
 void MCMiscExecDisableRemoteControl(MCExecContext& ctxt);
 void MCMiscGetRemoteControlEnabled(MCExecContext& ctxt, bool& r_enabled);
 void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_props);
+
+void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running);
 
 ////////////////////////////////////////////////////////////////////////////////
 
