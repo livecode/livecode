@@ -5037,7 +5037,7 @@ extern "C" MC_DLLEXPORT void MCCanvasNewCanvasWithSize(MCProperListRef p_list, M
     r_canvas = t_canvas;
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasGetPixelData(MCCanvasRef p_canvas, MCDataRef& r_data)
+extern "C" MC_DLLEXPORT void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canvas, MCDataRef& r_data)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -5053,14 +5053,14 @@ extern "C" MC_DLLEXPORT void MCCanvasGetPixelData(MCCanvasRef p_canvas, MCDataRe
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasGetPixelWidth(MCCanvasRef p_canvas, uinteger_t& r_width)
+extern "C" MC_DLLEXPORT void MCCanvasGetPixelWidthOfCanvas(MCCanvasRef p_canvas, uinteger_t& r_width)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
     r_width = MCGContextGetWidth(t_canvas -> context);
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasGetPixelHeight(MCCanvasRef p_canvas, uinteger_t& r_height)
+extern "C" MC_DLLEXPORT void MCCanvasGetPixelHeightOfCanvas(MCCanvasRef p_canvas, uinteger_t& r_height)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
