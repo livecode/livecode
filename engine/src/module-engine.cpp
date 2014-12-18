@@ -184,7 +184,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStrin
         MCNewAutoNameRef t_propset_name, t_propset_key;
         t_propset_name = t_script_object_imp -> handle -> Get() -> getdefaultpropsetname();
         if (!MCNameCreate(p_property, &t_propset_key))
-            return false;
+            return nil;
         t_script_object_imp -> handle -> Get() -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
     }
     else
