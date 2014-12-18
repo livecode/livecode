@@ -467,7 +467,7 @@ bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
     
     if (t_service != nil)
         return t_service -> DeleteRegistry(p_key, r_error);
-    
+		
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
@@ -478,11 +478,13 @@ bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_err
     
     if (t_service != nil)
     {
-        MCAutoStringRef t_native_path;
-        if (!MCS_pathtonative(p_path, &t_native_path))
-            return false;
+		// SN-2014-12-15: [[ Bug 14219 ]] The path to keys must have 
+		//  backslashes, not slashes
+        //MCAutoStringRef t_native_path;
+        //if (!MCS_pathtonative(p_path, &t_native_path))
+        //    return false;
         
-        return t_service -> ListRegistry(*t_native_path, r_list, r_error);        
+        return t_service -> ListRegistry(p_path, r_list, r_error);        
     }
     
 	return MCStringCreateWithCString("not supported", r_error);
