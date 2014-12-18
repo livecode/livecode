@@ -23,6 +23,11 @@
 
 typedef struct __MCScriptObject *MCScriptObjectRef;
 
+extern "C"
+{
+    extern MC_DLLEXPORT MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
+}
+
 bool MCScriptObjectCreate(MCObject *p_object, uint32_t p_part_id, MCScriptObjectRef& r_object);
 
 ////////////////////////////////////////////////////////////////////////////////
