@@ -1290,79 +1290,229 @@ begin
 	MCCanvasGradientStopSetOffset(input, mStop)
 end syntax
 
-syntax GradientStopColorProperty is prefix operator with precedence 4
+/*
+Summary:	The color of a gradient stop value.
+
+mStop:		An expression which evaluates to a gradient stop.
+
+Description:	The color of <mStop>.
+
+Example:
+	// Get the color of a stop
+	put the color of tStop into tColor
+	// Set the stop color to red
+	set the color of tStop to color [1,0,0]
+
+Tags:	Canvas
+*/
+
+syntax GradientStopPropertyColor is prefix operator with precedence 4
 	"the" "color" "of" <mStop: Expression>
 begin
 	MCCanvasGradientStopGetColor(mStop, output)
 	MCCanvasGradientStopSetColor(input, mStop)
 end syntax
 
-syntax GradientRampProperty is prefix operator with precedence 4
+/*
+Summary:	The ramp of a gradient paint.
+
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The ramp of <mGradient>. The ramp is a list of gradient stops that describes the color transitions along the length of the gradient
+
+Example:
+	// Get the gradient ramp
+	put the ramp of tGradient into tRamp
+	// Change the color of the first stop
+	set the color of element 1 of tRamp to color [1,0,0]
+	// Set the new gradient ramp
+	set the ramp of tGradient to tRamp
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyRamp is prefix operator with precedence 4
 	"the" "ramp" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetRamp(mGradient, output)
 	MCCanvasGradientSetRamp(input, mGradient)
 end syntax
 
-//syntax GradientStopsProperty is prefix operator with precedence 4
-//	"stop" <mStart: Expression> [ "to" <mEnd: Expression> ] "of" <mGradient: Expression>
-//begin
-//	MCCanvasGradientGetStops(mGradient, mStart, mStart, output)
-//	MCCanvasGradientSetStops(mGradient, mStart, mStart, input)
-//	MCCanvasGradientGetStops(mGradient, mStart, mEnd, output)
-//	MCCanvasGradientSetStops(mGradient, mStart, mEnd, input)
-//end syntax
+/*
+Summary:	The type of a gradient paint.
 
-syntax GradientTypeProperty is prefix operator with precedence 4
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The type of <mGradient> as a string. This can be one of "linear", "radial", "conical", "diamond", "spiral", "xy", "sqrtxy".
+
+Example:
+	// Store the old gradient type
+	put the type of tGradient into tType
+	// Change the gradient type to radial
+	set the type of tGradient to "radial"
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyType is prefix operator with precedence 4
 	"the" "type" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetTypeAsString(mGradient, output)
 	MCCanvasGradientSetTypeAsString(input, mGradient)
 end syntax
 
-syntax GradientRepeatProperty is prefix operator with precedence 4
+/*
+Summary:	The repeat count of a gradient paint.
+
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The repeat count of <mGradient> as a number. This determines how many times the ramp is repeated over the length of the gradient.
+
+Example:
+	// Store the old gradient repeat count
+	put the repeat of tGradient into tRepeat
+	// Make the gradient repeat 3 times
+	set the repeat of tGradient to 3
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyRepeat is prefix operator with precedence 4
 	"the" "repeat" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetRepeat(mGradient, output)
 	MCCanvasGradientSetRepeat(input, mGradient)
 end syntax
 
-syntax GradientWrapProperty is prefix operator with precedence 4
+/*
+Summary:	The wrap of a gradient paint.
+
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The wrap of <mGradient> as a boolean. If wrap is true then the gradient ramp will be repeated continually outside the defined extent of the gradient.
+
+Example:
+	// Toggle the wrapping of a gradient
+	put the wrap of tGradient into tWrap
+	set the wrap of tGradient to not tWrap
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyWrap is prefix operator with precedence 4
 	"the" "wrap" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetWrap(mGradient, output)
 	MCCanvasGradientSetWrap(input, mGradient)
 end syntax
 
-syntax GradientMirrorProperty is prefix operator with precedence 4
+/*
+Summary:	The mirror of a gradient paint.
+
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The mirror of <mGradient> as a boolean. If mirror is true then the ramp will be reversed on each repeat.
+
+Example:
+	// Toggle the mirroring of a gradient
+	put the mirror of tGradient into tMirror
+	set the mirror of tGradient to not tMirror
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyMirror is prefix operator with precedence 4
 	"the" "mirror" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetMirror(mGradient, output)
 	MCCanvasGradientSetMirror(input, mGradient)
 end syntax
 
-syntax GradientFromProperty is prefix operator with precedence 4
+/*
+Summary:	The from point of a gradient paint.
+
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The from point of <mGradient> as a point. Defines the starting point from which to begin drawing the gradient.
+
+Example:
+	// Set the start point of the gradient to the center of tRect
+	set the from of tGradient to point [(the left of tRect + the right of tRect) / 2, (the top of tRect + the bottom of tRect) / 2]
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyFrom is prefix operator with precedence 4
 	"the" "from" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetFrom(mGradient, output)
 	MCCanvasGradientSetFrom(input, mGradient)
 end syntax
 
-syntax GradientToProperty is prefix operator with precedence 4
+/*
+Summary:	The to point of a gradient paint.
+
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The to point of <mGradient> as a point. Defines the end point when drawing the gradient.
+
+Example:
+	// Set the end point of the gradient to the right of tRect
+	set the from of tGradient to point [the right of tRect, (the top of tRect + the bottom of tRect) / 2]
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyTo is prefix operator with precedence 4
 	"the" "to" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetTo(mGradient, output)
 	MCCanvasGradientSetTo(input, mGradient)
 end syntax
 
-syntax GradientViaProperty is prefix operator with precedence 4
+/*
+Summary:	The via point of a gradient paint.
+
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The via point of <mGradient> as a point. This is used to skew and scale the gradient when drawing.
+
+Example:
+	// Set the via of the gradient to the bottom of tRect
+	set the via of tGradient to point [(the left of tRect + the right of tRect) / 2, the bottom of tRect]
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyVia is prefix operator with precedence 4
 	"the" "via" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetVia(mGradient, output)
 	MCCanvasGradientSetVia(input, mGradient)
 end syntax
 
-syntax GradientTransformProperty is prefix operator with precedence 4
+/*
+Summary:	The transform of a gradient paint.
+
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	The transform of <mGradient> as a transform. This can be used to scale, position, and skew the gradient instead of setting the from, to, and via points.
+
+Example:
+	// Use the transform property to make the radial gradient spread out from the center of tRect
+	variable tTransform
+	put the identity transform into tTransform
+	// Scale out to the right & bottom of tRect
+	scale tTransform by [the width of tRect / 2, the height of tRect / 2]
+	// Offset transform to the center of tRect
+	translate tTransform by [(the left of tRect + the right of tRect) / 2, (the top of tRect + the bottom of tRect) / 2]
+	// Set the gradient transform
+	set the transform of tGradient to tTransform
+
+Tags:	Canvas
+*/
+
+syntax GradientPropertyTransform is prefix operator with precedence 4
 	"the" "transform" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetTransform(mGradient, output)
@@ -1382,36 +1532,109 @@ public foreign handler MCCanvasGradientRotate(inout xGradient as Gradient, in pR
 public foreign handler MCCanvasGradientTranslate(inout xGradient as Gradient, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientTranslateWithList(inout xGradient as Gradient, in pTranslation as list) as undefined binds to "<builtin>"
 
-syntax AddGradientStop is statement
+/*
+Summary:	Add a new stop to the ramp of a gradient paint.
+
+mStop:	An expression which evaluates to a gradient stop
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	Appends the stop to the ramp of <mGradient>. The offset of the new gradient should not be before the offset of the last stop.
+
+Example:
+	// Add stops to the gradient
+	add gradient stop at 0 with color [0,0,0] to tGradient
+	add gradient stop at 1 with color [1,1,1] to tGradient
+
+Tags:	Canvas
+*/
+
+syntax GradientOperationAddStop is statement
 	"add" <mStop: Expression> "to" <mGradient:Expression>
 begin
 	MCCanvasGradientAddStop(mStop, mGradient)
 end syntax
 
-syntax TransformGradient is statement
+/*
+Summary:	Apply a transform to a gradient paint.
+
+mTransform:	An expression which evaluates to a transform.
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	Concatenates the transform of <mGradient> with <mTransform>.
+
+Example:
+	// Scale the gradient with a transform
+	transform tGradient by transform with scale [2,2]
+
+Tags:	Canvas
+*/
+
+syntax GradientOperationTransform is statement
 	"transform" <mGradient: Expression> "by" <mTransform: Expression>
 begin
 	MCCanvasGradientTransform(mGradient, mTransform)
 end syntax
 
-syntax ScaleGradient is statement
+/*
+Summary:	Apply a scale to a gradient paint.
+
+mScale:	An expression which evaluates to a list of numbers.
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	Scales the transform of <mGradient> by <mScale>.
+
+Example:
+	// Scale the gradient
+	scale tGradient by [2,2]
+
+Tags:	Canvas
+*/
+
+syntax GradientOperationScale is statement
 	"scale" <mGradient: Expression> "by" <mScale: Expression>
 begin
-//	MCCanvasGradientScale(mGradient, mScale[0], mScale[0])
-//	MCCanvasGradientScale(mGradient, mScale[0], mScale[1])
 	MCCanvasGradientScaleWithList(mGradient, mScale)
 end syntax
 
-syntax RotateGradient is statement
+/*
+Summary:	Apply a rotation to a gradient paint.
+
+mRotation:	An expression which evaluates to a number.
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	Rotates the transform of <mGradient> by <mRotation> degrees.
+
+Example:
+	// Rotate the gradient
+	rotate tGradient by 45
+
+Tags:	Canvas
+*/
+
+syntax GradientOperationRotate is statement
 	"rotate" <mGradient: Expression> "by" <mRotation: Expression>
 begin
 	MCCanvasGradientRotate(mGradient, mRotation)
 end syntax
 
-syntax TranslateGradient is statement
+/*
+Summary:	Apply a translation to a gradient paint.
+
+mTranslation:	An expression which evaluates to a list of numbers.
+mGradient:		An expression which evaluates to a gradient.
+
+Description:	Translates the transform of <mGradient> by <mTranslation>.
+
+Example:
+	// Translate the gradient
+	translate tGradient by [50,100]
+
+Tags:	Canvas
+*/
+
+syntax GradientOperationTranslate is statement
 	"translate" <mGradient: Expression> "by" <mTranslation: Expression>
 begin
-//	MCCanvasGradientTranslate(mGradient, mTranslation[0], mTranslation[1])
 	MCCanvasGradientTranslateWithList(mGradient, mTranslation)
 end syntax
 
@@ -1426,14 +1649,46 @@ public foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as
 public foreign handler MCCanvasImageMakeWithPixels(in pWidth as integer, in pHeight as integer, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as list, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 
-syntax MakeImage is prefix operator with precedence 4
+/*
+Summary:	Creates a new image.
+
+mPath:		An expression which evaluates to a string.
+mData:	An expression which evaluates to binary data
+
+Returns:	A new image decoded from the file or data provided.
+
+Example:
+	// Load image from a file path
+	put image from file tPath into tImage
+	// Load image from a block of data
+	put image from data tData into tImage
+
+Tags: Canvas
+*/
+
+syntax ImageMake is prefix operator with precedence 4
 	"image" "from" ( "file" <mPath: Expression> | "data" <mData: Expression> )
 begin
 	MCCanvasImageMakeWithPath(mPath, output)
 	MCCanvasImageMakeWithData(mData, output)
 end syntax
 
-syntax MakeImageWithPixels is prefix operator with precedence 4
+/*
+Summary:	Creates a new image using raw pixel data.
+
+mSize:		An expression which evaluates to a list of integers.
+mPixels:	An expression which evaluates to binary data
+
+Returns:	A new image of the given size, using the provided ARGB pixel data.
+
+Example:
+	// Create image from pixel data
+	put image of size [320, 480] with pixels tPixelData into tImage
+
+Tags: Canvas
+*/
+
+syntax ImageMakeWithPixels is prefix operator with precedence 4
 	"image" "of" "size" <mSize: Expression> "with" "pixels" <mPixels: Expression>
 begin
 //	MCCanvasImageMakeWithPixels(mSize[0], mSize[1], mPixels, output)
@@ -1451,13 +1706,45 @@ public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as
 public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
 // TODO - add image frame index property?
 
-syntax ImageWidthProperty is prefix operator with precedence 2
+/*
+Summary:	The width of an image.
+
+mImage:		An expression which evaluates to an image.
+
+Description:	The width of the image in pixels.
+
+Example:
+	// Load an image from a file and get its dimensions
+	put image from file tPath into tImage
+	put the width of tImage into tWidth
+	put the height of tImage into tHeight
+
+Tags:	Canvas
+*/
+
+syntax ImagePropertyWidth is prefix operator with precedence 2
 	"the" "width" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetWidth(mImage, output)
 end syntax
 
-syntax ImageHeightProperty is prefix operator with precedence 2
+/*
+Summary:	The height of an image.
+
+mImage:		An expression which evaluates to an image.
+
+Description:	The height of the image in pixels.
+
+Example:
+	// Load an image from a file and get its dimensions
+	put image from file tPath into tImage
+	put the width of tImage into tWidth
+	put the height of tImage into tHeight
+
+Tags:	Canvas
+*/
+
+syntax ImagePropertyHeight is prefix operator with precedence 2
 	"the" "height" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetHeight(mImage, output)
@@ -1469,7 +1756,22 @@ end syntax
 //	MCCanvasImageGetMetadata(mImage, output)
 //end syntax
 
-syntax ImagePixelsProperty is prefix operator with precedence 4
+/*
+Summary:	The pixel data of an image.
+
+mImage:		An expression which evaluates to an image.
+
+Description:	The raw ARGB pixel data of the image.
+
+Example:
+	// Load an image from a file and get its pixels
+	put image from file tPath into tImage
+	put the pixels of tImage into tPixelData
+
+Tags:	Canvas
+*/
+
+syntax ImagePropertyPixels is prefix operator with precedence 4
 	"the" "pixels" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetPixels(mImage, output)
