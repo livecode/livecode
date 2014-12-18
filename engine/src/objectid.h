@@ -117,7 +117,7 @@ public:
 	virtual bool HasContext (void) const { return (m_context != NULL); }
 	virtual const MCObjectId *GetContext (void) const {return m_context; }
 
-	~MCDelayedObjectId (void);
+	virtual ~MCDelayedObjectId (void);
 
 protected:
 	const MCObjectId *m_context;
