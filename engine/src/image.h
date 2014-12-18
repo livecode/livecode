@@ -552,7 +552,11 @@ public:
 	void set_gif(uint1 *data, uint4 length);
 
 	MCString getrawdata(void);
-	
+    
+    // PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+    MCString getimagefilename(void);
+    bool isReferencedImage(void);
+    
 	MCImage *next()
 	{
 		return (MCImage *)MCDLlist::next();
