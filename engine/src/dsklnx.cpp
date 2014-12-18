@@ -1972,13 +1972,19 @@ public:
 
         return t_success;
     }
-
-	virtual bool GetExecutablePath(MCStringRef& r_path)
-	{
-		MCAutoStringRef t_proc_path;
-		MCStringCreateWithCString("/proc/self/exe", &t_proc_path);
-		return ResolvePath(*t_proc_path, r_path);
-	}
+    
+    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
+    virtual bool GetExecutablePath(MCStringRef &r_executable)
+    {
+        char t_executable[PATH_MAX];
+        uint32_t t_size;
+        t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
+        if (t_size == PATH_MAX)
+            return false;
+        
+        t_executable[t_size] = 0;
+        return MCStringCreateWithSysString(t_executable, r_executable);
+    }
 
     virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
     {

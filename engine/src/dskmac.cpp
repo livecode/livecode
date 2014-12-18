@@ -57,6 +57,8 @@
 #include <Security/Authorization.h>
 #include <Security/AuthorizationTags.h>
 
+#include <mach-o/dyld.h>
+
 
 #define ENTRIES_CHUNK 1024
 
@@ -6259,6 +6261,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return MCListCopyAsString(*t_list, r_drives) ? True : False;
     }
 	
+    
+    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
 	virtual bool GetExecutablePath(MCStringRef& r_path)
 	{
 		uint32_t bufsize = 0;
@@ -6270,7 +6274,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 		}
 
 		MCAutoStringRef t_path;
-		MCStringCreateWithCStringAndRelease(buf, *t_path);
+		MCStringCreateWithCStringAndRelease(buf, &t_path);
 		return ResolvePath(*t_path, r_path);
 	}
 

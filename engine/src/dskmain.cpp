@@ -140,6 +140,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	delete MCresult;
 #endif
 	
+    // ST-2014-12-18: [[ Bug 14259 ]] Update to get the executable file from the system
+    // since ResolvePath must behave differently on Linux
 	MCsystem -> GetExecutablePath(MCcmd);
 
     // Create the basic locale and the system locale
