@@ -11,6 +11,10 @@
 --    canvasApplyToImage "image 1"
 --    canvasDestroy
 --
+-- This creates a canvas of size 100x100, fills a circle of radius 25 at
+-- the centre, then copies the contents of the canvas to 'image 1' (which
+-- must already exist).
+--
 library com.livecode.libraries.example.canvas
 
 -- We need syntax from both canvas and engine built-in modules.
