@@ -2078,59 +2078,203 @@ public foreign handler MCCanvasPathCurveThroughPoint(in pThrough as Point, in pT
 public foreign handler MCCanvasPathCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, inout xPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathClosePath(inout xPath as Path) as undefined binds to "<builtin>"
 
-syntax PathMoveTo is statement
+/*
+Summary:	Move to a new point on a path.
+
+mPath:		An expression which evaluates to a path.
+mPoint:		An expression which evaluates to a point.
+
+Description:	Ends the current subpath and sets the starting point for new components of <mPath> to <mPoint>.
+
+Example:
+	// Begin a new subpath of mPath
+	move to point [25, 50] on tPath
+
+Tags:	Canvas
+*/
+
+syntax PathOperationMoveTo is statement
 	"move" "to" <mPoint: Expression> "on" <mPath: Expression>
 begin
 	MCCanvasPathMoveTo(mPoint, mPath)
 end syntax
 
-syntax PathLineTo is statement
+/*
+Summary:	Adds a line to a path.
+
+mPath:		An expression which evaluates to a path.
+mPoint:		An expression which evaluates to a point.
+
+Description:	Adds a line from the previous point to <mPoint> on <mPath>.
+
+Example:
+	// Begin a new subpath of mPath
+	move to point [25, 50] on tPath
+	// Continue path with a line to 50,100
+	line to [50,100] on tPath
+
+Tags:	Canvas
+*/
+
+syntax PathOperationLineTo is statement
 	"line" "to" <mPoint: Expression> "on" <mPath: Expression>
 begin
 	MCCanvasPathLineTo(mPoint, mPath)
 end syntax
 
-syntax PathCurveThrough is statement
+/*
+Summary:	Adds a curve to a path.
+
+mThroughA:		An expression which evaluates to a point.
+mThroughB:		An expression which evaluates to a point.
+mTo:		An expression which evaluates to a point.
+mPath:		An expression which evaluates to a path.
+
+Description:	Adds a curve from the previous point through one or two control points to <mTo> on <mPath>.
+
+Example:
+	// Begin a new subpath of mPath
+	move to point [25, 50] on tPath
+	// Continue path with a curve through 25,100 to 50,100
+	curve through [25,100] to [50,100] on tPath
+	// Continue path with a curve through 50,75 then 50,50 to 50,100
+	curve through [50,75] then [50,50] to [25,50] on tPath
+
+Tags:	Canvas
+*/
+
+syntax PathOperationCurveThrough is statement
 	"curve" "through" <mThroughA: Expression> [ "then" <mThroughB: Expression> ] "to" <mTo: Expression> "on" <mPath: Expression>
 begin
 	MCCanvasPathCurveThroughPoint(mThroughA, mTo, mPath)
 	MCCanvasPathCurveThroughPoints(mThroughA, mThroughB, mTo, mPath)
 end syntax
 
-syntax PathClosePath is statement
+/*
+Summary:	Closes the current subpath of a path.
+
+mPath:		An expression which evaluates to a path.
+
+Description:	Adds a line from the previous point to the start of current subpath, signaling the end of the subpath.
+
+Example:
+	// Begin a new subpath of mPath
+	move to point [25, 50] on tPath
+	// Continue path with a curve through 25,100 to 50,100
+	curve through [25,100] to [50,100] on tPath
+	// Close the path
+	close tPath
+
+Tags:	Canvas
+*/
+
+syntax PathOperationClosePath is statement
 	"close" "path" "on" <mPath: Expression>
 begin
 	MCCanvasPathClosePath(mPath)
 end syntax
 
-syntax TransformPath is statement
+/*
+Summary:	Apply a transform to a path.
+
+mTransform:	An expression which evaluates to a transform.
+mPath:		An expression which evaluates to a path.
+
+Description:	Transforms the points of <mPath> with <mTransform>.
+
+Example:
+	// Scale the path with a transform
+	transform tPath by transform with scale [2,2]
+
+Tags:	Canvas
+*/
+
+syntax PathOperationTransform is statement
 	"transform" <mPath: Expression> "by" <mTransform: Expression>
 begin
 	MCCanvasPathTransform(mPath, mTransform)
 end syntax
 
-syntax ScalePath is statement
+/*
+Summary:	Apply a scale to a path.
+
+mScale:	An expression which evaluates to a list of numbers.
+mPath:		An expression which evaluates to a path.
+
+Description:	Scales <mPath> by <mScale>.
+
+Example:
+	// Scale the path
+	scale tPath by [2,2]
+
+Tags:	Canvas
+*/
+
+syntax PathOperationScale is statement
 	"scale" <mPath: Expression> "by" <mScale: Expression>
 begin
-//	MCCanvasPathScale(mPath, mScale[0], mScale[0])
-//	MCCanvasPathScale(mPath, mScale[0], mScale[1])
 	MCCanvasPathScaleWithList(mPath, mScale)
 end syntax
 
-syntax RotatePath is statement
+/*
+Summary:	Apply a rotation to a path.
+
+mRotation:	An expression which evaluates to a number.
+mPath:		An expression which evaluates to a path.
+
+Description:	Rotates <mPath> by <mRotation> degrees.
+
+Example:
+	// Rotate the path
+	rotate tPath by 45
+
+Tags:	Canvas
+*/
+
+syntax PathOperationRotate is statement
 	"rotate" <mPath: Expression> "by" <mRotation: Expression>
 begin
 	MCCanvasPathRotate(mPath, mRotation)
 end syntax
 
-syntax TranslatePath is statement
+/*
+Summary:	Apply a translation to a path.
+
+mTranslation:	An expression which evaluates to a list of numbers.
+mPath:		An expression which evaluates to a path.
+
+Description:	Translates <mPath> by <mTranslation>.
+
+Example:
+	// Translate the path
+	translate tPath by [50,100]
+
+Tags:	Canvas
+*/
+
+syntax PathOperationTranslate is statement
 	"translate" <mPath: Expression> "by" <mTranslation: Expression>
 begin
 //	MCCanvasPathTranslate(mPath, mTranslation[0], mTranslation[1])
 	MCCanvasPathTranslateWithList(mPath, mTranslation)
 end syntax
 
-syntax AddPath is statement
+/*
+Summary:	Extend a path by adding another path.
+
+mSource:		An expression which evaluates to a path.
+mDest:		An expression which evaluates to a path.
+
+Description:	Adds the path defined by <mSource> to <mDest>.
+
+Example:
+	// Combine two paths
+	add tTempPath to tPath
+
+Tags:	Canvas
+*/
+
+syntax PathOperationAddPath is statement
 	"add" <mSource: Expression> "to" <mDest: Expression>
 begin
 	MCCanvasPathAddPath(mSource, mDest)
