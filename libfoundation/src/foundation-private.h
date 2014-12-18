@@ -536,6 +536,15 @@ bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_desc
 bool __MCStreamInitialize(void);
 void __MCStreamFinalize(void);
 
+/* Default implementations of each of the function members of struct &
+ * MCValueCustomCallbacks */
+void __MCCustomDefaultDestroy(MCValueRef);
+bool __MCCustomDefaultCopy(MCValueRef, bool, MCValueRef &);
+bool __MCCustomDefaultEqual(MCValueRef, MCValueRef);
+hash_t __MCCustomDefaultHash(MCValueRef);
+bool __MCCustomDefaultDescribe(MCValueRef, MCStringRef &);
+bool __MCCustomDefaultIsMutable(MCValueRef);
+bool __MCCustomDefaultMutableCopy(MCValueRef, bool, MCValueRef &);
 
 ////////////////////////////////////////////////////////////////////////////////
 

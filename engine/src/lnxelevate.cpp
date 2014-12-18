@@ -262,14 +262,14 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 		// We exec to gksu with appropriate parameters.
 		// This causes the child to request password from the user and then
 		// launch the specified command as admin.
-		char *t_argv[4];
+		const char * t_argv[4];
 		t_argv[0] = "gksu";
 		t_argv[1] = "--preserve-env";
 		t_argv[2] = *t_command_line;
 		t_argv[3] = nil;
 
 		// Shouldn't return.
-		execvp(t_argv[0], t_argv);
+		execvp(t_argv[0], (char * const *) t_argv);
 
 		// If we get here an error occured. We just exit with '-1' since the parent
 		// will detect termination of the child.

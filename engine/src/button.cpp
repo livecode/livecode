@@ -973,8 +973,6 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 		if (getstyleint(flags) == F_MENU && menumode == WM_TOP_LEVEL
 		        && IsMacLF() && state & CS_MFOCUSED)
 		{
-			MCRectangle trect = rect;
-			trect.height = 8 + MCFontGetAscent(m_font);
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}

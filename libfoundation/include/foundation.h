@@ -1118,6 +1118,9 @@ enum
 	kMCValueCustomHeaderSize = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uintptr_t)
 };
 
+/* If you add a new function pointer to this structure, don't forget
+ * to add a default implementation of the function to
+ * foundation-custom.cpp */
 struct MCValueCustomCallbacks
 {
 	bool is_singleton : 1;

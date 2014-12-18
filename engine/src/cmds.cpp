@@ -996,7 +996,7 @@ if (sp.next(type) != PS_NORMAL)
 		return PS_ERROR;
 	}
 	if (sp.lookup(SP_MARK,te) != PS_NORMAL
-	        || te->which != MC_BY && te->which != MC_WHERE)
+	    || (te->which != MC_BY && te->which != MC_WHERE))
 	{
 		MCperror->add
 		(PE_MARK_NOTBYORWHERE, sp);
@@ -2083,6 +2083,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
+		{
 			if (of == NULL && chunktype == CT_FIELD)
 			{
 				MCperror->add
@@ -2091,6 +2092,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 			}
 			else
 				break;
+		}
 		if (sp.lookup(SP_SORT, te) == PS_NORMAL)
 		{
 			switch (te->which)
@@ -2473,17 +2475,17 @@ Parse_stat MCWait::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 		if (condition == RF_FOR)
+		{
 			if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_MILLISECS) == PS_NORMAL)
 				units = F_MILLISECS;
+			else if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_SECONDS) == PS_NORMAL
+			         || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_SECOND) == PS_NORMAL)
+				units = F_SECONDS;
+			else if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_TICKS) == PS_NORMAL)
+				units = F_TICKS;
 			else
-				if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_SECONDS) == PS_NORMAL
-				        || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_SECOND) == PS_NORMAL)
-					units = F_SECONDS;
-				else
-					if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_TICKS) == PS_NORMAL)
-						units = F_TICKS;
-					else
-						units = F_TICKS;
+				units = F_TICKS;
+		}
 		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 		{
 			sp.skip_token(SP_MOVE, TT_UNDEFINED, MM_MESSAGES);
