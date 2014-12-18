@@ -456,7 +456,11 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	if (t_error != nil)
 	{
 		[t_new_movie release];
+        // PM-2014-12-17: [[ Bug 14233 ]] If invalid filename is used, reset previous open movie
+        m_movie = nil;
+        [m_view setMovie:nil];
         m_has_invalid_filename = true;
+
 		return;
 	}
     
