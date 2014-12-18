@@ -232,6 +232,7 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
 	Properties t_prop;
 	t_prop = parse_property_name(p_property);
     
+    // It seems using 'setproperty' takes the value in the execvalue :S
 	MCExecValue t_value;
     t_value . type = kMCExecValueTypeValueRef;
     t_value . valueref_value = t_value_copy;
@@ -249,8 +250,6 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
     }
     else
         t_script_object_imp -> handle -> Get() -> setprop(ctxt, t_script_object_imp -> part_id, t_prop, nil, False, t_value);
-    
-    MCValueRelease(t_value_copy);
     
     if (ctxt . HasError())
     {
