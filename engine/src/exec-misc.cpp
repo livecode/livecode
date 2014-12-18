@@ -406,20 +406,21 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
     bool t_extension_found = false;
     MCAutoStringRef t_file_extension;
     
-    MCAutoDataRef t_raw_data, t_data;
+    // SN-2014-12-18: [[ Bug 13860 ]] Update the way images data are created.
+    MCAutoDataRef t_raw_data, t_converted_data;
     MCAutoStringRef t_save_result;
     
-    if (ctxt . ConvertToData(p_data_or_id, &t_raw_data))
+    if (ctxt . ConvertToData(p_data_or_id, &t_converted_data))
     {
-        if (MCImageDataIsPNG(*t_raw_data))
+        if (MCImageDataIsPNG(*t_converted_data))
         {
             t_extension_found = MCStringCreateWithCString(".png\n", &t_file_extension);
         }
-        else if (MCImageDataIsGIF(*t_raw_data))
+        else if (MCImageDataIsGIF(*t_converted_data))
         {
             t_extension_found = MCStringCreateWithCString(".gif\n", &t_file_extension);
         }
-        else if (MCImageDataIsJPEG(*t_raw_data))
+        else if (MCImageDataIsJPEG(*t_converted_data))
         {
             t_extension_found = MCStringCreateWithCString(".jpg\n", &t_file_extension);
         }
@@ -477,29 +478,32 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
         if (t_image -> isReferencedImage())
         {
             // SN-2014-12-18: [[ Bug 13860 ]] We store the UTF-8 filename in the dataref for referenced images.
+            MCAutoStringRef t_filename;
             char *t_utf8_filename;
-            uint32_t t_byte_count;
-            MCStringConvertToUTF8(t_image -> getimagefilename(), t_utf8_filename, t_byte_count);
-            MCDataCreateWithBytesAndRelease((byte_t*)t_utf8_filename, t_byte_count, &t_image_data);
+            uindex_t t_byte_count;
+            t_image -> getimagefilename(&t_filename);
+            MCStringConvertToUTF8(*t_filename, t_utf8_filename, t_byte_count);
+            MCDataCreateWithBytesAndRelease((byte_t*)t_utf8_filename, t_byte_count, &t_raw_data);
             t_is_raw_data = false;
         }
         else
         {
-            t_image -> getrawdata(&t_image_data);
+            t_image -> getrawdata(&t_raw_data);
             t_is_raw_data = true;
         }
 #else
-        t_image -> getrawdata(&t_data);
+        t_image -> getrawdata(&t_raw_data);
 #endif
     }
     // SN-2014-12-18: [[ Bug 13860 ]] If an extension was found, then we have raw data
     else
-        t_raw_data = true;
+    {
+        t_raw_data = *t_converted_data;
+        t_is_raw_data = true;
+    }
     
-    if (t_is_raw_data)
-        MCSystemExportImageToAlbum(&t_save_result, *t_raw_data, p_file_name, *t_file_extension);
-    else
-        MCSystemExportImageToAlbum(&t_save_result, *t_data, p_file_name, *t_file_extension);
+    // SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
+    MCSystemExportImageToAlbum(&t_save_result, *t_raw_data, p_file_name, *t_file_extension, t_is_raw_data);
     
     if (!MCStringIsEmpty(p_file_name))
     {

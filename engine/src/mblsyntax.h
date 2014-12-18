@@ -460,7 +460,8 @@ bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier);
 bool MCSystemSetReachabilityTarget(MCStringRef p_hostname);
 bool MCSystemGetReachabilityTarget(MCStringRef& r_hostname);
 
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension);
+// SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension, bool p_is_raw_data = true);
 
 bool MCSystemSetRedrawInterval(int32_t p_interval);
 bool MCSystemSetAnimateAutorotation(bool p_enabled);

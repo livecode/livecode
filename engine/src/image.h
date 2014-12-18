@@ -566,7 +566,7 @@ public:
     void getrawdata(MCDataRef& r_data);
     
     // PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
-    MCString getimagefilename(void);
+    void getimagefilename(MCStringRef &r_filename);
     bool isReferencedImage(void);
     
 	MCImage *next()

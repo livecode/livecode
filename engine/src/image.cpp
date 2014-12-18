@@ -2864,6 +2864,18 @@ void MCImage::getrawdata(MCDataRef& r_data)
 	
 	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_data, t_size, r_data);
 }
+// PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+void MCImage::getimagefilename(MCStringRef &r_filename)
+{
+    MCStringRef t_filename;
+    if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
+        r_filename = MCValueRetain(kMCEmptyString);
+    
+    t_filename = static_cast<MCReferencedImageRep*>(m_rep)->GetSearchKey();
+    
+    MCStringCopy(t_filename, r_filename);
+    
+}
 
 bool MCImage::isReferencedImage()
 {

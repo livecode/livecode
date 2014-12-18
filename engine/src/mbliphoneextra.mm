@@ -304,7 +304,7 @@ static void export_image(void *p_context)
     if (t_data != nil)
         t_img = [[UIImage alloc] initWithData: t_data];
     else
-        t_img = [[UIImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String: MCDataGetBytePtr(ctxt -> raw_data]];
+        t_img = [[UIImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String: (char*)MCDataGetBytePtr(ctxt -> raw_data)]];
 
 	UIImageWriteToSavedPhotosAlbum(t_img, ctxt -> delegate, @selector(image:didFinishSavingWithError:contextInfo:), nil);
 	
@@ -395,9 +395,11 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 }
 #endif /* MCHandleExportImageToAlbumIphone */ 
 
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
+// SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension, bool p_is_raw_data)
 {
 	export_image_t ctxt;
+    ctxt . is_raw_data = p_is_raw_data;
     ctxt . raw_data = p_raw_data;
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 
