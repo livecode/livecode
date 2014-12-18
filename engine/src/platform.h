@@ -965,6 +965,7 @@ enum MCPlatformPlayerProperty
 {
 	kMCPlatformPlayerPropertyURL,
 	kMCPlatformPlayerPropertyFilename,
+    kMCPlatformPlayerPropertyInvalidFilename,
 	
 	kMCPlatformPlayerPropertyOffscreen,
 	kMCPlatformPlayerPropertyRect,

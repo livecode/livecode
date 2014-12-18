@@ -36,8 +36,8 @@
 // similar way to the MCPlatformWindow at a later date though.
 
 static uint32_t s_menu_select_lock = 0;
-// SN-2014-11-06: [[ Bug 13836 ]] Stores whether a shadowed item got selected
-static bool s_shadow_item_selected = false;
+// SN-2014-11-06: [[ Bug 13836 ]] Stores whether a quit item got selected
+static bool s_quit_selected = false;
 // SN-2014-11-10: [[ Bug 13836 ]] Keeps the track about the open items in the menu bar.
 static uint32_t s_open_menubar_items = 0;
 
@@ -269,9 +269,6 @@ enum MCShadowedItemTags
 	t_shadow = [self findShadowedMenuItem: tag];
 	if (t_shadow != nil)
     {
-        // SN-2014-11-06: [[ bug 13836 ]] A shadowed item has been selected - no need to call
-        //  keyDown/keyUp in the performKeyEquivalent which called this function call
-        s_shadow_item_selected = true;
         // MW-2014-10-29: [[ Bug 13847 ]] Dispatch default accelerators from app menu.
         uint32_t t_old_menu_select_lock;
         t_old_menu_select_lock = s_menu_select_lock;
@@ -311,6 +308,9 @@ enum MCShadowedItemTags
 
 - (void)quitMenuItemSelected: (id)sender
 {
+    // SN-2014-12-16: [[ Bug 14185 ]] Only flag the the quitting state (that's the only state
+    //  which causes issues.
+    s_quit_selected = true;
 	[self shadowedMenuItemSelected: @"Quit"];
 }
 
@@ -375,12 +375,35 @@ enum MCShadowedItemTags
 
 @compatibility_alias MCMenuHandlingKeys com_runrev_livecode_MCMenuHandlingKeys;
 
+// SN-2014-12-16: [[ Bug 14185 ]] Functions to save and restore the selected quit state
+uint32_t s_quitting_state_count = 0;
+uint8_t *s_quitting_states;
+
+void MCMacPlatformSaveQuittingState()
+{
+    MCMemoryReallocate(s_quitting_states, s_quitting_state_count + 1, s_quitting_states);
+    s_quitting_states[s_quitting_state_count] = s_quit_selected;
+    
+    ++s_quitting_state_count;
+    s_quit_selected = false;
+}
+
+void MCMacPlatformPopQuittingState()
+{
+    s_quit_selected = s_quitting_states[s_quitting_state_count - 1];
+    
+    --s_quitting_state_count;
+    MCMemoryReallocate(s_quitting_states, s_quitting_state_count, s_quitting_states);
+}
+
 // SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item clicked was a shadowed item.
-bool MCMacPlatformWasShadowItemSelected(void)
+// SN-2014-12-16: [[ Bug 14185 ]] Name changed as it only returns whether a 'Quit' item
+// has been selected.
+bool MCMacPlatformIsInQuittingState(void)
 {
 	bool t_occured;
-	t_occured = s_shadow_item_selected;
-	s_shadow_item_selected = false;
+	t_occured = s_quit_selected;
+	s_quit_selected = false;
 	return t_occured;
 }
 
@@ -408,6 +431,10 @@ void MCMacPlatformUnlockMenuSelect(void)
 	if (![[[event window] delegate] isKindOfClass: [MCWindowDelegate class]])
         return [super performKeyEquivalent: event];
     
+    // SN-2014-12-16; [[ Bug 14185 ]] We want to store the previous state, as when using answer
+    //  for example, we still want the key event to be processed.
+    MCMacPlatformSaveQuittingState();
+    
 	// Otherwise, we lock menuSelect firing, and propagate a keydown/keyup.
 	BOOL t_key_equiv;
 	MCMacPlatformLockMenuSelect();
@@ -429,8 +456,15 @@ void MCMacPlatformUnlockMenuSelect(void)
     // SN-2014-11-06: [[ Bug 13510 ]] Ensure that we don't get further, if a shadow item was selected
     //  and that Cocoa will stop looking for key equivalent amongst the application's menus
     //  Calling MCMacPlatformWasShadowItemSelected here ensure that the state is reset for each event.
-    if (MCMacPlatformWasShadowItemSelected())
+    // SN-2014-12-16; [[ Bug 14185 ]] Name changed as we only check whether a 'Quit' item was selected.
+    if (MCMacPlatformIsInQuittingState())
+    {
+        MCMacPlatformPopQuittingState();
         return YES;
+    }
+    
+    // SN-2014-12-16: [[ Bug 14185 ]] Pop the last state saved.
+    MCMacPlatformPopQuittingState();
     
     // MW-2014-04-10: [[ Bug 12047 ]] If it was found as a key equivalent dispatch
     //   a keypress so the engine can handle it. Otherwise we return NO and the
@@ -879,7 +913,8 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 				   keyEquivalent: @""];
     if (p_menu -> about_item == nil)
         [[t_app_menu itemAtIndex: 0] setEnabled:NO];
-	[[t_app_menu itemAtIndex: 0] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 0] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 0] setTag: kMCShadowedItemAbout];
         
     [t_app_menu addItem: [NSMenuItem separatorItem]];
     
@@ -893,6 +928,8 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
     [[t_app_menu itemAtIndex: 2] setTarget: s_app_menu_delegate];
     if (p_menu -> preferences_item == nil)
         [[t_app_menu itemAtIndex: 2] setEnabled: NO];
+    
+    [[t_app_menu itemAtIndex: 2] setTag: kMCShadowedItemPreferences];
     
     [t_app_menu addItem: [NSMenuItem separatorItem]];
     [t_app_menu addItemWithTitle: NSLocalizedStringFromTable(@"appMenu.services", @"Localisation", @"Services")
@@ -927,6 +964,7 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
         [[t_app_menu itemAtIndex: 10] setAction:@selector(quitApplicationSelected:)];
     
     [[t_app_menu itemAtIndex: 10] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 10] setTag: kMCShadowedItemQuit];
 	[t_app_menu setDelegate: s_app_menu_delegate];
 	
 	NSMenuItem *t_app_menu_item;

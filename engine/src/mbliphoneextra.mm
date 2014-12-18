@@ -242,7 +242,9 @@ static bool is_jpeg_data(const MCString& p_data)
 struct export_image_t
 {
 	MCExportImageToAlbumDelegate *delegate;
-	MCString raw_data;
+    // PM-2014-12-12: [[ Bug 13860 ]] Added support for exporting referenced images to album
+	MCString image_data;
+    bool is_raw_data;
 };
 
 static void export_image(void *p_context)
@@ -251,14 +253,25 @@ static void export_image(void *p_context)
 	ctxt = (export_image_t *)p_context;
 	
 	NSData *t_data;
-	t_data = [[NSData alloc] initWithBytes: (void *)ctxt -> raw_data . getstring() length: ctxt -> raw_data . getlength()];
-	
+    // PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+    if (ctxt -> is_raw_data)
+        t_data = [[NSData alloc] initWithBytes: (void *)ctxt -> image_data . getstring() length: ctxt -> image_data . getlength()];
+    else
+        t_data = nil;
+    
 	UIImage *t_img;
-	t_img = [[UIImage alloc] initWithData: t_data];
+    // For referenced images, init with filename rather than with bytes
+    if (t_data != nil)
+        t_img = [[UIImage alloc] initWithData: t_data];
+    else
+        t_img = [[UIImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:ctxt -> image_data . getstring()]];
+
 	UIImageWriteToSavedPhotosAlbum(t_img, ctxt -> delegate, @selector(image:didFinishSavingWithError:contextInfo:), nil);
 	
 	[t_img release];
-	[t_data release];
+    
+    if (t_data !=nil)
+        [t_data release];
 }
 
 #ifdef /* MCHandleExportImageToAlbumIphone */ LEGACY_EXEC
@@ -270,11 +283,12 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 	MCExecPoint ep(nil, nil, nil);	
 	p_parameters -> eval_argument(ep);
 
-	MCString t_raw_data;
+	MCString t_image_data;
+    bool t_is_raw_data;
 	if (is_png_data(ep . getsvalue()) ||
 		is_gif_data(ep . getsvalue()) ||
 		is_jpeg_data(ep . getsvalue()))
-		t_raw_data = ep . getsvalue();
+		t_image_data = ep . getsvalue();
 	else
 	{
 		uint4 parid;
@@ -307,11 +321,22 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 			return ES_NORMAL;
 		}
 		
-		t_raw_data = t_image -> getrawdata();
+        // PM-2014-12-12: [[ Bug 13860 ]] For referenced images we need the filename rather than the raw data
+        if (t_image -> isReferencedImage())
+        {
+            t_image_data = t_image -> getimagefilename();
+            t_is_raw_data = false;
+        }
+        else
+        {
+            t_image_data = t_image -> getrawdata();
+            t_is_raw_data = true;
+        }
 	}
 	
 	export_image_t ctxt;
-	ctxt . raw_data = t_raw_data;
+    ctxt . is_raw_data = t_is_raw_data;
+	ctxt . image_data = t_image_data;
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 	
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);
