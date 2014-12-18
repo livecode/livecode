@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-private.h"
 
+#include <stdlib.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
@@ -52,9 +54,13 @@ bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_er
 
 bool MCErrorUnwind(MCErrorRef p_error, MCValueRef p_target, uindex_t p_row, uindex_t p_column)
 {
+    if (p_error -> target != nil)
+        return true;
+    
     p_error -> target = MCValueRetain(p_target);
     p_error -> row = p_row;
     p_error -> column = p_column;
+    
     return true;
 }
 
@@ -71,6 +77,26 @@ MCArrayRef MCErrorGetInfo(MCErrorRef self)
 MCStringRef MCErrorGetMessage(MCErrorRef self)
 {
     return self -> message;
+}
+
+uindex_t MCErrorGetDepth(MCErrorRef self)
+{
+    return self -> target != nil ? 1 : 0;
+}
+
+MCValueRef MCErrorGetTargetAtLevel(MCErrorRef self, uindex_t level)
+{
+    return self -> target;
+}
+
+uindex_t MCErrorGetRowAtLevel(MCErrorRef self, uindex_t row)
+{
+    return self -> row;
+}
+
+uindex_t MCErrorGetColumnAtLevel(MCErrorRef self, uindex_t column)
+{
+    return self -> column;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

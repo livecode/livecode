@@ -125,6 +125,16 @@ public:
 
 	//////////
 
+    T* Ptr()
+    {
+        return m_values;
+    }
+    
+    uindex_t Size()
+    {
+        return m_value_count;
+    }
+    
 	T*& PtrRef()
 	{
 		MCAssert(m_values == nil);
@@ -758,10 +768,15 @@ public:
 
 	//////////
 
-	T& operator [] (const int p_index)
+	T& operator [] (int p_index)
 	{
 		return m_ptr[p_index];
 	}
+    
+    const T& operator [] (int p_index) const
+    {
+        return m_ptr[p_index];
+    }
 
 private:
 	T *m_ptr;
