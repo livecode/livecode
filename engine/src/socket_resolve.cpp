@@ -323,9 +323,17 @@ bool MCSocketHostNameResolve(const char *p_name, const char *p_port, int p_sockt
 		t_success = (MCCStringClone(p_name, t_info->m_name) &&
 			MCCStringClone(p_port, t_info->m_port));
 	}
+    // SN-2014-12-16: [[ Bug 14181 ]] We can't notify on servers as there is no RunLoop.
+    //  We do not create a thread to resolve the hostname.
 	if (t_success)
+#ifdef _SERVER
+    {
+        hostname_resolve_thread((void*)t_info);
+        hostname_resolve_notify_callback((void*)t_info);
+    }
+#else
 		t_success = launch_thread_with_notify(hostname_resolve_thread, hostname_resolve_notify_callback, t_info);
-
+#endif
 	if (t_success)
 	{
 		g_name_resolution_count += 1;

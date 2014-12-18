@@ -2613,8 +2613,12 @@ enum Exec_errors
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
     
+    // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
+    // {EE-0844} hostnameToAddress: callbacks are not allowed on server
+    EE_HOSTNAME_BADMESSAGE,
+
     // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
-    // {EE-0844} Chunk: bad extents provided
+    // {EE-0845} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
 };
 
