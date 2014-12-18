@@ -2601,7 +2601,7 @@ enum Exec_errors
 	// {EE-0840} secure: error in host name expression
 	EE_SECURE_BADHOST,
 	
-	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+    // MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {EE-0841} open: error in host name expression
 	EE_OPEN_BADHOST,
     

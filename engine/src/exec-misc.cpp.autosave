@@ -472,7 +472,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
 		}
 
         // SN-2014-12-18: [[ Bug 13860 ]] Only allow the use of the dataref as storing a filename for iOS
-#ifdef __IOS__
+#ifdef __IOS__  
         // PM-2014-12-12: [[ Bug 13860 ]] For referenced images we need the filename rather than the raw data
         if (t_image -> isReferencedImage())
         {
