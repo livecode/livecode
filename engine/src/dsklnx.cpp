@@ -2094,6 +2094,30 @@ public:
         else
             t_tilde_path = p_path;
 
+        // SN-2014-12-18: [[ Bug 14001 ]] Update the server file resolution to use realpath
+        //  so that we get the absolute path (needed for MCcmd for instance).
+#ifdef _SERVER
+        MCAutoStringRefAsSysString t_tilde_path_sys;
+        t_tilde_path_sys . Lock(*t_tilde_path);
+
+        char *t_resolved_path;
+        bool t_success;
+
+        t_resolved_path = realpath(*t_tilde_path_sys, NULL);
+
+        // If the does not exist, then realpath will fail: we want to
+        // return something though, so we keep the input path (as it
+        // is done for desktop).
+        if (t_resolved_path != NULL)
+            t_success = MCStringCreateWithSysString(t_resolved_path, r_resolved_path);
+        else
+            t_success = MCStringCopy(*t_tilde_path, r_resolved_path);
+
+        MCMemoryDelete(t_resolved_path);
+
+        return t_success;
+#else
+
         // IM-2012-07-23
         // Keep (somewhat odd) semantics of the original function for now
         if (!MCS_lnx_is_link(*t_tilde_path))
@@ -2125,6 +2149,7 @@ public:
         }
         else
             return MCStringCopy(*t_newname, r_resolved_path);
+#endif
     }
 
     virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
