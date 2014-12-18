@@ -2427,8 +2427,8 @@ void MCCanvasGradientSetMirror(bool p_mirror, MCCanvasGradientRef &x_gradient)
 void MCCanvasGradientTransformToPoints(const MCGAffineTransform &p_transform, MCGPoint &r_from, MCGPoint &r_to, MCGPoint &r_via)
 {
 	r_from = MCGPointApplyAffineTransform(MCGPointMake(0, 0), p_transform);
-	r_to = MCGPointApplyAffineTransform(MCGPointMake(0, 1), p_transform);
-	r_via = MCGPointApplyAffineTransform(MCGPointMake(1, 0), p_transform);
+	r_to = MCGPointApplyAffineTransform(MCGPointMake(1, 0), p_transform);
+	r_via = MCGPointApplyAffineTransform(MCGPointMake(0, 1), p_transform);
 }
 
 bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
@@ -4093,7 +4093,7 @@ void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanva
 
 void MCCanvasDirtyProperties(__MCCanvasImpl &p_canvas)
 {
-	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = p_canvas.stippled_changed = p_canvas.stroke_width_changed = true;
+	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = p_canvas.stroke_width_changed = true;
 }
 
 bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
@@ -4379,7 +4379,10 @@ void MCCanvasSetStippled(bool p_stippled, MCCanvasRef p_canvas)
 	t_canvas = MCCanvasGet(p_canvas);
 	
 	t_canvas->props().stippled = p_stippled;
-	t_canvas->stippled_changed = true;
+	// Stippled property only applies to solid paint
+	// TODO - make stippled a property of solid paint instead of canvas
+	if (MCCanvasPaintIsSolidPaint(t_canvas->props().paint))
+		t_canvas->paint_changed = true;
 }
 
 void MCCanvasGetImageResizeQualityAsString(MCCanvasRef p_canvas, MCStringRef &r_quality)
@@ -4432,6 +4435,12 @@ void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_p
 	
 	MCGContextSetFillRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
 	MCGContextSetStrokeRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
+	
+	MCGPaintStyle t_style;
+	t_style = x_canvas.props().stippled ? kMCGPaintStyleStippled : kMCGPaintStyleOpaque;
+	
+	MCGContextSetFillPaintStyle(x_canvas.context, t_style);
+	MCGContextSetStrokePaintStyle(x_canvas.context, t_style);
 }
 
 void MCCanvasApplyPatternPaint(__MCCanvasImpl &x_canvas, MCCanvasPatternRef p_pattern)
@@ -4558,15 +4567,6 @@ void MCCanvasApplyChanges(__MCCanvasImpl &x_canvas)
 		x_canvas.blend_mode_changed = false;
 	}
 	
-	if (x_canvas.stippled_changed)
-	{
-		MCGPaintStyle t_style;
-		t_style = x_canvas.props().stippled ? kMCGPaintStyleStippled : kMCGPaintStyleOpaque;
-		MCGContextSetFillPaintStyle(x_canvas.context, t_style);
-		MCGContextSetStrokePaintStyle(x_canvas.context, t_style);
-		x_canvas.stippled_changed = false;
-	}
-    
     if (x_canvas . stroke_width_changed)
     {
         MCGContextSetStrokeWidth(x_canvas.context, x_canvas.props().stroke_width);
