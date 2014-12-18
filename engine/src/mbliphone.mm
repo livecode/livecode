@@ -760,6 +760,11 @@ bool MCIPhoneSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path
 {
 	return MCStringCopy(p_path, r_short_path);
 }
+// ST-2014-12-18: [[ Bug 14259 ]] Not implemented / needed on iOS
+bool MCIPhoneSystem::GetExecutablePath(MCStringRef& r_path)
+{
+    return false;
+}
 
 bool MCIPhoneSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
 {
