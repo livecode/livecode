@@ -84,7 +84,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	font -> descent = size * 2 / 14 + 1;
 	
 	android_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
-	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > p_size)
+	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > size)
 		font -> ascent++;
 	
 #endif

@@ -2,6 +2,8 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
+DERIVED_SRC = ../_cache/mac/Debug/kernel.build/DerivedSources
+
 TARGET_PLATFORM=android-8
 
 LOCAL_MODULE := revandroid-kernel
@@ -85,7 +87,10 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
 	stacktile.cpp sysunxthreads.cpp \
-	widget.cpp widget-events.cpp native-layer.cpp native-layer-android.cpp)
+	widget.cpp widget-events.cpp native-layer.cpp native-layer-android.cpp \
+	module-canvas.cpp module-engine.cpp modules.cpp \
+	exec-extension.cpp exec-keywords.cpp) \
+	$(DERIVED_SRC)/canvas.mlc.c $(DERIVED_SRC)/engine.mlc.c $(DERIVED_SRC)/widget.mlc.c
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
@@ -101,7 +106,9 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/config \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/ports \
 	$(LOCAL_PATH)/../thirdparty/libfreetype/include \
-	$(LOCAL_PATH)/../thirdparty/libopenssl/include
+	$(LOCAL_PATH)/../thirdparty/libopenssl/include \
+	$(LOCAL_PATH)/../thirdparty/libffi/include \
+	$(LOCAL_PATH)/../libscript/include
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -126,7 +133,8 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
 
-LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libharfbuzz libexpat_static openssl
+LOCAL_GROUP_STATIC_LIBRARIES := true
+LOCAL_STATIC_LIBRARIES := librevandroid-kernel libscript libffi libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libharfbuzz libexpat_static openssl
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 
