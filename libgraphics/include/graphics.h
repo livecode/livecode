@@ -785,6 +785,13 @@ bool MCGContextCreateWithRaster(const MCGRaster& raster, MCGContextRef& r_contex
 MCGContextRef MCGContextRetain(MCGContextRef context);
 void MCGContextRelease(MCGContextRef context);
 
+// Return a pointer to the underlying pixel data
+void *MCGContextGetPixelPtr(MCGContextRef context);
+
+// Return the width, and height.
+uint32_t MCGContextGetWidth(MCGContextRef context);
+uint32_t MCGContextGetHeight(MCGContextRef context);
+
 // Returns whether the current context context is valid. If an error
 // occurs when calling any method on a context context, it will become
 // invalid and all further operations will be no-ops.

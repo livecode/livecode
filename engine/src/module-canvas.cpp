@@ -5003,11 +5003,68 @@ void MCCanvasPop(uintptr_t p_cookie)
 
 extern "C" MC_DLLEXPORT void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
 {
+    if (s_current_canvas == nil)
+        MCErrorThrowGeneric(MCSTR("no current canvas"));
     r_canvas = MCValueRetain(s_current_canvas);
 }
 
 extern "C" MC_DLLEXPORT void MCCanvasPretendToAssignToThisCanvas(MCCanvasRef p_canvas)
 {
+}
+
+extern "C" MC_DLLEXPORT void MCCanvasNewCanvasWithSize(MCProperListRef p_list, MCCanvasRef& r_canvas)
+{
+	MCGPoint t_scale;
+	if (!MCProperListToScale(p_list, t_scale))
+		return;
+
+    MCGContextRef t_gcontext;
+    if (!MCGContextCreate(ceil(t_scale . x), ceil(t_scale . y), true, t_gcontext))
+    {
+        MCErrorThrowGeneric(MCSTR("could not create gcontext"));
+        return;
+    }
+    
+    MCCanvasRef t_canvas;
+    if (!MCCanvasCreate(t_gcontext, t_canvas))
+    {
+        MCGContextRelease(t_gcontext);
+        return;
+    }
+    
+    MCGContextRelease(t_gcontext);
+    
+    r_canvas = t_canvas;
+}
+
+extern "C" MC_DLLEXPORT void MCCanvasGetPixelData(MCCanvasRef p_canvas, MCDataRef& r_data)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+    
+    uint32_t t_width, t_height;
+    t_width = MCGContextGetWidth(t_canvas -> context);
+    t_height = MCGContextGetHeight(t_canvas -> context);
+    
+    void *t_pixels;
+    t_pixels = MCGContextGetPixelPtr(t_canvas -> context);
+    
+    if (!MCDataCreateWithBytes((const byte_t *)t_pixels, t_width * t_height * sizeof(uint32_t), r_data))
+        return;
+}
+
+extern "C" MC_DLLEXPORT void MCCanvasGetPixelWidth(MCCanvasRef p_canvas, uinteger_t& r_width)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+    r_width = MCGContextGetWidth(t_canvas -> context);
+}
+
+extern "C" MC_DLLEXPORT void MCCanvasGetPixelHeight(MCCanvasRef p_canvas, uinteger_t& r_height)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+    r_height = MCGContextGetWidth(t_canvas -> context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

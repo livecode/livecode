@@ -4,6 +4,12 @@ public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as bool) as
 public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCTypeEvalIsNotDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsABoolean(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsANumber(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAString(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAData(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAnArray(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAList(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
 
 /*
 Summary:    Determines whether <Target> is empty or not.
@@ -61,6 +67,92 @@ syntax IsNotDefined is postfix operator with precedence 1
 	<Target: Expression> "is not" "defined"
 begin
 	MCTypeEvalIsNotDefined(Target, output)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Target> is a boolean or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a boolean, and false if not.
+
+*/
+
+syntax IsABoolean is postfix operator with precedence 1
+	<Target: Expression> "is" "a" "boolean"
+begin
+	MCTypeEvalIsABoolean(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a number or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a number, and false if not.
+
+*/
+
+syntax IsANumber is postfix operator with precedence 1
+	<Target: Expression> "is" "a" "number"
+begin
+	MCTypeEvalIsANumber(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a string or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a string, and false if not.
+
+*/
+
+syntax IsAString is postfix operator with precedence 1
+	<Target: Expression> "is" "a" "string"
+begin
+	MCTypeEvalIsAString(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a data or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a data, and false if not.
+
+*/
+
+syntax IsAData is postfix operator with precedence 1
+	<Target: Expression> "is" "a" "data"
+begin
+	MCTypeEvalIsAData(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is an array or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is an array, and false if not.
+
+*/
+
+syntax IsAnArray is postfix operator with precedence 1
+	<Target: Expression> "is" "an" "array"
+begin
+	MCTypeEvalIsAData(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a list or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a list, and false if not.
+
+*/
+
+syntax IsAList is postfix operator with precedence 1
+	<Target: Expression> "is" "a" "list"
+begin
+	MCTypeEvalIsAList(Target, output)
 end syntax
 
 --
