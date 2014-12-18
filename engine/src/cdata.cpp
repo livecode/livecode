@@ -93,7 +93,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 	{
 		uint1 set;
 		stat = IO_read_uint1(&set, stream);
-		data = (void *)(set ? 1 : 0);
+		data = reinterpret_cast<void *>(set ? 1 : 0);
 		return stat;
 	}
 	else

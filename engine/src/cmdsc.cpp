@@ -1671,7 +1671,7 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
             MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 
         // Release the text stored from evalvarchunk
-        for (int i = 0; i < t_chunks . Size(); ++i)
+        for (uindex_t i = 0; i < t_chunks . Size(); ++i)
         {
             MCValueRelease(t_chunks[i] . mark . text);
         }
@@ -1708,7 +1708,7 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
         if (!t_return)
             MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 
-        for (int i = 0; i < t_chunks . Size(); ++i)
+        for (uindex_t i = 0; i < t_chunks . Size(); ++i)
             MCValueRelease(t_chunks[i] . mark . text);
 	}
     else if (targets != nil)
@@ -3217,103 +3217,6 @@ void MCRename::compile(MCSyntaxFactoryRef ctxt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// MW-2012-02-01: [[ Bug 9647 ]] New implementation of replace to fix the flaws
-//   in the old implementation.
-// MW-2012-03-22: [[ Bug ]] Use uint8_t rather than char, otherwise we get
-//   comparison issues on some platforms (where char is signed!).
-
-// Special case replacing a char with another char when case-sensitive is true.
-static void replace_char_with_char(uint8_t *p_chars, uindex_t p_char_count, uint8_t p_from, uint8_t p_to)
-{
-	// Simplest case, just substitute from for to.
-	for(uindex_t i = 0; i < p_char_count; i++)
-		if (p_chars[i] == p_from)
-			p_chars[i] = p_to;
-}
-
-// Special case replacing a char with another char when case-sensitive is false.
-static void replace_char_with_char_caseless(uint8_t *p_chars, uindex_t p_char_count, uint8_t p_from, uint8_t p_to)
-{
-	// Lowercase the from char.
-	p_from = MCS_tolower(p_from);
-	
-	// Now substitute from for to, taking making sure its a caseless compare.
-	for(uindex_t i = 0; i < p_char_count; i++)
-		if (MCS_tolower(p_chars[i]) == p_from)
-			p_chars[i] = p_to;
-}
-
-// General replace case, rebuilds the input string in 'output' replacing each
-// occurance of from with to.
-static bool replace_general(const MCString& p_input, const MCString& p_from, const MCString& p_to, bool p_caseless, char*& r_output, uindex_t& r_output_length)
-{
-	char *t_output;
-	uindex_t t_output_length;
-	uindex_t t_output_capacity;
-	t_output = nil;
-	t_output_length = 0;
-	t_output_capacity = 0;
-	
-	MCString t_whole;
-	t_whole = p_input;
-	
-	for(;;)
-	{
-		// Search for the next occurance of from in whole.
-		Boolean t_found;
-		uindex_t t_offset;
-		t_found = MCU_offset(p_from, t_whole, t_offset, p_caseless);
-		
-		// If we found an instance of from, then we need space for to; otherwise,
-		// we update the offset, and need just room up to it.
-		uindex_t t_space_needed;
-		if (t_found)
-			t_space_needed = t_offset + p_to . getlength();
-		else
-		{
-			t_offset = t_whole . getlength();
-			t_space_needed = t_offset;
-		}
-		
-		// Expand the buffer as necessary.
-		if (t_output_length + t_space_needed > t_output_capacity)
-		{
-			if (t_output_capacity == 0)
-				t_output_capacity = 4096;
-				
-			while(t_output_length + t_space_needed > t_output_capacity)
-				t_output_capacity *= 2;
-			
-			if (!MCMemoryReallocate(t_output, t_output_capacity, t_output))
-			{
-				MCMemoryDeallocate(t_output);
-				return false;
-			}
-		}
-			
-		// Copy in whole, up to the offset.
-		memcpy(t_output + t_output_length, t_whole . getstring(), t_offset);
-		t_output_length += t_offset;
-
-		// No more occurances were found, so we are done.
-		if (!t_found)
-			break;
-			
-		// Now copy in to.
-		memcpy(t_output + t_output_length, p_to . getstring(), p_to . getlength());
-		t_output_length += p_to . getlength();
-		
-		// Update whole.
-		t_whole . set(t_whole . getstring() + t_offset + p_from . getlength(), t_whole . getlength() - (t_offset + p_from . getlength()));
-	}
-	
-	// Make sure the buffer is no bigger than is needed.
-	MCMemoryReallocate(t_output, t_output_length, r_output);
-	r_output_length = t_output_length;
-	
-	return true;
-}
 
 MCReplace::~MCReplace()
 {
