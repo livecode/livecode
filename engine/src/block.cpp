@@ -64,6 +64,9 @@ MCBlock::MCBlock(void)
     tabpos = 0;
     direction_level = 0;
 
+    // SN-2014-12-16: [[ Bug 14227 ]] Make sure to initialise the segment to nil.
+    segment = nil;
+
 	// MW-2012-02-14: [[ FontRefs ]] The font for the block starts off nil.
 	m_font = nil;
 }
@@ -117,6 +120,9 @@ MCBlock::MCBlock(const MCBlock &bref) : MCDLlist(bref)
     origin = 0;
     tabpos = 0;
     direction_level = bref.direction_level;
+
+    // SN-2014-12-16: [[ Bug 14227 ]] Make sure to initialise the segment to nil.
+    segment = nil;
 
 	// MW-2012-02-14: [[ FontRefs ]] The font for the block starts off nil.
 	m_font = nil;
@@ -372,6 +378,13 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 		t_is_unicode = true;
         flags |= F_HAS_UNICODE;
 	}
+
+    // SN-2014-12-04: [[ Bug 14149 ]] Add the F_HAS_TAB flag, for legacy saving
+    if (MCstackfileversion < 7000)
+    {
+        if (segment && segment != segment -> next())
+            flags |= F_HAS_TAB;
+    }
 	
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If we have unicode, or one of the font attr are
 	//   set then we must serialize a font.

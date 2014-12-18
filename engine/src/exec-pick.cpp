@@ -240,16 +240,20 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
     bool t_success;
     MCAutoValueRef t_result_string;
     
+    // SN-2014-12-03: [[ Bug 14120 ]] If the picker has been cancelled, we should not try to convert the uninitialised t_result.
     switch (p_which)
     {
     case kMCPickDate:
-            t_success = (MCSystemPickDate(t_current_ptr, t_start_ptr, t_end_ptr, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect) && MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_UNDEFINED, &t_result_string));
+            t_success = (MCSystemPickDate(t_current_ptr, t_start_ptr, t_end_ptr, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect)
+                         && (t_cancelled || MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_UNDEFINED, &t_result_string)));
         break;
     case kMCPickTime:
-            t_success = (MCSystemPickTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect) && MCD_convert_from_datetime(ctxt, t_result, CF_TIME, CF_UNDEFINED, &t_result_string));
+            t_success = (MCSystemPickTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect)
+                         && (t_cancelled || MCD_convert_from_datetime(ctxt, t_result, CF_TIME, CF_UNDEFINED, &t_result_string)));
         break;
     case kMCPickDateAndTime:
-            t_success = (MCSystemPickDateAndTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect) && MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_TIME, &t_result_string));
+            t_success = (MCSystemPickDateAndTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect)
+                         && (t_cancelled || MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_TIME, &t_result_string)));
         break;
     }
     

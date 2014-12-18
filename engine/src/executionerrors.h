@@ -2622,6 +2622,14 @@ enum Exec_errors
     EE_EXTENSION_ERROR_FILE,
     // {EE-0847} extension: error occured with line
     EE_EXTENSION_ERROR_LINE,
+
+    // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
+    // {EE-0848} hostnameToAddress: callbacks are not allowed on server
+    EE_HOSTNAME_BADMESSAGE,
+
+    // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
+    // {EE-0849} Chunk: bad extents provided
+    EE_CHUNK_BADEXTENTS,
 };
 
 extern const char *MCexecutionerrors;
