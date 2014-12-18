@@ -46,27 +46,27 @@ MCDelayedObjectId::MCDelayedObjectId ()
 	  m_name (NULL)
 {}
 
-MCDelayedObjectId::MCDelayedObjectId (const MCObjectId & id)
+MCDelayedObjectId::MCDelayedObjectId (const MCObjectId * id)
 	: m_context (NULL)
 {
-	m_have_uuid = id.HasUuid();
+	m_have_uuid = id->HasUuid();
 	if (m_have_uuid)
-		id.GetUuid (m_uuid);
+		id->GetUuid (m_uuid);
 
-	m_have_id = id.HasId();
+	m_have_id = id->HasId();
 	if (m_have_id)
-		m_id = id.GetId();
+		m_id = id->GetId();
 
-	m_name = id.HasName() ? MCValueRetain (id.GetName()) : NULL;
+	m_name = id->HasName() ? MCValueRetain (id->GetName()) : NULL;
 }
 
-MCDelayedObjectId::MCDelayedObjectId (const MCDelayedObjectId & id)
-	: m_context (id.m_context),
-	  m_uuid (id.m_uuid),
-	  m_have_uuid (id.m_have_uuid),
-	  m_id (id.m_id),
-	  m_have_id (id.m_have_id),
-	  m_name (MCValueRetain (id.m_name))
+MCDelayedObjectId::MCDelayedObjectId (const MCDelayedObjectId * id)
+	: m_context (id->m_context),
+	  m_uuid (id->m_uuid),
+	  m_have_uuid (id->m_have_uuid),
+	  m_id (id->m_id),
+	  m_have_id (id->m_have_id),
+	  m_name (MCValueRetain (id->m_name))
 {
 }
 
