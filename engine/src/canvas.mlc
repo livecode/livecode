@@ -1823,10 +1823,24 @@ public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rec
 
 public foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as string, out rPath as Path) as undefined binds to "<builtin>"
 
-syntax MakePath is prefix operator with precedence 4
-	"path" <mString: Expression>
+/*
+Summary:	Creates a new path.
+
+mInstructions:	An expression which evaluates to a string.
+
+Returns:	A new path created from the instructions provided.
+
+Example:
+	// Create a closed path with a line and some curves
+	put path "move 10,10 line 50,100 cubic 100,100 100,50 quad 75,50 50,25 50,10 close end" into tPath
+
+Tags: Canvas
+*/
+
+syntax PathMake is prefix operator with precedence 4
+	"path" <mInstructions: Expression>
 begin
-	MCCanvasPathMakeWithInstructionsAsString(mString, output)
+	MCCanvasPathMakeWithInstructionsAsString(mInstructions, output)
 end syntax
 
 // Primitive Constructors
@@ -1841,7 +1855,24 @@ public foreign handler MCCanvasPathMakeWithEllipseWithRadiiAsList(in pCenter as 
 public foreign handler MCCanvasPathMakeWithLine(in pStart as Point, in pEnd as Point, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithPoints(in pClose as boolean, in pPoints as list, out rPath as Path) as undefined binds to "<builtin>"
 
-syntax MakePathWithRoundedRectangle is prefix operator with precedence 4
+/*
+Summary:	Creates a new path.
+
+mRect: An expression which evaluates to a rectangle.
+mRadii:	An expression which evaluates to a list of numbers.
+mRadius:	An expression which evaluates to a number.
+
+Returns:	A new rounded rectangle path.
+
+Example:
+	// Create a rounded rectangle path
+	put rounded rectangle path of rectangle [10,10,210,60] with radii [10,5] into tPath
+	put rounded rectangle path of rectangle [10,10,210,60] with radius 15 into tPath
+
+Tags: Canvas
+*/
+
+syntax PathMakeWithRoundedRectangle is prefix operator with precedence 4
 	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" ( "radius" <mRadius: Expression> | "radii" <mRadii: Expression> )
 begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadius, output)
@@ -1849,33 +1880,106 @@ begin
 	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(mRect, mRadii, output)
 end syntax
 
-syntax MakePathWithRectangle is prefix operator with precedence 4
+/*
+Summary:	Creates a new path.
+
+mRect: An expression which evaluates to a rectangle.
+
+Returns:	A new rectangle path.
+
+Example:
+	// Create a rectangle path
+	put rectangle path of rectangle [10,10,210,60] into tPath
+
+Tags: Canvas
+*/
+
+syntax PathMakeWithRectangle is prefix operator with precedence 4
 	"rectangle" "path" "of" <mRect: Expression>
 begin
 	MCCanvasPathMakeWithRectangle(mRect, output)
 end syntax
 
-syntax MakePathWithCircle is prefix operator with precedence 4
-	"circle" "path" "centered" "at" <mPoint: Expression> "with" "radius" <mRadius: Expression>
+/*
+Summary:	Creates a new path.
+
+mCenter:	An expression which evaluates to a point.
+mRadius:	An expression which evaluates to a number.
+
+Returns:	A new circle path.
+
+Example:
+	// Create a circle path
+	put circle path centered at point [100,100] with radius 50 into tPath
+
+Tags: Canvas
+*/
+
+syntax PathMakeWithCircle is prefix operator with precedence 4
+	"circle" "path" "centered" "at" <mCenter: Expression> "with" "radius" <mRadius: Expression>
 begin
-//	MCCanvasPathMakeWithEllipse(mPoint, mRadius, mRadius, output)
-	MCCanvasPathMakeWithCircle(mPoint, mRadius, output)
+	MCCanvasPathMakeWithCircle(mCenter, mRadius, output)
 end syntax
 
-syntax MakePathWithEllipse is prefix operator with precedence 4
+/*
+Summary:	Creates a new path.
+
+mCenter:	An expression which evaluates to a point.
+mRadii:	An expression which evaluates to a list of numbers.
+
+Returns:	A new ellipse path.
+
+Example:
+	// Create an ellipse path
+	put ellipse path centered at point [100,100] with radii [100,75] into tPath
+
+Tags: Canvas
+*/
+
+syntax PathMakeWithEllipse is prefix operator with precedence 4
 	"ellipse" "path" "centered" "at" <mPoint: Expression> "with" "radii" <mRadii: Expression>
 begin
-//	MCCanvasPathMakeWithEllipse(mPoint, mRadii[0], mRadii[1], output)
 	MCCanvasPathMakeWithEllipseWithRadiiAsList(mPoint, mRadii, output)
 end syntax
 
-syntax MakePathWithLine is prefix operator with precedence 4
-	"line" "from" <mPointA: Expression> "to" <mPointB: Expression>
+/*
+Summary:	Creates a new path.
+
+mFrom:	An expression which evaluates to a point.
+mTo:	An expression which evaluates to a point.
+
+Returns:	A new line path.
+
+Example:
+	// Create a line path
+	put line path from point [50,100] to point [100,50] into tPath
+
+Tags: Canvas
+*/
+
+syntax PathMakeWithLine is prefix operator with precedence 4
+	"line" "path" "from" <mFrom: Expression> "to" <mTo: Expression>
 begin
-	MCCanvasPathMakeWithLine(mPointA, mPointB, output)
+	MCCanvasPathMakeWithLine(mFrom, mTo, output)
 end syntax
 
-syntax MakePathWithPoints is prefix operator with precedence 4
+/*
+Summary:	Creates a new path.
+
+mPoints:	An expression which evaluates to a list of points.
+
+Returns:	A new polyline or polygon path. A polygon path will be closed with an additional line from the last point to the first.
+
+Example:
+	// Create a polyline path
+	put polyline path with points [point [0,0], point [25,50], point [75,50], point [50,0]] into tPath
+	// Create a closed polygon path (rhombus)
+	put polygon path with points [point [0,0], point [25,50], point [75,50], point [50,0]] into tPath
+
+Tags: Canvas
+*/
+
+syntax PathMakeWithPoints is prefix operator with precedence 4
 	( "polygon" <mClosed=true> | "polyline" <mClosed=false> ) "path" "with" "points" <mPoints: Expression>
 begin
 	MCCanvasPathMakeWithPoints(mClosed, mPoints, output)
@@ -1890,21 +1994,66 @@ public foreign handler MCCanvasPathGetSubpath(in pIndex as integer, in pPath as 
 public foreign handler MCCanvasPathGetBoundingBox(in pPath as Path, out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as string) as undefined binds to "<builtin>"
 
-syntax PathSubpathProperty is prefix operator with precedence 4
+/*
+Summary:	The subpaths of a path.
+
+mPath:		An expression which evaluates to a path.
+mStart:		An expression which evaluates to a number.
+mEnd:		An expression which evaluates to a number.
+
+Description:	The subpaths of <mPath> in the range <mStart> to <mEnd>. Each subpath or range of subpaths is itself a path.
+
+Example:
+	// Split out the first subpath of a path
+	put subpath 1 of tPath into tSubPath
+	// Store the remaining subpaths in the original path
+	put subpath 2 to -1 of tPath into tPath
+
+Tags:	Canvas
+*/
+
+syntax PathPropertySubpath is prefix operator with precedence 4
 	"subpath" <mStart: Expression> [ "to" <mEnd: Expression> ] "of" <mPath: Expression>
 begin
 	MCCanvasPathGetSubpaths(mStart, mEnd, mPath, output)
-//	MCCanvasPathGetSubpaths(mStart, mStart, mPath, output)
 	MCCanvasPathGetSubpath(mStart, mPath, output)
 end syntax
 
-syntax PathBoundingBoxProperty is prefix operator with precedence 4
+/*
+Summary:	The bounding box of a path.
+
+mPath:		An expression which evaluates to a path.
+
+Description:	The smallest rectangle that competely encloses <mPath>.
+
+Example:
+	// Get the bounds of a path
+	put the bounding box of tPath
+
+Tags:	Canvas
+*/
+
+syntax PathPropertyBoundingBox is prefix operator with precedence 4
 	"bounding" "box" "of" <mPath: Expression>
 begin
 	MCCanvasPathGetBoundingBox(mPath, output)
 end syntax
 
-syntax PathInstructionsProperty is prefix operator with precedence 4
+/*
+Summary:	The instructions of a path.
+
+mPath:		An expression which evaluates to a path.
+
+Description:	A string containing the series of instructions and point arguments used to construct <mPath>.
+
+Example:
+	// Get the instructions of a path
+	put the instructions of tPath into tInstructionString
+
+Tags:	Canvas
+*/
+
+syntax PathPropertyInstructions is prefix operator with precedence 4
 	"the" "instructions" "of" <mPath: Expression>
 begin
 	MCCanvasPathGetInstructionsAsString(mPath, output)
