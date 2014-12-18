@@ -162,7 +162,6 @@ struct __MCCanvasImpl
 	bool antialias_changed : 1;
 	bool opacity_changed : 1;
 	bool blend_mode_changed : 1;
-	bool stippled_changed : 1;
     bool stroke_width_changed : 1;
 	
 	MCCanvasProperties *prop_stack;
