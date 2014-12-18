@@ -10,7 +10,7 @@ static bool MCTypeValueIsEmpty(MCValueRef p_value)
     (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringIsEmpty((MCStringRef)p_value)) ||
     (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName && MCNameIsEmpty((MCNameRef)p_value)) ||
     (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value)) ||
-    (MCValueGetTypeCode(p_value) == kMCValueTypeCodeList && MCListIsEmpty((MCListRef)p_value)));
+    (MCValueGetTypeCode(p_value) == kMCValueTypeCodeProperList && MCProperListIsEmpty((MCProperListRef)p_value)));
 }
 
 extern "C" MC_DLLEXPORT void MCTypeEvalIsEmpty(MCValueRef p_target, bool& r_output)
@@ -37,6 +37,54 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsNotDefined(MCValueRef *p_target, bool& 
     MCTypeEvalIsDefined(p_target, t_defined);
     
     r_output = !t_defined;
+}
+
+extern "C" MC_DLLEXPORT void MCTypeEvalIsABoolean(MCValueRef p_value, bool& r_output)
+{
+    if (p_value != nil)
+        r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeBoolean;
+    else
+        r_output = false;
+}
+
+extern "C" MC_DLLEXPORT void MCTypeEvalIsANumber(MCValueRef p_value, bool& r_output)
+{
+    if (p_value != nil)
+        r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeNumber;
+    else
+        r_output = false;
+}
+
+extern "C" MC_DLLEXPORT void MCTypeEvalIsAString(MCValueRef p_value, bool& r_output)
+{
+    if (p_value != nil)
+        r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeString;
+    else
+        r_output = false;
+}
+
+extern "C" MC_DLLEXPORT void MCTypeEvalIsAData(MCValueRef p_value, bool& r_output)
+{
+    if (p_value != nil)
+        r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeData;
+    else
+        r_output = false;
+}
+
+extern "C" MC_DLLEXPORT void MCTypeEvalIsAnArray(MCValueRef p_value, bool& r_output)
+{
+    if (p_value != nil)
+        r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray;
+    else
+        r_output = false;
+}
+
+extern "C" MC_DLLEXPORT void MCTypeEvalIsAList(MCValueRef p_value, bool& r_output)
+{
+    if (p_value != nil)
+        r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeProperList;
+    else
+        r_output = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

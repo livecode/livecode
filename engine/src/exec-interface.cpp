@@ -2124,9 +2124,13 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 				
 				t_new_object = t_control -> clone(True, OP_NONE, false);
 
+                // SN-2014-12-08: [[ Bug 12726 ]] Avoid to dereference a nil pointer (and fall back
+                //  to the default stack pointer if needed).
 				MCControl *t_new_control;
 				t_new_control = static_cast<MCControl *>(t_new_object);
-				if (p_dst . object -> getstack() != t_old_parent -> getstack())
+				if (t_old_parent == NULL)
+                    t_new_control -> resetfontindex(MCdefaultstackptr);
+                else if (p_dst . object -> getstack() != t_old_parent -> getstack())
 					t_new_control -> resetfontindex(t_old_parent -> getstack());
 
 				// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.

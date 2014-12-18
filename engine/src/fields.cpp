@@ -1011,8 +1011,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			int4 maxy = 0;
 			do
 			{
-				if (maxy != 0)
-					maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
+                // FG-2014-12-03: [[ Bug 11688 ]] The margins get counted twice...
+                //if (maxy != 0)
+                //	maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
 				maxy += sptr->getyextent(ei, fixedheight);
 				ei -= sptr->gettextlengthcr();
 				sptr = sptr->next();
@@ -1884,8 +1885,10 @@ Exec_stat MCField::seltext(findex_t si, findex_t ei, Boolean focus, Boolean upda
 		getstack()->kfocusset(this);
 		if (!(state & CS_KFOCUSED))
 			return ES_NORMAL;
-	}
-	else
+    }
+    // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+    //  if it is Focusable
+	else if (flags & F_TRAVERSAL_ON)
 		MCactivefield = this;
 	removecursor();
 	

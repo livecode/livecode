@@ -1,0 +1,72 @@
+-- Library modules add public handlers to the bottom of the message path.
+--
+-- This simple library gives access to the LiveCode Builder canvas syntax from
+-- LiveCode Script by wrapping in a few simple handlers.
+--
+-- Example usage:
+--
+--    canvasCreate 100, 100
+--    canvasSetColor 1, 0, 0, 1
+--    canvasFillCircle 50, 50, 25
+--    canvasApplyToImage "image 1"
+--    canvasDestroy
+--
+-- This creates a canvas of size 100x100, fills a circle of radius 25 at
+-- the centre, then copies the contents of the canvas to 'image 1' (which
+-- must already exist).
+--
+library com.livecode.libraries.example.canvas
+
+-- We need syntax from both canvas and engine built-in modules.
+use com.livecode.canvas
+use com.livecode.engine
+
+-- We store the current canvas in a module-scope variable.
+variable sCanvas as optional Canvas
+
+-- This handler creates a canvas of the given size for the other
+-- handlers to use.
+public handler canvasCreate(in pWidth as integer, in pHeight as integer) as undefined
+  -- Create a new canvas, this will release any previous canvas.
+  put a new canvas with size [ pWidth, pHeight ] into sCanvas
+  -- Set the paint to opaque black and fill the whole area.
+  set the paint of sCanvas to solid paint with color [0, 0, 0, 1]
+  fill rectangle path of rectangle [ 0, 0, pWidth, pHeight ] on sCanvas
+end handler
+
+-- This handler destroys the canvas by simply assigning undefined to the
+-- canvas variable.
+public handler canvasDestroy() as undefined
+  put undefined into sCanvas
+end handler
+
+-- This handler sets the current color of the canvas to the given RGBA value.
+public handler canvasSetColor(in pRed as real, in pGreen as real, in pBlue as real, in pAlpha as real) as undefined
+  set the paint of sCanvas to solid paint with color [pRed, pGreen, pBlue, pRed]
+end handler
+
+-- This handler fills a circle of the given radius at the given position.
+public handler canvasFillCircle(in pX as real, in pY as real, in pRadius as real) as undefined
+  fill circle path centered at point [pX, pY] with radius pRadius on sCanvas
+end handler
+
+-- This handler copies the current contents of the canvas to the specified
+-- image object. The parameter must be a string which is an object chunk referring
+-- to an image. e.g. the long id of image 1
+public handler canvasApplyToImage(in pObjectId as string) as undefined
+  variable tObject as ScriptObject
+
+  -- Resolving the script object gets a weak reference to the specified
+  -- object and places it in 'the result'.
+  resolve script object pObjectId
+  put the result into tObject
+
+  -- Now set the width and height of the image object to that of our canvas
+  set property "width" of tObject to the pixel width of sCanvas
+  set property "height" of tObject to the pixel height of sCanvas
+
+  -- Finally set the image data of the image object.
+  set property "imageData" of tObject to the pixel data of sCanvas
+end handler
+
+end library

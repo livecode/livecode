@@ -3464,6 +3464,10 @@ end syntax
 
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasNewCanvasWithSize(in pSize as list, out rCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as data) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as uint) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out rWidth as uint) as undefined binds to "<builtin>"
 
 /*
 Summary:	The canvas used when drawing a widget.
@@ -3483,6 +3487,30 @@ syntax ThisCanvas is expression
 begin
     MCCanvasThisCanvas(output)
     MCCanvasPretendToAssignThisCanvas(input)
+end syntax
+
+syntax NewCanvasWithSize is prefix operator with precedence 1
+  "a" "new" "canvas" "with" "size" <Size: Expression>
+begin
+  MCCanvasNewCanvasWithSize(Size, output)
+end syntax
+
+syntax GetPixelDataOfCanvas is prefix operator with precedence 1
+  "the" "pixel" "data" "of" <Canvas: Expression>
+begin
+  MCCanvasGetPixelDataOfCanvas(Canvas, output)
+end syntax
+
+syntax GetPixelWidthOfCanvas is prefix operator with precedence 1
+  "the" "pixel" "width" "of" <Canvas: Expression>
+begin
+  MCCanvasGetPixelWidthOfCanvas(Canvas, output)
+end syntax
+
+syntax GetPixelHeightOfCanvas is prefix operator with precedence 1
+  "the" "pixel" "height" "of" <Canvas: Expression>
+begin
+  MCCanvasGetPixelHeightOfCanvas(Canvas, output)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////

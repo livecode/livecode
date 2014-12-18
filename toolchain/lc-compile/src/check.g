@@ -1083,14 +1083,22 @@
 
 'var' IgnoredModulesList : NAMELIST
 
+'condition' ImportContainsCanvas(IMPORT)
+
 'sweep' CheckInvokes(ANY)
 
     'rule' CheckInvokes(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
         (|
             ne(Kind, widget)
-            MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
-            MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
-            IgnoredModulesList <- namelist(CanvasModuleName, namelist(WidgetModuleName, nil))
+            (|
+                ImportContainsCanvas(Imports)
+                MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
+                IgnoredModulesList <- namelist(WidgetModuleName, nil)
+            ||
+                MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
+                MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
+                IgnoredModulesList <- namelist(CanvasModuleName, namelist(WidgetModuleName, nil))
+            |)
         ||
             IgnoredModulesList <- nil
         |)

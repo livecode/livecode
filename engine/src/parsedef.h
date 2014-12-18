@@ -1610,6 +1610,8 @@ enum Properties {
     P_CAN_RETREAT,
     P_ALPHA,
     P_BACKGROUND_COLOR,
+    // SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+    P_IGNORE_VOICE_OVER_SENSITIVITY,
     P_MULTI_LINE,
     P_TEXT_COLOR,
     P_FONT_SIZE,

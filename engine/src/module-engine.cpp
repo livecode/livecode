@@ -184,7 +184,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStrin
         MCNewAutoNameRef t_propset_name, t_propset_key;
         t_propset_name = t_script_object_imp -> handle -> Get() -> getdefaultpropsetname();
         if (!MCNameCreate(p_property, &t_propset_key))
-            return false;
+            return nil;
         t_script_object_imp -> handle -> Get() -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
     }
     else
@@ -218,24 +218,34 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
         return;
     }
     
+    MCValueRef t_value_copy;
+    t_value_copy = MCValueRetain(p_value);
+    
     // Make sure the value is something the script world can understand.
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-    if (!MCExtensionConvertToScriptType(ctxt, p_value))
+    if (!MCExtensionConvertToScriptType(ctxt, t_value_copy))
+    {
+        MCValueRelease(t_value_copy);
         return;
+    }
     
 	Properties t_prop;
 	t_prop = parse_property_name(p_property);
     
+    // It seems using 'setproperty' takes the value in the execvalue :S
 	MCExecValue t_value;
     t_value . type = kMCExecValueTypeValueRef;
-    t_value . valueref_value = p_value;
+    t_value . valueref_value = t_value_copy;
     
     if (t_prop == P_CUSTOM)
     {
         MCNewAutoNameRef t_propset_name, t_propset_key;
         t_propset_name = t_script_object_imp -> handle -> Get() -> getdefaultpropsetname();
         if (!MCNameCreate(p_property, &t_propset_key))
+        {
+            MCValueRelease(t_value_copy);
             return;
+        }
         t_script_object_imp -> handle -> Get() -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
     }
     else

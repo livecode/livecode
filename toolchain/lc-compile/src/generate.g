@@ -35,9 +35,15 @@
         
         (|
             ne(Kind, widget)
-            MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
-            MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
-            IgnoredModuleList <- namelist(CanvasModuleName, namelist(WidgetModuleName, nil))
+            (|
+                ImportContainsCanvas(Imports)
+                MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
+                IgnoredModuleList <- namelist(WidgetModuleName, nil)
+            ||
+                MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
+                MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
+                IgnoredModuleList <- namelist(CanvasModuleName, namelist(WidgetModuleName, nil))
+            |)
         ||
             IgnoredModuleList <- nil
         |)
@@ -58,6 +64,19 @@
         EmitEndModule()
         
         GenerateManifest(Module)
+
+'condition' ImportContainsCanvas(IMPORT)
+
+    'rule' ImportContainsCanvas(sequence(Left, _)):
+        ImportContainsCanvas(Left)
+        
+    'rule' ImportContainsCanvas(sequence(_, Right)):
+        ImportContainsCanvas(Right)
+        
+    'rule' ImportContainsCanvas(import(_, Id)):
+        Id'Name -> Name
+        MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
+        eq(Name, CanvasModuleName)
 
 ----------
 
