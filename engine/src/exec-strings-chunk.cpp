@@ -162,8 +162,11 @@ void MCStringsGetExtentsByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, 
             r_first = p_ordinal_type - CT_FIRST;
             break;
         default:
+            // SN-2014-12-15: [[ Bug 14211 ]] bad extents shoudl throw an error. It was returning
+            //  a non-initialised value in 6.7.
             fprintf(stderr, "MCChunk: ERROR bad extents\n");
-            abort();
+            ctxt . LegacyThrow(EE_CHUNK_BADEXTENTS);
+            return;
 	}
     
     if (r_first < 0)
@@ -943,6 +946,11 @@ void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_typ
     int4 t_first;
     int4 t_chunk_count;
     MCStringsGetExtentsByOrdinal(ctxt, p_chunk_type, p_ordinal_type, *t_string, t_first, t_chunk_count);
+    
+    // SN-2014-12-15: [[ Bug 14211 ]] MCStringsGetExtensByOrdinal may throw an error.
+    // The release of x_mark.text will be done in MCChunk::evalobjectchunk
+    if (ctxt . HasError())
+        return;
     
     int4 t_add;
     int4 t_start, t_end;

@@ -775,11 +775,19 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
     return false;
 }
 
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
+// SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension, bool p_is_raw_data)
 {
     MCAndroidEngineCall("exportImageToAlbum", "xdxx", &r_save_result, p_raw_data, p_file_name, p_file_extension);
     
     return true;
+}
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+bool MCSystemGetIsVoiceOverRunning(bool& r_is_vo_running)
+{
+    // Not implemented on Android
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

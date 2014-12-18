@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbliphone.h"
 #include "mbliphonecontrol.h"
+#include "mbliphoneapp.h"
 
 #include "graphics_util.h"
 
@@ -50,6 +51,8 @@ MCPropertyInfo MCiOSControl::kProperties[] =
     DEFINE_RW_CTRL_PROPERTY(P_OPAQUE, Bool, MCiOSControl, Opaque)
     DEFINE_RW_CTRL_PROPERTY(P_ALPHA, UInt16, MCiOSControl, Alpha)
     DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_BACKGROUND_COLOR, NativeControlColor, MCiOSControl, BackgroundColor)
+    // SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]] Add property for ignoring voice over sensitivity
+    DEFINE_RW_CTRL_PROPERTY(P_IGNORE_VOICE_OVER_SENSITIVITY, Bool, MCiOSControl, IgnoreVoiceOverSensitivity)
 };
 
 MCObjectPropertyTable MCiOSControl::kPropertyTable =
@@ -309,6 +312,31 @@ void MCiOSControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControl
             [m_view setBackgroundColor: t_color];
 }
 
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+// PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over.
+// Note that in order to make a UIWebView accessible, we have to mark its parent view as 'not-accessible'
+void MCiOSControl::SetIgnoreVoiceOverSensitivity(MCExecContext& ctxt, bool p_ignore_vos)
+{
+    if (m_view != nil)
+    {
+        if (p_ignore_vos)
+        {
+            [m_view.superview setAccessibilityTraits:UIAccessibilityTraitNone];
+            m_view.superview.isAccessibilityElement = NO;
+            MCignorevoiceoversensitivity = True;
+        }
+        else
+        {
+            m_view.superview.isAccessibilityElement = YES;
+#ifdef __IPHONE_5_0
+            [m_view.superview setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+#endif
+            MCignorevoiceoversensitivity = False;
+        }
+
+    }
+}
+
 void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
 {
     if (m_view != nil)
@@ -362,6 +390,16 @@ void MCiOSControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor&
         return;
     
     ctxt . Throw();
+}
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+// PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over
+void MCiOSControl::GetIgnoreVoiceOverSensitivity(MCExecContext &ctxt, bool &r_ignore_vos)
+{
+    if (m_view != nil)
+        r_ignore_vos = MCignorevoiceoversensitivity;
+    else
+        r_ignore_vos = false;
 }
 
 #ifdef /* MCiOSControl::Set */ LEGACY_EXEC
@@ -445,7 +483,33 @@ Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 					[m_view setBackgroundColor: t_color];
 		}
 		return ES_NORMAL;
-		
+        
+		// PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over.
+        // Note that in order to make a UIWebView accessible, we have to mark its parent view as 'not-accessible'
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+        {
+            if (m_view != nil)
+            {
+                if (ep . getsvalue() == MCtruemcstring)
+                {
+                    [m_view.superview setAccessibilityTraits:UIAccessibilityTraitNone];
+                    m_view.superview.isAccessibilityElement = NO;
+                    MCignorevoiceoversensitivity = True;
+                }
+                else
+                {
+                    m_view.superview.isAccessibilityElement = YES;
+#ifdef __IPHONE_5_0
+                    [m_view.superview setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+#endif
+                    MCignorevoiceoversensitivity = False;
+                }
+                
+            }
+
+        }
+        return ES_NORMAL;
+            
 		default:
 			break;
 	}
@@ -503,6 +567,11 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 			if (m_view != nil)
 				FormatColor(ep, [m_view backgroundColor]);
 			return ES_NORMAL;
+          
+        // PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+            ep.setsvalue(MCU_btos(m_view != nil ? MCignorevoiceoversensitivity == True : NO));
+            return ES_NORMAL;
             
         default:
             break;

@@ -2487,9 +2487,16 @@ MCFontlist *MCFontlistGetCurrent(void)
 
 bool MCDispatch::GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color)
 {
-    if (which == P_FORE_COLOR)
+    // SN-2014-12-05: [[ Bug 14154 ]] Added forgotten properties
+    if (which == P_FORE_COLOR
+            || which ==  P_BORDER_COLOR
+            || which == P_TOP_COLOR
+            || which == P_BOTTOM_COLOR
+            || which == P_SHADOW_COLOR
+            || which == P_FOCUS_COLOR)
         GetDefaultForeColor(ctxt, r_color);
-    else if (which == P_BACK_COLOR)
+    else if (which == P_BACK_COLOR
+             || which == P_HILITE_COLOR)
         GetDefaultBackColor(ctxt, r_color);
     else
         r_color . name = MCValueRetain(kMCEmptyString);

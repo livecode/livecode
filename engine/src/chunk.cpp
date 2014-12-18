@@ -2160,7 +2160,12 @@ Exec_stat MCChunk::extents(MCCRef *ref, int4 &start, int4 &number,
 			start--;
 		break;
 	default:
+        // SN-2014-12-15: [[ Bug 14211 ]] Fix for using next with a text chunk.
+        //  That was causing the extents to return an uninitialised value.
 		fprintf(stderr, "MCChunk: ERROR bad extents\n");
+        MCeerror->add(EE_CHUNK_BADEXTENTS, line, pos);
+        return ES_ERROR;
+
 	}
 	if (start < 0)
 	{
@@ -3089,6 +3094,10 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             }
             
             mark(ctxt, false, false, t_new_mark);
+            
+            // SN-2014-12-15: [[ Bug 14211 ]] mark() can throw errors
+            if (ctxt . HasError())
+                return;
             
             if (!isdatachunk())
                 MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;

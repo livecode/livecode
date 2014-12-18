@@ -35,8 +35,8 @@
 // similar way to the MCPlatformWindow at a later date though.
 
 static uint32_t s_menu_select_lock = 0;
-// SN-2014-11-06: [[ Bug 13836 ]] Stores whether a shadowed item got selected
-static bool s_shadow_item_selected = false;
+// SN-2014-11-06: [[ Bug 13836 ]] Stores whether a quit item got selected
+static bool s_quit_selected = false;
 // SN-2014-11-10: [[ Bug 13836 ]] Keeps the track about the open items in the menu bar.
 static uint32_t s_open_menubar_items = 0;
 
@@ -268,9 +268,6 @@ enum MCShadowedItemTags
 	t_shadow = [self findShadowedMenuItem: tag];
 	if (t_shadow != nil)
     {
-        // SN-2014-11-06: [[ bug 13836 ]] A shadowed item has been selected - no need to call
-        //  keyDown/keyUp in the performKeyEquivalent which called this function call
-        s_shadow_item_selected = true;
         // MW-2014-10-29: [[ Bug 13847 ]] Dispatch default accelerators from app menu.
         uint32_t t_old_menu_select_lock;
         t_old_menu_select_lock = s_menu_select_lock;
@@ -310,6 +307,9 @@ enum MCShadowedItemTags
 
 - (void)quitMenuItemSelected: (id)sender
 {
+    // SN-2014-12-16: [[ Bug 14185 ]] Only flag the the quitting state (that's the only state
+    //  which causes issues.
+    s_quit_selected = true;
 	[self shadowedMenuItemSelected: @"Quit"];
 }
 
@@ -374,12 +374,35 @@ enum MCShadowedItemTags
 
 @compatibility_alias MCMenuHandlingKeys com_runrev_livecode_MCMenuHandlingKeys;
 
+// SN-2014-12-16: [[ Bug 14185 ]] Functions to save and restore the selected quit state
+uint32_t s_quitting_state_count = 0;
+uint8_t *s_quitting_states;
+
+void MCMacPlatformSaveQuittingState()
+{
+    MCMemoryReallocate(s_quitting_states, s_quitting_state_count + 1, s_quitting_states);
+    s_quitting_states[s_quitting_state_count] = s_quit_selected;
+    
+    ++s_quitting_state_count;
+    s_quit_selected = false;
+}
+
+void MCMacPlatformPopQuittingState()
+{
+    s_quit_selected = s_quitting_states[s_quitting_state_count - 1];
+    
+    --s_quitting_state_count;
+    MCMemoryReallocate(s_quitting_states, s_quitting_state_count, s_quitting_states);
+}
+
 // SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item clicked was a shadowed item.
-bool MCMacPlatformWasShadowItemSelected(void)
+// SN-2014-12-16: [[ Bug 14185 ]] Name changed as it only returns whether a 'Quit' item
+// has been selected.
+bool MCMacPlatformIsInQuittingState(void)
 {
 	bool t_occured;
-	t_occured = s_shadow_item_selected;
-	s_shadow_item_selected = false;
+	t_occured = s_quit_selected;
+	s_quit_selected = false;
 	return t_occured;
 }
 
@@ -397,10 +420,19 @@ void MCMacPlatformUnlockMenuSelect(void)
 
 - (BOOL)performKeyEquivalent: (NSEvent *)event
 {
+    // SN-2014-12-05: [[ Bug 14019 ]] Forbid any Cmd-key reaction when the target is the colour picker
+    // (that colour picker is modal after all)
+    if ([[[event window] delegate] isKindOfClass: [MCColorPanelDelegate class]])
+        return false;
+
 	// If the event is not targetted at one of our windows, we just let things
 	// flow as normal.
 	if (![[[event window] delegate] isKindOfClass: [MCWindowDelegate class]])
         return [super performKeyEquivalent: event];
+    
+    // SN-2014-12-16; [[ Bug 14185 ]] We want to store the previous state, as when using answer
+    //  for example, we still want the key event to be processed.
+    MCMacPlatformSaveQuittingState();
     
 	// Otherwise, we lock menuSelect firing, and propagate a keydown/keyup.
 	BOOL t_key_equiv;
@@ -423,8 +455,15 @@ void MCMacPlatformUnlockMenuSelect(void)
     // SN-2014-11-06: [[ Bug 13510 ]] Ensure that we don't get further, if a shadow item was selected
     //  and that Cocoa will stop looking for key equivalent amongst the application's menus
     //  Calling MCMacPlatformWasShadowItemSelected here ensure that the state is reset for each event.
-    if (MCMacPlatformWasShadowItemSelected())
+    // SN-2014-12-16; [[ Bug 14185 ]] Name changed as we only check whether a 'Quit' item was selected.
+    if (MCMacPlatformIsInQuittingState())
+    {
+        MCMacPlatformPopQuittingState();
         return YES;
+    }
+    
+    // SN-2014-12-16: [[ Bug 14185 ]] Pop the last state saved.
+    MCMacPlatformPopQuittingState();
     
     // MW-2014-04-10: [[ Bug 12047 ]] If it was found as a key equivalent dispatch
     //   a keypress so the engine can handle it. Otherwise we return NO and the
@@ -859,33 +898,33 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
     if (t_app_name == nil)
         t_app_name = [[NSProcessInfo processInfo] processName];
 	
+    
+    // SN-2014-12-09: [[ Bug 14168 ]] Update to use actually localised strings as menu items
+    // for the Application menu.
+    // The menu items Preferences, About and Quit are again auto-translated.
+    
 	NSMenu *t_services_menu;
-	t_services_menu = [[NSMenu alloc] initWithTitle: NSLocalizedString(@"Services", nil)];
+	t_services_menu = [[NSMenu alloc] initWithTitle: NSLocalizedStringFromTable(@"appMenu.services", @"Localisation", @"Services")];
 	[NSApp setServicesMenu: t_services_menu];
 						   
 	NSMenu *t_app_menu;
 	t_app_menu = [[NSMenu alloc] initWithTitle: t_app_name];
 	
     NSString *t_about_string;
-    if (p_menu -> about_item != nil)
-        t_about_string = [p_menu -> about_item title];
-    else
-        t_about_string = [NSString stringWithFormat: NSLocalizedString(@"About %@", @"About {Application Name}"), t_app_name];
+    t_about_string = [NSString stringWithFormat: NSLocalizedStringFromTable(@"appMenu.about", @"Localisation", @"Format string such as About %@"), t_app_name];
     
 	[t_app_menu addItemWithTitle: t_about_string
 						  action: @selector(aboutMenuItemSelected:)
 				   keyEquivalent: @""];
     if (p_menu -> about_item == nil)
         [[t_app_menu itemAtIndex: 0] setEnabled:NO];
-	[[t_app_menu itemAtIndex: 0] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 0] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 0] setTag: kMCShadowedItemAbout];
         
     [t_app_menu addItem: [NSMenuItem separatorItem]];
     
     NSString *t_preferences_string;
-    if (p_menu -> preferences_item != nil)
-        t_preferences_string = [p_menu -> preferences_item title];
-    else
-        t_preferences_string = @"Preferences...";
+    t_preferences_string = NSLocalizedStringFromTable(@"appMenu.preferences", @"Localisation", @"Preferences");
     
 	[t_app_menu addItemWithTitle: t_preferences_string
 						  action: @selector(preferencesMenuItemSelected:)
@@ -895,30 +934,29 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
     if (p_menu -> preferences_item == nil)
         [[t_app_menu itemAtIndex: 2] setEnabled: NO];
     
-	[t_app_menu addItem: [NSMenuItem separatorItem]];
-	[t_app_menu addItemWithTitle: NSLocalizedString(@"Services", nil)
+    [[t_app_menu itemAtIndex: 2] setTag: kMCShadowedItemPreferences];
+    
+    [t_app_menu addItem: [NSMenuItem separatorItem]];
+    [t_app_menu addItemWithTitle: NSLocalizedStringFromTable(@"appMenu.services", @"Localisation", @"Services")
 						  action: nil
 				   keyEquivalent: @""];
 	[[t_app_menu itemAtIndex: 4] setSubmenu: t_services_menu];
 	[t_services_menu release];
-	[t_app_menu addItem: [NSMenuItem separatorItem]];
-	[t_app_menu addItemWithTitle: [NSString stringWithFormat: NSLocalizedString(@"Hide %@", @"Hide {Application Name}"), t_app_name]
+    [t_app_menu addItem: [NSMenuItem separatorItem]];
+	[t_app_menu addItemWithTitle: [NSString stringWithFormat: NSLocalizedStringFromTable(@"appMenu.hide", @"Localisation", @"Format string such as Hide %@"), t_app_name]
 						  action: @selector(hide:)
-				   keyEquivalent: @"h"];
-	[t_app_menu addItemWithTitle: NSLocalizedString(@"Hide Others", nil)
+                   keyEquivalent: @"h"];
+    [t_app_menu addItemWithTitle: NSLocalizedStringFromTable(@"appMenu.hideOthers", @"Localisation", @"Hide Others")
 						  action: @selector(hideOtherApplications:)
 				   keyEquivalent: @"h"];
 	[[t_app_menu itemAtIndex: 7] setKeyEquivalentModifierMask: (NSAlternateKeyMask | NSCommandKeyMask)];
-	[t_app_menu addItemWithTitle: NSLocalizedString(@"Show All", nil)
+	[t_app_menu addItemWithTitle: NSLocalizedStringFromTable(@"appMenu.showAll", @"Localisation", @"Show All")
 						  action: @selector(unhideAllApplications:)
 				   keyEquivalent: @""];
 	[t_app_menu addItem: [NSMenuItem separatorItem]];
     
     NSString *t_quit_string;
-    if (p_menu -> quit_item != nil)
-        t_quit_string = [NSString stringWithFormat: @"%@ %@", [p_menu -> quit_item title], t_app_name];
-    else
-        t_quit_string = [NSString stringWithFormat: NSLocalizedString(@"Quit %@", @"Quit {Application Name}"), t_app_name];
+    t_quit_string = [NSString stringWithFormat: NSLocalizedStringFromTable(@"appMenu.quit", @"Localisation", @"Format string such as Quit %@"), t_app_name];
     
 	[t_app_menu addItemWithTitle: t_quit_string
 						  action: @selector(quitMenuItemSelected:)
@@ -931,6 +969,7 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
         [[t_app_menu itemAtIndex: 10] setAction:@selector(quitApplicationSelected:)];
     
     [[t_app_menu itemAtIndex: 10] setTarget: s_app_menu_delegate];
+    [[t_app_menu itemAtIndex: 10] setTag: kMCShadowedItemQuit];
 	[t_app_menu setDelegate: s_app_menu_delegate];
 	
 	NSMenuItem *t_app_menu_item;

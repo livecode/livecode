@@ -4081,8 +4081,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)t_string_ptr, p_string_length >> 1,
 										   (LPSTR)t_buffer_ptr, p_buffer_length, NULL, NULL);
 		else
+		{
 			dsize = MultiByteToWideChar( codepage, 0, (LPCSTR)t_string_ptr, p_string_length, (LPWSTR)t_buffer_ptr,
 										   p_buffer_length >> 1);
+			// SN-2014-12-15: [[ Bug 14203 ]] The required size must be adapted as it was beforehand
+			dsize <<= 1;
+		}
 
 		return dsize;
 	}

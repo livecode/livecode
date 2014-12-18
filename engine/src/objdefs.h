@@ -294,7 +294,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define F_HAS_SHIFT             (1UL << 16)
 #define F_HAS_BACK_COLOR        (1UL << 17)
 #define F_HAS_COLOR_NAME        (1UL << 18)
-//#define F_HAS_TAB               (1UL << 19) // [[ TabAlignments ]] No longer required
+// SN-2014-12-04: [[ Bug 14149 ]] Flag required for saving in legacy format.
+#define F_HAS_TAB               (1UL << 19) // [[ TabAlignments ]] No longer required
 #define F_HAS_BACK_COLOR_NAME   (1UL << 20)
 #define F_HAS_LINK              (1UL << 21)
 #define F_HAS_IMAGE             (1UL << 22)

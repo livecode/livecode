@@ -179,7 +179,8 @@ bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 	return true;
 }
 
-bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
+// SN-2014-12-03: [[ Bug 14147 ]] Array conversion is not always permissive, neither always strict
+bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array, bool p_strict)
 {
     if (MCValueIsEmpty(p_value))
     {
@@ -194,7 +195,8 @@ bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
         // array (for example, 'the extents of "foo"' should return empty
         // rather than throwing an error).
         MCAutoStringRef t_ignored;
-        if (ConvertToString(p_value, &t_ignored))
+        // SN-2014-12-03: [[ Bug 14147 ]] Do not try the string conversion if the
+        if (!p_strict && ConvertToString(p_value, &t_ignored))
         {
             r_array = MCValueRetain(kMCEmptyArray);
             return true;
@@ -307,7 +309,9 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
         if (!ConvertToReal(x_value . valueref_value, t_real))
         {
             MCAutoArrayRef t_array;
-            if (!ConvertToArray(x_value . valueref_value, &t_array))
+            // SN-2014-12-03: [[ Bug 14147 ]] An array should not be returned if the
+            //  value is neither empty or an array.
+            if (!ConvertToArray(x_value . valueref_value, &t_array, true))
                 return false;
             
             MCValueRelease(x_value . valueref_value);
