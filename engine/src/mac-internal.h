@@ -1,6 +1,8 @@
 #ifndef __MC_MAC_PLATFORM__
 #define __MC_MAC_PLATFORM__
 
+#import <AppKit/NSColorPanel.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCMacPlatformWindow;

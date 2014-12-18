@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32\include&quot;"
 				PreprocessorDefinitions="MODE_STANDALONE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -114,7 +114,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src;$(SolutionDir)libcore/src"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32\include&quot;"
 				PreprocessorDefinitions="MODE_STANDALONE"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
@@ -196,10 +196,19 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{6899CD7E-BE16-44CE-A28B-27304F42E127}"
+			RelativePathToProject=".\libcore\libcore.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{09751ABE-310B-4324-BACE-F7FFDA2299DE}"
 			RelativePathToProject=".\thirdparty\libgif\libgif.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}"
+			RelativePathToProject=".\thirdparty\libffi\libffi.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{56CD2637-6005-4DD6-9ADF-F85C7774BB88}"
+			RelativePathToProject=".\libscript\stdscript.vcproj"
 		/>
 	</References>
 	<Files>

@@ -24,6 +24,7 @@
 		7201667E1A42129F002B53F9 /* foundation-typeinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166741A42129F002B53F9 /* foundation-typeinfo.cpp */; };
 		7237189218E98BE60006C484 /* foundation-text.h in Headers */ = {isa = PBXBuildFile; fileRef = 7237189118E98BE60006C484 /* foundation-text.h */; };
 		7237189418E98BF80006C484 /* foundation-text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7237189318E98BF80006C484 /* foundation-text.cpp */; };
+		726C16641A434DC8008DE025 /* foundation-custom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 726C16631A434DC8008DE025 /* foundation-custom.cpp */; };
 		729903A918438B3900A93FA8 /* foundation-locale.h in Headers */ = {isa = PBXBuildFile; fileRef = 729903A718438B3900A93FA8 /* foundation-locale.h */; };
 		729903AA18438B3900A93FA8 /* foundation-unicode.h in Headers */ = {isa = PBXBuildFile; fileRef = 729903A818438B3900A93FA8 /* foundation-unicode.h */; };
 		729903AE18438B5300A93FA8 /* foundation-locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 729903AB18438B5300A93FA8 /* foundation-locale.cpp */; };
@@ -61,6 +62,13 @@
 			remoteGlobalIDString = 720165461A4208A0002B53F9;
 			remoteInfo = libffi;
 		};
+		726C167F1A434F05008DE025 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 720165A81A420CEF002B53F9 /* libffi-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 720165451A4208A0002B53F9;
+			remoteInfo = libffi;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -87,6 +95,7 @@
 		720166741A42129F002B53F9 /* foundation-typeinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-typeinfo.cpp"; path = "src/foundation-typeinfo.cpp"; sourceTree = "<group>"; };
 		7237189118E98BE60006C484 /* foundation-text.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-text.h"; path = "include/foundation-text.h"; sourceTree = "<group>"; };
 		7237189318E98BF80006C484 /* foundation-text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-text.cpp"; path = "src/foundation-text.cpp"; sourceTree = "<group>"; };
+		726C16631A434DC8008DE025 /* foundation-custom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-custom.cpp"; path = "src/foundation-custom.cpp"; sourceTree = "<group>"; };
 		729903A718438B3900A93FA8 /* foundation-locale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-locale.h"; path = "include/foundation-locale.h"; sourceTree = "<group>"; };
 		729903A818438B3900A93FA8 /* foundation-unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode.h"; path = "include/foundation-unicode.h"; sourceTree = "<group>"; };
 		729903AB18438B5300A93FA8 /* foundation-locale.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-locale.cpp"; path = "src/foundation-locale.cpp"; sourceTree = "<group>"; };
@@ -169,6 +178,7 @@
 		4DD3DDAC1040ABB000CAC7EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				726C16631A434DC8008DE025 /* foundation-custom.cpp */,
 				7201666B1A42129F002B53F9 /* foundation-chunk.cpp */,
 				7201666C1A42129F002B53F9 /* foundation-filters.cpp */,
 				7201666D1A42129F002B53F9 /* foundation-foreign.cpp */,
@@ -269,6 +279,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				726C16801A434F05008DE025 /* PBXTargetDependency */,
 			);
 			name = libfoundationmobile;
 			productName = coremobile;
@@ -328,6 +339,7 @@
 				BE096E19175CD6F900F92F90 /* foundation-core.cpp in Sources */,
 				BE096E1A175CD6F900F92F90 /* foundation-debug.cpp in Sources */,
 				BE096E1B175CD6F900F92F90 /* foundation-error.cpp in Sources */,
+				726C16641A434DC8008DE025 /* foundation-custom.cpp in Sources */,
 				BE096E1C175CD6F900F92F90 /* foundation-list.cpp in Sources */,
 				7201667B1A42129F002B53F9 /* foundation-proper-list.cpp in Sources */,
 				BE096E1D175CD6F900F92F90 /* foundation-name.cpp in Sources */,
@@ -358,6 +370,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		726C16801A434F05008DE025 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libffi;
+			targetProxy = 726C167F1A434F05008DE025 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4D75E65C113C0D3E000A129F /* Release */ = {

@@ -3279,7 +3279,7 @@ Tags:	Canvas
 syntax CanvasOperationClip is statement
 	"clip" "to" <mRect: Expression> "on" <mCanvas: Expression>
 begin
-	MCCanvasOperationClipToRect(mRect, mCanvas)
+	MCCanvasClipToRect(mRect, mCanvas)
 end syntax
 
 /*
@@ -3347,7 +3347,7 @@ Tags:	Canvas
 syntax CanvasOperationMoveTo is statement
 	"move" "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
-	MCCanvasOperationMoveTo(mPoint, mCanvas)
+	MCCanvasMoveTo(mPoint, mCanvas)
 end syntax
 
 /*

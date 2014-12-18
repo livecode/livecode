@@ -13,7 +13,7 @@ LOCAL_SRC_FILES := src/foundation-array.cpp src/foundation-core.cpp src/foundati
 	src/foundation-error.cpp src/foundation-unicode.cpp src/foundation-locale.cpp src/foundation-text.cpp src/foundation-bidi.cpp \
 	src/foundation-chunk.cpp src/foundation-filters.cpp src/foundation-foreign.cpp src/foundation-math.cpp \
 	src/foundation-pickle.cpp src/foundation-proper-list.cpp src/foundation-record.cpp src/foundation-typeconvert.cpp \
-	src/foundation-typeinfo.cpp src/foundation-handler.cpp
+	src/foundation-typeinfo.cpp src/foundation-handler.cpp src/foundation-custom.cpp
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \

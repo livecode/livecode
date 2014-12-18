@@ -69,7 +69,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)rules\Global.vsprops;$(SolutionDir)rules\Debug.vsprops"
+			InheritedPropertySheets="$(SolutionDir)rules\Global.vsprops;$(SolutionDir)rules\Release.vsprops"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
