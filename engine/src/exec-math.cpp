@@ -813,7 +813,13 @@ void MCMathArrayApplyOperationWithNumber(MCExecContext& ctxt, MCArrayRef p_array
 		ctxt.Throw();
 }
 
-void MCMathArrayApplyOperationWithArray(MCExecContext& ctxt, MCArrayRef p_left, Operators p_op, MCArrayRef p_right, MCArrayRef& r_result)
+
+void MCMathArrayApplyOperationWithArray(MCExecContext& ctxt,
+										MCArrayRef p_left,
+										Operators p_op,
+										MCArrayRef p_right,
+										Exec_errors p_error,
+										MCArrayRef& r_result)
 {
 	MCAutoArrayRef t_array;
 	if (MCArrayGetCount(p_left) == 0)
@@ -822,9 +828,9 @@ void MCMathArrayApplyOperationWithArray(MCExecContext& ctxt, MCArrayRef p_left, 
 		return;
 	}
 
-	if (!MCArrayCreateMutable(&t_array))
+	if (!MCArrayMutableCopy(p_left, &t_array))
 	{
-		ctxt.Throw();
+		ctxt.LegacyThrow(p_error);
 		return;
 	}
 
@@ -833,14 +839,14 @@ void MCMathArrayApplyOperationWithArray(MCExecContext& ctxt, MCArrayRef p_left, 
 	uintptr_t t_index = 0;
 
 	MCS_seterrno(0);
-	while (MCArrayIterate(p_left, t_index, t_key, t_value_left))
+	while (MCArrayIterate(p_right, t_index, t_key, t_value_right))
 	{
 		real64_t t_double_left, t_double_right;
-		if (!MCArrayFetchValue(p_right, ctxt.GetCaseSensitive(), t_key, t_value_right) ||
+		if (!MCArrayFetchValue(p_left, ctxt.GetCaseSensitive(), t_key, t_value_left) ||
 			!ctxt.ConvertToReal(t_value_left, t_double_left) ||
 			!ctxt.ConvertToReal(t_value_right, t_double_right))
 		{
-			ctxt.Throw();
+			ctxt.LegacyThrow(p_error);
 			return;
 		}
 
@@ -875,13 +881,13 @@ void MCMathArrayApplyOperationWithArray(MCExecContext& ctxt, MCArrayRef p_left, 
 		if (!MCNumberCreateWithReal(t_double_left, &t_number) ||
 			!MCArrayStoreValue(*t_array, ctxt.GetCaseSensitive(), t_key, *t_number))
 		{
-			ctxt.Throw();
+			ctxt.LegacyThrow(p_error);
 			return;
 		}
 	}
 
 	if (!MCArrayCopy(*t_array, r_result))
-		ctxt.Throw();
+		ctxt.LegacyThrow(p_error);
 }
 
 //////////
@@ -893,7 +899,7 @@ void MCMathEvalDivArrayByNumber(MCExecContext& ctxt, MCArrayRef p_array, real64_
 
 void MCMathEvalDivArrayByArray(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
-	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_DIV, p_right, r_result);
+	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_DIV, p_right, EE_DIVIDE_BADARRAY, r_result);
 }
 
 //////////
@@ -905,7 +911,7 @@ void MCMathEvalSubtractNumberFromArray(MCExecContext& ctxt, MCArrayRef p_array, 
 
 void MCMathEvalSubtractArrayFromArray(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
-	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_MINUS, p_right, r_result);
+	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_MINUS, p_right, EE_MINUS_BADARRAY, r_result);
 }
 
 //////////
@@ -917,7 +923,7 @@ void MCMathEvalModArrayByNumber(MCExecContext& ctxt, MCArrayRef p_array, real64_
 
 void MCMathEvalModArrayByArray(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
-	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_MOD, p_right, r_result);
+	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_MOD, p_right, EE_TIMES_BADARRAY, r_result);
 }
 
 //////////
@@ -929,7 +935,7 @@ void MCMathEvalWrapArrayByNumber(MCExecContext& ctxt, MCArrayRef p_array, real64
 
 void MCMathEvalWrapArrayByArray(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
-	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_WRAP, p_right, r_result);
+	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_WRAP, p_right, EE_WRAP_BADARRAY, r_result);
 }
 
 //////////
@@ -941,7 +947,7 @@ void MCMathEvalOverArrayByNumber(MCExecContext& ctxt, MCArrayRef p_array, real64
 
 void MCMathEvalOverArrayByArray(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
-	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_OVER, p_right, r_result);
+	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_OVER, p_right, EE_OVER_BADARRAY, r_result);
 }
 
 //////////
@@ -953,7 +959,7 @@ void MCMathEvalAddNumberToArray(MCExecContext& ctxt, MCArrayRef p_array, real64_
 
 void MCMathEvalAddArrayToArray(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
-	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_PLUS, p_right, r_result);
+	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_PLUS, p_right, EE_ADD_BADARRAY, r_result);
 }
 
 //////////
@@ -965,7 +971,7 @@ void MCMathEvalMultiplyArrayByNumber(MCExecContext& ctxt, MCArrayRef p_array, re
 
 void MCMathEvalMultiplyArrayByArray(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
-	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_TIMES, p_right, r_result);
+	MCMathArrayApplyOperationWithArray(ctxt, p_left, O_TIMES, p_right, EE_MULTIPLY_BADARRAY, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -162,6 +162,8 @@ void MCGroup::GetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t& r_
 {
 	if (controls != NULL)
 	{
+        bool t_found;
+        t_found = false;
 		MCControl *cptr = controls;
 		uint2 which = 1;
 		do
@@ -171,13 +173,17 @@ void MCGroup::GetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t& r_
 				MCButton *bptr = (MCButton *)cptr;
 				if (!(mgrabbed == True && cptr == mfocused)
 				        && bptr->gethilite(part))
+                {
+                    t_found = true;
 					break;
+                }
 				which++;
 			}
 			cptr = cptr->next();
 		}
 		while (cptr != controls);
-		r_button = (integer_t)which;
+        // PM-2014-12-08: [[ Bug 14170 ]] Return 0 in case there is no hilitedButton
+		r_button = (t_found ? (integer_t)which : 0);
 	}
 	else
 		r_button = 0;

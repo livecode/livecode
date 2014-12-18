@@ -1,0 +1,21 @@
+/* Format string such as About %@" */
+"appMenu.about" = "%@ について";
+
+/* Format string such as Hide %@ */
+"appMenu.hide" = "%@ を隠す";
+
+/* Hide Others */
+"appMenu.hideOthers" = "ほかを隠す";
+
+/* Preferences */
+"appMenu.preferences" = "環境設定...";
+
+/* Format string such as Quit %@ */
+"appMenu.quit" = "%@ を終了";
+
+/* Services */
+"appMenu.services" = "サービス";
+
+/* Show All */
+"appMenu.showAll" = "すべてを表示";
+

@@ -179,7 +179,8 @@ bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 	return true;
 }
 
-bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
+// SN-2014-12-03: [[ Bug 14147 ]] Array conversion is not always permissive, neither always strict
+bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array, bool p_strict)
 {
     if (MCValueIsEmpty(p_value))
     {
@@ -194,7 +195,8 @@ bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
         // array (for example, 'the extents of "foo"' should return empty
         // rather than throwing an error).
         MCAutoStringRef t_ignored;
-        if (ConvertToString(p_value, &t_ignored))
+        // SN-2014-12-03: [[ Bug 14147 ]] Do not try the string conversion if the
+        if (!p_strict && ConvertToString(p_value, &t_ignored))
         {
             r_array = MCValueRetain(kMCEmptyArray);
             return true;
@@ -307,7 +309,9 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
         if (!ConvertToReal(x_value . valueref_value, t_real))
         {
             MCAutoArrayRef t_array;
-            if (!ConvertToArray(x_value . valueref_value, &t_array))
+            // SN-2014-12-03: [[ Bug 14147 ]] An array should not be returned if the
+            //  value is neither empty or an array.
+            if (!ConvertToArray(x_value . valueref_value, &t_array, true))
                 return false;
             
             MCValueRelease(x_value . valueref_value);
@@ -358,18 +362,8 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
     if (!ConvertToString(p_value, &t_string))
         return false;
     
-    // Strings always convert to data as native characters
-    uindex_t t_native_length;
-    if (MCStringIsNative(*t_string))
-    {
-        const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
-        return MCDataCreateWithBytes(t_data, t_native_length, r_data);
-    }
-    
-    char_t *t_native_chars;
-    MCMemoryNewArray(MCStringGetLength(*t_string), t_native_chars);
-    t_native_length = MCStringGetNativeChars(*t_string, MCRangeMake(0, UINDEX_MAX), t_native_chars);
-    return MCDataCreateWithBytesAndRelease((byte_t *)t_native_chars, t_native_length, r_data);
+    // AL-2014-12-12: [[ Bug 14208 ]] Implement a specific function to aid conversion to data
+    return MCDataConvertStringToData(*t_string, r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
