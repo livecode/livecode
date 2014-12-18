@@ -387,9 +387,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
     
     ////
 
-	MCAutoStringRef t_native_command_string;
-	MCsystem -> ResolvePath(argv[0], &t_native_command_string);
-	MCsystem -> PathFromNative(*t_native_command_string, MCcmd);
+	MCsystem -> GetExecutablePath(MCcmd);
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the

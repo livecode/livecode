@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "font.h"
 #include "stacksecurity.h"
+#include "system.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +140,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	delete MCresult;
 #endif
 	
-	MCcmd = MCValueRetain(argv[0]);
+	MCsystem -> GetExecutablePath(MCcmd);
 
     // Create the basic locale and the system locale
     if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
@@ -148,13 +149,6 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
     if (kMCSystemLocale == nil)
         return false;
 		
-#if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
-	{
-      MCStringRef t_resolved_cmd;
-      MCS_resolvepath(MCcmd, t_resolved_cmd);
-      MCValueAssign(MCcmd, t_resolved_cmd);
-	}
-#endif
 
 	if (MCModeIsExecutableFirstArgument())
 		create_var(argv[0]);
