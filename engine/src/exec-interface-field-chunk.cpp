@@ -874,11 +874,13 @@ MCParagraph* PrepareLayoutSettings(bool all, MCField *p_field, uint32_t p_part_i
 
 // SN-2014-11-04: [[ Bug 13934 ]] Update the area of the field to redraw,
 //  depending on the paragraph settings.
-void LayoutParagraph(MCParagraph* p_paragraph, MCFieldLayoutSettings &x_layout_settings)
+// SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+void LayoutParagraph(MCParagraph* p_paragraph, MCFieldLayoutSettings &x_layout_settings, bool p_force)
 {
     // AL-2014-07-14: [[ Bug 12789 ]] Defragging can cause paragraph to need layout, do make sure we relayout
     //  if it did. Otherwise setting properties that avoid relayout can cause crashes.
-    if (p_paragraph -> getneedslayout() && !x_layout_settings . all && p_paragraph->getopened())
+    // SN-2014-12-18: [[ Bug 14161 ]] The relayout can be forced
+    if (p_force || (p_paragraph -> getneedslayout() && !x_layout_settings . all && p_paragraph->getopened()))
     {
         // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
         // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
@@ -938,7 +940,8 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
         sptr -> cleanattrs();
 
         // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
-        LayoutParagraph(sptr, t_layout_settings);
+        // SN-2014-12-18: [[ Bug 14161 ]] Forces the re-layout of this paragraph which has been changed
+        LayoutParagraph(sptr, t_layout_settings, true);
         
         ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
@@ -1108,7 +1111,8 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             // end of MCParagraph scope
 
             // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
-            LayoutParagraph(pgptr, t_layout_settings);
+            // SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+            LayoutParagraph(pgptr, t_layout_settings, false);
         }
 
         si = MCU_max(0, si - t_pg_length);
@@ -1218,7 +1222,8 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             // end of MCParagraph scope
 
             // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
-            LayoutParagraph(pgptr, t_layout_settings);
+            // SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+            LayoutParagraph(pgptr, t_layout_settings, false);
         }
         
         si = MCU_max(0, si - t_pg_length);
