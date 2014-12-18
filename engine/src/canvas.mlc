@@ -2133,7 +2133,7 @@ mPath:		An expression which evaluates to a path.
 Description:	Adds a curve from the previous point through one or two control points to <mTo> on <mPath>.
 
 Example:
-	// Begin a new subpath of mPath
+	// Begin a new subpath of an existing path
 	move to point [25, 50] on tPath
 	// Continue path with a curve through 25,100 to 50,100
 	curve through [25,100] to [50,100] on tPath
@@ -2296,8 +2296,31 @@ end syntax
 
 public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
 
-syntax MakeEffectWithProperties is prefix operator with precedence 4
-	<mType: EffectType> <mProperties: Expression>
+/*
+Summary:	Creates a new effect.
+
+mType:		One of color overlay, inner shadow, outer shadow, inner glow, outer glow.
+mProperties:	An expression which evaluates to an array.
+
+Returns:	A new effect of type <mType> with properties read from <mProperties>.
+
+Example:
+	// Create an effect from an array of properties
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	put outer shadow effect with properties tProps into tEffect
+
+Tags: Canvas
+*/
+
+syntax EffectMakeWithProperties is prefix operator with precedence 4
+	<mType: EffectType> "effect" "with" "properties" <mProperties: Expression>
 begin
 	MCCanvasEffectMakeWithPropertyArray(mType, mProperties, output)
 end syntax
@@ -2326,55 +2349,167 @@ public foreign handler MCCanvasEffectSetDistance(in pDistance as CanvasFloat, in
 public foreign handler MCCanvasEffectGetAngle(in pEffect as Effect, out rAngle as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectSetAngle(in pAngle as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
 
-syntax EffectTypeProperty is prefix operator with precedence 4
+/*
+Summary:	The type of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The type of <mEffect> as a string. Can be one of "color overlay", "inner shadow", "outer shadow", "inner glow", "outer glow".
+
+Example:
+	// Change effect from inner glow to outer glow
+	set the type of tEffect to "outer glow"
+
+Tags:	Canvas
+*/
+
+syntax EffectPropertyType is prefix operator with precedence 4
 	"the" "type" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetTypeAsString(mEffect, output)
 end syntax
 
-syntax EffectColorProperty is prefix operator with precedence 4
+/*
+Summary:	The color of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The color of <mEffect> as a color.
+
+Example:
+	// Change effect color to green.
+	set the color of tEffect to color [0,1,0]
+
+Tags:	Canvas
+*/
+
+syntax EffectPropertyColor is prefix operator with precedence 4
 	"the" "color" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetColor(mEffect, output)
 	MCCanvasEffectSetColor(input, mEffect)
 end syntax
 
-syntax EffectBlendModeProperty is prefix operator with precedence 4
+/*
+Summary:	The blend mode of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The blend mode of <mEffect> as a string. Can be one of "normal", "multiply", "color dodge".
+
+Example:
+	// Use color dodge mode for effect
+	set the blend mode of tEffect to "color dodge"
+
+Tags:	Canvas
+*/
+
+syntax EffectPropertyBlendMode is prefix operator with precedence 4
 	"the" "blend" "mode" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetBlendModeAsString(mEffect, output)
 	MCCanvasEffectSetBlendModeAsString(input, mEffect)
 end syntax
 
-syntax EffectOpacityProperty is prefix operator with precedence 4
+/*
+Summary:	The opacity of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The opacity of <mEffect> as a number between 0 and 255.
+
+Example:
+	// Use half-transparency for effect
+	set the opacity of tEffect to 0.5
+
+Tags:	Canvas
+*/
+
+syntax EffectPropertyOpacity is prefix operator with precedence 4
 	"the" "opacity" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetOpacity(mEffect, output)
 	MCCanvasEffectSetOpacity(input, mEffect)
 end syntax
 
-syntax EffectSizeProperty is prefix operator with precedence 4
+/*
+Summary:	The size of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The size of <mEffect> as a number. Size applies to inner shadow, outer shadow, inner glow, and outer glow effect types
+
+Example:
+	// Set the effect size
+	set the size of tEffect to 5
+
+Tags:	Canvas
+*/
+
+syntax EffectPropertySize is prefix operator with precedence 4
 	"the" "size" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetSize(mEffect, output)
 	MCCanvasEffectSetSize(input, mEffect)
 end syntax
 
-syntax EffectSpreadProperty is prefix operator with precedence 4
+/*
+Summary:	The spread of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The spread of <mEffect> as a number. Spread applies to inner shadow, outer shadow, inner glow, and outer glow effect types
+
+Example:
+	// Set the effect spread
+	set the spread of tEffect to 0
+
+Tags:	Canvas
+*/
+
+syntax EffectPropertySpread is prefix operator with precedence 4
 	"the" "spread" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetSpread(mEffect, output)
 	MCCanvasEffectSetSpread(input, mEffect)
 end syntax
 
-syntax EffectDistanceProperty is prefix operator with precedence 4
+/*
+Summary:	The distance of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The distance of <mEffect> as a number. Distance applies to inner shadow, and outer shadow effect types
+
+Example:
+	// Set the effect distance
+	set the distance of tEffect to 5
+
+Tags:	Canvas
+*/
+
+syntax EffectPropertyDistance is prefix operator with precedence 4
 	"the" "distance" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetDistance(mEffect, output)
 	MCCanvasEffectSetDistance(input, mEffect)
 end syntax
 
-syntax EffectAngleProperty is prefix operator with precedence 4
+/*
+Summary:	The angle of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The angle of <mEffect> as a number of degrees. Angle applies to inner shadow, and outer shadow effect types
+
+Example:
+	// Set the effect angle
+	set the angle of tEffect to 30
+
+Tags:	Canvas
+*/
+
+syntax EffectPropertyAngle is prefix operator with precedence 4
 	"the" "angle" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetAngle(mEffect, output)
@@ -2391,11 +2526,40 @@ public foreign handler MCCanvasFontMake(in pName as string, out rFont as Font) a
 public foreign handler MCCanvasFontMakeWithStyle(in pName as string, in pBold as bool, in pItalic as bool, out rFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontMakeWithSize(in pName as string, in pBold as bool, in pItalic as bool, in pSize as int, out rFont as Font) as undefined binds to "<builtin>"
 
+/*
+Summary:	Creates a new instance of the named font.
+
+mName:		An expression which evaluates to a string.
+
+Returns:	A new instance of the named font with the default size of 12pts.
+
+Example:
+	// Create Arial font
+	put font "Arial" into tFont
+
+Tags: Canvas
+*/
+
 syntax FontMake is prefix operator with precedence 4
 	"font" <mName: Expression>
 begin
 	MCCanvasFontMake(mName, output)
 end syntax
+
+/*
+Summary:	Creates a new instance of the named font.
+
+mName:		An expression which evaluates to a string.
+mSize:	An Expression which evaluates to a number.
+
+Returns:	A new instance of the named font at size <mSize> points.
+
+Example:
+	// Create 20pt Arial font
+	put font "Arial" at size 20 into tFont
+
+Tags: Canvas
+*/
 
 syntax FontMakeWithSize is prefix operator with precedence 4
 	"font" <mName: Expression> <mBold=false> <mItalic=false> "at" "size" <mSize: Expression>
@@ -2403,11 +2567,40 @@ begin
 	MCCanvasFontMakeWithSize(mName, mBold, mItalic, mSize, output)
 end syntax
 
+/*
+Summary:	Creates a new instance of the named font.
+
+mName:		An expression which evaluates to a string.
+
+Returns:	A new instance of the named font with style bold, italic, or bold italic, and the default size of 12pts.
+
+Example:
+	// Create italic Arial font
+	put font "Arial" with italic style into tFont
+
+Tags: Canvas
+*/
+
 syntax FontMakeWithStyle is expression
 	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style"
 begin
 	MCCanvasFontMakeWithStyle(mName, mBold, mItalic, output)
 end syntax
+
+/*
+Summary:	Creates a new instance of the named font.
+
+mName:		An expression which evaluates to a string.
+mSize:	An Expression which evaluates to a number.
+
+Returns:	A new instance of the named font with style bold, italic, or bold italic, at size <mSize> points.
+
+Example:
+	// Create 20pt bold Arial font
+	put font "Arial" with bold style at size 20 into tFont
+
+Tags: Canvas
+*/
 
 syntax FontMakeWithStyleAndSize is prefix operator with precedence 4
 	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style" "at" "size" <mSize: Expression>
@@ -2429,12 +2622,42 @@ public foreign handler MCCanvasFontSetItalic(in pItalic as bool, inout xFont as 
 public foreign handler MCCanvasFontGetSize(in pFont as Font, out rSize as int) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontSetSize(in pSize as int, inout xFont as Font) as undefined binds to "<builtin>"
 
+/*
+Summary:	The name of a font.
+
+mFont:		An expression which evaluates to a font.
+
+Description:	The name of <mFont>.
+
+Example:
+	// Get the old font name
+	put the name of tFont into tName
+	// Set the font to helvetica
+	set the name of tFont to "Helvetica"
+
+Tags:	Canvas
+*/
+
 syntax FontPropertyName is prefix operator with precedence 4
 	"the" "name" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetName(mFont, output)
 	MCCanvasFontSetName(input, mFont)
 end syntax
+
+/*
+Summary:	The bold setting of a font.
+
+mFont:		An expression which evaluates to a font.
+
+Description:	The bold flag of <mFont> as a boolean. If true, then <mFont> is bold.
+
+Example:
+	// Set the font to bold
+	set the bold of tFont to true
+
+Tags:	Canvas
+*/
 
 syntax FontPropertyBold is prefix operator with precedence 4
 	"the" "bold" "of" <mFont:Expression>
@@ -2443,12 +2666,40 @@ begin
 	MCCanvasFontSetBold(input, mFont)
 end syntax
 
+/*
+Summary:	The italic setting of a font.
+
+mFont:		An expression which evaluates to a font.
+
+Description:	The italic flag of <mFont> as a boolean. If true, then <mFont> is italic.
+
+Example:
+	// Set the font to italic
+	set the italic of tFont to true
+
+Tags:	Canvas
+*/
+
 syntax FontPropertyItalic is prefix operator with precedence 4
 	"the" "italic" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetItalic(mFont, output)
 	MCCanvasFontSetItalic(input, mFont)
 end syntax
+
+/*
+Summary:	The size of a font.
+
+mFont:		An expression which evaluates to a font.
+
+Description:	The size of <mFont> as a number of points.
+
+Example:
+	// Set the font size to 30pt
+	set the size of tFont to 30
+
+Tags:	Canvas
+*/
 
 syntax FontPropertySize is prefix operator with precedence 4
 	"the" "size" "of" <mFont:Expression>
@@ -2461,7 +2712,24 @@ end syntax
 
 public foreign handler MCCanvasFontMeasureText(in pText as string, in pFont as Font, out pRect as Rectangle) as undefined binds to "<builtin>"
 
-syntax FontOperationMeasureText is prefix operator with precedence 4
+/*
+Summary:	Measure text when drawn with a font.
+
+mText:	An expression which evaluates to a string.
+mFont:	An expression which evaluates to a font.
+
+Returns:	The bounding box of <mText> when drawn at point 0,0 with font <mFont>. Returns the bounds as a rectangle.
+
+Example:
+	// Measure text with the current font
+	put the bounds of text "Sample text" with tFont into tBounds
+	put the width of tBounds into tWidth
+	put the height of tBounds into tHeight
+
+Tags:	Canvas
+*/
+
+syntax FontOperationTextBounds is prefix operator with precedence 4
   "the" "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
 begin
 	MCCanvasFontMeasureText(mText, mFont, output)
@@ -2500,61 +2768,188 @@ public foreign handler MCCanvasSetStrokeWidth(in pStrokeWidth as CanvasFloat, in
 public foreign handler MCCanvasGetFont(in pCanvas as Canvas, out rFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetFont(in pFont as Font, in pCanvas as Canvas) as undefined binds to "<builtin>"
 
-syntax CanvasPaintProperty is prefix operator with precedence 4
+/*
+Summary:	The current paint of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The paint used for fill / stroke operations on <mCanvas>.
+
+Example:
+	// Set canvas to paint with solid blue
+	set the paint of tCanvas to solid paint with color [0,0,1]
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyPaint is prefix operator with precedence 4
 	"the" "paint" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetPaint(mCanvas, output)
 	MCCanvasSetPaint(input, mCanvas)
 end syntax
 
-syntax CanvasFillRuleProperty is prefix operator with precedence 4
+/*
+Summary:	The current fill rule of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The rule used to determine when to fill enclosed regions of a path. Can be "even odd" or "non-zero".
+
+Example:
+	// Set canvas fill rule to non-zero.
+	set the fill rule of tCanvas to "non-zero"
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyFillRule is prefix operator with precedence 4
 	"the" "fill" "rule" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetFillRuleAsString(mCanvas, output)
 	MCCanvasSetFillRuleAsString(input, mCanvas)
 end syntax
 
-syntax CanvasAntialiasProperty is prefix operator with precedence 4
+/*
+Summary:	The current antialias setting of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	A boolean value which determines whether or not antialiasing will be used when rendering paths on <mCanvas>.
+
+Example:
+	// Disable antialiasing on the canvas
+	set the antialias of tCanvas to false
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyAntialias is prefix operator with precedence 4
 	"the" "antialias" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetAntialias(mCanvas, output)
 	MCCanvasSetAntialias(input, mCanvas)
 end syntax
 
-syntax CanvasOpacityProperty is prefix operator with precedence 4
+/*
+Summary:	The current opacity setting of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The opacity of drawing operations on <mCanvas>, as a number between 0 and 1.
+
+Example:
+	// make subsequent drawing operations render with half transparency
+	set the opacity of tCanvas to 0.5
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyOpacity is prefix operator with precedence 4
 	"the" "opacity" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetOpacity(mCanvas, output)
 	MCCanvasSetOpacity(input, mCanvas)
 end syntax
 
-syntax CanvasBlendModeProperty is prefix operator with precedence 4
+/*
+Summary:	The current blend mode of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The blend mode used for drawing operations on <mCanvas> as a string.
+
+Example:
+	// Use color dodge mode to draw on canvas
+	set the blend mode of tCanvas to "color dodge"
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyBlendMode is prefix operator with precedence 4
 	"the" "blend" "mode" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetBlendModeAsString(mCanvas, output)
 	MCCanvasSetBlendModeAsString(input, mCanvas)
 end syntax
 
-syntax CanvasStippledProperty is prefix operator with precedence 4
+/*
+Summary:	The current stippled setting of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	A boolean value that determines whether or not stippling will be used when drawing with a solid color paint on <mCanvas>.
+
+Example:
+	// Draw with stippled red paint on canvas
+	set the paint of tCanvas to solid paint with color [1,0,0]
+	set the stippled of tCanvas to true
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyStippled is prefix operator with precedence 4
 	"the" "stippled" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetStippled(mCanvas, output)
 	MCCanvasSetStippled(input, mCanvas)
 end syntax
 
-syntax CanvasImageResizeQuality is prefix operator with precedence 4
+/*
+Summary:	The current image resize quality of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The image resize quality used when drawing scaled images and patterns on <mCanvas> as a string. Can be one of "none", "low", "medium", "high".
+
+Example:
+	// Use low (but faster) image resize algorithm to draw scaled images
+	set the image resize quality of tCanvas to "low"
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyImageResizeQuality is prefix operator with precedence 4
 	"the" "image" "resize" "quality" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetImageResizeQualityAsString(mCanvas, output)
 	MCCanvasSetImageResizeQualityAsString(input, mCanvas)
 end syntax
 
-syntax CanvasStrokeWidth is prefix operator with precedence 4
+/*
+Summary:	The current stroke width of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The width of lines used when stroking a path on <mCanvas> as a number.
+
+Example:
+	// Draw paths with line width 20
+	set the stroke width of tCanvas to 20
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyStrokeWidth is prefix operator with precedence 4
 	"the" "stroke" "width" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetStrokeWidth(mCanvas, output)
 	MCCanvasSetStrokeWidth(input, mCanvas)
 end syntax
+
+/*
+Summary:	The current font of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The font used when drawing text on <mCanvas> as a font.
+
+Example:
+	// Use 20pt Arial for text drawing on canvas
+	set the font of tCanvas to font "Arial" at size 20
+
+Tags:	Canvas
+*/
 
 syntax CanvasPropertyFont is prefix operator with precedence 4
 	"the" "font" "of" <mCanvas:Expression>
@@ -2597,120 +2992,419 @@ public foreign handler MCCanvasFillText(in pText as string, in pPoint as Point, 
 public foreign handler MCCanvasFillTextAligned(in pText as string, in pAlignment as int, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasMeasureText(in pText as string, in pCanvas as Canvas) as Rectangle binds to "<builtin>"
 
-syntax TransformCanvas is statement
+/*
+Summary:	Apply a transform to a canvas.
+
+mTransform:	An expression which evaluates to a transform.
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Concatenates the transform of <mCanvas> with <mTransform>.
+
+Example:
+	// Scale the canvas with a transform
+	transform tCanvas by transform with scale [2,2]
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationTransform is statement
 	"transform" <mCanvas: Expression> "by" <mTransform: Expression>
 begin
 	MCCanvasTransform(mCanvas, mTransform)
 end syntax
 
-syntax ScaleCanvas is statement
+/*
+Summary:	Apply a scale to a canvas.
+
+mScale:	An expression which evaluates to a list of numbers.
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Scales the transform of <mCanvas> by <mScale>.
+
+Example:
+	// Scale the canvas
+	scale tCanvas by [2,2]
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationScale is statement
 	"scale" <mCanvas: Expression> "by" <mScale: Expression>
 begin
-//	MCCanvasScale(mCanvas, mScale[0], mScale[0])
-//	MCCanvasScale(mCanvas, mScale[0], mScale[1])
 	MCCanvasScaleWithList(mCanvas, mScale)
 end syntax
 
-syntax RotateCanvas is statement
+/*
+Summary:	Apply a rotation to a canvas.
+
+mRotation:	An expression which evaluates to a number.
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Rotates the transform of <mCanvas> by <mRotation> degrees.
+
+Example:
+// Rotate the canvas
+rotate tCanvas by 45
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationRotate is statement
 	"rotate" <mCanvas: Expression> "by" <mRotation: Expression>
 begin
 	MCCanvasRotate(mCanvas, mRotation)
 end syntax
 
-syntax TranslateCanvas is statement
+/*
+Summary:	Apply a translation to a canvas.
+
+mTranslation:	An expression which evaluates to a list of numbers.
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Translates the transform of <mCanvas> by <mTranslation>.
+
+Example:
+	// Translate the canvas
+	translate tCanvas by [50,100]
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationTranslate is statement
 	"translate" <mCanvas: Expression> "by" <mTranslation: Expression>
 begin
 //	MCCanvasTranslate(mCanvas, mTranslation[0], mTranslation[1])
 	MCCanvasTranslateWithList(mCanvas, mTranslation)
 end syntax
 
-syntax CanvasSaveState is statement
+/*
+Summary:	Save the current state of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Saves the current properties of <mCanvas> to the top of a stack so that they can be restored later.
+
+Example:
+	// Save the current canvas properties
+	save state of tCanvas
+	// Call drawing handler which may change the canvas properties while drawing
+	doDrawButtonOnCanvasAtPoint tCanvas, point [50,50]
+	// Restore the previous canvas properties
+	restore state of tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationSaveState is statement
 	"save" "state" "of" <mCanvas: Expression>
 begin
 	MCCanvasSaveState(mCanvas)
 end syntax
 
-syntax CanvasRestoreState is statement
+/*
+Summary:	Restore the previously saved state of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Restores the properties of <mCanvas> from the top of the saved property stack.
+
+Example:
+	// Save the current canvas properties
+	save state of tCanvas
+	// Call drawing handler which may change the canvas properties while drawing
+	doDrawButtonOnCanvasAtPoint tCanvas, point [50,50]
+	// Restore the previous canvas properties
+	restore state of tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationRestoreState is statement
 	"restore" "state" "of" <mCanvas: Expression>
 begin
 	MCCanvasRestoreState(mCanvas)
 end syntax
 
-syntax CanvasBeginLayer is statement
+/*
+Summary:	Begin a new drawing layer on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mEffect:	An expression which evaluates to an effect.
+
+Description:	Begins a new layer on <mCanvas> to group drawing operations for which the opacity, blend mode, and optional effect are to be applied to as a whole rather than individually.
+
+Example:
+	// Draw two overlapping rectangles grouped with half transparency
+	set the opacity of tCanvas to 0.5
+	begin layer on tCanvas
+	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
+	fill rectangle path of rectangle path [75,75,125,125] on tCanvas
+	end layer on tCanvas
+
+	// Draw rectangle with an effect applied
+	begin layer with tEffect on tCanvas
+	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
+	end layer on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationBeginLayer is statement
 	"begin" "layer" [ "with" <mEffect: Expression> ] "on" <mCanvas: Expression>
 begin
 	MCCanvasBeginLayer(mCanvas)
 	MCCanvasBeginLayerWithEffect(mEffect, mCanvas)
 end syntax
 
-syntax CanvasEndLayer is statement
+/*
+Summary:	End the current drawing layer on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Ends the layer on <mCanvas>, rendering to the previous layer with the opacity, blend mode, and effect properties set when the layer began.
+
+Example:
+	// Draw two overlapping rectangles grouped with half transparency
+	set the opacity of tCanvas to 0.5
+	begin layer on tCanvas
+	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
+	fill rectangle path of rectangle path [75,75,125,125] on tCanvas
+	end layer on tCanvas
+
+	// Draw rectangle with an effect applied
+	begin layer with tEffect on tCanvas
+	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
+	end layer on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationEndLayer is statement
 	"end" "layer" "on" <mCanvas: Expression>
 begin
 	MCCanvasEndLayer(mCanvas)
 end syntax
 
-syntax CanvasFill is statement
+/*
+Summary:	Fill a path on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mPath:	An expression which evaluates to a path.
+
+Description:	Fills the region bound by <mPath> with the current canvas paint. If mPath is not specified then the current canvas path will be closed and filled, then emptied from the canvas.
+
+Example:
+	// Fill a circle path on the canvas
+	fill circle path centered at point [100,100] with radius 50 on tCanvas
+
+	// Add a path to the canvas
+	move to point [50,50] on tCanvas
+	line to point [50,100] on tCanvas
+	line to point [100,100] on tCanvas
+	// Fill the current canvas path
+	fill tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationFill is statement
 	"fill" [ <mPath: Expression> "on" ] <mCanvas: Expression>
 begin
 	MCCanvasFill(mCanvas)
 	MCCanvasFillPath(mPath, mCanvas)
 end syntax
 
-syntax CanvasStroke is statement
+/*
+Summary:	Stroke a path on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mPath:	An expression which evaluates to a path.
+
+Description:	Strokes <mPath> with the current canvas paint and stroke settings. If mPath is not specified then the current canvas path will be stroked, then emptied from the canvas.
+
+Example:
+	// Draw a circle path on the canvas
+	stroke circle path centered at point [100,100] with radius 50 on tCanvas
+
+	// Add a path to the canvas
+	move to point [50,50] on tCanvas
+	line to point [50,100] on tCanvas
+	line to point [100,100] on tCanvas
+	// Stroke the current canvas path
+	stroke tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationStroke is statement
 	"stroke" [ <mPath: Expression> "on" ] <mCanvas: Expression>
 begin
 	MCCanvasStroke(mCanvas)
 	MCCanvasStrokePath(mPath, mCanvas)
 end syntax
 
-syntax CanvasClip is statement
+/*
+Summary:	Clip to a rectangle on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mRect:	An expression which evaluates to a rectangle.
+
+Description:	Modifies the clip of <mCanvas> by intersecting with <mRect>. Drawing operations on <mCanvas> will be confined to the clip region.
+
+Example:
+	// Set the canvas clip
+	clip to rectangle [50,50,100,100] on tCanvas
+	// Fill rectangle path on canvas. only the region of the rectangle that falls within the canvas clip will be rendered.
+	fill rectangle path of rectangle [25, 25, 75, 75] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationClip is statement
 	"clip" "to" <mRect: Expression> "on" <mCanvas: Expression>
 begin
-	MCCanvasClipToRect(mRect, mCanvas)
+	MCCanvasOperationClipToRect(mRect, mCanvas)
 end syntax
 
-syntax CanvasAddPath is statement
+/*
+Summary:	Add a path to a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mPath:	An expression which evaluates to a path.
+
+Description:	Adds <mPath> to the current path of <mCanvas>
+
+Example:
+	// Add a path to the canvas
+	add rectangle path of rectangle [0,0,50,100] to tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationAddPath is statement
 	"add" <mPath: Expression> "to" <mCanvas: Expression>
 begin
 	MCCanvasAddPath(mPath, mCanvas)
 end syntax
 
-syntax ImageResizeQuality is phrase
-	( "low" <mQuality=1> | "medium" <mQuality=2> | "high" <mQuality=3> )
-begin
-end syntax
+/*
+Summary:	Draw an image on a canvas.
 
-syntax CanvasDrawImage is statement
-	"draw" [ "rect" <mSrcRect: Expression> "of" ] <mImage: Expression> "into" <mDestRect: Expression> "of" <mCanvas: Expression>
+mCanvas:		An expression which evaluates to a canvas.
+mImage:	An expression which evaluates to an image.
+mSrcRect:	An expression which evaluates to a rectangle.
+mDestRect:	An expression which evaluates to a rectangle.
+
+Description:	Renders from <mSrcRect> (or the bounds, if not specified) of <mImage> into <mDestRect> of <mCanvas>. The canvas image resize quality determines how the image is scaled if necessary.
+
+Example:
+	// Draw an image on the canvas
+	draw tImage into rectangle [0,0,the width of tImage,the height of tImage] of tCanvas
+	// Draw a section of an image
+	draw from rectangle[0,0,16,16] of tImage into rectangle [0,0,16,16] of tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationDrawImage is statement
+	"draw" [ "from" <mSrcRect: Expression> "of" ] <mImage: Expression> "into" <mDestRect: Expression> "of" <mCanvas: Expression>
 begin
 	MCCanvasDrawImage(mImage, mDestRect, mCanvas)
 	MCCanvasDrawRectOfImage(mSrcRect, mImage, mDestRect, mCanvas)
 end syntax
 
-syntax CanvasMoveTo is statement
+/*
+Summary:	Move to a point on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mPoint:	An expression which evaluates to a point.
+
+Description:	Moves to <mPoint> on the current path of <mCanvas>
+
+Example:
+	// move to a point on the canvas
+	move to point [0,50] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationMoveTo is statement
 	"move" "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
-	MCCanvasMoveTo(mPoint, mCanvas)
+	MCCanvasOperationMoveTo(mPoint, mCanvas)
 end syntax
 
-syntax CanvasLineTo is statement
+/*
+Summary:	Add a line to a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mPoint:	An expression which evaluates to a point.
+
+Description:	Adds a line to <mPoint> on the current path of <mCanvas>
+
+Example:
+	// add line to the canvas
+	line to point [50,50] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationLineTo is statement
 	"line" "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasLineTo(mPoint, mCanvas)
 end syntax
 
-syntax CanvasCurveThrough is statement
+/*
+Summary:	Add a curve to a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mThroughA:	An expression which evaluates to a point.
+mThroughA:	An expression which evaluates to a point.
+
+Description:	Adds a curve through 1 or 2 points to <mPoint> on the current path of <mCanvas>
+
+Example:
+	// Begin a new subpath on the canvas
+	move to point [25, 50] on tCanvas
+	// Continue path with a curve through 25,100 to 50,100
+	curve through [25,100] to [50,100] on tCanvas
+	// Continue path with a curve through 50,75 then 50,50 to 50,100
+	curve through [50,75] then [50,50] to [25,50] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasOperationCurveThrough is statement
 	"curve" "through" <mThroughA: Expression> [ "then" <mThroughB: Expression> ] "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasCurveThroughPoint(mThroughA, mPoint, mCanvas)
 	MCCanvasCurveThroughPoints(mThroughA, mThroughB, mPoint, mCanvas)
 end syntax
 
-syntax CanvasClosePath is statement
+syntax CanvasOperationClosePath is statement
 	"close" "path" "on" <mCanvas: Expression>
 begin
 	MCCanvasClosePath(mCanvas)
 end syntax
+
+/*
+Summary:	Render filled text on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mText:	An expression which evaluates to a string.
+mPoint:	An expression which evaluates to a point.
+
+Description:	Renders <mText> at <mPoint> on <mCanvas> using the current font setting.
+
+Example:
+	// Set the canvas font
+	set the font of tCanvas to font "Helvetica"
+	// Draw the text
+	fill text "Widget Label" at point [50,50] on tCanvas
+
+Tags:	Canvas
+*/
 
 syntax CanvasOperationFillText is statement
 	"fill" "text" <mText: Expression> "at" <mPoint: Expression> "on" <mCanvas: Expression>
@@ -2718,11 +3412,47 @@ begin
 	MCCanvasFillText(mText, mPoint, mCanvas)
 end syntax
 
+/*
+Summary:	Render filled text on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mText:	An expression which evaluates to a string.
+mRect:	An expression which evaluates to a rectangle.
+
+Description:	Renders <mText> aligned to the specified sides of <mRect> on <mCanvas> using the current font setting.
+
+Example:
+	// Set the canvas font
+	set the font of tCanvas to font "Helvetica"
+	// Draw the text in the top-left corner of the target rectangle
+	fill text "Widget Label" at top left of rectangle [50, 100, 250, 200] on tCanvas
+
+Tags:	Canvas
+*/
+
 syntax CanvasOperationFillTextAligned is statement
 	"fill" "text" <mText: Expression> "at" <mAlignment: CanvasTextAlignment> "of" <mRect: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasFillTextAligned(mText, mAlignment, mRect, mCanvas)
 end syntax
+
+/*
+Summary:	Measure text when drawn to a canvas.
+
+mText:	An expression which evaluates to a string.
+mCanvas:	An expression which evaluates to a canvas.
+
+Returns:	The bounding box of <mText> when drawn at point 0,0 with the current font of <mCanvas>. Returns the bounds as a rectangle in the result.
+
+Example:
+	// Measure text drawn on the canvas
+	measure text "Sample text" on tCanvas
+	put the result into tBounds
+	put the width of tBounds into tWidth
+	put the height of tBounds into tHeight
+
+Tags:	Canvas
+*/
 
 syntax CanvasOperationMeasureText is statement
 	"measure" <mText: Expression> "on" <mCanvas: Expression>
@@ -2734,6 +3464,19 @@ end syntax
 
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) as undefined binds to "<builtin>"
+
+/*
+Summary:	The canvas used when drawing a widget.
+
+Returns:	The target canvas for widget drawing operations.
+
+Example:
+	// Draw the label centered on the rect of the widget
+	set the paint of this canvas to solid paint with color [1,1,1]
+	fill text tLabel at center of my rectangle on this canvas
+
+Tags:	Canvas
+*/
 
 syntax ThisCanvas is expression
     "this" "canvas"
