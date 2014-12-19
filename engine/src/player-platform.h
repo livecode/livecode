@@ -231,6 +231,14 @@ public:
         return filename != NULL;
     }
     
+    // PM-2014-12-17: [[ Bug 14232 ]] Indicates if a filename is invalid or if the file is corrupted
+    bool hasinvalidfilename(void) const
+    {
+        bool t_has_invalid_filename;
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyInvalidFilename, kMCPlatformPropertyTypeBool, &t_has_invalid_filename);
+        return t_has_invalid_filename;
+    }
+    
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
     void currenttimechanged(void);

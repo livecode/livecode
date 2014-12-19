@@ -2763,13 +2763,33 @@ MCString MCImage::getrawdata()
 {
 	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
 		return MCString(nil, 0);
-	
+
 	void *t_data;
 	uindex_t t_size;
-	static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
-	
-	return MCString((char*)t_data, t_size);
+    static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
+
+    return MCString((char*)t_data, t_size);
 }
+
+// PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+MCString MCImage::getimagefilename(void)
+{
+    if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
+		return MCString(nil, 0);
+    
+    const char *t_filename;
+    t_filename = static_cast<MCReferencedImageRep*>(m_rep)->GetSearchKey();
+    
+    return MCString(t_filename);
+
+    
+}
+
+bool MCImage::isReferencedImage()
+{
+    return m_rep->GetType() == kMCImageRepReferenced;
+}
+
 
 bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 {

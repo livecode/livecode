@@ -158,6 +158,7 @@ private:
     bool m_finished : 1;
     bool m_loaded : 1;
     bool m_stepped : 1;
+    bool m_has_invalid_filename : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -429,6 +430,9 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
+    // PM_2014-12-17: [[ Bug 14233]] Now currentItem can be nil, if setting an empty or invalid filename
+    if ([m_player currentItem] == nil)
+        return;
     CVImageBufferRef t_image;
     CMTime t_output_time = [m_player currentItem] . currentTime;
     
@@ -568,7 +572,8 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
         
-        if (!CVDisplayLinkIsRunning(t_player -> m_display_link))
+        // PM_2014-12-17: [[ Bug 14233]] Now currentItem can be nil, if setting an empty or invalid filename
+        if (!CVDisplayLinkIsRunning(t_player -> m_display_link) && t_player -> m_player.currentItem != nil)
         {
             CVDisplayLinkStart(t_player -> m_display_link);
         }
@@ -641,6 +646,8 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         m_player_item_video_output = nil;
         [m_view setPlayer: nil];
         uint4 t_zero_time = 0;
+        // PM-2014-12-17: [[ Bug 14233 ]] Setting the filename to empty should reset the currentItem
+        [m_player replaceCurrentItemWithPlayerItem:nil];
         SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_zero_time);
         return;
     }
@@ -682,9 +689,15 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     {
         if(p_is_url)
             [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+        // PM-2014-12-17: [[ Bug 14232 ]] If we reach here it means the filename is invalid
+        m_has_invalid_filename = true;
         [t_player release];
+        // PM-2014-12-17: [[ Bug 14233 ]] Setting an invalid filename should reset a previously opened movie
+        [m_player replaceCurrentItemWithPlayerItem:nil];
         return;
     }
+    
+    m_has_invalid_filename = false;
     
     // Reset this to false when loading a new movie, so as the first frame of the new movie to be displayed
     m_loaded = false;
@@ -1087,6 +1100,9 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
                 t_size . width = 306;
                 t_size . height = 244;
             }
+            // PM-2014-12-17: [[ Bug 14232 ]] Check if the file is corrupted
+            if (t_size . width == 0 && t_size . height == 0)
+                m_has_invalid_filename = true;
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, t_size . width, t_size . height);
 		}
         break;
@@ -1142,6 +1158,10 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
             //TODO
 		case kMCPlatformPlayerPropertyLoop:
 			*(bool *)r_value = m_looping;
+			break;
+        // PM-2014-12-17: [[ Bug 14232 ]] Read-only property that indicates if a filename is invalid or if the file is corrupted
+        case kMCPlatformPlayerPropertyInvalidFilename:
+			*(bool *)r_value = m_has_invalid_filename;
 			break;
 	}
 }

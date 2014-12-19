@@ -116,6 +116,7 @@ private:
     bool m_switch_scheduled : 1;
     bool m_playing : 1;
     bool m_synchronizing : 1;
+    bool m_has_invalid_filename : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -455,8 +456,15 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	if (t_error != nil)
 	{
 		[t_new_movie release];
+        // PM-2014-12-17: [[ Bug 14233 ]] If invalid filename is used, reset previous open movie
+        m_movie = nil;
+        [m_view setMovie:nil];
+        m_has_invalid_filename = true;
+
 		return;
 	}
+    
+    m_has_invalid_filename = false;
 	
     // MW-2014-07-18: [[ Bug ]] Clean up callbacks before we release.
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
@@ -830,6 +838,10 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			break;
 		case kMCPlatformPlayerPropertyLoop:
 			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: *QTMovieLoopsAttribute_ptr] boolValue] == YES;
+			break;
+        // PM-2014-12-17: [[ Bug 14232 ]] Read-only property that indicates if a filename is invalid or if the file is corrupted
+        case kMCPlatformPlayerPropertyInvalidFilename:
+			*(bool *)r_value = m_has_invalid_filename;
 			break;
 	}
 }
