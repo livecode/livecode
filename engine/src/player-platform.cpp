@@ -1399,6 +1399,33 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	return ES_NORMAL;
 }
 
+static bool MCPathIsAbsolute(const char *p_path)
+{
+	if (p_path == nil || p_path[0] == '\0')
+		return false;
+	
+	return p_path[0] == '/' || p_path[0] == ':';
+}
+
+static bool MCPathIsRemoteURL(const char *p_path)
+{
+	return MCCStringBeginsWith(p_path, "http://") ||
+	MCCStringBeginsWith(p_path, "https://") ||
+	MCCStringBeginsWith(p_path, "ftp://");
+}
+
+// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
+{
+    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    {
+        r_filename = strdup(p_filename);
+        return true;
+    }
+    
+   return getstack()->resolve_relative_path(p_filename, r_filename);
+}
+
 Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -1417,8 +1444,13 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 playstop();
                 starttime = MAXUINT4; //clears the selection
                 endtime = MAXUINT4;
+                
                 if (data != MCnullmcstring)
-                    filename = data.clone();
+                {
+                    // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+                    char *t_filename = data.clone();
+                    resolveplayerfilename(t_filename, filename);
+                }
                 prepare(MCnullstring);
                 
                 // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
