@@ -851,28 +851,49 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
-	
+
 	int4 t_offset_x, t_offset_y;
 	t_offset_x = t_current_x - textx;
 	t_offset_y = t_current_y - texty + dy;
+
+    // SN-2014-12-19: [[ Bug 14238 ]] Split the update for x and y offsets, as one of them
+    // being out of [-32767; 32767] shouldn't have the other one affected.
+
+    // IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
+    uint32_t t_width, t_height;
+    /* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
 	
 	// MW-2009-01-22: [[ Bug 3869 ]] We need to use the actual width/height of the
 	//   pixmap tile in this case to ensure the offset falls within 32767.
-	if (MCU_abs(t_offset_y) > 32767 || MCU_abs(t_offset_x) > 32767)
-	{
-		// IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
-		uint32_t t_width, t_height;
-		/* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
-
-		t_offset_x %= t_width;
-		if (t_offset_x < 0)
-			t_offset_x += t_width;
+	if (MCU_abs(t_offset_y) > 32767)
+    {
+        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
+        while (t_offset_y < INT16_MIN)
+            t_offset_y += INT16_MAX;
+        
+        while (t_offset_y > INT16_MAX)
+            t_offset_y -= INT16_MAX;
 		
 		t_offset_y %= t_height;
 		if (t_offset_y < 0)
 			t_offset_y += t_height;
 	}
-	
+
+    if (MCU_abs(t_offset_x) > 32767)
+    {
+        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
+        while (t_offset_x < INT16_MIN)
+            t_offset_x += INT16_MAX;
+        
+        while (t_offset_x > INT16_MAX)
+            t_offset_x -= INT16_MAX;
+        
+        
+        t_offset_x %= t_width;
+        if (t_offset_x < 0)
+            t_offset_x += t_width;
+    }
+
 	dc -> setfillstyle(t_current_style, t_current_pixmap, t_offset_x, t_offset_y);
 }
 
