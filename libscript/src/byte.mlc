@@ -140,7 +140,7 @@ Description:
 Tags: Binary
 */
 
-syntax IsAmongTheBytesOf is neutral binary operator with precedence 1
+syntax ByteIsInData is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
     MCByteEvalIsInBytes(Needle, Target, output)

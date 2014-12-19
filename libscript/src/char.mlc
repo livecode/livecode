@@ -27,7 +27,7 @@ public foreign handler MCCharStoreCharRangeOf(in Value as string, in Start as in
 
 public foreign handler MCCharEvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as string, in Source as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as string, in Target as string, out Value as bool) as undefined binds to "<builtin>"
 
 public foreign handler MCCharStoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 public foreign handler MCCharStoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
@@ -135,9 +135,9 @@ end syntax
 --
 
 /*
-Summary:            Determines whether <Needle> is in <Source>.
+Summary:            Determines whether <Needle> is in <Target>.
 Needle: 			An expression which evaluates to a char.
-Source: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
 
 Returns: 	True if <Needle> is among the chars of <Target>, and false otherwise.
 
@@ -147,7 +147,7 @@ Description:
 Tags: Strings
 */
 
-syntax CharIsIn is neutral binary operator with precedence 1
+syntax CharIsInString is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Source: Expression>
 begin
     MCCharEvalIsAmongTheCharsOf(Needle, Source, output)

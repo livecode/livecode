@@ -241,7 +241,7 @@ Description:
 Tags: Lists
 */
                 
-syntax IsInList is neutral binary operator with precedence 1
+syntax ElementIsInList is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
     MCListEvalIsAmongTheElementsOf(Needle, Target, output)
