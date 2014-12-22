@@ -77,7 +77,8 @@ extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true);
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false);
 extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
@@ -689,7 +690,8 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 			PDEBUG(stderr, "SetProperties: Output location is file\n");
 			CFStringRef t_output_format;
 			t_output_type = PRINTER_OUTPUT_FILE;
-			t_output_location = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_output_location_url, kCFURLPOSIXPathStyle), true);
+            // SN-2014-12-22: [[ Bug 14278 ]] Get a UTF-8-encoded filename
+			t_output_location = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_output_location_url, kCFURLPOSIXPathStyle), true, true);
 		}
 		else if (t_type == kPMDestinationPrinter)
 		{
@@ -704,8 +706,9 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 			t_output_location = NULL;
 		}
 
-		MCAutoStringRef t_output_location_str;
-		/* UNCHECKED */ MCStringCreateWithCString(t_output_location, &t_output_location_str);
+        MCAutoStringRef t_output_location_str;
+        // SN-2014-12-22: [[ Bug 14278 ]] We get the output location as a UTF-8 string.
+		/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_output_location, strlen(t_output_location), kMCStringEncodingUTF8, false, &t_output_location_str);
 		SetDeviceOutput(t_output_type, *t_output_location_str);
 
 		delete t_output_location;
@@ -925,7 +928,8 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 		case PRINTER_OUTPUT_FILE:
 		{
 			CFStringRef t_output_file;
-			t_output_file = CFStringCreateWithCString(kCFAllocatorDefault, GetDeviceOutputLocation(), kCFStringEncodingMacRoman);
+            // SN-2014-12-22: [[ Bug 14278 ]] Output location now stored as a UTF-8 string
+			t_output_file = CFStringCreateWithCString(kCFAllocatorDefault, GetDeviceOutputLocation(), kCFStringEncodingUTF8);
 			t_output_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, t_output_file, kCFURLPOSIXPathStyle, false);
 			CFRelease(t_output_file);
 			t_output_type = kPMDestinationFile;
