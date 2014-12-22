@@ -1432,6 +1432,9 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                
                 dirty = wholecard = True;
             }
+            // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
+            else if (data == filename && hasinvalidfilename())
+                MCresult->sets("could not create movie reference");
             break;
         case P_DONT_REFRESH:
             if (!MCU_matchflags(data, flags, F_DONT_REFRESH, dirty))
