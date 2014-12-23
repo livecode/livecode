@@ -29,7 +29,7 @@ public:
 
 	//
 
-	MCPrinterResult Start(HDC p_dc, const wchar *p_document_name, const wchar *p_output_file);
+	MCPrinterResult Start(HDC p_dc, const wchar_t *p_document_name, const wchar_t *p_output_file);
 	MCPrinterResult Finish(void);
 
 	//

@@ -1195,7 +1195,7 @@ const char *MCWindowsPrinterDevice::Error(void) const
 }
 
 // SN-2014-12-22: [[ Bug 14278 ]] Function updated to take wchar params
-MCPrinterResult MCWindowsPrinterDevice::Start(HDC p_dc, const wchar *p_document_name, const wchar *p_output_file)
+MCPrinterResult MCWindowsPrinterDevice::Start(HDC p_dc, const wchar_t *p_document_name, const wchar_t *p_output_file)
 {
     // SN-2014-12-22: [[ Bug 14278 ]] Document name and output file now encoded as UTF16 chars
 	DOCINFOW t_info;
@@ -1737,9 +1737,14 @@ MCPrinterResult MCWindowsPrinter::DoBeginPrint(MCStringRef p_document_name, MCPr
     MCAutoStringRefAsWString t_doc_name, t_output_file;
     /* UNCHECKED */ t_doc_name . Lock(p_document_name);
     
-    MCStringRef p_output_file_stringref;
-    MCStringCreateWithBytes(GetDeviceOutputLocation(), strlen(GetDeviceOutputLocation()), kMCStringEncodingUTF8, false, &t_output_file_stringref);
-    /* UNCHECKED */ t_output_file . Lock(*t_output_file_stringref);
+    MCAutoStringRef t_output_file_stringref;
+	if (GetDeviceOutputLocation() != NULL)
+	{
+		/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)GetDeviceOutputLocation(), strlen(GetDeviceOutputLocation()), kMCStringEncodingUTF8, false, &t_output_file_stringref);
+		/* UNCHECKED */ t_output_file . Lock(*t_output_file_stringref);
+	}
+	else
+		t_output_file . Lock(kMCEmptyString);
     
 	t_result = t_device -> Start(t_dc, *t_doc_name, *t_output_file);
 

@@ -73,6 +73,7 @@ private:
 	bool create_mask_surface_from_image(const MCCustomPrinterImage &p_image, cairo_surface_t* &r_surface);
 	bool create_cairo_font_from_custom_printer_font(const MCCustomPrinterFont &p_cp_font, cairo_font_face_t* &r_cairo_font);
 	bool set_cairo_pdf_datetime_to_now(cairo_pdf_datetime_t &r_datetime);
+	bool get_filename(const char* p_utf8_path, char *& r_system_path);
 
 private:
 	struct FontCache
