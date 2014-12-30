@@ -470,7 +470,7 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
                     return false;
                 }
                 
-                if (!MCArrayStoreValue(t_array, t_field_name, false, t_field_value))
+                if (!MCArrayStoreValue(t_array, false, t_field_name, t_field_value))
                 {
                     MCValueRelease(t_array);
                     return false;
