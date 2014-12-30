@@ -147,6 +147,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
+		{
 			if (need_target)
 			{
 				if (ct_class(oterm) == CT_ORDINAL)
@@ -165,6 +166,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 			}
 			else
 				break;
+		}
 		if (type == ST_ID && (sp.lookup(SP_FACTOR, te) == PS_NORMAL
 		                      || sp.lookup(SP_GO, te) == PS_NORMAL))
 		{
@@ -2832,7 +2834,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
     // Need to have a second MCExecContext as getobj may throw a non-fatal error
     MCExecContext ctxt2(ctxt);
     if (!target -> getobj(ctxt2, optr, parid, True)
-	        || optr->gettype() != CT_BUTTON && optr->gettype() != CT_STACK)
+        || (optr->gettype() != CT_BUTTON && optr->gettype() != CT_STACK))
 	{
 		MCerrorlock--;
         if (!ctxt . EvalExprAsNameRef(target, EE_SUBWINDOW_BADEXP, &optr_name))

@@ -3131,11 +3131,12 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 	}
 
 	if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+	{
 		if (sp.skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
 			secureverify = False;
 		else
-			MCperror->add
-			(PE_OPEN_BADMESSAGE, sp);
+			MCperror->add (PE_OPEN_BADMESSAGE, sp);
+	}
 	return PS_NORMAL;
 }
 
