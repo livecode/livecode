@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "revpdfprinter.h"
 
 #include <cairo-pdf.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
 
@@ -214,8 +215,10 @@ bool MCPDFPrintingDevice::CanRenderPaint(const MCCustomPrinterPaint& p_paint)
 		return p_paint.gradient.type == kMCCustomPrinterGradientLinear ||
 			p_paint.gradient.type == kMCCustomPrinterGradientRadial;
 		break;
+	case kMCCustomPrinterPaintNone:
+	default:
+		return false;
 	}
-	return false;
 }
 
 bool MCPDFPrintingDevice::CanRenderImage(const MCCustomPrinterImage& p_image)
@@ -811,6 +814,9 @@ bool MCPDFPrintingDevice::draw_path(const MCCustomPrinterPath &p_path)
 				t_points += 3;
 			}
 			break;
+		case kMCCustomPrinterPathEnd:
+			/* Shouldn't ever be reached */
+			abort();
 		}
 		t_success = (m_status = cairo_status(m_context)) == CAIRO_STATUS_SUCCESS;
 	}
@@ -868,6 +874,8 @@ bool MCPDFPrintingDevice::apply_paint(const MCCustomPrinterPaint &p_paint)
 				break;
 			case kMCCustomPrinterGradientRadial:
 				t_paint_pattern = cairo_pattern_create_radial(0, 0, 0, 0, 0, t_extent);
+				break;
+			default:
 				break;
 			}
 			if (p_paint.gradient.repeat > 1 && !p_paint.gradient.wrap)
@@ -959,6 +967,8 @@ bool MCPDFPrintingDevice::apply_paint(const MCCustomPrinterPaint &p_paint)
 
 			init_matrix(t_transform, p_paint.gradient.transform);
 		}
+		break;
+	case kMCCustomPrinterPaintNone:
 		break;
 	}
 	if (t_paint_pattern != nil && t_success)
