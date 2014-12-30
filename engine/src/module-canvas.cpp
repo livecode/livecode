@@ -1679,9 +1679,6 @@ void MCCanvasImageGetHeight(MCCanvasImageRef p_image, uint32_t &r_height)
 
 void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 {
-	bool t_success;
-	t_success = true;
-	
 	MCImageRep *t_image_rep;
 	t_image_rep = MCCanvasImageGetImageRep(p_image);
 	
