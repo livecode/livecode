@@ -436,9 +436,6 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 			// If the name has changed process...
 			if (!hasname(*t_old_name))
 			{
-				bool t_is_mainstack;
-				t_is_mainstack = MCdispatcher -> ismainstack(this) == True;
-
 				// First flush any references to parentScripts on this stack
 				MCParentScript::FlushStack(this);
 				setextendedstate(false, ECS_HAS_PARENTSCRIPTS);
