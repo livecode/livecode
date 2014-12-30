@@ -40,7 +40,7 @@ void bootstrap_main(int argc, char *argv[])
     if (argc == 0)
     {
         fprintf(stderr, "Invalid arguments\n");
-        return 1;
+        return;
     }
     
     s_is_bootstrap = 1;
