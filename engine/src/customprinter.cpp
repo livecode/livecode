@@ -1680,6 +1680,8 @@ public:
 		m_target = p_target;
 	}
 
+	virtual ~MCLoggingPrintingDevice(void) {}
+
 	////////
 
 	void Destroy(void)
@@ -1823,6 +1825,8 @@ public:
 		m_indent = 0;
 		m_stream = nil;
 	}
+
+	virtual ~MCDebugPrintingDevice(void) {}
 
 	void Destroy(void)
 	{

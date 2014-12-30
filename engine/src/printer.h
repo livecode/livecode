@@ -55,6 +55,8 @@ enum MCPrinterLinkType
 class MCPrinterDevice
 {
 public:
+	virtual ~MCPrinterDevice(void) {};
+
 	// Return a descriptive string of the last printer error that occured. This
 	// call should return NULL if ERROR has not been returned by any method of
 	// the object.

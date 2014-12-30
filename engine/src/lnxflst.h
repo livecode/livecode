@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCFontlist
 {
 public:
+	virtual ~MCFontlist(void) {};
 	virtual void destroy(void) = 0;
 
 	virtual MCFontStruct *getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer) = 0;
