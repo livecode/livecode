@@ -628,10 +628,12 @@ void MCStack::SetCantModify(MCExecContext& ctxt, bool setting)
 			return;
 		}
 		if (mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED)
+		{
 			if (flags & F_CANT_MODIFY || !MCdispatcher->cut(True))
 				mode = WM_TOP_LEVEL_LOCKED;
 			else
 				mode = WM_TOP_LEVEL;
+		}
 		stopedit();
 		dirtywindowname();
 		resetcursor(True);
