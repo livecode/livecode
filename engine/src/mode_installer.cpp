@@ -403,6 +403,8 @@ private:
 				CloseHandle(s_payload_file_handle);
 		}
 		return t_success;
+#else
+		return false;
 #endif
 	}
 };
