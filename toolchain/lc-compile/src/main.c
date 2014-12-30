@@ -24,6 +24,8 @@
 #include "report.h"
 
 extern void ROOT(void);
+extern void yyExtend(void);
+extern void InitializeCustomInvokeLists(void);
 
 static int s_is_bootstrap = 0;
 
