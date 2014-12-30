@@ -925,9 +925,6 @@ public:
     
     void exec_ctxt(MCExecContext& ctxt)
 	{
-		bool t_success;
-		t_success = true;
-        
         MCAutoStringRef t_module_str;
         if (!ctxt . EvalExprAsStringRef(m_module, EE_INTERNAL_TASKS_BADMODULE, &t_module_str))
             return;
@@ -1004,9 +1001,6 @@ public:
 
 	void exec_ctxt(MCExecContext& ctxt)
 	{
-		bool t_success;
-		t_success = true;
-
         MCAutoStringRef t_string;
         if (!ctxt . EvalExprAsStringRef(m_key, EE_INTERNAL_DELETE_BADKEY, &t_string))
             return;
@@ -1046,9 +1040,6 @@ public:
     
     void exec_ctxt(MCExecContext& ctxt)
 	{
-		bool t_success;
-		t_success = true;
-        
         MCAutoStringRef t_string;
         if (!ctxt . EvalExprAsStringRef(m_file, EE_INTERNAL_DELETE_BADFILENAME, &t_string))
             return;
