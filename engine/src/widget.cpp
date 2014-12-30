@@ -276,11 +276,6 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 	mx = p_x;
 	my = p_y;
 	
-	// Get control local coords
-	int32_t t_mouse_x, t_mouse_y;
-	t_mouse_x = p_x - getrect() . x;
-	t_mouse_y = p_y - getrect() . y;
-	
     return MCwidgeteventmanager->event_mfocus(this, p_x, p_y);
 }
 
