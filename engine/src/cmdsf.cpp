@@ -1407,8 +1407,6 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
     // MERG-2014-07-11: metadata array
     MCAutoArrayRef t_metadata_array;
     MCImageMetadata t_metadata;
-    MCImageMetadata *t_metadata_ptr;
-    t_metadata_ptr = NULL;
     if (!ctxt . EvalOptionalExprAsArrayRef(metadata, kMCEmptyArray , EE_EXPORT_NOSELECTED, &t_metadata_array))
         return;
 
