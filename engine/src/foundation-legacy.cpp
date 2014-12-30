@@ -1366,9 +1366,6 @@ uint32_t MCArrayMeasureForStreamLegacy(MCArrayRef self, bool p_nested_only)
 
 static bool is_array_nested(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-	bool *t_nested_ptr;
-	t_nested_ptr = (bool *)p_context;
-	
 	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
 		return false;
 
