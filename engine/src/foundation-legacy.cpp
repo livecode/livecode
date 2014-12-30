@@ -1269,7 +1269,7 @@ bool MCArrayIsSequence(MCArrayRef self)
 	ctxt . maximum = INDEX_MIN;
 	return MCArrayApply(self, get_array_extent, &ctxt) &&
 			ctxt . minimum == 1 &&
-			(ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self);
+			(uindex_t) (ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self);
 }
 
 static bool list_keys(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
