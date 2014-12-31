@@ -522,7 +522,7 @@ uint2 MCField::getfwidth() const
 		width -= shadowoffset;
 	if (flags & F_VSCROLLBAR)
 		width -= vscrollbar->getrect().width;
-	if (width > 0 && width < MAXUINT2)
+	if (width > 0 && width < (int4) MAXUINT2)
 		return (uint2)width;
 	else
 		return 0;
@@ -537,7 +537,7 @@ uint2 MCField::getfheight() const
 		height -= shadowoffset;
 	if (flags & F_HSCROLLBAR)
 		height -= hscrollbar->getrect().height;
-	if (height > 0 && height < MAXUINT2)
+	if (height > 0 && height < (int4) MAXUINT2)
 		return (uint2)height;
 	else
 		return 0;
@@ -1813,7 +1813,10 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 		
 		// MW-UNDO-FIX: Make sure we only append to a previous record if it
 		//   is immediately after the last one.
-		if (us != NULL && (us->type == UT_DELETE_TEXT || us->type == UT_TYPE_TEXT) && MCundos->getobject() == this && us->ud.text.index+us->ud.text.newchars == si)
+		if (us != NULL &&
+		    (us->type == UT_DELETE_TEXT || us->type == UT_TYPE_TEXT) &&
+		    MCundos->getobject() == this &&
+		    (findex_t) (us->ud.text.index+us->ud.text.newchars) == si)
 		{
 			if (us->type == UT_DELETE_TEXT)
 			{
