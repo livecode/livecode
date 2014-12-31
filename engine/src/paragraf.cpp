@@ -3996,29 +3996,6 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 	}
 }
 
-// MW-2008-07-25: [[ Bug 6830 ]] Make sure we use the block retreat/advance
-//   methods to navigate relatively to an index, otherwise Unicodiness isn't
-//   taken into account.
-static codepoint_t GetCodepointAtRelativeIndex(MCBlock *p_block, findex_t p_index, findex_t p_delta)
-{
-	while(p_block != NULL && p_delta < 0)
-	{
-		p_block = p_block -> RetreatIndex(p_index);
-		p_delta += 1;
-	}
-	
-	while(p_block != NULL && p_delta > 0)
-	{
-		p_block = p_block -> AdvanceIndex(p_index);
-		p_delta -= 1;
-	}
-	
-	if (p_block == NULL)
-		return 0xFFFFFFFF;
-	
-	return p_block -> getparent() -> GetCodepointAtIndex(p_index);
-}
-
 findex_t MCParagraph::findwordbreakbefore(MCBlock *p_block, findex_t p_index)
 {    
 	// Create the word break iterator
