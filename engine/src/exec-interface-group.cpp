@@ -227,7 +227,7 @@ void MCGroup::SetHilitedButtonId(MCExecContext& ctxt, uint32_t part, integer_t p
 			if (cptr->gettype() == CT_BUTTON)
 			{
 				MCButton *bptr = (MCButton *)cptr;
-				bptr->resethilite(part, p_id == bptr->getid());
+				bptr->resethilite(part, p_id == (integer_t) bptr->getid());
 			}
 			cptr = (MCControl *)cptr->next();
 		}

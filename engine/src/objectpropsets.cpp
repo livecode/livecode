@@ -174,7 +174,7 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
     MCArrayCreateMutable(&t_new_props);
     uinteger_t t_size;
     t_size = t_split . Count();
-    for (index_t i = 0; i < t_size && t_success; i++)
+    for (uindex_t i = 0; i < t_size && t_success; i++)
     {
         MCNewAutoNameRef t_key_name;
         if (t_success)
