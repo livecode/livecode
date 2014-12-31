@@ -836,18 +836,6 @@ static MCExternalError number_to_real(double p_number, MCExternalValueOptions p_
 	return kMCExternalErrorNone;
 }
 
-static MCExternalError convert_stringref_to_mcstring(MCStringRef p_string, MCString& r_mcstring)
-{
-	char_t *t_chars;
-	uindex_t t_char_count;
-	if (!MCStringNormalizeAndConvertToNative(p_string, t_chars, t_char_count))
-		return kMCExternalErrorOutOfMemory;
-	
-	r_mcstring . set((char *)t_chars, t_char_count);
-	
-	return kMCExternalErrorNone;
-}
-
 #ifdef __HAS_CORE_FOUNDATION__
 
 #import <Foundation/Foundation.h>
