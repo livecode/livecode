@@ -3088,6 +3088,7 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 	if (dirty)
 	{
 		if (opened && getstack() == MCmousestackptr)
+		{
 			if (!(flags & F_VISIBLE))
 			{
 				MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
@@ -3111,6 +3112,7 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 			}
 			else if (MCU_point_in_rect(rect, MCmousex, MCmousey))
 				needmfocus = true;
+		}
 
 		if (state & CS_KFOCUSED)
 			getcard(part)->kunfocus();

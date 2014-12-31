@@ -570,8 +570,8 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 	tptr->setflag(dontrefresh, F_DONT_REFRESH);
 	if (p_looping)
 		tptr->setflag(True, F_LOOPING);
-	if (p_prepare && !tptr->prepare(p_options == nil ? kMCEmptyString : p_options)
-			|| !p_prepare && !tptr->playstart(p_options == nil ? kMCEmptyString : p_options))
+	if ((p_prepare && !tptr->prepare(p_options == nil ? kMCEmptyString : p_options)) ||
+	    (!p_prepare && !tptr->playstart(p_options == nil ? kMCEmptyString : p_options)))
 	{
 		if (tptr->isdisposable())
 			delete tptr;

@@ -1822,10 +1822,10 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 	MCbuttonstate = oldbstate;
 	MCControl *mfocused = MCdefaultstackptr->getcard()->getmfocused();
 	if (mfocused != NULL
-	        && (mfocused->gettype() == CT_GRAPHIC
-	            && mfocused->getstate(CS_CREATE_POINTS)
-	            || (mfocused->gettype() == CT_IMAGE && mfocused->getstate(CS_DRAW)
-	                && MCdefaultstackptr->gettool(mfocused) == T_POLYGON)))
+	    && ((mfocused->gettype() == CT_GRAPHIC
+	         && mfocused->getstate(CS_CREATE_POINTS))
+	        || (mfocused->gettype() == CT_IMAGE && mfocused->getstate(CS_DRAW)
+	            && MCdefaultstackptr->gettool(mfocused) == T_POLYGON)))
 		mfocused->doubleup(1); // cancel polygon create
 	if (t_old_mousestack == NULL || t_old_mousestack->getmode() != 0)
 	{

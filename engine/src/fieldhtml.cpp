@@ -1446,7 +1446,7 @@ static void import_html_append_unicode_char(import_html_t& ctxt, uint32_t p_code
 	
 	// If the text is currently native (and there is some) or if the styling has changed
 	// then flush.
-	if (!ctxt . is_unicode && ctxt . byte_count > 0 ||
+	if ((!ctxt . is_unicode && ctxt . byte_count > 0) ||
 		!import_html_equal_style(ctxt . last_used_style, ctxt . styles[ctxt . style_index] . style))
 		import_html_flush_chars(ctxt);
 	
