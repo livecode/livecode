@@ -1609,9 +1609,6 @@ void MCDispatch::wmdragleave(Window w)
 
 MCDragAction MCDispatch::wmdragdrop(Window w)
 {
-	MCStack *target;
-	target = findstackd(w);
-	
 	// MW-2011-02-08: Make sure we store the drag action that is in effect now
 	//   otherwise it can change as a result of message sends which is bad :o)
 	uint32_t t_drag_action;
@@ -1724,7 +1721,6 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		// TODO: what about other 'special' chars added by unicode?
         //  => the unicode chars shouldn't be changed
 		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
-		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_replace));
         uindex_t t_offset;
 		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
 		{

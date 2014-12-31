@@ -1051,9 +1051,6 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 {
     MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
     
-	bool t_is_unicode;
-	t_is_unicode = p_mark -> text . unicode_override;
-
 	MCAutoStringRef t_text_str;
     if (p_mark -> text . unicode_override)
         /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)p_mark -> text . data, p_mark -> text . length, &t_text_str);
