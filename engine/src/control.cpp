@@ -767,7 +767,6 @@ Boolean MCControl::del()
 		break;
 	}
 	uint2 num = 0;
-	MCRectangle orect = geteffectiverect();
 	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
 	switch (parent->gettype())
 	{
