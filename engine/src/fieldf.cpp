@@ -771,7 +771,7 @@ void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, in
 	// MW-2006-02-26: Even if the screen is locked we still want to set the cursor
 	//   position, otherwise the repositioning gets deferred too much.
 	if (!(state & (CS_KFOCUSED | CS_DRAG_TEXT))
-	        || !(flags & F_LIST_BEHAVIOR) && flags & F_LOCK_TEXT)
+	    || (!(flags & F_LIST_BEHAVIOR) && flags & F_LOCK_TEXT))
 		return;
 
 	// OK-2008-07-22 : Crash fix.
@@ -1402,7 +1402,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 	else
 	{
 		if (flags & F_LIST_BEHAVIOR)
-			if (MCmodifierstate & MS_CONTROL && flags & F_NONCONTIGUOUS_HILITES
+			if ((MCmodifierstate & MS_CONTROL && flags & F_NONCONTIGUOUS_HILITES)
 			        || flags & F_TOGGLE_HILITE)
 				contiguous = False;
 			else

@@ -278,10 +278,12 @@ void MCColors::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_
 				draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 		}
 	if (flags & F_SHOW_BORDER)
+	{
 		if (flags & F_3D)
 			draw3d(dc, rect, ETCH_SUNKEN, borderwidth);
 		else
 			drawborder(dc, rect, borderwidth);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -598,7 +598,7 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 #endif
 
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
-	        || type != OT_STACK && type != OT_ENCRYPT_STACK
+	    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
 	{
 		delete t_stack;
@@ -709,7 +709,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		MCresult -> clear();
 
 		if (IO_read_uint1(&type, stream) != IO_NORMAL
-		    || type != OT_STACK && type != OT_ENCRYPT_STACK
+		    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
 		    || sptr->load(stream, version, type) != IO_NORMAL)
 		{
 			if (MCresult -> isclear())

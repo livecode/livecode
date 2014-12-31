@@ -574,8 +574,8 @@ void MCField::kfocus()
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
-                if (!focusedparagraph->isselection()
-                        && !focusedparagraph->IsEmpty()
+				if ((!focusedparagraph->isselection()
+				     && !focusedparagraph->IsEmpty())
 				        || focusedparagraph->next() != focusedparagraph)
 				{
 					focusedparagraph->sethilite(True);
@@ -844,7 +844,7 @@ Boolean MCField::mfocus(int2 x, int2 y)
 {
 	Tool tool = getstack()->gettool(this);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-            || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
+	    || (flags & F_DISABLED && tool == T_BROWSE) || state & CS_NO_FILE)
 		return False;
 	if (sbfocus(x, y, hscrollbar, vscrollbar))
 	{
@@ -1040,7 +1040,7 @@ Boolean MCField::mdown(uint2 which)
 				}
 			}
 			if (flags & F_TRAVERSAL_ON ||
-                (flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
+			    ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR))
 			{
 				if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
 				        && !(flags & F_NO_AUTO_HILITE))
@@ -1170,8 +1170,8 @@ Boolean MCField::mup(uint2 which, bool p_release)
                     {
                         if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
-                                    || paragraphs == paragraphs->next()
-                                    && paragraphs->IsEmpty()))
+                                    || (paragraphs == paragraphs->next()
+                                        && paragraphs->IsEmpty())))
                             message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 						else
 						{
@@ -1325,6 +1325,7 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
 		{
 			if (opened)
+			{
 				if (state & CS_SELECTING)
 				{
 					// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
@@ -1333,12 +1334,15 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 					MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 				}
 				else
+				{
 					if (state & CS_DRAG_TEXT)
 					{
 						if (!MCU_point_in_rect(getfrect(), mx, my))
 							dragtext();
 						MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 					}
+				}
+			}
 		}
 		else
 			MCControl::timer(mptr, params);
@@ -2612,7 +2616,7 @@ Exec_stat MCField::vscroll(int4 offset, Boolean doredraw)
 			drect.y -= DEFAULT_BORDER;
 			drect.height += flags & F_HSCROLLBAR ? DEFAULT_BORDER : DEFAULT_BORDER * 2;
 			if (state & CS_KFOCUSED && !(extraflags & EF_NO_FOCUS_BORDER)
-			        && (IsMacEmulatedLF() || IsMacLFAM() && !MCaqua))
+			    && (IsMacEmulatedLF() || (IsMacLFAM() && !MCaqua)))
 				drect = MCU_reduce_rect(drect, 1);
 		}
 	//to-do change for drawing xp text fields
