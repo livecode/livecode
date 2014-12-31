@@ -822,6 +822,7 @@ static bool MCEventQueuePost(MCEventType p_type, MCEvent*& r_event)
 	return true;
 }
 
+#ifdef _MOBILE
 static bool MCEventQueuePostAtFront(MCEventType p_type, MCEvent*& r_event)
 {
 	MCEvent *t_event;
@@ -846,6 +847,7 @@ static bool MCEventQueuePostAtFront(MCEventType p_type, MCEvent*& r_event)
 	
 	return true;
 }
+#endif /* _MOBILE */
 
 //////////
 
