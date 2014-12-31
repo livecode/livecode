@@ -2040,9 +2040,6 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 			ctxt . SetTheResultToStaticCString("can't cut object (stack is password protected)");
 			continue;
 		}
-		uindex_t t_part;
-		t_part = p_objects[i] . part_id;
-
 		switch(t_object -> gettype())
 		{
 		case CT_AUDIO_CLIP:
@@ -2232,9 +2229,8 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 
 	/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
 
-	int4 start, end;
+	int4 start;
 	start = p_target . mark . start;
-	end = p_target . mark . finish;
 
 	bool t_changed;
 	t_changed = false;
@@ -2386,9 +2382,6 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 		t_start = t_finish;
 		break;
 	}
-    
-    MCField *t_field;
-    t_field = static_cast<MCField *>(p_target . object);
     
 	static_cast<MCField *>(p_target . object) -> seltext(t_start, t_finish, True);
 }
@@ -3887,9 +3880,6 @@ MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
 
 void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data)
 {
-    bool t_image_locked;
-    t_image_locked = false;
-    
 	if (p_target == nil)
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)
@@ -3914,9 +3904,6 @@ void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_fo
 }
 void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
-    bool t_image_locked;
-    t_image_locked = false;
-    
 	if (p_target == nil)
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)

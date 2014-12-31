@@ -843,7 +843,7 @@ Boolean stretcheffect_step(const MCRectangle &drect, MCStackSurface *p_target, M
 {
 	uint2 height = drect.height * delta / duration;
 	
-	uint32_t t_top, t_bottom;
+	uint32_t t_top;
 	
 	switch (dir)
 	{
@@ -859,7 +859,6 @@ Boolean stretcheffect_step(const MCRectangle &drect, MCStackSurface *p_target, M
 			t_top = drect.height - height;
 			break;
 	}
-	t_bottom = t_top + height;
 	
 	MCGRectangle t_start_src, t_start_dst;
 	MCGRectangle t_end_src, t_end_dst;

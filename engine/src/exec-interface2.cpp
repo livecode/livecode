@@ -3326,12 +3326,7 @@ void MCInterfaceEvalOptionalStackWithBackgroundByName(MCExecContext& ctxt, MCObj
     t_stack = nil;
     
     if (p_stack . object != nil)
-    {
-        MCGroup *t_background;
-        
         t_stack = static_cast<MCStack *>(p_stack . object);
-        t_background = t_stack -> getbackgroundbyname(p_name);
-    }
         
     r_stack . object = t_stack;
     r_stack . part_id = p_stack . part_id;
