@@ -2141,7 +2141,7 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
         // SN-2014-10-14: [[ Bug 13658 ]] In case we want to read everything (EOF, end, empty) from a binary process,
         //  the sentinel must be empty, not Ctrl-D (0x04, which might appear in a binary data output.
         MCAutoStringRef t_sentinel;
-        if (MCprocesses[t_index] . encoding == kMCFileEncodingBinary &&
+        if (MCprocesses[t_index] . encoding == (Encoding_type) kMCFileEncodingBinary &&
             MCStringGetLength(p_sentinel) == 1 && MCStringGetCharAtIndex(p_sentinel, 0) == 0x4)
             t_sentinel = kMCEmptyString;
         else
