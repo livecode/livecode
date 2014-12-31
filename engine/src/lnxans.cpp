@@ -234,12 +234,10 @@ char * get_next_mask ( char *p_masks )
 // Get mask number <p_mask_id> from the comma delimited list of masks.
 char * get_filter_mask ( uint4 p_mask_id, char * p_masks ) 
 {
-	uint4 a ;
 	uint4 t_count ;
 	char *t_ptr ;
 
 	t_count = 0 ;
-	a = 0 ;
 	t_ptr = p_masks ;
 	
 	
