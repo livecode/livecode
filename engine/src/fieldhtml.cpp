@@ -354,7 +354,7 @@ static const char *export_html_hexcolor(uint32_t p_pixel)
 	static char s_color[8];
 	uint8_t r, g, b, a;
 	MCGPixelUnpackNative(p_pixel, r, g, b, a);
-	sprintf(s_color, "#%02.2X%02.2X%02.2X", r, g, b);
+	sprintf(s_color, "#%2.2X%2.2X%2.2X", r, g, b);
 	
 	return s_color;
 }
