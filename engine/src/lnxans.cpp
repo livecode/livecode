@@ -584,7 +584,7 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
 
     if (r_value == nil)
         /* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, r_result);
-    else if (p_options & MCA_OPTION_RETURN_FILTER != 0)
+    else if ((p_options & MCA_OPTION_RETURN_FILTER) != 0)
         /* UNCHECKED */ MCStringCreateWithSysString(get_current_filter_name(dialog), r_result);
 
 	
