@@ -192,6 +192,12 @@ uint32_t MCWeightedPixelBox::split_axis(uint32_t p_channel, uint32_t p_left, uin
 	return pivot_pixels_by_value(pixels, p_channel, p_left, p_right, p_pivot_value, t_weight);
 }
 
+static int32_t vbox_compare_population(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+static int32_t vbox_compare_longest_dimension(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+static int32_t vbox_compare_volume(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+static int32_t vbox_compare_volume_population_product(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+static int32_t vbox_compare_null(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+
 static int32_t vbox_compare_population(MCWeightedPixelBox *p_a, MCWeightedPixelBox *p_b)
 {
 	return p_a->population - p_b->population;
