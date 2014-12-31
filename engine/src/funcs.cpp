@@ -4152,6 +4152,7 @@ Parse_stat MCReplaceText::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 static void *realloc_range(void *p_block, unsigned int p_minimum, unsigned int p_maximum, unsigned int& p_limit)
 {
 	void *p_result;
@@ -4170,6 +4171,7 @@ static void *realloc_range(void *p_block, unsigned int p_minimum, unsigned int p
 		free(p_block);
 	return p_result;
 }
+#endif /* LEGACY_EXEC */
 
 void MCReplaceText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {

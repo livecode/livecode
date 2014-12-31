@@ -302,8 +302,8 @@ void MCFiltersEvalUrlDecode(MCExecContext& ctxt, MCStringRef p_source, MCStringR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define BINARY_NOCOUNT -2
-#define BINARY_ALL -1
+#define BINARY_NOCOUNT (UINDEX_MAX - 1)
+#define BINARY_ALL (UINDEX_MAX)
 
 // From exec-strings.cpp
 extern bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding);
@@ -542,7 +542,7 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
 				count = 1;
 			while (t_success && count--)
 			{
-				int4 oldoffset = offset;
+				uindex_t oldoffset = offset;
 				real64_t t_number;
 				switch (cmd)
 				{

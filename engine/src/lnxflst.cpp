@@ -232,7 +232,7 @@ bool MCNewFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 	PangoFontFamily **t_families;
 	int t_family_count;
 	pango_context_list_families(m_pango, &t_families, &t_family_count);
-	for(uint32_t i = 0; t_success && i < t_family_count; i++)
+	for(int i = 0; t_success && i < t_family_count; i++)
 		t_success = MCListAppendCString(*t_list, pango_font_family_get_name(t_families[i]));
 
 	g_free(t_families);
@@ -253,7 +253,7 @@ bool MCNewFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 	PangoFontFamily **t_families;
 	int t_family_count;
 	pango_context_list_families(m_pango, &t_families, &t_family_count);
-	for(uint32_t i = 0; t_success && i < t_family_count; i++)
+	for(int i = 0; t_success && i < t_family_count; i++)
 		if (MCStringIsEqualToCString(p_fname, pango_font_family_get_name(t_families[i]), kMCCompareCaseless))
 		{
 			PangoFontFace **t_faces;
@@ -268,7 +268,7 @@ bool MCNewFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 					t_success = MCListAppendInteger(*t_list, 0);
 				else
 				{
-					for(uint32_t i = 0; t_success && i < t_size_count; i++)
+					for(int i = 0; t_success && i < t_size_count; i++)
 						t_success = MCListAppendInteger(*t_list, t_sizes[i] / PANGO_SCALE);
 					g_free(t_sizes);
 				}
@@ -292,13 +292,13 @@ bool MCNewFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r
 	PangoFontFamily **t_families;
 	int t_family_count;
 	pango_context_list_families(m_pango, &t_families, &t_family_count);
-	for(uint32_t i = 0; t_success && i < t_family_count; i++)
+	for(int i = 0; t_success && i < t_family_count; i++)
 		if (MCStringIsEqualToCString(p_fname, pango_font_family_get_name(t_families[i]), kMCCompareCaseless))
 		{
 			PangoFontFace **t_faces;
 			int t_face_count;
 			pango_font_family_list_faces(t_families[i], &t_faces, &t_face_count);
-			for(uint32_t i = 0; t_success && i < t_face_count; i++)
+			for(int i = 0; t_success && i < t_face_count; i++)
 				t_success = MCListAppendCString(*t_list, pango_font_face_get_face_name(t_faces[i]));
 			g_free(t_faces);
 		}
@@ -389,7 +389,7 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 		PangoFcFont *t_font;
 		t_font = PANGO_FC_FONT(t_run -> item -> analysis . font);
 		if (t_success)
-			for(uint32_t i = 0; i < t_run -> glyphs -> num_glyphs; i++)
+			for(int i = 0; i < t_run -> glyphs -> num_glyphs; i++)
 			{
 				t_glyphs[i] . index = t_run -> glyphs -> glyphs[i] . glyph;
 				t_glyphs[i] . x = t_running_x + (double)t_run -> glyphs -> glyphs[i] . geometry . x_offset / PANGO_SCALE;
@@ -463,11 +463,11 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 			// Now we have the byte -> char mapping we can compute the clusters.
 			for(uint32_t i = 0; i < t_char_count; i++)
 				t_clusters[i] = 65535;
-			for(uint32_t i = 0; i < t_run -> glyphs -> num_glyphs; i++)
+			for(int i = 0; i < t_run -> glyphs -> num_glyphs; i++)
 			{
 				uint32_t t_byte_offset;
 				t_byte_offset = t_run -> glyphs -> log_clusters[i];
-				t_clusters[t_char_map[t_byte_offset]] = MCMin((uint32_t)t_clusters[t_char_map[t_byte_offset]], i);
+				t_clusters[t_char_map[t_byte_offset]] = MCMin(t_clusters[t_char_map[t_byte_offset]], i);
 			}
 			for(uint32_t i = 1; i < t_char_count; i++)
 				if (t_clusters[i] == 65535)
@@ -480,7 +480,7 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 			for(uint32_t i = 0; i < t_byte_count; i++)
 				fprintf(stderr, "%04x ", t_char_map[i]);
 			fprintf(stderr, "\nGlyph Map: ");
-			for(uint32_t i = 0; i < t_run -> glyphs -> num_glyphs; i++)
+			for(int i = 0; i < t_run -> glyphs -> num_glyphs; i++)
 				fprintf(stderr, "%04x ", t_run -> glyphs -> log_clusters[i]);
 			fprintf(stderr, "\nClusters:  ");
 			for(uint32_t i = 0; i < t_char_count; i++)

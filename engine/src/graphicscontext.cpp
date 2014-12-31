@@ -1219,28 +1219,6 @@ void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, re
 {
 }
 
-// We have a matrix (a, b, c, d). This can be decomposed as:
-//    (cos t, -sin t, sin t, cos t) * (1, m, 0, 1) * (x, 0, 0, y)
-//
-// Which results in:
-//     t = atan(a / c)
-//     x = sqrt(a^2 + b^2)
-//     m = (cb-ad)/(ba-cd)
-//     y = d / (m.sin(t) - cos(t))
-
-static void decompose_matrix(float a, float b, float c, float d, float& t, float& m, float& x, float& y)
-{
-    /*t = atan2f(a, c);
-    x = sqrtf(a * a + b * b);
-    m = (c * b - a * d) / (b * a - c * d);
-    y = d / (m * sinf(t) - cosf(t));*/
-    
-    t = atan2f(c, a);
-    x = sqrtf(a * a + b * b);
-    m = (a * b - c * d) / (b * c - a * d);
-    y = d / (m * sinf(t) - cosf(t));
-}
-
 static MCGRectangle get_rect_pixel_exterior(MCGRectangle r)
 {
     MCGRectangle rr;

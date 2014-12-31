@@ -522,7 +522,7 @@ uint2 MCField::getfwidth() const
 		width -= shadowoffset;
 	if (flags & F_VSCROLLBAR)
 		width -= vscrollbar->getrect().width;
-	if (width > 0 && width < MAXUINT2)
+	if (width > 0 && width < (int4) MAXUINT2)
 		return (uint2)width;
 	else
 		return 0;
@@ -537,7 +537,7 @@ uint2 MCField::getfheight() const
 		height -= shadowoffset;
 	if (flags & F_HSCROLLBAR)
 		height -= hscrollbar->getrect().height;
-	if (height > 0 && height < MAXUINT2)
+	if (height > 0 && height < (int4) MAXUINT2)
 		return (uint2)height;
 	else
 		return 0;
@@ -771,7 +771,7 @@ void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, in
 	// MW-2006-02-26: Even if the screen is locked we still want to set the cursor
 	//   position, otherwise the repositioning gets deferred too much.
 	if (!(state & (CS_KFOCUSED | CS_DRAG_TEXT))
-	        || !(flags & F_LIST_BEHAVIOR) && flags & F_LOCK_TEXT)
+	    || (!(flags & F_LIST_BEHAVIOR) && flags & F_LOCK_TEXT))
 		return;
 
 	// OK-2008-07-22 : Crash fix.
@@ -1402,7 +1402,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 	else
 	{
 		if (flags & F_LIST_BEHAVIOR)
-			if (MCmodifierstate & MS_CONTROL && flags & F_NONCONTIGUOUS_HILITES
+			if ((MCmodifierstate & MS_CONTROL && flags & F_NONCONTIGUOUS_HILITES)
 			        || flags & F_TOGGLE_HILITE)
 				contiguous = False;
 			else
@@ -1813,7 +1813,10 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 		
 		// MW-UNDO-FIX: Make sure we only append to a previous record if it
 		//   is immediately after the last one.
-		if (us != NULL && (us->type == UT_DELETE_TEXT || us->type == UT_TYPE_TEXT) && MCundos->getobject() == this && us->ud.text.index+us->ud.text.newchars == si)
+		if (us != NULL &&
+		    (us->type == UT_DELETE_TEXT || us->type == UT_TYPE_TEXT) &&
+		    MCundos->getobject() == this &&
+		    (findex_t) (us->ud.text.index+us->ud.text.newchars) == si)
 		{
 			if (us->type == UT_DELETE_TEXT)
 			{

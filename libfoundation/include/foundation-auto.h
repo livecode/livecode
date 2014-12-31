@@ -367,12 +367,7 @@ public:
 
     bool Lock(MCStringRef p_string)
     {
-        bool t_success =  MCStringConvertToSysString(p_string, m_sysstring);
-        if (!t_success)
-        {
-            int x = 42;
-        }
-        return t_success;
+        return MCStringConvertToSysString(p_string, m_sysstring);
     }
 
     void Unlock()

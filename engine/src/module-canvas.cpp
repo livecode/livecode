@@ -1254,17 +1254,18 @@ void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTrans
 	MCCanvasTransformMake(MCGAffineTransformInvert(*MCCanvasTransformGet(p_transform)), r_transform);
 }
 
-// T = Tscale * Trotate * Tskew * Ttranslate
-
-// Ttranslate:
-// / 1 0 tx \
-// | 0 1 ty |
-// \ 0 0  1 /
-
-// Tscale * Trotate * Tskew:
-// / a  c \   / ScaleX       0 \   /  Cos(r)  Sin(r) \   / 1  Skew \   /  ScaleX * Cos(r)   ScaleX * Skew * Cos(r) + ScaleX * Sin(r) \
-// \ b  d / = \      0  ScaleY / * \ -Sin(r)  Cos(r) / * \ 0     1 / = \ -ScaleY * Sin(r)  -ScaleY * Skew * Sin(r) + ScaleY * Cos(r) /
-
+/*
+ * T = Tscale * Trotate * Tskew * Ttranslate
+ *
+ * Ttranslate:
+ * / 1 0 tx \
+ * | 0 1 ty |
+ * \ 0 0  1 /
+ *
+ * Tscale * Trotate * Tskew:
+ * / a  c \   / ScaleX       0 \   /  Cos(r)  Sin(r) \   / 1  Skew \   /  ScaleX * Cos(r)   ScaleX * Skew * Cos(r) + ScaleX * Sin(r) \
+ * \ b  d / = \      0  ScaleY / * \ -Sin(r)  Cos(r) / * \ 0     1 / = \ -ScaleY * Sin(r)  -ScaleY * Skew * Sin(r) + ScaleY * Cos(r) /
+ */
 bool MCCanvasTransformDecompose(const MCGAffineTransform &p_transform, MCGPoint &r_scale, MCCanvasFloat &r_rotation, MCGPoint &r_skew, MCGPoint &r_translation)
 {
 	MCGFloat t_r, t_skew;
@@ -1678,9 +1679,6 @@ void MCCanvasImageGetHeight(MCCanvasImageRef p_image, uint32_t &r_height)
 
 void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 {
-	bool t_success;
-	t_success = true;
-	
 	MCImageRep *t_image_rep;
 	t_image_rep = MCCanvasImageGetImageRep(p_image);
 	

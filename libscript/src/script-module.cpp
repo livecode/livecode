@@ -31,6 +31,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Using offsetof() on a non-POD type (e.g. structs with inheritance
+ * and classes) is, strictly-speaking, undefined according to the C++
+ * standard (because C++'s offsetof is only present for C
+ * compatibility and is only defined for operations on C types).
+ * Disable GCC's offsetof warnings for these macros */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+
 MC_PICKLE_BEGIN_RECORD(MCScriptDefinedType)
     MC_PICKLE_UINDEX(index)
 MC_PICKLE_END_RECORD()
@@ -176,6 +184,9 @@ MC_PICKLE_BEGIN_RECORD(MCScriptModule)
     MC_PICKLE_ARRAY_OF_NAMEREF(source_files, source_file_count)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptPosition, positions, position_count)
 MC_PICKLE_END_RECORD()
+
+/* Re-enable invalid-offsetof warnings */
+#pragma GCC diagnostic pop
 
 ////////////////////////////////////////////////////////////////////////////////
 

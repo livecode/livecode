@@ -455,7 +455,7 @@ uint32_t MCTileCacheGetCacheLimit(MCTileCacheRef self)
 	return self -> cache_limit;
 }
 
-void MCTileCacheSetTileSize(MCTileCacheRef self, int32_t p_new_tile_size)
+void MCTileCacheSetTileSize(MCTileCacheRef self, uint32_t p_new_tile_size)
 {
 	// If the new tile size is different from the old, we need to flush.
 	if (self -> tile_size != p_new_tile_size)
@@ -1813,7 +1813,7 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 			// we are not clipping accurately yet, we must always erase).
 			if (*t_activity < 2)
 			{
-				for(int32_t y = 0; y < self -> tile_size; y++)
+				for(uint32_t y = 0; y < self -> tile_size; y++)
 					memset((uint8_t*)t_bitmap -> data + t_bitmap -> stride * (y + (t_tile -> y - t_required_tiles . top) * self -> tile_size) + (t_tile -> x - t_required_tiles . left) * self -> tile_size * sizeof(uint32_t), 0, self -> tile_size * sizeof(uint32_t));
 			}
 

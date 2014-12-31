@@ -730,7 +730,7 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 			t_mouse_move = t_event;
 		if (t_event -> type == kMCEventTypeMousePress &&
 			t_event -> mouse . press . state == kMCMousePressStateDown &&
-			(p_button == 0 || t_event -> mouse . press . button == p_button))
+		    (p_button == 0 || (uint32_t) t_event -> mouse . press . button == p_button))
 		{
 			t_mouse_down = t_event;
 			break;
@@ -746,7 +746,7 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 	for(MCEvent *t_event = t_mouse_down -> next; t_event != nil; t_event = t_event -> next)
 		if (t_event -> type == kMCEventTypeMousePress &&
 			!t_event -> mouse . press . state == kMCMousePressStateUp &&
-			(p_button == 0 || t_event -> mouse . press . button == p_button))
+		    (p_button == 0 || (uint32_t) t_event -> mouse . press . button == p_button))
 		{
 			t_mouse_up = t_event;
 			break;
@@ -822,6 +822,7 @@ static bool MCEventQueuePost(MCEventType p_type, MCEvent*& r_event)
 	return true;
 }
 
+#ifdef _MOBILE
 static bool MCEventQueuePostAtFront(MCEventType p_type, MCEvent*& r_event)
 {
 	MCEvent *t_event;
@@ -846,6 +847,7 @@ static bool MCEventQueuePostAtFront(MCEventType p_type, MCEvent*& r_event)
 	
 	return true;
 }
+#endif /* _MOBILE */
 
 //////////
 

@@ -261,9 +261,6 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
             break;
         }
         
-        MCHandlerTypeFieldMode t_mode;
-        t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
-        
         if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeOut)
         {
             MCValueRef t_value;
@@ -454,9 +451,6 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
             if (!MCArrayCreateMutable(t_array))
                 return false;
             
-            MCTypeInfoRef t_record_type;
-            t_record_type = MCValueGetTypeInfo(x_value);
-            
             MCNameRef t_field_name;
             MCValueRef t_field_value;
             uintptr_t t_iterator;
@@ -470,7 +464,7 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
                     return false;
                 }
                 
-                if (!MCArrayStoreValue(t_array, t_field_name, false, t_field_value))
+                if (!MCArrayStoreValue(t_array, false, t_field_name, t_field_value))
                 {
                     MCValueRelease(t_array);
                     return false;

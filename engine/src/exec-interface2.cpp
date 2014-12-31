@@ -1428,7 +1428,7 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t& r_id, bool p_is_defau
 		if (!p_is_default && r_id == PI_BUSY)
 		{
 			r_id = PI_BUSY1 + MCbusycount;
-			MCbusycount = MCbusycount + 1 & 0x7;
+			MCbusycount = (MCbusycount + 1) & 0x7;
 		}
 		r_cursor = MCcursors[r_id];
 	}
@@ -3326,12 +3326,7 @@ void MCInterfaceEvalOptionalStackWithBackgroundByName(MCExecContext& ctxt, MCObj
     t_stack = nil;
     
     if (p_stack . object != nil)
-    {
-        MCGroup *t_background;
-        
         t_stack = static_cast<MCStack *>(p_stack . object);
-        t_background = t_stack -> getbackgroundbyname(p_name);
-    }
         
     r_stack . object = t_stack;
     r_stack . part_id = p_stack . part_id;
@@ -3731,7 +3726,9 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 		// that that exists and is still a child of new owner.
 		if (t_source_handle -> Exists() &&
 			t_new_owner_handle -> Exists() &&
-			(t_new_target == nil || t_new_target_handle -> Exists() && t_new_target -> getparent() == t_new_owner))
+		    (t_new_target == nil ||
+		     (t_new_target_handle -> Exists() &&
+		      t_new_target -> getparent() == t_new_owner)))
 		{
 			p_source . object -> getparent() -> relayercontrol_remove(static_cast<MCControl *>(p_source . object));
 			t_new_owner -> relayercontrol_insert(static_cast<MCControl *>(p_source . object), t_new_target);

@@ -1258,7 +1258,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                         MCStringUnmapGraphemeIndices(*t_string, kMCBasicLocale, t_range, t_range);
                         
                         // If the width sub-specifier is greater than the grapheme length of the string, then pad appropriately
-                        if (width > t_range . length)
+                        if (width > (integer_t) t_range . length)
                         {
                             // AL-2014-11-19: [[ Bug 14059 ]] Pad with zeroes if the appropriate specifier flag was used
                             if (t_zero_pad)

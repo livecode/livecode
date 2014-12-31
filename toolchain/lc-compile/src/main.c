@@ -24,6 +24,8 @@
 #include "report.h"
 
 extern void ROOT(void);
+extern void yyExtend(void);
+extern void InitializeCustomInvokeLists(void);
 
 static int s_is_bootstrap = 0;
 
@@ -40,7 +42,7 @@ void bootstrap_main(int argc, char *argv[])
     if (argc == 0)
     {
         fprintf(stderr, "Invalid arguments\n");
-        return 1;
+        return;
     }
     
     s_is_bootstrap = 1;

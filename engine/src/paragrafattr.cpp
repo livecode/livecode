@@ -915,6 +915,7 @@ Exec_stat MCParagraph::getparagraphattr(Properties which, MCExecPoint& ep, Boole
 }
 #endif
 
+#ifdef OLD_EXEC
 template<typename T> static void copysingleattr_int(MCParagraphAttrs *other_attrs, MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset)
 {
 	if (other_attrs == nil || (other_attrs -> flags & p_flag) == 0)
@@ -970,6 +971,7 @@ static void copysingleattr_int32(MCParagraphAttrs *other_attrs, MCParagraphAttrs
 {
 	copysingleattr_int<int32_t>(other_attrs, attrs, p_flag, p_field_offset);
 }
+#endif /* OLD_EXEC */
 
 void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 {

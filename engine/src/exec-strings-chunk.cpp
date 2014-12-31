@@ -284,7 +284,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 // If we found a trailing delimiter for this item or line, make sure it is included in the mark.
                 // e.g. mark item 3 of a,b,c, -> a,b,(c,) so that delete item 3 of a,b,c, -> a,b,
                 
-                if (r_end < t_length)
+	            if (r_end >= 0 && (uindex_t) r_end < t_length)
                     r_end += t_found_range . length;
                 // If we didn't, and this operation does not force additional delimiters, then include the previous delimiter in the mark.
                 // e.g. mark item 3 of a,b,c -> a,b(,c) so that delete item 3 of a,b,c -> a,b
@@ -356,7 +356,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             if (p_whole_chunk && !p_further_chunks)
             {
-                if (r_end < t_length)
+	            if (r_end >= 0 && (uindex_t) r_end < t_length)
                     r_end++;
                 else if (r_start > 0 && !r_add)
                     r_start--;
@@ -407,11 +407,11 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             if (p_whole_chunk && !p_further_chunks)
             {
-                while (r_end < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_end)))
+	            while (r_end >= 0 && (uindex_t) r_end < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_end)))
                     r_end++;
                 // AL-2014-09-29: [[ Bug 13550 ]] Only delete preceding whitespace if wholechunks is true
                 //  and word chunk range goes to the end of the string. 
-                if (r_end == t_length)
+	            if (r_end >= 0 && (uindex_t) r_end == t_length)
                 {
                     while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
                         r_start--;

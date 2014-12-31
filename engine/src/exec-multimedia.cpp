@@ -126,6 +126,7 @@ void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef FEATURE_PLATFORM_RECORDER
 static bool list_compressors_callback(void *context, unsigned int id, const char *label)
 {
     MCListRef *t_state = static_cast<MCListRef *>(context);
@@ -142,6 +143,7 @@ static bool list_compressors_callback(void *context, unsigned int id, const char
     MCListAppend(*t_state, *t_compressor_info);
     return true;
 }
+#endif /* FEATURE_PLATFORM_RECORDER */
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_string)
@@ -570,8 +572,8 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 	tptr->setflag(dontrefresh, F_DONT_REFRESH);
 	if (p_looping)
 		tptr->setflag(True, F_LOOPING);
-	if (p_prepare && !tptr->prepare(p_options == nil ? kMCEmptyString : p_options)
-			|| !p_prepare && !tptr->playstart(p_options == nil ? kMCEmptyString : p_options))
+	if ((p_prepare && !tptr->prepare(p_options == nil ? kMCEmptyString : p_options)) ||
+	    (!p_prepare && !tptr->playstart(p_options == nil ? kMCEmptyString : p_options)))
 	{
 		if (tptr->isdisposable())
 			delete tptr;

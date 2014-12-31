@@ -598,7 +598,7 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 #endif
 
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
-	        || type != OT_STACK && type != OT_ENCRYPT_STACK
+	    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
 	{
 		delete t_stack;
@@ -709,7 +709,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		MCresult -> clear();
 
 		if (IO_read_uint1(&type, stream) != IO_NORMAL
-		    || type != OT_STACK && type != OT_ENCRYPT_STACK
+		    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
 		    || sptr->load(stream, version, type) != IO_NORMAL)
 		{
 			if (MCresult -> isclear())
@@ -1609,9 +1609,6 @@ void MCDispatch::wmdragleave(Window w)
 
 MCDragAction MCDispatch::wmdragdrop(Window w)
 {
-	MCStack *target;
-	target = findstackd(w);
-	
 	// MW-2011-02-08: Make sure we store the drag action that is in effect now
 	//   otherwise it can change as a result of message sends which is bad :o)
 	uint32_t t_drag_action;
@@ -1724,7 +1721,6 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		// TODO: what about other 'special' chars added by unicode?
         //  => the unicode chars shouldn't be changed
 		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
-		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_replace));
         uindex_t t_offset;
 		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
 		{
@@ -2431,7 +2427,7 @@ void MCDispatch::clearcursors(void)
 	{
 		if (MCcursor == MCcursors[i])
 			MCcursor = nil;
-		if (MCdefaultcursor = MCcursors[i])
+		if (MCdefaultcursor == MCcursors[i])
 			MCdefaultcursor = nil;
 	}
 
