@@ -2966,7 +2966,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     t_top_para = t_pg = resolveparagraphs(p_part_id);
     
     // Loop through the paragraphs until we've gone x_si code units in
-    uindex_t t_index = 0;
+    findex_t t_index = 0;
     while ((t_index + t_pg->gettextlengthcr()) < x_si)
     {
         t_index += t_pg->gettextlengthcr();
@@ -2983,7 +2983,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     p_start += t_char_range.length;
     
     // Loop until we get to the starting paragraph (or reach the end of the field)
-    uindex_t t_pg_char_length = t_pg -> gettextlengthcr(true);
+    findex_t t_pg_char_length = t_pg -> gettextlengthcr(true);
     while (t_pg_char_length <= p_start)
     {
         // Move to the next paragraph
