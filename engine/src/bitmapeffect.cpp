@@ -203,6 +203,9 @@ bool MCBitmapEffectsScale(MCBitmapEffectsRef& self, int32_t p_scale)
 	return true;
 }
 
+static void MCBitmapEffectColorToMCColor(uint32_t, MCColor &) ATTRIBUTE_UNUSED;
+static void MCBitmapEffectColorFromMCColor(MCColor &, uint32_t &) ATTRIBUTE_UNUSED;
+
 // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
 static void MCBitmapEffectColorToMCColor(uint32_t p_color, MCColor &r_color)
 {
