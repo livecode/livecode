@@ -2431,7 +2431,7 @@ void MCDispatch::clearcursors(void)
 	{
 		if (MCcursor == MCcursors[i])
 			MCcursor = nil;
-		if (MCdefaultcursor = MCcursors[i])
+		if (MCdefaultcursor == MCcursors[i])
 			MCdefaultcursor = nil;
 	}
 
