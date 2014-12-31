@@ -233,10 +233,12 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	t_device_rect = MCRectangleGetScaledBounds(t_effect_area, t_scale);
 	t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
 	
+#ifdef _MAC_DESKTOP
 	// IM-2013-08-29: [[ RefactorGraphics ]] get device height for CoreImage effects
 	// IM-2013-09-30: [[ FullscreenMode ]] Use view rect to get device height
 	uint32_t t_device_height;
 	t_device_height = floor(view_getrect().height * t_scale);
+#endif /* _MAC_DESKTOP */
 	
 	// Make a region of the effect area
 	// IM-2013-08-29: [[ ResIndependence ]] scale effect region to device coords
