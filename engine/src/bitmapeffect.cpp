@@ -268,41 +268,6 @@ static void MCBitmapEffectDefault(MCBitmapEffect *p_effect, MCBitmapEffectType p
 	}
 }
 
-static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, MCStringRef p_data, uint4 p_current_value, uint4& r_new_value, Boolean& r_dirty)
-{
-	uint4 t_value;
-	if (!MCU_stoui4(p_data, t_value))
-	{
-		MCeerror -> add(EE_BITMAPEFFECT_BADNUMBER, 0, 0, p_data);
-		return ES_ERROR;
-	}
-
-	t_value = MCU_min(t_value, p_bound);
-	if (t_value != p_current_value)
-		r_dirty = True;
-
-	r_new_value = t_value;
-
-	return ES_NORMAL;
-}
-
-static Exec_stat MCBitmapEffectSetBooleanProperty(MCStringRef p_data, bool p_current_value, bool& r_new_value, Boolean& r_dirty)
-{
-	bool t_value;
-	if (!MCTypeConvertStringToBool(p_data, t_value))
-	{
-		MCeerror -> add(EE_BITMAPEFFECT_BADBOOLEAN, 0, 0, p_data);
-		return ES_ERROR;
-	}
-
-	if (t_value != p_current_value)
-		r_dirty = True;
-
-	r_new_value = t_value;
-
-	return ES_NORMAL;
-}
-
 uint32_t MCBitmapEffectsWeigh(MCBitmapEffectsRef self)
 {
 	uint32_t t_size;
