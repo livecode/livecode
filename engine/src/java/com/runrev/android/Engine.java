@@ -2763,30 +2763,47 @@ public class Engine extends View implements EngineApi
 
     public String exportImageToAlbum (byte[] t_image_data, String t_file_name, String t_file_type)
     {
-        Log.i("revandroid", "exportToAlbum called 1" + t_file_name + t_file_type);
+        Log.i("revandroid", String.format("exportToAlbum called: %s %s", t_file_name, t_file_type));
         File t_file = null;
         UUID t_uuid;
         if (t_image_data == null)
             return "export failed";
         else
         {
+            File t_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            String t_filename;
+            
+            // SN-2015-01-05: [[ Bug 11417 ]] Ensure that the folder exists.
+            t_folder.mkdirs();
+            
             // The user did not supply a file name, so create one now
             if (t_file_name == null)
             {
                 t_uuid = UUID.randomUUID();
                 Log.i("revandroid", "Generated File Name: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/I" + t_uuid.toString().substring(0,7) + t_file_type);
-                t_file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/I" + t_uuid.toString().substring(0,7) + t_file_type);
+                t_filename = "I" + t_uuid.toString().substring(0,7) + t_file_type;
             }
             else
             {
-                t_file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/" + t_file_name + t_file_type);
+                t_filename = t_file_name + t_file_type;
             }
+            
+            // SN-2015-01-05: [[ Bug 11417 ]] Let File create the file with the File returned
+            //  by getExternalStoragePublicDirectory and t_file_type.
+            t_file = new File(t_folder, t_filename);
+            
             FileOutputStream fs = null;
             try
             {
                 fs = new FileOutputStream(t_file);
                 fs.write(t_image_data,0,t_image_data.length);
+                
                 fs.close();
+                
+                // SN-2015-01-05 [[ Bug 11417 ]] Ask the Media Scanner to scan the newly created file.
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                intent.setData(Uri.fromFile(t_file));
+                getContext().sendBroadcast(intent);
             }
             catch (IOException e)
             {
