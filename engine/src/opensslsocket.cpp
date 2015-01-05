@@ -879,10 +879,13 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 #endif
 
 	char *portname = new char[U2L];
-	sprintf(portname, "%d", port);
+    
+    // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
+    uindex_t t_length;
+    t_length = sprintf(portname, "%d", port);
 
 	MCNewAutoNameRef t_portname;
-	MCNameCreateWithNativeChars((char_t*)portname, U2L, &t_portname);
+	MCNameCreateWithNativeChars((char_t*)portname, t_length, &t_portname);
 	return new MCSocket(*t_portname, object, message, datagram, sock, True, False, secure);
 }
 
