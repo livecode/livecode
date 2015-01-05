@@ -116,10 +116,11 @@ bool MCStoreCanMakePurchase()
     
     MCAndroidEngineRemoteCall("storeCanMakePurchase", "b", &t_result);
     
-    while (!s_can_make_purchase_returned)
-        MCscreen->wait(60, True, True);
+    //while (!s_can_make_purchase_returned)
+       // MCscreen->wait(60, True, True);
     
-    return s_can_make_purchase;
+    //return s_can_make_purchase;
+    return t_result;
 }
 
 bool MCStoreEnablePurchaseUpdates()

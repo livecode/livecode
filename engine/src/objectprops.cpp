@@ -482,6 +482,7 @@ bool MCObject::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 	{
         MCValueRef t_value;
 		MCObjectPropertySet *p;
+        MCLog("==================prop name is %@",p_prop_name);
 		if (!findpropset(p_set_name, false, p) ||
 			!p -> fetchelement(ctxt, p_prop_name, t_value))
         {

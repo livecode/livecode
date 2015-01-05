@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /Users/alilloyd/Documents/GitHub/livecode-ali/refactor-syntax/engine/src/java/com/sec/android/iap/IAPServiceCallback.aidl
+ * Original file: /Users/panos/Develop/livecode/engine/src/java/com/sec/android/iap/IAPServiceCallback.aidl
  */
 package com.sec.android.iap;
 public interface IAPServiceCallback extends android.os.IInterface

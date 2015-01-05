@@ -18,7 +18,8 @@ export JCOUNT=20
 export PREBUILT_LIB_DIR=$SRCROOT/prebuilt/lib/android/armv6
 
 # Find the appropriate folder for the platform-tools, now located in the build-tools
-BUILD_TOOLS=${ANDROID_SDK}/build-tools/$(ls $ANDROID_SDK/build-tools | tail -n 1)
+#BUILD_TOOLS=${ANDROID_SDK}/build-tools/$(ls $ANDROID_SDK/build-tools | tail -n 1)
+BUILD_TOOLS=${ANDROID_SDK}/platform-tools/
 
 # Path variables
 export CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"

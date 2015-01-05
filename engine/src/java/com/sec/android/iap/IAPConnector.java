@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /Users/alilloyd/Documents/GitHub/livecode-ali/refactor-syntax/engine/src/java/com/sec/android/iap/IAPConnector.aidl
+ * Original file: /Users/panos/Develop/livecode/engine/src/java/com/sec/android/iap/IAPConnector.aidl
  */
 package com.sec.android.iap;
 public interface IAPConnector extends android.os.IInterface

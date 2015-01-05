@@ -2752,6 +2752,8 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
     MCAutoStringRef t_property, t_set;
 
     t_success = MCJavaStringToStringRef(env, set, &t_set) && MCJavaStringToStringRef(env, property, &t_property);
+    
+    MCLog("=========== t_set is %@ and t_property is %@ ", *t_set, *t_property);
 
     MCNewAutoNameRef t_set_name, t_prop_name;
     if (t_success)
@@ -2762,10 +2764,11 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
 
     MCExecValue t_value;
     MCExecContext ctxt(nil, nil, nil);
-    if (!MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
+    // TODO for bug 14285 : Check why t_value is empty after executing the following line
+    if (MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
     {
         MCAutoStringRef t_string_value;
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &t_string_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &(&t_string_value));
 
         if (!ctxt . HasError())
             t_success = MCJavaStringFromStringRef(env, *t_string_value, t_js);
