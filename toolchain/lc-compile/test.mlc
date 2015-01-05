@@ -1,12 +1,16 @@
 module test
 
+use com.livecode.file
+
 public handler test()
     variable tResults as list
     put the empty list into tResults
+    	testFile(tResults)
 
     variable tDelimiter as string
     put newline into tDelimiter
 	
+
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
 	testLog("__Test", "Succeed", true, tResults)
@@ -55,6 +59,9 @@ public handler test()
 	--com.livecode.type
 	testType(tResults)
 	
+	--com.livecode.file
+	testFile(tResults)
+	
 	--com.livecode.binary
 	--com.livecode.byte
 	--com.livecode.item
@@ -62,6 +69,7 @@ public handler test()
 	--com.livecode.segmentchunk
 
     return newline & testSummary (tResults)
+
 end handler
 
 /*
@@ -660,8 +668,8 @@ public handler testList(inout xResults as list)
 	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
 	testLog("List", "IsNot", tSubList is not ["Abcd", 1], xResults)
 
-    --testLog("List", "IsIn", "abcd" is in tSubList, xResults)
-    --testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
+    testLog("List", "IsIn", "abcd" is in ["abcd", "efgh"], xResults)
+    testLog("List", "IsNotIn", not "dsf" is in ["abcd", "efgh"], xResults)
 
     variable tString as string
     pop front of tSubList into tString
@@ -721,5 +729,16 @@ public handler testSort(inout xResults as list)
     testLog("Sort", "AscendingText", the head of tTestList is "abcd", xResults)
     testLog("Sort", "TextStable", the tail of tTestList is 2, xResults)
 end handler
+
+public handler testFile(inout xResults as list)
+	variable tStream as Stream
+	put (open read only stream for file "/Users/alilloyd/Desktop/log.txt") into tStream
+	
+	variable tText as string
+	read 7 from stream tStream into tText
+	
+	testLog("File", "ReadFromStream", tText is "Warning", xResults)
+end handler
+
 
 end module

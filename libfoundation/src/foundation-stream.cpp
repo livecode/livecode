@@ -768,6 +768,11 @@ bool __MCStreamInitialize(void)
     if (!MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
         return false;
     
+    MCAutoTypeInfoRef t_unnamed;
+    /* UNCHECKED */ MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, &t_unnamed);
+    /* UNCHECKED */ MCNamedTypeInfoCreate(MCNAME("livecode.lang.Stream"), kMCStreamTypeInfo);
+    /* UNCHECKED */ MCNamedTypeInfoBind(kMCStreamTypeInfo, *t_unnamed);
+    
     return true;
 }
 

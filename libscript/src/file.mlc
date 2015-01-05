@@ -4,42 +4,33 @@ This module specifies the syntax definitions and bindings for file i/o operation
 
 module com.livecode.file
 
---
+public foreign type Stream binds to "kMCStreamTypeInfo"
 
-opaque type Stream
-    measure is MCFileStreamType_Measure
-    finalize is MCFileStreamType_Finalize
-    copy is MCFileStreamType_Copy
-end type
+public foreign handler MCFileExecOpenFileForRead(in File as string) as Stream binds to "<builtin>"
+public foreign handler MCFileExecOpenFileForWrite(in File as string) as Stream binds to "<builtin>"
+public foreign handler MCFileExecOpenFileForUpdate(in File as string) as Stream binds to "<builtin>"
+public foreign handler MCFileExecOpenNewFile(in File as string) as Stream binds to "<builtin>"
 
---
+public foreign handler MCFileExecReadFromStream(in Amount as uint, in Source as Stream) as string binds to "<builtin>"
 
-foreign handler ExecOpenFileForRead(in File as string) as Stream binds to "<builtin>"
-foreign handler ExecOpenFileForWrite(in File as string) as Stream binds to "<builtin>"
-foreign handler ExecOpenFileForUpdate(in File as string) as Stream binds to "<builtin>"
-foreign handler ExecOpenNewFile(in File as string) as Stream binds to "<builtin>"
 
-foreign handler ExecReadFromStream(in Amount as uint, in Source as Stream) as string binds to "<builtin>"
-
-foreign handler MCFileStreamType_Measure() as uint binds to "<undefined>"
-foreign handler MCFileStreamType_Finalize(in Target as Stream) as undefined binds to "<undefined>"
-foreign handler MCFileStreamType_Copy(in Source as Stream, out Destination as Stream) as undefined binds to "<undefined>"
+public foreign handler MCFileExecDoNothingToStream(in Source as Stream) as undefined binds to "<builtin>"
 
 --
 
 syntax OpenFileForRead is statement
     "open" "read" "only" "stream" "for" "file" <File: Expression>
 begin
-    ExecOpenFileForRead(File)
+    MCFileExecOpenFileForRead(File, output)
 end syntax
 
-syntax OpenFileForRead is statement
+syntax OpenFileForWrite is statement
     "open" "write" "only" "stream" "for" "file" <File: Expression>
 begin
     ExecOpenFileForWrite(File)
 end syntax
 
-syntax OpenFileForRead is statement
+syntax OpenFileForUpdate is statement
     "open" "read" "write" "stream" "for" "file" <File: Expression>
 begin
     ExecOpenFileForUpdate(File)
@@ -50,7 +41,7 @@ end syntax
 syntax ReadFromStream is statement
     "read" <Amount: Expression> "from" "stream" <Source: Expression>
 begin
-    ExecReadFromStream(Amount, Source)
+    MCFileExecReadFromStream(Amount, Source, Result)
 end syntax
 
 end module
