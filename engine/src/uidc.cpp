@@ -673,13 +673,13 @@ MCCursorRef MCUIDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yho
 void MCUIDC::freecursor(MCCursorRef c)
 { }
 
-uint4 MCUIDC::dtouint4(Drawable d)
+uintptr_t MCUIDC::dtouint(Drawable d)
 {
 	return 1;
 }
 
 
-Boolean MCUIDC::uint4towindow(uint4, Window &w)
+Boolean MCUIDC::uinttowindow(uintptr_t, Window &w)
 {
 	w = (Window)1;
 	return True;

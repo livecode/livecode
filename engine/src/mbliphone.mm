@@ -376,8 +376,12 @@ char *MCIPhoneSystem::GetMachine(void)
 
 char *MCIPhoneSystem::GetProcessor(void)
 {
-#ifdef __i386__
+#if defined __i386__
 	return strclone("i386");
+#elif defined __amd64__
+    return strclone("x86_64");
+#elif defined __arm64__
+    return strclone("arm64");
 #else
 	return strclone("ARM");
 #endif

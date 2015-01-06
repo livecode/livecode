@@ -120,8 +120,8 @@ public:
 	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y);
 	void freecursor(MCCursorRef c);
 
-	uint4 dtouint4(Drawable d);
-	Boolean uint4towindow(uint4, Window &w);
+	uintptr_t dtouint(Drawable d);
+	Boolean uinttowindow(uintptr_t, Window &w);
 
 	void beep();
 	bool setbeepsound(const char *sound);

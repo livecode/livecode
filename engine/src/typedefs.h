@@ -84,6 +84,11 @@ typedef double          real8;
 
 // New-style (C99) integer definitions and limits
 
+
+#ifndef _WIN32
+#include <stdint.h>
+#else
+
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef unsigned short uint16_t;
@@ -105,6 +110,8 @@ typedef signed int int32_t;
 	#else
 		typedef signed long int int64_t;
 	#endif
+#endif
+
 #endif
 
 typedef float float32_t;
@@ -143,6 +150,12 @@ typedef uint32_t codepoint_t;
 #define INT64_MIN 
 #define INT64_MAX 0x7FFFFFFFFFFFFFFFLL
 #endif
+
+// These are non-standard
+#define UINT8_MIN   0
+#define UINT16_MIN  0
+#define UINT32_MIN  0
+#define UINT64_MIN  0
 
 #define UINDEX_MIN UINT32_MIN
 #define UINDEX_MAX UINT32_MAX
