@@ -393,10 +393,25 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put tempName() into tSDKs[tInstSet]["engine file"]
          put tLinkCommand & "-o" && quote & tSDKs[tInstSet]["engine file"] & quote & return into url ("binfile:" & tLinkOptionsFile)
          
+         -- Compute the list of archs in the fat binary
+         local tRawArchs
+         put shell("otool -fv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
+         if tRawArchs is empty then
+            put shell("otool -hv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
+         end if
+         
+         local tArchs
+         if tRawArchs contains "ARM64" then
+            put "-arch arm64 " after tArchs
+         end if
+         if tRawArchs contains "V7" then
+            put "-arch armv7 " after tArchs
+         end if
+         
          -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
          -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
          --
-         get shell("g++ -arch" && tInstSet && quote & "@" & tLinkOptionsFile & quote)
+         get shell("g++ " & tArchs && quote & "@" & tLinkOptionsFile & quote)
          
          delete file tLinkOptionsFile
          if it is not empty or there is no file tSDKs[tInstSet]["engine file"] then

@@ -361,6 +361,7 @@ struct load_command {
 #define LC_DYLD_INFO 0x22
 #define LC_DYLD_INFO_ONLY 0x80000022
 #define LC_SOURCE_VERSION 0x2A
+#define LC_ENCRYPTION_INFO_64 0x2C
 
 // MM-2014-09-30: [[ iOS 8 Support ]] Used by iOS 8 simulator builds.
 #define LC_MAIN (0x28|LC_REQ_DYLD) /* replacement for LC_UNIXTHREAD */
@@ -1276,6 +1277,7 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
                 case LC_LOAD_WEAK_DYLIB:
                 case LC_LOAD_DYLINKER:
                 case LC_ENCRYPTION_INFO:
+                case LC_ENCRYPTION_INFO_64:
                 case LC_VERSION_MIN_MACOSX:
                 case LC_VERSION_MIN_IPHONEOS:
                 case LC_SOURCE_VERSION:
@@ -1738,9 +1740,10 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 	}
 	else
 	{
-		// The output offset starts at 4096 - the fat header is updated as we go.
+		// The output offset for the slice is aligned up to fat_arch.align after the
+        // fat header.
 		uint32_t t_output_offset;
-		t_output_offset = 4096;
+		t_output_offset = sizeof(fat_header);
 		
 		// The fat_arch structures follow the fat header directly
 		uint32_t t_header_offset;
@@ -1759,7 +1762,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
                 swap_fat_arch(true, t_fat_arch);
 				
 				// Round the end of the last engine up to the nearest page boundary.
-				t_output_offset = (t_output_offset + 4095) & ~4095;
+				t_output_offset = (t_output_offset + ((1 << t_fat_arch . align))) & ~((1 << t_fat_arch . align) - 1);
 				
 				// Record the end of the last engine.
 				t_last_output_offset = t_output_offset;
