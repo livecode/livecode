@@ -38,6 +38,8 @@ public foreign handler MCArrayEvalEmpty(out Value as array) as undefined binds t
 public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional pointer, out Iterand as any, in Container as array) as bool binds to "<builtin>"
 public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional pointer, out Iterand as string, in Container as array) as bool binds to "<builtin>"
 
+public foreign handler MCArrayDeleteElementOfCaseless(inout Target as array, in Key as string) as undefined binds to "<builtin>"
+
 --
 
 /* 
@@ -229,6 +231,33 @@ syntax SingletonElementOfArray is postfix operator with precedence 1
 begin
     MCArrayFetchElementOfCaseless(Target, Key, output)
 	MCArrayStoreElementOfCaseless(input, Target, Key)
+end syntax
+
+--
+
+/*
+
+Summary:            Deletes the element with key <Key> in <Target>.
+Index: 				An expression which evaluates to a string.
+Target:				An expression which evaluates to an array.
+
+Example:			
+	variable tArray as array
+	put the empty array into tArray
+	put "value" into tArray["key"]
+
+	delete tArray["key"] -- tArray is the empty array
+
+Description:     
+Either locates the element container with the given key for use as the target container of another operation, or evaluates the element with the given key as the source of another operation.
+
+Tags: Arrays
+*/
+
+syntax DeleteElementOfArray is statement
+	"delete" <Target: Expression> "[" <Key: Expression> "]"
+begin
+	MCArrayDeleteElementOfCaseless(Target, Key)
 end syntax
 
 --
