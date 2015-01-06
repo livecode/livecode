@@ -2921,7 +2921,6 @@ public class Engine extends View implements EngineApi
 
 	// callbacks from the billing service
 
-	public static native void doBillingSupported(boolean supported);
 	public static native void doPurchaseStateChanged(boolean verified, int purchaseState,
 		String notificationId, String productId, String orderId, long purchaseTime,
 		String developerPayload, String signedData, String signature);
