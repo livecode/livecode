@@ -1,0 +1,9 @@
+VAR
+  i : INTEGER;
+  j : INTEGER;
+  a : ARRAY [1..10] OF ARRAY [1..20] OF INTEGER
+BEGIN
+  i := 1;
+  j := i*2;
+  i := a[i][a[i][j]] +10
+END.

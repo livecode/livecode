@@ -396,7 +396,7 @@ void MCImage::compute_gravity(MCRectangle &trect, int2 &xorigin, int2 &yorigin)
 		trect.height = MCU_min(t_height, rect.height);
 	}
 
-	MCLog("compute gravity: rect(%d,%d,%d,%d) x(%d) y(%d)", trect.x, trect.y, trect.width, trect.height, xorigin, yorigin);
+    //MCLog("compute gravity: rect(%d,%d,%d,%d) x(%d) y(%d)", trect.x, trect.y, trect.width, trect.height, xorigin, yorigin);
 }
 
 void MCImage::compute_offset(MCRectangle &p_rect, int16_t &r_xoffset, int16_t &r_yoffset)

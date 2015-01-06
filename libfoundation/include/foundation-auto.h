@@ -75,6 +75,7 @@ typedef MCAutoValueRefBase<MCProperSetRef> MCAutoProperSetRef;
 typedef MCAutoValueRefBase<MCTypeInfoRef> MCAutoTypeInfoRef;
 typedef MCAutoValueRefBase<MCRecordRef> MCAutoRecordRef;
 typedef MCAutoValueRefBase<MCEnumRef> MCAutoEnumRef;
+typedef MCAutoValueRefBase<MCErrorRef> MCAutoErrorRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -368,12 +369,7 @@ public:
 
     bool Lock(MCStringRef p_string)
     {
-        bool t_success =  MCStringConvertToSysString(p_string, m_sysstring);
-        if (!t_success)
-        {
-            int x = 42;
-        }
-        return t_success;
+        return MCStringConvertToSysString(p_string, m_sysstring);
     }
 
     void Unlock()

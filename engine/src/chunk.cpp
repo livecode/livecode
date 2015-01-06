@@ -201,6 +201,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
+		{
 			if (need_target)
 			{
 				MCperror->add(PE_CHUNK_NOCHUNK, sp);
@@ -208,6 +209,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			}
 			else
 				break;
+		}
 		if (type == ST_ID)
 		{
 			te = NULL;
@@ -222,10 +224,10 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 						//   execution outwith a handler.
 						if (doingthe
-						        || sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
+						    || (sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
 						        && (MCexplicitvariables
 						            || sp.lookupconstant(&newfact) == PS_NORMAL
-						            || sp.findnewvar(sp.gettoken_nameref(), kMCEmptyName, &destvar) != PS_NORMAL))
+						            || sp.findnewvar(sp.gettoken_nameref(), kMCEmptyName, &destvar) != PS_NORMAL)))
 						{
 							delete newfact;
 							MCperror->add(PE_CHUNK_NOVARIABLE, sp);
@@ -351,8 +353,8 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 					break;
 				case CT_TYPES:
 					// MW-2011-08-08: [[ Bug ]] Allow control ... of control ...
-					if (lterm != CT_UNDEFINED && nterm > lterm
-					        || nterm == lterm && nterm != CT_GROUP && nterm != CT_LAYER && nterm != CT_STACK)
+					if ((lterm != CT_UNDEFINED && nterm > lterm)
+					    || (nterm == lterm && nterm != CT_GROUP && nterm != CT_LAYER && nterm != CT_STACK))
 					{
 						MCperror->add(PE_CHUNK_BADORDER, sp);
 						return PS_ERROR;
@@ -446,6 +448,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 					case CT_EPS:
 					case CT_COLOR_PALETTE:
 					case CT_MAGNIFY:
+                    case CT_WIDGET:
 						object = curref;
 						break;
 
@@ -1647,6 +1650,7 @@ Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
 		case CT_PLAYER:
 		case CT_MAGNIFY:
 		case CT_COLOR_PALETTE:
+        case CT_WIDGET:
 			MCCard *t_card;
 			t_card = objptr -> getcard(parid);
 			if (t_card == NULL)
@@ -2158,7 +2162,12 @@ Exec_stat MCChunk::extents(MCCRef *ref, int4 &start, int4 &number,
 			start--;
 		break;
 	default:
+        // SN-2014-12-15: [[ Bug 14211 ]] Fix for using next with a text chunk.
+        //  That was causing the extents to return an uninitialised value.
 		fprintf(stderr, "MCChunk: ERROR bad extents\n");
+        MCeerror->add(EE_CHUNK_BADEXTENTS, line, pos);
+        return ES_ERROR;
+
 	}
 	if (start < 0)
 	{
@@ -3087,6 +3096,10 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             }
             
             mark(ctxt, false, false, t_new_mark);
+            
+            // SN-2014-12-15: [[ Bug 14211 ]] mark() can throw errors
+            if (ctxt . HasError())
+                return;
             
             if (!isdatachunk())
                 MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;

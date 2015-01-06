@@ -97,7 +97,6 @@ bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCG
 	
     MCGImageFrame t_frame;
     t_frame.x_scale = t_frame.y_scale = 1.0;
-    t_frame.duration = 0.0;
     
 	if (!MCGImageCreateWithRasterNoCopy(t_raster, t_frame.image))
 		return false;
@@ -119,29 +118,29 @@ void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_fram
 	Release();
 }
 
-bool MCMutableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
+bool MCMutableImageRep::LockBitmap(uindex_t p_frame, MCGFloat p_density, MCImageBitmap *&r_bitmap)
 {
 	if (p_frame > 0)
 		return false;
 	
-	if (!MCImageCopyBitmap(m_bitmap, m_frame.image))
+	if (!MCImageCopyBitmap(m_bitmap, m_locked_bitmap))
 		return false;
-	MCImageBitmapUnpremultiply(m_frame.image);
+	MCImageBitmapUnpremultiply(m_locked_bitmap);
 	
 	Retain();
 	
-	r_frame = &m_frame;
+	r_bitmap = m_locked_bitmap;
 	
 	return true;
 }
 
-void MCMutableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
+void MCMutableImageRep::UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap)
 {
-	if (p_index > 0 || p_frame != &m_frame)
+	if (p_index > 0 || p_bitmap != m_locked_bitmap)
 		return;
 	
-	MCImageFreeBitmap(m_frame.image);
-	m_frame.image = nil;
+	MCImageFreeBitmap(m_locked_bitmap);
+	m_locked_bitmap = nil;
 	
 	Release();
 }
@@ -149,6 +148,15 @@ void MCMutableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_fra
 uindex_t MCMutableImageRep::GetFrameCount()
 {
 	return 1;
+}
+
+bool MCMutableImageRep::GetFrameDuration(uindex_t p_index, uint32_t &r_duration)
+{
+	if (p_index > 0)
+		return false;
+	
+	r_duration = 0;
+	return true;
 }
 
 bool MCMutableImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
@@ -181,11 +189,9 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	mx = my = 0;
 	state = 0;
 
-	m_frame.image = nil;
+	m_locked_bitmap = nil;
 	m_gframe.image = nil;
 	
-	m_frame.duration = m_gframe.duration = 0;
-	m_frame.x_scale = m_frame.y_scale = 1.0;
 	m_gframe.x_scale = m_gframe.y_scale = 1.0;
 }
 
@@ -198,7 +204,7 @@ MCMutableImageRep::~MCMutableImageRep()
 
 	MCImageFreeMask(m_draw_mask);
 
-	MCImageFreeBitmap(m_frame.image);
+	MCImageFreeBitmap(m_locked_bitmap);
 	MCGImageRelease(m_gframe.image);
 }
 
@@ -833,7 +839,7 @@ void MCMutableImageRep::endrub()
 
 void MCMutableImageRep::startseldrag()
 {
-	MCLog("MCMutableImageRep<%p>::startseldrag()", this);
+    //MCLog("MCMutableImageRep<%p>::startseldrag()", this);
 	state |= CS_DRAG;
 	if (state & CS_BEEN_MOVED)
 	{
@@ -846,7 +852,7 @@ void MCMutableImageRep::startseldrag()
 
 void MCMutableImageRep::endsel()
 {
-	MCLog("MCMutableImageRep<%p>::endsel()", this);
+    //MCLog("MCMutableImageRep<%p>::endsel()", this);
 	if (state & CS_BEEN_MOVED)
 	{
 		stampsel();
@@ -1624,7 +1630,7 @@ void MCMutableImageRep::croptoopaque()
 
 void MCMutableImageRep::selimage()
 {
-	MCLog("MCMutableImageRep<%p>::selimage()", this);
+    //MCLog("MCMutableImageRep<%p>::selimage()", this);
 	if (MCcurtool != T_SELECT)
 	{
 		oldtool = MCcurtool;
@@ -1656,7 +1662,7 @@ void MCMutableImageRep::selimage()
 
 void MCMutableImageRep::getsel(Boolean cut)
 {
-	MCLog("MCMutableImageRep<%p>::getsel()", this);
+    //MCLog("MCMutableImageRep<%p>::getsel()", this);
 	/* UNCHECKED */ MCImageCopyBitmapRegion(m_bitmap, selrect, m_selection_image);
 	
 	if (cut)
@@ -1667,7 +1673,7 @@ void MCMutableImageRep::getsel(Boolean cut)
 
 void MCMutableImageRep::cutoutsel()
 {
-	MCLog("MCMutableImageRep<%p>::cutoutsel()", this);
+    //MCLog("MCMutableImageRep<%p>::cutoutsel()", this);
 	if (state & CS_BEEN_MOVED)
 		MCImageBitmapClear(m_selection_image);
 	else
@@ -1687,7 +1693,7 @@ void MCImageBitmapMerge(MCImageBitmap *p_dst, MCImageBitmap *p_src, uindex_t p_d
 
 void MCMutableImageRep::stampsel()
 {
-	MCLog("MCMutableImageRep<%p>::stampsel()", this);
+    //MCLog("MCMutableImageRep<%p>::stampsel()", this);
 	// merge m_selection_image(0, 0) onto m_bitmap(selrect) srcOver
 	MCImageBitmapMerge(m_bitmap, m_selection_image, selrect.x, selrect.y, 0, 0, selrect.width, selrect.height);
 	
@@ -1901,7 +1907,7 @@ void MCMutableImageRep::flipsel(Boolean ishorizontal)
 
 void MCMutableImageRep::pasteimage(MCImageBitmap *p_bitmap)
 {
-	MCLog("MCMutableImageRep<%p>::pasteimage()", this);
+    //MCLog("MCMutableImageRep<%p>::pasteimage()", this);
 	if (MCcurtool != T_SELECT)
 	{
 		oldtool = MCcurtool;
@@ -1959,7 +1965,7 @@ void MCMutableImageRep::image_undo(Ustruct *us)
 
 void MCMutableImageRep::image_freeundo(Ustruct *us)
 {
-	MCLog("MCMutableImage::image_free_undo(%p) - freeing image %p", us, m_undo_image);
+    //MCLog("MCMutableImage::image_free_undo(%p) - freeing image %p", us, m_undo_image);
 	MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
 }

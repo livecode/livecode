@@ -294,7 +294,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define F_HAS_SHIFT             (1UL << 16)
 #define F_HAS_BACK_COLOR        (1UL << 17)
 #define F_HAS_COLOR_NAME        (1UL << 18)
-//#define F_HAS_TAB               (1UL << 19) // [[ TabAlignments ]] No longer required
+// SN-2014-12-04: [[ Bug 14149 ]] Flag required for saving in legacy format.
+#define F_HAS_TAB               (1UL << 19) // [[ TabAlignments ]] No longer required
 #define F_HAS_BACK_COLOR_NAME   (1UL << 20)
 #define F_HAS_LINK              (1UL << 21)
 #define F_HAS_IMAGE             (1UL << 22)
@@ -562,6 +563,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FA_LINK               (1UL << 14)
 #define FA_FONT               (1UL << 15)  // to mark a font change in paragraph HTML
 
+// Font is special and should be ignored for font lookups, etc
+#define FA_SYSTEM_FONT        (1UL << 31)
+
 #define STYLE_LENGTH           256
 
 typedef struct
@@ -600,7 +604,16 @@ enum Draw_index {
     DI_TOP,
     DI_BOTTOM,
     DI_SHADOW,
-    DI_FOCUS
+    DI_FOCUS,
+    
+    // Pseudo-DIs used for theming
+    DI_PSEUDO_TEXT_COLOR,           // Text colour for non-selected text
+    DI_PSEUDO_TEXT_BACKGROUND,      // Text background colour
+    DI_PSEUDO_TEXT_COLOR_SEL_FORE,  // Text colour for selected text, use DI_FORE
+    DI_PSEUDO_TEXT_COLOR_SEL_BACK,  // Text colour for selected text, use DI_BACK
+    DI_PSEUDO_TEXT_BACKGROUND_SEL,  // Text selection colour
+    DI_PSEUDO_BUTTON_TEXT,          // Text colour for button text
+    DI_PSEUDO_BUTTON_TEXT_SEL      // Text colour for selected menu items
 };
 
 

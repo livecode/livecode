@@ -115,8 +115,9 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
+
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
     
@@ -369,6 +370,14 @@ public:
     
     MCRectangle resize(MCRectangle rect);
 
+    // PM-2014-12-17: [[ Bug 14232 ]] Indicates if a filename is invalid or if the file is corrupted
+    bool hasinvalidfilename(void) const
+    {
+        bool t_has_invalid_filename;
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyInvalidFilename, kMCPlatformPropertyTypeBool, &t_has_invalid_filename);
+        return t_has_invalid_filename;
+    }
+    
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
     void currenttimechanged(void);

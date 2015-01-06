@@ -1610,6 +1610,8 @@ enum Properties {
     P_CAN_RETREAT,
     P_ALPHA,
     P_BACKGROUND_COLOR,
+    // SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+    P_IGNORE_VOICE_OVER_SENSITIVITY,
     P_MULTI_LINE,
     P_TEXT_COLOR,
     P_FONT_SIZE,
@@ -1674,6 +1676,10 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    P_KIND,
+
+    // MW-2014-12-10: [[ Extensions ]] 'loadedExtensions' global property
+    P_LOADED_EXTENSIONS,
 };
 
 enum Look_and_feel {
@@ -1890,6 +1896,8 @@ enum Sugar_constants {
 	
     // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
 	SG_HOST,
+    
+    SG_EXTENSION,
 };
 
 enum Statements {

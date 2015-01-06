@@ -293,6 +293,8 @@ enum MCGFillRule
 {
 	kMCGFillRuleNonZero,
 	kMCGFillRuleEvenOdd,
+	
+	kMCGFillRuleCount
 };
 
 enum MCGPaintStyle
@@ -392,6 +394,8 @@ enum MCGImageFilter
 	kMCGImageFilterLow,
 	kMCGImageFilterMedium,
     kMCGImageFilterHigh,
+    
+    kMCGImageFilterCount
 };
 
 enum MCGGradientFunction
@@ -404,6 +408,8 @@ enum MCGGradientFunction
 	kMCGLegacyGradientSpiral,
 	kMCGLegacyGradientXY,
 	kMCGLegacyGradientSqrtXY,
+	
+	kMCGGradientFunctionCount
 };
 
 enum MCGGradientTileMode
@@ -519,6 +525,45 @@ inline bool MCGPointIsEqual(const MCGPoint &p_a, const MCGPoint &p_b)
 inline bool MCGSizeIsEqual(const MCGSize &p_a, const MCGSize &p_b)
 {
 	return p_a.width == p_b.width && p_a.height == p_b.height;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
+{
+	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
+}
+
+inline void MCGColorSetRed(MCGColor& x_color, MCGFloat p_red) {
+	x_color = (x_color & 0xFF00FFFF) | ((uint8_t)(p_red * 255) << 16);
+}
+
+inline void MCGColorSetGreen(MCGColor& x_color, MCGFloat p_green) {
+	x_color = (x_color & 0xFFFF00FF) | ((uint8_t)(p_green * 255) << 8);
+}
+
+inline void MCGColorSetBlue(MCGColor& x_color, MCGFloat p_blue) {
+	x_color = (x_color & 0xFFFFFF00) | ((uint8_t)(p_blue * 255) << 0);
+}
+
+inline void MCGColorSetAlpha(MCGColor& x_color, MCGFloat p_alpha) {
+	x_color = (x_color & 0x00FFFFFF) | ((uint8_t)(p_alpha * 255) << 24);
+}
+
+inline MCGFloat MCGColorGetRed(MCGColor p_color) {
+	return ((p_color >> 16) & 0xFF) / 255.0f;
+}
+
+inline MCGFloat MCGColorGetGreen(MCGColor p_color) {
+	return ((p_color >> 8) & 0xFF) / 255.0f;
+}
+
+inline MCGFloat MCGColorGetBlue(MCGColor p_color) {
+	return ((p_color >> 0) & 0xFF) / 255.0f;
+}
+
+inline MCGFloat MCGColorGetAlpha(MCGColor p_color) {
+	return ((p_color >> 24) & 0xFF) / 255.0f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -673,15 +718,16 @@ MCGRectangle MCGMaskGetBounds(MCGMaskRef mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef uint8_t MCGPathCommand;
-enum
+enum MCGPathCommand
 {
 	kMCGPathCommandEnd,
 	kMCGPathCommandMoveTo,
 	kMCGPathCommandLineTo,
-	kMCGPathCommandCurveTo,
+	kMCGPathCommandCubicCurveTo,
 	kMCGPathCommandQuadCurveTo,
 	kMCGPathCommandCloseSubpath,
+	
+	kMCGPathCommandCount
 };
 
 bool MCGPathCreate(const MCGPathCommand *commands, const MCGFloat *parameters, MCGPathRef& r_path);
@@ -691,11 +737,15 @@ MCGPathRef MCGPathRetain(MCGPathRef path);
 void MCGPathRelease(MCGPathRef path);
 
 bool MCGPathIsValid(MCGPathRef path);
+bool MCGPathIsEmpty(MCGPathRef path);
+bool MCGPathIsEqualTo(MCGPathRef a, MCGPathRef b);
 
 void MCGPathCopy(MCGPathRef path, MCGPathRef& r_new_path);
 void MCGPathCopyAndRelease(MCGPathRef path, MCGPathRef& r_new_path);
 void MCGPathMutableCopy(MCGPathRef path, MCGPathRef& r_new_path);
 void MCGPathMutableCopyAndRelease(MCGPathRef path, MCGPathRef& r_new_path);
+
+bool MCGPathMutableCopySubpaths(MCGPathRef self, uint32_t p_first, uint32_t p_last, MCGPathRef &r_subpaths);
 
 void MCGPathAddRectangle(MCGPathRef path, MCGRectangle bounds);
 void MCGPathAddRoundedRectangle(MCGPathRef path, MCGRectangle bounds, MCGSize corner_radii);
@@ -719,14 +769,28 @@ void MCGPathThicken(MCGPathRef path, const MCGStrokeAttr& attr, MCGPathRef& r_th
 void MCGPathFlatten(MCGPathRef path, MCGFloat flatness, MCGPathRef& r_flat_path);
 void MCGPathSimplify(MCGPathRef path, MCGPathRef& r_simple_path);
 
+bool MCGPathTransform(MCGPathRef path, const MCGAffineTransform &p_transform);
+
+bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
+
+typedef bool (*MCGPathIterateCallback)(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count);
+bool MCGPathIterate(MCGPathRef p_path, MCGPathIterateCallback p_callback, void *p_context);
+
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCGContextCreate(uint32_t width, uint32_t height, bool alpha, MCGContextRef& r_context);
+extern "C" bool MCGContextCreate(uint32_t width, uint32_t height, bool alpha, MCGContextRef& r_context);
 bool MCGContextCreateWithPixels(uint32_t width, uint32_t height, uint32_t stride, void *pixels, bool alpha, MCGContextRef& r_context);
 bool MCGContextCreateWithRaster(const MCGRaster& raster, MCGContextRef& r_context);
 
 MCGContextRef MCGContextRetain(MCGContextRef context);
 void MCGContextRelease(MCGContextRef context);
+
+// Return a pointer to the underlying pixel data
+void *MCGContextGetPixelPtr(MCGContextRef context);
+
+// Return the width, and height.
+uint32_t MCGContextGetWidth(MCGContextRef context);
+uint32_t MCGContextGetHeight(MCGContextRef context);
 
 // Returns whether the current context context is valid. If an error
 // occurs when calling any method on a context context, it will become
@@ -879,15 +943,18 @@ MCGAffineTransform MCGAffineTransformMakeIdentity(void);
 MCGAffineTransform MCGAffineTransformMakeRotation(MCGFloat p_angle);
 MCGAffineTransform MCGAffineTransformMakeTranslation(MCGFloat p_xoffset, MCGFloat p_yoffset);
 MCGAffineTransform MCGAffineTransformMakeScale(MCGFloat p_xscale, MCGFloat p_yscale);
+MCGAffineTransform MCGAffineTransformMakeSkew(MCGFloat p_xskew, MCGFloat p_yskew);
 
 MCGAffineTransform MCGAffineTransformConcat(const MCGAffineTransform& transform_1, const MCGAffineTransform& transform_2);
 MCGAffineTransform MCGAffineTransformRotate(const MCGAffineTransform& transform, MCGFloat angle);
 MCGAffineTransform MCGAffineTransformTranslate(const MCGAffineTransform& transform, MCGFloat xoffset, MCGFloat yoffset);
 MCGAffineTransform MCGAffineTransformScale(const MCGAffineTransform& transform, MCGFloat xscale, MCGFloat yscale);
+MCGAffineTransform MCGAffineTransformSkew(const MCGAffineTransform &p_transform, MCGFloat p_xskew, MCGFloat p_yskew);
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& transform);
 
 // IM-2014-06-11: [[ Bug 12557 ]] Returns transform that would convert rectangle a to rectangle b by scaling + translating
 MCGAffineTransform MCGAffineTransformFromRectangles(const MCGRectangle &p_a, const MCGRectangle &p_b);
+bool MCGAffineTransformFromPoints(const MCGPoint p_src[3], const MCGPoint p_dst[3], MCGAffineTransform &r_transform);
 
 MCGPoint MCGPointApplyAffineTransform(const MCGPoint& p_point, const MCGAffineTransform& p_transform);
 MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const MCGAffineTransform& p_transform);

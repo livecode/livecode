@@ -128,7 +128,6 @@ MCImage::MCImage()
 	m_flip_y = false;
 
 	m_locked_rep = nil;
-	m_locked_bitmap_frame = nil;
 	m_locked_image = nil;
 	m_locked_bitmap = nil;
 
@@ -159,7 +158,6 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_flip_y = false;
 	
 	m_locked_rep = nil;
-	m_locked_bitmap_frame = nil;
 	m_locked_image = nil;
 	m_locked_bitmap = nil;
 	m_needs = nil;
@@ -547,12 +545,10 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 				advanceframe();
 				if (irepeatcount)
 				{
-					MCGImageFrame t_frame;
-					if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-					{
-						MCscreen->addtimer(this, MCM_internal, t_frame.duration);
-						m_rep->UnlockImageFrame(currentframe, t_frame);
-					}
+					// IM-2014-11-25: [[ ImageRep ]] Use ImageRep method to get frame duration
+					uint32_t t_frame_duration;
+					if (m_rep->GetFrameDuration(currentframe, t_frame_duration))
+						MCscreen->addtimer(this, MCM_internal, t_frame_duration);
 				}
 			}
 	}
@@ -660,7 +656,7 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	uint2 i;
 	uint4 size = 0;
@@ -957,7 +953,7 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
         break;
 #endif /* MCImage::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -2379,12 +2375,12 @@ void MCImage::finishediting()
 	bool t_success = true;
 
 	MCImageRep *t_rep = m_rep;
-	MCBitmapFrame *t_frame = nil;
+	MCImageBitmap *t_bitmap = nil;
 
-	t_success = t_rep->LockBitmapFrame(0, 1.0, t_frame);
+	t_success = t_rep->LockBitmap(0, 1.0, t_bitmap);
 	if (t_success)
-		t_success = setbitmap(t_frame->image, 1.0);
-	t_rep->UnlockBitmapFrame(0, t_frame);
+		t_success = setbitmap(t_bitmap, 1.0);
+	t_rep->UnlockBitmap(0, t_bitmap);
 
 	/* UNCHECKED */ MCAssert(t_success);
 }
@@ -2701,16 +2697,15 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, const MC
 			// so we have to release and lock the unpremultiplied bitmap frame.
 			t_rep->UnlockImageFrame(currentframe, t_frame);
 			
-			MCBitmapFrame *t_bitmap_frame;
-			t_bitmap_frame = nil;
+			MCImageBitmap *t_bitmap;
+			t_bitmap = nil;
 			
-			t_success = t_rep->LockBitmapFrame(currentframe, t_transform_scale, t_bitmap_frame);
+			t_success = t_rep->LockBitmap(currentframe, t_transform_scale, t_bitmap);
 			
 			if (t_success)
 			{
-				m_locked_bitmap = t_bitmap_frame->image;
+				m_locked_bitmap = t_bitmap;
 				m_locked_rep = t_rep;
-				m_locked_bitmap_frame = t_bitmap_frame;
 			}
 		}
 		else if (t_copy_pixels && p_premultiplied)
@@ -2791,9 +2786,8 @@ void MCImage::unlockbitmap(MCImageBitmap *p_bitmap)
 {
 	if (m_locked_rep != nil)
 	{
-		m_locked_rep->UnlockBitmapFrame(currentframe, m_locked_bitmap_frame);
+		m_locked_rep->UnlockBitmap(currentframe, m_locked_bitmap);
 		m_locked_rep = nil;
-		m_locked_bitmap_frame = nil;
 		m_locked_bitmap = nil;
 	}
 	else if (m_locked_image != nil)
@@ -2828,12 +2822,26 @@ MCString MCImage::getrawdata()
 {
 	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
 		return MCString(nil, 0);
-	
+
 	void *t_data;
 	uindex_t t_size;
-	static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
-	
-	return MCString((char*)t_data, t_size);
+    static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
+
+    return MCString((char*)t_data, t_size);
+}
+
+// PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+MCString MCImage::getimagefilename(void)
+{
+    if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
+		return MCString(nil, 0);
+    
+    const char *t_filename;
+    t_filename = static_cast<MCReferencedImageRep*>(m_rep)->GetSearchKey();
+    
+    return MCString(t_filename);
+
+    
 }
 #endif 
 
@@ -2850,6 +2858,24 @@ void MCImage::getrawdata(MCDataRef& r_data)
 	
 	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_data, t_size, r_data);
 }
+// PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+void MCImage::getimagefilename(MCStringRef &r_filename)
+{
+    MCStringRef t_filename;
+    if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
+        r_filename = MCValueRetain(kMCEmptyString);
+    
+    t_filename = static_cast<MCReferencedImageRep*>(m_rep)->GetSearchKey();
+    
+    MCStringCopy(t_filename, r_filename);
+    
+}
+
+bool MCImage::isReferencedImage()
+{
+    return m_rep->GetType() == kMCImageRepReferenced;
+}
+
 
 bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 {

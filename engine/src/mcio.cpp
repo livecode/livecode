@@ -836,6 +836,8 @@ enum
 	IO_VALUEREF_ARRAY_EMPTY,
 	IO_VALUEREF_ARRAY_SEQUENCE,
 	IO_VALUEREF_ARRAY_MAP,
+    IO_VALUEREF_LIST_EMPTY,
+    IO_VALUEREF_LIST_ANY,
 };
 
 IO_stat IO_write_valueref_new(MCValueRef p_value, IO_handle p_stream)
@@ -933,6 +935,23 @@ IO_stat IO_write_valueref_new(MCValueRef p_value, IO_handle p_stream)
 			}
 		}	
 		break;
+        case kMCValueTypeCodeList:
+        {
+            if (MCProperListIsEmpty((MCProperListRef)p_value))
+                t_stat = IO_write_uint1(IO_VALUEREF_LIST_EMPTY, p_stream);
+            else
+            {
+				t_stat = IO_write_uint1(IO_VALUEREF_LIST_ANY, p_stream);
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_write_uint4(MCProperListGetLength((MCProperListRef)p_value), p_stream);
+				for(uindex_t i = 0; t_stat == IO_NORMAL && i < MCProperListGetLength((MCProperListRef)p_value); i++)
+				{
+					if (t_stat == IO_NORMAL)
+						t_stat = IO_write_valueref_new(MCProperListFetchElementAtIndex((MCProperListRef)p_value, i), p_stream);
+				}
+            }
+        }
+        break;
 		default:
             MCAssert(false);
 			return IO_ERROR;
@@ -1090,7 +1109,43 @@ IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle p_stream)
 					t_mutable_array != nil)
 					MCValueRelease(t_mutable_array);
 			}
-			break;
+            break;
+			case IO_VALUEREF_LIST_EMPTY:
+				r_value = MCValueRetain(kMCEmptyList);
+				break;
+			case IO_VALUEREF_LIST_ANY:
+			{
+				MCProperListRef t_mutable_list;
+				t_mutable_list = nil;
+				if (!MCProperListCreateMutable(t_mutable_list))
+					t_stat = IO_ERROR;
+                
+				uint4 t_length;
+				if (t_stat == IO_NORMAL)
+					t_stat = IO_read_uint4(&t_length, p_stream);
+				for(uindex_t i = 0; t_stat == IO_NORMAL && i < t_length; i++)
+				{
+					MCValueRef t_element;
+					t_element = nil;
+					
+					t_stat = IO_read_valueref_new(t_element, p_stream);
+					if (t_stat == IO_NORMAL &&
+						!MCProperListPushElementOntoBack(t_mutable_list, t_element))
+						t_stat = IO_ERROR;
+					
+					if (t_element != nil)
+						MCValueRelease(t_element);
+				}
+				
+				if (t_stat == IO_NORMAL &&
+					!MCProperListCopyAndRelease(t_mutable_list, (MCProperListRef&)r_value))
+					t_stat = IO_ERROR;
+				
+				if (t_stat == IO_ERROR &&
+					t_mutable_list != nil)
+					MCValueRelease(t_mutable_list);
+			}
+            break;
             // AL-2014-08-04: [[ Bug 13056 ]] Return IO_ERROR if we don't read a valid type
             default:
                 return IO_ERROR;

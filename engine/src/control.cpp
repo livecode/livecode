@@ -216,7 +216,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_GRAB)
 	{
@@ -281,7 +281,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	case T_FIELD:
 	case T_IMAGE:
 	case T_GRAPHIC:
-		if (is && state & CS_SELECTED || state & CS_MFOCUSED)
+		if ((is && state & CS_SELECTED) || state & CS_MFOCUSED)
 			return True;
 		else
 			return False;
@@ -418,7 +418,7 @@ uint2 MCControl::gettransient() const
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive = false)
 {
 	switch (which)
 	{
@@ -486,7 +486,7 @@ Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 	break;
 #endif /* MCControl::getprop */
 	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -760,11 +760,13 @@ Boolean MCControl::del()
 		message(MCM_delete_group);
 		message(MCM_delete_background);
 		break;
+    case CT_WIDGET:
+        message(MCM_delete_widget);
+        break;
 	default:
 		break;
 	}
 	uint2 num = 0;
-	MCRectangle orect = geteffectiverect();
 	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
 	switch (parent->gettype())
 	{
@@ -930,7 +932,7 @@ MCControl *MCControl::findname(Chunk_term type, MCNameRef p_name)
 MCControl *MCControl::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
 	if ((type == gettype() || type == CT_LAYER)
-	        && (inid == obj_id || alt && inid == altid))
+	    && (inid == obj_id || (alt && inid == altid)))
 		return this;
 	else
 		return NULL;
@@ -1295,6 +1297,7 @@ void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 			dc->fillpolygon(ap, 5);
 			dc->drawlines(ap, 5);
 			if (border)
+			{
 				if (IsMacLF())
 				{
 					size -= 2;
@@ -1309,6 +1312,7 @@ void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 					else
 						draw3d(dc, trect, ETCH_RAISED_SMALL, DEFAULT_BORDER);
 				}
+			}
 		}
 		break;
 	}
@@ -1497,17 +1501,25 @@ void MCControl::start(Boolean canclone)
 			MCselected->replace(this);
 	}
 	else
+	{
 		if (MCmodifierstate & MS_SHIFT && sizehandles() == 0)
 		{
 			MCselected->remove(this);
 			return;
 		}
 		else
+		{
 			MCselected->top(this);
+		}
+	}
 	if (MCbuttonstate == 0)
+	{
 		state &= ~(CS_MOVE | CS_SIZE | CS_CREATE);
+	}
 	else
+	{
 		if (canclone)
+		{
 			if (!(state & CS_SIZE))
 			{
 				state |= CS_MOVE;
@@ -1529,6 +1541,8 @@ void MCControl::start(Boolean canclone)
 				MCundos->savestate(this, us);
 				aspect = rect . height / (double)rect . width;
 			}
+		}
+	}
 	
 	// MM-2012-11-06: [[ Property Listener ]]
 	if (state & CS_SIZE)
@@ -1673,10 +1687,10 @@ Boolean MCControl::sbfocus(int2 x, int2 y, MCScrollbar *hsb, MCScrollbar *vsb)
 		return True;
 	}
 	else
-		if (!(state & CS_SELECTED)
-		        && (flags & F_HSCROLLBAR && MCU_point_in_rect(hsb->getrect(), x, y) ||
-		            flags & F_VSCROLLBAR && MCU_point_in_rect(vsb->getrect(), x, y))
-		        && (gettype() == CT_GROUP || getstack()->gettool(this) == T_BROWSE))
+		if (!(state & CS_SELECTED) &&
+		    ((flags & F_HSCROLLBAR && MCU_point_in_rect(hsb->getrect(), x, y)) ||
+		     (flags & F_VSCROLLBAR && MCU_point_in_rect(vsb->getrect(), x, y))) &&
+		    (gettype() == CT_GROUP || getstack()->gettool(this) == T_BROWSE))
 		{
 			if(MCcurtheme && MCcurtheme->getthemepropbool(WTHEME_PROP_SUPPORTHOVERING))
 			{
@@ -1929,7 +1943,7 @@ void MCControl::drawfocus(MCDC *dc, const MCRectangle &dirty)
 		!MCcurtheme -> drawfocusborder(dc, dirty, trect))
 	{
 		setforeground(dc, DI_FOCUS, False, True);
-		if (IsMacEmulatedLF() || IsMacLFAM() && !MCaqua)
+		if (IsMacEmulatedLF() || (IsMacLFAM() && !MCaqua))
 			trect = MCU_reduce_rect(trect, 1);
 		drawborder(dc, trect, MCfocuswidth);
 	}
@@ -1983,8 +1997,8 @@ void MCControl::setbitmapeffects(MCBitmapEffectsRef p_effects)
 
 MCObject *MCControl::hittest(int32_t x, int32_t y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
-		|| flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	if (!(flags & F_VISIBLE || MCshowinvisibles) ||
+	    (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	
 	MCRectangle r;

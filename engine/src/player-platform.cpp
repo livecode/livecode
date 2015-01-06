@@ -103,11 +103,6 @@ static MCColor controllercolors[] = {
     
 };
 
-inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
-{
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
-}
-
 inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
 {
 	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
@@ -1219,7 +1214,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 i = 0;
 	switch (which)
@@ -1397,7 +1392,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             break;
 #endif /* MCPlayer::getprop */
         default:
-            return MCControl::getprop(parid, which, ep, effective);
+            return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -1434,7 +1429,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     m_is_attached = true;
                     m_should_attach = false;
                 }
-
+               
                 dirty = wholecard = True;
             }
             break;
@@ -2095,13 +2090,8 @@ Boolean MCPlayer::prepare(MCStringRef options)
     
     if (state & CS_PREPARED)
         return True;
-    
-    // Fixes the issue of invisible player being created by script
-    // SN-2014-08-19: [[ Bug 13214 ]] An empty name should have the function stopping here
-    if (MCStringIsEmpty(filename))
-        return True;
-    
-	if (!opened)
+
+   	if (!opened)
 		return False;
     
 	if (m_platform_player == nil)
@@ -2117,8 +2107,18 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	else
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
 	
+    if (!hasfilename())
+        return True;
+    
 	MCRectangle t_movie_rect;
 	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
+    
+    // PM-2014-12-17: [[ Bug 14233 ]] If an invalid filename is used then keep the previous dimensions of the player rect instead of displaying only the controller
+    if (t_movie_rect . height == 0 && t_movie_rect . width == 0)
+    {
+        MCresult->sets("could not create movie reference");
+        return False;
+    }
 	
 	MCRectangle trect = resize(t_movie_rect);
 	
@@ -2172,6 +2172,10 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	setloudness();
 	
 	MCresult -> clear(False);
+    
+    // PM-2014-12-17: [[ Bug 14232 ]] Update the result in case a filename is invalid or the file is corrupted
+    if (hasinvalidfilename())
+        MCresult->sets("could not create movie reference");
 	
 	ok = True;
 	
@@ -2214,7 +2218,7 @@ void MCPlayer::detachplayer()
 
 Boolean MCPlayer::playstart(MCStringRef options)
 {
-	if (!prepare(options))
+	if (!prepare(options) || !hasfilename())
 		return False;
     
     // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
@@ -2857,7 +2861,8 @@ void MCPlayer::moviefinished(void)
 {
     // PM-2014-08-06: [[ Bug 13104 ]] Set rate to zero when movie finish
     rate = 0.0;
-    timer(MCM_play_stopped, nil);
+    // PM-2014-12-02: [[ Bug 14141 ]] Delay the playStopped message to prevent IDE hang in case where the player's filename is set in the playStopped message (AVFoundation does not like nested callbacks)
+    MCscreen -> delaymessage(this, MCM_play_stopped);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)

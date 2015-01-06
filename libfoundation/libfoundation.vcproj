@@ -160,6 +160,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-custom.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-data.cpp"
 				>
 			</File>

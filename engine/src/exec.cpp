@@ -127,7 +127,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0 &&
                     !MCStringGetNumericValue(MCNameGetString((MCNameRef)p_value), t_number))
             {
-                if (!MCU_stor8(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
+                if (!MCTypeConvertStringToReal(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -145,7 +145,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             // Fetches the numeric value in case it exists, or stores the one therefore computed otherwise
             if (MCStringGetLength((MCStringRef)p_value) != 0 && !MCStringGetNumericValue((MCStringRef)p_value, t_number))
             {
-                if (!MCU_stor8((MCStringRef)p_value, t_number, m_convertoctals))
+                if (!MCTypeConvertStringToReal((MCStringRef)p_value, t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -179,7 +179,8 @@ bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 	return true;
 }
 
-bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
+// SN-2014-12-03: [[ Bug 14147 ]] Array conversion is not always permissive, neither always strict
+bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array, bool p_strict)
 {
     if (MCValueIsEmpty(p_value))
     {
@@ -194,7 +195,8 @@ bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
         // array (for example, 'the extents of "foo"' should return empty
         // rather than throwing an error).
         MCAutoStringRef t_ignored;
-        if (ConvertToString(p_value, &t_ignored))
+        // SN-2014-12-03: [[ Bug 14147 ]] Do not try the string conversion if the
+        if (!p_strict && ConvertToString(p_value, &t_ignored))
         {
             r_array = MCValueRetain(kMCEmptyArray);
             return true;
@@ -307,7 +309,9 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
         if (!ConvertToReal(x_value . valueref_value, t_real))
         {
             MCAutoArrayRef t_array;
-            if (!ConvertToArray(x_value . valueref_value, &t_array))
+            // SN-2014-12-03: [[ Bug 14147 ]] An array should not be returned if the
+            //  value is neither empty or an array.
+            if (!ConvertToArray(x_value . valueref_value, &t_array, true))
                 return false;
             
             MCValueRelease(x_value . valueref_value);
@@ -358,18 +362,8 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
     if (!ConvertToString(p_value, &t_string))
         return false;
     
-    // Strings always convert to data as native characters
-    uindex_t t_native_length;
-    if (MCStringIsNative(*t_string))
-    {
-        const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
-        return MCDataCreateWithBytes(t_data, t_native_length, r_data);
-    }
-    
-    char_t *t_native_chars;
-    MCMemoryNewArray(MCStringGetLength(*t_string), t_native_chars);
-    t_native_length = MCStringGetNativeChars(*t_string, MCRangeMake(0, UINDEX_MAX), t_native_chars);
-    return MCDataCreateWithBytesAndRelease((byte_t *)t_native_chars, t_native_length, r_data);
+    // AL-2014-12-12: [[ Bug 14208 ]] Implement a specific function to aid conversion to data
+    return MCDataConvertStringToData(*t_string, r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
@@ -1422,7 +1416,7 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
             t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
 		
 		if (t_success)
-			t_success = MCU_stor8(*t_double_string, t_d);
+			t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
 		
 		if (t_success)
 			t_success = t_list . Push(t_d);
@@ -1648,7 +1642,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 r_value . type = kMCExecValueTypeNameRef;
             }
         }
-            break;
+        break;
             
         case kMCPropertyTypeColor:
         {
@@ -1963,13 +1957,11 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
-                char_t t_delimiter;
-                t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
                 if (MCPropertyFormatStringList(t_value, t_count, '\n', r_value . stringref_value))
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
-                for (int i = 0; i < t_count; ++i)
+                for (uindex_t i = 0; i < t_count; ++i)
                     MCValueRelease(t_value[i]);
                 if (t_count > 0)
                     MCMemoryDeleteArray(t_value);
@@ -2338,6 +2330,27 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, MCExecValue&))prop -> getter)(ctxt, mark, r_value);
         }
             break;
+         
+        case kMCPropertyTypeProperItemsOfString:
+        case kMCPropertyTypeProperLinesOfString:
+        {
+            MCAutoProperListRef t_proper_list;
+            ((void(*)(MCExecContext&, void *, MCProperListRef&))prop -> getter)(ctxt, mark, &t_proper_list);
+            if (!ctxt . HasError())
+            {
+                MCListRef t_list;
+                /* UNCHECKED */ MCListCreateMutable(prop -> type == kMCPropertyTypeProperLinesOfString ? '\n' : ',', t_list);
+                uintptr_t t_iterator;
+                t_iterator = 0;
+                MCValueRef t_element;
+                while(MCProperListIterate(*t_proper_list, t_iterator, t_element))
+                    /* UNCHECKED */ MCListAppend(t_list, t_element);
+                
+                r_value . type = kMCExecValueTypeStringRef;
+                /* UNCHECKED */ MCListCopyAsStringAndRelease(t_list, r_value . stringref_value);
+            }
+        }
+        break;
             
         default:
             ctxt . Unimplemented();

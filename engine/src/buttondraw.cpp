@@ -138,15 +138,17 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCcurtheme -> drawmenuheaderbackground(dc, dirty, this))
 		{
 			t_themed_menu = true;
-			dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            //dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            setforeground(dc, DI_PSEUDO_BUTTON_TEXT, False);
 		}
 		else if (menucontrol != MENUCONTROL_NONE && MCcurtheme != NULL &&
 				MCcurtheme -> drawmenuitembackground(dc, dirty, this))
 		{
 			t_themed_menu = true;
 			indicator = False;
-			dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
-			}
+            //dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            setforeground(dc, DI_PSEUDO_BUTTON_TEXT, False);
+        }
 		else
 		{
 		if (flags & F_OPAQUE && (MCcurtheme == NULL || !noback
@@ -342,6 +344,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 
 		if (flags & F_DISABLED)
+        {
 			if (MClook == LF_MOTIF)
 			{
 				setforeground(dc, DI_FORE, False);
@@ -354,15 +357,18 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			}
 			else
 				setforeground(dc, DI_TOP, False);
+        }
 		else
-			if (white && state & CS_KFOCUSED && !(state & CS_SUBMENU) ||
-				isstdbtn && noback && (MCcurtheme == NULL || MCcurtheme->getthemeid() != LF_NATIVEWIN && MCcurtheme->getthemeid() != LF_NATIVEGTK) && state & CS_HILITED && !MCaqua ||
-				MClook != LF_MOTIF && style == F_MENU && flags & F_OPAQUE && state & CS_ARMED && !(flags & F_SHOW_BORDER))
-				setforeground(dc, DI_BACK, False, True);
+        {
+			if ((white && state & CS_KFOCUSED && !(state & CS_SUBMENU)) ||
+				(isstdbtn && noback && (MCcurtheme == NULL || (MCcurtheme->getthemeid() != LF_NATIVEWIN && MCcurtheme->getthemeid() != LF_NATIVEGTK)) && state & CS_HILITED && !MCaqua) ||
+				(MClook != LF_MOTIF && style == F_MENU && flags & F_OPAQUE && state & CS_ARMED && !(flags & F_SHOW_BORDER)))
+				setforeground(dc, DI_PSEUDO_BUTTON_TEXT_SEL, False, True);
 			else
 				setforeground(dc, DI_FORE, (state & CS_HILITED && flags & F_HILITE_FILL
-				                            || state & CS_ARMED && flags & F_ARM_FILL) && flags & F_OPAQUE && (MClook != LF_WIN95 && !MCaqua
+				                            || state & CS_ARMED && flags & F_ARM_FILL) && flags & F_OPAQUE && ((MClook != LF_WIN95 && !MCaqua)
 				                            || style != F_STANDARD), False);
+        }
 		}
 
 		// MW-2009-06-14: We will assume (perhaps unwisely) that is 'opaque' is set
@@ -375,7 +381,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		Boolean icondrawed = False;
 		
         // SN-2014-08-12: [[ Bug 13155 ]] Don't try to draw the icons if the button has not got any
-		if (icons != NULL && m_icon_gravity != kMCGravityNone)
+        // SN-2014-12-17: [[ Bug 14249 ]] Do not try to draw the curicon if there is no current
+        //  icon (as it may after loading a stack).
+		if (icons != NULL && icons -> curicon && m_icon_gravity != kMCGravityNone)
 		{
 			// MW-2014-06-19: [[ IconGravity ]] Use iconGravity to place the icon.
 			int t_left, t_top, t_right, t_bottom;
@@ -405,17 +413,31 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			/* UNCHECKED */ MCStringSplit(t_label, MCSTR("\n"), nil, kMCCompareExact, &lines);
 			uindex_t nlines = MCArrayGetCount(*lines);
 			
-			uint2 fheight;
-			fheight = gettextheight();
+            coord_t fascent, fdescent, fleading, fxheight;
+            fascent = MCFontGetAscent(m_font);
+            fdescent = MCFontGetDescent(m_font);
+            fleading = MCFontGetLeading(m_font);
+            fxheight = MCFontGetXHeight(m_font);
 
-			int32_t fascent, fdescent;
-			fascent = MCFontGetAscent(m_font);
-			fdescent = MCFontGetDescent(m_font);
+			coord_t fheight;
+            fheight = fascent + fdescent + fleading;
 
-			int2 sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
-			int2 sy = centery - (nlines * fheight >> 1) + fascent + fdescent - 2;
-			uint2 theight = nlines == 1 ? fascent : nlines * fheight;
-            
+            coord_t sx, sy, theight;
+            if (nlines == 1)
+            {
+                // Centre things on the middle of the ascent
+                sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+                sy = roundf(centery + (fascent-fdescent)/2);
+                theight = fascent;
+            }
+            else
+            {
+                // Centre things by centring the bounding box of the text
+                sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+                sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
+                theight = nlines * fheight;
+            }
+
             // MW-2014-06-19: [[ IconGravity ]] Use old method of calculating icon location if gravity is none.
 			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL && m_icon_gravity == kMCGravityNone)
 			{
@@ -427,9 +449,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					          - (icons->curicon->getrect().width >> 1);
 					break;
 				case F_ALIGN_CENTER:
-					centery -= (theight >> 1) + 1;
-					sy = shadowrect.y + shadowrect.height - bottommargin - theight
-					     + fascent - fdescent - 1;
+                        centery -= (theight / 2) + 1;
+                        sy = shadowrect.y + shadowrect.height - bottommargin - theight
+                            + fascent - fdescent - 1;
 					break;
 				case F_ALIGN_RIGHT:
 					centerx = shadowrect.x + leftmargin
@@ -443,9 +465,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				icondrawed = True;
 			}
 
-			uint2 starty = sy;
+			coord_t starty = sy;
 			uint2 i;
-			uint2 twidth = 0;
+			coord_t twidth = 0;
 			
 			dc->save();
 			dc->cliprect(t_content_rect);
@@ -458,7 +480,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
 				MCStringRef line = (MCStringRef)(lineval);
                 // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-                twidth = MCFontMeasureText(m_font, line, getstack() -> getdevicetransform());
+                twidth = MCFontMeasureTextFloat(m_font, line, getstack() -> getdevicetransform());
 				
 				// Mnemonic position calculation
 				uindex_t t_mnemonic = 0;
@@ -488,7 +510,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					break;
 				case F_ALIGN_CENTER:
-					sx = centerx - (twidth >> 1);
+					sx = floorf(centerx - (twidth / 2));
 					if (menumode == WM_OPTION || menumode == WM_COMBO)
 						sx -= optionrect.width;
 					// MH-2007-03-16 [[ Bug 3598 ]] Centering of the label did not work correctly on mac os classic and non vista windows option buttons.
@@ -633,10 +655,10 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	if (getstyleint(flags) == F_MENU && menumode == WM_OPTION
 	        && MClook != LF_WIN95)
 		sx += 2;
-	if (MCaqua && IsMacLFAM()
+	/*if (MCaqua && IsMacLFAM()
 	        && (getstyleint(flags) == F_STANDARD  || getstyleint(flags) == F_MENU
 	            && menumode == WM_OPTION))
-		sy--;
+		sy--;*/
 
     drawdirectionaltext(dc, sx, sy, p_label, m_font);
 	

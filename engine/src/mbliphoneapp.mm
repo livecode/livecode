@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblnotification.h"
 #import <sys/utsname.h>
 
+#include "script.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _DEBUG
@@ -1776,9 +1778,12 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 // PM-2014-10-13: [[ Bug 13659 ]] Make sure we can interact with the LC app when Voice Over is enabled/disabled while our view is already onscreen
 - (void)voiceOverStatusChanged
 {
+    if (MCignorevoiceoversensitivity == True)
+        return;
+    
     UIView *t_main_view;
     t_main_view = [[MCIPhoneApplication sharedApplication] fetchMainView];
-    
+
     if (UIAccessibilityIsVoiceOverRunning())
     {
         t_main_view.isAccessibilityElement = YES;
@@ -1996,6 +2001,8 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
+extern bool MCModulesInitialize();
+
 int main(int argc, char *argv[], char *envp[])
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
@@ -2006,7 +2013,7 @@ int main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
-    if (!MCInitialize())
+    if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
         return -1;
     
 	int t_exit_code;

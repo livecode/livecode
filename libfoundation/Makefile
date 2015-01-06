@@ -6,7 +6,9 @@ include ../rules/environment.linux.makefile
 SOURCES= \
 	foundation-array.cpp \
 	foundation-bidi.cpp \
+	foundation-chunk.cpp \
 	foundation-core.cpp \
+	foundation-custom.cpp \
 	foundation-data.cpp \
 	foundation-debug.cpp \
 	foundation-enum.cpp \

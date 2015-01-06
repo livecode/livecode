@@ -179,7 +179,12 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(version_info, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
-	return true;
+	if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("modules"), false, t_temp_array))
+		return false;
+	MCValueAssign(modules, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +247,47 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.redirects, i + 1, t_val);
 			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeRedirect, (MCStringRef)t_val);
 		}
-			
+    
+    ////////
+    
+    // Add all the modules before the stacks, this is so that widgets can resolve
+    // themselves on load.
+    uindex_t t_module_file_count;
+	MCDeployFileRef *t_module_files;
+    t_module_file_count = 0;
+	t_module_files = nil;
+	if (t_success)
+		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . modules), t_module_files, t_module_file_count);
+    if (t_success)
+        for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules) && t_success; i++)
+        {
+            MCValueRef t_module_filename;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params .modules, i + 1, t_module_filename);
+			if (t_success && !MCDeployFileOpen((MCStringRef)t_module_filename, kMCOpenFileModeRead, t_module_files[i]))
+				t_success = MCDeployThrow(kMCDeployErrorNoModule);
+            if (t_success)
+                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[i]);
+        }
+    
+    // TEMPORARY - Iterator through all loaded extensions and add them to the list.
+    if (t_success)
+    {
+        extern bool MCEngineIterateExtensionFilenames(uintptr_t& x_iterator, MCStringRef& r_filename);
+        MCStringRef t_filename;
+        uintptr_t t_iterator;
+        t_iterator = 0;
+        while(t_success && MCEngineIterateExtensionFilenames(t_iterator, t_filename))
+        {
+            t_success = MCMemoryResizeArray(t_module_file_count + 1, t_module_files, t_module_file_count);
+            if (t_success && !MCDeployFileOpen(t_filename, kMCOpenFileModeRead, t_module_files[t_module_file_count - 1]))
+                t_success = MCDeployThrow(kMCDeployErrorNoModule);
+            if (t_success)
+                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[t_module_file_count - 1]);
+        }
+    }
+    
+    ////////
+    
 	// Now we add the main stack
 	if (t_success)
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
@@ -275,7 +320,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	// Now add the startup script, if any.
 	if (t_success && (!MCStringIsEmpty(p_params . startup_script)))
 		t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script);
-
+    
 	// Now a digest
 	if (t_success)
 		t_success = MCDeployCapsuleChecksum(t_capsule);
@@ -292,6 +337,9 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles); i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
 	MCMemoryDeleteArray(t_aux_stackfiles);
+	for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules); i++)
+		MCDeployFileClose(t_module_files[i]);
+    MCMemoryDeleteArray(t_module_files);
 	MCDeployFileClose(t_spill);
 	MCDeployFileClose(t_stackfile);
 

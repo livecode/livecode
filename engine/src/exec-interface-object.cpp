@@ -999,7 +999,7 @@ struct MCInterfaceShadow
 
 static void MCInterfaceShadowParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceShadow& r_output)
 {
-	if (MCU_stob(p_input, r_output . flag))
+	if (MCTypeConvertStringToBool(p_input, r_output . flag))
 		r_output . is_flag = true;
 	else if (MCU_stoi2(p_input, r_output . shadow))
 		r_output . is_flag = false;
@@ -1119,7 +1119,7 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
         r_output . type = kMCInterfaceTriStateMixed;
     }
     
-    if (MCU_stob(p_input, r_output . state))
+    if (MCTypeConvertStringToBool(p_input, r_output . state))
     {
         r_output . type = kMCInterfaceTriStateBoolean;
         return;
@@ -1773,21 +1773,22 @@ void MCObject::GetNumber(MCExecContext& ctxt, uint32_t part, uinteger_t& r_numbe
 
 bool MCObject::GetPixel(MCExecContext& ctxt, Properties which, bool effective, uinteger_t& r_pixel)
 {
-	// MW-2011-02-27: [[ Bug 9419 ]] If the object isn't already open, then alloc the color
-	//   first.
-	uint2 i;
-	if (getcindex(which - P_FORE_PIXEL, i))
-	{
-		if (!opened)
-			MCscreen -> alloccolor(colors[i]);
-		r_pixel = colors[i] . pixel & 0xFFFFFF;
-		return true;
-	}
-	
-	if (effective && parent != nil)
-		return parent -> GetPixel(ctxt, which, effective, r_pixel);
-
-	return false;
+    MCInterfaceNamedColor t_color;
+    MCInterfaceNamedColorInit(ctxt, t_color);
+    
+    // Change the property name from *Pixel to *Color
+    Properties t_which;
+    t_which = Properties(which - P_FORE_PIXEL + P_FORE_COLOR);
+    
+    if (GetColor(ctxt, t_which, effective, t_color))
+    {
+        r_pixel = t_color.color.pixel & 0x00FFFFFF;
+        
+        MCInterfaceNamedColorFree(ctxt, t_color);
+        return true;
+    }
+    
+    return false;
 }
 
 void MCObject::SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel)
@@ -2011,7 +2012,7 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 	}
 }
 
-bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color)
+bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color, bool recursive)
 {
 	uint2 i;
 	if (getcindex(which - P_FORE_COLOR, i))
@@ -2021,10 +2022,39 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 	}
 	else if (effective)
     {
+        bool t_found;
+        t_found = false;
+        
         if (parent != NULL)
-            return parent -> GetColor(ctxt, which, effective, r_color);
-        else
-            return MCdispatcher -> GetColor(ctxt, which, effective, r_color);
+            t_found = parent -> GetColor(ctxt, which, effective, r_color, true);
+        
+        if (!t_found && !recursive)
+        {
+            // Look up the colour using the theming API
+            MCPlatformControlType t_control_type;
+            MCPlatformControlPart t_control_part;
+            MCPlatformControlState t_control_state;
+            MCPlatformThemeProperty t_control_prop;
+            MCPlatformThemePropertyType t_control_prop_type;
+            if (getthemeselectorsforprop(which, t_control_type, t_control_part, t_control_state, t_control_prop, t_control_prop_type))
+            {
+                MCColor t_color;
+                if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_control_prop, t_color))
+                {
+                    t_found = true;
+                    MCscreen->alloccolor(t_color);
+                    r_color.color = t_color;
+                    r_color.name = nil;
+                }
+
+            }
+            
+            // Only fall back to the dispatcher's default colours if theming failed
+            if (!t_found)
+                t_found = MCdispatcher -> GetColor(ctxt, which, effective, r_color);
+        }
+        
+        return t_found;
     }
 	else
 	{
@@ -2806,15 +2836,6 @@ void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
 
 void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 {
-	if ((m_font_flags & FF_HAS_TEXTFONT) == 0)
-	{
-		if (parent != nil)
-			parent -> GetEffectiveTextFont(ctxt, r_font);
-		else
-			MCdispatcher -> GetDefaultTextFont(ctxt, r_font);
-		return;
-	}
-
     uint2 fontsize, fontstyle;
     MCNameRef fontname;
     getfontattsnew(fontname, fontsize, fontstyle);
@@ -2874,20 +2895,10 @@ void MCObject::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
 
 void MCObject::GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size)
 {
-	if ((m_font_flags & FF_HAS_TEXTSIZE) == 0)
-	{
-		if (parent != nil)
-			parent -> GetEffectiveTextSize(ctxt, r_size);
-		else
-			MCdispatcher -> GetDefaultTextSize(ctxt, r_size);
-	}
-	else
-	{
-		uint2 fontsize, fontstyle;
-		MCNameRef fontname;
-		getfontattsnew(fontname, fontsize, fontstyle);
-		r_size = (uinteger_t)fontsize;
-	}
+    uint2 fontsize, fontstyle;
+    MCNameRef fontname;
+    getfontattsnew(fontname, fontsize, fontstyle);
+    r_size = fontsize;
 }
 
 void MCObject::GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
@@ -3077,6 +3088,7 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 	if (dirty)
 	{
 		if (opened && getstack() == MCmousestackptr)
+		{
 			if (!(flags & F_VISIBLE))
 			{
 				MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
@@ -3100,6 +3112,7 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 			}
 			else if (MCU_point_in_rect(rect, MCmousex, MCmousey))
 				needmfocus = true;
+		}
 
 		if (state & CS_KFOCUSED)
 			getcard(part)->kunfocus();
@@ -3313,6 +3326,9 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
 		table = videoclipprops;
 		tablesize = ELEMENTS(videoclipprops);
 		break;
+    case CT_WIDGET:
+        // WIDGET-TODO: Implement properties
+        break;
 	default:
 		return;
 	}

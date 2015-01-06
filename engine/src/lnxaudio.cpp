@@ -107,6 +107,7 @@ int X11Audio::play(int1 * p_sample, uint4 p_samplesize, uint p_rate)
 		
 		return t_bytes_written ;
 	}
+	return 0;
 }
 
 

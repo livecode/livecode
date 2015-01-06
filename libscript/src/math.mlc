@@ -1,0 +1,369 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library consists of the mathematical operations included in the standard library of LiveCode Builder.
+*/
+
+module com.livecode.math
+
+public foreign handler MCMathEvalRealToPowerOfReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalNumberToPowerOfNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalBase10LogReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalBase10LogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalNaturalLogReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalNaturalLogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalExpReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalExpNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalSinReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalSinNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalCosReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalCosNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalTanReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalAbsInteger(in Operand as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAbsReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAbsNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalTruncInteger(in Operand as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTruncReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTruncNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalMinInteger(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMinReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMinNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxInteger(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalRandomReal(out Value as double) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalConvertBase(in Operand as string, in Source as int, in Target as int, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertToBase10(in Operand as string, in Source as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertFromBase10(in Operand as int, in Target as int, out Value as string) as undefined binds to "<builtin>"
+
+--
+
+/*
+Summary:    Binary exponentiation operation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	The result of raising <Left> to the power <Right>.
+
+Example:
+	variable tVar as number
+	put 5^2 into tVar -- tVar contains 25
+
+Tags: Math
+*/
+
+syntax PowOperator is left binary operator with precedence 1
+    <Left: Expression> "^" <Right: Expression>
+begin
+    MCMathEvalNumberToPowerOfNumber(Left, Right, output)
+end syntax
+
+--
+
+/*
+Summary:    Sin operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+	variable tVar as number
+	put the sin of pi / 2 into tVar -- tVar contains 1
+
+Tags: Math
+*/
+
+syntax SinOperator is prefix operator with precedence 1
+    "the" "sin" "of" <Operand: Expression>
+begin
+    MCMathEvalSinNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Cos operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+	variable tVar as number
+	put the cos of pi into tVar -- tVar contains -1
+
+Tags: Math
+*/
+
+syntax CosOperator is prefix operator with precedence 1
+    "the" "cos" "of" <Operand: Expression>
+begin
+    MCMathEvalCosNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Tan operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+	variable tVar as number
+	put the tan of pi /4 into tVar -- tVar contains approximately 1
+
+Tags: Math
+*/
+
+syntax TanOperator is prefix operator with precedence 1
+    "the" "tan" "of" <Operand: Expression>
+begin
+    MCMathEvalTanNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Base 10 log operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+	variable tVar as number
+	put the log of 10000 into tVar -- tVar contains 5
+
+Tags: Math
+*/
+
+syntax Base10LogOperator is prefix operator with precedence 1
+    "the" "log" "of" <Operand: Expression>
+begin
+    MCMathEvalBase10LogNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Natural log operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+	variable tVar as number
+	put the natural log of the exp of 3 into tVar -- tVar contains approximately 3
+
+Tags: Math
+
+*/
+
+syntax BaseELogOperator is prefix operator with precedence 1
+    "the" "natural" "log" "of" <Operand: Expression>
+begin
+    MCMathEvalNaturalLogNumber(Operand, output)
+end syntax
+
+
+/*
+Summary:    Exponentiation operator.
+Operand:    An expression that evaluates to a number.
+
+Returns: 	e to the power of <Operand>
+
+Example:
+	variable tVar as number
+	put the exp of the natural log of 100 into tVar -- tVar contains approximately 100
+
+Tags: Math
+*/
+
+syntax ExpOperator is prefix operator with precedence 1
+    "the" "exp" "of" <Operand: Expression>
+begin
+    MCMathEvalExpNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Truncation operator.
+Operand:    An expression that evaluates to a number.
+
+Returns: 	<Operand> truncated.
+
+Example:
+	variable tVar as number
+	put the trunc of 3.9 into tVar -- tVar contains 3
+
+Description:
+The trunc of <Operand> is the integer part of the decimal representation of <Operand>.
+
+Tags: Math
+
+*/
+
+syntax TruncOperator is prefix operator with precedence 1
+    "the" "trunc" "of" <Operand: Expression>
+begin
+    MCMathEvalTruncNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Absolute value operator.
+Operand:    An expression that evaluates to a number.
+
+Returns: 	The absolute value of <Operand>.
+            
+Example:
+	variable tVar as number
+	put the trunc of 3.9 into tVar -- tVar contains 3
+
+Description:
+The absolute value of <Operand> is the value of <Operand> if it is greater than or equal to 0, or the negation of the value of <Operand> if it is less than zero.
+
+Tags: Math
+*/
+
+syntax AbsOperator is prefix operator with precedence 1
+    "the" "abs" "of" <Operand: Expression>
+begin
+    MCMathEvalAbsNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Generates a pseudo-random number.
+
+Returns: 	A real between 0.0 and 1.0.
+            
+Example:
+	variable tVar as number
+	put any number into tVar -- 0 <= tVar <= 1
+
+Tags: Math
+
+*/
+
+syntax RandomNumber is expression
+    "any" "number"
+begin
+    MCMathEvalRandomReal(output)
+end syntax
+
+--
+
+/*
+Summary:    Min operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	The value of <Left>, if it is less than the value of <Right>, and the value of <Right> otherwise.
+
+Tags: Math
+*/
+
+syntax MinOperator is prefix operator with precedence 5
+    "the" "min" "of" <Left: Expression> "and" <Right: Expression>
+begin
+    MCMathEvalMinNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Max operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	The value of <Left>, if it is greater than the value of <Right>, and the value of <Right> otherwise.
+
+Tags: Math
+*/
+
+syntax MaxOperator is prefix operator with precedence 5
+    "the" "max" "of" <Left: Expression> "and" <Right: Expression>
+begin
+    MCMathEvalMaxNumber(Left, Right, output)
+end syntax
+
+--
+
+/*
+Summary:    Converts the base of <Operand>
+Operand:    An expression that evaluates to a string.
+Source:     An expression that evaluates to an integer.
+
+Returns: <Operand> converted to base 10.
+
+Description:
+Interprets a string in the desired base and converts it to decimal.
+
+>*Note:* The source base must be an integer between 2 and 32.
+
+Tags: Math
+*/
+
+syntax BaseConvertFrom is left binary operator with precedence 1
+    <Operand: Expression> "converted" "from" "base" <Source: Expression>
+begin
+    MCMathEvalConvertToBase10(Operand, Source, output)
+end syntax
+
+/*
+Summary:    Converts the base of <Operand>
+Operand:    An expression that evaluates to an integer.
+Target:     An expression that evaluates to an integer.
+
+Returns: 	A string representation of <Operand> in base <Target>.
+
+Description:
+Converts a decimal into the desired base, and returns a string representation.
+
+>*Note:* The destination base must be an integer between 2 and 32.
+
+Tags: Math
+*/
+
+syntax BaseConvertTo is left binary operator with precedence 1
+    <Operand: Expression> "converted" "to" "base" <Target: Expression>
+begin
+    MCMathEvalConvertFromBase10(Operand, Target, output)
+end syntax
+
+/*
+Summary:    Converts the base of <Operand>
+Operand:    An expression that evaluates to a string.
+Source:     An expression that evaluates to an integer.
+Target:     An expression that evaluates to an integer.
+
+Returns: 	A string representation <Operand> interpreted as a number in base <From>, converted to base <To>.
+
+Description:
+Interprets a string in the desired source base and converts it to the desired target base, and returns a string representation.
+
+>*Note:* The source and destination bases must be integers between 2 and 32.
+
+Tags: Math
+*/
+
+syntax BaseConvert is left binary operator with precedence 1
+    <Operand: Expression> "converted" "from" "base" <Source: Expression> "to" "base" <Target: Expression>
+begin
+    MCMathEvalConvertBase(Operand, Source, Target, output)
+end syntax
+
+--
+
+end module

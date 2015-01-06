@@ -1,0 +1,200 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library consists of the sorting operations provided by the standard library of LiveCode Builder.
+*/
+
+module com.livecode.sort
+
+public foreign handler MCSortExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingText(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingBinary(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending text order.
+Target:         An expression that evaluates to a list of strings.
+
+Example:
+    variable tTestList as list
+    put the empty list into tTestList
+
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+
+    sort tTestList in ascending order -- tTestList is ["abcd", "xyz", 2, 1]
+
+Description:
+Text sort is performed by comparing string elements on a codepoint by codepoint basis. Non-string elements come after all string elements in the sort order. The sort is stable, so that non-string elements are not re-ordered relative to each other.
+
+Tags: Sorting
+*/
+
+syntax SortListAscendingText is statement
+    "sort" <Target: Expression> "in" "ascending" ["text"] "order"
+begin 
+    MCSortExecSortListAscendingText(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending text order.
+Target:         An expression that evaluates to a list of strings.
+
+Example:
+    variable tTestList as list
+    put the empty list into tTestList
+
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+
+    sort tTestList in descending order -- tTestList is ["xyz", "abcd", 1, 2]
+
+Description:
+Text sort is performed by comparing string elements on a codepoint by codepoint basis. Non-string elements come after all string elements in the sort order. The sort is stable, so that non-string elements are not re-ordered relative to each other.
+
+Tags: Sorting
+*/
+
+syntax SortListDescendingText is statement
+    "sort" <Target: Expression> "in" "descending" ["text"] "order"
+begin 
+    MCSortExecSortListDescendingText(Target)
+end syntax
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending binary order.
+Target:         An expression that evaluates to a list of binary data.
+
+Description:
+Binary sort is performed by comparing data elements on a byte by byte basis. Non-data elements come after all data elements in the sort order. The sort is stable, so that non-data elements are not re-ordered relative to each other.
+
+Tags: Sorting
+*/
+
+syntax SortListAscendingBinary is statement
+    "sort" <Target: Expression> "in" "ascending" "byte" "order"
+begin 
+    MCSortExecSortListAscendingBinary(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending binary order.
+Target:         An expression that evaluates to a list of binary data.
+
+Description:
+Binary sort is performed by comparing data elements on a byte by byte basis. Non-data elements come after all data elements in the sort order. The sort is stable, so that non-data elements are not re-ordered relative to each other.
+
+Tags: Sorting
+*/
+
+syntax SortListDescendingBinary is statement
+    "sort" <Target: Expression> "in" "descending" "byte" "order"
+begin 
+    MCSortExecSortListDescendingBinary(Target)
+end syntax
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending numeric order.
+Target:         An expression that evaluates to a list of numbers.
+
+Example:
+    variable tTestList as list
+    put the empty list into tTestList
+
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+
+    sort tTestList in ascending numeric order -- tTestList is [1, 2, "abcd", "xyz"]
+    
+Description:
+Numeric sort is performed by comparing numeric elements by cardinality. Non-numeric elements come after all numeric elements in the sort order. The sort is stable, so that non-numeric elements are not re-ordered relative to each other.
+
+Tags: Sorting
+*/
+
+syntax SortListAscendingNumeric is statement
+    "sort" <Target: Expression> "in" "ascending" "numeric" "order"
+begin 
+    MCSortExecSortListAscendingNumeric(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending numeric order.
+Target:         An expression that evaluates to a list of numbers.
+
+Example:
+    variable tTestList as list
+    put the empty list into tTestList
+
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+
+    sort tTestList in descending numeric order -- tTestList is [2, 1, "abcd", "xyz"]
+    	
+Description:
+Numeric sort is performed by comparing numeric elements by cardinality. Non-numeric elements come after all numeric elements in the sort order. The sort is stable, so that non-numeric elements are not re-ordered relative to each other.
+
+Tags: Sorting
+*/
+
+syntax SortListDescendingNumeric is statement
+    "sort" <Target: Expression> "in" "descending" "numeric" "order"
+begin 
+    MCSortExecSortListDescendingNumeric(Target)
+end syntax
+
+--
+
+syntax SortListAscendingDateTime is statement
+    "sort" <Target: Expression> "in" "ascending" "chronological" "order"
+begin 
+    MCSortExecSortListAscendingDateTime(Target)
+end syntax
+
+syntax SortListDescendingDateTime is statement
+    "sort" <Target: Expression> "in" "descending" "chronological" "order"
+begin 
+    MCSortExecSortListDescendingDateTime(Target)
+end syntax
+
+--
+
+end module

@@ -3254,7 +3254,7 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
 
 	if (target != NULL)
         if (!target->getobj(ctxt, optr, parid, True)
-		        || optr == NULL && mode != SC_EDITING)
+            || (optr == NULL && mode != SC_EDITING))
 		{
             ctxt . LegacyThrow(EE_STOP_BADTARGET);
             return;

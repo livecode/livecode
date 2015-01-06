@@ -53,6 +53,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stacktile.cpp"
 
+#include "script.h"
+
+extern bool MCModulesInitialize();
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Various globals depended on by other parts of the engine.
@@ -1789,6 +1793,8 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidde
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
     MCInitialize();
+    MCModulesInitialize();
+    MCScriptInitialize();
     
 	MCLog("doCreate called", 0);
 
@@ -2804,3 +2810,23 @@ JNIEnv *MCJavaGetThreadEnv()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// No theming for mobile platforms yet
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&)
+{
+    return false;
+}

@@ -285,8 +285,8 @@ void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos)
 			{
 				MCParentScriptUse *t_parentscript;
 				t_parentscript = ctxt . GetParentScript();
-				if (t_parentscript == NULL && MCbreakpoints[i].object == ctxt.GetObject() ||
-					t_parentscript != NULL && MCbreakpoints[i].object == t_parentscript -> GetParent() -> GetObject())
+				if ((t_parentscript == NULL && MCbreakpoints[i].object == ctxt.GetObject()) ||
+				    (t_parentscript != NULL && MCbreakpoints[i].object == t_parentscript -> GetParent() -> GetObject()))
 				MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0, MCbreakpoints[i].info);
 			}
 	}

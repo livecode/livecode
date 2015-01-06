@@ -83,6 +83,8 @@ enum Object_type {
 	OT_PARAGRAPH_EXT,
 	// MW-2012-03-04: [[ StackFile5500 ]] The extended block tag.
 	OT_BLOCK_EXT,
+    // MW-2014-12-16: [[ Widgets ]] The widget object tag.
+    OT_WIDGET,
 };
 
 #define IO_WRITTEN    (1UL << 0)

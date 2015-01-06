@@ -93,7 +93,7 @@ const char *MCVideoClip::gettypestring()
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -121,7 +121,7 @@ Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 		break;
 #endif /* MCVideoClip::getprop */
 	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

@@ -874,11 +874,13 @@ MCParagraph* PrepareLayoutSettings(bool all, MCField *p_field, uint32_t p_part_i
 
 // SN-2014-11-04: [[ Bug 13934 ]] Update the area of the field to redraw,
 //  depending on the paragraph settings.
-void LayoutParagraph(MCParagraph* p_paragraph, MCFieldLayoutSettings &x_layout_settings)
+// SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+void LayoutParagraph(MCParagraph* p_paragraph, MCFieldLayoutSettings &x_layout_settings, bool p_force)
 {
     // AL-2014-07-14: [[ Bug 12789 ]] Defragging can cause paragraph to need layout, do make sure we relayout
     //  if it did. Otherwise setting properties that avoid relayout can cause crashes.
-    if (p_paragraph -> getneedslayout() && !x_layout_settings . all && p_paragraph->getopened())
+    // SN-2014-12-18: [[ Bug 14161 ]] The relayout can be forced
+    if (p_force || (p_paragraph -> getneedslayout() && !x_layout_settings . all && p_paragraph->getopened()))
     {
         // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
         // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
@@ -938,7 +940,8 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
         sptr -> cleanattrs();
 
         // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
-        LayoutParagraph(sptr, t_layout_settings);
+        // SN-2014-12-18: [[ Bug 14161 ]] Forces the re-layout of this paragraph which has been changed
+        LayoutParagraph(sptr, t_layout_settings, true);
         
         ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
@@ -959,11 +962,11 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     // Sanity check for lengths
     uindex_t t_para_len;
     t_para_len = p_paragraph->gettextlength();
-    if (si > t_para_len)
+    if (si > 0 && (uindex_t) si > t_para_len)
     {
         si = ei = t_para_len;
     }
-    else if (ei > t_para_len)
+    else if (ei > 0 && (uindex_t) ei > t_para_len)
     {
         ei = t_para_len;
     }
@@ -1043,7 +1046,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
 
             // MCParagraph scope
             {
-                uindex_t t_ei;
+                findex_t t_ei;
                 t_ei = MCU_min(ei, pgptr -> gettextlength());
                 bool t_blocks_changed;
                 bool t_need_layout;
@@ -1108,7 +1111,8 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             // end of MCParagraph scope
 
             // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
-            LayoutParagraph(pgptr, t_layout_settings);
+            // SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+            LayoutParagraph(pgptr, t_layout_settings, false);
         }
 
         si = MCU_max(0, si - t_pg_length);
@@ -1153,7 +1157,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             
             // MCParagraph scope
             {
-                uindex_t t_ei;
+                findex_t t_ei;
                 t_ei = MCU_min(ei, pgptr -> gettextlength());
                 bool t_blocks_changed;
                 bool t_need_layout;
@@ -1218,7 +1222,8 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             // end of MCParagraph scope
 
             // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
-            LayoutParagraph(pgptr, t_layout_settings);
+            // SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+            LayoutParagraph(pgptr, t_layout_settings, false);
         }
         
         si = MCU_max(0, si - t_pg_length);
@@ -1651,8 +1656,9 @@ void MCField::GetFormattedHeightOfCharChunk(MCExecContext& ctxt, uint32_t p_part
         int4 maxy = 0;
         do
         {
-            if (maxy != 0)
-                maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
+            // FG-2014-12-03: [[ Bug 11688 ]] The margins get counted twice...
+            //if (maxy != 0)
+            //    maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
             maxy += sptr->getyextent(ei, fixedheight);
             ei -= sptr->gettextlengthcr();
             sptr = sptr->next();
@@ -1890,11 +1896,11 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
     // Loop while there is a range to flag and and we haven't gone further than ei
     while (t_range_index < value . count
-           && t_next_range . start < ei
+           && (findex_t) t_next_range . start < ei
            && t_paragraph_offset < ei)
     {
         // if the next range doesn't cover this paragraph, we skip the paragraph
-        if (t_next_range . start > t_paragraph_offset + sptr -> gettextlengthcr())
+        if ((findex_t) t_next_range . start > t_paragraph_offset + sptr -> gettextlengthcr())
         {
             t_paragraph_offset += sptr -> gettextlengthcr();
             sptr = sptr -> next();
@@ -1913,7 +1919,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
                && t_block_offset < ei)
         {
             // skip block if it's not covered by the next range
-            if (t_next_range . start > t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . start > t_block_offset + bptr -> GetLength())
             {
                 t_block_offset += bptr -> GetLength();
                 bptr = bptr -> next();
@@ -1922,7 +1928,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range doesn't start at the beginning of the block
             // we must split the block and skip the first part
-            if (t_next_range . start > t_block_offset)
+            if ((findex_t) t_next_range . start > t_block_offset)
             {
                 bptr -> split(t_next_range . start);
                 t_block_offset += bptr -> GetLength();
@@ -1931,7 +1937,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range doesn't cover the block up to its end
             // we must split it
-            if (t_next_range . end < t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . end < t_block_offset + bptr -> GetLength())
                 bptr -> split(t_next_range . end);
 
             // Flag the block
@@ -1939,7 +1945,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range went further than the block
             // we must keep track of this and update the next range to be flagged
-            if (t_next_range . end > t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . end > t_block_offset + bptr -> GetLength())
                 t_next_range . start = t_block_offset + bptr -> GetLength();
             // otherwise we set the next range to the appropriate value
             else if (t_range_index < value . count)

@@ -1121,6 +1121,9 @@ enum
 	kMCValueCustomHeaderSize = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uintptr_t)
 };
 
+/* If you add a new function pointer to this structure, don't forget
+ * to add a default implementation of the function to
+ * foundation-custom.cpp */
 struct MCValueCustomCallbacks
 {
 	bool is_singleton : 1;
@@ -1892,6 +1895,9 @@ MC_DLLEXPORT uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, 
 // Nativize self
 MC_DLLEXPORT void MCStringNativize(MCStringRef string);
 
+// Create a native copy of p_string
+MC_DLLEXPORT bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy);
+
 // Maps from a codepoint (character) range to a code unit (StringRef) range
 MC_DLLEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
 
@@ -2225,6 +2231,8 @@ MC_DLLEXPORT extern MCDataRef kMCEmptyData;
 MC_DLLEXPORT bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 MC_DLLEXPORT bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 
+MC_DLLEXPORT bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data);
+
 MC_DLLEXPORT bool MCDataIsEmpty(MCDataRef p_data);
 
 MC_DLLEXPORT uindex_t MCDataGetLength(MCDataRef p_data);
@@ -2479,6 +2487,8 @@ MC_DLLEXPORT bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValu
 MC_DLLEXPORT bool MCRecordEncodeAsArray(MCRecordRef record, MCArrayRef & r_array);
 MC_DLLEXPORT bool MCRecordDecodeFromArray(MCArrayRef array, MCTypeInfoRef p_typeinfo, MCRecordRef & r_record);
 
+MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCNameRef& r_field, MCValueRef& r_value);
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  HANDLER DEFINITIONS
@@ -2524,6 +2534,11 @@ MC_DLLEXPORT MCValueRef MCErrorGetTargetAtLevel(MCErrorRef error, uindex_t level
 MC_DLLEXPORT uindex_t MCErrorGetRowAtLevel(MCErrorRef error, uindex_t row);
 MC_DLLEXPORT uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column);
 
+// Create and throw an error. The arguments are used to build the info dictionary.
+// They should be a sequence of pairs (const char *key, MCValueRef value), and finish
+// with nil.
+MC_DLLEXPORT bool MCErrorCreateAndThrow(MCTypeInfoRef typeinfo, ...);
+    
 // Throw the given error code (local to the current thread).
 MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
 
@@ -2540,7 +2555,8 @@ MC_DLLEXPORT MCErrorRef MCErrorPeek(void);
 MC_DLLEXPORT bool MCErrorThrowOutOfMemory(void);
 
 // Throw a generic runtime error (one that hasn't had a class made for it yet).
-MC_DLLEXPORT bool MCErrorThrowGeneric(void);
+// The message argument is optional (nil if no message).
+MC_DLLEXPORT bool MCErrorThrowGeneric(MCStringRef message);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

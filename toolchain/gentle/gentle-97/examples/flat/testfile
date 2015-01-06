@@ -1,0 +1,4 @@
+declare ten = 10
+write ten
+write twenty
+declare twenty = 20

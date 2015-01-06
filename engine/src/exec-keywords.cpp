@@ -385,7 +385,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 	MCNameRef t_key;
 	MCValueRef t_value;
 	uintptr_t t_iterator;
-    const byte_t *t_data_ptr, *t_data_end;
+    const byte_t *t_data_ptr;
     Parse_stat ps;
     MCScriptPoint *sp = nil;
     int4 count = 0;
@@ -427,7 +427,6 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             
             t_length = MCDataGetLength(*t_data);
             t_data_ptr = MCDataGetBytePtr(*t_data);
-            t_data_end = t_data_ptr + t_length;
         }
         else
         {

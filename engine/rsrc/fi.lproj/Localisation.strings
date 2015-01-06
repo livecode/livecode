@@ -1,0 +1,21 @@
+/* Format string such as About %@" */
+"appMenu.about" = "Tietoja: %@";
+
+/* Format string such as Hide %@ */
+"appMenu.hide" = "Kätke %@";
+
+/* Hide Others */
+"appMenu.hideOthers" = "Kätke muut";
+
+/* Preferences */
+"appMenu.preferences" = "Asetukset…";
+
+/* Format string such as Quit %@ */
+"appMenu.quit" = "Lopeta %@";
+
+/* Services */
+"appMenu.services" = "Palvelut";
+
+/* Show All */
+"appMenu.showAll" = "Näytä kaikki";
+

@@ -32,4 +32,3 @@ $(TARGET_PATH): $(OBJECTS) $(DEPS)
 
 .PHONY: $(NAME)
 $(NAME): $(TARGET_PATH)
-	#

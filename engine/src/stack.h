@@ -273,6 +273,9 @@ protected:
 	
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
+    
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
 
 public:
 	Boolean menuwindow;
@@ -307,8 +310,9 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void setrect(const MCRectangle &nrect);
+
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
 
@@ -319,6 +323,8 @@ public:
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 	virtual void recompute();
 	
+    virtual void toolchanged(Tool p_new_tool);
+    
 	// MW-2011-09-20: [[ Collision ]] Compute shape of stack.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
@@ -535,6 +541,11 @@ public:
     
 	//////////
 	
+    // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
+    bool substackhaswidgets();
+    
+	//////////
+    
 	void setgeom();
 	
 	//////////

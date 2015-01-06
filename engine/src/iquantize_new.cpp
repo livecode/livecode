@@ -192,6 +192,12 @@ uint32_t MCWeightedPixelBox::split_axis(uint32_t p_channel, uint32_t p_left, uin
 	return pivot_pixels_by_value(pixels, p_channel, p_left, p_right, p_pivot_value, t_weight);
 }
 
+static int32_t vbox_compare_population(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+static int32_t vbox_compare_longest_dimension(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+static int32_t vbox_compare_volume(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+static int32_t vbox_compare_volume_population_product(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+static int32_t vbox_compare_null(MCWeightedPixelBox *, MCWeightedPixelBox *) ATTRIBUTE_UNUSED;
+
 static int32_t vbox_compare_population(MCWeightedPixelBox *p_a, MCWeightedPixelBox *p_b)
 {
 	return p_a->population - p_b->population;
@@ -271,7 +277,7 @@ bool MCImageMedianCutQuantization(MCWeightedPixel *p_pixels, uint32_t p_pixel_co
 			uint32_t t_midpoint_index = t_box->split_axis(t_box->longest_axis, t_box->first, t_median_index, t_midpoint_value) - 1;
 			t_box1 = new MCWeightedPixelBox(p_pixels, t_box->first, t_midpoint_index);
 			t_box2 = new MCWeightedPixelBox(p_pixels, t_midpoint_index + 1, t_box->last);
-			MCLog("split axis %d by value %d into %d+%d (population %d, first %d)", t_box->longest_axis, t_midpoint_value, t_box1->population, t_box2->population, t_box->population, t_box->first);
+            //MCLog("split axis %d by value %d into %d+%d (population %d, first %d)", t_box->longest_axis, t_midpoint_value, t_box1->population, t_box2->population, t_box->population, t_box->first);
 		}
 		else
 		{
@@ -279,7 +285,7 @@ bool MCImageMedianCutQuantization(MCWeightedPixel *p_pixels, uint32_t p_pixel_co
 			uint32_t t_midpoint_index = t_box->split_axis(t_box->longest_axis, t_median_index, t_box->last, t_midpoint_value) - 1;
 			t_box1 = new MCWeightedPixelBox(p_pixels, t_box->first, t_midpoint_index);
 			t_box2 = new MCWeightedPixelBox(p_pixels, t_midpoint_index + 1, t_box->last);
-			MCLog("split axis %d by value %d into %d+%d (population %d, first %d)", t_box->longest_axis, t_midpoint_value, t_box1->population, t_box2->population, t_box->population, t_box->first);
+            //MCLog("split axis %d by value %d into %d+%d (population %d, first %d)", t_box->longest_axis, t_midpoint_value, t_box1->population, t_box2->population, t_box->population, t_box->first);
 		}
 
 		t_box1->pre_count = t_box->pre_count;

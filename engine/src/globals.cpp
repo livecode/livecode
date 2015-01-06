@@ -22,7 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
 #include "undolst.h"
 #include "sellst.h"
 #include "stacklst.h"
@@ -51,6 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parentscript.h"
 #include "osspec.h"
 #include "variable.h"
+#include "widget.h"
 
 #include "printer.h"
 
@@ -72,6 +72,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "date.h"
 #include "systhreads.h"
 #include "stacktile.h"
+
+#include "widget-events.h"
 
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
@@ -444,6 +446,8 @@ Boolean MChidebackdrop = False;
 Boolean MCraisewindows = False;
 
 uint4 MCmajorosversion = 0;
+// PM-2014-12-08: [[ Bug 13659 ]] Toggle the value of ignoreVoiceOverSensitivity property of iOS native controls
+Boolean MCignorevoiceoversensitivity = False;
 
 MCTheme *MCcurtheme = NULL;
 
@@ -1031,7 +1035,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	//   screen, otherwise we don't have a root fontref!
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
 #if defined(TARGET_PLATFORM_WINDOWS)
-	if (MCmajorosversion >= 0x0600)
+	/*if (MCmajorosversion >= 0x0600)
 	{
 		// Vista onwards
 		MCdispatcher -> setfontattrs(MCSTR("Segoe UI"), 12, FA_DEFAULT_STYLE);
@@ -1039,18 +1043,18 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	else
 	{
 		// Pre-Vista
-		MCdispatcher -> setfontattrs(MCSTR("Tahoma"), 11, FA_DEFAULT_STYLE);
-	}
+		MCdispatcher -> setfontattrs("Tahoma", 11, FA_DEFAULT_STYLE);
+	}*/
 #elif defined(TARGET_PLATFORM_MACOS_X)
-    if (MCmajorosversion < 0x10A0)
-        MCdispatcher -> setfontattrs(MCSTR("Lucida Grande"), 11, FA_DEFAULT_STYLE);
+    /*if (MCmajorosversion < 0x10A0)
+        MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
     else
     {
-        MCdispatcher -> setfontattrs(MCSTR("Helvetica Neue"), 11, FA_DEFAULT_STYLE);
-        MCttfont = MCSTR("Helvetica Neue");
-    }
+        MCdispatcher -> setfontattrs("Helvetica Neue", 11, FA_DEFAULT_STYLE);
+        MCttfont = "Helvetica Neue";
+    }*/
 #elif defined(TARGET_PLATFORM_LINUX)
-	MCdispatcher -> setfontattrs(MCSTR("Helvetica"), 12, FA_DEFAULT_STYLE);
+    //MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
 #else
 	MCdispatcher -> setfontattrs(MCSTR(DEFAULT_TEXT_FONT), DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
 #endif
@@ -1081,6 +1085,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
 	
+    MCwidgeteventmanager = new MCWidgetEventManager;
+    
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
 	MCresult -> clear();
@@ -1236,6 +1242,8 @@ int X_close(void)
 	MCprinter -> Finalize();
 	delete MCprinter;
 	
+    delete MCwidgeteventmanager;
+    
 	delete MCsslcertificates;
 	delete MCdefaultnetworkinterface;
 	

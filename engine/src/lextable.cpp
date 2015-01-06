@@ -1074,6 +1074,7 @@ LT factor_table[] =
         {"jpegquality", TT_PROPERTY, P_JPEG_QUALITY},
         {"keys", TT_FUNCTION, F_KEYS},
         {"keysdown", TT_FUNCTION, F_KEYS_DOWN},
+        {"kind", TT_PROPERTY, P_KIND},
         {"label", TT_PROPERTY, P_LABEL},
         {"labelwidth", TT_PROPERTY, P_LABEL_WIDTH},
         {"last", TT_CHUNK, CT_LAST},
@@ -1114,6 +1115,7 @@ LT factor_table[] =
         {"liveresizing", TT_PROPERTY, P_LIVE_RESIZING},
         {"ln", TT_FUNCTION, F_LN},
         {"ln1", TT_FUNCTION, F_LN1},
+        {"loadedextensions", TT_PROPERTY, P_LOADED_EXTENSIONS},
         {"loadedtime", TT_PROPERTY, P_MOVIE_LOADED_TIME},
         {"loc", TT_PROPERTY, P_LOCATION},
         {"localloc", TT_FUNCTION, F_LOCAL_LOC},
@@ -1783,6 +1785,8 @@ LT factor_table[] =
         {"weekdaynames", TT_FUNCTION, F_WEEK_DAY_NAMES},
         {"wholematches", TT_PROPERTY, P_WHOLE_MATCHES},
         {"widemargins", TT_PROPERTY, P_WIDE_MARGINS},
+        {"widget", TT_CHUNK, CT_WIDGET},
+        {"widgets", TT_CLASS, CT_WIDGET},
         {"width", TT_PROPERTY, P_WIDTH},
         {"window", TT_CHUNK, CT_STACK},
         {"windowboundingrect", TT_PROPERTY, P_WINDOW_BOUNDING_RECT},
@@ -1991,7 +1995,7 @@ static LT reset_table[] =
         {"templateplayer", TT_UNDEFINED, RT_TEMPLATE_PLAYER},
         {"templatescrollbar", TT_UNDEFINED, RT_TEMPLATE_SCROLLBAR},
         {"templatestack", TT_UNDEFINED, RT_TEMPLATE_STACK},
-        {"templatevideoclip", TT_UNDEFINED, RT_TEMPLATE_VIDEO_CLIP}
+        {"templatevideoclip", TT_UNDEFINED, RT_TEMPLATE_VIDEO_CLIP},
     };
 
 static LT show_table[] =
@@ -2072,6 +2076,7 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
+        {"extension", TT_UNDEFINED, SG_EXTENSION},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'failure'
 		{"failure", TT_UNDEFINED, SG_FAILURE},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'false'

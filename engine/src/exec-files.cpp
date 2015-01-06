@@ -2141,7 +2141,7 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
         // SN-2014-10-14: [[ Bug 13658 ]] In case we want to read everything (EOF, end, empty) from a binary process,
         //  the sentinel must be empty, not Ctrl-D (0x04, which might appear in a binary data output.
         MCAutoStringRef t_sentinel;
-        if (MCprocesses[t_index] . encoding == kMCFileEncodingBinary &&
+        if (MCprocesses[t_index] . encoding == (Encoding_type) kMCFileEncodingBinary &&
             MCStringGetLength(p_sentinel) == 1 && MCStringGetCharAtIndex(p_sentinel, 0) == 0x4)
             t_sentinel = kMCEmptyString;
         else
@@ -2238,7 +2238,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 				MCAutoStringRef s;
 				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMake(t_start_pos, t_data_pos - t_start_pos), &s); 
 				real8 n;
-				if (!MCU_stor8(*s, n))
+				if (!MCTypeConvertStringToReal(*s, n))
 				{
 					ctxt . LegacyThrow(EE_FUNCTION_NAN);
 					r_stat = IO_ERROR;
