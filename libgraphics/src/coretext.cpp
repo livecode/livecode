@@ -39,7 +39,7 @@ void MCGPlatformInitialize(void)
     s_text_colour = NULL;
     s_measure_context = NULL;
     s_measure_data = NULL;
-    const float t_colour_components[] = {1.0, 1.0};
+    const CGFloat t_colour_components[] = {1.0, 1.0};
 #ifdef TARGET_SUBPLATFORM_IPHONE
     // iOS doesn't support device-independent or generic color spaces
     s_colour_space = CGColorSpaceCreateDeviceGray();

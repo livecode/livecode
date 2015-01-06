@@ -757,8 +757,8 @@ static char *runloop_wait(const char *arg1, const char *arg2,
 static char *stack_to_window_rect(const char *arg1, const char *arg2,
 									   const char *arg3, int *retval)
 {
-	uint32_t t_win_id;
-	t_win_id = (uint32_t)arg1;
+	uintptr_t t_win_id;
+	t_win_id = (uintptr_t)arg1;
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher->findstackwindowid(t_win_id);
@@ -785,8 +785,8 @@ static char *stack_to_window_rect(const char *arg1, const char *arg2,
 static char *window_to_stack_rect(const char *arg1, const char *arg2,
 									   const char *arg3, int *retval)
 {
-	uint32_t t_win_id;
-	t_win_id = (uint32_t)arg1;
+	uintptr_t t_win_id;
+	t_win_id = (uintptr_t)arg1;
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher->findstackwindowid(t_win_id);
