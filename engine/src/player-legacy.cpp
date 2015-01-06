@@ -2250,10 +2250,12 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 #endif
     
 	if (getflag(F_SHOW_BORDER))
+	{
 		if (getflag(F_3D))
 			draw3d(dc, rect, ETCH_SUNKEN, borderwidth);
 		else
 			drawborder(dc, rect, borderwidth);
+	}
 	
 	if (!p_isolated)
 	{
