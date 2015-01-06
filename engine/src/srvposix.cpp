@@ -459,7 +459,14 @@ struct MCPosixSystem: public MCSystemInterface
 	}
 	
 	////
-	
+
+	virtual bool GetExecutablePath(MCStringRef& r_path)
+	{
+		MCAutoStringRef t_proc_path;
+		MCStringCreateWithCString("/proc/self/exe", &t_proc_path);
+		return ResolvePath(*t_proc_path, r_path);
+	}
+
 	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
 		return MCStringCopy(p_path, r_native);

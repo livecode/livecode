@@ -386,10 +386,10 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
         return false;
     
     ////
-
-	MCAutoStringRef t_native_command_string;
-	MCsystem -> ResolvePath(argv[0], &t_native_command_string);
-	MCsystem -> PathFromNative(*t_native_command_string, MCcmd);
+    
+    // ST-2014-12-18: [[ Bug 14259 ]] Update to get the executable file from the system
+    // since ResolvePath must behave differently on Linux
+	MCsystem -> GetExecutablePath(MCcmd);
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the

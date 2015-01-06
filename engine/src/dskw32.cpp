@@ -3484,6 +3484,17 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return true;
     }
     
+    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
+	virtual bool GetExecutablePath(MCStringRef& r_path)
+	{
+		WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
+		DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
+		
+		MCAutoStringRef t_path;
+		MCStringCreateWithWStringAndRelease(wcFileNameBuf, &t_path);
+		return PathFromNative(*t_path, r_path);
+	}
+
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
 #ifdef /* MCU_path2native */ LEGACY_SYSTEM
