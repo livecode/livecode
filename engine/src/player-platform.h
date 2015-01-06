@@ -190,6 +190,7 @@ public:
 	Boolean playstart(const char *options);
 	Boolean playpause(Boolean on);
 	void playstepforward();
+    bool resolveplayerfilename(const char *p_filename, char *&r_filename);
     //void playfast(Boolean forward);
     //void playfastforward();
     //void playfastback();
