@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /Users/panos/Develop/livecode/engine/src/java/com/android/vending/billing/IInAppBillingService.aidl
+ * Original file: /Users/alilloyd/Documents/GitHub/livecode-ali/refactor-syntax/engine/src/java/com/android/vending/billing/IInAppBillingService.aidl
  */
 package com.android.vending.billing;
 /**
