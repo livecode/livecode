@@ -696,10 +696,6 @@ void MCX11PutImage(GdkDisplay *p_dpy, GdkDrawable* d, GdkRegion* p_clip_region, 
 	if (d == nil)
 		return;
 
-	GdkGC *t_gc;
-
-	t_gc = gdk_gc_new(d);
-
     // If we use gdk_draw_pixbuf, the pixbuf gets blended with the existing
     // contents of the window - something that we definitely do not want. We
     // need to use Cairo directly to do the drawing to the window surface.
