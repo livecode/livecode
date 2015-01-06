@@ -766,10 +766,6 @@ void MCScreenDC::flush(Window w)
 
 void MCScreenDC::beep()
 {
-	bool t_use_internal = false ; 
-	if ( m_sound_internal != NULL)
-		if ( strcmp(m_sound_internal, "internal") == 0 )
-			t_use_internal = true ;
 	gdk_beep();
 }
 
