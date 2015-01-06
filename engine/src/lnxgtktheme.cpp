@@ -656,7 +656,7 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo,
 			gint xthickness,ythickness;
 			GtkThemeWidgetType  moztype;
 			gint flags = 0 ;
-			GtkWidgetState state = getpartandstate(winfo, moztype, flags);
+			getpartandstate(winfo, moztype, flags);
 			if (moz_gtk_get_widget_border(moztype, &xthickness,
 			                              &ythickness) == MOZ_GTK_SUCCESS)
 			{
