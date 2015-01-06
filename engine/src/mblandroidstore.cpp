@@ -72,9 +72,6 @@ typedef struct
     MCStringRef error;
 } MCAndroidPurchase;
 
-static bool s_can_make_purchase_returned = false;
-static bool s_can_make_purchase = false;
-
 ////////////////////////////////////////////////////////////////////////
 
 void MCPurchaseGetProductIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier);
@@ -111,15 +108,9 @@ bool MCStoreCanMakePurchase()
 {
     bool t_result = false;
     
-    s_can_make_purchase_returned = false;
-    s_can_make_purchase = false;
-    
     MCAndroidEngineRemoteCall("storeCanMakePurchase", "b", &t_result);
     
-    while (!s_can_make_purchase_returned)
-        MCscreen->wait(60, True, True);
-    
-    return s_can_make_purchase;
+    return t_result;
 }
 
 bool MCStoreEnablePurchaseUpdates()
@@ -578,14 +569,6 @@ void MCCStringReplace(char *&src, char *&dest)
     src = NULL;
 }
 #endif
-
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doBillingSupported(JNIEnv *env, jobject object, jboolean supported) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doBillingSupported(JNIEnv *env, jobject object, jboolean supported)
-{
-    s_can_make_purchase_returned = true;
-	s_can_make_purchase = supported;
-}
-
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestoreTransactionsResponse(JNIEnv *env, jobject object, jint responseCode) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestoreTransactionsResponse(JNIEnv *env, jobject object, jint responseCode)
