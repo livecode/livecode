@@ -69,127 +69,61 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    --   root path - root locaiton of the Developer tools (the XCode bundle)
    --
    
-   -- MM-2013-10-08: We now only build for Arm v7 devices for 2 reasons:
-   --   1) Codesigning universal builds broke when using the iOS 7 SDK.
-   --   2) We only support iOS 4.3 or later which only runs on > Arm V7 devices.
-   -- Code for building universal/Arm v6 is still present. Since we're overriding the build type here, it will never be called.
-   put "Arm v7" into tSettings["ios,build type"]
-   
    local tSDKs
    if pTarget is "Device" then      
       if revIDEDeployIOSSanatizeSystemVersion() < 100700 then   
          
-         -- MM-2012-09-18: For Snow Leopard, all device builds (both armv6 and armv6 components) are built using the iOS 5.0 SDK.
-         --
          get revIDEDeployIOSGetDeviceSDK("5.0")
          if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") then
             throw "performing iOS device builds requires the iOS 5.0 SDK platform to be installed (available with XCode 4.2)"
-         end if                  
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
-            put it into tSDKs["armv6"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["armv6"]["sdk path"]
-            put "5_0" into tSDKs["armv6"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
-         end if         
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            put it into tSDKs["armv7"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["armv7"]["sdk path"]
-            put "5_0" into tSDKs["armv7"]["suffix"] 
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]                                             
-         end if  
+         end if 
+         
+         put it into tSDKs["arm"]["root path"]
+         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["arm"]["sdk path"]
+         put "5_0" into tSDKs["arm"]["suffix"] 
+         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
          
       else if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
          
-         -- MM-2012-09-18: For Lion and later, armv6 device builds are built using the iOS 5.1 SDK (armv7 builds are no longer supported in the 6.0 SDK).
-         --
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
-            get revIDEDeployIOSGetDeviceSDK("5.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
-               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
-            end if                  
-            put it into tSDKs["armv6"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
-            put "5_1" into tSDKs["armv6"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
-         end if
-         
          -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
          --  
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            get revIDEDeployIOSGetDeviceSDK("6.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk") then
-               throw "performing iOS device builds requires the iOS 6.1 SDK platform to be installed (available with XCode 4.6)"
-            end if                  
-            put it into tSDKs["armv7"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk") into tSDKs["armv7"]["sdk path"]
-            put "6_1" into tSDKs["armv7"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
-         end if
+         get revIDEDeployIOSGetDeviceSDK("6.1")           
+         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk") then
+            throw "performing iOS device builds requires the iOS 6.1 SDK platform to be installed (available with XCode 4.6)"
+         end if                  
+         put it into tSDKs["arm"]["root path"]
+         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk") into tSDKs["arm"]["sdk path"]
+         put "6_1" into tSDKs["arm"]["suffix"]
+         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
          
       else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
          
-         -- MM-2013-09-23: [[ iOS7 Support ]] Use iOS 7 SDK for armv7 builds on 10.8.
-         --
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
-            get revIDEDeployIOSGetDeviceSDK("5.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
-               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
-            end if                  
-            put it into tSDKs["armv6"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
-            put "5_1" into tSDKs["armv6"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
-         end if         
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            get revIDEDeployIOSGetDeviceSDK("7.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") then
-               throw "performing iOS device builds requires the iOS 7.1 SDK platform to be installed (available with XCode 5.1)"
-            end if                  
-            put it into tSDKs["armv7"]["root path"]
-            put it & "/usr/bin" into tSDKs["armv7"]["tools path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") into tSDKs["armv7"]["sdk path"]
-            put "7_1" into tSDKs["armv7"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
-         end if
+         get revIDEDeployIOSGetDeviceSDK("7.1")           
+         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") then
+            throw "performing iOS device builds requires the iOS 7.1 SDK platform to be installed (available with XCode 5.1)"
+         end if                  
+         put it into tSDKs["arm"]["root path"]
+         put it & "/usr/bin" into tSDKs["arm"]["tools path"]
+         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") into tSDKs["arm"]["sdk path"]
+         put "7_1" into tSDKs["arm"]["suffix"]
+         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
          
       else
          
          -- MM-2014-10-21: [[ iOS 8.1 Support ]] Use iOS 8.1 SDK for armv7 builds on 10.9.
          --
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
-            get revIDEDeployIOSGetDeviceSDK("5.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
-               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
-            end if                  
-            put it into tSDKs["armv6"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
-            put "5_1" into tSDKs["armv6"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
-         end if         
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            get revIDEDeployIOSGetDeviceSDK("8.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") then
-               throw "performing iOS device builds requires the iOS 8.1 SDK platform to be installed (available with XCode 6.1)"
-            end if                  
-            put it into tSDKs["armv7"]["root path"]
-            put it & "/usr/bin" into tSDKs["armv7"]["tools path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") into tSDKs["armv7"]["sdk path"]
-            put "8_1" into tSDKs["armv7"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
-         end if
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm64" then
-	    get revIDEDeployIOSGetDeviceSDK("8.1")
-	    if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") then
-	       throw "performing iOS device builds requires the iOS 8.1 SDK platform to be installed (available with XCode 6.1)"
-	    end if
-	    put it into tSDKs["arm64"]["root path"]
-	    put it & "/usr/bin" into tSDKs["arm64"]["tools path"]
-	    put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") into tSDKs["arm64"]["sdk path"]
- 	    put "8_1" into tSDKs["arm64"]["suffix"]
-	    put revMobileRuntimeFolder(pTarget, tSDKs["arm64"]["suffix"]) into tSDKs["arm64"]["runtime path"]
-	 end if
+         get revIDEDeployIOSGetDeviceSDK("8.1")           
+         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") then
+            throw "performing iOS device builds requires the iOS 8.1 SDK platform to be installed (available with XCode 6.1)"
+         end if                  
+         put it into tSDKs["arm"]["root path"]
+         put it & "/usr/bin" into tSDKs["arm"]["tools path"]
+         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") into tSDKs["arm"]["sdk path"]
+         put "8_1" into tSDKs["arm"]["suffix"]
+         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
          
       end if
+      
    else
       
       -- MM-2012-09-18: We now only support the 4.3 simulators or later.
@@ -358,9 +292,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if pTarget is "Device" then
       revStandaloneProgress "Linking engine..."      
       
-      -- MM-2012-09-18: We now build the armv6 and armv7 engines using separate SDKs.
-      --
-      repeat for each word tInstSet in "armv6 armv7 arm64"
+      repeat for each word tInstSet in "arm"
          if tSDKs[tInstSet]["suffix"] is empty then
             next repeat
          end if
@@ -430,13 +362,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             put "-dead_strip" & return after tLinkCommand
          end if
          
-         -- MW-2013-06-25: [[ PIE ]] Add the flag for 'PIE' executables, but only if not on ARMv6
-         -- MM-2013-09-23: [[ iOS7 Support ]] This causes warnings whn using XCode 5. Further investigation needed.
-         --
-         if tInstSet is not "armv6" then
-            --put "-pie" & return after tLinkCommand
-         end if
-         
          -- Add reference to the partially linked standalone engine
          put quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote & space after tLinkCommand
          
@@ -485,28 +410,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       
       -- MM-2012-09-18: We now should have the required engines linked.  If we are building a universal binary,
       -- create from the two separate linkede engines.
-      --
-      switch tSettings["ios,build type"]
-         case "Arm v6"
-            put tSDKs["armv6"]["engine file"] into tLinkEngineFile
-            break
-         case "Arm v7"
-            put tSDKs["armv7"]["engine file"] into tLinkEngineFile
-            break
-	 case "Arm64"
-	    put tSDKs["arm64"]["engine file"] into tLinkEngineFile
-	    break
-         case "Universal"
-         default
-            put tempName() into tLinkEngineFile
-            get shell("lipo -create" && quote & tSDKs["armv6"]["engine file"] & quote && quote & tSDKs["armv7"]["engine file"] quote && quote & tSDKs["arm64"]["engine file"] & quote && "-output" && quote & tLinkEngineFile & quote)
-            delete file tSDKs["armv6"]["engine file"]
-            delete file tSDKs["armv7"]["engine file"]
-	    delete file tSDKs["arm64"]["engine file"]
-            if it is not empty  then
-               throw "creating universal arm engine failed with" && it
-            end if
-      end switch      
+      --=
+      put tSDKs["arm"]["engine file"] into tLinkEngineFile
       
       if there is no file tLinkEngineFile then
          throw "creating engine failed"
