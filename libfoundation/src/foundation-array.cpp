@@ -297,7 +297,6 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 
 	// Lookup the slot for the first part of the path.
 	uindex_t t_slot;
-    // TODO for bug 14285 : Check why the following method returns false
 	if (!__MCArrayFindKeyValueSlot(t_contents, p_case_sensitive, p_path[0], t_slot))
 		return false;
 
