@@ -5716,8 +5716,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (MCStringGetLength(p_path) == 0)
             return False;
         
+        // SN-2015-01-05: [[ Bug 14043 ]] Apply the fix to MCS_exists
+        MCAutoStringRef t_redirected;
+        if (!MCS_apply_redirect(p_path, true, &t_redirected))
+            t_redirected = p_path;
+        
         MCAutoStringRefAsUTF8String t_utf8_path;
-        if (!t_utf8_path.Lock(p_path))
+        if (!t_utf8_path.Lock(*t_redirected))
             return False;
         
         bool t_found;
