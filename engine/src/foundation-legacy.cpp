@@ -1170,14 +1170,22 @@ MCString MCNameGetOldString(MCNameRef p_name)
 
 bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
+    MCStringRef t_key;
+    t_key = MCNameGetString(p_name);
+    
+    // AL-2015-01-05: [[ Bug 14303 ]] Don't treat keys of the form "01" as indices,
+    //  since for example "01" and "1" are distinct array keys.
+    if (MCStringGetLength(t_key) != 1 && MCStringGetCodepointAtIndex(t_key, 0) == '0')
+        return false;
+    
 	char *t_end;
 	index_t t_index;
     
     // AL-2014-05-15: [[ Bug 12203 ]] Don't nativize array name when checking
     //  for a sequential array.
-    
     MCAutoStringRefAsCString t_cstring;
-    t_cstring . Lock(MCNameGetString(p_name));
+    t_cstring . Lock(t_key);
+    
 	t_index = strtol(*t_cstring, &t_end, 10);
 	if (*t_end == '\0')
 	{
