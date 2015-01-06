@@ -1547,6 +1547,8 @@ MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typei
 // All the values must be distinct (i.e. MCValueIsEqualTo(values[i],
 // values[j]) must be false for all {i,j}).
 MC_DLLEXPORT bool MCEnumTypeInfoCreate(const MCValueRef *values, index_t value_count, MCTypeInfoRef & r_typeinfo);
+// Create a new enumerated type description, returning a new named type info bound to the new type.
+MC_DLLEXPORT bool MCEnumTypeInfoCreateWithName(const MCValueRef *values, index_t value_count, MCNameRef name, MCTypeInfoRef & r_typeinfo);
 
 // Get the number of distinct values permitted by the enumerated type.
 MC_DLLEXPORT uindex_t MCEnumTypeInfoGetValueCount(MCTypeInfoRef typeinfo);

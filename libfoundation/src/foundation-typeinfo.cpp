@@ -822,6 +822,24 @@ MCEnumTypeInfoCreate (const MCValueRef *p_values,
 	return t_success;
 }
 
+bool
+MCEnumTypeInfoCreateWithName (const MCValueRef *p_values,
+                              index_t p_value_count,
+                              MCNameRef p_name,
+                              MCTypeInfoRef & r_typeinfo)
+{
+	MCAutoTypeInfoRef t_raw_typeinfo, t_typeinfo;
+	if (!MCEnumTypeInfoCreate (p_values, p_value_count, &t_raw_typeinfo))
+		return false;
+
+	if (!(MCNamedTypeInfoCreate (p_name, &t_typeinfo) &&
+	      MCNamedTypeInfoBind (*t_typeinfo, *t_raw_typeinfo)))
+		return false;
+
+	r_typeinfo = MCValueRetain(*t_typeinfo);
+	return true;
+}
+
 uindex_t
 MCEnumTypeInfoGetValueCount (MCTypeInfoRef p_unresolved)
 {
