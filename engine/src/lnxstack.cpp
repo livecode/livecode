@@ -787,9 +787,9 @@ public:
 			t_mask = m_stack -> getwindowshape();
 			if (t_mask != nil && !t_mask -> is_sharp)
 			{
-				if (m_area.origin.x + m_area.size.width > t_mask->width)
+				if (m_area.origin.x + (int32_t) m_area.size.width > (int32_t) t_mask->width)
 					MCBitmapClearRegion(m_bitmap, t_mask->width, 0, m_area.origin.x + m_area.size.width - t_mask->width, m_area.size.height);
-				if (m_area.origin.y + m_area.size.height > t_mask->height)
+				if (m_area.origin.y + (int32_t) m_area.size.height > (int32_t) t_mask->height)
 					MCBitmapClearRegion(m_bitmap, 0, t_mask->height, m_area.size.width, m_area.origin.y + m_area.size.height - t_mask->height);
 					
 				uint32_t t_width = 0;

@@ -121,7 +121,7 @@ void MCGdkTransferStore::cleartypes()
 {
     if (m_entries != NULL)
     {
-        for (int32_t i = 0; i < m_entry_count; i++)
+        for (uint32_t i = 0; i < m_entry_count; i++)
         {
             if (m_entries[i].m_data != nil)
                 MCValueRelease(m_entries[i].m_data);
@@ -306,7 +306,7 @@ void MCGdkTransferStore::GetExternalTypes(GdkAtom p_selection, GdkWindow *p_targ
     if (t_property_type != GDK_SELECTION_TYPE_ATOM || t_property_format != 32)
         return;
     
-    for (gint i = 0; i < t_byte_len/sizeof(GdkAtom); i++)
+    for (gint i = 0; i < t_byte_len / (int) sizeof(GdkAtom); i++)
     {
         addAtom(((GdkAtom*)t_bytes)[i]);
     }
