@@ -458,7 +458,7 @@ void MCScreenDC::setinputfocus(Window window)
 	MCPlatformFocusWindow(window);
 }
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
 	if (d == nil)
 		return 0;
@@ -472,7 +472,7 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 	return t_id;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4 p_id, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t p_id, Window &w)
 {
     // MW-2014-07-15: [[ Bug 12800 ]] Map the windowId to a platform window if one exists.
     MCPlatformWindowRef t_window;

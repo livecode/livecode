@@ -687,15 +687,15 @@ void MCScreenDC::freecursor(MCCursorRef c)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
 	if (d == DNULL)
 		return 0;
 	
-	return (uint4)d -> handle . pixmap;
+	return (uintptr_t)d -> handle . pixmap;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t, Window &w)
 {
 	return False;
 }

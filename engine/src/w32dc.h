@@ -254,8 +254,8 @@ public:
 	virtual MCCursorRef createcursor(MCImageBitmap *image, int2 xhot, int2 yhot);
 	virtual void freecursor(MCCursorRef c);
 
-	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4towindow(uint4, Window &w);
+	virtual uintptr_t dtouint(Drawable d);
+	virtual Boolean uinttowindow(uintptr_t, Window &w);
 	virtual void getbeep(uint4 property, MCExecPoint &ep);
 	virtual void setbeep(uint4 property, int4 beep);
 	virtual void getvendorstring(MCExecPoint &ep);
