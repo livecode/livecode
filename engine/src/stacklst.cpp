@@ -264,6 +264,14 @@ MCStack *MCStacklist::getstack(uint2 n)
 bool MCStacklist::stackprops(MCExecContext& ctxt, Properties p_property, MCListRef& r_list)
 {
 	MCAutoListRef t_list;
+    
+    // SN-2015-01-05: [[ Bug 14330 ]] Return if there is no open stacks
+    if (stacks == NULL)
+    {
+        r_list = MCValueRetain(kMCEmptyList);
+        return true;
+    }
+    
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
