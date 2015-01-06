@@ -123,7 +123,9 @@ class MCButton : public MCControl
 	uint1 accelmods;
 	uint1 mnemonic;
 	uint1 menucontrol;
-    MCGravity m_icon_gravity : 4;
+	// SN-2015-01-06: [[ Bug 14306 ]] The type of an enum is implementation-defined,
+	// and forcing the size to 4 boils down to a 4-bit int, not a 4-byte int on Windows.
+	MCGravity m_icon_gravity;
 	bool menuhasitemtags : 1;
 
 	Boolean ishovering;
