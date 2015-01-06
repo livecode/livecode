@@ -262,7 +262,7 @@ bool MCObject::findpropset(MCNameRef p_name, bool p_empty_is_default, MCObjectPr
 		r_set = t_set;
 		return true;
 	}
-    
+
 	return false;
 }
 

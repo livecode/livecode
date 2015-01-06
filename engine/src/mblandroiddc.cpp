@@ -2752,7 +2752,7 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
     MCAutoStringRef t_property, t_set;
 
     t_success = MCJavaStringToStringRef(env, set, &t_set) && MCJavaStringToStringRef(env, property, &t_property);
-    
+
     MCNewAutoNameRef t_set_name, t_prop_name;
     if (t_success)
     {

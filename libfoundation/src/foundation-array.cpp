@@ -300,7 +300,7 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	if (!__MCArrayFindKeyValueSlot(t_contents, p_case_sensitive, p_path[0], t_slot))
 		return false;
 
-    // We found a slot successfully matching the key so get the value.
+	// We found a slot successfully matching the key so get the value.
 	MCValueRef t_value;
 	t_value = (MCValueRef)t_contents -> key_values[t_slot] . value;
 
@@ -310,9 +310,11 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 		r_value = t_value;
 		return true;
 	}
+
 	// If the value isn't an array then we can't continue with the lookup.
 	if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeArray)
 		return false;
+
 	// Otherwise, look up the next step in the path.
 	return MCArrayFetchValueOnPath((MCArrayRef)t_value, p_case_sensitive, p_path + 1, p_path_length - 1, r_value);
 }
