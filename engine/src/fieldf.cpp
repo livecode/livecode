@@ -871,7 +871,14 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
         if (t_offset_y > INT16_MAX)
             t_offset_y %= INT16_MAX;
         else
-            t_offset_y %= INT16_MIN;
+        {
+            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
+            //  is implementation-defined.
+            int4 t_positive_offset;
+            t_positive_offset = -t_offset_y;
+            t_positive_offset %= INT16_MAX;
+            t_offset_y = -t_positive_offset;
+        }
 		
 		t_offset_y %= t_height;
 		if (t_offset_y < 0)
@@ -884,7 +891,14 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
         if (t_offset_x > INT16_MAX)
             t_offset_x %= INT16_MAX;
         else
-            t_offset_x %= INT16_MIN;
+        {
+            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
+            //  is implementation-defined.
+            int4 t_positive_offset;
+            t_positive_offset = -t_offset_x;
+            t_positive_offset %= INT16_MAX;
+            t_offset_x = -t_positive_offset;
+        }
         
         t_offset_x %= t_width;
         if (t_offset_x < 0)
