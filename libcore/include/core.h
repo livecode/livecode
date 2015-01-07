@@ -517,17 +517,18 @@ bool MCBinaryDecoderReadCFString(MCBinaryDecoder *decoder, CFStringRef& r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if (__cplusplus >= 201103L)
-template <class T, class U>
-  inline auto MCMin(T a, U b) -> decltype(a+b) { return a < b ? a : b; }
-template <class T, class U>
-  inline auto MCMax(T a, U b) -> decltype(a+b) { return a < b ? b : a; }
-#else
-template <class T, class U, class R = T>
-  inline R MCMin(T a, U b) { return a < b ? a : b; }
-template <class T, class U, class R = T>
-  inline R MCMax(T a, U b) { return a < b ? b : a; }
-#endif
+inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
+inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
+inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
+inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
+inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
+inline int64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
+inline int64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
+inline double MCMin(double a, double b) { return a < b ? a : b; }
+inline double MCMax(double a, double b) { return a > b ? a : b; }
+inline float MCMin(float a, float b) { return a < b ? a : b; }
+inline float MCMax(float a, float b) { return a > b ? a : b; }
 
 inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
 inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
