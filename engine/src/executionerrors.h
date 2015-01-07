@@ -2630,6 +2630,14 @@ enum Exec_errors
     // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
     // {EE-0849} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0850} floor: bad parameter
+	EE_FLOOR_BADSOURCE,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0851} ceil: bad parameter
+	EE_CEIL_BADSOURCE,
 };
 
 extern const char *MCexecutionerrors;
