@@ -312,13 +312,16 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
             m_is_attached = true;
             m_should_attach = false;
         }
-        // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
-        else if (data == filename && hasinvalidfilename())
-            MCresult->sets("could not create movie reference");
 #endif
 
 		Redraw();
-	}
+    }
+#ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
+    else if (MCStringIsEqualTo(p_name, filename, kMCStringOptionCompareCaseless) && hasinvalidfilename())
+        ctxt . SetTheResultToCString("could not create movie reference");
+#endif
+
 }
 
 void MCPlayer::GetDontRefresh(MCExecContext& ctxt, bool& r_setting)
