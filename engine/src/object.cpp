@@ -750,10 +750,12 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 	{
 		if (opened && hashandlers & HH_IDLE
 		        && getstack()->gettool(this) == T_BROWSE)
+		{
 			if (message(mptr, params, True, True) == ES_ERROR)
 				senderror();
 			else
 				MCscreen->addtimer(this, MCM_idle, MCidleRate);
+		}
 	}
 	else
 	{
@@ -2442,7 +2444,7 @@ Bool MCObject::hashandler(Handler_type p_type, MCNameRef p_message)
 
 MCHandler *MCObject::findhandler(Handler_type p_type, MCNameRef p_message)
 {
-	if (hlist != NULL || parsescript(False, False) && hlist != NULL)
+	if (hlist != NULL || (parsescript(False, False) && hlist != NULL))
 	{
 		MCHandler *t_handler;
 		if (hlist -> findhandler(p_type, p_message, t_handler) == ES_NORMAL)
@@ -2581,14 +2583,18 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 			dc->fillpolygon(t_points, 6);
 
 			gen_3d_bottom_points(t_points, lx + 1, ty + 1, rx - 1, by - 1, 1);
-			if (MClook != LF_MAC && MClook != LF_AM || style != ETCH_SUNKEN)
+			if ((MClook != LF_MAC && MClook != LF_AM) || style != ETCH_SUNKEN)
+			{
 				if (reversed)
+				{
 					if (gettype() == CT_FIELD)
 						parent->setforeground(dc, DI_BACK, False);
 					else
 						setforeground(dc, DI_BACK, False);
+				}
 				else
 					setforeground(dc, DI_BOTTOM, False);
+			}
 			dc->fillpolygon(t_points, 6);
 
 			gen_3d_bottom_points(t_points, lx, ty, rx, by, 1);
@@ -3407,7 +3413,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	//   long scripts, and put extended data after it.
 	if (MCstackfileversion < 7000)
 	{
-		if (flags & F_SCRIPT && MCStringGetLength(_script) >= MAXUINT2 || t_extended)
+		if ((flags & F_SCRIPT && MCStringGetLength(_script) >= MAXUINT2) || t_extended)
 		{
 			addflags |= AF_LONG_SCRIPT;
 			flags &= ~F_SCRIPT;
@@ -4654,8 +4660,8 @@ bool MCObject::mapfont(bool recursive)
 		//   set, make sure we create a printer font.
 		// MW-2013-12-04: [[ Bug 11513 ]] Make sure we check for ideal layout, rather than
 		//   just for formatForPrinting.
-        if (parent != nil && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font) ||
-			gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout())
+		if ((parent != nil && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font)) ||
+		    (gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout()))
 			t_font_style |= kMCFontStylePrinterMetrics;
 
 		// Create our font.

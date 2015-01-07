@@ -4989,6 +4989,7 @@ Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 {
 	contents = False;
 	if (!the)
+	{
 		if (sp.skip_token(SP_FACTOR, TT_LPAREN) == PS_NORMAL)
 		{
 			if (sp.skip_token(SP_FACTOR, TT_RPAREN) != PS_NORMAL)
@@ -4999,6 +5000,7 @@ Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 		}
 		else
 			contents = True;
+	}
 	initpoint(sp);
 	return PS_NORMAL;
 }

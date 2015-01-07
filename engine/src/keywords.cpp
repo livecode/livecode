@@ -158,7 +158,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
             
             // MW-2014-11-06: [[ Bug 3680 ]] We allow either - or + next, but only if the
             //   next token is a number.
-			if (type == ST_MIN || type == ST_OP && sp.token_is_cstring("+"))
+			if (type == ST_MIN || (type == ST_OP && sp.token_is_cstring("+")))
 			{
                 // negative or positive initializer
 				if (sp.next(type) != PS_NORMAL || type != ST_NUM)

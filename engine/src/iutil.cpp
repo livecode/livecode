@@ -380,19 +380,23 @@ void MCImage::compute_gravity(MCRectangle &trect, int2 &xorigin, int2 &yorigin)
 	if (rect.width != t_width)
 	{
 		if (state & CS_SIZEL)
+		{
 			if (rect.width > t_width)
 				trect.x = rect.x + rect.width - t_width;
 			else
 				xorigin = t_width - rect.width;
+		}
 		trect.width = MCU_min(t_width, rect.width);
 	}
 	if (rect.height != t_height)
 	{
 		if (state & CS_SIZET)
+		{
 			if (rect.height > t_height)
 				trect.y = rect.y + rect.height - t_height;
 			else
 				yorigin = t_height - rect.height;
+		}
 		trect.height = MCU_min(t_height, rect.height);
 	}
 

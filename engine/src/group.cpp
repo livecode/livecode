@@ -332,7 +332,7 @@ void MCGroup::kfocus()
 
 Boolean MCGroup::kfocusnext(Boolean top)
 {
-	if (state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR
+	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
 	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
 		return False;
 	if (newkfocused != NULL)
@@ -389,7 +389,7 @@ Boolean MCGroup::kfocusnext(Boolean top)
 
 Boolean MCGroup::kfocusprev(Boolean bottom)
 {
-	if (state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR
+	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
 	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
 		return False;
 	MCControl *startptr = NULL;
@@ -531,7 +531,7 @@ void MCGroup::mdrag(void)
 Boolean MCGroup::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
@@ -799,8 +799,9 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	t_size_changed = nrect . width != rect . width || nrect . height != rect . height;
 
 	if (controls != NULL)
-		if (state & CS_SIZE || rect.x + rect.width == nrect.x + nrect.width
-		        && rect.y + rect.height == nrect.y + nrect.height)
+		if (state & CS_SIZE ||
+		    (rect.x + rect.width == nrect.x + nrect.width &&
+		     rect.y + rect.height == nrect.y + nrect.height))
 		{
 			if (flags & F_HSCROLLBAR || flags & F_VSCROLLBAR)
 			{
@@ -1615,7 +1616,7 @@ MCControl *MCGroup::findchildwithid(Chunk_term type, uint4 p_id)
 MCControl *MCGroup::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
 	if ((type == CT_GROUP || type == CT_LAYER)
-	        && (inid == obj_id || alt && inid == altid))
+	    && (inid == obj_id || (alt && inid == altid)))
 		return this;
 
 	if (controls != NULL && (alt || type == CT_IMAGE))
@@ -2586,10 +2587,12 @@ void MCGroup::computecrect()
 		do
 		{
 			if (cptr->getflag(F_VISIBLE))
+			{
 				if (minrect.width == 0)
 					minrect = cptr->getrect();
 				else
 					minrect = MCU_union_rect(cptr->getrect(), minrect);
+			}
 			cptr = cptr->next();
 		}
 		while (cptr != controls);
@@ -3057,10 +3060,12 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 		else
 		{
 			if (flags & F_SHOW_BORDER)
+			{
 				if (flags & F_3D)
 					draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 				else
 					drawborder(dc, trect, borderwidth);
+			}
 		}
 	}
 }
@@ -3538,7 +3543,7 @@ bool MCGroup::resolveparentscript(void)
 MCObject *MCGroup::hittest(int32_t x, int32_t y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-		|| flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	
 	// If not inside the groups bounds, do nothing.
@@ -3611,8 +3616,8 @@ void MCGroup::relayercontrol(MCControl *p_source, MCControl *p_target)
 	if (p_source == p_target)
 		return;
 
-	if (p_source -> next() != controls && p_source -> next() == p_target ||
-		p_target == nil && p_source -> next() == controls)
+	if ((p_source -> next() != controls && p_source -> next() == p_target) ||
+	    (p_target == nil && p_source -> next() == controls))
 		return;
 
 	p_source -> remove(controls);
