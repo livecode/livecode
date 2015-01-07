@@ -523,10 +523,10 @@ template <class T, class U>
 template <class T, class U>
   inline auto MCMax(T a, U b) -> decltype(a+b) { return a < b ? b : a; }
 #else
+template <class T, class U>
+  inline T MCMin(T a, U b) { return a < b ? a : b; }
 template <class T, class U, class R = T>
-  inline R MCMin(T a, U b) { return a < b ? a : b; }
-template <class T, class U, class R = T>
-  inline R MCMax(T a, U b) { return a < b ? b : a; }
+  inline T MCMax(T a, U b) { return a < b ? b : a; }
 #endif
 
 inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
