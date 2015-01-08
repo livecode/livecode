@@ -149,6 +149,46 @@ extern "C" MC_DLLEXPORT void MCCharEvalNewlineCharacter(MCStringRef& r_output)
     MCStringFormat(r_output, "\n");
 }
 
+extern "C" MC_DLLEXPORT void MCCharFetchFirstCharOf(MCStringRef p_target, MCStringRef& r_output)
+{
+    MCCharFetchCharOf(1, p_target, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCCharStoreFirstCharOf(MCStringRef p_value, MCStringRef& x_target)
+{
+    MCCharStoreCharOf(p_value, 1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCCharFetchLastCharOf(MCStringRef p_target, MCStringRef& r_output)
+{
+    MCCharFetchCharOf(-1, p_target, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCCharStoreLastCharOf(MCStringRef p_value, MCStringRef& x_target)
+{
+    MCCharStoreCharOf(p_value, -1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCCharExecDeleteCharRangeOf(index_t p_start, index_t p_finish, MCStringRef& x_target)
+{
+    MCCharStoreCharRangeOf(kMCEmptyString, p_start, p_finish, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCCharExecDeleteCharOf(index_t p_index, MCStringRef& x_target)
+{
+    MCCharStoreCharOf(kMCEmptyString, p_index, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCCharExecDeleteFirstCharOf(MCStringRef& x_target)
+{
+    MCCharExecDeleteCharOf(1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCCharExecDeleteLastCharOf(MCStringRef& x_target)
+{
+    MCCharExecDeleteCharOf(-1, x_target);
+}
+
 // Iterate syntax methods have special calling convention at the moment:
 //
 // Post assignment of out / inout variables only occurs if the method returns true.

@@ -136,6 +136,23 @@ extern "C" MC_DLLEXPORT void MCArrayStoreElementOfCaseless(MCValueRef p_value, M
     MCValueAssign(x_target, *t_new_array);
 }
 
+extern "C" MC_DLLEXPORT void MCArrayDeleteElementOfCaseless(MCArrayRef& x_target, MCStringRef p_key)
+{
+    MCNewAutoNameRef t_key;
+    MCAutoArrayRef t_array;
+    MCArrayMutableCopy(x_target, &t_array);
+    
+    if (!create_key_for_array(p_key, x_target, &t_key) ||
+        !MCArrayRemoveValue(*t_array, MCArrayIsCaseSensitive(*t_array), *t_key))
+        return;
+    
+    MCAutoArrayRef t_new_array;
+    if (!MCArrayCopy(*t_array, &t_new_array))
+        return;
+    
+    MCValueAssign(x_target, *t_new_array);
+}
+
 extern "C" MC_DLLEXPORT void MCArrayEvalEmpty(MCArrayRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyArray);
