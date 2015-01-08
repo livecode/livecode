@@ -5002,7 +5002,11 @@ void MCCanvasPop(uintptr_t p_cookie)
 extern "C" MC_DLLEXPORT void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
 {
     if (s_current_canvas == nil)
+    {
         MCErrorThrowGeneric(MCSTR("no current canvas"));
+        return;
+    }
+    
     r_canvas = MCValueRetain(s_current_canvas);
 }
 
