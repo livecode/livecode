@@ -1032,7 +1032,7 @@ void EmitAssignReal(long reg, long value)
 void EmitAssignString(long reg, long value)
 {
     MCAutoStringRef t_string;
-    MCStringCreateWithCString((const char *)value, &t_string);
+    MCStringCreateWithBytes((const byte_t *)value, strlen((const char *)value), kMCStringEncodingUTF8, false, &t_string);
     MCScriptEmitAssignConstantInModule(s_builder, reg, *t_string);
     MCLog("[Emit] AssignString(%ld, \"%s\")", reg, (const char *)value);
 }
@@ -1193,6 +1193,8 @@ void EmitPosition(PositionRef p_position)
     long t_line;
     GetRowOfPosition(p_position, &t_line);
     MCScriptEmitPositionInModule(s_builder, to_mcnameref(t_filename_name), t_line);
+    
+    MCLog("[Emit] Position('%s', %ld)", t_filename, t_line);
 }
 
 //////////

@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,8 +78,180 @@ void MakeDoubleLiteral(const char *p_token, long *r_literal)
     *r_literal = (long)t_value;
 }
 
+static int char_to_nibble(char p_char, int *r_nibble)
+{
+    if (isdigit(p_char))
+        *r_nibble = p_char - '0';
+    else if (p_char >= 'a' && p_char <= 'f')
+        *r_nibble = (p_char - 'a') + 10;
+    else if (p_char >= 'A' && p_char <= 'F')
+        *r_nibble = (p_char - 'A') + 10;
+    else
+        return 0;
+    
+    return 1;
+}
+
+void append_utf8_char(char *p_string, int *x_index, int p_char)
+{
+    if (p_char < 128)
+    {
+        p_string[*x_index] = p_char;
+        x_index += 1;
+    }
+    else if (p_char >= 0x10000)
+    {
+        p_string[*x_index] = 0xf0 | (p_char >> 18);
+        p_string[*x_index + 1] = 0x80 | ((p_char >> 12) & 0x3f);
+        p_string[*x_index + 2] = 0x80 | ((p_char >> 6) & 0x3f);
+        p_string[*x_index + 3] = 0x80 | ((p_char >> 0) & 0x3f);
+        x_index += 4;
+    }
+    else if (p_char >= 0x0800)
+    {
+        p_string[*x_index] = 0xe0 | (p_char >> 12);
+        p_string[*x_index + 1] = 0x80 | ((p_char >> 6) & 0x3f);
+        p_string[*x_index + 2] = 0x80 | ((p_char >> 0) & 0x3f);
+        x_index += 3;
+    }
+    else
+    {
+        p_string[*x_index] = 0xc0 | (p_char >> 6);
+        p_string[*x_index + 1] = 0x80 | ((p_char >> 0) & 0x3f);
+        x_index += 2;
+    }
+}
+
+int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
+{
+    // Allocate enough room for the length of the string including a NUL char.
+    // This is more than enough to handle any escapes as escaped chars are always
+    // greater in length than their unescaped versions.
+    char *t_value;
+    const char *t_limit;
+    int t_length;
+    const char *t_ptr;
+    
+    t_value = (char *)malloc(strlen(p_string) + 1);
+    
+    t_limit = p_string + strlen(p_string);
+    t_length = 0;
+    
+    for(t_ptr = p_string; t_ptr < t_limit; t_ptr++)
+    {
+        if (*t_ptr == '\\')
+        {
+            if (t_ptr + 1 < t_limit)
+            {
+                t_ptr += 1;
+                
+                if (*t_ptr == 'q')
+                    t_value[t_length++] = '"';
+                else if (*t_ptr == 'n')
+                    t_value[t_length++] = '\n';
+                else if (*t_ptr == 'r')
+                    t_value[t_length++] = '\r';
+                else if (*t_ptr == 't')
+                    t_value[t_length++] = '\t';
+                else if (*t_ptr == '\\')
+                    t_value[t_length++] = '\\';
+                else if (*t_ptr == 'x')
+                {
+                    t_ptr += 1;
+                    
+                    if (t_ptr + 1 < t_limit)
+                    {
+                        int t_nibble_1, t_nibble_2;
+                        int t_char;
+                        
+                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
+                            goto error_exit;
+                        
+                        t_char = (t_nibble_1 << 4) | t_nibble_2;
+                        append_utf8_char(t_value, &t_length, t_char);
+                    }
+                }
+                else if (*t_ptr == 'u')
+                {
+                    t_ptr += 1;
+                    
+                    if (t_ptr + 3 < t_limit)
+                    {
+                        int t_nibble_1, t_nibble_2, t_nibble_3, t_nibble_4;
+                        int t_char;
+                        
+                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_3))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_4))
+                            goto error_exit;
+                        
+                        t_char = (t_nibble_1 << 12) | (t_nibble_2 << 8) | (t_nibble_3  << 4) | t_nibble_4;
+                        append_utf8_char(t_value, &t_length, t_char);
+                    }
+                }
+                else if (*t_ptr == 'U')
+                {
+                    t_ptr += 1;
+                    
+                    if (t_ptr + 5 < t_limit)
+                    {
+                        int t_nibble_1, t_nibble_2, t_nibble_3, t_nibble_4, t_nibble_5, t_nibble_6;
+                        int t_char;
+                        
+                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_3))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_4))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_5))
+                            goto error_exit;
+                        t_ptr += 1;
+                        if (!char_to_nibble(*t_ptr, &t_nibble_6))
+                            goto error_exit;
+                        
+                        t_char = (t_nibble_1 << 20) | (t_nibble_2 << 16) | (t_nibble_3 << 12) | (t_nibble_4 << 8) | (t_nibble_5 << 4) | t_nibble_6;
+                        append_utf8_char(t_value, &t_length, t_char);
+                    }
+                }
+                else
+                    goto error_exit;
+            }
+        }
+        else
+            t_value[t_length++] = *t_ptr;
+    }
+    
+    t_value[t_length++] = '\0';
+    
+    *r_unescaped_string = (long)t_value;
+
+    return 1;
+    
+error_exit:
+    free(t_value);
+    return 0;
+}
+
 void MakeStringLiteral(const char *p_token, long *r_literal)
 {
+    
     char *t_value;
     t_value = strdup(p_token + 1);
     if (t_value == NULL)
@@ -87,6 +260,7 @@ void MakeStringLiteral(const char *p_token, long *r_literal)
     *r_literal = (long)t_value;
 }
 
+                    
 void MakeNameLiteral(const char *p_token, NameRef *r_literal)
 {
     NameRef t_name;
