@@ -25,6 +25,8 @@ public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecScheduleTimerIn(in pTime as double) as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecCancelTimer() as undefined binds to "<builtin>"
 public foreign handler MCWidgetEvalInEditMode(out rInEditMode as bool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecDispatch(in pIsFunction as bool, in pMessage as string) as any binds to "<builtin>"
+public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as bool, in pMessage as string, in pArguments as optional list) as any binds to "<builtin>"
 
 syntax RedrawAll is statement
   "redraw" "all"
@@ -49,6 +51,14 @@ syntax IsEditMode is expression
 begin
   MCWidgetEvalInEditMode(output)
 end syntax
+
+syntax Dispatch is statement
+    "dispatch" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCWidgetExecDispatch(IsFunction, Message)
+    MCWidgetExecDispatchWithArguments(IsFunction, Message, Arguments)
+end syntax
+
 
 // ---------- External properties of widgets ---------- //
 

@@ -259,18 +259,8 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
     }
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+MCValueRef MCEngineDoDispatchToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments)
 {
-    __MCScriptObjectImpl *t_script_object_imp;
-    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
-    if (t_script_object_imp -> handle == nil ||
-        !t_script_object_imp -> handle -> Exists())
-    {
-        // TODO: Throw script object doesn't exist error.
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
-        return nil;
-    }
-    
     MCNewAutoNameRef t_message_as_name;
     if (!MCNameCreate(p_message, &t_message_as_name))
         return nil;
@@ -305,7 +295,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArgumen
 	}
     
     Exec_stat t_stat;
-    t_stat = t_script_object_imp -> handle -> Get() -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
+    t_stat = p_object -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
     if (t_stat == ES_ERROR)
     {
         MCEngineThrowScriptError();
@@ -329,6 +319,21 @@ cleanup:
 	}
     
     return t_result;
+}
+
+extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+{
+    __MCScriptObjectImpl *t_script_object_imp;
+    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
+    if (t_script_object_imp -> handle == nil ||
+        !t_script_object_imp -> handle -> Exists())
+    {
+        // TODO: Throw script object doesn't exist error.
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
+        return nil;
+    }
+    
+    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, t_script_object_imp -> handle -> Get(), p_arguments);
 }
 
 extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObject(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object)
