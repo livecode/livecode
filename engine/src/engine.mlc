@@ -28,6 +28,8 @@ public foreign handler MCEngineExecDispatchToScriptObjectWithArguments(in pIsFun
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as bool) as undefined binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as bool) as undefined binds to "<builtin>"
 public foreign handler MCEngineExecExecuteScript(in pScript as string) as any binds to "<builtin>"
+public foreign handler MCEngineExecLog(in pFormat as string) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecLogWithValues(in pFormat as string, in pValues as list) as undefined binds to "<builtin>"
 
 syntax ResolveScriptObject is statement
     "resolve" "script" "object" <Object: Expression>
@@ -82,6 +84,13 @@ syntax ExecuteScript is statement
     "execute" "script" <Script: Expression>
 begin
     MCEngineExecExecuteScript(Script)
+end syntax
+
+syntax Log is statement
+    "log" <String: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCEngineExecLog(String)
+    MCEngineExecLogWithValues(String, Arguments)
 end syntax
 
 end module

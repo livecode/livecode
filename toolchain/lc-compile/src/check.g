@@ -1124,6 +1124,7 @@
     'rule' CheckInvokes(STATEMENT'call(Position, Handler, Arguments)):
         QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
         CheckCallArguments(Position, Parameters, Arguments)
+        CheckInvokes(Arguments)
 
     'rule' CheckInvokes(STATEMENT'invoke(Position, Info, Arguments)):
         (|
@@ -1134,6 +1135,7 @@
             ||
                 Fatal_InternalInconsistency("No execute method for statement syntax")
             |)
+            CheckInvokes(Arguments)
         ||
             Error_SyntaxNotAllowedInThisContext(Position)
         |)
@@ -1141,29 +1143,40 @@
     'rule' CheckInvokes(STATEMENT'put(Position, Source, Target)):
         CheckExpressionIsEvaluatable(Source)
         CheckExpressionIsAssignable(Target)
+        CheckInvokes(Source)
+        CheckInvokes(Target)
         
     'rule' CheckInvokes(STATEMENT'repeatcounted(Position, Count, Body)):
         CheckExpressionIsEvaluatable(Count)
+        CheckInvokes(Count)
         CheckInvokes(Body)
         
     'rule' CheckInvokes(STATEMENT'repeatwhile(Position, Condition, Body)):
         CheckExpressionIsEvaluatable(Condition)
+        CheckInvokes(Condition)
         CheckInvokes(Body)
 
     'rule' CheckInvokes(STATEMENT'repeatuntil(Position, Condition, Body)):
         CheckExpressionIsEvaluatable(Condition)
+        CheckInvokes(Condition)
         CheckInvokes(Body)
 
     'rule' CheckInvokes(STATEMENT'repeatupto(Position, Slot, Start, Finish, Step, Body)):
         CheckExpressionIsEvaluatable(Start)
         CheckExpressionIsEvaluatable(Finish)
         CheckExpressionIsEvaluatable(Step)
+        CheckInvokes(Start)
+        CheckInvokes(Finish)
+        CheckInvokes(Step)
         CheckInvokes(Body)
 
     'rule' CheckInvokes(STATEMENT'repeatdownto(Position, Slot, Start, Finish, Step, Body)):
         CheckExpressionIsEvaluatable(Start)
         CheckExpressionIsEvaluatable(Finish)
         CheckExpressionIsEvaluatable(Step)
+        CheckInvokes(Start)
+        CheckInvokes(Finish)
+        CheckInvokes(Step)
         CheckInvokes(Body)
 
     'rule' CheckInvokes(STATEMENT'repeatforeach(Position, invoke(IteratorPosition, IteratorInvoke, IteratorArguments), Container, Body)):
@@ -1175,24 +1188,30 @@
             ||
                 Fatal_InternalInconsistency("No iterate method for repeat for each syntax")
             |)
+            CheckInvokes(IteratorArguments)
         ||
             Error_SyntaxNotAllowedInThisContext(Position)
         |)
         CheckExpressionIsEvaluatable(Container)
+        CheckInvokes(IteratorArguments)
+        CheckInvokes(Container)
         CheckInvokes(Body)
         
     'rule' CheckInvokes(STATEMENT'return(Position, Value)):
         [|
             ne(Value, nil)
             CheckExpressionIsEvaluatable(Value)
+            CheckInvokes(Value)
         |]
 
     'rule' CheckInvokes(STATEMENT'throw(Position, Error)):
         CheckExpressionIsEvaluatable(Error)
+        CheckInvokes(Error)
 
     'rule' CheckInvokes(EXPRESSION'call(Position, Handler, Arguments)):
         QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
         CheckCallArguments(Position, Parameters, Arguments)
+        CheckInvokes(Arguments)
     
     'rule' CheckInvokes(EXPRESSION'invoke(Position, Info, Arguments)):
         (|
@@ -1203,6 +1222,7 @@
             ||
                 Error_NonEvaluatableExpressionUsedForInContext(Position)
             |)
+            CheckInvokes(Arguments)
         ||
             Error_SyntaxNotAllowedInThisContext(Position)
         |)
@@ -1210,10 +1230,14 @@
     'rule' CheckInvokes(EXPRESSION'logicaland(Position, Left, Right)):
         CheckExpressionIsEvaluatable(Left)
         CheckExpressionIsEvaluatable(Right)
+        CheckInvokes(Left)
+        CheckInvokes(Right)
 
     'rule' CheckInvokes(EXPRESSION'logicalor(Position, Left, Right)):
         CheckExpressionIsEvaluatable(Left)
         CheckExpressionIsEvaluatable(Right)
+        CheckInvokes(Left)
+        CheckInvokes(Right)
 
 
 'action' CheckCallArguments(POS, PARAMETERLIST, EXPRESSIONLIST)
