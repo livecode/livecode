@@ -90,7 +90,7 @@ static inline MCRectangle MCRectangleFromWin32RECT(const RECT &p_rect)
 MCStack *MCStack::findstackd(Window w)
 {
 	// IM-2014-07-09: [[ Bug 12225 ]] Use window ID to find stack
-	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
+	return findstackwindowid(MCscreen->dtouint((Drawable)w));
 }
 
 void MCStack::platform_openwindow(Boolean p_override)
