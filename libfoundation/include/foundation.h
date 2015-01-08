@@ -2797,8 +2797,11 @@ MC_DLLEXPORT bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperLis
 
 MC_DLLEXPORT bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 
-bool MCProperListBeginsWithList(MCProperListRef list, MCProperListRef p_prefix);
-bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef p_suffix);
+MC_DLLEXPORT bool MCProperListBeginsWithList(MCProperListRef list, MCProperListRef p_prefix);
+MC_DLLEXPORT bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef p_suffix);
+
+MC_DLLEXPORT bool MCProperListIsListOfType(MCProperListRef list, MCValueTypeCode p_type);
+MC_DLLEXPORT bool MCProperListIsHomogeneous(MCProperListRef list, MCValueTypeCode& r_type);
     
 ////////////////////////////////////////////////////////////////////////////////
 
