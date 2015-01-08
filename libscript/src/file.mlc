@@ -6,34 +6,30 @@ module com.livecode.file
 
 public foreign type Stream binds to "kMCStreamTypeInfo"
 
-public foreign handler MCFileExecOpenFileForRead(in File as string) as Stream binds to "<builtin>"
-public foreign handler MCFileExecOpenFileForWrite(in File as string) as Stream binds to "<builtin>"
-public foreign handler MCFileExecOpenFileForUpdate(in File as string) as Stream binds to "<builtin>"
-public foreign handler MCFileExecOpenNewFile(in File as string) as Stream binds to "<builtin>"
+public foreign handler MCFileExecOpenFileForRead(in File as string) as optional Stream binds to "<builtin>"
+public foreign handler MCFileExecOpenFileForWrite(in Create as bool, in File as string) as optional Stream binds to "<builtin>"
+public foreign handler MCFileExecOpenFileForUpdate(in Create as bool, in File as string) as optional Stream binds to "<builtin>"
 
-public foreign handler MCFileExecReadFromStream(in Amount as uint, in Source as Stream) as string binds to "<builtin>"
-
-
-public foreign handler MCFileExecDoNothingToStream(in Source as Stream) as undefined binds to "<builtin>"
+public foreign handler MCFileExecReadFromStream(in Amount as uint, in Source as Stream) as data binds to "<builtin>"
 
 --
 
 syntax OpenFileForRead is statement
     "open" "read" "only" "stream" "for" "file" <File: Expression>
 begin
-    MCFileExecOpenFileForRead(File, output)
+    MCFileExecOpenFileForRead(File)
 end syntax
 
 syntax OpenFileForWrite is statement
-    "open" "write" "only" "stream" "for" "file" <File: Expression>
+    "open" "write" "only" "stream" "for" ("new" <Create=true> | <Create=false>) "file" <File: Expression>
 begin
-    ExecOpenFileForWrite(File)
+    MCFileExecOpenFileForWrite(Create, File)
 end syntax
 
 syntax OpenFileForUpdate is statement
-    "open" "read" "write" "stream" "for" "file" <File: Expression>
+    "open" "read" "write" "stream" "for" ("new" <Create=true> | <Create=false>) "file" <File: Expression>
 begin
-    ExecOpenFileForUpdate(File)
+    MCFileExecOpenFileForUpdate(Create, File)
 end syntax
 
 --
@@ -41,7 +37,7 @@ end syntax
 syntax ReadFromStream is statement
     "read" <Amount: Expression> "from" "stream" <Source: Expression>
 begin
-    MCFileExecReadFromStream(Amount, Source, Result)
+    MCFileExecReadFromStream(Amount, Source)
 end syntax
 
 end module

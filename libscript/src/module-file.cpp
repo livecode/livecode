@@ -21,47 +21,54 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCFileExecOpenFileForRead(MCStringRef p_filename, MCStreamRef& r_stream)
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForRead(MCStringRef p_filename)
 {
-    if (!MCFileCreateStreamForFile(p_filename, kMCOpenFileModeRead, r_stream))
-        return;
+    MCStreamRef t_stream;
+    if (!MCFileCreateStreamForFile(p_filename, kMCOpenFileModeRead, t_stream))
+        return nil;
+    
+    return t_stream;
 }
 
-extern "C" MC_DLLEXPORT void MCFileExecOpenFileForWrite(MCStringRef p_filename, MCStreamRef& r_stream)
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForWrite(bool p_create, MCStringRef p_filename, MCStreamRef& r_stream)
 {
-    if (!MCFileCreateStreamForFile(p_filename, kMCOpenFileModeWrite, r_stream))
-        return;
+    MCStreamRef t_stream;
+    if (!MCFileCreateStreamForFile(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeWrite, t_stream))
+        return nil;
+    
+    return t_stream;
 }
 
-extern "C" MC_DLLEXPORT void MCFileExecOpenFileForUpdate(MCStringRef p_filename, MCStreamRef& r_stream)
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForUpdate(bool p_create, MCStringRef p_filename, MCStreamRef& r_stream)
 {
-    if (!MCFileCreateStreamForFile(p_filename, kMCOpenFileModeUpdate, r_stream))
-        return;
+    MCStreamRef t_stream;
+    if (!MCFileCreateStreamForFile(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeUpdate, t_stream))
+        return nil;
+    
+    return t_stream;
 }
 
-extern "C" MC_DLLEXPORT void MCFileExecOpenNewFile(MCStringRef p_filename, MCStreamRef& r_stream)
-{
-    if (!MCFileCreateStreamForFile(p_filename, kMCOpenFileModeCreate, r_stream))
-        return;
-}
-
-extern "C" MC_DLLEXPORT MCStringRef MCFileExecReadFromStream(uindex_t p_amount, MCStreamRef p_stream)
+extern "C" MC_DLLEXPORT MCDataRef MCFileExecReadFromStream(uindex_t p_amount, MCStreamRef p_stream)
 {
     if (!MCStreamIsReadable(p_stream))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("stream is not readable"), nil);
-        return;
+        return MCValueRetain(kMCEmptyData);
     }
     
-    char t_buffer[p_amount];
+    byte_t t_buffer[p_amount];
     
     if (!MCStreamRead(p_stream, t_buffer, p_amount))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("could not read from stream"), nil);
-        return;
+        return MCValueRetain(kMCEmptyData);
     }
     
-    MCStringCreateWithBytes((const byte_t *)t_buffer, p_amount, kMCStringEncodingUTF8, false, r_result);
+    MCDataRef t_data;
+    if (!MCDataCreateWithBytes(t_buffer, p_amount, t_data))
+        return MCValueRetain(kMCEmptyData);
+    
+    return t_data;
 }
 
 

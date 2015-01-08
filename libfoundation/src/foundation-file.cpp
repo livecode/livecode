@@ -150,7 +150,7 @@ static bool __MCFileStreamRead(MCStreamRef p_stream, void *p_buffer, size_t p_am
     __MCFileStream *self;
     self = (__MCFileStream *)MCStreamGetExtraBytesPtr(p_stream);
     
-    return self -> Write(p_buffer, p_amount);
+    return self -> Read(p_buffer, p_amount);
 }
 
 static bool __MCFileStreamWrite(MCStreamRef p_stream, const void *p_data, size_t p_length)
