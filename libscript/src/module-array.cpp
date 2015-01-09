@@ -86,7 +86,7 @@ extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_needle
     r_output = !MCArrayApply(p_target, is_not_among_the_elements_of, p_needle);
 }
 
-extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOfCaseless(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     MCNewAutoNameRef t_key;
     if (!create_key_for_array(p_needle, p_target, &t_key))
