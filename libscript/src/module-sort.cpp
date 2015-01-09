@@ -46,7 +46,7 @@ extern "C" MC_DLLEXPORT void MCSortExecSortList(MCProperListRef& x_target, bool 
     MCValueTypeCode t_type;
     if (!MCProperListIsHomogeneous(x_target, t_type))
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("list is not homogeneous"), nil);
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("list elements are not all of the same type"), nil);
         return;
     }
     
