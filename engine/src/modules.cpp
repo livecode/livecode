@@ -40,6 +40,7 @@ extern "C"
     extern builtin_module_descriptor __com_livecode_string_module_info;
     extern builtin_module_descriptor __com_livecode_type_module_info;
     extern builtin_module_descriptor __com_livecode_typeconvert_module_info;
+    extern builtin_module_descriptor __com_livecode_mathfoundation_module_info;
     extern builtin_module_descriptor __com_livecode_canvas_module_info;
     extern builtin_module_descriptor __com_livecode_engine_module_info;
     extern builtin_module_descriptor __com_livecode_widget_module_info;
@@ -63,6 +64,7 @@ extern "C"
         &__com_livecode_string_module_info,
         &__com_livecode_type_module_info,
         &__com_livecode_typeconvert_module_info,
+        &__com_livecode_mathfoundation_module_info,
         &__com_livecode_canvas_module_info,
         &__com_livecode_engine_module_info,
         &__com_livecode_widget_module_info,
@@ -83,6 +85,7 @@ extern "C"
     extern void (*MCStringEvalConcatenate)();
     extern void (*MCTypeEvalIsDefined)();
     extern void (*MCTypeConvertExecSplitStringByDelimiter)();
+    extern void (*MCMathFoundationEvalFloorNumber)();
     extern void (*MCWidgetExecRedrawAll)();
     extern void (*MCEngineExecResolveScriptObject)();
     extern void (*MCCanvasThisCanvas)();
@@ -103,6 +106,7 @@ extern "C"
         &MCStringEvalConcatenate,
         &MCTypeEvalIsDefined,
         &MCTypeConvertExecSplitStringByDelimiter,
+        &MCMathFoundationEvalFloorNumber,
         &MCWidgetExecRedrawAll,
         &MCCanvasThisCanvas,
         &MCEngineExecResolveScriptObject,
