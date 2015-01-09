@@ -512,6 +512,98 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCStringEncodingName
+{
+    const char *m_name;
+    MCStringEncoding m_encoding;
+};
+
+// These names must match the formatting of character encoding names as output
+// by the algorithm described in section 1.4 of the Unicode Consortium TR22.
+static MCStringEncodingName MCStringEncodingNames[] =
+{
+    {"ascii", kMCStringEncodingASCII},
+    {"iso88591", kMCStringEncodingISO8859_1},
+    {"macroman", kMCStringEncodingMacRoman},
+    {"native", kMCStringEncodingNative},
+    {"utf16", kMCStringEncodingUTF16},
+    {"utf16be", kMCStringEncodingUTF16BE},
+    {"utf16le", kMCStringEncodingUTF16LE},
+    {"utf32", kMCStringEncodingUTF32},
+    {"utf32be", kMCStringEncodingUTF32BE},
+    {"utf32le", kMCStringEncodingUTF32LE},
+    {"utf8", kMCStringEncodingUTF8},
+    {"cp1252", kMCStringEncodingWindows1252},
+    
+    {NULL, 0},
+};
+
+bool MCStringEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding)
+{
+    // First, map the incoming charset name according to the rules in Unicode TR22:
+    //  Delete all characters except a-zA-Z0-9
+    //  Map A-Z to a-z
+    //  From left-to-right, delete each 0 not preceded by a digit
+    MCAutoArray<char_t> t_cleaned;
+    t_cleaned.New(MCStringGetLength(p_encoding) + 1);   // Cannot exceed incoming length
+    
+    uindex_t t_cleaned_len;
+    t_cleaned_len = 0;
+    
+    bool t_in_number;
+    t_in_number = false;
+    for (uindex_t i = 0; i < MCStringGetLength(p_encoding); i++)
+    {
+        unichar_t t_char;
+        t_char = MCStringGetCharAtIndex(p_encoding, i);
+        
+        // All important characters are in the ASCII range (filtering here
+        // avoids problems with the subsequent tolower call and non-ASCII chars)
+        if (t_char > 128)
+        {
+            t_in_number = false;
+            continue;
+        }
+        
+        t_char = tolower(t_char);
+        
+        if (t_char >= 'a' && t_char <= 'z')
+        {
+            t_in_number = false;
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+        else if (t_char == '0' && t_in_number)
+        {
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+        else if (t_char >= '1' && t_char <= '9')
+        {
+            t_in_number = true;
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+    }
+    
+    // Terminate the cleaned name
+    t_cleaned[t_cleaned_len++] = '\0';
+    
+    // Search the encoding table
+    uindex_t t_index;
+    t_index = 0;
+    while (MCStringEncodingNames[t_index].m_name != NULL)
+    {
+        if (strncmp(MCStringEncodingNames[t_index].m_name, (const char*)&t_cleaned[0], t_cleaned_len) == 0)
+        {
+            r_encoding = MCStringEncodingNames[t_index].m_encoding;
+            return true;
+        }
+        
+        t_index++;
+    }
+    
+    // Encoding could not be recognised
+    return false;
+}
+
 bool MCStringEncode(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
 {
     byte_t *t_bytes;
@@ -1973,7 +2065,7 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
             ++t_codepoint_count;
         }
         
-        t_codepoints . Shrink(t_codepoint_count + 1);
+        t_codepoints . Shrink(t_codepoint_count);
         t_codepoints . Take(r_codepoints, r_char_count);
         return true;
     }

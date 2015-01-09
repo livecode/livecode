@@ -58,7 +58,7 @@ extern "C"
         &__com_livecode_byte_module_info,
         &__com_livecode_char_module_info,
         &__com_livecode_date_module_info,
-        //&__com_livecode_encoding_module_info,
+        &__com_livecode_encoding_module_info,
         &__com_livecode_file_module_info,
         //&__com_livecode_item_module_info,
         //&__com_livecode_line_module_info,
@@ -86,6 +86,7 @@ extern "C"
     extern void (*MCByteEvalNumberOfBytesIn)();
     extern void (*MCCharEvalNumberOfCharsIn)();
     extern void (*MCDateExecGetLocalTime)();
+    extern void (*MCEncodingEvalEncodedUsingBase64)();
     extern void (*MCFileExecGetContents)();
     extern void (*MCListEvalHeadOf)();
     extern void (*MCLogicEvalNot)();
@@ -110,6 +111,7 @@ extern "C"
         &MCByteEvalNumberOfBytesIn,
         &MCCharEvalNumberOfCharsIn,
         &MCDateExecGetLocalTime,
+        &MCEncodingEvalEncodedUsingBase64,
         &MCFileExecGetContents,
         &MCListEvalHeadOf,
         &MCLogicEvalNot,

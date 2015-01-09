@@ -26,6 +26,9 @@ public handler test()
     
     testParseAndFormat(tResults)
 
+	--com.livecode.encoding
+	testEncoding(tResults)
+
     --com.livecode.type
     testType(tResults)
 
@@ -79,6 +82,7 @@ public handler test()
 	
 	--com.livecode.binary
 	--com.livecode.byte
+	
 	--com.livecode.item
 	--com.livecode.line
 	--com.livecode.segmentchunk
@@ -143,6 +147,46 @@ public handler testLog(in pModule as string, in pTest as string, in pResult as b
     end if
 
     push tStringResult && ":" && pModule & "_" & pTest onto xResults
+end handler
+
+public handler testEncoding(inout xResults as list)
+	variable tString as string
+	
+	put "ℬ" into tString
+	encode tString using "utf8"
+	testLog("Encoding", "UTF8Bytes", the number of bytes in the result is 3, xResults)
+	
+	encode tString using utf16
+	testLog("Encoding", "UTF16Bytes", the number of bytes in the result is 2, xResults)
+	
+	variable tBEData as data
+	encode tString using utf32be
+	put the result into tBEData
+	testLog("Encoding", "UTF32BEBytes", the number of bytes in tBEData is 4, xResults)
+	
+	variable tLEData as data
+	encode tString using utf32le
+	put the result into tLEData
+	testLog("Encoding", "UTF32LEBytes", the number of bytes in tLEData is 4, xResults)
+
+	testLog("Encoding", "Endianness 1", byte 1 of tLEData is byte -1 of tBEData, xResults)
+	
+	decode (byte 1 to 2 of tLEData) using utf16le
+	testLog("Encoding", "Endianness 2", the result is tString, xResults)
+	
+	decode (byte -2 to -1 of tBEData) using utf16be
+	testLog("Encoding", "Endianness 3", the result is tString, xResults)
+	
+	// round tripping
+	put "hello" into tString
+
+	variable tElement as string
+	repeat for each element tElement in ["utf8","utf16be","utf16le","utf16","utf32be","utf32le","utf32","ascii","native"]
+		encode tString using tElement
+		decode the result using tElement
+		testLog("Encoding", tElement & "RoundTrip", the result is "hello", xResults)
+	end repeat
+	
 end handler
 
 public handler boolWithSideEffect(in tResult as boolean, inout tVar as string) as boolean

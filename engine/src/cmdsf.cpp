@@ -3378,8 +3378,6 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
         
         if (encoding != NULL)
         {
-            extern bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding);
-            
             if (!ctxt . EvalExprAsStringRef(encoding, EE_OPEN_BADENCODING, &t_encoding_as_string))
                 return;
             
@@ -3388,7 +3386,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
             else
             {
                 MCStringEncoding t_string_encoding;
-                if (!MCStringsEvalTextEncoding(*t_encoding_as_string, (MCStringEncoding&)t_string_encoding))
+                if (!MCStringEvalTextEncoding(*t_encoding_as_string, (MCStringEncoding&)t_string_encoding))
                 {
                     ctxt . LegacyThrow(EE_OPEN_BADENCODING);
                     return;

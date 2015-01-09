@@ -235,7 +235,7 @@ Either locates the byte at the given index for use as the target container of an
 Tags: Binary
 */
 
-syntax SingletonByteOf is prefix operator with precedence 1
+syntax SingletonByteOf is prefix operator with precedence 3
 	"byte" <Index: Expression> "of" <Target: Expression>
 begin
 	MCByteFetchByteOf(Index, Target, output)
@@ -258,7 +258,7 @@ Either locates the bytes between the given indices for use as the target contain
 Tags: Binary
 */
 
-syntax RangeByteOf is prefix operator with precedence 1
+syntax RangeByteOf is prefix operator with precedence 3
 	"byte" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	MCByteFetchByteRangeOf(Start, Finish, Target, output)

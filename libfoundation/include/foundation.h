@@ -1748,6 +1748,9 @@ MC_DLLEXPORT bool MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& 
 
 /////////
 
+// Evaluate the text encoding from the given string.
+MC_DLLEXPORT bool MCStringEvalTextEncoding(MCStringRef encoding, MCStringEncoding& r_encoding);
+    
 // Encode the given string with the specified encoding. Characters which cannot
 // be represented in the target encoding are replaced by '?'.
 MC_DLLEXPORT bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
