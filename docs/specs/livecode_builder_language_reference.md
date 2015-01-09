@@ -24,9 +24,20 @@ The structure of tokens is similar to LiveCode Script, but again a little strict
  - **String**: "[^\n\r"]*"
  - **Separator**: Any whitespace containing at least one newline
 
+Strings use backslash ('\') as an escape - the following are understood:
+
+ - **\n**: LF (ASCII 10)
+ - **\r**: CR (ASCII 13)
+ - **\t**: TAB (ASCII 9)
+ - **\q**: quote '"'
+ - **\xXX**: character with unicode codepoint hex value 0xXX
+ - **\uXXXX**: character with unicode codepoint hex value 0xXXXX
+ - **\UXXXXXX**: character with unicode codepoint hex valu 0xXXXXXX
+ - **\\**: backslash '\'
+
 > **Note:** The presence of '.' in identifiers are used as a namespace scope delimiter.
 
-> **Note:** Eventually strings will use '\' as an escaping character allowing things such as \n for newline and \q for quote.
+> **Note:** Source files are presumed to be in UTF-8 encoding.
 
 ## Case-Sensitivity
 
