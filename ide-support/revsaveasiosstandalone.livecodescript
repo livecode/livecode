@@ -920,7 +920,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
             end if
          else
             put "external-tmp" into rExternals[it]["type"]        
-            repeat for each word tInstSet in "armv6 armv7 arm64"
+            repeat for each word tInstSet in "armv6 armv7 arm64 arm"
                if pSDKs[tInstSet]["suffix"] is not empty then
                   put the tempName into tTarget
                   if lcextExtractExternal(tSource, "Device-" & pSDKs[tInstSet]["suffix"], tTarget) then
@@ -1006,7 +1006,7 @@ end lcextExtractExternal
 -- where we extract the appropraite external for the instruciton set(s) we are building for.
 --
 private command revCopyMobileExternals pExternals, pAppBundle, pTarget, pSDKs, @rExternals 
-   repeat for each word tInstSet in "sim armv6 armv7 arm64"
+   repeat for each word tInstSet in "sim armv6 armv7 arm64 arm"
       if pSDKs[tInstSet]["suffix"] is not empty then
          repeat for each line tLine in pExternals      
             local tFile
@@ -1030,7 +1030,7 @@ end revCopyMobileExternals
 -- where we extract the appropraite external for the instruciton set(s) we are building for.
 --
 private command revCopyMobileDrivers pDrivers, pAppBundle, pTarget, pSDKs, @rExternals
-   repeat for each word tInstSet in "sim armv6 armv7 arm64"
+   repeat for each word tInstSet in "sim armv6 armv7 arm64 arm"
       if pSDKs[tInstSet]["suffix"] is not empty then
          repeat for each line tLine in pDrivers
             local tFile
@@ -1357,6 +1357,8 @@ private function revGetMobileProfileInfo pProfileId
       if tCert contains "Distribution" then
          put true into tIsDist
          get offset("iPhone Distribution:", tCert)
+      else if tCert Contains "iOS Development:" then
+         get offset("iOS Development:", tCert)
       else
          get offset("iPhone Developer:", tCert)
       end if
