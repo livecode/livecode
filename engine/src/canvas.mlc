@@ -2310,7 +2310,7 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as int, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new effect.

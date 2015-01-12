@@ -5578,7 +5578,7 @@ void MCCanvasStringsInitialize()
 	/* UNCHECKED */
 	s_blend_mode_map[kMCGBlendModeClear] = MCNAME("clear");
 	s_blend_mode_map[kMCGBlendModeCopy] = MCNAME("copy");
-	s_blend_mode_map[kMCGBlendModeSourceOut] = MCNAME("source over");
+	s_blend_mode_map[kMCGBlendModeSourceOver] = MCNAME("source over");
 	s_blend_mode_map[kMCGBlendModeSourceIn] = MCNAME("source in");
 	s_blend_mode_map[kMCGBlendModeSourceOut] = MCNAME("source out");
 	s_blend_mode_map[kMCGBlendModeSourceAtop] = MCNAME("source atop");
@@ -5702,7 +5702,7 @@ bool _mcenumfromstring(MCNameRef *N, MCStringRef p_string, T &r_value)
 {
 	for (uint32_t i = 0; i < C; i++)
 	{
-		if (MCStringIsEqualTo(p_string, MCNameGetString(N[i]), kMCStringOptionCompareCaseless))
+		if (N[i] != nil && MCStringIsEqualTo(p_string, MCNameGetString(N[i]), kMCStringOptionCompareCaseless))
 		{
 			r_value = (T)i;
 			return true;
