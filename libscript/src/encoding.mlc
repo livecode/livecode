@@ -113,7 +113,7 @@ Target:		An expression which evaluates to a string.
 The result:	The decoded data.
 
 Description:
-Decodes a string which has been <EncodeUsingBase64|encoded using base 64>
+Decodes a string which has been <EncodeUsingBase64|encoded using base64>
 
 Tags: Encoding
 
