@@ -2466,6 +2466,8 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCGenericErrorTypeInfo;
 
 MC_DLLEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
 
+MC_DLLEXPORT bool MCErrorCreateWithMessage(MCTypeInfoRef typeinfo, MCStringRef message, MCArrayRef info, MCErrorRef & r_error);
+
 MC_DLLEXPORT bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
 
 MC_DLLEXPORT MCNameRef MCErrorGetDomain(MCErrorRef error);
@@ -2481,6 +2483,8 @@ MC_DLLEXPORT uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column)
 // They should be a sequence of pairs (const char *key, MCValueRef value), and finish
 // with nil.
 MC_DLLEXPORT bool MCErrorCreateAndThrow(MCTypeInfoRef typeinfo, ...);
+
+MC_DLLEXPORT bool MCErrorCreateAndThrowWithMessage(MCTypeInfoRef typeinfo, MCStringRef message_format, ...);
     
 // Throw the given error code (local to the current thread).
 MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
