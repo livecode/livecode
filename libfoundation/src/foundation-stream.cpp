@@ -26,7 +26,7 @@ struct __MCStreamImpl
 	const MCStreamCallbacks *callbacks;
 };
 
-MCTypeInfoRef kMCStreamTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCStreamTypeInfo;
 
 static inline __MCStreamImpl &__MCStreamGet(MCStreamRef p_stream)
 {
