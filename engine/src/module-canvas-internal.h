@@ -151,8 +151,14 @@ struct MCCanvasProperties
 	MCGBlendMode blend_mode;
 	bool stippled;
 	MCGImageFilter image_filter;
-    MCGFloat stroke_width;
 	MCCanvasFontRef font;
+
+	MCGFloat stroke_width;
+	MCGJoinStyle join_style;
+	MCGCapStyle cap_style;
+	MCCanvasFloat miter_limit;
+	MCProperListRef dash_lengths;
+	MCCanvasFloat dash_phase;
 };
 
 struct __MCCanvasImpl
@@ -162,7 +168,12 @@ struct __MCCanvasImpl
 	bool antialias_changed : 1;
 	bool opacity_changed : 1;
 	bool blend_mode_changed : 1;
+	// line stroke properties
     bool stroke_width_changed : 1;
+	bool join_style_changed : 1;
+	bool cap_style_changed : 1;
+	bool miter_limit_changed : 1;
+	bool dashes_changed : 1;
 	
 	MCCanvasProperties *prop_stack;
 	uint32_t prop_max;
