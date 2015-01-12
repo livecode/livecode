@@ -3491,8 +3491,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
 		
 		MCAutoStringRef t_path;
-		MCStringCreateWithWStringAndRelease(wcFileNameBuf, &t_path);
-		return PathFromNative(*t_path, r_path);
+		MCStringCreateWithWStringAndRelease((unichar_t*)wcFileNameBuf, &t_path);
+		return PathFromNative(*t_path, r_path); 
 	}
 
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
