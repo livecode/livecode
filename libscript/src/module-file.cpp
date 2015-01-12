@@ -33,6 +33,24 @@ MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT void
+MCStreamExecGetStandardOutput (MCStreamRef & r_stream)
+{
+	MCStreamGetStandardOutput (r_stream);
+}
+
+extern "C" MC_DLLEXPORT void
+MCStreamExecGetStandardInput (MCStreamRef & r_stream)
+{
+	MCStreamGetStandardInput (r_stream);
+}
+extern "C" MC_DLLEXPORT void
+MCStreamExecGetStandardError (MCStreamRef & r_stream)
+{
+	MCStreamGetStandardError (r_stream);
+}
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForRead(MCStringRef p_filename)
 {
     MCStreamRef t_stream;

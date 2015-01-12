@@ -6,6 +6,10 @@ module com.livecode.file
 
 public foreign type Stream binds to "kMCStreamTypeInfo"
 
+public foreign handler MCStreamExecGetStandardOutput(out StdOut as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecGetStandardInput(out StdIn as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecGetStandardError(out StdErr as Stream) as undefined binds to "<builtin>"
+
 public foreign handler MCFileExecGetContents(in File as string, out Contents as data) as undefined binds to "<builtin>"
 public foreign handler MCFileExecSetContents(in Contents as data, in File as string) as undefined binds to "<builtin>"
 
@@ -15,6 +19,66 @@ public foreign handler MCFileExecOpenFileForUpdate(in Create as bool, in File as
 
 public foreign handler MCFileExecReadFromStream(in Amount as uint, in Source as Stream) as data binds to "<builtin>"
 public foreign handler MCFileExecWriteToStream(in Buffer as data, in Destination as Stream) as undefined binds to "<builtin>"
+
+--
+
+/*
+Summary:	Default output stream.
+Returns:	The default output stream.
+
+Description:
+The default output stream for output from the program.
+
+In command-line programs, this is usually used to output the results
+of running the program.  In CGI programs running on servers, this is
+usually used to output the data to be sent to the client.
+
+Tags: IO
+*/
+syntax DefaultOutputStream is expression
+	"the" "output" "stream"
+begin
+	MCStreamExecGetStandardOutput(output)
+end syntax
+
+/*
+Summary:	Default input stream.
+Returns:	The default input stream.
+
+Description:
+The default input stream for input to the program.
+
+In command-line programs, this is usually used to receive input from
+the user or from other applications.  In CGI programs running on
+servers, this is usually used to receive incoming data from the
+client.
+
+Tags: IO
+*/
+syntax DefaultInputStream is expression
+	"the" "input" "stream"
+begin
+	MCStreamExecGetStandardInput(output)
+end syntax
+
+/*
+Summary:	Default error stream.
+Returns:	The default error stream.
+
+Description:
+The default error stream for diagnostic information.
+
+In command-line programs, this is usually used to display error
+messages.  In server programs, data output through this stream may be
+stored in the system log, depending on the server configuration.
+
+Tags: IO
+*/
+syntax DefaultErrorStream is expression
+	"the" "error" "stream"
+begin
+	MCStreamExecGetStandardError(output)
+end syntax
 
 --
 
