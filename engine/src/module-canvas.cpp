@@ -32,6 +32,22 @@ extern MCWidget *MCwidgetobject;
 
 // Useful stuff
 
+bool MCMemoryAllocateArray(uint32_t p_size, uint32_t p_count, void *&r_array)
+{
+	return MCMemoryAllocate(p_size * p_count, r_array);
+}
+
+template <class T>
+bool MCMemoryAllocateArray(uint32_t p_count, T *&r_array)
+{
+	void *t_array;
+	if (!MCMemoryAllocateArray(sizeof(T), p_count, t_array))
+		return false;
+	
+	r_array = (T*)t_array;
+	return true;
+}
+
 bool MCMemoryAllocateArrayCopy(const void *p_array, uint32_t p_size, uint32_t p_count, void *&r_copy)
 {
 	return MCMemoryAllocateCopy(p_array, p_size * p_count, r_copy);
@@ -165,6 +181,16 @@ bool MCProperListFetchRealAtIndex(MCProperListRef p_list, uindex_t p_index, real
 	return true;
 }
 
+inline bool MCProperListFetchFloatAtIndex(MCProperListRef p_list, uindex_t p_index, float32_t &r_float)
+{
+	real64_t t_real;
+	if (!MCProperListFetchRealAtIndex(p_list, p_index, t_real))
+		return false;
+	
+	r_float = t_real;
+	return true;
+}
+
 bool MCProperListFetchIntegerAtIndex(MCProperListRef p_list, uindex_t p_index, integer_t &r_integer)
 {
 	MCNumberRef t_number;
@@ -207,6 +233,18 @@ bool MCProperListCreateWithArrayOfReal(const real64_t *p_reals, uindex_t p_size,
 	return t_success;
 }
 
+bool MCProperListFetchAsArrayOfFloat(MCProperListRef p_list, uindex_t p_size, float32_t *x_floats)
+{
+	if (p_size != MCProperListGetLength(p_list))
+		return false;
+	
+	for (uindex_t i = 0; i < p_size; i++)
+		if (!MCProperListFetchFloatAtIndex(p_list, i, x_floats[i]))
+			return false;
+	
+	return true;
+}
+
 bool MCProperListFetchAsArrayOfInteger(MCProperListRef p_list, uindex_t p_size, integer_t *r_integers)
 {
 	if (p_size != MCProperListGetLength(p_list))
@@ -217,6 +255,34 @@ bool MCProperListFetchAsArrayOfInteger(MCProperListRef p_list, uindex_t p_size, 
 			return false;
 	
 	return true;
+}
+
+bool MCProperListToArrayOfFloat(MCProperListRef p_list, uindex_t &r_count, float32_t *&r_values)
+{
+	bool t_success;
+	t_success = true;
+	
+	uindex_t t_count;
+	t_count = MCProperListGetLength(p_list);
+	
+	float32_t *t_values;
+	t_values = nil;
+	
+	if (t_success)
+		t_success = MCMemoryAllocateArray(t_count, t_values);
+	
+	if (t_success)
+		t_success = MCProperListFetchAsArrayOfFloat(p_list, t_count, t_values);
+	
+	if (t_success)
+	{
+		r_count = t_count;
+		r_values = t_values;
+	}
+	else
+		MCMemoryDeleteArray(t_values);
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -343,6 +409,10 @@ bool MCCanvasImageFilterFromString(MCStringRef p_string, MCGImageFilter &r_filte
 bool MCCanvasImageFilterToString(MCGImageFilter p_filter, MCStringRef &r_string);
 bool MCCanvasPathCommandToString(MCGPathCommand p_command, MCStringRef &r_string);
 bool MCCanvasPathCommandFromString(MCStringRef p_string, MCGPathCommand &r_command);
+bool MCCanvasJoinStyleToString(MCGJoinStyle p_style, MCStringRef &r_string);
+bool MCCanvasJoinStyleFromString(MCStringRef p_string, MCGJoinStyle &r_style);
+bool MCCanvasCapStyleToString(MCGCapStyle p_style, MCStringRef &r_string);
+bool MCCanvasCapStyleFromString(MCStringRef p_string, MCGCapStyle &r_style);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -354,6 +424,8 @@ static MCNameRef s_gradient_type_map[kMCGGradientFunctionCount];
 static MCNameRef s_canvas_fillrule_map[kMCGFillRuleCount];
 static MCNameRef s_image_filter_map[kMCGImageFilterCount];
 static MCNameRef s_path_command_map[kMCGPathCommandCount];
+static MCNameRef s_join_style_map[kMCGJoinStyleCount];
+static MCNameRef s_cap_style_map[kMCGCapStyleCount];
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4093,7 +4165,8 @@ void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanva
 
 void MCCanvasDirtyProperties(__MCCanvasImpl &p_canvas)
 {
-	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = p_canvas.stroke_width_changed = true;
+	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = true;
+	p_canvas.stroke_width_changed = p_canvas.join_style_changed = p_canvas.cap_style_changed = p_canvas.miter_limit_changed = p_canvas.dashes_changed = true;
 }
 
 bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
@@ -4122,9 +4195,15 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 		p_properties.paint = nil;
 		p_properties.stippled = false;
 		p_properties.image_filter = kMCGImageFilterMedium;
-		p_properties.stroke_width = 0;
 		p_properties.font = t_default_font;
-		
+
+		p_properties.stroke_width = 0;
+		p_properties.join_style = kMCGJoinStyleBevel;
+		p_properties.cap_style = kMCGCapStyleButt;
+		p_properties.miter_limit = 0;
+		p_properties.dash_lengths = MCValueRetain(kMCEmptyProperList);
+		p_properties.dash_phase = 0;
+
 		// TODO - check this cast to supertype?
 		p_properties.paint = (MCCanvasPaintRef)t_black_paint;
 	}
@@ -4148,8 +4227,14 @@ bool MCCanvasPropertiesCopy(MCCanvasProperties &p_src, MCCanvasProperties &p_dst
 	t_properties.stippled = p_src.stippled;
 	t_properties.image_filter = p_src.image_filter;
 	t_properties.paint = MCValueRetain(p_src.paint);
-	t_properties.stroke_width = p_src.stroke_width;
 	t_properties.font = MCValueRetain(p_src.font);
+	
+	t_properties.stroke_width = p_src.stroke_width;
+	t_properties.join_style = p_src.join_style;
+	t_properties.cap_style = p_src.cap_style;
+	t_properties.miter_limit = p_src.miter_limit;
+	t_properties.dash_lengths = MCValueRetain(p_src.dash_lengths);
+	t_properties.dash_phase = p_src.dash_phase;
 	
 	p_dst = t_properties;
 	
@@ -4160,6 +4245,7 @@ void MCCanvasPropertiesClear(MCCanvasProperties &p_properties)
 {
 	MCValueRelease(p_properties.paint);
 	MCValueRelease(p_properties.font);
+	MCValueRelease(p_properties.dash_lengths);
 	MCMemoryClear(&p_properties, sizeof(MCCanvasProperties));
 }
 
@@ -4401,6 +4487,11 @@ void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef p_
 		t_canvas->paint_changed = true;
 }
 
+void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width)
+{
+	r_stroke_width = MCCanvasGetProps(p_canvas).stroke_width;
+}
+
 void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4408,11 +4499,6 @@ void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas)
 	
 	t_canvas->props().stroke_width = p_stroke_width;
 	t_canvas->stroke_width_changed = true;
-}
-
-void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width)
-{
-	r_stroke_width = MCCanvasGetProps(p_canvas).stroke_width;
 }
 
 void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font)
@@ -4423,6 +4509,91 @@ void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font)
 void MCCanvasSetFont(MCCanvasFontRef p_font, MCCanvasRef p_canvas)
 {
 	MCValueAssign(MCCanvasGetProps(p_canvas).font, p_font);
+}
+
+void MCCanvasGetJoinStyleAsString(MCCanvasRef p_canvas, MCStringRef &r_join_style)
+{
+	/* UNCHECKED */ MCCanvasJoinStyleToString(MCCanvasGetProps(p_canvas).join_style, r_join_style);
+}
+
+void MCCanvasSetJoinStyleAsString(MCStringRef p_join_style, MCCanvasRef p_canvas)
+{
+	if (!MCCanvasJoinStyleFromString(p_join_style, MCCanvasGetProps(p_canvas).join_style))
+	{
+		// TODO - throw join style error
+		return;
+	}
+	
+	MCCanvasGet(p_canvas)->join_style_changed = true;
+}
+
+void MCCanvasGetCapStyleAsString(MCCanvasRef p_canvas, MCStringRef &r_cap_style)
+{
+	/* UNCHECKED */ MCCanvasCapStyleToString(MCCanvasGetProps(p_canvas).cap_style, r_cap_style);
+}
+
+void MCCanvasSetCapStyleAsString(MCStringRef p_cap_style, MCCanvasRef p_canvas)
+{
+	if (!MCCanvasCapStyleFromString(p_cap_style, MCCanvasGetProps(p_canvas).cap_style))
+	{
+		// TODO - throw cap style error
+		return;
+	}
+	
+	MCCanvasGet(p_canvas)->cap_style_changed = true;
+}
+
+void MCCanvasGetMiterLimit(MCCanvasRef p_canvas, MCCanvasFloat &r_limit)
+{
+	r_limit = MCCanvasGetProps(p_canvas).miter_limit;
+}
+
+void MCCanvasSetMiterLimit(MCCanvasFloat p_limit, MCCanvasRef p_canvas)
+{
+	MCCanvasGetProps(p_canvas).miter_limit = p_limit;
+	MCCanvasGet(p_canvas)->miter_limit_changed = true;
+}
+
+void MCCanvasGetDashes(MCCanvasRef p_canvas, MCProperListRef &r_dashes)
+{
+	r_dashes = MCValueRetain(MCCanvasGetProps(p_canvas).dash_lengths);
+}
+
+bool MCCanvasDashesCheckList(MCProperListRef p_list)
+{
+	uindex_t t_length;
+	t_length = MCProperListGetLength(p_list);
+	
+	for (uindex_t i = 0; i < t_length; i++)
+	{
+		if (MCValueGetTypeInfo(MCProperListFetchElementAtIndex(p_list, i)) != kMCNumberTypeInfo)
+			return false;
+	}
+	
+	return true;
+}
+
+void MCCanvasSetDashes(MCProperListRef p_dashes, MCCanvasRef p_canvas)
+{
+	if (!MCCanvasDashesCheckList(p_dashes))
+	{
+		// TODO - throw dashes list type error
+		return;
+	}
+	
+	MCValueAssign(MCCanvasGetProps(p_canvas).dash_lengths, p_dashes);
+	MCCanvasGet(p_canvas)->dashes_changed = true;
+}
+
+void MCCanvasGetDashPhase(MCCanvasRef p_canvas, MCCanvasFloat &r_phase)
+{
+	r_phase = MCCanvasGetProps(p_canvas).dash_phase;
+}
+
+void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas)
+{
+	MCCanvasGetProps(p_canvas).dash_phase = p_phase;
+	MCCanvasGet(p_canvas)->dashes_changed = true;
 }
 
 //////////
@@ -4572,6 +4743,38 @@ void MCCanvasApplyChanges(__MCCanvasImpl &x_canvas)
         MCGContextSetStrokeWidth(x_canvas.context, x_canvas.props().stroke_width);
         x_canvas.stroke_width_changed = false;
     }
+	
+	if (x_canvas.join_style_changed)
+	{
+		MCGContextSetStrokeJoinStyle(x_canvas.context, x_canvas.props().join_style);
+		x_canvas.join_style_changed = false;
+	}
+	
+	if (x_canvas.cap_style_changed)
+	{
+		MCGContextSetStrokeCapStyle(x_canvas.context, x_canvas.props().cap_style);
+		x_canvas.cap_style_changed = false;
+	}
+	
+	if (x_canvas.miter_limit_changed)
+	{
+		MCGContextSetStrokeMiterLimit(x_canvas.context, x_canvas.props().miter_limit);
+		x_canvas.miter_limit_changed = false;
+	}
+	
+	if (x_canvas.dashes_changed)
+	{
+		MCCanvasFloat *t_lengths;
+		t_lengths = nil;
+		uindex_t t_count;
+		t_count = 0;
+		
+		/* UNCHECKED */ MCProperListToArrayOfFloat(x_canvas.props().dash_lengths, t_count, t_lengths);
+		MCGContextSetStrokeDashes(x_canvas.context, x_canvas.props().dash_phase, t_lengths, t_count);
+		x_canvas.dashes_changed = false;
+		
+		MCMemoryDeleteArray(t_lengths);
+	}
 }
 
 //////////
@@ -5367,6 +5570,8 @@ void MCCanvasStringsInitialize()
 	MCMemoryClear(s_gradient_type_map, sizeof(s_gradient_type_map));
 	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_gradient_type_map));
 	MCMemoryClear(s_image_filter_map, sizeof(s_image_filter_map));
+	MCMemoryClear(s_join_style_map, sizeof(s_join_style_map));
+	MCMemoryClear(s_cap_style_map, sizeof(s_cap_style_map));
 	
 	/* UNCHECKED */
 	s_blend_mode_map[kMCGBlendModeClear] = MCNAME("clear");
@@ -5446,6 +5651,14 @@ void MCCanvasStringsInitialize()
 	s_path_command_map[kMCGPathCommandCloseSubpath] = MCNAME("close");
 	s_path_command_map[kMCGPathCommandEnd] = MCNAME("end");
 	
+	s_join_style_map[kMCGJoinStyleBevel] = MCNAME("bevel");
+	s_join_style_map[kMCGJoinStyleMiter] = MCNAME("miter");
+	s_join_style_map[kMCGJoinStyleRound] = MCNAME("round");
+	
+	s_cap_style_map[kMCGCapStyleButt] = MCNAME("butt");
+	s_cap_style_map[kMCGCapStyleRound] = MCNAME("round");
+	s_cap_style_map[kMCGCapStyleSquare] = MCNAME("square");
+	
 /* UNCHECKED */
 }
 
@@ -5474,6 +5687,12 @@ void MCCanvasStringsFinalize()
 	
 	for (uint32_t i = 0; i < kMCGPathCommandCount; i++)
 		MCValueRelease(s_path_command_map[i]);
+	
+	for (uint32_t i = 0; i < kMCGJoinStyleCount; i++)
+		MCValueRelease(s_join_style_map);
+	
+	for (uint32_t i = 0; i < kMCGCapStyleSquare; i++)
+		MCValueRelease(s_cap_style_map);
 }
 
 template <typename T, int C>
@@ -5562,6 +5781,26 @@ bool MCCanvasPathCommandToString(MCGPathCommand p_command, MCStringRef &r_string
 bool MCCanvasPathCommandFromString(MCStringRef p_string, MCGPathCommand &r_command)
 {
 	return _mcenumfromstring<MCGPathCommand, kMCGPathCommandCount>(s_path_command_map, p_string, r_command);
+}
+
+bool MCCanvasJoinStyleToString(MCGJoinStyle p_style, MCStringRef &r_string)
+{
+	return _mcenumtostring<MCGJoinStyle, kMCGJoinStyleCount>(s_join_style_map, p_style, r_string);
+}
+
+bool MCCanvasJoinStyleFromString(MCStringRef p_string, MCGJoinStyle &r_style)
+{
+	return _mcenumfromstring<MCGJoinStyle, kMCGJoinStyleCount>(s_join_style_map, p_string, r_style);
+}
+
+bool MCCanvasCapStyleToString(MCGCapStyle p_style, MCStringRef &r_string)
+{
+	return _mcenumtostring<MCGCapStyle, kMCGCapStyleCount>(s_cap_style_map, p_style, r_string);
+}
+
+bool MCCanvasCapStyleFromString(MCStringRef p_string, MCGCapStyle &r_style)
+{
+	return _mcenumfromstring<MCGCapStyle, kMCGCapStyleCount>(s_cap_style_map, p_string, r_style);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
