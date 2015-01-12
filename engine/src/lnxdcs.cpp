@@ -1003,13 +1003,13 @@ void MCScreenDC::setfunction(uint4 rop)
         gdk_gc_set_function(getgc(), XOpToGdkOp(rop));
 }
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
 	// Return the XID
     return d != DNULL ? x11::gdk_x11_drawable_get_xid(d) : 0;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t id, Window &w)
 {
     // Look up the XID in GDK's window table
     w = x11::gdk_x11_window_lookup_for_display(dpy, id);

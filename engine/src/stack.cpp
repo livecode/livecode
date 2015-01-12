@@ -1611,7 +1611,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		ep.setboolean(getflag(F_WM_PLACE));
 		break;
 	case P_WINDOW_ID:
-		ep.setint(MCscreen->dtouint4((Drawable)window));
+		ep.setint(MCscreen->dtouint((Drawable)window));
 		break;
 	case P_PIXMAP_ID:
 		ep.setint(0);

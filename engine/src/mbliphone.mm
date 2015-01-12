@@ -383,8 +383,12 @@ bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
 
 MCNameRef MCIPhoneSystem::GetProcessor(void)
 {
-#ifdef __i386__
-	return MCN_i386;
+#if defined __i386__
+    return MCN_i386;
+#elif defined __amd64__
+    return MCN_x86_64;
+#elif defined __arm64__
+    return MCN_arm64;
 #else
 	return MCN_arm;
 #endif

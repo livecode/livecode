@@ -1386,18 +1386,18 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 	return NULL;
 }
 
-MCStack *MCStack::findstackwindowid(uint32_t p_win_id)
+MCStack *MCStack::findstackwindowid(uintptr_t p_win_id)
 {
 	if (p_win_id == 0)
 		return NULL;
-	if (MCscreen->dtouint4((Drawable)window) == p_win_id)
+	if (MCscreen->dtouint((Drawable)window) == p_win_id)
 		return this;
 	if (substacks != NULL)
 	{
 		MCStack *tptr = substacks;
 		do
 		{
-			if (MCscreen->dtouint4((Drawable)tptr->window) == p_win_id)
+			if (MCscreen->dtouint((Drawable)tptr->window) == p_win_id)
 				return tptr;
 			tptr = (MCStack *)tptr->next();
 		}
