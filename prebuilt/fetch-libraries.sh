@@ -6,7 +6,7 @@ VERSION_Curl="7.21.1"
 VERSION_ICU="52.1"
 
 # Libraries to fetch
-PLATFORMS=( mac linux win32 android )
+PLATFORMS=( mac linux win32 android ios )
 ARCHS_android=( armv6 )
 ARCHS_mac=( Universal )
 ARCHS_ios=( Universal )
@@ -17,7 +17,7 @@ LIBS_mac=( OpenSSL ICU )
 LIBS_ios=( OpenSSL ICU )
 LIBS_win32=( OpenSSL Curl ICU )
 LIBS_linux=( OpenSSL Curl ICU )
-SUBPLATFORMS_ios=( iPhoneSimulator5.0 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneOS5.0 iPhoneOS6.1 iPhoneOS7.1 )
+SUBPLATFORMS_ios=( iPhoneSimulator5.0 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.1 iPhoneOS5.0 iPhoneOS6.1 iPhoneOS7.1 iPhoneOS8.1 )
 
 # Fetch settings
 FETCH_DIR=`pwd`/fetched
