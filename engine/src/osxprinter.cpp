@@ -708,7 +708,10 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 
         MCAutoStringRef t_output_location_str;
         // SN-2014-12-22: [[ Bug 14278 ]] We get the output location as a UTF-8 string.
-		/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_output_location, strlen(t_output_location), kMCStringEncodingUTF8, false, &t_output_location_str);
+        if (t_output_location != NULL)
+            /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_output_location, strlen(t_output_location), kMCStringEncodingUTF8, false, &t_output_location_str);
+        else
+            t_output_location_str = kMCEmptyString;
 		SetDeviceOutput(t_output_type, *t_output_location_str);
 
 		delete t_output_location;
