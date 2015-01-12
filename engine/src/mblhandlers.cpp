@@ -867,6 +867,82 @@ Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleGetPurchaseProperty */ LEGACY_EXEC
+    bool t_success = true;
+	
+	char *t_product_id = nil;
+    char *t_prop_name = nil;
+    const char *t_prop_value = nil;
+    
+	if (t_success)
+        t_success = MCParseParameters(p_parameters, "ss", &t_product_id, &t_prop_name);
+	if (t_success)
+        t_prop_value = MCStoreGetPurchaseProperty(t_product_id, t_prop_name);
+    
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_prop_name);
+    
+    MCresult -> sets(t_prop_value);
+    return ES_NORMAL;
+#endif /* MCHandleGetPurchaseProperty */
+
+    bool t_success = true;
+    MCAutoStringRef t_product_id, t_prop_name, t_prop_value;
+    MCExecContext ctxt(nil,nil,nil);
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "xx", &(&t_product_id), &(&t_prop_name));
+    
+    if (t_success)
+        MCStoreGetPurchaseProperty(ctxt, *t_product_id, *t_prop_name, &t_prop_value);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_prop_value);
+        return ES_NORMAL;
+    }
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleSetPurchaseProperty */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    char *t_prop_name = nil;
+    char *t_prop_value = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "sss", &t_product_id, &t_prop_name, &t_prop_value);
+    if (t_success)
+        t_success = MCStoreSetPurchaseProperty(t_product_id, t_prop_name, t_prop_value);
+    
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_prop_name);
+    MCCStringFree(t_prop_value);
+    
+    return ES_NORMAL;
+#endif /* MCHandleSetPurchaseProperty */
+
+    bool t_success = true;
+    MCAutoStringRef t_product_id, t_prop_name, t_prop_value;
+    MCExecContext ctxt(nil,nil,nil);
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "xxx", &(&t_product_id), &(&t_prop_name), &(&t_prop_value));
+    if (t_success)
+        MCStoreSetPurchaseProperty(ctxt, *t_product_id, *t_prop_name, *t_prop_value);
+    
+    if (ctxt.HasError())
+        return ES_ERROR;
+    
+    return ES_NORMAL;
+    
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
@@ -6808,7 +6884,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
     {false, "mobileStoreMakePurchase", MCHandleMakePurchase, nil},
     {false, "mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
-//    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
     {false, "mobileStoreSetProductType", MCHandleProductSetType, nil},
     {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
     {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
