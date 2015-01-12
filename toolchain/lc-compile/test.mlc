@@ -221,6 +221,13 @@ public handler testMath(inout xResults as list)
 	
 	testLog("Math", "ConvertFromBaseToBase", ("1122" converted from base 4 to base 14) is "66", xResults)
 
+	// inverse trig functions
+	testLog("Math", "Arcsin", the arcsin of 1 is pi / 2, xResults)
+	testLog("Math", "Arccos", the arccos of -1 is pi, xResults)
+	testLog("Math", "Arctan", the arctan of 1 is pi / 4, xResults)
+	
+	testLog("Math", "Arctan2", the arctan2 of -1,-1 is -3 * pi / 4, xResults)
+
 end handler
 
 public handler testTypeConvert(inout xResults as list)

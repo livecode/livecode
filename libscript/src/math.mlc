@@ -41,6 +41,18 @@ public foreign handler MCMathEvalCosNumber(in Operand as number, out Value as nu
 public foreign handler MCMathEvalTanReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalTanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
+public foreign handler MCMathEvalAsinReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAsinNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalAcosReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAcosNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalAtanReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAtanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalAtan2Real(in First as double, in Second as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAtan2Number(in First as number, in Second as number, out Value as number) as undefined binds to "<builtin>"
+
 public foreign handler MCMathEvalAbsInteger(in Operand as int, out Value as int) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalAbsReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalAbsNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
@@ -135,6 +147,79 @@ syntax TanOperator is prefix operator with precedence 1
     "the" "tan" "of" <Operand: Expression>
 begin
     MCMathEvalTanNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Arcsin operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+	variable tVar as number
+	put the arcsin of 1 into tVar -- tVar contains pi / 2
+
+Tags: Math
+*/
+
+syntax ArcsinOperator is prefix operator with precedence 1
+    "the" "arcsin" "of" <Operand: Expression>
+begin
+    MCMathEvalAsinNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Arccos operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+	variable tVar as number
+	put the arccos of -1 into tVar -- tVar contains pi
+
+Tags: Math
+*/
+
+syntax ArccosOperator is prefix operator with precedence 1
+    "the" "arccos" "of" <Operand: Expression>
+begin
+    MCMathEvalAcosNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Arctan operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+	variable tVar as number
+	put the arctan of 1 into tVar -- tVar contains pi / 4
+
+Tags: Math
+*/
+
+syntax ArctanOperator is prefix operator with precedence 1
+    "the" "arctan" "of" <Operand: Expression>
+begin
+    MCMathEvalAtanNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Binary arctan operator.
+yCoord:   	An expression that evaluates to a number.
+xCoord:   	An expression that evaluates to a number.
+
+Example:
+    variable tVar as number
+    put the arctan of -1,-1 into tVar --tVar contains −3π/4.
+
+Description:
+The binary arctan operator returns the angle in radians between the x-axis and the line from the origin to the point (xCoord, yCoord).
+The angle returned has absolute value less than pi: −π < arctan2(y, x) ≤ π.
+
+Tags: Math
+*/
+
+syntax Arctan2Operator is prefix operator with precedence 1
+    "the" "arctan2" "of" <yCoord: Expression> "," <xCoord: Expression>
+begin
+    MCMathEvalAtan2Number(yCoord, xCoord, output)
 end syntax
 
 --

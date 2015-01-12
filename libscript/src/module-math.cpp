@@ -150,6 +150,75 @@ extern "C" MC_DLLEXPORT void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumber
     MCNumberCreateWithReal(t_result, r_output);
 }
 
+extern "C" MC_DLLEXPORT void MCMathEvalAsinReal(double p_operand, double& r_output)
+{
+    r_output = asin(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    double t_operand;
+    t_operand = MCNumberFetchAsReal(p_operand);
+    
+    double t_result;
+    MCMathEvalAsinReal(t_operand, t_result);
+    
+    // if (!ctxt . HasError())
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAcosReal(double p_operand, double& r_output)
+{
+    r_output = acos(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAcosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    double t_operand;
+    t_operand = MCNumberFetchAsReal(p_operand);
+    
+    double t_result;
+    MCMathEvalAcosReal(t_operand, t_result);
+    
+    // if (!ctxt . HasError())
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAtanReal(double p_operand, double& r_output)
+{
+    r_output = atan(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAtanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    double t_operand;
+    t_operand = MCNumberFetchAsReal(p_operand);
+    
+    double t_result;
+    MCMathEvalAtanReal(t_operand, t_result);
+    
+    // if (!ctxt . HasError())
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAtan2Real(double p_first, double p_second, double& r_output)
+{
+    r_output = atan2(p_first, p_second);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAtan2Number(MCNumberRef p_first, MCNumberRef p_second, MCNumberRef& r_output)
+{
+    double t_first, t_second;
+    t_first = MCNumberFetchAsReal(p_first);
+    t_second = MCNumberFetchAsReal(p_second);
+    
+    double t_result;
+    MCMathEvalAtan2Real(t_first, t_second, t_result);
+    
+    // if (!ctxt . HasError())
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
 extern "C" MC_DLLEXPORT void MCMathEvalAbsInteger(integer_t p_operand, integer_t& r_output)
 {
     r_output = MCAbs(p_operand);
