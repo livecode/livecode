@@ -1016,6 +1016,22 @@
 
     'rule' Constant(-> indexedvariable(Position, Value, Index)):
         Identifier(-> Value) @(-> Position) "[" INTEGER_LITERAL(-> Index) "]"
+        
+    'rule' Constant(-> variable(Position, Value)):
+        "output" @(-> Position)
+        MakeNameLiteral("output" -> Identifier)
+        Value::ID
+        Value'Position <- Position
+        Value'Name <- Identifier
+        Value'Meaning <- nil
+
+    'rule' Constant(-> variable(Position, Value)):
+        "input" @(-> Position)
+        MakeNameLiteral("input" -> Identifier)
+        Value::ID
+        Value'Position <- Position
+        Value'Name <- Identifier
+        Value'Meaning <- nil
 
 --------------------------------------------------------------------------------
 -- Identifier Syntax
