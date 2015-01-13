@@ -50,8 +50,8 @@ public foreign handler MCMathEvalAcosNumber(in Operand as number, out Value as n
 public foreign handler MCMathEvalAtanReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalAtanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathEvalAtan2Real(in First as double, in Second as double, out Value as double) as undefined binds to "<builtin>"
-public foreign handler MCMathEvalAtan2Number(in First as number, in Second as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAtan2Real(in yCoord as double, in xCoord as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAtan2Number(in yCoord as number, in xCoord as number, out Value as number) as undefined binds to "<builtin>"
 
 public foreign handler MCMathEvalAbsInteger(in Operand as int, out Value as int) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalAbsReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
@@ -157,6 +157,9 @@ Example:
 	variable tVar as number
 	put the arcsin of 1 into tVar -- tVar contains pi / 2
 
+Description:
+The inverse of the sin operator.
+
 Tags: Math
 */
 
@@ -174,6 +177,9 @@ Example:
 	variable tVar as number
 	put the arccos of -1 into tVar -- tVar contains pi
 
+Description:
+The inverse of the cos operator.
+
 Tags: Math
 */
 
@@ -190,6 +196,9 @@ Operand:    An expression that evaluates to a number.
 Example:
 	variable tVar as number
 	put the arctan of 1 into tVar -- tVar contains pi / 4
+
+Description:
+The inverse of the tan operator.
 
 Tags: Math
 */
@@ -216,7 +225,7 @@ The angle returned has absolute value less than pi: −π < arctan2(y, x) ≤ π
 Tags: Math
 */
 
-syntax Arctan2Operator is prefix operator with precedence 1
+syntax BinaryArctanOperator is prefix operator with precedence 1
     "the" "arctan2" "of" <yCoord: Expression> "," <xCoord: Expression>
 begin
     MCMathEvalAtan2Number(yCoord, xCoord, output)
