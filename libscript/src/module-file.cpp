@@ -17,108 +17,105 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-#include "prefix.h"
+#include "foundation-file.h"
 
-#include "globdefs.h"
-#include "filedefs.h"
-#include "objdefs.h"
-#include "parsedef.h"
-#include "mcio.h"
-
-#include "globals.h"
-#include "osspec.h"
-
-#include "securemode.h"
-#include "exec.h"
-#include "util.h"
-#include "uidc.h"
-
-#include "system.h"
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-uinteger_t MCFileStreamType_Measure(void)
+extern "C" MC_DLLEXPORT void
+MCFileExecGetContents (MCStringRef p_path, MCDataRef & r_data)
 {
-    return sizeof(IO_handle);
+	/* UNCHECKED */ MCFileGetContents (p_path, r_data);
 }
 
-void MCFileStreamType_Copy(const IO_handle p_source, IO_handle p_dest)
+extern "C" MC_DLLEXPORT void
+MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
 {
-    if (!MCMemoryAllocateCopy(p_source, sizeof(IO_handle), p_dest))
+	/* UNCHECKED */ MCFileSetContents (p_path, p_contents);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void
+MCStreamExecGetStandardOutput (MCStreamRef & r_stream)
+{
+	MCStreamGetStandardOutput (r_stream);
+}
+
+extern "C" MC_DLLEXPORT void
+MCStreamExecGetStandardInput (MCStreamRef & r_stream)
+{
+	MCStreamGetStandardInput (r_stream);
+}
+extern "C" MC_DLLEXPORT void
+MCStreamExecGetStandardError (MCStreamRef & r_stream)
+{
+	MCStreamGetStandardError (r_stream);
+}
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForRead(MCStringRef p_filename)
+{
+    MCStreamRef t_stream;
+    if (!MCFileCreateStream(p_filename, kMCOpenFileModeRead, t_stream))
+        return nil;
+    
+    return t_stream;
+}
+
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForWrite(bool p_create, MCStringRef p_filename, MCStreamRef& r_stream)
+{
+    MCStreamRef t_stream;
+    if (!MCFileCreateStream(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeWrite, t_stream))
+        return nil;
+    
+    return t_stream;
+}
+
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForUpdate(bool p_create, MCStringRef p_filename, MCStreamRef& r_stream)
+{
+    MCStreamRef t_stream;
+    if (!MCFileCreateStream(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeUpdate, t_stream))
+        return nil;
+    
+    return t_stream;
+}
+
+extern "C" MC_DLLEXPORT MCDataRef MCFileExecReadFromStream(uindex_t p_amount, MCStreamRef p_stream)
+{
+	/* FIXME this should be handled by MCStreamRead */
+    if (!MCStreamIsReadable(p_stream))
     {
-        // Throw
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("stream is not readable"), nil);
+        return MCValueRetain(kMCEmptyData);
     }
+    
+    byte_t t_buffer[p_amount];
+    
+    if (!MCStreamRead(p_stream, t_buffer, p_amount))
+    {
+		/* Error information should already be set */
+        return MCValueRetain(kMCEmptyData);
+    }
+    
+    MCDataRef t_data;
+    if (!MCDataCreateWithBytes(t_buffer, p_amount, t_data))
+        return MCValueRetain(kMCEmptyData);
+    
+    return t_data;
 }
 
-void MCFileStreamType_Finalize(IO_handle p_handle)
+extern "C" MC_DLLEXPORT void
+MCFileExecWriteToStream(MCDataRef p_data,
+                        MCStreamRef p_stream)
 {
-    p_handle -> Close();
+	/* FIXME This check should be handled by MCStreamWrite */
+	if (!MCStreamIsWritable (p_stream))
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason", MCSTR("stream is not writable"), NULL);
+		return;
+	}
+
+	if (!MCStreamWrite (p_stream,
+	                    MCDataGetBytePtr (p_data), MCDataGetLength (p_data)))
+	{
+		return; /* Error should already have been set */
+	}
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-IO_handle MCFileExecOpenFileForRead(MCStringRef p_filename)
-{
-    return MCS_open(p_filename, kMCOpenFileModeRead, true, false, 0);
-}
-
-IO_handle MCFileExecOpenFileForWrite(MCStringRef p_filename)
-{
-    return MCS_open(p_filename, kMCOpenFileModeWrite, false, false, 0);
-}
-
-IO_handle MCFileExecOpenFileForUpdate(MCStringRef p_filename)
-{
-    return MCS_open(p_filename, kMCOpenFileModeUpdate, false, false, 0);
-}
-
-IO_handle MCFileExecOpenNewFile(MCStringRef p_filename)
-{
-    return MCS_open(p_filename, kMCOpenFileModeCreate, false, false, 0);
-}
-
-MCStringRef MCFileExecReadFromStream(IO_handle p_stream, uindex_t p_amount)
-{
-    byte_t *bytes;
-    MCMemoryAllocate(p_amount, bytes);
-    
-    uindex_t t_read;
-    MCStringRef t_result;
-    
-    if (p_stream -> Read(bytes, p_amount, t_read) &&
-        MCStringCreateWithBytesAndRelease(bytes, t_read, kMCStringEncodingNative, false, t_result))
-        return t_result;
-    
-    // Throw
-    MCMemoryDeallocate(bytes);
-    
-    return MCValueRetain(kMCEmptyString);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-extern void log(const char *module, const char *test, bool result);
-#define log_result(test, result) log("FILE MODULE", test, result)
-void MCFileRunTests()
-{
-    MCStringRef t_string = MCSTR("/Users/alilloyd/Desktop/test.txt");
-    
-    IO_handle t_stream;
-    t_stream = MCFileExecOpenFileForRead(t_string);
-    
-    MCStringRef t_first, t_second;
-    
-    t_first = MCFileExecReadFromStream(t_stream, 13);
-    
-    log_result("read test", MCStringIsEqualToCString(t_first, "abcdefghijklm", kMCStringOptionCompareCaseless));
-    
-    MCValueRelease(t_first);
-    
-    t_second = MCFileExecReadFromStream(t_stream, 13);
-    
-    log_result("stream test", MCStringIsEqualToCString(t_second, "nopqrstuvwxyz", kMCStringOptionCompareCaseless));
-    
-    MCValueRelease(t_second);
-}
-
-

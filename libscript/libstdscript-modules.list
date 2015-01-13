@@ -6,6 +6,7 @@ binary.mlc
 bitwise.mlc
 byte.mlc
 char.mlc
+file.mlc
 list.mlc
 logic.mlc
 math-foundation.mlc

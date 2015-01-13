@@ -1,12 +1,16 @@
 module test
 
+use com.livecode.file
+
 public handler test()
     variable tResults as list
     put the empty list into tResults
+    	testFile(tResults)
 
     variable tDelimiter as string
     put newline into tDelimiter
 	
+
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
 	testLog("__Test", "Succeed", true, tResults)
@@ -55,6 +59,9 @@ public handler test()
 	--com.livecode.type
 	testType(tResults)
 	
+	--com.livecode.file
+	testFile(tResults)
+	
 	--com.livecode.binary
 	--com.livecode.byte
 	--com.livecode.item
@@ -62,6 +69,7 @@ public handler test()
 	--com.livecode.segmentchunk
 
     return newline & testSummary (tResults)
+
 end handler
 
 /*
@@ -700,8 +708,8 @@ public handler testList(inout xResults as list)
 	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
 	testLog("List", "IsNot", tSubList is not ["Abcd", 1], xResults)
 
-    --testLog("List", "IsIn", "abcd" is in tSubList, xResults)
-    --testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
+    testLog("List", "IsIn", "abcd" is in ["abcd", "efgh"], xResults)
+    testLog("List", "IsNotIn", not "dsf" is in ["abcd", "efgh"], xResults)
 
     variable tString as string
     pop front of tSubList into tString
@@ -836,5 +844,22 @@ public handler testData(inout xResults as list)
 	testLog("Char", "DeleteFirstChar", tTest is "b", xResults)	
 */
 end handler
+
+public handler testFile(inout xResults as list)
+	variable tContents as data
+	put the contents of file "/dev/null" into tContents
+	testLog("File", "GetEmptyContents", tContents is empty, xResults)
+
+	variable tStream as Stream
+	open read only stream for file "/dev/zero"
+    put the result into tStream
+	
+	variable tData as data
+	read 7 bytes from stream tStream
+    put the result into tData
+	
+	--testLog("File", "ReadFromStream", tText is "Warning", xResults)
+end handler
+
 
 end module
