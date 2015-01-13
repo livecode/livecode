@@ -76,8 +76,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef __SPARC__
 // __SPARC_64__ will be defined if the target processor is Sparc-64.
 #undef __SPARC_64__
-// __ARM__ will be defined if the target processor is ARM.
+// __ARM__ will be defined if the target processor is 32-bit ARM.
 #undef __ARM__
+// __ARM64__ will be defined if the target processor is 64-bit ARM.
+#undef __ARM64__
 
 // __SMALL__ will be defined if pointers are 32-bit and indicies are 32-bit.
 #undef __SMALL__
@@ -167,7 +169,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
-#define __HUGE__ 1 
+#define __HUGE__ 1
 #endif
 
 // Native char set
@@ -254,6 +256,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 #define __ARM__ 1
 #define __SMALL__ 1 
+#elif defined(__arm64__)
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __ARM64__
+#define __HUGE__ 1
 #endif
 
 // Native char set
