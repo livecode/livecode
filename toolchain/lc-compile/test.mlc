@@ -846,12 +846,16 @@ public handler testData(inout xResults as list)
 end handler
 
 public handler testFile(inout xResults as list)
+	variable tContents as data
+	put the contents of file "/dev/null" into tContents
+	testLog("File", "GetEmptyContents", tContents is empty, xResults)
+
 	variable tStream as Stream
-	open read only stream for file "/Users/alilloyd/Desktop/log.txt"
+	open read only stream for file "/dev/zero"
     put the result into tStream
 	
 	variable tData as data
-	read 7 from stream tStream
+	read 7 bytes from stream tStream
     put the result into tData
 	
 	--testLog("File", "ReadFromStream", tText is "Warning", xResults)

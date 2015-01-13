@@ -19,12 +19,24 @@
 
 #include "foundation-file.h"
 
+extern "C" MC_DLLEXPORT void
+MCFileExecGetContents (MCStringRef p_path, MCDataRef & r_data)
+{
+	/* UNCHECKED */ MCFileGetContents (p_path, r_data);
+}
+
+extern "C" MC_DLLEXPORT void
+MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
+{
+	/* UNCHECKED */ MCFileSetContents (p_path, p_contents);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForRead(MCStringRef p_filename)
 {
     MCStreamRef t_stream;
-    if (!MCFileCreateStreamForFile(p_filename, kMCOpenFileModeRead, t_stream))
+    if (!MCFileCreateStream(p_filename, kMCOpenFileModeRead, t_stream))
         return nil;
     
     return t_stream;
@@ -33,7 +45,7 @@ extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForRead(MCStringRef p_file
 extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForWrite(bool p_create, MCStringRef p_filename, MCStreamRef& r_stream)
 {
     MCStreamRef t_stream;
-    if (!MCFileCreateStreamForFile(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeWrite, t_stream))
+    if (!MCFileCreateStream(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeWrite, t_stream))
         return nil;
     
     return t_stream;
@@ -42,7 +54,7 @@ extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForWrite(bool p_create, MC
 extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForUpdate(bool p_create, MCStringRef p_filename, MCStreamRef& r_stream)
 {
     MCStreamRef t_stream;
-    if (!MCFileCreateStreamForFile(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeUpdate, t_stream))
+    if (!MCFileCreateStream(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeUpdate, t_stream))
         return nil;
     
     return t_stream;
@@ -50,6 +62,7 @@ extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForUpdate(bool p_create, M
 
 extern "C" MC_DLLEXPORT MCDataRef MCFileExecReadFromStream(uindex_t p_amount, MCStreamRef p_stream)
 {
+	/* FIXME this should be handled by MCStreamRead */
     if (!MCStreamIsReadable(p_stream))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("stream is not readable"), nil);
@@ -60,7 +73,7 @@ extern "C" MC_DLLEXPORT MCDataRef MCFileExecReadFromStream(uindex_t p_amount, MC
     
     if (!MCStreamRead(p_stream, t_buffer, p_amount))
     {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("could not read from stream"), nil);
+		/* Error information should already be set */
         return MCValueRetain(kMCEmptyData);
     }
     
@@ -71,4 +84,20 @@ extern "C" MC_DLLEXPORT MCDataRef MCFileExecReadFromStream(uindex_t p_amount, MC
     return t_data;
 }
 
+extern "C" MC_DLLEXPORT void
+MCFileExecWriteToStream(MCDataRef p_data,
+                        MCStreamRef p_stream)
+{
+	/* FIXME This check should be handled by MCStreamWrite */
+	if (!MCStreamIsWritable (p_stream))
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason", MCSTR("stream is not writable"), NULL);
+		return;
+	}
 
+	if (!MCStreamWrite (p_stream,
+	                    MCDataGetBytePtr (p_data), MCDataGetLength (p_data)))
+	{
+		return; /* Error should already have been set */
+	}
+}
