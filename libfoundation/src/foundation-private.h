@@ -541,6 +541,9 @@ bool __MCStdioStreamCreate(FILE *, MCStreamRef &);
 bool __MCStdioStreamInitialize(void);
 bool __MCStdioStreamFinalize(void);
 
+bool __MCFileInitialize(void);
+void __MCFileFinalize(void);
+
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */
 void __MCCustomDefaultDestroy(MCValueRef);

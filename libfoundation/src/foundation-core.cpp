@@ -80,11 +80,15 @@ bool MCInitialize(void)
 	if (!__MCStdioStreamInitialize())
 		return false;
 
+	if (!__MCFileInitialize())
+		return false;
+
 	return true;
 }
 
 void MCFinalize(void)
 {
+	__MCFileFinalize();
 	__MCStdioStreamFinalize();
     __MCStreamFinalize();
     __MCProperListFinalize();
