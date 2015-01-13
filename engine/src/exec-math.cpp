@@ -39,6 +39,8 @@ MC_EXEC_DEFINE_EVAL_METHOD(Math, Round, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, StatRoundToPrecision, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, StatRound, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, Trunc, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Math, Floor, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Math, Ceil, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, Acos, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, Asin, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, Atan, 2)
@@ -221,6 +223,16 @@ void MCMathEvalTrunc(MCExecContext& ctxt, real64_t p_number, real64_t& r_result)
 		r_result = ceil(p_number);
 	else
 		r_result = floor(p_number);
+}
+
+void MCMathEvalFloor(MCExecContext& ctxt, real64_t p_number, real64_t& r_result)
+{
+	r_result = floor(p_number);
+}
+
+void MCMathEvalCeil(MCExecContext& ctxt, real64_t p_number, real64_t& r_result)
+{
+	r_result = ceil(p_number);
 }
 
 //////////

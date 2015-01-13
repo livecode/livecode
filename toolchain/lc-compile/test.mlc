@@ -368,6 +368,16 @@ public handler testArray(inout xResults as list)
     
     testLog("Array", "RepeatForEachElement", tSum is 6, xResults)
 
+	variable tTest as array
+	put the empty array into tTest
+	put "value" into tTest["key"]
+
+	delete tTest["key"]
+	
+	testLog("Array", "DeleteElement", the number of elements in tTest is 0, xResults)
+
+
+
 end handler
 
 public handler testBitwise(inout xResults as list)
@@ -514,7 +524,37 @@ public handler testChar(inout xResults as list)
 		subtract 1 from tCount
 	end repeat 	
 	
-	testLog("Char", "CharExample", tVar is "1,2,3", xResults)	
+	testLog("Char", "CharExample", tVar is "1,2,3", xResults)
+
+    variable tTest as string
+    put "abc" into tTest
+
+    put "X" into char 1 of tTest
+    testLog("Char", "FirstCharFetch", the first char of tTest is "X", xResults)
+
+    put "a" into the first char of tTest
+    testLog("Char", "FirstCharStore", char 1 of tTest is "a", xResults)
+    
+    put "Z" into char -1 of tTest
+    testLog("Char", "LastCharFetch", the last char of tTest is "Z", xResults)
+
+    put "c" into the last char of tTest
+    testLog("Char", "LastCharStore", char -1 of tTest is "c", xResults)
+    
+    delete char 1 of tTest
+    testLog("Char", "DeleteChar", tTest is "bc", xResults)
+    
+    delete char 1 to 2 of tTest
+    testLog("Char", "DeleteChars", tTest is the empty string, xResults)
+
+	put "abc" into tTest
+
+	delete the last char of tTest
+	testLog("Char", "DeleteLastChar", tTest is "ab", xResults)	
+
+	delete the first char of tTest
+	testLog("Char", "DeleteFirstChar", tTest is "b", xResults)	
+
 end handler
 
 public handler testArithmetic(inout xResults as list)
@@ -708,26 +748,101 @@ public handler testList(inout xResults as list)
 	put tAnotherList into element 1 to 2 of tAnotherList 
 	testLog("List", "ElementRangeOf3", element -2 of tAnotherList is [1,2,3], xResults)
 
+    variable tTest as list
+    put [1,2,3] into tTest
+
+    put "X" into element 1 of tTest
+    testLog("List", "FirstElementFetch", the first element of tTest is "X", xResults)
+
+    put 0 into the first element of tTest
+    testLog("List", "FirstElementStore", element 1 of tTest is 0, xResults)
+   
+    put "Z" into element -1 of tTest
+    testLog("List", "LastElementFetch", the last element of tTest is "Z", xResults)
+
+    put 4 into the last element of tTest
+    testLog("List", "LastElementStore", element -1 of tTest is 4, xResults)
+    
+    delete element 1 of tTest
+    testLog("List", "DeleteElement", tTest is [2,4], xResults)
+    
+    delete element 1 to 2 of tTest
+    testLog("List", "DeleteElements", tTest is the empty list, xResults)
+
+	put [1,2,3] into tTest
+
+	delete the last element of tTest
+	testLog("List", "DeleteLastElement", tTest is [1,2], xResults)	
+
+	delete the first element of tTest
+	testLog("List", "DeleteFirstElement", tTest[1] is 2, xResults)	
+
 end handler
 
 public handler testSort(inout xResults as list)
-    variable tTestList as list
-    put the empty list into tTestList
-
-    push "xyz" onto tTestList
-    push 2 onto tTestList
-    push "abcd" onto tTestList
-    push 1 onto tTestList
+    variable tNumericList as list
+	put [4,3,5,1,2] into tNumericList
     
-    sort tTestList in ascending numeric order
+    sort tNumericList in descending numeric order
 
-    testLog("Sort", "AscendingNumeric", the head of tTestList is 1, xResults)
-    testLog("Sort", "NumericStable", the tail of tTestList is "abcd", xResults)
+    testLog("Sort", "DescendingNumeric", tNumericList is [5,4,3,2,1], xResults)
+    
+    sort tNumericList in ascending numeric order
+    
+    testLog("Sort", "AscendingNumeric", tNumericList is [1,2,3,4,5], xResults)
 
-    sort tTestList in ascending text order
+	variable tStringList as list
+	put ["a", "c", "b"] into tStringList
 
-    testLog("Sort", "AscendingText", the head of tTestList is "abcd", xResults)
-    testLog("Sort", "TextStable", the tail of tTestList is 2, xResults)
+    sort tStringList in ascending text order
+
+    testLog("Sort", "AscendingText", tStringList is ["a", "b", "c"], xResults)
+    
+    sort tStringList in descending text order
+
+    testLog("Sort", "DescendingText", tStringList is ["c", "b", "a"], xResults)
+    
+    sort tStringList
+    
+    testLog("Sort", "AscendingGeneric", tStringList is ["a", "b", "c"], xResults)
+    
+    sort tNumericList in descending order
+    
+    testLog("Sort", "DescendingGeneric", tNumericList is [5,4,3,2,1], xResults)
+        
+end handler
+
+public handler testData(inout xResults as list)
+/*
+    variable tTest as string
+    put "abc" into tTest
+
+    put "X" into char 1 of tTest
+    testLog("Char", "FirstCharFetch", the first char of tTest is "X", xResults)
+
+    put "a" into the first char of tTest
+    testLog("Char", "FirstCharStore", char 1 of tTest is "a", xResults)
+    
+    put "Z" into char -1 of tTest
+    testLog("Char", "LastCharFetch", the last char of tTest is "Z", xResults)
+
+    put "c" into the last char of tTest
+    testLog("Char", "LastCharStore", char -1 of tTest is "c", xResults)
+    
+    delete char 1 of tTest
+    testLog("Char", "DeleteChar", tTest is "bc", xResults)
+    
+    delete char 1 to 2 of tTest
+    testLog("Char", "DeleteChars", tTest is the empty string, xResults)
+
+	put "abc" into tTest
+
+	delete the last char of tTest
+	testLog("Char", "DeleteLastChar", tTest is "ab", xResults)	
+
+	delete the first char of tTest
+	testLog("Char", "DeleteFirstChar", tTest is "b", xResults)	
+*/
 end handler
 
 public handler testFile(inout xResults as list)

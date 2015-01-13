@@ -1000,7 +1000,13 @@
         
     'rule' GenerateBody(Result, Context, return(Position, Value)):
         EmitPosition(Position)
-        GenerateExpression(Result, Context, Value -> ReturnReg)
+        (|
+            where(Value -> nil)
+            EmitCreateRegister(-> ReturnReg)
+            EmitAssignUndefined(ReturnReg)
+        ||
+            GenerateExpression(Result, Context, Value -> ReturnReg)
+        |)
         EmitReturn(ReturnReg)
         
     'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):

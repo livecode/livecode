@@ -14,6 +14,10 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+/*
+  This library consists of the general operations on types provided by the standard library of LiveCode Builder.
+*/
+
 module com.livecode.type
 
 public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
@@ -35,7 +39,7 @@ output:     Returns true if the given expression <Target> evaluates to the empty
 
 */
 
-syntax IsEmpty is postfix operator with precedence 1
+syntax IsEmpty is postfix operator with precedence 7
     <Target: Expression> "is" "empty"
 begin
     MCTypeEvalIsEmpty(Target, output)
@@ -49,7 +53,7 @@ output:     Returns false if the given expression <Target> evaluates to the empt
 
 */
 
-syntax IsNotEmpty is postfix operator with precedence 1
+syntax IsNotEmpty is postfix operator with precedence 7
 	<Target: Expression> "is not" "empty"
 begin
 	MCTypeEvalIsNotEmpty(Target, output)
@@ -65,7 +69,7 @@ output:     Returns true if the given expression <Target> is defined, and false 
 
 */
 
-syntax IsDefined is postfix operator with precedence 1
+syntax IsDefined is postfix operator with precedence 7
 	<Target: Expression> "is" "defined"
 begin
 	MCTypeEvalIsDefined(Target, output)
@@ -79,7 +83,7 @@ output:     Returns false if the given expression <Target> is defined, and true 
 
 */
 
-syntax IsNotDefined is postfix operator with precedence 1
+syntax IsNotDefined is postfix operator with precedence 7
 	<Target: Expression> "is not" "defined"
 begin
 	MCTypeEvalIsNotDefined(Target, output)
@@ -95,7 +99,7 @@ output:     Returns true if the given expression <Target> is a boolean, and fals
 
 */
 
-syntax IsABoolean is postfix operator with precedence 1
+syntax IsABoolean is postfix operator with precedence 7
 	<Target: Expression> "is" "a" "boolean"
 begin
 	MCTypeEvalIsABoolean(Target, output)
@@ -109,7 +113,7 @@ output:     Returns true if the given expression <Target> is a number, and false
 
 */
 
-syntax IsANumber is postfix operator with precedence 1
+syntax IsANumber is postfix operator with precedence 7
 	<Target: Expression> "is" "a" "number"
 begin
 	MCTypeEvalIsANumber(Target, output)
@@ -123,21 +127,21 @@ output:     Returns true if the given expression <Target> is a string, and false
 
 */
 
-syntax IsAString is postfix operator with precedence 1
+syntax IsAString is postfix operator with precedence 7
 	<Target: Expression> "is" "a" "string"
 begin
 	MCTypeEvalIsAString(Target, output)
 end syntax
 
 /*
-Summary:    Determines whether <Target> is a data or not.
+Summary:    Determines whether <Target> is data or not.
 
 Target:     Any expression
-output:     Returns true if the given expression <Target> is a data, and false if not.
+output:     Returns true if the given expression <Target> is data, and false if not.
 
 */
 
-syntax IsAData is postfix operator with precedence 1
+syntax IsAData is postfix operator with precedence 7
 	<Target: Expression> "is" "a" "data"
 begin
 	MCTypeEvalIsAData(Target, output)
@@ -151,10 +155,10 @@ output:     Returns true if the given expression <Target> is an array, and false
 
 */
 
-syntax IsAnArray is postfix operator with precedence 1
+syntax IsAnArray is postfix operator with precedence 7
 	<Target: Expression> "is" "an" "array"
 begin
-	MCTypeEvalIsAData(Target, output)
+	MCTypeEvalIsAnArray(Target, output)
 end syntax
 
 /*
@@ -165,7 +169,7 @@ output:     Returns true if the given expression <Target> is a list, and false i
 
 */
 
-syntax IsAList is postfix operator with precedence 1
+syntax IsAList is postfix operator with precedence 7
 	<Target: Expression> "is" "a" "list"
 begin
 	MCTypeEvalIsAList(Target, output)

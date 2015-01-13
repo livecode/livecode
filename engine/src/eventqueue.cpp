@@ -520,7 +520,11 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 				MCModeConfigureIme(MCactivefield -> getstack(), true, r . x, r . y + r . height);
 			}
 		}
-		break;
+        break;
+            
+    case kMCEventTypeCustom:
+        t_event -> custom . event -> Dispatch();
+        break;
 		
 #ifdef _MOBILE
 	case kMCEventTypeTouch:
@@ -569,10 +573,6 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		
 	case kMCEventTypeHeading:
 		MCdefaultstackptr -> getcurcard() -> message(t_event -> location . error == nil ? MCM_heading_changed : MCM_heading_error);
-		break;
-		
-	case kMCEventTypeCustom:
-		t_event -> custom . event -> Dispatch();
 		break;
 #endif
 	}
@@ -822,7 +822,6 @@ static bool MCEventQueuePost(MCEventType p_type, MCEvent*& r_event)
 	return true;
 }
 
-#ifdef _MOBILE
 static bool MCEventQueuePostAtFront(MCEventType p_type, MCEvent*& r_event)
 {
 	MCEvent *t_event;
@@ -847,7 +846,6 @@ static bool MCEventQueuePostAtFront(MCEventType p_type, MCEvent*& r_event)
 	
 	return true;
 }
-#endif /* _MOBILE */
 
 //////////
 
@@ -1072,6 +1070,38 @@ bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, MCStringRef p_string)
 	t_event -> menu . target = p_target;
     // SN-2014-06-23: pick updated to StringRef
 	return MCStringCopy(p_string, t_event -> menu . pick . string);
+}
+
+bool MCEventQueuePostCustom(MCCustomEvent *p_event)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCEvent *t_event;
+	t_event = nil;
+	if (t_success)
+		t_success = MCEventQueuePost(kMCEventTypeCustom, t_event);
+    
+	if (t_success)
+		t_event -> custom . event = p_event;
+	
+	return t_success;
+}
+
+bool MCEventQueuePostCustomAtFront(MCCustomEvent *p_event)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCEvent *t_event;
+	t_event = nil;
+	if (t_success)
+		t_success = MCEventQueuePostAtFront(kMCEventTypeCustom, t_event);
+	
+	if (t_success)
+		t_event -> custom . event = p_event;
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1343,38 +1373,6 @@ bool MCEventQueuePostHeadingError(void)
 	t_event -> location . error = "";
 	
 	return true;
-}
-
-bool MCEventQueuePostCustom(MCCustomEvent *p_event)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCEvent *t_event;
-	t_event = nil;
-	if (t_success)
-		t_success = MCEventQueuePost(kMCEventTypeCustom, t_event);
-
-	if (t_success)
-		t_event -> custom . event = p_event;
-	
-	return t_success;
-}
-
-bool MCEventQueuePostCustomAtFront(MCCustomEvent *p_event)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCEvent *t_event;
-	t_event = nil;
-	if (t_success)
-		t_success = MCEventQueuePostAtFront(kMCEventTypeCustom, t_event);
-	
-	if (t_success)
-		t_event -> custom . event = p_event;
-	
-	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

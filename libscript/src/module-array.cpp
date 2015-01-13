@@ -86,7 +86,7 @@ extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_needle
     r_output = !MCArrayApply(p_target, is_not_among_the_elements_of, p_needle);
 }
 
-extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOfCaseless(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     MCNewAutoNameRef t_key;
     if (!create_key_for_array(p_needle, p_target, &t_key))
@@ -127,6 +127,23 @@ extern "C" MC_DLLEXPORT void MCArrayStoreElementOfCaseless(MCValueRef p_value, M
     
     if (!create_key_for_array(p_key, x_target, &t_key) ||
         !MCArrayStoreValue(*t_array, MCArrayIsCaseSensitive(*t_array), *t_key, p_value))
+        return;
+    
+    MCAutoArrayRef t_new_array;
+    if (!MCArrayCopy(*t_array, &t_new_array))
+        return;
+    
+    MCValueAssign(x_target, *t_new_array);
+}
+
+extern "C" MC_DLLEXPORT void MCArrayDeleteElementOfCaseless(MCArrayRef& x_target, MCStringRef p_key)
+{
+    MCNewAutoNameRef t_key;
+    MCAutoArrayRef t_array;
+    MCArrayMutableCopy(x_target, &t_array);
+    
+    if (!create_key_for_array(p_key, x_target, &t_key) ||
+        !MCArrayRemoveValue(*t_array, MCArrayIsCaseSensitive(*t_array), *t_key))
         return;
     
     MCAutoArrayRef t_new_array;

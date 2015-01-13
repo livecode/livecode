@@ -60,6 +60,18 @@ public foreign handler MCListEvalEmpty(out Value as list) as undefined binds to 
 
 public foreign handler MCListRepeatForEachElement(inout Iterator as optional pointer, out Iterand as any, in Container as list) as bool binds to "<builtin>"
 
+public foreign handler MCListFetchFirstElementOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
+public foreign handler MCListStoreFirstElementOf(in Value as any, inout Target as list) as undefined binds to "<builtin>"
+
+public foreign handler MCListFetchLastElementOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
+public foreign handler MCListStoreLastElementOf(in Value as any, inout Target as list) as undefined binds to "<builtin>"
+
+public foreign handler MCListExecDeleteElementOf(in Index as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteElementRangeOf(in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+
+public foreign handler MCListExecDeleteFirstElementOf(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteLastElementOf(inout Target as list) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -491,6 +503,129 @@ syntax RangeElementsOfList is prefix operator with precedence 1
 begin
     MCListFetchElementRangeOf(Start, Finish, Target, output)
     MCListStoreElementRangeOf(input, Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Designates the first element in <Target>.
+Target:				An expression which evaluates to a list.
+
+Description:
+Either locates the first element for use as the target container of another operation, or evaluates the first element as the source of another operation.
+
+>*Note:* It is an error if <Target> is empty.
+
+Tags: Lists
+*/
+
+syntax FirstElementOf is prefix operator with precedence 1
+	"the" "first" "element" "of" <Target: Expression>
+begin
+	MCListFetchFirstElementOf(Target, output)
+	MCListStoreFirstElementOf(input, Target)
+end syntax
+
+/*
+
+Summary:            Designates the last element in <Target>.
+Target:				An expression which evaluates to a list.
+
+Description:
+Either locates the first element for use as the target container of another operation, or evaluates the first element as the source of another operation.
+
+>*Note:* It is an error if <Target> is empty.
+
+Tags: Lists
+*/
+
+syntax LastElementOf is prefix operator with precedence 1
+	"the" "last" "element" "of" <Target: Expression>
+begin
+	MCListFetchLastElementOf(Target, output)
+	MCListStoreLastElementOf(input, Target)
+end syntax
+
+--
+
+/*
+
+Summary:            Deletes the element at index <Index> in <Target>.
+Index: 				An expression which evaluates to a valid integer index of <Target>.
+Target:				A list container.
+
+Description:
+Removes the element at the given index from the list.
+
+>*Note:* It is an error if either <Index> is out of range.
+
+Tags: Lists
+*/
+
+syntax DeleteSingletonElementOf is statement
+	"delete" "element" <Index: Expression> "of" <Target: Expression>
+begin
+	MCListExecDeleteElementOf(Index, Target)
+end syntax
+
+/*
+
+Summary:            Deletes the elements between indices <Start> and <Finish> in <Target>.
+
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
+Target:             A list container.
+
+Description:
+Removes the elements between the given indices from the list.
+
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
+
+Tags: Lists
+*/
+
+syntax DeleteRangeElementOf is statement
+	"delete" "element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	MCListExecDeleteElementRangeOf(Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Deletes the first element of <Target>.
+Target:				A list container.
+
+Description:
+Removes the first element of <Target>.
+
+>*Note:* It is an error if <Target> is the empty list.
+
+Tags: Lists
+*/
+
+syntax DeleteFirstElementOf is statement
+	"delete" "the" "first" "element" "of" <Target: Expression>
+begin
+	MCListExecDeleteFirstElementOf(Target)
+end syntax
+
+
+/*
+
+Summary:            Deletes the last element of <Target>.
+Target:				A list container.
+
+Description:
+Removes the last element of <Target>.
+
+>*Note:* It is an error if <Target> is the empty list.
+
+Tags: Lists
+*/
+
+syntax DeleteLastElementOf is statement
+	"delete" "the" "last" "element" "of" <Target: Expression>
+begin
+	MCListExecDeleteLastElementOf(Target)
 end syntax
 
 --

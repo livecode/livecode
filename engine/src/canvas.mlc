@@ -2310,7 +2310,7 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as int, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new effect.
@@ -2783,6 +2783,16 @@ public foreign handler MCCanvasGetStrokeWidth(in pCanvas as Canvas, out rStrokeW
 public foreign handler MCCanvasSetStrokeWidth(in pStrokeWidth as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetFont(in pCanvas as Canvas, out rFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetFont(in pFont as Font, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetJoinStyleAsString(in pCanvas as Canvas, out rJoinStyle as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetJoinStyleAsString(in pJoinStyle as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetCapStyleAsString(in pCanvas as Canvas, out rCapStyle as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetCapStyleAsString(in pCapStyle as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetMiterLimit(in pCanvas as Canvas, out rLimit as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetMiterLimit(in pLimit as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetDashes(in pCanvas as Canvas, out rDashes as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetDashes(in pDashes as list, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetDashPhase(in pCanvas as Canvas, out rPhase as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetDashPhase(in pPhase as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 /*
 Summary:	The current paint of a canvas.
@@ -2972,6 +2982,117 @@ syntax CanvasPropertyFont is prefix operator with precedence 4
 begin
 	MCCanvasGetFont(mCanvas, output)
 	MCCanvasSetFont(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current join style of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Determines how to draw the join between the lines of a path when stroking. Can be one of "bevel", "round", or "miter".
+
+Example:
+// Draw a square with beveled corners.
+set the join style of tCanvas to "bevel"
+stroke rectangle path of rectangle [25, 25, 75, 75] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyJoinStyle is prefix operator with precedence 4
+	"the" "join" "style" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetJoinStyleAsString(mCanvas, output)
+	MCCanvasSetJoinStyleAsString(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current cap style of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Determines how to draw the end points of a path when stroking. Can be one of "butt", "square", or "round".
+
+Example:
+// Draw a line with rounded ends.
+set the cap style of tCanvas to "round"
+stroke line path from point [50,100] to point [100,50] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyCapStyle is prefix operator with precedence 4
+	"the" "cap" "style" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetCapStyleAsString(mCanvas, output)
+	MCCanvasSetCapStyleAsString(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current miter limit of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The limit of miter joins as a number. Specifies how far miter joins can extend from the meeting point of two lines before a bevel join is used instead.
+
+Example:
+// Draw a right-angled triangle, setting the miter limit so only the right-angle corner is mitered.
+set the miter limit of tCanvas to 1.5
+stroke polygon path with points [point [50,50], point [50,100], point [100,50]] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyMiterLimit is prefix operator with precedence 4
+	"the" "miter" "limit" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetMiterLimit(mCanvas, output)
+	MCCanvasSetMiterLimit(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current dashes of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The dashes as a list of numbers. The dashes specifies a sequence of lengths that alternately represent space and dash lengths when stroking a path.
+
+Example:
+// Draw a rectangle with short, widely spaced dashes
+set the dashes of tCanvas to [10, 40]
+stroke rectangle path of rectangle [50, 50, 200, 200] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyDashes is prefix operator with precedence 4
+	"the" "dashes" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetDashes(mCanvas, output)
+	MCCanvasSetDashes(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current dash phase of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The offset into the dashes at which to begin applying the dash pattern.
+
+Example:
+// Draw a rectangle with short, widely spaced dashes, offset to begin from the middle of the dash pattern
+set the dashes of tCanvas to [10, 40]
+set the dash phase of tCanvas to 25
+stroke rectangle path of rectangle [50, 50, 200, 200] on tCanvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyDashPhase is prefix operator with precedence 4
+	"the" "dash" "phase" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetDashPhase(mCanvas, output)
+	MCCanvasSetDashPhase(input, mCanvas)
 end syntax
 
 //////////

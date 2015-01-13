@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "util.h"
 #include "variable.h"
+#include "script.h"
 
 #include <locale.h>
 #include <langinfo.h>
@@ -55,7 +56,8 @@ int main(int argc, char *argv[], char *envp[])
 	setlocale(LC_ALL, "");
 	MCsysencoding = strclone(nl_langinfo(CODESET));
 	
-	if (!MCInitialize())
+	extern bool MCModulesInitialize();
+	if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
     
 	// Convert the argv array to StringRefs
@@ -112,6 +114,9 @@ int main(int argc, char *argv[], char *envp[])
 	
 	int t_exit_code = X_close();
 
+	extern void MCModulesFinalize();
+	MCScriptFinalize();
+	MCModulesFinalize();
 	MCFinalize();
 
 	exit(t_exit_code);

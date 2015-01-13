@@ -491,6 +491,20 @@ extern "C" MC_DLLEXPORT void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFlo
 extern "C" MC_DLLEXPORT void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font);
 extern "C" MC_DLLEXPORT void MCCanvasSetFont(MCCanvasFontRef p_font, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width);
+extern "C" MC_DLLEXPORT void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font);
+extern "C" MC_DLLEXPORT void MCCanvasSetFont(MCCanvasFontRef p_font, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetJoinStyleAsString(MCCanvasRef p_canvas, MCStringRef &r_join_style);
+extern "C" MC_DLLEXPORT void MCCanvasSetJoinStyleAsString(MCStringRef p_join_style, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetCapStyleAsString(MCCanvasRef p_canvas, MCStringRef &r_cap_style);
+extern "C" MC_DLLEXPORT void MCCanvasSetCapStyleAsString(MCStringRef p_cap_style, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetMiterLimit(MCCanvasRef p_canvas, MCCanvasFloat &r_limit);
+extern "C" MC_DLLEXPORT void MCCanvasSetMiterLimit(MCCanvasFloat p_limit, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetDashes(MCCanvasRef p_canvas, MCProperListRef &r_dashes);
+extern "C" MC_DLLEXPORT void MCCanvasSetDashes(MCProperListRef p_dashes, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetDashPhase(MCCanvasRef p_canvas, MCCanvasFloat &r_phase);
+extern "C" MC_DLLEXPORT void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas);
 
 // Operations
 extern "C" MC_DLLEXPORT void MCCanvasTransform(MCCanvasRef p_canvas, MCCanvasTransformRef p_transform);
