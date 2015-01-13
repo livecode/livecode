@@ -77,11 +77,15 @@ bool MCInitialize(void)
     if (!__MCStreamInitialize())
         return false;
     
+	if (!__MCStdioStreamInitialize())
+		return false;
+
 	return true;
 }
 
 void MCFinalize(void)
 {
+	__MCStdioStreamFinalize();
     __MCStreamFinalize();
     __MCProperListFinalize();
 	__MCLocaleFinalize();

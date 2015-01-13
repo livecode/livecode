@@ -26,6 +26,7 @@ SOURCES= \
 	foundation-record.cpp \
 	foundation-set.cpp \
 	foundation-stream.cpp \
+	foundation-stream-stdio.cpp \
 	foundation-string.cpp \
 	foundation-text.cpp \
 	foundation-typeconvert.cpp \
