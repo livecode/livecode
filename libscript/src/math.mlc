@@ -64,6 +64,10 @@ public foreign handler MCMathEvalTruncNumber(in Operand as number, out Value as 
 public foreign handler MCMathEvalMinInteger(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMinReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMinNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathEvalMinList(in List as list, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxList(in List as list, out Value as number) as undefined binds to "<builtin>"
+
 public foreign handler MCMathEvalMaxInteger(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMaxReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMaxNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
@@ -99,26 +103,37 @@ end syntax
 --
 
 /*
+Syntax:		sin(<Operand>)
 Summary:    Sin operator.
 Operand:    An expression that evaluates to a number.
 
 Example:
 	variable tVar as number
-	put the sin of pi / 2 into tVar -- tVar contains 1
+	put sin(pi / 2) into tVar -- tVar contains 1
+	
+Example:
+	variable tVar as number
+	put the sine of pi into tVar -- tVar contains 0
 
 Tags: Math
 */
 
 syntax SinOperator is prefix operator with precedence 1
-    "the" "sin" "of" <Operand: Expression>
+    "the" "sine" "of" <Operand: Expression>
 begin
     MCMathEvalSinNumber(Operand, output)
 end syntax
 
+public handler sin(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalSinNumber(pOperand, tVar)
+    return tVar
+end handler
+
 /*
+Syntax:		cos(<Operand>)
 Summary:    Cos operator.
 Operand:    An expression that evaluates to a number.
-Syntax:		cos(<Operand>)
 
 Example:
 	variable tVar as number
@@ -140,29 +155,45 @@ public handler cos(in pOperand as number) as number
 end handler
 
 /*
+Syntax:		tan(<Operand>)
 Summary:    Tan operator.
 Operand:    An expression that evaluates to a number.
 
 Example:
 	variable tVar as number
-	put the tan of pi /4 into tVar -- tVar contains approximately 1
+	put the tan(pi) into tVar -- tVar contains 0
+
+Example:
+	variable tVar as number
+	put the tangent of pi /4 into tVar -- tVar contains approximately 1
 
 Tags: Math
 */
 
 syntax TanOperator is prefix operator with precedence 1
-    "the" "tan" "of" <Operand: Expression>
+    "the" "tangent" "of" <Operand: Expression>
 begin
     MCMathEvalTanNumber(Operand, output)
 end syntax
 
+public handler tan(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalTanNumber(pOperand, tVar)
+    return tVar
+end handler
+
 /*
+Syntax:		asin(<Operand>)
 Summary:    Arcsin operator.
 Operand:    An expression that evaluates to a number.
 
 Example:
 	variable tVar as number
-	put the arcsin of 1 into tVar -- tVar contains pi / 2
+	put the asin(-1) into tVar -- tVar contains -pi/2
+	
+Example:
+	variable tVar as number
+	put the arcsine of 1 into tVar -- tVar contains pi/2
 
 Description:
 The inverse of the sin operator.
@@ -171,18 +202,29 @@ Tags: Math
 */
 
 syntax ArcsinOperator is prefix operator with precedence 1
-    "the" "arcsin" "of" <Operand: Expression>
+    "the" "arcsine" "of" <Operand: Expression>
 begin
     MCMathEvalAsinNumber(Operand, output)
 end syntax
 
+public handler asin(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalAsinNumber(pOperand, tVar)
+    return tVar
+end handler
+
 /*
+Syntax:		acos(<Operand>)
 Summary:    Arccos operator.
 Operand:    An expression that evaluates to a number.
 
 Example:
 	variable tVar as number
-	put the arccos of -1 into tVar -- tVar contains pi
+	put acos(0) into tVar -- tVar contains pi/2
+
+Example:
+	variable tVar as number
+	put the arccosine of -1 into tVar -- tVar contains pi
 
 Description:
 The inverse of the cos operator.
@@ -191,18 +233,29 @@ Tags: Math
 */
 
 syntax ArccosOperator is prefix operator with precedence 1
-    "the" "arccos" "of" <Operand: Expression>
+    "the" "arccosine" "of" <Operand: Expression>
 begin
     MCMathEvalAcosNumber(Operand, output)
 end syntax
 
+public handler acos(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalAcosNumber(pOperand, tVar)
+    return tVar
+end handler
+
 /*
+Syntax:		atan(<Operand>)
 Summary:    Arctan operator.
 Operand:    An expression that evaluates to a number.
 
 Example:
 	variable tVar as number
-	put the arctan of 1 into tVar -- tVar contains pi / 4
+	put atan(-1) into tVar -- tVar contains -pi / 4
+	
+Example:
+	variable tVar as number
+	put the arctangent of 1 into tVar -- tVar contains pi / 4
 
 Description:
 The inverse of the tan operator.
@@ -211,19 +264,30 @@ Tags: Math
 */
 
 syntax ArctanOperator is prefix operator with precedence 1
-    "the" "arctan" "of" <Operand: Expression>
+    "the" "arctangent" "of" <Operand: Expression>
 begin
     MCMathEvalAtanNumber(Operand, output)
 end syntax
 
+public handler atan(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalAtanNumber(pOperand, tVar)
+    return tVar
+end handler
+
 /*
+Syntax:		atan2(<yCoord>,<xCoord>)
 Summary:    Binary arctan operator.
 yCoord:   	An expression that evaluates to a number.
 xCoord:   	An expression that evaluates to a number.
 
 Example:
     variable tVar as number
-    put the arctan of -1,-1 into tVar --tVar contains −3π/4.
+    put atan2(-1,-1) into tVar --tVar contains −3π/4.
+
+Example:
+    variable tVar as number
+    put the binary arctangent of -1 and -1 into tVar --tVar contains −3π/4.
 
 Description:
 The binary arctan operator returns the angle in radians between the x-axis and the line from the origin to the point (xCoord, yCoord).
@@ -233,14 +297,21 @@ Tags: Math
 */
 
 syntax BinaryArctanOperator is prefix operator with precedence 1
-    "the" "arctan2" "of" <yCoord: Expression> "," <xCoord: Expression>
+    "the" "binary" "arctangent" "of" <yCoord: Expression> "and" <xCoord: Expression>
 begin
     MCMathEvalAtan2Number(yCoord, xCoord, output)
 end syntax
 
+public handler atan2(in pY as number, in pX as number) as number
+    variable tVar as number
+    MCMathEvalAtan2Number(pX, pY, tVar)
+    return tVar
+end handler
+
 --
 
 /*
+Syntax:		log(<Operand>)
 Summary:    Base 10 log operator.
 Operand:    An expression that evaluates to a number.
 
@@ -257,15 +328,22 @@ begin
     MCMathEvalBase10LogNumber(Operand, output)
 end syntax
 
+public handler log10(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalBase10LogNumber(pOperand, tVar)
+    return tVar
+end handler
+
 --
 
 /*
+Syntax:		ln(<Operand>)
 Summary:    Natural log operator.
 Operand:    An expression that evaluates to a number.
 
 Example:
 	variable tVar as number
-	put the natural log of the exp of 3 into tVar -- tVar contains approximately 3
+	put ln(exp(3)) into tVar -- tVar contains approximately 3
 
 Tags: Math
 
@@ -277,8 +355,14 @@ begin
     MCMathEvalNaturalLogNumber(Operand, output)
 end syntax
 
+public handler ln(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalNaturalLogNumber(pOperand, tVar)
+    return tVar
+end handler
 
 /*
+Syntax:		exp(<Operand>)
 Summary:    Exponentiation operator.
 Operand:    An expression that evaluates to a number.
 
@@ -286,16 +370,22 @@ Returns: 	e to the power of <Operand>
 
 Example:
 	variable tVar as number
-	put the exp of the natural log of 100 into tVar -- tVar contains approximately 100
+	put the exp(ln(100)) into tVar -- tVar contains approximately 100
 
 Tags: Math
 */
 
 syntax ExpOperator is prefix operator with precedence 1
-    "the" "exp" "of" <Operand: Expression>
+    "the" "exponential" "of" <Operand: Expression>
 begin
     MCMathEvalExpNumber(Operand, output)
 end syntax
+
+public handler exp(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalExpNumber(pOperand, tVar)
+    return tVar
+end handler
 
 --
 
@@ -378,10 +468,16 @@ Tags: Math
 */
 
 syntax MinOperator is prefix operator with precedence 5
-    "the" "min" "of" <Left: Expression> "and" <Right: Expression>
+    "the" "minimum" "of" <Left: Expression> "and" <Right: Expression>
 begin
     MCMathEvalMinNumber(Left, Right, output)
 end syntax
+
+public handler min(in pX as number, in pY as number) as number
+    variable tVar as number
+    MCMathEvalMinNumber(pX, pY, tVar)
+    return tVar
+end handler
 
 /*
 Summary:    Max operator.
@@ -394,10 +490,16 @@ Tags: Math
 */
 
 syntax MaxOperator is prefix operator with precedence 5
-    "the" "max" "of" <Left: Expression> "and" <Right: Expression>
+    "the" "maximum" "of" <Left: Expression> "and" <Right: Expression>
 begin
     MCMathEvalMaxNumber(Left, Right, output)
 end syntax
+
+public handler max(in pX as number, in pY as number) as number
+    variable tVar as number
+    MCMathEvalMaxNumber(pX, pY, tVar)
+    return tVar
+end handler
 
 --
 

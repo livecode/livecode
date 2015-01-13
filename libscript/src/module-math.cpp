@@ -290,6 +290,41 @@ extern "C" MC_DLLEXPORT void MCMathEvalMinNumber(MCNumberRef p_left, MCNumberRef
     MCNumberCreateWithReal(t_result, r_output);
 }
 
+static void MCMathEvalMinMaxList(MCProperListRef p_list, bool p_is_min, MCNumberRef& r_output)
+{
+    if (MCProperListIsEmpty(p_list))
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("list must be non-empty"), nil);
+    
+    if (!MCProperListIsListOfType(p_list, kMCValueTypeCodeNumber))
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("list must be numeric"), nil);
+
+    double t_minmax, t_cur_real;
+    t_cur_real = MCNumberFetchAsReal((MCNumberRef)MCProperListFetchElementAtIndex(p_list, 0));
+    t_minmax = t_cur_real;
+    
+    bool t_replace;
+    for (uindex_t i = 1; i < MCProperListGetLength(p_list); i++)
+    {
+        t_cur_real = MCNumberFetchAsReal((MCNumberRef)MCProperListFetchElementAtIndex(p_list, i));
+        t_replace = p_is_min ? t_cur_real < t_minmax : t_cur_real > t_minmax;
+
+        if (t_replace)
+            t_minmax = t_cur_real;
+    }
+    
+    MCNumberCreateWithReal(t_minmax, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalMinList(MCProperListRef p_list, MCNumberRef& r_output)
+{
+    MCMathEvalMinMaxList(p_list, true, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalMaxList(MCProperListRef p_list, MCNumberRef& r_output)
+{
+    MCMathEvalMinMaxList(p_list, false, r_output);
+}
+
 extern "C" MC_DLLEXPORT void MCMathEvalMaxInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = MCMax(p_left, p_right);
