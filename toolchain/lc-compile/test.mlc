@@ -266,10 +266,10 @@ public handler testMath(inout xResults as list)
 	
 	variable tNum
 	put any number into tNum
-	testLog("Math", "Random", tNum >= 0, xResults)
-	testLog("Math", "Random", tNum <= 1, xResults)
+	testLog("Math", "RandomRangeLower", tNum >= 0, xResults)
+	testLog("Math", "RandomRangeHigher", tNum <= 1, xResults)
 	
-	testLog("Math", "Random", tNum is not any number, xResults)
+	testLog("Math", "RandomMatch", tNum is not any number, xResults)
 
 	variable tLeft as integer
 	variable tRight as integer
