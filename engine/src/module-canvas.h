@@ -142,6 +142,19 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
 
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformArrayFormatErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformDecomposeErrorTypeInfo;
+
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepReferencedErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepDataErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepPixelsErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepGetGeometryErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
+	
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
+
 
 }
 
