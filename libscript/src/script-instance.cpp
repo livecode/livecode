@@ -1746,7 +1746,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // Fetch the signature of the current handler.
                 MCTypeInfoRef t_signature;
-                t_signature = self -> module -> types[t_frame -> handler -> type] -> typeinfo;
+                t_signature = t_frame -> instance -> module -> types[t_frame -> handler -> type] -> typeinfo;
                 
                 MCTypeInfoRef t_output_type;
                 t_output_type = MCHandlerTypeInfoGetReturnType(t_signature);
