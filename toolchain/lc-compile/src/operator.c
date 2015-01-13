@@ -168,11 +168,11 @@ static int CompareNodePrecedence(Node *p_left, Node *p_right)
     
     if (t_left_operator == kNodeKindPrefixOperator &&
         t_right_operator == kNodeKindPrefixOperator)
-        return 0;
+        return -1;
     
     if (t_left_operator == kNodeKindPostfixOperator &&
         t_right_operator == kNodeKindPostfixOperator)
-        return 0;
+        return 1;
     
 	// Handle the prefix rules:
 	//   T <- L for all T
