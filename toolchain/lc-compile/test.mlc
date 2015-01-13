@@ -772,23 +772,36 @@ public handler testList(inout xResults as list)
 end handler
 
 public handler testSort(inout xResults as list)
-    variable tTestList as list
-    put the empty list into tTestList
-
-    push "xyz" onto tTestList
-    push 2 onto tTestList
-    push "abcd" onto tTestList
-    push 1 onto tTestList
+    variable tNumericList as list
+	put [4,3,5,1,2] into tNumericList
     
-    sort tTestList in ascending numeric order
+    sort tNumericList in descending numeric order
 
-    testLog("Sort", "AscendingNumeric", the head of tTestList is 1, xResults)
-    testLog("Sort", "NumericStable", the tail of tTestList is "abcd", xResults)
+    testLog("Sort", "DescendingNumeric", tNumericList is [5,4,3,2,1], xResults)
+    
+    sort tNumericList in ascending numeric order
+    
+    testLog("Sort", "AscendingNumeric", tNumericList is [1,2,3,4,5], xResults)
 
-    sort tTestList in ascending text order
+	variable tStringList as list
+	put ["a", "c", "b"] into tStringList
 
-    testLog("Sort", "AscendingText", the head of tTestList is "abcd", xResults)
-    testLog("Sort", "TextStable", the tail of tTestList is 2, xResults)
+    sort tStringList in ascending text order
+
+    testLog("Sort", "AscendingText", tStringList is ["a", "b", "c"], xResults)
+    
+    sort tStringList in descending text order
+
+    testLog("Sort", "DescendingText", tStringList is ["c", "b", "a"], xResults)
+    
+    sort tStringList
+    
+    testLog("Sort", "AscendingGeneric", tStringList is ["a", "b", "c"], xResults)
+    
+    sort tNumericList in descending order
+    
+    testLog("Sort", "DescendingGeneric", tNumericList is [5,4,3,2,1], xResults)
+        
 end handler
 
 public handler testData(inout xResults as list)
