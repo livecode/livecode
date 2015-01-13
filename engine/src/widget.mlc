@@ -14,6 +14,298 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+/*
+This library consists of the operations on widgets provided by LiveCode Builder.
+
+Name: OnOpen
+Type: message
+Syntax: OnOpen
+Summary: Sent when the widget is opened.
+Example:
+	public handler OnOpen()
+		// do something
+	end handler
+Description:
+Handle the OnOpen message to have the widget perform an action when it is opened in LiveCode.
+
+
+Name: OnClose
+Type: message
+Syntax: OnClose
+Summary: Sent when the widget is closed.
+
+
+Name: OnAttach
+Type: message
+Syntax: OnAttach
+Summary: Sent when the widget is attached.
+
+
+Name: OnDetach
+Type: message
+Syntax: OnDetach
+Summary: Sent when the widget is detached.
+
+
+Name: OnPaint
+Type: message
+Syntax: OnPaint
+Summary: Sent when the widget is drawn.
+
+
+Name: OnGeometryChanged
+Type: message
+Syntax: OnPaint
+Summary: Sent when the widget geometry changed.
+
+
+Name: OnVisibilityChanged
+Type: message
+Syntax: OnVisibilityChanged <isVisible>
+Summary: Sent when the widget visibility changed.
+Parameters:
+isVisible(bool): Whether the widget is now visible or not.
+
+
+Name: OnSave
+Type: message
+Syntax: OnSave
+Summary: Sent when the widget is saved.
+
+
+Name: OnLoad
+Type: message
+Syntax: OnLoad
+Summary: Sent when the widget is loaded.
+
+
+Name: OnCreate
+Type: message
+Syntax: OnCreate
+Summary: Sent when the widget is created.
+
+
+Name: OnDestroy
+Type: message
+Syntax: OnDestroy
+Summary: Sent when the widget is deleted.
+
+
+Name: OnParentPropChanged
+Type: message
+Syntax: OnParentPropChanged
+Summary: Sent when a property of the widget parent is changed.
+
+
+Name: OnStopEditing
+Type: message
+Syntax: OnStopEditing
+Summary: Sent when the browse tool is selected.
+
+
+Name: OnStartEditing
+Type: message
+Syntax: OnStartEditing
+Summary: Sent when the pointer tool is selected.
+
+
+Name: OnLayerChanged
+Type: message
+Syntax: OnLayerChanged
+Summary: Sent when the widget layer is changed.
+
+
+Name: OnTimer
+Type: message
+Syntax: OnTimer
+Summary: Sent when the widget layer is changed.
+
+
+Name: OnMouseEnter
+Type: message
+Syntax: OnMouseEnter
+Summary: Sent when the mouse pointer enters the widget's rect.
+
+
+Name: OnMouseLeave
+Type: message
+Syntax: OnMouseLeave
+Summary: Sent when the mouse pointer leaves the widget's rect.
+
+
+Name: OnMouseMove
+Type: message
+Syntax: OnMouseMove
+Summary: Sent when the mouse pointer moves within the widget's rect.
+
+
+Name: OnMouseRelease
+Type: message
+Syntax: OnMouseRelease
+Summary: Sent when the mouse button is released outside of the widget's rect.
+
+
+Name: OnMouseDown
+Type: message
+Syntax: OnMouseDown
+Summary: Sent when the mouse button is pushed within the widget's rect.
+
+
+Name: OnMouseUp
+Type: message
+Syntax: OnMouseUp
+Summary: Sent when the mouse button is released within the widget's rect.
+
+
+Name: OnMouseScroll
+Type: message
+Syntax: OnMouseScroll
+Summary: Sent when the mouse wheel is scrolled within the widget's rect.
+
+
+Name: OnMouseStillDown
+Type: message
+Syntax: OnMouseStillDown
+Summary: Sent when the mouse button is held down within the widget's rect.
+
+
+Name: OnMouseHover
+Type: message
+Syntax: OnMouseHover
+Summary: Sent when the mouse pointer hovers over the widget's rect.
+
+
+Name: OnMouseStillHover
+Type: message
+Syntax: OnMouseHover
+Summary: Sent when the mouse pointer continues to hover over the widget's rect.
+
+
+Name: OnMouseCancelHover
+Type: message
+Syntax: OnMouseHover
+Summary: Sent when the mouse pointer continues to hover outside of the widget's rect.
+
+
+Name: OnTouchStart
+Type: message
+Syntax: OnTouchStart
+Summary: Sent when a touch event begins within the widget's rect.
+
+
+Name: OnTouchMove
+Type: message
+Syntax: OnTouchMove
+Summary: Sent when a touch event moves within the widget's rect.
+
+
+Name: OnTouchEnter
+Type: message
+Syntax: OnTouchEnter
+Summary: Sent when a touch event moves into the widget's rect from outside.
+
+
+Name: OnTouchLeave
+Type: message
+Syntax: OnTouchEnter
+Summary: Sent when a touch event moves outside of the widget's rect from inside.
+
+
+Name: OnTouchFinish
+Type: message
+Syntax: OnTouchFinish
+Summary: Sent when a touch event finishes within the widget's rect.
+
+
+Name: OnTouchCancel
+Type: message
+Syntax: OnTouchCancel
+Summary: Sent when a touch event finishes outside of the widget's rect.
+
+
+Name: OnFocusEnter
+Type: message
+Syntax: OnFocusEnter
+Summary: Sent when the widget gains focus.
+
+
+Name: OnFocusLeave
+Type: message
+Syntax: OnFocusLeave
+Summary: Sent when the widget loses focus.
+
+
+Name: OnKeyPress
+Type: message
+Syntax: OnKeyPress <keyText>
+Summary: Sent when a key is pressed while the widget has focus.
+Parameters:
+keyText(string): The key pressed
+
+
+Name: OnModifiersChanged
+Type: message
+Syntax: OnModifiersChanged
+Summary: Sent when the keyboard modifiers are changed.
+
+
+Name: OnActionKeyPress
+Type: message
+Syntax: OnActionKeyPress <keyText>
+Summary: Sent when an action key is pressed while the widget has focus.
+Parameters:
+keyText(string): The key pressed
+
+
+Name: OnDragEnter
+Type: message
+Syntax: OnDragEnter
+Summary: Sent when an object is dragged onto the widget rect.
+
+
+Name: OnDragLeave
+Type: message
+Syntax: OnDragEnter
+Summary: Sent when an object is dragged outside of the widget rect.
+
+
+Name: OnDragMove
+Type: message
+Syntax: OnDragMove
+Summary: Sent when a dragged object is moved within the widget rect.
+
+
+Name: OnDragDrop
+Type: message
+Syntax: OnDragDrop
+Summary: Sent when a dragged object is released within the widget rect.
+
+
+Name: OnDragStart
+Type: message
+Syntax: OnDragStart
+Summary: Sent when the widget begins to be dragged
+
+
+Name: OnDragFinish
+Type: message
+Syntax: OnDragStart
+Summary: Sent when the widget finishes being dragged
+
+
+Name: OnClick
+Type: message
+Syntax: OnClick
+Summary: Sent when the widget is clicked.
+
+
+Name: OnDoubleClick
+Type: message
+Syntax: OnDoubleClick
+Summary: Sent when the widget is double-clicked.
+
+*/
+
 module com.livecode.widget
 
 use com.livecode.canvas
