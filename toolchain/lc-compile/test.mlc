@@ -1,5 +1,7 @@
 module test
 
+use com.livecode.math
+
 public handler test()
     variable tResults as list
     put the empty list into tResults
@@ -171,7 +173,7 @@ public handler testMath(inout xResults as list)
 	testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
 	
 	testLog("Math", "Sin", the sin of (pi / 2) is 1, xResults)
-	testLog("Math", "Cos", the cos of pi is -1, xResults)
+	testLog("Math", "Cos", cos(pi) is -1, xResults)
 	testLog("Math", "Tan", (the tan of (pi / 4) - 1) < 0.00000000001, xResults)
 
 	testLog("Math", "Exp", the exp of 3 > 20, xResults)

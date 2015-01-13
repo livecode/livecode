@@ -118,19 +118,26 @@ end syntax
 /*
 Summary:    Cos operator.
 Operand:    An expression that evaluates to a number.
+Syntax:		cos(<Operand>)
 
 Example:
 	variable tVar as number
-	put the cos of pi into tVar -- tVar contains -1
+	put cos(pi) into tVar -- tVar contains -1
 
 Tags: Math
 */
 
 syntax CosOperator is prefix operator with precedence 1
-    "the" "cos" "of" <Operand: Expression>
+    "the" "cosine" "of" <Operand: Expression>
 begin
     MCMathEvalCosNumber(Operand, output)
 end syntax
+
+public handler cos(in pOperand as number) as number
+    variable tVar as number
+    MCMathEvalCosNumber(pOperand, tVar)
+    return tVar
+end handler
 
 /*
 Summary:    Tan operator.
