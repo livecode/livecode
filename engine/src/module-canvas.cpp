@@ -30,6 +30,50 @@ extern MCWidget *MCwidgetobject;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// SVG Path Parsing
+
+enum MCSVGPathCommand
+{
+	kMCSVGPathMoveTo,
+	kMCSVGPathRelativeMoveTo,
+	kMCSVGPathClose,
+	kMCSVGPathRelativeClose,
+	kMCSVGPathLineTo,
+	kMCSVGPathRelativeLineTo,
+	kMCSVGPathHorizontalLineTo,
+	kMCSVGPathRelativeHorizontalLineTo,
+	kMCSVGPathVerticalLineTo,
+	kMCSVGPathRelativeVerticalLineTo,
+	kMCSVGPathCurveTo,
+	kMCSVGPathRelativeCurveTo,
+	kMCSVGPathShorthandCurveTo,
+	kMCSVGPathRelativeShorthandCurveTo,
+	kMCSVGPathQuadraticCurveTo,
+	kMCSVGPathRelativeQuadraticCurveTo,
+	kMCSVGPathShorthandQuadraticCurveTo,
+	kMCSVGPathRelativeShorthandQuadraticCurveTo,
+	kMCSVGPathEllipticalCurveTo,
+	kMCSVGPathRelativeEllipticalCurveTo,
+};
+
+#define kMCSVGPathCommandCount (kMCSVGPathRelativeEllipticalCurveTo + 1)
+
+typedef bool (*MCSVGParseCallback)(void *p_context, MCSVGPathCommand p_command, float32_t *p_args, uint32_t p_arg_count);
+
+bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_context);
+
+inline bool MCSVGPathCommandIsCubic(MCSVGPathCommand p_command)
+{
+	return p_command == kMCSVGPathCurveTo || p_command == kMCSVGPathRelativeCurveTo || p_command == kMCSVGPathShorthandCurveTo || p_command == kMCSVGPathRelativeShorthandCurveTo;
+}
+
+inline bool MCSVGPathCommandIsQuadratic(MCSVGPathCommand p_command)
+{
+	return p_command == kMCSVGPathQuadraticCurveTo || p_command == kMCSVGPathRelativeQuadraticCurveTo || p_command == kMCSVGPathShorthandQuadraticCurveTo || p_command == kMCSVGPathRelativeShorthandQuadraticCurveTo;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Useful stuff
 
 bool MCMemoryAllocateArray(uint32_t p_size, uint32_t p_count, void *&r_array)
@@ -286,6 +330,16 @@ bool MCProperListToArrayOfFloat(MCProperListRef p_list, uindex_t &r_count, float
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+inline MCGPoint MCGPointRelativeToAbsolute(const MCGPoint &origin, const MCGPoint &point)
+{
+	return MCGPointMake(origin.x + point.x, origin.y + point.y);
+}
+
+inline MCGPoint MCGPointReflect(const MCGPoint &origin, const MCGPoint &point)
+{
+	return MCGPointMake(origin.x - (point.x - origin.x), origin.y - (point.y - origin.y));
+}
 
 inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_transform)
 {
@@ -2851,6 +2905,184 @@ bool MCCanvasPathUnparseInstructions(MCCanvasPathRef &p_path, MCStringRef &r_str
 
 // Constructors
 
+struct MCCanvasPathSVGParseContext
+{
+	MCGPathRef path;
+	MCGPoint last_point;
+	MCGPoint last_control;
+	MCSVGPathCommand last_command;
+};
+
+bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, float32_t *p_params, uindex_t p_param_count)
+{
+	MCCanvasPathSVGParseContext *t_context;
+	t_context = static_cast<MCCanvasPathSVGParseContext*>(p_context);
+	
+	switch (p_command)
+	{
+		case kMCSVGPathMoveTo:
+		case kMCSVGPathRelativeMoveTo:
+		{
+			MCGPoint t_point;
+			t_point = MCGPointMake(p_params[0], p_params[1]);
+			MCGPathMoveTo(t_context->path, t_point);
+			t_context->last_point = t_point;
+			break;
+		}
+			
+		case kMCSVGPathClose:
+		case kMCSVGPathRelativeClose:
+			MCGPathCloseSubpath(t_context->path);
+			break;
+			
+		case kMCSVGPathLineTo:
+		case kMCSVGPathRelativeLineTo:
+		{
+			MCGPoint t_point;
+			t_point = MCGPointMake(p_params[0], p_params[1]);
+			if (p_command == kMCSVGPathRelativeLineTo)
+				t_point = MCGPointRelativeToAbsolute(t_context->last_point, t_point);
+			MCGPathLineTo(t_context->path, t_point);
+			t_context->last_point = t_point;
+			break;
+		}
+			
+		case kMCSVGPathHorizontalLineTo:
+		case kMCSVGPathRelativeHorizontalLineTo:
+		{
+			MCGPoint t_point;
+			t_point = t_context->last_point;
+			if (p_command == kMCSVGPathRelativeHorizontalLineTo)
+				t_point.x += p_params[0];
+			else
+				t_point.x = p_params[0];
+			MCGPathLineTo(t_context->path, t_point);
+			t_context->last_point = t_point;
+			break;
+		}
+			
+		case kMCSVGPathVerticalLineTo:
+		case kMCSVGPathRelativeVerticalLineTo:
+		{
+			MCGPoint t_point;
+			t_point = t_context->last_point;
+			if (p_command == kMCSVGPathRelativeVerticalLineTo)
+				t_point.y += p_params[0];
+			else
+				t_point.y = p_params[0];
+			MCGPathLineTo(t_context->path, t_point);
+			t_context->last_point = t_point;
+			break;
+		}
+			
+		case kMCSVGPathCurveTo:
+		case kMCSVGPathRelativeCurveTo:
+		{
+			MCGPoint t_point[3];
+			t_point[0] = MCGPointMake(p_params[0], p_params[1]);
+			t_point[1] = MCGPointMake(p_params[2], p_params[3]);
+			t_point[2] = MCGPointMake(p_params[4], p_params[5]);
+			if (p_command == kMCSVGPathRelativeCurveTo)
+			{
+				t_point[0] = MCGPointRelativeToAbsolute(t_context->last_point, t_point[0]);
+				t_point[1] = MCGPointRelativeToAbsolute(t_context->last_point, t_point[1]);
+				t_point[2] = MCGPointRelativeToAbsolute(t_context->last_point, t_point[2]);
+			}
+			MCGPathCubicTo(t_context->path, t_point[0], t_point[1], t_point[2]);
+			t_context->last_point = t_point[2];
+			t_context->last_control = t_point[1];
+			break;
+		}
+			
+		case kMCSVGPathShorthandCurveTo:
+		case kMCSVGPathRelativeShorthandCurveTo:
+		{
+			MCGPoint t_point[3];
+			t_point[1] = MCGPointMake(p_params[0], p_params[1]);
+			t_point[2] = MCGPointMake(p_params[2], p_params[3]);
+			if (p_command == kMCSVGPathRelativeCurveTo)
+			{
+				t_point[1] = MCGPointRelativeToAbsolute(t_context->last_point, t_point[1]);
+				t_point[2] = MCGPointRelativeToAbsolute(t_context->last_point, t_point[2]);
+			}
+			if (MCSVGPathCommandIsCubic(t_context->last_command))
+				t_point[0] = MCGPointReflect(t_context->last_point, t_context->last_control);
+			else
+				t_point[0] = t_point[1];
+			
+			MCGPathCubicTo(t_context->path, t_point[0], t_point[1], t_point[2]);
+			t_context->last_point = t_point[2];
+			t_context->last_control = t_point[1];
+			break;
+		}
+			
+		case kMCSVGPathQuadraticCurveTo:
+		case kMCSVGPathRelativeQuadraticCurveTo:
+		{
+			MCGPoint t_point[2];
+			t_point[0] = MCGPointMake(p_params[0], p_params[1]);
+			t_point[1] = MCGPointMake(p_params[2], p_params[3]);
+			if (p_command == kMCSVGPathRelativeCurveTo)
+			{
+				t_point[0] = MCGPointRelativeToAbsolute(t_context->last_point, t_point[0]);
+				t_point[1] = MCGPointRelativeToAbsolute(t_context->last_point, t_point[1]);
+			}
+			MCGPathQuadraticTo(t_context->path, t_point[0], t_point[1]);
+			t_context->last_point = t_point[1];
+			t_context->last_control = t_point[0];
+			break;
+		}
+			
+		case kMCSVGPathShorthandQuadraticCurveTo:
+		case kMCSVGPathRelativeShorthandQuadraticCurveTo:
+		{
+			MCGPoint t_point[2];
+			t_point[1] = MCGPointMake(p_params[0], p_params[1]);
+			if (p_command == kMCSVGPathRelativeCurveTo)
+			{
+				t_point[1] = MCGPointRelativeToAbsolute(t_context->last_point, t_point[1]);
+			}
+			if (MCSVGPathCommandIsQuadratic(t_context->last_command))
+				t_point[0] = MCGPointReflect(t_context->last_point, t_context->last_control);
+			else
+				t_point[0] = t_point[1];
+			
+			MCGPathQuadraticTo(t_context->path, t_point[0], t_point[1]);
+			t_context->last_point = t_point[1];
+			t_context->last_control = t_point[0];
+			break;
+		}
+			
+		case kMCSVGPathEllipticalCurveTo:
+		case kMCSVGPathRelativeEllipticalCurveTo:
+		{
+			MCCanvasFloat t_rx, t_ry;
+			MCCanvasFloat t_xrotation;
+			bool t_large_arc, t_sweep;
+			MCGPoint t_point;
+			t_rx = p_params[0]; t_ry = p_params[1];
+			t_xrotation = p_params[2];
+			t_large_arc = p_params[3] != 0;
+			t_sweep = p_params[4] != 0;
+			t_point = MCGPointMake(p_params[5], p_params[6]);
+			if (p_command == kMCSVGPathRelativeEllipticalCurveTo)
+				t_point = MCGPointRelativeToAbsolute(t_context->last_point, t_point);
+			
+			MCGPathArcTo(t_context->path, MCGSizeMake(t_rx, t_ry), t_xrotation, t_large_arc, t_sweep, t_point);
+			t_context->last_point = t_point;
+			break;
+		}
+			
+		default:
+			MCAssert(false);
+			
+	}
+	
+	t_context->last_command = p_command;
+	
+	return MCGPathIsValid(t_context->path);
+}
+
 bool MCCanvasPathMakeWithInstructionsCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
 {
 	MCGPathRef t_path;
@@ -2906,7 +3138,13 @@ void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanv
 		t_success = MCGPathCreateMutable(t_path);
 	
 	if (t_success)
-		t_success = MCCanvasPathParseInstructions(p_instructions, MCCanvasPathMakeWithInstructionsCallback, t_path);
+	{
+		MCCanvasPathSVGParseContext t_context;
+		t_context.path = t_path;
+		t_success = MCSVGParse(p_instructions, MCCanvasPathSVGParseCallback, &t_context);
+	}
+//	if (t_success)
+//		t_success = MCCanvasPathParseInstructions(p_instructions, MCCanvasPathMakeWithInstructionsCallback, t_path);
 	
 	if (t_success)
 		MCCanvasPathMakeWithMCGPath(t_path, r_path);
@@ -5803,6 +6041,230 @@ bool MCCanvasCapStyleToString(MCGCapStyle p_style, MCStringRef &r_string)
 bool MCCanvasCapStyleFromString(MCStringRef p_string, MCGCapStyle &r_style)
 {
 	return _mcenumfromstring<MCGCapStyle, kMCGCapStyleCount>(s_cap_style_map, p_string, r_style);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCSVGPathCommandMap
+{
+	char letter;
+	MCSVGPathCommand command;
+};
+
+static MCSVGPathCommandMap s_svg_command_map[] = {
+	{'M', kMCSVGPathMoveTo},
+	{'m', kMCSVGPathRelativeMoveTo},
+	{'Z', kMCSVGPathClose},
+	{'z', kMCSVGPathRelativeClose},
+	{'L', kMCSVGPathLineTo},
+	{'l', kMCSVGPathRelativeLineTo},
+	{'H', kMCSVGPathHorizontalLineTo},
+	{'h', kMCSVGPathRelativeHorizontalLineTo},
+	{'V', kMCSVGPathVerticalLineTo},
+	{'v', kMCSVGPathRelativeVerticalLineTo},
+	{'C', kMCSVGPathCurveTo},
+	{'c', kMCSVGPathRelativeCurveTo},
+	{'S', kMCSVGPathShorthandCurveTo},
+	{'s', kMCSVGPathRelativeShorthandCurveTo},
+	{'Q', kMCSVGPathQuadraticCurveTo},
+	{'q', kMCSVGPathRelativeQuadraticCurveTo},
+	{'T', kMCSVGPathShorthandQuadraticCurveTo},
+	{'t', kMCSVGPathRelativeShorthandQuadraticCurveTo},
+	{'A', kMCSVGPathEllipticalCurveTo},
+	{'a', kMCSVGPathRelativeEllipticalCurveTo},
+};
+
+bool MCSVGLookupPathCommand(char p_char, MCSVGPathCommand &r_command)
+{
+	for (uint32_t i = 0; i < kMCSVGPathCommandCount; i++)
+		if (p_char == s_svg_command_map[i].letter)
+		{
+			r_command = s_svg_command_map[i].command;
+			return true;
+		}
+	
+	return false;
+}
+
+bool MCSVGParsePathCommand(MCStringRef p_string, uindex_t &x_index, MCSVGPathCommand &r_command)
+{
+	if (x_index >= MCStringGetLength(p_string))
+		return false;
+	
+	if (!MCSVGLookupPathCommand(MCStringGetNativeCharAtIndex(p_string, x_index), r_command))
+		return false;
+	
+	x_index++;
+	return true;
+}
+
+bool MCSVGParseNumber(MCStringRef p_string, uindex_t &x_index, MCNumberRef &r_number)
+{
+	bool t_success;
+	
+	uindex_t t_length;
+	t_success = MCNumberParseOffsetPartial(p_string, x_index, t_length, r_number);
+	
+	if (t_success)
+		x_index += t_length;
+	
+	return t_success;
+}
+
+bool MCSVGIsWhiteSpace(char p_char)
+{
+	return p_char == ' ' || p_char == '\t' || p_char == '\r' || p_char == '\n';
+}
+
+void MCSVGSkipWhitespace(MCStringRef p_string, uindex_t &x_index)
+{
+	uindex_t t_length;
+	t_length = MCStringGetLength(p_string);
+	
+	while (x_index < t_length && MCSVGIsWhiteSpace(MCStringGetNativeCharAtIndex(p_string, x_index)))
+		x_index++;
+}
+
+void MCSVGSkipComma(MCStringRef p_string, uindex_t &x_index)
+{
+	if (x_index < MCStringGetLength(p_string) && MCStringGetNativeCharAtIndex(p_string, x_index) == ',')
+		x_index++;
+}
+
+bool MCSVGConsumeWSPCommaWSP(MCStringRef p_string, uindex_t &x_index)
+{
+	uindex_t t_index;
+	t_index = x_index;
+	
+	MCSVGSkipWhitespace(p_string, x_index);
+	MCSVGSkipComma(p_string, x_index);
+	MCSVGSkipWhitespace(p_string, x_index);
+	
+	return x_index != t_index;
+}
+
+bool MCSVGParseParams(MCStringRef p_string, uindex_t &x_index, MCSVGPathCommand p_command, float32_t r_params[7], uindex_t &r_param_count)
+{
+	uindex_t t_param_count;
+	uindex_t t_index;
+	t_index = x_index;
+	
+	switch (p_command)
+	{
+		case kMCSVGPathMoveTo:
+		case kMCSVGPathRelativeMoveTo:
+			t_param_count = 2;
+			break;
+			
+		case kMCSVGPathClose:
+		case kMCSVGPathRelativeClose:
+			t_param_count = 0;
+			break;
+			
+		case kMCSVGPathLineTo:
+		case kMCSVGPathRelativeLineTo:
+			t_param_count = 2;
+			break;
+			
+		case kMCSVGPathHorizontalLineTo:
+		case kMCSVGPathRelativeHorizontalLineTo:
+			t_param_count = 1;
+			break;
+			
+		case kMCSVGPathVerticalLineTo:
+		case kMCSVGPathRelativeVerticalLineTo:
+			t_param_count = 1;
+			break;
+			
+		case kMCSVGPathCurveTo:
+		case kMCSVGPathRelativeCurveTo:
+			t_param_count = 6;
+			break;
+			
+		case kMCSVGPathShorthandCurveTo:
+		case kMCSVGPathRelativeShorthandCurveTo:
+			t_param_count = 4;
+			break;
+			
+		case kMCSVGPathQuadraticCurveTo:
+		case kMCSVGPathRelativeQuadraticCurveTo:
+			t_param_count = 4;
+			break;
+			
+		case kMCSVGPathShorthandQuadraticCurveTo:
+		case kMCSVGPathRelativeShorthandQuadraticCurveTo:
+			t_param_count = 2;
+			break;
+			
+		case kMCSVGPathEllipticalCurveTo:
+		case kMCSVGPathRelativeEllipticalCurveTo:
+			t_param_count = 7;
+			break;
+			
+		default:
+			/* UNKNOWN COMMAND */
+			return false;
+	}
+	
+	for (uint32_t i = 0; i < t_param_count; i++)
+	{
+		MCAutoNumberRef t_number;
+		if (!MCSVGParseNumber(p_string, t_index, &t_number))
+			return false;
+		
+		MCSVGConsumeWSPCommaWSP(p_string, t_index);
+		
+		r_params[i] = MCNumberFetchAsReal(*t_number);
+	}
+	
+	r_param_count = t_param_count;
+	x_index = t_index;
+	
+	return true;
+}
+
+bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_context)
+{
+	uindex_t t_index;
+	t_index = 0;
+	
+	MCSVGPathCommand t_command;
+	float32_t t_params[7];
+	uindex_t t_param_count;
+	
+	bool t_success;
+	t_success = true;
+	
+	bool t_first_command;
+	t_first_command = true;
+	
+	while (t_success && t_index < MCStringGetLength(p_string))
+	{
+		bool t_have_command;
+		t_have_command = MCSVGParsePathCommand(p_string, t_index, t_command);
+		if (t_have_command)
+			MCSVGSkipWhitespace(p_string, t_index);
+		
+		if (t_first_command && !(t_have_command && t_command == kMCSVGPathMoveTo))
+		{
+			// TODO - throw error - svg path must begin with moveto command
+			return false;
+		}
+		t_first_command = false;
+		
+		// switch to lineto after moveto
+		if (!t_have_command && t_command == kMCSVGPathMoveTo)
+			t_command = kMCSVGPathLineTo;
+		if (!t_have_command && t_command == kMCSVGPathRelativeMoveTo)
+			t_command = kMCSVGPathRelativeLineTo;
+		
+		t_success = MCSVGParseParams(p_string, t_index, t_command, t_params, t_param_count);
+		
+		if (t_success)
+			t_success = p_callback(p_context, t_command, t_params, t_param_count);
+	}
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
