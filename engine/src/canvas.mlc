@@ -1019,11 +1019,26 @@ Tags: Canvas
 */
 
 syntax PatternMakeTransformed is prefix operator with precedence 4
-	"pattern" "with" <mImage: Expression> ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: Expression> | "translated" "by" <mTranslation: Expression> | "rotated" "by" <mRotation: Expression> )
+	"pattern" "with" <mImage: Expression> "transformed" "by" <mTransform: Expression>
 begin
-	MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
+    MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
+end syntax
+
+syntax PatternMakeScaledBy is prefix operator with precedence 4
+    "pattern" "with" <mImage: Expression> "scaled" "by" <mScale: Expression>
+begin
 	MCCanvasPatternMakeWithImageScaledWithList(mImage, mScale, output)
+end syntax
+
+syntax PatternMakeTranslatedBy is prefix operator with precedence 4
+    "pattern" "with" <mImage: Expression> "translated" "by" <mTranslation: Expression>
+begin
 	MCCanvasPatternMakeWithImageTranslatedWithList(mImage, mTranslation, output)
+end syntax
+
+syntax PatternMakeRotatedBy is prefix operator with precedence 4
+    "pattern" "with" <mImage: Expression> "rotated" "by" <mRotation: Expression>
+begin
 	MCCanvasPatternMakeWithRotatedImage(mImage, mRotation, output)
 end syntax
 
@@ -1682,10 +1697,15 @@ Example:
 Tags: Canvas
 */
 
-syntax ImageMake is prefix operator with precedence 4
-	"image" "from" ( "file" <mPath: Expression> | "data" <mData: Expression> )
+syntax ImageMakeFromFile is prefix operator with precedence 4
+	"image" "from" "file" <mPath: Expression>
 begin
 	MCCanvasImageMakeWithPath(mPath, output)
+end syntax
+
+syntax ImageMakeFromData is prefix operator with precedence 4
+	"image" "from" "data" <mData: Expression>
+begin
 	MCCanvasImageMakeWithData(mData, output)
 end syntax
 
@@ -1888,11 +1908,15 @@ Example:
 Tags: Canvas
 */
 
-syntax PathMakeWithRoundedRectangle is prefix operator with precedence 4
-	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" ( "radius" <mRadius: Expression> | "radii" <mRadii: Expression> )
+syntax PathMakeWithRoundedRectangleWithRadius is prefix operator with precedence 4
+	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radius" <mRadius: Expression>
 begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadius, output)
-//	MCCanvasPathMakeWithRoundedRectangleWithRadii(mRect, mRadii[0], mRadii[1], output)
+end syntax
+
+syntax PathMakeWithRoundedRectangleWithRadii is prefix operator with precedence 4
+	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radii" <mRadii: Expression>
+begin
 	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(mRect, mRadii, output)
 end syntax
 
