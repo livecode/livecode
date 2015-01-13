@@ -343,7 +343,7 @@ bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **
 	
 	r_names = NULL;
 	r_values = NULL;
-	r_param_count = NULL;
+	r_param_count = 0;
 	
 	while (t_success && t_next_param != NULL)
 	{

@@ -672,7 +672,8 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 			uint32_t t_length;
 			t_length = MCU_r8tos(t_buffer, t_buffer_length, MCNumberFetchAsReal((MCNumberRef)self), 8, 6, 0);
 
-			t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string);
+			t_success = MCStringCreateWithNativeChars((char_t *)t_buffer, t_length, r_string);
+            delete[] t_buffer;
 		}
 		break;
 	case kMCValueTypeCodeString:
@@ -1268,7 +1269,7 @@ bool MCArrayIsSequence(MCArrayRef self)
 	ctxt . maximum = INDEX_MIN;
 	return MCArrayApply(self, get_array_extent, &ctxt) &&
 			ctxt . minimum == 1 &&
-			(ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self);
+			(uindex_t) (ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self);
 }
 
 static bool list_keys(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
@@ -1365,9 +1366,6 @@ uint32_t MCArrayMeasureForStreamLegacy(MCArrayRef self, bool p_nested_only)
 
 static bool is_array_nested(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-	bool *t_nested_ptr;
-	t_nested_ptr = (bool *)p_context;
-	
 	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
 		return false;
 

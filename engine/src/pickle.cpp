@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "font.h"
 #include "stacksecurity.h"
+#include "widget.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -230,32 +231,53 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 	MCgroupedobjectoffset . x = 0;
 	MCgroupedobjectoffset . y = 0;
 	
-	// Write the version header - either 2.7 or 5.5 depending on the setting of include_2700.
-	if (t_stat == IO_NORMAL)
-		t_stat = IO_write(p_context -> include_legacy ? "REVO2700" : "REVO7000", 8, 1, t_stream);
-
-	// Write the space for the chunk size field
-	if (t_stat == IO_NORMAL)
-		t_stat = IO_write_uint4(0, t_stream);
-
-	// Record where we are now in the stream
-	uint4 t_chunk_start;
-	if (t_stat == IO_NORMAL)
-		t_chunk_start = MCS_tell(t_stream);
-
-    if (t_stat == IO_NORMAL)
-        t_stat = pickle_object_to_stream(t_stream, p_context -> include_legacy ? 2700 : 7000, p_object, p_part);
-
-	// MW-2012-03-04: [[ UnicodeFileFormat ]] If we are including 2.7, 5.5 and 7.0, now write
-	//   out the 5.5 and 7.0 versions.
-	if (t_stat == IO_NORMAL && p_context -> include_legacy)
-	{
-        t_stat = pickle_object_to_stream(t_stream, 5500, p_object, p_part);
+    // MW-2014-12-17: [[ Widgets ]] If the object is or contains widgets, we can
+    //   only produce 8.0 version data.
+    uint4 t_chunk_start;
+    if (p_object -> haswidgets())
+    {
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write("REVO8000", 8, 1, t_stream);
+        
+        // Write the space for the chunk size field
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write_uint4(0, t_stream);
+        
+        // Record where we are now in the stream
+        if (t_stat == IO_NORMAL)
+            t_chunk_start = MCS_tell(t_stream);
         
         if (t_stat == IO_NORMAL)
-            pickle_object_to_stream(t_stream, 7000, p_object, p_part);
-	}
+            t_stat = pickle_object_to_stream(t_stream, 8000, p_object, p_part);
+    }
+    else
+    {
+        // Write the version header - either 2.7 or 5.5 depending on the setting of include_2700.
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write(p_context -> include_legacy ? "REVO2700" : "REVO7000", 8, 1, t_stream);
 
+        // Write the space for the chunk size field
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write_uint4(0, t_stream);
+
+        // Record where we are now in the stream
+        if (t_stat == IO_NORMAL)
+            t_chunk_start = MCS_tell(t_stream);
+
+        if (t_stat == IO_NORMAL)
+            t_stat = pickle_object_to_stream(t_stream, p_context -> include_legacy ? 2700 : 7000, p_object, p_part);
+
+        // MW-2012-03-04: [[ UnicodeFileFormat ]] If we are including 2.7, 5.5 and 7.0, now write
+        //   out the 5.5 and 7.0 versions.
+        if (t_stat == IO_NORMAL && p_context -> include_legacy)
+        {
+            t_stat = pickle_object_to_stream(t_stream, 5500, p_object, p_part);
+            
+            if (t_stat == IO_NORMAL)
+                pickle_object_to_stream(t_stream, 7000, p_object, p_part);
+        }
+    }
+    
 	// Write back the length of the chunk at the recorded position
 	if (t_stat == IO_NORMAL)
 	{
@@ -390,7 +412,10 @@ static bool unpickle_object_from_stream(IO_handle p_stream, uint32_t p_version, 
 		break;
 		case OT_MCEPS:
 			t_object = new MCEPS;
-		break;
+        break;
+        case OT_WIDGET:
+            t_object = new MCWidget;
+        break;
 		case OT_MAGNIFY:
 			t_object = new MCMagnify;
 		break;
@@ -481,6 +506,8 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 
 	while(t_length > 0 && t_success)
 	{
+		bool t_8000_only;
+		t_8000_only = false;
 		bool t_7000_only;
 		t_7000_only = false;
         bool t_5500_only;
@@ -493,7 +520,9 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 		{
             // AL-2014-02-14: [[ UnicodeFileFormat ]] If the header is 7.0, then there
 			//   won't be a 2.7 version before it.
-			if (memcmp(t_buffer, "REVO7000", 8) == 0)
+            if (memcmp(t_buffer, "REVO8000", 8) == 0)
+				t_8000_only = true;
+			else if (memcmp(t_buffer, "REVO7000", 8) == 0)
 				t_7000_only = true;
             else if (memcmp(t_buffer, "REVO5500", 8) == 0)
 				t_5500_only = true;
@@ -533,7 +562,9 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 		t_object = nil;
 		if (t_success)
         {
-            if (t_7000_only)
+            if (t_8000_only)
+                t_success = unpickle_object_from_stream(t_stream, 8000, p_stack, t_object);
+            else if (t_7000_only)
                 t_success = unpickle_object_from_stream(t_stream, 7000, p_stack, t_object);
             else
                 t_success = unpickle_object_from_stream(t_stream, t_5500_only ? 5500 : 2700, p_stack, t_object);
@@ -542,7 +573,7 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
         // AL-2014-02-14: [[ UnicodeFileFormat ]] If the header was 2.7, then there could
 		//   be 5.5 and 7.0 versions following it. So attempt to unpickle second and third
 		//   versions, and use them if present.
-		if (t_success && !t_7000_only && !t_5500_only)
+		if (t_success && !t_8000_only && !t_7000_only && !t_5500_only)
 		{
 			MCObject *t_5500_object;
 			if (unpickle_object_from_stream(t_stream, 5500, p_stack, t_5500_object))

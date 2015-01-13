@@ -31,11 +31,11 @@ static bool __check_conformance(MCTypeInfoRef p_typeinfo, const MCValueRef *p_va
     }
     
     if (x_offset + p_typeinfo -> record . field_count > p_value_count)
-        return MCErrorThrowGeneric();
+        return MCErrorThrowGeneric(nil);
     
     for(uindex_t i = 0; i < p_typeinfo -> record . field_count; i++)
         if (MCTypeInfoConforms(MCValueGetTypeInfo(p_values[x_offset + i]), p_typeinfo -> record . fields[i] . type))
-            return MCErrorThrowGeneric();
+            return MCErrorThrowGeneric(nil);
     
     return true;
 }
@@ -225,7 +225,7 @@ static bool __store_value(MCTypeInfoRef p_typeinfo, MCRecordRef self, MCNameRef 
         if (MCNameIsEqualTo(p_field, t_resolved_typeinfo -> record . fields[i] . name))
         {
             if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_resolved_typeinfo -> record . fields[i] . type))
-                return MCErrorThrowGeneric();
+                return MCErrorThrowGeneric(nil);
             
             self -> fields[i] = MCValueRetain(p_value);
             return true;
@@ -405,6 +405,30 @@ MCRecordDecodeFromArray(MCArrayRef array,
 	}
 
 	return MCRecordCopyAndRelease (t_new_record, r_record);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool
+MCRecordIterate(MCRecordRef record,
+                uintptr_t& x_iterator,
+                MCNameRef& r_field_name,
+                MCValueRef& r_field_value)
+{
+	MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo (record);
+	uindex_t t_num_fields = MCRecordTypeInfoGetFieldCount (t_typeinfo);
+    
+    /* If the iterator parameter has reached the field count then we are
+     * done. */
+    if (x_iterator >= (uintptr_t)t_num_fields)
+        return false;
+    
+    r_field_name = MCRecordTypeInfoGetFieldName (t_typeinfo, x_iterator);
+    r_field_value = record -> fields[x_iterator];
+    
+    x_iterator += 1;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "stacksecurity.h"
 #include "scriptpt.h"
+#include "widget-events.h"
 
 #include "exec.h"
 #include "exec-interface.h"
@@ -79,8 +80,9 @@ static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The followi
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
 static const char *newheader7000 = "REVO7000";
+static const char *newheader8000 = "REVO8000";
 
-#define MAX_STACKFILE_VERSION 7000
+#define MAX_STACKFILE_VERSION 8000
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -186,37 +188,37 @@ bool MCDispatch::isdragtarget(void)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
 #ifdef /* MCDispatch::getprop */ LEGACY_EXEC
 	case P_BACK_PIXEL:
-		ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_TOP_PIXEL:
-		ep.setint(MCscreen->white_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->white_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_HILITE_PIXEL:
 	case P_FORE_PIXEL:
 	case P_BORDER_PIXEL:
 	case P_BOTTOM_PIXEL:
 	case P_SHADOW_PIXEL:
 	case P_FOCUS_PIXEL:
-		ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_BACK_COLOR:
 	case P_HILITE_COLOR:
-		ep.setstaticcstring("white");
-		return ES_NORMAL;
+        //ep.setstaticcstring("white");
+        return ES_NOT_HANDLED;
 	case P_FORE_COLOR:
 	case P_BORDER_COLOR:
 	case P_TOP_COLOR:
 	case P_BOTTOM_COLOR:
 	case P_SHADOW_COLOR:
 	case P_FOCUS_COLOR:
-		ep.setstaticcstring("black");
-		return ES_NORMAL;
+        //ep.setstaticcstring("black");
+        return ES_NOT_HANDLED;
 	case P_FORE_PATTERN:
 	case P_BACK_PATTERN:
 	case P_HILITE_PATTERN:
@@ -231,14 +233,14 @@ Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint 
 		ep.setstaticcstring(MCleftstring);
 		return ES_NORMAL;
 	case P_TEXT_FONT:
-		ep.setstaticcstring(DEFAULT_TEXT_FONT);
-		return ES_NORMAL;
+        //ep.setstaticcstring(DEFAULT_TEXT_FONT);
+		return ES_NOT_HANDLED;
 	case P_TEXT_HEIGHT:
-		ep.setint(heightfromsize(DEFAULT_TEXT_SIZE));
-		return ES_NORMAL;
+        //ep.setint(heightfromsize(DEFAULT_TEXT_SIZE));
+		return ES_NOT_HANDLED;
 	case P_TEXT_SIZE:
-		ep.setint(DEFAULT_TEXT_SIZE);
-		return ES_NORMAL;
+        //ep.setint(DEFAULT_TEXT_SIZE);
+		return ES_NOT_HANDLED;
 	case P_TEXT_STYLE:
 		ep.setstaticcstring(MCplainstring);
 		return ES_NORMAL;
@@ -358,6 +360,12 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 //	}
 //#endif
 
+    if ((stat == ES_NOT_HANDLED || stat == ES_PASS))
+    {
+        extern Exec_stat MCEngineHandleLibraryMessage(MCNameRef name, MCParameter *params);
+        stat = MCEngineHandleLibraryMessage(mess, params);
+    }
+    
 	if (MCmessagemessages && stat != ES_PASS)
 		MCtargetptr->sendmessage(htype, mess, False);
 		
@@ -590,7 +598,7 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 #endif
 
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
-	        || type != OT_STACK && type != OT_ENCRYPT_STACK
+	    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
 	{
 		delete t_stack;
@@ -701,7 +709,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		MCresult -> clear();
 
 		if (IO_read_uint1(&type, stream) != IO_NORMAL
-		    || type != OT_STACK && type != OT_ENCRYPT_STACK
+		    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
 		    || sptr->load(stream, version, type) != IO_NORMAL)
 		{
 			if (MCresult -> isclear())
@@ -979,10 +987,12 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 			t_found = true;
 		}
 	}
-
+    
 	if (!t_found)
-	{
-		MCAutoStringRef t_leaf_name;
+    {
+        // SN-2014-11-18: [[ Bug 14043 ]] If p_path is was not correct, we then use the leaf, and append it to different locations
+        //  in all the next steps.
+        MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
 		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
 			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
@@ -995,38 +1005,40 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
 			t_found = true;
 		}
-	}
 
-	if (!t_found)
-	{
-		if (openstartup(p_name, &t_open_path, stream) ||
-		        openenv(p_name, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
-		        openenv(p_name, MCSTR("PATH"), &t_open_path, stream, 0))
-			t_found = true;
-	}
-
-	if (!t_found)
-	{
-
-		MCAutoStringRef t_homename;
-		if (MCS_getenv(MCSTR("HOME"), &t_homename) && !MCStringIsEmpty(*t_homename))
-		{
-			MCAutoStringRef t_trimmed_homename;
-			if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
-				/* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
-			else
-				t_trimmed_homename = *t_homename;
-
-			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/%@", *t_trimmed_homename, p_name);
-
-			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/stacks/%@", *t_trimmed_homename, p_name);
-
-			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/components/%@", *t_trimmed_homename, p_name);
-		}
-	}
+        if (!t_found)
+        {
+            // SN-2014-11-18: [[ Bug 14043 ]] The whole path was appended, instead of only the leaf.
+            if (openstartup(*t_leaf_name, &t_open_path, stream) ||
+                openenv(*t_leaf_name, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
+                openenv(*t_leaf_name, MCSTR("PATH"), &t_open_path, stream, 0))
+                t_found = true;
+        }
+        
+        if (!t_found)
+        {
+            
+            MCAutoStringRef t_homename;
+            if (MCS_getenv(MCSTR("HOME"), &t_homename) && !MCStringIsEmpty(*t_homename))
+            {
+                MCAutoStringRef t_trimmed_homename;
+                if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
+                /* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
+                else
+                    t_trimmed_homename = *t_homename;
+                
+                // SN-2014-11-18: [[ Bug 14043 ]] The whole path was appended, instead of only the leaf.
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/%@", *t_trimmed_homename, *t_leaf_name);
+                
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/stacks/%@", *t_trimmed_homename, *t_leaf_name);
+                
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/components/%@", *t_trimmed_homename, *t_leaf_name);
+            }
+        }
+    }
 
 
 	if (stream == NULL)
@@ -1059,9 +1071,20 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
     }
     else
     {
+        // MW-2014-12-17: [[ Widgets ]] Force writing out as 8.0 version stack if it
+        //   contains widgets, and only write out as 8.0 if it contains widgets.
+        uint32_t t_old_stackfileversion;
+        t_old_stackfileversion = MCstackfileversion;
+        if (sptr -> haswidgets() || sptr -> substackhaswidgets())
+            MCstackfileversion = 8000;
+        else if (MCstackfileversion == 8000)
+            MCstackfileversion = 7000;
+        
         stat = dosavestack(sptr, p_fname);
-
+        
         MCLogicalFontTableFinish();
+        
+        MCstackfileversion = t_old_stackfileversion;
     }
     
 	return stat;
@@ -1195,11 +1218,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	}
 	MCValueAssign(MCfiletype, oldfiletype);
 	MCString errstring = "Error writing stack (disk full?)";
-	
+    
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-	if (MCstackfileversion >= 7000)
+    if (MCstackfileversion >= 8000)
+		t_header = newheader8000, t_header_size = 8;
+	else if (MCstackfileversion >= 7000)
 		t_header = newheader7000, t_header_size = 8;
 	else if (MCstackfileversion >= 5500)
 		t_header = newheader5500, t_header_size = 8;
@@ -1584,9 +1609,6 @@ void MCDispatch::wmdragleave(Window w)
 
 MCDragAction MCDispatch::wmdragdrop(Window w)
 {
-	MCStack *target;
-	target = findstackd(w);
-	
 	// MW-2011-02-08: Make sure we store the drag action that is in effect now
 	//   otherwise it can change as a result of message sends which is bad :o)
 	uint32_t t_drag_action;
@@ -1647,6 +1669,17 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 	return fonts->getfont(fname, size, style, printer);
 }
 
+MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle)
+{
+#if defined(_MACOSX)
+    if (fonts == nil)
+        fonts = new MCFontlist;
+    return fonts->getfontbyhandle(p_handle);
+#else
+    return NULL;
+#endif
+}
+
 MCStack *MCDispatch::findstackname(MCNameRef p_name)
 {
 	if (p_name == nil || MCNameIsEmpty(p_name))
@@ -1688,7 +1721,6 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		// TODO: what about other 'special' chars added by unicode?
         //  => the unicode chars shouldn't be changed
 		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
-		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_replace));
         uindex_t t_offset;
 		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
 		{
@@ -2187,7 +2219,10 @@ void MCDispatch::dodrop(bool p_source)
 	{
 		// We are only the source
 		m_drag_end_sent = true;
-		MCdragsource -> message(MCM_drag_end);
+        if (MCdragsource->gettype() == CT_WIDGET)
+            MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
+        else
+            MCdragsource -> message(MCM_drag_end);
 
 		// OK-2008-10-21 : [[Bug 7316]] - Cursor in script editor follows mouse after dragging to non-Revolution target.
 		// I have no idea why this apparently only happens in the script editor, but this seems to fix it and doesn't seem too risky :)
@@ -2304,7 +2339,19 @@ void MCDispatch::dodrop(bool p_source)
 		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
 
 	bool t_auto_drop;
-	t_auto_drop = MCdragdest != NULL && MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;
+    t_auto_drop = MCdragdest != NULL;
+    if (t_auto_drop)
+    {
+        if (MCdragdest->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_dnd_drop(reinterpret_cast<MCWidget*>(MCdragdest));
+            t_auto_drop = false;
+        }
+        else
+        {
+            t_auto_drop = MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;
+        }
+    }
 
 	if (t_auto_dest && t_auto_drop && MCdragdata != NULL && MCdropfield != NULL)
 	{
@@ -2345,7 +2392,15 @@ void MCDispatch::dodrop(bool p_source)
 	if (MCdragsource != NULL)
 	{
 		m_drag_end_sent = true;
-		t_auto_end = MCdragsource -> message(MCM_drag_end) != ES_NORMAL;
+        if (MCdragsource->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
+            t_auto_end = false;
+        }
+        else
+        {
+            t_auto_end = MCdragsource -> message(MCM_drag_end) != ES_NORMAL;
+        }
 	}
 	else
 		t_auto_end = false;
@@ -2372,7 +2427,7 @@ void MCDispatch::clearcursors(void)
 	{
 		if (MCcursor == MCcursors[i])
 			MCcursor = nil;
-		if (MCdefaultcursor = MCcursors[i])
+		if (MCdefaultcursor == MCcursors[i])
 			MCdefaultcursor = nil;
 	}
 
@@ -2428,9 +2483,16 @@ MCFontlist *MCFontlistGetCurrent(void)
 
 bool MCDispatch::GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color)
 {
-    if (which == P_FORE_COLOR)
+    // SN-2014-12-05: [[ Bug 14154 ]] Added forgotten properties
+    if (which == P_FORE_COLOR
+            || which ==  P_BORDER_COLOR
+            || which == P_TOP_COLOR
+            || which == P_BOTTOM_COLOR
+            || which == P_SHADOW_COLOR
+            || which == P_FOCUS_COLOR)
         GetDefaultForeColor(ctxt, r_color);
-    else if (which == P_BACK_COLOR)
+    else if (which == P_BACK_COLOR
+             || which == P_HILITE_COLOR)
         GetDefaultBackColor(ctxt, r_color);
     else
         r_color . name = MCValueRetain(kMCEmptyString);

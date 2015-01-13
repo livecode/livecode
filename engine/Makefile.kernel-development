@@ -9,6 +9,8 @@ SOURCES= \
 	deploy_macosx.cpp deploy_capsule.cpp deploy_sign.cpp deploy_file.cpp \
 	deploy_dmg.cpp bsdiff_build.cpp encodederrors.cpp
 
+MLC_LIST = libkernel-modules.list
+
 KERNEL_DEFINES=\
 	MODE_DEVELOPMENT
 

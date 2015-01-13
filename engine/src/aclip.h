@@ -80,10 +80,9 @@ public:
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
 #ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
-
 
 	virtual Boolean del();
 	virtual void paste(void);
@@ -108,8 +107,8 @@ public:
 	Boolean import(MCStringRef fname, IO_handle stream);
 	Boolean open_audio();
 	Boolean play();
-	void stop(Boolean abort);
-	void setloudness(uint2 p_loudness);
+    void stop(Boolean abort);
+    bool isPlaying();
 
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);

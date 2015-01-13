@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "context.h"
 #include "stacklst.h"
+#include "flst.h"
 
 #include "graphics_util.h"
 
@@ -93,8 +94,28 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 			return true;
 		}
 	}
+    
+    uint2 t_temp_size;
+    MCFontStruct* t_font_struct;
+    t_temp_size = p_size;
+    t_font_struct = MCdispatcher -> loadfont(p_name, t_temp_size, MCFontStyleToTextStyle(p_style), (p_style & kMCFontStylePrinterMetrics) != 0);
+    
+    return MCFontCreateWithFontStruct(p_name, p_style, p_size, t_font_struct, r_font);
+}
 
-	MCFontRef self;
+bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontStruct* p_font_struct, MCFontRef& r_font)
+{
+    for(MCFont *t_font = s_fonts; t_font != nil; t_font = t_font -> next)
+    {
+        if (p_font_struct == t_font->fontstruct)
+        {
+            t_font -> references += 1;
+            r_font = t_font;
+            return true;
+        }
+    }
+    
+    MCFontRef self;
 	if (!MCMemoryNew(self))
 		return false;
 
@@ -103,9 +124,7 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 	self -> style = p_style;
 	self -> size = p_size;
 
-	uint2 t_temp_size;
-	t_temp_size = self -> size;
-	self -> fontstruct = MCdispatcher -> loadfont(self -> name, t_temp_size, MCFontStyleToTextStyle(self -> style), (self -> style & kMCFontStylePrinterMetrics) != 0);
+    self -> fontstruct = p_font_struct;
 
 	// MW-2013-12-04: [[ Bug 11535 ]] Test to see if the font is fixed-width, at least for
 	//   Roman script.
@@ -143,6 +162,25 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 	return true;
 }
 
+bool MCFontCreateWithHandle(MCSysFontHandle p_handle, MCFontRef& r_font)
+{
+    MCFontStruct* t_font_struct;
+    t_font_struct = MCdispatcher->loadfontwithhandle(p_handle);
+    if (t_font_struct == nil)
+        return false;
+    
+    MCNameRef t_name;
+    uint2 t_size, t_style;
+    Boolean t_printer;
+    if (!MCdispatcher->getfontlist()->getfontstructinfo(t_name, t_size, t_style, t_printer, t_font_struct))
+        return false;
+    
+    // The returned style is not the same as the MCFont* style values
+    t_style = 0;
+    
+    return MCFontCreateWithFontStruct(t_name, t_style, t_size, t_font_struct, r_font);
+}
+
 MCFontRef MCFontRetain(MCFontRef self)
 {
 	self -> references += 1;
@@ -172,6 +210,21 @@ void MCFontRelease(MCFontRef self)
 	MCMemoryDelete(self);
 }
 
+MCNameRef MCFontGetName(MCFontRef self)
+{
+	return self->name;
+}
+
+MCFontStyle MCFontGetStyle(MCFontRef self)
+{
+	return self->style;
+}
+
+int32_t MCFontGetSize(MCFontRef self)
+{
+	return self->size;
+}
+
 bool MCFontHasPrinterMetrics(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
@@ -181,22 +234,38 @@ bool MCFontHasPrinterMetrics(MCFontRef self)
 	return (self -> style & kMCFontStylePrinterMetrics) != 0;
 }
 
-int32_t MCFontGetAscent(MCFontRef self)
+coord_t MCFontGetAscent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return 0;
 	
-	return self -> fontstruct -> ascent;
+	return self -> fontstruct -> m_ascent;
 }
 
-int32_t MCFontGetDescent(MCFontRef self)
+coord_t MCFontGetDescent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return 0;
 	
-	return self -> fontstruct -> descent;
+	return self -> fontstruct -> m_descent;
+}
+
+coord_t MCFontGetLeading(MCFontRef self)
+{
+    if (self -> fontstruct == nil)
+        return 0;
+    
+    return self -> fontstruct -> m_leading;
+}
+
+coord_t MCFontGetXHeight(MCFontRef self)
+{
+    if (self -> fontstruct == nil)
+        return 0;
+    
+    return self -> fontstruct -> m_xheight;
 }
 
 void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data, bool p_rtl)
@@ -399,6 +468,12 @@ int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text, const MCGAffineT
     return MCFontMeasureTextSubstring(p_font, p_text, t_range, p_transform);
 }
 
+MCGFloat MCFontMeasureTextFloat(MCFontRef p_font, MCStringRef p_text, const MCGAffineTransform &p_transform)
+{
+    MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
+    return MCFontMeasureTextSubstringFloat(p_font, p_text, t_range, p_transform);
+}
+
 MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string, MCRange p_range, const MCGAffineTransform &p_transform)
 {
     font_measure_text_context ctxt;
@@ -415,7 +490,7 @@ struct font_draw_text_context
     MCGContextRef m_gcontext;
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the x-offset.
     MCGFloat x;
-    int32_t y;
+    MCGFloat y;
     bool rtl;
 };
 
@@ -435,13 +510,13 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
     ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
 }
 
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break)
+void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
 	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font, p_rtl, p_can_break);
 }
 
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;

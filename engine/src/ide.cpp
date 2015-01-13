@@ -359,8 +359,6 @@ Parse_stat MCIdeScriptFlush::parse(MCScriptPoint& p_script)
   Parse_stat t_status;
 	t_status = PS_NORMAL;
 
-	MCChunk *t_target;
-	t_target = NULL;
 	if (t_status == PS_NORMAL)
 		t_status = parse_target(p_script, f_target);
 
@@ -1786,7 +1784,7 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
 ///////////////////////////////////////////////////////////////////////////////
 
 MCIdeScriptReplace::MCIdeScriptReplace(void)
-	: f_target(NULL), f_start(NULL), f_end(NULL), f_text(NULL), f_type(CT_UNDEFINED)
+	: f_type(CT_UNDEFINED), f_start(NULL), f_end(NULL), f_target(NULL), f_text(NULL)
 {
 }
 

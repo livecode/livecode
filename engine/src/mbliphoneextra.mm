@@ -281,8 +281,10 @@ UIWindow *MCIPhoneGetWindow(void);
 
 struct export_image_t
 {
-	MCExportImageToAlbumDelegate *delegate;
-	MCDataRef raw_data;
+    MCExportImageToAlbumDelegate *delegate;
+    MCDataRef raw_data;
+    // PM-2014-12-12: [[ Bug 13860 ]] Added support for exporting referenced images to album
+    bool is_raw_data;
 };
 
 static void export_image(void *p_context)
@@ -290,14 +292,26 @@ static void export_image(void *p_context)
 	export_image_t *ctxt;
 	ctxt = (export_image_t *)p_context;
 	
-	NSData *t_data;
-	t_data = [[NSData alloc] initWithBytes: (void *)MCDataGetBytePtr(ctxt -> raw_data) length: MCDataGetLength(ctxt -> raw_data)];
+    NSData *t_data;
+    // PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+    if (ctxt -> is_raw_data)
+        t_data = [[NSData alloc] initWithBytes: (void *)MCDataGetBytePtr(ctxt -> raw_data) length: MCDataGetLength(ctxt -> raw_data)];
+    else
+        t_data = nil;
+
 	UIImage *t_img;
-	t_img = [[UIImage alloc] initWithData: t_data];
+    // For referenced images, init with filename rather than with bytes
+    if (t_data != nil)
+        t_img = [[UIImage alloc] initWithData: t_data];
+    else
+        t_img = [[UIImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String: (char*)MCDataGetBytePtr(ctxt -> raw_data)]];
+
 	UIImageWriteToSavedPhotosAlbum(t_img, ctxt -> delegate, @selector(image:didFinishSavingWithError:contextInfo:), nil);
 	
 	[t_img release];
-	[t_data release];
+    
+    if (t_data !=nil)
+        [t_data release];
 }
 
 #ifdef /* MCHandleExportImageToAlbumIphone */ LEGACY_EXEC
@@ -309,11 +323,12 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 	MCExecPoint ep(nil, nil, nil);	
 	p_parameters -> eval_argument(ep);
 
-	MCString t_raw_data;
+	MCString t_image_data;
+    bool t_is_raw_data;
 	if (is_png_data(ep . getsvalue()) ||
 		is_gif_data(ep . getsvalue()) ||
 		is_jpeg_data(ep . getsvalue()))
-		t_raw_data = ep . getsvalue();
+		t_image_data = ep . getsvalue();
 	else
 	{
 		uint4 parid;
@@ -346,11 +361,22 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 			return ES_NORMAL;
 		}
 		
-		t_raw_data = t_image -> getrawdata();
+        // PM-2014-12-12: [[ Bug 13860 ]] For referenced images we need the filename rather than the raw data
+        if (t_image -> isReferencedImage())
+        {
+            t_image_data = t_image -> getimagefilename();
+            t_is_raw_data = false;
+        }
+        else
+        {
+            t_image_data = t_image -> getrawdata();
+            t_is_raw_data = true;
+        }
 	}
 	
 	export_image_t ctxt;
-	ctxt . raw_data = t_raw_data;
+    ctxt . is_raw_data = t_is_raw_data;
+	ctxt . image_data = t_image_data;
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 	
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);
@@ -369,9 +395,11 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 }
 #endif /* MCHandleExportImageToAlbumIphone */ 
 
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
+// SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension, bool p_is_raw_data)
 {
 	export_image_t ctxt;
+    ctxt . is_raw_data = p_is_raw_data;
     ctxt . raw_data = p_raw_data;
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 
@@ -731,8 +759,10 @@ bool MCSystemGetDeviceScale(real64_t& r_scale)
 
 bool MCSystemGetPixelDensity(real64_t& r_density)
 {
-    // Not implemented on IPhone
-    return false;
+    // AL-2014-11-17: [[ Bug 14031 ]] pixelDensity on iOS should return device scale
+    r_density = MCIPhoneGetDeviceScale();
+    
+    return true;
 }
 
 // SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
@@ -965,6 +995,22 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef /* MCHandleIsVoiceOverRunning */ LEGACY_EXEC
+// PM-2014-12-08: [[ Bug 13659 ]] New function to detect if Voice Over is turned on (iOS only)
+static Exec_stat MCHandleIsVoiceOverRunning(void *context, MCParameter *p_parameters)
+{
+    MCresult -> sets(UIAccessibilityIsVoiceOverRunning() ? MCtruestring : MCfalsestring);
+    return ES_NORMAL;
+    
+}
+#endif /* MCHandleIsVoiceOverRunning */
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+bool MCSystemGetIsVoiceOverRunning(bool &r_is_vo_running)
+{
+    r_is_vo_running = UIAccessibilityIsVoiceOverRunning();
+    return true;
+}
 
 #ifdef /* MCHandleCurrentLocaleIphone */ LEGACY_EXEC
 static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
@@ -1876,6 +1922,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
     {false, "iphoneCurrentLocale", MCHandleCurrentLocale, nil},
     {false, "mobileCurrentLocale", MCHandleCurrentLocale, nil},
+
+    // PM-2014-12-05: [[ Bug 13659 ]] Detect if Voice Over is enabled
+    {false, "mobileIsVoiceOverRunning", MCHandleIsVoiceOverRunning, nil},
+    {false, "iphoneIsVoiceOverRunning", MCHandleIsVoiceOverRunning, nil},
     
     {false, "iphonePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
     {false, "iphonePausePlayingOnChannel", MCHandlePausePlayingOnChannel},

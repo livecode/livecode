@@ -467,7 +467,7 @@ bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
     
     if (t_service != nil)
         return t_service -> DeleteRegistry(p_key, r_error);
-    
+		
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
@@ -478,11 +478,13 @@ bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_err
     
     if (t_service != nil)
     {
-        MCAutoStringRef t_native_path;
-        if (!MCS_pathtonative(p_path, &t_native_path))
-            return false;
+		// SN-2014-12-15: [[ Bug 14219 ]] The path to keys must have 
+		//  backslashes, not slashes
+        //MCAutoStringRef t_native_path;
+        //if (!MCS_pathtonative(p_path, &t_native_path))
+        //    return false;
         
-        return t_service -> ListRegistry(*t_native_path, r_list, r_error);        
+        return t_service -> ListRegistry(p_path, r_list, r_error);        
     }
     
 	return MCStringCreateWithCString("not supported", r_error);
@@ -870,7 +872,7 @@ struct MCS_getentries_state
 	MCListRef list;
 };
 
-bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
 
 static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *p_entry)
 {
@@ -880,10 +882,12 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (!t_state -> files != p_entry -> is_folder)
 		return true;
     
+#if defined(_MACOSX)
     // Mac doesn't list the '..' folder
     if (p_entry -> is_folder && MCListIsEmpty(t_state -> list)
             && !MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
         MCListAppendCString(t_state -> list, "..");
+#endif
 	
 	if (t_state -> details)
 	{

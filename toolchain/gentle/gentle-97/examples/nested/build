@@ -1,0 +1,30 @@
+
+#!/bin/sh
+
+set -e
+set -x
+
+GENTLE=../../gentle/gentle
+GRTS=../../gentle/grts.o
+REFLEX=../../reflex/reflex
+LIB=../../lib
+LEX=lex
+YACC=yacc
+CC=cc
+
+$GENTLE nested.g
+$REFLEX
+$LEX gen.l
+$YACC gen.y
+
+$CC -c y.tab.c
+$CC -c lex.yy.c
+$CC -c nested.c
+
+$CC -o nested \
+   nested.o \
+   y.tab.o lex.yy.o \
+   $LIB/idents.o $LIB/errmsg.o $LIB/main.o \
+   $GRTS
+
+nested testfile

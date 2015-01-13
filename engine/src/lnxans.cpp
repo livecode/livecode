@@ -234,12 +234,10 @@ char * get_next_mask ( char *p_masks )
 // Get mask number <p_mask_id> from the comma delimited list of masks.
 char * get_filter_mask ( uint4 p_mask_id, char * p_masks ) 
 {
-	uint4 a ;
 	uint4 t_count ;
 	char *t_ptr ;
 
 	t_count = 0 ;
-	a = 0 ;
 	t_ptr = p_masks ;
 	
 	
@@ -586,7 +584,7 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
 
     if (r_value == nil)
         /* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, r_result);
-    else if (p_options & MCA_OPTION_RETURN_FILTER != 0)
+    else if ((p_options & MCA_OPTION_RETURN_FILTER) != 0)
         /* UNCHECKED */ MCStringCreateWithSysString(get_current_filter_name(dialog), r_result);
 
 	
@@ -908,7 +906,7 @@ MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings )
 			p_settings . page_range_count = t_range_count ;
 			
 			// We need to adjust these as GTK starts pages at 0 and we start pages at 1
-			for ( uint4 a=0; a<t_range_count; a++)
+			for (int4 a = 0; a < t_range_count; a++)
 			{
 				p_settings . page_ranges[a] . from++;
 				p_settings . page_ranges[a] . to++;

@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)prebuilt\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)prebuilt\include&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -97,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)prebuilt\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)prebuilt\include&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
@@ -132,6 +132,10 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}"
+			RelativePathToProject=".\thirdparty\libffi\libffi.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -148,7 +152,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-chunk.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-core.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-custom.cpp"
 				>
 			</File>
 			<File
@@ -164,11 +176,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-filters.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-foreign.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-handler.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-list.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\foundation-locale.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-math.cpp"
 				>
 			</File>
 			<File
@@ -184,7 +212,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-pickle.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-private.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-proper-list.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-record.cpp"
 				>
 			</File>
 			<File
@@ -201,6 +241,14 @@
 			</File>
 			<File
 				RelativePath=".\src\foundation-text.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-typeconvert.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-typeinfo.cpp"
 				>
 			</File>
 			<File
@@ -234,6 +282,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\foundation-chunk.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\foundation-filters.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\foundation-inline.h"
 				>
 			</File>
@@ -242,7 +298,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\foundation-math.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\foundation-objc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\foundation-stdlib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\foundation-string.h"
 				>
 			</File>
 			<File

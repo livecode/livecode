@@ -78,6 +78,20 @@ bool MCProperListCreateMutable(MCProperListRef& r_list)
 	return true;
 }	
 
+// Should this take ownership of buffer and values, or just values?
+/* bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list)
+{
+    __MCProperList *t_list;
+    if (!__MCValueCreate(kMCValueTypeCodeProperList, t_list))
+        return false;
+    
+    t_list -> list = p_values;
+    t_list -> length = p_length;
+    
+    r_list = t_list;
+    return true;
+} */
+
 bool MCProperListCopy(MCProperListRef self, MCProperListRef& r_new_list)
 {
 	// If we aren't mutable, then we can just copy directly.
@@ -595,6 +609,111 @@ bool MCProperListStableSort(MCProperListRef self, bool p_reverse, MCProperListCo
 bool MCProperListIsEqualTo(MCProperListRef self, MCProperListRef p_other)
 {
     return __MCProperListIsEqualTo(self, p_other);
+}
+
+bool MCProperListBeginsWithList(MCProperListRef self, MCProperListRef p_prefix)
+{
+    // If the list is indirect, get the contents.
+    MCProperListRef t_contents;
+    if (!__MCProperListIsIndirect(self))
+        t_contents = self;
+    else
+        t_contents = self -> contents;
+    
+    // If the other list is indirect, get its contents.
+    MCProperListRef t_other_contents;
+    if (!__MCProperListIsIndirect(p_prefix))
+        t_other_contents = p_prefix;
+    else
+        t_other_contents = p_prefix -> contents;
+    
+    if (t_other_contents -> length > t_contents -> length)
+        return false;
+    
+    for(uindex_t i = 0; i < t_other_contents -> length; i++)
+    {
+        if (!MCValueIsEqualTo(t_contents -> list[i], t_other_contents -> list[i]))
+            return false;
+    }
+    
+    // If we get here it means all values in the p_prefix are the same as their equivalents in self.
+    return true;
+}
+
+bool MCProperListEndsWithList(MCProperListRef self, MCProperListRef p_suffix)
+{
+    // If the list is indirect, get the contents.
+    MCProperListRef t_contents;
+    if (!__MCProperListIsIndirect(self))
+        t_contents = self;
+    else
+        t_contents = self -> contents;
+    
+    // If the other list is indirect, get its contents.
+    MCProperListRef t_other_contents;
+    if (!__MCProperListIsIndirect(p_suffix))
+        t_other_contents = p_suffix;
+    else
+        t_other_contents = p_suffix -> contents;
+    
+    if (t_other_contents -> length > t_contents -> length)
+        return false;
+    
+    for(uindex_t i = 1; i <= t_other_contents -> length; i++)
+    {
+        if (!MCValueIsEqualTo(t_contents -> list[t_contents -> length - i], t_other_contents -> list[t_other_contents -> length - i]))
+            return false;
+    }
+    
+    // If we get here it means all values in the p_suffix are the same as their equivalents in self.
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCProperListIsListOfType(MCProperListRef self, MCValueTypeCode p_type)
+{
+    // If the list is indirect, get the contents.
+    MCProperListRef t_contents;
+    if (!__MCProperListIsIndirect(self))
+        t_contents = self;
+    else
+        t_contents = self -> contents;
+    
+    for(uindex_t i = 0; i < t_contents -> length; i++)
+    {
+        if (MCValueGetTypeCode(t_contents -> list[i]) != p_type)
+            return false;
+    }
+    
+    return true;
+}
+
+bool MCProperListIsHomogeneous(MCProperListRef self, MCValueTypeCode& r_type)
+{
+    if (MCProperListIsEmpty(self))
+    {
+        r_type = kMCValueTypeCodeNull;
+        return true;
+    }
+    
+    // If the list is indirect, get the contents.
+    MCProperListRef t_contents;
+    if (!__MCProperListIsIndirect(self))
+        t_contents = self;
+    else
+        t_contents = self -> contents;
+    
+    MCValueTypeCode t_type;
+    t_type = MCValueGetTypeCode(self -> list[0]);
+    
+    if (MCProperListIsListOfType(self, t_type))
+    {
+        r_type = t_type;
+        return true;
+    }
+    
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

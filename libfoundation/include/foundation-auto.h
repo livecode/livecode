@@ -73,6 +73,7 @@ typedef MCAutoValueRefBase<MCDataRef> MCAutoDataRef;
 typedef MCAutoValueRefBase<MCProperListRef> MCAutoProperListRef;
 typedef MCAutoValueRefBase<MCTypeInfoRef> MCAutoTypeInfoRef;
 typedef MCAutoValueRefBase<MCRecordRef> MCAutoRecordRef;
+typedef MCAutoValueRefBase<MCErrorRef> MCAutoErrorRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -123,6 +124,16 @@ public:
 
 	//////////
 
+    T* Ptr()
+    {
+        return m_values;
+    }
+    
+    uindex_t Size()
+    {
+        return m_value_count;
+    }
+    
 	T*& PtrRef()
 	{
 		MCAssert(m_values == nil);
@@ -356,12 +367,7 @@ public:
 
     bool Lock(MCStringRef p_string)
     {
-        bool t_success =  MCStringConvertToSysString(p_string, m_sysstring);
-        if (!t_success)
-        {
-            int x = 42;
-        }
-        return t_success;
+        return MCStringConvertToSysString(p_string, m_sysstring);
     }
 
     void Unlock()
@@ -756,10 +762,15 @@ public:
 
 	//////////
 
-	T& operator [] (const int p_index)
+	T& operator [] (int p_index)
 	{
 		return m_ptr[p_index];
 	}
+    
+    const T& operator [] (int p_index) const
+    {
+        return m_ptr[p_index];
+    }
 
 private:
 	T *m_ptr;
@@ -847,8 +858,9 @@ public:
 
 	bool CreateStringAndRelease(MCStringRef& r_string)
 	{
-		if (MCStringCreateWithNativeCharsAndRelease(m_chars, m_char_count, r_string))
+		if (MCStringCreateWithNativeChars(m_chars, m_char_count, r_string))
 		{
+            MCMemoryDeleteArray(m_chars);
 			m_chars = nil;
 			m_char_count = 0;
 			return true;

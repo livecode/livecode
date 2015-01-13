@@ -1557,6 +1557,28 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+// PM-2014-12-08: [[ Bug 13659 ]] New function to detect if Voice Over is turned on (iOS only)
+Exec_stat MCHandleIsVoiceOverRunning(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleIsVoiceOverRunning */ MLEGACY_EXEC
+    MCresult -> sets(UIAccessibilityIsVoiceOverRunning() ? MCtruestring : MCfalsestring);
+    return ES_NORMAL;
+#endif /* MCHandleIsVoiceOverRunning */
+    MCExecContext ctxt(nil, nil, nil);
+
+    bool t_is_vo_running;
+    MCMiscGetIsVoiceOverRunning(ctxt, t_is_vo_running);
+
+    if (!ctxt . HasError())
+    {
+        ctxt . SetTheResultToBool(t_is_vo_running);
+        return ES_NORMAL;
+    }
+
+    return ES_ERROR;
+}
+
 // MM-2012-02-11: Added support old style sensor syntax (iPhoneGetCurrentLocation etc)
 Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
 {
@@ -3190,7 +3212,8 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
         t_success = MCParseParameters(p_parameters, "x", &(&t_label));
     
     intenum_t t_indicator;
-    if (t_success)
+    // PM-2014-11-21: [[ Bug 14068 ]] Nil check to prevent a crash
+    if (t_success && p_parameters)
         t_success = MCBusyIndicatorTypeFromString(*t_indicator_string);
     
     int32_t t_opacity = -1;
@@ -6454,6 +6477,11 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 
 	if (t_success)
 		MCNativeControlExecDo(ctxt, *t_control_name, *t_property, t_params . Ptr(), t_params . Size());
+
+    
+    // SN-2014-11-20: [[ Bug 14062 ]] Cleanup the memory
+    for (uint32_t i = 0; i < t_params . Size(); ++i)
+        MCValueRelease(t_params[i]);\
 	
 	return ES_NORMAL;
 }

@@ -171,6 +171,9 @@ public:
 	void reset();
 	uint2 getascent(void);
 	uint2 getdescent(void);
+    coord_t GetAscent() const;
+    coord_t GetDescent() const;
+    coord_t GetLeading() const;
 	void freeatts();
 	void freerefs();
 	void openimage();
@@ -412,5 +415,11 @@ public:
     void SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_value);
 
     //////////
+
+    // FG-2014-11-11: [[ Better theming ]]
+    // Sets up the colours on the DC for the given type of drawing
+    void setcolorfornormaltext(MCDC*, MCColor*);
+    void setcolorforhilite(MCDC*);
+    void setcolorforselectedtext(MCDC*, MCColor*);
 };
 #endif

@@ -84,6 +84,11 @@ bool MCTypeInfoIsForeign(MCTypeInfoRef self)
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsForeign;
 }
 
+bool MCTypeInfoIsCustom(MCTypeInfoRef self)
+{
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeCustom;
+}
+
 bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 {
     intenum_t t_ext_typecode;
@@ -102,6 +107,7 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
         // We've successfully resolved the type, so return this one as the resolution.
         r_resolution . named_type = self;
         r_resolution . type = t_next_type;
+        r_resolution . is_optional = false;
         
         return true;
     }
@@ -173,7 +179,7 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
             return true;
         
         // Now check to see if the target is one of the source's supertypes.
-        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> foreign . descriptor . basetype)
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = __MCTypeInfoResolve(t_supertype) -> foreign . descriptor . basetype)
             if (target . named_type == t_supertype)
                 return true;
         
@@ -191,12 +197,24 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
         return false;
     }
     
-    // If the source is of record type, then the target must be the same type of
+    // If the source is of record type, then the target must be the same type or
     // one of the source's super types.
     if (MCTypeInfoIsRecord(source . type))
     {
         // Now check to see if the target is one of the source's supertypes.
-        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> record . base)
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = __MCTypeInfoResolve(t_supertype) -> record . base)
+            if (target . named_type == t_supertype)
+                return true;
+        
+        return false;
+    }
+    
+    // If the source is of custom type, then the target must be the same type or
+    // one of the source's super types.
+    if (MCTypeInfoIsCustom(source . type))
+    {
+        // Now check to see if the target is one of the source's supertypes.
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = __MCTypeInfoResolve(t_supertype) -> custom . base)
             if (target . named_type == t_supertype)
                 return true;
         
@@ -277,6 +295,11 @@ bool MCNamedTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
     return false;
 }
 
+MCNameRef MCNamedTypeInfoGetName(MCTypeInfoRef self)
+{
+    return self -> named . name;
+}
+
 bool MCNamedTypeInfoIsBound(MCTypeInfoRef self)
 {
     return self -> named . typeinfo != nil;
@@ -290,7 +313,7 @@ MCTypeInfoRef MCNamedTypeInfoGetBoundTypeInfo(MCTypeInfoRef self)
 bool MCNamedTypeInfoBind(MCTypeInfoRef self, MCTypeInfoRef p_target)
 {
     if (self -> named . typeinfo != nil)
-        return MCErrorThrowGeneric();
+        return MCErrorThrowGeneric(nil);
     
     self -> named . typeinfo = MCValueRetain(p_target);
     
@@ -300,7 +323,7 @@ bool MCNamedTypeInfoBind(MCTypeInfoRef self, MCTypeInfoRef p_target)
 bool MCNamedTypeInfoUnbind(MCTypeInfoRef self)
 {
     if (self -> named . typeinfo == nil)
-        return MCErrorThrowGeneric();
+        return MCErrorThrowGeneric(nil);
     
     MCValueRelease(self -> named . typeinfo);
     self -> named . typeinfo = nil;
@@ -311,7 +334,7 @@ bool MCNamedTypeInfoUnbind(MCTypeInfoRef self)
 bool MCNamedTypeInfoResolve(MCTypeInfoRef self, MCTypeInfoRef& r_bound_type)
 {
     if (self -> named . typeinfo == nil)
-        return MCErrorThrowGeneric();
+        return MCErrorThrowGeneric(nil);
     
     r_bound_type = self -> named . typeinfo;
     
@@ -346,25 +369,6 @@ bool MCOptionalTypeInfoCreate(MCTypeInfoRef p_base, MCTypeInfoRef& r_new_type)
 MCTypeInfoRef MCOptionalTypeInfoGetBaseTypeInfo(MCTypeInfoRef p_base)
 {
     return p_base -> optional . basetype;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoRef r_typeinfo)
-{
-    __MCTypeInfo *self;
-    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
-        return false;
-    
-    self -> flags |= kMCValueTypeCodeCustom;
-    self -> custom . callbacks = *callbacks;
-    
-    if (MCValueInterAndRelease(self, r_typeinfo))
-        return true;
-    
-    MCValueRelease(self);
-    
-    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -760,15 +764,15 @@ MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef unresolved_self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *p_callbacks, MCTypeInfoRef& r_typeinfo)
+bool MCCustomTypeInfoCreate(MCTypeInfoRef p_base, const MCValueCustomCallbacks *p_callbacks, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
     
     self -> flags |= kMCValueTypeCodeCustom;
-    
     self -> custom . callbacks = *p_callbacks;
+    self -> custom . base = MCValueRetain(p_base);
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -778,8 +782,17 @@ bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *p_callbacks, MCTypeInf
     return false;
 }
 
-const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef self)
+MCTypeInfoRef MCCustomTypeInfoGetBaseType(MCTypeInfoRef unresolved_self)
 {
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+    return self -> custom . base;
+}
+
+const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef unresolved_self)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
     return &self -> custom . callbacks;
 }
 
@@ -790,6 +803,7 @@ MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self)
     if (__MCTypeInfoGetExtendedTypeCode(self) != kMCTypeInfoTypeIsNamed)
         return self;
     
+	MCAssert (self -> named . typeinfo != nil);
     return self -> named . typeinfo;
 }
 

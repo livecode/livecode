@@ -1110,14 +1110,29 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 			bool useShort = false;
 			uinteger_t whichValue = PTR_VALUE;
 			const char *end;
-
+            const char_t *prefix_zero;
+            prefix_zero = nil;
+            
+            bool t_zero_pad;
+            t_zero_pad = false;
+            
             *dptr++ = *t_native_format++;
             while (*t_native_format == '-' || *t_native_format == '#' || *t_native_format == '0'
                 || *t_native_format == ' ' || *t_native_format == '+')
+            {
+                // AL-2014-11-19: [[ Bug 14059 ]] Record position of last zero.
+                if (*t_native_format == '0')
+                    prefix_zero = t_native_format;
                 *dptr++ = *t_native_format++;
+            }
             if (isdigit((uint1)*t_native_format))
 			{
                 width = strtol((const char*)t_native_format, (char **)&end, 10);
+                
+                // AL-2014-11-19: [[ Bug 14059 ]] If last zero was immediately before the first non-zero digit then pad with zeroes.
+                if (prefix_zero == t_native_format - 1)
+                    t_zero_pad = true;
+                
                 t_native_format = (char_t*)end;
 			}
             else if (*t_native_format == '*')
@@ -1243,8 +1258,14 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                         MCStringUnmapGraphemeIndices(*t_string, kMCBasicLocale, t_range, t_range);
                         
                         // If the width sub-specifier is greater than the grapheme length of the string, then pad appropriately
-                        if (width > t_range . length)
-                            t_success = MCStringAppendFormat(*t_result, "%*s%@", width - t_range . length, "", *t_string);
+                        if (width > (integer_t) t_range . length)
+                        {
+                            // AL-2014-11-19: [[ Bug 14059 ]] Pad with zeroes if the appropriate specifier flag was used
+                            if (t_zero_pad)
+                                t_success = MCStringAppendFormat(*t_result, "%0*s%@", width - t_range . length, "", *t_string);
+                            else
+                                t_success = MCStringAppendFormat(*t_result, "%*s%@", width - t_range . length, "", *t_string);
+                        }
                         else
                             t_success = MCStringAppendFormat(*t_result, "%@", *t_string);
                     }
@@ -1683,21 +1704,12 @@ void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_ch
 
 void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
-    uindex_t t_byte_count = MCDataGetLength(p_string);
-    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
-    
-    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
-    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
-    
-    bool t_found = false;
-    for (uindex_t i = 0; i < t_byte_count - t_chunk_byte_count + 1; i++)
-        if (MCMemoryCompare(t_bytes++, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
-        {
-            t_found = true;
-            break;
-        }
-    
-    r_result = t_found;
+    if (MCDataIsEmpty(p_chunk))
+    {
+        r_result = false;
+        return;
+    }
+    r_result = MCDataContains(p_string, p_chunk);
 }
 
 void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
@@ -1764,26 +1776,15 @@ void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStr
 
 void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    uindex_t t_byte_count = MCDataGetLength(p_string);
-    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
-    
-    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
-    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
-    
-    uindex_t t_offset;
-    r_result = 0;
-    
+    uindex_t t_result;
+    t_result = 0;
     // SN-2014-09-05: [[ Bug 13346 ]] byteOffset is 0 if the byte is not found, and 'empty'
     // is by definition not found; getting in the loop ensures at least 1 is returned.
-    if (t_chunk_byte_count == 0)
-        return;
     
-    for (t_offset = p_start_offset; t_offset < t_byte_count - t_chunk_byte_count + 1; t_offset++)
-        if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
-        {
-            r_result = t_offset - p_start_offset + 1;
-            break;
-        }
+    if (!MCDataIsEmpty(p_chunk) && MCDataFirstIndexOf(p_string, p_chunk, MCRangeMake(p_start_offset, UINDEX_MAX), t_result))
+        t_result++;
+    
+    r_result = t_result;
 }
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)

@@ -2612,6 +2612,32 @@ enum Exec_errors
     // MW-2014-10-23: Improve the error message you get from 'start using <name>'
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
+    
+    // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
+    // {EE-0844} extension: error occured with domain
+    EE_EXTENSION_ERROR_DOMAIN,
+    // {EE-0845} extension: error occured with description
+    EE_EXTENSION_ERROR_DESCRIPTION,
+    // {EE-0846} extension: error occured with file
+    EE_EXTENSION_ERROR_FILE,
+    // {EE-0847} extension: error occured with line
+    EE_EXTENSION_ERROR_LINE,
+
+    // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
+    // {EE-0848} hostnameToAddress: callbacks are not allowed on server
+    EE_HOSTNAME_BADMESSAGE,
+
+    // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
+    // {EE-0849} Chunk: bad extents provided
+    EE_CHUNK_BADEXTENTS,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0850} floor: bad parameter
+	EE_FLOOR_BADSOURCE,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0851} ceil: bad parameter
+	EE_CEIL_BADSOURCE,
 };
 
 extern const char *MCexecutionerrors;

@@ -114,7 +114,6 @@ struct MCCapsule
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCCapsuleBucketCreate(uint32_t p_data_length, bool p_finished, bool p_foreign, const void *p_data, IO_handle p_file, MCCapsuleBucket*& r_self);
 static void MCCapsuleBucketDestroy(MCCapsuleBucket *self);
 
 static bool MCCapsuleBucketCreate(uint32_t p_data_length, uint32_t p_data_offset, bool p_finished, bool p_foreign, const void *p_data, IO_handle p_file, MCCapsuleBucket*& r_self)

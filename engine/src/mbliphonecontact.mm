@@ -940,6 +940,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 -(bool)showPickContact: (int32_t&) r_chosen
 {
+#ifdef __IPHONE_8_0
     // PM-2014-11-10: [[ Bug 13979 ]] On iOS 8, we need to request authorization to be able to get a record identifier
     // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
     if (MCmajorosversion >= 800)
@@ -947,6 +948,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
         ABAddressBookRef t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
         requestAuthorization(t_address_book);
     }
+#endif
 
 	MCIPhoneCallSelectorOnMainFiber(self, @selector(doShowPickContact));
 	
@@ -1081,6 +1083,10 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 			m_success = nil != (m_navigation = [[UINavigationController alloc] initWithRootViewController: m_view_contact]);
 		}
 		
+        // PM-2014-12-10: [[ Bug 13168 ]] Add a Cancel button to allow dismissing mobileShowContact
+        if (m_success)
+            m_success = nil != (m_view_contact.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(handleGetContactCancel)]);
+        
 		if (m_success)
 		{
 			[m_navigation setToolbarHidden: NO];
@@ -1125,6 +1131,13 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 {
 	m_running = false;
 }
+
+// PM-2014-12-10: [[ Bug 13168 ]] If Cancel button is pressed return to the app
+-(void) handleGetContactCancel
+{
+    m_running = false;
+}
+
 
 // Does not allow users to perform default actions such as dialing a phone number, when they select a contact property.
 - (BOOL)personViewController:(ABPersonViewController *)personViewController shouldPerformDefaultActionForPerson:(ABRecordRef)person 
@@ -1288,6 +1301,11 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		
 		if (m_success)
 			m_success = nil != (t_done_button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(handleUpdateContactDone)]);
+        
+        // PM-2014-12-10: [[ Bug 13169 ]] Add a Cancel button to allow dismissing mobileUpdateContact
+        if (m_success)
+            m_success = nil != (m_update_contact.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(handleUpdateContactCancel)]);
+        
 		if (m_success)
 			m_success = nil != (t_items = [NSArray arrayWithObject: t_done_button]);
 		
@@ -1323,6 +1341,13 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 {
 	m_running = false;
 }
+
+// PM-2014-12-10: [[ Bug 13169 ]] If Cancel button is pressed return to the app
+-(void) handleUpdateContactCancel
+{
+    m_running = false;
+}
+
 
 // Dismisses the picker when users are done creating a contact or adding the displayed person properties to an existing contact. 
 - (void)unknownPersonViewController:(ABUnknownPersonViewController *)unknownPersonView didResolveToPerson:(ABRecordRef)person

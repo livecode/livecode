@@ -495,6 +495,7 @@ class MCCreate : public MCStatement
 	Chunk_term otype;
 	MCExpression *newname;
 	MCExpression *file;
+    MCExpression *kind;
     MCChunk *container;
     Boolean directory: 1;
     Boolean visible: 1;
@@ -507,6 +508,7 @@ public:
 		otype = CT_UNDEFINED;
 		newname = NULL;
 		file = NULL;
+        kind = NULL;
 		container = NULL;
 		directory = False;
 		alias = False;
@@ -704,10 +706,12 @@ class MCLoad : public MCStatement
 {
 	MCExpression *url;
 	MCExpression *message;
+    bool is_extension : 1;
 public:
 	MCLoad()
 	{
 		url = message = NULL;
+        is_extension = false;
 	}
 	virtual ~MCLoad();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -718,10 +722,12 @@ public:
 class MCUnload : public MCStatement
 {
 	MCExpression *url;
+    bool is_extension : 1;
 public:
 	MCUnload()
 	{
 		url = NULL;
+        is_extension = false;
 	}
 	virtual ~MCUnload();
 	virtual Parse_stat parse(MCScriptPoint &);

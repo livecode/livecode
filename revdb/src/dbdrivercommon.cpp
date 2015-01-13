@@ -332,7 +332,7 @@ Bool CDBCursor::move(int p_record_index)
 		return True;
 
 	// The absolute value of the difference gives us the number of moves needed to reach the required record.
-	for (unsigned int i = 0; i < abs(t_gap); i++)
+	for (int i = 0; i < abs(t_gap); i++)
 	{
 		Bool t_result;
 		if (t_gap > 0)

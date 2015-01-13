@@ -55,10 +55,6 @@ static MCCursorRef create_cursor(Pixmap_ids p_id, GdkCursor *p_cursor)
 	return t_cursor;
 }
 
-static void ensure_cursor(MCCursorRef cursor)
-{
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool s_checked_xcursor = false;
@@ -153,9 +149,6 @@ void MCScreenDC::setcursor(Window w, MCCursorRef c)
 
 	if (c != nil)
 	{
-		//if (c -> handle == nil)
-		//	ensure_cursor(c);
-
 		if (c -> handle != nil)
             gdk_window_set_cursor(w, c->handle);
         

@@ -121,12 +121,14 @@ void MCDateTimeEvalIsNotADate(MCExecContext& ctxt, MCValueRef p_value, bool& r_r
 
 void MCDateTimeExecConvert(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second, MCStringRef &r_output)
 {
-	ctxt . SetTheResultToEmpty();
 	if (!MCD_convert(ctxt, p_input, (Convert_form)p_from_first, (Convert_form)p_from_second, (Convert_form)p_to_first, (Convert_form)p_to_second, r_output))
 	{
 		MCStringCopy(p_input, r_output);
 		ctxt .SetTheResultToStaticCString("invalid date");
 	}
+    // PM-2014-12-01: [[ Bug 14123 ]] Make sure the result is empty if conversion is successful
+    else
+        ctxt . SetTheResultToEmpty();
 }
 void MCDateTimeExecConvertIntoIt(MCExecContext &ctxt, MCStringRef p_input, int p_from_first, int p_from_second, int p_to_first, int p_to_second)
 {

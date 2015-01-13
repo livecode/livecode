@@ -1,0 +1,187 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.widget
+
+use com.livecode.canvas
+use com.livecode.engine
+
+// ---------- Widget commands ---------- //
+
+public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecScheduleTimerIn(in pTime as double) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecCancelTimer() as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalInEditMode(out rInEditMode as bool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecDispatch(in pIsFunction as bool, in pMessage as string) as any binds to "<builtin>"
+public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as bool, in pMessage as string, in pArguments as optional list) as any binds to "<builtin>"
+
+syntax RedrawAll is statement
+  "redraw" "all"
+begin
+  MCWidgetExecRedrawAll()
+end syntax
+
+syntax ScheduleTimerIn is statement
+  "schedule" "timer" "in" <Time: Expression> "seconds"
+begin
+  MCWidgetExecScheduleTimerIn(Time)
+end syntax
+
+syntax CancelTimer is statement
+  "cancel" "timer"
+begin
+  MCWidgetExecCancelTimer()
+end syntax
+
+syntax IsEditMode is expression
+  "in" "edit" "mode"
+begin
+  MCWidgetEvalInEditMode(output)
+end syntax
+
+syntax Dispatch is statement
+    "dispatch" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCWidgetExecDispatch(IsFunction, Message)
+    MCWidgetExecDispatchWithArguments(IsFunction, Message, Arguments)
+end syntax
+
+
+// ---------- External properties of widgets ---------- //
+
+public foreign handler MCWidgetGetScriptObject(out rObject as ScriptObject) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetFrame(out rRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetBounds(out rRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetWidth(out rWidth as real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetSetWidth(in pWidth as real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetHeight(out rHeight as real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetSetHeight(in pHeight as real) as undefined binds to "<builtin>"
+
+syntax MyScriptObject is expression
+  "my" "script" "object"
+begin
+    MCWidgetGetScriptObject(output)
+end syntax
+
+syntax MyRectangle is expression
+  "my" "rectangle"
+begin
+    MCWidgetGetRectangle(output)
+end syntax
+
+syntax MyFrame is expression
+  "my" "frame"
+begin
+    MCWidgetGetFrame(output)
+end syntax
+
+syntax MyBounds is expression
+  "my" "bounds"
+begin
+    MCWidgetGetBounds(output)
+end syntax
+
+syntax MyWidth is expression
+  "my" "width"
+begin
+    MCWidgetGetWidth(output)
+    MCWidgetSetWidth(input)
+end syntax
+
+syntax MyHeight is expression
+  "my" "height"
+begin
+    MCWidgetGetHeight(output)
+    MCWidgetSetHeight(input)
+end syntax
+
+
+// ---------- Synchronous and asynchronous ("current") event information ---------- //
+
+//foreign type PressedState binds to "kMCPressedState"
+
+public foreign handler MCWidgetGetMousePosition(in pCurrent as bool, out rLocation as Point) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetClickPosition(in pCurrent as bool, out rLocation as Point) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetMouseButtonState(in pIndex as uint, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetModifierKeys(in pCurrent as bool, out rKeys as list) as undefined binds to "<builtin>"
+
+syntax TheMouseLocation is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "mouse" "position"
+begin
+    MCWidgetGetMousePosition(IsCurrent, output)
+end syntax
+
+syntax TheClickLocation is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "position"
+begin
+    MCWidgetGetClickPosition(IsCurrent, output)
+end syntax
+
+syntax MouseButtonName is phrase
+    ( "primary" <Index=1> | "secondary" <Index=2> | "left" <Index=1> | "right" <Index=2> | "middle" <Index=3> )
+begin
+end syntax
+
+syntax TheMouseButtonState is expression
+  "the" <Index: MouseButtonName> "mouse" "button"
+begin
+    MCWidgetGetMouseButtonState(Index, output)
+end syntax
+
+syntax TheModifierKeys is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "modifier" "keys"
+begin
+    MCWidgetGetModifierKeys(IsCurrent, output)
+end syntax
+
+
+// ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
+
+public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as bool, out rPressed as bool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as bool, out rNotPressed as bool) as undefined binds to "<builtin>"
+
+syntax IsPressed is postfix operator with precedence 5
+  <mState: Expression> "is" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
+begin
+    MCWidgetEvalStateIsPressed(mState, Currently, output)
+end syntax
+
+syntax IsNotPressed is postfix operator with precedence 5
+  <mState: Expression> "is not" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
+begin
+    MCWidgetEvalStateIsNotPressed(mState, Currently, output)
+end syntax
+
+
+// ---------- Syntactic sugar for points and rects ---------- //
+
+public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as bool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as bool) as undefined binds to "<builtin>"
+
+syntax IsPointWithinRect is neutral binary operator with precedence 5
+  <mPoint: Expression> "is" "within" <mRect: Expression>
+begin
+    MCWidgetEvalIsPointWithinRect(mPoint, mRect, output)
+end syntax
+
+syntax IsPointNotWithinRect is neutral binary operator with precedence 5
+  <mPoint: Expression> "is not" "within" <mRect: Expression>
+begin
+    MCWidgetEvalIsPointNotWithinRect(mPoint, mRect, output)
+end syntax
+
+end module

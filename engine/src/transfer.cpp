@@ -414,11 +414,18 @@ bool MCTransferData::Fetch(MCTransferType p_type, MCValueRef &r_data)
 	}
 
 	Unlock();
-
-	if (p_type == t_current_type)
+    
+    // SN-2014-11-13: [[ Bug 13993 ]] The clipboard for files now contains a UTF-16 string
+	if (p_type == t_current_type && p_type != TRANSFER_TYPE_FILES)
     {
         r_data = MCValueRetain(*t_current_data);
         return true;
+    }
+    
+    // SN-2014-11-13: [[ Bug 13993 ]] The files may return unicode chars; the data should be UTF-16
+    if (p_type == TRANSFER_TYPE_FILES)
+    {
+        return MCStringDecode(*t_current_data, kMCStringEncodingUTF16, false, (MCStringRef&)r_data);
     }
     
     // AL-2014-06-26: [[ Bug 12540 ]] If text is requested, return a (not necessarily native) string

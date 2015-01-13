@@ -45,6 +45,8 @@
 #include "region.h"
 #include "scriptenvironment.h"
 #include "stacklst.h"
+#include "eventqueue.h"
+#include "mode.h"
 
 #include "desktop-dc.h"
 
@@ -812,9 +814,13 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		if (MCNotifyDispatch(dispatch == True) && anyevent)
 			break;
 		
+        // MW-2015-01-08: [[ EventQueue ]] Reinstate event queue poking.
+		MCModeQueueEvents();
+        
 		// Handle pending events
 		real8 eventtime = exittime;
-		if (handlepending(curtime, eventtime, dispatch))
+		if (handlepending(curtime, eventtime, dispatch) ||
+            dispatch && MCEventQueueDispatch())
 		{
 			if (anyevent)
 				done = True;

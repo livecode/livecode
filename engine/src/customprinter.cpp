@@ -128,6 +128,8 @@ static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGR
 		// Unsupported
 		MCAssert(false);
 		return kMCCustomPrinterImageNone;
+	default:
+		MCUnreachable();
 	}
 }
 
@@ -1049,9 +1051,6 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 {
     MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
     
-	bool t_is_unicode;
-	t_is_unicode = p_mark -> text . unicode_override;
-
 	MCAutoStringRef t_text_str;
     if (p_mark -> text . unicode_override)
         /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)p_mark -> text . data, p_mark -> text . length, &t_text_str);
@@ -1678,6 +1677,8 @@ public:
 		m_target = p_target;
 	}
 
+	virtual ~MCLoggingPrintingDevice(void) {}
+
 	////////
 
 	void Destroy(void)
@@ -1821,6 +1822,8 @@ public:
 		m_indent = 0;
 		m_stream = nil;
 	}
+
+	virtual ~MCDebugPrintingDevice(void) {}
 
 	void Destroy(void)
 	{

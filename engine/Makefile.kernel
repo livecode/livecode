@@ -67,7 +67,9 @@ SOURCES=\
 	objectprops.cpp objectpropsets.cpp internal.cpp mcutility.cpp \
 	redraw.cpp tilecache.cpp tilecachesw.cpp syslnxregion.cpp fieldstyledtext.cpp paragrafattr.cpp \
 	fonttable.cpp fieldrtf.cpp fieldhtml.cpp syslnxfs.cpp stackcache.cpp  quicktime.cpp \
-	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
+	exec-array.cpp exec-datetime.cpp exec-engine.cpp \
+	exec-extension.cpp \
+	exec-files.cpp exec-filters.cpp exec-interface.cpp \
 	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
 	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
 	exec-ide.cpp exec-server.cpp exec-interface2.cpp exec.cpp \
@@ -75,9 +77,16 @@ SOURCES=\
 	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
 	exec-interface-object.cpp exec-interface-field-chunk.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
 	exec-interface-vclip.cpp exec-keywords.cpp exec-legacy.cpp exec-dialog.cpp exec-strings-chunk.cpp \
+	module-canvas.cpp \
+	module-engine.cpp \
+	modules.cpp \
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
-	sysunxthreads.cpp, stacktile.cpp
+	sysunxthreads.cpp, stacktile.cpp \
+	native-layer.cpp native-layer-x11.cpp \
+	widget.cpp widget-events.cpp \
+	linux-theme.cpp \
+	mcstring.cpp
 
 linuxstubs.cpp: src/linux.stubs ../util/weak_stub_maker.pl
 #	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp

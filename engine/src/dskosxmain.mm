@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
+#include "script.h"
 
 #include <unistd.h>
 #include <Cocoa/Cocoa.h>
@@ -63,7 +64,7 @@ int main(int argc, char *argv[], char *envp[])
 	// MW-2011-08-18: [[ Bug ]] Make sure we initialize Cocoa on startup.
 	NSApplicationLoad();
 	
-	if (!MCInitialize())
+	if (!MCInitialize() || !MCScriptInitialize())
 		exit(-1);
 	
 	// On OSX, argv and envp are encoded as UTF8
@@ -127,6 +128,7 @@ int main(int argc, char *argv[], char *envp[])
 	int t_exit_code = X_close();
 	[t_pool release];
 	
+    MCScriptFinalize();
 	MCFinalize();
 
 	exit(t_exit_code);

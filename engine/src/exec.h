@@ -148,7 +148,7 @@ struct MCExecSetTypeInfo
 struct MCExecEnumTypeElementInfo
 {
 	const char *tag;
-	uindex_t value;
+	intenum_t value;
 	bool read_only;
 };
 
@@ -242,11 +242,13 @@ enum MCPropertyType
     kMCPropertyTypeOptionalColor,
 	kMCPropertyTypeOptionalEnum,
 	kMCPropertyTypeName,
+    kMCPropertyTypeProperLinesOfString,
     kMCPropertyTypeLinesOfString,
     kMCPropertyTypeLinesOfUInt,
     kMCPropertyTypeLinesOfUIntX2,
     kMCPropertyTypeLinesOfDouble,
     kMCPropertyTypeLinesOfPoint,
+    kMCPropertyTypeProperItemsOfString,
     kMCPropertyTypeItemsOfUInt,
     kMCPropertyTypeItemsOfString,
     kMCPropertyTypeMixedBool,
@@ -485,6 +487,8 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetOptionalEnumType(ptype, mth) MCProperty##ptype##ThunkImp(mth, intenum_t*&)
 #define MCPropertyThunkGetArray(ptype, mth) MCProperty##ptype##ThunkImp(mth, MCArrayRef&)
 #define MCPropertyThunkGetName(ptype, mth) MCProperty##ptype##ThunkImp(mth, MCNameRef&)
+#define MCPropertyThunkGetProperLinesOfString(ptype, mth) MCProperty##ptype##ThunkImp(mth, MCProperListRef&)
+#define MCPropertyThunkGetProperItemsOfString(ptype, mth) MCProperty##ptype##ThunkImp(mth, MCProperListRef&)
 #define MCPropertyThunkGetItemsOfUInt(ptype, mth) MCProperty##ptype##ListThunkImp(mth,uindex_t&,uinteger_t*&)
 #define MCPropertyThunkGetLinesOfString(ptype, mth) MCProperty##ptype##ListThunkImp(mth,uindex_t&,MCStringRef*&)
 #define MCPropertyThunkGetLinesOfDouble(ptype, mth) MCProperty##ptype##ListThunkImp(mth,uindex_t&,double*&)
@@ -1430,7 +1434,8 @@ public:
     bool ConvertToData(MCValueRef p_value, MCDataRef& r_data);
     bool ConvertToName(MCValueRef p_value, MCNameRef& r_data);
 	bool ConvertToNumber(MCValueRef value, MCNumberRef& r_number);
-	bool ConvertToArray(MCValueRef value, MCArrayRef& r_array);
+    // SN-2014-12-03: [[ Bug 14147 ]] Some conversions to an array might not accept a string
+	bool ConvertToArray(MCValueRef value, MCArrayRef& r_array, bool p_strict = false);
     
     bool ConvertToBool(MCValueRef value, bool& r_bool);
 	bool ConvertToInteger(MCValueRef value, integer_t& r_integer);
@@ -1806,6 +1811,8 @@ extern MCExecMethodInfo *kMCMathEvalRoundMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalStatRoundToPrecisionMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalStatRoundMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalTruncMethodInfo;
+extern MCExecMethodInfo *kMCMathEvalFloorMethodInfo;
+extern MCExecMethodInfo *kMCMathEvalCeilMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalAcosMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalAsinMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalAtanMethodInfo;
@@ -1893,6 +1900,8 @@ void MCMathEvalRound(MCExecContext& ctxt, real64_t p_number, real64_t& r_result)
 void MCMathEvalStatRoundToPrecision(MCExecContext& ctxt, real64_t p_number, real64_t p_precision, real64_t& r_result);
 void MCMathEvalStatRound(MCExecContext& ctxt, real64_t p_number, real64_t& r_result);
 void MCMathEvalTrunc(MCExecContext& ctxt, real64_t p_number, real64_t& r_result);
+void MCMathEvalFloor(MCExecContext& ctxt, real64_t p_number, real64_t& r_result);
+void MCMathEvalCeil(MCExecContext& ctxt, real64_t p_number, real64_t& r_result);
 
 void MCMathEvalAcos(MCExecContext& ctxt, real64_t p_in, real64_t& r_result);
 void MCMathEvalAsin(MCExecContext& ctxt, real64_t p_in, real64_t& r_result);
@@ -2957,6 +2966,7 @@ void MCInterfaceExecCreateScriptOnlyStack(MCExecContext& ctxt, MCStringRef p_new
 void MCInterfaceExecCreateStackWithGroup(MCExecContext& ctxt, MCGroup *p_group_to_copy, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, int p_type, MCGroup *p_container, bool p_force_invisible);
+void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MCNameRef p_kind, MCGroup *p_container, bool p_force_invisible);
 
 void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p_new_name, bool p_force_invisible);
 
@@ -3569,6 +3579,7 @@ extern MCExecMethodInfo *kMCEngineExecGetMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecPutIntoVariableMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecPutOutputMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecDoMethodInfo;
+extern MCExecMethodInfo *kMCEngineExecDoInCallerMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecInsertScriptOfObjectIntoMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecQuitMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecCancelMessageMethodInfo;
@@ -3691,6 +3702,7 @@ void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value);
 void MCEngineExecPutOutputUnicode(MCExecContext& ctxt, MCDataRef value);
 
 void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos);
+void MCEngineExecDoInCaller(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos);
 void MCEngineExecInsertScriptOfObjectInto(MCExecContext& ctxt, MCObject *p_script, bool p_in_front);
 void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode);
 
@@ -3725,6 +3737,9 @@ void MCEngineExecUnlockMessages(MCExecContext& ctxt);
 
 void MCEngineExecSet(MCExecContext& ctxt, MCProperty *target, MCValueRef value);
 void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef value);
+
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename);
+void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename);
 
 void MCEngineSetCaseSensitive(MCExecContext& ctxt, bool p_value);
 void MCEngineGetCaseSensitive(MCExecContext& ctxt, bool& r_value);
@@ -3783,6 +3798,9 @@ void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStri
 void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
 
 void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition);
+
+void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_extensions);
+
 ///////////
 
 extern MCExecEnumTypeInfo *kMCFilesOpenModeEnumTypeInfo;
@@ -5316,6 +5334,15 @@ void MCMiscExecEnableRemoteControl(MCExecContext& ctxt);
 void MCMiscExecDisableRemoteControl(MCExecContext& ctxt);
 void MCMiscGetRemoteControlEnabled(MCExecContext& ctxt, bool& r_enabled);
 void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_props);
+
+void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value);
+bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value);
+
+Exec_stat MCExtensionCatchError(MCExecContext& ctxt);
 
 ////////////////////////////////////////////////////////////////////////////////
 

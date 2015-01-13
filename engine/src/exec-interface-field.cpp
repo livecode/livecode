@@ -322,6 +322,8 @@ MCExecCustomTypeInfo *kMCInterfaceFieldTabAlignmentsTypeInfo = &_kMCInterfaceFie
 
 void MCField::Relayout(bool reset, int4 xoffset, int4 yoffset)
 {
+    // SN-2014-11-24: [[ Bug 14053 ]] do_recompute was always called with true in 6.x (needed for the text alignment)
+    // SN-2014-12-18: [[ Bug 14161 ]] We don't want to recompute all the paragraphs of a field at any change
     do_recompute(reset);
     
 	if (reset)

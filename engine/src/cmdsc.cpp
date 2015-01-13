@@ -679,7 +679,11 @@ Exec_errors MCClipboardCmd::processtocontainer(MCExecPoint& ep, MCObjectRef *p_o
 
 				MCControl *t_new_control;
 				t_new_control = static_cast<MCControl *>(t_new_object);
-				if (p_dst -> getstack() != t_old_parent -> getstack())
+                // SN-2014-12-08: [[ Bug 12726 ]] Avoid to dereference a nil pointer (and fall back
+                //  to the default stack).
+                if (t_old_parent == NULL)
+                    t_new_control -> resetfontindex(MCdefaultstackptr);
+                else if (p_dst -> getstack() != t_old_parent -> getstack())
 					t_new_control -> resetfontindex(t_old_parent -> getstack());
 
 				// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
@@ -879,7 +883,8 @@ bool MCCopyCmd::iscut(void) const
 
 MCCreate::~MCCreate()
 {
-	delete newname;
+    delete kind;
+    delete newname;
 	delete file;
 	delete container;
 }
@@ -920,6 +925,7 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 		case CT_PLAYER:
 		case CT_GRAPHIC:
 		case CT_EPS:
+            case CT_WIDGET:
 			otype = (Chunk_term)te->which;
 			break;
 		case CT_ALIAS:
@@ -996,9 +1002,23 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
             return PS_ERROR;
         }
     }
+    else if (otype == CT_WIDGET)
+    {
+        if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) != PS_NORMAL)
+        {
+            MCperror -> add(PE_CREATE_BADTYPE, sp);
+            return PS_ERROR;
+        }
+        if (sp.parseexp(False, True, &kind) != PS_NORMAL)
+        {
+            MCperror -> add(PE_CREATE_BADTYPE, sp);
+            return PS_ERROR;
+        }
+    }
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 MCControl *MCCreate::getobject(MCObject *&parent)
 {
 	switch (otype)
@@ -1027,6 +1047,7 @@ MCControl *MCCreate::getobject(MCObject *&parent)
 		return NULL;
 	}
 }
+#endif
 
 void MCCreate::exec_ctxt(MCExecContext& ctxt)
 {
@@ -1263,6 +1284,29 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
             case CT_CARD:
                 MCInterfaceExecCreateCard(ctxt, *t_new_name, visible == False);
                 break;
+            case CT_WIDGET:
+            {
+                MCNewAutoNameRef t_kind;
+                MCObject *parent = nil;
+                kind->eval_typed(ctxt, kMCExecValueTypeNameRef, &(&t_kind));
+                if (ctxt.HasError())
+                {
+                    ctxt . LegacyThrow(EE_CREATE_BADEXP);
+                    return;
+                }
+                if (container != nil)
+                {
+                    uint32_t parid;
+                    
+                    if (!container->getobj(ctxt, parent, parid, True) || parent->gettype() != CT_GROUP)
+                    {
+                        ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
+                        return;
+                    }
+                }
+                MCInterfaceExecCreateWidget(ctxt, *t_new_name, *t_kind, (MCGroup *)parent, visible == False);
+                break;
+            }
             default:
             {
                 MCObject *parent = nil;
@@ -1667,7 +1711,7 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
             MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 
         // Release the text stored from evalvarchunk
-        for (int i = 0; i < t_chunks . Size(); ++i)
+        for (uindex_t i = 0; i < t_chunks . Size(); ++i)
         {
             MCValueRelease(t_chunks[i] . mark . text);
         }
@@ -1704,7 +1748,7 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
         if (!t_return)
             MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 
-        for (int i = 0; i < t_chunks . Size(); ++i)
+        for (uindex_t i = 0; i < t_chunks . Size(); ++i)
             MCValueRelease(t_chunks[i] . mark . text);
 	}
     else if (targets != nil)
@@ -2297,24 +2341,31 @@ MCLoad::~MCLoad()
 Parse_stat MCLoad::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-
-	sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
+    
+    if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION) == PS_NORMAL)
+        is_extension = true;
+    else
+        sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
 
 	if (sp.parseexp(False, True, &url) != PS_NORMAL)
 	{
 		MCperror->add(PE_LOAD_BADURLEXP, sp);
 		return PS_ERROR;
 	}
-
-	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+    
+	if (!is_extension)
 	{
-		sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED);
-		if (sp.parseexp(False, True, &message) != PS_NORMAL)
+		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 		{
-			MCperror->add(PE_LOAD_BADMESSAGEEXP, sp);
-			return PS_ERROR;
+			sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED);
+			if (sp.parseexp(False, True, &message) != PS_NORMAL)
+			{
+				MCperror->add(PE_LOAD_BADMESSAGEEXP, sp);
+				return PS_ERROR;
+			}
 		}
 	}
+
 	return PS_NORMAL;
 }
 
@@ -2345,17 +2396,28 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
 	delete mptr;
 	return ES_NORMAL;
 #endif /* MCLoad */
-
-    MCNewAutoNameRef t_message;
     
-    if (!ctxt . EvalOptionalExprAsNameRef(message, kMCEmptyName, EE_LOAD_BADMESSAGEEXP, &t_message))
-            return;
-	
-    MCAutoStringRef t_url;
-    if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
-        return;    
-    
-    MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
+	if (is_extension)
+	{
+		MCAutoStringRef t_filename;
+		if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_filename))
+			return;
+        
+        MCEngineExecLoadExtension(ctxt, *t_filename);
+	}
+	else
+    {
+        MCNewAutoNameRef t_message;
+        
+        if (!ctxt . EvalOptionalExprAsNameRef(message, kMCEmptyName, EE_LOAD_BADMESSAGEEXP, &t_message))
+                return;
+        
+        MCAutoStringRef t_url;
+        if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
+            return;    
+        
+        MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
+    }
 }
 
 void MCLoad::compile(MCSyntaxFactoryRef ctxt)
@@ -2382,8 +2444,11 @@ MCUnload::~MCUnload()
 Parse_stat MCUnload::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-
-	sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
+    
+	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION))
+		is_extension = true;
+	else
+		sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
 
 	if (sp.parseexp(False, True, &url) != PS_NORMAL)
 	{
@@ -2404,12 +2469,15 @@ void MCUnload::exec_ctxt(MCExecContext &ctxt)
 	MCS_unloadurl(ep . getobj(), ep . getcstring());
 	return ES_NORMAL;
 #endif /* MCUnload */
-
+    
     MCAutoStringRef t_url;
     if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
         return;
     
-    MCNetworkExecUnloadUrl(ctxt, *t_url);
+	if (is_extension)
+		MCEngineExecUnloadExtension(ctxt, *t_url);
+	else
+		MCNetworkExecUnloadUrl(ctxt, *t_url);
 }
 
 void MCUnload::compile(MCSyntaxFactoryRef ctxt)
@@ -3213,103 +3281,6 @@ void MCRename::compile(MCSyntaxFactoryRef ctxt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// MW-2012-02-01: [[ Bug 9647 ]] New implementation of replace to fix the flaws
-//   in the old implementation.
-// MW-2012-03-22: [[ Bug ]] Use uint8_t rather than char, otherwise we get
-//   comparison issues on some platforms (where char is signed!).
-
-// Special case replacing a char with another char when case-sensitive is true.
-static void replace_char_with_char(uint8_t *p_chars, uindex_t p_char_count, uint8_t p_from, uint8_t p_to)
-{
-	// Simplest case, just substitute from for to.
-	for(uindex_t i = 0; i < p_char_count; i++)
-		if (p_chars[i] == p_from)
-			p_chars[i] = p_to;
-}
-
-// Special case replacing a char with another char when case-sensitive is false.
-static void replace_char_with_char_caseless(uint8_t *p_chars, uindex_t p_char_count, uint8_t p_from, uint8_t p_to)
-{
-	// Lowercase the from char.
-	p_from = MCS_tolower(p_from);
-	
-	// Now substitute from for to, taking making sure its a caseless compare.
-	for(uindex_t i = 0; i < p_char_count; i++)
-		if (MCS_tolower(p_chars[i]) == p_from)
-			p_chars[i] = p_to;
-}
-
-// General replace case, rebuilds the input string in 'output' replacing each
-// occurance of from with to.
-static bool replace_general(const MCString& p_input, const MCString& p_from, const MCString& p_to, bool p_caseless, char*& r_output, uindex_t& r_output_length)
-{
-	char *t_output;
-	uindex_t t_output_length;
-	uindex_t t_output_capacity;
-	t_output = nil;
-	t_output_length = 0;
-	t_output_capacity = 0;
-	
-	MCString t_whole;
-	t_whole = p_input;
-	
-	for(;;)
-	{
-		// Search for the next occurance of from in whole.
-		Boolean t_found;
-		uindex_t t_offset;
-		t_found = MCU_offset(p_from, t_whole, t_offset, p_caseless);
-		
-		// If we found an instance of from, then we need space for to; otherwise,
-		// we update the offset, and need just room up to it.
-		uindex_t t_space_needed;
-		if (t_found)
-			t_space_needed = t_offset + p_to . getlength();
-		else
-		{
-			t_offset = t_whole . getlength();
-			t_space_needed = t_offset;
-		}
-		
-		// Expand the buffer as necessary.
-		if (t_output_length + t_space_needed > t_output_capacity)
-		{
-			if (t_output_capacity == 0)
-				t_output_capacity = 4096;
-				
-			while(t_output_length + t_space_needed > t_output_capacity)
-				t_output_capacity *= 2;
-			
-			if (!MCMemoryReallocate(t_output, t_output_capacity, t_output))
-			{
-				MCMemoryDeallocate(t_output);
-				return false;
-			}
-		}
-			
-		// Copy in whole, up to the offset.
-		memcpy(t_output + t_output_length, t_whole . getstring(), t_offset);
-		t_output_length += t_offset;
-
-		// No more occurances were found, so we are done.
-		if (!t_found)
-			break;
-			
-		// Now copy in to.
-		memcpy(t_output + t_output_length, p_to . getstring(), p_to . getlength());
-		t_output_length += p_to . getlength();
-		
-		// Update whole.
-		t_whole . set(t_whole . getstring() + t_offset + p_from . getlength(), t_whole . getlength() - (t_offset + p_from . getlength()));
-	}
-	
-	// Make sure the buffer is no bigger than is needed.
-	MCMemoryReallocate(t_output, t_output_length, r_output);
-	r_output_length = t_output_length;
-	
-	return true;
-}
 
 MCReplace::~MCReplace()
 {

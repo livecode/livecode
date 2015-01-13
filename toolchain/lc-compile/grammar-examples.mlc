@@ -1,0 +1,334 @@
+module com.livecode.GrammarExamples
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Comment Forms:
+//
+// The following forms of comment will be admissible in MLC:
+//    /* ... */ (not nested)
+//    //
+//    -- (TO REVIEW)
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Constant definitions
+//
+constant MyConstant is 100
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Type definitions
+//
+
+// Named type definition
+//
+// An identifier can be bound to another type. The other type can either
+// be a named type, or one of the high-level types.
+//
+type MyTypeAlias is MyAny
+
+// Opaque type definition
+//
+// An opaque type defines a new script type whose internals are managed by
+// a collection of handlers (foreign or not). Opaque types are automatically
+// boxed and unboxed wherever necessary.
+//
+opaque type MyOpaqueType
+    
+    // The 'measure' method is called once and should return the size of the
+    // opaque type in bytes.
+    measure is MyOpaqueType_Measure
+    
+    // The 'typecheck' method of a type is called to ensure the value is of that
+    // type.
+    typecheck is MyOpaqueType_TypeCheck
+
+    // The 'initialize' method is called whenever the contents of the type
+    // needs to be initialized after allocation. If this method is not supplied,
+    // the contents will be filled with zeros.
+    initialize is MyOpaqueType_Initialize
+    
+    // The 'finalize' method is called whenever the contents of the type is
+    // finished with and needs cleaned up. This method is optional (i.e. if
+    // the type has nothing to clean up in its contents).
+    finalize is MyOpaqueType_Finalize
+
+    // The 'move' method is called whenever the contents of the type is moved
+    // in memory. If this method is not supplied, copy and finalize will be
+    // used instead.
+    Move is MyOpaqueType_Move
+    
+    // The 'copy' method is called whenever the contents of the type is copied.
+    // If this method is not supplied, then a byte-for-byte copy will be performed.
+    copy is MyOpaqueType_Copy
+
+    // The 'equal' method is called whenever two of the types need to be
+    // compared. If this method is not supplied, a byte-for-byte comparison
+    // will be performed.
+    equal is MyOpaqueType_Equal
+    
+    // The 'hash' method is called whenever a hash value of the type is required.
+    // If this method is not supplied, an unspecified byte-hash function will be
+    // used on the contents.
+    hash is MyOpaqueType_Hash
+    
+    // The 'convert' methods are called to satisfy an 'as <type>' request. There
+    // can be as many convert methods as desired as long as the output types are
+    // all distinct.
+    convert is MyOpaqueType_ConvertToString
+    --convert is MyOpaqueType_ConvertToInteger
+
+    // The 'encode' method (if present) will allow the type to be serializable.
+    // For this to be possible, the encoded type can be any high-level type.
+    encode is MyOpaqueType_Encode
+    
+    // The 'decode' method (if present) will allow the type to be unserializable.
+    // The encoded type must be the same as specified by encode.
+    decode is MyOpaqueType_Decode
+
+end type
+
+// Methods for a 'base' opaque type are as follows. The 'contents' pointers are all
+// pointers to the start of the type's allocated memory.
+foreign handler MyOpaqueType_Measure() as uint binds to "<undefined>"
+foreign handler MyOpaqueType_TypeCheck() as bool binds to "<undefined>"
+foreign handler MyOpaqueType_Initialize(in pContents as pointer) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_Finalize(in pContents as pointer) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_Move(in pOldContents as pointer, in pNewContents as pointer) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_Copy(in pOldContents as pointer, in pNewContents as pointer) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_Equal(in pLeftContents as pointer, in pRightContents as pointer) as bool binds to "<undefined>"
+foreign handler MyOpaqueType_Hash(in pContents as pointer) as uint binds to "<undefined>"
+foreign handler MyOpaqueType_ConvertToString(in pContents as pointer, out pConversion as string) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_ConvertToInteger(in pContents as pointer, out pConversion as integer) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_Encode(in pContents as pointer, out pEncodedType as array) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_Decode(in pEncodedContents as array, in pContents as pointer) as undefined binds to "<undefined>"
+
+// An opaque type can also be based on the pointer type. In this case, the parameters
+// to the type's methods are the value of the pointer rather than a pointer to the
+// start of the opaque type's contents.
+opaque type MyPointerOpaqueType based on pointer
+    initialize is MyPointerOpaqueType_Initialize
+    finalize is MyPointerOpaqueType_Finalize
+    Move is MyPointerOpaqueType_Move
+    copy is MyPointerOpaqueType_Copy
+    equal is MyPointerOpaqueType_Equal
+    hash is MyPointerOpaqueType_Hash
+end type
+
+// Methods for a pointer-based opaque type are as follows. Here the pointers passed are
+// already dereferenced from the contents.
+foreign handler MyPointerOpaqueType_Initialize(out rPointer as pointer) as undefined binds to "<undefined>"
+foreign handler MyPointerOpaqueType_Finalize(in pPointer as pointer) as undefined binds to "<undefined>"
+foreign handler MyPointerOpaqueType_Move(in pPointer as pointer, out pMovedPointer as pointer) as undefined binds to "<undefined>"
+foreign handler MyPointerOpaqueType_Copy(in pPointer as pointer, out pCopiedPointer as pointer) as undefined binds to "<undefined>"
+foreign handler MyPointerOpaqueType_Equal(in pLeft as pointer, in pRight as pointer) as bool binds to "<undefined>"
+foreign handler MyPointerOpaqueType_Hash(in pLeft as pointer, in pRight as pointer) as bool binds to "<undefined>"
+
+// Record type definition
+//
+// A record type is a collection of fields all stored together.
+//
+/*record type MyRecordType
+    Offset as integer
+    Length as integer
+end type*/
+
+// Handler type definition
+//
+// A handler type can store a handler for later invocation.
+//
+handler type MyHandlerType(in pBoolParam as bool, in pArrayParam as array, out rStringReturnParam as string) as integer
+
+// High-level types
+//
+// These types are the 'natural' types MLC works with. When used in a
+// foreign handler context it means pass the value as an MLC type (ValueRef).
+
+// 'any' is the union of all (high-level) types
+public type MyAny is any
+
+// 'boolean' is the true / false type
+type MyBoolean is boolean
+
+// 'integer' is the integral number type
+type MyInteger is integer
+
+// 'real' is the floating point number type.
+type MyReal is real
+
+// 'number' is either an integer or a real, it preserves the representation
+// wherever possible, and promotes as necessary (i.e. on overflow).
+type MyNumber is number
+
+// 'string' is a sequence of unicode codepoints
+type MyString is string
+
+// 'data' is a sequence of bytes
+type MyData is data
+
+// 'array' is an associative array
+type MyArray is array
+
+// 'list' is a sequence of values, indexed starting at 1.
+type MyList is list
+
+// Low-level types
+//
+// These types are used to indicate types to pass to foreign handlers. Outside
+// of that they can be assumed to be taken as their natural 'high-level' types.
+
+// 'pointer' is the foreign pointer type, it has no natural representation and is
+// passed around as a boxed value of unique type.
+type MyPointer is pointer
+
+// 'bool' is the foreign boolean type, it is naturally represented by 'boolean'.
+type MyBool is bool
+
+// 'int' is the foreign integer type, it is naturally represeted by 'integer'.
+type MyInt is int
+
+// 'uint' is the foreign unsigned integer type, it is naturally represented by 'integer'.
+type MyUInt is uint
+
+// 'float' is the foreign small real type, it is naturally represented by 'real'
+type MyFloat is float
+
+// 'double' is the foreign real type, it is naturally represented by 'real'
+type MyDouble is double
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Variable definitions
+//
+
+variable mMyAnyVariable as any
+variable mMyIntegerVariable as integer
+variable mMyPointerOpaqueTypeVariable as MyPointerOpaqueType
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Handler definitions
+//
+
+foreign handler MyForeignStatementHandler(in pArg1 as int) as undefined binds to "MyBinding"
+foreign handler MyForeignExpressionHandler(in pArg1 as integer, in pArg2 as string, out pArg3 as MyHandlerType) as undefined binds to "MyBinding"
+foreign handler MyForeignIteratorHandler(inout foo, in bar, out baz) as undefined binds to "MyBinding"
+
+handler MyHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) as boolean
+end handler
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Expressions
+//
+
+handler MyExpressionHandler(pParam)
+    MyExpressionHandler(undefined)
+    MyExpressionHandler(true)
+    MyExpressionHandler(false)
+    MyExpressionHandler(100)
+    MyExpressionHandler(3.14159)
+    MyExpressionHandler("The quick brown fox jumped over the lazy dog")
+    MyExpressionHandler(MyHandler(100, "Hello World", MyHandler) as integer)
+    MyExpressionHandler(MyHandler(100, "Hello World", MyHandler))
+end handler
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Statements
+//
+
+handler MyStatementHandler(pParam)
+    if pParam then
+        MyStatementHandler(pParam)
+    else if pParam then
+        MyStatementHandler(pParam)
+    else
+        MyStatementHandler(pParam)
+    end if
+    
+    repeat forever
+        MyStatementHandler(pParam)
+        exit repeat
+    end repeat
+    
+    repeat 100 times
+        MyStatementHandler(pParam)
+        next repeat
+    end repeat
+    
+    variable tMyVar
+
+    repeat with tMyVar from 0 up to 100 by 10
+        MyStatementHandler(pParam)
+    end repeat
+
+    repeat with tMyVar from 100 down to 0 by -10
+        MyStatementHandler(pParam)
+    end repeat
+    
+    //repeat for each char tMyVar in pParam
+    //    MyStatementHandler(pParam)
+    //end repeat
+    
+    put 100 after tMyVar
+    add 200 to tMyVar
+
+    return MyStatementHandler(100)
+end handler
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Syntax definitions
+//
+
+syntax MyStatementSyntax is statement
+    "do" <Value: Expression> "in" "my" "own" "way"
+begin
+    MyForeignStatementHandler(Value)
+end syntax
+
+syntax MyExpressionSyntax is expression
+    "evaluate" <Value: Expression> "specially"
+begin
+    //MyForeignExpressionHandler(Value, output)
+end syntax
+
+syntax MyPrefixExpressionSyntax is prefix operator with precedence 1
+    "something" "after" "me" <Value: Expression>
+begin
+    //MyForeignExpressionHandler(Value, output)
+end syntax
+
+syntax MyPostfixExpressionSyntax is postfix operator with precedence 1
+    <Value: Expression> "something" "before" "me"
+begin
+    //MyForeignExpressionHandler(Value, output)
+end syntax
+
+syntax MyLeftBinaryExpressionSyntax is left binary operator with precedence 1
+    <LeftValue: Expression> "something" "before" "and" "after" "me" <RightValue: Expression>
+begin
+    MyForeignExpressionHandler(LeftValue, RightValue, output)
+end syntax
+
+syntax MyRightBinaryExpressionSyntax is right binary operator with precedence 1
+    <LeftValue: Expression> "something" "before" "and" "after" "me" <RightValue: Expression>
+begin
+    MyForeignExpressionHandler(LeftValue, RightValue, output)
+end syntax
+
+syntax MyNeutralBinaryExpressionSyntax is neutral binary operator with precedence 1
+    <LeftValue: Expression> "something" "before" "and" "after" "me" <RightValue: Expression>
+begin
+    MyForeignExpressionHandler(LeftValue, RightValue, output)
+end syntax
+
+syntax MyChunkIteratorSyntax is iterator
+    "char"
+begin
+    MyForeignIteratorHandler(iterator, container, output)
+end syntax
+
+end module
+

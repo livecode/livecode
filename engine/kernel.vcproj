@@ -13,6 +13,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath="..\toolchain\vs-rules\MLC.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -28,6 +31,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="MLC (for built-in)"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -38,7 +44,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -88,6 +94,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="MLC (for built-in)"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -98,7 +107,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="prefix.h"
@@ -165,6 +174,10 @@
 		<ProjectReference
 			ReferencedProjectIdentifier="{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}"
 			RelativePathToProject=".\libgraphics\libgraphics.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}"
+			RelativePathToProject=".\libscript\libscript.vcproj"
 		/>
 	</References>
 	<Files>
@@ -444,6 +457,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\native-layer-win32.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\native-layer-win32.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\native-layer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\native-layer.h"
+				>
+			</File>
+			<File
 				RelativePath="src\objdefs.h"
 				>
 			</File>
@@ -645,6 +674,22 @@
 			</File>
 			<File
 				RelativePath="src\vclip.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget-events.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget-events.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget.h"
 				>
 			</File>
 		</Filter>
@@ -3519,6 +3564,10 @@
 					RelativePath="src\w32transfer.h"
 					>
 				</File>
+				<File
+					RelativePath=".\src\windows-theme.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -3567,13 +3616,6 @@
 			<File
 				RelativePath=".\src\mblad.h"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
@@ -3966,13 +4008,6 @@
 			<File
 				RelativePath=".\src\mblsensor.h"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
@@ -6111,11 +6146,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\systhreads.h"
+				RelativePath=".\src\system.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\system.h"
+				RelativePath=".\src\systhreads.h"
 				>
 			</File>
 			<File
@@ -6246,15 +6281,15 @@
 					/>
 				</FileConfiguration>
 			</File>
-            <File
+			<File
 				RelativePath=".\src\sysw32threads.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
-                    Name="VCCLCompilerTool"
-                    PrecompiledHeaderThrough="w32prefix.h"
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
 					/>
 				</FileConfiguration>
 			</File>
@@ -6344,6 +6379,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-engine.syntax"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-extension.cpp"
 				>
 			</File>
 			<File
@@ -7954,6 +7993,222 @@
 				RelativePath=".\src\legacy_spec.cpp"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="Core - Text"
+			>
+			<File
+				RelativePath=".\src\text-api.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-api.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-block.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-block.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-breakblock.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-breakblock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-breakingengine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-breakingengine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-cell.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-cell.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-controlblock.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-controlblock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-imageblock.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-imageblock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-line.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-line.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-pane.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-pane.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-paragraph.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-paragraph.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-run.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-run.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-segment.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-segment.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-simplebreakingengine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-simplebreakingengine.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Modules"
+			>
+			<File
+				RelativePath=".\src\canvas.mlc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\engine.mlc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-canvas-internal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-canvas.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-canvas.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-engine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-engine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\modules.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget.mlc"
+				>
+			</File>
+			<Filter
+				Name="Generated"
+				>
+				<File
+					RelativePath=".\generated\canvas.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\generated\engine.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\generated\widget.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\ChangeLog.txt"

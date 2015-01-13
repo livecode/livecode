@@ -574,8 +574,8 @@ void MCField::kfocus()
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
-                if (!focusedparagraph->isselection()
-                        && !focusedparagraph->IsEmpty()
+				if ((!focusedparagraph->isselection()
+				     && !focusedparagraph->IsEmpty())
 				        || focusedparagraph->next() != focusedparagraph)
 				{
 					focusedparagraph->sethilite(True);
@@ -844,7 +844,7 @@ Boolean MCField::mfocus(int2 x, int2 y)
 {
 	Tool tool = getstack()->gettool(this);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-            || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
+	    || (flags & F_DISABLED && tool == T_BROWSE) || state & CS_NO_FILE)
 		return False;
 	if (sbfocus(x, y, hscrollbar, vscrollbar))
 	{
@@ -1040,7 +1040,7 @@ Boolean MCField::mdown(uint2 which)
 				}
 			}
 			if (flags & F_TRAVERSAL_ON ||
-                (flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
+			    ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR))
 			{
 				if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
 				        && !(flags & F_NO_AUTO_HILITE))
@@ -1170,8 +1170,8 @@ Boolean MCField::mup(uint2 which, bool p_release)
                     {
                         if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
-                                    || paragraphs == paragraphs->next()
-                                    && paragraphs->IsEmpty()))
+                                    || (paragraphs == paragraphs->next()
+                                        && paragraphs->IsEmpty())))
                             message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 						else
 						{
@@ -1325,6 +1325,7 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
 		{
 			if (opened)
+			{
 				if (state & CS_SELECTING)
 				{
 					// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
@@ -1333,12 +1334,15 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 					MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 				}
 				else
+				{
 					if (state & CS_DRAG_TEXT)
 					{
 						if (!MCU_point_in_rect(getfrect(), mx, my))
 							dragtext();
 						MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 					}
+				}
+			}
 		}
 		else
 			MCControl::timer(mptr, params);
@@ -1383,7 +1387,7 @@ void MCField::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -1641,7 +1645,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
 #endif /* MCField::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -2612,7 +2616,7 @@ Exec_stat MCField::vscroll(int4 offset, Boolean doredraw)
 			drect.y -= DEFAULT_BORDER;
 			drect.height += flags & F_HSCROLLBAR ? DEFAULT_BORDER : DEFAULT_BORDER * 2;
 			if (state & CS_KFOCUSED && !(extraflags & EF_NO_FOCUS_BORDER)
-			        && (IsMacEmulatedLF() || IsMacLFAM() && !MCaqua))
+			    && (IsMacEmulatedLF() || (IsMacLFAM() && !MCaqua)))
 				drect = MCU_reduce_rect(drect, 1);
 		}
 	//to-do change for drawing xp text fields
@@ -2966,7 +2970,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     t_top_para = t_pg = resolveparagraphs(p_part_id);
     
     // Loop through the paragraphs until we've gone x_si code units in
-    uindex_t t_index = 0;
+    findex_t t_index = 0;
     while ((t_index + t_pg->gettextlengthcr()) < x_si)
     {
         t_index += t_pg->gettextlengthcr();
@@ -2983,7 +2987,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     p_start += t_char_range.length;
     
     // Loop until we get to the starting paragraph (or reach the end of the field)
-    uindex_t t_pg_char_length = t_pg -> gettextlengthcr(true);
+    findex_t t_pg_char_length = t_pg -> gettextlengthcr(true);
     while (t_pg_char_length <= p_start)
     {
         // Move to the next paragraph
@@ -3488,4 +3492,30 @@ bool MCField::IsCursorMovementVisual()
         return true;
 #endif
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformControlType MCField::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = kMCPlatformControlTypeInputField;
+    
+    if (flags & F_LIST_BEHAVIOR)
+        t_type = kMCPlatformControlTypeList;
+    
+    return t_type;
+}
+
+MCPlatformControlPart MCField::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+
+MCPlatformControlState MCField::getcontrolstate()
+{
+    int t_state;
+    t_state = MCControl::getcontrolstate();
+    
+    return MCPlatformControlState(t_state);
 }

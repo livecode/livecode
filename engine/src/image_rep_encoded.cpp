@@ -35,116 +35,131 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCEncodedImageRep::~MCEncodedImageRep()
+// IM-2014-11-25: [[ ImageRep ]] Reworked encoded image rep to keep image loader until the image frames have been loaded.
+
+MCEncodedImageRep::MCEncodedImageRep()
 {
+	m_compression = F_RLE;
+	m_have_compression = false;
+	m_loader = nil;
+	m_stream = nil;
 }
 
-// IM-2014-07-31: [[ ImageLoader ]] Use image loader class to read image frames
-extern bool MCImageLoaderFormatToCompression(MCImageLoaderFormat p_format, uint32_t &r_compression);
-bool MCEncodedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
+MCEncodedImageRep::~MCEncodedImageRep()
 {
-	bool t_success = true;
+	ClearImageLoader();
+}
 
-	IO_handle t_stream = nil;
-
+extern bool MCImageLoaderFormatToCompression(MCImageLoaderFormat p_format, uint32_t &r_compression);
+bool MCEncodedImageRep::SetupImageLoader()
+{
+	if (m_loader != nil)
+		return true;
+	
+	bool t_success;
+	t_success = true;
+	
+	IO_handle t_stream;
+	t_stream = nil;
+	
 	MCImageLoader *t_loader;
 	t_loader = nil;
-
-	MCBitmapFrame *t_frames;
-	uint32_t t_count;
-
-	MCImageLoaderFormat t_format;
-
+	
 	if (t_success)
 		t_success = GetDataStream(t_stream);
-
+	
 	if (t_success)
 		t_success = MCImageLoader::LoaderForStream(t_stream, t_loader);
 	
 	if (t_success)
 	{
-		t_format = t_loader->GetFormat();
-		t_success = t_loader->TakeFrames(t_frames, t_count);
-			}
-	
-	if (t_loader != nil)
+		m_stream = t_stream;
+		m_loader = t_loader;
+		
+		m_have_compression = MCImageLoaderFormatToCompression(m_loader->GetFormat(), m_compression);
+	}
+	else
+	{
 		delete t_loader;
-	
-	if (t_stream != nil)
 		MCS_close(t_stream);
+	}
+	
+	return t_success;
+}
+
+void MCEncodedImageRep::ClearImageLoader()
+{
+	if (m_loader != nil)
+	{
+		delete m_loader;
+		m_loader = nil;
+	}
+	if (m_stream != nil)
+	{
+		MCS_close(m_stream);
+		m_stream = nil;
+	}
+}
+
+bool MCEncodedImageRep::LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count)
+{
+	bool t_success;
+	t_success = true;
+	
+	uindex_t t_width, t_height;
+	uint32_t t_frame_count;
+	
+	if (t_success)
+		t_success = SetupImageLoader();
+	
+	if (t_success)
+		t_success = m_loader->GetGeometry(t_width, t_height);
+	
+	if (t_success)
+		t_success = m_loader->GetFrameCount(t_frame_count);
+	
+	if (t_success)
+	{
+		// keep image loader until the frames have been loaded
+		r_width = t_width;
+		r_height = t_height;
+		r_frame_count = t_frame_count;
+	}
+	else
+		ClearImageLoader();
+	
+	return t_success;
+}
+
+// IM-2014-07-31: [[ ImageLoader ]] Use image loader class to read image frames
+bool MCEncodedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
+{
+	bool t_success = true;
+
+	if (t_success)
+		t_success = SetupImageLoader();
+	
+	if (t_success)
+		t_success = m_loader->TakeFrames(r_frames, r_frame_count);
+	
+	// Should be done with the image loader now
+	ClearImageLoader();
 
 	if (t_success)
 	{
-		if (t_count == 1)
-			t_frames[0].x_scale = t_frames[0].y_scale = 1.0;
+		if (r_frame_count == 1)
+			r_frames[0].x_scale = r_frames[0].y_scale = 1.0;
 
-		m_width = t_frames[0].image->width;
-		m_height = t_frames[0].image->height;
-		m_header_frame_count = t_count;
-
-		/* UNCHECKED */ MCImageLoaderFormatToCompression(t_format, m_compression);
-
-		m_have_geometry = true;
-		
-		r_frames = t_frames;
-		r_frame_count = t_count;
 		r_frames_premultiplied = false;
 	}
 
 	return t_success;
 }
 	
-// IM-2014-08-01: [[ ImageLoader ]] The frame count is determined when reading the header
-// during CalculateGeometry or LoadImageFrames
-uindex_t MCEncodedImageRep::GetFrameCount()
-{
-	uint32_t t_width, t_height;
-	if (m_have_geometry)
-		return m_header_frame_count;
-
-	if (GetGeometry(t_width, t_height))
-		return m_header_frame_count;
-	
-	return 0;
-}
-
-// IM-2014-07-31: [[ ImageLoader ]] Use image loader class to read image geometry from stream header
-bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
-{
-	bool t_success;
-	t_success = true;
-
-	IO_handle t_stream;
-	t_stream = nil;
-
-	MCImageLoader *t_loader;
-	t_loader = nil;
-	
-	if (t_success)
-		t_success = GetDataStream(t_stream);
-	
-	if (t_success)
-		t_success = MCImageLoader::LoaderForStream(t_stream, t_loader);
-	
-	if (t_success)
-	{
-		/* UNCHECKED */ MCImageLoaderFormatToCompression(t_loader->GetFormat(), m_compression);
-		t_success = t_loader->GetGeometry(r_width, r_height) && t_loader->GetFrameCount(m_header_frame_count);
-	}
-	
-	if (t_loader != nil)
-		delete t_loader;
-	
-	if (t_stream != nil)
-		MCS_close(t_stream);
-
-	return true;
-}
-
 // IM-2014-07-31: [[ ImageLoader ]] Use image loader method to identify stream format
 uint32_t MCEncodedImageRep::GetDataCompression()
 {
-	if (m_have_geometry)
+	if (m_have_compression)
 		return m_compression;
 
 	IO_handle t_stream;
@@ -264,7 +279,7 @@ bool MCVectorImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_fra
 	return false;
 }
 
-bool MCVectorImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
+bool MCVectorImageRep::LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count)
 {
 	bool t_success = true;
     MCAutoDataRef t_data;
@@ -276,6 +291,9 @@ bool MCVectorImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 	if (t_success)
 		t_success = MCImageGetMetafileGeometry(t_stream, r_width, r_height);
 
+	if (t_success)
+		r_frame_count = 1;
+	
 	if (t_stream != nil)
 		MCS_close(t_stream);
 
@@ -323,10 +341,11 @@ bool MCCompressedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r
 	return t_success;
 }
 
-bool MCCompressedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
+bool MCCompressedImageRep::LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count)
 {
 	r_width = m_compressed->width;
 	r_height = m_compressed->height;
+	r_frame_count = 1;
 
 	return true;
 }

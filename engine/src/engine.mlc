@@ -1,0 +1,96 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.engine
+
+public foreign type ScriptObject binds to "kMCEngineScriptObjectTypeInfo"
+
+public foreign handler MCEngineExecResolveScriptObject(in pObjectId) as ScriptObject binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as bool) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as bool) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as string, in pObject as ScriptObject) as any binds to "<builtin>"
+public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as string, in pObject as ScriptObject, in pValue as any) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecDispatchToScriptObject(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject) as any binds to "<builtin>"
+public foreign handler MCEngineExecDispatchToScriptObjectWithArguments(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject, in pArguments as optional list) as any binds to "<builtin>"
+public foreign handler MCEngineEvalMessageWasHandled(out pHandled as bool) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as bool) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScript(in pScript as string) as any binds to "<builtin>"
+public foreign handler MCEngineExecLog(in pFormat as string) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecLogWithValues(in pFormat as string, in pValues as list) as undefined binds to "<builtin>"
+
+syntax ResolveScriptObject is statement
+    "resolve" "script" "object" <Object: Expression>
+begin
+    MCEngineExecResolveScriptObject(Object)
+end syntax
+
+syntax ScriptObjectExists is postfix operator with precedence 3
+    <Object: Expression> "exists"
+begin
+    MCEngineEvalScriptObjectExists(Object, output)
+end syntax
+
+syntax ScriptObjectDoesNotExist is postfix operator with precedence 3
+    <Object: Expression> "does" "not" "exist"
+begin
+    MCEngineEvalScriptObjectDoesNotExists(Object, output)
+end syntax
+
+syntax GetPropertyOfScriptObject is statement
+    "get" "property" <Property: Expression> "of" <Object: Expression>
+begin
+    MCEngineExecGetPropertyOfScriptObject(Property, Object)
+end syntax
+
+syntax SetPropertyOfScriptObject is statement
+    "set" "property" <Property: Expression> "of" <Object: Expression> "to" <Value: Expression>
+begin
+    MCEngineExecSetPropertyOfScriptObject(Property, Object, Value)
+end syntax
+
+syntax DispatchToScriptObject is statement
+    "dispatch" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCEngineExecDispatchToScriptObject(IsFunction, Message, Object)
+    MCEngineExecDispatchToScriptObjectWithArguments(IsFunction, Message, Object, Arguments)
+end syntax
+
+syntax MessageWasHandled is expression
+    "the" "message" "was" "handled"
+begin
+    MCEngineEvalMessageWasHandled(output)
+end syntax
+
+syntax MessageWasNotHandled is expression
+    "the" "message" "was" "not" "handled"
+begin
+    MCEngineEvalMessageWasNotHandled(output)
+end syntax
+
+syntax ExecuteScript is statement
+    "execute" "script" <Script: Expression>
+begin
+    MCEngineExecExecuteScript(Script)
+end syntax
+
+syntax Log is statement
+    "log" <String: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCEngineExecLog(String)
+    MCEngineExecLogWithValues(String, Arguments)
+end syntax
+
+end module

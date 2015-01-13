@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblnotification.h"
 #import <sys/utsname.h>
 
+#include "script.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _DEBUG
@@ -206,6 +208,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	
 	m_keyboard_activation_pending = false;
     m_keyboard_is_visible = false;
+    m_is_remote_notification = false;
 	
     m_pending_push_notification = nil;
     m_pending_local_notification = nil;
@@ -323,6 +326,15 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	Class t_cls = NSClassFromString(@"UILocalNotification");
     if (t_cls)
     {
+#ifdef __IPHONE_8_0
+        // PM-2014-11-14: [[ Bug 13927 ]] From iOS 8 we have to ask for user permission for local notifications
+        if ([UIApplication instancesRespondToSelector:@selector(registerUserNotificationSettings:)])
+        {
+            UIUserNotificationSettings *t_local_settings;
+            t_local_settings = [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound categories:nil];
+            [[UIApplication sharedApplication] registerUserNotificationSettings:t_local_settings];
+        }
+#endif
         UILocalNotification *t_notification = [p_launchOptions objectForKey: UIApplicationLaunchOptionsLocalNotificationKey];
         if (t_notification)
         {
@@ -407,6 +419,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
             }
             if (t_allowed_notifications != UIUserNotificationTypeNone)
             {
+                m_is_remote_notification = true;
                 UIUserNotificationSettings *t_push_settings;
                 t_push_settings = [UIUserNotificationSettings settingsForTypes: t_allowed_notifications categories:nil];
                 [[UIApplication sharedApplication] registerUserNotificationSettings: t_push_settings];
@@ -426,12 +439,14 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
                                                object: nil];
 }
 
-// MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (push) notification settings.
+// MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (local or remote) notification settings.
 //  Call registerForRemoteNotifications to finish off push notification registration process. (Will send didRegisterForRemoteNotificationsWithDeviceToken which will be handled as before.)
+// PM-2014-11-14: [[ Bug 13927 ]] Call registerForRemoteNotifications only if didRegisterUserNotificationSettings was called after successully registering *remote* notification settings
 #ifdef __IPHONE_8_0
 - (void)application: (UIApplication *)p_application didRegisterUserNotificationSettings: (UIUserNotificationSettings *)p_notificationSettings
 {
-    [p_application registerForRemoteNotifications];
+    if (m_is_remote_notification)
+        [p_application registerForRemoteNotifications];
 }
 #endif
 
@@ -1763,9 +1778,12 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 // PM-2014-10-13: [[ Bug 13659 ]] Make sure we can interact with the LC app when Voice Over is enabled/disabled while our view is already onscreen
 - (void)voiceOverStatusChanged
 {
+    if (MCignorevoiceoversensitivity == True)
+        return;
+    
     UIView *t_main_view;
     t_main_view = [[MCIPhoneApplication sharedApplication] fetchMainView];
-    
+
     if (UIAccessibilityIsVoiceOverRunning())
     {
         t_main_view.isAccessibilityElement = YES;
@@ -1983,6 +2001,8 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
+extern bool MCModulesInitialize();
+
 int main(int argc, char *argv[], char *envp[])
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
@@ -1993,7 +2013,7 @@ int main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
-    if (!MCInitialize())
+    if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
         return -1;
     
 	int t_exit_code;

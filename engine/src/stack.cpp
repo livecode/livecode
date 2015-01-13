@@ -1264,7 +1264,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 j = 0;
 	uint2 k = 0;
@@ -1773,7 +1773,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		Exec_stat t_stat;
 		t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
-			return MCObject::getprop_legacy(parid, which, ep, effective);
+			return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 
 		return t_stat;
 	}
@@ -3050,6 +3050,12 @@ void MCStack::recompute()
 		curcard->recompute();
 }
 
+void MCStack::toolchanged(Tool p_new_tool)
+{
+    if (curcard != NULL)
+        curcard->toolchanged(p_new_tool);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCStack::loadexternals(void)
@@ -3367,4 +3373,14 @@ void MCStack::setasscriptonly(MCStringRef p_script)
         curcard = cards = MCtemplatecard->clone(False, False);
         cards->setparent(this);
     }
+}
+
+MCPlatformControlType MCStack::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCStack::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
 }

@@ -84,14 +84,79 @@ bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataR
 
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data)
 {
-    if (MCDataCreateWithBytes(p_bytes, p_byte_count, r_data))
+    // AL-2014-11-17: Create with bytes and release should just take the bytes.
+    
+    bool t_success;
+    t_success = true;
+    
+    __MCData *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeData, self);
+    
+    if (t_success)
     {
-        MCMemoryDeallocate(p_bytes);
-        return true;
+        self -> bytes = p_bytes;
+        self -> byte_count = p_byte_count;
+        r_data = self;
+    }
+    else
+        MCMemoryDelete(self);
+    
+    return t_success;
+}
+
+bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
+{
+    // AL-2014-12-12: [[ Bug 14208 ]] Implement MCDataConvertStringToData reduce the overhead in
+    //  converting from non-native string to data.
+    
+    uindex_t t_native_length;
+    MCStringRef t_native_copy;
+    t_native_copy = nil;
+    if (!MCStringNativeCopy(string, t_native_copy))
+        return false;
+
+    if (t_native_copy -> references != 1 || MCStringIsMutable(t_native_copy))
+    {
+        uindex_t t_native_length;
+        const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(t_native_copy, t_native_length);
+        if (MCDataCreateWithBytes(t_data, t_native_length, r_data))
+        {
+            MCValueRelease(t_native_copy);
+            return true;
+        }
+        
+        return false;
     }
     
-    return false;
+    bool t_success;
+    t_success = true;
+    
+    __MCData *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeData, self);
+    
+    if (t_success)
+    {
+        self -> bytes = (byte_t *)t_native_copy -> native_chars;
+        self -> byte_count = t_native_copy -> char_count;
+        r_data = self;
+        
+        t_native_copy -> native_chars = nil;
+        t_native_copy -> char_count = 0;
+    }
+    else
+        MCMemoryDelete(self);
+    
+    if (t_success)
+        MCValueRelease(t_native_copy);
+    
+    return t_success;
 }
+
+
 
 bool MCDataIsEmpty(MCDataRef p_data)
 {

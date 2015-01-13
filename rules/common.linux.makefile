@@ -12,6 +12,7 @@ GLOBAL_PACKAGES=\
 GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
 	$(SOLUTION_DIR)/libfoundation/include \
+	$(SOLUTION_DIR)/libscript/include \
 	$(SOLUTION_DIR)/lcidlc/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
@@ -87,6 +88,6 @@ $(CACHE_DIR)/%.o: %.s
 	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
 
 clean:
-	rm $(OBJECTS)
-	rm $(TARGET_PATH)
+	-rm -f $(OBJECTS)
+	-rm -f $(TARGET_PATH)
 

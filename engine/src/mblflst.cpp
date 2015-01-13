@@ -31,11 +31,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 extern void *iphone_font_create(MCStringRef name, uint32_t size, bool bold, bool italic);
 extern void iphone_font_destroy(void *font);
-extern void iphone_font_get_metrics(void *font, float& a, float& d);
+extern void iphone_font_get_metrics(void *font, float& a, float& d, float& leading, float& xheight);
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 extern void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool italic);
 extern void android_font_destroy(void *font);
-extern void android_font_get_metrics(void *font, float& a, float& d);
+extern void android_font_get_metrics(void *font, float& a, float& d, float& leading, float& xheight);
 #endif
 
 MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
@@ -62,9 +62,8 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	font -> ascent = size - 1;
 	font -> descent = size * 2 / 14 + 1;
 	
-	float ascent, descent;
-	iphone_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > size)
+	iphone_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
+	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > size)
 		font -> ascent++;
     
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
@@ -84,9 +83,8 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	font -> ascent = size - 1;
 	font -> descent = size * 2 / 14 + 1;
 	
-	float ascent, descent;
-	android_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > size)
+	android_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
+	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > size)
 		font -> ascent++;
 	
 #endif

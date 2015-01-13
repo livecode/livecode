@@ -89,6 +89,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(Misc, DisableRemoteControl, 0)
 MC_EXEC_DEFINE_GET_METHOD(Misc, RemoteControlEnabled, 1)
 MC_EXEC_DEFINE_SET_METHOD(Misc, RemoteControlDisplayProperties, 1)
 
+// SN-2014-12-11: [[ Merge-6.7.2-rc-4 ]]
+MC_EXEC_DEFINE_GET_METHOD(Misc, IsVoiceOverRunning, 1)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCExecEnumTypeElementInfo _kMCMiscStatusBarStyleElementInfo[] =
@@ -363,6 +366,17 @@ void MCMiscExecLibUrlSetSSLVerification(MCExecContext& ctxt, bool p_enabled)
     MCS_seturlsslverification(p_enabled);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running)
+{
+    if (MCSystemGetIsVoiceOverRunning(r_is_vo_running))
+        return;
+
+    ctxt . Throw();
+}
+
 //////////////////////////////////////////////////////////////////////
 
 static bool is_png_data(MCStringRef p_data)
@@ -389,28 +403,30 @@ static bool is_jpeg_data(MCStringRef p_data)
 void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id, MCStringRef p_file_name)
 {
     bool t_is_raw_data = false;
+    bool t_extension_found = false;
     MCAutoStringRef t_file_extension;
     
-    MCAutoDataRef t_raw_data, t_data;
+    // SN-2014-12-18: [[ Bug 13860 ]] Update the way images data are created.
+    MCAutoDataRef t_raw_data, t_converted_data;
     MCAutoStringRef t_save_result;
     
-    if (ctxt . ConvertToData(p_data_or_id, &t_raw_data))
+    if (ctxt . ConvertToData(p_data_or_id, &t_converted_data))
     {
-        if (MCImageDataIsPNG(*t_raw_data))
+        if (MCImageDataIsPNG(*t_converted_data))
         {
-            t_is_raw_data = MCStringCreateWithCString(".png\n", &t_file_extension);
+            t_extension_found = MCStringCreateWithCString(".png\n", &t_file_extension);
         }
-        else if (MCImageDataIsGIF(*t_raw_data))
+        else if (MCImageDataIsGIF(*t_converted_data))
         {
-            t_is_raw_data = MCStringCreateWithCString(".gif\n", &t_file_extension);
+            t_extension_found = MCStringCreateWithCString(".gif\n", &t_file_extension);
         }
-        else if (MCImageDataIsJPEG(*t_raw_data))
+        else if (MCImageDataIsJPEG(*t_converted_data))
         {
-            t_is_raw_data = MCStringCreateWithCString(".jpg\n", &t_file_extension);
+            t_extension_found = MCStringCreateWithCString(".jpg\n", &t_file_extension);
         }
     }
     
-    if (!t_is_raw_data)
+    if (!t_extension_found)
     {
         MCLog("Type not found", nil);
 		uint4 parid;
@@ -455,14 +471,39 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
             ctxt.SetTheResultToStaticCString("not a supported format");
 			return;
 		}
-        
-        t_image -> getrawdata(&t_data);
+
+        // SN-2014-12-18: [[ Bug 13860 ]] Only allow the use of the dataref as storing a filename for iOS
+#ifdef __IOS__
+        // PM-2014-12-12: [[ Bug 13860 ]] For referenced images we need the filename rather than the raw data
+        if (t_image -> isReferencedImage())
+        {
+            // SN-2014-12-18: [[ Bug 13860 ]] We store the UTF-8 filename in the dataref for referenced images.
+            MCAutoStringRef t_filename;
+            char *t_utf8_filename;
+            uindex_t t_byte_count;
+            t_image -> getimagefilename(&t_filename);
+            MCStringConvertToUTF8(*t_filename, t_utf8_filename, t_byte_count);
+            MCDataCreateWithBytesAndRelease((byte_t*)t_utf8_filename, t_byte_count, &t_raw_data);
+            t_is_raw_data = false;
+        }
+        else
+        {
+            t_image -> getrawdata(&t_raw_data);
+            t_is_raw_data = true;
+        }
+#else
+        t_image -> getrawdata(&t_raw_data);
+#endif
+    }
+    // SN-2014-12-18: [[ Bug 13860 ]] If an extension was found, then we have raw data
+    else
+    {
+        t_raw_data = *t_converted_data;
+        t_is_raw_data = true;
     }
     
-    if (t_is_raw_data)
-        MCSystemExportImageToAlbum(&t_save_result, *t_raw_data, p_file_name, *t_file_extension);
-    else
-        MCSystemExportImageToAlbum(&t_save_result, *t_data, p_file_name, *t_file_extension);
+    // SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
+    MCSystemExportImageToAlbum(&t_save_result, *t_raw_data, p_file_name, *t_file_extension, t_is_raw_data);
     
     if (!MCStringIsEmpty(p_file_name))
     {

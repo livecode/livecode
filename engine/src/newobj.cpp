@@ -788,6 +788,12 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCTrunc;
     case F_UNICODE_CHAR_TO_NUM:
         return new MCUnicodeCharToNum;
+	// MDW-2014-08-23 : [[ feature_floor ]]
+	case F_FLOOR:
+		return new MCFloor;
+	// MDW-2014-08-23 : [[ feature_floor ]]
+	case F_CEIL:
+		return new MCCeil;
 	case F_VALUE:
 		return new MCValue;
 	case F_VARIABLES:
@@ -836,10 +842,10 @@ MCExpression *MCN_new_function(int2 which)
 
 	MCExpression *t_new_function;
 	t_new_function = MCModeNewFunction(which);
-	if (t_new_function != NULL)
-		return t_new_function;
 
-	return new MCFunction;
+    // SN-2014-11-25: [[ Bug 14088 ]] A NULL pointer is returned if no function exists.
+    //  (that avoids to get a MCFunction which does not implement eval_ctxt).
+	return t_new_function;
 }
 
 MCExpression *MCN_new_operator(int2 which)

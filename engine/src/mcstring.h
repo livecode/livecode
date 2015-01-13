@@ -98,6 +98,7 @@ extern const char *MCimagestring;
 extern const char *MCfieldstring;
 extern const char *MCcolorstring;
 extern const char *MCmagnifierstring;
+extern const char *MCwidgetstring;
 
 extern const char *MCnotfoundstring;
 extern const char *MClnfamstring;
@@ -304,6 +305,7 @@ extern MCNameRef MCM_delete_image;
 extern MCNameRef MCM_delete_scrollbar;
 extern MCNameRef MCM_delete_player;
 extern MCNameRef MCM_delete_stack;
+extern MCNameRef MCM_delete_widget;
 
 extern MCNameRef MCM_delete_key;
 extern MCNameRef MCM_delete_url;

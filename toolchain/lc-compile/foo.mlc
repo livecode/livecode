@@ -1,0 +1,213 @@
+module com.livecode.widget.foo
+
+foreign handler MCStringGetCString(in stringref as string) as pointer binds to "<builtin>"
+foreign handler MCStringGetLength(in stringref as string) as uint binds to "<builtin>"
+foreign handler MCStringMutableCopy(in i as string, out o as string) as bool binds to "<builtin>"
+foreign handler MCStringAppendChar(in stringref as string, in c as uint) as bool binds to "<builtin>"
+foreign handler MCStringPrepend(in stringref as string, in prepend as string) as bool binds to "<builtin>"
+foreign handler MCStringAppend(in stringref as string, in prepend as string) as bool binds to "<builtin>"
+foreign handler write(in fildes as int, in buf as pointer, in nbyte as uint) as int binds to "write"
+
+foreign handler MCTextPaneSet(in pPane as pointer) as undefined binds to "<builtin>"
+foreign handler MCTextPaneCreate(in pStack as int, out rPointer as pointer) as bool binds to "<builtin>"
+foreign handler MCTextPaneSetContentsPlain(in pPane as pointer, in pText as string) as bool binds to "<builtin>"
+foreign handler MCTextPanePaintShim(in pPane as pointer) as undefined binds to "<builtin>"
+foreign handler MCTextPaneGet() as pointer binds to "<builtin>"
+foreign handler MCTextCellSetMaxSize(in pCell as pointer, in pWidth as float, in pHeight as float) as undefined binds to "<builtin>"
+
+foreign handler MCWidgetRedraw() as undefined binds to "<builtin>"
+
+//variable sPane as pointer
+
+handler println(in textin as string)
+	variable ptr as pointer
+	variable text as string
+	MCStringMutableCopy(textin, text)
+	MCStringPrepend(text, "com.livecode.widget.foo: ")
+	MCStringAppendChar(text, 13)
+	put MCStringGetCString(text) into ptr
+	write(2, ptr, MCStringGetLength(text))
+end handler
+
+public handler OnOpen()
+	variable tPane as pointer
+	variable tMessage as string
+
+	println("OnOpen")
+
+	MCStringMutableCopy("Hello, World!", tMessage)
+//	MCStringAppendChar(tMessage, 11)
+//	MCStringAppend(tMessage, "I'm a widget.")
+//	MCStringAppendChar(tMessage, 11)
+//	MCStringAppend(tMessage, "What are you?")
+
+	MCTextPaneCreate(0, tPane)
+	MCTextPaneSet(tPane)
+	MCTextPaneSetContentsPlain(tPane, tMessage)
+
+	//MCTextPaneCreate(0, sPane)
+
+	println("Pane created")
+end handler
+
+public handler OnClose()
+	println("OnClose")
+end handler
+
+public handler OnAttach()
+	println("OnAttach")
+end handler
+
+public handler OnDetach()
+	println("OnDetach")
+end handler
+
+public handler OnPaint()
+	println("OnPaint")
+	MCTextPanePaintShim(MCTextPaneGet())
+end handler
+
+public handler OnGeometryChanged(in pX as real, in pY as real, in pW as number, in pH as number)
+	println("OnGeometryChanged")
+	MCTextCellSetMaxSize(MCTextPaneGet(), pW, pH)
+end handler
+
+public handler OnVisibilityChanged(in visible as boolean)
+	println("OnVisibilityChanged")
+end handler
+
+/* OnHitTest */
+
+/* OnBoundsTest */
+
+/* OnSave */
+
+/* OnLoad */
+
+public handler OnCreate()
+	println("OnCreate")
+end handler
+
+public handler OnDestroy()
+	println("OnDestroy")
+end handler
+
+public handler OnParentPropertyChanged()
+	println("OnParentPropertyChanged")
+end handler
+
+/* OnToolChanged */
+
+public handler OnLayerChanged()
+	println("OnLayerChanged")
+end handler
+
+public handler OnMouseEnter()
+	println("OnMouseEnter")
+end handler
+
+public handler OnMouseLeave()
+	println("OnMouseLeave")
+end handler
+
+public handler OnMouseMove(in pX as real, in pY as real)
+	println("OnMouseMove")
+end handler
+
+public handler OnMouseCancel(in pButton as integer)
+	println("OnMouseCancel")
+end handler
+
+public handler OnMouseDown(in pX as real, in pY as real, in pButton as integer)
+	println("OnMouseDown")
+end handler
+
+public handler OnMouseUp(in pX as real, in pY as real, in pButton as integer)
+	println("OnMouseUp")
+end handler
+
+public handler OnMouseScroll(in pDeltaX as real, in pDeltaY as real)
+	println("OnMouseScroll")
+end handler
+
+public handler OnMouseStillDown(in pButton as integer, in pDuration as real)
+	println("OnMouseStillDown")
+end handler
+
+public handler OnMouseHover(in pX as real, in pY as real, in pDuration as real)
+	println("OnMouseHover")
+end handler
+
+public handler OnMouseStillHover(in pX as real, in pY as real, in pDuration as real)
+	println("OnMouseStillHover")
+end handler
+
+public handler OnMouseCancelHover(in pDuration as real)
+	println("OnMouseCancelHover")
+end handler
+
+/* Touch events */
+
+public handler OnFocusEnter()
+	println("OnFocusEnter")
+end handler
+
+public handler OnFocusLeave()
+	println("OnFocusLeave")
+end handler
+
+public handler OnKeyPress(in pText as string)
+	println("OnKeyPress")
+end handler
+
+public handler OnModifiersChanged(in pWhich as integer)
+	println("OnModifiersChanged")
+end handler
+
+public handler OnActionKeyPress(in pName as string)
+	println("OnActionKeyPress")
+end handler
+
+public handler OnDragEnter() as boolean
+	println("OnDragEnter")
+	return true
+end handler
+
+public handler OnDragLeave()
+	println("OnDragLeave")
+end handler
+
+public handler OnDragMove(in pX as real, in pY as real)
+	println("OnDragMove")
+end handler
+
+public handler OnDragDrop()
+	println("OnDragDrop")
+end handler
+
+public handler OnDragStart() as boolean
+	println("OnDragStart")
+	return true
+end handler
+
+public handler OnDragFinish()
+	println("OnDragFinish")
+end handler
+
+public handler OnClick(in pX as real, in pY as real, in pButton as integer, in pMultiplicity as integer)
+	println("OnClick")
+
+	variable tText as string
+	MCStringMutableCopy("Hello, World!", tText)
+	MCStringAppendChar(tText, 11)
+	MCStringAppend(tText, "I'm a widget. What are you?")
+	MCTextPaneSetContentsPlain(MCTextPaneGet(), tText)
+	MCWidgetRedraw()
+end handler
+
+public handler OnDoubleClick(in pX as real, in pY as real, in pButton as integer)
+	println("OnDoubleClick")
+end handler
+
+end module
+

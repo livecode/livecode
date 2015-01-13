@@ -49,6 +49,9 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
+// SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#include <dlfcn.h>
+
 #include "foundation.h"
 
 #include <Security/Authorization.h>
@@ -3386,10 +3389,11 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     MCresult->sets("error reading file");
                 else
                 {
-                    /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)buffer, toread, r_data);
+                    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, toread, r_data);
                     MCresult->clear(False);
                 }
             }
+            delete[] buffer;
         }
         
         FSCloseFork(fRefNum);
@@ -3965,7 +3969,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 {
                     errno = getAddressFromDesc(senderDesc, sender);
                     AEDisposeDesc(&senderDesc);
-                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)sender, r_value);
+                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease(sender, r_value);
                     return;
                 }
                 delete[] sender;
@@ -4434,6 +4438,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         sigaction(SIGILL, &action, NULL);
         sigaction(SIGBUS, &action, NULL);
         
+        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
+        
 #ifndef _MAC_SERVER
         // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
         //   Without this you can't poll read when a slave process.
@@ -4461,10 +4467,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         for(uint4 i = 0; i < 256; ++i)
             MClowercasingtable[i] = (uint1)i;
         LowercaseText((char *)MClowercasingtable, 256, smRoman);
-        
-        // MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
-        //   property here (otherwise it is nil in -ui mode).
-        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
         
         //
         
@@ -6727,6 +6729,20 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	return (MCSysModuleHandle)t_result;
 #endif /* MCS_loadmodule_dsk_mac */
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        MCAutoStringRefAsUTF8String t_utf_path;
+        
+        if (!t_utf_path.Lock(p_filename))
+            return NULL;
+        
+        void *t_result;
+        
+        t_result = dlopen(*t_utf_path, RTLD_LAZY);
+        
+        return (MCSysModuleHandle)t_result;
+#else
         MCAutoStringRefAsUTF8String t_utf_path;
         
         if (!t_utf_path.Lock(p_filename))
@@ -6744,6 +6760,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         CFRelease(t_url);
         
         return (MCSysModuleHandle)t_result;
+#endif
     }
     
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
@@ -6761,6 +6778,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	return t_symbol_ptr;
 #endif /* MCS_resolvemodulesymbol_dsk_mac */
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        return (MCSysModuleHandle)dlsym(p_module, MCStringGetCString(p_symbol));
+#else
         CFStringRef t_cf_symbol;
        
         MCStringConvertToCFStringRef(p_symbol, t_cf_symbol);
@@ -6773,6 +6795,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         CFRelease(t_cf_symbol);
         
         return (MCSysModuleHandle) t_symbol_ptr;
+#endif
     }
     
 	virtual void UnloadModule(MCSysModuleHandle p_module)
@@ -6780,7 +6803,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #ifdef /* MCS_unloadmodule_dsk_mac */ LEGACY_SYSTEM
 	CFRelease((CFBundleRef)p_module);
 #endif /* MCS_unloadmodule_dsk_mac */
-        CFRelease((CFBundleRef)p_module);        
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        dlclose(p_module);
+#else
+        CFRelease((CFBundleRef)p_module);
+#endif
     }
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -8233,21 +8262,26 @@ static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r
             {
                 byte_t *result = new byte_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithBytesAndRelease(result, s, kMCStringEncodingUTF8, false, r_result);
+                /* UNCHECKED */ MCStringCreateWithBytes(result, s, kMCStringEncodingUTF8, false, r_result);
+                delete[] result;
                 break;
             }
             case typeChar:
             {
                 char_t *result = new char_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease(result, s, r_result);
+                /* UNCHECKED */ MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
                 break;
             }
             case typeType:
             {
                 FourCharCode t_type;
                 AEGetAttributePtr(ae, key, dt, &rType, &t_type, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)FourCharCodeToString(t_type), 4, r_result);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
 			}
                 break;
             case typeShortInteger:
@@ -8339,14 +8373,18 @@ static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_res
             {
                 char_t *result = new char_t[s + 1];
                 AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease(result, s, r_result);
+                /* UNCHECKED */ MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
                 break;
             }
             case typeType:
             {
                 FourCharCode t_type;
                 AEGetParamPtr(ae, key, dt, &rType, &t_type, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)FourCharCodeToString(t_type), 4, r_result);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
 			}
                 break;
             case typeShortInteger:

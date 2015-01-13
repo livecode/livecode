@@ -1331,11 +1331,11 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
-		return false;
+		return NULL;
 	}
 	*retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, &var));
 	if (var == NULL)
-		return false;
+		return NULL;
     
     MCAutoValueRef t_value;
     

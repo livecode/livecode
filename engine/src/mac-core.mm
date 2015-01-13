@@ -25,6 +25,8 @@
 
 #include "graphics_util.h"
 
+#include "script.h"
+
 #include <objc/objc-runtime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1978,10 +1980,10 @@ int main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-	
-	if (!MCInitialize())
+    extern bool MCModulesInitialize();
+	if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
-	
+    
 	// On OSX, argv and envp are encoded as UTF8
 	MCStringRef *t_new_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
@@ -2030,6 +2032,9 @@ int main(int argc, char *argv[], char *envp[])
 	// Drain the autorelease pool.
 	[t_pool release];
 	
+    extern void MCModulesFinalize(void);
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
 	
 	return 0;

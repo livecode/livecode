@@ -383,6 +383,42 @@ bool MCGContextCreateWithPixels(uint32_t p_width, uint32_t p_height, uint32_t p_
 	return MCGContextCreateWithBitmap(t_bitmap, r_context);	
 }
 
+void *MCGContextGetPixelPtr(MCGContextRef context)
+{
+    MCGContextLayerRef t_layer;
+    t_layer = context -> layer;
+    while(t_layer -> parent != nil)
+        t_layer = t_layer -> parent;
+    
+	const SkBitmap& t_bitmap = t_layer -> canvas -> getTopDevice() -> accessBitmap(false);
+    
+    return t_bitmap . getPixels();
+}
+
+uint32_t MCGContextGetWidth(MCGContextRef context)
+{
+    MCGContextLayerRef t_layer;
+    t_layer = context -> layer;
+    while(t_layer -> parent != nil)
+        t_layer = t_layer -> parent;
+    
+	const SkBitmap& t_bitmap = t_layer -> canvas -> getTopDevice() -> accessBitmap(false);
+    
+    return t_bitmap . width();
+}
+
+uint32_t MCGContextGetHeight(MCGContextRef context)
+{
+    MCGContextLayerRef t_layer;
+    t_layer = context -> layer;
+    while(t_layer -> parent != nil)
+        t_layer = t_layer -> parent;
+    
+	const SkBitmap& t_bitmap = t_layer -> canvas -> getTopDevice() -> accessBitmap(false);
+    
+    return t_bitmap . height();
+}
+
 MCGContextRef MCGContextRetain(MCGContextRef self)
 {
 	if (self != NULL)
