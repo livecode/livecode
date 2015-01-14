@@ -49,6 +49,7 @@
 		BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE19F5D718FE92600001B410 /* foundation-bidi.cpp */; };
 		C741ECCE1A6933310096D171 /* foundation-file-posix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C741ECCA1A6933310096D171 /* foundation-file-posix.cpp */; };
 		C741ECD01A6933310096D171 /* foundation-stream-stdio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C741ECCD1A6933310096D171 /* foundation-stream-stdio.cpp */; };
+		C7264E541A669AF100BFD8E3 /* foundation-random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C7264E531A669AF100BFD8E3 /* foundation-random.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -144,6 +145,7 @@
 		C741ECCB1A6933310096D171 /* foundation-file-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-file-private.h"; path = "src/foundation-file-private.h"; sourceTree = "<group>"; };
 		C741ECCC1A6933310096D171 /* foundation-file-w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-file-w32.cpp"; path = "src/foundation-file-w32.cpp"; sourceTree = "<group>"; };
 		C741ECCD1A6933310096D171 /* foundation-stream-stdio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-stream-stdio.cpp"; path = "src/foundation-stream-stdio.cpp"; sourceTree = "<group>"; };
+		C7264E531A669AF100BFD8E3 /* foundation-random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-random.cpp"; path = "src/foundation-random.cpp"; sourceTree = "<group>"; usesTabs = 1; };
 		C74D7EDD1A2639F200BC7FE8 /* libffi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libffi.xcodeproj; path = ../thirdparty/libffi/libffi.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -255,6 +257,7 @@
 				4D7FA7951594E09500EEF440 /* foundation-nativechars.cpp */,
 				4D7FA7961594E09500EEF440 /* foundation-number.cpp */,
 				7653455819F656640032E6E2 /* foundation-proper-list.cpp */,
+				C7264E531A669AF100BFD8E3 /* foundation-random.cpp */,
 				4D7FA7981594E09500EEF440 /* foundation-set.cpp */,
 				4D7FA7991594E09500EEF440 /* foundation-stream.cpp */,
 				C741ECCD1A6933310096D171 /* foundation-stream-stdio.cpp */,
@@ -386,6 +389,7 @@
 				7237187918E42F580006C484 /* foundation-text.cpp in Sources */,
 				76E711FC1A0BA24B00B68F93 /* foundation-math.cpp in Sources */,
 				7696676D19E81D92008B0972 /* foundation-chunk.cpp in Sources */,
+				C7264E541A669AF100BFD8E3 /* foundation-random.cpp in Sources */,
 				7653455919F656650032E6E2 /* foundation-proper-list.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

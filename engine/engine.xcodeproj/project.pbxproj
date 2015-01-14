@@ -760,7 +760,6 @@
 		7699BE311A1CD51E00636397 /* osxcisupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A3181E7CCE00FAC195 /* osxcisupport.mm */; };
 		7699BE321A1CD51E00636397 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A5181E7D8000FAC195 /* cgimageutil.cpp */; };
 		7699BE331A1CD51E00636397 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9DFA13CDE63000B9B15D /* surface.cpp */; };
-		7699BE341A1CD51E00636397 /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A9181E801800FAC195 /* sysosxrandom.cpp */; };
 		7699BE351A1CD51E00636397 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8589AA173A856600B20951 /* uuid.cpp */; };
 		7699BE361A1CD51E00636397 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32CA182268BC00FAC195 /* foundation-legacy.cpp */; };
 		7699BE371A1CD51E00636397 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
@@ -837,7 +836,6 @@
 		76EF31A4181E7CDB00FAC195 /* osxcisupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A3181E7CCE00FAC195 /* osxcisupport.mm */; };
 		76EF31A6181E7D8700FAC195 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A5181E7D8000FAC195 /* cgimageutil.cpp */; };
 		76EF31A7181E7DEF00FAC195 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9DFA13CDE63000B9B15D /* surface.cpp */; };
-		76EF31AA181E803C00FAC195 /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A9181E801800FAC195 /* sysosxrandom.cpp */; };
 		76EF32CC182268BF00FAC195 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32CA182268BC00FAC195 /* foundation-legacy.cpp */; };
 		76F0CCF418CA328300C01A67 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
 		76F1A3011A1CDCAA00A3DBB1 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7699BE7F1A1CD72200636397 /* test.cpp */; };
@@ -958,7 +956,6 @@
 		BEF61893194718C400C42C57 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3B0B8096FD00200116 /* opensslsocket.cpp */; };
 		BEF6189619471C9700C42C57 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		BEF618A119471D4000C42C57 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB3856E1714422200D3F102 /* Carbon.framework */; };
-		BEF618A219471D6500C42C57 /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A9181E801800FAC195 /* sysosxrandom.cpp */; };
 		BEF618A319471D7700C42C57 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8589AA173A856600B20951 /* uuid.cpp */; };
 		BEF618A419471D8900C42C57 /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C03ED911134205A009DE406 /* socket_resolve.cpp */; };
 		BEF618A519471DE100C42C57 /* srvposix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD485D13BA28AE008DB91F /* srvposix.cpp */; };
@@ -2198,9 +2195,7 @@
 		72B67C501A0BBDF600BB2594 /* mac-theme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-theme.mm"; path = "src/mac-theme.mm"; sourceTree = "<group>"; };
 		72C22E951945E48E00B18E8D /* syslnxfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxfs.cpp; path = src/syslnxfs.cpp; sourceTree = "<group>"; };
 		72C22E961945E48E00B18E8D /* syslnxregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxregion.cpp; path = src/syslnxregion.cpp; sourceTree = "<group>"; };
-		72C22E971945E48E00B18E8D /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
 		72C22E981945E48E00B18E8D /* sysw32fs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32fs.cpp; path = src/sysw32fs.cpp; sourceTree = "<group>"; };
-		72C22E991945E48E00B18E8D /* sysw32random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32random.cpp; path = src/sysw32random.cpp; sourceTree = "<group>"; };
 		72C28AF819112FDE007F2AA0 /* segment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = segment.h; path = src/segment.h; sourceTree = "<group>"; };
 		72C28AF91911300D007F2AA0 /* segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = segment.cpp; path = src/segment.cpp; sourceTree = "<group>"; };
 		72D6A8B519ED30D600D00689 /* native-layer-x11.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "native-layer-x11.cpp"; path = "src/native-layer-x11.cpp"; sourceTree = "<group>"; };
@@ -2296,7 +2291,6 @@
 		76EF319F181E79FF00FAC195 /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
 		76EF31A3181E7CCE00FAC195 /* osxcisupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxcisupport.mm; path = src/osxcisupport.mm; sourceTree = "<group>"; };
 		76EF31A5181E7D8000FAC195 /* cgimageutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cgimageutil.cpp; path = src/cgimageutil.cpp; sourceTree = "<group>"; };
-		76EF31A9181E801800FAC195 /* sysosxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysosxrandom.cpp; path = src/sysosxrandom.cpp; sourceTree = "<group>"; };
 		76EF322A1821256200FAC195 /* exec-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-strings.h"; path = "src/exec-strings.h"; sourceTree = "<group>"; };
 		76EF32CA182268BC00FAC195 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
 		76EF32CB182268BC00FAC195 /* foundation-legacy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-legacy.h"; path = "src/foundation-legacy.h"; sourceTree = "<group>"; };
@@ -3473,10 +3467,7 @@
 				4D79B8981A3604F200DD750C /* sysunxthreads.cpp */,
 				72C22E951945E48E00B18E8D /* syslnxfs.cpp */,
 				72C22E961945E48E00B18E8D /* syslnxregion.cpp */,
-				72C22E971945E48E00B18E8D /* sysunxrandom.cpp */,
 				72C22E981945E48E00B18E8D /* sysw32fs.cpp */,
-				72C22E991945E48E00B18E8D /* sysw32random.cpp */,
-				76EF31A9181E801800FAC195 /* sysosxrandom.cpp */,
 				4DDB66531413990400E5C84C /* sysunxdate.cpp */,
 				4DDB66541413990400E5C84C /* sysw32network.cpp */,
 				4DDB66551413990400E5C84C /* sysw32region.cpp */,
@@ -5019,7 +5010,6 @@
 				BEF61891194718A400C42C57 /* exec-interface-stack.cpp in Sources */,
 				BEF61892194718A400C42C57 /* exec-interface-vclip.cpp in Sources */,
 				BEF61893194718C400C42C57 /* opensslsocket.cpp in Sources */,
-				BEF618A219471D6500C42C57 /* sysosxrandom.cpp in Sources */,
 				BEF618A319471D7700C42C57 /* uuid.cpp in Sources */,
 				BEF618A419471D8900C42C57 /* socket_resolve.cpp in Sources */,
 				BEF618A519471DE100C42C57 /* srvposix.cpp in Sources */,
@@ -5308,7 +5298,6 @@
 				76EF31A4181E7CDB00FAC195 /* osxcisupport.mm in Sources */,
 				76EF31A6181E7D8700FAC195 /* cgimageutil.cpp in Sources */,
 				76EF31A7181E7DEF00FAC195 /* surface.cpp in Sources */,
-				76EF31AA181E803C00FAC195 /* sysosxrandom.cpp in Sources */,
 				4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */,
 				76EF32CC182268BF00FAC195 /* foundation-legacy.cpp in Sources */,
 				4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */,
@@ -5572,7 +5561,6 @@
 				7699BE311A1CD51E00636397 /* osxcisupport.mm in Sources */,
 				7699BE321A1CD51E00636397 /* cgimageutil.cpp in Sources */,
 				7699BE331A1CD51E00636397 /* surface.cpp in Sources */,
-				7699BE341A1CD51E00636397 /* sysosxrandom.cpp in Sources */,
 				7699BE351A1CD51E00636397 /* uuid.cpp in Sources */,
 				7699BE361A1CD51E00636397 /* foundation-legacy.cpp in Sources */,
 				7699BE371A1CD51E00636397 /* image_rep_densitymapped.cpp in Sources */,
