@@ -229,14 +229,10 @@ void MCPurchaseRelease(MCPurchase *p_purchase)
 	MCLog("MCPurchaseRelease(%p)...", p_purchase);
 	if (p_purchase != NULL)
 	{
-        MCAssert(p_purchase->ref_count > 0);
-        //MCLog("MCPurchaseRelease : referencecount : %d", p_purchase->ref_count);
         if (p_purchase -> ref_count > 1)
             p_purchase -> ref_count -= 1;
         else
             MCPurchaseDelete(p_purchase);
-		//if (--p_purchase -> ref_count == 0)
-			//MCPurchaseDelete(p_purchase);
 	}
 }
 
