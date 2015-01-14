@@ -471,6 +471,8 @@ __MCStdioStreamInitialize (void)
 	/* Create error types */
 	if (!__MCStdioStreamInitializeErrors())
 		return false;
+
+    return true;
 }
 
 bool
