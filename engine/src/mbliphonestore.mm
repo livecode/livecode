@@ -226,6 +226,7 @@ char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_n
 #endif
 
 // PM-2015-01-12: [[ Bug 14343 ]] Implemented MCStoreGetPurchaseProperty/MCStoreSetPurchaseProperty for iOS
+extern MCPropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *p_table, Properties p_which);
 
 void MCStoreGetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_prop_name, MCStringRef& r_property_value)
 {
@@ -242,7 +243,7 @@ void MCStoreGetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, M
 	{
 		MCExecValue t_value;
         MCExecFetchProperty(ctxt, t_info, t_purchase, t_value);
-		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStingRef, &r_property_value);
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
         return;
     }
     
@@ -666,6 +667,9 @@ void update_purchase_state(MCPurchase *p_purchase)
 			case SKPaymentTransactionStateFailed:
 			{
 				NSError *t_error = [t_ios_data->transaction error];
+                
+                if(t_error == nil)
+                    return;
 				if ([[t_error domain] isEqualToString:SKErrorDomain] && [t_error code] == SKErrorPaymentCancelled)
 					p_purchase->state = kMCPurchaseStateCancelled;
 				else
