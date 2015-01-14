@@ -976,6 +976,9 @@ LCError LCArrayRelease(LCArrayRef p_array)
 
 static LCError LCArrayResolvePath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, MCVariableRef& r_var)
 {
+    if (s_interface -> version < 5)
+        return kLCErrorNotImplemented;
+    
 	LCError t_error;
 	t_error = kLCErrorNone;
 	
@@ -997,7 +1000,7 @@ static LCError LCArrayResolvePath(LCArrayRef p_array, unsigned int p_options, co
 //////////
 
 LCError LCArrayCountKeysOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, unsigned int *r_count)
-{		
+{
 	LCError t_error;
 	t_error = kLCErrorNone;
 	
@@ -1065,8 +1068,12 @@ LCError LCArrayListKeysOnPath(LCArrayRef p_array, unsigned int p_options, const 
 	for(unsigned int i = 0; i < t_key_count && t_error == kLCErrorNone; i++)
 	{
 		MCVariableRef t_key_var;
-        // SN-2014-11-24: [[ Bug 14057 ]] Get the keys are UTF-8 C-string, to allow Unicode keys to be understood.
-		t_error = (LCError)s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsUTF8CString, &t_keys[i], &t_key_var);
+        // SN-2015-01-14: [[ Bug 14057 ]] Only return a UTF-8 string if the interface version allows it
+        if (s_interface -> version < 5)
+            t_error = (LCError)s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsCString, &t_keys[i], &t_key_var);
+        else
+            t_error = (LCError)s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsUTF8String, &t_keys[i], &t_key_var);
+        
 		if (t_error == kLCErrorNone)
 		{
 			t_keys[i] = strdup(t_keys[i]);
@@ -1227,6 +1234,9 @@ LCError LCArrayFetchKeyWithPath(LCArrayRef p_array, unsigned int p_options, cons
 
 LCError LCArrayStoreKeyOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, void *p_value)
 {
+    if (s_interface -> version < 5)
+        return kLCErrorNotImplemented;
+    
 	LCError t_error;
 	t_error = kLCErrorNone;
 

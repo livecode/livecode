@@ -435,6 +435,10 @@ public:
     MCExternalError GetCData(MCExternalValueOptions options, void* r_data);
 	MCExternalError GetCString(MCExternalValueOptions options, const char*& r_cstring);
     
+    // SN-2015-01-14: [[ Bug 14057 ]] Function added to uniformise the External conversion
+    //  to string, and make it accessible outside of a MCExternalVariable
+    static MCExternalError ConvertToString(MCValueRef t_value, MCExternalValueOptions options, MCStringRef& r_string);
+    
 	virtual bool IsTemporary(void) = 0;
 	virtual bool IsTransient(void) = 0;
 	
@@ -854,14 +858,15 @@ static MCExternalError convert_stringref_to_mcstring(MCStringRef p_string, MCStr
 
 // MW-2013-06-14: [[ ExternalsApiV5 ]] New methods to convert to/from objc-arrays
 //   and dictionaries.
-static MCExternalError MCExternalValueArrayToObjcArray(MCExternalVariableRef src, NSArray*& r_dst);
-static MCExternalError MCExternalValueArrayFromObjcArray(MCExternalVariableRef src, NSArray* r_dst);
-static MCExternalError MCExternalValueArrayToObjcDictionary(MCExternalVariableRef src, NSDictionary*& r_dst);
-static MCExternalError MCExternalValueArrayFromObjcDictionary(MCExternalVariableRef src, NSDictionary* r_dst);
+// SN-2015-01-14: [[ Bug 14057 ]] Update the prototype to use MCArrays directly
+static MCExternalError MCArrayFromObjcArray(NSArray* p_src, MCArrayRef& r_array);
+static MCExternalError MCArrayToObjcArray(MCArrayRef p_src, NSArray*& r_array);
+static MCExternalError MCArrayFromObjcDictionary(NSDictionary* p_src, MCArrayRef &r_array);
+static MCExternalError MCArrayToObjcDictionary(MCArrayRef p_src, NSDictionary*& r_dictionary);
 
-// SN-2014-11-20: [[ Bug 14057 ]] MCExternalVariableRefs are not anymore pointers to the arrays in 7.0
-static MCExternalError MCExternalValueArrayRefFromObjArray(MCExternalVariableRef dst, NSArray* p_src);
-static MCExternalError MCExternalValueArrayRefFromObjcDictionary(MCExternalVariableRef dst, NSDictionary* p_src);
+// SN-2015-01-14: [[ Bug 14057 ]] Added conversion functions
+static MCExternalError MCValueFromObjcValue(id src, MCValueRef &var);
+static MCExternalError MCValueToObjcValue(MCValueRef p_input, id& r_dst);
 
 #endif
 
@@ -1103,62 +1108,62 @@ MCExternalError MCExternalVariable::GetReal(MCExternalValueOptions p_options, re
 
 MCExternalError MCExternalVariable::GetString(MCExternalValueOptions p_options, MCStringRef& r_value)
 {
-    MCAutoStringRef t_string_value;
-	
-	// Get the valueref.
-	MCValueRef t_value;
-	t_value = GetValueRef();
-	
-    // Avoid null pointer dereferences in externals
-    if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNull)
-        t_value = kMCEmptyString;
-
-	switch(MCValueGetTypeCode(t_value))
-	{
-		case kMCValueTypeCodeBoolean:
-			t_string_value = (t_value == kMCTrue ? kMCTrueString : kMCFalseString);
-			break;
-		case kMCValueTypeCodeNumber:
-		{
-			// Use the externalv1 method to convert.
-			double t_number;
-			t_number = MCNumberFetchAsReal((MCNumberRef)t_value);
-			
-			if (!number_to_string(t_number, p_options, &t_string_value))
-                return kMCExternalErrorOutOfMemory;
-		}
-			break;
-		case kMCValueTypeCodeName:
-        {
-            t_string_value = MCNameGetString((MCNameRef)t_value);
-		}
-			break;
-		case kMCValueTypeCodeString:
-		{
-			t_string_value = (MCStringRef)t_value;
-		}
-			break;
-		case kMCValueTypeCodeData:
-		{
-            MCDataRef t_dataref;
-            t_dataref = (MCDataRef)t_value;
-            if (!MCStringCreateWithBytes(MCDataGetBytePtr(t_dataref), MCDataGetLength(t_dataref), kMCStringEncodingNative, false, &t_string_value))
-                return kMCExternalErrorOutOfMemory;
-		}
-			break;
-		case kMCValueTypeCodeArray:
-			// An array is never a string (from the point of view of the externals API).
-			return kMCExternalErrorNotAString;
-			break;
-		default:
-			assert(false);
-	}
-	
-	r_value = MCValueRetain(*t_string_value);
-	
-	return kMCExternalErrorNone;
+    return ConvertToString(GetValueRef(), p_options, r_value);
 }
 
+MCExternalError MCExternalVariable::ConvertToString(MCValueRef p_value, MCExternalValueOptions p_options, MCStringRef &r_string)
+{
+    MCAutoStringRef t_string_value;
+    
+    // Avoid null pointer dereferences in externals
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeNull)
+        p_value = kMCEmptyString;
+    
+    switch(MCValueGetTypeCode(p_value))
+    {
+        case kMCValueTypeCodeBoolean:
+            t_string_value = (p_value == kMCTrue ? kMCTrueString : kMCFalseString);
+            break;
+        case kMCValueTypeCodeNumber:
+        {
+            // Use the externalv1 method to convert.
+            double t_number;
+            t_number = MCNumberFetchAsReal((MCNumberRef)p_value);
+            
+            if (!number_to_string(t_number, p_options, &t_string_value))
+                return kMCExternalErrorOutOfMemory;
+        }
+            break;
+        case kMCValueTypeCodeName:
+        {
+            t_string_value = MCNameGetString((MCNameRef)p_value);
+        }
+            break;
+        case kMCValueTypeCodeString:
+        {
+            t_string_value = (MCStringRef)p_value;
+        }
+            break;
+        case kMCValueTypeCodeData:
+        {
+            MCDataRef t_dataref;
+            t_dataref = (MCDataRef)p_value;
+            if (!MCStringCreateWithBytes(MCDataGetBytePtr(t_dataref), MCDataGetLength(t_dataref), kMCStringEncodingNative, false, &t_string_value))
+                return kMCExternalErrorOutOfMemory;
+        }
+            break;
+        case kMCValueTypeCodeArray:
+            // An array is never a string (from the point of view of the externals API).
+            return kMCExternalErrorNotAString;
+            break;
+        default:
+            assert(false);
+    }
+    
+    r_string = MCValueRetain(*t_string_value);
+    
+    return kMCExternalErrorNone;
+}
 // SN-2014-07-16: [[ ExternalsApiV6 ]] Function to get the CData type - allowing nil bytes in the string
 MCExternalError MCExternalVariable::GetCData(MCExternalValueOptions p_options, void *r_value)
 {
@@ -1805,6 +1810,8 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
 
 	if (p_value == nil)
 		return kMCExternalErrorNoValue;
+    
+    MCExternalError t_error;
 
 	switch(p_options & 0xff)
 	{
@@ -1884,47 +1891,40 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsCFNumber:
     case kMCExternalValueOptionAsNSNumber:
     {
-        CFNumberRef t_number;
-        t_number = *(CFNumberRef*)p_value;
+        NSNumber* t_number;
+        t_number = *(NSNumber**)p_value;
+        MCAutoValueRef t_value;
         
-        if (CFNumberIsFloatType(t_number))
-        {
-            real64_t t_double;
-            if (!CFNumberGetValue(t_number, kCFNumberFloat64Type, &t_double))
-                return kMCExternalErrorNotANumber;
-            else
-                return var -> SetReal(t_double);
-        }
-        else
-        {
-            int32_t t_integer;
-            if (!CFNumberGetValue(t_number, kCFNumberIntType, &t_integer))
-                return kMCExternalErrorNotANumber;
-            else
-                return var -> SetInteger(t_integer);
-        }
+        t_error = MCValueFromObjcValue(t_number, &t_value);
+        
+        if (t_error != kMCExternalErrorNone)
+            return t_error;
+        
+        return var -> SetReal(MCNumberFetchAsReal((MCNumberRef)*t_value));
     }
     case kMCExternalValueOptionAsCFString:
     case kMCExternalValueOptionAsNSString:
     {
-        MCAutoStringRef t_string;
+        MCAutoValueRef t_value;
         
-        if (!MCStringCreateWithCFString(*(CFStringRef*)p_value, &t_string))
-            return kMCExternalErrorNotAString;
+        t_error = MCValueFromObjcValue(*(NSString**)p_value, &t_value);
         
-        return var -> SetString(*t_string);
+        if (t_error != kMCExternalErrorNone)
+            return t_error;
+        
+        return var -> SetString((MCStringRef)*t_value);
     }
     case kMCExternalValueOptionAsCFData:
     case kMCExternalValueOptionAsNSData:
     {
-        MCAutoStringRef t_string;
-        CFDataRef t_data;
-        t_data = *(CFDataRef*)p_value;
+        MCAutoValueRef t_value;
         
-        if (!MCStringCreateWithBytes(CFDataGetBytePtr(t_data), CFDataGetLength(t_data), kMCStringEncodingNative, false, &t_string))
-            return kMCExternalErrorOutOfMemory;
+        t_error = MCValueFromObjcValue(*(NSData**)p_value, &t_value);
         
-        return var -> SetString(*t_string);
+        if (t_error != kMCExternalErrorNone)
+            return t_error;
+        
+        return var -> SetString((MCStringRef)*t_value);
     }
     case kMCExternalValueOptionAsCFArray:
     case kMCExternalValueOptionAsNSArray:
@@ -1933,14 +1933,20 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         MCExternalVariableRef t_tmp_array;
         MCExternalError t_error;
         
+        MCAutoArrayRef t_tmp_array_ref;
+        
         t_error = kMCExternalErrorNone;
         t_tmp_array = nil;
         if (t_error == kMCExternalErrorNone)
             t_error = MCExternalVariableCreate(&t_tmp_array);
+        // SN-2015-01-14: [[ Bug 14057 ]] Use the new engine function
         if (t_error == kMCExternalErrorNone)
-            t_error = MCExternalValueArrayFromObjcArray(t_tmp_array, *(NSArray **)p_value);
+            t_error = MCArrayFromObjcArray(*(NSArray **)p_value, &t_tmp_array_ref);
         if (t_error == kMCExternalErrorNone)
-            t_error = g_external_interface . variable_exchange(var, t_tmp_array);
+        {
+            t_tmp_array -> SetValueRef(*t_tmp_array_ref);
+            t_error = MCExternalVariableExchange(var, t_tmp_array);
+        }
         if (t_tmp_array != nil)
             MCExternalVariableRelease(t_tmp_array);
         
@@ -1952,15 +1958,20 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
         MCExternalVariableRef t_tmp_array;
         MCExternalError t_error;
+        MCAutoArrayRef t_tmp_array_ref;
         
         t_error = kMCExternalErrorNone;
         t_tmp_array = nil;
         if (t_error == kMCExternalErrorNone)
             t_error = MCExternalVariableCreate(&t_tmp_array);
+        // SN-2015-01-14: [[ Bug 14057 ]] Use the new engine function
         if (t_error == kMCExternalErrorNone)
-            t_error = MCExternalValueArrayFromObjcDictionary(t_tmp_array, *(NSDictionary **)p_value);
+            t_error = MCArrayFromObjcDictionary(*(NSDictionary **)p_value, &t_tmp_array_ref);
         if (t_error == kMCExternalErrorNone)
-            t_error = g_external_interface . variable_exchange(var, t_tmp_array);
+        {
+            t_tmp_array -> SetValueRef(*t_tmp_array_ref);
+            t_error = MCExternalVariableExchange(var, t_tmp_array);
+        }
         if (t_tmp_array != nil)
             MCExternalVariableRelease(t_tmp_array);
         return t_error;
@@ -2131,7 +2142,15 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         MCExternalError t_error;
         NSArray* t_value;
         
-        t_error = MCExternalValueArrayToObjcArray(var, t_value);
+        t_error = kMCExternalErrorNone;
+        
+        MCValueRef t_valueref;
+        t_valueref = var -> GetValueRef();
+        if (MCValueGetTypeCode(t_valueref) != kMCValueTypeCodeArray)
+            t_error = kMCExternalErrorNotAnArray;
+        
+        if (t_error == kMCExternalErrorNone)
+            t_error = MCArrayToObjcArray((MCArrayRef)var -> GetValueRef(), t_value);
         
         if (t_error != kMCExternalErrorNone)
             return t_error;
@@ -2150,7 +2169,16 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         MCExternalError t_error;
         NSDictionary* t_value;
         
-        t_error = MCExternalValueArrayToObjcDictionary(var, t_value);
+        t_error = kMCExternalErrorNone;
+        
+        MCValueRef t_valueref;
+        t_valueref = var -> GetValueRef();
+        
+        if (MCValueGetTypeCode(t_valueref) != kMCValueTypeCodeArray)
+            t_error = kMCExternalErrorNotAnArray;
+        
+        if (t_error == kMCExternalErrorNone)
+            t_error = MCArrayToObjcDictionary((MCArrayRef)var -> GetValueRef(), t_value);
         
         if (t_error != kMCExternalErrorNone)
             return t_error;
@@ -3068,85 +3096,112 @@ static MCExternalError MCExternalObjectUpdate(MCExternalObjectRef p_object, unsi
 // Convert a LiveCode value into an element of an Objc Array/Dictionary. This
 // converts all non-array values to strings, arrays which are sequences to
 // NSArray, and arrays which are maps to NSDictionary.
-static MCExternalError MCExternalValueArrayValueToObjcValue(MCExternalVariableRef var, id& r_dst)
+static MCExternalError MCValueToObjcValue(MCValueRef p_input, id& r_dst)
 {
 	MCExternalError t_error;
 	t_error = kMCExternalErrorNone;
 	
-	if (t_error == kMCExternalErrorNone)
-	{
-        bool t_is_empty;
+    if (MCValueIsEmpty(p_input))
+    {
+        r_dst = @"";
+    }
+    else if (MCValueGetTypeCode(p_input) != kMCValueTypeCodeArray)
+    {
+        MCAutoStringRef t_stringref;
         
-        t_error = MCExternalVariableQuery(var, kMCExternalVariableQueryIsEmpty, &t_is_empty);
+        t_error = MCExternalVariable::ConvertToString(p_input, kMCExternalValueOptionDefaultNumberFormat, &t_stringref);
         
-        if (t_error == kMCExternalErrorNone && t_is_empty)
-		{
-			r_dst = @"";
-			return kMCExternalErrorNone;
-		}
-	}
-	
-	if (t_error == kMCExternalErrorNone)
-	{
-        bool t_is_array;
+        if (t_error != kMCExternalErrorNone)
+            return t_error;
         
-        t_error = MCExternalVariableQuery(var, kMCExternalVariableQueryIsAnArray, &t_is_array);
-        
-        if (t_error == kMCExternalErrorNone && !t_is_array)
-            // SN-2014-11-24: [[ Bug 14057 ]] Give the expected reference to the NSDictionary
-			return MCExternalVariableFetch(var, kMCExternalValueOptionAsNSString, &r_dst);
-	}
-	
-	if (t_error == kMCExternalErrorNone)
-	{
-        bool t_is_sequence;
-        
-        t_error = MCExternalVariableQuery(var, kMCExternalVariableQueryIsASequence, &t_is_sequence);
-        
-        if (t_error == kMCExternalErrorNone && t_is_sequence)
-			return MCExternalValueArrayToObjcArray(var, (NSArray*&)r_dst);
-	}
-	
-	if (t_error == kMCExternalErrorNone)
-		return MCExternalValueArrayToObjcDictionary(var, (NSDictionary*&)r_dst);
+        if (!MCStringConvertToCFStringRef(*t_stringref, (CFStringRef&)r_dst))
+            return kMCExternalErrorOutOfMemory;
+    }
+    // p_input is an MCArrayRef
+    else if (MCArrayIsSequence((MCArrayRef)p_input))
+        return MCArrayToObjcArray((MCArrayRef)p_input, (NSArray*&)r_dst);
+	else
+		return MCArrayToObjcDictionary((MCArrayRef)p_input, (NSDictionary*&)r_dst);
 	
 	return (MCExternalError)t_error;
 }
 
-static MCExternalError MCExternalValueArrayValueFromObjcValue(MCExternalVariableRef var, id src)
+static MCExternalError MCValueFromObjcValue(id src, MCValueRef &var)
 {
 	if ([src isKindOfClass: [NSNull class]])
-		return (MCExternalError)MCExternalVariableClear(var);
-	
-	if ((CFBooleanRef)src == kCFBooleanTrue || (CFBooleanRef)src == kCFBooleanFalse)
+    {
+		var = MCValueRetain(kMCEmptyString);
+    }
+	else if ((CFBooleanRef)src == kCFBooleanTrue || (CFBooleanRef)src == kCFBooleanFalse)
 	{
-		bool t_bool;
-		t_bool = (CFBooleanRef)src == kCFBooleanTrue;
-		return MCExternalVariableStore(var, kMCExternalValueOptionAsBoolean, &t_bool);
+		if ((CFBooleanRef)src == kCFBooleanTrue)
+            var = MCValueRetain(kMCTrue);
+        else
+            var = MCValueRetain(kMCFalse);
 	}
-    
-	if ([src isKindOfClass: [NSNumber class]])
-		return MCExternalVariableStore(var, kMCExternalValueOptionAsNSNumber, &src);
-    
-	if ([src isKindOfClass: [NSString class]])
-		return MCExternalVariableStore(var, kMCExternalValueOptionAsNSString, &src);
-    
-	if ([src isKindOfClass: [NSData class]])
-		return MCExternalVariableStore(var, kMCExternalValueOptionAsNSData, &src);
-    
-	if ([src isKindOfClass: [NSArray class]])
-		return MCExternalValueArrayFromObjcArray(var, (NSArray *)src);
+	else if ([src isKindOfClass: [NSNumber class]])
+    {
+        CFNumberRef t_number;
+        t_number = (CFNumberRef)src;
+        
+        if (CFNumberIsFloatType(t_number))
+        {
+            real64_t t_double;
+            if (!CFNumberGetValue(t_number, kCFNumberFloat64Type, &t_double))
+                return kMCExternalErrorNotANumber;
+            else if (!MCNumberCreateWithReal(t_double, (MCNumberRef&)var))
+                return kMCExternalErrorNotANumber;
+        }
+        else
+        {
+            int32_t t_integer;
+            if (!CFNumberGetValue(t_number, kCFNumberIntType, &t_integer))
+                return kMCExternalErrorNotANumber;
+            else if (!MCNumberCreateWithInteger(t_integer, (MCNumberRef&)var))
+                return kMCExternalErrorNotAnInteger;
+        }
+    }
+	else if ([src isKindOfClass: [NSString class]])
+    {
+        MCAutoStringRef t_string;
+        
+        if (!MCStringCreateWithCFString((CFStringRef)src, &t_string))
+            return kMCExternalErrorNotAString;
+        
+        var = MCValueRetain(*t_string);
+    }
+	else if ([src isKindOfClass: [NSData class]])
+    {
+        MCAutoStringRef t_string;
+        CFDataRef t_data;
+        t_data = (CFDataRef)src;
+        
+        if (!MCStringCreateWithBytes(CFDataGetBytePtr(t_data), CFDataGetLength(t_data), kMCStringEncodingNative, false, &t_string))
+            return kMCExternalErrorOutOfMemory;
+        
+        var = MCValueRetain(*t_string);
+    }
+	else if ([src isKindOfClass: [NSArray class]])
+		return MCArrayFromObjcArray((NSArray *)src, (MCArrayRef&)var);
 	
-	if ([src isKindOfClass: [NSDictionary class]])
-		return MCExternalValueArrayFromObjcDictionary(var, (NSDictionary *)src);
-	
-	NSString *t_as_string;
-	t_as_string = [src description];
-	return MCExternalVariableStore(var, kMCExternalValueOptionAsNSString, &t_as_string);
+	else if ([src isKindOfClass: [NSDictionary class]])
+		return MCArrayFromObjcDictionary((NSDictionary *)src, (MCArrayRef&)var);
+	else
+    {
+        MCAutoStringRef t_string;
+        NSString *t_as_string;
+        t_as_string = [src description];
+        if (!MCStringCreateWithCFString((CFStringRef)t_as_string, &t_string))
+            return kMCExternalErrorOutOfMemory;
+        
+        var = MCValueRetain(*t_string);
+    }
+    
+    return kMCExternalErrorNone;
 }
 
 // Convert a LiveCode array into an NSArray. The returned NSArray is alloc'd.
-static MCExternalError MCExternalValueArrayToObjcArray(MCExternalVariableRef src, NSArray*& r_dst)
+static MCExternalError MCArrayToObjcArray(MCArrayRef src, NSArray*& r_dst)
 {
 	MCExternalError t_error;
 	t_error = kMCExternalErrorNone;
@@ -3154,7 +3209,7 @@ static MCExternalError MCExternalValueArrayToObjcArray(MCExternalVariableRef src
 	if (t_error == kMCExternalErrorNone)
 	{
 		bool t_is_sequence;
-		t_error = MCExternalVariableQuery(src, kMCExternalVariableQueryIsASequence, &t_is_sequence);
+        t_is_sequence = MCArrayIsSequence(src);
 		if (t_error == kMCExternalErrorNone && !t_is_sequence)
 			t_error = kMCExternalErrorNotASequence;
 	}
@@ -3162,7 +3217,7 @@ static MCExternalError MCExternalValueArrayToObjcArray(MCExternalVariableRef src
 	uint32_t t_count;
 	t_count = 0;
 	if (t_error == kMCExternalErrorNone)
-		t_error = g_external_interface . variable_count_keys(src, &t_count);
+		t_count = MCArrayGetCount(src);
 	
 	id *t_objects;
 	t_objects = nil;
@@ -3173,22 +3228,31 @@ static MCExternalError MCExternalValueArrayToObjcArray(MCExternalVariableRef src
 			t_error = kMCExternalErrorOutOfMemory;
 	}
 	
-	MCExternalVariableIteratorRef t_iterator;
-	t_iterator = nil;
-	for(uint32_t i = 0; i < t_count && t_error == kMCExternalErrorNone; i++)
+    uintptr_t t_iterator;
+    t_iterator = 0;
+	for(uintptr_t i = 0; i < t_count && t_error == kMCExternalErrorNone; ++i)
 	{
 		// Fetch the key and value.
-		const char *t_key;
-		MCExternalVariableRef t_value;
+		MCNameRef t_key;
+		MCValueRef t_value;
+        
 		if (t_error == kMCExternalErrorNone)
-			t_error = g_external_interface . variable_iterate_keys(src, &t_iterator, kMCExternalValueOptionAsCString, &t_key, &t_value);
+        {
+			if (!MCArrayIterate(src, t_iterator, t_key, t_value))
+                t_error = kMCExternalErrorNotAnArray;
+        }
 		
 		// Now convert the value - remembering that LC sequences are 1 based, and
 		// Objc arrays are 0 based. Note that we don't have to validate the key as
 		// its guaranteed to be of the correct form as we checked the array was a
 		// sequence.
+        int4 t_index;
+        if (t_error == kMCExternalErrorNone
+                && !MCU_strtol(MCNameGetString(t_key), t_index))
+            t_error= kMCExternalErrorNotASequence;
+        
 		if (t_error == kMCExternalErrorNone)
-			t_error = MCExternalValueArrayValueToObjcValue(t_value, t_objects[strtoul(t_key, nil, 10) - 1]);
+			t_error = MCValueToObjcValue(t_value, t_objects[t_index - 1]);
 	}
 	
 	// If we succeeded, then try to build an NSArray.
@@ -3211,54 +3275,41 @@ static MCExternalError MCExternalValueArrayToObjcArray(MCExternalVariableRef src
 	return t_error;
 }
 
-static MCExternalError MCExternalValueArrayFromObjcArray(MCExternalVariableRef var, NSArray *src)
+static MCExternalError MCArrayFromObjcArray(NSArray *src, MCArrayRef &r_array)
 {
 	MCExternalError t_error;
 	t_error = kMCExternalErrorNone;
+    
+    MCAutoArrayRef t_array;
+    
+    if (!MCArrayCreateMutable(&t_array))
+        return kMCExternalErrorOutOfMemory;
 	
 	for(unsigned int t_index = 0; t_index < [src count] && t_error == kMCExternalErrorNone; t_index++)
 	{
         // SN-2014-11-24: [[ Bug 14057 ]] Function rewritten as ExternalVariable are not anymore the values
         //  stored in the arrays.
-        MCExternalVariableRef t_variable;
+        MCAutoValueRef t_value;
         if (t_error == kMCExternalErrorNone)
-            t_error = MCExternalVariableCreate(&t_variable);
-        
-        if (t_error == kMCExternalErrorNone)
-            t_error = MCExternalValueArrayValueFromObjcValue(t_variable, [src objectAtIndex: t_index]);
+            t_error = MCValueFromObjcValue([src objectAtIndex: t_index], &t_value);
         
         if (t_error == kMCExternalErrorNone)
         {
-            // Get the ValueRef stored in the ExternalVariable, and append it to the content of output ExternalVariable's array
-            MCValueRef t_value;
-            MCArrayRef t_array;
-            
-            t_value = var -> GetValueRef();
-            if (MCValueIsArray(t_value))
-                t_array = (MCArrayRef)t_value;
-            else
-            {
-                MCAutoArrayRef t_new_array;
-                if (!MCArrayCreateMutable(&t_new_array))
-                    t_error = kMCExternalErrorOutOfMemory;
-                else
-                {
-                    var -> SetValueRef(*t_new_array);
-                    // Be sure to get the reference to the valueRef stored in the ExternalVariable
-                    t_array = (MCArrayRef)(var -> GetValueRef());
-                }
-            }
-            
-            if (t_error == kMCExternalErrorNone &&
-                !MCArrayStoreValueAtIndex(t_array, t_index + 1, t_variable -> GetValueRef()))
+            if (!MCArrayStoreValueAtIndex(*t_array, t_index + 1, *t_value))
                 t_error = kMCExternalErrorOutOfMemory;
         }
 	}
+    
+    if (t_error == kMCExternalErrorNone)
+    {
+        if (!MCArrayCopy(*t_array, r_array))
+            t_error = kMCExternalErrorOutOfMemory;
+    }
 	
 	return t_error;
 }
 
-static MCExternalError MCExternalValueArrayToObjcDictionary(MCExternalVariableRef src, NSDictionary*& r_dst)
+static MCExternalError MCArrayToObjcDictionary(MCArrayRef p_input, NSDictionary*& r_dst)
 {
 	MCExternalError t_error;
 	t_error = kMCExternalErrorNone;
@@ -3266,8 +3317,7 @@ static MCExternalError MCExternalValueArrayToObjcDictionary(MCExternalVariableRe
 	uint32_t t_count;
 	t_count = 0;
 	if (t_error == kMCExternalErrorNone)
-        // SN-2014-11-24: [[ Bug 14057 ]] Get the count of keys in t_count, not the error status
-		t_error = g_external_interface . variable_count_keys(src, &t_count);
+		t_count = MCArrayGetCount(p_input);
 	
 	id *t_keys, *t_values;
 	t_keys = t_values = nil;
@@ -3279,29 +3329,27 @@ static MCExternalError MCExternalValueArrayToObjcDictionary(MCExternalVariableRe
 			t_error = kMCExternalErrorOutOfMemory;
 	}
 	
-	MCExternalVariableIteratorRef t_iterator;
-	t_iterator = nil;
-	for(uint32_t i = 0; i < t_count && t_error == kMCExternalErrorNone; i++)
+    uintptr_t t_iterator;
+    t_iterator = 0;
+	for(uint32_t i = 0; i < t_count && t_error == kMCExternalErrorNone; ++i)
 	{
 		// Fetch the key and value.
-        // SN-2014-11-24 : [[ Bug 14057 ]] Update to use UTF8 string instead of CString.
-		char* t_key;
-		MCExternalVariableRef t_value;
-		if (t_error == kMCExternalErrorNone)
-			t_error = g_external_interface . variable_iterate_keys(src, &t_iterator, kMCExternalValueOptionAsUTF8CString, &t_key, &t_value);
-		
+        MCNameRef t_key;
+        MCValueRef t_value;
+        if (t_error == kMCExternalErrorNone)
+            if (!MCArrayIterate(p_input, t_iterator, t_key, t_value))
+                t_error = kMCExternalErrorNotAnArray;
+        
 		// Convert the key.
 		if (t_error == kMCExternalErrorNone)
 		{
-            MCAutoStringRef t_key_as_string;
-            if (!MCStringCreateWithBytesAndRelease((byte_t*)t_key, strlen(t_key), kMCStringEncodingUTF8, false, &t_key_as_string)
-                    || !MCStringConvertToCFStringRef(*t_key_as_string, (CFStringRef&)t_keys[i]))
+            if (!MCStringConvertToCFStringRef(MCNameGetString(t_key), (CFStringRef&)t_keys[i]))
 				t_error = kMCExternalErrorOutOfMemory;
 		}
 		
 		// Now convert the value.
 		if (t_error == kMCExternalErrorNone)
-			t_error = MCExternalValueArrayValueToObjcValue(t_value, t_values[i]);
+			t_error = MCValueToObjcValue(t_value, t_values[i]);
 	}
 	
 	// If we succeeded then build the dictionary.
@@ -3316,6 +3364,7 @@ static MCExternalError MCExternalValueArrayToObjcDictionary(MCExternalVariableRe
 	if (t_error == kMCExternalErrorNone)
 		r_dst = t_dictionary;
 	
+    // Only release the created
 	for(uint32_t i = 0; i < t_count; i++)
 	{
 		[t_keys[i] release];
@@ -3327,10 +3376,14 @@ static MCExternalError MCExternalValueArrayToObjcDictionary(MCExternalVariableRe
 	return t_error;
 }
 
-static MCExternalError MCExternalValueArrayFromObjcDictionary(MCExternalVariableRef var, NSDictionary *p_src)
+static MCExternalError MCArrayFromObjcDictionary(NSDictionary *p_src, MCArrayRef &r_array)
 {
 	MCExternalError t_error;
 	t_error = kMCExternalErrorNone;
+    
+    MCAutoArrayRef t_array;
+    if (!MCArrayCreateMutable(&t_array))
+        return kMCExternalErrorOutOfMemory;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
@@ -3354,6 +3407,7 @@ static MCExternalError MCExternalValueArrayFromObjcDictionary(MCExternalVariable
         //  stored in the arrays.
         MCAutoStringRef t_key_stringref;
         MCNewAutoNameRef t_key_nameref;
+        
         if (t_error == kMCExternalErrorNone)
         {
             if (!MCStringCreateWithCFString((CFStringRef)t_key, &t_key_stringref) ||
@@ -3361,41 +3415,22 @@ static MCExternalError MCExternalValueArrayFromObjcDictionary(MCExternalVariable
                 t_error = kMCExternalErrorOutOfMemory;
         }
         
-        MCExternalVariableRef t_variable;
-        if (t_error == kMCExternalErrorNone)
-            t_error = MCExternalVariableCreate(&t_variable);
+        MCAutoValueRef t_value;
         
         if (t_error == kMCExternalErrorNone)
-            t_error = MCExternalValueArrayValueFromObjcValue(t_variable, [p_src objectForKey: t_key]);
+            t_error = MCValueFromObjcValue([p_src objectForKey: t_key], &t_value);
     
         if (t_error == kMCExternalErrorNone)
         {
-            // Get the ValueRef stored in the ExternalVariable after the conversion from the Obj-C value
-            MCValueRef t_value;
-            MCArrayRef t_array;
-            
-            t_value = var -> GetValueRef();
-            if (MCValueIsArray(t_value))
-                t_array = (MCArrayRef)t_value;
-            else
-            {
-                MCAutoArrayRef t_new_array;
-                if (!MCArrayCreateMutable(&t_new_array))
-                    t_error = kMCExternalErrorOutOfMemory;
-                else
-                {
-                    var -> SetValueRef(*t_new_array);
-                    // Be sure to get the reference to the valueRef stored in the ExternalVariable
-                    t_array = (MCArrayRef)(var -> GetValueRef());
-                }
-            }
-            
-            if (t_error == kMCExternalErrorNone &&
-                    !MCArrayStoreValue(t_array, false, *t_key_nameref, t_variable -> GetValueRef()))
+            if (!MCArrayStoreValue(*t_array, false, *t_key_nameref, *t_value))
                 t_error = kMCExternalErrorOutOfMemory;
         }
     }
     [t_pool release];
+        
+    if (t_error == kMCExternalErrorNone
+            && !MCArrayCopy(*t_array, r_array))
+        t_error = kMCExternalErrorOutOfMemory;
     
     return t_error;
 }
