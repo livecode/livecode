@@ -582,13 +582,16 @@ Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters)
     MCAutoStringRef t_quantity;
     MCAutoStringRef t_payload;
     MCPurchase *t_purchase = nil;
+    uint32_t t_id;
     
     if (t_success)
         t_success = MCParseParameters(p_parameters, "xxx", &(&t_prod_id), &(&t_quantity), &(&t_payload));
     
     MCExecContext ctxt(nil, nil, nil);
-    //if (t_success)
-    //t_success = MCStoreMakePurchase(t_purchase);
+    
+    if (t_success)
+        MCStoreExecCreatePurchase(ctxt, *t_prod_id, t_id);
+   
     if (t_success)
         MCStoreExecMakePurchase(ctxt, *t_prod_id, *t_quantity, *t_payload);
     
