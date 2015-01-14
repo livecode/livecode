@@ -667,6 +667,9 @@ void update_purchase_state(MCPurchase *p_purchase)
 			case SKPaymentTransactionStateFailed:
 			{
 				NSError *t_error = [t_ios_data->transaction error];
+                
+                if(t_error == nil)
+                    return;
 				if ([[t_error domain] isEqualToString:SKErrorDomain] && [t_error code] == SKErrorPaymentCancelled)
 					p_purchase->state = kMCPurchaseStateCancelled;
 				else
