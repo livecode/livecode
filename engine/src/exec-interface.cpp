@@ -4086,7 +4086,8 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		else
 		{
 			uint4 win;
-			if (MCU_stoui4(p_window, win) && MCscreen->uint4towindow(win, w))
+            // SN-2015-01-07: [[ iOS-64bit ]] Update to uinttowindow
+            if (MCU_stoui4(p_window, win) && MCscreen->uinttowindow(win, w))
 				oldstack = MCdispatcher->findstackd(w);
 			else
 				oldstack = ctxt . GetObject()->getstack()->findstackname_string(p_window);

@@ -253,6 +253,8 @@ MCNameRef MCN_x86_64;
 MCNameRef MCN_motorola_powerpc;
 MCNameRef MCN_i386;
 MCNameRef MCN_arm;
+// SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
+MCNameRef MCN_arm64;
 
 MCNameRef MCN_local_mac;
 MCNameRef MCN_local_win32;
@@ -690,6 +692,8 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("Motorola PowerPC", MCN_motorola_powerpc);
 	/* UNCHECKED */ MCNameCreateWithCString("i386", MCN_i386);
 	/* UNCHECKED */ MCNameCreateWithCString("ARM", MCN_arm);
+    // SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
+    /* UNCHECKED */ MCNameCreateWithCString("arm64", MCN_arm64);
 
 	/* UNCHECKED */ MCNameCreateWithCString("local Mac", MCN_local_mac);
 	/* UNCHECKED */ MCNameCreateWithCString("local Win32", MCN_local_win32);
@@ -1127,6 +1131,8 @@ void MCU_finalize_names(void)
     MCNameDelete(MCN_motorola_powerpc);
     MCNameDelete(MCN_i386);
     MCNameDelete(MCN_arm);
+    // SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
+    MCNameDelete(MCN_arm64);
 
 	MCNameDelete(MCN_local_mac);
 	MCNameDelete(MCN_local_win32);

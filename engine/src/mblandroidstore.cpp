@@ -110,6 +110,7 @@ bool MCStoreCanMakePurchase()
     
     MCAndroidEngineRemoteCall("storeCanMakePurchase", "b", &t_result);
     
+    // PM-2015-01-05: [[ Bug 14285 ]] Removed code. The bool variable that indicates if in-app billing is supported has already been initialised in initBilling() method, so no need to block-wait
     return t_result;
 }
 

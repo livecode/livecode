@@ -135,7 +135,7 @@ static inline void glvColor4ub(MCTileCacheOpenGLVersion p_version, uint8_t r, ui
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline void MCTileCacheOpenGLCompositorDecodeTile(MCTileCacheOpenGLCompositorContext *self, uint32_t p_tile, uint32_t& r_super_tile, uint32_t& r_sub_tile)
+static inline void MCTileCacheOpenGLCompositorDecodeTile(MCTileCacheOpenGLCompositorContext *self, uintptr_t p_tile, uint32_t& r_super_tile, uint32_t& r_sub_tile)
 {
 	r_super_tile = (p_tile & 0xffff) - 1;
 	r_sub_tile = (p_tile >> 16) - 1;
@@ -218,7 +218,7 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	return true;
 }
 
-static void MCTileCacheOpenGLCompositorDestroyTile(MCTileCacheOpenGLCompositorContext *self, uint32_t p_tile)
+static void MCTileCacheOpenGLCompositorDestroyTile(MCTileCacheOpenGLCompositorContext *self, uintptr_t p_tile)
 {
 	// Fetch the super/sub indices of the tile.
 	uint32_t t_super_tile_index, t_sub_tile_index;
@@ -375,7 +375,7 @@ void MCTileCacheOpenGLCompositor_DeallocateTile(void *p_context, void *p_tile)
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
-	MCTileCacheOpenGLCompositorDestroyTile(self, (uint32_t)p_tile);
+	MCTileCacheOpenGLCompositorDestroyTile(self, (uintptr_t)p_tile);
 }
 
 static void MCTileCacheOpenGLCompositor_PrepareFrame(MCTileCacheOpenGLCompositorContext *self)
@@ -569,7 +569,7 @@ bool MCTileCacheOpenGLCompositor_CompositeTile(void *p_context, int32_t p_x, int
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 
 	uint32_t t_super_tile_index, t_sub_tile_index;
-	MCTileCacheOpenGLCompositorDecodeTile(self, (uint32_t)p_tile, t_super_tile_index, t_sub_tile_index);
+	MCTileCacheOpenGLCompositorDecodeTile(self, (uintptr_t)p_tile, t_super_tile_index, t_sub_tile_index);
 	
 	GLuint t_texture;
 	t_texture = self -> super_tiles[t_super_tile_index] -> texture;

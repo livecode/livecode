@@ -215,7 +215,10 @@ public:
     virtual void setforegroundcolor(const MCInterfaceNamedColor& p_color);
     virtual void getforegrouncolor(MCInterfaceNamedColor& r_color);
     virtual void sethilitecolor(const MCInterfaceNamedColor& p_color);
-    virtual void gethilitecolor(MCInterfaceNamedColor& r_color);    
+    virtual void gethilitecolor(MCInterfaceNamedColor& r_color);
+
+    // SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]]
+    virtual bool resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename);
     
     // End of virtual functions from MCPlayerInterface
     

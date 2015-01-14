@@ -380,6 +380,17 @@ bool MCStringCreateWithWString(const unichar_t *p_wstring, MCStringRef& r_string
 	return MCStringCreateWithChars(p_wstring, t_length, r_string);
 }
 
+bool MCStringCreateWithWStringAndRelease(unichar_t* p_wstring, MCStringRef& r_string)
+{
+	if (MCStringCreateWithWString(p_wstring, r_string))
+	{
+		free(p_wstring);
+		return true;
+	}
+
+	return false;
+}
+
 bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
 	bool t_success;

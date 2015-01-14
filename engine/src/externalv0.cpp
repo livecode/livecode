@@ -1625,8 +1625,8 @@ static char *set_array_utf8_binary(const char *arg1, const char *arg2,
 static char *stack_to_window_rect(const char *arg1, const char *arg2,
 									   const char *arg3, int *retval)
 {
-	uintptr_t t_win_id;
-	t_win_id = uintptr_t(arg1);
+    uintptr_t t_win_id;
+    t_win_id = (uintptr_t)arg1;
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher->findstackwindowid(t_win_id);
