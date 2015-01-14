@@ -95,8 +95,22 @@ void MCU_init()
 		qa_points[i].y = MAXINT2 - (short)(cos(angle) * (real8)MAXINT2);
 		angle += increment;
 	}
-	MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
-	MCU_srand();
+
+    /* Attempt to seed the random number generator using the system entropy
+     * source. If that fails, fall back to constructing using some of the
+     * entropy available from the properties of the current process. */
+    MCAutoDataRef t_seed_data;
+    if (MCDataCreateRandom(sizeof(MCrandomseed), &t_seed_data))
+    {
+        MCMemoryCopy(&MCrandomseed, MCDataGetBytePtr(*t_seed_data),
+                     sizeof(MCrandomseed));
+    }
+    else
+    {
+        MCLog("Warning: Failed to seed random number generator", NULL);
+        MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
+    }
+    MCU_srand();
 }
 
 void MCU_watchcursor(MCStack *sptr, Boolean force)
