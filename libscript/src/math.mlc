@@ -501,6 +501,42 @@ public handler max(in pX as number, in pY as number) as number
     return tVar
 end handler
 
+/*
+Summary:    Min operator.
+List:		An expression that evaluates to a list.
+
+Returns: 	The minimal value attained by the elements of <List>.
+
+Description:
+>*Note:* It is an error if any element of <List> is non-numeric.
+
+Tags: Math
+*/
+
+syntax MinListOperator is prefix operator with precedence 5
+    "the" "minimum" "value" "of" <List: Expression>
+begin
+    MCMathEvalMinList(List, output)
+end syntax
+
+/*
+Summary:    Max operator.
+List:		An expression that evaluates to a list.
+
+Returns: 	The maximum value attained by the elements of <List>.
+
+Description:
+>*Note:* It is an error if any element of <List> is non-numeric.
+
+Tags: Math
+*/
+
+syntax MaxListOperator is prefix operator with precedence 5
+    "the" "maximum" "value" "of" <List: Expression>
+begin
+    MCMathEvalMaxList(List, output)
+end syntax
+
 --
 
 /*
