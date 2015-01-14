@@ -538,7 +538,7 @@ __MCFileCreateStream (MCStringRef p_native_path,
 	if (t_success)
 	{
 		t_cstream = fdopen (t_fd, t_stream_mode);
-		t_success == (NULL != t_cstream);
+		t_success = (NULL != t_cstream);
 	}
 
 	if (!t_success)
