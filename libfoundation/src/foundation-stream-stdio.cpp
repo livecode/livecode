@@ -475,7 +475,7 @@ __MCStdioStreamInitialize (void)
     return true;
 }
 
-bool
+void
 __MCStdioStreamFinalize (void)
 {
 	MCValueRelease (s_standard_output_stream);

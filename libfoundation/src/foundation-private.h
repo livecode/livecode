@@ -539,7 +539,7 @@ void __MCStreamFinalize(void);
 bool __MCStdioStreamCreate(FILE *, MCStreamRef &);
 
 bool __MCStdioStreamInitialize(void);
-bool __MCStdioStreamFinalize(void);
+void __MCStdioStreamFinalize(void);
 
 bool __MCFileInitialize(void);
 void __MCFileFinalize(void);
