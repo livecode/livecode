@@ -541,13 +541,15 @@ static long CountSyntaxNodeMarks(SyntaxNodeRef p_node)
             t_index = 0;
             break;
         case kSyntaxNodeKindDescent:
-            t_index = p_node -> descent . index == -1 ? 0 : p_node -> descent . index;
+            // We are counting the number of marks - we want index + 1 (since index can be 0)
+            t_index = p_node -> descent . index == -1 ? 0 : p_node -> descent . index + 1;
             break;
         case kSyntaxNodeKindBooleanMark:
         case kSyntaxNodeKindIntegerMark:
         case kSyntaxNodeKindRealMark:
         case kSyntaxNodeKindStringMark:
-            t_index = p_node -> boolean_mark . index;
+            // We are counting the number of marks - we want index + 1 (since index can be 0)
+            t_index = p_node -> boolean_mark . index + 1;
             break;
         case kSyntaxNodeKindConcatenate:
         case kSyntaxNodeKindAlternate:
