@@ -1252,12 +1252,14 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 				if (t_success)
 					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 			}
-
+            
 			if (t_success)
 			{
 				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), true);
+                // PM-2015-01-15: [[ Bug 14347 ]] Unlock bitmap to prevent a crashgit
+                unlockbitmap(t_copy);
 				setbitmap(t_copy, 1.0);
-			}
+            }
 
 			MCImageFreeBitmap(t_copy);
 
