@@ -54,7 +54,7 @@ typedef void (*MCExternalThreadRequiredCallback)(void *state, int flags);
 
 // MW-2013-06-14: [[ ExternalsApiV5 ]] Update the interface version.
 // MW-2014-06-26: [[ ExternalsApiV6 ]] Update the interface version for unicode changes.
-#define kMCExternalInterfaceVersion 5
+#define kMCExternalInterfaceVersion 6
 
 enum
 {

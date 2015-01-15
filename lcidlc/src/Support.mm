@@ -357,9 +357,8 @@ static LCError LCValueFetch(MCVariableRef var, unsigned int options, void *r_val
 static LCError LCValueStore(MCVariableRef var, unsigned int options, void *r_value);
 
 
-// SN-2014-07-01: [[ ExternalsApiV6 ]] The Obj-C parameter can be passed straight to
-// the externals
-#ifdef __EXTERNALS_V5__
+// SN-2014-07-01: [[ ExternalsApiV6 ]] Keep the pre-7.0 way to build arrays in case
+//  the engine is pre-7.0
 #ifdef __OBJC__
 
 // MW-2013-06-14: [[ ExternalsApiV5 ]] New methods to convert to/from objc-arrays
@@ -640,7 +639,6 @@ static LCError LCValueArrayFromObjcDictionary(MCVariableRef var, NSDictionary *p
 }
 
 #endif
-#endif // defined(__EXTERNALS_V5__)
 
 static unsigned int LCValueOptionsGetCaseSensitive(unsigned int p_options)
 {
@@ -761,12 +759,28 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				t_value_to_use = r_value;
 				break;
 			case kLCValueOptionAsObjcArray:
-                t_options_to_use = kMCOptionAsObjcArray;
-                t_value_to_use = r_value;
+                if (s_interface -> version < 6)
+                {
+                    t_options_to_use = kMCOptionAsVariable;
+                    t_value_to_use = &t_array_value;
+                }
+                else
+                {
+                    t_options_to_use = kMCOptionAsObjcArray;
+                    t_value_to_use = r_value;
+                }
                 break;
-			case kLCValueOptionAsObjcDictionary:
-				t_options_to_use = kMCOptionAsObjcDictionary;
-				t_value_to_use = r_value;
+            case kLCValueOptionAsObjcDictionary:
+                if (s_interface -> version < 6)
+                {
+                    t_options_to_use = kMCOptionAsVariable;
+                    t_value_to_use = &t_array_value;
+                }
+                else
+                {
+                    t_options_to_use = kMCOptionAsObjcDictionary;
+                    t_value_to_use = r_value;
+                }
 				break;
 #endif
 				
@@ -843,9 +857,14 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 			}
 			break;
 
-            // SN-2014-07-01: [[ ExternalsApiV6 ]] Obj-C types now passed straight to the externals
-#ifdef __EXTERNALS_V5__
+        }
+        // SN-2014-07-01: [[ ExternalsApiV6 ]] Obj-C types now passed straight to the externals
+        //  but we want to keep the old code for the former externals
 #ifdef __OBJC__
+        if (s_interface -> version < 6)
+        {
+            switch (p_options & kLCValueOptionMaskAs)
+            {
 			case kLCValueOptionAsObjcNumber:
 				*(NSNumber **)r_value = [NSNumber numberWithDouble: t_number_value];
 				break;
@@ -865,9 +884,9 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				if (t_error == kLCErrorNone)
 					[*(NSDictionary **)r_value autorelease];
 				break;
-#endif
-#endif
+            }
 		}
+#endif
 	}
 
 	return t_error;
@@ -900,13 +919,6 @@ static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
         case kLCValueOptionAsUTF8CString:
         case kLCValueOptionAsUTF16CData:
         case kLCValueOptionAsUTF16CString:
-#ifdef __OBJC__
-		case kLCValueOptionAsObjcNumber:
-		case kLCValueOptionAsObjcString:
-		case kLCValueOptionAsObjcData:
-		case kLCValueOptionAsObjcArray:
-		case kLCValueOptionAsObjcDictionary:
-#endif
 			t_options_to_use = p_options & kLCValueOptionMaskAs;
 			t_value_to_use = p_value;
 			break;
@@ -919,7 +931,96 @@ static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 		case kLCValueOptionAsLCArray:
 			t_options_to_use = kMCOptionAsVariable;
 			t_value_to_use = *(void **)p_value;
-			break;
+            break;
+#ifdef __OBJC__
+        case kLCValueOptionAsObjcNumber:
+            if (s_interface -> version >= 6)
+            {
+                t_options_to_use = p_options & kLCValueOptionMaskAs;
+                t_value_to_use = p_value;
+            }
+            else
+            {
+                t_options_to_use = kMCOptionAsReal;
+                t_number_value = [*(NSNumber **)p_value doubleValue];
+                t_value_to_use = &t_number_value;
+            }
+            break;
+        case kLCValueOptionAsObjcString:
+            if (s_interface -> version >= 6)
+            {
+                t_options_to_use = p_options & kLCValueOptionMaskAs;
+                t_value_to_use = p_value;
+            }
+            else
+            {
+                t_options_to_use = kMCOptionAsCString;
+                t_cstring_value = [*(NSString **)p_value cStringUsingEncoding: NSMacOSRomanStringEncoding];
+                if (t_cstring_value != nil)
+                    t_value_to_use = &t_cstring_value;
+                else
+                    t_error = kLCErrorCannotEncodeCString;
+            }
+            break;
+        case kLCValueOptionAsObjcData:
+            if (s_interface -> version >= 6)
+            {
+                t_options_to_use = p_options & kLCValueOptionMaskAs;
+                t_value_to_use = p_value;
+            }
+            else
+            {
+                t_options_to_use = kMCOptionAsString;
+                t_cdata_value . buffer = (char *)[*(NSData **)p_value bytes];
+                t_cdata_value . length = [*(NSData **)p_value length];
+                t_value_to_use = &t_cdata_value;
+            }
+            break;
+        case kLCValueOptionAsObjcArray:
+            if (s_interface -> version >= 6)
+            {
+                t_options_to_use = p_options & kLCValueOptionMaskAs;
+                t_value_to_use = p_value;
+            }
+            else
+            {
+                // For efficiency, we use 'exchange' - this prevents copying a temporary array.
+                MCVariableRef t_tmp_array;
+                t_tmp_array = nil;
+                if (t_error == kLCErrorNone)
+                    t_error = (LCError)MCVariableCreate(&t_tmp_array);
+                if (t_error == kLCErrorNone)
+                    t_error = LCValueArrayFromObjcArray(t_tmp_array, *(NSArray **)p_value);
+                if (t_error == kLCErrorNone)
+                    t_error = (LCError)s_interface -> variable_exchange(p_var, t_tmp_array);
+                if (t_tmp_array != nil)
+                    MCVariableRelease(t_tmp_array);
+                return t_error;
+            }
+            break;
+        case kLCValueOptionAsObjcDictionary:
+            if (s_interface -> version >= 6)
+            {
+                t_options_to_use = p_options & kLCValueOptionMaskAs;
+                t_value_to_use = p_value;
+            }
+            else
+            {
+                // For efficiency, we use 'exchange' - this prevents copying a temporary array.
+                MCVariableRef t_tmp_array;
+                t_tmp_array = nil;
+                if (t_error == kLCErrorNone)
+                    t_error = (LCError)MCVariableCreate(&t_tmp_array);
+                if (t_error == kLCErrorNone)
+                    t_error = LCValueArrayFromObjcDictionary(t_tmp_array, *(NSDictionary **)p_value);
+                if (t_error == kLCErrorNone)
+                    t_error = (LCError)s_interface -> variable_exchange(p_var, t_tmp_array);
+                if (t_tmp_array != nil)
+                    MCVariableRelease(t_tmp_array);
+                return t_error;
+            }
+            break;
+#endif
 		default:
 			t_error = kLCErrorBadValueOptions;
 			break;
@@ -976,17 +1077,22 @@ LCError LCArrayRelease(LCArrayRef p_array)
 
 static LCError LCArrayResolvePath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, MCVariableRef& r_var)
 {
-    if (s_interface -> version < 5)
-        return kLCErrorNotImplemented;
-    
 	LCError t_error;
 	t_error = kLCErrorNone;
 	
 	MCVariableRef t_key;
 	t_key = (MCVariableRef)p_array;
+    
+    // SN-2015-01-15: [[ Bug 14057 ]] Use the UTF8 string if possible.
+    int32_t t_option;
+    if (s_interface -> version < 6)
+        t_option = kMCOptionAsCString;
+    else
+        t_option = kMCOptionAsUTF8CString;
+    
 	for(unsigned int i = 0; i <= p_path_length; i++)
 	{
-		t_error = (LCError)s_interface -> variable_lookup_key((MCVariableRef)t_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, i < p_path_length ? (void *)&p_path[i] : (void *)&p_key, false, &t_key);
+		t_error = (LCError)s_interface -> variable_lookup_key((MCVariableRef)t_key, LCValueOptionsGetCaseSensitive(p_options) | t_option, i < p_path_length ? (void *)&p_path[i] : (void *)&p_key, false, &t_key);
 		if (t_error != kLCErrorNone || t_key == nil)
 			break;
 	}
@@ -1023,6 +1129,10 @@ LCError LCArrayCountKeysOnPath(LCArrayRef p_array, unsigned int p_options, const
 			*r_count = 0;
 		else
 			t_error = (LCError)s_interface -> variable_count_keys(t_var, r_count);
+        
+        // SN-2015-01-15: [[ Bug 14057 ]] ResolvePath now return a caller-free VariableRef
+        if (s_interface -> version >= 6)
+            MCVariableRelease(t_var);
 	}
 	
 	return (LCError)t_error;
@@ -1043,7 +1153,10 @@ LCError LCArrayListKeysOnPath(LCArrayRef p_array, unsigned int p_options, const 
 		if (p_path_length != 0)
 			t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length - 1, p_path[p_path_length - 1], t_var);
 		else
+        {
 			t_var = (MCVariableRef)p_array;
+            MCVariableRetain(t_var);
+        }
 	}
 	
 	unsigned int t_key_count;
@@ -1069,16 +1182,22 @@ LCError LCArrayListKeysOnPath(LCArrayRef p_array, unsigned int p_options, const 
 	{
 		MCVariableRef t_key_var;
         // SN-2015-01-14: [[ Bug 14057 ]] Only return a UTF-8 string if the interface version allows it
-        if (s_interface -> version < 5)
+        if (s_interface -> version < 6)
             t_error = (LCError)s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsCString, &t_keys[i], &t_key_var);
         else
             t_error = (LCError)s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsUTF8String, &t_keys[i], &t_key_var);
         
 		if (t_error == kLCErrorNone)
 		{
-			t_keys[i] = strdup(t_keys[i]);
-			if (t_keys[i] == NULL)
-				t_error = kLCErrorOutOfMemory;
+            // SN-2015-01-15: [[ Bug 14057 ]] From version 6, the key and the value are is caller-free
+            if (s_interface -> version < 6)
+            {
+                t_keys[i] = strdup(t_keys[i]);
+                if (t_keys[i] == NULL)
+                    t_error = kLCErrorOutOfMemory;
+            }
+            else
+                MCVariableRelease(t_key_var);
 		}
 	}
 	
@@ -1093,7 +1212,11 @@ LCError LCArrayListKeysOnPath(LCArrayRef p_array, unsigned int p_options, const 
 			for(unsigned int i = 0; i < t_key_count && t_keys[i] != nil; i++)
 				free(t_keys[i]);
 	}
-	
+    
+    // SN-2015-01-15: [[ Bug 14057 ]] ResolvePath now return a caller-free VariableRef
+    if (s_interface -> version >= 6 && t_var != nil)
+        MCVariableRelease(t_var);
+    
 	free(t_keys);
 	
 	return t_error;
@@ -1115,11 +1238,18 @@ LCError LCArrayRemoveKeysOnPath(LCArrayRef p_array, unsigned int p_options, cons
 		if (p_path_length != 0)
 			t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length - 1, p_path[p_path_length - 1], t_var);
 		else
+        {
 			t_var = (MCVariableRef)p_array;
+            MCVariableRetain(t_var);
+        }
 	}
 	
 	if (t_error == kLCErrorNone)
 		s_interface -> variable_clear(t_var);
+    
+    // SN-2015-01-15: [[ Bug 14057 ]] ResolvePath now return a caller-free VariableRef
+    if (s_interface -> version >= 6 && t_var != nil)
+        MCVariableRelease(t_var);
 	
 	return (LCError)t_error;
 }
@@ -1139,6 +1269,10 @@ LCError LCArrayHasKeyOnPath(LCArrayRef p_array, unsigned int p_options, const ch
 	
 	if (t_error == kLCErrorNone)
 		*r_exists = t_var != nil;
+    
+    // SN-2015-01-15: [[ Bug 14057 ]] ResolvePath now return a caller-free VariableRef
+    if (s_interface -> version >= 6 && t_var != nil)
+        MCVariableRelease(t_var);
 	
 	return (LCError)t_error;
 }
@@ -1208,6 +1342,10 @@ LCError LCArrayLookupKeyOnPath(LCArrayRef p_array, unsigned int p_options, const
 	
 	if (t_error == kLCErrorNone)
 		*r_exists = true;
+    
+    // SN-2015-01-15: [[ Bug 14057 ]] ResolvePath now return a caller-free VariableRef
+    if (s_interface -> version >= 6 && t_var != nil)
+        MCVariableRelease(t_var);
 	
 	return (LCError)t_error;
 }
@@ -1234,19 +1372,24 @@ LCError LCArrayFetchKeyWithPath(LCArrayRef p_array, unsigned int p_options, cons
 
 LCError LCArrayStoreKeyOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, void *p_value)
 {
-    if (s_interface -> version < 5)
-        return kLCErrorNotImplemented;
-    
 	LCError t_error;
 	t_error = kLCErrorNone;
 
 	unsigned int t_path_index;
 	MCVariableRef t_previous_key, t_key;
-	t_key = (MCVariableRef)p_array;
+    t_key = (MCVariableRef)p_array;
+    
+    // SN-2015-01-15: [[ Bug 14057 ]] Use the UTF8 string if possible.
+    int32_t t_option;
+    if (s_interface -> version < 6)
+        t_option = kMCOptionAsCString;
+    else
+        t_option = kMCOptionAsUTF8CString;
+    
 	for(t_path_index = 0; t_path_index <= p_path_length; t_path_index++)
 	{
 		t_previous_key = t_key;
-		t_error = (LCError)s_interface -> variable_lookup_key((MCVariableRef)t_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, t_path_index < p_path_length ? (void *)&p_path[t_path_index] : (void *)&p_key, false, &t_key);
+		t_error = (LCError)s_interface -> variable_lookup_key((MCVariableRef)t_key, LCValueOptionsGetCaseSensitive(p_options) | t_option, t_path_index < p_path_length ? (void *)&p_path[t_path_index] : (void *)&p_key, false, &t_key);
 		if (t_error != kLCErrorNone || t_key == nil)
 			break;
 	}
@@ -1269,7 +1412,7 @@ LCError LCArrayStoreKeyOnPath(LCArrayRef p_array, unsigned int p_options, const 
 	{
 		MCVariableRef t_key_value;
 		if (t_error == kLCErrorNone)
-			t_error = (LCError)s_interface -> variable_lookup_key(i - 1 == t_path_index ? t_previous_key : t_parent_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, i <= p_path_length ? (void *)&p_path[i - 1] : (void *)&p_key, true, &t_key_value);
+			t_error = (LCError)s_interface -> variable_lookup_key(i - 1 == t_path_index ? t_previous_key : t_parent_key, LCValueOptionsGetCaseSensitive(p_options) | t_option, i <= p_path_length ? (void *)&p_path[i - 1] : (void *)&p_key, true, &t_key_value);
 		if (t_error == kLCErrorNone)
 			t_error = (LCError)s_interface -> variable_exchange(t_key_value, t_key);
 		if (t_error == kLCErrorNone)
@@ -1313,11 +1456,18 @@ LCError LCArrayRemoveKeyOnPath(LCArrayRef p_array, unsigned int p_options, const
 		if (p_path_length != 0)
 			t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length - 1, p_path[p_path_length - 1], t_var);
 		else
+        {
 			t_var = (MCVariableRef)p_array;
+            MCVariableRetain(t_var);
+        }
 	}
 	
 	if (t_error == kLCErrorNone && t_var != nil)
 		t_error = (LCError)s_interface -> variable_remove_key(t_var, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, (void *)&p_key);
+    
+    // SN-2015-01-15: [[ Bug 14057 ]] ResolvePath now return a caller-free VariableRef
+    if (s_interface -> version >= 6 && t_var != nil)
+        MCVariableRelease(t_var);
 		
 	return (LCError)t_error;
 }
@@ -2732,7 +2882,10 @@ static bool fetch__objc_data(const char *arg, MCVariableRef var, NSData*& r_data
 static bool fetch__objc_array(const char *arg, MCVariableRef var, NSArray*& r_array)
 {
 	LCError err;
-	err = LCValueFetch(var, kLCValueOptionAsObjcArray, &r_array);
+    if (s_interface -> version < 6)
+        err = LCValueArrayToObjcArray(var, r_array);
+    else
+        err = LCValueFetch(var, kLCValueOptionAsObjcArray, &r_array);
 	if (err == kLCErrorNone)
 		return true;
 	return fetch__report_error(err, arg);
@@ -2740,8 +2893,11 @@ static bool fetch__objc_array(const char *arg, MCVariableRef var, NSArray*& r_ar
 
 static bool fetch__objc_dictionary(const char *arg, MCVariableRef var, NSDictionary*& r_dictionary)
 {
-	LCError err;
-	err = LCValueFetch(var, kLCValueOptionAsObjcDictionary, &r_dictionary);
+    LCError err;
+    if (s_interface -> version < 6)
+        err = LCValueArrayToObjcDictionary(var, r_dictionary);
+    else
+        err = LCValueFetch(var, kLCValueOptionAsObjcDictionary, &r_dictionary);
 	if (err == kLCErrorNone)
 		return true;
 	return fetch__report_error(err, arg);
@@ -2880,7 +3036,10 @@ static bool store__objc_data(MCVariableRef var, NSData* value)
 static bool store__objc_array(MCVariableRef var, NSArray* value)
 {
 	LCError err;
-	err = LCValueStore(var, kLCValueOptionAsObjcArray, &value);
+    if (s_interface -> version < 6)
+        err = LCValueArrayFromObjcArray(var, value);
+    else
+        err = LCValueStore(var, kLCValueOptionAsObjcArray, &value);
 	if (err == kLCErrorNone)
 		return true;
 	return store__report_error(err);
@@ -2888,11 +3047,14 @@ static bool store__objc_array(MCVariableRef var, NSArray* value)
 
 static bool store__objc_dictionary(MCVariableRef var, NSDictionary* value)
 {
-	LCError err;
-	err = LCValueStore(var, kLCValueOptionAsObjcDictionary, &value);
-	if (err == kLCErrorNone)
-		return true;
-	return store__report_error(err);
+    LCError err;
+    if (s_interface -> version < 6)
+        err = LCValueArrayFromObjcDictionary(var, value);
+    else
+        err = LCValueStore(var, kLCValueOptionAsObjcDictionary, &value);
+    if (err == kLCErrorNone)
+        return true;
+    return store__report_error(err);
 }
 #endif
 
