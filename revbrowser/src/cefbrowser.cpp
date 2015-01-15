@@ -27,6 +27,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <list>
 #include <set>
 
+#if defined(TARGET_PLATFORM_POSIX)
+#include "signal_restore_posix.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // String conversion
 
@@ -183,7 +187,16 @@ bool MCCefInitialise(void)
 		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);
 
 	if (t_success)
+	{
+#if defined(TARGET_PLATFORM_POSIX)
+		BackupSignalHandlers();
+#endif
 		t_success = CefInitialize(t_args, t_settings, t_app, nil);
+		
+#if defined(TARGET_PLATFORM_POSIX)
+		RestoreSignalHandlers();
+#endif
+	}
 
 	s_cef_initialised = t_success;
 	

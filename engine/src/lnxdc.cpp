@@ -429,6 +429,13 @@ MCRectangle MCScreenDC::screentologicalrect(const MCRectangle &p_rect)
 	return p_rect;
 }
 
+bool MCScreenDC::platform_get_display_handle(void *&r_display)
+{
+	r_display = x11::gdk_x11_display_get_xdisplay(getDisplay());
+	
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCResPlatformInitPixelScaling(void)

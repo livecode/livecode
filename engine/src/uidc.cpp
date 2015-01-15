@@ -1905,3 +1905,14 @@ void MCUIDC::hidecursoruntilmousemoves(void)
     // Default action is to do nothing - Mac overrides and performs the
     // appropriate function.
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCUIDC::platform_get_display_handle(void *&r_display)
+{
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+

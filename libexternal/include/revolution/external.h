@@ -506,6 +506,10 @@ extern Bool SecurityCanAccessFileUTF8(const char *p_file);
 extern Bool SecurityCanAccessHostUTF8(const char *p_host);
 extern Bool SecurityCanAccessLibraryUTF8(const char *p_library);
 	
+// IM-2014-09-23: [[ RevBrowserCEF ]] Retrieve the Xserver connection info
+extern void GetXDisplayHandle(void **r_display, int *r_success);
+extern void GetXScreenHandle(void **r_screen, int *r_success);
+
 #ifdef __cplusplus
 };
 #endif

@@ -1,0 +1,19 @@
+NAME=revbrowser
+TYPE=library
+
+include ../rules/environment.linux.makefile
+
+SOURCES=revbrowser.cpp lnxbrowser.cpp cefbrowser.cpp cefbrowser_lnx.cpp cefshared_lnx.cpp signal_restore_posix.cpp
+
+CUSTOM_DEFINES=
+
+CUSTOM_INCLUDES=./src ../libcore/include ../thirdparty/libcef ../libexternal/include/revolution
+
+CUSTOM_LIBS=core external cefwrapper cef
+CUSTOM_DYNAMIC_LIBS=dl X11
+
+CUSTOM_CCFLAGS=
+
+CUSTOM_LDFLAGS=
+
+include ../rules/library.linux.makefile
