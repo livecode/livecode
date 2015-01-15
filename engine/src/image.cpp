@@ -1256,7 +1256,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (t_success)
 			{
 				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), true);
-                // PM-2015-01-15: [[ Bug 14347 ]] Unlock bitmap to prevent a crashgit
+                // PM-2015-01-15: [[ Bug 14347 ]] Unlock bitmap to prevent a crash
                 unlockbitmap(t_copy);
 				setbitmap(t_copy, 1.0);
             }
