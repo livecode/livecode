@@ -1227,12 +1227,15 @@ mColor:		An expression which evaluates to a color.
 Returns:	A new gradient stop.
 
 Example:
+	// Array to temporarily hold gradient stops
+	variable tStops
+	put the empty array into tStops
 	// First gradient stop is red at position 0
-	put gradient stop at offset 0 with color [1,0,0] into tStops[1]
+	put gradient stop at 0 with color [1,0,0] into tStops[1]
 	// Second stop is half-transparent green at position 0.5
-	put gradient stop at offset 0.5 with color [0,1,0,0.5] into tStops[2]
+	put gradient stop at 0.5 with color [0,1,0,0.5] into tStops[2]
 	// Third stop is blue at position 1
-	put gradient stop at offset 1 with color [0,0,1] into tStops[3]
+	put gradient stop at 1 with color [0,0,1] into tStops[3]
 
 Tags: Canvas
 */
@@ -1251,10 +1254,13 @@ mRamp:		An expression which evaluates to a list of gradient stops.
 Returns:	A new gradient paint.
 
 Example:
+	// Array to temporarily hold gradient stops
+	variable tStops
+	put the empty array into tStops
 	// Set up gradient stops
-	put gradient stop at offset 0 with color [1,0,0] into tStops[1]
-	put gradient stop at offset 0.5 with color [0,1,0,0.5] into tStops[2]
-	put gradient stop at offset 1 with color [0,0,1] into tStops[3]
+	put gradient stop at 0 with color [1,0,0] into tStops[1]
+	put gradient stop at 0.5 with color [0,1,0,0.5] into tStops[2]
+	put gradient stop at 1 with color [0,0,1] into tStops[3]
 
 	// Create new gradient paint
 	put linear gradient with ramp [tStops[1], tStops[2], tStops[3]] into tGradient
@@ -2827,7 +2833,7 @@ Description:	The paint used for fill / stroke operations on <mCanvas>.
 
 Example:
 	// Set canvas to paint with solid blue
-	set the paint of tCanvas to solid paint with color [0,0,1]
+	set the paint of this canvas to solid paint with color [0,0,1]
 
 Tags:	Canvas
 */
@@ -2848,7 +2854,7 @@ Description:	The rule used to determine when to fill enclosed regions of a path.
 
 Example:
 	// Set canvas fill rule to non-zero.
-	set the fill rule of tCanvas to "non-zero"
+	set the fill rule of this canvas to "non-zero"
 
 Tags:	Canvas
 */
@@ -2869,7 +2875,7 @@ Description:	A boolean value which determines whether or not antialiasing will b
 
 Example:
 	// Disable antialiasing on the canvas
-	set the antialias of tCanvas to false
+	set the antialias of this canvas to false
 
 Tags:	Canvas
 */
@@ -2890,7 +2896,7 @@ Description:	The opacity of drawing operations on <mCanvas>, as a number between
 
 Example:
 	// make subsequent drawing operations render with half transparency
-	set the opacity of tCanvas to 0.5
+	set the opacity of this canvas to 0.5
 
 Tags:	Canvas
 */
@@ -2911,7 +2917,7 @@ Description:	The blend mode used for drawing operations on <mCanvas> as a string
 
 Example:
 	// Use color dodge mode to draw on canvas
-	set the blend mode of tCanvas to "color dodge"
+	set the blend mode of this canvas to "color dodge"
 
 Tags:	Canvas
 */
@@ -2932,8 +2938,8 @@ Description:	A boolean value that determines whether or not stippling will be us
 
 Example:
 	// Draw with stippled red paint on canvas
-	set the paint of tCanvas to solid paint with color [1,0,0]
-	set the stippled of tCanvas to true
+	set the paint of this canvas to solid paint with color [1,0,0]
+	set the stippled of this canvas to true
 
 Tags:	Canvas
 */
@@ -2954,7 +2960,7 @@ Description:	The image resize quality used when drawing scaled images and patter
 
 Example:
 	// Use low (but faster) image resize algorithm to draw scaled images
-	set the image resize quality of tCanvas to "low"
+	set the image resize quality of this canvas to "low"
 
 Tags:	Canvas
 */
@@ -2975,7 +2981,7 @@ Description:	The width of lines used when stroking a path on <mCanvas> as a numb
 
 Example:
 	// Draw paths with line width 20
-	set the stroke width of tCanvas to 20
+	set the stroke width of this canvas to 20
 
 Tags:	Canvas
 */
@@ -2996,7 +3002,7 @@ Description:	The font used when drawing text on <mCanvas> as a font.
 
 Example:
 	// Use 20pt Arial for text drawing on canvas
-	set the font of tCanvas to font "Arial" at size 20
+	set the font of this canvas to font "Arial" at size 20
 
 Tags:	Canvas
 */
@@ -3017,8 +3023,8 @@ Description:	Determines how to draw the join between the lines of a path when st
 
 Example:
 // Draw a square with beveled corners.
-set the join style of tCanvas to "bevel"
-stroke rectangle path of rectangle [25, 25, 75, 75] on tCanvas
+set the join style of this canvas to "bevel"
+stroke rectangle path of rectangle [25, 25, 75, 75] on this canvas
 
 Tags:	Canvas
 */
@@ -3039,8 +3045,8 @@ Description:	Determines how to draw the end points of a path when stroking. Can 
 
 Example:
 // Draw a line with rounded ends.
-set the cap style of tCanvas to "round"
-stroke line path from point [50,100] to point [100,50] on tCanvas
+set the cap style of this canvas to "round"
+stroke line path from point [50,100] to point [100,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3061,8 +3067,8 @@ Description:	The limit of miter joins as a number. Specifies how far miter joins
 
 Example:
 // Draw a right-angled triangle, setting the miter limit so only the right-angle corner is mitered.
-set the miter limit of tCanvas to 1.5
-stroke polygon path with points [point [50,50], point [50,100], point [100,50]] on tCanvas
+set the miter limit of this canvas to 1.5
+stroke polygon path with points [point [50,50], point [50,100], point [100,50]] on this canvas
 
 Tags:	Canvas
 */
@@ -3083,8 +3089,8 @@ Description:	The dashes as a list of numbers. The dashes specifies a sequence of
 
 Example:
 // Draw a rectangle with short, widely spaced dashes
-set the dashes of tCanvas to [10, 40]
-stroke rectangle path of rectangle [50, 50, 200, 200] on tCanvas
+set the dashes of this canvas to [10, 40]
+stroke rectangle path of rectangle [50, 50, 200, 200] on this canvas
 
 Tags:	Canvas
 */
@@ -3105,9 +3111,9 @@ Description:	The offset into the dashes at which to begin applying the dash patt
 
 Example:
 // Draw a rectangle with short, widely spaced dashes, offset to begin from the middle of the dash pattern
-set the dashes of tCanvas to [10, 40]
-set the dash phase of tCanvas to 25
-stroke rectangle path of rectangle [50, 50, 200, 200] on tCanvas
+set the dashes of this canvas to [10, 40]
+set the dash phase of this canvas to 25
+stroke rectangle path of rectangle [50, 50, 200, 200] on this canvas
 
 Tags:	Canvas
 */
@@ -3163,7 +3169,7 @@ Description:	Concatenates the transform of <mCanvas> with <mTransform>.
 
 Example:
 	// Scale the canvas with a transform
-	transform tCanvas by transform with scale [2,2]
+	transform this canvas by transform with scale [2,2]
 
 Tags:	Canvas
 */
@@ -3184,7 +3190,7 @@ Description:	Scales the transform of <mCanvas> by <mScale>.
 
 Example:
 	// Scale the canvas
-	scale tCanvas by [2,2]
+	scale this canvas by [2,2]
 
 Tags:	Canvas
 */
@@ -3205,7 +3211,7 @@ Description:	Rotates the transform of <mCanvas> by <mRotation> degrees.
 
 Example:
 // Rotate the canvas
-rotate tCanvas by 45
+rotate this canvas by 45
 
 Tags:	Canvas
 */
@@ -3226,7 +3232,7 @@ Description:	Translates the transform of <mCanvas> by <mTranslation>.
 
 Example:
 	// Translate the canvas
-	translate tCanvas by [50,100]
+	translate this canvas by [50,100]
 
 Tags:	Canvas
 */
@@ -3247,11 +3253,11 @@ Description:	Saves the current properties of <mCanvas> to the top of a stack so 
 
 Example:
 	// Save the current canvas properties
-	save state of tCanvas
+	save state of this canvas
 	// Call drawing handler which may change the canvas properties while drawing
-	doDrawButtonOnCanvasAtPoint tCanvas, point [50,50]
+	doDrawButtonOnCanvasAtPoint this canvas, point [50,50]
 	// Restore the previous canvas properties
-	restore state of tCanvas
+	restore state of this canvas
 
 Tags:	Canvas
 */
@@ -3271,11 +3277,11 @@ Description:	Restores the properties of <mCanvas> from the top of the saved prop
 
 Example:
 	// Save the current canvas properties
-	save state of tCanvas
+	save state of this canvas
 	// Call drawing handler which may change the canvas properties while drawing
-	doDrawButtonOnCanvasAtPoint tCanvas, point [50,50]
+	doDrawButtonOnCanvasAtPoint this canvas, point [50,50]
 	// Restore the previous canvas properties
-	restore state of tCanvas
+	restore state of this canvas
 
 Tags:	Canvas
 */
@@ -3296,16 +3302,16 @@ Description:	Begins a new layer on <mCanvas> to group drawing operations for whi
 
 Example:
 	// Draw two overlapping rectangles grouped with half transparency
-	set the opacity of tCanvas to 0.5
-	begin layer on tCanvas
-	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
-	fill rectangle path of rectangle path [75,75,125,125] on tCanvas
-	end layer on tCanvas
+	set the opacity of this canvas to 0.5
+	begin layer on this canvas
+	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	fill rectangle path of rectangle path [75,75,125,125] on this canvas
+	end layer on this canvas
 
 	// Draw rectangle with an effect applied
-	begin layer with tEffect on tCanvas
-	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
-	end layer on tCanvas
+	begin layer with tEffect on this canvas
+	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	end layer on this canvas
 
 Tags:	Canvas
 */
@@ -3326,16 +3332,16 @@ Description:	Ends the layer on <mCanvas>, rendering to the previous layer with t
 
 Example:
 	// Draw two overlapping rectangles grouped with half transparency
-	set the opacity of tCanvas to 0.5
-	begin layer on tCanvas
-	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
-	fill rectangle path of rectangle path [75,75,125,125] on tCanvas
-	end layer on tCanvas
+	set the opacity of this canvas to 0.5
+	begin layer on this canvas
+	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	fill rectangle path of rectangle path [75,75,125,125] on this canvas
+	end layer on this canvas
 
 	// Draw rectangle with an effect applied
-	begin layer with tEffect on tCanvas
-	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
-	end layer on tCanvas
+	begin layer with tEffect on this canvas
+	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	end layer on this canvas
 
 Tags:	Canvas
 */
@@ -3356,14 +3362,14 @@ Description:	Fills the region bound by <mPath> with the current canvas paint. If
 
 Example:
 	// Fill a circle path on the canvas
-	fill circle path centered at point [100,100] with radius 50 on tCanvas
+	fill circle path centered at point [100,100] with radius 50 on this canvas
 
 	// Add a path to the canvas
-	move to point [50,50] on tCanvas
-	line to point [50,100] on tCanvas
-	line to point [100,100] on tCanvas
+	move to point [50,50] on this canvas
+	line to point [50,100] on this canvas
+	line to point [100,100] on this canvas
 	// Fill the current canvas path
-	fill tCanvas
+	fill this canvas
 
 Tags:	Canvas
 */
@@ -3385,14 +3391,14 @@ Description:	Strokes <mPath> with the current canvas paint and stroke settings. 
 
 Example:
 	// Draw a circle path on the canvas
-	stroke circle path centered at point [100,100] with radius 50 on tCanvas
+	stroke circle path centered at point [100,100] with radius 50 on this canvas
 
 	// Add a path to the canvas
-	move to point [50,50] on tCanvas
-	line to point [50,100] on tCanvas
-	line to point [100,100] on tCanvas
+	move to point [50,50] on this canvas
+	line to point [50,100] on this canvas
+	line to point [100,100] on this canvas
 	// Stroke the current canvas path
-	stroke tCanvas
+	stroke this canvas
 
 Tags:	Canvas
 */
@@ -3414,9 +3420,9 @@ Description:	Modifies the clip of <mCanvas> by intersecting with <mRect>. Drawin
 
 Example:
 	// Set the canvas clip
-	clip to rectangle [50,50,100,100] on tCanvas
+	clip to rectangle [50,50,100,100] on this canvas
 	// Fill rectangle path on canvas. only the region of the rectangle that falls within the canvas clip will be rendered.
-	fill rectangle path of rectangle [25, 25, 75, 75] on tCanvas
+	fill rectangle path of rectangle [25, 25, 75, 75] on this canvas
 
 Tags:	Canvas
 */
@@ -3437,7 +3443,7 @@ Description:	Adds <mPath> to the current path of <mCanvas>
 
 Example:
 	// Add a path to the canvas
-	add rectangle path of rectangle [0,0,50,100] to tCanvas
+	add rectangle path of rectangle [0,0,50,100] to this canvas
 
 Tags:	Canvas
 */
@@ -3460,9 +3466,9 @@ Description:	Renders from <mSrcRect> (or the bounds, if not specified) of <mImag
 
 Example:
 	// Draw an image on the canvas
-	draw tImage into rectangle [0,0,the width of tImage,the height of tImage] of tCanvas
+	draw tImage into rectangle [0,0,the width of tImage,the height of tImage] of this canvas
 	// Draw a section of an image
-	draw from rectangle[0,0,16,16] of tImage into rectangle [0,0,16,16] of tCanvas
+	draw from rectangle[0,0,16,16] of tImage into rectangle [0,0,16,16] of this canvas
 
 Tags:	Canvas
 */
@@ -3484,7 +3490,7 @@ Description:	Moves to <mPoint> on the current path of <mCanvas>
 
 Example:
 	// move to a point on the canvas
-	move to point [0,50] on tCanvas
+	move to point [0,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3505,7 +3511,7 @@ Description:	Adds a line to <mPoint> on the current path of <mCanvas>
 
 Example:
 	// add line to the canvas
-	line to point [50,50] on tCanvas
+	line to point [50,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3527,11 +3533,11 @@ Description:	Adds a curve through 1 or 2 points to <mPoint> on the current path 
 
 Example:
 	// Begin a new subpath on the canvas
-	move to point [25, 50] on tCanvas
+	move to point [25, 50] on this canvas
 	// Continue path with a curve through 25,100 to 50,100
-	curve through [25,100] to [50,100] on tCanvas
+	curve through [25,100] to [50,100] on this canvas
 	// Continue path with a curve through 50,75 then 50,50 to 50,100
-	curve through [50,75] then [50,50] to [25,50] on tCanvas
+	curve through [50,75] then [50,50] to [25,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3560,9 +3566,9 @@ Description:	Renders <mText> at <mPoint> on <mCanvas> using the current font set
 
 Example:
 	// Set the canvas font
-	set the font of tCanvas to font "Helvetica"
+	set the font of this canvas to font "Helvetica"
 	// Draw the text
-	fill text "Widget Label" at point [50,50] on tCanvas
+	fill text "Widget Label" at point [50,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3584,9 +3590,9 @@ Description:	Renders <mText> aligned to the specified sides of <mRect> on <mCanv
 
 Example:
 	// Set the canvas font
-	set the font of tCanvas to font "Helvetica"
+	set the font of this canvas to font "Helvetica"
 	// Draw the text in the top-left corner of the target rectangle
-	fill text "Widget Label" at top left of rectangle [50, 100, 250, 200] on tCanvas
+	fill text "Widget Label" at top left of rectangle [50, 100, 250, 200] on this canvas
 
 Tags:	Canvas
 */
@@ -3607,7 +3613,7 @@ Returns:	The bounding box of <mText> when drawn at point 0,0 with the current fo
 
 Example:
 	// Measure text drawn on the canvas
-	measure text "Sample text" on tCanvas
+	measure text "Sample text" on this canvas
 	put the result into tBounds
 	put the width of tBounds into tWidth
 	put the height of tBounds into tHeight
