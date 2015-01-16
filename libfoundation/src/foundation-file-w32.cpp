@@ -621,8 +621,22 @@ __MCFileDelete (MCStringRef p_native_path)
 	if (!t_path_w32.Lock(p_native_path))
 		return false;
 
-	if (!DeleteFile (*t_path_w32))
+	if (!DeleteFileW (*t_path_w32))
 		return __MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to delete file %{path}: %{description}"), GetLastError());
+
+	return true;
+}
+
+bool
+__MCFileCreateDirectory (MCStringRef p_native_path)
+{
+	/* Get a system path */
+	MCAutoStringRefAsWString t_path_w32;
+	if (!t_path_w32.Lock(p_native_path))
+		return false;
+
+	if (!CreateDirectoryW (*t_path_w32, NULL))
+		return __MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to create directory %{path}: %{description}"), GetLastError());
 
 	return true;
 }
