@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(TARGET_PLATFORM_POSIX)
 #include "signal_restore_posix.h"
+#include <sys/time.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,12 +162,17 @@ bool MCCefInitialise(void)
 	if (t_success)
 	{
 #if defined(TARGET_PLATFORM_POSIX)
+		struct itimerval t_old_timer, t_new_timer;
+		memset(&t_new_timer, 0, sizeof(t_new_timer));
+		
+		setitimer(ITIMER_REAL, &t_new_timer, &t_old_timer);
 		BackupSignalHandlers();
 #endif
 		t_success = CefInitialize(t_args, t_settings, t_app, nil);
 		
 #if defined(TARGET_PLATFORM_POSIX)
 		RestoreSignalHandlers();
+		setitimer(ITIMER_REAL, &t_old_timer, nil);
 #endif
 	}
 
