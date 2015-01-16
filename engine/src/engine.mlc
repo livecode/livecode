@@ -82,7 +82,7 @@ end syntax
 Summary:	Tests the existence of a script object.
 Object:		An expression that evaluates to a <ScriptObject>.
 
-The result:	True if the object <Object> exists, and false otherwise.
+Returns:	True if the object <Object> exists, and false otherwise.
 
 Example:
 	variable tObject as ScriptObject
@@ -110,7 +110,7 @@ end syntax
 Summary:	Tests the existence of a script object.
 Object:		An expression that evaluates to a <ScriptObject>.
 
-The result:	True if the object <Object> exists, and false otherwise.
+Returns:	True if the object <Object> exists, and false otherwise.
 
 Example:
 	variable tObject as ScriptObject

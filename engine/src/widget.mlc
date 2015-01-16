@@ -17,6 +17,8 @@
 /*
 This library consists of the operations on widgets provided by LiveCode Builder.
 
+Tags: Widget
+
 Name: OnOpen
 Type: message
 Syntax: OnOpen
@@ -320,11 +322,32 @@ public foreign handler MCWidgetEvalInEditMode(out rInEditMode as bool) as undefi
 public foreign handler MCWidgetExecDispatch(in pIsFunction as bool, in pMessage as string) as any binds to "<builtin>"
 public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as bool, in pMessage as string, in pArguments as optional list) as any binds to "<builtin>"
 
+/* 
+Summary:	Redraws the widget.
+
+Example:
+
+Description:
+
+References: OnPaint(message)
+*/	
+
 syntax RedrawAll is statement
   "redraw" "all"
 begin
   MCWidgetExecRedrawAll()
 end syntax
+
+/* 
+Summary:	Schedules a timer.
+Time:		An expression which evaluates to a number.
+
+Example:
+
+Description:
+
+References: OnTimer(message)
+*/	
 
 syntax ScheduleTimerIn is statement
   "schedule" "timer" "in" <Time: Expression> "seconds"
@@ -332,17 +355,47 @@ begin
   MCWidgetExecScheduleTimerIn(Time)
 end syntax
 
+/* 
+Summary:	Cancels a timer.
+
+Example:
+
+Description:
+Use to cancel a timer scheduled by the <ScheduleTimerIn|schedule> statement.
+
+References: OnTimer(message), ScheduleTimerIn(statement)
+*/	
+
 syntax CancelTimer is statement
   "cancel" "timer"
 begin
   MCWidgetExecCancelTimer()
 end syntax
 
+/* 
+Summary:	Determines whether the IDE is in edit mode.
+
+Example:
+
+Description:
+
+*/	
+
+
 syntax IsEditMode is expression
   "in" "edit" "mode"
 begin
   MCWidgetEvalInEditMode(output)
 end syntax
+
+/* 
+Summary:	Dispatches a message to the widget script object.
+
+Example:
+
+Description:
+
+*/	
 
 syntax Dispatch is statement
     "dispatch" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
@@ -363,11 +416,33 @@ public foreign handler MCWidgetSetWidth(in pWidth as real) as undefined binds to
 public foreign handler MCWidgetGetHeight(out rHeight as real) as undefined binds to "<builtin>"
 public foreign handler MCWidgetSetHeight(in pHeight as real) as undefined binds to "<builtin>"
 
+/* 
+Summary:	Obtains a reference to the widget script object.
+
+Returns:	The widget script object.
+
+Example:
+
+Description:
+
+*/	
+
 syntax MyScriptObject is expression
   "my" "script" "object"
 begin
     MCWidgetGetScriptObject(output)
 end syntax
+
+/* 
+Summary:	
+
+Returns:	The rectangle of the widget script object.
+
+Example:
+
+Description:
+
+*/	
 
 syntax MyRectangle is expression
   "my" "rectangle"
@@ -464,16 +539,50 @@ end syntax
 public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as bool) as undefined binds to "<builtin>"
 public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as bool) as undefined binds to "<builtin>"
 
+/* 
+Summary:	Determines whether a point is within a rectangle.
+Point:		An expression that evaluates to a Point.
+Rect: 		An expression that evaluates to a Rectangle.
+
+Example:
+	variable tClick as Point
+	put the click position into tClick
+	
+	variable tRect as Rectangle
+	put my bounds into tRect
+	
+	if tClick is within tRect then
+		// click was within widget bounds
+	end if
+*/
+	
 syntax IsPointWithinRect is neutral binary operator with precedence 5
   <mPoint: Expression> "is" "within" <mRect: Expression>
 begin
     MCWidgetEvalIsPointWithinRect(mPoint, mRect, output)
 end syntax
 
+/* 
+Summary:	Determines whether a point is within a rectangle.
+Point:		An expression that evaluates to a Point.
+Rect: 		An expression that evaluates to a Rectangle.
+
+Example:
+	variable tClick as Point
+	put the click position into tClick
+	
+	variable tRect as Rectangle
+	put my bounds into tRect
+	
+	if tClick is not within tRect then
+		// click was outside of widget bounds
+	end if
+*/
+	
 syntax IsPointNotWithinRect is neutral binary operator with precedence 5
-  <mPoint: Expression> "is not" "within" <mRect: Expression>
+  <Point: Expression> "is not" "within" <Rect: Expression>
 begin
-    MCWidgetEvalIsPointNotWithinRect(mPoint, mRect, output)
+    MCWidgetEvalIsPointNotWithinRect(Point, Rect, output)
 end syntax
 
 end module
