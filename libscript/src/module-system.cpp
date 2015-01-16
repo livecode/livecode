@@ -16,20 +16,29 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
-#include <foundation-auto.h>
 
-#include "foundation-file.h"
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern "C" MC_DLLEXPORT void
-MCFileExecGetContents (MCStringRef p_path, MCDataRef & r_data)
-{
-	/* UNCHECKED */ MCFileGetContents (p_path, r_data);
-}
+/* ================================================================
+ * System identification
+ * ================================================================ */
 
 extern "C" MC_DLLEXPORT void
-MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
+MCSystemExecGetOperatingSystem (MCStringRef & r_string)
 {
-	/* UNCHECKED */ MCFileSetContents (p_path, p_contents);
+	const char t_os[] =
+#if defined(__IOS__)
+		"ios"
+#elif defined(__MAC__)
+		"mac"
+#elif defined(__WINDOWS__)
+		"windows"
+#elif defined(__ANDROID__)
+		"android"
+#elif defined(__LINUX__)
+		"linux"
+#else
+#  error "Unrecognized operating system"
+#endif
+		;
+
+	/* UNCHECKED */ MCStringCreateWithCString (t_os, r_string);
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 Runtime Revolution Ltd.
 
 This file is part of LiveCode.
 
@@ -21,51 +21,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static uint32_t s_random_seed;
-
-////////////////////////////////////////////////////////////////////////////////
-
-#define N       16
-#define RMASK    ((uint32_t)(1 << (N - 1)) + (1 << (N - 1)) - 1)
-#define LOW(x)  ((uint32_t)(x) & RMASK)
-#define HIGH(x) LOW((x) >> N)
-#define MUL(x, y, z)    { uint32_t l = (uint32_t)(x) * (uint32_t)(y); \
-(z)[0] = LOW(l); (z)[1] = HIGH(l); }
-#define CARRY(x, y)     ((uint32_t)(x) + (uint32_t)(y) > RMASK)
-#define ADDEQU(x, y, z) (z = CARRY(x, (y)), x = LOW(x + (y)))
-#define X0      0x330E
-#define X1      0xABCD
-#define X2      0x1234
-#define A0      0xE66D
-#define A1      0xDEEC
-#define A2      0x5
-#define C       0xB
-#define SET3(x, x0, x1, x2)     ((x)[0] = (x0), (x)[1] = (x1), (x)[2] = (x2))
-#define SEED(x0, x1, x2) (SET3(x, x0, x1, x2), SET3(a, A0, A1, A2), c = C)
-
-static uint32_t x[3] = { X0, X1, X2 }, a[3] = { A0, A1, A2 }, c = C;
-
-void MCMathRandomSeed()
+real64_t
+MCMathRandom (void)
 {
-    SEED(X0, LOW(s_random_seed), HIGH(s_random_seed));
-}
+	real64_t t_random_bytes;
+	int t_ignored;
 
-real64_t MCMathRandom()
-{
-    static real64_t two16m = 1.0 / (1L << N);
-    uint32_t p[2], q[2], r[2], carry0, carry1;
-    
-    MUL(a[0], x[0], p);
-    ADDEQU(p[0], c, carry0);
-    ADDEQU(p[1], carry0, carry1);
-    MUL(a[0], x[1], q);
-    ADDEQU(p[1], q[0], carry0);
-    MUL(a[1], x[0], r);
-    x[2] = LOW(carry0 + carry1 + CARRY(p[1], r[0]) + q[1] + r[1] +
-               a[0] * x[2] + a[1] * x[1] + a[2] * x[0]);
-    x[1] = LOW(p[1] + r[0]);
-    x[0] = LOW(p[0]);
-    return (two16m * (two16m * (two16m * x[0] + x[1]) + x[2]));
+	/* Ensure that if we can't obtain a valid random number, the
+	 * return value is obviously useless.  __MCRandomBytes() should
+	 * have thrown an error. */
+	if (!__MCRandomBytes (&t_random_bytes, sizeof (t_random_bytes)))
+		return NAN;
+
+	/* Convert the value to a value in the range [0, 1).  frexp(3)
+	 * always returns a value with absolute value in the range [0.5,
+	 * 1). */
+	real64_t value = frexp (copysign (t_random_bytes, 1), &t_ignored) * 2 - 1;
+	return value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,10 +135,6 @@ bool MCMathConvertToBase10(MCStringRef p_source, integer_t p_source_base, bool& 
 
 bool __MCMathInitialize()
 {
-    // initialise random seed
-    // s_random_seed = (int32_t)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
-    MCMathRandomSeed();
-    
     return true;
 }
 

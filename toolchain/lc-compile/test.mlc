@@ -1,14 +1,19 @@
 module test
 
 use com.livecode.math
+use com.livecode.file
+use com.livecode.stream
+use com.livecode.system
 
 public handler test()
     variable tResults as list
     put the empty list into tResults
+    	testFile(tResults)
 
     variable tDelimiter as string
     put newline into tDelimiter
 	
+
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
 	testLog("__Test", "Succeed", true, tResults)
@@ -59,6 +64,15 @@ public handler test()
 	--com.livecode.type
 	testType(tResults)
 	
+	--com.livecode.file
+	testFile(tResults)
+
+	--com.livecode.stream
+	testStream(tResults)
+
+	--com.livecode.system
+	testSystem(tResults)
+	
 	--com.livecode.binary
 	--com.livecode.byte
 	--com.livecode.item
@@ -66,6 +80,7 @@ public handler test()
 	--com.livecode.segmentchunk
 
     return newline & testSummary (tResults)
+
 end handler
 
 /*
@@ -255,10 +270,10 @@ public handler testMath(inout xResults as list)
 	
 	variable tNum
 	put any number into tNum
-	testLog("Math", "Random", tNum >= 0, xResults)
-	testLog("Math", "Random", tNum <= 1, xResults)
+	testLog("Math", "RandomRangeLower", tNum >= 0, xResults)
+	testLog("Math", "RandomRangeHigher", tNum <= 1, xResults)
 	
-	testLog("Math", "Random", tNum is not any number, xResults)
+	testLog("Math", "RandomMatch", tNum is not any number, xResults)
 
 	variable tLeft as integer
 	variable tRight as integer
@@ -765,8 +780,8 @@ public handler testList(inout xResults as list)
 	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
 	testLog("List", "IsNot", tSubList is not ["Abcd", 1], xResults)
 
-    testLog("List", "IsIn", "abcd" is in tSubList, xResults)
-    testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
+    testLog("List", "IsIn", "abcd" is in ["abcd", "efgh"], xResults)
+    testLog("List", "IsNotIn", not "dsf" is in ["abcd", "efgh"], xResults)
 
     variable tString as string
     pop front of tSubList into tString
@@ -900,6 +915,20 @@ public handler testData(inout xResults as list)
 	delete the first char of tTest
 	testLog("Char", "DeleteFirstChar", tTest is "b", xResults)	
 */
+end handler
+
+public handler testFile(inout xResults as list)
+	variable tData as data
+	put the contents of file "/dev/null" into tData
+	testLog("File", "GetEmptyContents", tData is empty, xResults)
+end handler
+
+public handler testStream(inout xResults as list)
+
+end handler
+
+public handler testSystem(inout xResults as list)
+	testLog("System", "OperatingSystemNonEmpty", the operating system is not empty, xResults)
 end handler
 
 end module

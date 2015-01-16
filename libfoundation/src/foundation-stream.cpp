@@ -26,7 +26,7 @@ struct __MCStreamImpl
 	const MCStreamCallbacks *callbacks;
 };
 
-MCTypeInfoRef kMCStreamTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCStreamTypeInfo;
 
 static inline __MCStreamImpl &__MCStreamGet(MCStreamRef p_stream)
 {
@@ -767,6 +767,11 @@ bool __MCStreamInitialize(void)
 {
     if (!MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
         return false;
+    
+    MCAutoTypeInfoRef t_unnamed;
+    /* UNCHECKED */ MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, &t_unnamed);
+    /* UNCHECKED */ MCNamedTypeInfoCreate(MCNAME("livecode.lang.Stream"), kMCStreamTypeInfo);
+    /* UNCHECKED */ MCNamedTypeInfoBind(kMCStreamTypeInfo, *t_unnamed);
     
     return true;
 }

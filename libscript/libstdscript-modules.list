@@ -6,11 +6,14 @@ binary.mlc
 bitwise.mlc
 byte.mlc
 char.mlc
+file.mlc
 list.mlc
 logic.mlc
 math-foundation.mlc
 math.mlc
 sort.mlc
+stream.mlc
 string.mlc
+system.mlc
 type.mlc
 type-convert.mlc
