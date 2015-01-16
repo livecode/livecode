@@ -42,6 +42,7 @@ extern builtin_module_descriptor __com_livecode_segmentchunk_module_info;
 extern builtin_module_descriptor __com_livecode_sort_module_info;
 extern builtin_module_descriptor __com_livecode_stream_module_info;
 extern builtin_module_descriptor __com_livecode_string_module_info;
+extern builtin_module_descriptor __com_livecode_system_module_info;
 extern builtin_module_descriptor __com_livecode_type_module_info;
 extern builtin_module_descriptor __com_livecode_typeconvert_module_info;
 
@@ -65,6 +66,7 @@ builtin_module_descriptor* g_builtin_modules[] =
     &__com_livecode_sort_module_info,
     &__com_livecode_stream_module_info,
     &__com_livecode_string_module_info,
+    &__com_livecode_system_module_info,
     &__com_livecode_type_module_info,
     &__com_livecode_typeconvert_module_info
 };
@@ -85,6 +87,7 @@ extern void (*MCMathFoundationExecRoundRealToNearest)();
 extern void (*MCSortExecSortListAscendingText)();
 extern void (*MCStreamExecWriteToStream)();
 extern void (*MCStringEvalConcatenate)();
+extern void (*MCSystemExecGetOperatingSystem)();
 extern void (*MCTypeEvalIsEmpty)();
 extern void (*MCTypeConvertExecSplitStringByDelimiter)();
 
@@ -105,6 +108,7 @@ void *g_builtin_ptrs[] =
     &MCSortExecSortListAscendingText,
     &MCStreamExecWriteToStream,
     &MCStringEvalConcatenate,
+    &MCSystemExecGetOperatingSystem,
     &MCTypeEvalIsEmpty,
     &MCTypeConvertExecSplitStringByDelimiter
 };
