@@ -6986,40 +6986,6 @@ char *MCHTTPProxyForURL::PACmyIpAddress(const char* const* p_arguments, unsigned
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef /* MCRandomBytes */ LEGACY_EXEC
-	if (byte_count->eval(ep) != ES_NORMAL && ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOMBYTES_BADCOUNT, line, pos);
-		return ES_ERROR;
-	}
-	
-	size_t t_count;
-	t_count = ep.getuint4();
-	
-	// MW-2013-05-21: [[ RandomBytes ]] Updated to use system primitive, rather
-	//   than SSL.
-	
-	void *t_bytes;
-	t_bytes = ep . getbuffer(t_count);
-	if (t_bytes == nil)
-	{
-		MCeerror -> add(EE_NO_MEMORY, line, pos);
-		return ES_ERROR;
-	}
-	
-	if (MCU_random_bytes(t_count, t_bytes))
-		ep . setlength(t_count);
-	else
-	{
-		ep . clear();
-		MCresult->copysvalue(MCString("error: could not get random bytes"));
-	}
-	
-	return ES_NORMAL;
-#endif /* MCRandomBytes */
-
-///////////////////////////////////////////////////////////////////////////////
-
 MCControlAtLoc::~MCControlAtLoc()
 {
     delete location;

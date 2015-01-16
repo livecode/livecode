@@ -544,6 +544,8 @@ void __MCStdioStreamFinalize(void);
 bool __MCFileInitialize(void);
 void __MCFileFinalize(void);
 
+bool __MCRandomBytes (void *, size_t);
+
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */
 void __MCCustomDefaultDestroy(MCValueRef);

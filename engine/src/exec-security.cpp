@@ -83,7 +83,7 @@ void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCD
 		return;
 	}
 
-	if (MCU_random_bytes(p_byte_count, r_bytes))
+	if (MCDataCreateRandom (p_byte_count, r_bytes))
 	{
 		ctxt.SetTheResultToEmpty();
 		return;

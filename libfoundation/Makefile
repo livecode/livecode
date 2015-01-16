@@ -25,6 +25,7 @@ SOURCES= \
 	foundation-number.cpp \
 	foundation-pickle.cpp \
 	foundation-proper-list.cpp \
+	foundation-random.cpp \
 	foundation-record.cpp \
 	foundation-set.cpp \
 	foundation-stream.cpp \

@@ -204,6 +204,14 @@ extern "C" MC_DLLEXPORT bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRe
     return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void
+MCDataExecRandomBytes (uindex_t p_count, MCDataRef & r_data)
+{
+	/* UNCHECKED */ MCDataCreateRandom (p_count, r_data);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST

@@ -1163,18 +1163,6 @@ MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 
 //////////////////
 
-// MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
-bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
-{
-    // IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
-    MCAutoByteArray t_bytes;
-    return (t_bytes . New(p_count) &&
-            SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)t_bytes . Bytes()) == 0 &&
-            t_bytes . CreateData(r_buffer));
-}
-
-//////////////////
-
 extern "C" void *IOS_LoadModule(const char *name);
 extern "C" void *IOS_ResolveSymbol(void *module, const char *name);
 

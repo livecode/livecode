@@ -52,6 +52,8 @@ public foreign handler MCByteExecDeleteByteRangeOf(in Start as index, in Finish 
 public foreign handler MCByteExecDeleteLastByteOf(inout Target as data) as undefined binds to "<builtin>"
 public foreign handler MCByteExecDeleteFirstByteOf(inout Target as data) as undefined binds to "<builtin>"
 
+public foreign handler MCDataExecRandomBytes(in Count as uindex, out Value as data) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -402,6 +404,25 @@ syntax RepeatForEachByte is iterator
     "byte" <Iterand: Expression>
 begin
     MCByteRepeatForEachByte(iterator, Iterand, container)
+end syntax
+
+--
+
+/*
+Summary:	Generate random data
+Count:		Expression evaluating to the number of bytes to generate
+
+Description:
+Generates the requested number of bytes of cryptographic-quality
+random data.
+
+Tags: Binary, Random
+
+*/
+syntax RandomBytes is postfix operator with precedence 5
+	<Count : Expression> "random" "bytes"
+begin
+	MCDataExecRandomBytes(Count, output)
 end syntax
 
 --
