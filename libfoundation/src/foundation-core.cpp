@@ -67,6 +67,9 @@ bool MCInitialize(void)
     
     if (!__MCRecordInitialize())
         return false;
+
+	if (!__MCEnumInitialize())
+		return false;
     
     if (!__MCLocaleInitialize())
         return false;
@@ -85,6 +88,7 @@ void MCFinalize(void)
     __MCStreamFinalize();
     __MCProperListFinalize();
 	__MCLocaleFinalize();
+	__MCEnumFinalize();
     __MCRecordFinalize();
     __MCDataFinalize();
     __MCSetFinalize();

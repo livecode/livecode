@@ -11,6 +11,7 @@ SOURCES= \
 	foundation-custom.cpp \
 	foundation-data.cpp \
 	foundation-debug.cpp \
+	foundation-enum.cpp \
 	foundation-error.cpp \
 	foundation-filters.cpp \
 	foundation-foreign.cpp \
@@ -23,6 +24,7 @@ SOURCES= \
 	foundation-number.cpp \
 	foundation-pickle.cpp \
 	foundation-proper-list.cpp \
+	foundation-proper-set.cpp \
 	foundation-record.cpp \
 	foundation-set.cpp \
 	foundation-stream.cpp \
