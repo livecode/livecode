@@ -62,6 +62,12 @@
 		766113891A31FB640042DE7F /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766113881A31FB640042DE7F /* module-array.cpp */; };
 		7661138A1A31FB690042DE7F /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766113881A31FB640042DE7F /* module-array.cpp */; };
 		7661138D1A31FE1B0042DE7F /* array.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7661138C1A31FDFD0042DE7F /* array.mlc */; };
+		76FEC2311A5D3F0900188FD4 /* module-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FEC2301A5D3F0900188FD4 /* module-file.cpp */; };
+		76FEC2341A5D3F1600188FD4 /* module-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FEC2301A5D3F0900188FD4 /* module-file.cpp */; };
+		76FEC2361A5D43E000188FD4 /* file.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 76FEC22F1A5D3F0900188FD4 /* file.mlc */; };
+		C741ECC81A6932E60096D171 /* module-stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C741ECC61A6932E60096D171 /* module-stream.cpp */; };
+		C741ECC91A6932E60096D171 /* module-stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C741ECC61A6932E60096D171 /* module-stream.cpp */; };
+		C741ECD11A6933CF0096D171 /* stream.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C741ECC71A6932E60096D171 /* stream.mlc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -200,6 +206,10 @@
 		7210DCA31A37102F00C23D23 /* module-helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-helper.cpp"; path = "src/module-helper.cpp"; sourceTree = "<group>"; };
 		766113881A31FB640042DE7F /* module-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-array.cpp"; path = "src/module-array.cpp"; sourceTree = "<group>"; };
 		7661138C1A31FDFD0042DE7F /* array.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = array.mlc; path = src/array.mlc; sourceTree = "<group>"; };
+		76FEC22F1A5D3F0900188FD4 /* file.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = file.mlc; path = src/file.mlc; sourceTree = "<group>"; };
+		76FEC2301A5D3F0900188FD4 /* module-file.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-file.cpp"; path = "src/module-file.cpp"; sourceTree = "<group>"; };
+		C741ECC61A6932E60096D171 /* module-stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-stream.cpp"; path = "src/module-stream.cpp"; sourceTree = "<group>"; };
+		C741ECC71A6932E60096D171 /* stream.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = stream.mlc; path = src/stream.mlc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,9 +327,12 @@
 				4D79B6631A273BA000DD750C /* module-math_foundation.cpp */,
 				4D79B6641A273BA000DD750C /* module-math.cpp */,
 				4D79B6651A273BA000DD750C /* module-sort.cpp */,
+				C741ECC61A6932E60096D171 /* module-stream.cpp */,
 				4D79B6661A273BA000DD750C /* module-string.cpp */,
 				4D79B6671A273BA000DD750C /* module-type_convert.cpp */,
 				4D79B6681A273BA000DD750C /* module-type.cpp */,
+				76FEC22F1A5D3F0900188FD4 /* file.mlc */,
+				76FEC2301A5D3F0900188FD4 /* module-file.cpp */,
 				4D79B66A1A273BA000DD750C /* arithmetic.mlc */,
 				7661138C1A31FDFD0042DE7F /* array.mlc */,
 				4D79B66B1A273BA000DD750C /* binary.mlc */,
@@ -335,6 +348,7 @@
 				4D79B6791A273BA000DD750C /* math.mlc */,
 				4D79B67A1A273BA000DD750C /* segmentchunk.mlc */,
 				4D79B67B1A273BA000DD750C /* sort.mlc */,
+				C741ECC71A6932E60096D171 /* stream.mlc */,
 				4D79B67C1A273BA000DD750C /* string.mlc */,
 				4D79B67D1A273BA000DD750C /* type-convert.mlc */,
 				4D79B67E1A273BA000DD750C /* type.mlc */,
@@ -506,9 +520,11 @@
 				4D79B68B1A273BA000DD750C /* module-math.cpp in Sources */,
 				4D79B68C1A273BA000DD750C /* module-sort.cpp in Sources */,
 				4D322F2219DD95A4008476D3 /* script-object.cpp in Sources */,
+				76FEC2311A5D3F0900188FD4 /* module-file.cpp in Sources */,
 				4D79B6801A273BA000DD750C /* module-arithmetic.cpp in Sources */,
 				4D79B6881A273BA000DD750C /* module-logic.cpp in Sources */,
 				4D79B68E1A273BA000DD750C /* module-type_convert.cpp in Sources */,
+				C741ECC81A6932E60096D171 /* module-stream.cpp in Sources */,
 				4D79B6871A273BA000DD750C /* module-list.cpp in Sources */,
 				4D21B5FF19E3DFCB00B64BEF /* script-module.cpp in Sources */,
 				4D21B60319E3DFF800B64BEF /* script-instance.cpp in Sources */,
@@ -530,6 +546,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C741ECD11A6933CF0096D171 /* stream.mlc in Sources */,
+				76FEC2361A5D43E000188FD4 /* file.mlc in Sources */,
 				5DDE27B91A37909500D5ABD2 /* math-foundation.mlc in Sources */,
 				7661138D1A31FE1B0042DE7F /* array.mlc in Sources */,
 				766113441A2F298E0042DE7F /* list.mlc in Sources */,
@@ -546,9 +564,11 @@
 				4D79B6E01A27405600DD750C /* sort.mlc in Sources */,
 				4D79B6E11A27405600DD750C /* string.mlc in Sources */,
 				4D79B6E31A27405600DD750C /* type.mlc in Sources */,
+				C741ECC91A6932E60096D171 /* module-stream.cpp in Sources */,
 				4D79B8ED1A375F4700DD750C /* type-convert.mlc in Sources */,
 				7661138A1A31FB690042DE7F /* module-array.cpp in Sources */,
 				4D79B6911A273BBB00DD750C /* module-arithmetic.cpp in Sources */,
+				76FEC2341A5D3F1600188FD4 /* module-file.cpp in Sources */,
 				4D79B6921A273BBB00DD750C /* module-binary.cpp in Sources */,
 				4D79B6931A273BBB00DD750C /* module-bitwise.cpp in Sources */,
 				4D79B6941A273BBB00DD750C /* module-byte.cpp in Sources */,

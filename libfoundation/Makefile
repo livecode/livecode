@@ -12,6 +12,8 @@ SOURCES= \
 	foundation-data.cpp \
 	foundation-debug.cpp \
 	foundation-error.cpp \
+	foundation-file.cpp \
+	foundation-file-posix.cpp \
 	foundation-filters.cpp \
 	foundation-foreign.cpp \
 	foundation-handler.cpp \
@@ -26,6 +28,7 @@ SOURCES= \
 	foundation-record.cpp \
 	foundation-set.cpp \
 	foundation-stream.cpp \
+	foundation-stream-stdio.cpp \
 	foundation-string.cpp \
 	foundation-text.cpp \
 	foundation-typeconvert.cpp \

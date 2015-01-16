@@ -530,20 +530,20 @@
 		766E329B180EE4EE00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
 		7699BD261A1CD51A00636397 /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4DADCDFC12393F26003CD17C /* Installer.icns */; };
 		7699BD271A1CD51A00636397 /* LiveCode.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode.rsrc */; };
-		7699BD281A1CD51A00636397 /* da.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854C0B80DEAB00200116 /* da.lproj */; };
-		7699BD291A1CD51A00636397 /* French.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854E0B80DEAC00200116 /* French.lproj */; };
-		7699BD2A1A1CD51A00636397 /* Japanese.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885500B80DEAC00200116 /* Japanese.lproj */; };
-		7699BD2B1A1CD51A00636397 /* Dutch.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885520B80DEAC00200116 /* Dutch.lproj */; };
-		7699BD2C1A1CD51A00636397 /* German.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885540B80DEAC00200116 /* German.lproj */; };
-		7699BD2D1A1CD51A00636397 /* ko.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885560B80DEAC00200116 /* ko.lproj */; };
-		7699BD2E1A1CD51A00636397 /* English.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885580B80DEAC00200116 /* English.lproj */; };
-		7699BD2F1A1CD51A00636397 /* Italian.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58855A0B80DEAC00200116 /* Italian.lproj */; };
-		7699BD301A1CD51A00636397 /* no.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58855C0B80DEAC00200116 /* no.lproj */; };
-		7699BD311A1CD51A00636397 /* fi.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58855E0B80DEAC00200116 /* fi.lproj */; };
-		7699BD321A1CD51A00636397 /* Spanish.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885630B80DEAC00200116 /* Spanish.lproj */; };
-		7699BD331A1CD51A00636397 /* sv.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885650B80DEAC00200116 /* sv.lproj */; };
-		7699BD341A1CD51A00636397 /* zh_CN.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885670B80DEAC00200116 /* zh_CN.lproj */; };
-		7699BD351A1CD51A00636397 /* zh_TW.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885690B80DEAC00200116 /* zh_TW.lproj */; };
+		7699BD281A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD291A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD2A1A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD2B1A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD2C1A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD2D1A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD2E1A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD2F1A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD301A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD311A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD321A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD331A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD341A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		7699BD351A1CD51A00636397 /* (null) in Resources */ = {isa = PBXBuildFile; };
 		7699BD371A1CD51A00636397 /* lextable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E750B8096FD00200116 /* lextable.cpp */; };
 		7699BD3D1A1CD51A00636397 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		7699BD3E1A1CD51A00636397 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -4623,20 +4623,20 @@
 			files = (
 				7699BD261A1CD51A00636397 /* Installer.icns in Resources */,
 				7699BD271A1CD51A00636397 /* LiveCode.rsrc in Resources */,
-				7699BD281A1CD51A00636397 /* da.lproj in Resources */,
-				7699BD291A1CD51A00636397 /* French.lproj in Resources */,
-				7699BD2A1A1CD51A00636397 /* Japanese.lproj in Resources */,
-				7699BD2B1A1CD51A00636397 /* Dutch.lproj in Resources */,
-				7699BD2C1A1CD51A00636397 /* German.lproj in Resources */,
-				7699BD2D1A1CD51A00636397 /* ko.lproj in Resources */,
-				7699BD2E1A1CD51A00636397 /* English.lproj in Resources */,
-				7699BD2F1A1CD51A00636397 /* Italian.lproj in Resources */,
-				7699BD301A1CD51A00636397 /* no.lproj in Resources */,
-				7699BD311A1CD51A00636397 /* fi.lproj in Resources */,
-				7699BD321A1CD51A00636397 /* Spanish.lproj in Resources */,
-				7699BD331A1CD51A00636397 /* sv.lproj in Resources */,
-				7699BD341A1CD51A00636397 /* zh_CN.lproj in Resources */,
-				7699BD351A1CD51A00636397 /* zh_TW.lproj in Resources */,
+				7699BD281A1CD51A00636397 /* (null) in Resources */,
+				7699BD291A1CD51A00636397 /* (null) in Resources */,
+				7699BD2A1A1CD51A00636397 /* (null) in Resources */,
+				7699BD2B1A1CD51A00636397 /* (null) in Resources */,
+				7699BD2C1A1CD51A00636397 /* (null) in Resources */,
+				7699BD2D1A1CD51A00636397 /* (null) in Resources */,
+				7699BD2E1A1CD51A00636397 /* (null) in Resources */,
+				7699BD2F1A1CD51A00636397 /* (null) in Resources */,
+				7699BD301A1CD51A00636397 /* (null) in Resources */,
+				7699BD311A1CD51A00636397 /* (null) in Resources */,
+				7699BD321A1CD51A00636397 /* (null) in Resources */,
+				7699BD331A1CD51A00636397 /* (null) in Resources */,
+				7699BD341A1CD51A00636397 /* (null) in Resources */,
+				7699BD351A1CD51A00636397 /* (null) in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -2474,6 +2474,8 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCGenericErrorTypeInfo;
 
 MC_DLLEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
 
+MC_DLLEXPORT bool MCErrorCreateWithMessage(MCTypeInfoRef typeinfo, MCStringRef message, MCArrayRef info, MCErrorRef & r_error);
+
 MC_DLLEXPORT bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
 
 MC_DLLEXPORT MCNameRef MCErrorGetDomain(MCErrorRef error);
@@ -2489,6 +2491,8 @@ MC_DLLEXPORT uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column)
 // They should be a sequence of pairs (const char *key, MCValueRef value), and finish
 // with nil.
 MC_DLLEXPORT bool MCErrorCreateAndThrow(MCTypeInfoRef typeinfo, ...);
+
+MC_DLLEXPORT bool MCErrorCreateAndThrowWithMessage(MCTypeInfoRef typeinfo, MCStringRef message_format, ...);
     
 // Throw the given error code (local to the current thread).
 MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
@@ -2697,6 +2701,11 @@ MC_DLLEXPORT bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
 // Variant valueref functions - these tag the data with the type, allowing
 // easy encoding/decoding of any value type (that supports serialization).
 MC_DLLEXPORT bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
+
+// Standard streams
+MC_DLLEXPORT bool MCStreamGetStandardOutput(MCStreamRef & r_stdout);
+MC_DLLEXPORT bool MCStreamGetStandardInput(MCStreamRef & r_stdin);
+MC_DLLEXPORT bool MCStreamGetStandardError(MCStreamRef & r_stderr);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
