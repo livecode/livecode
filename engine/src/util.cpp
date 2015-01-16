@@ -3199,15 +3199,6 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes.
-bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
-{
-	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
-	return MCS_random_bytes(p_bytecount, r_bytes);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 #ifndef _DEBUG_MEMORY
 
 #ifdef __VISUALC__
