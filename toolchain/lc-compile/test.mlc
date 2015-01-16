@@ -3,6 +3,7 @@ module test
 use com.livecode.math
 use com.livecode.file
 use com.livecode.stream
+use com.livecode.system
 
 public handler test()
     variable tResults as list
@@ -68,6 +69,9 @@ public handler test()
 
 	--com.livecode.stream
 	testStream(tResults)
+
+	--com.livecode.system
+	testSystem(tResults)
 	
 	--com.livecode.binary
 	--com.livecode.byte
@@ -923,5 +927,8 @@ public handler testStream(inout xResults as list)
 
 end handler
 
+public handler testSystem(inout xResults as list)
+	testLog("System", "OperatingSystemNonEmpty", the operating system is not empty, xResults)
+end handler
 
 end module

@@ -1,0 +1,59 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library provides low-level system functionality for modular
+LiveCode programs.
+*/
+
+module com.livecode.system
+
+----------------------------------------------------------------
+-- Platform identification
+----------------------------------------------------------------
+
+public foreign handler MCSystemExecGetOperatingSystem(out Platform as string) as undefined binds to "<builtin>"
+
+/*
+Summary:	The operating system
+
+Example:
+	if the operating system is "linux" then
+		- Platform specific-code
+	end if
+
+Description:
+Returns a string describing the operating system that LiveCode is
+running on.  The possible values are:
+
+* "windows" - 32-bit and 64-bit Windows
+* "mac" - Desktop OS X
+* "ios" - iOS (iPhone and iPad)
+* "android" - Android Linux devices
+* "linux" - All other Linux platforms
+
+Tags: System
+*/
+syntax OperatingSystem is expression
+	"the" "operating" "system"
+begin
+	MCSystemExecGetOperatingSystem(output)
+end syntax
+
+--
+
+end module
