@@ -256,6 +256,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\math-foundation.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\math.mlc"
 					>
 				</File>
@@ -321,6 +325,10 @@
 				</File>
 				<File
 					RelativePath=".\generated\logic.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\math-foundation.c"
 					>
 				</File>
 				<File
