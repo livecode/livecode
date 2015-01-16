@@ -2167,6 +2167,11 @@ OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref)
 {
 	char *t_resolved_path;
 	t_resolved_path = MCS_resolvepath(p_path);
+    
+    // SN-2015-01-16: [[ Bug 14392 ]] We want to apply the redirection
+    //   since few engine functions (and LiveCode 'launch')
+    //   are using MCS_pathtoref
+    MCS_apply_redirect(t_resolved_path, true);
 	
 	char *t_utf8_path;
 	t_utf8_path = path2utf(t_resolved_path);
