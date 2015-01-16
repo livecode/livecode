@@ -77,6 +77,7 @@ static struct {const char *name; MCPurchaseState state;} s_purchase_states[] =
 // we maintain here a list of known pending purchases
 static MCPurchase *s_purchases = nil;
 static uint32_t s_last_purchase_id = 1;
+static uint32_t s_id = 0;
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
 {
@@ -93,6 +94,15 @@ bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
 
 bool MCPurchaseFindByProdId(MCStringRef p_prod_id, MCPurchase *&r_purchase)
 {
+    // First look up the purchase by purchase ID (unique). This prevents a crash when restoring auto-renewing subscriptions (iOS), where the same product ID appears multiple times.
+    MCPurchase *t_purchase;
+    bool t_found_by_id = MCPurchaseFindById(s_id, t_purchase);
+    if (t_found_by_id && MCStringIsEqualTo(t_purchase -> prod_id, p_prod_id, kMCStringOptionCompareCaseless))
+    {
+        r_purchase = t_purchase;
+        return true;
+    }
+    
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
 	{
         if (MCStringIsEqualTo(t_purchase->prod_id, p_prod_id, kMCStringOptionCompareCaseless))
@@ -136,9 +146,9 @@ bool MCPurchaseList(MCStringRef& r_string)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-		MCListAppendUnsignedInteger(*t_list, t_purchase -> id);
+        MCListAppendFormat(*t_list,"%@", t_purchase -> prod_id); // we want a list of product IDs
 	
-	return MCListCopyAsString(*t_list, r_string);	
+	return MCListCopyAsString(*t_list, r_string);
 }
 
 bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);
@@ -152,7 +162,8 @@ bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_
 	
 	if (t_success)
 	{
-        t_purchase->prod_id = MCValueRetain(p_product_id);
+        // PM-2015-01-07: [[ Bug 14343 ]] Nil-check to prevent crash
+        t_purchase->prod_id = (p_product_id != nil ? MCValueRetain(p_product_id) : MCValueRetain(kMCEmptyString));
         MCLog("MCPurchaseCreate :purchase->prod_id is : %@", t_purchase->prod_id);
 		t_purchase->id = s_last_purchase_id++;
 		t_purchase->ref_count = 1;
@@ -218,15 +229,11 @@ void MCPurchaseRelease(MCPurchase *p_purchase)
 	MCLog("MCPurchaseRelease(%p)...", p_purchase);
 	if (p_purchase != NULL)
 	{
-        MCLog("MCPurchaseRelease : p_purchase is NOT null", nil);
-        MCLog("MCPurchaseRelease : referencecount : %d", p_purchase->ref_count);
-		if (p_purchase -> ref_count > 1)
-			p_purchase -> ref_count -= 1;
-		else
-			MCPurchaseDelete(p_purchase);
+        if (p_purchase -> ref_count > 1)
+            p_purchase -> ref_count -= 1;
+        else
+            MCPurchaseDelete(p_purchase);
 	}
-    MCLog("reference count: %d", p_purchase->ref_count);
-	//MCLog("...done", nil);
 }
 
 MCPurchase *MCStoreGetPurchases()
@@ -307,17 +314,14 @@ void MCPurchaseUpdateEvent::Dispatch()
 	if (t_success)
         t_success = MCStringFormat(&t_id, "%d", m_purchase->id);
     
+    // PM-2015-01-07: [[ Bug 14343 ]] m_purchase->prod_id is an MCStringRef
     if (t_success)
-        t_success = MCStringFormat(&t_prod_id, "%s", m_purchase->prod_id);
+        t_success = MCStringFormat(&t_prod_id, "%@", m_purchase->prod_id);
     
-    //if (m_purchase->prod_id == NULL)
-        //t_prod_id = "Null prod_id";
-       // MCLog("m_purchase->prod_id is null",nil);
+    s_id = m_purchase->id;
     
 	if (t_success)
 		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_purchase_updated, *t_id, *t_prod_id, *t_state);
-	
-    MCLog("MCPurchaseUpdateEvent::Dispatch() : m_purchase->prod_id is :  %@",*t_prod_id);
 }
 
 bool MCPurchaseUpdateEvent::EventPendingForPurchase(MCPurchase *p_purchase)

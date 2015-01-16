@@ -56,13 +56,14 @@ static void MCU_play_message()
 {
 	MCAudioClip *acptr = MCacptr;
 	MCacptr = NULL;
-	MCStack *sptr = acptr->getmessagestack();
+    // PM-2014-12-22: [[ Bug 14269 ]] Nil checks to prevent a crash
+	MCStack *sptr = (acptr != NULL ? acptr->getmessagestack() : NULL);
 	if (sptr != NULL)
 	{
 		acptr->setmessagestack(NULL);
 		sptr->getcurcard()->message_with_valueref_args(MCM_play_stopped, acptr->getname());
 	}
-	if (acptr->isdisposable())
+	if (acptr != NULL && acptr->isdisposable())
 		delete acptr;
 }
 

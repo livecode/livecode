@@ -778,7 +778,10 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 // SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
 bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension, bool p_is_raw_data)
 {
-    MCAndroidEngineCall("exportImageToAlbum", "xdxx", &r_save_result, p_raw_data, p_file_name, p_file_extension);
+    // SN-2015-01-05: [[ Bug 11417 ]] The file extension has a trailing '\n', which causes issues on Android.
+    MCAutoStringRef t_android_filetype;
+    MCStringCopySubstring(p_file_extension, MCRangeMake(0, MCStringGetLength(p_file_extension) - 1), &t_android_filetype);
+    MCAndroidEngineCall("exportImageToAlbum", "xdxx", &r_save_result, p_raw_data, p_file_name, *t_android_filetype);
     
     return true;
 }
@@ -1017,17 +1020,18 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
     MCExecPoint ep(nil, nil, nil);
     p_parameters -> eval_argument(ep);
     
+    // SN-2015-01-05: [[ Bug 11417 ]] The extension can't finish with a LF
     if (is_png_data(ep . getsvalue()))
     {
-        sprintf (t_file_extension, ".png\n");
+        sprintf (t_file_extension, ".png");
     }
     else if (is_gif_data(ep . getsvalue()))
     {
-        sprintf (t_file_extension, ".gif\n");
+        sprintf (t_file_extension, ".gif");
     }
     else if (is_jpeg_data(ep . getsvalue()))
     {
-        sprintf (t_file_extension, ".jpg\n");
+        sprintf (t_file_extension, ".jpg");
     }
     if (t_file_extension[0] != '\0')
     {
@@ -1060,17 +1064,18 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
         
         MCImage *t_image;
         t_image = static_cast<MCImage *>(objptr);
+        // SN-2015-01-05: [[ Bug 11417 ]] The extension can't finish with a LF
         if (t_image -> getcompression() == F_PNG)
         {
-            sprintf (t_file_extension, ".png\n");
+            sprintf (t_file_extension, ".png");
         }
         else if (t_image -> getcompression() == F_JPEG)
         {
-            sprintf (t_file_extension, ".jpg\n");
+            sprintf (t_file_extension, ".jpg");
         }
         else if (t_image -> getcompression() == F_GIF)
         {
-            sprintf (t_file_extension, ".gif\n");
+            sprintf (t_file_extension, ".gif");
         }
         else
         {

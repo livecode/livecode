@@ -1780,7 +1780,7 @@ bool MCDispatch::foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_ca
 	return t_continue;
 }
 
-MCStack *MCDispatch::findstackwindowid(uint32_t p_win_id)
+MCStack *MCDispatch::findstackwindowid(uintptr_t p_win_id)
 {
 	if (p_win_id == 0)
 		return NULL;
@@ -1829,7 +1829,7 @@ MCStack *MCDispatch::findstackwindowid(uint32_t p_win_id)
 MCStack *MCDispatch::findstackd(Window w)
 {
 	// IM-2014-07-09: [[ Bug 12225 ]] Use window ID to find stack
-	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
+	return findstackwindowid(MCscreen->dtouint((Drawable)w));
 }
 
 MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)

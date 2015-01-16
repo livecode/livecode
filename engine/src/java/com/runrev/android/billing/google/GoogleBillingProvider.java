@@ -90,7 +90,7 @@ public class GoogleBillingProvider implements BillingProvider
     {
         if (mHelper == null)
             return false;
-        
+	
         else
             return mHelper.is_billing_supported;
     }

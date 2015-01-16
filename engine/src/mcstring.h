@@ -201,6 +201,8 @@ extern MCNameRef MCN_x86_64;
 extern MCNameRef MCN_motorola_powerpc;
 extern MCNameRef MCN_i386;
 extern MCNameRef MCN_arm;
+// SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
+extern MCNameRef MCN_arm64;
 
 extern MCNameRef MCN_local_mac;
 extern MCNameRef MCN_local_win32;

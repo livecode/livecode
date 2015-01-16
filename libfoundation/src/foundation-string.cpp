@@ -380,6 +380,17 @@ bool MCStringCreateWithWString(const unichar_t *p_wstring, MCStringRef& r_string
 	return MCStringCreateWithChars(p_wstring, t_length, r_string);
 }
 
+bool MCStringCreateWithWStringAndRelease(unichar_t* p_wstring, MCStringRef& r_string)
+{
+	if (MCStringCreateWithWString(p_wstring, r_string))
+	{
+		free(p_wstring);
+		return true;
+	}
+
+	return false;
+}
+
 bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
 	bool t_success;
@@ -655,7 +666,9 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					strncmp(t_format_ptr, "f", 1) == 0 ||
 					strncmp(t_format_ptr, "I64d", 4) == 0)
 					t_arg_count += FORMAT_ARG_64_BIT;
-				else
+                // SN-2015-01-05: [[ Bug 14304 ]] There is no argument to be popped from the list
+                //   if we are considering a "%%" sequence
+				else if (*t_format_ptr != '%')
 					t_arg_count += FORMAT_ARG_32_BIT;
 			}
 			
