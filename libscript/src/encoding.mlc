@@ -28,16 +28,12 @@ public foreign handler MCEncodingExecEncodeUsingBase64(in Target as string) as d
 public foreign handler MCEncodingExecDecodeUsingBase64(in Target as data) as string binds to "<builtin>"
 public foreign handler MCEncodingEvalEncodedUsingBase64(in Target as string, out Result as data) as undefined binds to "<builtin>"
 public foreign handler MCEncodingEvalDecodedUsingBase64(in Target as data, out Result as string) as undefined binds to "<builtin>"
-public foreign handler MCEncodingExecEncodeTextUsingEncoding(in Target as string, in Encoding as int) as data binds to "<builtin>"
-public foreign handler MCEncodingExecDecodeTextUsingEncoding(in Target as data, in Encoding as int) as string binds to "<builtin>"
-public foreign handler MCEncodingExecEncodeTextUsingEncodingString(in Target as string, in EncodingString as string) as data binds to "<builtin>"
-public foreign handler MCEncodingExecDecodeTextUsingEncodingString(in Target as data, in EncodingString as string) as string binds to "<builtin>"
 
-public foreign handler MCEncodingEvalTextEncodedUsingEncoding(in Target as string, in Encoding as int, out Result as data) as undefined binds to "<builtin>"
-public foreign handler MCEncodingEvalTextDecodedUsingEncoding(in Target as data, in Encoding as int, out Result as string) as undefined binds to "<builtin>"
+public foreign handler MCEncodingExecEncodeTextUsingEncodingString(in Target as string, in Encoding as string) as data binds to "<builtin>"
+public foreign handler MCEncodingExecDecodeTextUsingEncodingString(in Target as data, in Encoding as string) as string binds to "<builtin>"
 
-public foreign handler MCEncodingEvalTextEncodedUsingEncodingString(in Target as string, in EncodingString as string, out Result as data) as undefined binds to "<builtin>"
-public foreign handler MCEncodingEvalTextDecodedUsingEncodingString(in Target as data, in EncodingString as string, out Result as string) as undefined binds to "<builtin>"
+public foreign handler MCEncodingEvalTextEncodedUsingEncodingString(in Target as string, in Encoding as string, out Result as data) as undefined binds to "<builtin>"
+public foreign handler MCEncodingEvalTextDecodedUsingEncodingString(in Target as data, in Encoding as string, out Result as string) as undefined binds to "<builtin>"
 
 public foreign handler MCEncodingExecEncodeForURL(in Target as string) as string binds to "<builtin>"
 public foreign handler MCEncodingExecDecodeFromURL(in Target as string) as string binds to "<builtin>"
@@ -199,8 +195,7 @@ end syntax
 Summary:	Encodes a string
 
 Target:		An expression which evaluates to a string.
-Encoding: 	A text encoding.
-EncodingString: A string which evaluates to a <TextEncoding>.
+Encoding:   A string which evaluates to a <TextEncoding>.
 
 The result:	The encoded data.
 
@@ -211,18 +206,16 @@ Tags: Encoding
 */
 
 syntax EncodeText is statement
-    "encode" <Target: Expression> "using" [<Encoding: TextEncoding> | <EncodingString: Expression>]
+    "encode" <Target: Expression> "using" <Encoding: Expression>
 begin
-    MCEncodingExecEncodeTextUsingEncoding(Target, Encoding)
-    MCEncodingExecEncodeTextUsingEncodingString(Target, EncodingString)
+    MCEncodingExecEncodeTextUsingEncodingString(Target, Encoding)
 end syntax
 
 /*
 Summary:	Decodes a string
 
 Target:		An expression which evaluates to data.
-Encoding: 	A text encoding.
-EncodingString: A string which evaluates to a <TextEncoding>.
+Encoding:   A string which evaluates to a <TextEncoding>.
 
 The result:	The decoded data 
 
@@ -234,18 +227,16 @@ Tags: Encoding
 */
 
 syntax DecodeText is statement
-"decode" <Target: Expression> "using" [<Encoding: TextEncoding> | <EncodingString: Expression>]
+    "decode" <Target: Expression> "using" <Encoding: Expression>
 begin
-    MCEncodingExecDecodeTextUsingEncoding(Target, Encoding)
-    MCEncodingExecDecodeTextUsingEncodingString(Target, EncodingString)
+    MCEncodingExecDecodeTextUsingEncodingString(Target, Encoding)
 end syntax
 
 /*
 Summary:	Encodes a string
 
 Target:		An expression which evaluates to a string.
-Encoding: 	A text encoding.
-EncodingString: A string which evaluates to a <TextEncoding>.
+Encoding: A string which evaluates to a <TextEncoding>.
 
 output:     The encoded data
 
@@ -255,19 +246,17 @@ Encodes a string in the specified encoding, returning the encoded data.
 Tags: Encoding
 */
 
-syntax TextEncodeOperator is postfix operator with precedence 3
-    <Target: Expression> "encoded" "using" [<Encoding: TextEncoding> | <EncodingString: Expression>]
+syntax TextEncodeOperator is left binary operator with precedence 3
+    <Target: Expression> "encoded" "using" <Encoding: Expression>
 begin
-    MCEncodingEvalTextEncodedUsingEncoding(Target, Encoding, output)
-    MCEncodingEvalTextEncodedUsingEncodingString(Target, EncodingString, output)
+    MCEncodingEvalTextEncodedUsingEncodingString(Target, Encoding, output)
 end syntax
 
 /*
 Summary:	Decodes a string
 
 Target:		An expression which evaluates to data.
-Encoding: 	A text encoding.
-EncodingString: A string which evaluates to a <TextEncoding>.
+Encoding: A string which evaluates to a <TextEncoding>.
 
 output:     The decoded data
 
@@ -277,11 +266,10 @@ Decodes bytes from the specified encoding, returning the decoded string.
 Tags: Encoding
 */
 
-syntax TextDecodeOperator is postfix operator with precedence 3
-    <Target: Expression> "decoded" "using" [<Encoding: TextEncoding> | <EncodingString: Expression>]
+syntax TextDecodeOperator is left binary operator with precedence 3
+    <Target: Expression> "decoded" "using" <Encoding: Expression>
 begin
-    MCEncodingEvalTextDecodedUsingEncoding(Target, Encoding, output)
-    MCEncodingEvalTextEncodedUsingEncodingString(Target, EncodingString, output)
+    MCEncodingEvalTextEncodedUsingEncodingString(Target, Encoding, output)
 end syntax
 
 

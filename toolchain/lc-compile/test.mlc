@@ -153,28 +153,28 @@ public handler testEncoding(inout xResults as list)
 	variable tString as string
 	
 	put "ℬ" into tString
-	encode tString using "utf8"
+	encode tString using "utf-8"
 	testLog("Encoding", "UTF8Bytes", the number of bytes in the result is 3, xResults)
 	
-	encode tString using utf16
+	encode tString using "utf-16"
 	testLog("Encoding", "UTF16Bytes", the number of bytes in the result is 2, xResults)
 	
 	variable tBEData as data
-	encode tString using utf32be
+	encode tString using "utf-32be"
 	put the result into tBEData
 	testLog("Encoding", "UTF32BEBytes", the number of bytes in tBEData is 4, xResults)
 	
 	variable tLEData as data
-	encode tString using utf32le
+	encode tString using "utf-32le"
 	put the result into tLEData
 	testLog("Encoding", "UTF32LEBytes", the number of bytes in tLEData is 4, xResults)
 
 	testLog("Encoding", "Endianness 1", byte 1 of tLEData is byte -1 of tBEData, xResults)
 	
-	decode (byte 1 to 2 of tLEData) using utf16le
+	decode (byte 1 to 2 of tLEData) using "utf-16le"
 	testLog("Encoding", "Endianness 2", the result is tString, xResults)
 	
-	decode (byte -2 to -1 of tBEData) using utf16be
+	decode (byte -2 to -1 of tBEData) using "utf-16be"
 	testLog("Encoding", "Endianness 3", the result is tString, xResults)
 	
 	// round tripping
