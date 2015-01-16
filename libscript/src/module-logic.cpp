@@ -31,17 +31,27 @@ extern "C" MC_DLLEXPORT void MCLogicEvalIsNotEqualTo(bool p_left, bool p_right, 
     r_result = (p_left != p_right);
 }
 
-extern "C" MC_DLLEXPORT void MCLogicEvalBooleanFormattedAsString(bool p_operand, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT MCStringRef MCLogicExecFormatBooleanAsString(bool p_operand)
 {
-    r_output = MCValueRetain(p_operand ? kMCTrueString : kMCFalseString);
+    return MCValueRetain(p_operand ? kMCTrueString : kMCFalseString);
 }
 
-extern "C" MC_DLLEXPORT void MCLogicEvalStringParsedAsBoolean(MCStringRef p_operand, bool& r_output)
+extern "C" MC_DLLEXPORT MCValueRef MCLogicExecParseStringAsBool(MCStringRef p_operand)
 {
     if (MCStringIsEqualTo(p_operand, kMCTrueString, kMCStringOptionCompareCaseless))
-        r_output = true;
+        return MCValueRetain(kMCTrue);
     else if (MCStringIsEqualTo(p_operand, kMCFalseString, kMCStringOptionCompareCaseless))
-        r_output = false;
+        return MCValueRetain(kMCFalse);
     else
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("string must be either \"true\" or \"false\""), nil);
+        return MCValueRetain(kMCNull);
+}
+
+extern "C" MC_DLLEXPORT void MCLogicEvalBooleanFormattedAsString(bool p_operand, MCStringRef& r_output)
+{
+    r_output = MCLogicExecFormatBooleanAsString(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCLogicEvalStringParsedAsBool(MCStringRef p_operand, MCValueRef& r_output)
+{
+    r_output = MCLogicExecParseStringAsBool(p_operand);
 }

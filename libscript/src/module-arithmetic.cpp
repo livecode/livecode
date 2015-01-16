@@ -449,29 +449,31 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToNumber(MCNumberRef p_left
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberFormattedAsString(MCNumberRef p_operand, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT MCStringRef MCArithmeticExecFormatNumberAsString(MCNumberRef p_operand)
 {
-    MCStringFormat(r_output, "%f", MCNumberFetchAsReal(p_operand));
+    MCAutoStringRef t_output;
+    MCStringFormat(&t_output, "%f", MCNumberFetchAsReal(p_operand));
+    return MCValueRetain(*t_output);
 }
 
-extern "C" MC_DLLEXPORT void MCArithmeticEvalStringParsedAsNumber(MCStringRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT MCValueRef MCArithmeticExecParseStringAsNumber(MCStringRef p_operand)
 {
     double t_converted;
     if (!MCTypeConvertStringToReal(p_operand, t_converted))
-    {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("input string is not a number"), nil);
-        return;
-    }
+        return MCValueRetain(kMCNull);
     
-    if (!MCNumberCreateWithReal(t_converted, r_output))
-        return;
+    MCAutoNumberRef t_number;
+    if (!MCNumberCreateWithReal(t_converted, &t_number))
+        return MCValueRetain(kMCNull);
+    
+    return MCValueRetain(*t_number);
 }
 
-extern "C" MC_DLLEXPORT void MCArithmeticEvalListOfStringParsedAsListOfNumber(MCProperListRef p_list_of_string, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT MCValueRef MCArithmeticExecParseListOfStringAsListOfNumber(MCProperListRef p_list_of_string)
 {
     MCAutoProperListRef t_output;
     if (!MCProperListCreateMutable(&t_output))
-        return;
+        return MCValueRetain(kMCNull);
     
     for(uindex_t i = 0; i < MCProperListGetLength(p_list_of_string); i++)
     {
@@ -480,17 +482,31 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalListOfStringParsedAsListOfNumber(MC
         if (MCValueGetTypeCode(t_element) != kMCValueTypeCodeString)
         {
             MCErrorThrowGeneric(MCSTR("not a list of string"));
-            return;
+            return MCValueRetain(kMCNull);
         }
         
-        MCAutoNumberRef t_number;
-        MCArithmeticEvalStringParsedAsNumber((MCStringRef)t_element, &t_number);
-        if (MCErrorIsPending())
-            return;
-        if (!MCProperListPushElementOntoBack(*t_output, *t_number))
-            return;
+        if (!MCProperListPushElementOntoBack(*t_output, MCArithmeticExecParseStringAsNumber((MCStringRef)t_element)))
+            return MCValueRetain(kMCNull);
     }
     
-    if (!MCProperListCopy(*t_output, r_output))
-        return;
+    MCAutoProperListRef t_list;
+    if (!MCProperListCopy(*t_output, &t_list))
+        return MCValueRetain(kMCNull);
+    
+    return MCValueRetain(*t_list);
+}
+
+extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberFormattedAsString(MCNumberRef p_operand, MCStringRef& r_output)
+{
+    r_output = MCArithmeticExecFormatNumberAsString(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCArithmeticEvalStringParsedAsNumber(MCStringRef p_operand, MCValueRef& r_output)
+{
+    r_output = MCArithmeticExecParseStringAsNumber(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCArithmeticEvalListOfStringParsedAsListOfNumber(MCProperListRef p_list_of_string, MCValueRef& r_output)
+{
+    r_output = MCArithmeticExecParseListOfStringAsListOfNumber(p_list_of_string);
 }

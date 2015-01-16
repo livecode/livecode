@@ -17,6 +17,8 @@ public handler test()
 	testRepeat(tResults)
 	testLogicStructural(tResults)
     testPrecedence(tResults)
+    
+    testParseAndFormat(tResults)
 
     --com.livecode.type
     testType(tResults)
@@ -127,6 +129,47 @@ end handler
 public handler boolWithSideEffect(in tResult as boolean, inout tVar as string) as boolean
 	put "a" into tVar
 	return tResult
+end handler
+
+public handler testParseAndFormat(inout xResults as list)
+
+	// some formatting tests will fail until we have
+	// context vars (number format) and distinct reals/ints
+	
+	testLog("Arithmetic", "StringParsedAsNumber", "1.5" parsed as number is 1.5, xResults)
+
+	variable tInt as integer
+	put 3 into tInt
+	testLog("Arithmetic", "NumberFormattedAsString", tInt formatted as string is "3", xResults)
+
+	variable tVar as optional number
+	put "dfsdf" parsed as number into tVar
+
+	testLog("Arithmetic", "StringParsedAsNumberFail", tVar is not defined, xResults)
+	
+	variable tList as list
+	put ["1", "b", "3"] parsed as list of number into tList
+	
+	variable tElt as number
+	repeat with tElt from 1 up to the number of elements in tList
+		if tList[tElt] is not defined then
+			put 0 into element tElt of tList
+		end if
+	end repeat
+
+	testLog("Arithmetic", "ListOfStringParsedAsListOfNumberFail", tList is [ 1, 0, 3 ], xResults)
+	testLog("Arithmetic", "ListOfStringParsedAsListOfNumber", ["1", "2", "3"] parsed as list of number is [ 1, 2, 3 ], xResults)
+	
+	parse "0.5" as number
+	testLog("Arithmetic", "ParseAsNumber", the result is 0.5, xResults)
+	
+	testLog("Logic", "ParseAsBool", "true" parsed as boolean, xResults)
+	testLog("Logic", "ParseAsBool2", not "false" parsed as boolean, xResults)
+	
+	variable tBool
+	put "sdgfds" parsed as boolean into tBool
+	testLog("Logic", "ParseAsBoolFail", tBool is not defined, xResults)
+	
 end handler
 
 public handler testType(inout xResults as list)
