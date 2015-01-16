@@ -6,7 +6,7 @@ public handler test()
 
     variable tDelimiter as string
     put newline into tDelimiter
-	
+
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
 	testLog("__Test", "Succeed", true, tResults)
@@ -15,6 +15,9 @@ public handler test()
 	testRepeat(tResults)
 	testLogicStructural(tResults)
     testPrecedence(tResults)
+
+	--com.livecode.chunk
+	testChunk(tResults)
 
     --com.livecode.type
     testType(tResults)
@@ -125,6 +128,19 @@ end handler
 public handler boolWithSideEffect(in tResult as boolean, inout tVar as string) as boolean
 	put "a" into tVar
 	return tResult
+end handler
+
+public handler testChunk(inout xResults as list)
+	variable tChunks as string
+	put "" into tChunks
+	
+	variable tChunk as string
+	repeat for each chunk tChunk in "a,b,c,d,e"
+		put tChunk after tChunks
+	end repeat
+	
+	testLog("Chunk", "RepeatForEachChunk", tChunks is "abcde", xResults)
+	
 end handler
 
 public handler testType(inout xResults as list)

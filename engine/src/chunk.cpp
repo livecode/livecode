@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "syntax.h"
 #include "exec.h"
 
+#include "foundation-chunk.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef COLLECTING_CHUNKS
@@ -5492,28 +5494,12 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range)
+static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type, MCRange p_range)
 {
-	MCRange t_range;
-	if (!MCStringFind(p_string, p_range, p_chunk, p_options, &t_range))
-		return false;
+    MCStringRef t_delimiter;
+    t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
     
-	MCStringRef t_delimiter;
-	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
-	
-
-    uindex_t t_length;
-    // if there is no delimiter to the left then continue searching the string.
-	if (t_range . offset != 0 &&
-        !MCStringSharedSuffix(p_string, MCRangeMake(0, t_range . offset), t_delimiter, p_options, t_length))
-		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
-    
-    // if there is no delimiter to the right then continue searching the string.
-	if (t_range . offset + t_range . length != MCStringGetLength(p_string) &&
-        !MCStringSharedPrefix(p_string, MCRangeMake(t_range . offset + t_range . length, UINDEX_MAX), t_delimiter, p_options, t_length))
-		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
-    
-	return true;
+    return MCChunkIsAmongTheChunksOfRange(p_chunk, p_string, t_delimiter, ctxt . GetStringComparisonType(), p_range);
 }
 
 static bool MCStringsIsAmongTheParagraphsOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, MCStringOptions p_options, MCRange p_range)
@@ -5543,31 +5529,13 @@ static bool MCStringsIsAmongTheParagraphsOfRange(MCExecContext& ctxt, MCStringRe
 	return true;
 }
 
-static bool MCStringsFindChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_needle, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range, uindex_t& r_offset)
+static bool MCStringsFindChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_needle, Chunk_term p_chunk_type, MCRange p_range, uindex_t& r_offset)
 {
-    // If we can't find the chunk in the remainder of the string, we are done.
-    MCRange t_range;
-    if (!MCStringFind(p_string, p_range, p_needle, p_options, &t_range))
-        return false;
-    
     // Work out the delimiter.
 	MCStringRef t_delimiter;
 	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
-    
-    uindex_t t_length;
-    // If we are in wholeMatches mode, ensure the delimiter is either side.
-	if (ctxt . GetWholeMatches())
-	{
-		if (t_range . offset > 0 &&
-            !MCStringSharedSuffix(p_string, MCRangeMake(0, t_range . offset), t_delimiter, p_options, t_length))
-			return MCStringsFindChunkInRange(ctxt, p_string, p_needle, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
-		if (t_range . offset + t_range . length < MCStringGetLength(p_string) &&
-            !MCStringSharedPrefix(p_string, MCRangeMake(t_range . offset + t_range . length, UINDEX_MAX), t_delimiter, p_options, t_length))
-			return MCStringsFindChunkInRange(ctxt, p_string, p_needle, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length + 1, p_range . length), r_offset);
-	}
-    
-    r_offset = t_range . offset;
-    return true;
+
+    return MCChunkOffsetOfChunkInRange(p_string, p_needle, t_delimiter, ctxt . GetWholeMatches(), ctxt . GetStringComparisonType(), p_range, r_offset);
 }
 
 static bool MCStringsFindParagraphInRange(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_needle, MCStringOptions p_options, MCRange p_range, uindex_t& r_offset)
@@ -5852,7 +5820,7 @@ bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
             if (type == CT_PARAGRAPH)
                 return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_needle, text, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
             
-            return MCStringsIsAmongTheChunksOfRange(ctxt, p_needle, text, type, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+            return MCStringsIsAmongTheChunksOfRange(ctxt, p_needle, text, type, MCRangeMake(0, length));
         }
         default:
             if (MCStringIsEmpty(p_needle))
@@ -5914,7 +5882,7 @@ uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_nee
             uindex_t t_found_offset;
             if (type != CT_PARAGRAPH)
             {
-                if (!MCStringsFindChunkInRange(ctxt, text, p_needle, type, t_options, MCRangeMake(range . offset, length - range . offset), t_found_offset))
+                if (!MCStringsFindChunkInRange(ctxt, text, p_needle, type, MCRangeMake(range . offset, length - range . offset), t_found_offset))
                     return 0;
             }
             else
