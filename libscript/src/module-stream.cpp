@@ -36,3 +36,11 @@ MCStreamExecWriteToStream(MCDataRef p_data,
 		return; /* Error should already have been set */
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void
+MCStreamExecGetStandardOutput (MCStreamRef & r_stream)
+{
+	MCStreamGetStandardOutput (r_stream);
+}

@@ -9,6 +9,29 @@ public foreign type Stream binds to "kMCStreamTypeInfo"
 
 --
 
+public foreign handler MCStreamExecGetStandardOutput(out Stdout as Stream) as undefined binds to "<builtin>"
+
+/*
+Summary:	Default output stream.
+Returns:	The default output stream.
+
+Description:
+The default output stream for output from the program.
+
+In command-line programs, this is usually used to output the results
+of running the program.  In CGI programs running on servers, this is
+usually used to output the data to be sent to the client.
+
+Tags: IO
+*/
+syntax DefaultOutputStream is expression
+	"the" "output" "stream"
+begin
+	MCStreamExecGetStandardOutput(output)
+end syntax
+
+--
+
 public foreign handler MCStreamExecWriteToStream(in Buffer as data, in Destination as Stream) as undefined binds to "<builtin>"
 
 /*
