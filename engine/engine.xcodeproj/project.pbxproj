@@ -481,6 +481,9 @@
 		721CAACC18351E7400858545 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		721CAACD18351E7400858545 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
 		723BDBFF19E6C34E007365F3 /* native-layer-mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */; };
+		724459DB1A69359400D22C2C /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7261915D1A26091900851787 /* libffi.a */; };
+		724459DC1A69359400D22C2C /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 726191731A260B6D00851787 /* libscript.a */; };
+		724459DD1A69359400D22C2C /* libstdscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B72D1A275A7C00DD750C /* libstdscript.a */; };
 		7261910C1A1F596200851787 /* text-controlblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7261910A1A1F596200851787 /* text-controlblock.cpp */; };
 		7261910F1A1F67EC00851787 /* text-breakingengine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7261910D1A1F67EC00851787 /* text-breakingengine.cpp */; };
 		726191121A1F73AC00851787 /* text-simplebreakingengine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 726191101A1F73AC00851787 /* text-simplebreakingengine.cpp */; };
@@ -1300,6 +1303,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
+		};
+		724459D41A6933AB00D22C2C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D322F1519DD945E008476D3;
+			remoteInfo = script;
+		};
+		724459D61A6933AB00D22C2C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D79B6531A273B6900DD750C;
+			remoteInfo = stdscript;
+		};
+		724459D81A6933AB00D22C2C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 726191581A26091900851787 /* libffi.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libffi;
 		};
 		7261915C1A26091900851787 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -2465,6 +2489,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				724459DB1A69359400D22C2C /* libffi.a in Frameworks */,
+				724459DC1A69359400D22C2C /* libscript.a in Frameworks */,
+				724459DD1A69359400D22C2C /* libstdscript.a in Frameworks */,
 				76570D52198BBBE800614ECD /* CoreMedia.framework in Frameworks */,
 				76570D51198BBBDF00614ECD /* AVFoundation.framework in Frameworks */,
 				BE6444491965B8CB00C2092C /* AudioToolbox.framework in Frameworks */,
@@ -4184,6 +4211,9 @@
 			buildRules = (
 			);
 			dependencies = (
+				724459D51A6933AB00D22C2C /* PBXTargetDependency */,
+				724459D71A6933AB00D22C2C /* PBXTargetDependency */,
+				724459D91A6933AB00D22C2C /* PBXTargetDependency */,
 				4D2A579A1198634300135143 /* PBXTargetDependency */,
 				4D1F9C52171C66230091C6CB /* PBXTargetDependency */,
 				4C13881C18A12EB400EFF7B6 /* PBXTargetDependency */,
@@ -5787,6 +5817,21 @@
 			isa = PBXTargetDependency;
 			name = external;
 			targetProxy = 4DEE2BD20FDE4A1E0009423C /* PBXContainerItemProxy */;
+		};
+		724459D51A6933AB00D22C2C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = script;
+			targetProxy = 724459D41A6933AB00D22C2C /* PBXContainerItemProxy */;
+		};
+		724459D71A6933AB00D22C2C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = stdscript;
+			targetProxy = 724459D61A6933AB00D22C2C /* PBXContainerItemProxy */;
+		};
+		724459D91A6933AB00D22C2C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libffi;
+			targetProxy = 724459D81A6933AB00D22C2C /* PBXContainerItemProxy */;
 		};
 		7261915F1A26094100851787 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
