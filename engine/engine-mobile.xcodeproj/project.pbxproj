@@ -306,7 +306,6 @@
 		76956893182277B200779255 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76956892182277AE00779255 /* cgimageutil.cpp */; };
 		76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */; };
 		76EF32BA182263E000FAC195 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32B7182263DB00FAC195 /* foundation-legacy.cpp */; };
-		76EF32D918226C7300FAC195 /* sysunxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF323E182145CA00FAC195 /* sysunxrandom.cpp */; };
 		76EF32DF182270E500FAC195 /* mbltheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32DE182270D400FAC195 /* mbltheme.cpp */; };
 		76EF32E41822749600FAC195 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76EF32E31822749500FAC195 /* Security.framework */; };
 		76EF32E61822757A00FAC195 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32E51822756F00FAC195 /* stackview.cpp */; };
@@ -1023,7 +1022,6 @@
 		76956892182277AE00779255 /* cgimageutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cgimageutil.cpp; path = src/cgimageutil.cpp; sourceTree = "<group>"; };
 		76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
 		76EF321F182124AA00FAC195 /* exec-strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-strings.h"; path = "src/exec-strings.h"; sourceTree = "<group>"; };
-		76EF323E182145CA00FAC195 /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
 		76EF328D18217FA200FAC195 /* mblandroidtypeface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtypeface.cpp; path = src/mblandroidtypeface.cpp; sourceTree = "<group>"; };
 		76EF328E18217FC600FAC195 /* libgraphics-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libgraphics-mobile.xcodeproj"; path = "../libgraphics/libgraphics-mobile.xcodeproj"; sourceTree = "<group>"; };
 		76EF32B7182263DB00FAC195 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
@@ -1992,7 +1990,6 @@
 				4DD3DF041040ADFC00CAC7EF /* System.h */,
 				4C529CBA1973CF16007C5F7C /* systhreads.h */,
 				4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */,
-				76EF323E182145CA00FAC195 /* sysunxrandom.cpp */,
 				4C529CBB1973CF16007C5F7C /* sysunxthreads.cpp */,
 			);
 			name = System;
@@ -2642,7 +2639,6 @@
 				BE0A3CD417E1FD2500C2361B /* mblnetwork.cpp in Sources */,
 				76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */,
 				76EF32BA182263E000FAC195 /* foundation-legacy.cpp in Sources */,
-				76EF32D918226C7300FAC195 /* sysunxrandom.cpp in Sources */,
 				76EF32DF182270E500FAC195 /* mbltheme.cpp in Sources */,
 				76EF32E61822757A00FAC195 /* stackview.cpp in Sources */,
 				76956893182277B200779255 /* cgimageutil.cpp in Sources */,
