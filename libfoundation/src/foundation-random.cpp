@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "foundation-private.h"
 
 #if defined(__WINDOWS__)
+#  include <windows.h>
 #  include <Wincrypt.h>
 #endif
 
@@ -58,7 +59,7 @@ __MCRandomBytes (void *x_buffer,
 	}
 
 	/* Obtain random data */
-	if (!CryptGenRandom (t_provider, p_buffer_length, x_buffer))
+	if (!CryptGenRandom (t_provider, p_buffer_length, (BYTE*)x_buffer))
 	{
 		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason", MCSTR("Failed to generate random data"), NULL);
 		goto error_cleanup;

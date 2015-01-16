@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <foundation.h>
+#include <foundation-math.h>
 
 #include "foundation-auto.h"
 #include "foundation-private.h"

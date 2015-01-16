@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_FOUNDATION_PRIVATE__
 #define __MC_FOUNDATION_PRIVATE__
 
+
+#include <stdio.h>
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __LINUX__

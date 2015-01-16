@@ -28,6 +28,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <errno.h>
 
+#ifdef __WINDOWS__
+#  if defined(_CRT_DISABLE_PERFCRIT_LOCKS) && !defined(_DLL)
+#    define fseeko _fseeki64_nolock
+#  else
+#    define fseeko _fseeki64
+#  endif
+#  define ftello _ftelli64
+#endif
+
 /*
  * This file provides an MCStream implementation that tightly wraps a
  * C standard library io stream (FILE *, defined in stdio.h).  It

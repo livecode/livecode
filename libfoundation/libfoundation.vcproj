@@ -176,6 +176,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-file-private.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-file-w32.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-file.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-filters.cpp"
 				>
 			</File>
@@ -224,11 +236,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-random.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-record.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\foundation-set.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-stream-stdio.cpp"
 				>
 			</File>
 			<File

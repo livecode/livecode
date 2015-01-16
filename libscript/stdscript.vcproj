@@ -240,6 +240,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\file.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\item.mlc"
 					>
 				</File>
@@ -269,6 +273,10 @@
 				</File>
 				<File
 					RelativePath=".\src\sort.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\stream.mlc"
 					>
 				</File>
 				<File
@@ -312,6 +320,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\generated\file.c"
+					>
+				</File>
+				<File
 					RelativePath=".\generated\item.c"
 					>
 				</File>
@@ -341,6 +353,10 @@
 				</File>
 				<File
 					RelativePath=".\generated\sort.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\stream.c"
 					>
 				</File>
 				<File

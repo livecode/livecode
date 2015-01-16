@@ -351,9 +351,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if !defined(__LINUX__) && !defined(__WINDOWS__)
-#  define MCAutoStringRefAsSysString MCAutoStringRefAsUTF8String
-#else
+#if defined(__LINUX__)
 class MCAutoStringRefAsSysString
 {
 public:
@@ -387,6 +385,10 @@ public:
 private:
     const char *m_sysstring;
 };
+#elif defined(__WINDOWS__)
+#  define MCAutoStringRefAsSysString MCAutoStringRefAsWS
+#else
+#  define MCAutoStringRefAsSysString MCAutoStringRefAsUTF8String
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

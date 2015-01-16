@@ -20,7 +20,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation-file.h>
 
 #include "foundation-private.h"
-#include "foundation-file-private"
+#include "foundation-file-private.h"
+
+#include <windows.h>
+#include <io.h>
+#include <fcntl.h>
 
 /* ================================================================
  * Windows file errors
@@ -49,9 +53,9 @@ __MCFileErrorCodeGetDescription (DWORD p_error_code,
 	                              0, NULL);
 
 	if (0 == t_temp_size || NULL == t_temp)
-		t_description = MCSTR("Unknown error");
+		r_description = MCSTR("Unknown error");
 	else
-		return MCStringCreateWithWString (t_temp, &t_description);
+		return MCStringCreateWithWString (t_temp, r_description);
 
 	return true;
 }
@@ -140,15 +144,15 @@ __MCFileGetContents (MCStringRef p_native_path,
 	                        FILE_ATTRIBUTE_NORMAL,  /* flags & attrs. */
 	                        NULL);                  /* template file */
 
-	if (h == INVALID_HANDLE_VALUE)
+	if (t_handle == INVALID_HANDLE_VALUE)
 	{
 		return __MCFileThrowOpenErrorWithErrorCode (p_native_path, GetLastError());
 	}
 
 	/* ---------- 2) Get the file size */
 
-	LARGE_INTEGER t_file_size;
-	if (!GetFileSizeEx (t_handle, &t_file_size))
+	LARGE_INTEGER t_file_size_struct;
+	if (!GetFileSizeEx (t_handle, &t_file_size_struct))
 	{
 		__MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to read from '%{path}'; GetFileSizeEx() failed: %{description}"), GetLastError());
 		goto error_cleanup;
@@ -156,19 +160,19 @@ __MCFileGetContents (MCStringRef p_native_path,
 
 	/* ---------- 3) Allocate a sufficiently-large buffer */
 	byte *t_buffer = NULL;
-	size_t t_file_size;
 
 	/* Check that the file isn't too large (i.e., size > 2^31 on
 	 * 32-bit systems) */
-	if (t_file_size.QuadPart < 0 || t_file_size.QuadPart > SIZE_MAX)
+	if (t_file_size_struct.QuadPart < 0 || t_file_size_struct.QuadPart > SIZE_MAX)
 	{
 		__MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("File '%{path}' is too large"), 0);
 		goto error_cleanup;
 	}
 
-	t_file_size = (size_t) t_file_size.QuadPart;
+	size_t t_file_size;
+	t_file_size = t_file_size_struct.QuadPart;
 
-	if (!MCMemoryAllocate (t_buffer, t_file_size))
+	if (!MCMemoryAllocate (t_file_size, t_buffer))
 		goto error_cleanup;
 
 	/* ---------- 4) Read the contents of the file */
@@ -180,7 +184,7 @@ __MCFileGetContents (MCStringRef p_native_path,
 	while (t_total_read < t_file_size)
 	{
 		uint32_t t_bytes_request;
-		uint32_t t_bytes_read;
+		DWORD t_bytes_read;
 
 		t_bytes_request = MCMax ((t_file_size - t_total_read), UINT32_MAX);
 
@@ -248,7 +252,6 @@ __MCFileSetContents (MCStringRef p_native_path,
 		return __MCFileThrowIOErrorWithErrorCode (kMCEmptyString, MCSTR("Failed to create temporary file; GetTempPath() failed: %{description}"), GetLastError());
 
 	unichar_t t_temp_path_w32[MAX_PATH];
-	UINT t_temp_result;
 	t_temp_result = GetTempFileNameW (t_tempdir_path_w32, /* path name */
 	                                  NULL,               /* prefix */
 	                                  0,                  /* unique */
@@ -266,11 +269,11 @@ __MCFileSetContents (MCStringRef p_native_path,
 
 	/* FIXME Possibly inefficient */
 	MCStreamRef t_stream = NULL;
-	if (!__MCFileCreateStream (t_temp_native_path, kMCOpenFileModeRead,
+	if (!__MCFileCreateStream (*t_temp_native_path, kMCOpenFileModeRead,
 	                           t_stream))
 		goto error_cleanup;
 
-	if (!__MCStreamWrite (t_stream, MCDataGetBytePtr (p_data),
+	if (!MCStreamWrite (t_stream, MCDataGetBytePtr (p_data),
 	                      MCDataGetLength (p_data)))
 		goto error_cleanup;
 
@@ -280,7 +283,7 @@ __MCFileSetContents (MCStringRef p_native_path,
 
 	/* ---------- 3) Move the temporary file into place */
 
-	if (!MoveFileEx (t_temp_path_w32, t_path_w32, MOVEFILE_REPLACE_EXISTING))
+	if (!MoveFileEx (t_temp_path_w32, *t_path_w32, MOVEFILE_REPLACE_EXISTING))
 	{
 		/* Report rename error */
 		DWORD t_error = GetLastError();
@@ -364,14 +367,14 @@ __MCFilePathToNative (MCStringRef p_path,
 	/* Check for '//?/' prefix.  If present, we handle some path
 	 * translations differently. */
 	bool t_file_namespace;
-	t_file_namespace = MCStringBeginsWithCString (p_path, "//?/",
+	t_file_namespace = MCStringBeginsWithCString (p_path, (const char_t*)"//?/",
 	                                              kMCStringOptionCompareExact);
 
 	MCAutoArray<unichar_t> t_native_chars;
 	if (!t_native_chars.New (t_len))
 		return false;
 
-	for (uindex i = 0; i < t_len; ++i)
+	for (uindex_t i = 0; i < t_len; ++i)
 	{
 		unichar_t t_char = MCStringGetCharAtIndex (p_path, i);
 
@@ -418,14 +421,14 @@ __MCFilePathFromNative (MCStringRef p_native_path,
 	/* Check for '\\?\' prefix.  If present, we handle some path
 	 * translations differently. */
 	bool t_file_namespace;
-	t_file_namespace = MCStringBeginsWithCString (p_native_path, "\\\\?\\",
+	t_file_namespace = MCStringBeginsWithCString (p_native_path, (const char_t*)"\\\\?\\",
 	                                              kMCStringOptionCompareExact);
 
 	MCAutoArray<unichar_t> t_internal_chars;
 	if (!t_internal_chars.New (t_len))
 		return false;
 
-	for (uindex i = 0; i < t_len; ++i)
+	for (uindex_t i = 0; i < t_len; ++i)
 	{
 		unichar_t t_char = MCStringGetCharAtIndex (p_native_path, i);
 
@@ -443,7 +446,7 @@ __MCFilePathFromNative (MCStringRef p_native_path,
 			 * we may need to do translation to/from file namespace in
 			 * future versions of this API). */
 			if (t_file_namespace)
-				t_native_chars[i] = '\\';
+				t_internal_chars[i] = '\\';
 			else
 				return __MCFileThrowInvalidPathError (p_native_path);
 		case '\\':
@@ -535,7 +538,7 @@ __MCFileCreateStream (MCStringRef p_native_path,
 	                        FILE_ATTRIBUTE_NORMAL,  /* flags & attrs. */
 	                        NULL);                  /* template file */
 
-	if (h == INVALID_HANDLE_VALUE)
+	if (t_handle == INVALID_HANDLE_VALUE)
 	{
 		return __MCFileThrowOpenErrorWithErrorCode (p_native_path,
 		                                            GetLastError());
@@ -580,7 +583,7 @@ __MCFileCreateStream (MCStringRef p_native_path,
 	}
 	else if (p_mode & kMCOpenFileModeWrite)
 	{
-		t_stream_mode = (p_mode & kMCOpenFileModeAppend) ? "ab" : "wb"
+		t_stream_mode = (p_mode & kMCOpenFileModeAppend) ? "ab" : "wb";
 	}
 
 	/* Create stream */
