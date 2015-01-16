@@ -12,6 +12,8 @@ SOURCES= \
 	foundation-data.cpp \
 	foundation-debug.cpp \
 	foundation-error.cpp \
+	foundation-file.cpp \
+	foundation-file-posix.cpp \
 	foundation-filters.cpp \
 	foundation-foreign.cpp \
 	foundation-handler.cpp \

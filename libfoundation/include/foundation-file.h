@@ -23,24 +23,52 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum MCOpenFileMode
-{
-    kMCOpenFileModeRead,
-    kMCOpenFileModeWrite,
-    kMCOpenFileModeUpdate,
-    kMCOpenFileModeAppend,
-    kMCOpenFileModeCreate,
-};
+MC_DLLEXPORT extern MCTypeInfoRef kMCFileIOErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCFileEndOfFileErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCFileInvalidPathErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCFileCreateStreamForFile(MCStringRef p_filename, MCOpenFileMode p_mode, MCStreamRef& r_stream);
+/* Read an entire file into allocated memory, with good error checking. */
+MC_DLLEXPORT bool MCFileGetContents(MCStringRef p_filename, MCDataRef & r_data);
 
-bool MCFilePathToNative(MCStringRef p_path, MCStringRef& r_native);
-bool MCFilePathFromNative(MCStringRef p_path, MCStringRef& r_livecode_path);
-bool MCFileGetCurrentFolder(MCStringRef& r_path);
-bool MCFileResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path);
-bool MCFileResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path);
+/* Write all of p_data to a file called p_filename, with good error
+ * checking.  If a file called p_filename already exists it will be
+ * overwritten.
+ *
+ * The data is first written to a temporary file which is then renamed
+ * to the final name.  On some systems, the write will therefore be
+ * atomic in some sense.  Note that:
+ *
+ * 1) On POSIX systems, if p_filename already exists hard links to
+ *    p_filename will break.  Also, existing permissions, access
+ *    control lists, metadata etc. may be lost.  If p_filename is a
+ *    symbolic link, the link itself will be replaced, not the linked
+ *    file.
+ *
+ * 2) On Windows it isn't possible to rename over an existing file.
+ *    There will therefore be a race condition between the existing
+ *    file being removed and the temporary file being moved into
+ *    place.
+ *
+ * 3) On Windows, this function will fail if p_filename already exists
+ *    and is open.
+ */
+MC_DLLEXPORT bool MCFileSetContents(MCStringRef p_filename, MCDataRef p_data);
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum MCOpenFileMode
+{
+	kMCOpenFileModeRead = (1 << 0),
+	kMCOpenFileModeWrite = (1 << 1),
+	kMCOpenFileModeAppend = (1 << 2),
+	kMCOpenFileModeCreate = (1 << 3),  /* Force creation of file */
+
+	kMCOpenFileModeUpdate = (kMCOpenFileModeRead | kMCOpenFileModeWrite),
+};
+
+MC_DLLEXPORT bool MCFileCreateStream(MCStringRef p_filename, intenum_t p_mode, MCStreamRef& r_stream);
 
 ////////////////////////////////////////////////////////////////////////////////
 
