@@ -1,6 +1,7 @@
 module test
 
 use com.livecode.file
+use com.livecode.stream
 
 public handler test()
     variable tResults as list
@@ -61,6 +62,9 @@ public handler test()
 	
 	--com.livecode.file
 	testFile(tResults)
+
+	--com.livecode.stream
+	testStream(tResults)
 	
 	--com.livecode.binary
 	--com.livecode.byte
@@ -846,15 +850,13 @@ public handler testData(inout xResults as list)
 end handler
 
 public handler testFile(inout xResults as list)
-	variable tStream as Stream
-	open read only stream for file "/Users/alilloyd/Desktop/log.txt"
-    put the result into tStream
-	
 	variable tData as data
-	read 7 from stream tStream
-    put the result into tData
-	
-	--testLog("File", "ReadFromStream", tText is "Warning", xResults)
+	put the contents of file "/dev/null" into tData
+	testLog("File", "GetEmptyContents", tData is empty, xResults)
+end handler
+
+public handler testStream(inout xResults as list)
+
 end handler
 
 

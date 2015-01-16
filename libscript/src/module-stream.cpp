@@ -16,20 +16,23 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
-#include <foundation-auto.h>
-
-#include "foundation-file.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void
-MCFileExecGetContents (MCStringRef p_path, MCDataRef & r_data)
+MCStreamExecWriteToStream(MCDataRef p_data,
+                        MCStreamRef p_stream)
 {
-	/* UNCHECKED */ MCFileGetContents (p_path, r_data);
-}
+	/* FIXME This check should be handled by MCStreamWrite */
+	if (!MCStreamIsWritable (p_stream))
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason", MCSTR("stream is not writable"), NULL);
+		return;
+	}
 
-extern "C" MC_DLLEXPORT void
-MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
-{
-	/* UNCHECKED */ MCFileSetContents (p_path, p_contents);
+	if (!MCStreamWrite (p_stream,
+	                    MCDataGetBytePtr (p_data), MCDataGetLength (p_data)))
+	{
+		return; /* Error should already have been set */
+	}
 }

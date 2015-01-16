@@ -1,43 +1,34 @@
-/*  
+/*
 This module specifies the syntax definitions and bindings for file i/o operations in modular LiveCode.
 */
 
 module com.livecode.file
 
-public foreign type Stream binds to "kMCStreamTypeInfo"
-
-public foreign handler MCFileExecOpenFileForRead(in File as string) as optional Stream binds to "<builtin>"
-public foreign handler MCFileExecOpenFileForWrite(in Create as bool, in File as string) as optional Stream binds to "<builtin>"
-public foreign handler MCFileExecOpenFileForUpdate(in Create as bool, in File as string) as optional Stream binds to "<builtin>"
-
-public foreign handler MCFileExecReadFromStream(in Amount as uint, in Source as Stream) as data binds to "<builtin>"
-
 --
 
-syntax OpenFileForRead is statement
-    "open" "read" "only" "stream" "for" "file" <File: Expression>
-begin
-    MCFileExecOpenFileForRead(File)
-end syntax
+public foreign handler MCFileExecGetContents(in File as string, out Contents as data) as undefined binds to "<builtin>"
+public foreign handler MCFileExecSetContents(in Contents as data, in File as string) as undefined binds to "<builtin>"
 
-syntax OpenFileForWrite is statement
-    "open" "write" "only" "stream" "for" ("new" <Create=true> | <Create=false>) "file" <File: Expression>
-begin
-    MCFileExecOpenFileForWrite(Create, File)
-end syntax
+/*
+Summary:	The data stored in a file.
 
-syntax OpenFileForUpdate is statement
-    "open" "read" "write" "stream" "for" ("new" <Create=true> | <Create=false>) "file" <File: Expression>
+File:		An expression that evaluates to a filename.
+
+Description:
+The raw data stored in a file.
+
+>*Note:* Setting the contents of a file will replace the file with a
+>newly-created file with the new contents.
+
+Tags: IO
+*/
+syntax FileContents is prefix operator with precedence 2
+	"the" "contents" "of" "file" <File: Expression>
 begin
-    MCFileExecOpenFileForUpdate(Create, File)
+	MCFileExecGetContents(File, output)
+	MCFileExecSetContents(input, File)
 end syntax
 
 --
-
-syntax ReadFromStream is statement
-    "read" <Amount: Expression> "from" "stream" <Source: Expression>
-begin
-    MCFileExecReadFromStream(Amount, Source)
-end syntax
 
 end module
