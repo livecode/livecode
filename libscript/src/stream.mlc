@@ -33,6 +33,7 @@ end syntax
 --
 
 public foreign handler MCStreamExecWriteToStream(in Buffer as data, in Destination as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecReadFromStream(in Amount as uint, in Source as Stream) as data binds to "<builtin>"
 
 /*
 Summary:	Write data to a stream.
@@ -55,6 +56,27 @@ syntax WriteToStream is statement
 	"write" <Buffer: Expression> "to" "stream" <Destination: Expression>
 begin
 	MCStreamExecWriteToStream(Buffer, Destination)
+end syntax
+
+/*
+Summary:	Read data from a stream.
+
+Amount:	An expression that evaluates to a number.
+Stream:	An expression that evaluates to a stream.
+
+Description:
+Read a specific amount of data from a stream.  If there is not enough
+data available in the stream, fails with an error.
+
+>*Warning:* Some streams will discard successfully-read data if there
+>wasn't enough data to fully satisfy the request.  This may cause loss
+>of data.
+
+*/
+syntax ReadFromStream is statement
+	"read" <Amount: Expression> "bytes" "from" "stream" <Source: Expression>
+begin
+    MCStreamExecReadFromStream(Amount, Source)
 end syntax
 
 --

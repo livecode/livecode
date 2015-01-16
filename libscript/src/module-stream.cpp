@@ -37,6 +37,33 @@ MCStreamExecWriteToStream(MCDataRef p_data,
 	}
 }
 
+extern "C" MC_DLLEXPORT MCDataRef
+MCStreamExecReadFromStream (uindex_t p_amount,
+                            MCStreamRef p_stream)
+{
+	/* FIXME this should be handled by MCStreamRead */
+    if (!MCStreamIsReadable(p_stream))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("stream is not readable"), nil);
+        return MCValueRetain(kMCEmptyData);
+    }
+    
+    byte_t t_buffer[p_amount];
+    
+    if (!MCStreamRead(p_stream, t_buffer, p_amount))
+    {
+		/* Error information should already be set */
+        return MCValueRetain(kMCEmptyData);
+    }
+    
+    MCDataRef t_data;
+    if (!MCDataCreateWithBytes(t_buffer, p_amount, t_data))
+        return MCValueRetain(kMCEmptyData);
+    
+    return t_data;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void

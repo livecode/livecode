@@ -33,3 +33,32 @@ MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
 {
 	/* UNCHECKED */ MCFileSetContents (p_path, p_contents);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForRead(MCStringRef p_filename)
+{
+    MCStreamRef t_stream;
+    if (!MCFileCreateStream(p_filename, kMCOpenFileModeRead, t_stream))
+        return nil;
+    
+    return t_stream;
+}
+
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForWrite(bool p_create, MCStringRef p_filename, MCStreamRef& r_stream)
+{
+    MCStreamRef t_stream;
+    if (!MCFileCreateStream(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeWrite, t_stream))
+        return nil;
+    
+    return t_stream;
+}
+
+extern "C" MC_DLLEXPORT MCStreamRef MCFileExecOpenFileForUpdate(bool p_create, MCStringRef p_filename, MCStreamRef& r_stream)
+{
+    MCStreamRef t_stream;
+    if (!MCFileCreateStream(p_filename, p_create ? kMCOpenFileModeCreate : kMCOpenFileModeUpdate, t_stream))
+        return nil;
+    
+    return t_stream;
+}
