@@ -4,6 +4,7 @@ use com.livecode.math
 use com.livecode.file
 use com.livecode.stream
 use com.livecode.system
+use com.livecode.date
 
 public handler test()
     variable tResults as list
@@ -72,6 +73,9 @@ public handler test()
 
 	--com.livecode.system
 	testSystem(tResults)
+
+	--com.livecode.date
+	testDate(tResults)
 	
 	--com.livecode.binary
 	--com.livecode.byte
@@ -929,6 +933,10 @@ end handler
 
 public handler testSystem(inout xResults as list)
 	testLog("System", "OperatingSystemNonEmpty", the operating system is not empty, xResults)
+end handler
+
+public handler testDate(inout xResults as list)
+testLog("Date", "LocalTimeListLength", the number of elements in the local time is 6, xResults)
 end handler
 
 end module
