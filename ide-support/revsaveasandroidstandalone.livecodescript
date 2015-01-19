@@ -1112,6 +1112,9 @@ function mapFilePath pPath
          case "dbmysql"
             put "DbMysql" into tLibName
             break
+         case "revsecurity"
+			put "RevSecurity" into tLibName
+			break
          default
             return pPath
       end switch
