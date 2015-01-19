@@ -474,8 +474,8 @@ ALL_mlc = \
 $(COMPILE_stagedir)/stamp-lci: $(ALL_mlc) $(SCRIPT_mlc_list)
 	$(MKDIR_P) $(MODULE_DIR) $(dir $@)
 	@for mlcfile in $(ALL_mlc); do \
-	    echo $(LC_COMPILE) -modulepath $(MODULE_DIR) $$mlcfile ; \
-	    $(LC_COMPILE) -modulepath $(MODULE_DIR) $$mlcfile || exit $$?; \
+	    echo $(LC_COMPILE) --modulepath $(MODULE_DIR) $$mlcfile ; \
+	    $(LC_COMPILE) --modulepath $(MODULE_DIR) $$mlcfile || exit $$?; \
 	done
 	touch $@
 
@@ -500,8 +500,8 @@ endif
 $(GRAMMAR_output): $(COMPILE_stagedir)/stamp-lci
 $(GRAMMAR_output): $(GRAMMAR_inputs) $(GRAMMAR_template)
 	$(MKDIR_P) $(dir $@)
-	$(LC_COMPILE) -bootstrap -template $(GRAMMAR_template) \
-	    -modulepath $(MODULE_DIR) -output $(GRAMMAR_output) $(GRAMMAR_inputs) > /dev/null
+	$(LC_COMPILE) --bootstrap --template $(GRAMMAR_template) \
+	    --modulepath $(MODULE_DIR) --output $(GRAMMAR_output) $(GRAMMAR_inputs) > /dev/null
 
 ########## Convenience targets
 
@@ -575,7 +575,7 @@ CHECK_lcm = $(patsubst %.mlc,$(MODULE_DIR)/%.lcm,$(CHECK_mlc))
 
 $(MODULE_DIR)/%.lcm: %.mlc $(LC_COMPILE)
 	$(MKDIR_P) $(dir $@)
-	$(LC_COMPILE) -modulepath $(MODULE_DIR) -output $@ $<
+	$(LC_COMPILE) --modulepath $(MODULE_DIR) --output $@ $<
 
 lc-test-check: $(CHECK_lcm) $(LC_TEST)
 	for test_lcm in $(CHECK_lcm); do \
