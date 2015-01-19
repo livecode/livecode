@@ -404,6 +404,7 @@ MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 MCCanvasTransformRef kMCCanvasIdentityTransform = nil;
 MCCanvasColorRef kMCCanvasColorBlack = nil;
 MCCanvasFontRef kMCCanvasFont12PtHelvetica = nil;
+MCCanvasPathRef kMCCanvasEmptyPath = nil;
 
 void MCCanvasConstantsInitialize();
 void MCCanvasConstantsFinalize();
@@ -2850,6 +2851,31 @@ MCGPathRef MCCanvasPathGetMCGPath(MCCanvasPathRef p_path)
 	return *MCCanvasPathGet(p_path);
 }
 
+bool MCCanvasPathCreateEmpty(MCCanvasPathRef &r_path)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCGPathRef t_gpath;
+	t_gpath = nil;
+	
+	MCCanvasPathRef t_path;
+	t_path = nil;
+	
+	if (t_success)
+		t_success = MCGPathCreateMutable(t_gpath);
+	
+	if (t_success)
+		t_success = MCCanvasPathCreateWithMCGPath(t_gpath, t_path);
+	
+	MCGPathRelease(t_gpath);
+	
+	if (t_success)
+		r_path = t_path;
+	
+	return t_success;
+}
+
 //////////
 
 bool MCProperListToRadii(MCProperListRef p_list, MCGPoint &r_radii)
@@ -2874,6 +2900,11 @@ bool MCCanvasPathParseInstructions(MCStringRef p_instructions, MCGPathIterateCal
 bool MCCanvasPathUnparseInstructions(MCCanvasPathRef &p_path, MCStringRef &r_string);
 
 // Constructors
+
+void MCCanvasPathMakeEmpty(MCCanvasPathRef &r_path)
+{
+	r_path = MCValueRetain(kMCCanvasEmptyPath);
+}
 
 bool MCCanvasPathMakeWithInstructionsCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
 {
@@ -5620,6 +5651,7 @@ void MCCanvasConstantsInitialize()
 	// Defer creation until after initialize
 	kMCCanvasFont12PtHelvetica = nil;
 //	/* UNCHECKED */ MCCanvasFontCreate(MCNAME("Helvetica"), 0, 12, kMCCanvasFont12PtHelvetica);
+	/* UNCHECKED */ MCCanvasPathCreateEmpty(kMCCanvasEmptyPath);
 }
 
 void MCCanvasConstantsFinalize()
