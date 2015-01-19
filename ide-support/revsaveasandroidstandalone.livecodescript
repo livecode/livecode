@@ -1093,6 +1093,29 @@ end pathToJarSigner
 --   files in the build folder.
 function mapFilePath pPath
    if revEnvironmentIsInstalled() then
+      // SN-2015-01-19: [[ Bug 13213 ]] Linux filepaths are case-sensitive.
+      local tLibName
+      set the itemDelimiter to slash
+      switch last item of pPath
+         case "revzip"
+            put "RevZip" into tLibName
+            break
+         case "revdb"
+            put "RevDb" into tLibName
+            break
+         case "revxml"
+            put "RevXml" into tLibName
+            break
+         case "dbsqlite"
+            put "DbSqlite" into tLibName
+            break
+         case "dbmysql"
+            put "DbMysql" into tLibName
+            break
+         default
+            return pPath
+      end switch
+      put tLibName into item -1 of pPath
       return pPath
    end if
    
