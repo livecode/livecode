@@ -240,6 +240,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\date.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\file.mlc"
 					>
 				</File>
@@ -284,6 +288,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\system.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\type-convert.mlc"
 					>
 				</File>
@@ -317,6 +325,10 @@
 				</File>
 				<File
 					RelativePath=".\generated\char.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\date.c"
 					>
 				</File>
 				<File
@@ -361,6 +373,10 @@
 				</File>
 				<File
 					RelativePath=".\generated\string.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\system.c"
 					>
 				</File>
 				<File
