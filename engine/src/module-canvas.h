@@ -129,7 +129,8 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTypeInfo;
 extern MCCanvasTransformRef kMCCanvasIdentityTransform;
 extern MCCanvasColorRef kMCCanvasColorBlack;
 //extern MCCanvasFontRef kMCCanvasFont12PtHelvetica;
-
+extern MCCanvasPathRef kMCCanvasEmptyPath;
+	
 ////////////////////////////////////////////////////////////////////////////////
 // Canvas Errors
 
@@ -399,6 +400,7 @@ extern "C" MC_DLLEXPORT void MCCanvasGradientTranslateWithList(MCCanvasGradientR
 // Path
 
 // Constructors
+extern "C" MC_DLLEXPORT void MCCanvasPathMakeEmpty(MCCanvasPathRef &r_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanvasPathRef &r_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathMakeWithRectangle(MCCanvasRectangleRef p_rect, MCCanvasPathRef &r_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathMakeWithRoundedRectangle(MCCanvasRectangleRef p_rect, MCCanvasFloat p_radius, MCCanvasPathRef &r_path);
