@@ -257,7 +257,6 @@
 		7201665C1A420FFB002B53F9 /* module-canvas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166571A420FFB002B53F9 /* module-canvas.cpp */; };
 		7201665D1A420FFB002B53F9 /* module-engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166591A420FFB002B53F9 /* module-engine.cpp */; };
 		7201665E1A420FFB002B53F9 /* modules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201665B1A420FFB002B53F9 /* modules.cpp */; };
-		720166621A421106002B53F9 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 720166611A421106002B53F9 /* libffi.a */; };
 		7201667F1A4212FF002B53F9 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7201664D1A420F4B002B53F9 /* libscript.a */; };
 		7201668D1A42136A002B53F9 /* exec-extension.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201668C1A42136A002B53F9 /* exec-extension.cpp */; };
 		720166B51A421408002B53F9 /* canvas.mlc.c in Sources */ = {isa = PBXBuildFile; fileRef = 720166B21A421408002B53F9 /* canvas.mlc.c */; };
@@ -279,6 +278,7 @@
 		7268ED941848C30200D10598 /* exec-sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE9459481761E219008408DE /* exec-sound.cpp */; };
 		7268ED951848C30200D10598 /* exec-textmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449997175D02AE00346B49 /* exec-textmessaging.cpp */; };
 		7268ED961848C37D00D10598 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */; };
+		728636391A6D712F001D1FBF /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 728636361A6D70EB001D1FBF /* libffi.a */; };
 		72CC34B418A9378800BEC655 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3451858840300BA6A23 /* exec-keywords.cpp */; };
 		72CC34B518A9379200BEC655 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */; };
 		72CE28951993D7C10003BAE0 /* imageloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E89DBC50198A6F410009651B /* imageloader.cpp */; };
@@ -997,6 +997,9 @@
 		7231B08618CF3FFF00295AE6 /* graphicscontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphicscontext.h; path = src/graphicscontext.h; sourceTree = "<group>"; };
 		7231B08818CF40B600295AE6 /* imagelist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imagelist.cpp; path = src/imagelist.cpp; sourceTree = "<group>"; };
 		7231B08918CF40B600295AE6 /* imagelist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagelist.h; path = src/imagelist.h; sourceTree = "<group>"; };
+		7286362B1A6D6F9B001D1FBF /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "/Users/frasergordon/Workspace/LiveCode/livecode-8/thirdparty/libffi/../../_build/ios/iphoneos8.1/Debug/libffi.a"; sourceTree = "<absolute>"; };
+		7286362D1A6D7016001D1FBF /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "/Users/frasergordon/Workspace/LiveCode/livecode-8/thirdparty/libffi/../../_build/ios/iphoneos8.1/Debug/libffi.a"; sourceTree = "<absolute>"; };
+		728636361A6D70EB001D1FBF /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "/Users/frasergordon/Workspace/LiveCode/livecode-8/thirdparty/libffi/../../_build/ios/iphoneos8.1/Debug/libffi.a"; sourceTree = "<absolute>"; };
 		72FFE3451858840300BA6A23 /* exec-keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-keywords.cpp"; path = "src/exec-keywords.cpp"; sourceTree = "<group>"; };
 		72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
 		7607CF601769BB4C00ADB512 /* exec-interface-aclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-aclip.cpp"; path = "src/exec-interface-aclip.cpp"; sourceTree = "<group>"; };
@@ -1171,8 +1174,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				728636391A6D712F001D1FBF /* libffi.a in Frameworks */,
 				7201667F1A4212FF002B53F9 /* libscript.a in Frameworks */,
-				720166621A421106002B53F9 /* libffi.a in Frameworks */,
 				769568911822776B00779255 /* libskiamobile.a in Frameworks */,
 				7695688A1822771000779255 /* libgraphicsmobile.a in Frameworks */,
 				BE096E8B175CD7CF00F92F90 /* libfoundationmobile.a in Frameworks */,
@@ -1935,6 +1938,9 @@
 		E82D43BE1712CEF500A10289 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				728636361A6D70EB001D1FBF /* libffi.a */,
+				7286362D1A6D7016001D1FBF /* libffi.a */,
+				7286362B1A6D6F9B001D1FBF /* libffi.a */,
 				720166611A421106002B53F9 /* libffi.a */,
 				7201665F1A4210BA002B53F9 /* libffi.a */,
 				7201659C1A420BCC002B53F9 /* libffi.a */,
@@ -2836,6 +2842,7 @@
 					"$(inherited)",
 					"/Users/frasergordon/Workspace/LiveCode/livecode-8-priv/thirdparty/libffi/libffi-mobile/.././_build/ios/iphoneos8.1/Debug",
 					"/Users/frasergordon/Workspace/LiveCode/livecode-8-priv/thirdparty/libffi/.././_build/ios/iphoneos8.1/Debug",
+					"/Users/frasergordon/Workspace/LiveCode/livecode-8/thirdparty/libffi/../../_build/ios/iphoneos8.1/Debug",
 				);
 				PRODUCT_NAME = "standalone-mobile-lib-community";
 			};
@@ -2848,6 +2855,7 @@
 					"$(inherited)",
 					"/Users/frasergordon/Workspace/LiveCode/livecode-8-priv/thirdparty/libffi/libffi-mobile/.././_build/ios/iphoneos8.1/Debug",
 					"/Users/frasergordon/Workspace/LiveCode/livecode-8-priv/thirdparty/libffi/.././_build/ios/iphoneos8.1/Debug",
+					"/Users/frasergordon/Workspace/LiveCode/livecode-8/thirdparty/libffi/../../_build/ios/iphoneos8.1/Debug",
 				);
 				PRODUCT_NAME = "standalone-mobile-lib-community";
 			};

@@ -81,7 +81,6 @@
 		4D5837B31806A0C6006DE6A2 /* foundation-objc.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "foundation-objc.mm"; path = "src/foundation-objc.mm"; sourceTree = "<group>"; };
 		4DD3DF451040B04D00CAC7EF /* Global Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Global Mobile.xcconfig"; path = "../rules/Global Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
-		4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3E06B1040BC4700CAC7EF /* libfoundationmobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfoundationmobile.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		720165A81A420CEF002B53F9 /* libffi-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libffi-mobile.xcodeproj"; path = "../thirdparty/libffi/libffi-mobile.xcodeproj"; sourceTree = "<group>"; };
 		720166631A421298002B53F9 /* foundation-chunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-chunk.h"; path = "include/foundation-chunk.h"; sourceTree = "<group>"; };
@@ -106,6 +105,7 @@
 		724910D21A695F1A00DAFCE3 /* foundation-random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-random.cpp"; path = "src/foundation-random.cpp"; sourceTree = "<group>"; };
 		724910D31A695F1A00DAFCE3 /* foundation-stream-stdio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-stream-stdio.cpp"; path = "src/foundation-stream-stdio.cpp"; sourceTree = "<group>"; };
 		726C16631A434DC8008DE025 /* foundation-custom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-custom.cpp"; path = "src/foundation-custom.cpp"; sourceTree = "<group>"; };
+		7286362F1A6D7040001D1FBF /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = "<group>"; };
 		729903A718438B3900A93FA8 /* foundation-locale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-locale.h"; path = "include/foundation-locale.h"; sourceTree = "<group>"; };
 		729903A818438B3900A93FA8 /* foundation-unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode.h"; path = "include/foundation-unicode.h"; sourceTree = "<group>"; };
 		729903AB18438B5300A93FA8 /* foundation-locale.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-locale.cpp"; path = "src/foundation-locale.cpp"; sourceTree = "<group>"; };
@@ -233,8 +233,8 @@
 		4DD3DF3A1040B03B00CAC7EF /* Configurations */ = {
 			isa = PBXGroup;
 			children = (
+				7286362F1A6D7040001D1FBF /* Release Mobile.xcconfig */,
 				4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */,
-				4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */,
 				4DD3DF451040B04D00CAC7EF /* Global Mobile.xcconfig */,
 			);
 			name = Configurations;
@@ -402,7 +402,7 @@
 /* Begin XCBuildConfiguration section */
 		4D75E65C113C0D3E000A129F /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */;
+			baseConfigurationReference = 7286362F1A6D7040001D1FBF /* Release Mobile.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
@@ -447,7 +447,6 @@
 		};
 		4D8F6FCF113EC98D0056ED41 /* ReleaseDeviceForShark */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */;
 			buildSettings = {
 			};
 			name = ReleaseDeviceForShark;
