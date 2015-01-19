@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /* Windows doesn't have localtime_r(), but it does have an equivalent
  * function with the arguments in the opposite order! */
 #if defined(__WINDOWS__)
-#  define localtime_r(s,t) (_localtime_s(t,s))
+#  define localtime_r(s,t) (localtime_s(t,s))
 #endif
 
 extern "C" MC_DLLEXPORT void

@@ -272,6 +272,18 @@
 			ReferencedProjectIdentifier="{BFB6C63F-C119-45D6-96EB-23D717727D58}"
 			RelativePathToProject=".\engine\kernel-server.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}"
+			RelativePathToProject=".\libscript\libscript.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{56CD2637-6005-4DD6-9ADF-F85C7774BB88}"
+			RelativePathToProject=".\libscript\stdscript.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}"
+			RelativePathToProject=".\thirdparty\libffi\libffi.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter

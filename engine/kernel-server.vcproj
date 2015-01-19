@@ -38,6 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="$(SolutionDir)libscript\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -96,6 +97,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="$(SolutionDir)libscript\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
@@ -1368,6 +1370,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\widget-events.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget-events.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\window.h"
 				>
 			</File>
@@ -1376,11 +1394,11 @@
 			Name="System"
 			>
 			<File
-				RelativePath=".\src\quicktime.cpp"
-                                >
-                        </File>
-                        <File
 				RelativePath=".\src\dskw32.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\quicktime.cpp"
 				>
 			</File>
 			<File
@@ -1408,10 +1426,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\sysw32random.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\sysw32registry.cpp"
 				>
 			</File>
@@ -1425,6 +1439,10 @@
 			</File>
 			<File
 				RelativePath=".\src\w32prefix.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\windows-theme.cpp"
 				>
 			</File>
 		</Filter>
@@ -1689,6 +1707,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-engine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-extension.cpp"
 				>
 			</File>
 			<File
@@ -2003,6 +2025,68 @@
 				RelativePath=".\src\syntax.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="Modules"
+			>
+			<File
+				RelativePath=".\src\module-canvas-internal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-canvas.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-canvas.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-engine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-engine.h"
+				>
+			</File>
+			<File
+				RelativePath="..\toolchain\lc-compile\src\module-helper.cpp"
+				>
+			</File>
+			<Filter
+				Name="Generated"
+				>
+				<File
+					RelativePath=".\src\_mlc\canvas.c"
+					>
+				</File>
+				<File
+					RelativePath=".\src\_mlc\engine.c"
+					>
+				</File>
+				<File
+					RelativePath=".\src\_mlc\widget.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\encode_errors.rev"

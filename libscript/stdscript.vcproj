@@ -131,7 +131,6 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{82AB9A7D-6D59-4AA1-A6C0-9799E293C1F5}"
-			RelativePathToProject=".\toolchain\lc-compile\src\lc-compile.vcproj"
 		/>
 	</References>
 	<Files>
@@ -162,6 +161,10 @@
 			</File>
 			<File
 				RelativePath=".\src\module-char.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-date.cpp"
 				>
 			</File>
 			<File
@@ -197,7 +200,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\module-stream.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-string.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-system.cpp"
 				>
 			</File>
 			<File
