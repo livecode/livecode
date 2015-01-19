@@ -109,16 +109,19 @@ enum
     kMCExternalValueOptionAsUTF16String = 9,
     kMCExternalValueOptionAsUTF16CString = 10,
     
+    // SN-2015-01-19: [[ Bug 14057 ]] Update the enum to match
+    //  the ones declared in lcidlc/include/LiveCode.h
+    //  and lcidlc/src/Support.mm
 #ifdef __HAS_CORE_FOUNDATION__
     kMCExternalValueOptionAsNSNumber = 17,
-    kMCExternalValueOptionAsCFNumber = 18,
-    kMCExternalValueOptionAsNSString = 19,
-    kMCExternalValueOptionAsCFString = 20,
-    kMCExternalValueOptionAsNSData = 21,
-    kMCExternalValueOptionAsCFData = 22,
-    kMCExternalValueOptionAsNSArray = 23,
-    kMCExternalValueOptionAsCFArray = 24,
-    kMCExternalValueOptionAsNSDictionary = 25,
+    kMCExternalValueOptionAsNSString = 18,
+    kMCExternalValueOptionAsNSData = 19,
+    kMCExternalValueOptionAsNSArray = 20,
+    kMCExternalValueOptionAsNSDictionary = 21,
+    kMCExternalValueOptionAsCFNumber = 22,
+    kMCExternalValueOptionAsCFString = 23,
+    kMCExternalValueOptionAsCFData = 24,
+    kMCExternalValueOptionAsCFArray = 25,
     kMCExternalValueOptionAsCFDictionary = 26,
 #endif
     // V6-ADDITIONS-END
