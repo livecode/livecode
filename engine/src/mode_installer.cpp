@@ -1501,6 +1501,12 @@ uint32_t MCModeGetEnvironmentType(void)
 	return kMCModeEnvironmentTypeInstaller;
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Installer-mode is standalone
+void MCModeGetResourcesFolder(MCExecPoint &ep)
+{
+    MCS_getresourcesfolder(ep, true);
+}
+
 // In standalone mode, we are never licensed.
 bool MCModeGetLicensed(void)
 {

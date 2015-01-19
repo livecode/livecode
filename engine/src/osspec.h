@@ -99,6 +99,8 @@ extern void MCS_setresource(const char *source, const char *type,
 	                            const char *name, const char *id, const char *flags,
 	                            const MCString &s);
 extern void MCS_getspecialfolder(MCExecPoint &ep);
+// SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+extern void MCS_getresourcesfolder(MCExecPoint &p_context, bool p_standalone);
 extern void MCS_shortfilepath(MCExecPoint &ep);
 extern void MCS_longfilepath(MCExecPoint &ep);
 extern Boolean MCS_createalias(char *srcpath, char *dstpath);
