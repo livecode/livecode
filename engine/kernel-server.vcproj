@@ -2050,7 +2050,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\toolchain\lc-compile\src\module-helper.cpp"
+				RelativePath=".\src\modules.cpp"
 				>
 			</File>
 			<Filter
