@@ -118,13 +118,11 @@ enum
     kMCExternalValueOptionAsNSData = 19,
     kMCExternalValueOptionAsNSArray = 20,
     kMCExternalValueOptionAsNSDictionary = 21,
-    kMCExternalValueOptionAsCFNumber = 22,
-    kMCExternalValueOptionAsCFString = 23,
-    kMCExternalValueOptionAsCFData = 24,
-    kMCExternalValueOptionAsCFArray = 25,
-    kMCExternalValueOptionAsCFDictionary = 26,
 #endif
     // V6-ADDITIONS-END
+    
+    // SN-2015-01-19: [[ Bug 14057 ]] Added forgotten C-char value type
+    kMCExternalValueOptionAsCChar = 22,
     
 	kMCExternalValueOptionCaseSensitiveMask = 3 << 30,
 	kMCExternalValueOptionDefaultCaseSensitive = 0 << 30,
@@ -1890,8 +1888,22 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         
         return var -> SetString(*t_stringref);
     }
+    // SN-2015-01-19: [[ Bug 14057 ]] Added forgotten C-char value type, used to
+    //   get the pre-7.0, non-Unicode, lone-character delimiters
+    case kMCExternalValueOptionAsCChar:
+    {
+        char_t t_chars;
+        MCAutoStringRef t_stringref;
+            
+        t_chars = *(char_t*)p_value;
+            
+        if (!MCStringCreateWithNativeChars(&t_chars, 1, &t_stringref))
+            return kMCExternalErrorOutOfMemory;
+            
+        return var -> SetString(*t_stringref);
+    }
+            
 #ifdef __HAS_CORE_FOUNDATION__
-    case kMCExternalValueOptionAsCFNumber:
     case kMCExternalValueOptionAsNSNumber:
     {
         NSNumber* t_number;
@@ -1905,7 +1917,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         
         return var -> SetReal(MCNumberFetchAsReal((MCNumberRef)*t_value));
     }
-    case kMCExternalValueOptionAsCFString:
     case kMCExternalValueOptionAsNSString:
     {
         MCAutoValueRef t_value;
@@ -1917,7 +1928,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         
         return var -> SetString((MCStringRef)*t_value);
     }
-    case kMCExternalValueOptionAsCFData:
     case kMCExternalValueOptionAsNSData:
     {
         MCAutoValueRef t_value;
@@ -1929,7 +1939,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         
         return var -> SetString((MCStringRef)*t_value);
     }
-    case kMCExternalValueOptionAsCFArray:
     case kMCExternalValueOptionAsNSArray:
     {
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
@@ -1955,7 +1964,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         
         return t_error;
     }
-    case kMCExternalValueOptionAsCFDictionary:
     case kMCExternalValueOptionAsNSDictionary:
     {
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
@@ -2082,8 +2090,20 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         (*(unichar_t**)p_value) = t_chars;
         break;
     }
+    // SN-2015-01-19: [[ Bug 14057 ]] Added forgotten C-char value type
+    case kMCExternalValueOptionAsCChar:
+    {
+        MCAutoStringRef t_stringref;
+            
+        t_error = var -> GetString(p_options, &t_stringref);
+            
+        if (t_error != kMCExternalErrorNone)
+            return t_error;
+            
+        (*(char_t*)p_value) = MCStringGetNativeCharAtIndex(*t_stringref, 0);
+        break;
+    }
 #ifdef __HAS_CORE_FOUNDATION__
-    case kMCExternalValueOptionAsCFNumber:
     case kMCExternalValueOptionAsNSNumber:
     {
         CFNumberRef t_number;
@@ -2101,7 +2121,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         
         break;
     }
-    case kMCExternalValueOptionAsCFString:
     case kMCExternalValueOptionAsNSString:
     {
         MCAutoStringRef t_stringref;
@@ -2118,7 +2137,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 //            [*(NSString**)p_value autorelease];
         break;
     }
-    case kMCExternalValueOptionAsCFData:
     case kMCExternalValueOptionAsNSData:
     {
         MCAutoStringRef t_stringref;
@@ -2139,7 +2157,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 //            [*(NSData**)p_value autorelease];
         break;
     }
-    case kMCExternalValueOptionAsCFArray:
     case kMCExternalValueOptionAsNSArray:
     {
         MCExternalError t_error;
@@ -2166,7 +2183,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 //            [*(NSArray**)p_value autorelease];
         return t_error;
     }
-    case kMCExternalValueOptionAsCFDictionary:
     case kMCExternalValueOptionAsNSDictionary:
     {
         MCExternalError t_error;
@@ -2281,8 +2297,20 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
         
         return var -> AppendString(p_options, *t_stringref);
     }
+    // SN-2015-01-19: [[ Bug 14057 ]] Added forgotten C-char value type
+    case kMCExternalValueOptionAsCChar:
+    {
+        MCAutoStringRef t_stringref;
+        char_t t_char;
+            
+        t_char = *(char_t*) p_value;
+            
+        if (!MCStringCreateWithNativeChars(&t_char, 1, &t_stringref))
+            return kMCExternalErrorOutOfMemory;
+            
+        return var -> AppendString(p_options, *t_stringref);
+    }
 #ifdef __HAS_CORE_FOUNDATION__
-    case kMCExternalValueOptionAsCFNumber:
     case kMCExternalValueOptionAsNSNumber:
     {
         CFNumberRef t_number;
@@ -2306,7 +2334,6 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
         }
         break;
     }
-    case kMCExternalValueOptionAsCFString:
     case kMCExternalValueOptionAsNSString:
     {
         MCAutoStringRef t_string;
@@ -2316,7 +2343,6 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
         
         return var -> AppendString(p_options, *t_string);
     }
-    case kMCExternalValueOptionAsCFData:
     case kMCExternalValueOptionAsNSData:
     {
         MCAutoStringRef t_string;
@@ -2329,9 +2355,7 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
         return var -> AppendString(p_options, *t_string);
     }
     // SN-2014-07-01: [[ ExternalsApiV6 ]] CFArray and CFDictionary can't be appended.
-    case kMCExternalValueOptionAsCFArray:
     case kMCExternalValueOptionAsNSArray:
-    case kMCExternalValueOptionAsCFDictionary:
     case kMCExternalValueOptionAsNSDictionary:
 #endif
 	default:
