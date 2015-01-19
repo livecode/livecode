@@ -1605,6 +1605,34 @@ static LCError LCContextQueryDelimiter(MCExternalContextVar p_var, unsigned int 
 	return t_error;
 }
 
+// SN-2015-01-19: [[ Bug 14057 ]] New Unicode delimiter function, knowing that s_interface -> context_query
+//   will return a string, not a char.
+static LCError LCContextQueryUnicodeDelimiter(MCExternalContextVar p_var, unsigned int p_options, void *r_value)
+{
+    // Ensure that we don't try against the pre-7.0 engines.
+    if (s_interface -> version < 6)
+        return kLCErrorNotImplemented;
+    
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	// Fetch the delimiter string from the context - this is returned as a UTF-16 encoded C-String
+	unichar_t* t_delimiter_char;
+	t_delimiter_char = NULL;
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> context_query(p_var, &t_delimiter_char);
+	
+	// Convert the UTF-16 string to the requested output.
+	if (t_error == kLCErrorNone && (p_options & kLCValueOptionMaskAs != kLCValueOptionAsUTF16CString))
+	{
+		t_error = LCValueConvert(kLCValueOptionAsUTF16CString, &t_delimiter_char, p_options, r_value);
+        // We need to free the memory allocated for the delimiter string.
+        free(t_delimiter_char);
+	}
+	
+	return t_error;
+}
+
 LCError LCContextItemDelimiter(unsigned int p_options, void *r_value)
 {
 	return LCContextQueryDelimiter(kMCExternalContextVarItemDelimiter, p_options, r_value);
@@ -1629,34 +1657,22 @@ LCError LCContextColumnDelimiter(unsigned int p_options, void *r_value)
 //   reflect the 7.0 update on the delimiters.
 LCError LCContextUnicodeItemDelimiter(unsigned int p_options, void *r_value)
 {
-    if (s_interface -> version < 6)
-        return kLCErrorNotImplemented;
-    else
-        return LCContextQueryDelimiter(kMCExternalContextVarUnicodeItemDelimiter, p_options, r_value);
+    return LCContextQueryUnicodeDelimiter(kMCExternalContextVarUnicodeItemDelimiter, p_options, r_value);
 }
     
 LCError LCContextUnicodeLineDelimiter(unsigned int p_options, void *r_value)
 {
-    if (s_interface -> version < 6)
-        return kLCErrorNotImplemented;
-    else
-    return LCContextQueryDelimiter(kMCExternalContextVarUnicodeLineDelimiter, p_options, r_value);
+    return LCContextQueryUnicodeDelimiter(kMCExternalContextVarUnicodeLineDelimiter, p_options, r_value);
 }
     
 LCError LCContextUnicodeRowDelimiter(unsigned int p_options, void *r_value)
 {
-    if (s_interface -> version < 6)
-        return kLCErrorNotImplemented;
-    else
-        return LCContextQueryDelimiter(kMCExternalContextVarUnicodeRowDelimiter, p_options, r_value);
+    return LCContextQueryUnicodeDelimiter(kMCExternalContextVarUnicodeRowDelimiter, p_options, r_value);
 }
     
 LCError LCContextUnicodeColumnDelimiter(unsigned int p_options, void *r_value)
 {
-    if (s_interface -> version < 6)
-        return kLCErrorNotImplemented;
-    else
-        return LCContextQueryDelimiter(kMCExternalContextVarUnicodeColumnDelimiter, p_options, r_value);
+    return LCContextQueryUnicodeDelimiter(kMCExternalContextVarUnicodeColumnDelimiter, p_options, r_value);
 }
 
 //////////
