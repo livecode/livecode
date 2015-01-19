@@ -507,7 +507,7 @@ bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, M
         if (!p_callback(self -> list[i], t_value))
             t_success = false;
         
-        if (t_success);
+        if (t_success)
             t_values . Push(t_value);
     }
     
