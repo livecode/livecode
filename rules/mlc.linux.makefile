@@ -25,7 +25,7 @@ $(MLC_STAMP): $(MLC_SOURCES) $(MLC_LIST) $(LC_COMPILE)
 	@for f in $(MLC_SOURCES); do \
 	    mlcfile=$(SRC_DIR)/$$f ; \
 	    cfile=$(MLC_SRC_DIR)/`echo $$f | sed -e's:mlc$$:c:'` ; \
-	    $(LC_COMPILE) -modulepath $(MODULE_DIR) -outputc $$cfile $$mlcfile \
+	    $(LC_COMPILE) --modulepath $(MODULE_DIR) --outputc $$cfile $$mlcfile \
 	        || exit $$? ; \
 	done
 	touch $@
