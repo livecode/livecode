@@ -1,0 +1,192 @@
+Library: control structures
+
+Name: If
+
+Type: control structure
+
+Syntax: 
+if <IfCondition> then 
+	<IfStatementList> 
+[else if <ElseCondition> then 
+	<ElseIfStatementList>] 
+[else 
+	<ElseStatementList>]
+end if
+
+Summary: Executes a list of statements depending on the value of a condition.
+
+Parameters:
+IfCondition(bool): An expression which evaluates to a boolean.
+IfStatementList: A set of statements.
+ElseCondition(bool): An expression which evaluates to a boolean.
+ElseIfStatementList: A set of statements.
+ElseStatementList: A set of statements. 
+
+Description:
+Use the if control structure to execute a statement (or list of statements) only under certain circumstances. If <IfCondition> evaluates to true, the statements in <IfStatementList> are executed. For each condition <ElseCondition> such that none of the previous conditions evaluates to true, the condition is evaluated and the corresponding statements in <ElseIfStatementList> are executed. If none of the conditions evaluate to true, the statements in <ElseStatementList> are executed.
+
+Name: RepeatForEach
+
+Type: control structure
+
+Syntax: 
+repeat for each <Iterator> in <Container>
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements until the <Iterator> is exhausted.
+
+Parameters:
+Iterator: Any iterator expression.
+Container: The container over which to iterate.
+StatementList: A set of statements. 
+
+Example:
+	variable tElement
+	variable tNumbers as list
+	put the empty list into tNumbers
+	
+	repeat for each element tElement in ["a", 1, 2, 3, "b", "c", 4]
+		if tElement is a number then
+			push tElement onto tNumbers
+		end if
+	end repeat
+	
+	// tNumbers contains [1, 2, 3, 4]
+
+Description:
+Use the repeat for each control structure to iterate though the chars of a string, bytes of data, elements of a list or array, or keys of an array.
+>*Note:* The variable which contains the iterand must be declared prior to being used in the repeat loop.
+
+References: RepeatForEachChar(iterator), RepeatForEachByte(iterator), RepeatForEachKey(iterator), RepeatForEachElementInList(iterator), RepeatForEachElementInArray(iterator)
+
+Name: RepeatForever
+
+Type: control structure
+
+Syntax: 
+repeat forever
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements continually.
+
+Parameters:
+StatementList: A set of statements. 
+
+Example:
+	variable tCount as number
+	variable tList as list
+	put [ 1, 2, 3, 4, 5, 6, 7, 8, "A", 9, 10 ] into tList
+	put 0 into tCount
+	repeat forever
+		if tList[tCount] is not a number then
+			exit repeat
+		end if
+		add 1 to tCount
+	end repeat
+	
+	// tCount is 8
+
+Description:
+Use the repeat forever structure to execute a set of statements until either an error is thrown, or exit repeat is executed.
+
+Name: RepeatTimes
+
+Type: control structure
+
+Syntax: 
+repeat <Count> times
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements a given number of times.
+
+Parameters:
+Count(integer): An expression which evaluates to an integer.
+StatementList: A set of statements. 
+
+Example:
+public handler TwoToThePower(in pOperand as integer) as number
+
+	if pOperand is 0 then
+		return 1
+	end if	
+
+	variable tCount as number
+	put the abs of pOperand into tCount
+	
+	variable tResult as number
+	put 1 into tResult
+	repeat tCount times
+		multiply tResult by 2
+	end repeat
+		
+	if pOperand < 0 then 
+		return 1 / tResult
+	end if
+	
+	return tResult
+end handler
+
+Description:
+Use the repeat <Count> times structure to execute a set of statements a given number of times, when the statements executed do not rely on knowing which iteration the repeat loop is on.
+
+Name: RepeatWhile
+
+Type: control structure
+
+Syntax: 
+repeat while <Condition>
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements while a condition continues to be true.
+
+Parameters:
+Condition(bool): An expression which evaluates to a boolean.
+StatementList: A set of statements. 
+
+Description:
+Use the repeat while <Condition> structure to execute a set of statements repeatedly, while the <Condition> continues to evaluate to true.
+
+Name: RepeatUntil
+
+Type: control structure
+
+Syntax: 
+repeat until <Condition>
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements until a condition becomes true.
+
+Parameters:
+Condition(bool): An expression which evaluates to a boolean.
+StatementList: A set of statements. 
+
+Description:
+Use the repeat until <Condition> structure to execute a set of statements repeatedly, until the <Condition> evaluates to true.
+
+Name: RepeatWith
+
+Type: control structure
+
+Syntax: 
+repeat with <Counter> from <Start> ( up | down ) to <Finish> [ by <Step> ]
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements 
+
+Parameters:
+Counter: A numeric variable.
+Start(number): The initial value of <Counter>
+Finish(number): The boundary value of <Counter>
+Step(number): The value by which to increase or decrease the <Counter>
+StatementList: A set of statements. 
+
+Example:
+
+Description:
+Use the repeat with <Counter> structure to execute a set of statements until the value of <Counter> reaches or crosses (depending on iteration direction) the value of <Finish>. The counter is increased (or decreased) by <Step> on each iteration of the loop.

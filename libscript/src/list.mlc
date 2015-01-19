@@ -217,7 +217,7 @@ Example:
 	variable tVar as list
 	put [1,2,3,4,5] into tVar
 	variable tNum as number
-	put the number of elements of tVar into tNum -- tNum is 5
+	put the number of elements in tVar into tNum -- tNum is 5
 	
 Description:
 Returns the number of elements in the list.
@@ -847,7 +847,7 @@ Use repeat for each to perform an operation on each element of a list. On each i
 Tags: Lists, Control structures
 */
 
-syntax RepeatForEachElementOfList is iterator
+syntax RepeatForEachElementInList is iterator
     "element" <Iterand: Expression>
 begin
     MCListRepeatForEachElement(iterator, Iterand, container)
