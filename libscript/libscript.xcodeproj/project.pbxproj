@@ -84,7 +84,7 @@
 			outputFiles = (
 				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_NAME).c",
 			);
-			script = "mkdir -p \"${BUILT_PRODUCTS_DIR}/modules\"\n\"${BUILT_PRODUCTS_DIR}/lc-compile\" -modulepath \"${BUILT_PRODUCTS_DIR}/modules\" -outputc \"${DERIVED_FILE_DIR}/${INPUT_FILE_NAME}.c\" \"${INPUT_FILE_PATH}\"";
+			script = "mkdir -p \"${BUILT_PRODUCTS_DIR}/modules\"\n\"${BUILT_PRODUCTS_DIR}/lc-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" --outputc \"${DERIVED_FILE_DIR}/${INPUT_FILE_NAME}.c\" \"${INPUT_FILE_PATH}\"";
 		};
 /* End PBXBuildRule section */
 
