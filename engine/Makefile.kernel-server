@@ -55,7 +55,7 @@ SOURCES=\
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp lextable.cpp uuid.cpp \
 	objectprops.cpp objectpropsets.cpp mcutility.cpp notify.cpp customprinter.cpp \
-	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
+	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp \
 	srvmain.cpp dsklnx.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvdebug.cpp \
 	srvscript.cpp srvoutput.cpp srvtheme.cpp \
     eventqueue.cpp encodederrors.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \

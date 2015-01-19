@@ -212,7 +212,7 @@ COMPILE_CPPFLAGS=$(CPPFLAGS) \
 # We can't do much about warnings that occur in the generate source
 # code, so don't bother outputting them.
 COMPILE_stage_CFLAGS=$(CFLAGS)
-COMPILE_CFLAGS=$(CFLAGS) -Wall -std=gnu90 -g
+COMPILE_CFLAGS=$(CFLAGS) -Wall -std=gnu89 -g
 
 COMPILE_CXXFLAGS=$(CXXFLAGS) -Wall -g
 
