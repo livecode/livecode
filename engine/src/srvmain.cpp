@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "uidc.h"
 #include "font.h"
+#include "script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -604,11 +605,14 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCModulesInitialize();
+extern bool MCModulesFinalize();
+
 int main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize())
+	if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
-
+    
 // THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX
 
 	// On OSX, argv and envp are encoded as UTF8
@@ -647,6 +651,8 @@ int main(int argc, char *argv[], char *envp[])
 	int t_exit_code;
 	t_exit_code = X_close();
 
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
 	
 	exit(t_exit_code);
