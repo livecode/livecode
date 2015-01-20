@@ -78,19 +78,21 @@ bool MCProperListCreateMutable(MCProperListRef& r_list)
 	return true;
 }	
 
-// Should this take ownership of buffer and values, or just values?
-/* bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list)
+bool
+MCProperListCreateAndRelease(MCValueRef *p_values,
+                             uindex_t p_length,
+                             MCProperListRef& r_list)
 {
-    __MCProperList *t_list;
-    if (!__MCValueCreate(kMCValueTypeCodeProperList, t_list))
-        return false;
-    
-    t_list -> list = p_values;
-    t_list -> length = p_length;
-    
-    r_list = t_list;
-    return true;
-} */
+	__MCProperList *t_list;
+	if (!__MCValueCreate(kMCValueTypeCodeProperList, t_list))
+		return false;
+
+	t_list -> list = p_values;
+	t_list -> length = p_length;
+
+	r_list = t_list;
+	return true;
+}
 
 bool MCProperListCopy(MCProperListRef self, MCProperListRef& r_new_list)
 {

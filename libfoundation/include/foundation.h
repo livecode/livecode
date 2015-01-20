@@ -2741,7 +2741,9 @@ MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, 
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
-// Create an immutable list taking ownership of the given array of values.
+// Create an immutable list taking ownership of the given array of
+// values.  Takes ownership of both the underlying MCValueRef
+// references, and the p_values buffer.
 bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list);
     
 // Make an immutable copy of the given list. If the 'copy and release' form is
