@@ -4,10 +4,18 @@ This module specifies the syntax definitions and bindings for file i/o operation
 
 module com.livecode.file
 
+use com.livecode.stream
+
 --
 
 public foreign handler MCFileExecGetContents(in File as string, out Contents as data) as undefined binds to "<builtin>"
 public foreign handler MCFileExecSetContents(in Contents as data, in File as string) as undefined binds to "<builtin>"
+
+public foreign handler MCFileExecOpenFileForRead(in File as string) as Stream binds to "<builtin>"
+public foreign handler MCFileExecOpenFileForWrite(in Create as bool, in File as string) as Stream binds to "<builtin>"
+public foreign handler MCFileExecOpenFileForUpdate(in Create as bool, in File as string) as Stream binds to "<builtin>"
+
+--
 
 /*
 Summary:	The data stored in a file.
@@ -24,6 +32,98 @@ Tags: IO
 */
 syntax FileContents is prefix operator with precedence 2
 	"the" "contents" "of" "file" <File: Expression>
+begin
+	MCFileExecGetContents(File, output)
+	MCFileExecSetContents(input, File)
+end syntax
+
+--
+
+/*
+Summary:	Open a read-only file stream
+
+File:		An expression that evaluates to a filename.
+
+Description:
+Open a stream for reading from a file.
+
+Example:
+	variable tStream
+	open read only stream for file "my_file.txt"
+	put the result into tStream
+
+Tags: IO
+*/
+syntax OpenFileForRead is statement
+    "open" "read" "only" "stream" "for" "file" <File: Expression>
+begin
+    MCFileExecOpenFileForRead(File)
+end syntax
+
+/*
+Summary:	Open a write-only file stream
+
+File:		An expression that evaluates to a filename.
+
+Description:
+Open a stream for writing to a file.
+
+There are two possible behaviours when the file already exists:
+
+* If a "new" file was requested, then no stream will be created, and
+  an error will be indicated.
+
+* Otherwise, the contents of the existing file will be deleted.
+
+If the file doesn't exist yet, then it will always be created.
+
+Example:
+	// 1. Open a stream to a file.  It might already exist.
+	variable tStream
+	open write only stream for file "my_file.txt"
+	put the result into tStream
+
+	// 2. Open a stream to a *new* file.  If it already exists,
+	// this will fail.
+	variable tStream
+	open write only stream for new file "my_file.txt"
+	put the result into tStream
+
+Tags: IO
+*/
+syntax OpenFileForWrite is statement
+    "open" "write" "only" "stream" "for" ("new" <Create=true> | <Create=false>) "file" <File: Expression>
+begin
+    MCFileExecOpenFileForWrite(Create, File)
+end syntax
+
+/*
+Summary:	Open a read/write file stream
+
+File:		An expression that evaluates to a filename.
+
+Description:
+Open a stream for reading from and writing to a file.
+
+There are two possible behaviours when the file already exists:
+
+* If a "new" file was requested, then no stream will be created, and
+  an error will be indicated.
+
+* Otherwise, the file will be opened as normal and the existing
+  contents will be preserved.
+
+If the file doesn't exist yet, then it will always be created.
+
+Example:
+	variable tStream
+	open read write stream for file "my_file.txt"
+	put the result into tStream
+
+Tags: IO
+*/
+syntax OpenFileForUpdate is statement
+    "open" "read" "write" "stream" "for" ("new" <Create=true> | <Create=false>) "file" <File: Expression>
 begin
 	MCFileExecGetContents(File, output)
 	MCFileExecSetContents(input, File)

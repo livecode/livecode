@@ -9,7 +9,29 @@ public foreign type Stream binds to "kMCStreamTypeInfo"
 
 --
 
+public foreign handler MCStreamExecGetStandardInput(out Stdin as Stream) as undefined binds to "<builtin>"
 public foreign handler MCStreamExecGetStandardOutput(out Stdout as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecGetStandardError(out Stderr as Stream) as undefined binds to "<builtin>"
+
+/*
+Summary:	Default input stream.
+Returns:	The default input stream.
+
+Description:
+The default input stream for input to the program.
+
+In command-line programs, this is usually used to receive input from
+the user or from other applications.  In CGI programs running on
+servers, this is usually used to receive incoming data from the
+client.
+
+Tags: IO
+*/
+syntax DefaultInputStream is expression
+	"the" "input" "stream"
+begin
+	MCStreamExecGetStandardInput(output)
+end syntax
 
 /*
 Summary:	Default output stream.
@@ -30,9 +52,29 @@ begin
 	MCStreamExecGetStandardOutput(output)
 end syntax
 
+/*
+Summary:	Default error stream.
+Returns:	The default error stream.
+
+Description:
+The default error stream for diagnostic information.
+
+In command-line programs, this is usually used to display error
+messages.  In server programs, data output through this stream may be
+stored in the system log, depending on the server configuration.
+
+Tags: IO
+*/
+syntax DefaultErrorStream is expression
+	"the" "error" "stream"
+begin
+	MCStreamExecGetStandardError(output)
+end syntax
+
 --
 
 public foreign handler MCStreamExecWriteToStream(in Buffer as data, in Destination as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecReadFromStream(in Amount as uint, in Source as Stream) as data binds to "<builtin>"
 
 /*
 Summary:	Write data to a stream.
@@ -55,6 +97,27 @@ syntax WriteToStream is statement
 	"write" <Buffer: Expression> "to" "stream" <Destination: Expression>
 begin
 	MCStreamExecWriteToStream(Buffer, Destination)
+end syntax
+
+/*
+Summary:	Read data from a stream.
+
+Amount:	An expression that evaluates to a number.
+Stream:	An expression that evaluates to a stream.
+
+Description:
+Read a specific amount of data from a stream.  If there is not enough
+data available in the stream, fails with an error.
+
+>*Warning:* Some streams will discard successfully-read data if there
+>wasn't enough data to fully satisfy the request.  This may cause loss
+>of data.
+
+*/
+syntax ReadFromStream is statement
+	"read" <Amount: Expression> "bytes" "from" "stream" <Source: Expression>
+begin
+    MCStreamExecReadFromStream(Amount, Source)
 end syntax
 
 --
