@@ -648,24 +648,27 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 		// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 		ctxt . SetTheResultToEmpty();
 
-        MCAutoDataRef t_data;
+        MCDataRef t_data;
 		if (p_sentinel != nil)
         {
             MCAutoPointer<char> t_sentinel;
             /* UNCHECKED */ MCStringConvertToCString(p_sentinel, &t_sentinel);
-            MCS_read_socket(MCsockets[t_index], ctxt, p_count, *t_sentinel, p_message, &t_data);
+            t_data = MCS_read_socket(MCsockets[t_index], ctxt, p_count, *t_sentinel, p_message);
         }
 		else
-			MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message, &t_data);
+			t_data = MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message);
 
 		if (p_message == NULL)
 		{
-            // PM-2015-01-20: [[ Bug 14409 ]] Nil-check to prevent a crash
-            if (*t_data == nil)
+            // PM-2015-01-20: [[ Bug 14409 ]] Prevent a crash if MCS_read_socket fails
+            if (t_data == nil)
                 ctxt . SetItToValue(kMCEmptyData);
             else
-                ctxt . SetItToValue(*t_data);
+                ctxt . SetItToValue(t_data);
 		}
+        
+        MCValueRelease(t_data);
+        
 	}
 	else
 		ctxt . SetTheResultToStaticCString("socket is not open");
