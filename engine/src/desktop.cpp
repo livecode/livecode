@@ -930,7 +930,10 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     t_char[1] = 0;
 
     MCAutoStringRef t_string;
-    if (s_pending_key_down -> next && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+    // SN-2015-01-20: [[ Bug 14406 ]] If we have a series of pending keys, we have two possibilities:
+    //   - typing IME characters: the characters are native, so we use the finsertnew
+    //   - typing dead characters: the character, if we arrive here, is > 127
+    if (*p_chars > 127 && s_pending_key_down -> next && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
     {
         MCStringCreateWithNativeChars((const char_t *)t_char, 1, &t_string);
         MCdispatcher -> wkdown(p_window, *t_string, *t_char);
@@ -948,7 +951,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         // then that's not a combining char - and it deserves its (raw)Key(Down|Up) messages
         uint32_t t_codepoint;
         t_codepoint = MCStringGetCodepointAtIndex(*t_string, 0);
-        if (p_char_count == 1 && MCUnicodeIsAlnum(t_codepoint))
+        
+        // SN-2015-01-20: [[ Bug 14406 ]] Same as above: *p_chars > 127 means that we are in IME.
+        if (*p_chars > 127 && p_char_count == 1 && MCUnicodeIsAlnum(t_codepoint))
         {
             MCAutoStringRef t_mapped_char;
             MCPlatformKeyCode t_mapped_key_code;
