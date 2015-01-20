@@ -599,3 +599,17 @@ __MCFileCreateDirectory (MCStringRef p_native_path)
 
 	return true;
 }
+
+bool
+__MCFileDeleteDirectory (MCStringRef p_native_path)
+{
+	/* Get a system path */
+	MCAutoStringRefAsSysString t_path_sys;
+	if (!t_path_sys.Lock(p_native_path))
+		return false;
+
+	if (0 != rmdir (*t_path_sys))
+		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to delete directory %{path}: %{description}"), errno);
+
+	return true;
+}

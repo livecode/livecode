@@ -79,6 +79,9 @@ MC_DLLEXPORT bool MCFileDelete (MCStringRef p_path);
  * directories. */
 MC_DLLEXPORT bool MCFileCreateDirectory (MCStringRef p_path);
 
+/* Delete a directory at p_path.  The directory must be empty. */
+MC_DLLEXPORT bool MCFileDeleteDirectory (MCStringRef p_path);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif
