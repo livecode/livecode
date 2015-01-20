@@ -660,7 +660,11 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 
 		if (p_message == NULL)
 		{
-			ctxt . SetItToValue(*t_data);
+            // PM-2015-01-20: [[ Bug 14409 ]] Nil-check to prevent a crash
+            if (*t_data == nil)
+                ctxt . SetItToValue(kMCEmptyData);
+            else
+                ctxt . SetItToValue(*t_data);
 		}
 	}
 	else
