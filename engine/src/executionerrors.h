@@ -2620,6 +2620,10 @@ enum Exec_errors
     // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
     // {EE-0845} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
+	
+	// MW-2015-01-20: [[ SymmetricArray ]] Error code for attempting to use 'symmetrically' on non-array operation
+	// {EE-0846} add: source and target must be arrays to use symmetrically adjective
+	EE_ADD_SYMMETRICNEEDSARRAYS,
 };
 
 extern const char *MCexecutionerrors;

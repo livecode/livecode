@@ -1606,13 +1606,17 @@ class MCAdd : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
+	// MW-2015-01-20: [[ SymmetricArray ]] If true then treat array keys symmetrically.
+	bool symmetric : 1;
+	bool overlap : 1;
 public:
 	MCAdd()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
+		// MW-2015-01-20: [[ SymmetricArray ]] By default, array operations are non-symmetric (key-wise)
+		symmetric = false;
 		overlap = false;
 	}
 	virtual ~MCAdd();

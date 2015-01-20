@@ -2113,6 +2113,8 @@ static LT sugar_table[] =
         {"string", TT_UNDEFINED, SG_STRING},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'success'
 		{"success", TT_UNDEFINED, SG_SUCCESS},
+		// MW-2015-01-20: [[ SymmetricArray ]] Token for 'symmetrically'
+		{"symmetrically", TT_UNDEFINED, SG_SYMETRICALLY},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'true'
 		{"true", TT_UNDEFINED, SG_TRUE},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},

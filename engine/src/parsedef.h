@@ -1892,6 +1892,9 @@ enum Sugar_constants {
 	
     // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
 	SG_HOST,
+	
+	// MW-2015-01-20: [[ SymmetricArray ]] Tags for sugar used in arithmetic array commands.
+	SG_SYMMETRICALLY,
 };
 
 enum Statements {

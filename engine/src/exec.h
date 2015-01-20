@@ -2038,6 +2038,9 @@ void MCMathGetRandomSeed(MCExecContext& ctxt, integer_t& r_value);
 void MCMathSetRandomSeed(MCExecContext& ctxt, integer_t p_value);
 void MCMathEvaluateStatsFunction(MCExecContext& ctxt, Functions p_func, real64_t *p_values, uindex_t p_count, real64_t& r_result);
                                  
+// MW-2015-01-20: [[ SymmetricArray ]] Exec function for 'add <array> to <array> symmetrically'
+void MCMathExecAddArrayToArraySymmetrically(MCExecContext& ctxt, MCArrayRef src, MCArrayRef dst, MCArrayRef& r_result);
+								 
 #define MCMathExecAddNumberToNumber(ctxt, a, b, r) MCMathEvalAdd(ctxt, a, b, r)
 #define MCMathExecAddNumberToArray(ctxt, a, b, r) MCMathEvalAddNumberToArray(ctxt, b, a, r)
 #define MCMathExecAddArrayToArray(ctxt, a, b, r) MCMathEvalAddArrayToArray(ctxt, a, b, r)

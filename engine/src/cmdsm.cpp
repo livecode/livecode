@@ -82,6 +82,7 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 		MCperror->add(PE_ADD_NOTO, sp);
 		return PS_ERROR;
 	}
+	
 	Symbol_type type;
 	// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 	//   execution outwith a handler.
@@ -97,6 +98,10 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 	}
 	else
 		destvar->parsearray(sp);
+		
+	// MW-2015-01-20: [[ SymmetricArray ]] Check for 'symmetrically' keyword
+	if (sp . skip_token(SP_FACTOR, TT_UNDEFINED, SG_SYMMETRICALLY) == PS_NORMAL)
+		symmetric = true;
 	
 	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
 	if (dest != NULL && dest -> isvarchunk())
@@ -247,7 +252,14 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
     if (t_src . type == kMCExecValueTypeArrayRef)
 	{
         if (t_dst . type == kMCExecValueTypeArrayRef)
-            MCMathExecAddArrayToArray(ctxt, t_src . arrayref_value, t_dst . arrayref_value, t_result . arrayref_value);
+		{
+			// MW-2015-01-20: [[ SymmetricArray ]] Call appropriate exec method depending on
+			//   whether 'symmetrically' keyword is specified.
+			if (!symmetric)
+				MCMathExecAddArrayToArray(ctxt, t_src . arrayref_value, t_dst . arrayref_value, t_result . arrayref_value);
+			else
+				MCMathExecAddArrayToArraySymmetrically(ctxt, t_src . arrayref_value, t_dst . arrayref_value, t_result . arrayref_value);
+		}
 		else
 		{
             ctxt . LegacyThrow(EE_ADD_MISMATCH);
@@ -256,6 +268,14 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	}
 	else
 	{
+		// MW-2015-01-20: [[ SymmetricArray ]] If both operands are not arrays then you cannot
+		//   do 'symmetrically'.
+		if (symmetric)
+		{
+			ctxt . LegacyThrow(EE_ADD_SYMMETRICNEEDSARRAYS);
+			return;
+		}
+	
         if (t_dst . type == kMCExecValueTypeArrayRef)
             MCMathExecAddNumberToArray(ctxt, t_src . double_value, t_dst . arrayref_value, t_result . arrayref_value);
 		else

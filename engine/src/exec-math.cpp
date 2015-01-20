@@ -976,6 +976,13 @@ void MCMathEvalMultiplyArrayByArray(MCExecContext& ctxt, MCArrayRef p_left, MCAr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCMathExecAddArrayToArraySymmetrically(MCExecContxt& ctxt, MCArrayRef p_source, MCArrayRef p_target, MCArrayRef& r_result)
+{
+	ctxt . Unimplemented();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMathEvalIsAnInteger(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
 	MCAutoNumberRef t_number;
