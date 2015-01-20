@@ -1,4 +1,4 @@
-Library: control structures
+Library: com.livecode.language
 
 Name: If
 
@@ -187,6 +187,161 @@ Step(number): The value by which to increase or decrease the <Counter>
 StatementList: A set of statements. 
 
 Example:
-
+	public handler Factorial(in pOperand as integer) as number
+		if pOperand < 1 then
+			return 0
+		end if
+		
+		variable tTotal as number
+		put 1 into tTotal
+		
+		variable tCounter as integer
+		repeat with tCounter from 1 up to pOperand 
+			multiply tTotal by tCounter
+		end repeat
+		
+		return tCounter
+	end handler
+	
 Description:
 Use the repeat with <Counter> structure to execute a set of statements until the value of <Counter> reaches or crosses (depending on iteration direction) the value of <Finish>. The counter is increased (or decreased) by <Step> on each iteration of the loop.
+
+Name: NextRepeat
+Type: control structure
+Summary: Begin the next iteration of a repeat loop.
+Syntax: exit repeat
+Example:
+	variable tList as list
+	variable tElement
+	put [1, 2, 3, "a", 4, "b", 5] into tList
+	
+	variable tSum as number
+	put 0 into tSum
+	repeat for each element tElement in tList
+		if tElement is not a number then
+			next repeat
+		end if
+		
+		add tElement to tSum
+	end repeat
+	
+Description:
+Use <NextRepeat|next repeat> to skip to the next iteration of a repeat loop. This is particularly useful when operations are only to be performed on iterands which satisfy certain criteria.
+
+Name: ExitRepeat
+Type: control structure
+Summary: Exit a repeat loop.
+Syntax: exit repeat
+Example:
+	public handler ListUpToSentinel(in pList as list, in pSentinel as string) as list
+	
+		variable tElement
+		variable tNewList as list
+		put the empty list into tNewList
+		
+		repeat for each element tElement in pList
+			if tElement is a string and tElement is pSentinel then
+				exit repeat
+			end if
+			push tElement onto tNewList
+		end repeat
+
+		return tNewList
+	end handler
+Description:
+Use <ExitRepeat|exit repeat> to exit a repeat loop, for example when a certain condition is met.
+
+
+Name: Return
+Type: statement
+Syntax: return [<returnValue>]
+Summary: Causes execution of the current handler to end, and control return to the caller.
+
+Parameters:
+returnValue (any): The value to return
+
+Description:
+Use the return control structure to halt execution of the current handler, to return control to the caller, and optionally to return a value.
+Note: It is a checked runtime error for a value returned from a handler to not match the return type of the handler it is in.
+
+Name: ThrowError
+Type: statement
+Syntax: throw <errorString>
+Summary: Causes an error to be raised.
+
+Parameters:
+errorString (string): The error to throw.
+
+Example:
+	variable tVar as optional number
+	put "Z" parsed as string into tVar
+	if tVar is not defined then
+		throw tVar && "is not a number
+	end if
+	
+Description:
+The throw statement causes an error to be raised. This causes execution to terminate, and the error is passed back to environment.
+
+The Error expression must be an expression that evaluates to a string.
+
+Note: There is currently no try / catch mechanism in LiveCode Builder, so throwing an error will cause the error to be raised in LiveCode Script in the appropriate context.
+
+Name: PutInto
+Type: statement
+Summary: Put a value into a container.
+Syntax: put <sourceValue> into <targetContainer>
+
+Parameters:
+sourceValue (any): The value to put into the <targetContainer>
+targetContainer (any): A valid target for <sourceValue>
+
+Description:
+Assigns the result of evaluating <sourceValue> to <targetContainer>.
+>*Note:* It is a checked runtime error for the source value's type to not be compatible with the target expression's type.
+
+
+Name: SetTo
+Type: statement
+Summary: Put a value into a container.
+Syntax: set <targetContainer> to <sourceValue>
+
+Parameters:
+targetContainer (any): A valid target for <sourceValue>
+sourceValue (any): The value to put into the <targetContainer>
+
+Description:
+Assigns the result of evaluating <sourceValue> to <targetContainer>.
+>*Note:* It is a checked runtime error for the source value's type to not be compatible with the target expression's type.
+
+Name: Get
+Type: statement
+Summary: Evaluate an expression and put it into the result.
+Syntax: get <expression>
+Parameters:
+expression: Any expression.
+
+Description:
+The get statement evaluates the Value expression and returns it as the result of the statement. The value is subsequently available by using <TheResult|the result> expression.
+
+References: TheResult(expression)
+
+Name: TheResult
+Type: expression
+Summary: The result of the previous statement. 
+Syntax: the result
+Example:
+	resolve script object "this stack"
+	get property "name" of the result
+	log the result
+
+Example:
+	get 20
+	subtract 1 from the result
+	divide the result by 2
+	round the result
+	-- the result is 10
+
+Description:
+Use <TheResult|the result> to obtain the return value of the previous (executed) non-control structure statement.
+>*Note:* Result expressions are not assignable.
+
