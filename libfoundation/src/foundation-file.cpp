@@ -148,6 +148,13 @@ MCFileDelete (MCStringRef p_path)
 	return __MCFileDelete (p_path);
 }
 
+bool
+MCFileCreateDirectory (MCStringRef p_path)
+{
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCFileCreateDirectory (t_native_path);
+}
+
 /* ================================================================
  * Initialization
  * ================================================================ */

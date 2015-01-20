@@ -578,3 +578,24 @@ __MCFileDelete (MCStringRef p_native_path)
 
 	return true;
 }
+
+bool
+__MCFileCreateDirectory (MCStringRef p_native_path)
+{
+	/* Get a system path */
+	MCAutoStringRefAsSysString t_path_sys;
+	if (!t_path_sys.Lock(p_native_path))
+		return false;
+
+	/* The default permissions are full, but they're modified by the effective
+	 * umask in the mkdir() call.*/
+	mode_t t_mode = (S_IRUSR | S_IWUSR | S_IXUSR |
+	                 S_IRGRP | S_IWGRP | S_IXGRP |
+	                 S_IROTH | S_IWOTH | S_IXOTH);
+
+	errno = 0;
+	if (0 != mkdir (*t_path_sys, t_mode))
+		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to create directory %{path}: %{description}"), errno);
+
+	return true;
+}

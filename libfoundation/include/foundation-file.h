@@ -75,6 +75,10 @@ MC_DLLEXPORT bool MCFileCreateStream(MCStringRef p_filename, intenum_t p_mode, M
 /* Delete the file at path. */
 MC_DLLEXPORT bool MCFileDelete (MCStringRef p_path);
 
+/* Create a directory at p_path.  Does not recursively create
+ * directories. */
+MC_DLLEXPORT bool MCFileCreateDirectory (MCStringRef p_path);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif
