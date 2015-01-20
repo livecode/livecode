@@ -22,20 +22,27 @@ Tags: Widget
 Name: OnOpen
 Type: message
 Syntax: OnOpen
-Summary: Sent when the widget is opened.
+Summary: Sent when the card containing the widget becomes the current card.
 Example:
 	public handler OnOpen()
-		// do something
+  		-- Schedule a timer to perform an action every 5 seconds
+ 		 schedule timer in 5 seconds
 	end handler
 Description:
-Handle the OnOpen message to have the widget perform an action when it is opened in LiveCode.
+Handle the OnOpen message to have the widget perform an action when the card containing the widget becomes the current card.
 
 
 Name: OnClose
 Type: message
 Syntax: OnClose
-Summary: Sent when the widget is closed.
-
+Summary: Sent when card containing the widget is navigated away from.
+Example:
+	public handler OnCreate()
+  		-- Schedule a timer to perform an action every 5 seconds
+ 		 cancel timer
+	end handler
+Description:
+Handle the <OnOpen> message to have the widget perform an action when it is opened in LiveCode, for example setting default values of instance variables.
 
 Name: OnAttach
 Type: message
@@ -52,13 +59,36 @@ Summary: Sent when the widget is detached.
 Name: OnPaint
 Type: message
 Syntax: OnPaint
-Summary: Sent when the widget is drawn.
+Summary: Sent when the widget is to be drawn.
+Example:
+	public handler OnPaint()
+		variable tCirclePath as Path
+   		put circle path centered at point [the width of my bounds/2,the height of my bounds/2] with radius (the width of my bounds/2) into tFacePath
+		set the paint of this canvas to solid paint with color [1, 0, 1]
+		fill tFacePath on this canvas
+	end handler
+Description:
+References: RedrawAll(statement)
 
 
 Name: OnGeometryChanged
 Type: message
-Syntax: OnPaint
+Syntax: OnGeometryChanged
 Summary: Sent when the widget geometry changed.
+Example:
+
+	private variable mLabel as string
+	
+	public handler OnGeometryChanged()
+		if my width is not my height then
+			put "Rectangle" into mLabel
+		else
+			put "Square" into mLabel
+		end if
+		redraw all	
+	end handler
+Description:
+Handle the <OnGeometryChanged> message to perform specific actions that depend on the geometry of the widget, for example the locations on the canvas where parts of the widget are drawn.
 
 
 Name: OnVisibilityChanged
@@ -67,61 +97,93 @@ Syntax: OnVisibilityChanged <isVisible>
 Summary: Sent when the widget visibility changed.
 Parameters:
 isVisible(bool): Whether the widget is now visible or not.
+Example:
+	private variable mAnimate as bool
+	
+	public handler OnVisibilityChanged(in pVisible as bool)
+		put pVisible into mAnimate
+	end handler
+	
+Description:
+Handle the OnVisibilityChanged message to execute code when the widget becomes visible or invisible.
 
 
 Name: OnSave
 Type: message
 Syntax: OnSave
 Summary: Sent when the widget is saved.
-
+Description:
+Handler the OnSave message to execute code when a stack containing the widget is saved.
 
 Name: OnLoad
 Type: message
 Syntax: OnLoad
-Summary: Sent when the widget is loaded.
-
+Summary: Sent when the widget is loaded.	
+Description:
+Handler the OnSave message to execute code when a stack containing the widget is loaded, for example setting default values of instance variables.
 
 Name: OnCreate
 Type: message
 Syntax: OnCreate
 Summary: Sent when the widget is created.
-
+Example:
+	private variable mPrimaryColor as Color
+	private variable mSecondaryColor as Color
+	
+	public handler OnCreate()
+		put color [ 0.5, 0.5, 1.0 ] into mPrimaryColor
+		put color [ 0.0, 0.0, 1.0 ] into mSecondaryColor
+	end handler
+Description:
+Handle the OnCreate message to have the widget perform an action when it is created, for example setting default values of instance variables.
 
 Name: OnDestroy
 Type: message
 Syntax: OnDestroy
 Summary: Sent when the widget is deleted.
+Description:
+Handle the OnDestroy message to have the widget perform an action when it is deleted.
 
-
-Name: OnParentPropChanged
+Name: OnParentPropertyChanged
 Type: message
-Syntax: OnParentPropChanged
+Syntax: OnParentPropertyChanged
 Summary: Sent when a property of the widget parent is changed.
-
+Description:
+Handle the <OnParentPropertyChanged> message when a widget property depends on the properties of a parent object.
 
 Name: OnStopEditing
 Type: message
 Syntax: OnStopEditing
 Summary: Sent when the browse tool is selected.
-
+Description:
+Handle the <OnStopEditing> message to perform an action when the browse tool is selected.
 
 Name: OnStartEditing
 Type: message
 Syntax: OnStartEditing
 Summary: Sent when the pointer tool is selected.
-
+Description:
+Handle the <OnStartEditing> message to perform an action when the edit tool is selected.
 
 Name: OnLayerChanged
 Type: message
 Syntax: OnLayerChanged
 Summary: Sent when the widget layer is changed.
 
-
 Name: OnTimer
 Type: message
 Syntax: OnTimer
-Summary: Sent when the widget layer is changed.
+Summary: Sent when a timer message has been scheduled.
+Example:
+	// Create a timer loop
+	public handler OnTimer()
+		...
+		schedule timer in 1 second
+	end handler
+Description:
+Handle the <OnTimer> message to perform an action at a scheduled time.
 
+References: ScheduleTimerIn(statement)
 
 Name: OnMouseEnter
 Type: message
@@ -193,37 +255,6 @@ Name: OnTouchStart
 Type: message
 Syntax: OnTouchStart
 Summary: Sent when a touch event begins within the widget's rect.
-
-
-Name: OnTouchMove
-Type: message
-Syntax: OnTouchMove
-Summary: Sent when a touch event moves within the widget's rect.
-
-
-Name: OnTouchEnter
-Type: message
-Syntax: OnTouchEnter
-Summary: Sent when a touch event moves into the widget's rect from outside.
-
-
-Name: OnTouchLeave
-Type: message
-Syntax: OnTouchEnter
-Summary: Sent when a touch event moves outside of the widget's rect from inside.
-
-
-Name: OnTouchFinish
-Type: message
-Syntax: OnTouchFinish
-Summary: Sent when a touch event finishes within the widget's rect.
-
-
-Name: OnTouchCancel
-Type: message
-Syntax: OnTouchCancel
-Summary: Sent when a touch event finishes outside of the widget's rect.
-
 
 Name: OnFocusEnter
 Type: message
@@ -326,8 +357,21 @@ public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as bool,
 Summary:	Redraws the widget.
 
 Example:
+	private variable mColor as Color
+	
+	public handler OnClick()
+		put color [ any number, any number, any number ] into mColor
+		redraw all
+	end handler
+	
+	public handler OnPaint()
+		...
+		set the paint of this canvas to solid paint with color mColor
+		...
+	end handler
 
 Description:
+Use redraw all to redraw the widget, for example after setting a property which should trigger a change in appearance.
 
 References: OnPaint(message)
 */	
@@ -343,8 +387,14 @@ Summary:	Schedules a timer.
 Time:		An expression which evaluates to a number.
 
 Example:
+	// Create a timer loop
+	public handler OnTimer()
+		...
+		schedule timer in 1 second
+	end handler
 
 Description:
+Scheduling a timer causes an <OnTimer> message to be sent to the widget in <Time> seconds.
 
 References: OnTimer(message)
 */	
@@ -359,6 +409,10 @@ end syntax
 Summary:	Cancels a timer.
 
 Example:
+	// Cancel the timer when the widget is no longer on the current card.
+	public handler OnClose()
+		cancel timer
+	end handler
 
 Description:
 Use to cancel a timer scheduled by the <ScheduleTimerIn|schedule> statement.
@@ -374,11 +428,6 @@ end syntax
 
 /* 
 Summary:	Determines whether the IDE is in edit mode.
-
-Example:
-
-Description:
-
 */	
 
 
@@ -390,11 +439,6 @@ end syntax
 
 /* 
 Summary:	Dispatches a message to the widget script object.
-
-Example:
-
-Description:
-
 */	
 
 syntax Dispatch is statement
@@ -417,14 +461,9 @@ public foreign handler MCWidgetGetHeight(out rHeight as real) as undefined binds
 public foreign handler MCWidgetSetHeight(in pHeight as real) as undefined binds to "<builtin>"
 
 /* 
-Summary:	Obtains a reference to the widget script object.
+Summary:	Returns the widget script object.
 
 Returns:	The widget script object.
-
-Example:
-
-Description:
-
 */	
 
 syntax MyScriptObject is expression
@@ -434,14 +473,9 @@ begin
 end syntax
 
 /* 
-Summary:	
+Summary:	Returns the rectangle of the widget script object.
 
 Returns:	The rectangle of the widget script object.
-
-Example:
-
-Description:
-
 */	
 
 syntax MyRectangle is expression
@@ -450,11 +484,23 @@ begin
     MCWidgetGetRectangle(output)
 end syntax
 
+/* 
+Summary:	Returns the frame of the widget script object.
+
+Returns:	The frame of the widget script object.
+*/	
+
 syntax MyFrame is expression
   "my" "frame"
 begin
     MCWidgetGetFrame(output)
 end syntax
+
+/* 
+Summary:	Returns the bounds of the widget script object.
+
+Returns:	The bounds of the widget script object.
+*/	
 
 syntax MyBounds is expression
   "my" "bounds"
@@ -462,12 +508,24 @@ begin
     MCWidgetGetBounds(output)
 end syntax
 
+/*
+Summary:	Returns the height of the widget.
+
+Returns:	The height of the widget.
+*/
+
 syntax MyWidth is expression
   "my" "width"
 begin
     MCWidgetGetWidth(output)
     MCWidgetSetWidth(input)
 end syntax
+
+/*
+Summary:	Returns the height of the widget.
+
+Returns:	The height of the widget.
+*/
 
 syntax MyHeight is expression
   "my" "height"
@@ -486,11 +544,51 @@ public foreign handler MCWidgetGetClickPosition(in pCurrent as bool, out rLocati
 public foreign handler MCWidgetGetMouseButtonState(in pIndex as uint, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetModifierKeys(in pCurrent as bool, out rKeys as list) as undefined binds to "<builtin>"
 
+/* 
+Summary:		Determines the location of the mouse pointer.
+
+Returns:		The location of the mouse pointer.
+
+Example:
+	variable tClick as Point
+	put the click position into tClick
+	
+	variable tRect as Rectangle
+	put my bounds into tRect
+	
+	if tClick is within tRect then
+		// click was within widget bounds
+	end if
+	
+Description:
+Use the 'current' form to obtain the asynchronous mouse position.
+*/
+
 syntax TheMouseLocation is expression
   "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "mouse" "position"
 begin
     MCWidgetGetMousePosition(IsCurrent, output)
 end syntax
+
+/*
+Summary:		Determines the location of a mouse click.
+
+Returns:		The location of the mouse pointer when it was clicked.
+
+Example:
+	variable tClick as Point
+	put the click position into tClick
+	
+	variable tRect as Rectangle
+	put my bounds into tRect
+	
+	if tClick is within tRect then
+		// click was within widget bounds
+	end if
+	
+Description:
+Use the mouse location to obtain the location of the mouse pointer when it was last clicked. Use the 'current' form to obtain the asynchronous click position.
+*/
 
 syntax TheClickLocation is expression
   "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "position"

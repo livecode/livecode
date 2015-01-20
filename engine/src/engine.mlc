@@ -68,7 +68,7 @@ Example:
 	end if	
 	
 Description:
-Use the <ResolveScriptObject | resolve script object> statement to obtain a <ScriptObject> in LiveCode Builder, in order to interact with it.
+Use the <ResolveScriptObject|resolve script object> statement to obtain a <ScriptObject> in LiveCode Builder, in order to interact with it.
 
 */
 
@@ -82,7 +82,7 @@ end syntax
 Summary:	Tests the existence of a script object.
 Object:		An expression that evaluates to a <ScriptObject>.
 
-Returns:	True if the object <Object> exists, and false otherwise.
+The result:	True if the object <Object> exists, and false otherwise.
 
 Example:
 	variable tObject as ScriptObject
@@ -110,7 +110,7 @@ end syntax
 Summary:	Tests the existence of a script object.
 Object:		An expression that evaluates to a <ScriptObject>.
 
-Returns:	True if the object <Object> exists, and false otherwise.
+The result:	True if the object <Object> exists, and false otherwise.
 
 Example:
 	variable tObject as ScriptObject
@@ -121,7 +121,7 @@ Example:
 	end if	
 	
 Description:
-Use to test the non-existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject | resolve script object>
+Use to test the non-existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject|resolve script object>
 
 References: ResolveScriptObject(statement)
 */
