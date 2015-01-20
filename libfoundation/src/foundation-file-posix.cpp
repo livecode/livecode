@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <dirent.h>
 
 /* ================================================================
  * POSIX whole-file IO
@@ -612,4 +613,72 @@ __MCFileDeleteDirectory (MCStringRef p_native_path)
 		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to delete directory %{path}: %{description}"), errno);
 
 	return true;
+}
+
+/* This function is used by __MCFileGetDirectoryEntries() with
+ * scandir(3) in order to filter out '.' and '..' from directory
+ * listings. */
+static int
+__MCFileGetDirectoryEntries_Filter (const struct dirent *p_entry)
+{
+	const char *p_name;
+
+	MCAssert (p_entry);
+	MCAssert (p_entry->d_name);
+
+	p_name = p_entry->d_name;
+
+	if (0 == strcmp (p_name, ".") ||
+	    0 == strcmp (p_name, ".."))
+		return 0;
+	else
+		return 1;
+}
+
+bool
+__MCFileGetDirectoryEntries (MCStringRef p_native_path,
+                             MCProperListRef & r_native_entries)
+{
+	/* Get a system path */
+	MCAutoStringRefAsSysString t_path_sys;
+	if (!t_path_sys.Lock(p_native_path))
+		return false;
+
+	/* Use scandir(3) to retrieve a list of all directory entries. We
+	 * don't use readdir(3) because it's not reentrant.  We don't use
+	 * readdir_r(3) because it's complicated to calculate the amount
+	 * of memory to allocate and if you use it wrong you get buffer
+	 * overflows and other Bad Things. */
+	int t_num_entries;
+	struct dirent **t_raw_entries;
+
+	errno = 0;
+	t_num_entries = scandir (*t_path_sys, &t_raw_entries,
+	                         __MCFileGetDirectoryEntries_Filter,
+	                         NULL);
+	if (-1 == t_num_entries)
+		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed get entries of directory %{path}: %{description}"), errno);
+
+	/* Convert all directory entries' names to strings. N.b. the
+	 * MCFileGetDirectoryEntries() wrapper will convert them from
+	 * native representation. */
+	MCAutoStringRefArray t_entries;
+
+	if (!t_entries.New (t_num_entries))
+		goto error_cleanup;
+
+	for (int i = 0; i < t_num_entries; ++i)
+	{
+		if (!MCStringCreateWithSysString (t_raw_entries[i]->d_name,
+		                                  t_entries[i]))
+			goto error_cleanup;
+	}
+
+	/* Finally return the constructed list. */
+	free (t_raw_entries);
+	return t_entries.TakeAsProperList (r_native_entries);
+
+ error_cleanup:
+	free (t_raw_entries);
+	return false;
 }

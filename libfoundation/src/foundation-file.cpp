@@ -162,6 +162,42 @@ MCFileDeleteDirectory (MCStringRef p_path)
 	return __MCFileDeleteDirectory (t_native_path);
 }
 
+/* This callback function is used by MCFileGetDirectoryEntries() to
+ * convert directory entries from system filename representation to
+ * LiveCode's internal representation. */
+static bool
+MCFileGetDirectoryEntries_MapCallback (void *p_context,
+                                       MCValueRef p_native_path,
+                                       MCValueRef & r_path)
+{
+	MCAssert (kMCStringTypeInfo == MCValueGetTypeInfo (p_native_path));
+	MCStringRef t_path;
+	if (!__MCFilePathFromNative (static_cast<MCStringRef>(p_native_path),
+	                             t_path))
+		return false;
+
+	r_path = t_path;
+	return true;
+}
+
+bool
+MCFileGetDirectoryEntries (MCStringRef p_path,
+                           MCProperListRef & r_entries)
+{
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+
+	MCAutoProperListRef t_native_entries;
+	if (!__MCFileGetDirectoryEntries (t_native_path, &t_native_entries))
+		return false;
+
+	/* Convert the returned directory entries to LiveCode path
+	 * representation. */
+	return MCProperListMap (*t_native_entries,
+	                        MCFileGetDirectoryEntries_MapCallback,
+	                        r_entries,
+	                        NULL);
+}
+
 /* ================================================================
  * Initialization
  * ================================================================ */

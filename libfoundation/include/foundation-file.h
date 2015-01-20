@@ -82,6 +82,10 @@ MC_DLLEXPORT bool MCFileCreateDirectory (MCStringRef p_path);
 /* Delete a directory at p_path.  The directory must be empty. */
 MC_DLLEXPORT bool MCFileDeleteDirectory (MCStringRef p_path);
 
+/* Return a list of the entries in the directory at p_path.  The
+ * returned list never includes "." and "..". */
+MC_DLLEXPORT bool MCFileGetDirectoryEntries (MCStringRef p_path, MCProperListRef & r_entries);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

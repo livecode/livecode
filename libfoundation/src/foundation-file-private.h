@@ -55,5 +55,6 @@ bool __MCFileCreateStream (MCStringRef p_native_path, intenum_t p_mode, MCStream
 bool __MCFileDelete (MCStringRef p_native_path);
 bool __MCFileCreateDirectory (MCStringRef p_native_path);
 bool __MCFileDeleteDirectory (MCStringRef p_native_path);
+bool __MCFileGetDirectoryEntries (MCStringRef p_native_path, MCProperListRef & r_entries);
 
 #endif /* __MC_FOUNDATION_FILE_PRIVATE__ */
