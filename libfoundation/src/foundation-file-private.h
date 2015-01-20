@@ -48,4 +48,10 @@ bool __MCFilePathFromNative (MCStringRef p_native_path, MCStringRef & r_path);
 
 bool __MCFileCreateStream (MCStringRef p_native_path, intenum_t p_mode, MCStreamRef & r_stream);
 
+/* ----------------------------------------------------------------
+ * Per-platform filesystem operations
+ * ---------------------------------------------------------------- */
+
+bool __MCFileDelete (MCStringRef p_native_path);
+
 #endif /* __MC_FOUNDATION_FILE_PRIVATE__ */

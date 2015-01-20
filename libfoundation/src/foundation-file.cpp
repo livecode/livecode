@@ -138,6 +138,17 @@ MCFileCreateStream (MCStringRef p_path,
 }
 
 /* ================================================================
+ * File system operations
+ * ================================================================ */
+
+bool
+MCFileDelete (MCStringRef p_path)
+{
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCFileDelete (p_path);
+}
+
+/* ================================================================
  * Initialization
  * ================================================================ */
 

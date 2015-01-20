@@ -559,3 +559,22 @@ __MCFileCreateStream (MCStringRef p_native_path,
 	r_stream = t_stream;
 	return true;
 }
+
+/* ================================================================
+ * Filesystem operations
+ * ================================================================ */
+
+bool
+__MCFileDelete (MCStringRef p_native_path)
+{
+	/* Get a system path */
+	MCAutoStringRefAsSysString t_path_sys;
+	if (!t_path_sys.Lock(p_native_path))
+		return false;
+
+	errno = 0;
+	if (-1 == unlink (*t_path_sys))
+		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to delete file %{path}: %{description}"), errno);
+
+	return true;
+}
