@@ -606,7 +606,7 @@ void X_main_loop(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCModulesInitialize();
-extern bool MCModulesFinalize();
+extern void MCModulesFinalize();
 
 int main(int argc, char *argv[], char *envp[])
 {
