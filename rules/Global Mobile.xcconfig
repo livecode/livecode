@@ -18,3 +18,4 @@ ALWAYS_SEARCH_USER_PATHS = NO
 DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
 SDKROOT=iphoneos
 ARCHS_STANDARD=armv7 arm64
+OTHER_CFLAGS=-fvisibility=hidden
