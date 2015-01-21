@@ -20,6 +20,14 @@
 
 #include "foundation-file-private.h"
 
+#define MC_FILE_CONVERT_PATH(path, native_path)  \
+	MCAutoStringRef native_path##__auto; \
+	MCStringRef native_path; \
+	do { if (!__MCFilePathToNative (path, & native_path##__auto)) \
+			return false; \
+		native_path = * native_path##__auto; \
+	} while (0)
+
 /* ================================================================
  * Error handling
  * ================================================================ */
@@ -104,22 +112,16 @@ bool
 MCFileGetContents (MCStringRef p_path,
                    MCDataRef & r_data)
 {
-	MCAutoStringRef t_native_path;
-	if (!__MCFilePathToNative (p_path, &t_native_path))
-		return false;
-
-	return __MCFileGetContents (*t_native_path, r_data);
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCFileGetContents (t_native_path, r_data);
 }
 
 bool
 MCFileSetContents (MCStringRef p_path,
                    MCDataRef p_data)
 {
-	MCAutoStringRef t_native_path;
-	if (!__MCFilePathToNative (p_path, &t_native_path))
-		return false;
-
-	return __MCFileSetContents (*t_native_path, p_data);
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCFileSetContents (t_native_path, p_data);
 }
 
 /* ================================================================
@@ -131,11 +133,69 @@ MCFileCreateStream (MCStringRef p_path,
                     intenum_t p_mode,
                     MCStreamRef & r_stream)
 {
-	MCAutoStringRef t_native_path;
-	if (!__MCFilePathToNative (p_path, &t_native_path))
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCFileCreateStream (t_native_path, p_mode, r_stream);
+}
+
+/* ================================================================
+ * File system operations
+ * ================================================================ */
+
+bool
+MCFileDelete (MCStringRef p_path)
+{
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCFileDelete (p_path);
+}
+
+bool
+MCFileCreateDirectory (MCStringRef p_path)
+{
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCFileCreateDirectory (t_native_path);
+}
+
+bool
+MCFileDeleteDirectory (MCStringRef p_path)
+{
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCFileDeleteDirectory (t_native_path);
+}
+
+/* This callback function is used by MCFileGetDirectoryEntries() to
+ * convert directory entries from system filename representation to
+ * LiveCode's internal representation. */
+static bool
+MCFileGetDirectoryEntries_MapCallback (void *p_context,
+                                       MCValueRef p_native_path,
+                                       MCValueRef & r_path)
+{
+	MCAssert (kMCStringTypeInfo == MCValueGetTypeInfo (p_native_path));
+	MCStringRef t_path;
+	if (!__MCFilePathFromNative (static_cast<MCStringRef>(p_native_path),
+	                             t_path))
 		return false;
 
-	return __MCFileCreateStream (*t_native_path, p_mode, r_stream);
+	r_path = t_path;
+	return true;
+}
+
+bool
+MCFileGetDirectoryEntries (MCStringRef p_path,
+                           MCProperListRef & r_entries)
+{
+	MC_FILE_CONVERT_PATH(p_path, t_native_path);
+
+	MCAutoProperListRef t_native_entries;
+	if (!__MCFileGetDirectoryEntries (t_native_path, &t_native_entries))
+		return false;
+
+	/* Convert the returned directory entries to LiveCode path
+	 * representation. */
+	return MCProperListMap (*t_native_entries,
+	                        MCFileGetDirectoryEntries_MapCallback,
+	                        r_entries,
+	                        NULL);
 }
 
 /* ================================================================

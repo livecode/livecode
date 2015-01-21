@@ -20,13 +20,87 @@ The raw data stored in a file.
 >*Note:* Setting the contents of a file will replace the file with a
 >newly-created file with the new contents.
 
-Tags: IO
+Tags: IO, Filesystem
 */
 syntax FileContents is prefix operator with precedence 2
 	"the" "contents" "of" "file" <File: Expression>
 begin
 	MCFileExecGetContents(File, output)
 	MCFileExecSetContents(input, File)
+end syntax
+
+--
+
+public foreign handler MCFileExecDeleteFile(in File as string) as undefined binds to "<builtin>"
+
+/*
+Summary:	Delete a file from the filesystem.
+
+File:		An expression that evaluates to a filename.
+
+Description:
+Deletes the specified file.
+
+Tags: IO, Filesystem
+*/
+syntax DeleteFile is statement
+	"delete" "file" <File: Expression>
+begin
+	MCFileExecDeleteFile(File)
+end syntax
+
+--
+
+public foreign handler MCFileExecCreateDirectory(in Directory as string) as undefined binds to "<builtin>"
+public foreign handler MCFileExecDeleteDirectory(in Directory as string) as undefined binds to "<builtin>"
+public foreign handler MCFileExecGetDirectoryEntries(in Directory as string, out Entrise as list) as undefined binds to "<builtin>"
+
+/*
+Summary:	Create a named directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Creates a new, empty directory.
+
+Tags: IO, Filesystem
+*/
+syntax CreateDirectory is statement
+	"create" "directory" <Directory: Expression>
+begin
+	MCFileExecCreateDirectory(Directory)
+end syntax
+
+/*
+Summary:	Delete a directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Deletes a directory.  The directory must be empty.
+
+Tags: IO, Filesystem
+*/
+syntax DeleteDirectory is statement
+	"delete" "directory" <Directory: Expression>
+begin
+	MCFileExecDeleteDirectory(Directory)
+end syntax
+
+/*
+Summary:	List the contents of a directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Creates a new, empty directory.
+
+Tags: IO, Filesystem
+*/
+syntax GetDirectoryEntries is prefix operator with precedence 5
+	"the" "entries" "of" "directory" <Directory: Expression>
+begin
+	MCFileExecGetDirectoryEntries(Directory, output)
 end syntax
 
 --

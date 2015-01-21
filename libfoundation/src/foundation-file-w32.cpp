@@ -608,3 +608,154 @@ __MCFileCreateStream (MCStringRef p_native_path,
 	r_stream = t_stream;
 	return true;
 }
+
+/* ================================================================
+ * Filesystem operations
+ * ================================================================ */
+
+bool
+__MCFileDelete (MCStringRef p_native_path)
+{
+	/* Get a system path */
+	MCAutoStringRefAsWString t_path_w32;
+	if (!t_path_w32.Lock(p_native_path))
+		return false;
+
+	if (!DeleteFileW (*t_path_w32))
+		return __MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to delete file %{path}: %{description}"), GetLastError());
+
+	return true;
+}
+
+bool
+__MCFileCreateDirectory (MCStringRef p_native_path)
+{
+	/* Get a system path */
+	MCAutoStringRefAsWString t_path_w32;
+	if (!t_path_w32.Lock(p_native_path))
+		return false;
+
+	if (!CreateDirectoryW (*t_path_w32, NULL))
+		return __MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to create directory %{path}: %{description}"), GetLastError());
+
+	return true;
+}
+
+bool
+__MCFileDeleteDirectory (MCStringRef p_native_path)
+{
+	/* Get a system path */
+	MCAutoStringRefAsWString t_path_w32;
+	if (!t_path_w32.Lock(p_native_path))
+		return false;
+
+	if (!RemoveDirectoryW (*t_path_w32))
+		return __MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to delete directory %{path}: %{description}"), GetLastError());
+
+	return true;
+}
+
+bool
+__MCFileGetDirectoryEntries (MCStringRef p_native_path,
+                             MCProperListRef & r_native_entries)
+{
+	/* Windows needs the search string to be in a glob format.  To
+	 * match all directories, the glob string needs to end in "\\*".
+	 * However, the input path might already end in a directory
+	 * separator.  If so, remove it. */
+	MCAutoStringRef t_native_path;
+	if (MCStringEndsWithCString (p_native_path, "\\",
+	                             kMCStringOptionCompareExact))
+		/* Trim last character */
+		MCStringCopySubstring (p_native_path,
+		                       MCRangeMake (0, MCStringGetLength (p_native_path) - 1),
+		                       &t_native_path);
+	else
+		MCStringCopy (p_native_path, t_native_path);
+
+	/* Add the glob suffix */
+	MCAutoStringRef t_native_search_path;
+	if (!MCStringFormat (&t_native_search_path, "%@\\*",
+	                     *t_native_path, MCSTR(t_wildcard_suffix)))
+		return false;
+
+	/* Get a system path */
+	MCAutoStringRefAsWString t_search_path_w32;
+	if (!t_search_path_w32.Lock(*t_native_search_path))
+		return false;
+
+	/* Open a directory search handle */
+	WIN32_FIND_DATAW t_find_data;
+	HANDLE t_find_handle;
+	DWORD t_error_code;
+
+	t_find_handle = FindFirstFileW (*t_search_path_w32, &t_find_data);
+	if (INVALID_HANDLE_VALUE == t_find_handle)
+	{
+		t_error_code = GetLastError();
+
+		/* If the error *isn't* "file not found", throw an error */
+		if (ERROR_FILE_NOT_FOUND != t_error_code)
+			return __MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to get entries of directory %{path}: %{description}"), t_error_code);
+
+		/* If the error *is* "file not found", then there can be two
+		 * reasons.  First, the p_native_path isn't a directory, in
+		 * which case we should throw an error.  If the p_native_path
+		 * is a directory, on the other hand, then we should return
+		 * the empty list. */
+		MCAutoStringRefAsWString t_path_w32;
+		if (!t_path_w32.Lock (*t_native_path))
+			return false;
+
+		t_find_handle = FindFirstFileW (*t_path_w32, &t_find_data);
+
+		if (INVALID_HANDLE_VALUE == t_find_handle ||
+		    !(FILE_ATTRIBUTE_DIRECTORY & t_find_data.dwFileAttributes))
+		{
+			return __MCFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to get entries of directory %{path}: %{path} is not a directory"), t_error_code);
+		}
+		else
+		{
+			return MCProperListCopy (kMCEmptyProperList, r_native_entries);
+		}
+	}
+
+	/* Build a list of directory entries, skipping '.' and '..' */
+	MCAutoStringRefArray t_entries;
+	uindex_t t_num_entries = 0;
+
+	MCStringRef t_curdir = MCSTR(".");
+	MCStringRef t_parentdir = MCSTR("..");
+
+	if (!t_entries.New(1))
+		goto error_cleanup;
+
+	do
+	{
+		MCStringRef t_entry_name;
+		if (!t_entries.Extend(++t_num_entries))
+			goto error_cleanup;
+
+		if (!MCStringCreateWithWString (t_find_data.cFileName, t_entry_name))
+			goto error_cleanup;
+
+		/* Skip "." and ".." */
+		if (MCStringIsEqualTo (t_entry_name, t_curdir) ||
+		    MCStringIsEqualTo (t_entry_name, t_parentdir))
+		{
+			MCValueRelease (t_entry_name);
+			continue;
+		}
+
+		t_entries[t_num_entries - 1] = t_entry_name;
+	}
+	while (0 != FindNextFile (t_find_handle, &t_find_data));
+
+	/* Clean up and return the list of directory entries */
+	FindClose (t_find_handle);
+	return t_entries->TakeAsProperList (r_native_entries);
+
+ error_cleanup:
+	FindClose (t_find_handle);
+	return false;
+}
