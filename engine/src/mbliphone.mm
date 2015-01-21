@@ -94,8 +94,8 @@ real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////
 
-extern "C" void *load_module(const char *);
-extern "C" void *resolve_symbol(void *, const char *);
+MC_DLLEXPORT extern "C" void *load_module(const char *);
+MC_DLLEXPORT extern "C" void *resolve_symbol(void *, const char *);
 
 struct LibExport
 {
