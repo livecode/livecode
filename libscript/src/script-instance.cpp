@@ -32,7 +32,7 @@
 struct MCScriptHandlerContext
 {
     MCScriptInstanceRef instance;
-    MCScriptHandlerDefinition *definition;
+    MCScriptCommonHandlerDefinition *definition;
 };
 
 static bool MCScriptHandlerInvoke(void *context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value);
@@ -848,7 +848,7 @@ static bool __split_binding(MCStringRef& x_string, codepoint_t p_char, MCStringR
     return true;
 }
 
-static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefinition *p_handler, ffi_abi& r_abi)
+static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefinition *p_handler, ffi_abi& r_abi, bool p_throw, bool& r_bound)
 {
     MCStringRef t_rest;
     t_rest = MCValueRetain(p_handler -> binding);
@@ -905,7 +905,13 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
                 return false;
             t_module = LoadLibraryW(*t_library_wstr);
             if (t_module == nil)
-                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
+            {
+                if (p_throw)
+                    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
+
+                r_bound = false;
+                return true;
+            }
             p_handler -> function = GetProcAddress(t_module, MCStringGetCString(*t_function));
         }
 #else
@@ -923,7 +929,13 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
             void *t_module;
             t_module = dlopen(*t_utf8_library, RTLD_LAZY);
             if (t_module == nil)
-                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
+            {
+                if (p_throw)
+                    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
+             
+                r_bound = false;
+                return true;
+            }
             p_handler -> function = dlsym(t_module, MCStringGetCString(*t_function));
         }
 #endif
@@ -935,14 +947,22 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
     else if (MCStringIsEqualToCString(*t_language, "objc", kMCStringOptionCompareExact))
     {
 #if !defined(_MACOSX) && !defined(_IOS_MOBILE)
-        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("objc binding not supported on this platform"), nil);
+        if (p_throw)
+            return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("objc binding not supported on this platform"), nil);
+        
+        r_bound = false;
+        return true;
 #endif
         return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("objc binding not implemented yet"), nil);
     }
     else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
     {
 #if !defined(_ANDROID_MOBILE)
-        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not supported on this platform"), nil);
+        if (p_throw)
+            return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not supported on this platform"), nil);
+        
+        r_bound = false;
+        return true;
 #else
         return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not implemented yet"), nil);
 #endif
@@ -954,17 +974,33 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
     r_abi = FFI_DEFAULT_ABI;
 #endif
     
+    if (!p_throw)
+        r_bound = true;
+    
     return true;
 }
 
-static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler)
+// If p_throw is true, then this function throws an error if resolution fails.
+// If p_throw is false, then this function does not throw errors related to being
+// unable to bind. Instead it returns true, and indicates binding success in r_bound.
+static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, bool p_throw, bool& r_bound)
 {
     ffi_abi t_abi;
-    if (!MCScriptResolveForeignFunctionBinding(p_handler, t_abi))
+    if (!MCScriptResolveForeignFunctionBinding(p_handler, t_abi, p_throw, r_bound))
         return false;
     
+    if (!p_throw && !r_bound)
+        return true;
+    
     if (p_handler -> function == nil)
-        return MCScriptThrowUnableToResolveForeignHandlerError(p_instance -> module, p_handler);
+    {
+        if (p_throw)
+            return MCScriptThrowUnableToResolveForeignHandlerError(p_instance -> module, p_handler);
+        
+        r_bound = false;
+        
+        return true;
+    }
     
     MCTypeInfoRef t_signature;
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
@@ -1039,6 +1075,9 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     p_handler -> function_argtypes = t_ffi_arg_types;
     p_handler -> function_cif = t_cif;
     
+    if (!p_throw)
+        r_bound = true;
+    
     return true;
 }
 
@@ -1046,7 +1085,8 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
 {
     if (p_handler -> function == nil)
     {
-        if (!MCScriptPrepareForeignFunction(x_frame, p_instance, p_handler))
+        bool t_bound;
+        if (!MCScriptPrepareForeignFunction(x_frame, p_instance, p_handler, true, t_bound))
             return false;
     }
     
@@ -1637,7 +1677,10 @@ static bool MCScriptHandlerInvoke(void *p_context, MCValueRef *p_arguments, uind
     MCScriptHandlerContext *context;
     context = (MCScriptHandlerContext *)p_context;
     
-    return MCScriptCallHandlerOfInstanceDirect(context -> instance, context -> definition, p_arguments, p_argument_count, r_result);
+    if (context -> definition -> kind != kMCScriptDefinitionKindHandler)
+        return MCErrorThrowGeneric(MCSTR("out-of-frame indirect foreign handler calls not yet supported"));
+    
+    return MCScriptCallHandlerOfInstanceDirect(context -> instance, static_cast<MCScriptHandlerDefinition *>(context -> definition), p_arguments, p_argument_count, r_result);
 }
 
 static void MCScriptHandlerRelease(void *p_context)
@@ -1645,6 +1688,50 @@ static void MCScriptHandlerRelease(void *p_context)
     MCScriptHandlerContext *context;
     context = (MCScriptHandlerContext *)p_context;
     MCScriptReleaseInstance(context -> instance);
+}
+
+static bool MCScriptMapValueToType(MCValueRef p_value, MCResolvedTypeInfo& p_input_type, MCResolvedTypeInfo& p_output_type, MCValueRef& r_transformed)
+{
+    bool t_success;
+    t_success = true;
+    
+    if (MCTypeInfoIsForeign(p_input_type . type))
+    {
+        if (MCTypeInfoIsForeign(p_output_type . type))
+        {
+            // Both foreign and conform, which means they are compatible.
+            r_transformed = p_value;
+        }
+        else
+        {
+            // Input foreign, output not foreign - need to import.
+            const MCForeignTypeDescriptor *t_descriptor;
+            t_descriptor = MCForeignTypeInfoGetDescriptor(p_input_type . type);
+            // If the doimport method is nil, then there is no bridge, so we just
+            // propagate the type itself.
+            if (t_descriptor -> doimport == nil)
+                r_transformed = p_value;
+            else if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(p_value), false, r_transformed))
+                t_success = false;
+        }
+    }
+    else
+    {
+        if (MCTypeInfoIsForeign(p_output_type . type))
+        {
+            // Input not foreign, output foreign so need to export.
+            if (!MCForeignValueExport(p_output_type . named_type, p_value, (MCForeignValueRef&)r_transformed))
+                t_success = false;
+        }
+        else
+        {
+            // Input is not foreign, output is not foreign so they must be
+            // compatible.
+            r_transformed = p_value;
+        }
+    }
+    
+    return t_success;
 }
 
 bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHandlerDefinition *p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
@@ -1811,44 +1898,12 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     t_success = MCScriptThrowUnableToResolveTypeError(t_output_type);
                 if (t_success &&
                     !MCResolvedTypeInfoConforms(t_resolved_input_type, t_resolved_output_type))
-                    t_success = MCScriptThrowInvalidValueForResultError(t_frame -> instance -> module, t_frame -> handler, t_input_type, t_value);
+                    t_success = MCScriptThrowInvalidValueForResultError(t_frame -> instance -> module, t_frame -> handler, t_output_type, t_value);
                 
                 MCValueRef t_transformed_value;
                 t_transformed_value = nil;
                 if (t_success)
-                {
-                    if (MCTypeInfoIsForeign(t_resolved_input_type . type))
-                    {
-                        if (MCTypeInfoIsForeign(t_resolved_output_type . type))
-                        {
-                            // Both foreign and conform, which means they are compatible.
-                            t_transformed_value = t_value;
-                        }
-                        else
-                        {
-                            // Input foreign, output not foreign - need to import.
-                            const MCForeignTypeDescriptor *t_descriptor;
-                            t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_input_type . type);
-                            if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_transformed_value))
-                                t_success = false;
-                        }
-                    }
-                    else
-                    {
-                        if (MCTypeInfoIsForeign(t_resolved_output_type . type))
-                        {
-                            // Input not foreign, output foreign so need to export.
-                            if (!MCForeignValueExport(t_resolved_output_type . named_type, t_value, (MCForeignValueRef&)t_transformed_value))
-                                t_success = false;
-                        }
-                        else
-                        {
-                            // Input is not foreign, output is not foreign so they must be
-                            // compatible.
-                            t_transformed_value = t_value;
-                        }
-                    }
-                }
+                    t_success = MCScriptMapValueToType(t_value, t_resolved_input_type, t_resolved_output_type, t_transformed_value);
                 
                 // Check that out parameters are defined.
                 for(uindex_t i = 0; t_success && i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
@@ -1924,42 +1979,51 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 				MCValueRef t_handler;
 				t_handler = MCScriptFetchFromRegisterInFrame(t_frame, t_src);
 				
-				__MCScriptAssert__(MCValueGetTypeCode(t_handler) == kMCValueTypeCodeHandler,
-									"handler argument to invoke not a handler");
-                
                 if (MCValueGetTypeCode(t_handler) != kMCValueTypeCodeHandler)
                     t_success = MCScriptThrowNotAHandlerValueError(t_handler);
                 
-                // Build the argument list (arg_1 onwards).
-                MCValueRef *t_handler_args;
-                if (t_success)
-                    t_success = MCMemoryNewArray(t_arity - 2, t_handler_args);
-				
-                if (t_success)
+                // If the handler value is a 'script handler' then we can go direct.
+                // Otherwise we have to indirect through a ValueRef array.
+                if (MCHandlerGetCallbacks((MCHandlerRef)t_handler) == &kMCScriptHandlerCallbacks)
                 {
-                    for(int i = 0; i < t_arity - 2; i++)
-                        t_handler_args[i] = MCScriptFetchFromRegisterInFrame(t_frame, t_arguments[i + 2]);
+                    MCScriptHandlerContext *t_context;
+                    t_context = (MCScriptHandlerContext *)MCHandlerGetContext((MCHandlerRef)t_handler);
+                 
+                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_context -> instance, t_context -> definition, t_arguments + 1, t_arity - 1);
+                }
+                else
+                {
+                    // Build the argument list (arg_1 onwards).
+                    MCValueRef *t_handler_args;
+                    if (t_success)
+                        t_success = MCMemoryNewArray(t_arity - 2, t_handler_args);
                     
-                    MCValueRef t_result;
-                    t_success = MCHandlerInvoke((MCHandlerRef)t_handler, t_handler_args, t_arity - 2, t_result);
-                    
-                    // If the call succeeded, we must copy back all 'out' / 'inout' mode parameters
-                    // to the register file, and also the result.
                     if (t_success)
                     {
-                        MCTypeInfoRef t_signature;
-                        t_signature = MCValueGetTypeInfo(t_handler);
+                        for(int i = 0; i < t_arity - 2; i++)
+                            t_handler_args[i] = MCScriptFetchFromRegisterInFrame(t_frame, t_arguments[i + 2]);
                         
-                        for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
-                            if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
-                                MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_arguments[i + 2], t_handler_args[i]);
-                                
+                        MCValueRef t_result;
+                        t_success = MCHandlerInvoke((MCHandlerRef)t_handler, t_handler_args, t_arity - 2, t_result);
                         
-                        MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_arguments[1], t_result);
+                        // If the call succeeded, we must copy back all 'out' / 'inout' mode parameters
+                        // to the register file, and also the result.
+                        if (t_success)
+                        {
+                            MCTypeInfoRef t_signature;
+                            t_signature = MCValueGetTypeInfo(t_handler);
+                            
+                            for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
+                                if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
+                                    MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_arguments[i + 2], t_handler_args[i]);
+                                    
+                            
+                            MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_arguments[1], t_result);
+                        }
+                        
+                        MCMemoryDeleteArray(t_handler_args);
                     }
-                    
-                    MCMemoryDeleteArray(t_handler_args);
-                }                
+                }
             }
             break;
             case kMCScriptBytecodeOpFetchLocal:
@@ -2003,7 +2067,6 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     t_transformed_value = t_value;
                 else
                 {
-                    
                     MCResolvedTypeInfo t_resolved_input_type, t_resolved_output_type;
                     if (!MCTypeInfoResolve(t_input_type, t_resolved_input_type))
                         t_success = MCScriptThrowUnableToResolveTypeError(t_input_type);
@@ -2015,39 +2078,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         t_success = MCScriptThrowInvalidValueForLocalVariableError(t_frame -> instance -> module, t_frame -> handler, t_index, t_output_type, t_value);
                     
                     if (t_success)
-                    {
-                        if (MCTypeInfoIsForeign(t_resolved_input_type . type))
-                        {
-                            if (MCTypeInfoIsForeign(t_resolved_output_type . type))
-                            {
-                                // Both foreign and conform, which means they are compatible.
-                                t_transformed_value = t_value;
-                            }
-                            else
-                            {
-                                // Input foreign, output not foreign - need to import.
-                                const MCForeignTypeDescriptor *t_descriptor;
-                                t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_input_type . type);
-                                if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_transformed_value))
-                                    t_success = false;
-                            }
-                        }
-                        else
-                        {
-                            if (MCTypeInfoIsForeign(t_resolved_output_type . type))
-                            {
-                                // Input not foreign, output foreign so need to export.
-                                if (!MCForeignValueExport(t_resolved_output_type . named_type, t_value, (MCForeignValueRef&)t_transformed_value))
-                                    t_success = false;
-                            }
-                            else
-                            {
-                                // Input is not foreign, output is not foreign so they must be
-                                // compatible.
-                                t_transformed_value = t_value;
-                            }
-                        }
-                    }
+                        t_success = MCScriptMapValueToType(t_value, t_resolved_input_type, t_resolved_output_type, t_transformed_value);
                 }
                 
                 if (t_success)
@@ -2071,17 +2102,20 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // Fetch the value - if it is a variable fetch from the slot; if
                 // it is a handler construct a handler value.
-                MCValueRef t_value;
                 if (t_definition -> kind == kMCScriptDefinitionKindVariable)
                 {
                     MCScriptVariableDefinition *t_var_definition;
                     t_var_definition = static_cast<MCScriptVariableDefinition *>(t_definition);
-                
+                    
+                    MCValueRef t_value;
                     t_value = t_instance -> slots[t_var_definition -> slot_index];
                 
                     if (t_value == kMCNull &&
                         !MCTypeInfoIsOptional(t_instance -> module -> types[t_var_definition -> type] -> typeinfo))
                         t_success = MCScriptThrowGlobalVariableUsedBeforeDefinedError(t_frame -> instance -> module, t_index);
+                    
+                    if (t_success)
+                        MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_value);
                 }
                 else if (t_definition -> kind == kMCScriptDefinitionKindHandler)
                 {
@@ -2096,18 +2130,46 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     t_context . instance = MCScriptRetainInstance(t_instance);
                     t_context . definition = t_handler_definition;
                     
-                    t_success = MCHandlerCreate(t_signature, &kMCScriptHandlerCallbacks, &t_context, (MCHandlerRef&)t_value);
+                    MCHandlerRef t_value;
+                    t_success = MCHandlerCreate(t_signature, &kMCScriptHandlerCallbacks, &t_context, t_value);
+                    
+                    if (t_success)
+                        MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_dst, t_value);
                 }
-                else
+                else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
                 {
-                    // TODO: Implement support for foreign handler evaluation
-                    t_success = false;
-                }
-                
-                if (t_success)
-                {
-                    MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_value);
-                    MCValueRelease(t_value);
+                    MCScriptForeignHandlerDefinition *t_handler_definition;
+                    t_handler_definition = static_cast<MCScriptForeignHandlerDefinition *>(t_definition);
+                    
+                    MCTypeInfoRef t_signature;
+                    t_signature = t_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
+                    
+                    bool t_bound;
+                    if (t_handler_definition -> function == nil)
+                    {
+                        if (!MCScriptPrepareForeignFunction(t_frame, t_instance, t_handler_definition, false, t_bound))
+                            return false;
+                    }
+                    else
+                        t_bound = true;
+                    
+                    if (t_bound)
+                    {
+                        // The context struct is 'moved' into the handlerref.
+                        MCScriptHandlerContext t_context;
+                        t_context . instance = MCScriptRetainInstance(t_instance);
+                        t_context . definition = t_handler_definition;
+                        
+                        MCHandlerRef t_value;
+                        t_success = MCHandlerCreate(t_signature, &kMCScriptHandlerCallbacks, &t_context, t_value);
+                        
+                        if (t_success)
+                            MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_dst, t_value);
+                    }
+                    else
+                    {
+                        MCScriptStoreToRegisterInFrame(t_frame, t_dst, kMCNull);
+                    }
                 }
             }
             break;
@@ -2137,9 +2199,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCTypeInfoRef t_input_type;
                 t_input_type = MCValueGetTypeInfo(t_value);
                 
-                MCValueRef t_transformed_value;
-                
                 // If the types are equal, short-circuit to take the value immediately.
+                MCValueRef t_transformed_value;
                 if (t_input_type == t_output_type)
                     t_transformed_value = t_value;
                 else
@@ -2155,39 +2216,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         t_success = MCScriptThrowInvalidValueForGlobalVariableError(t_frame -> instance -> module, t_index, t_output_type, t_value);
                     
                     if (t_success)
-                    {
-                        if (MCTypeInfoIsForeign(t_resolved_input_type . type))
-                        {
-                            if (MCTypeInfoIsForeign(t_resolved_output_type . type))
-                            {
-                                // Both foreign and conform, which means they are compatible.
-                                t_transformed_value = t_value;
-                            }
-                            else
-                            {
-                                // Input foreign, output not foreign - need to import.
-                                const MCForeignTypeDescriptor *t_descriptor;
-                                t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_input_type . type);
-                                if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_transformed_value))
-                                    t_success = false;
-                            }
-                        }
-                        else
-                        {
-                            if (MCTypeInfoIsForeign(t_resolved_output_type . type))
-                            {
-                                // Input not foreign, output foreign so need to export.
-                                if (!MCForeignValueExport(t_resolved_output_type . named_type, t_value, (MCForeignValueRef&)t_transformed_value))
-                                    t_success = false;
-                            }
-                            else
-                            {
-                                // Input is not foreign, output is not foreign so they must be
-                                // compatible.
-                                t_transformed_value = t_value;
-                            }
-                        }
-                    }
+                        t_success = MCScriptMapValueToType(t_value, t_resolved_input_type, t_resolved_output_type, t_transformed_value);
                 }
                 
                 if (t_success)
