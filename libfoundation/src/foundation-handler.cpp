@@ -41,6 +41,16 @@ bool MCHandlerInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_t p_argu
     return self -> callbacks -> invoke(self + 1, p_arguments, p_argument_count, r_value);
 }
 
+void *MCHandlerGetContext(MCHandlerRef self)
+{
+    return self + 1;
+}
+
+const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef self)
+{
+    return self -> callbacks;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void __MCHandlerDestroy(__MCHandler *self)

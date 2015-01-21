@@ -2464,8 +2464,19 @@ MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCN
 //  HANDLER DEFINITIONS
 //
 
-MC_DLLEXPORT void *MCHandlerGetDefinition(MCHandlerRef handler);
-MC_DLLEXPORT void *MCHandlerGetInstance(MCHandlerRef handler);
+struct MCHandlerCallbacks
+{
+    size_t size;
+    void (*release)(void *context);
+    bool (*invoke)(void *context, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+};
+
+MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbacks *callbacks, void *context, MCHandlerRef& r_handler);
+
+MC_DLLEXPORT void *MCHandlerGetContext(MCHandlerRef handler);
+MC_DLLEXPORT const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef handler);
+    
+MC_DLLEXPORT bool MCHandlerInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
