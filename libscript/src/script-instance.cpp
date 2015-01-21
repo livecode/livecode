@@ -878,7 +878,15 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         if (MCStringIsEmpty(*t_library))
         {
             void* t_self;
+#ifdef TARGET_SUBPLATFORM_ANDROID
+            t_self = dlopen("librevandroid.so", 0);
+            if (t_self == NULL)
+            {
+                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("could not bind to engine"), nil);
+            }
+#else
             t_self = dlopen(NULL, 0);
+#endif
             p_handler -> function = dlsym(t_self, MCStringGetCString(*t_function));
         }
         else
