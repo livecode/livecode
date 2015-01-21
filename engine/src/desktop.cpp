@@ -953,7 +953,10 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         t_codepoint = MCStringGetCodepointAtIndex(*t_string, 0);
         
         // SN-2015-01-20: [[ Bug 14406 ]] Same as above: *p_chars > 127 means that we are in IME.
-        if (*p_chars > 127 && p_char_count == 1 && MCUnicodeIsAlnum(t_codepoint))
+        //  Use UnicodeMapToNative as well, as it may cause issues with Hiragana, when parts
+        //  of the whole word are individual Kanji as well, and Unicode valid alphanum.
+        //  (they would be appended to the in-process IME string).
+        if (*p_chars > 127 && p_char_count == 1 && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
         {
             MCAutoStringRef t_mapped_char;
             MCPlatformKeyCode t_mapped_key_code;
