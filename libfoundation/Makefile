@@ -36,7 +36,8 @@ SOURCES= \
 	foundation-typeinfo.cpp \
 	foundation-unicodechars.cpp \
 	foundation-unicode.cpp \
-	foundation-value.cpp
+	foundation-value.cpp \
+	system-init.cpp
 
 CUSTOM_DEFINES=
 
