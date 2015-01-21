@@ -494,7 +494,7 @@ bool MCProperListApply(MCProperListRef self, MCProperListApplyCallback p_callbac
     return true;
 }
 
-bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, MCProperListRef& r_new_list)
+bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context)
 {
     if (MCProperListIsIndirect(self))
         self = self -> contents;
@@ -506,7 +506,7 @@ bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, M
     for (uindex_t i = 0; t_success && i < self -> length; i++)
     {
         MCValueRef t_value;
-        if (!p_callback(self -> list[i], t_value))
+        if (!p_callback(context, self -> list[i], t_value))
             t_success = false;
         
         if (t_success);

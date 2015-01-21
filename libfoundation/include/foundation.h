@@ -2775,8 +2775,8 @@ typedef bool (*MCProperListApplyCallback)(void *context, MCValueRef element);
 MC_DLLEXPORT bool MCProperListApply(MCProperListRef list, MCProperListApplyCallback p_callback, void *context);
 
 // Apply the callback to each element of list to create a new list.
-typedef bool (*MCProperListMapCallback)(MCValueRef element, MCValueRef& r_new_element);
-MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list);
+typedef bool (*MCProperListMapCallback)(void *context, MCValueRef element, MCValueRef& r_new_element);
+MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context);
 
 // Sort list by comparing elements using the provided callback.
 typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);
