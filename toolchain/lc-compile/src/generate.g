@@ -1369,7 +1369,7 @@
             -- If the Id is not a handler it must be a variable
             ne(Kind, handler)
             EmitCreateRegister(-> HandlerReg)
-            EmitFetchVar(Kind, Index, HandlerReg)
+            EmitFetchVar(Kind, HandlerReg, Index)
         ||
             where(-1 -> HandlerReg)
         |)
@@ -1501,12 +1501,13 @@
 
 'action' EmitFetchVar(SYMBOLKIND, INT, INT)
 
-    'rule' EmitFetchVar(variable, Reg, Var):
-        EmitFetchGlobal(Reg, Var)
-        
-    'rule' EmitFetchVar(_, Reg, Var):
+    'rule' EmitFetchVar(local, Reg, Var):
         EmitFetchLocal(Reg, Var)
 
+    -- This catches all module-scope things, including variables and handler references.
+    'rule' EmitFetchVar(_, Reg, Var):
+        EmitFetchGlobal(Reg, Var)
+        
 'action' EmitInvokeRegisterList(INTLIST)
 
     'rule' EmitInvokeRegisterList(intlist(Head, Tail)):

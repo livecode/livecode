@@ -1368,7 +1368,7 @@ void MCScriptBeginInvokeEvaluateInModule(MCScriptModuleBuilderRef self, uindex_t
 }
 #endif
 
-void MCScriptBeginIndirectInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_reg, uindex_t p_result_reg)
+void MCScriptBeginInvokeIndirectInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_reg, uindex_t p_result_reg)
 {
     if (self == nil || !self -> valid)
         return;

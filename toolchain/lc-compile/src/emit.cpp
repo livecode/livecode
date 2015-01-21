@@ -984,7 +984,7 @@ void EmitBeginInvoke(long index, long contextreg, long resultreg)
 
 void EmitBeginIndirectInvoke(long handlerreg, long contextreg, long resultreg)
 {
-    MCScriptBeginInvokeInModule(s_builder, handlerreg, resultreg);
+    MCScriptBeginInvokeIndirectInModule(s_builder, handlerreg, resultreg);
     MCLog("[Emit] BeginExecuteIndirectInvoke(%ld, %ld, %ld)", handlerreg, contextreg, resultreg);
 }
 
