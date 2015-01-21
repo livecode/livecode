@@ -499,29 +499,34 @@ bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, M
     if (MCProperListIsIndirect(self))
         self = self -> contents;
     
-    MCAutoArray<MCValueRef> t_values;
+	MCAutoValueRefArray t_values;
+	if (!t_values.New (self -> length))
+		return false;
+
     bool t_success;
     t_success = true;
     
     for (uindex_t i = 0; t_success && i < self -> length; i++)
     {
         MCValueRef t_value;
+		t_value = NULL;
+
         if (!p_callback(context, self -> list[i], t_value))
             t_success = false;
         
-        if (t_success);
-            t_values . Push(t_value);
+
+		/* In case the callback returns a value into t_value but also
+		 * indicates failure, make sure to release t_value on
+		 * failure. */
+		if (t_success)
+			t_values[i] = t_value;
+		else
+			MCValueRelease (t_value);
     }
     
     if (t_success)
-        t_success = MCProperListCreate(t_values . Ptr(), t_values . Size(), r_new_list);
+		t_success = t_values.TakeAsProperList (r_new_list);
 
-    if (!t_success)
-    {
-        for (uindex_t i = 0; i < t_values . Size(); i++)
-            MCValueRelease(t_values[i]);
-    }
-    
     return t_success;
 }
 
