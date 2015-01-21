@@ -237,7 +237,8 @@
 
 'action' FullyResolveType(TYPE -> TYPE)
 
-    'rule' FullyResolveType(optional(_, Base) -> Base):
+    'rule' FullyResolveType(optional(_, Type) -> Base):
+        FullyResolveType(Type -> Base)
     
     'rule' FullyResolveType(named(_, Id) -> Base):
         QuerySymbolId(Id -> Named)
