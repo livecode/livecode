@@ -48,6 +48,8 @@ class MCLine : public MCDLlist
 public:
 	MCLine(MCParagraph *paragraph);
 	~MCLine();
+    // SN-2015-01-21: [[ Bug 14229 ]] Update the dirtywidth with the width of lptr.
+    void takewidth(MCLine *lptr);
 	void takebreaks(MCLine *lptr);
 	MCBlock *fitblocks(MCBlock *p_first, MCBlock *p_sentinal, uint2 maxwidth);
 	void appendall(MCBlock *bptr, bool p_flow);

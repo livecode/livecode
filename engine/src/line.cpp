@@ -46,6 +46,13 @@ MCLine::~MCLine()
 {
 }
 
+// SN-2015-01-21: [[ Bug 14229 ]] We want to get the length of the line we replace
+void MCLine::takewidth(MCLine *lptr)
+{
+    if (width != lptr -> width)
+        dirtywidth = MCU_max(width, lptr->width);
+}
+
 /*void MCLine::takebreaks(MCLine *lptr)
 {
 	if (firstblock != lptr->firstblock)
