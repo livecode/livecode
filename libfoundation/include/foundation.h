@@ -2257,9 +2257,6 @@ MC_DLLEXPORT bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange
 MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
 #endif
 
-// Create a data buffer filled with uniformly-distributed random bytes
-MC_DLLEXPORT bool MCDataCreateRandom (uindex_t p_length, MCDataRef & r_data);
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  ARRAY DEFINITIONS

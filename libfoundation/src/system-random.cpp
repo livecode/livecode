@@ -15,12 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-
-#include <foundation.h>
-#include <foundation-auto.h>
-#include <foundation-system.h>
-
-#include "foundation-private.h"
+#include "system-private.h"
 
 #if defined(__WINDOWS__)
 #  include <windows.h>
@@ -28,7 +23,50 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 /* ================================================================
- * Random data generation
+ * Random value generation
+ * ================================================================ */
+
+bool
+MCSRandomData (uindex_t p_length, MCDataRef & r_data)
+{
+	MCDataRef t_mutable;
+	byte_t *t_buffer;
+
+	if (!MCDataCreateMutable (p_length, t_mutable))
+		return false;
+
+	t_buffer = (byte_t *) MCDataGetBytePtr (t_mutable);
+
+	if (!__MCSRandomBytes (t_buffer, p_length))
+	{
+		MCValueRelease (t_mutable);
+		return false;
+	}
+
+	return MCDataCopyAndRelease (t_mutable, r_data);
+}
+
+real64_t
+MCSRandomReal (void)
+{
+	real64_t t_random_bytes;
+	int t_ignored;
+
+	/* Ensure that if we can't obtain a valid random number, the
+	 * return value is obviously useless.  __MCSRandomBytes() should
+	 * have thrown an error. */
+	if (!__MCSRandomBytes (&t_random_bytes, sizeof (t_random_bytes)))
+		return NAN;
+
+	/* Convert the value to a value in the range [0, 1).  frexp(3)
+	 * always returns a value with absolute value in the range [0.5,
+	 * 1). */
+	real64_t value = frexp (copysign (t_random_bytes, 1), &t_ignored);
+	return (value * 2 - 1);
+}
+
+/* ================================================================
+ * Low-level random data generation
  * ================================================================
  *
  * The __MCRandomBytes() function obtains cryptographic-quality
@@ -42,8 +80,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * ---------------------------------------------------------------- */
 
 bool
-__MCRandomBytes (void *x_buffer,
-                 size_t p_buffer_length)
+__MCSRandomBytes (void *x_buffer,
+                  size_t p_buffer_length)
 {
 	/* Acquire cryptographic provider */
 	HCRYPTPROV t_provider;
@@ -81,8 +119,8 @@ __MCRandomBytes (void *x_buffer,
  * ---------------------------------------------------------------- */
 
 bool
-__MCRandomBytes (void *x_buffer,
-                 size_t p_buffer_length)
+__MCSRandomBytes (void *x_buffer,
+                  size_t p_buffer_length)
 {
 
 #	if defined(__MAC__) || defined(__IOS__)

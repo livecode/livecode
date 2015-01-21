@@ -25,6 +25,7 @@ extern "C" {
 
 #include <system-file.h>
 #include <system-init.h>
+#include <system-random.h>
 #include <system-stream.h>
 
 }
