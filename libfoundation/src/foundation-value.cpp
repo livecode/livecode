@@ -89,8 +89,7 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
         case kMCValueTypeCodeRecord:
             return ((__MCRecord *)p_value) -> typeinfo;
         case kMCValueTypeCodeHandler:
-            MCAssert(false); // TODO
-            return nil;
+            return ((__MCHandler *)p_value) -> typeinfo;
         case kMCValueTypeCodeError:
             return ((__MCError *)p_value) -> typeinfo;
         case kMCValueTypeCodeForeignValue:
@@ -200,6 +199,8 @@ hash_t MCValueHash(MCValueRef p_value)
         return __MCProperListHash((__MCProperList *)self);
     case kMCValueTypeCodeRecord:
         return __MCRecordHash((__MCRecord*) self);
+    case kMCValueTypeCodeHandler:
+        return __MCHandlerHash((__MCHandler*) self);    
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoHash((__MCTypeInfo*) self);
     case kMCValueTypeCodeError:
@@ -277,6 +278,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
         return __MCProperListIsEqualTo((__MCProperList*)self, (__MCProperList*)other_self);
     case kMCValueTypeCodeRecord:
         return __MCRecordIsEqualTo((__MCRecord*)self, (__MCRecord*)other_self);
+    case kMCValueTypeCodeHandler:
+        return __MCHandlerIsEqualTo((__MCHandler*)self, (__MCHandler*)other_self);    
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoIsEqualTo((__MCTypeInfo *)self, (__MCTypeInfo *)other_self);
     case kMCValueTypeCodeError:
@@ -332,6 +335,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
         return __MCProperListCopyDescription((__MCProperList*)p_value, r_desc);
     case kMCValueTypeCodeRecord:
         return __MCRecordCopyDescription((__MCRecord*)p_value, r_desc);
+    case kMCValueTypeCodeHandler:
+        return __MCHandlerCopyDescription((__MCHandler*)p_value, r_desc);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoCopyDescription((__MCTypeInfo*)p_value, r_desc);
     case kMCValueTypeCodeError:
@@ -544,6 +549,9 @@ void __MCValueDestroy(__MCValue *self)
         break;
     case kMCValueTypeCodeRecord:
         __MCRecordDestroy((__MCRecord *)self);
+        break;
+    case kMCValueTypeCodeHandler:
+        __MCHandlerDestroy((__MCHandler *)self);
         break;
     case kMCValueTypeCodeTypeInfo:
         __MCTypeInfoDestroy((__MCTypeInfo *)self);

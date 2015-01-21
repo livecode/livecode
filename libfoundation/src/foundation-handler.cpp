@@ -20,14 +20,48 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *MCHandlerGetDefinition(MCHandlerRef self)
+bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callbacks, void *p_context, MCHandlerRef& r_handler)
 {
-    return nil;
+    __MCHandler *self;
+    if (!__MCValueCreate(kMCValueTypeCodeHandler, sizeof(__MCHandler) + p_callbacks -> size, (__MCValue*&)self))
+        return false;
+    
+    MCMemoryCopy(self + 1, p_context, p_callbacks -> size);
+    
+    self -> typeinfo = MCValueRetain(p_typeinfo);
+    self -> callbacks = p_callbacks;
+    
+    r_handler = self;
+    
+    return true;
 }
 
-void *MCHandlerGetInstance(MCHandlerRef self)
+bool MCHandlerInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
-    return nil;
+    return self -> callbacks -> invoke(self + 1, p_arguments, p_argument_count, r_value);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void __MCHandlerDestroy(__MCHandler *self)
+{
+    if (self -> callbacks -> release != nil)
+        self -> callbacks -> release(self + 1);
+}
+
+hash_t __MCHandlerHash(__MCHandler *self)
+{
+    return MCHashPointer(self);
+}
+
+bool __MCHandlerIsEqualTo(__MCHandler *self, __MCHandler *other_self)
+{
+    return self == other_self;
+}
+
+bool __MCHandlerCopyDescription(__MCHandler *self, MCStringRef& r_desc)
+{
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
