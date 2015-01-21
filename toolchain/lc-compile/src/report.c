@@ -173,7 +173,6 @@ DEFINE_ERROR(ParameterMustHaveHighLevelType, "Inappropriate type for parameter")
 
 DEFINE_ERROR_I(CannotAssignToHandlerId, "'%s' is a handler id and cannot be assigned to")
 
-DEFINE_ERROR(UniversalHandlerTypeVariablesCannotBeCalled, "Variables must have specific handler type to be called")
 DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler type to be called")
 
 ////////////////////////////////////////////////////////////////////////////////

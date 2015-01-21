@@ -280,7 +280,6 @@
     Error_ParameterMustHaveHighLevelType
     Error_VariableMustHaveHighLevelType
     Error_CannotAssignToHandlerId
-    Error_UniversalHandlerTypeVariablesCannotBeCalled
     Error_NonHandlerTypeVariablesCannotBeCalled
 
 
@@ -613,7 +612,6 @@
 'action' Error_VariableMustHaveHighLevelType(Position: POS)
 
 'action' Error_CannotAssignToHandlerId(Position: POS, Identifier: NAME)
-'action' Error_UniversalHandlerTypeVariablesCannotBeCalled(Position: POS)
 'action' Error_NonHandlerTypeVariablesCannotBeCalled(Position: POS)
 
 --------------------------------------------------------------------------------

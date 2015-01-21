@@ -259,11 +259,6 @@
             FullyResolveType(Type -> BaseType)
             (|
                 where(BaseType -> handler(_, Signature))
-                [|
-                    where(Signature -> deferred)
-                    Id'Position -> Position
-                    Error_UniversalHandlerTypeVariablesCannotBeCalled(Position)
-                |]
             ||
                 Id'Position -> Position
                 Error_NonHandlerTypeVariablesCannotBeCalled(Position)
