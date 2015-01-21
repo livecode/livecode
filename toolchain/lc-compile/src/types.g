@@ -79,6 +79,7 @@
 
 'type' SIGNATURE
     signature(Parameters: PARAMETERLIST, ReturnType: TYPE)
+    deferred -- a deferred signature indicates 'any handler type'
 
 'type' ACCESS
     inferred

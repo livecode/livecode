@@ -115,6 +115,7 @@ extern "C" void EmitBeginIndirectCall(long reg, long resultreg);
 extern "C" void EmitContinueCall(long reg);
 extern "C" void EmitEndCall(void);
 extern "C" void EmitBeginInvoke(long index, long contextreg, long resultreg);
+extern "C" void EmitBeginIndirectInvoke(long handlerreg, long contextreg, long resultreg);
 extern "C" void EmitContinueInvoke(long reg);
 extern "C" void EmitEndInvoke(void);
 extern "C" void EmitAssign(long dst, long src);
@@ -979,6 +980,12 @@ void EmitBeginInvoke(long index, long contextreg, long resultreg)
 {
     MCScriptBeginInvokeInModule(s_builder, index, resultreg);
     MCLog("[Emit] BeginExecuteInvoke(%ld, %ld, %ld)", index, contextreg, resultreg);
+}
+
+void EmitBeginIndirectInvoke(long handlerreg, long contextreg, long resultreg)
+{
+    MCScriptBeginInvokeInModule(s_builder, handlerreg, resultreg);
+    MCLog("[Emit] BeginExecuteIndirectInvoke(%ld, %ld, %ld)", handlerreg, contextreg, resultreg);
 }
 
 void EmitContinueInvoke(long reg)
