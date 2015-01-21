@@ -749,8 +749,12 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
                 /* UNCHECKED */ MCStringFormat(&t_string, t_value == kMCTrue ? "<true>" : "<false>");
 			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNull)
                 /* UNCHECKED */ MCStringFormat(&t_string, "<null>");
+            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeHandler)
+                /* UNCHECKED */ MCStringFormat(&t_string, "<handler>");
+            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeTypeInfo)
+                /* UNCHECKED */ MCStringFormat(&t_string, "<type>");
             else
-				MCAssert(false);
+                /* UNCHECKED */ MCStringFormat(&t_string, "<unknown>");
 
 			if (t_range == nil)
 				t_success = MCStringAppend(t_buffer, *t_string);
