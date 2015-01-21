@@ -157,8 +157,9 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 
 bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolvedTypeInfo& target)
 {
-    // If source and target are the same, we are done.
-    if (source . named_type == target . named_type)
+    // If source and target are the same, we are done - as they are named types.
+    if (source . named_type != nil &&
+        source . named_type == target . named_type)
         return true;
     
     // If source is undefined, then target must be optional.
@@ -219,6 +220,49 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
                 return true;
         
         return false;
+    }
+    
+    // If the source is a handler type then we must check conformance with the
+    // dst handler type.
+    if (MCTypeInfoIsHandler(source . type))
+    {
+        // If the other type is not a handler, then we are done.
+        if (!MCTypeInfoIsHandler(target . type))
+            return false;
+        
+        // The number of parameters must conform.
+        if (MCHandlerTypeInfoGetParameterCount(source . type) != MCHandlerTypeInfoGetParameterCount(target . type))
+            return false;
+        
+        // The source return type must conform to the target (i.e. the return value
+        // of the concrete handler, must be assignable to the return value of the
+        // abstract handler).
+        if (!MCTypeInfoConforms(MCHandlerTypeInfoGetReturnType(source . type), MCHandlerTypeInfoGetReturnType(target . type)))
+            return false;
+    
+        // The modes of each parameter must match, and conformance must correspond to the
+        // mode.
+        for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(source . type); i++)
+        {
+            if (MCHandlerTypeInfoGetParameterMode(source . type, i) != MCHandlerTypeInfoGetParameterMode(target . type, i))
+                return false;
+            
+            // Out parameters - source must conform to target.
+            if (MCHandlerTypeInfoGetParameterMode(source . type, i) != kMCHandlerTypeFieldModeOut)
+            {
+                if (!MCTypeInfoConforms(MCHandlerTypeInfoGetParameterType(source . type, i), MCHandlerTypeInfoGetParameterType(target . type, i)))
+                    return false;
+            }
+            
+            // In parameters - target must conform to source.
+            if (MCHandlerTypeInfoGetParameterMode(source . type, i) != kMCHandlerTypeFieldModeIn)
+            {
+                if (!MCTypeInfoConforms(MCHandlerTypeInfoGetParameterType(target . type, i), MCHandlerTypeInfoGetParameterType(source . type, i)))
+                    return false;
+            }
+        }
+        
+        return true;
     }
     
     return false;
