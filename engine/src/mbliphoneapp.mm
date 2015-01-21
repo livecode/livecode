@@ -2013,7 +2013,8 @@ MC_DLLEXPORT int main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
-    if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
+    if (!MCInitialize() || !MCSInitialize() ||
+        !MCModulesInitialize() || !MCScriptInitialize())
         return -1;
     
 	int t_exit_code;
