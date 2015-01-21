@@ -178,10 +178,10 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, coord_t p_max_
 			  t_break_block -> textisspace(&t_text[t_break_index]))
         {
             // SN-2015-01-21: [[ Bug 14421 ]] If the break block is a unicode block,
-            //  then the next index is 2 'char' further, not one. This can lead to a
+            //  then the next index is 2 'char' (a unichar) further, not one. This can lead to a
             //  size of 1 for a unicode block, and a hang in FontBreaking.
             if (t_break_block -> getflag(F_HAS_UNICODE))
-                t_break_index += 2;
+                t_break_index += sizeof(unichar_t);
             else
                 t_break_index++;
         }
