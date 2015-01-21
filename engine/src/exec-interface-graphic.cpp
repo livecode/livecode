@@ -1043,7 +1043,10 @@ MCExecEnumTypeInfo *kMCInterfaceGradientFillQualityTypeInfo = &_kMCInterfaceGrad
 
 void MCGraphic::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color)
 {
-    if (color . name != nil && (!MCStringIsEmpty(color . name)) && m_stroke_gradient != nil)
+    // PM-2015-21-01: When the graphic has a strokegradient, make sure we can set a fore color of the form "rrr,ggg,bbb" (where color.name == nil)
+    bool t_has_color;
+    t_has_color = &color . color != NULL;
+    if (t_has_color && m_stroke_gradient != nil)
     {
         MCGradientFillFree(m_stroke_gradient);
         m_stroke_gradient = nil;
@@ -1053,10 +1056,14 @@ void MCGraphic::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& c
 
 void MCGraphic::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color)
 {
-    if (color . name != nil && (!MCStringIsEmpty(color . name)) && m_stroke_gradient != nil)
+    // PM-2015-21-01: [[ Bug 14399 ]] Remove fillgradient when setting the bg color of a graphic
+    // Also make sure we can set a bg color of the form "rrr,ggg,bbb" (where color.name == nil)
+    bool t_has_color;
+    t_has_color = &color . color != NULL;
+    if (t_has_color && m_fill_gradient != nil)
     {
-        MCGradientFillFree(m_stroke_gradient);
-        m_stroke_gradient = nil;
+        MCGradientFillFree(m_fill_gradient);
+        m_fill_gradient = nil;
     }
     MCObject::SetBackColor(ctxt, color);
 }
@@ -1073,10 +1080,11 @@ void MCGraphic::SetForePattern(MCExecContext& ctxt, uinteger_t* pattern)
 
 void MCGraphic::SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern)
 {
-    if (m_stroke_gradient != nil)
+    // PM-2015-21-01: [[ Bug 14399 ]] Remove fillgradient when setting the bg pattern of a graphic
+    if (m_fill_gradient != nil)
     {
-        MCGradientFillFree(m_stroke_gradient);
-        m_stroke_gradient = nil;
+        MCGradientFillFree(m_fill_gradient);
+        m_fill_gradient = nil;
     }
     MCObject::SetBackPattern(ctxt, pattern);
 }
