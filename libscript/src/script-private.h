@@ -40,6 +40,7 @@ extern MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -249,10 +250,13 @@ struct MCScriptVariableDefinition: public MCScriptDefinition
 	uindex_t slot_index;
 };
 
-struct MCScriptHandlerDefinition: public MCScriptDefinition
+struct MCScriptCommonHandlerDefinition: public MCScriptDefinition
 {
-	uindex_t type;
-    
+    uindex_t type;
+};
+
+struct MCScriptHandlerDefinition: public MCScriptCommonHandlerDefinition
+{
     uindex_t *locals;
     uindex_t local_count;
     
@@ -287,9 +291,8 @@ struct MCScriptSyntaxDefinition: public MCScriptDefinition
     uindex_t method_count;
 };
 
-struct MCScriptForeignHandlerDefinition: public MCScriptDefinition
+struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
 {
-    uindex_t type;
     MCStringRef binding;
     
     // Bound function information - not pickled.

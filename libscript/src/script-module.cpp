@@ -307,7 +307,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpStoreGlobal:
                         // check arity is 2
                         // check glob index is in definition range
-                        // check definition[index] is variable
+                        // check definition[index] is variable or handler
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                 }
