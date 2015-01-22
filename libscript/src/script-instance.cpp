@@ -1950,14 +1950,22 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 int t_index;
                 t_index = t_arguments[0];
 				
+                // The 'PerformInvoke' method expects a list of registers, the
+                // first being the result register, followed by each argument
+                // register.
+                uindex_t t_result_then_arg_count;
+                uindex_t *t_result_then_args;
+                t_result_then_arg_count = t_arity - 1;
+                t_result_then_args = &t_arguments[1];
+                
 				MCScriptInstanceRef t_instance;
                 MCScriptDefinition *t_definition;
                 MCScriptResolveDefinitionInFrame(t_frame, t_index, t_instance, t_definition);
 
                 if (t_definition -> kind != kMCScriptDefinitionKindDefinitionGroup)
-                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
+                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_result_then_args, t_result_then_arg_count);
                 else
-                    t_success = MCScriptPerformMultiInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
+                    t_success = MCScriptPerformMultiInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_result_then_args, t_result_then_arg_count);
             }
             break;
             case kMCScriptBytecodeOpInvokeIndirect:
@@ -1978,23 +1986,44 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 {
                     __MCScriptHandlerContext *t_context;
                     t_context = (__MCScriptHandlerContext *)MCHandlerGetContext((MCHandlerRef)t_handler);
-                 
-                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_context -> instance, t_context -> definition, t_arguments + 1, t_arity - 1);
+
+                    // The 'PerformInvoke' method expects a list of registers, the
+                    // first being the result register, followed by each argument
+                    // register.
+                    uindex_t t_result_then_arg_count;
+                    uindex_t *t_result_then_args;
+                    t_result_then_arg_count = t_arity - 1;
+                    t_result_then_args = &t_arguments[1];
+                    
+                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_context -> instance, t_context -> definition, t_result_then_args, t_result_then_arg_count);
                 }
                 else
                 {
-                    // Build the argument list (arg_1 onwards).
-                    MCValueRef *t_handler_args;
+                    // The argument at index 1 is the result register.
+                    uindex_t t_result_reg;
+                    t_result_reg = t_arguments[1];
+                    
+                    // The actual arguments start at index 2 onwards.
+                    uindex_t t_arg_count;
+                    uindex_t *t_arg_regs;
+                    t_arg_count = t_arity - 2;
+                    t_arg_regs = &t_arguments[2];
+                    
+                    // As the arguments to an invoke is a list of (non-contiguous)
+                    // registers, we must build a contiguous array of their values
+                    // to pass to HandlerInvoke.
+                    MCValueRef *t_linear_args;
+                    t_linear_args = nil;
                     if (t_success)
-                        t_success = MCMemoryNewArray(t_arity - 2, t_handler_args);
+                        t_success = MCMemoryNewArray(t_arg_count, t_linear_args);
                     
                     if (t_success)
                     {
-                        for(int i = 0; i < t_arity - 2; i++)
-                            t_handler_args[i] = MCScriptFetchFromRegisterInFrame(t_frame, t_arguments[i + 2]);
+                        for(int i = 0; i < t_arg_count; i++)
+                            t_linear_args[i] = MCScriptFetchFromRegisterInFrame(t_frame, t_arg_regs[i]);
                         
                         MCValueRef t_result;
-                        t_success = MCHandlerInvoke((MCHandlerRef)t_handler, t_handler_args, t_arity - 2, t_result);
+                        t_success = MCHandlerInvoke((MCHandlerRef)t_handler, t_linear_args, t_arg_count, t_result);
                         
                         // If the call succeeded, we must copy back all 'out' / 'inout' mode parameters
                         // to the register file, and also the result.
@@ -2005,13 +2034,12 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                             
                             for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
                                 if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
-                                    MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_arguments[i + 2], t_handler_args[i]);
-                                    
-                            
-                            MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_arguments[1], t_result);
+                                    MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_arg_regs[i], t_linear_args[i]);
+
+                            MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_result_reg, t_result);
                         }
                         
-                        MCMemoryDeleteArray(t_handler_args);
+                        MCMemoryDeleteArray(t_linear_args);
                     }
                 }
             }
@@ -2053,6 +2081,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // If the types are equal, short-circuit to take the value immediately.
                 MCValueRef t_transformed_value;
+                t_transformed_value = nil;
                 if (t_output_type == t_input_type)
                     t_transformed_value = t_value;
                 else
@@ -2191,6 +2220,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // If the types are equal, short-circuit to take the value immediately.
                 MCValueRef t_transformed_value;
+                t_transformed_value = nil;
                 if (t_input_type == t_output_type)
                     t_transformed_value = t_value;
                 else
@@ -2238,6 +2268,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 }
                 
                 MCProperListRef t_list;
+                t_list = nil;
                 if (t_success)
                     t_success = MCProperListCreate(t_values, t_arity - 1, t_list);
                 
