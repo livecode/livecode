@@ -789,7 +789,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         uinteger_t t_skipped;
         t_skipped = 0;
-        for (uindex_t i = 0; i < t_result_count && i < r_value . int_value; i++)
+        for (uindex_t i = 0; i < t_result_count && (integer_t) i < r_value . int_value; i++)
         {
             if (t_results[i] != nil)
             {
@@ -812,7 +812,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         }
         
         // Account for the skipped ("x") parameters
-        if (t_skipped >= r_value . int_value)
+        if ((integer_t) t_skipped >= r_value . int_value)
             r_value . int_value = 0;
         else
             r_value . int_value -= t_skipped;
