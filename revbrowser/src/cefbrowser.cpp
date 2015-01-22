@@ -140,6 +140,7 @@ bool MCCefInitialise(void)
 	CefSettings t_settings;
 	t_settings.multi_threaded_message_loop = false;
 	t_settings.command_line_args_disabled = true;
+	t_settings.no_sandbox = true;
 
 	bool t_success;
 	t_success = MCCefStringFromUtf8String(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);
