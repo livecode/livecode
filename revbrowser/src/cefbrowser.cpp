@@ -27,53 +27,30 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <list>
 #include <set>
 
+#if defined(TARGET_PLATFORM_POSIX)
+#include "signal_restore_posix.h"
+#include <sys/time.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // String conversion
 
-bool MCCefStringToCString(const CefString &p_cef_string, char *&r_c_string)
+bool MCCefStringToUtf8String(const CefString &p_cef_string, char *&r_u8_string)
 {
 	if (p_cef_string.empty())
-		return MCCStringClone("", r_c_string);
+		return MCCStringClone("", r_u8_string);
 
-	bool t_success;
-	t_success = true;
-
-	char *t_utf8string;
-	t_utf8string = nil;
-
-	t_success = MCCStringFromUnicode(p_cef_string.c_str(), t_utf8string);
-
-	if (t_success)
-		t_success = MCCStringToNative(t_utf8string, r_c_string);
-
-	if (t_utf8string != nil)
-		MCCStringFree(t_utf8string);
-
-	return t_success;
+	return MCCStringFromUnicode(p_cef_string.c_str(), r_u8_string);
 }
 
-bool MCCefStringFromCString(const char *p_c_string, cef_string_t *r_cef_string)
+bool MCCefStringFromUtf8String(const char *p_u8_string, cef_string_t *r_cef_string)
 {
-	bool t_success;
-	t_success = true;
-
-	char *t_utf8_string;
-	t_utf8_string = nil;
-
-	t_success = MCCStringFromNative(p_c_string, t_utf8_string);
-
-	if (t_success)
-		t_success = 0 != cef_string_from_utf8(t_utf8_string, MCCStringLength(t_utf8_string), r_cef_string);
-
-	if (t_utf8_string != nil)
-		MCCStringFree(t_utf8_string);
-
-	return t_success;
+	return 0 != cef_string_from_utf8(p_u8_string, MCCStringLength(p_u8_string), r_cef_string);
 }
 
-bool MCCefStringFromCString(const char *p_c_string, CefString &r_cef_string)
+bool MCCefStringFromUtf8String(const char *p_u8_string, CefString &r_cef_string)
 {
-	return MCCefStringFromCString(p_c_string, r_cef_string.GetWritableStruct());
+	return MCCefStringFromUtf8String(p_u8_string, r_cef_string.GetWritableStruct());
 }
 
 bool MCCefStringToUInt(const CefString &p_string, uint32_t &r_int)
@@ -84,7 +61,7 @@ bool MCCefStringToUInt(const CefString &p_string, uint32_t &r_int)
 	uint32_t t_int;
 	
 	bool t_success;
-	t_success = MCCefStringToCString(p_string, t_tmp_string);
+	t_success = MCCefStringToUtf8String(p_string, t_tmp_string);
 	if (t_success)
 		t_success = MCCStringToCardinal(t_tmp_string, t_int);
 	
@@ -163,9 +140,10 @@ bool MCCefInitialise(void)
 	CefSettings t_settings;
 	t_settings.multi_threaded_message_loop = false;
 	t_settings.command_line_args_disabled = true;
+	t_settings.no_sandbox = true;
 
 	bool t_success;
-	t_success = MCCefStringFromCString(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);
+	t_success = MCCefStringFromUtf8String(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);
 
 	if (t_success)
 	{
@@ -174,7 +152,7 @@ bool MCCefInitialise(void)
 		t_locale_path = MCCefPlatformGetLocalePath();
 
 		if (t_locale_path != nil)
-			t_success = MCCefStringFromCString(t_locale_path, &t_settings.locales_dir_path);
+			t_success = MCCefStringFromUtf8String(t_locale_path, &t_settings.locales_dir_path);
 	}
 
 	CefRefPtr<CefApp> t_app = nil;
@@ -183,7 +161,21 @@ bool MCCefInitialise(void)
 		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);
 
 	if (t_success)
+	{
+#if defined(TARGET_PLATFORM_POSIX)
+		struct itimerval t_old_timer, t_new_timer;
+		memset(&t_new_timer, 0, sizeof(t_new_timer));
+		
+		setitimer(ITIMER_REAL, &t_new_timer, &t_old_timer);
+		BackupSignalHandlers();
+#endif
 		t_success = CefInitialize(t_args, t_settings, t_app, nil);
+		
+#if defined(TARGET_PLATFORM_POSIX)
+		RestoreSignalHandlers();
+		setitimer(ITIMER_REAL, &t_old_timer, nil);
+#endif
+	}
 
 	s_cef_initialised = t_success;
 	
@@ -337,7 +329,7 @@ public:
 				t_tmp = nil;
 
 				t_converted = MCCStringFormat(t_tmp, "%d", m_result_int) &&
-					MCCefStringFromCString(t_tmp, r_result);
+					MCCefStringFromUtf8String(t_tmp, r_result);
 
 				if (t_tmp != nil)
 					MCCStringFree(t_tmp);
@@ -502,7 +494,7 @@ public:
 				t_success = nil != m_owner;
 			
 			if (t_success)
-				t_success = MCCefStringToCString(t_args->GetString(0), t_handler);
+				t_success = MCCefStringToUtf8String(t_args->GetString(0), t_handler);
 
 			uint32_t t_arg_count;
 			t_arg_count = 0;
@@ -515,7 +507,7 @@ public:
 			}
 
 			for (uint32_t i = 0; i < t_arg_count; i++)
-				t_success = MCCefStringToCString(t_args->GetString(i + 1), t_arg_strings[i]);
+				t_success = MCCefStringToUtf8String(t_args->GetString(i + 1), t_arg_strings[i]);
 
 			bool t_cancel;
 			if (t_success)
@@ -616,7 +608,7 @@ public:
 
 		char *t_url_str;
 		t_url_str = nil;
-		/* UNCHECKED */ MCCefStringToCString(t_url, t_url_str);
+		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
 
 		if (p_frame->IsMain())
 		{
@@ -713,7 +705,7 @@ public:
 
 		char *t_url_str;
 		t_url_str = nil;
-		/* UNCHECKED */ MCCefStringToCString(t_url, t_url_str);
+		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
 
 		CB_DownloadRequest(m_owner->GetInst(), t_url_str, &t_cancel);
 
@@ -743,7 +735,7 @@ public:
 
 		char *t_url_str;
 		t_url_str = nil;
-		/* UNCHECKED */ MCCefStringToCString(t_url, t_url_str);
+		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
 
 		if (p_frame->IsMain())
 			CB_NavigateComplete(m_owner->GetInst(), t_url_str);
@@ -775,7 +767,7 @@ public:
 
 		char *t_url_str;
 		t_url_str = nil;
-		/* UNCHECKED */ MCCefStringToCString(t_url, t_url_str);
+		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
 
 		if (p_frame->IsMain())
 			CB_DocumentComplete(m_owner->GetInst(), t_url_str);
@@ -1088,7 +1080,7 @@ char *MCCefBrowserBase::GetSelectedText(void)
 	t_return_value_str = nil;
 
 	if (t_success)
-		t_success = MCCefStringToCString(t_return_value, t_return_value_str);
+		t_success = MCCefStringToUtf8String(t_return_value, t_return_value_str);
 
 	return t_return_value_str;
 }
@@ -1169,7 +1161,7 @@ char *MCCefBrowserBase::GetSource(void)
 	t_src_str = nil;
 
 	if (t_success)
-		t_success = MCCefStringToCString(t_src, t_src_str);
+		t_success = MCCefStringToUtf8String(t_src, t_src_str);
 
 	return t_src_str;
 }
@@ -1182,7 +1174,7 @@ void MCCefBrowserBase::SetSource(const char *p_source)
 		p_source = "<html><head></head><body></body></html>";
 	
 	CefString t_source;
-	/* UNCHECKED */ MCCefStringFromCString(p_source, t_source);
+	/* UNCHECKED */ MCCefStringFromUtf8String(p_source, t_source);
 
 	// LoadString requires a valid url
 	CefString t_url;
@@ -1374,13 +1366,13 @@ char *MCCefBrowserBase::GetUserAgent(void)
 	char *t_string;
 	t_string = nil;
 
-	/* UNCHECKED */ MCCefStringToCString(m_user_agent, t_string);
+	/* UNCHECKED */ MCCefStringToUtf8String(m_user_agent, t_string);
 	return t_string;
 }
 
 void MCCefBrowserBase::SetUserAgent(const char *p_user_agent)
 {
-	/* UNCHECKED */ MCCefStringFromCString(p_user_agent, m_user_agent);
+	/* UNCHECKED */ MCCefStringFromUtf8String(p_user_agent, m_user_agent);
 }
 
 bool MCCefBrowserBase::GetBusy(void)
@@ -1396,7 +1388,7 @@ char *MCCefBrowserBase::GetURL(void)
 	char *t_url_str;
 	t_url_str = nil;
 
-	/* UNCHECKED */ MCCefStringToCString(t_url, t_url_str);
+	/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
 
 	return t_url_str;
 }
@@ -1418,7 +1410,7 @@ char *MCCefBrowserBase::GetTitle(void)
 	t_return_value_str = nil;
 
 	if (t_success)
-		t_success = MCCefStringToCString(t_return_value, t_return_value_str);
+		t_success = MCCefStringToUtf8String(t_return_value, t_return_value_str);
 
 	return t_return_value_str;
 }
@@ -1483,7 +1475,7 @@ char *MCCefBrowserBase::ExecuteScript(const char *p_javascript_string)
 	t_result = nil;
 
 	CefString t_script;
-	t_success = MCCefStringFromCString(p_javascript_string, t_script);
+	t_success = MCCefStringFromUtf8String(p_javascript_string, t_script);
 
 	CefString t_return_value;
 	if (t_success)
@@ -1493,7 +1485,7 @@ char *MCCefBrowserBase::ExecuteScript(const char *p_javascript_string)
 	t_return_value_str = nil;
 
 	if (t_success)
-		t_success = MCCefStringToCString(t_return_value, t_return_value_str);
+		t_success = MCCefStringToUtf8String(t_return_value, t_return_value_str);
 
 	return t_return_value_str;
 }
@@ -1504,7 +1496,7 @@ char *MCCefBrowserBase::CallScript(const char *p_function_name, char **p_argumen
 	t_success = true;
 
 	CefString t_function_name;
-	t_success = MCCefStringFromCString(p_function_name, t_function_name);
+	t_success = MCCefStringFromUtf8String(p_function_name, t_function_name);
 
 	CefRefPtr<CefListValue> t_args_list;
 	if (t_success)
@@ -1516,7 +1508,7 @@ char *MCCefBrowserBase::CallScript(const char *p_function_name, char **p_argumen
 	for (uint32_t i = 0; t_success && i < p_argument_count; i++)
 	{
 		CefString t_arg_string;
-		t_success = MCCefStringFromCString(p_arguments[i], t_arg_string);
+		t_success = MCCefStringFromUtf8String(p_arguments[i], t_arg_string);
 		if (t_success)
 			t_success = t_args_list->SetString(i, t_arg_string);
 	}
@@ -1544,7 +1536,7 @@ char *MCCefBrowserBase::CallScript(const char *p_function_name, char **p_argumen
 	t_return_value_str = nil;
 
 	if (t_success)
-		t_success = MCCefStringToCString(t_return_value, t_return_value_str);
+		t_success = MCCefStringToUtf8String(t_return_value, t_return_value_str);
 
 	return t_return_value_str;
 }
@@ -1552,7 +1544,7 @@ char *MCCefBrowserBase::CallScript(const char *p_function_name, char **p_argumen
 bool MCCefBrowserBase::FindString(const char *p_string, bool p_search_up)
 {
 	CefString t_searchstring;
-	/* UNCHECKED */ MCCefStringFromCString(p_string, t_searchstring);
+	/* UNCHECKED */ MCCefStringFromUtf8String(p_string, t_searchstring);
 
 	int t_identifier;
 	t_identifier = 0;
@@ -1587,7 +1579,7 @@ void MCCefBrowserBase::GoURL(const char *p_url, const char *p_target_frame)
 	else
 	{
 		CefString t_frame_name;
-		if (MCCefStringFromCString(p_target_frame, t_frame_name))
+		if (MCCefStringFromUtf8String(p_target_frame, t_frame_name))
 			t_frame = t_browser->GetFrame(t_frame_name);
 	}
 
@@ -1595,7 +1587,7 @@ void MCCefBrowserBase::GoURL(const char *p_url, const char *p_target_frame)
 		return;
 
 	CefString t_url;
-	if (MCCefStringFromCString(p_url, t_url))
+	if (MCCefStringFromUtf8String(p_url, t_url))
 		t_frame->LoadURL(t_url);
 }
 
@@ -1668,7 +1660,7 @@ bool MCCefBrowserBase::SetJavaScriptHandlerEnabled(const CefString &p_handler, b
 void MCCefBrowserBase::AddJavaScriptHandler(const char *p_handler)
 {
 	CefString t_handler;
-	/* UNCHECKED */ MCCefStringFromCString(p_handler, t_handler);
+	/* UNCHECKED */ MCCefStringFromUtf8String(p_handler, t_handler);
 
 	/* UNCHECKED */ SetJavaScriptHandlerEnabled(t_handler, true);
 }
@@ -1676,7 +1668,7 @@ void MCCefBrowserBase::AddJavaScriptHandler(const char *p_handler)
 void MCCefBrowserBase::RemoveJavaScriptHandler(const char *p_handler)
 {
 	CefString t_handler;
-	/* UNCHECKED */ MCCefStringFromCString(p_handler, t_handler);
+	/* UNCHECKED */ MCCefStringFromUtf8String(p_handler, t_handler);
 
 	/* UNCHECKED */ SetJavaScriptHandlerEnabled(t_handler, false);
 }
