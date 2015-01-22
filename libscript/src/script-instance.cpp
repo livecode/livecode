@@ -878,7 +878,15 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         if (MCStringIsEmpty(*t_library))
         {
             void* t_self;
+#ifdef TARGET_SUBPLATFORM_ANDROID
+            t_self = dlopen("librevandroid.so", 0);
+            if (t_self == NULL)
+            {
+                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("could not bind to engine"), nil);
+            }
+#else
             t_self = dlopen(NULL, 0);
+#endif
             p_handler -> function = dlsym(t_self, MCStringGetCString(*t_function));
         }
         else
@@ -900,14 +908,14 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
     }
     else if (MCStringIsEqualToCString(*t_language, "objc", kMCStringOptionCompareExact))
     {
-#if !defined(_MACOSX) && !defined(_IOS_MOBILE)
+#if !defined(_MACOSX) && !defined(TARGET_SUBPLATFORM_IPHONE)
         return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("objc binding not supported on this platform"), nil);
 #endif
         return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("objc binding not implemented yet"), nil);
     }
     else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
     {
-#if !defined(_ANDROID_MOBILE)
+#if !defined(TARGET_SUBPLATFORM_ANDROID)
         return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not supported on this platform"), nil);
 #else
         return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not implemented yet"), nil);

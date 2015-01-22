@@ -68,7 +68,7 @@ SCRIPT_SRC_FILES = \
 	$(DERIVED_SRC)/type.mlc.c
 
 #############################################################
-#   build the ffi static library
+#   build the libscript static library
 #
 
 TARGET_PLATFORM=android-8

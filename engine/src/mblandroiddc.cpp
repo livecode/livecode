@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "region.h"
+#include "font.h"
 
 #include "mbldc.h"
 
@@ -2827,7 +2828,7 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControl
     return false;
 }
 
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&)
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
 {
-    return false;
+    return MCFontCreate(MCNAME("Arial"), 0, 12, r_font);
 }

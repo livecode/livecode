@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include <X11/extensions/Xinerama.h>
 
 #include "graphics_util.h"
+#include <fontconfig/fontconfig.h>
+#include "font.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,6 +57,7 @@ static Boolean pserror;
 Bool debugtest = False;
 
 extern "C" int initialise_weak_link_Xinerama(void);
+extern "C" int initialise_weak_link_fontconfig(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -471,3 +474,107 @@ void MCResPlatformHandleScaleChange(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static bool s_fontconfig_resolved = false;
+static bool s_can_use_fontconfig = true;
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-01-20 [[ DynamicFonts ]] Implement font loading on Linux
+bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
+{
+    // We can't load fonts globally with fontconfig
+    if (p_globally)
+        return false;
+    
+    // If it has already been determined that the weak link to the fontconfig library
+    //  cannot be resolved then just return false, as we cannot load a font otherwise.
+    if (!s_can_use_fontconfig)
+        return false;
+    
+    // Try to resolve the weak link
+    if (!s_fontconfig_resolved)
+    {
+        if (initialise_weak_link_fontconfig() == 0)
+        {
+            s_can_use_fontconfig = false;
+            return false;
+        }
+        
+        s_fontconfig_resolved = true;
+    }
+    
+    if (!FcInit())
+        return false;
+    
+    FcConfig *t_config;
+    t_config = FcInitLoadConfigAndFonts();
+    
+    if (t_config == nil)
+        return false;
+    
+    MCAutoStringRefAsSysString t_font_file;
+    t_font_file . Lock(p_path);
+    
+    if (!FcConfigAppFontAddFile(t_config, (FcChar8*)*t_font_file) == FcTrue)
+        return false;
+    
+    if (!FcConfigSetCurrent(t_config))
+        return false;
+    
+    if (!FcConfigBuildFonts(t_config))
+        return false;
+    
+    // We don't actually do anything with the loaded font handle at the moment.
+    // It is slightly awkward to create one, so we just set it to nil for now.
+    r_loaded_font_handle = nil;
+    return true;
+}
+
+bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle)
+{
+    // We can't unload fonts globally with fontconfig
+    if (p_globally)
+        return false;
+    
+    if (!s_can_use_fontconfig)
+        return false;
+    
+    if (!FcInit())
+        return false;
+    
+    FcConfig *t_config;
+    t_config = FcInitLoadConfigAndFonts();
+    
+    if (t_config == nil)
+        return false;
+    
+    // fontconfig does not currently supply a remove file function, so we need to
+    // unload all of the fonts and reload all but the specified one.
+
+    MCStringRef *t_font_files_in_use = nil;
+    uindex_t t_count;
+    
+    if (!MCFontListLoaded(t_count, t_font_files_in_use))
+        return false;
+    
+    FcConfigAppFontClear(t_config);
+    
+    for (uindex_t i = 0; i < t_count; i++)
+    {
+        if (!MCStringIsEqualTo(t_font_files_in_use[i], p_path, kMCStringOptionCompareCaseless))
+        {
+            MCAutoStringRefAsSysString t_to_load;
+            t_to_load . Lock(t_font_files_in_use[i]);
+            FcConfigAppFontAddFile(t_config, (FcChar8*)*t_to_load);
+        }
+    }
+    
+    if (!FcConfigSetCurrent(t_config))
+        return false;
+    
+    if (!FcConfigBuildFonts(t_config))
+        return false;
+    
+    return true;
+}
