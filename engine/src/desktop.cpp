@@ -914,7 +914,10 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     // Otherwise, we have the dead char in p_chars, we need to remove the one stored first in the sequence
     uint1 t_char[2];
     t_char[1] = 0;
-    if (s_pending_key_down -> next && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+    // SN-2015-01-20: [[ Bug 14406 ]] If we have a series of pending keys, we have two possibilities:
+    //   - typing IME characters: the characters are native, so we use the finsertnew
+    //   - typing dead characters: the character, if we arrive here,    is > 127
+    if (*p_chars > 127 && s_pending_key_down -> next && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
     {
         MCdispatcher -> wkdown(p_window, (const char *)t_char, *t_char);
         // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in NSApplication's keyDown).
