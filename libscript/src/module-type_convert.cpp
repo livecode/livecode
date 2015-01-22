@@ -46,11 +46,17 @@ extern "C" MC_DLLEXPORT MCStringRef MCTypeConvertExecCombineListWithDelimiter(MC
         return nil;
     
     if (!MCProperListApply(p_target, MCProperListCombine, &t_list))
+    {
+        MCValueRelease(t_list);
         return nil;
+    }
    
     MCAutoStringRef t_string;
     if (!MCListCopyAsStringAndRelease(t_list, &t_string))
+    {
+        MCValueRelease(t_list);
         return nil;
+    }
     
     return MCValueRetain(*t_string);
 }
