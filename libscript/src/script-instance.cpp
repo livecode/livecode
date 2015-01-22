@@ -29,21 +29,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCScriptHandlerContext
+// This context struct, callbacks and associated functions provide an implementation
+// of MCHandler for handlers coming from libscript. It enables an MCHandlerRef
+// created from within LCB to be used 'out-of-frame' - i.e. not just from direct
+// invocation within the LCB VM.
+
+struct __MCScriptHandlerContext
 {
     MCScriptInstanceRef instance;
     MCScriptCommonHandlerDefinition *definition;
 };
 
-static bool MCScriptHandlerInvoke(void *context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value);
-static void MCScriptHandlerRelease(void *context);
-
-static const MCHandlerCallbacks kMCScriptHandlerCallbacks =
-{
-    sizeof(MCScriptHandlerContext),
-    MCScriptHandlerRelease,
-    MCScriptHandlerInvoke,
-};
+extern MCHandlerCallbacks __kMCScriptHandlerCallbacks;
+bool __MCScriptHandlerInvoke(void *context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value);
+void __MCScriptHandlerRelease(void *context);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1681,24 +1680,6 @@ bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCSc
     return true;
 }
 
-static bool MCScriptHandlerInvoke(void *p_context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_result)
-{
-    MCScriptHandlerContext *context;
-    context = (MCScriptHandlerContext *)p_context;
-    
-    if (context -> definition -> kind != kMCScriptDefinitionKindHandler)
-        return MCErrorThrowGeneric(MCSTR("out-of-frame indirect foreign handler calls not yet supported"));
-    
-    return MCScriptCallHandlerOfInstanceDirect(context -> instance, static_cast<MCScriptHandlerDefinition *>(context -> definition), p_arguments, p_argument_count, r_result);
-}
-
-static void MCScriptHandlerRelease(void *p_context)
-{
-    MCScriptHandlerContext *context;
-    context = (MCScriptHandlerContext *)p_context;
-    MCScriptReleaseInstance(context -> instance);
-}
-
 static bool MCScriptMapValueToType(MCValueRef p_value, MCResolvedTypeInfo& p_input_type, MCResolvedTypeInfo& p_output_type, MCValueRef& r_transformed)
 {
     bool t_success;
@@ -1993,10 +1974,10 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // If the handler value is a 'script handler' then we can go direct.
                 // Otherwise we have to indirect through a ValueRef array.
-                if (MCHandlerGetCallbacks((MCHandlerRef)t_handler) == &kMCScriptHandlerCallbacks)
+                if (MCHandlerGetCallbacks((MCHandlerRef)t_handler) == &__kMCScriptHandlerCallbacks)
                 {
-                    MCScriptHandlerContext *t_context;
-                    t_context = (MCScriptHandlerContext *)MCHandlerGetContext((MCHandlerRef)t_handler);
+                    __MCScriptHandlerContext *t_context;
+                    t_context = (__MCScriptHandlerContext *)MCHandlerGetContext((MCHandlerRef)t_handler);
                  
                     t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_context -> instance, t_context -> definition, t_arguments + 1, t_arity - 1);
                 }
@@ -2135,12 +2116,12 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     t_signature = t_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
                     
                     // The context struct is 'moved' into the handlerref.
-                    MCScriptHandlerContext t_context;
+                    __MCScriptHandlerContext t_context;
                     t_context . instance = MCScriptRetainInstance(t_instance);
                     t_context . definition = t_handler_definition;
                     
                     MCHandlerRef t_value;
-                    t_success = MCHandlerCreate(t_signature, &kMCScriptHandlerCallbacks, &t_context, t_value);
+                    t_success = MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value);
                     
                     if (t_success)
                         MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_dst, t_value);
@@ -2165,12 +2146,12 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     if (t_bound)
                     {
                         // The context struct is 'moved' into the handlerref.
-                        MCScriptHandlerContext t_context;
+                        __MCScriptHandlerContext t_context;
                         t_context . instance = MCScriptRetainInstance(t_instance);
                         t_context . definition = t_handler_definition;
                         
                         MCHandlerRef t_value;
-                        t_success = MCHandlerCreate(t_signature, &kMCScriptHandlerCallbacks, &t_context, t_value);
+                        t_success = MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value);
                         
                         if (t_success)
                             MCScriptStoreToRegisterInFrameAndRelease(t_frame, t_dst, t_value);
@@ -2325,6 +2306,33 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     }
     
     return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCHandlerCallbacks __kMCScriptHandlerCallbacks =
+{
+    sizeof(__MCScriptHandlerContext),
+    __MCScriptHandlerRelease,
+    __MCScriptHandlerInvoke,
+};
+
+bool __MCScriptHandlerInvoke(void *p_context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_result)
+{
+    __MCScriptHandlerContext *context;
+    context = (__MCScriptHandlerContext *)p_context;
+    
+    if (context -> definition -> kind != kMCScriptDefinitionKindHandler)
+        return MCErrorThrowGeneric(MCSTR("out-of-frame indirect foreign handler calls not yet supported"));
+    
+    return MCScriptCallHandlerOfInstanceDirect(context -> instance, static_cast<MCScriptHandlerDefinition *>(context -> definition), p_arguments, p_argument_count, r_result);
+}
+
+void __MCScriptHandlerRelease(void *p_context)
+{
+    __MCScriptHandlerContext *context;
+    context = (__MCScriptHandlerContext *)p_context;
+    MCScriptReleaseInstance(context -> instance);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
