@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-locale.h>
 
 #include "foundation-chunk.h"
 
@@ -28,6 +29,13 @@ uinteger_t MCChunkCountByteChunkCallback(void *context)
 uinteger_t MCChunkCountCodeunitChunkCallback(void *context)
 {
     return MCStringGetLength(*(MCStringRef *)context);
+}
+
+uinteger_t MCChunkCountGraphemeChunkCallback(void *context)
+{
+    MCRange t_grapheme_range;
+    MCStringUnmapGraphemeIndices(*(MCStringRef *)context, kMCLocaleBasic, MCRangeMake(0, MCStringGetLength(*(MCStringRef *)context)), t_grapheme_range);
+    return t_grapheme_range . length;
 }
 
 uinteger_t MCChunkCountElementChunkCallback(void *context)
@@ -114,6 +122,16 @@ void MCChunkGetExtentsOfCodeunitChunkByRange(MCStringRef p_string, integer_t p_f
 void MCChunkGetExtentsOfCodeunitChunkByExpression(MCStringRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     MCChunkGetExtentsByExpression(p_first, MCChunkCountCodeunitChunkCallback, &p_string, r_first, r_chunk_count);
+}
+
+void MCChunkGetExtentsOfGraphemeChunkByRange(MCStringRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
+{
+    MCChunkGetExtentsByRange(p_first, p_last, MCChunkCountCodeunitChunkCallback, &p_string, r_first, r_chunk_count);
+}
+
+void MCChunkGetExtentsOfGraphemeChunkByExpression(MCStringRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
+{
+    MCChunkGetExtentsByExpression(p_first, MCChunkCountGraphemeChunkCallback, &p_string, r_first, r_chunk_count);
 }
 
 void MCChunkGetExtentsOfElementChunkByRange(MCProperListRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)

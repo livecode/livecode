@@ -39,13 +39,15 @@ extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, M
 extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0 || t_start + t_count > MCStringGetLength(p_target))
+    if (t_count == 0)
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
     }
+    
+    MCChunkMarkTextChunk()
     
     if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
