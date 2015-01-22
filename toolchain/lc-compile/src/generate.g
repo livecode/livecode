@@ -1353,21 +1353,45 @@
 
 ----
 
+'action' FullyResolveType(TYPE -> TYPE)
+
 'action' GenerateCallInRegister(INT, INT, POS, ID, EXPRESSIONLIST, INT)
 
     'rule' GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output):
         QuerySymbolId(Handler -> Info)
         Info'Index -> Index
         Info'Kind -> Kind
-        Info'Type -> handler(_, signature(HandlerSig, _))
+        Info'Type -> Type
+        FullyResolveType(Type -> handler(_, signature(HandlerSig, _)))
         GenerateCall_GetInvokeSignature(HandlerSig, 0 -> InvokeSig)
 
+        (|
+            -- If the Id is not a handler it must be a variable
+            ne(Kind, handler)
+            EmitCreateRegister(-> HandlerReg)
+            EmitFetchVar(Kind, HandlerReg, Index)
+        ||
+            where(-1 -> HandlerReg)
+        |)
+        
         GenerateInvoke_EvaluateArguments(Result, Context, InvokeSig, Arguments)
-        EmitBeginInvoke(Index, Context, Output)
+        
+        (|
+            ne(Kind, handler)
+            EmitBeginIndirectInvoke(HandlerReg, Context, Output)
+        ||
+            EmitBeginInvoke(Index, Context, Output)
+        |)
+        
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke
         GenerateInvoke_AssignArguments(Result, Context, InvokeSig, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
+        
+        [|
+            ne(Kind, handler)
+            EmitDestroyRegister(HandlerReg)
+        |]
 
 'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT -> INVOKESIGNATURE)
 
@@ -1477,12 +1501,13 @@
 
 'action' EmitFetchVar(SYMBOLKIND, INT, INT)
 
-    'rule' EmitFetchVar(variable, Reg, Var):
-        EmitFetchGlobal(Reg, Var)
-        
-    'rule' EmitFetchVar(_, Reg, Var):
+    'rule' EmitFetchVar(local, Reg, Var):
         EmitFetchLocal(Reg, Var)
 
+    -- This catches all module-scope things, including variables and handler references.
+    'rule' EmitFetchVar(_, Reg, Var):
+        EmitFetchGlobal(Reg, Var)
+        
 'action' EmitInvokeRegisterList(INTLIST)
 
     'rule' EmitInvokeRegisterList(intlist(Head, Tail)):
