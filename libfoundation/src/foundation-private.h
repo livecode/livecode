@@ -416,6 +416,7 @@ struct __MCHandler: public __MCValue
 {
     MCTypeInfoRef typeinfo;
     const MCHandlerCallbacks *callbacks;
+    char context[1];
 };
 
 ////////////////////////////////////////////////////////////////////////////////
