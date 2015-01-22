@@ -1460,6 +1460,7 @@
         EmitBeginAssignList(Output)
         GenerateAssignList(ListRegs)
         EmitEndAssignList()
+        EmitDestroyRegisterList(ListRegs)
     
     'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments), Output):
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output)
@@ -1502,6 +1503,9 @@
 'action' EmitFetchVar(SYMBOLKIND, INT, INT)
 
     'rule' EmitFetchVar(local, Reg, Var):
+        EmitFetchLocal(Reg, Var)
+
+    'rule' EmitFetchVar(parameter, Reg, Var):
         EmitFetchLocal(Reg, Var)
 
     -- This catches all module-scope things, including variables and handler references.
