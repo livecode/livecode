@@ -148,6 +148,46 @@ extern "C" MC_DLLEXPORT void MCByteStoreByteOf(MCDataRef p_value, index_t p_inde
     MCByteStoreByteRangeOf(p_value, p_index, p_index, x_target);
 }
 
+extern "C" MC_DLLEXPORT void MCByteFetchFirstByteOf(MCDataRef p_target, MCDataRef& r_output)
+{
+    MCByteFetchByteOf(1, p_target, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCByteStoreFirstByteOf(MCDataRef p_value, MCDataRef& x_target)
+{
+    MCByteStoreByteOf(p_value, 1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCByteFetchLastByteOf(MCDataRef p_target, MCDataRef& r_output)
+{
+    MCByteFetchByteOf(-1, p_target, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCByteStoreLastByteOf(MCDataRef p_value, MCDataRef& x_target)
+{
+    MCByteStoreByteOf(p_value, -1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCByteExecDeleteByteRangeOf(index_t p_start, index_t p_finish, MCDataRef& x_target)
+{
+    MCByteStoreByteRangeOf(kMCEmptyData, p_start, p_finish, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCByteExecDeleteByteOf(index_t p_index, MCDataRef& x_target)
+{
+    MCByteStoreByteOf(kMCEmptyData, p_index, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCByteExecDeleteFirstByteOf(MCDataRef& x_target)
+{
+    MCByteExecDeleteByteOf(1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCByteExecDeleteLastByteOf(MCDataRef& x_target)
+{
+    MCByteExecDeleteByteOf(-1, x_target);
+}
+
 extern "C" MC_DLLEXPORT bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRef& r_iterand, MCDataRef p_data)
 {
     uintptr_t t_offset;
@@ -162,6 +202,14 @@ extern "C" MC_DLLEXPORT bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRe
     x_iterator = (void *)(t_offset + 1);
     
     return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void
+MCDataExecRandomBytes (uindex_t p_count, MCDataRef & r_data)
+{
+	/* UNCHECKED */ MCDataCreateRandom (p_count, r_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

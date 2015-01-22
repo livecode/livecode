@@ -129,7 +129,8 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTypeInfo;
 extern MCCanvasTransformRef kMCCanvasIdentityTransform;
 extern MCCanvasColorRef kMCCanvasColorBlack;
 //extern MCCanvasFontRef kMCCanvasFont12PtHelvetica;
-
+extern MCCanvasPathRef kMCCanvasEmptyPath;
+	
 ////////////////////////////////////////////////////////////////////////////////
 // Canvas Errors
 
@@ -141,6 +142,19 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTranslationListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
+
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformArrayFormatErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformDecomposeErrorTypeInfo;
+
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepReferencedErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepDataErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepPixelsErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepGetGeometryErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
+	
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
 
 }
@@ -386,6 +400,7 @@ extern "C" MC_DLLEXPORT void MCCanvasGradientTranslateWithList(MCCanvasGradientR
 // Path
 
 // Constructors
+extern "C" MC_DLLEXPORT void MCCanvasPathMakeEmpty(MCCanvasPathRef &r_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanvasPathRef &r_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathMakeWithRectangle(MCCanvasRectangleRef p_rect, MCCanvasPathRef &r_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathMakeWithRoundedRectangle(MCCanvasRectangleRef p_rect, MCCanvasFloat p_radius, MCCanvasPathRef &r_path);
@@ -491,6 +506,20 @@ extern "C" MC_DLLEXPORT void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFlo
 extern "C" MC_DLLEXPORT void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font);
 extern "C" MC_DLLEXPORT void MCCanvasSetFont(MCCanvasFontRef p_font, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width);
+extern "C" MC_DLLEXPORT void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font);
+extern "C" MC_DLLEXPORT void MCCanvasSetFont(MCCanvasFontRef p_font, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetJoinStyleAsString(MCCanvasRef p_canvas, MCStringRef &r_join_style);
+extern "C" MC_DLLEXPORT void MCCanvasSetJoinStyleAsString(MCStringRef p_join_style, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetCapStyleAsString(MCCanvasRef p_canvas, MCStringRef &r_cap_style);
+extern "C" MC_DLLEXPORT void MCCanvasSetCapStyleAsString(MCStringRef p_cap_style, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetMiterLimit(MCCanvasRef p_canvas, MCCanvasFloat &r_limit);
+extern "C" MC_DLLEXPORT void MCCanvasSetMiterLimit(MCCanvasFloat p_limit, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetDashes(MCCanvasRef p_canvas, MCProperListRef &r_dashes);
+extern "C" MC_DLLEXPORT void MCCanvasSetDashes(MCProperListRef p_dashes, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetDashPhase(MCCanvasRef p_canvas, MCCanvasFloat &r_phase);
+extern "C" MC_DLLEXPORT void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas);
 
 // Operations
 extern "C" MC_DLLEXPORT void MCCanvasTransform(MCCanvasRef p_canvas, MCCanvasTransformRef p_transform);

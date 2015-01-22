@@ -76,8 +76,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef __SPARC__
 // __SPARC_64__ will be defined if the target processor is Sparc-64.
 #undef __SPARC_64__
-// __ARM__ will be defined if the target processor is ARM.
+// __ARM__ will be defined if the target processor is 32-bit ARM.
 #undef __ARM__
+// __ARM64__ will be defined if the target processor is 64-bit ARM.
+#undef __ARM64__
 
 // __SMALL__ will be defined if pointers are 32-bit and indicies are 32-bit.
 #undef __SMALL__
@@ -167,7 +169,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
-#define __MEDIUM__ 1 
+#define __HUGE__ 1
 #endif
 
 // Native char set
@@ -254,6 +256,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 #define __ARM__ 1
 #define __SMALL__ 1 
+#elif defined(__arm64__)
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __ARM64__
+#define __HUGE__ 1
 #endif
 
 // Native char set
@@ -363,6 +370,7 @@ typedef signed int int32_t;
 
 // MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
 #if !defined(uint64_t)
+#define _UINT64_T
 #ifndef __LP64__
 typedef unsigned long long int uint64_t;
 #else
@@ -370,6 +378,7 @@ typedef unsigned long int uint64_t;
 #endif
 #endif
 #if !defined(int64_t)
+#define _INT64_T
 #ifndef __LP64__
 typedef signed long long int int64_t;
 #else
@@ -671,15 +680,14 @@ inline compare_t MCSgn(int64_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 //  COMPARE FUNCTIONS
 //
 
-inline compare_t MCCompare(int32_t a, int32_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(uint32_t a, uint32_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(int64_t a, int64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(uint64_t a, uint64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
+// SN-2015-01-07: [[ iOS-64bit ]] Update the MCCompare functions
+inline compare_t MCCompare(int a, int b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned int a, unsigned int b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(long a, long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned long a, unsigned long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(long long a, long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned long long a, unsigned long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
 
-#if !defined(__WINDOWS__) && !defined(__LINUX__) && !defined(__ANDROID__)
-inline compare_t MCCompare(intptr_t a, intptr_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(uintptr_t a, uintptr_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2249,6 +2257,9 @@ MC_DLLEXPORT bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange
 MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
 #endif
 
+// Create a data buffer filled with uniformly-distributed random bytes
+MC_DLLEXPORT bool MCDataCreateRandom (uindex_t p_length, MCDataRef & r_data);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  ARRAY DEFINITIONS
@@ -2466,6 +2477,8 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCGenericErrorTypeInfo;
 
 MC_DLLEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
 
+MC_DLLEXPORT bool MCErrorCreateWithMessage(MCTypeInfoRef typeinfo, MCStringRef message, MCArrayRef info, MCErrorRef & r_error);
+
 MC_DLLEXPORT bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
 
 MC_DLLEXPORT MCNameRef MCErrorGetDomain(MCErrorRef error);
@@ -2481,6 +2494,8 @@ MC_DLLEXPORT uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column)
 // They should be a sequence of pairs (const char *key, MCValueRef value), and finish
 // with nil.
 MC_DLLEXPORT bool MCErrorCreateAndThrow(MCTypeInfoRef typeinfo, ...);
+
+MC_DLLEXPORT bool MCErrorCreateAndThrowWithMessage(MCTypeInfoRef typeinfo, MCStringRef message_format, ...);
     
 // Throw the given error code (local to the current thread).
 MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
@@ -2690,6 +2705,11 @@ MC_DLLEXPORT bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
 // easy encoding/decoding of any value type (that supports serialization).
 MC_DLLEXPORT bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
 
+// Standard streams
+MC_DLLEXPORT bool MCStreamGetStandardOutput(MCStreamRef & r_stdout);
+MC_DLLEXPORT bool MCStreamGetStandardInput(MCStreamRef & r_stdin);
+MC_DLLEXPORT bool MCStreamGetStandardError(MCStreamRef & r_stderr);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  PROPER LIST DEFINITIONS
@@ -2797,8 +2817,11 @@ MC_DLLEXPORT bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperLis
 
 MC_DLLEXPORT bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 
-bool MCProperListBeginsWithList(MCProperListRef list, MCProperListRef p_prefix);
-bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef p_suffix);
+MC_DLLEXPORT bool MCProperListBeginsWithList(MCProperListRef list, MCProperListRef p_prefix);
+MC_DLLEXPORT bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef p_suffix);
+
+MC_DLLEXPORT bool MCProperListIsListOfType(MCProperListRef list, MCValueTypeCode p_type);
+MC_DLLEXPORT bool MCProperListIsHomogeneous(MCProperListRef list, MCValueTypeCode& r_type);
     
 ////////////////////////////////////////////////////////////////////////////////
 

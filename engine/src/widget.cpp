@@ -1486,6 +1486,8 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern MCValueRef MCEngineDoDispatchToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
+
 extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
 {
     if (MCwidgetobject == nil)
@@ -1497,6 +1499,30 @@ extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script
     if (!MCScriptObjectCreate(MCwidgetobject, 0, r_script_object))
         return;
 }
+
+extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatch(bool p_is_function, MCStringRef p_message)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return nil;
+    }
+    
+    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, MCwidgetobject, kMCEmptyProperList);
+}
+
+extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatchWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return nil;
+    }
+    
+    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, MCwidgetobject, p_arguments);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
 {

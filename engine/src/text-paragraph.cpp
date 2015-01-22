@@ -18,6 +18,8 @@
 
 #include "text-paragraph.h"
 
+#include <foundation-math.h>
+
 #include "foundation-locale.h"
 #include "foundation-unicode.h"
 #include "text-line.h"

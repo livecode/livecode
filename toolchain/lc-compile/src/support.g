@@ -37,6 +37,7 @@
     MakeIntegerLiteral
     MakeDoubleLiteral
     MakeStringLiteral
+    UnescapeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
     IsNameEqualToString
@@ -228,6 +229,7 @@
     Error_UnableToFindImportedModule
     Error_MalformedToken
     Error_MalformedSyntax
+    Error_MalformedEscapedString
     Error_IdentifierPreviouslyDeclared
     Error_IdentifierNotDeclared
     Error_InvalidNameForSyntaxMarkVariable
@@ -308,6 +310,7 @@
 'action' MakeIntegerLiteral(Token: STRING -> Literal: INT)
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
+'condition' UnescapeStringLiteral(String: STRING -> UnescapedString: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
 
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
@@ -548,6 +551,7 @@
 
 'action' Error_MalformedToken(Position: POS, Token: STRING)
 'action' Error_MalformedSyntax(Position: POS)
+'action' Error_MalformedEscapedString(Position: POS, Token: STRING)
 'action' Error_IdentifierPreviouslyDeclared(Position: POS, Identifier: NAME, PreviousPosition: POS)
 'action' Error_IdentifierNotDeclared(Position: POS, Identifier: NAME)
 'action' Error_InvalidNameForSyntaxMarkVariable(Position: POS, Name: NAME)

@@ -29,7 +29,9 @@ extern "C"
     extern builtin_module_descriptor __com_livecode_bitwise_module_info;
     extern builtin_module_descriptor __com_livecode_byte_module_info;
     extern builtin_module_descriptor __com_livecode_char_module_info;
+    extern builtin_module_descriptor __com_livecode_date_module_info;
     extern builtin_module_descriptor __com_livecode_encoding_module_info;
+    extern builtin_module_descriptor __com_livecode_file_module_info;
     extern builtin_module_descriptor __com_livecode_item_module_info;
     extern builtin_module_descriptor __com_livecode_line_module_info;
     extern builtin_module_descriptor __com_livecode_list_module_info;
@@ -37,9 +39,12 @@ extern "C"
     extern builtin_module_descriptor __com_livecode_math_module_info;
     extern builtin_module_descriptor __com_livecode_segmentchunk_module_info;
     extern builtin_module_descriptor __com_livecode_sort_module_info;
+    extern builtin_module_descriptor __com_livecode_stream_module_info;
     extern builtin_module_descriptor __com_livecode_string_module_info;
+    extern builtin_module_descriptor __com_livecode_system_module_info;
     extern builtin_module_descriptor __com_livecode_type_module_info;
     extern builtin_module_descriptor __com_livecode_typeconvert_module_info;
+    extern builtin_module_descriptor __com_livecode_mathfoundation_module_info;
     extern builtin_module_descriptor __com_livecode_canvas_module_info;
     extern builtin_module_descriptor __com_livecode_engine_module_info;
     extern builtin_module_descriptor __com_livecode_widget_module_info;
@@ -52,7 +57,9 @@ extern "C"
         &__com_livecode_bitwise_module_info,
         &__com_livecode_byte_module_info,
         &__com_livecode_char_module_info,
+        &__com_livecode_date_module_info,
         //&__com_livecode_encoding_module_info,
+        &__com_livecode_file_module_info,
         //&__com_livecode_item_module_info,
         //&__com_livecode_line_module_info,
         &__com_livecode_list_module_info,
@@ -60,9 +67,11 @@ extern "C"
         &__com_livecode_math_module_info,
         //&__com_livecode_segmentchunk_module_info,
         &__com_livecode_sort_module_info,
+        &__com_livecode_stream_module_info,
         &__com_livecode_string_module_info,
         &__com_livecode_type_module_info,
         &__com_livecode_typeconvert_module_info,
+        &__com_livecode_mathfoundation_module_info,
         &__com_livecode_canvas_module_info,
         &__com_livecode_engine_module_info,
         &__com_livecode_widget_module_info,
@@ -76,13 +85,17 @@ extern "C"
     extern void (*MCBitwiseEvalBitwiseAnd)();
     extern void (*MCByteEvalNumberOfBytesIn)();
     extern void (*MCCharEvalNumberOfCharsIn)();
+    extern void (*MCDateExecGetLocalTime)();
+    extern void (*MCFileExecGetContents)();
     extern void (*MCListEvalHeadOf)();
     extern void (*MCLogicEvalNot)();
     extern void (*MCMathEvalRealToPowerOfReal)();
     extern void (*MCSortExecSortListAscendingText)();
+    extern void (*MCStreamExecWriteToStream)();
     extern void (*MCStringEvalConcatenate)();
     extern void (*MCTypeEvalIsDefined)();
     extern void (*MCTypeConvertExecSplitStringByDelimiter)();
+    extern void (*MCMathFoundationEvalFloorNumber)();
     extern void (*MCWidgetExecRedrawAll)();
     extern void (*MCEngineExecResolveScriptObject)();
     extern void (*MCCanvasThisCanvas)();
@@ -96,13 +109,17 @@ extern "C"
         &MCBitwiseEvalBitwiseAnd,
         &MCByteEvalNumberOfBytesIn,
         &MCCharEvalNumberOfCharsIn,
+        &MCDateExecGetLocalTime,
+        &MCFileExecGetContents,
         &MCListEvalHeadOf,
         &MCLogicEvalNot,
         &MCMathEvalRealToPowerOfReal,
         &MCSortExecSortListAscendingText,
+        &MCStreamExecWriteToStream,
         &MCStringEvalConcatenate,
         &MCTypeEvalIsDefined,
         &MCTypeConvertExecSplitStringByDelimiter,
+        &MCMathFoundationEvalFloorNumber,
         &MCWidgetExecRedrawAll,
         &MCCanvasThisCanvas,
         &MCEngineExecResolveScriptObject,

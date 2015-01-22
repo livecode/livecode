@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "mbldc.h"
 
+#include "font.h"
+
 #include <objc/runtime.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -1688,7 +1690,7 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControl
     return false;
 }
 
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&)
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
 {
-    return false;
+    return MCFontCreate(MCNAME("Helvetica"), 0, 13, r_font);
 }

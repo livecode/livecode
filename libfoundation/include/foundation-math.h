@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 Runtime Revolution Ltd.
  
  This file is part of LiveCode.
  
@@ -21,10 +21,24 @@
 #include <foundation.h>
 #endif
 
+// Work-arounds for MSVC
+#ifdef _WIN32
+#  ifndef INFINITY
+#    define INFINITY HUGE_VAL
+#  endif
+#  ifndef NAN
+#    define NAN ((float)(INFINITY*0.));
+#  endif
+#  include <float.h>
+#  define isinf(x) (!_finite(x))
+#  define copysign _copysign
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMathRandomSeed();
-real64_t MCMathRandom();
+/* Return a random number in the range [0, 1).  If any random number
+ * generation error occurs, returns a quiet NaN. */
+real64_t MCMathRandom (void);
 
 // Convert from base 10 to a string in the desired base. Destination base should be between 2 and 32 inclusive.
 bool MCMathConvertFromBase10(uint32_t p_value, bool p_negative, integer_t p_dest_base, MCStringRef& r_result);

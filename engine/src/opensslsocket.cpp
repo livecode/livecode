@@ -53,7 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SystemConfiguration/SCDynamicStore.h>
 #include <SystemConfiguration/SCDynamicStoreKey.h>
 #include <SystemConfiguration/SCSchemaDefinitions.h>
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool p_utf8_string);
 #endif
 
 #include <sys/types.h>
@@ -1003,7 +1004,7 @@ bool MCS_hostaddress(MCStringRef &r_host_address)
 			CFStringRef t_string;
 			t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
 			if (t_string != NULL)
-				t_result = osx_cfstring_to_cstring(t_string, false);
+				t_result = osx_cfstring_to_cstring(t_string, false, false);
 		}
 	}
 	

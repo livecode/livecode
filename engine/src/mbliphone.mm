@@ -94,8 +94,8 @@ real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////
 
-extern "C" void *load_module(const char *);
-extern "C" void *resolve_symbol(void *, const char *);
+MC_DLLEXPORT extern "C" void *load_module(const char *);
+MC_DLLEXPORT extern "C" void *resolve_symbol(void *, const char *);
 
 struct LibExport
 {
@@ -383,8 +383,12 @@ bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
 
 MCNameRef MCIPhoneSystem::GetProcessor(void)
 {
-#ifdef __i386__
-	return MCN_i386;
+#if defined __i386__
+    return MCN_i386;
+#elif defined __amd64__
+    return MCN_x86_64;
+#elif defined __arm64__
+    return MCN_arm64;
 #else
 	return MCN_arm;
 #endif
@@ -759,6 +763,11 @@ bool MCIPhoneSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
 bool MCIPhoneSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
 {
 	return MCStringCopy(p_path, r_short_path);
+}
+// ST-2014-12-18: [[ Bug 14259 ]] Not implemented / needed on iOS
+bool MCIPhoneSystem::GetExecutablePath(MCStringRef& r_path)
+{
+    return false;
 }
 
 bool MCIPhoneSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
@@ -1150,18 +1159,6 @@ bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
 MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 {
 	return new MCIPhoneSystem;
-}
-
-//////////////////
-
-// MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
-bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
-{
-    // IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
-    MCAutoByteArray t_bytes;
-    return (t_bytes . New(p_count) &&
-            SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)t_bytes . Bytes()) == 0 &&
-            t_bytes . CreateData(r_buffer));
 }
 
 //////////////////

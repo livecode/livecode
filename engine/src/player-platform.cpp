@@ -1417,8 +1417,13 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 playstop();
                 starttime = MAXUINT4; //clears the selection
                 endtime = MAXUINT4;
+                
                 if (data != MCnullmcstring)
-                    filename = data.clone();
+                {
+                    // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+                    char *t_filename = data.clone();
+                    resolveplayerfilename(t_filename, filename);
+                }
                 prepare(MCnullstring);
                 
                 // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
@@ -1432,6 +1437,9 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                
                 dirty = wholecard = True;
             }
+            // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
+            else if (data == filename && hasinvalidfilename())
+                MCresult->sets("could not create movie reference");
             break;
         case P_DONT_REFRESH:
             if (!MCU_matchflags(data, flags, F_DONT_REFRESH, dirty))

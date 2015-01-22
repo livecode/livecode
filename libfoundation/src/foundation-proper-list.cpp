@@ -671,6 +671,53 @@ bool MCProperListEndsWithList(MCProperListRef self, MCProperListRef p_suffix)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCProperListIsListOfType(MCProperListRef self, MCValueTypeCode p_type)
+{
+    // If the list is indirect, get the contents.
+    MCProperListRef t_contents;
+    if (!__MCProperListIsIndirect(self))
+        t_contents = self;
+    else
+        t_contents = self -> contents;
+    
+    for(uindex_t i = 0; i < t_contents -> length; i++)
+    {
+        if (MCValueGetTypeCode(t_contents -> list[i]) != p_type)
+            return false;
+    }
+    
+    return true;
+}
+
+bool MCProperListIsHomogeneous(MCProperListRef self, MCValueTypeCode& r_type)
+{
+    if (MCProperListIsEmpty(self))
+    {
+        r_type = kMCValueTypeCodeNull;
+        return true;
+    }
+    
+    // If the list is indirect, get the contents.
+    MCProperListRef t_contents;
+    if (!__MCProperListIsIndirect(self))
+        t_contents = self;
+    else
+        t_contents = self -> contents;
+    
+    MCValueTypeCode t_type;
+    t_type = MCValueGetTypeCode(self -> list[0]);
+    
+    if (MCProperListIsListOfType(self, t_type))
+    {
+        r_type = t_type;
+        return true;
+    }
+    
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCProperListDestroy(__MCProperList *self)
 {
 	if (__MCProperListIsIndirect(self))

@@ -1340,6 +1340,8 @@ void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
         MCscreen -> addtimer(MCacptr, MCM_internal, 0);
         // PM-2014-12-09: [[ Bug 14176 ]] Release and nullify the sound once it is done
         MCacptr->stop(True);
+        // PM-2014-12-22: [[ Bug 14269 ]] Nullify MCacptr to prevent looping when play audioclip is followed by wait until the sound is done
+        MCacptr = NULL;
     }
 }
 

@@ -32,6 +32,7 @@
 #include "param.h"
 #include "card.h"
 #include "redraw.h"
+#include "eventqueue.h"
 
 #include "module-engine.h"
 
@@ -258,18 +259,8 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
     }
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+MCValueRef MCEngineDoDispatchToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments)
 {
-    __MCScriptObjectImpl *t_script_object_imp;
-    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
-    if (t_script_object_imp -> handle == nil ||
-        !t_script_object_imp -> handle -> Exists())
-    {
-        // TODO: Throw script object doesn't exist error.
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
-        return nil;
-    }
-    
     MCNewAutoNameRef t_message_as_name;
     if (!MCNameCreate(p_message, &t_message_as_name))
         return nil;
@@ -304,7 +295,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArgumen
 	}
     
     Exec_stat t_stat;
-    t_stat = t_script_object_imp -> handle -> Get() -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
+    t_stat = p_object -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
     if (t_stat == ES_ERROR)
     {
         MCEngineThrowScriptError();
@@ -328,6 +319,21 @@ cleanup:
 	}
     
     return t_result;
+}
+
+extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+{
+    __MCScriptObjectImpl *t_script_object_imp;
+    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
+    if (t_script_object_imp -> handle == nil ||
+        !t_script_object_imp -> handle -> Exists())
+    {
+        // TODO: Throw script object doesn't exist error.
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
+        return nil;
+    }
+    
+    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, t_script_object_imp -> handle -> Get(), p_arguments);
 }
 
 extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObject(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object)
@@ -411,8 +417,6 @@ static bool __MCScriptObjectDescribe(MCValueRef p_value, MCStringRef& r_descript
     return false;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 static MCValueCustomCallbacks kMCScriptObjectCustomValueCallbacks =
 {
     false,
@@ -422,6 +426,94 @@ static MCValueCustomCallbacks kMCScriptObjectCustomValueCallbacks =
     __MCScriptObjectHash,
     __MCScriptObjectDescribe,
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCStringRef s_log_buffer = nil;
+static bool s_log_update_pending = false;
+
+class MCEngineLogChangedEvent: public MCCustomEvent
+{
+public:
+    void Destroy(void)
+    {
+        delete this;
+    }
+    
+    void Dispatch(void)
+    {
+        MCdefaultstackptr -> getcard() -> message_with_valueref_args(MCNAME("logChanged"), s_log_buffer);
+        MCStringRemove(s_log_buffer, MCRangeMake(0, MCStringGetLength(s_log_buffer)));
+        s_log_update_pending = false;
+    }
+};
+
+extern "C" MC_DLLEXPORT void MCEngineExecLog(MCStringRef p_message)
+{
+    if (!MCStringIsEmpty(s_log_buffer))
+    {
+        if (!MCStringAppendChar(s_log_buffer, '\n'))
+            return;
+    }
+    
+    if (!MCStringAppend(s_log_buffer, p_message))
+        return;
+    
+    if (s_log_update_pending)
+        return;
+    
+    s_log_update_pending = true;
+    MCEventQueuePostCustom(new MCEngineLogChangedEvent);
+}
+
+extern "C" MC_DLLEXPORT void MCEngineExecLogWithValues(MCStringRef p_message, MCProperListRef p_values)
+{
+    MCAutoStringRef t_formatted_message;
+    if (!MCStringCreateMutable(0, &t_formatted_message))
+        return;
+    
+    uindex_t t_value_index;
+    t_value_index = 0;
+    for(uindex_t i = 0; i < MCStringGetLength(p_message); i++)
+    {
+        if (MCStringGetCharAtIndex(p_message, i) == '%')
+        {
+            if (i + 1 < MCStringGetLength(p_message) &&
+                MCStringGetCharAtIndex(p_message, i + 1) == '@')
+            {
+                i += 1;
+                if (t_value_index < MCProperListGetLength(p_values))
+                {
+                    MCAutoStringRef t_value_as_string;
+                    if (!MCValueCopyDescription(MCProperListFetchElementAtIndex(p_values, t_value_index), &t_value_as_string))
+                    {
+                        if (!MCStringAppendNativeChars(*t_formatted_message, (const char_t *)"<unknown>", strlen("<unknown>")))
+                            return;
+                    }
+                    else
+                    {
+                        if (!MCStringAppend(*t_formatted_message, *t_value_as_string))
+                            return;
+                    }
+                    
+                    t_value_index += 1;
+                }
+                else
+                {
+                    if (!MCStringAppendNativeChars(*t_formatted_message, (const char_t *)"<overflow>", strlen("<overflow>")))
+                        return;
+                }
+                
+                continue;
+            }
+        }
+        
+        if (!MCStringAppendChar(*t_formatted_message, MCStringGetCharAtIndex(p_message, i)))
+            return;
+    }
+    
+    MCEngineExecLog(*t_formatted_message);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -436,11 +528,15 @@ static void __create_named_custom_typeinfo(MCTypeInfoRef p_base, const MCValueCu
 bool MCEngineModuleInitialize(void)
 {
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCScriptObjectCustomValueCallbacks, MCNAME("com.livecode.engine.ScriptObject"), kMCEngineScriptObjectTypeInfo);
+    
+    /* UNCHECKED */ MCStringCreateMutable(0, s_log_buffer);
+    
     return true;
 }
 
 void MCEngineModuleFinalize(void)
 {
+    MCValueRelease(s_log_buffer);
     MCValueRelease(kMCEngineScriptObjectTypeInfo);
 }
 

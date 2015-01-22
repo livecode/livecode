@@ -230,6 +230,26 @@ extern "C" MC_DLLEXPORT void MCListStoreBeforeElementOf(MCValueRef p_value, inde
     MCValueAssign(x_target, *t_immutable);
 }
 
+extern "C" MC_DLLEXPORT void MCListFetchFirstElementOf(MCProperListRef p_target, MCValueRef& r_output)
+{
+    MCListFetchElementOf(1, p_target, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCListStoreFirstElementOf(MCValueRef p_value, MCProperListRef& x_target)
+{
+    MCListStoreElementOf(p_value, 1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCListFetchLastElementOf(MCProperListRef p_target, MCValueRef& r_output)
+{
+    MCListFetchElementOf(-1, p_target, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCListStoreLastElementOf(MCValueRef p_value, MCProperListRef& x_target)
+{
+    MCListStoreElementOf(p_value, -1, x_target);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
@@ -320,6 +340,36 @@ extern "C" MC_DLLEXPORT void MCListSpliceBefore(MCProperListRef p_list, MCProper
 extern "C" MC_DLLEXPORT void MCListSpliceAfter(MCProperListRef p_list, MCProperListRef& x_target)
 {
     MCListSpliceAfterElementOf(p_list, -1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCListSpliceIntoFirstElementOf(MCProperListRef p_list, MCProperListRef& x_target)
+{
+    MCListSpliceIntoElementOf(p_list, 1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCListSpliceIntoLastElementOf(MCProperListRef p_list, MCProperListRef& x_target)
+{
+    MCListSpliceIntoElementOf(p_list, -1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCListExecDeleteElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef& x_target)
+{
+    MCListSpliceIntoElementRangeOf(kMCEmptyProperList, p_start, p_finish, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCListExecDeleteElementOf(index_t p_index, MCProperListRef& x_target)
+{
+    MCListSpliceIntoElementOf(kMCEmptyProperList, p_index, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCListExecDeleteFirstElementOf(MCProperListRef& x_target)
+{
+    MCListExecDeleteElementOf(1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCListExecDeleteLastElementOf(MCProperListRef& x_target)
+{
+    MCListExecDeleteElementOf(-1, x_target);
 }
 
 extern "C" MC_DLLEXPORT void MCListEvalEmpty(MCProperListRef& r_output)

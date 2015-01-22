@@ -370,13 +370,17 @@ enum MCGJoinStyle
 	kMCGJoinStyleBevel,
 	kMCGJoinStyleRound,
 	kMCGJoinStyleMiter,
+	
+	kMCGJoinStyleCount
 };
 
 enum MCGCapStyle
 {
 	kMCGCapStyleButt,
 	kMCGCapStyleRound,
-	kMCGCapStyleSquare
+	kMCGCapStyleSquare,
+	
+	kMCGCapStyleCount
 };
 
 enum MCGRasterFormat

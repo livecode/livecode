@@ -1019,11 +1019,26 @@ Tags: Canvas
 */
 
 syntax PatternMakeTransformed is prefix operator with precedence 4
-	"pattern" "with" <mImage: Expression> ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: Expression> | "translated" "by" <mTranslation: Expression> | "rotated" "by" <mRotation: Expression> )
+	"pattern" "with" <mImage: Expression> "transformed" "by" <mTransform: Expression>
 begin
-	MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
+    MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
+end syntax
+
+syntax PatternMakeScaledBy is prefix operator with precedence 4
+    "pattern" "with" <mImage: Expression> "scaled" "by" <mScale: Expression>
+begin
 	MCCanvasPatternMakeWithImageScaledWithList(mImage, mScale, output)
+end syntax
+
+syntax PatternMakeTranslatedBy is prefix operator with precedence 4
+    "pattern" "with" <mImage: Expression> "translated" "by" <mTranslation: Expression>
+begin
 	MCCanvasPatternMakeWithImageTranslatedWithList(mImage, mTranslation, output)
+end syntax
+
+syntax PatternMakeRotatedBy is prefix operator with precedence 4
+    "pattern" "with" <mImage: Expression> "rotated" "by" <mRotation: Expression>
+begin
 	MCCanvasPatternMakeWithRotatedImage(mImage, mRotation, output)
 end syntax
 
@@ -1212,12 +1227,15 @@ mColor:		An expression which evaluates to a color.
 Returns:	A new gradient stop.
 
 Example:
+	// Array to temporarily hold gradient stops
+	variable tStops
+	put the empty array into tStops
 	// First gradient stop is red at position 0
-	put gradient stop at offset 0 with color [1,0,0] into tStops[1]
+	put gradient stop at 0 with color [1,0,0] into tStops[1]
 	// Second stop is half-transparent green at position 0.5
-	put gradient stop at offset 0.5 with color [0,1,0,0.5] into tStops[2]
+	put gradient stop at 0.5 with color [0,1,0,0.5] into tStops[2]
 	// Third stop is blue at position 1
-	put gradient stop at offset 1 with color [0,0,1] into tStops[3]
+	put gradient stop at 1 with color [0,0,1] into tStops[3]
 
 Tags: Canvas
 */
@@ -1236,10 +1254,13 @@ mRamp:		An expression which evaluates to a list of gradient stops.
 Returns:	A new gradient paint.
 
 Example:
+	// Array to temporarily hold gradient stops
+	variable tStops
+	put the empty array into tStops
 	// Set up gradient stops
-	put gradient stop at offset 0 with color [1,0,0] into tStops[1]
-	put gradient stop at offset 0.5 with color [0,1,0,0.5] into tStops[2]
-	put gradient stop at offset 1 with color [0,0,1] into tStops[3]
+	put gradient stop at 0 with color [1,0,0] into tStops[1]
+	put gradient stop at 0.5 with color [0,1,0,0.5] into tStops[2]
+	put gradient stop at 1 with color [0,0,1] into tStops[3]
 
 	// Create new gradient paint
 	put linear gradient with ramp [tStops[1], tStops[2], tStops[3]] into tGradient
@@ -1264,16 +1285,16 @@ public foreign handler MCCanvasGradientStopSetColor(in pColor as Color, inout xS
 
 public foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRamp as list) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetRamp(in pRamp as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
-// public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as integer, in pEnd as integer, out rStops as list) as undefined binds to "<builtin>"
-// public foreign handler MCCanvasGradientSetStops(in pStart as integer, in pEnd as integer, in rStops as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
+// public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as int, in pEnd as int, out rStops as list) as undefined binds to "<builtin>"
+// public foreign handler MCCanvasGradientSetStops(in pStart as int, in pEnd as int, in rStops as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as string) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetTypeAsString(in pType as string, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as integer) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetRepeat(in pRepeat as integer, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetWrap(in pGradient as Gradient, out rWrap as boolean) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetWrap(in pWrap as boolean, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetMirror(in pGradient as Gradient, out rMirror as boolean) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetMirror(in pMirror as boolean, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as int) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetRepeat(in pRepeat as int, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetWrap(in pGradient as Gradient, out rWrap as bool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetWrap(in pWrap as bool, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetMirror(in pGradient as Gradient, out rMirror as bool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetMirror(in pMirror as bool, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetFrom(in pGradient as Gradient, out rFrom as Point) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetFrom(in pFrom as Point, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetTo(in pGradient as Gradient, out rTo as Point) as undefined binds to "<builtin>"
@@ -1662,7 +1683,7 @@ end syntax
 
 public foreign handler MCCanvasImageMakeWithPath(in pPath as string, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithPixels(in pWidth as integer, in pHeight as integer, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixels(in pWidth as int, in pHeight as int, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as list, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 
 /*
@@ -1682,10 +1703,15 @@ Example:
 Tags: Canvas
 */
 
-syntax ImageMake is prefix operator with precedence 4
-	"image" "from" ( "file" <mPath: Expression> | "data" <mData: Expression> )
+syntax ImageMakeFromFile is prefix operator with precedence 4
+	"image" "from" "file" <mPath: Expression>
 begin
 	MCCanvasImageMakeWithPath(mPath, output)
+end syntax
+
+syntax ImageMakeFromData is prefix operator with precedence 4
+	"image" "from" "data" <mData: Expression>
+begin
 	MCCanvasImageMakeWithData(mData, output)
 end syntax
 
@@ -1837,7 +1863,30 @@ public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rec
 
 // Constructors
 
+public foreign handler MCCanvasPathMakeEmpty(out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as string, out rPath as Path) as undefined binds to "<builtin>"
+
+/*
+Summary:	Creates a new empty path.
+
+Returns:	An empty path.
+
+Example:
+	// Initialize the path to empty
+	variable tPath
+	put the empty path into tPath
+	// add a line to the path
+	move to point [0,50] on tPath
+	line to point [100,50] on tPath
+
+Tags: Canvas
+*/
+
+syntax PathMakeEmpty is expression
+	"the" "empty" "path"
+begin
+	MCCanvasPathMakeEmpty(output)
+end syntax
 
 /*
 Summary:	Creates a new path.
@@ -1869,7 +1918,7 @@ public foreign handler MCCanvasPathMakeWithEllipse(in pCenter as Point, in pRadi
 public foreign handler MCCanvasPathMakeWithCircle(in pCenter as Point, in pRadius as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithEllipseWithRadiiAsList(in pCenter as Point, in pRadii as list, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithLine(in pStart as Point, in pEnd as Point, out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithPoints(in pClose as boolean, in pPoints as list, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithPoints(in pClose as bool, in pPoints as list, out rPath as Path) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new path.
@@ -1888,11 +1937,15 @@ Example:
 Tags: Canvas
 */
 
-syntax PathMakeWithRoundedRectangle is prefix operator with precedence 4
-	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" ( "radius" <mRadius: Expression> | "radii" <mRadii: Expression> )
+syntax PathMakeWithRoundedRectangleWithRadius is prefix operator with precedence 4
+	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radius" <mRadius: Expression>
 begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadius, output)
-//	MCCanvasPathMakeWithRoundedRectangleWithRadii(mRect, mRadii[0], mRadii[1], output)
+end syntax
+
+syntax PathMakeWithRoundedRectangleWithRadii is prefix operator with precedence 4
+	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radii" <mRadii: Expression>
+begin
 	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(mRect, mRadii, output)
 end syntax
 
@@ -2005,8 +2058,8 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasPathGetSubpaths(in pStart as integer, in pEnd as integer, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathGetSubpath(in pIndex as integer, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathGetSubpaths(in pStart as int, in pEnd as int, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathGetSubpath(in pIndex as int, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathGetBoundingBox(in pPath as Path, out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as string) as undefined binds to "<builtin>"
 
@@ -2310,7 +2363,7 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as int, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new effect.
@@ -2769,20 +2822,30 @@ public foreign handler MCCanvasGetPaint(in pCanvas as Canvas, out rPaint as Pain
 public foreign handler MCCanvasSetPaint(in pPaint as Paint, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetFillRuleAsString(in pCanvas as Canvas, out rFillRule as string) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetFillRuleAsString(in pFillRule as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetAntialias(in pCanvas as Canvas, out rAntialias as boolean) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetAntialias(in pAntialias as boolean, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetAntialias(in pCanvas as Canvas, out rAntialias as bool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetAntialias(in pAntialias as bool, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetOpacity(in pCanvas as Canvas, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetOpacity(in pOpacity as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetBlendModeAsString(in pCanvas as Canvas, out rBlendMode as string) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetBlendModeAsString(in pBlendMode as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetStippled(in pCanvas as Canvas, out rStippled as boolean) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetStippled(in pStippled as boolean, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetStippled(in pCanvas as Canvas, out rStippled as bool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetStippled(in pStippled as bool, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetImageResizeQualityAsString(in pCanvas as Canvas, out rQuality as string) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetImageResizeQualityAsString(in pQuality as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetStrokeWidth(in pCanvas as Canvas, out rStrokeWidth as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetStrokeWidth(in pStrokeWidth as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetFont(in pCanvas as Canvas, out rFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetFont(in pFont as Font, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetJoinStyleAsString(in pCanvas as Canvas, out rJoinStyle as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetJoinStyleAsString(in pJoinStyle as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetCapStyleAsString(in pCanvas as Canvas, out rCapStyle as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetCapStyleAsString(in pCapStyle as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetMiterLimit(in pCanvas as Canvas, out rLimit as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetMiterLimit(in pLimit as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetDashes(in pCanvas as Canvas, out rDashes as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetDashes(in pDashes as list, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetDashPhase(in pCanvas as Canvas, out rPhase as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetDashPhase(in pPhase as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 /*
 Summary:	The current paint of a canvas.
@@ -2793,7 +2856,7 @@ Description:	The paint used for fill / stroke operations on <mCanvas>.
 
 Example:
 	// Set canvas to paint with solid blue
-	set the paint of tCanvas to solid paint with color [0,0,1]
+	set the paint of this canvas to solid paint with color [0,0,1]
 
 Tags:	Canvas
 */
@@ -2814,7 +2877,7 @@ Description:	The rule used to determine when to fill enclosed regions of a path.
 
 Example:
 	// Set canvas fill rule to non-zero.
-	set the fill rule of tCanvas to "non-zero"
+	set the fill rule of this canvas to "non-zero"
 
 Tags:	Canvas
 */
@@ -2835,7 +2898,7 @@ Description:	A boolean value which determines whether or not antialiasing will b
 
 Example:
 	// Disable antialiasing on the canvas
-	set the antialias of tCanvas to false
+	set the antialias of this canvas to false
 
 Tags:	Canvas
 */
@@ -2856,7 +2919,7 @@ Description:	The opacity of drawing operations on <mCanvas>, as a number between
 
 Example:
 	// make subsequent drawing operations render with half transparency
-	set the opacity of tCanvas to 0.5
+	set the opacity of this canvas to 0.5
 
 Tags:	Canvas
 */
@@ -2877,7 +2940,7 @@ Description:	The blend mode used for drawing operations on <mCanvas> as a string
 
 Example:
 	// Use color dodge mode to draw on canvas
-	set the blend mode of tCanvas to "color dodge"
+	set the blend mode of this canvas to "color dodge"
 
 Tags:	Canvas
 */
@@ -2898,8 +2961,8 @@ Description:	A boolean value that determines whether or not stippling will be us
 
 Example:
 	// Draw with stippled red paint on canvas
-	set the paint of tCanvas to solid paint with color [1,0,0]
-	set the stippled of tCanvas to true
+	set the paint of this canvas to solid paint with color [1,0,0]
+	set the stippled of this canvas to true
 
 Tags:	Canvas
 */
@@ -2920,7 +2983,7 @@ Description:	The image resize quality used when drawing scaled images and patter
 
 Example:
 	// Use low (but faster) image resize algorithm to draw scaled images
-	set the image resize quality of tCanvas to "low"
+	set the image resize quality of this canvas to "low"
 
 Tags:	Canvas
 */
@@ -2941,7 +3004,7 @@ Description:	The width of lines used when stroking a path on <mCanvas> as a numb
 
 Example:
 	// Draw paths with line width 20
-	set the stroke width of tCanvas to 20
+	set the stroke width of this canvas to 20
 
 Tags:	Canvas
 */
@@ -2962,7 +3025,7 @@ Description:	The font used when drawing text on <mCanvas> as a font.
 
 Example:
 	// Use 20pt Arial for text drawing on canvas
-	set the font of tCanvas to font "Arial" at size 20
+	set the font of this canvas to font "Arial" at size 20
 
 Tags:	Canvas
 */
@@ -2972,6 +3035,117 @@ syntax CanvasPropertyFont is prefix operator with precedence 4
 begin
 	MCCanvasGetFont(mCanvas, output)
 	MCCanvasSetFont(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current join style of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Determines how to draw the join between the lines of a path when stroking. Can be one of "bevel", "round", or "miter".
+
+Example:
+// Draw a square with beveled corners.
+set the join style of this canvas to "bevel"
+stroke rectangle path of rectangle [25, 25, 75, 75] on this canvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyJoinStyle is prefix operator with precedence 4
+	"the" "join" "style" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetJoinStyleAsString(mCanvas, output)
+	MCCanvasSetJoinStyleAsString(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current cap style of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Determines how to draw the end points of a path when stroking. Can be one of "butt", "square", or "round".
+
+Example:
+// Draw a line with rounded ends.
+set the cap style of this canvas to "round"
+stroke line path from point [50,100] to point [100,50] on this canvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyCapStyle is prefix operator with precedence 4
+	"the" "cap" "style" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetCapStyleAsString(mCanvas, output)
+	MCCanvasSetCapStyleAsString(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current miter limit of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The limit of miter joins as a number. Specifies how far miter joins can extend from the meeting point of two lines before a bevel join is used instead.
+
+Example:
+// Draw a right-angled triangle, setting the miter limit so only the right-angle corner is mitered.
+set the miter limit of this canvas to 1.5
+stroke polygon path with points [point [50,50], point [50,100], point [100,50]] on this canvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyMiterLimit is prefix operator with precedence 4
+	"the" "miter" "limit" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetMiterLimit(mCanvas, output)
+	MCCanvasSetMiterLimit(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current dashes of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The dashes as a list of numbers. The dashes specifies a sequence of lengths that alternately represent space and dash lengths when stroking a path.
+
+Example:
+// Draw a rectangle with short, widely spaced dashes
+set the dashes of this canvas to [10, 40]
+stroke rectangle path of rectangle [50, 50, 200, 200] on this canvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyDashes is prefix operator with precedence 4
+	"the" "dashes" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetDashes(mCanvas, output)
+	MCCanvasSetDashes(input, mCanvas)
+end syntax
+
+/*
+Summary:	The current dash phase of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The offset into the dashes at which to begin applying the dash pattern.
+
+Example:
+// Draw a rectangle with short, widely spaced dashes, offset to begin from the middle of the dash pattern
+set the dashes of this canvas to [10, 40]
+set the dash phase of this canvas to 25
+stroke rectangle path of rectangle [50, 50, 200, 200] on this canvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyDashPhase is prefix operator with precedence 4
+	"the" "dash" "phase" "of" <mCanvas:Expression>
+begin
+	MCCanvasGetDashPhase(mCanvas, output)
+	MCCanvasSetDashPhase(input, mCanvas)
 end syntax
 
 //////////
@@ -3018,7 +3192,7 @@ Description:	Concatenates the transform of <mCanvas> with <mTransform>.
 
 Example:
 	// Scale the canvas with a transform
-	transform tCanvas by transform with scale [2,2]
+	transform this canvas by transform with scale [2,2]
 
 Tags:	Canvas
 */
@@ -3039,7 +3213,7 @@ Description:	Scales the transform of <mCanvas> by <mScale>.
 
 Example:
 	// Scale the canvas
-	scale tCanvas by [2,2]
+	scale this canvas by [2,2]
 
 Tags:	Canvas
 */
@@ -3060,7 +3234,7 @@ Description:	Rotates the transform of <mCanvas> by <mRotation> degrees.
 
 Example:
 // Rotate the canvas
-rotate tCanvas by 45
+rotate this canvas by 45
 
 Tags:	Canvas
 */
@@ -3081,7 +3255,7 @@ Description:	Translates the transform of <mCanvas> by <mTranslation>.
 
 Example:
 	// Translate the canvas
-	translate tCanvas by [50,100]
+	translate this canvas by [50,100]
 
 Tags:	Canvas
 */
@@ -3102,11 +3276,11 @@ Description:	Saves the current properties of <mCanvas> to the top of a stack so 
 
 Example:
 	// Save the current canvas properties
-	save state of tCanvas
+	save state of this canvas
 	// Call drawing handler which may change the canvas properties while drawing
-	doDrawButtonOnCanvasAtPoint tCanvas, point [50,50]
+	doDrawButtonOnCanvasAtPoint this canvas, point [50,50]
 	// Restore the previous canvas properties
-	restore state of tCanvas
+	restore state of this canvas
 
 Tags:	Canvas
 */
@@ -3126,11 +3300,11 @@ Description:	Restores the properties of <mCanvas> from the top of the saved prop
 
 Example:
 	// Save the current canvas properties
-	save state of tCanvas
+	save state of this canvas
 	// Call drawing handler which may change the canvas properties while drawing
-	doDrawButtonOnCanvasAtPoint tCanvas, point [50,50]
+	doDrawButtonOnCanvasAtPoint this canvas, point [50,50]
 	// Restore the previous canvas properties
-	restore state of tCanvas
+	restore state of this canvas
 
 Tags:	Canvas
 */
@@ -3151,16 +3325,16 @@ Description:	Begins a new layer on <mCanvas> to group drawing operations for whi
 
 Example:
 	// Draw two overlapping rectangles grouped with half transparency
-	set the opacity of tCanvas to 0.5
-	begin layer on tCanvas
-	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
-	fill rectangle path of rectangle path [75,75,125,125] on tCanvas
-	end layer on tCanvas
+	set the opacity of this canvas to 0.5
+	begin layer on this canvas
+	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	fill rectangle path of rectangle path [75,75,125,125] on this canvas
+	end layer on this canvas
 
 	// Draw rectangle with an effect applied
-	begin layer with tEffect on tCanvas
-	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
-	end layer on tCanvas
+	begin layer with tEffect on this canvas
+	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	end layer on this canvas
 
 Tags:	Canvas
 */
@@ -3181,16 +3355,16 @@ Description:	Ends the layer on <mCanvas>, rendering to the previous layer with t
 
 Example:
 	// Draw two overlapping rectangles grouped with half transparency
-	set the opacity of tCanvas to 0.5
-	begin layer on tCanvas
-	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
-	fill rectangle path of rectangle path [75,75,125,125] on tCanvas
-	end layer on tCanvas
+	set the opacity of this canvas to 0.5
+	begin layer on this canvas
+	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	fill rectangle path of rectangle path [75,75,125,125] on this canvas
+	end layer on this canvas
 
 	// Draw rectangle with an effect applied
-	begin layer with tEffect on tCanvas
-	fill rectangle path of rectangle path [50,50,100,100] on tCanvas
-	end layer on tCanvas
+	begin layer with tEffect on this canvas
+	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	end layer on this canvas
 
 Tags:	Canvas
 */
@@ -3211,14 +3385,14 @@ Description:	Fills the region bound by <mPath> with the current canvas paint. If
 
 Example:
 	// Fill a circle path on the canvas
-	fill circle path centered at point [100,100] with radius 50 on tCanvas
+	fill circle path centered at point [100,100] with radius 50 on this canvas
 
 	// Add a path to the canvas
-	move to point [50,50] on tCanvas
-	line to point [50,100] on tCanvas
-	line to point [100,100] on tCanvas
+	move to point [50,50] on this canvas
+	line to point [50,100] on this canvas
+	line to point [100,100] on this canvas
 	// Fill the current canvas path
-	fill tCanvas
+	fill this canvas
 
 Tags:	Canvas
 */
@@ -3240,14 +3414,14 @@ Description:	Strokes <mPath> with the current canvas paint and stroke settings. 
 
 Example:
 	// Draw a circle path on the canvas
-	stroke circle path centered at point [100,100] with radius 50 on tCanvas
+	stroke circle path centered at point [100,100] with radius 50 on this canvas
 
 	// Add a path to the canvas
-	move to point [50,50] on tCanvas
-	line to point [50,100] on tCanvas
-	line to point [100,100] on tCanvas
+	move to point [50,50] on this canvas
+	line to point [50,100] on this canvas
+	line to point [100,100] on this canvas
 	// Stroke the current canvas path
-	stroke tCanvas
+	stroke this canvas
 
 Tags:	Canvas
 */
@@ -3269,9 +3443,9 @@ Description:	Modifies the clip of <mCanvas> by intersecting with <mRect>. Drawin
 
 Example:
 	// Set the canvas clip
-	clip to rectangle [50,50,100,100] on tCanvas
+	clip to rectangle [50,50,100,100] on this canvas
 	// Fill rectangle path on canvas. only the region of the rectangle that falls within the canvas clip will be rendered.
-	fill rectangle path of rectangle [25, 25, 75, 75] on tCanvas
+	fill rectangle path of rectangle [25, 25, 75, 75] on this canvas
 
 Tags:	Canvas
 */
@@ -3292,7 +3466,7 @@ Description:	Adds <mPath> to the current path of <mCanvas>
 
 Example:
 	// Add a path to the canvas
-	add rectangle path of rectangle [0,0,50,100] to tCanvas
+	add rectangle path of rectangle [0,0,50,100] to this canvas
 
 Tags:	Canvas
 */
@@ -3315,9 +3489,9 @@ Description:	Renders from <mSrcRect> (or the bounds, if not specified) of <mImag
 
 Example:
 	// Draw an image on the canvas
-	draw tImage into rectangle [0,0,the width of tImage,the height of tImage] of tCanvas
+	draw tImage into rectangle [0,0,the width of tImage,the height of tImage] of this canvas
 	// Draw a section of an image
-	draw from rectangle[0,0,16,16] of tImage into rectangle [0,0,16,16] of tCanvas
+	draw from rectangle[0,0,16,16] of tImage into rectangle [0,0,16,16] of this canvas
 
 Tags:	Canvas
 */
@@ -3339,7 +3513,7 @@ Description:	Moves to <mPoint> on the current path of <mCanvas>
 
 Example:
 	// move to a point on the canvas
-	move to point [0,50] on tCanvas
+	move to point [0,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3360,7 +3534,7 @@ Description:	Adds a line to <mPoint> on the current path of <mCanvas>
 
 Example:
 	// add line to the canvas
-	line to point [50,50] on tCanvas
+	line to point [50,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3382,11 +3556,11 @@ Description:	Adds a curve through 1 or 2 points to <mPoint> on the current path 
 
 Example:
 	// Begin a new subpath on the canvas
-	move to point [25, 50] on tCanvas
+	move to point [25, 50] on this canvas
 	// Continue path with a curve through 25,100 to 50,100
-	curve through [25,100] to [50,100] on tCanvas
+	curve through [25,100] to [50,100] on this canvas
 	// Continue path with a curve through 50,75 then 50,50 to 50,100
-	curve through [50,75] then [50,50] to [25,50] on tCanvas
+	curve through [50,75] then [50,50] to [25,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3415,9 +3589,9 @@ Description:	Renders <mText> at <mPoint> on <mCanvas> using the current font set
 
 Example:
 	// Set the canvas font
-	set the font of tCanvas to font "Helvetica"
+	set the font of this canvas to font "Helvetica"
 	// Draw the text
-	fill text "Widget Label" at point [50,50] on tCanvas
+	fill text "Widget Label" at point [50,50] on this canvas
 
 Tags:	Canvas
 */
@@ -3439,9 +3613,9 @@ Description:	Renders <mText> aligned to the specified sides of <mRect> on <mCanv
 
 Example:
 	// Set the canvas font
-	set the font of tCanvas to font "Helvetica"
+	set the font of this canvas to font "Helvetica"
 	// Draw the text in the top-left corner of the target rectangle
-	fill text "Widget Label" at top left of rectangle [50, 100, 250, 200] on tCanvas
+	fill text "Widget Label" at top left of rectangle [50, 100, 250, 200] on this canvas
 
 Tags:	Canvas
 */
@@ -3462,7 +3636,7 @@ Returns:	The bounding box of <mText> when drawn at point 0,0 with the current fo
 
 Example:
 	// Measure text drawn on the canvas
-	measure text "Sample text" on tCanvas
+	measure text "Sample text" on this canvas
 	put the result into tBounds
 	put the width of tBounds into tWidth
 	put the height of tBounds into tHeight

@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "region.h"
+#include "font.h"
 
 #include "mbldc.h"
 
@@ -2768,10 +2769,11 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
 
     MCExecValue t_value;
     MCExecContext ctxt(nil, nil, nil);
-    if (!MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
+    
+    if (MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
     {
         MCAutoStringRef t_string_value;
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &t_string_value);
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &(&t_string_value));
 
         if (!ctxt . HasError())
             t_success = MCJavaStringFromStringRef(env, *t_string_value, t_js);
@@ -2826,7 +2828,7 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControl
     return false;
 }
 
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&)
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
 {
-    return false;
+    return MCFontCreate(MCNAME("Arial"), 0, 12, r_font);
 }

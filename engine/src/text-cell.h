@@ -25,18 +25,6 @@
 
 #include "text-api.h"
 
-// Work-arounds for MSVC
-#ifdef _WIN32
-#  ifndef INFINITY
-#    define INFINITY HUGE_VAL
-#  endif
-#  ifndef NAN
-#    define NAN ((float)(INFINITY*0.));
-#  endif
-#  include <float.h>
-#  define isinf(x) (!_finite(x))
-#endif
-
 
 // Forward declarations
 class MCTextAttributes;

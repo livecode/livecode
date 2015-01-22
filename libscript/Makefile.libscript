@@ -12,6 +12,7 @@ SOURCES += \
 	module-bitwise.cpp \
 	module-byte.cpp \
 	module-char.cpp \
+	module-date.cpp \
 	module-encoding.cpp \
 	module-file.cpp \
 	module-list.cpp \
@@ -20,7 +21,9 @@ SOURCES += \
 	module-math.cpp \
 	module-math_foundation.cpp \
 	module-sort.cpp \
+	module-stream.cpp \
 	module-string.cpp \
+	module-system.cpp \
 	module-type_convert.cpp \
 	module-type.cpp \
 	module-url.cpp \

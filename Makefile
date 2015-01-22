@@ -17,6 +17,9 @@ libexternal:
 libexternalv1:
 	$(MAKE) -C ./libexternalv1 libexternalv1
 
+libffi:
+	$(MAKE) -C ./thirdparty/libffi libffi
+
 libz:
 	$(MAKE) -C ./thirdparty/libz libz
 
@@ -38,7 +41,7 @@ libopenssl:
 libskia:
 	$(MAKE) -C ./thirdparty/libskia libskia
 
-libfoundation:
+libfoundation: libffi
 	$(MAKE) -C ./libfoundation libfoundation
 
 libscript:
@@ -193,10 +196,10 @@ libstdscript: lc-compile
 	$(MAKE) -C ./libscript libstdscript
 
 ########## Compiler
-lc-compile: libscript libfoundation
+lc-compile: libscript libfoundation libffi
 	$(MAKE) -C ./toolchain lc-compile
 
-lc-bootstrap-compile: libscript libfoundation
+lc-bootstrap-compile: libscript libfoundation libffi
 	$(MAKE) -C ./toolchain bootstrap
 
 lc-compile-clean:

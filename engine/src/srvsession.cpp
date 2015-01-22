@@ -696,9 +696,7 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 	
 	MCAutoDataRef t_randombytes;
     
-    // MW-2013-05-21; [[ RandomBytes ]] Use system primitive rather than SSL
-	//   directly.
-	/* UNCHECKED */ MCU_random_bytes(64, &t_randombytes);
+	/* UNCHECKED */ MCDataCreateRandom (64, &t_randombytes);
 	
 	md5_state_t t_state;
 	md5_byte_t t_digest[16];

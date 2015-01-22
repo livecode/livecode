@@ -40,6 +40,20 @@ public foreign handler MCByteStoreByteRangeOf(in Value as data, in Start as inde
 
 public foreign handler MCByteRepeatForEachByte(inout Iterator as optional pointer, out Iterand as data, in Container as data) as bool binds to "<builtin>"
 
+public foreign handler MCByteFetchFirstByteOf(in Target as data, out Value as data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreFirstByteOf(in Value as data, inout Target as data) as undefined binds to "<builtin>"
+
+public foreign handler MCByteFetchLastByteOf(in Target as data, out Value as data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreLastByteOf(in Value as data, inout Target as data) as undefined binds to "<builtin>"
+
+public foreign handler MCByteExecDeleteByteOf(in Index as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteByteRangeOf(in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
+
+public foreign handler MCByteExecDeleteLastByteOf(inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteFirstByteOf(inout Target as data) as undefined binds to "<builtin>"
+
+public foreign handler MCDataExecRandomBytes(in Count as uindex, out Value as data) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -140,7 +154,7 @@ Description:
 Tags: Binary
 */
 
-syntax IsAmongTheBytesOf is neutral binary operator with precedence 1
+syntax ByteIsInData is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
     MCByteEvalIsInBytes(Needle, Target, output)
@@ -252,8 +266,133 @@ begin
 end syntax
 
 /*
+
+Summary:            Designates the first byte of data in <Target>.
+Target:				An expression which evaluates to binary data.
+
+Description:
+Either locates the first byte for use as the target container of another operation, or evaluates the first byte as the source of another operation.
+
+>*Note:* It is an error if <Target> is empty.
+
+Tags: Binary
+*/
+
+syntax FirstByteOf is prefix operator with precedence 1
+	"the" "first" "byte" "of" <Target: Expression>
+begin
+	MCByteFetchFirstByteOf(Target, output)
+	MCByteStoreFirstByteOf(input, Target)
+end syntax
+
+/*
+
+Summary:            Designates the first byte of data in <Target>.
+Target:				An expression which evaluates to binary data.
+
+Description:
+Either locates the first byte for use as the target container of another operation, or evaluates the first byte as the source of another operation.
+
+>*Note:* It is an error if <Target> is empty.
+
+Tags: Binary
+*/
+
+syntax LastByteOf is prefix operator with precedence 1
+	"the" "last" "byte" "of" <Target: Expression>
+begin
+	MCByteFetchLastByteOf(Target, output)
+	MCByteStoreLastByteOf(input, Target)
+end syntax
+
+--
+
+/*
+
+Summary:            Deletes the byte of data at index <Index> in <Target>.
+Index: 				An expression which evaluates to a valid integer index of <Target>.
+Target:				A container of binary data.
+
+Description:
+Replaces the byte at the given index with the empty data.
+
+>*Note:* It is an error if <Index> is out of range.
+
+Tags: Binary
+*/
+
+syntax DeleteSingletonByteOf is statement
+	"delete" "byte" <Index: Expression> "of" <Target: Expression>
+begin
+	MCByteExecDeleteByteOf(Index, Target)
+end syntax
+
+/*
+
+Summary:            Deletes the bytes of data between indices <Start> and <Finish> in <Target>.
+
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
+Target:             A container of binary data.
+
+Description:
+Replaces the bytes between the given indices with the empty data.
+
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
+
+Tags: Binary
+*/
+
+syntax DeleteRangeByteOf is statement
+	"delete" "byte" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	MCByteExecDeleteByteRangeOf(Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Deletes the first byte in <Target>.
+Target:				A binary data container.
+
+Description:
+Replaces the first byte in <Target> with the empty data.
+
+>*Note:* It is an error if <Target> is the empty data.
+
+Tags: Binary
+*/
+
+syntax DeleteFirstByteOf is statement
+	"delete" "the" "first" "byte" "of" <Target: Expression>
+begin
+	MCByteExecDeleteFirstByteOf(Target)
+end syntax
+
+
+/*
+
+Summary:            Deletes the last byte in <Target>.
+Target:				A binary data container.
+
+Description:
+Replaces the last byte in <Target> with the empty data.
+
+>*Note:* It is an error if <Target> is the empty data.
+
+Tags: Binary
+*/
+
+syntax DeleteLastByteOf is statement
+	"delete" "the" "last" "byte" "of" <Target: Expression>
+begin
+	MCByteExecDeleteLastByteOf(Target)
+end syntax
+
+--
+
+/*
 Summary:        Repeat over the bytes of some data
-Iterand:        A binary data container.
+Iterand:        A container of binary data.
 
 Description:
 Use repeat for each to perform an operation on each byte of some data. On each iteration, the <Iterand> will contain the next char of the string being iterated over.
@@ -265,6 +404,25 @@ syntax RepeatForEachByte is iterator
     "byte" <Iterand: Expression>
 begin
     MCByteRepeatForEachByte(iterator, Iterand, container)
+end syntax
+
+--
+
+/*
+Summary:	Generate random data
+Count:		Expression evaluating to the number of bytes to generate
+
+Description:
+Generates the requested number of bytes of cryptographic-quality
+random data.
+
+Tags: Binary, Random
+
+*/
+syntax RandomBytes is postfix operator with precedence 5
+	<Count : Expression> "random" "bytes"
+begin
+	MCDataExecRandomBytes(Count, output)
 end syntax
 
 --

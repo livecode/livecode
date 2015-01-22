@@ -225,6 +225,52 @@ char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_n
 }
 #endif
 
+// PM-2015-01-12: [[ Bug 14343 ]] Implemented MCStoreGetPurchaseProperty/MCStoreSetPurchaseProperty for iOS
+extern MCPropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *p_table, Properties p_which);
+
+void MCStoreGetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_prop_name, MCStringRef& r_property_value)
+{
+    MCPurchase *t_purchase = nil;
+    Properties t_property;
+    
+    MCPropertyInfo *t_info;
+    t_info = nil;
+    
+    if (MCPurchaseFindByProdId(p_product_id, t_purchase) && MCPurchaseLookupProperty(p_prop_name, t_property))
+        t_info = lookup_purchase_property(getpropertytable(), t_property);
+    
+    if (t_info != nil)
+	{
+		MCExecValue t_value;
+        MCExecFetchProperty(ctxt, t_info, t_purchase, t_value);
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
+        return;
+    }
+    
+    ctxt .Throw();
+}
+
+void MCStoreSetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_prop_name, MCStringRef p_value)
+{
+    MCPurchase *t_purchase = nil;
+	Properties t_property;
+    
+    MCPropertyInfo *t_info;
+    t_info = nil;
+    
+    if (MCPurchaseFindByProdId(p_product_id, t_purchase) && MCPurchaseLookupProperty(p_prop_name, t_property))
+        t_info = lookup_purchase_property(getpropertytable(), t_property);
+	
+	if (t_info != nil)
+	{
+		MCExecValue t_value;
+		MCExecValueTraits<MCValueRef>::set(t_value, MCValueRetain(p_value));
+        MCExecStoreProperty(ctxt, t_info, t_purchase, t_value);
+        return;
+	}
+    
+    ctxt . Throw();
+}
 
 #ifdef /* MCPurchaseGet */ LEGACY_EXEC
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
@@ -621,6 +667,9 @@ void update_purchase_state(MCPurchase *p_purchase)
 			case SKPaymentTransactionStateFailed:
 			{
 				NSError *t_error = [t_ios_data->transaction error];
+                
+                if(t_error == nil)
+                    return;
 				if ([[t_error domain] isEqualToString:SKErrorDomain] && [t_error code] == SKErrorPaymentCancelled)
 					p_purchase->state = kMCPurchaseStateCancelled;
 				else

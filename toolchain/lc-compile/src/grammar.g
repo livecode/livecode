@@ -885,7 +885,7 @@
         DOUBLE_LITERAL(-> Value) @(-> Position)
 
     'rule' ConstantTermExpression(-> string(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position)
+        StringLiteral(-> Value) @(-> Position)
 
 ----------
 
@@ -1009,13 +1009,29 @@
         "+" DOUBLE_LITERAL(-> Value) @(-> Position)
 
     'rule' Constant(-> string(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position)
+        StringLiteral(-> Value) @(-> Position)
 
     'rule' Constant(-> variable(Position, Value)):
         Identifier(-> Value) @(-> Position)
 
     'rule' Constant(-> indexedvariable(Position, Value, Index)):
         Identifier(-> Value) @(-> Position) "[" INTEGER_LITERAL(-> Index) "]"
+        
+    'rule' Constant(-> variable(Position, Value)):
+        "output" @(-> Position)
+        MakeNameLiteral("output" -> Identifier)
+        Value::ID
+        Value'Position <- Position
+        Value'Name <- Identifier
+        Value'Meaning <- nil
+
+    'rule' Constant(-> variable(Position, Value)):
+        "input" @(-> Position)
+        MakeNameLiteral("input" -> Identifier)
+        Value::ID
+        Value'Position <- Position
+        Value'Name <- Identifier
+        Value'Meaning <- nil
 
 --------------------------------------------------------------------------------
 -- Identifier Syntax
@@ -1040,7 +1056,7 @@
 'nonterm' StringyIdentifier(-> ID)
 
     'rule' StringyIdentifier(-> Id):
-        STRING_LITERAL(-> String) @(-> Position)
+        StringLiteral(-> String) @(-> Position)
         MakeNameLiteral(String -> Identifier)
         Id::ID
         Id'Position <- Position
@@ -1078,6 +1094,17 @@
 --------------------------------------------------------------------------------
 -- Tokens
 --------------------------------------------------------------------------------
+
+'nonterm' StringLiteral(-> STRING)
+
+    'rule' StringLiteral(-> Value):
+        STRING_LITERAL(-> EscapedValue) @(-> Position)
+        (|
+            UnescapeStringLiteral(EscapedValue -> Value)
+        ||
+            Error_MalformedEscapedString(Position, EscapedValue)
+            where(EscapedValue -> Value)
+        |)
 
 'token' NAME_LITERAL (-> NAME)
 'token' INTEGER_LITERAL (-> INT)
