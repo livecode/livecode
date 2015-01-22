@@ -13,7 +13,10 @@ public handler test()
 
     variable tDelimiter as string
     put newline into tDelimiter
+<<<<<<< HEAD
 	
+=======
+>>>>>>> builder-chunk_utils
 
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
@@ -25,6 +28,9 @@ public handler test()
     testPrecedence(tResults)
     
     testParseAndFormat(tResults)
+
+	--com.livecode.chunk
+	testChunk(tResults)
 
     --com.livecode.type
     testType(tResults)

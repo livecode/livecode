@@ -1,0 +1,162 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.chunk
+
+public foreign handler MCChunkFetchChunkOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkStoreChunkOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkFetchChunkRangeOf(in Start as index, in Finish as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkStoreChunkRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkFetchFirstChunkOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkStoreFirstChunkOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkFetchLastChunkOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkStoreLastChunkOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
+
+public foreign handler MCChunkExecDeleteChunkOf(in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkExecDeleteChunkRangeOf(in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkExecDeleteFirstChunkOf(inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCChunkExecDeleteLastChunkOf(inout Target as string) as undefined binds to "<builtin>"
+
+public foreign handler MCChunkEvalNumberOfChunksIn(in Target as string, out Count as uindex) as undefined binds to "<builtin>"
+
+public foreign handler MCChunkEvalIsAmongTheChunksOf(in Needle as string, in Target as string, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCChunkEvalIsNotAmongTheChunksOf(in Needle as string, in Target as string, out Result as bool) as undefined binds to "<builtin>"
+
+public foreign handler MCChunkEvalOffsetOfChunkIn(in IsPartial as bool, in Needle as string, in Target as string, out Offset as uindex) as undefined binds to "<builtin>"
+
+public foreign handler MCChunkEvalChunksOf(in Target as string, out Value as list) as undefined binds to "<builtin>"
+
+public foreign handler MCChunkRepeatForEachChunk(inout Iterator as optional pointer, out Iterand as string, in Container as string) as bool binds to "<builtin>"
+
+--
+
+syntax SingletonChunkOf is prefix operator with precedence 1
+	"chunk" <Index: Expression> "of" <Target: Expression>
+begin
+	MCChunkFetchChunkOf(Index, Target, output)
+	MCChunkStoreChunkOf(input, Index, Target)
+end syntax
+
+syntax RangeChunkOf is prefix operator with precedence 1
+	"chunk" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	MCChunkFetchChunkRangeOf(Start, Finish, Target, output)
+	MCChunkStoreChunkRangeOf(input, Start, Finish, Target)
+end syntax
+
+syntax FirstChunkOf is prefix operator with precedence 1
+	"the" "first" "chunk" "of" <Target: Expression>
+begin
+	MCChunkFetchFirstChunkOf(Target, output)
+	MCChunkStoreFirstChunkOf(input, Target)
+end syntax
+
+syntax LastChunkOf is prefix operator with precedence 1
+	"the" "last" "chunk" "of" <Target: Expression>
+begin
+	MCChunkFetchLastChunkOf(Target, output)
+	MCChunkStoreLastChunkOf(input, Target)
+end syntax
+
+--
+
+syntax DeleteSingletonChunkOf is statement
+	"delete" "chunk" <Index: Expression> "of" <Target: Expression>
+begin
+	MCChunkExecDeleteChunkOf(Index, Target)
+end syntax
+
+syntax DeleteRangeChunkOf is statement
+	"delete" "chunk" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	MCChunkExecDeleteChunkRangeOf(Start, Finish, Target)
+end syntax
+
+syntax DeleteFirstChunkOf is statement
+	"delete" "the" "first" "chunk" "of" <Target: Expression>
+begin
+	MCChunkExecDeleteFirstChunkOf(Target)
+end syntax
+
+syntax DeleteLastChunkOf is statement
+	"delete" "the" "last" "chunk" "of" <Target: Expression>
+begin
+	MCChunkExecDeleteLastChunkOf(Target)
+end syntax
+
+--
+
+syntax CountChunksOf is prefix operator with precedence 1
+	"the" "number" "of" "chunks" "in" <Target: Expression>
+begin
+	MCChunkEvalNumberOfChunksIn(Target, output)
+end syntax
+
+syntax IsAmongTheChunksOf is left binary operator with precedence 1
+	<Needle: Expression> "is" "among" "the" "chunks" "of" <Target: Expression>
+begin
+	MCChunkEvalIsAmongTheChunksOf(Needle, Target, output)
+end syntax
+
+syntax IsNotAmongTheChunksOf is left binary operator with precedence 1
+	<Needle: Expression> "is" "not" "among" "the" "chunks" "of" <Target: Expression>
+begin
+	MCChunkEvalIsAmongTheChunksOf(Needle, Target, output)
+end syntax
+
+syntax ChunkOffset is prefix operator with precedence 1
+	"the" "offset" "of" ("whole" <IsPartial=true> | "partial" <IsPartial=false> | <IsPartial=false>) "chunk" <Needle: Expression> "in" <Target: Expression>
+begin
+	MCChunkEvalOffsetOfChunkIn(IsPartial, Needle, Target, output)
+end syntax
+
+--
+
+syntax ChunksOf is prefix operator with precedence 1
+	"the" "chunks" "of" <Target:Expression>
+begin
+	MCChunkEvalChunksOf(Target, output)
+end syntax
+
+--
+
+/*
+Summary:        Repeat over the chunks of a string
+Iterand:        A string container.
+
+Example:
+	variable tString as string
+	put "" into tString
+
+	variable tChunks as string
+
+	repeat for each chunk tChunk in tString
+
+	end repeat
+
+Description:
+Use repeat for each to perform an operation on each chunk of a string. On each iteration, the <Iterand> will contain the next chunk of the string being iterated over.
+
+Tags: Strings, Control structures
+*/
+
+syntax RepeatForEachChunk is iterator
+    "chunk" <Iterand: Expression>
+begin
+    MCChunkRepeatForEachChunk(iterator, Iterand, container)
+end syntax
+
+end module
