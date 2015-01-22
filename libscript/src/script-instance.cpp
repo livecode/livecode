@@ -544,6 +544,31 @@ struct MCScriptFrame
 	uindex_t *mapping;
 };
 
+static inline bool MCScriptIsRegisterValidInFrame(MCScriptFrame *p_frame, int p_register)
+{
+    return p_register >= 0 && p_register < p_frame -> handler -> slot_count - p_frame -> handler -> register_offset;
+}
+
+static inline uindex_t MCScriptComputeSlotIndexOfRegisterInFrame(MCScriptFrame *p_frame, int p_register)
+{
+    return p_frame -> handler -> register_offset + p_register;
+}
+
+static inline bool MCScriptIsLocalValidInFrame(MCScriptFrame *p_frame, int p_local)
+{
+    return p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo);
+}
+
+static inline uindex_t MCScriptComputeSlotIndexOfLocalInFrame(MCScriptFrame *p_frame, int p_index)
+{
+    return (uindex_t)p_index;
+}
+
+static inline bool MCScriptIsConstantValidInFrame(MCScriptFrame *p_frame, int p_constant)
+{
+    return p_constant >= 0 && p_constant < p_frame -> instance -> module -> value_count;
+}
+
 static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, MCScriptFrame*& r_frame)
 {
     MCScriptFrame *self;
@@ -650,25 +675,33 @@ static inline void MCScriptResolveDefinitionInFrame(MCScriptFrame *p_frame, uind
 
 static inline MCValueRef MCScriptFetchFromLocalInFrame(MCScriptFrame *p_frame, uindex_t p_local)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
+    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsLocalValidInFrame(p_frame, p_local),
                                         "local out of range on fetch");
-    return p_frame -> slots[p_local];
+    
+    uindex_t t_slot_index;
+    t_slot_index = MCScriptComputeSlotIndexOfLocalInFrame(p_frame, p_local);
+    
+    return p_frame -> slots[t_slot_index];
 }
 
 static inline void MCScriptStoreToLocalInFrame(MCScriptFrame *p_frame, uindex_t p_local, MCValueRef p_value)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
+    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsLocalValidInFrame(p_frame, p_local),
                                         "local out of range on store");
-    if (p_frame -> slots[p_local] != p_value)
+    
+    uindex_t t_slot_index;
+    t_slot_index = MCScriptComputeSlotIndexOfLocalInFrame(p_frame, p_local);
+    
+    if (p_frame -> slots[t_slot_index] != p_value)
     {
-        MCValueRelease(p_frame -> slots[p_local]);
-        p_frame -> slots[p_local] = MCValueRetain(p_value);
+        MCValueRelease(p_frame -> slots[t_slot_index]);
+        p_frame -> slots[t_slot_index] = MCValueRetain(p_value);
     }
 }
 
 static inline MCTypeInfoRef MCScriptFetchTypeForLocalInFrame(MCScriptFrame *p_frame, uindex_t p_local)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
+    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsLocalValidInFrame(p_frame, p_local),
                                         "local out of range on type fetch");
     
     MCTypeInfoRef t_handler_type;
@@ -687,7 +720,7 @@ static inline MCTypeInfoRef MCScriptFetchTypeForLocalInFrame(MCScriptFrame *p_fr
 
 static inline bool MCScriptIsLocalInFrameOptional(MCScriptFrame *p_frame, uindex_t p_local)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
+    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsLocalValidInFrame(p_frame, p_local),
                                         "local out of range on optional check");
     
     MCTypeInfoRef t_type;
@@ -701,36 +734,47 @@ static inline bool MCScriptIsLocalInFrameOptional(MCScriptFrame *p_frame, uindex
 
 static inline MCValueRef MCScriptFetchFromRegisterInFrame(MCScriptFrame *p_frame, int p_register)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_register >= 0 && p_register < p_frame -> handler -> slot_count - p_frame -> handler -> register_offset,
-                       "register out of range on fetch");
-    return p_frame -> slots[p_frame -> handler -> register_offset + p_register];
+    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
+                                        "register out of range on fetch");
+    uindex_t t_slot_index;
+    t_slot_index = MCScriptComputeSlotIndexOfRegisterInFrame(p_frame, p_register);
+    
+    return p_frame -> slots[t_slot_index];
 }
 
 static inline void MCScriptStoreToRegisterInFrameAndRelease(MCScriptFrame *p_frame, int p_register, MCValueRef p_value)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_register >= 0 && p_register < p_frame -> handler -> slot_count - p_frame -> handler -> register_offset,
+    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
                                         "register out of range on store");
-    if (p_frame -> slots[p_frame -> handler -> register_offset + p_register] != p_value)
+    
+    uindex_t t_slot_index;
+    t_slot_index = MCScriptComputeSlotIndexOfRegisterInFrame(p_frame, p_register);
+    
+    if (p_frame -> slots[t_slot_index] != p_value)
     {
-        MCValueRelease(p_frame -> slots[p_frame -> handler -> register_offset + p_register]);
-        p_frame -> slots[p_frame -> handler -> register_offset + p_register] = p_value;
+        MCValueRelease(p_frame -> slots[t_slot_index]);
+        p_frame -> slots[t_slot_index] = p_value;
     }
 }
 
 static inline void MCScriptStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_register, MCValueRef p_value)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_register >= 0 && p_register < p_frame -> handler -> slot_count - p_frame -> handler -> register_offset,
+    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
                        "register out of range on store");
-    if (p_frame -> slots[p_frame -> handler -> register_offset + p_register] != p_value)
+    
+    uindex_t t_slot_index;
+    t_slot_index = MCScriptComputeSlotIndexOfRegisterInFrame(p_frame, p_register);
+    
+    if (p_frame -> slots[t_slot_index] != p_value)
     {
-        MCValueRelease(p_frame -> slots[p_frame -> handler -> register_offset + p_register]);
-        p_frame -> slots[p_frame -> handler -> register_offset + p_register] = MCValueRetain(p_value);
+        MCValueRelease(p_frame -> slots[t_slot_index]);
+        p_frame -> slots[t_slot_index] = MCValueRetain(p_value);
     }
 }
 
 static inline MCValueRef MCScriptFetchConstantInFrame(MCScriptFrame *p_frame, int p_index)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_index >= 0 && p_index < p_frame -> instance -> module -> value_count,
+    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsConstantValidInFrame(p_frame, p_index),
                        "constant out of range on fetch");
     return p_frame -> instance -> module -> values[p_index];
 }
