@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 static bool MCProperListCombine(void *context, MCValueRef p_value)
 {
@@ -29,18 +30,27 @@ static bool MCProperListCombine(void *context, MCValueRef p_value)
     return MCListAppend(t_list, p_value);
 }
 
-extern "C" MC_DLLEXPORT void MCTypeConvertExecSplitStringByDelimiter(MCStringRef p_target, MCStringRef p_delimiter, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT MCProperListRef MCTypeConvertExecSplitStringByDelimiter(MCStringRef p_target, MCStringRef p_delimiter)
 {
-    MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareExact, r_output);
+    MCAutoProperListRef t_list;
+    if (!MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareExact, &t_list))
+        return nil;
+    
+    return MCValueRetain(*t_list);
 }
 
-extern "C" MC_DLLEXPORT void MCTypeConvertExecCombineListWithDelimiter(MCProperListRef p_target, MCStringRef p_delimiter, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT MCStringRef MCTypeConvertExecCombineListWithDelimiter(MCProperListRef p_target, MCStringRef p_delimiter)
 {
     MCListRef t_list;
-    MCListCreateMutable(p_delimiter, t_list);
+    if (!MCListCreateMutable(p_delimiter, t_list))
+        return nil;
     
     if (!MCProperListApply(p_target, MCProperListCombine, &t_list))
-        return;
+        return nil;
+   
+    MCAutoStringRef t_string;
+    if (!MCListCopyAsStringAndRelease(t_list, &t_string))
+        return nil;
     
-    MCListCopyAsStringAndRelease(t_list, r_output);
+    return MCValueRetain(*t_string);
 }
