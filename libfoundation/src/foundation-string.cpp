@@ -161,6 +161,10 @@ bool MCStringCreateWithBytesAndReplacement(const byte_t *p_bytes, uindex_t p_byt
         case kMCStringEncodingNative:
             return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
         case kMCStringEncodingUTF16:
+            
+            if (p_replacement == nil && p_byte_count % 2 != 0)
+                return false;
+            
             return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
         // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.
         case kMCStringEncodingUTF16LE:
