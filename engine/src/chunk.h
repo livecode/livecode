@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	CHUNK_H
 #define	CHUNK_H
 
+#ifndef __MC_FOUNDATION_CHUNK__
+#include "foundation-chunk.h"
+#endif
+
 #include "express.h"
 
 class MCCRef
@@ -230,6 +234,45 @@ public:
                 && trueword == NULL && word == NULL && token == NULL && character == NULL
                 && codepoint == NULL && codeunit == NULL && byte == NULL;
 	}
+};
+
+MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term);
+
+class MCOldTextChunkIterator
+{
+    MCStringRef text;
+    MCScriptPoint *sp;
+    Chunk_term type;
+    MCRange range;
+    bool exhausted;
+    uindex_t length;
+    bool first_chunk;
+    MCAutoArray<MCRange> breaks;
+    uindex_t break_position;
+    
+    // store the number of codeunits matched in text when searching for
+    //  delimiter, so that we can increment the range appropriately.
+    uindex_t delimiter_length;
+    
+public:
+    MCOldTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
+    ~MCOldTextChunkIterator();
+    
+    MCRange getrange()
+    {
+        return range;
+    }
+    
+    bool isexhausted()
+    {
+        return exhausted;
+    }
+    
+    bool next(MCExecContext& ctxt);
+    bool copystring(MCStringRef& r_string);
+    uindex_t countchunks(MCExecContext& ctxt);
+    bool isamong(MCExecContext& ctxt, MCStringRef p_needle);
+    uindex_t chunkoffset(MCExecContext& ctxt, MCStringRef p_needle, uindex_t p_start_offset);
 };
 
 #endif

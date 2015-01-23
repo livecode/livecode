@@ -17,7 +17,24 @@
 #ifndef __MC_FOUNDATION_CHUNK__
 #define __MC_FOUNDATION_CHUNK__
 
-#include "foundation.h"
+#ifndef __MC_FOUNDATION_AUTO__
+#include "foundation-auto.h"
+#endif
+
+enum MCChunkType
+{
+    kMCChunkTypeLine,
+    kMCChunkTypeParagraph,
+    kMCChunkTypeSentence,
+    kMCChunkTypeItem,
+    kMCChunkTypeTrueWord,
+    kMCChunkTypeWord,
+    kMCChunkTypeToken,
+    kMCChunkTypeCharacter,
+    kMCChunkTypeCodepoint,
+    kMCChunkTypeCodeunit,
+    kMCChunkTypeByte,
+};
 
 typedef uinteger_t (MCChunkCountCallback(void *context));
 
@@ -51,6 +68,8 @@ bool MCChunkApply(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions
 
 bool MCChunkIterate(MCRange& x_range, MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, bool p_first);
 
+void MCChunkSkipWord(MCStringRef p_string, MCStringRef p_line_delimiter, MCStringOptions p_options, bool p_skip_spaces, uindex_t& x_offset);
+
 class MCTextChunkIterator
 {
 protected:
@@ -58,10 +77,12 @@ protected:
     MCRange m_range;
     bool m_exhausted;
     uindex_t m_length;
-    Chunk_term m_chunk_type;
+    MCStringOptions m_options;
+    MCChunkType m_chunk_type;
     
 public:
-    ~MCTextChunkIterator();
+    MCTextChunkIterator(MCStringRef p_text, MCChunkType p_chunk_type);
+    virtual ~MCTextChunkIterator();
     
     MCRange GetRange() const
     {
@@ -78,6 +99,57 @@ public:
         return MCStringCopySubstring(m_text, m_range, r_string);
     }
     
+    void SetOptions(MCStringOptions p_options)
+    {
+        m_options = p_options;
+    }
+    
+    MCChunkType GetType() const
+    {
+        return m_chunk_type;
+    }
+    
+    virtual bool Next() = 0;
+    
+    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches)
+    {
+        // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
+        uindex_t t_chunk_offset;
+        t_chunk_offset = 1;
+        
+        // Skip ahead to the first (1-indexed) chunk of interest.
+        p_start_offset += 1;
+        while (p_start_offset)
+        {
+            if (!Next())
+                break;
+            p_start_offset--;
+        }
+        
+        // If we skip past the last chunk, we are done.
+        if (p_start_offset > 0)
+            return 0;
+        
+        // Otherwise, just iterate through the chunks.
+        do
+        {
+            if (p_whole_matches)
+            {
+                if (MCStringSubstringIsEqualTo(m_text, m_range, p_needle, m_options))
+                    return t_chunk_offset;
+            }
+            else
+            {
+                if (MCStringSubstringContains(m_text, m_range, p_needle, m_options))
+                    return t_chunk_offset;
+            }
+            t_chunk_offset++;
+        }
+        while (Next());
+        
+        return 0;
+    }
+    
     virtual uindex_t CountChunks()
     {
         uindex_t t_count = 0;
@@ -86,38 +158,45 @@ public:
         
         return t_count;
     }
-    virtual bool Next();
-    virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset);
+
+    virtual bool IsAmong(MCStringRef p_needle)
+    {
+        if (MCStringIsEmpty(p_needle))
+            return false;
+    
+        while (Next())
+            if (MCStringSubstringIsEqualTo(m_text, m_range, p_needle, m_options))
+                return true;
+        
+        // AL-2014-09-10: [[ Bug 13356 ]] If we were not 'exhausted', then there was a trailing delimiter
+        //  which means empty is considered to be among the chunks.
+        if (MCStringIsEmpty(p_needle) && !m_exhausted)
+            return true;
+        
+        return false;
+    }
 };
 
 class MCTextChunkIterator_Codepoint : public MCTextChunkIterator
 {
-    MCStringOptions m_options;
 public:
-    MCTextChunkIterator_Codepoint();
+    MCTextChunkIterator_Codepoint(MCStringRef p_text, MCChunkType p_chunk_type);
     ~MCTextChunkIterator_Codepoint();
-    
-    void SetOptions(MCStringOptions p_options)
-    {
-        m_options = p_options;
-    }
     
     virtual bool Next();
     virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset);
 };
 
 class MCTextChunkIterator_Codeunit : public MCTextChunkIterator
 {
 public:
-    MCTextChunkIterator_Codeunit();
+    MCTextChunkIterator_Codeunit(MCStringRef p_text, MCChunkType p_chunk_type);
     ~MCTextChunkIterator_Codeunit();
     
     virtual uindex_t CountChunks();
     virtual bool Next();
     virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset);
+    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches);
 };
 
 class MCTextChunkIterator_Delimited : public MCTextChunkIterator
@@ -126,11 +205,9 @@ class MCTextChunkIterator_Delimited : public MCTextChunkIterator
     //  delimiter, so that we can increment the range appropriately.
     uindex_t m_delimiter_length;
     MCStringRef m_delimiter;
-    MCStringOptions m_options;
-    bool m_whole_matches;
     bool m_first_chunk;
 public:
-    MCTextChunkIterator_Delimited();
+    MCTextChunkIterator_Delimited(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_delimiter);
     ~MCTextChunkIterator_Delimited();
     
     void SetDelimiter(MCStringRef p_delimiter)
@@ -138,19 +215,26 @@ public:
         MCValueAssign(m_delimiter, p_delimiter);
     }
     
-    void SetOptions(MCStringOptions p_options)
-    {
-        m_options = p_options;
-    }
+    virtual bool Next();
+    virtual bool IsAmong(MCStringRef p_needle);
+    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches);
+};
+
+class MCTextChunkIterator_Word : public MCTextChunkIterator
+{
+    // store the number of codeunits matched in text when searching for
+    //  delimiter, so that we can increment the range appropriately.
+    MCStringRef m_line_delimiter;
+public:
+    MCTextChunkIterator_Word(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_delimiter);
+    ~MCTextChunkIterator_Word();
     
-    void SetWholeMatches(bool p_whole_matches)
+    void SetLineDelimiter(MCStringRef p_delimiter)
     {
-        m_whole_matches = p_whole_matches;
+        MCValueAssign(m_line_delimiter, p_delimiter);
     }
     
     virtual bool Next();
-    virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset);
 };
 
 class MCTextChunkIterator_ICU : public MCTextChunkIterator
@@ -158,24 +242,24 @@ class MCTextChunkIterator_ICU : public MCTextChunkIterator
     MCAutoArray<MCRange> m_breaks;
     uindex_t m_break_position;
 public:
-    MCTextChunkIterator_ICU();
+    MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType p_chunk_type);
     ~MCTextChunkIterator_ICU();
     
     virtual bool Next();
-    virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset);
 };
+
+class MCScriptPoint;
 
 class MCTextChunkIterator_Tokenized : public MCTextChunkIterator
 {
     MCScriptPoint *m_sp;
 public:
-    MCTextChunkIterator_Tokenized();
+    MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type);
     ~MCTextChunkIterator_Tokenized();
     
     virtual bool Next();
-    virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset);
 };
+
+MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_delimiter, MCStringOptions p_options);
 
 #endif // __MC_FOUNDATION_CHUNK__

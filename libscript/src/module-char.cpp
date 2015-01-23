@@ -39,7 +39,7 @@ extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, M
 extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    //MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     
     if (t_count == 0)
     {
@@ -47,7 +47,7 @@ extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_f
         return;
     }
     
-    MCChunkMarkTextChunk()
+   // MCChunkMarkTextChunk()
     
     if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
