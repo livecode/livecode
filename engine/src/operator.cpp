@@ -419,7 +419,10 @@ Exec_stat MCDiv::eval(MCExecPoint &ep)
 		}
 		else
 			n = ep.getnvalue() / ep2.getnvalue();
-		if (n == MCinfinity || MCS_geterrno() != 0)
+        
+        // SN-2015-01-23: [[ Bug 14136 ]] We don't want to raise an issue for having infinity
+        //  as a result (adding 1 to inf only failed here, not with number + number).
+		if (MCS_geterrno() != 0)
 		{
 			MCS_seterrno(0);
 			MCeerror->add(EE_DIV_RANGE, line, pos);
@@ -527,7 +530,10 @@ Exec_stat MCMod::eval(MCExecPoint &ep)
 		}
 		else
 			n = ep.getnvalue() / ep2.getnvalue();
-		if (n == MCinfinity || MCS_geterrno() != 0)
+        
+        // SN-2015-01-23: [[ Bug 14136 ]] We don't want to raise an issue for having infinity
+        //  as a result (adding 1 to inf only failed here, not with number + number).
+		if (MCS_geterrno() != 0)
 		{
 			MCS_seterrno(0);
 			MCeerror->add(EE_MOD_RANGE, line, pos);
@@ -583,8 +589,10 @@ Exec_stat MCWrap::eval(MCExecPoint &ep)
 		}
 		else
 			n = ep.getnvalue() / ep2.getnvalue();
-			
-		if (n == MCinfinity || MCS_geterrno() != 0)
+        
+        // SN-2015-01-23: [[ Bug 14136 ]] We don't want to raise an issue for having infinity
+        //  as a result (adding 1 to inf only failed here, not with number + number).
+		if (MCS_geterrno() != 0)
 		{
 			MCS_seterrno(0);
 			MCeerror->add(EE_WRAP_RANGE, line, pos);
@@ -638,8 +646,11 @@ Exec_stat MCOver::eval(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		else
-			n = ep.getnvalue() / ep2.getnvalue();
-		if (n == MCinfinity || MCS_geterrno() != 0)
+            n = ep.getnvalue() / ep2.getnvalue();
+        
+        // SN-2015-01-23: [[ Bug 14136 ]] We don't want to raise an issue for having infinity
+        //  as a result (adding 1 to inf only failed here, not with number + number).
+		if (MCS_geterrno() != 0)
 		{
 			MCS_seterrno(0);
 			MCeerror->add(EE_OVER_RANGE, line, pos);
@@ -764,11 +775,14 @@ Exec_stat MCTimes::eval(MCExecPoint &ep)
 		ep.setarray(v, True);
 	}
 	else
-	{
+    {
 		MCS_seterrno(0);
 		real8 n = 0.0;
 		n = ep.getnvalue() * ep2.getnvalue();
-		if (n == MCinfinity || MCS_geterrno() != 0)
+        
+        // SN-2015-01-23: [[ Bug 14136 ]] We don't want to raise an issue for having infinity
+        //  as a result (adding 1 to inf only failed here, not with number + number).
+		if (MCS_geterrno() != 0)
 		{
 			MCS_seterrno(0);
 			MCeerror->add(EE_TIMES_RANGE, line, pos);
