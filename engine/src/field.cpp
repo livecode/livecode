@@ -2591,7 +2591,11 @@ Exec_stat MCField::hscroll(int4 offset, Boolean doredraw)
 
 	signallisteners(P_HSCROLL);
 	
-	return message_with_args(MCM_scrollbar_drag, textx);
+    // PM-2015-01-23: [[ Bug 14405 ]] Make sure a scrollbarDrag message is sent only hscrollbar is visible
+    if (flags & F_HSCROLLBAR)
+        return message_with_args(MCM_scrollbar_drag, textx);
+    
+    return ES_NORMAL;
 }
 
 Exec_stat MCField::vscroll(int4 offset, Boolean doredraw)
@@ -2645,8 +2649,12 @@ Exec_stat MCField::vscroll(int4 offset, Boolean doredraw)
 	}
 	
 	signallisteners(P_VSCROLL);
-	
-	return message_with_args(MCM_scrollbar_drag, texty);
+    
+    // PM-2015-01-23: [[ Bug 14405 ]] Make sure a scrollbarDrag message is sent only vscrollbar is visible
+	if (flags & F_VSCROLLBAR)
+        return message_with_args(MCM_scrollbar_drag, texty);
+    
+    return ES_NORMAL;
 }
 
 void MCField::readscrollbars()
