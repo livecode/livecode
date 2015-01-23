@@ -530,8 +530,10 @@ Exec_stat MCVariableArray::factorarray(MCExecPoint &ep, Operators op)
 					default:
 						dst_value /= src_value;
 						break;
-					}
-					if (src_value == MCinfinity || MCS_geterrno() != 0)
+                    }
+                    // SN-2015-01-23: [[ Bug 14136 ]] We don't want to raise an issue for having infinity
+                    //  as a result (adding 1 to inf only failed here, not with number + number).
+					if (MCS_geterrno() != 0)
 					{
 						MCS_seterrno(0);
 						if (src_value == 0.0)
@@ -598,7 +600,9 @@ Exec_stat MCVariableArray::factorarray(MCExecPoint &ep, Operators op)
 						value /= tnum;
 						break;
 					}
-					if (value == MCinfinity || MCS_geterrno() != 0)
+                    // SN-2015-01-23: [[ Bug 14136 ]] We don't want to raise an issue for having infinity
+                    //  as a result (adding 1 to inf only failed here, not with number + number).
+					if (MCS_geterrno() != 0)
 					{
 						MCS_seterrno(0);
 						if (tnum == 0.0)
