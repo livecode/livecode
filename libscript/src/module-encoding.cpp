@@ -106,35 +106,17 @@ extern "C" MC_DLLEXPORT void MCEncodingEvaluateTextEncoding(integer_t p_type, in
     r_type = p_type;
 }
 
-extern "C" MC_DLLEXPORT MCDataRef MCEncodingExecEncodeTextUsingEncoding(MCStringRef p_target, integer_t p_encoding)
-{
-    MCDataRef t_data;
-    if (!MCStringEncode(p_target, (MCStringEncoding)p_encoding, false, t_data))
-        return nil;
-    
-    return t_data;
-}
-
-extern "C" MC_DLLEXPORT MCStringRef MCEncodingExecDecodeTextUsingEncoding(MCDataRef p_target, integer_t p_encoding)
-{
-    MCStringRef t_string;
-    if (!MCStringDecode(p_target, (MCStringEncoding)p_encoding, false, t_string))
-        return nil;
-    
-    return t_string;
-}
-
 extern "C" MC_DLLEXPORT MCDataRef MCEncodingExecEncodeTextUsingEncodingString(MCStringRef p_target, MCStringRef p_encoding)
 {
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
-        //MCErrorCreateAndThrow();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
         return nil;
     }
     
     MCDataRef t_data;
-    if (!MCStringEncode(p_target, t_encoding, false, t_data))
+    if (!MCStringEncodeWithReplacement(p_target, t_encoding, false, nil, t_data))
         return nil;
     
     return t_data;
@@ -145,27 +127,59 @@ extern "C" MC_DLLEXPORT MCStringRef MCEncodingExecDecodeTextUsingEncodingString(
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
-        //MCErrorCreateAndThrow();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
         return nil;
     }
     
     MCStringRef t_string;
-    if (!MCStringDecode(p_target, t_encoding, false, t_string))
+    if (!MCStringDecodeWithReplacement(p_target, t_encoding, false, nil, t_string))
         return nil;
     
     return t_string;
 }
 
-extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncoding(MCStringRef p_target, integer_t p_encoding, MCDataRef& r_encoded)
+extern "C" MC_DLLEXPORT MCDataRef MCEncodingExecEncodeTextUsingEncodingStringWithReplacement(MCStringRef p_target, MCStringRef p_encoding, MCDataRef p_replacement)
 {
-    if (!MCStringEncode(p_target, (MCStringEncoding)p_encoding, false, r_encoded))
-        return;
+    if (MCDataGetLength(p_replacement) != 1)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 byte"), nil);
+        return nil;
+    }
+    
+    MCStringEncoding t_encoding;
+    if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
+        return nil;
+    }
+    
+    MCDataRef t_data;
+    if (!MCStringEncodeWithReplacement(p_target, t_encoding, false, p_replacement, t_data))
+        return nil;
+    
+    return t_data;
 }
 
-extern "C" MC_DLLEXPORT void MCEncodingEvalTextDecodedUsingEncoding(MCDataRef p_target, integer_t p_encoding, MCStringRef& r_decoded)
+extern "C" MC_DLLEXPORT MCStringRef MCEncodingExecDecodeTextUsingEncodingStringWithReplacement(MCDataRef p_target, MCStringRef p_encoding, MCStringRef p_replacement)
 {
-    if (!MCStringDecode(p_target, (MCStringEncoding)p_encoding, false, r_decoded))
-        return;
+    if (MCStringGetLength(p_replacement) != 1)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 codeunit"), nil);
+        return nil;
+    }
+    
+    MCStringEncoding t_encoding;
+    if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
+        return nil;
+    }
+    
+    MCStringRef t_string;
+    if (!MCStringDecodeWithReplacement(p_target, t_encoding, false, p_replacement, t_string))
+        return nil;
+    
+    return t_string;
 }
 
 extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncodingString(MCStringRef p_target, MCStringRef p_encoding, MCDataRef& r_encoded)
@@ -173,12 +187,15 @@ extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncodingString(MCStri
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
-        //MCErrorCreateAndThrow();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
         return;
     }
     
-    if (!MCStringEncode(p_target, t_encoding, false, r_encoded))
+    if (!MCStringEncodeWithReplacement(p_target, t_encoding, false, nil, r_encoded))
+    {
+        r_encoded = MCValueRetain((MCDataRef&)kMCNull);
         return;
+    }
 }
 
 extern "C" MC_DLLEXPORT void MCEncodingEvalTextDecodedUsingEncodingString(MCDataRef p_target, MCStringRef p_encoding, MCStringRef& r_decoded)
@@ -186,12 +203,59 @@ extern "C" MC_DLLEXPORT void MCEncodingEvalTextDecodedUsingEncodingString(MCData
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
-        //MCErrorCreateAndThrow();
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
         return;
     }
     
-    if (!MCStringDecode(p_target, t_encoding, false, r_decoded))
+    if (!MCStringDecodeWithReplacement(p_target, t_encoding, false, nil, r_decoded))
+    {
+        r_decoded = MCValueRetain((MCStringRef&)kMCNull);
         return;
+    }
+}
+
+extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncodingStringWithReplacement(MCStringRef p_target, MCStringRef p_encoding, MCDataRef p_replacement, MCDataRef& r_encoded)
+{
+    if (MCDataGetLength(p_replacement) != 1)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 byte"), nil);
+        return;
+    }
+    
+    MCStringEncoding t_encoding;
+    if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
+        return;
+    }
+    
+    if (!MCStringEncodeWithReplacement(p_target, t_encoding, false, p_replacement, r_encoded))
+    {
+        r_encoded = MCValueRetain((MCDataRef&)kMCNull);
+        return;
+    }
+}
+
+extern "C" MC_DLLEXPORT void MCEncodingEvalTextDecodedUsingEncodingStringWithReplacement(MCDataRef p_target, MCStringRef p_encoding, MCStringRef p_replacement, MCStringRef& r_decoded)
+{
+    if (MCStringGetLength(p_replacement) != 1)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 codeunit"), nil);
+        return;
+    }
+    
+    MCStringEncoding t_encoding;
+    if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
+        return;
+    }
+    
+    if (!MCStringDecodeWithReplacement(p_target, t_encoding, false, p_replacement, r_decoded))
+    {
+        r_decoded = MCValueRetain((MCStringRef&)kMCNull);
+        return;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

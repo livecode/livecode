@@ -32,8 +32,14 @@ public foreign handler MCEncodingEvalDecodedUsingBase64(in Target as data, out R
 public foreign handler MCEncodingExecEncodeTextUsingEncodingString(in Target as string, in Encoding as string) as data binds to "<builtin>"
 public foreign handler MCEncodingExecDecodeTextUsingEncodingString(in Target as data, in Encoding as string) as string binds to "<builtin>"
 
+public foreign handler MCEncodingExecEncodeTextUsingEncodingStringWithReplacement(in Target as string, in Encoding as string, in Replacement as data) as data binds to "<builtin>"
+public foreign handler MCEncodingExecDecodeTextUsingEncodingStringWithReplacement(in Target as data, in Encoding as string, in Replacement as string) as string binds to "<builtin>"
+
 public foreign handler MCEncodingEvalTextEncodedUsingEncodingString(in Target as string, in Encoding as string, out Result as data) as undefined binds to "<builtin>"
 public foreign handler MCEncodingEvalTextDecodedUsingEncodingString(in Target as data, in Encoding as string, out Result as string) as undefined binds to "<builtin>"
+
+public foreign handler MCEncodingEvalTextEncodedUsingEncodingStringWithReplacement(in Target as string, in Encoding as string, in Replacement as data, out Result as data) as undefined binds to "<builtin>"
+public foreign handler MCEncodingEvalTextDecodedUsingEncodingStringWithReplacement(in Target as data, in Encoding as string, in Replacement as string, out Result as string) as undefined binds to "<builtin>"
 
 public foreign handler MCEncodingExecEncodeForURL(in Target as string) as string binds to "<builtin>"
 public foreign handler MCEncodingExecDecodeFromURL(in Target as string) as string binds to "<builtin>"
@@ -192,44 +198,48 @@ begin
 end syntax
 
 /*
-Summary:	Encodes a string
+Summary:        Encodes a string
 
-Target:		An expression which evaluates to a string.
-Encoding:   A string which evaluates to a <TextEncoding>.
+Target:         An expression which evaluates to a string.
+Encoding:       A string which evaluates to a <TextEncoding>.
+Replacement:    A byte to output <Target> contains chars which cannot be encoded as <Encoding>.
 
-The result:	The encoded data.
+The result:     The encoded data.
 
 Description:
-Encodes a string in the specified encoding.
+Encodes a string in the specified encoding. If the 'with <Replacement>' form is used, each char of Target that cannot be encoded using <Encoding> is replaced by the <Replacement> byte. Otherwise, if any char of <Target> cannot be encoded using <Encoding>, <The result> is undefined.
 
 Tags: Encoding
 */
 
 syntax EncodeText is statement
-    "encode" <Target: Expression> "using" <Encoding: Expression>
+    "encode" <Target: Expression> "using" <Encoding: Expression> ["with" "replacement" <Replacement: Expression>]
 begin
     MCEncodingExecEncodeTextUsingEncodingString(Target, Encoding)
+    MCEncodingExecEncodeTextUsingEncodingStringWithReplacement(Target, Encoding, Replacement)
 end syntax
 
 /*
-Summary:	Decodes a string
+Summary:        Decodes a string
 
-Target:		An expression which evaluates to data.
-Encoding:   A string which evaluates to a <TextEncoding>.
+Target:         An expression which evaluates to data.
+Encoding:       A string which evaluates to a <TextEncoding>.
+Replacement:    A char to replace any invalid data.
 
 The result:	The decoded data 
 
 Description:
-Decodes bytes from the specified encoding.
+Decodes bytes from the specified encoding. If the 'with <Replacement>' form is used, any data in <Target> that cannot be interpreted as <Encoding>-encoded is replaced by the replacement char. Otherwise, if any data in <Target> cannot be interpreted as <Encoding>-encoded, <The result> is undefined.
 
 Tags: Encoding
 
 */
 
 syntax DecodeText is statement
-    "decode" <Target: Expression> "using" <Encoding: Expression>
+    "decode" <Target: Expression> "using" <Encoding: Expression> ["with" "replacement" <Replacement: Expression>]
 begin
     MCEncodingExecDecodeTextUsingEncodingString(Target, Encoding)
+    MCEncodingExecDecodeTextUsingEncodingStringWithReplacement(Target, Encoding, Replacement)
 end syntax
 
 /*
@@ -237,19 +247,21 @@ Summary:	Encodes a string
 
 Target:		An expression which evaluates to a string.
 Encoding: A string which evaluates to a <TextEncoding>.
+Replacement:    A byte to output <Target> contains chars which cannot be encoded as <Encoding>.
 
 output:     The encoded data
 
 Description:
-Encodes a string in the specified encoding, returning the encoded data.
+Encodes a string in the specified encoding. If the 'with <Replacement>' form is used, each char of Target that cannot be encoded using <Encoding> is replaced by the <Replacement> byte. Otherwise, if any char of <Target> cannot be encoded using <Encoding>, undefined is returned.
 
 Tags: Encoding
 */
 
 syntax TextEncodeOperator is left binary operator with precedence 3
-    <Target: Expression> "encoded" "using" <Encoding: Expression>
+    <Target: Expression> "encoded" "using" <Encoding: Expression> ["with" "replacement" <Replacement: Expression>]
 begin
     MCEncodingEvalTextEncodedUsingEncodingString(Target, Encoding, output)
+    MCEncodingEvalTextEncodedUsingEncodingStringWithReplacement(Target, Encoding, Replacement, output)
 end syntax
 
 /*
@@ -257,19 +269,22 @@ Summary:	Decodes a string
 
 Target:		An expression which evaluates to data.
 Encoding: A string which evaluates to a <TextEncoding>.
+Replacement:    A char to replace any invalid data.
 
 output:     The decoded data
 
 Description:
-Decodes bytes from the specified encoding, returning the decoded string.
+Decodes bytes from the specified encoding. If the 'with <Replacement>' form is used, any data in <Target> that cannot be interpreted as <Encoding>-encoded is replaced by the replacement char. Otherwise, if any data in <Target> cannot be interpreted as <Encoding>-encoded, undefined is returned.
+
 
 Tags: Encoding
 */
 
 syntax TextDecodeOperator is left binary operator with precedence 3
-    <Target: Expression> "decoded" "using" <Encoding: Expression>
+    <Target: Expression> "decoded" "using" <Encoding: Expression> ["with" "replacement" <Replacement: Expression>]
 begin
-    MCEncodingEvalTextEncodedUsingEncodingString(Target, Encoding, output)
+    MCEncodingEvalTextDecodedUsingEncodingString(Target, Encoding, output)
+    MCEncodingEvalTextDecodedUsingEncodingStringWithReplacement(Target, Encoding, Replacement, output)
 end syntax
 
 

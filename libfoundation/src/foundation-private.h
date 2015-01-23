@@ -632,7 +632,7 @@ bool MCUnicodeCharsMapToNative(const unichar_t *uchars, uindex_t uchar_count, ch
 void MCUnicodeCharsMapFromNative(const char_t *chars, uindex_t char_count, unichar_t *uchars);
 
 uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes, uindex_t utf8byte_count);
-uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count);
+uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count, const unichar_t *p_replacement);
 
 bool MCUnicodeCharMapToNative(unichar_t uchar, char_t& r_nchar);
 char_t MCUnicodeCharMapToNativeLossy(unichar_t nchar);

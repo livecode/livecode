@@ -1713,6 +1713,10 @@ MC_DLLEXPORT bool MCStringIsEqualToCString(MCStringRef string, const char *cstri
 // the specified encoding.
 MC_DLLEXPORT bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+    
+// Create an immutable string from the given bytes, interpreting them using
+// the specified encoding, and replacing bad data with a replacement char.
+MC_DLLEXPORT bool MCStringCreateWithBytesAndReplacement(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef p_replacement, MCStringRef& r_string);
 
 // Create an immutable string from the given unicode char sequence.
 MC_DLLEXPORT bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
@@ -1726,6 +1730,10 @@ MC_DLLEXPORT bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStri
 MC_DLLEXPORT bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
 
+// Create an immutable string from the given native char sequence. If any chars are out of range for ASCII (i.e. > 127)
+//  then either the replacement char is substituted or, if p_replacement is nil, the function returns false.
+MC_DLLEXPORT bool MCStringCreateWithAsciiCharsAndReplacement(const char_t *p_chars, uindex_t p_char_count, MCStringRef p_replacement, MCStringRef& r_string);
+    
 // Create an immutable string from the given (native) c-string.
 MC_DLLEXPORT bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithCStringAndRelease(char *cstring, MCStringRef& r_string);
@@ -1755,11 +1763,21 @@ MC_DLLEXPORT bool MCStringEvalTextEncoding(MCStringRef encoding, MCStringEncodin
 // be represented in the target encoding are replaced by '?'.
 MC_DLLEXPORT bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
 MC_DLLEXPORT bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+    
+// Encode the given string with the specified encoding. Characters which cannot
+// be represented in the target encoding are replaced by the replacement byte, or,
+// if p_replacement is nil, the function returns false.
+MC_DLLEXPORT bool MCStringEncodeWithReplacement(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef p_replacement, MCDataRef& r_data);
 
 // Decode the given data, intepreting in the given encoding.
 MC_DLLEXPORT bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
+// Decode the given data, intepreting in the given encoding. Invalid bytes for the
+// target encoding are replaced by the replacement byte, or, if p_replacement is nil,
+// the function returns false.
+MC_DLLEXPORT bool MCStringDecodeWithReplacement(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef p_replacement, MCStringRef& r_string);
+    
 /////////
 
 // Create an immutable string, built using the given format specification and
@@ -1862,6 +1880,13 @@ MC_DLLEXPORT uindex_t MCStringGetChars(MCStringRef string, MCRange range, unicha
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 MC_DLLEXPORT uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
 
+// Returns the sequence of native chars making up the given range in 'chars' and
+// returns the number of chars generated. If 'chars' is nil, just the number of chars
+// that would be generated is returned. Any unmappable chars get generated as the
+// replacement char. If the replacement char is nil, the length returned is the number of
+// generated chars.
+MC_DLLEXPORT uindex_t MCStringGetNativeCharsWithReplacement(MCStringRef self, MCRange p_range, char_t *p_replacement, char_t *p_chars);
+    
 // Nativize self
 MC_DLLEXPORT void MCStringNativize(MCStringRef string);
 
@@ -1921,6 +1946,13 @@ MC_DLLEXPORT bool MCStringUnmapIndices(MCStringRef, MCCharChunkType, MCRange p_c
 // but this is not reflected in the byte count.
 MC_DLLEXPORT bool MCStringConvertToBytes(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count);
 
+// Converts the contents of the string to bytes using the given encoding. The caller
+// takes ownership of the byte array. Note that the returned array is NUL terminated,
+// but this is not reflected in the byte count. Any string characters that cannot be
+// encoded using the given encoding are replaced with the replacement byte, or, if
+// p_replacement is nil, the function returns false.
+MC_DLLEXPORT bool MCStringConvertToBytesWithReplacement(MCStringRef self, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef p_replacement, byte_t*& r_bytes, uindex_t& r_byte_count);
+    
 // [[ Bug 12204 ]] textEncode ASCII support is actually native
 // Converts the contents of the string to ASCII characters - excluding the characters from the extended range
 MC_DLLEXPORT bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char_count);
@@ -1935,6 +1967,12 @@ MC_DLLEXPORT bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_cha
 // terminated, but this is not reflected in the char count.
 MC_DLLEXPORT bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 
+// Converts the contents of the string to native - using p_replacement as the unmappable char,
+// or, if p_replacement is nil and an unmappable char is encountered, the function returns false.
+// The caller takes ownership of the char array. Note that the returned array is NUL
+// terminated, but this is not reflected in the char count.
+MC_DLLEXPORT bool MCStringConvertToNativeWithReplacement(MCStringRef self, MCDataRef p_replacement, bool p_ascii, char_t*& r_chars, uindex_t& r_char_count);
+    
 // Normalizes and converts to native
 MC_DLLEXPORT bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 

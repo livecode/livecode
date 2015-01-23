@@ -220,7 +220,7 @@ unichar_t MCUnicodeCharUppercase(unichar_t p_char)
 
 // Convert the given UTF-8 string to Unicode. Both counts are in bytes.
 // Returns the number of bytes used.
-static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t *p_dst, int32_t p_dst_count)
+static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t *p_dst, int32_t p_dst_count, const unichar_t *p_replacement)
 {
 	int32_t t_made;
 	t_made = 0;
@@ -241,7 +241,11 @@ static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t
 		}
 		else if ((p_src[0] & 0x40) == 0)
 		{
-			// This is an error
+			if (p_replacement || p_dst_count == 0)
+            {
+                t_codepoint = p_replacement ? *p_replacement : '?';
+                t_consumed = 1;
+            }
 		}
 		else if ((p_src[0] & 0x20) == 0)
 		{
@@ -430,9 +434,9 @@ uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, 
 
 // If wchars is nil, returns the size of the buffer (in wchars needed)
 // If wchars is not nil, does the conversion into wchars
-uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count)
+uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count, const unichar_t *p_replacement)
 {
-    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count * 2) / 2;
+    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count * 2, p_replacement) / 2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
