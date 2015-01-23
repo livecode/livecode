@@ -21,6 +21,7 @@ bool
 MCSInitialize(void)
 {
 	return
+		__MCSCommandLineInitialize() &&
 		__MCSFileInitialize() &&
 		__MCSStreamInitialize();
 }
@@ -30,4 +31,5 @@ MCSFinalize(void)
 {
 	__MCSStreamFinalize();
 	__MCSFileFinalize();
+	__MCSCommandLineFinalize();
 }

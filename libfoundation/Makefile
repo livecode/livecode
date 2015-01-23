@@ -33,6 +33,7 @@ SOURCES= \
 	foundation-unicodechars.cpp \
 	foundation-unicode.cpp \
 	foundation-value.cpp \
+	system-commandline.cpp \
 	system-file.cpp \
 	system-file-posix.cpp \
 	system-init.cpp \
