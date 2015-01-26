@@ -61,7 +61,15 @@ function fetchLibrary {
 	fi
 }
 
-for PLATFORM in "${PLATFORMS[@]}" ; do
+if [ 0 -eq "$#" ]; then
+    SELECTED_PLATFORMS="${PLATFORMS[@]}"
+else
+    SELECTED_PLATFORMS="$@"
+fi
+
+echo "$SELECTED_PLATFORMS"
+
+for PLATFORM in "${SELECTED_PLATFORMS}" ; do
 	eval "ARCHS=( \${ARCHS_${PLATFORM}[@]} )"
 	eval "LIBS=( \${LIBS_${PLATFORM}[@]} )"
 	eval "SUBPLATFORMS=( \${SUBPLATFORMS_${PLATFORM}[@]} )"
