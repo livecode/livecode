@@ -3636,7 +3636,7 @@ Returns:	The bounding box of <mText> when drawn at point 0,0 with the current fo
 
 Example:
 	// Measure text drawn on the canvas
-	measure text "Sample text" on this canvas
+	measure "Sample text" on this canvas
 	put the result into tBounds
 	put the width of tBounds into tWidth
 	put the height of tBounds into tHeight
