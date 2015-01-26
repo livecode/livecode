@@ -3,6 +3,13 @@
 
 language: c++
 
+# Environment variables
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "R/JfoBMrkhCGWhfWM1m3gPHuLtMBlp2SIK1R9BaPbRsbGBUJmAg9V0g0YXSaw8SVxoyuiL/jsLtHPfDeub9oTxrYydew+6/4KaoQdG7EGXQJfBhH2f0ag/hTKJfXnmZX9jMMnTxPf5Axjq+w4E6sKkU2+d1oAJRhrqzYNwDhVlc="
+
 # Before setting up the source tree, install necessary development
 # headers
 before_install:
@@ -14,3 +21,18 @@ install: (cd prebuilt && ./fetch-libraries.sh linux)
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
 script: make -sj2 bootstrap && make -sj2 all && make -sj2 check
+
+# Configuration for Coverity Scan integration
+#
+# In order to trigger a scan with Coverity, push to the
+# 'coverity_scan' branch.
+#
+addons:
+  coverity_scan:
+    project:
+      name: "runrev/livecode"
+      description: "Build submitted via Travis CI"
+    notification_email: peter@livecode.com
+    build_command_prepend: "./configure; make clean"
+    build_command: "make -sj2 bootstrap && make -sj2 all"
+    branch_pattern: coverity_scan
