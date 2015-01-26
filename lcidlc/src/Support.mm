@@ -246,7 +246,8 @@ typedef struct MCExternalInterface
 {
 	uint32_t version;
 	MCError (*engine_run_on_main_thread)(void *callback, void *callback_state, uint32_t options);
-	MCError (*context_query)(MCExternalContextVar op, void *result);
+    // SN-2015-01-26: [[ Bug 14057 ]] Former context query set as legacy function
+	MCError (*context_query_legacy)(MCExternalContextVar op, void *result);
 	MCError (*variable_create)(MCVariableRef* var);
 	MCError (*variable_retain)(MCVariableRef var);
 	MCError (*variable_release)(MCVariableRef var);
@@ -277,6 +278,9 @@ typedef struct MCExternalInterface
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] New context methods for script execution.
 	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCVariableRef *binds, unsigned int bind_count, MCVariableRef result);
 	MCError (*context_execute)(const char *p_expression, unsigned int options, MCVariableRef *binds, unsigned int bind_count);
+    
+    // SN-2015-01-26: [[ Bug 14057 ]] Added new function in the API v6, to allow the users to choose their return type (for the delimiters)
+    MCError (*context_query)(MCExternalContextVar op, MCValueOptions p_options, void *result);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -1543,41 +1547,41 @@ typedef struct __LCWait *LCWaitRef;
 
 LCError LCContextMe(LCObjectRef *r_object)
 {
-	return (LCError)s_interface -> context_query(kMCExternalContextVarMe, r_object);
+	return (LCError)s_interface -> context_query_legacy(kMCExternalContextVarMe, r_object);
 }
 
 LCError LCContextTarget(LCObjectRef *r_target)
 {
-	return (LCError)s_interface -> context_query(kMCExternalContextVarTarget, r_target);
+	return (LCError)s_interface -> context_query_legacy(kMCExternalContextVarTarget, r_target);
 }
 
 LCError LCContextDefaultStack(LCObjectRef *r_object)
 {
-	return (LCError)s_interface -> context_query(kMCExternalContextVarDefaultStack, r_object);
+	return (LCError)s_interface -> context_query_legacy(kMCExternalContextVarDefaultStack, r_object);
 }
 
 LCError LCContextDefaultCard(LCObjectRef *r_object)
 {
-	return (LCError)s_interface -> context_query(kMCExternalContextVarDefaultCard, r_object);
+	return (LCError)s_interface -> context_query_legacy(kMCExternalContextVarDefaultCard, r_object);
 }
 
 //////////
 
 LCError LCContextCaseSensitive(bool *r_case_sensitive)
 {
-	return (LCError)s_interface -> context_query(kMCExternalContextVarCaseSensitive, r_case_sensitive);
+	return (LCError)s_interface -> context_query_legacy(kMCExternalContextVarCaseSensitive, r_case_sensitive);
 }
 
 LCError LCContextConvertOctals(bool *r_convert_octals)
 {
-	return (LCError)s_interface -> context_query(kMCExternalContextVarConvertOctals, r_convert_octals);
+	return (LCError)s_interface -> context_query_legacy(kMCExternalContextVarConvertOctals, r_convert_octals);
 }
 
 LCError LCContextWholeMatches(bool *r_whole_matches)
 {
 	if (s_interface -> version < 5)
 		return kLCErrorNotImplemented;
-	return (LCError)s_interface -> context_query(kMCExternalContextVarWholeMatches, r_whole_matches);
+	return (LCError)s_interface -> context_query_legacy(kMCExternalContextVarWholeMatches, r_whole_matches);
 }
 
 //////////
@@ -1587,48 +1591,30 @@ static LCError LCContextQueryDelimiter(MCExternalContextVar p_var, unsigned int 
 	LCError t_error;
 	t_error = kLCErrorNone;
 	
-	// Fetch the delimiter char from the context - this is returned as a uint32_t, but is just
-	// a native char.
-	uint32_t t_delimiter_char;
-	t_delimiter_char = '\0';
-	if (t_error == kLCErrorNone)
-		t_error = (LCError)s_interface -> context_query(p_var, &t_delimiter_char);
-	
-	// Convert the native char to the requested output.
-	if (t_error == kLCErrorNone)
-	{
-		char t_native_delimiter_char;
-		t_native_delimiter_char = (char)t_delimiter_char;
-		t_error = LCValueConvert(kLCValueOptionAsCChar, &t_delimiter_char, p_options, r_value);
-	}
-	
-	return t_error;
-}
-
-// SN-2015-01-19: [[ Bug 14057 ]] New Unicode delimiter function, knowing that s_interface -> context_query
-//   will return a string, not a char.
-static LCError LCContextQueryUnicodeDelimiter(MCExternalContextVar p_var, unsigned int p_options, void *r_value)
-{
-    // Ensure that we don't try against the pre-7.0 engines.
+    // SN-2015-01-26: [[ Bug 14057 ]] Keep the old execution against pre V6.
     if (s_interface -> version < 6)
-        return kLCErrorNotImplemented;
-    
-	LCError t_error;
-	t_error = kLCErrorNone;
-	
-	// Fetch the delimiter string from the context - this is returned as a UTF-16 encoded C-String
-	unichar_t* t_delimiter_char;
-	t_delimiter_char = NULL;
-	if (t_error == kLCErrorNone)
-		t_error = (LCError)s_interface -> context_query(p_var, &t_delimiter_char);
-	
-	// Convert the UTF-16 string to the requested output.
-	if (t_error == kLCErrorNone && (p_options & kLCValueOptionMaskAs != kLCValueOptionAsUTF16CString))
-	{
-		t_error = LCValueConvert(kLCValueOptionAsUTF16CString, &t_delimiter_char, p_options, r_value);
-        // We need to free the memory allocated for the delimiter string.
-        free(t_delimiter_char);
-	}
+    {
+        // Fetch the delimiter char from the context - this is returned as a uint32_t, but is just
+        // a native char.
+        uint32_t t_delimiter_char;
+        t_delimiter_char = '\0';
+        if (t_error == kLCErrorNone)
+            t_error = (LCError)s_interface -> context_query_legacy(p_var, &t_delimiter_char);
+        
+        // Convert the native char to the requested output.
+        if (t_error == kLCErrorNone)
+        {
+            char t_native_delimiter_char;
+            t_native_delimiter_char = (char)t_delimiter_char;
+            t_error = LCValueConvert(kLCValueOptionAsCChar, &t_delimiter_char, p_options, r_value);
+        }
+    }
+    else
+    {
+        // SN-2015-01-26: [[ Bug 14057 ]] From version 6, no conversion needed for the delimiters.
+        if (t_error == kLCErrorNone)
+            t_error = (LCError)s_interface -> context_query(p_var, p_options, r_value);
+    }
 	
 	return t_error;
 }
@@ -1652,28 +1638,6 @@ LCError LCContextColumnDelimiter(unsigned int p_options, void *r_value)
 {
 	return LCContextQueryDelimiter(kMCExternalContextVarColumnDelimiter, p_options, r_value);
 }
-    
-// SN-2015-01-19: [[ Bug 14057 ]] Added Unicode, string delimiter-query to
-//   reflect the 7.0 update on the delimiters.
-LCError LCContextUnicodeItemDelimiter(unsigned int p_options, void *r_value)
-{
-    return LCContextQueryUnicodeDelimiter(kMCExternalContextVarUnicodeItemDelimiter, p_options, r_value);
-}
-    
-LCError LCContextUnicodeLineDelimiter(unsigned int p_options, void *r_value)
-{
-    return LCContextQueryUnicodeDelimiter(kMCExternalContextVarUnicodeLineDelimiter, p_options, r_value);
-}
-    
-LCError LCContextUnicodeRowDelimiter(unsigned int p_options, void *r_value)
-{
-    return LCContextQueryUnicodeDelimiter(kMCExternalContextVarUnicodeRowDelimiter, p_options, r_value);
-}
-    
-LCError LCContextUnicodeColumnDelimiter(unsigned int p_options, void *r_value)
-{
-    return LCContextQueryUnicodeDelimiter(kMCExternalContextVarUnicodeColumnDelimiter, p_options, r_value);
-}
 
 //////////
 
@@ -1686,7 +1650,7 @@ static LCError LCContextQueryVariable(MCExternalContextVar p_var, unsigned int p
 	MCVariableRef t_var;
 	t_var = nil;
 	if (t_error == kLCErrorNone)
-		t_error = (LCError)s_interface -> context_query(kMCExternalContextVarIt, &t_var);
+		t_error = (LCError)s_interface -> context_query_legacy(kMCExternalContextVarIt, &t_var);
 	
 	// Fetch the value in the format requested.
 	if (t_error == kLCErrorNone)

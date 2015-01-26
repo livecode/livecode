@@ -316,7 +316,7 @@ struct MCExternalInterface
 
 	//////////
 
-	MCExternalError (*context_query)(MCExternalContextQueryTag op, void *result);
+	MCExternalError (*context_query_legacy)(MCExternalContextQueryTag op, void *result);
 
 	//////////
 
@@ -382,6 +382,9 @@ struct MCExternalInterface
 	//   in the current context.
 	// MW-2013-06-21: [[ ExternalsApiV5 ]] Added binds parameters for future extension.
 	MCExternalError (*context_execute)(const char *p_expression, unsigned int options, MCExternalVariableRef *binds, unsigned int bind_count); // V5
+    
+    // SN-2015-01-26: [[ Bug 14057 ]] Update context query, to allow the user to set the return type
+    MCExternalError (*context_query)(MCExternalContextQueryTag op, MCExternalValueOptions p_options, void *r_result); // V6
 };
 
 typedef MCExternalInfo *(*MCExternalDescribeProc)(void);
@@ -1543,120 +1546,190 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void *result)
+// SN-2015-01-26: [[ Bug 14057 ]] Function added to have a consistent conversion from a string.
+static MCExternalError MCExternalConvertStringToValueType(MCStringRef p_string, MCExternalValueOptions p_option, void *r_result)
 {
-	switch(op)
-	{
-	case kMCExternalContextQueryMe:
-		{
-			MCObjectHandle *t_handle;
-			t_handle = MCECptr -> GetObject() -> gethandle();
-			if (t_handle == nil)
-				return kMCExternalErrorOutOfMemory;
-			*(MCObjectHandle **)result = t_handle;
-		}
-		break;
-	case kMCExternalContextQueryTarget:
-		{
-			MCObjectHandle *t_handle;
-			t_handle = MCtargetptr -> gethandle();
-			if (t_handle == nil)
-				return kMCExternalErrorOutOfMemory;
-			*(MCObjectHandle **)result = t_handle;
-		}
-		break;
-	case kMCExternalContextQueryResult:
-		// MW-2014-01-22: [[ CompatV1 ]] If the result shim hasn't been made, make it.
-		if (s_external_v1_result == nil)
-			s_external_v1_result = new MCReferenceExternalVariable(MCresult);
-		*(MCExternalVariableRef *)result = s_external_v1_result;
-		break;
-	case kMCExternalContextQueryIt:
-		{
-			// MW-2014-01-22: [[ CompatV1 ]] Use the current it shim (initialized before
-			//   a new handler is invoked).
-			*(MCExternalVariableRef *)result = s_external_v1_current_it;
-		}
-		break;
-	case kMCExternalContextQueryCaseSensitive:
-		*(bool *)result = MCECptr -> GetCaseSensitive();
-		break;
-	case kMCExternalContextQueryConvertOctals:
-		*(bool *)result = MCECptr -> GetConvertOctals();
-		break;
-	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of 'the wholeMatches' query.
-	case kMCExternalContextQueryWholeMatches:
-		*(bool *)result = MCECptr -> GetWholeMatches();
-		break;
-	case kMCExternalContextQueryItemDelimiter:
-        *(char *)result = MCStringGetNativeCharAtIndex(MCECptr -> GetItemDelimiter(), 0);
-		break;
-	case kMCExternalContextQueryLineDelimiter:
-        *(char *)result = MCStringGetNativeCharAtIndex(MCECptr -> GetLineDelimiter(), 0);
-		break;
-	case kMCExternalContextQueryColumnDelimiter:
-        *(char *)result = MCStringGetNativeCharAtIndex(MCECptr -> GetColumnDelimiter(), 0);
-		break;
-	case kMCExternalContextQueryRowDelimiter:
-		*(char *)result = MCStringGetNativeCharAtIndex(MCECptr -> GetRowDelimiter(), 0);
-		break;
-    // SN-2014-07-01: [[ ExternalsApiV6 ]] Unicode delimiters, UTF-16 encoded
-    case kMCExternalContextQueryUnicodeColumnDelimiter:
+    MCString t_string;
+    
+    // Any of the MCStringConvertTo* generate NULL-terminated strings.
+    switch(p_option & 0xff)
     {
-        uindex_t t_dummy;
-        if (!MCStringConvertToUnicode(MCECptr -> GetColumnDelimiter(), *(unichar_t**)result, t_dummy))
-            return kMCExternalErrorOutOfMemory;
-        break;
+        case kMCExternalValueOptionAsCChar:
+            *(char*)r_result = MCStringGetNativeCharAtIndex(p_string, 0);
+            break;
+            
+        case kMCExternalValueOptionAsCString:
+        case kMCExternalValueOptionAsString:
+        {
+            char *t_cstring;
+            if (!MCStringConvertToCString(p_string, t_cstring))
+                return kMCExternalErrorOutOfMemory;
+            
+            if ((p_option & 0xff) == kMCExternalValueOptionAsCString)
+                *(char**)r_result = t_cstring;
+            else
+                ((MCString*) r_result) -> setstring(t_cstring);
+            break;
+        }
+            
+        case kMCExternalValueOptionAsUTF16CString:
+        case kMCExternalValueOptionAsUTF16String:
+        {
+            unichar_t *t_chars;
+            uint32_t t_count;
+            if (!MCStringConvertToUnicode(p_string, t_chars, t_count))
+                return kMCExternalErrorOutOfMemory;
+            
+            if ((p_option & 0xff) == kMCExternalValueOptionAsUTF16CString)
+                *(unichar_t**)r_result = t_chars;
+            else
+                ((MCString*)r_result) -> set ((char*)t_chars, t_count);
+            
+            break;
+        }
+            
+        case kMCExternalValueOptionAsUTF8CString:
+        case kMCExternalValueOptionAsUTF8String:
+        {
+            char *t_chars;
+            uint32_t t_count;
+            if (!MCStringConvertToUTF8(p_string, t_chars, t_count))
+                return kMCExternalErrorOutOfMemory;
+            
+            if ((p_option & 0xff) == kMCExternalValueOptionAsUTF8CString)
+                *(char**)r_result = t_chars;
+            else
+                ((MCString*)r_result) -> set(t_chars, t_count);
+            
+            break;
+        }
+            
+#ifdef __OBJC__
+        case kMCExternalValueOptionAsNSString:
+        {
+            CFStringRef t_string;
+            if (!MCStringConvertToCFStringRef(p_string, t_string))
+                return kMCExternalErrorOutOfMemory;
+            
+            *(NSString**)r_result = (NSString*)t_string;
+        }
+#endif
+        default:
+            return kMCExternalErrorInvalidValueType;
     }
-    case kMCExternalContextQueryUnicodeItemDelimiter:
+    
+    return kMCExternalErrorNone;
+}
+
+// SN-2015-01-26: [[ Bug 14057 ]] New context query function, to allow the users to choose their type for the delimiters
+static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCExternalValueOptions p_option, void *result)
+{
+    switch(op)
     {
-        uindex_t t_dummy;
-        if (!MCStringConvertToUnicode(MCECptr -> GetItemDelimiter(), *(unichar_t**)result, t_dummy))
-            return kMCExternalErrorOutOfMemory;
-        break;
+        case kMCExternalContextQueryMe:
+        {
+            MCObjectHandle *t_handle;
+            t_handle = MCECptr -> GetObject() -> gethandle();
+            if (t_handle == nil)
+                return kMCExternalErrorOutOfMemory;
+            *(MCObjectHandle **)result = t_handle;
+        }
+            break;
+        case kMCExternalContextQueryTarget:
+        {
+            MCObjectHandle *t_handle;
+            t_handle = MCtargetptr -> gethandle();
+            if (t_handle == nil)
+                return kMCExternalErrorOutOfMemory;
+            *(MCObjectHandle **)result = t_handle;
+        }
+            break;
+        case kMCExternalContextQueryResult:
+            // MW-2014-01-22: [[ CompatV1 ]] If the result shim hasn't been made, make it.
+            if (s_external_v1_result == nil)
+                s_external_v1_result = new MCReferenceExternalVariable(MCresult);
+            *(MCExternalVariableRef *)result = s_external_v1_result;
+            break;
+        case kMCExternalContextQueryIt:
+        {
+            // MW-2014-01-22: [[ CompatV1 ]] Use the current it shim (initialized before
+            //   a new handler is invoked).
+            *(MCExternalVariableRef *)result = s_external_v1_current_it;
+        }
+            break;
+        case kMCExternalContextQueryCaseSensitive:
+            *(bool *)result = MCECptr -> GetCaseSensitive();
+            break;
+        case kMCExternalContextQueryConvertOctals:
+            *(bool *)result = MCECptr -> GetConvertOctals();
+            break;
+            // MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of 'the wholeMatches' query.
+        case kMCExternalContextQueryWholeMatches:
+            *(bool *)result = MCECptr -> GetWholeMatches();
+            break;
+        case kMCExternalContextQueryDefaultStack:
+        {
+            if (MCdefaultstackptr == nil)
+                return kMCExternalErrorNoDefaultStack;
+            
+            MCObjectHandle *t_handle;
+            t_handle = MCdefaultstackptr -> gethandle();
+            if (t_handle == nil)
+                return kMCExternalErrorOutOfMemory;
+            *(MCObjectHandle **)result = t_handle;
+        }
+            break;
+        case kMCExternalContextQueryDefaultCard:
+        {
+            if (MCdefaultstackptr == nil)
+                return kMCExternalErrorNoDefaultStack;
+            
+            MCObjectHandle *t_handle;
+            t_handle = MCdefaultstackptr -> getcurcard() -> gethandle();
+            if (t_handle == nil)
+                return kMCExternalErrorOutOfMemory;
+            *(MCObjectHandle **)result = t_handle;
+        }
+            break;
+            
+            // SN-2015-01-26: [[ Bug 14057 ]] Delimiters query can now return more types than a C-char
+        case kMCExternalContextQueryItemDelimiter:
+            return MCExternalConvertStringToValueType(MCECptr -> GetItemDelimiter(), p_option, result);
+        case kMCExternalContextQueryLineDelimiter:
+            return MCExternalConvertStringToValueType(MCECptr -> GetLineDelimiter(), p_option, result);
+        case kMCExternalContextQueryColumnDelimiter:
+            return MCExternalConvertStringToValueType(MCECptr -> GetColumnDelimiter(), p_option, result);
+        case kMCExternalContextQueryRowDelimiter:
+            return MCExternalConvertStringToValueType(MCECptr -> GetRowDelimiter(), p_option, result);
+            break;
+        default:
+            return kMCExternalErrorInvalidContextQuery;
     }
-    case kMCExternalContextQueryUnicodeLineDelimiter:
+    return kMCExternalErrorNone;
+}
+
+// SN-2015-01-26: [[ Bug 14057 ]] ContextQueryLegacy does only apply specific, fixed treatment for the delimiters
+static MCExternalError MCExternalContextQueryLegacy(MCExternalContextQueryTag op, void *result)
+{
+    switch(op)
     {
-        uindex_t t_dummy;
-        if (!MCStringConvertToUnicode(MCECptr -> GetLineDelimiter(), *(unichar_t**)result, t_dummy))
-            return kMCExternalErrorOutOfMemory;
-        break;
+        case kMCExternalContextQueryItemDelimiter:
+            *(char *)result = MCStringGetNativeCharAtIndex(MCECptr -> GetItemDelimiter(), 0);
+            break;
+        case kMCExternalContextQueryLineDelimiter:
+            *(char *)result = MCStringGetNativeCharAtIndex(MCECptr -> GetLineDelimiter(), 0);
+            break;
+        case kMCExternalContextQueryColumnDelimiter:
+            *(char *)result = MCStringGetNativeCharAtIndex(MCECptr -> GetColumnDelimiter(), 0);
+            break;
+        case kMCExternalContextQueryRowDelimiter:
+            *(char *)result = MCStringGetNativeCharAtIndex(MCECptr -> GetRowDelimiter(), 0);
+            break;
+            // Back up to the legacy context query if we are something which can be a string.
+        default:
+            return MCExternalContextQuery(op, 0, result);
     }
-    case kMCExternalContextQueryUnicodeRowDelimiter:
-    {
-        uindex_t t_dummy;
-        if (!MCStringConvertToUnicode(MCECptr -> GetRowDelimiter(), *(unichar_t**)result, t_dummy))
-            return kMCExternalErrorOutOfMemory;
-        break;
-    }
-	case kMCExternalContextQueryDefaultStack:
-    {
-        if (MCdefaultstackptr == nil)
-            return kMCExternalErrorNoDefaultStack;
-        
-        MCObjectHandle *t_handle;
-        t_handle = MCdefaultstackptr -> gethandle();
-        if (t_handle == nil)
-            return kMCExternalErrorOutOfMemory;
-        *(MCObjectHandle **)result = t_handle;
-    }
-        break;
-	case kMCExternalContextQueryDefaultCard:
-    {
-        if (MCdefaultstackptr == nil)
-            return kMCExternalErrorNoDefaultStack;
-        
-        MCObjectHandle *t_handle;
-        t_handle = MCdefaultstackptr -> getcurcard() -> gethandle();
-        if (t_handle == nil)
-            return kMCExternalErrorOutOfMemory;
-        *(MCObjectHandle **)result = t_handle;
-    }
-		break;
-	default:
-		return kMCExternalErrorInvalidContextQuery;
-	}
-	return kMCExternalErrorNone;
+    return kMCExternalErrorNone;
 }
 
 // MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of context_evaluate method.
@@ -3555,7 +3628,8 @@ MCExternalInterface g_external_interface =
 
 	MCExternalEngineRunOnMainThread,
 
-	MCExternalContextQuery,
+    // SN-2015-01-26: [[ Bug 14057 ]] Former ContextQuery now set as legacy.
+	MCExternalContextQueryLegacy,
 
 	MCExternalVariableCreate,
 	MCExternalVariableRetain,
@@ -3593,6 +3667,9 @@ MCExternalInterface g_external_interface =
 	//   for the outside world.
 	MCExternalContextEvaluate,
 	MCExternalContextExecute,
+    
+    // SN-2015-01-26: [[ Bug 14057 ]] Update the ContextQuery for the new delimiters
+    MCExternalContextQuery,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
