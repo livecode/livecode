@@ -595,15 +595,20 @@ bool MCFontUnload(MCStringRef p_path)
 
 bool MCFontListLoaded(uindex_t& r_count, MCStringRef*& r_list)
 {
-    MCAutoArray<MCStringRef> t_list;
+    MCAutoStringRefArray t_list;
     
-    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
-        if (!t_list . Push(t_font -> path))
-            return false;
+    bool t_success;
+    t_success = true;
+ 
+    // AL-2015-01-22: [[ Bug 14424 ]] 'the fontfilesinuse' can cause a crash, due to overreleasing MCStringRefs.
+    //  Property getters always release afterwards, use an MCAutoStringRefArray which increses the refcount.
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_success && t_font != nil; t_font = t_font -> next)
+        t_success = t_list . Push(t_font -> path);
     
-    t_list . Take(r_list, r_count);
-    
-    return true;
+    if (t_success)
+        t_list . Take(r_list, r_count);
+
+    return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
