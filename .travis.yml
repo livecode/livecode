@@ -1,0 +1,16 @@
+# Very basic Travis CI (http://travis-ci.org) control file that allows
+# some basic Linux-based continuous integration testing (for free).
+
+language: c++
+
+# Before setting up the source tree, install necessary development
+# headers
+before_install:
+- sudo apt-get install -y libx11-dev libxext-dev libxrender-dev libxft-dev libxinerama-dev libxv-dev libxcursor-dev libfreetype6-dev libgtk2.0-dev libpopt-dev libesd0-dev liblcms-dev
+
+# Set up the source tree by fetching Linux-specific prebuilt objects
+install: (cd prebuilt && ./fetch-libraries.sh linux)
+
+# Bootstrap the LCB compiler, build the default target set and run a
+# the default test suite.
+script: make -sj2 bootstrap && make -sj2 all && make -sj2 check
