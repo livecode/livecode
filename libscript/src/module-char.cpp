@@ -49,20 +49,24 @@ bool MCCharStoreChunk(MCStringRef &x_target, MCStringRef p_value, MCRange p_grap
 
 extern "C" MC_DLLEXPORT void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
 {
-    r_output = MCStringGetLength(p_target);
+    MCTextChunkIterator *tci;
+    tci = MCChunkCreateTextChunkIterator(p_target, kMCChunkTypeCharacter, nil, kMCStringOptionCompareExact);
+    r_output = tci -> CountChunks();
 }
 
 extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
-    MCTextChunkIterator *tci;
-    tci = MCChunkCreateTextChunkIterator(p_target, kMCChunkTypeCharacter, nil, kMCStringOptionCompareExact);
- 
     // Error if there is more than one char in needle.
-    if (tci -> CountChunks() != 1)
+    MCRange t_range;
+    MCStringUnmapGraphemeIndices(p_needle, kMCLocaleBasic, MCRangeMake(0, UINDEX_MAX), t_range);
+    if (t_range . length != 1)
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("needle must be a single char"), nil);
         return;
     }
+    
+    MCTextChunkIterator *tci;
+    tci = MCChunkCreateTextChunkIterator(p_target, kMCChunkTypeCharacter, nil, kMCStringOptionCompareExact);
     r_output = tci -> IsAmong(p_needle);
 }
 
@@ -107,11 +111,20 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsInRange(bool p_is_last, MCSt
     t_offset = 0;
     if (!MCStringIsEmpty(p_needle))
     {
+        MCRange t_range;
+        if (p_range . length == UINDEX_MAX)
+        {
+            MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, MCRangeMake(p_range . offset, 1), t_range);
+            t_range . length = UINDEX_MAX;
+        }
+        else
+            MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, p_range, t_range);
+        
         bool t_found;
         if (p_is_last)
-            t_found = MCStringLastIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
+            t_found = MCStringLastIndexOfStringInRange(p_target, p_needle, t_range, kMCStringOptionCompareExact, t_offset);
         else
-            t_found = MCStringFirstIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
+            t_found = MCStringFirstIndexOfStringInRange(p_target, p_needle, t_range, kMCStringOptionCompareExact, t_offset);
         
         // correct output index
         if (t_found)
@@ -120,7 +133,10 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsInRange(bool p_is_last, MCSt
             t_offset++;
         }
     }
-    r_output = t_offset;
+    
+    MCRange t_output_range;
+    MCStringUnmapGraphemeIndices(p_target, kMCLocaleBasic, MCRangeMake(t_offset, 1), t_output_range);
+    r_output = t_output_range . offset;
 }
 
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfChars(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, uindex_t& r_output)
@@ -131,7 +147,11 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfChars(bool p_is_last, MCStringRef
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_after, p_after, t_start, t_count);
+    if (!MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_after, p_after, true, t_start, t_count))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
+        return;
+    }
     
     MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
@@ -139,8 +159,12 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStri
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, uindex_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_before, p_before, t_start, t_count);
-    
+    if (!MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_before, p_before, true, t_start, t_count))
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
+        return;
+    }
+
     MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, t_start), r_output);
 }
 

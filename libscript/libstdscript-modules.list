@@ -6,12 +6,8 @@ binary.mlc
 bitwise.mlc
 byte.mlc
 char.mlc
-<<<<<<< HEAD
 date.mlc
 file.mlc
-=======
-chunk.mlc
->>>>>>> builder-chunk_utils
 list.mlc
 logic.mlc
 math-foundation.mlc
