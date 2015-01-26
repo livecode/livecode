@@ -5132,19 +5132,34 @@ static bool __MCStringResolveIndirect(__MCString *self)
 	}
 	else
 	{
-        MCValueRelease(self -> string);
+        // SN-2015-01-13: [[ Bug 14354 ]] We don't want to release the string we reference
+        // before being sure that we can clone its buffer.
+        unichar_t *t_chars;
+        uint32_t t_char_count;
         
         if (MCStringIsNative(t_string))
         {
-            if (!__MCStringCloneNativeBuffer(t_string, self -> native_chars, self -> char_count))
+            char_t *t_native_chars;
+            if (!__MCStringCloneNativeBuffer(t_string, t_native_chars, t_char_count))
                 return false;
+            
+            t_chars = (unichar_t*)t_native_chars;
         }
         else
         {
-            if (!__MCStringCloneBuffer(t_string, self -> chars, self -> char_count))
+            unichar_t *t_uni_chars;
+            if (!__MCStringCloneBuffer(t_string, t_chars, t_char_count))
                 return false;
+            
             self -> flags |= kMCStringFlagIsNotNative;
         }
+        
+        // SN-2015-01-13: [[ Bug 14354 ]] We can release now release the string,
+        // and then change the value of the string attributes
+        MCValueRelease(self -> string);
+        
+        self -> chars = t_chars;
+        self -> char_count = t_char_count;
 
         self -> capacity = t_string -> char_count;
 	}
