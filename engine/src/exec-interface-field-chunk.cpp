@@ -941,7 +941,9 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
 
         // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
         // SN-2014-12-18: [[ Bug 14161 ]] Forces the re-layout of this paragraph which has been changed
-        LayoutParagraph(sptr, t_layout_settings, true);
+        // SN-2015-01-22: [[ Bug 14428 ]] Ensure that the field is open, before forcing a re-layout
+        //  (MCParagraph::lines is NULL otherwise, and crashes in MCParagraph::countlines).
+        LayoutParagraph(sptr, t_layout_settings, sptr -> getopened());
         
         ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
