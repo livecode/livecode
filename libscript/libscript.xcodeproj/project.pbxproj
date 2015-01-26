@@ -208,7 +208,6 @@
 		4DDA20441A136FF4001B0CA2 /* script-builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-builder.cpp"; path = "src/script-builder.cpp"; sourceTree = "<group>"; };
 		4DDA20661A139BA1001B0CA2 /* libscript-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "libscript-test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7210DCA31A37102F00C23D23 /* module-helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-helper.cpp"; path = "src/module-helper.cpp"; sourceTree = "<group>"; };
-		7628E9D81A66B25F00FFE7A9 /* module-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-chunk.cpp"; path = "src/module-chunk.cpp"; sourceTree = "<group>"; };
 		766113881A31FB640042DE7F /* module-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-array.cpp"; path = "src/module-array.cpp"; sourceTree = "<group>"; };
 		7661138C1A31FDFD0042DE7F /* array.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = array.mlc; path = src/array.mlc; sourceTree = "<group>"; };
 		76FEC22F1A5D3F0900188FD4 /* file.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = file.mlc; path = src/file.mlc; sourceTree = "<group>"; };
@@ -323,7 +322,6 @@
 		4D79B6581A273B8100DD750C /* Library Source */ = {
 			isa = PBXGroup;
 			children = (
-				7628E9D81A66B25F00FFE7A9 /* module-chunk.cpp */,
 				4D79B6591A273BA000DD750C /* module-arithmetic.cpp */,
 				766113881A31FB640042DE7F /* module-array.cpp */,
 				4D79B65A1A273BA000DD750C /* module-binary.cpp */,
@@ -547,6 +545,8 @@
 				4D79B6831A273BA000DD750C /* module-byte.cpp in Sources */,
 				4D79B6851A273BA000DD750C /* module-encoding.cpp in Sources */,
 				4D21B60119E3DFED00B64BEF /* script-package.cpp in Sources */,
+				C7A74E161A6D07CC0031099F /* module-system.cpp in Sources */,
+				C7A74E171A6D07DF0031099F /* module-date.cpp in Sources */,
 				4D79B68F1A273BA000DD750C /* module-type.cpp in Sources */,
 				766113891A31FB640042DE7F /* module-array.cpp in Sources */,
 				4D79B6811A273BA000DD750C /* module-binary.cpp in Sources */,

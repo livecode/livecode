@@ -17,6 +17,35 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
+#include <foundation-locale.h>
+
+bool MCCharEvaluateChunk(MCStringRef p_target, MCRange p_grapheme_range, MCStringRef& r_output)
+{
+    MCRange t_range;
+    MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, p_grapheme_range, t_range);
+    
+    return MCStringCopySubstring(p_target, t_range, r_output);
+}
+
+bool MCCharStoreChunk(MCStringRef &x_target, MCStringRef p_value, MCRange p_grapheme_range, MCStringRef& r_output)
+{
+    MCAutoStringRef t_string;
+    if (!MCStringMutableCopy(x_target, &t_string))
+        return false;
+    
+    MCRange t_range;
+    MCStringMapGraphemeIndices(x_target, kMCLocaleBasic, p_grapheme_range, t_range);
+    
+    if (!MCStringReplace(*t_string, MCRangeMake(t_range . offset, t_range . length), p_value))
+        return false;
+    
+    MCAutoStringRef t_new_string;
+    if (!MCStringCopy(*t_string, &t_new_string))
+        return false;
+    
+    MCValueAssign(x_target, *t_new_string);
+    return true;
+}
 
 extern "C" MC_DLLEXPORT void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
 {
@@ -25,57 +54,41 @@ extern "C" MC_DLLEXPORT void MCCharEvalNumberOfCharsIn(MCStringRef p_target, ind
 
 extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
+    MCTextChunkIterator *tci;
+    tci = MCChunkCreateTextChunkIterator(p_target, kMCChunkTypeCharacter, nil, kMCStringOptionCompareExact);
+ 
     // Error if there is more than one char in needle.
-    if (MCStringGetLength(p_needle) != 1)
+    if (tci -> CountChunks() != 1)
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("needle must be a single char"), nil);
         return;
     }
-    
-    uindex_t t_dummy;
-    r_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, kMCStringOptionCompareExact, t_dummy);
+    r_output = tci -> IsAmong(p_needle);
 }
 
 extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
-    //MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_start, p_finish, t_start, t_count);
-    
-    if (t_count == 0)
+    if (!MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_start, p_finish, true, t_start, t_count))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
     }
     
-   // MCChunkMarkTextChunk()
-    
-    if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
-        return;
+    MCCharEvaluateChunk(p_target, MCRangeMake(t_start, t_count), r_output);
 }
 
 extern "C" MC_DLLEXPORT void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
-    if (t_count == 0 || t_start + t_count > MCStringGetLength(x_target))
+    if (!MCChunkGetExtentsOfGraphemeChunkByRange(x_target, p_start, p_finish, true, t_start, t_count))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
     }
     
-    MCAutoStringRef t_string;
-    if (!MCStringMutableCopy(x_target, &t_string))
-        return;
-    
-    if (!MCStringReplace(*t_string, MCRangeMake(t_start, t_count), p_value))
-        return;
-    
-    MCAutoStringRef t_new_string;
-    if (!MCStringCopy(*t_string, &t_new_string))
-        return;
-    
-    MCValueAssign(x_target, *t_new_string);
+    MCCharStoreChunk(x_target, p_value, MCRangeMake(t_start, t_count), p_value);
 }
 
 extern "C" MC_DLLEXPORT void MCCharFetchCharOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
@@ -204,16 +217,27 @@ extern "C" MC_DLLEXPORT void MCCharExecDeleteLastCharOf(MCStringRef& x_target)
 // Will result in tChar containing the value it had at the point of end repeat.
 extern "C" MC_DLLEXPORT bool MCCharRepeatForEachChar(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
 {
-    uintptr_t t_offset;
-    t_offset = (uintptr_t)x_iterator;
+    MCTextChunkIterator *t_iterator;
+    bool t_first;
+    t_first = false;
     
-    if (t_offset == MCStringGetLength(p_string))
+    if ((uintptr_t)x_iterator == 0)
+    {
+        t_first = true;
+        t_iterator = MCChunkCreateTextChunkIterator(p_string, kMCChunkTypeCharacter, nil, kMCStringOptionCompareExact);
+    }
+    else
+        t_iterator = (MCTextChunkIterator *)x_iterator;
+    
+    if (t_iterator -> Next())
+        t_iterator -> CopyString(r_iterand);
+    else
+    {
+        delete t_iterator;
         return false;
+    }
     
-    if (!MCStringCopySubstring(p_string, MCRangeMake(t_offset, 1), r_iterand))
-        return false;
-    
-    x_iterator = (void *)(t_offset + 1);
+    x_iterator = (void *)(t_iterator);
     
     return true;
 }

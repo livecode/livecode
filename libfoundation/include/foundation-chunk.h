@@ -43,6 +43,9 @@ uinteger_t MCChunkCountCodepointChunkCallback(void *context);
 
 uindex_t MCChunkCountChunkChunks(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options);
 
+bool MCChunkEnsureExtentsByRange(bool p_strict, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkEnsureExtentsByExpression(bool p_strict, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+
 void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
 void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
@@ -52,6 +55,9 @@ void MCChunkGetExtentsOfByteChunkByExpression(MCDataRef p_data, integer_t p_firs
 
 void MCChunkGetExtentsOfCodeunitChunkByRange(MCStringRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
 void MCChunkGetExtentsOfCodeunitChunkByExpression(MCStringRef p_data, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+
+bool MCChunkGetExtentsOfGraphemeChunkByRange(MCStringRef p_string, integer_t p_first, integer_t p_last, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfGraphemeChunkByExpression(MCStringRef p_string, integer_t p_first, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count);
 
 void MCChunkGetExtentsOfElementChunkByRange(MCProperListRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
 void MCChunkGetExtentsOfElementChunkByExpression(MCProperListRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
@@ -111,7 +117,7 @@ public:
     
     virtual bool Next() = 0;
     
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches)
+    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, uindex_t *p_end_offset, bool p_whole_matches)
     {
         // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
         uindex_t t_chunk_offset;
@@ -145,7 +151,7 @@ public:
             }
             t_chunk_offset++;
         }
-        while (Next());
+        while (Next() && (p_end_offset == nil || *p_end_offset < t_chunk_offset));
         
         return 0;
     }

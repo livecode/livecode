@@ -80,14 +80,17 @@ uindex_t MCChunkCountChunkChunks(MCStringRef p_string, MCStringRef p_delimiter, 
     return t_count;
 }
 
-void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
+bool MCChunkEnsureExtentsByRange(bool p_strict, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     int32_t t_chunk_count;
+    uinteger_t t_count;
+    bool t_counted;
+    t_counted = false;
     
     if (p_first < 0 || p_last < 0)
     {
-        uinteger_t t_count;
         t_count = p_callback(p_context);
+        t_counted = true;
         
         if (p_first < 0)
             p_first += t_count;
@@ -111,18 +114,41 @@ void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountC
     if (t_chunk_count < 0)
         t_chunk_count = 0;
     
+    if (p_strict)
+    {
+        if (t_chunk_count == 0)
+            return false;
+        
+        if (!t_counted)
+            t_count = p_callback(p_context);
+        
+        if (p_first + t_chunk_count > t_count)
+            return false;
+    }
+    
     r_chunk_count = t_chunk_count;
     r_first = p_first;
+    return true;
 }
 
-void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    r_chunk_count = 1;
+    MCChunkEnsureExtentsByRange(false, p_first, p_last, p_callback, p_context, r_first, r_chunk_count);
+}
+
+bool MCChunkEnsureExtentsByExpression(bool p_strict, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
+{
+    int32_t t_chunk_count;
+    t_chunk_count = 1;
+    
+    uinteger_t t_count;
+    bool t_counted;
+    t_counted = false;
     
     if (p_first < 0)
     {
-        uinteger_t t_count;
         t_count = p_callback(p_context);
+        t_counted = true;
         p_first += t_count;
     }
     else
@@ -130,13 +156,31 @@ void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_cal
     
     if (p_first < 0)
     {
-        r_chunk_count = 0;
+        t_chunk_count = 0;
         p_first = 0;
     }
     
+    if (p_strict)
+    {
+        if (t_chunk_count == 0)
+            return false;
+        
+        if (!t_counted)
+            t_count = p_callback(p_context);
+        
+        if (p_first + t_chunk_count > t_count)
+            return false;
+    }
+    
     r_first = p_first;
+    r_chunk_count = t_chunk_count;
+    return true;
 }
 
+void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
+{
+    MCChunkEnsureExtentsByExpression(false, p_first, p_callback, p_context, r_first, r_chunk_count);
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCChunkGetExtentsOfByteChunkByRange(MCDataRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
@@ -159,14 +203,14 @@ void MCChunkGetExtentsOfCodeunitChunkByExpression(MCStringRef p_string, integer_
     MCChunkGetExtentsByExpression(p_first, MCChunkCountCodeunitChunkCallback, &p_string, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfGraphemeChunkByRange(MCStringRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
+bool MCChunkGetExtentsOfGraphemeChunkByRange(MCStringRef p_string, integer_t p_first, integer_t p_last, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByRange(p_first, p_last, MCChunkCountCodeunitChunkCallback, &p_string, r_first, r_chunk_count);
+    return MCChunkEnsureExtentsByRange(p_strict, p_first, p_last, MCChunkCountGraphemeChunkCallback, &p_string, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfGraphemeChunkByExpression(MCStringRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
+bool MCChunkGetExtentsOfGraphemeChunkByExpression(MCStringRef p_string, integer_t p_first, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByExpression(p_first, MCChunkCountGraphemeChunkCallback, &p_string, r_first, r_chunk_count);
+    return MCChunkEnsureExtentsByExpression(p_strict, p_first, MCChunkCountGraphemeChunkCallback, &p_string, r_first, r_chunk_count);
 }
 
 void MCChunkGetExtentsOfElementChunkByRange(MCProperListRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
@@ -265,6 +309,7 @@ bool MCChunkApply(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions
 bool MCChunkIterate(MCRange& x_range, MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, bool p_first)
 {
     // Currently assumes delimiter is 1 char long.
+    // Reimplement with MCTextChunkIterator_Delimited to accommodate arbitrary delimiters.
     uindex_t t_delimiter_offset;
     
     if (!p_first)
@@ -560,7 +605,7 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
         {
             MCRange t_range;
             uindex_t t_end;
-            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == kMCChunkTypeSentence ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, p_chunk_type == kMCChunkTypeSentence ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, m_text);
             t_range . length = 0;
             t_range . offset = 0;
@@ -576,7 +621,7 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
         case kMCChunkTypeTrueWord:
         {
             MCAutoArray<uindex_t> t_breaks;
-            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeWord, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, m_text);
             MCRange t_range = MCRangeMake(0, 0);
             
@@ -586,6 +631,8 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
                 m_breaks . Push(t_range);
             }
         }
+            break;
+        default:
             break;
     }
     
@@ -676,9 +723,6 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCChunkT
             break;
         case kMCChunkTypeParagraph:
             t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"));
-            break;
-        case kMCChunkTypeToken:
-            t_iterator = new MCTextChunkIterator_Tokenized(p_text, p_chunk_type);
             break;
         case kMCChunkTypeWord:
             t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_delimiter);

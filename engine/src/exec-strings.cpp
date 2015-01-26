@@ -1736,7 +1736,7 @@ uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCString
     MCTextChunkIterator *tci;
     tci = MCStringsTextChunkIteratorCreate(ctxt, p_string, p_chunk_type);
     
-    uindex_t t_offset = tci -> ChunkOffset(p_chunk, p_start_offset, ctxt . GetWholeMatches());
+    uindex_t t_offset = tci -> ChunkOffset(p_chunk, p_start_offset, nil, ctxt . GetWholeMatches());
     
     delete tci;
     return t_offset;

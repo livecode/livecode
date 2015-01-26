@@ -1132,6 +1132,13 @@ bool MCTextChunkIterator_Tokenized::Next()
 
 MCTextChunkIterator *MCStringsTextChunkIteratorCreate(MCExecContext& ctxt, MCStringRef p_text, Chunk_term p_chunk_type)
 {
+    if (p_chunk_type == CT_TOKEN)
+    {
+        MCTextChunkIterator *tci;
+        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type));
+        return tci;
+    }
+    
     return MCChunkCreateTextChunkIterator(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
 }
 
