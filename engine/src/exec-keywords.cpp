@@ -472,8 +472,13 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     }
     else
     {
-        if (!ctxt . ConvertToInteger(*t_condition, count))
+        // SN-2015-01-14: [[ Bug 14377 ]] Throw an error as it used to be done
+        if (!ctxt . ConvertToInteger(*t_condition, count) && (MCtrace || MCnbreakpoints)
+                && !MCtrylock && !MClockerrors)
+        {
+            MCB_error(ctxt, line, pos, EE_REPEAT_BADFORCOND);
             return;
+        }
         count = MCU_max(count, 0);
     }
     
