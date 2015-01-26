@@ -20,7 +20,7 @@ install: (cd prebuilt && ./fetch-libraries.sh linux)
 
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
-script: make -sj2 bootstrap && make -sj2 all && make -sj2 check
+script: make -s bootstrap && make -s all && make -s check
 
 # Configuration for Coverity Scan integration
 #
@@ -34,5 +34,5 @@ addons:
       description: "Build submitted via Travis CI"
     notification_email: peter@livecode.com
     build_command_prepend: "./configure; make clean"
-    build_command: "make -sj2 bootstrap && make -sj2 all"
+    build_command: "make -s bootstrap && make -s all"
     branch_pattern: coverity_scan
