@@ -4967,55 +4967,55 @@ bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
 
 /////////
 
-
-
 bool MCStringSetNumericValue(MCStringRef self, double p_value)
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
-
+    
     if (MCStringIsMutable(self))
         return false;
-
-    bool t_success = false;
-
-    // Ensure we have a 8-byte aligned position for the number value
+    
+    // Compute the number of bytes used by the string - including 1 for the
+    // implicit NUL.
+    uindex_t t_byte_count;
     if (MCStringIsNative(self))
-    {
-        if (MCMemoryReallocate(self -> native_chars, ((self -> char_count + 7) & ~7) + 8, self -> native_chars))
-        {
-            *(double*)(&(self -> native_chars[(self -> char_count + 7) & ~7])) = p_value;
-            t_success= true;
-        }
-    }
+        t_byte_count = self -> char_count + 1;
     else
-    {
-        if (MCMemoryReallocate(self -> chars, ((self -> char_count * 2 + 7) & ~7) + 8, self -> chars))
-        {
-            // AL-2014-06-25: [[ Bug 12676 ]] Put numeric value at correct memory address
-            *(double*)(&(self -> native_chars[(self -> char_count * 2 + 7) & ~7])) = p_value;
-            t_success = true;
-        }
-    }
-
-    if (t_success)
-        self -> flags |= kMCStringFlagHasNumber;
-
-    return t_success;
+        t_byte_count = self -> char_count * 2 + 1;
+    
+    // Round up the byte count to the nearest 8 bytes.
+    t_byte_count = (t_byte_count + 7) & ~7;
+    
+    if (!MCMemoryReallocate(self -> native_chars, t_byte_count + 8, self -> native_chars))
+        return false;
+    
+    *(double *)(&(self -> native_chars[t_byte_count])) = p_value;
+    
+    self -> flags |= kMCStringFlagHasNumber;
+    
+    return true;
 }
 
 bool MCStringGetNumericValue(MCStringRef self, double &r_value)
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
-
+    
     if ((self -> flags & kMCStringFlagHasNumber) != 0)
     {
+        // Compute the number of bytes used by the string - including 1 for the
+        // implicit NUL.
+        uindex_t t_byte_count;
         if (MCStringIsNative(self))
-            r_value = *(double*)(&(self -> native_chars[(self -> char_count + 7) & ~7]));
+            t_byte_count = self -> char_count + 1;
         else
-            r_value = *(double*)(&(self -> native_chars[(self -> char_count * 2 + 7) & ~7]));
-
+            t_byte_count = self -> char_count * 2 + 1;
+        
+        // Round up the byte count to the nearest 8 bytes.
+        t_byte_count = (t_byte_count + 7) & ~7;
+        
+        r_value = *(double *)(&(self -> native_chars[t_byte_count]));
+        
         return true;
     }
     else
