@@ -143,7 +143,7 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
 
-extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformArrayFormatErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformMatrixListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformDecomposeErrorTypeInfo;
 
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepReferencedErrorTypeInfo;
@@ -170,7 +170,6 @@ void MCCanvasPointGetMCGPoint(MCCanvasPointRef p_point, MCGPoint &r_point);
 bool MCCanvasColorCreateWithRGBA(MCCanvasFloat red, MCCanvasFloat green, MCCanvasFloat blue, MCCanvasFloat alpha, MCCanvasColorRef &r_color);
 
 bool MCCanvasTransformCreateWithMCGAffineTransform(const MCGAffineTransform &p_transform, MCCanvasTransformRef &r_transform);
-void MCCanvasTransformGetMCGAffineTransform(MCCanvasTransformRef p_transform, MCGAffineTransform &r_transform);
 
 bool MCCanvasImageCreateWithImageRep(MCImageRep *p_rep, MCCanvasImageRef &r_image);
 MCImageRep *MCCanvasImageGetImageRep(MCCanvasImageRef p_image);
@@ -258,11 +257,12 @@ extern "C" MC_DLLEXPORT void MCCanvasTransformMakeTranslation(MCCanvasFloat p_x,
 extern "C" MC_DLLEXPORT void MCCanvasTransformMakeTranslationWithList(MCProperListRef p_list, MCCanvasTransformRef &r_transform);
 extern "C" MC_DLLEXPORT void MCCanvasTransformMakeSkew(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasTransformRef &r_transform);
 extern "C" MC_DLLEXPORT void MCCanvasTransformMakeSkewWithList(MCProperListRef p_list, MCCanvasTransformRef &r_transform);
+extern "C" MC_DLLEXPORT void MCCanvasTransformMakeWithMatrixAsList(MCProperListRef p_matrix, MCCanvasTransformRef &r_transform);
 extern "C" MC_DLLEXPORT void MCCanvasTransformMakeWithMatrixValues(MCCanvasFloat p_a, MCCanvasFloat p_b, MCCanvasFloat p_c, MCCanvasFloat p_d, MCCanvasFloat p_tx, MCCanvasFloat p_ty, MCCanvasTransformRef &r_transform);
 
 // Properties
-extern "C" MC_DLLEXPORT void MCCanvasTransformGetMatrix(MCCanvasTransformRef p_transform, MCArrayRef &r_matrix);
-extern "C" MC_DLLEXPORT void MCCanvasTransformSetMatrix(MCArrayRef p_matrix, MCCanvasTransformRef &x_transform);
+extern "C" MC_DLLEXPORT void MCCanvasTransformGetMatrixAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_matrix);
+extern "C" MC_DLLEXPORT void MCCanvasTransformSetMatrixAsList(MCProperListRef p_matrix, MCCanvasTransformRef &x_transform);
 extern "C" MC_DLLEXPORT void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTransformRef &r_transform);
 // T = Tscale * Trotate * Tskew * Ttranslate
 extern "C" MC_DLLEXPORT void MCCanvasTransformGetScaleAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_scale);
