@@ -1414,7 +1414,8 @@ static bool MCPathIsRemoteURL(const char *p_path)
 	MCCStringBeginsWith(p_path, "ftp://");
 }
 
-// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path to the stack folder
+// PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
 bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
 {
     if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
@@ -1423,7 +1424,15 @@ bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
         return true;
     }
     
-   return getstack()->resolve_relative_path(p_filename, r_filename);
+    bool t_relative_to_stack = getstack()->resolve_relative_path(p_filename, r_filename);
+    if (t_relative_to_stack && MCS_exists(r_filename, True))
+        return true;
+    
+    bool t_relative_to_default_folder = getstack()->resolve_relative_path_to_default_folder(p_filename, r_filename);
+    if (t_relative_to_default_folder && MCS_exists(r_filename, True))
+        return true;
+    
+    return false;
 }
 
 Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
@@ -1437,7 +1446,15 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	{
 #ifdef /* MCPlayer::setprop */ LEGACY_EXEC
         case P_FILE_NAME:
-            if (filename == NULL || data != filename)
+        {
+            // Edge case: Suppose filenameA is a valid relative path to defaultFolderA, but invalid relative path to defaultFolderB
+            // 1. Set defaultFolder to defaultFolderB. Set the filename to filenameA. Video will become empty, since the absolute path is invalid.
+            // 2. Change the defaultFolder to defaultFolderB. Set the filename again to filenameA. Now the absolute path is valid
+            char *t_resolved_filename;
+            resolveplayerfilename(filename, t_resolved_filename);
+            
+            // Compare with the resolved filename so handle the edge case mentioned below
+            if (filename == NULL || data != filename || data != t_resolved_filename)
             {
                 delete filename;
                 filename = NULL;
@@ -1445,12 +1462,9 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 starttime = MAXUINT4; //clears the selection
                 endtime = MAXUINT4;
                 
+                // PM-2015-01-26: [[ Bug 14435 ]] Resolve the filename in MCPlayer::prepare(), to avoid prepending the defaultFolder or the stack folder to the filename property
                 if (data != MCnullmcstring)
-                {
-                    // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
-                    char *t_filename = data.clone();
-                    resolveplayerfilename(t_filename, filename);
-                }
+                    filename = data.clone();
                 prepare(MCnullstring);
                 
                 // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
@@ -1468,6 +1482,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             else if (data == filename && hasinvalidfilename())
                 MCresult->sets("could not create movie reference");
             break;
+        }
         case P_DONT_REFRESH:
             if (!MCU_matchflags(data, flags, F_DONT_REFRESH, dirty))
             {
@@ -2122,10 +2137,14 @@ Boolean MCPlayer::prepare(const char *options)
 	if (m_platform_player == nil)
 		MCPlatformCreatePlayer(m_platform_player);
     
-	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &filename);
+    // PM-2015-01-26: [[ Bug 14435 ]] Use a temp var to resolve the filename, to avoid prepending the defaultFolder or the stack folder to the filename property
+    char *t_filename;
+    resolveplayerfilename(filename, t_filename);
+    
+	if (strnequal(t_filename, "https:", 6) || strnequal(t_filename, "http:", 5) || strnequal(t_filename, "ftp:", 4) || strnequal(t_filename, "file:", 5) || strnequal(t_filename, "rtsp:", 5))
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &t_filename);
 	else
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &t_filename);
 	
     if (!hasfilename())
         return True;

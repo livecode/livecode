@@ -2938,6 +2938,24 @@ bool MCStack::resolve_relative_path(const char *p_path, char *&r_resolved)
 	return MCCStringFormat(r_resolved, "%.*s%s", t_last_separator - t_stack_filename + 1, t_stack_filename, t_leaf);
 }
 
+// PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
+bool MCStack::resolve_relative_path_to_default_folder(const char *p_path, char *&r_resolved)
+{
+	if (MCCStringIsEmpty(p_path))
+		return false;
+	
+	// If the relative path begins with "./" or ".\", we must remove this, otherwise
+	// certain system calls will get confused by the path.
+	const char *t_leaf;
+	if (p_path[0] == '.' && (p_path[1] == '/' || p_path[1] == '\\'))
+		t_leaf = p_path + 2;
+	else
+		t_leaf = p_path;
+	
+    const char *t_default_folder = MCS_getcurdir();
+	return MCCStringFormat(r_resolved, "%s/%s", t_default_folder, t_leaf);
+}
+
 // OK-2009-01-09: [[Bug 1161]]
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
