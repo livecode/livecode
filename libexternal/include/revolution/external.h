@@ -673,10 +673,10 @@ template<ExternalHandler u_handler> void ExternalWrapperObjC(char *p_arguments[]
 #define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
 		{ m_name, "F", 0, ExternalWrapperObjC<m_function>, NULL },
 
-#define EXTERNAL_DECLARE_COMMAND_OBJC(m_name, m_function) \
+#define EXTERNAL_DECLARE_COMMAND_OBJC_UTF8(m_name, m_function) \
         { m_name, "c", 0, ExternalWrapperObjC<m_function>, NULL },
 
-#define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
+#define EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8(m_name, m_function) \
         { m_name, "f", 0, ExternalWrapperObjC<m_function>, NULL },
 
 #else
