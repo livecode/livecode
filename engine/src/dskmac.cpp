@@ -1197,13 +1197,18 @@ OSErr MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
 	return t_error;
 #endif /* MCS_pathtoref_dsk_mac */
     MCAutoStringRef t_auto_path;
+    MCAutoStringRef t_redirected_path;
     MCAutoStringRefAsUTF8String t_path;
     
     if (!MCS_resolvepath(p_path, &t_auto_path))
         // TODO assign relevant error code
         return memFullErr;
+
+    // SN-2015-01-26: [[ Merge-6.7.2-rc-2 ]]
+    if (!MCS_apply_redirect(*t_auto_path, true, &t_redirected_path))
+        t_redirected_path = *t_auto_path;
     
-    if (!t_path.Lock(*t_auto_path))
+    if (!t_path.Lock(*t_redirected_path))
         return memFullErr;
     
 	return FSPathMakeRef((const UInt8 *)(*t_path), &r_ref, NULL);
@@ -1271,16 +1276,22 @@ static OSErr MCS_mac_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniCha
 	t_error = noErr;
     
 	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_redirected_path;
     
     if (!MCS_resolvepath(p_path, &t_resolved_path))
         // TODO assign relevant error code
         t_error = fnfErr;
+
+    // SN-2015-01-26: [[ Merge-6.7.2-rc-2 ]]
+    if (!MCS_apply_redirect(*t_resolved_path, true, &t_redirected_path))
+        t_redirected_path = *t_resolved_path;
+
     
     MCAutoStringRef t_folder, t_leaf;
     uindex_t t_leaf_index;
-    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
+    if (MCStringLastIndexOfChar(*t_redirected_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
     {
-        if (!MCStringDivideAtIndex(*t_resolved_path, t_leaf_index, &t_folder, &t_leaf))
+        if (!MCStringDivideAtIndex(*t_redirected_path, t_leaf_index, &t_folder, &t_leaf))
             t_error = memFullErr;
     }
     else

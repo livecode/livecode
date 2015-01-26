@@ -182,11 +182,20 @@ void MCLine::takewidth(MCLine *lptr)
 	//   break index through any space chars.
 	for(;;)
 	{
-		// Consume all spaces after the break index.
+        // Consume all spaces after the break index.
         // AL-2014-03-21: [[ Bug 11958 ]] Break index is paragraph index, not block index.
 		while(t_break_index < (t_break_block -> GetOffset() + t_break_block -> GetLength()) &&
 			  parent -> TextIsWordBreak(parent -> GetCodepointAtIndex(t_break_index)))
-			t_break_index++;
+            t_break_index++;
+        {
+            // SN-2015-01-21: [[ Bug 14421 ]] If the break block is a unicode block,
+            //  then the next index is 2 'char' (a unichar) further, not one. This can lead to a
+            //  size of 1 for a unicode block, and a hang in FontBreaking.
+            if (t_break_block -> getflag(F_HAS_UNICODE))
+                t_break_index += sizeof(unichar_t);
+            else
+                t_break_index++;
+        }
 		
 		if (t_break_index < (t_break_block -> GetOffset() + t_break_block -> GetLength()))
 			break;
