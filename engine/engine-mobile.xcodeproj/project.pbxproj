@@ -2173,6 +2173,7 @@
 				4DD3DD971040AA9A00CAC7EF /* Frameworks */,
 				F670DB65147D45A5008FEA1E /* CopyFiles */,
 				4DBF5B5B1802E7C1009CAB2E /* Copy revsecurity */,
+				729D0F9B1A6FEA3000B0CA0F /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -2371,7 +2372,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -e $PLATFORM_DEVELOPER_BIN_DIR/g++ ]; then\n    BIN_DIR=$PLATFORM_DEVELOPER_BIN_DIR\nelse\n    BIN_DIR=$DEVELOPER_BIN_DIR\nfi\n\nif [ $CONFIGURATION = \"Debug\" ]; then\n  $BIN_DIR/g++ -ObjC -nodefaultlibs -nostartfiles -Wl,-r -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol -L\"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME\" -licudata -licui18n -licuio -licule -liculx -licuuc\nelse\n  $BIN_DIR/g++ -ObjC -nodefaultlibs -nostartfiles -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol -L\"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME\" -licudata -licui18n -licuio -licule -liculx -licuuc\nfi\n";
+			shellScript = "if [ -e $PLATFORM_DEVELOPER_BIN_DIR/g++ ]; then\n    BIN_DIR=$PLATFORM_DEVELOPER_BIN_DIR\nelse\n    BIN_DIR=$DEVELOPER_BIN_DIR\nfi\n\nif [ $CONFIGURATION = \"Debug\" ]; then\n  $BIN_DIR/g++ -ObjC -nodefaultlibs -nostartfiles -Wl,-r -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol -L\"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME\" -licudata -licui18n -licuio -licule -liculx -licuuc\nelse\n  $BIN_DIR/g++ -ObjC -nodefaultlibs -nostartfiles -Wl,-r -Wl,-x -Wl,-export_dynamic -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -L\"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME\" -licudata -licui18n -licuio -licule -liculx -licuuc\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4DBF5B5B1802E7C1009CAB2E /* Copy revsecurity */ = {
@@ -2389,6 +2390,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"";
+		};
+		729D0F9B1A6FEA3000B0CA0F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME,
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "strip -r -S -x \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME.app/$EXECUTABLE_NAME\"";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2866,8 +2882,6 @@
 			baseConfigurationReference = 4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */;
 			buildSettings = {
 				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)";
-				OTHER_CFLAGS = "";
-				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 			};
 			name = Release;
 		};
@@ -2879,9 +2893,6 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
 				OTHER_LDFLAGS = (
-					"-Wl,-x",
-					"-Wl,-exported_symbol",
-					"-Wl,_main",
 					"-ObjC",
 					"-force_load",
 					"${BUILT_PRODUCTS_DIR}/libfoundationmobile.a",
@@ -2894,7 +2905,6 @@
 				);
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -2917,8 +2927,6 @@
 			baseConfigurationReference = 4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */;
 			buildSettings = {
 				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/ios/$(SDK_NAME)";
-				OTHER_CFLAGS = "";
-				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 			};
 			name = Debug;
 		};
@@ -2941,7 +2949,6 @@
 				);
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};

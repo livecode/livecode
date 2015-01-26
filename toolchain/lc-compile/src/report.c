@@ -171,6 +171,10 @@ DEFINE_ERROR(SyntaxNotAllowedInThisContext, "This syntax is not allowed for this
 DEFINE_ERROR(VariableMustHaveHighLevelType, "Inappropriate type for variable")
 DEFINE_ERROR(ParameterMustHaveHighLevelType, "Inappropriate type for parameter")
 
+DEFINE_ERROR_I(CannotAssignToHandlerId, "'%s' is a handler id and cannot be assigned to")
+
+DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler type to be called")
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void yyerror(const char *p_text)

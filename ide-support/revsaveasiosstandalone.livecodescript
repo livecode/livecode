@@ -347,8 +347,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          
          -- MW-2013-06-26: [[ CloneAndRun ]] Only strip global symbols if an installed env.
          if revEnvironmentIsInstalled() then
+            -- FG-2015-01-21: [[ Widgets ]] We need to keep all exported symbols
             -- Make sure the only exported symbol is "main"
-            put "-Wl,-x -Wl,-exported_symbol -Wl,_main" & return after tLinkCommand
+            --put "-Wl,-x -Wl,-exported_symbol -Wl,_main" & return after tLinkCommand
          end if
          
          -- MW-2013-06-25: [[ PIE ]] Make sure we make the minversion 4.3 so we can make

@@ -626,3 +626,12 @@ esd libesd.so.0
 	esd_close: (integer) -> (integer)
 	esd_play_stream: (integer, integer, pointer, pointer) -> (integer)
 	esd_open_sound: (pointer) -> (integer)
+
+fontconfig libfontconfig.so.1
+	FcInit: () -> (integer)
+	FcInitLoadConfigAndFonts: () -> (pointer)
+	FcConfigAppFontAddFile: (pointer, pointer) -> (integer)
+	FcConfigAppFontClear: (pointer) -> ()
+	FcConfigBuildFonts: (pointer) -> (integer)
+	FcConfigSetCurrent: (pointer) -> (integer)
+    
