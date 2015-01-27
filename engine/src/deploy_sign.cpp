@@ -1432,7 +1432,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 	// Next we read the salt (if any)
 	uint8_t *t_salt;
 	t_salt = nil;
-	if (t_header . salt_length > 0)
+	if (t_success && t_header . salt_length > 0)
 	{
 		if (t_success)
 			t_success = MCMemoryNewArray(t_header . salt_length, t_salt);
