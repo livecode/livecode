@@ -483,6 +483,10 @@ static bool MCStringCreateMutableUnicode(uindex_t p_initial_capacity, MCStringRe
 		self->char_count = 0;
 		r_string = self;
 	}
+	else
+	{
+		MCValueRelease (self);
+	}
     
 	return t_success;
 }
