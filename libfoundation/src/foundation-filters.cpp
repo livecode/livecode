@@ -366,7 +366,10 @@ bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result)
             uint32_t newsize = size + size / 4 + 7;
             uint32_t offset = dptr - buffer . Chars();
             if (!buffer . Extend(newsize))
+			{
+				MCMemoryDeleteArray (t_utf8_string);
                 return false;
+			}
             dptr = buffer . Chars() + offset;
             size = newsize;
         }
