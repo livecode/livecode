@@ -277,8 +277,10 @@ void EmitEndModule(void)
         else if (t_output != NULL)
         {
             fwrite(t_buffer, 1, t_size, t_output);
-            fclose(t_output);
         }
+        
+        if (t_output != NULL)
+            fclose(t_output);
         
         bool t_success;
         t_success = true;
