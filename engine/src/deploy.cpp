@@ -836,20 +836,15 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
         return;
     }
 	
-	MCDeployDmgItem *t_items;
-	uint32_t t_item_count;
-	t_items = nil;
-	t_item_count = 0;
+	MCAutoArray<MCDeployDmgItem> t_items;
 	if (!ctxt . HasError())
 	{
-		if (MCMemoryNewArray(MCArrayGetCount(*t_array), t_items))
-			t_item_count = MCArrayGetCount(*t_array);
-		else
-			ctxt . Throw();
+        if (!t_items . New(MCArrayGetCount(*t_array)))
+            ctxt . Throw();
 	}
 
 	if (!ctxt . HasError())
-		for(uint32_t i = 0; i < t_item_count && !ctxt . HasError(); i++)
+		for(uint32_t i = 0; i < t_items . Size() && !ctxt . HasError(); i++)
 		{
 			MCValueRef t_val = nil;
 			if (!MCArrayFetchValueAtIndex(*t_array, i + 1, t_val))
@@ -915,8 +910,8 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
             return;
         }
 		MCDeployDmgParameters t_params;
-		t_params . items = t_items;
-		t_params . item_count = t_item_count;
+		t_params . items = t_items . Ptr();
+		t_params . item_count = t_items . Size();
 		t_params . output = *temp;
 		if (!MCDeployDmgBuild(t_params))
 			ctxt . Throw();
