@@ -2752,7 +2752,9 @@ MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, 
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
-// Create an immutable list taking ownership of the given array of values.
+// Create an immutable list taking ownership of the given array of
+// values.  Takes ownership of both the underlying MCValueRef
+// references, and the p_values buffer.
 bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list);
     
 // Make an immutable copy of the given list. If the 'copy and release' form is
@@ -2784,8 +2786,8 @@ typedef bool (*MCProperListApplyCallback)(void *context, MCValueRef element);
 MC_DLLEXPORT bool MCProperListApply(MCProperListRef list, MCProperListApplyCallback p_callback, void *context);
 
 // Apply the callback to each element of list to create a new list.
-typedef bool (*MCProperListMapCallback)(MCValueRef element, MCValueRef& r_new_element);
-MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list);
+typedef bool (*MCProperListMapCallback)(void *context, MCValueRef element, MCValueRef& r_new_element);
+MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context);
 
 // Sort list by comparing elements using the provided callback.
 typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);

@@ -33,3 +33,30 @@ MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
 {
 	/* UNCHECKED */ MCFileSetContents (p_path, p_contents);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void
+MCFileExecDeleteFile (MCStringRef p_path)
+{
+	/* UNCHECKED */ MCFileDelete (p_path);
+}
+
+extern "C" MC_DLLEXPORT void
+MCFileExecCreateDirectory (MCStringRef p_path)
+{
+	/* UNCHECKED */ MCFileCreateDirectory (p_path);
+}
+
+extern "C" MC_DLLEXPORT void
+MCFileExecDeleteDirectory (MCStringRef p_path)
+{
+	/* UNCHECKED */ MCFileDeleteDirectory (p_path);
+}
+
+extern "C" MC_DLLEXPORT void
+MCFileExecGetDirectoryEntries (MCStringRef p_path,
+                               MCProperListRef & r_entries)
+{
+	/* UNCHECKED */ MCFileGetDirectoryEntries (p_path, r_entries);
+}
