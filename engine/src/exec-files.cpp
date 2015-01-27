@@ -2242,6 +2242,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 		break;
 	default:
 		{
+            r_stat = IO_NORMAL;
 			while (len)
 			{
 				uindex_t t_start_pos;
