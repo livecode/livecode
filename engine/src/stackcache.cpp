@@ -95,6 +95,8 @@ const uindex_t __kMCValueHashTableCapacities[] = {
 #endif
 };
 
+#define __kMCValueHashTableCapacityCount (sizeof(__kMCValueHashTableCapacities) / sizeof(__kMCValueHashTableCapacities[0]))
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStackIdCache::MCStackIdCache(void)
@@ -313,9 +315,13 @@ bool MCStackIdCache::RehashBuckets(uindex_t p_new_item_count)
 		// Work out the smallest possible capacity greater than the requested capacity.
 		uindex_t t_new_capacity_req;
 		t_new_capacity_req = m_count + p_new_item_count;
-		for(t_new_capacity_idx = 0; t_new_capacity_idx < 64; t_new_capacity_idx++)
+		for(t_new_capacity_idx = 0; t_new_capacity_idx < __kMCValueHashTableCapacityCount; t_new_capacity_idx++)
 			if (t_new_capacity_req <= __kMCValueHashTableCapacities[t_new_capacity_idx])
 				break;
+        
+        // If we are exceeding the maximum capacity then we can do no more.
+        if (t_new_capacity_idx == __kMCValueHashTableCapacityCount)
+            return false;
 	}
 
 	// Fetch the old capacity and table.
