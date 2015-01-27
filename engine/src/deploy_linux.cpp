@@ -686,7 +686,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	typename T::Shdr *t_project_section, *t_payload_section;
 	t_project_section = NULL;
 	t_payload_section = NULL;
-	for(uint32_t i = 0; i < t_header . e_shnum && t_project_section == NULL && t_success; i++)
+	for(uint32_t i = 0; i < t_success && t_header . e_shnum && t_project_section == NULL && t_success; i++)
 	{
 		char *t_section_name;
 		t_success = MCDeployToLinuxReadString<T>(t_engine, t_section_headers[t_header . e_shstrndx], t_section_headers[i] . sh_name, t_section_name);
@@ -724,7 +724,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	// that segment must be the last.
 	typename T::Phdr *t_project_segment;
 	t_project_segment = NULL;
-	for(uint32_t i = 0; i < t_header . e_phnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_phnum; i++)
 		if (t_project_section -> sh_addr >= t_program_headers[i] . p_vaddr &&
 			t_project_section -> sh_addr + t_project_section -> sh_size <= t_program_headers[i] . p_vaddr + t_program_headers[i] . p_memsz)
 		{
