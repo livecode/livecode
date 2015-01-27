@@ -547,6 +547,10 @@
 		72D6032A18476FC90022379C /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
 		72DDBF7A19EC011300361E88 /* native-layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72DDBF7919EC011300361E88 /* native-layer.cpp */; };
 		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
+		7637AC20192DFD2F008FF003 /* exec-files-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7637AC1C192DFD2D008FF003 /* exec-files-file.cpp */; };
+		7637AC21192DFD2F008FF003 /* exec-files-process.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7637AC1D192DFD2D008FF003 /* exec-files-process.cpp */; };
+		7637AC22192DFD2F008FF003 /* exec-interface-screen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7637AC1E192DFD2E008FF003 /* exec-interface-screen.cpp */; };
+		7637AC23192DFD2F008FF003 /* exec-network-socket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7637AC1F192DFD2E008FF003 /* exec-network-socket.cpp */; };
 		763FF4E918522CBE00B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
 		763FF4EA18522CC100B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
 		76570D51198BBBDF00614ECD /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -2245,6 +2249,10 @@
 		72DDBF7819EC000300361E88 /* native-layer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "native-layer.h"; path = "src/native-layer.h"; sourceTree = "<group>"; };
 		72DDBF7919EC011300361E88 /* native-layer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "native-layer.cpp"; path = "src/native-layer.cpp"; sourceTree = "<group>"; };
 		7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
+		7637AC1C192DFD2D008FF003 /* exec-files-file.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-files-file.cpp"; path = "src/exec-files-file.cpp"; sourceTree = "<group>"; };
+		7637AC1D192DFD2D008FF003 /* exec-files-process.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-files-process.cpp"; path = "src/exec-files-process.cpp"; sourceTree = "<group>"; };
+		7637AC1E192DFD2E008FF003 /* exec-interface-screen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-screen.cpp"; path = "src/exec-interface-screen.cpp"; sourceTree = "<group>"; };
+		7637AC1F192DFD2E008FF003 /* exec-network-socket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-network-socket.cpp"; path = "src/exec-network-socket.cpp"; sourceTree = "<group>"; };
 		763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
 		766E3292180EE4E000CF7FCF /* graphics_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
 		766E3293180EE4E000CF7FCF /* graphicscontext.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
@@ -3401,6 +3409,10 @@
 		4DE3B0EE15888AA1008EB6B5 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
+				7637AC1C192DFD2D008FF003 /* exec-files-file.cpp */,
+				7637AC1D192DFD2D008FF003 /* exec-files-process.cpp */,
+				7637AC1E192DFD2E008FF003 /* exec-interface-screen.cpp */,
+				7637AC1F192DFD2E008FF003 /* exec-network-socket.cpp */,
 				4DD9D74E1A3AE4580006366D /* exec-extension.cpp */,
 				76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */,
 				768D665F1762076000F203A3 /* exec-ad.cpp */,
@@ -5372,6 +5384,10 @@
 				4CF4B883199E0D9900E33AEE /* coretextlayout.mm in Sources */,
 				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
 				72C28AFA1911300D007F2AA0 /* segment.cpp in Sources */,
+				7637AC20192DFD2F008FF003 /* exec-files-file.cpp in Sources */,
+				7637AC21192DFD2F008FF003 /* exec-files-process.cpp in Sources */,
+				7637AC22192DFD2F008FF003 /* exec-interface-screen.cpp in Sources */,
+				7637AC23192DFD2F008FF003 /* exec-network-socket.cpp in Sources */,
 				BEBC51DA195350C300215C85 /* coretextfonts.cpp in Sources */,
 				BEBC51DB195350C300215C85 /* mac-abort.mm in Sources */,
 				BEBC51DC195350C300215C85 /* mac-color.mm in Sources */,

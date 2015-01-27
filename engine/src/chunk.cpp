@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "syntax.h"
 #include "exec.h"
 
+#include "socket.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef COLLECTING_CHUNKS
@@ -140,7 +142,8 @@ MCChunk::MCChunk(Boolean isforset)
 	function = F_UNDEFINED;
 	marked = False;
 	next = NULL;
-    
+    pseudoobject = NULL;
+
     // MW-2014-05-28: [[ Bug 11928 ]] We assume (at first) we are not a transient text chunk (i.e. one that is evaluated from a var).
     m_transient_text_chunk = false;
 }
@@ -181,6 +184,8 @@ MCChunk::~MCChunk()
     delete trueword;
 	delete source;
 	delete destvar;
+    
+    delete pseudoobject;
 }
 
 Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
@@ -201,7 +206,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
-		{
+        {
 			if (need_target)
 			{
 				MCperror->add(PE_CHUNK_NOCHUNK, sp);
@@ -209,51 +214,56 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			}
 			else
 				break;
-		}
+        }
 		if (type == ST_ID)
 		{
 			te = NULL;
 			if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || te->type == TT_PROPERTY)
 			{
-				if (need_target)
-				{
-					if (desttype == DT_ISDEST && stack == NULL && background == NULL
-					        && card == NULL && group == NULL && object == NULL)
-					{
-						MCExpression *newfact = NULL;
-						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
-						//   execution outwith a handler.
-						if (doingthe
-						    || (sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
+                // AL-2014-05-23: [[ PseudoObjectProps ]] Since screen is a property name,
+                //  we have to jump through a few hoops to parse it as a pseudo-object.
+                if (te == NULL || te->which != P_SCREEN || doingthe)
+                {
+                    if (need_target)
+                    {
+                        if (desttype == DT_ISDEST && stack == NULL && background == NULL
+					        && card == NULL && group == NULL && object == NULL && pseudoobject == NULL)
+                        {
+                            MCExpression *newfact = NULL;
+                            // MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
+                            //   execution outwith a handler.
+                            if (doingthe
+						        || (sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
 						        && (MCexplicitvariables
 						            || sp.lookupconstant(&newfact) == PS_NORMAL
 						            || sp.findnewvar(sp.gettoken_nameref(), kMCEmptyName, &destvar) != PS_NORMAL)))
-						{
-							delete newfact;
-							MCperror->add(PE_CHUNK_NOVARIABLE, sp);
-							return PS_ERROR;
-						}
-						destvar->parsearray(sp);
-						desttype = DT_VARIABLE;
-						return PS_NORMAL;
-					}
-					else
-					{
-						if (doingthe)
-							sp.backup();
-						sp.backup();
-						if (sp.parseexp(True, False, &source) != PS_NORMAL)
-						{
-							MCperror->add
-							(PE_CHUNK_BADEXP, sp);
-							return PS_ERROR;
-						}
-						desttype = DT_EXPRESSION;
-					}
-				}
-				else
-					sp.backup();
-				break;
+                            {
+                                delete newfact;
+                                MCperror->add(PE_CHUNK_NOVARIABLE, sp);
+                                return PS_ERROR;
+                            }
+                            destvar->parsearray(sp);
+                            desttype = DT_VARIABLE;
+                            return PS_NORMAL;
+                        }
+                        else
+                        {
+                            if (doingthe)
+                                sp.backup();
+                            sp.backup();
+                            if (sp.parseexp(True, False, &source) != PS_NORMAL)
+                            {
+                                MCperror->add
+                                (PE_CHUNK_BADEXP, sp);
+                                return PS_ERROR;
+                            }
+                            desttype = DT_EXPRESSION;
+                        }
+                    }
+                    else
+                        sp.backup();
+                    break;
+                }
 			}
 			switch (te->type)
 			{
@@ -332,8 +342,18 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				}
 				marked = True;
 				break;
+            case TT_PROPERTY:
 			case TT_CHUNK:
-				nterm = (Chunk_term)te->which;
+                // AL-2014-05-23: [[ PseudoObjectProps ]] Since screen is a property name,
+                //  we have to jump through a few hoops to parse it as a pseudo-object.
+                if (te->type == TT_PROPERTY)
+                {
+                    if (te -> which != P_SCREEN)
+                        break;
+                    nterm = CT_SCREEN;
+                }
+                else
+                    nterm = (Chunk_term)te->which;
 				// MW-2013-08-05: [[ ThisMe ]] If 'this' is followed by 'me' we become 'this me'.
 				if (nterm == CT_THIS &&
 					sp . skip_token(SP_FACTOR, TT_FUNCTION, F_ME) == PS_NORMAL)
@@ -410,6 +430,14 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 					case CT_PULLDOWN:
 					case CT_POPUP:
 					case CT_OPTION:
+                    
+                    // pseudo-object parsing
+                    case CT_SOCKET:
+                    case CT_FILE:
+                    case CT_PROCESS:
+                    case CT_SCREEN:
+                        pseudoobject = curref;
+                        break;
 					case CT_STACK:
 						if (oterm > CT_STACK)
 						{
@@ -4206,9 +4234,69 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	return nil;
 }
 
+static const MCObjectPropertyTable *get_object_property_table(MCPseudoObjectChunkPtr t_ptr)
+{
+    switch (t_ptr . type)
+    {
+        case kMCPseudoObjectTypeSocket:
+            return MCSocketGetPropertyTable();
+        case kMCPseudoObjectTypeScreen:
+            return MCScreenGetPropertyTable();
+        case kMCPseudoObjectTypeFile:
+            return MCFileGetPropertyTable();
+        case kMCPseudoObjectTypeProcess:
+            return MCProcessGetPropertyTable();
+        default:
+            return nil;
+    }
+}
+
+bool MCChunk::setpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
+{
+    MCPseudoObjectChunkPtr t_ptr;
+    if (evalpseudoobject(ctxt, t_ptr) != ES_NORMAL)
+        return false;
+    
+    MCPropertyInfo *t_info;
+    const MCObjectPropertyTable *t_table;
+    t_table = get_object_property_table(t_ptr);
+    if (t_table == nil)
+        return false;
+    
+    t_info = lookup_object_property(t_table, which, false, false, kMCPropertyInfoChunkTypeNone);
+    
+    if (t_info == nil)
+        return false;
+    
+    MCExecStoreProperty(ctxt, t_info, &t_ptr, p_value);
+}
+
+bool MCChunk::getpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
+{
+    MCPseudoObjectChunkPtr t_ptr;
+    if (evalpseudoobject(ctxt, t_ptr) != ES_NORMAL)
+        return false;
+    
+    MCPropertyInfo *t_info;
+    const MCObjectPropertyTable *t_table;
+    t_table = get_object_property_table(t_ptr);
+    if (t_table == nil)
+        return false;
+    
+    t_info = lookup_object_property(t_table, which, false, false, kMCPropertyInfoChunkTypeNone);
+    
+    if (t_info == nil)
+        return false;
+    
+    MCExecFetchProperty(ctxt, t_info, &t_ptr, r_value);
+}
+
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
 {
+    if (pseudoobject != nil)
+        return getpseudoprop(ctxt, which, index, effective, r_value);
+    
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
         return false;
@@ -4271,6 +4359,9 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
 {
+    if (pseudoobject != nil)
+        return setpseudoprop(ctxt, which, index, effective, p_value);
+    
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ctxt, false, true, t_obj_chunk) != ES_NORMAL)
         return false;
@@ -4473,6 +4564,49 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
     r_chunk . part_id = t_object . part_id;
     r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
 
+    return true;
+}
+
+bool MCChunk::evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectChunkPtr &r_chunk)
+{
+    if (pseudoobject -> etype != CT_EXPRESSION)
+        return false;
+    
+    MCNewAutoNameRef t_exp;
+    if (!ctxt . EvalExprAsNameRef(pseudoobject -> startpos, EE_CHUNK_CANTFINDOBJECT, &t_exp))
+        return false;
+    
+    switch (pseudoobject -> otype)
+    {
+        case CT_SOCKET:
+            if (!MCSocketGetObject(ctxt, *t_exp, r_chunk))
+                return false;
+            break;
+        case CT_PROCESS:
+            if (!MCProcessGetObject(ctxt, *t_exp, r_chunk))
+                return false;
+            break;
+        case CT_FILE:
+            if (!MCFileGetObject(ctxt, *t_exp, r_chunk))
+                return false;
+            break;
+        case CT_SCREEN:
+            if (!MCScreenGetObject(ctxt, *t_exp, r_chunk))
+                return false;
+            break;
+        default:
+            return false;
+    }
+
+    MCMarkedText t_mark;
+    t_mark . finish = INDEX_MAX;
+    t_mark . start = 0;
+    t_mark . changed = false;
+    t_mark . text = nil;
+
+    r_chunk . chunk = CT_UNDEFINED;
+    r_chunk . mark = t_mark;
+    
     return true;
 }
 

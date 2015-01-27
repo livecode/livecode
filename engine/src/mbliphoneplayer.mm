@@ -136,8 +136,8 @@ public:
     void GetDuration(MCExecContext& ctxt, integer_t& r_duration);
     void GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration);
     void GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value);
-    void GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state);
-    void GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state);
+    void GetLoadState(MCExecContext& ctxt, intset_t& r_state);
+    void GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state);
     void GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2]);
     
     
@@ -593,7 +593,7 @@ void MCiOSPlayerControl::GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value)
         r_value = false;
 }
 
-void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state)
+void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, intset_t& r_state)
 {
     uint32_t t_load_state;
     t_load_state = 0;
@@ -613,7 +613,7 @@ void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadSt
     r_state = (MCNativeControlLoadState)t_load_state;
 }
 
-void MCiOSPlayerControl::GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state)
+void MCiOSPlayerControl::GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state)
 {
     if (m_controller != nil)
     {

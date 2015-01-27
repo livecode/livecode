@@ -1680,6 +1680,10 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    
+    // PSEUDO-OBJECT PROPERTIES
+    P_OPEN_MODE,
+
     P_KIND,
 
     // MW-2014-12-10: [[ Extensions ]] 'loadedExtensions' global property

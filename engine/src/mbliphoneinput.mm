@@ -120,30 +120,30 @@ public:
     void SetTextColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
     void SetFontName(MCExecContext& ctxt, MCStringRef p_font);
     void SetFontSize(MCExecContext& ctxt, uinteger_t p_size);
-    void SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align);
+    void SetTextAlign(MCExecContext& ctxt, intenum_t p_align);
 
-    void SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type);
-    void SetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType p_type);
+    void SetAutoCapitalizationType(MCExecContext& ctxt, intenum_t p_type);
+    void SetAutoCorrectionType(MCExecContext& ctxt, intenum_t p_type);
     void SetManageReturnKey(MCExecContext& ctxt, bool p_value);
-    void SetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType p_type);
-    void SetKeyboardStyle(MCExecContext& ctxt, MCNativeControlInputKeyboardStyle p_style);
-    void SetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType p_key);
-    void SetContentType(MCExecContext& ctxt, MCNativeControlInputContentType p_type);
+    void SetKeyboardType(MCExecContext& ctxt, intenum_t p_type);
+    void SetKeyboardStyle(MCExecContext& ctxt, intenum_t p_style);
+    void SetReturnKey(MCExecContext& ctxt, intenum_t p_key);
+    void SetContentType(MCExecContext& ctxt, intenum_t p_type);
 
     void GetEnabled(MCExecContext& ctxt, bool& r_value);
     void GetText(MCExecContext& ctxt, MCStringRef& r_string);
     void GetTextColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
     void GetFontName(MCExecContext& ctxt, MCStringRef& r_font);
     void GetFontSize(MCExecContext& ctxt, uinteger_t& r_size);
-    void GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align);
+    void GetTextAlign(MCExecContext& ctxt, intenum_t& r_align);
 
-    void GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type);
-    void GetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType& r_type);
-    void GetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType& r_type);
+    void GetAutoCapitalizationType(MCExecContext& ctxt, intenum_t& r_type);
+    void GetAutoCorrectionType(MCExecContext& ctxt, intenum_t& r_type);
+    void GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type);
     void GetManageReturnKey(MCExecContext& ctxt, bool& r_value);
-    void GetKeyboardStyle(MCExecContext& ctxt, MCNativeControlInputKeyboardStyle& r_style);
-    void GetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType& r_key);
-    void GetContentType(MCExecContext& ctxt, MCNativeControlInputContentType& r_type);
+    void GetKeyboardStyle(MCExecContext& ctxt, intenum_t& r_style);
+    void GetReturnKey(MCExecContext& ctxt, intenum_t& r_key);
+    void GetContentType(MCExecContext& ctxt, intenum_t& r_type);
     
 	// Input-specific actions
 	void ExecFocus(MCExecContext& ctxt);
@@ -179,14 +179,14 @@ public:
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
     void SetMinimumFontSize(MCExecContext& ctxt, integer_t p_size);
     void SetAutoClear(MCExecContext& ctxt, bool p_value);
-    void SetClearButtonMode(MCExecContext& ctxt, MCNativeControlClearButtonMode p_mode);
-    void SetBorderStyle(MCExecContext& ctxt, MCNativeControlBorderStyle p_style);
+    void SetClearButtonMode(MCExecContext& ctxt, intenum_t p_mode);
+    void SetBorderStyle(MCExecContext& ctxt, intenum_t p_style);
     
     void GetAutoFit(MCExecContext& ctxt, bool& r_value);
     void GetMinimumFontSize(MCExecContext& ctxt, integer_t& r_size);
     void GetAutoClear(MCExecContext& ctxt, bool& r_value);
-    void GetClearButtonMode(MCExecContext& ctxt, MCNativeControlClearButtonMode& r_mode);
-    void GetBorderStyle(MCExecContext& ctxt, MCNativeControlBorderStyle& r_style);
+    void GetClearButtonMode(MCExecContext& ctxt, intenum_t& r_mode);
+    void GetBorderStyle(MCExecContext& ctxt, intenum_t& r_style);
 	
 protected:
 	virtual UIView *CreateView(void);
@@ -224,14 +224,14 @@ public:
     
     void SetEditable(MCExecContext& ctxt, bool p_value);
     void SetSelectedRange(MCExecContext& ctxt, const MCNativeControlRange& p_range);
-    void SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type);
-    void SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align);
+    void SetDataDetectorTypes(MCExecContext& ctxt, intset_t p_type);
+    void SetVerticalTextAlign(MCExecContext& ctxt, intenum_t p_align);
     virtual void SetContentRect(MCExecContext& ctxt, integer_t p_rect[4]);
     
     void GetEditable(MCExecContext& ctxt, bool& r_value);
     void GetSelectedRange(MCExecContext& ctxt, MCNativeControlRange& r_range);
-    void GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type);
-    void GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align);
+    void GetDataDetectorTypes(MCExecContext& ctxt, intset_t& r_type);
+    void GetVerticalTextAlign(MCExecContext& ctxt, intenum_t& r_align);
     
     void GetContentRect(MCExecContext& ctxt, integer_t r_rect[4]);
     void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
@@ -252,8 +252,8 @@ public:
     void GetPagingEnabled(MCExecContext& ctxt, bool& r_value);
     void SetDecelerationRate(MCExecContext& ctxt, const MCNativeControlDecelerationRate& p_rate);
     void GetDecelerationRate(MCExecContext& ctxt, MCNativeControlDecelerationRate& r_rate);
-    void SetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle p_style);
-    void GetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle& r_style);
+    void SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_style);
+    void GetIndicatorStyle(MCExecContext& ctxt, intenum_t& r_style);
     void SetIndicatorInsets(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_insets);
     void GetIndicatorInsets(MCExecContext& ctxt, MCNativeControlIndicatorInsets& r_insets);
     void SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value);
@@ -621,7 +621,7 @@ void MCiOSInputControl::SetFontSize(MCExecContext& ctxt, uinteger_t p_size)
     }
 }
 
-void MCiOSInputControl::SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align)
+void MCiOSInputControl::SetTextAlign(MCExecContext& ctxt, intenum_t p_align)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -646,7 +646,7 @@ void MCiOSInputControl::SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTe
     }
 }
 
-void MCiOSInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type)
+void MCiOSInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, intenum_t p_type)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -673,7 +673,7 @@ void MCiOSInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeC
     }
 }
 
-void MCiOSInputControl::SetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType p_type)
+void MCiOSInputControl::SetAutoCorrectionType(MCExecContext& ctxt, intenum_t p_type)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -706,7 +706,7 @@ void MCiOSInputControl::SetManageReturnKey(MCExecContext& ctxt, bool p_value)
         [t_field setEnablesReturnKeyAutomatically: p_value];
 }
 
-void MCiOSInputControl::SetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType p_type)
+void MCiOSInputControl::SetKeyboardType(MCExecContext& ctxt, intenum_t p_type)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -752,7 +752,7 @@ void MCiOSInputControl::SetKeyboardType(MCExecContext& ctxt, MCNativeControlInpu
     }
 }
 
-void MCiOSInputControl::SetKeyboardStyle(MCExecContext& ctxt, MCNativeControlInputKeyboardStyle p_style)
+void MCiOSInputControl::SetKeyboardStyle(MCExecContext& ctxt, intenum_t p_style)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -765,7 +765,7 @@ void MCiOSInputControl::SetKeyboardStyle(MCExecContext& ctxt, MCNativeControlInp
     }
 }
 
-void MCiOSInputControl::SetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType p_key)
+void MCiOSInputControl::SetReturnKey(MCExecContext& ctxt, intenum_t p_key)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -814,7 +814,7 @@ void MCiOSInputControl::SetReturnKey(MCExecContext& ctxt, MCNativeControlInputRe
     }
 }
     
-void MCiOSInputControl::SetContentType(MCExecContext& ctxt, MCNativeControlInputContentType p_type)
+void MCiOSInputControl::SetContentType(MCExecContext& ctxt, intenum_t p_type)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -892,7 +892,7 @@ void MCiOSInputControl::GetFontSize(MCExecContext& ctxt, uinteger_t& r_size)
         r_size = 0;
 }
 
-void MCiOSInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align)
+void MCiOSInputControl::GetTextAlign(MCExecContext& ctxt, intenum_t& r_align)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -916,7 +916,7 @@ void MCiOSInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTe
     }
 }
 
-void MCiOSInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type)
+void MCiOSInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, intenum_t& r_type)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -942,7 +942,7 @@ void MCiOSInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeC
     }
 }
 
-void MCiOSInputControl::GetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType& r_type)
+void MCiOSInputControl::GetAutoCorrectionType(MCExecContext& ctxt, intenum_t& r_type)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -976,7 +976,7 @@ void MCiOSInputControl::GetManageReturnKey(MCExecContext& ctxt, bool& r_value)
         r_value = false;
 }
 
-void MCiOSInputControl::GetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType& r_type)
+void MCiOSInputControl::GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1018,7 +1018,7 @@ void MCiOSInputControl::GetKeyboardType(MCExecContext& ctxt, MCNativeControlInpu
     }
 }
 
-void MCiOSInputControl::GetKeyboardStyle(MCExecContext& ctxt, MCNativeControlInputKeyboardStyle& r_style)
+void MCiOSInputControl::GetKeyboardStyle(MCExecContext& ctxt, intenum_t& r_style)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1029,7 +1029,7 @@ void MCiOSInputControl::GetKeyboardStyle(MCExecContext& ctxt, MCNativeControlInp
         r_style = kMCNativeControlInputKeyboardStyleAlert;
 }
 
-void MCiOSInputControl::GetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType& r_key)
+void MCiOSInputControl::GetReturnKey(MCExecContext& ctxt, intenum_t& r_key)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1076,7 +1076,7 @@ void MCiOSInputControl::GetReturnKey(MCExecContext& ctxt, MCNativeControlInputRe
     }
 }
 
-void MCiOSInputControl::GetContentType(MCExecContext& ctxt, MCNativeControlInputContentType& r_type)
+void MCiOSInputControl::GetContentType(MCExecContext& ctxt, intenum_t& r_type)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1371,7 +1371,7 @@ void MCiOSInputFieldControl::SetAutoClear(MCExecContext& ctxt, bool p_value)
         [t_field setClearsOnBeginEditing: p_value];
 }
 
-void MCiOSInputFieldControl::SetClearButtonMode(MCExecContext& ctxt, MCNativeControlClearButtonMode p_mode)
+void MCiOSInputFieldControl::SetClearButtonMode(MCExecContext& ctxt, intenum_t p_mode)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1399,7 +1399,7 @@ void MCiOSInputFieldControl::SetClearButtonMode(MCExecContext& ctxt, MCNativeCon
     }
 }
 
-void MCiOSInputFieldControl::SetBorderStyle(MCExecContext& ctxt, MCNativeControlBorderStyle p_style)
+void MCiOSInputFieldControl::SetBorderStyle(MCExecContext& ctxt, intenum_t p_style)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1460,7 +1460,7 @@ void MCiOSInputFieldControl::GetAutoClear(MCExecContext& ctxt, bool& r_value)
         r_value = false;
 }
 
-void MCiOSInputFieldControl::GetClearButtonMode(MCExecContext& ctxt, MCNativeControlClearButtonMode& r_mode)
+void MCiOSInputFieldControl::GetClearButtonMode(MCExecContext& ctxt, intenum_t& r_mode)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1486,7 +1486,7 @@ void MCiOSInputFieldControl::GetClearButtonMode(MCExecContext& ctxt, MCNativeCon
     }
 }
 
-void MCiOSInputFieldControl::GetBorderStyle(MCExecContext& ctxt, MCNativeControlBorderStyle& r_style)
+void MCiOSInputFieldControl::GetBorderStyle(MCExecContext& ctxt, intenum_t& r_style)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1668,7 +1668,7 @@ void MCiOSMultiLineControl::SetSelectedRange(MCExecContext& ctxt, const MCNative
     }
 }
 
-void MCiOSMultiLineControl::SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type)
+void MCiOSMultiLineControl::SetDataDetectorTypes(MCExecContext& ctxt, intset_t p_type)
 {
     UITextView *t_view;
 	t_view = (UITextView *)GetView();
@@ -1693,7 +1693,7 @@ void MCiOSMultiLineControl::SetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
     }
 }
 
-void MCiOSMultiLineControl::SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align)
+void MCiOSMultiLineControl::SetVerticalTextAlign(MCExecContext& ctxt, intenum_t p_align)
 {
 	if (m_delegate != nil)
     {
@@ -1733,7 +1733,7 @@ void MCiOSMultiLineControl::GetSelectedRange(MCExecContext& ctxt, MCNativeContro
     }
 }
 
-void MCiOSMultiLineControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type)
+void MCiOSMultiLineControl::GetDataDetectorTypes(MCExecContext& ctxt, intset_t& r_type)
 {
     UITextView *t_view;
 	t_view = (UITextView *)GetView();
@@ -1768,7 +1768,7 @@ void MCiOSMultiLineControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
     r_type = (MCNativeControlInputDataDetectorType)t_types;
 }
 
-void MCiOSMultiLineControl::GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align)
+void MCiOSMultiLineControl::GetVerticalTextAlign(MCExecContext& ctxt, intenum_t& r_align)
 {
 	MCiOSMultiLineDelegate *t_delegate;
 	t_delegate = (MCiOSMultiLineDelegate*)m_delegate;
@@ -2012,7 +2012,7 @@ void MCiOSMultiLineControl::GetDecelerationRate(MCExecContext& ctxt, MCNativeCon
         r_rate . rate = 0;
 }
 
-void MCiOSMultiLineControl::SetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle p_style)
+void MCiOSMultiLineControl::SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_style)
 {
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
@@ -2039,7 +2039,7 @@ void MCiOSMultiLineControl::SetIndicatorStyle(MCExecContext& ctxt, MCNativeContr
     }
 }
 
-void MCiOSMultiLineControl::GetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle& r_style)
+void MCiOSMultiLineControl::GetIndicatorStyle(MCExecContext& ctxt, intenum_t& r_style)
 {
     UIScrollView *t_view;
     t_view = (UIScrollView*)GetView();

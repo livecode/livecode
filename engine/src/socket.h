@@ -175,6 +175,9 @@ public:
 	Boolean sslconnect();
 	Boolean sslaccept();
 	void sslclose();
+    
+    void GetName(MCExecContext& ctxt, MCNameRef& r_name);
+    
 protected:
 #ifdef _MACOSX
 	CFSocketRef cfsockref;
@@ -189,6 +192,10 @@ protected:
 	SSL_CTX *_ssl_context;
 #endif
 };
+
+struct MCObjectPropertyTable;
+MCObjectPropertyTable *MCSocketGetPropertyTable();
+bool MCSocketGetObject(MCExecContext& ctxt, MCNameRef p_expression, MCPseudoObjectChunkPtr& r_pobj);
 
 typedef bool (*MCHostNameResolveCallback)(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen);
 typedef void (*MCSockAddrToStringCallback)(void *p_context, bool p_resolved, const char *p_hostname);

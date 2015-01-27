@@ -216,32 +216,32 @@ public:
     void SetText(MCExecContext& ctxt, MCStringRef p_string);
     void SetTextColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
     void SetTextSize(MCExecContext& ctxt, uinteger_t p_size);
-    void SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align);
-    void SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align);
+    void SetTextAlign(MCExecContext& ctxt, intenum_t p_align);
+    void SetVerticalTextAlign(MCExecContext& ctxt, intenum_t p_align);
     void SetEnabled(MCExecContext& ctxt, bool p_value);
-    void SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type);
-    void SetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType p_type);
-    void SetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType p_type);
-    void SetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType p_key);
-    void SetContentType(MCExecContext& ctxt, MCNativeControlInputContentType p_type);
+    void SetAutoCapitalizationType(MCExecContext& ctxt, intenum_t p_type);
+    void SetAutoCorrectionType(MCExecContext& ctxt, intenum_t p_type);
+    void SetKeyboardType(MCExecContext& ctxt, intenum_t p_type);
+    void SetReturnKey(MCExecContext& ctxt, intenum_t p_key);
+    void SetContentType(MCExecContext& ctxt, intenum_t p_type);
     void SetScrollingEnabled(MCExecContext& ctxt, bool p_value);
-    void SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type);
+    void SetDataDetectorTypes(MCExecContext& ctxt, intset_t p_type);
     void SetSelectedRange(MCExecContext& ctxt, const MCNativeControlRange& p_range);
     
     void GetMultiLine(MCExecContext& ctxt, bool& r_multiline);
     void GetText(MCExecContext& ctxt, MCStringRef& r_string);
     void GetTextColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
     void GetTextSize(MCExecContext& ctxt, uinteger_t& r_size);
-    void GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align);
-    void GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align);
+    void GetTextAlign(MCExecContext& ctxt, intenum_t& r_align);
+    void GetVerticalTextAlign(MCExecContext& ctxt, intenum_t& r_align);
     void GetEnabled(MCExecContext& ctxt, bool& r_value);
-    void GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type);
-    void GetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType& r_type);
-    void GetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType& r_type);
-    void GetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType& r_key);
-    void GetContentType(MCExecContext& ctxt, MCNativeControlInputContentType& r_type);
+    void GetAutoCapitalizationType(MCExecContext& ctxt, intenum_t& r_type);
+    void GetAutoCorrectionType(MCExecContext& ctxt, intenum_t& r_type);
+    void GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type);
+    void GetReturnKey(MCExecContext& ctxt, intenum_t& r_key);
+    void GetContentType(MCExecContext& ctxt, intenum_t& r_type);
     void GetScrollingEnabled(MCExecContext& ctxt, bool& r_value);
-    void GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type);
+    void GetDataDetectorTypes(MCExecContext& ctxt, intset_t& r_type);
     void GetSelectedRange(MCExecContext& ctxt, MCNativeControlRange& r_range);
     
 	// Input-specific actions
@@ -360,7 +360,7 @@ void MCAndroidInputControl::SetTextSize(MCExecContext& ctxt, uinteger_t p_size)
         MCAndroidObjectRemoteCall(t_view, "setTextSize", "vi", nil, p_size);
 }
 
-void MCAndroidInputControl::SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align)
+void MCAndroidInputControl::SetTextAlign(MCExecContext& ctxt, intenum_t p_align)
 {
     jobject t_view;
     t_view = GetView();
@@ -386,7 +386,7 @@ void MCAndroidInputControl::SetTextAlign(MCExecContext& ctxt, MCNativeControlInp
     }
 }
 
-void MCAndroidInputControl::SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align)
+void MCAndroidInputControl::SetVerticalTextAlign(MCExecContext& ctxt, intenum_t p_align)
 {
     jobject t_view;
     t_view = GetView();
@@ -421,7 +421,7 @@ void MCAndroidInputControl::SetEnabled(MCExecContext& ctxt, bool p_value)
         MCAndroidObjectRemoteCall(t_view, "setEnabled", "vb", nil, p_value);
 }
 
-void MCAndroidInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type)
+void MCAndroidInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, intenum_t p_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -448,7 +448,7 @@ void MCAndroidInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, MCNat
     }
 }
 
-void MCAndroidInputControl::SetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType p_type)
+void MCAndroidInputControl::SetAutoCorrectionType(MCExecContext& ctxt, intenum_t p_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -461,7 +461,7 @@ void MCAndroidInputControl::SetAutoCorrectionType(MCExecContext& ctxt, MCNativeC
     }
 }
 
-void MCAndroidInputControl::SetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType p_type)
+void MCAndroidInputControl::SetKeyboardType(MCExecContext& ctxt, intenum_t p_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -499,7 +499,7 @@ void MCAndroidInputControl::SetKeyboardType(MCExecContext& ctxt, MCNativeControl
     }
 }
 
-void MCAndroidInputControl::SetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType p_key)
+void MCAndroidInputControl::SetReturnKey(MCExecContext& ctxt, intenum_t p_key)
 {
     jobject t_view;
     t_view = GetView();
@@ -532,7 +532,7 @@ void MCAndroidInputControl::SetReturnKey(MCExecContext& ctxt, MCNativeControlInp
     }
 }
 
-void MCAndroidInputControl::SetContentType(MCExecContext& ctxt, MCNativeControlInputContentType p_type)
+void MCAndroidInputControl::SetContentType(MCExecContext& ctxt, intenum_t p_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -555,7 +555,7 @@ void MCAndroidInputControl::SetScrollingEnabled(MCExecContext& ctxt, bool p_valu
         MCAndroidObjectRemoteCall(t_view, "setScrollingEnabled", "vb", nil, p_value);
 }
 
-void MCAndroidInputControl::SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type)
+void MCAndroidInputControl::SetDataDetectorTypes(MCExecContext& ctxt, intset_t p_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -631,7 +631,7 @@ void MCAndroidInputControl::GetTextSize(MCExecContext& ctxt, uinteger_t& r_size)
         r_size = 0;
 }
 
-void MCAndroidInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align)
+void MCAndroidInputControl::GetTextAlign(MCExecContext& ctxt, intenum_t& r_align)
 {
     jobject t_view;
     t_view = GetView();
@@ -656,7 +656,7 @@ void MCAndroidInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInp
     }
 }
 
-void MCAndroidInputControl::GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align)
+void MCAndroidInputControl::GetVerticalTextAlign(MCExecContext& ctxt, intenum_t& r_align)
 {
     jobject t_view;
     t_view = GetView();
@@ -692,7 +692,7 @@ void MCAndroidInputControl::GetEnabled(MCExecContext& ctxt, bool& r_value)
         r_value = false;
 }
 
-void MCAndroidInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type)
+void MCAndroidInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, intenum_t& r_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -720,7 +720,7 @@ void MCAndroidInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, MCNat
     }
 }
 
-void MCAndroidInputControl::GetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType& r_type)
+void MCAndroidInputControl::GetAutoCorrectionType(MCExecContext& ctxt, intenum_t& r_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -733,7 +733,7 @@ void MCAndroidInputControl::GetAutoCorrectionType(MCExecContext& ctxt, MCNativeC
     r_type = t_autocorrect ? kMCNativeControlInputAutocorrectionYes : kMCNativeControlInputAutocorrectionNo;
 }
 
-void MCAndroidInputControl::GetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType& r_type)
+void MCAndroidInputControl::GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -770,7 +770,7 @@ void MCAndroidInputControl::GetKeyboardType(MCExecContext& ctxt, MCNativeControl
     }
 }
 
-void MCAndroidInputControl::GetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType& r_type)
+void MCAndroidInputControl::GetReturnKey(MCExecContext& ctxt, intenum_t& r_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -804,7 +804,7 @@ void MCAndroidInputControl::GetReturnKey(MCExecContext& ctxt, MCNativeControlInp
     }
 }
 
-void MCAndroidInputControl::GetContentType(MCExecContext& ctxt, MCNativeControlInputContentType& r_type)
+void MCAndroidInputControl::GetContentType(MCExecContext& ctxt, intenum_t& r_type)
 {
     jobject t_view;
     t_view = GetView();
@@ -827,7 +827,7 @@ void MCAndroidInputControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_val
         MCAndroidObjectRemoteCall(t_view, "getScrollingEnabled", "b", nil, &r_value);
 }
 
-void MCAndroidInputControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type)
+void MCAndroidInputControl::GetDataDetectorTypes(MCExecContext& ctxt, intset_t& r_type)
 {
     jobject t_view;
     t_view = GetView();

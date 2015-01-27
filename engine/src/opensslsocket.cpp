@@ -123,6 +123,8 @@ extern "C" char *strdup(const char *);
 
 Boolean MCSocket::sslinited = False;
 
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef _MACOSX
 static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CFDataRef address, const void *pData, void *pInfo)
 {
@@ -2145,6 +2147,6 @@ static int verify_callback(int ok, X509_STORE_CTX *store)
 	return ok;
 }
 
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
+    
+#endif

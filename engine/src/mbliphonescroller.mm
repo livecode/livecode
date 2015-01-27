@@ -114,8 +114,8 @@ public:
     void GetPagingEnabled(MCExecContext& ctxt, bool& r_value);
     void SetDecelerationRate(MCExecContext& ctxt, const MCNativeControlDecelerationRate& p_rate);
     void GetDecelerationRate(MCExecContext& ctxt, MCNativeControlDecelerationRate& r_rate);
-    void SetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle p_style);
-    void GetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle& r_style);
+    void SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_style);
+    void GetIndicatorStyle(MCExecContext& ctxt, intenum_t& r_style);
     void SetIndicatorInsets(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_insets);
     void GetIndicatorInsets(MCExecContext& ctxt, MCNativeControlIndicatorInsets& r_insets);
     void SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value);
@@ -508,7 +508,7 @@ void MCiOSScrollerControl::GetDecelerationRate(MCExecContext& ctxt, MCNativeCont
         r_rate . rate = 0;
 }
 
-void MCiOSScrollerControl::SetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle p_style)
+void MCiOSScrollerControl::SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_style)
 {
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
@@ -535,7 +535,7 @@ void MCiOSScrollerControl::SetIndicatorStyle(MCExecContext& ctxt, MCNativeContro
     }
 }
 
-void MCiOSScrollerControl::GetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle& r_style)
+void MCiOSScrollerControl::GetIndicatorStyle(MCExecContext& ctxt, intenum_t& r_style)
 {
         UIScrollView *t_view;
         t_view = (UIScrollView*)GetView();

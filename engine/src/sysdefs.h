@@ -1266,6 +1266,8 @@ typedef struct MCFont *MCFontRef;
 
 typedef struct MCSyntaxFactory *MCSyntaxFactoryRef;
 
+struct MCDisplay;
+
 //////////////////////////////////////////////////////////////////////
 
 // Chunks, containers and ordinals (and dest for Go command)
@@ -1313,7 +1315,15 @@ enum Chunk_term {
     CT_PULLDOWN,
     CT_POPUP,
     CT_OPTION,
-
+   
+    // pseudo-objects
+    CT_SOCKET,
+    CT_FIRST_PSEUDOOBJECT = CT_SOCKET,
+    CT_FILE,
+    CT_PROCESS,
+    CT_SCREEN,
+    CT_LAST_PSEUDOOBJECT = CT_SCREEN,
+    
     CT_STACK,
     CT_AUDIO_CLIP,
     CT_VIDEO_CLIP,
@@ -1351,6 +1361,7 @@ enum Chunk_term {
 	CT_ELEMENT,
     CT_TYPES,
 	CT_KEY
+
 };
 
 struct MCObjectPtr
@@ -1407,9 +1418,32 @@ struct MCObjectChunkIndexPtr
     MCNameRef index;
 };
 
+enum MCPseudoObjectType
+{
+    kMCPseudoObjectTypeSocket,
+    kMCPseudoObjectTypeFile,
+    kMCPseudoObjectTypeProcess,
+    kMCPseudoObjectTypeScreen
+};
+
+struct MCPseudoObjectChunkPtr
+{
+    MCPseudoObjectType type;
+    union
+    {
+        MCSocket *socket;
+        const MCDisplay *display;
+        Streamnode *file;
+        Streamnode *process;
+    };
+    Chunk_term chunk;
+    MCMarkedText mark;
+};
+
 // MM-2014-07-31: [[ ThreadedRendering ]]
 typedef struct __MCThreadCondition *MCThreadConditionRef;
 typedef struct __MCThreadMutex *MCThreadMutexRef;
+
 
 //////////////////////////////////////////////////////////////////////
 

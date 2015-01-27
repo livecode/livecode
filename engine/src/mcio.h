@@ -224,4 +224,17 @@ IO_stat MCS_fake_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// File and process pseudo-object props
+
+struct MCObjectPropertyTable;
+
+bool MCFileGetObject(MCExecContext& ctxt, MCNameRef p_expression, MCPseudoObjectChunkPtr& r_pobj);
+bool MCProcessGetObject(MCExecContext& ctxt, MCNameRef p_expression, MCPseudoObjectChunkPtr& r_pobj);
+
+MCObjectPropertyTable *MCFileGetPropertyTable();
+MCObjectPropertyTable *MCProcessGetPropertyTable();
+
+void MCFileGetOpenMode(MCExecContext& ctxt, Streamnode *file, intenum_t& r_mode);
+void MCProcessGetOpenMode(MCExecContext& ctxt, Streamnode *file, intenum_t& r_mode);
+
 #endif

@@ -55,6 +55,9 @@ class MCChunk : public MCExpression
     MCCRef *sentence;
     MCCRef *trueword;
     
+    // AL [[ Pseudo-objectProperties ]]
+    MCCRef *pseudoobject;
+    
 	// MW-2008-03-05: [[ Owner Reference ]] If desttype == DT_OWNER, then this pointer will
 	//   be an MCChunk, otherwise it will be an MCExpression.
 	MCExpression *source;
@@ -92,6 +95,7 @@ public:
 
     bool evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
     bool evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
+    bool evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectChunkPtr &t_obj);
     bool evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, int p_preposition, MCUrlChunkPtr& r_chunk);
 	
 	void take_components(MCChunk *tchunk);
@@ -171,6 +175,9 @@ public:
 
     bool getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value);
     bool setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value);
+    
+    bool setpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value);
+    bool getpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value);
     
 #ifdef LEGACY_EXEC
 	Exec_stat getprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
