@@ -621,7 +621,7 @@ static bool MCDeployToLinuxReadString(MCDeployFileRef p_file, typename T::Shdr& 
 	if (t_success)
 		r_string = t_buffer;
 	else
-		delete t_buffer;
+		free(t_buffer);
 
 	return t_success;
 }
