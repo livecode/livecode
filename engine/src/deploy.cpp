@@ -252,12 +252,9 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
     
     // Add all the modules before the stacks, this is so that widgets can resolve
     // themselves on load.
-    uindex_t t_module_file_count;
-	MCDeployFileRef *t_module_files;
-    t_module_file_count = 0;
-	t_module_files = nil;
+    MCAutoArray<MCDeployFileRef> t_module_files;
 	if (t_success)
-		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . modules), t_module_files, t_module_file_count);
+		t_success = t_module_files . New(MCArrayGetCount(p_params . modules));
     if (t_success)
         for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules) && t_success; i++)
         {
@@ -278,11 +275,17 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
         t_iterator = 0;
         while(t_success && MCEngineIterateExtensionFilenames(t_iterator, t_filename))
         {
-            t_success = MCMemoryResizeArray(t_module_file_count + 1, t_module_files, t_module_file_count);
-            if (t_success && !MCDeployFileOpen(t_filename, kMCOpenFileModeRead, t_module_files[t_module_file_count - 1]))
+            MCDeployFileRef t_file;
+            t_file = nil;
+            if (t_success &&
+                !MCDeployFileOpen(t_filename, kMCOpenFileModeRead, t_file))
                 t_success = MCDeployThrow(kMCDeployErrorNoModule);
             if (t_success)
-                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[t_module_file_count - 1]);
+                t_success = t_module_files . Push(t_file);
+            if (t_success)
+                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_file);
+            if (!t_success && t_file != nil)
+                MCDeployFileClose(t_file);
         }
     }
     
@@ -337,9 +340,8 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles); i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
 	MCMemoryDeleteArray(t_aux_stackfiles);
-	for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules); i++)
-		MCDeployFileClose(t_module_files[i]);
-    MCMemoryDeleteArray(t_module_files);
+    for(uint32_t i = 0; i < t_module_files . Size(); i++)
+        MCDeployFileClose(t_module_files[i]);
 	MCDeployFileClose(t_spill);
 	MCDeployFileClose(t_stackfile);
 
