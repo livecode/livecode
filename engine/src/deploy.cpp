@@ -441,6 +441,7 @@ bool MCDeployWritePayload(const MCDeployParameters& p_params, bool p_to_network,
 MCIdeDeploy::MCIdeDeploy(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeDeploy::~MCIdeDeploy(void)
@@ -565,6 +566,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 MCIdeSign::MCIdeSign(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeSign::~MCIdeSign(void)
@@ -666,6 +668,7 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 MCIdeDiet::MCIdeDiet(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeDiet::~MCIdeDiet(void)
