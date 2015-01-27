@@ -1092,6 +1092,10 @@ static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 
 static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
+    // If there is no context, then we have nothing to add the entry to.
+    if (p_context == nil)
+        return true;
+    
     MCWindowsVersionInfo *t_string;
     MCExecContext ctxt(nil, nil, nil);
 	MCAutoStringRef t_value;
@@ -1111,7 +1115,8 @@ static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRe
 		t_bytes[t_byte_count - 2] = '\0';
 		t_bytes[t_byte_count - 1] = '\0';	 
 	}
-	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes, t_byte_count, t_string);
+	
+    return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes, t_byte_count, t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
