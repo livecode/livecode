@@ -92,6 +92,69 @@ begin
 	MCSystemExecQuitWithStatus(Status)
 end syntax
 
+----------------------------------------------------------------
+-- Command-line information
+----------------------------------------------------------------
+
+public foreign handler MCSystemExecGetCommandName (out CommandName as string) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as list) as undefined binds to "<builtin>"
+
+/*
+Summary:	The command name
+
+Example:
+	-- Program that only succeeds if it's run as the "true"
+	-- command.
+	variable tCommand as string
+	put the command name into tCommand
+	if tCommand ends with "true" then
+		quit with status 0
+	else
+		quit with status 1
+	end if
+
+Description:
+Evaluates to the name that was used to execute the program, possibly
+including path information.
+*/
+syntax CommandName is expression
+	"the" "command" "name"
+begin
+	MCSystemExecGetCommandName(output)
+end syntax
+
+/*
+Summary:	The command arguments
+
+Example:
+	-- Program that only succeeds if it's run as the "true"
+	-- command.
+	variable tCommand as string
+	put the command name into tCommand
+	if tCommand ends with "true" then
+		quit with status 0
+	else
+		quit with status 1
+	end if
+
+Description:
+
+Evaluates to a list of command-line arguments passed to the program.
+Some arguments may not be passed in if they are "used up" by the
+LiveCode run-time environment (for example, the LiveCode IDE will
+detect and "use" the `-mmap` argument).
+
+> **Note:** No filename conversion is performed on command line
+> arguments, so some processing may be required before using a command
+> line argument with any of the file handling syntax provided by the
+> `com.livecode.file` module.
+*/
+syntax CommandArguments is expression
+	"the" "command" "arguments"
+begin
+	MCSystemExecGetCommandArguments(output)
+end syntax
+
 --
 
 end module
