@@ -2257,9 +2257,6 @@ MC_DLLEXPORT bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange
 MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
 #endif
 
-// Create a data buffer filled with uniformly-distributed random bytes
-MC_DLLEXPORT bool MCDataCreateRandom (uindex_t p_length, MCDataRef & r_data);
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  ARRAY DEFINITIONS
@@ -2544,10 +2541,6 @@ MC_DLLEXPORT bool MCForeignValueExport(MCTypeInfoRef typeinfo, MCValueRef value,
 //  STREAM DEFINITIONS
 //
 
-MC_DLLEXPORT extern MCStreamRef kMCStdinStream;
-MC_DLLEXPORT extern MCStreamRef kMCStdoutStream;
-MC_DLLEXPORT extern MCStreamRef kMCStderrStream;
-
 // Basic stream creation.
 
 struct MCStreamCallbacks
@@ -2715,11 +2708,6 @@ MC_DLLEXPORT bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
 // Variant valueref functions - these tag the data with the type, allowing
 // easy encoding/decoding of any value type (that supports serialization).
 MC_DLLEXPORT bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
-
-// Standard streams
-MC_DLLEXPORT bool MCStreamGetStandardOutput(MCStreamRef & r_stdout);
-MC_DLLEXPORT bool MCStreamGetStandardInput(MCStreamRef & r_stdin);
-MC_DLLEXPORT bool MCStreamGetStandardError(MCStreamRef & r_stderr);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

@@ -16,6 +16,7 @@
 
 #include <foundation.h>
 #include "foundation-math.h"
+#include <foundation-system.h>
 
 #include <float.h>
 
@@ -348,7 +349,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalMaxNumber(MCNumberRef p_left, MCNumberRef
 
 extern "C" MC_DLLEXPORT void MCMathEvalRandomReal(double& r_output)
 {
-    r_output = MCMathRandom();
+    r_output = MCSRandomReal();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

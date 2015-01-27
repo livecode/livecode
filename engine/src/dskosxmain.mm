@@ -64,7 +64,7 @@ int main(int argc, char *argv[], char *envp[])
 	// MW-2011-08-18: [[ Bug ]] Make sure we initialize Cocoa on startup.
 	NSApplicationLoad();
 	
-	if (!MCInitialize() || !MCScriptInitialize())
+	if (!MCInitialize() || !MCSInitialize() || !MCScriptInitialize())
 		exit(-1);
 	
 	// On OSX, argv and envp are encoded as UTF8

@@ -21,27 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-real64_t
-MCMathRandom (void)
-{
-	real64_t t_random_bytes;
-	int t_ignored;
-
-	/* Ensure that if we can't obtain a valid random number, the
-	 * return value is obviously useless.  __MCRandomBytes() should
-	 * have thrown an error. */
-	if (!__MCRandomBytes (&t_random_bytes, sizeof (t_random_bytes)))
-		return NAN;
-
-	/* Convert the value to a value in the range [0, 1).  frexp(3)
-	 * always returns a value with absolute value in the range [0.5,
-	 * 1). */
-	real64_t value = frexp (copysign (t_random_bytes, 1), &t_ignored) * 2 - 1;
-	return value;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCMathConvertFromBase10(uint32_t p_value, bool p_negative, integer_t p_dest_base, MCStringRef& r_result)
 {
     char_t result[64];

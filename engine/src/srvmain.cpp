@@ -610,7 +610,8 @@ extern void MCModulesFinalize();
 
 int main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
+	if (!MCInitialize() || !MCSInitialize() ||
+	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
     
 // THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX
