@@ -148,11 +148,15 @@ bool MCCefInitialise(void)
 	if (t_success)
 	{
 		// IM-2014-03-25: [[ revBrowserCEF ]] Allow per-platform locale path settings
-		const char *t_locale_path;
+        const char *t_locale_path, *t_resource_path;
 		t_locale_path = MCCefPlatformGetLocalePath();
+        t_resource_path = MCCefPlatformGetResourcesDirPath();
 
 		if (t_locale_path != nil)
 			t_success = MCCefStringFromUtf8String(t_locale_path, &t_settings.locales_dir_path);
+        
+        if (t_resource_path != nil)
+            t_success = MCCefStringFromUtf8String(t_resource_path, &t_settings.resources_dir_path);
 	}
 
 	CefRefPtr<CefApp> t_app = nil;

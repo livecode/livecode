@@ -123,7 +123,7 @@ bool get_exe_path_from_proc_fs(char *&r_path)
 
 const char *MCCefPlatformGetCefFolder(void)
 {
-	static char *s_cef_path = nil;
+    static char *s_cef_path = nil;
 
 	if (s_cef_path == nil)
 	{

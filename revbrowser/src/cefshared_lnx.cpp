@@ -30,20 +30,9 @@ bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path)
 		return MCCStringFormat(r_path, "%s/%s", p_base, p_path);
 }
 
-//#ifdef _DEBUG
-//#define CEF_PATH_PREFIX ""
-//#else
-#define CEF_PATH_PREFIX "CEF/"
-//#endif
-
 const char *MCCefPlatformGetResourcesDirPath(void)
 {
-	static char *s_res_path = nil;
-
-	if (s_res_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), CEF_PATH_PREFIX, s_res_path);
-
-	return s_res_path;
+    return MCCefPlatformGetCefFolder();
 }
 
 // IM-2014-10-03: [[ revBrowserCEF ]] locales located in CEF subfolder relative to revbrowser external
@@ -52,7 +41,7 @@ const char *MCCefPlatformGetLocalePath(void)
 	static char *s_locale_path = nil;
 
 	if (s_locale_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), CEF_PATH_PREFIX"locales", s_locale_path);
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), "locales", s_locale_path);
 
 	return s_locale_path;
 }
@@ -63,7 +52,7 @@ const char *MCCefPlatformGetSubProcessName(void)
 	static char *s_exe_path = nil;
 
 	if (s_exe_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), CEF_PATH_PREFIX"revbrowser-cefprocess", s_exe_path);
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), "revbrowser-cefprocess", s_exe_path);
 
 	return s_exe_path;
 }
@@ -74,7 +63,7 @@ const char *MCCefPlatformGetCefLibraryPath(void)
 	static char *s_lib_path = nil;
 
 	if (s_lib_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), CEF_PATH_PREFIX"libcef.so", s_lib_path);
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), "libcef.so", s_lib_path);
 
 	return s_lib_path;
 }

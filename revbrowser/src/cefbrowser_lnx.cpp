@@ -222,6 +222,8 @@ bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define CEF_PATH_PREFIX "CEF"
+
 const char *MCCefPlatformGetCefFolder(void)
 {
 	static char *s_cef_path = nil;
@@ -244,6 +246,9 @@ const char *MCCefPlatformGetCefFolder(void)
 			uint32_t t_index;
 			if (MCCStringLastIndexOf(s_cef_path, '/', t_index))
 				s_cef_path[t_index] = '\0';
+            
+            // Append the name of the folder containing the CEF components
+            MCCStringAppend(s_cef_path, "/" CEF_PATH_PREFIX);
 		}
 	}
 
