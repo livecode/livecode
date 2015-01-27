@@ -299,8 +299,13 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 		endtime = MAXUINT4;
 		if (p_name != nil)
         {
+#ifdef FEATURE_PLATFORM_PLAYER
             // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
             resolveplayerfilename(p_name, filename);
+#else
+            // PM-2015-01-27: [[ Bug 14449 ]] Keep the old behaviour when not in OSX, since the filename is resolved later in x11_prepare/qt_prepare/avi_prepare depending on platform
+            filename = MCValueRetain(p_name);
+#endif
         }
 		prepare(kMCEmptyString);
 #ifdef FEATURE_PLATFORM_PLAYER
