@@ -22,6 +22,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #  include <Wincrypt.h>
 #endif
 
+#if defined(__MAC__) || defined(__IOS__)
+#  include <dlfcn.h>
+#endif
+
 /* ================================================================
  * Random value generation
  * ================================================================ */
@@ -135,11 +139,12 @@ __MCSRandomBytes (void *x_buffer,
 	 * compile time, check for it using dlsym(3).
 	 */
 	{
-		void (*t_arc4random_buf_func)(void *, size_t);
+		typedef void (*arc4random_buf_func_t)(void*, size_t);
+		arc4random_buf_func_t t_arc4random_buf_func;
 		void *t_self;
 
 		t_self = dlopen(NULL, 0);
-		t_arc4random_buf_func = dlsym (t_self, "arc4random_buf");
+		t_arc4random_buf_func = (arc4random_buf_func_t) dlsym (t_self, "arc4random_buf");
 
 		if (NULL != t_arc4random_buf_func)
 		{

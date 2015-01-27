@@ -518,7 +518,7 @@ public foreign handler MCCanvasTransformMakeRotation(in pRotation as CanvasFloat
 public foreign handler MCCanvasTransformMakeTranslation(in pX as CanvasFloat, in pY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeTranslationWithList(in pTranslation as list, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeWithMatrixValues(in pA as CanvasFloat, in pB as CanvasFloat, in pC as CanvasFloat, in pD as CanvasFloat, in pTX as CanvasFloat, in pTY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformMakeWithMatrixArray(in pMatrix as array, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeWithMatrixAsList(in pMatrix as list, out rTransform as Transform) as undefined binds to "<builtin>"
 
 /*
 Summary:	The identity transform.
@@ -607,7 +607,26 @@ begin
     MCCanvasTransformMakeTranslationWithList(mTranslation, output)
 end syntax
 
-// TODO - define & implement remaining transform constructors
+/*
+Summary:		Creates a new transform.
+
+mTranslation:	An expression which evaluates to a list of 6 numbers, the a, b, c, d, tx and ty values of the transform matrix.
+
+Returns:	A new translation transform.
+
+Example:
+	// Create combined rotate, scale, and translate transform
+	variable tTransform
+	put transform with matrix [0, 2, -2, 0, 50, 100] into tTransform
+
+Tags: Canvas
+*/
+
+syntax TransformMakeWithMatrixAsList is prefix operator with precedence 4
+	"transform" "with" "matrix" <mMatrix: Expression>
+begin
+	MCCanvasTransformMakeWithMatrixAsList(mMatrix, output)
+end syntax
 
 //////////
 
@@ -621,9 +640,8 @@ public foreign handler MCCanvasTransformGetSkewAsList(in pTransform as Transform
 public foreign handler MCCanvasTransformSetSkewAsList(in pSkew as list, inout xTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformGetTranslationAsList(in pTransform as Transform, out rTranslation as list) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformSetTranslationAsList(in pTranslation as list, inout xTransform as Transform) as undefined binds to "<builtin>"
-
-public foreign handler MCCanvasTransformGetMatrix(in pTransform as Transform, out rMatrix as array) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetMatrix(in pMatrix as array, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetMatrixAsList(in pTransform as Transform, out rMatrix as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetMatrixAsList(in pMatrix as list, inout xTransform as Transform) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasTransformGetInverse(in pTransform as Transform, out rInverse as Transform) as undefined binds to "<builtin>"
 
@@ -728,17 +746,22 @@ Summary:		The matrix values of a transform.
 
 mTransform:		An expression which evaluates to a transform.
 
-Description:	The matrix values of <mTransform> as an array with 3x3 multi-dimensional keys ranging from 0,0 to 2,2.
+Description:	The matrix values of <mTransform> as a list of 6 numbers.
 
 Example:
-	variable tMatrix
+	variable tTransform
+	put transform with translation by [20,50] into tTransform
+
 	// Get the current transform matrix
+	variable tMatrix
 	put the matrix of tTransform into tMatrix
+
 	// Directly set the components
-	put 2.5 into tMatrix[0,0]
-	put 0 into tMatrix[1,0]
-	put 0 into tMatrix[0,1]
-	put 2.5 into tMatrix[1,1]
+	put 2.5 into element 1 of tMatrix
+	put 0 into element 2 of tMatrix
+	put 0 into element 3 of tMatrix
+	put 2.5 into element 4 of tMatrix
+
 	// Update the transform with the new values
 	set the matrix of tTransform to tMatrix
 
@@ -748,8 +771,8 @@ Tags: Canvas
 syntax TransformPropertyMatrix is prefix operator with precedence 4
 	"the" "matrix" "of" <mTransform: Expression>
 begin
-	MCCanvasTransformGetMatrix(mTransform, output)
-	MCCanvasTransformSetMatrix(input, mTransform)
+	MCCanvasTransformGetMatrixAsList(mTransform, output)
+	MCCanvasTransformSetMatrixAsList(input, mTransform)
 end syntax
 
 /*
@@ -3636,7 +3659,7 @@ Returns:	The bounding box of <mText> when drawn at point 0,0 with the current fo
 
 Example:
 	// Measure text drawn on the canvas
-	measure text "Sample text" on this canvas
+	measure "Sample text" on this canvas
 	put the result into tBounds
 	put the width of tBounds into tWidth
 	put the height of tBounds into tHeight
