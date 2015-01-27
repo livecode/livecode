@@ -745,7 +745,7 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 	t_mouse_up = nil;
 	for(MCEvent *t_event = t_mouse_down -> next; t_event != nil; t_event = t_event -> next)
 		if (t_event -> type == kMCEventTypeMousePress &&
-			!t_event -> mouse . press . state == kMCMousePressStateUp &&
+			t_event -> mouse . press . state == kMCMousePressStateUp &&
 		    (p_button == 0 || (uint32_t) t_event -> mouse . press . button == p_button))
 		{
 			t_mouse_up = t_event;
