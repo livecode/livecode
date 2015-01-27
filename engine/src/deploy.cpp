@@ -968,19 +968,20 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
     if (!ctxt . EvalExprAsStringRef(m_filename, EE_IDE_EXTRACT_BADFILENAME, &t_filename))
         return;
 		
+	if (!ctxt . HasError())
+        return;
+    
 	void *t_data;
 	uint32_t t_data_size;
     Exec_stat t_stat;
-	if (!ctxt . HasError())
-		t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
-	
-	if (t_stat == ES_NORMAL)
-	{
+    t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
+    if (t_stat == ES_NORMAL)
+    {
         MCAutoStringRef t_string;
         /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)t_data, t_data_size, &t_string);
         ctxt . SetItToValue(*t_string);
-	}
-	else
+    }
+    else
         ctxt . SetItToEmpty();
 }
 
