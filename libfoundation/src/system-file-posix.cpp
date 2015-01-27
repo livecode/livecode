@@ -205,6 +205,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 	if (fstat (t_fd, &t_stat_buf) < 0)
 	{
 		int t_save_errno = errno;
+		close (t_fd);
 		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to get the attributes of file '%{path}': %{description}"), t_save_errno);
 	}
 
