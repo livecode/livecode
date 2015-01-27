@@ -765,6 +765,8 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 
 	if (t_success)
 		t_success = MCStringCopyAndRelease(t_buffer, r_string);
+	else
+		MCValueRelease (t_buffer);
 	
 	return t_success;
 }
