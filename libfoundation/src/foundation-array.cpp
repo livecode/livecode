@@ -888,10 +888,9 @@ static bool __MCArrayRehash(__MCArray *self, index_t p_by)
 
 		uindex_t t_new_capacity_req;
 		t_new_capacity_req = self -> key_value_count + p_by;
-		for(t_new_capacity_idx = 0; t_new_capacity_idx < 64; t_new_capacity_idx++)
-            // AL-2014-07-15: [[ Bug 12532 ]] Rehash according to hash table capacities rather than sizes
-			if (t_new_capacity_req <= __kMCValueHashTableCapacities[t_new_capacity_idx])
-				break;
+		for(t_new_capacity_idx = 0;
+		    t_new_capacity_req > __kMCValueHashTableCapacities[t_new_capacity_idx];
+		    ++t_new_capacity_idx);
 	}
 
 	uindex_t t_old_capacity;

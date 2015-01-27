@@ -384,7 +384,7 @@ MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
 MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
 MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
 
-MCTypeInfoRef kMCCanvasTransformArrayFormatErrorTypeInfo;
+MCTypeInfoRef kMCCanvasTransformMatrixListFormatErrorTypeInfo;
 MCTypeInfoRef kMCCanvasTransformDecomposeErrorTypeInfo;
 
 MCTypeInfoRef kMCCanvasImageRepReferencedErrorTypeInfo;
@@ -1203,6 +1203,36 @@ bool MCProperListToTranslation(MCProperListRef p_list, MCGPoint &r_translation)
 	return t_success;
 }
 
+bool MCProperListToTransform(MCProperListRef p_list, MCGAffineTransform &r_transform)
+{
+	bool t_success;
+	t_success = true;
+	
+	real64_t t_matrix[6];
+	
+	t_success = MCProperListFetchAsArrayOfReal(p_list, 6, t_matrix);
+	
+	if (t_success)
+		r_transform = MCGAffineTransformMake(t_matrix[0], t_matrix[1], t_matrix[2], t_matrix[3], t_matrix[4], t_matrix[5]);
+	else
+		MCCanvasThrowError(kMCCanvasTransformMatrixListFormatErrorTypeInfo);
+	
+	return t_success;
+}
+
+bool MCProperListFromTransform(const MCGAffineTransform &p_transform, MCProperListRef &r_list)
+{
+	real64_t t_matrix[6];
+	t_matrix[0] = p_transform.a;
+	t_matrix[1] = p_transform.b;
+	t_matrix[2] = p_transform.c;
+	t_matrix[3] = p_transform.d;
+	t_matrix[4] = p_transform.tx;
+	t_matrix[5] = p_transform.ty;
+	
+	return MCProperListCreateWithArrayOfReal(t_matrix, 6, r_list);
+}
+
 // Constructors
 
 void MCCanvasTransformMake(const MCGAffineTransform &p_transform, MCCanvasTransformRef &r_transform)
@@ -1267,6 +1297,15 @@ void MCCanvasTransformMakeWithMatrixValues(MCCanvasFloat p_a, MCCanvasFloat p_b,
 	MCCanvasTransformMake(MCGAffineTransformMake(p_a, p_b, p_c, p_d, p_tx, p_ty), r_transform);
 }
 
+void MCCanvasTransformMakeWithMatrixAsList(MCProperListRef p_matrix, MCCanvasTransformRef &r_transform)
+{
+	MCGAffineTransform t_transform;
+	if (!MCProperListToTransform(p_matrix, t_transform))
+		return;
+	
+	MCCanvasTransformMake(t_transform, r_transform);
+}
+
 //////////
 
 // Properties
@@ -1280,58 +1319,21 @@ void MCCanvasTransformSetMCGAffineTransform(const MCGAffineTransform &p_transfor
 	MCValueRelease(t_transform);
 }
 
-void MCCanvasTransformGetMatrix(MCCanvasTransformRef p_transform, MCArrayRef &r_matrix)
+void MCCanvasTransformGetMatrixAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_matrix)
 {
-	bool t_success;
-	t_success = true;
-	
-	MCGAffineTransform *t_transform;
-	t_transform = MCCanvasTransformGet(p_transform);
-	
-	MCArrayRef t_matrix;
-	t_matrix = nil;
-	
-	if (t_success)
-		t_success = MCArrayCreateMutable(t_matrix);
-	
-	if (t_success)
-		t_success = MCArrayStoreReal(t_matrix, s_transform_matrix_keys[0], t_transform->a) &&
-		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[1], t_transform->b) &&
-		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[2], 0) &&
-		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[3], t_transform->c) &&
-		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[4], t_transform->d) &&
-		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[5], 0) &&
-		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[6], t_transform->tx) &&
-		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[7], t_transform->ty) &&
-		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[8], 1);
-		
-	if (t_success)
-		t_success = MCArrayCopy(t_matrix, r_matrix);
-	MCValueRelease(t_matrix);
+	/* UNCHECKED */ MCProperListFromTransform(*MCCanvasTransformGet(p_transform), r_matrix);
 }
 
-void MCCanvasTransformSetMatrix(MCArrayRef p_matrix, MCCanvasTransformRef &x_transform)
+void MCCanvasTransformSetMatrixAsList(MCProperListRef p_matrix, MCCanvasTransformRef &x_transform)
 {
 	bool t_success;
 	t_success = true;
 	
-	real64_t a, b, c, d, tx, ty;
-	a = b = c = d = tx = ty = 0.0;
-	t_success =
-		MCArrayFetchReal(p_matrix, s_transform_matrix_keys[0], a) &&
-		MCArrayFetchReal(p_matrix, s_transform_matrix_keys[1], b) &&
-		MCArrayFetchReal(p_matrix, s_transform_matrix_keys[3], c) &&
-		MCArrayFetchReal(p_matrix, s_transform_matrix_keys[4], d) &&
-		MCArrayFetchReal(p_matrix, s_transform_matrix_keys[6], tx) &&
-		MCArrayFetchReal(p_matrix, s_transform_matrix_keys[7], ty);
-
-	if (!t_success)
-	{
-		MCCanvasThrowError(kMCCanvasTransformArrayFormatErrorTypeInfo);
+	MCGAffineTransform t_transform;
+	if (!MCProperListToTransform(p_matrix, t_transform))
 		return;
-	}
 	
-	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformMake(a, b, c, d, tx, ty), x_transform);
+	MCCanvasTransformSetMCGAffineTransform(t_transform, x_transform);
 }
 
 void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTransformRef &r_transform)
@@ -5588,11 +5590,11 @@ void MCCanvasErrorsInitialize()
 	kMCCanvasImageSizeListFormatErrorTypeInfo = nil;
 	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageSizeListFormatError"), MCSTR("image size parameter must be a list of 2 integers greater than 0."), kMCCanvasImageSizeListFormatErrorTypeInfo);
 	
-	kMCCanvasTransformArrayFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TransformArrayFormatError"), MCSTR("transform array parameter must be multi-dimensional 3x3 array with numeric values."), kMCCanvasTransformArrayFormatErrorTypeInfo);
+	kMCCanvasTransformMatrixListFormatErrorTypeInfo = nil;
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TransformMatrixListFormatError"), MCSTR("transform matrix parameter must be a list of 6 numbers."), kMCCanvasTransformMatrixListFormatErrorTypeInfo);
 	
 	kMCCanvasTransformDecomposeErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TransformDecomposeError"), MCSTR("Unable to decompose transform matrix."), kMCCanvasTransformArrayFormatErrorTypeInfo);
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TransformDecomposeError"), MCSTR("Unable to decompose transform matrix."), kMCCanvasTransformDecomposeErrorTypeInfo);
 	
 	kMCCanvasImageRepReferencedErrorTypeInfo = nil;
 	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageRepReferencedError"), MCSTR("Unable to create image from reference."), kMCCanvasImageRepReferencedErrorTypeInfo);
@@ -5630,7 +5632,7 @@ void MCCanvasErrorsFinalize()
 	MCValueRelease(kMCCanvasSkewListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasRadiiListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageSizeListFormatErrorTypeInfo);
-	MCValueRelease(kMCCanvasTransformArrayFormatErrorTypeInfo);
+	MCValueRelease(kMCCanvasTransformMatrixListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasTransformDecomposeErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepReferencedErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepDataErrorTypeInfo);
