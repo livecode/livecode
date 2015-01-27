@@ -1731,6 +1731,7 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
                     else
                         t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
                 }
+				MCMemoryDeleteArray (t_bytes);
                 r_bytes = (byte_t*&)t_buffer;
                 r_byte_count = t_char_count * sizeof(unichar_t);
                 return true;
