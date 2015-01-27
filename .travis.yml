@@ -21,7 +21,7 @@ install: (cd prebuilt && ./fetch-libraries.sh linux)
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
 script: >
-  if [ ${COVERITY_SCAN_BRANCH} != "1" ]; then
+  if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
       make -s bootstrap && make -s all && make -s check;
   fi
 
