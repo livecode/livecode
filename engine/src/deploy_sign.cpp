@@ -1034,7 +1034,8 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	// the sig.
 	if (t_request != nil)
 	{
-		t_request -> blob -> signature = nil;
+        if (t_request -> blob != nil)
+            t_request -> blob -> signature = nil;
 		SpcTimeStampRequest_free(t_request);
 	}
 
