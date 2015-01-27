@@ -1085,7 +1085,7 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
             {
                 p_node -> descent . index = *x_next_mark;
                 x_mapping[p_other_node -> descent . index] = *x_next_mark;
-                x_next_mark++;
+                (*x_next_mark) += 1;
             }
             else
                 x_mapping[p_other_node -> descent . index] = p_node -> descent . index;
