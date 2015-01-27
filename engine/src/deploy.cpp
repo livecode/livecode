@@ -789,8 +789,11 @@ void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
         }
 		FILE *t_output;
 		t_output = fopen("C:\\Users\\Mark\\Desktop\\dmg.txt", "w");
-		MCDeployDmgDump(*temp, stdfile_log, t_output);
-		fclose(t_output);
+        if (t_output != nil)
+        {
+            MCDeployDmgDump(*temp, stdfile_log, t_output);
+            fclose(t_output);
+        }
     }
 }
 
