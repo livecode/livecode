@@ -287,8 +287,14 @@ __MCSFileSetContents (MCStringRef p_native_path,
 	 * file had been created by opening a stream for writing,
 	 * i.e. 0666 modified by the effective umask. */
 	mode_t t_mode;
+	mode_t t_umask = ~0;
+
+	t_umask = umask (t_umask); /* Get the umask */
+
 	t_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-	t_mode = umask (t_mode);
+	t_mode &= ~t_umask;
+
+	umask (t_umask); /* Reset the umask */
 
 	if (t_success)
 	{
