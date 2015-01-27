@@ -296,10 +296,9 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
 
 	// Now we add the auxillary stackfiles, if any
-	MCDeployFileRef *t_aux_stackfiles;
-	t_aux_stackfiles = nil;
+	MCAutoArray<MCDeployFileRef> t_aux_stackfiles;
 	if (t_success)
-		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . auxillary_stackfiles), t_aux_stackfiles);
+		t_success = t_aux_stackfiles . New(MCArrayGetCount(p_params . auxillary_stackfiles));
 	if (t_success)
 		for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles) && t_success; i++)
 		{
@@ -337,9 +336,8 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployCapsuleGenerate(t_capsule, p_output, t_spill, x_offset);
 
 	MCDeployCapsuleDestroy(t_capsule);
-	for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles); i++)
+	for(uint32_t i = 0; i < t_aux_stackfiles . Size(); i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
-	MCMemoryDeleteArray(t_aux_stackfiles);
     for(uint32_t i = 0; i < t_module_files . Size(); i++)
         MCDeployFileClose(t_module_files[i]);
 	MCDeployFileClose(t_spill);
