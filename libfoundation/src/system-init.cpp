@@ -20,10 +20,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool
 MCSInitialize(void)
 {
-	return true;
+	return
+		__MCSFileInitialize() &&
+		__MCSStreamInitialize();
 }
 
 void
 MCSFinalize(void)
 {
+	__MCSStreamFinalize();
+	__MCSFileFinalize();
 }

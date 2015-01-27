@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
 #include <foundation-auto.h>
-#include <foundation-file.h>
+#include <foundation-system.h>
 
 #include "foundation-private.h"
 
@@ -123,9 +123,9 @@ __MCRandomBytes (void *x_buffer,
 		MCStreamRef t_stream = NULL;
 
 		if (t_success)
-			t_success = MCFileCreateStream (MCSTR(k_random_device),
-			                                kMCOpenFileModeRead,
-			                                t_stream);
+			t_success = MCSFileCreateStream (MCSTR(k_random_device),
+			                                 kMCSFileOpenModeRead,
+			                                 t_stream);
 
 		if (t_success)
 			t_success = MCStreamRead (t_stream, x_buffer,
