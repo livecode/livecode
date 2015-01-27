@@ -495,7 +495,10 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
         return false;
     
     if (!MCMemoryNewArray(p_descriptor -> layout_size, self -> foreign . descriptor . layout, self -> foreign . descriptor . layout_size))
+	{
+		MCValueRelease (self);
         return false;
+	}
     
     self -> flags |= kMCTypeInfoTypeIsForeign;
     
