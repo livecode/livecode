@@ -187,6 +187,23 @@ public handler testEncoding(inout xResults as list)
 	encode tString using "native" with replacement tData
 	testLog("Encoding", "InvalidNativeChar", the result is tData, xResults)
 	
+	encode "A" using "utf32"
+	decode byte 1 to 3 of the result using "utf32" with replacement "?"
+	testLog("Encoding", "InvalidUTF32", the result is "?", xResults)
+
+	encode "A" using "utf16"
+	decode byte 1 of the result using "utf16" with replacement "?"
+	testLog("Encoding", "InvalidUTF16", the result is "?", xResults)
+
+	put "𝄞" into tString
+	encode tString using "utf16"
+	put the result into tData
+	
+	decode byte 1 to 2 of tData using "utf16"
+	testLog("Encoding", "InvalidHighSurrogate", the result is not defined, xResults)
+	
+	decode byte 3 to 4 of tData using "utf16"
+	testLog("Encoding", "InvalidLowSurrogate", the result is not defined, xResults)
 	
 	/*
 	encode "\u0080" using "utf-8"

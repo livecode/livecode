@@ -192,7 +192,7 @@ end syntax
 public foreign handler MCEncodingEvaluateTextEncoding(in pType as int, out rType as int) as undefined binds to "<builtin>"
 
 syntax TextEncoding is phrase
-	("ascii" <Encoding=0> | "cp1252" <Encoding=1> | "macroman" <Encoding=2> | "iso88591" <Encoding=3> | "utf8" <Encoding=4> | "utf16le" <Encoding=5> | "utf16be" <Encoding=6> | "utf32le" <Encoding=7> | "utf32be" <Encoding=8> | "utf16" <Encoding=9> | "utf32" <Encoding=10> | "native" <Encoding=11>)
+	("ascii" <Encoding=0> | "cp1252" <Encoding=1> | "macroman" <Encoding=2> | "iso8859-1" <Encoding=3> | "utf-8" <Encoding=4> | "utf-16le" <Encoding=5> | "utf16be" <Encoding=6> | "utf-32le" <Encoding=7> | "utf-32be" <Encoding=8> | "utf-16" <Encoding=9> | "utf-32" <Encoding=10> | "native" <Encoding=11>)
 begin
 	MCEncodingEvaluateTextEncoding(Encoding, output)
 end syntax
@@ -229,7 +229,7 @@ Replacement:    A char to replace any invalid data.
 The result:	The decoded data 
 
 Description:
-Decodes bytes from the specified encoding. If the 'with <Replacement>' form is used, any data in <Target> that cannot be interpreted as <Encoding>-encoded is replaced by the replacement char. Otherwise, if any data in <Target> cannot be interpreted as <Encoding>-encoded, <The result> is undefined.
+Decodes bytes from the specified encoding. If the 'with <Replacement>' form is used, any data in <Target> that cannot be interpreted as <Encoding>-encoded is replaced by the replacement char. Otherwise, if any data in <Target> cannot be interpreted as <Encoding>-encoded, <The result> is undefined. The latter includes invalid surrogates and single bytes when decoding using UTF-16, and less than 4 bytes when decoding using UTF-32.
 
 Tags: Encoding
 

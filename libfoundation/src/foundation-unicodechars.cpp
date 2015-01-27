@@ -241,6 +241,9 @@ static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t
 		}
 		else if ((p_src[0] & 0x40) == 0)
 		{
+            // This is an invalid byte sequence in UTF-8. If we have a replacement char,
+            //  or are just counting the number of bytes used for allocation purposes,
+            //  do a replacement and carry on.
 			if (p_replacement || p_dst_count == 0)
             {
                 t_codepoint = p_replacement ? *p_replacement : '?';

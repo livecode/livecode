@@ -145,76 +145,18 @@ bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCStr
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
-    return MCStringCreateWithBytesAndReplacement(p_bytes, p_byte_count, p_encoding, p_is_external_rep, MCSTR("?"), r_string);
-}
-
-// Create an immutable string from the given bytes, interpreting them using
-// the specified encoding.
-bool MCStringCreateWithBytesAndReplacement(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef p_replacement, MCStringRef& r_string)
-{
     MCAssert(!p_is_external_rep);
     
+    // The behavior when converting invalid UTF-16 and UTF-32 data in LiveCode script is incompatible
+    //  with that of LiveCode builder - in the former case we need to ignore wrong numbers of bytes and allow
+    //  unpaired surrogates. So we deal with those cases separately here, as LCB always calls
+    //  MCStringCreateWithBytesAndReplacement.
     switch (p_encoding)
     {
-        case kMCStringEncodingASCII:
-            return MCStringCreateWithAsciiCharsAndReplacement(p_bytes, p_byte_count, p_replacement, r_string);
-        case kMCStringEncodingNative:
-            return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
-        case kMCStringEncodingUTF16:
-            
-            if (p_replacement == nil && p_byte_count % 2 != 0)
-                return false;
-            
-            return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
-        // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.
-        case kMCStringEncodingUTF16LE:
-        case kMCStringEncodingUTF16BE:
-        {
-            if (p_replacement == nil && p_byte_count % 2 != 0)
-                return false;
-
-            unichar_t *t_buffer;
-            uindex_t t_length = p_byte_count / 2;
-            MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
-
-            for (uindex_t i = 0; i < t_length; i++)
-            {
-                if (p_encoding == kMCStringEncodingUTF16BE)
-                    t_buffer[i] = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i]);
-                else
-                    t_buffer[i] = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i]);
-            }
-            return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
-        }
-            
-        case kMCStringEncodingUTF8:
-        {
-            unichar_t *t_chars;
-            uindex_t t_char_count;
-            t_char_count = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, nil, 0, nil);
-            if (!MCMemoryNewArray(t_char_count, t_chars))
-                return false;
-            uindex_t t_mapped;
-            t_mapped = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, t_chars, t_char_count, p_replacement != nil ? MCStringGetCharPtr(p_replacement) : nil);
-            
-            if (p_replacement == nil && t_mapped != t_char_count)
-                return false;
-            
-            if (!MCStringCreateWithCharsAndRelease(t_chars, t_char_count, r_string))
-            {
-                MCMemoryDeleteArray(t_chars);
-                return false;
-            }
-            return true;
-        }
-        break;
         case kMCStringEncodingUTF32:
         case kMCStringEncodingUTF32LE:
         case kMCStringEncodingUTF32BE:
         {
-            if (p_replacement == nil && p_byte_count % 4 != 0)
-                return false;
-            
             // Round the byte count to a multiple of UTF-32 units
             p_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
             
@@ -250,6 +192,198 @@ bool MCStringCreateWithBytesAndReplacement(const byte_t *p_bytes, uindex_t p_byt
                     t_out_offset += 2;
                 }
             }
+            
+            return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
+        }
+        case kMCStringEncodingUTF16:
+            return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
+            // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.
+        case kMCStringEncodingUTF16LE:
+        case kMCStringEncodingUTF16BE:
+            {
+                unichar_t *t_buffer;
+                uindex_t t_length = p_byte_count / 2;
+                MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
+                
+                for (uindex_t i = 0; i < t_length; i++)
+                {
+                    if (p_encoding == kMCStringEncodingUTF16BE)
+                        t_buffer[i] = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i]);
+                    else
+                        t_buffer[i] = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i]);
+                }
+                return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
+            }
+        default:
+            return MCStringCreateWithBytesAndReplacement(p_bytes, p_byte_count, p_encoding, p_is_external_rep, MCSTR("?"), r_string);
+    }
+}
+
+// Create an immutable string from the given bytes, interpreting them using
+// the specified encoding.
+bool MCStringCreateWithBytesAndReplacement(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef p_replacement, MCStringRef& r_string)
+{
+    MCAssert(!p_is_external_rep);
+    
+    switch (p_encoding)
+    {
+        case kMCStringEncodingASCII:
+            return MCStringCreateWithAsciiCharsAndReplacement(p_bytes, p_byte_count, p_replacement, r_string);
+        case kMCStringEncodingNative:
+            return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
+        case kMCStringEncodingUTF16:
+        // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.
+        case kMCStringEncodingUTF16LE:
+        case kMCStringEncodingUTF16BE:
+        {
+            bool t_can_be_valid;
+            t_can_be_valid = p_byte_count % 2 == 0;
+            
+            if (p_replacement == nil && !t_can_be_valid)
+                return false;
+
+            unichar_t *t_buffer;
+            uindex_t t_length = p_byte_count / 2;
+            
+            if (!t_can_be_valid)
+                t_length++;
+            
+            if (!MCMemoryNewArray(t_length, t_buffer))
+                return false;
+            
+            bool t_is_valid;
+            t_is_valid = true;
+            
+            for (uindex_t i = 0; t_is_valid && i < t_length; i++)
+            {
+                unichar_t t_lead;
+                if (p_encoding == kMCStringEncodingUTF16BE)
+                    t_lead = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i]);
+                else if (p_encoding == kMCStringEncodingUTF16LE)
+                    t_lead = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i]);
+                else
+                    t_lead = ((unichar_t *)p_bytes)[i];
+                
+                // Validate UTF-16 data
+                if (MCUnicodeCodepointIsHighSurrogate(t_lead))
+                {
+                    if (i + 1 >= t_length)
+                        t_is_valid = false;
+                    
+                    unichar_t t_tail;
+                    if (t_is_valid)
+                    {
+                        if (p_encoding == kMCStringEncodingUTF16BE)
+                            t_tail = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i + 1]);
+                        else if (p_encoding == kMCStringEncodingUTF16LE)
+                            t_tail = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i + 1]);
+                        else
+                            t_tail = ((unichar_t *)p_bytes)[i + 1];
+                    
+                        if (!MCUnicodeCodepointIsLowSurrogate(t_tail))
+                            t_is_valid = false;
+                    }
+                    
+                    if (t_is_valid)
+                    {
+                        t_buffer[i] = t_lead;
+                        t_buffer[i++] = t_tail;
+                        continue;
+                    }
+                }
+                else if (MCUnicodeCodepointIsLowSurrogate(t_lead))
+                    t_is_valid = false;
+                
+                if (!t_is_valid && p_replacement)
+                {
+                    t_lead = MCStringGetCharAtIndex(p_replacement, 0);
+                    t_is_valid = true;
+                }
+                
+                t_buffer[i] = t_lead;
+            }
+            
+            if (t_is_valid)
+            {
+                if (!t_can_be_valid)
+                    t_buffer[t_length - 1] = MCStringGetCharAtIndex(p_replacement, 0);
+                return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
+            }
+            
+            MCMemoryDeleteArray(t_buffer);
+            return false;
+        }
+            
+        case kMCStringEncodingUTF8:
+        {
+            unichar_t *t_chars;
+            uindex_t t_char_count;
+            t_char_count = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, nil, 0, nil);
+            if (!MCMemoryNewArray(t_char_count, t_chars))
+                return false;
+            uindex_t t_mapped;
+            t_mapped = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, t_chars, t_char_count, p_replacement != nil ? MCStringGetCharPtr(p_replacement) : nil);
+            
+            if (p_replacement == nil && t_mapped != t_char_count)
+                return false;
+            
+            if (!MCStringCreateWithCharsAndRelease(t_chars, t_char_count, r_string))
+            {
+                MCMemoryDeleteArray(t_chars);
+                return false;
+            }
+            return true;
+        }
+        break;
+        case kMCStringEncodingUTF32:
+        case kMCStringEncodingUTF32LE:
+        case kMCStringEncodingUTF32BE:
+        {
+            bool t_can_be_valid;
+            t_can_be_valid = p_byte_count % 4 == 0;
+            
+            if (p_replacement == nil && !t_can_be_valid)
+                return false;
+            
+            // Round the byte count up to a multiple of UTF-32 units
+            uindex_t t_byte_count;
+            t_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
+            
+            // Convert the string to UTF-16 first. The UTF-16 string cannot be longer than the UTF-32 string
+            MCAutoArray<unichar_t> t_buffer;
+            t_buffer.Extend(t_byte_count / sizeof(uint32_t));
+            uindex_t t_in_offset;
+            uindex_t t_out_offset = 0;
+            for (t_in_offset = 0; t_in_offset + sizeof(uint32_t) < p_byte_count; t_in_offset += sizeof(uint32_t))
+            {
+                // BMP characters are output unchanged, non-BMP requires surrogate pairs
+                codepoint_t t_codepoint;
+                t_codepoint = *(uint32_t*)&p_bytes[t_in_offset];
+                
+                if (p_encoding == kMCStringEncodingUTF32BE)
+                    t_codepoint = MCSwapInt32BigToHost(t_codepoint);
+                else if (p_encoding == kMCStringEncodingUTF32LE)
+                    t_codepoint = MCSwapInt32LittleToHost(t_codepoint);
+                
+                if (t_codepoint < 0x10000)
+                {
+                    t_buffer[t_out_offset] = unichar_t(t_codepoint);
+                    t_out_offset += 1;
+                }
+                else
+                {
+                    // Split to surrogate pairs
+                    unichar_t t_lead, t_trail;
+                    t_lead =  unichar_t((t_codepoint - 0x10000) >> 10) + 0xD800;
+                    t_trail = unichar_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
+                    t_buffer[t_out_offset] = t_lead;
+                    t_buffer[t_out_offset + 1] = t_trail;
+                    t_out_offset += 2;
+                }
+            }
+            
+            if (!t_can_be_valid)
+                t_buffer[t_out_offset++] = MCStringGetCharAtIndex(p_replacement, 0);
             
             return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
         }
