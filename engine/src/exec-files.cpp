@@ -1326,7 +1326,7 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 			r_stat = MCS_readall(t_bytes.Bytes(), 2, p_stream, t_bytes_read);
 
 			if (t_bytes_read == 2 ||
-					(t_bytes_read == 1 && r_stat == EOF))
+					(t_bytes_read == 1 && r_stat == IO_EOF))
 			{
 				unichar_t t_codeunit;
 
@@ -1350,7 +1350,7 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
             t_bytes . New(4);
             r_stat = MCS_readall(t_bytes.Bytes(), 4, p_stream, t_bytes_read);
             
-            if (t_bytes_read == 4 || r_stat == EOF)
+            if (t_bytes_read == 4 || r_stat == IO_EOF)
             {
                 uint32_t t_codeunit;
                 MCAutoStringRef t_string;
