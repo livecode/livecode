@@ -512,6 +512,12 @@ __MCSFileCreateStream (MCStringRef p_native_path,
 			t_oflag |= O_TRUNC;
 		}
 	}
+	else
+	{
+		/* We'll use fdopen(3) later; throw the same error that it
+		 * would throw with an invalid open mode argument. */
+		return __MCSFileThrowOpenErrorWithErrno (p_native_path, EINVAL);
+	}
 
 	if (p_mode & kMCSFileOpenModeWrite && p_mode & kMCSFileOpenModeCreate)
 		t_oflag |= O_EXCL;
