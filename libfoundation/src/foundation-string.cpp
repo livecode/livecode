@@ -506,6 +506,10 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 		self->char_count = 0;
 		r_string = self;
 	}
+	else
+	{
+		MCValueRelease (self);
+	}
 
 	return t_success;
 }
