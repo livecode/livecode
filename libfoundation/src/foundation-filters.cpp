@@ -396,7 +396,10 @@ bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result)
         return false;
     
     if (!t_buffer . New(t_srclen))
+	{
+		MCMemoryDeleteArray (t_srcptr);
         return false;
+	}
     
     const uint8_t *sptr = (uint8_t *)t_srcptr;
     const uint8_t *eptr = sptr + t_srclen;
