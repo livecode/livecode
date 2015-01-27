@@ -30,28 +30,55 @@ void dummy(void)
 
 static MCScriptModuleRef load_module(const char *p_filename)
 {
-    FILE *t_file;
-    t_file = fopen(p_filename, "rb");
-    if (t_file == NULL)
-        return NULL;
+    bool t_success;
+    t_success = true;
     
-    fseek(t_file, 0, SEEK_END);
+    FILE *t_file;
+    t_file = NULL;
+    if (t_success)
+        t_file = fopen(p_filename, "rb");
+    
+    if (t_success)
+        t_success = fseek(t_file, 0, SEEK_END) != -1;
+    
     long t_length;
-    t_length = ftell(t_file);
-    fseek(t_file, 0, SEEK_SET);
+    t_length = 0;
+    if (t_success)
+    {
+        t_length = ftell(t_file);
+        if (t_length == -1)
+            t_success = false;
+    }
+    
+    if (t_success)
+        t_success = fseek(t_file, 0, SEEK_SET) != -1;
     
     void *t_mem;
-    t_mem = malloc(t_length);
-    fread(t_mem, t_length, 1, t_file);
-    fclose(t_file);
+    t_mem = NULL;
+    if (t_success)
+    {
+        t_mem = malloc(t_length);
+        if (t_mem == NULL)
+            t_success = false;
+    }
+    
+    if (t_success)
+        t_success = fread(t_mem, t_length, 1, t_file) == 1;
+    
+    if (t_file != NULL)
+        fclose(t_file);
     
     MCStreamRef t_stream;
-    MCScriptModuleRef t_module;
-    MCMemoryInputStreamCreate(t_mem, t_length, t_stream);
-    if (!MCScriptCreateModuleFromStream(t_stream, t_module))
-        t_module = NULL;
-    MCValueRelease(t_stream);
+    t_stream = NULL;
+    if (t_success)
+        t_success = MCMemoryInputStreamCreate(t_mem, t_length, t_stream);
     
+    MCScriptModuleRef t_module;
+    t_module = NULL;
+    if (t_success)
+        t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
+    
+    MCValueRelease(t_stream);
     free(t_mem);
     
     return t_module;

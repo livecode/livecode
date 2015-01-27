@@ -114,8 +114,7 @@
         CheckBindings(Body)
 
     'rule' CheckBindings(STATEMENT'call(_, Handler, Arguments)):
-        -- TODO: Implement indirect calls
-        /* B4 */ CheckBindingIsHandlerId(Handler)
+        /* B4 */ CheckBindingIsCallableVariableOrHandlerId(Handler)
         CheckBindings(Arguments)
 
     --
@@ -124,8 +123,7 @@
         /* BE1 */ CheckBindingIsVariableOrHandlerId(Name)
 
     'rule' CheckBindings(EXPRESSION'call(_, Handler, Arguments)):
-        -- TODO: Implement indirect calls
-        /* BE2 */ CheckBindingIsHandlerId(Handler)
+        /* BE2 */ CheckBindingIsCallableVariableOrHandlerId(Handler)
         CheckBindings(Arguments)
         
     --
@@ -236,6 +234,38 @@
         Error_NotBoundToAVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
+
+'action' FullyResolveType(TYPE -> TYPE)
+
+    'rule' FullyResolveType(optional(_, Type) -> Base):
+        FullyResolveType(Type -> Base)
+    
+    'rule' FullyResolveType(named(_, Id) -> Base):
+        QuerySymbolId(Id -> Named)
+        Named'Type -> Type
+        FullyResolveType(Type -> Base)
+        
+    'rule' FullyResolveType(Type -> Type):
+
+'action' CheckBindingIsCallableVariableOrHandlerId(ID)
+
+    'rule' CheckBindingIsCallableVariableOrHandlerId(Id):
+        CheckBindingIsVariableOrHandlerId(Id)
+        [|
+            QuerySymbolId(Id -> Info)
+            Info'Kind -> Kind
+            -- If we get here the symbol is either a handler or variable (local or global)
+            ne(Kind, handler)
+            Info'Type -> Type
+            FullyResolveType(Type -> BaseType)
+            (|
+                where(BaseType -> handler(_, Signature))
+            ||
+                Id'Position -> Position
+                Error_NonHandlerTypeVariablesCannotBeCalled(Position)
+            |)
+        |]
+            
 
 'action' CheckBindingIsSyntaxRuleOfExpressionType(ID)
 
@@ -1122,9 +1152,12 @@
         CheckInvokes(Definitions)
 
     'rule' CheckInvokes(STATEMENT'call(Position, Handler, Arguments)):
-        QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
-        CheckCallArguments(Position, Parameters, Arguments)
-        CheckInvokes(Arguments)
+        [|
+            -- This call will fail if Handler is an untyped or generic handler type variable
+            QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
+            CheckCallArguments(Position, Parameters, Arguments)
+            CheckInvokes(Arguments)
+        |]
 
     'rule' CheckInvokes(STATEMENT'invoke(Position, Info, Arguments)):
         (|
@@ -1209,9 +1242,12 @@
         CheckInvokes(Error)
 
     'rule' CheckInvokes(EXPRESSION'call(Position, Handler, Arguments)):
-        QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
-        CheckCallArguments(Position, Parameters, Arguments)
-        CheckInvokes(Arguments)
+        [|
+            -- This call will fail if Handler is an untyped or generic handler type variable
+            QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
+            CheckCallArguments(Position, Parameters, Arguments)
+            CheckInvokes(Arguments)
+        |]
     
     'rule' CheckInvokes(EXPRESSION'invoke(Position, Info, Arguments)):
         (|
@@ -1316,8 +1352,12 @@
             Error_SyntaxNotAllowedInThisContext(Position)
         |)
         
-    'rule' CheckExpressionIsAssignable(slot(_, _)):
-        -- variables are assignable
+    'rule' CheckExpressionIsAssignable(slot(Position, Id)):
+        [|
+            QueryKindOfSymbolId(Id -> handler)
+            Id'Name -> Name
+            Error_CannotAssignToHandlerId(Position, Name)
+        |]
         
     'rule' CheckExpressionIsAssignable(Expr):
         -- everything else is not
@@ -1431,6 +1471,7 @@
         |)
     'rule' IsHighLevelType(optional(_, Type)):
         IsHighLevelType(Type)
+    'rule' IsHighLevelType(handler(_, _)):
     'rule' IsHighLevelType(record(_, _, _)):
     'rule' IsHighLevelType(pointer(_)):
     'rule' IsHighLevelType(boolean(_)):
@@ -1450,6 +1491,12 @@
         QueryId(Id -> symbol(Info))
         Info'Kind -> handler
         Info'Type -> handler(_, Signature)
+        
+    'rule' QueryHandlerIdSignature(Id -> Signature)
+        QueryId(Id -> symbol(Info))
+        Info'Kind -> variable
+        Info'Type -> Type
+        FullyResolveType(Type -> handler(_, Signature))
 
 'condition' QueryKindOfSymbolId(ID -> SYMBOLKIND)
 
