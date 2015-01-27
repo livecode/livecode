@@ -1904,7 +1904,10 @@ bool MCStringConvertToUTF8(MCStringRef p_string, char*& r_utf8string, uindex_t& 
     t_byte_count = MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, nil, 0);
     
     if (!MCMemoryNewArray(t_byte_count + 1, r_utf8string))
+	{
+		MCMemoryDeleteArray (t_unichars);
         return false;
+	}
     
     MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string, t_byte_count);
 	r_utf8_chars = t_byte_count;
