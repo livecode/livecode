@@ -86,6 +86,20 @@ static void __assign_definition_name(MCScriptModuleBuilderRef self, uindex_t p_i
     self -> module . definition_names[p_index] = MCValueRetain(p_name);
 }
 
+template<typename T> static bool __extend_array(MCScriptModuleBuilderRef self, T*& x_array, uindex_t& x_array_size, uindex_t& r_index)
+{
+    if (!MCMemoryResizeArray(x_array_size + 1, x_array, x_array_size))
+    {
+        r_index = 0;
+        self -> valid = false;
+        return false;
+    }
+    
+    r_index = x_array_size - 1;
+    
+    return true;
+}
+
 void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptModuleBuilderRef& r_builder)
 {
     MCScriptModuleBuilder *self;
@@ -162,17 +176,11 @@ void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef self, MCNameRef p_de
             return;
         }
     
-    if (!MCMemoryResizeArray(self -> module . dependency_count + 1, self -> module . dependencies, self -> module . dependency_count))
-    {
-        r_index = 0;
-        self -> valid = false;
+    if (!__extend_array(self, self -> module . dependencies, self -> module . dependency_count, r_index))
         return;
-    }
     
-    self -> module . dependencies[self -> module . dependency_count - 1] . name = MCValueRetain(p_dependency);
-    self -> module . dependencies[self -> module . dependency_count - 1] . version = 0;
-    
-    r_index = self -> module . dependency_count - 1;
+    self -> module . dependencies[r_index] . name = MCValueRetain(p_dependency);
+    self -> module . dependencies[r_index] . version = 0;
 }
 
 void MCScriptAddExportToModule(MCScriptModuleBuilderRef self, uindex_t p_definition)
@@ -180,14 +188,12 @@ void MCScriptAddExportToModule(MCScriptModuleBuilderRef self, uindex_t p_definit
     if (self == nil || !self -> valid)
         return;
     
-    if (!MCMemoryResizeArray(self -> module . exported_definition_count + 1, self -> module . exported_definitions, self -> module . exported_definition_count))
-    {
-        self -> valid = false;
+    uindex_t t_index;
+    if (!__extend_array(self, self -> module . exported_definitions, self -> module . exported_definition_count, t_index))
         return;
-    }
     
-    self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . name = MCValueRetain(self -> module . definition_names[p_definition]);
-    self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . index = p_definition;
+    self -> module  . exported_definitions[t_index] . name = MCValueRetain(self -> module . definition_names[p_definition]);
+    self -> module  . exported_definitions[t_index] . index = p_definition;
     
     // If the definition is a type, then make sure we make it a 'defined' type otherwise
     // it won't get bound globally.
@@ -218,9 +224,10 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
                 }
         }
     
-    if (!MCMemoryResizeArray(self -> module . imported_definition_count + 1, self -> module . imported_definitions, self -> module . imported_definition_count) ||
-        !MCMemoryResizeArray(self -> module . definition_count + 1, self -> module . definitions, self -> module . definition_count) ||
-        !MCMemoryNew((MCScriptExternalDefinition*&)self -> module . definitions[self -> module . definition_count - 1]) ||
+    uindex_t t_imp_index, t_def_index;
+    if (!__extend_array(self, self -> module . imported_definitions, self -> module . imported_definition_count, t_imp_index) ||
+        !__extend_array(self, self -> module . definitions, self -> module . definition_count, t_def_index) ||
+        !MCMemoryNew((MCScriptExternalDefinition*&)self -> module . definitions[t_def_index]) ||
         !__append_definition_name(self, p_name))
     {
         r_index = 0;
@@ -229,7 +236,7 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
     }
     
     MCScriptImportedDefinition *t_import;
-    t_import = &self -> module . imported_definitions[self -> module . imported_definition_count - 1];
+    t_import = &self -> module . imported_definitions[t_imp_index];
     
     t_import -> module = p_index;
     t_import -> kind = p_kind;
@@ -237,12 +244,12 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
     // t_import -> type = MCValueRetain(p_type);
     
     MCScriptExternalDefinition *t_definition;
-    t_definition = static_cast<MCScriptExternalDefinition *>(self -> module . definitions[self -> module . definition_count - 1]);
+    t_definition = static_cast<MCScriptExternalDefinition *>(self -> module . definitions[t_def_index]);
     
     t_definition -> kind = kMCScriptDefinitionKindExternal;
-    t_definition -> index = self -> module . imported_definition_count - 1;
+    t_definition -> index = t_imp_index;
 
-    r_index = self -> module . definition_count - 1;
+    r_index = t_def_index;
 }
 
 void MCScriptAddDefinitionToModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
@@ -250,15 +257,13 @@ void MCScriptAddDefinitionToModule(MCScriptModuleBuilderRef self, uindex_t& r_in
     if (self == nil || !self -> valid)
         return;
     
-    if (!MCMemoryResizeArray(self -> module . definition_count + 1, self -> module . definitions, self -> module . definition_count) ||
+    if (!__extend_array(self, self -> module . definitions, self -> module . definition_count, r_index) ||
         !__append_definition_name(self, kMCEmptyName))
     {
         r_index = 0;
         self -> valid = false;
         return;
     }
-    
-    r_index = self -> module . definition_count - 1;
 }
 
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
@@ -401,14 +406,11 @@ void MCScriptAddEventToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, u
 
 static void __add_script_type(MCScriptModuleBuilderRef self, MCScriptType *p_type, uindex_t& r_index)
 {
-    if (!MCMemoryResizeArray(self -> module . type_count + 1, self -> module . types, self -> module . type_count))
-    {
-        self -> valid = false;
+    if (!__extend_array(self, self -> module . types, self -> module . type_count, r_index))
         return;
-    }
     
-    self -> module . types[self -> module . type_count - 1] = p_type;
-    r_index = self -> module . type_count - 1;
+    self -> module . types[r_index] = p_type;
+    r_index = r_index;
 }
 
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_index, uindex_t& r_type)
@@ -515,17 +517,14 @@ void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef self, MCScript
     MCScriptHandlerType *t_type;
     t_type = static_cast<MCScriptHandlerType *>(self -> current_type);
     
-    if (!MCMemoryResizeArray(t_type -> parameter_count + 1, t_type -> parameters, t_type -> parameter_count) ||
-        !MCMemoryResizeArray(t_type -> parameter_name_count + 1, t_type -> parameter_names, t_type -> parameter_name_count))
-    {
-        self -> valid = false;
+    uindex_t t_param_index, t_name_index;
+    if (!__extend_array(self, t_type -> parameters, t_type -> parameter_count, t_param_index) ||
+        !__extend_array(self, t_type -> parameter_names, t_type -> parameter_name_count, t_name_index))
         return;
-    }
     
-    t_type -> parameters[t_type -> parameter_count - 1] . mode = p_mode;
-    //t_type -> parameters[t_type -> parameter_count - 1] . name = MCValueRetain(p_name);
-    t_type -> parameters[t_type -> parameter_count - 1] . type = p_type;
-    t_type -> parameter_names[t_type -> parameter_name_count - 1] = MCValueRetain(p_name);
+    t_type -> parameters[t_param_index] . mode = p_mode;
+    t_type -> parameters[t_param_index] . type = p_type;
+    t_type -> parameter_names[t_name_index] = MCValueRetain(p_name);
 }
 
 void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_new_type)
@@ -604,14 +603,12 @@ void MCScriptContinueRecordTypeInModule(MCScriptModuleBuilderRef self, MCNameRef
     MCScriptRecordType *t_type;
     t_type = static_cast<MCScriptRecordType *>(self -> current_type);
     
-    if (!MCMemoryResizeArray(t_type -> field_count + 1, t_type -> fields, t_type -> field_count))
-    {
-        self -> valid = false;
+    uindex_t t_index;
+    if (!__extend_array(self, t_type -> fields, t_type -> field_count, t_index))
         return;
-    }
     
-    t_type -> fields[t_type -> field_count - 1] . name = MCValueRetain(p_name);
-    t_type -> fields[t_type -> field_count - 1] . type = p_type;
+    t_type -> fields[t_index] . name = MCValueRetain(p_name);
+    t_type -> fields[t_index] . type = p_type;
 }
 
 void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_new_type)
@@ -703,13 +700,14 @@ void MCScriptBeginSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p
     MCScriptSyntaxDefinition *t_syntax;
     t_syntax = static_cast<MCScriptSyntaxDefinition *>(self -> module . definitions[self -> current_syntax]);
     
-    if (!MCMemoryResizeArray(t_syntax -> method_count + 1, t_syntax -> methods, t_syntax -> method_count))
+    uindex_t t_index;
+    if (!__extend_array(self, t_syntax -> methods, t_syntax -> method_count, t_index))
     {
         self -> valid = false;
         return;
     }
     
-    t_syntax -> methods[t_syntax -> method_count - 1] . handler = p_handler;
+    t_syntax -> methods[t_index] . handler = p_handler;
 }
 
 static void MCScriptAddArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_index)
@@ -729,13 +727,11 @@ static void MCScriptAddArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef s
     MCScriptSyntaxMethod *t_method;
     t_method = &t_syntax -> methods[t_syntax -> method_count - 1];
     
-    if (!MCMemoryResizeArray(t_method -> argument_count + 1, t_method -> arguments, t_method -> argument_count))
-    {
-        self -> valid = false;
+    uindex_t t_arg_index;
+    if (!__extend_array(self, t_method -> arguments, t_method -> argument_count, t_arg_index))
         return;
-    }
     
-    t_method -> arguments[t_method -> argument_count - 1] = p_index;
+    t_method -> arguments[t_arg_index] = p_index;
 }
 
 void MCScriptAddBuiltinArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_index)
@@ -818,13 +814,11 @@ void MCScriptAddHandlerToDefinitionGroupInModule(MCScriptModuleBuilderRef self, 
         if (self -> current_handler_group[i] == index)
             return;
     
-    if (!MCMemoryResizeArray(self -> current_handler_group_size + 1, self -> current_handler_group, self -> current_handler_group_size))
-    {
-        self -> valid = false;
+    uindex_t t_gindex;
+    if (!__extend_array(self, self -> current_handler_group, self -> current_handler_group_size, t_gindex))
         return;
-    }
     
-    self -> current_handler_group[self -> current_handler_group_size - 1] = index;
+    self -> current_handler_group[t_gindex] = index;
 }
 
 void MCScriptEndDefinitionGroupInModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
@@ -923,13 +917,11 @@ static void __emit_bytecode_byte(MCScriptModuleBuilderRef self, uint8_t p_byte)
     if (self == nil || !self -> valid)
         return;
     
-    if (!MCMemoryResizeArray(self -> module . bytecode_count + 1, self -> module . bytecode, self -> module . bytecode_count))
-    {
-        self -> valid = false;
+    uindex_t t_index;
+    if (!__extend_array(self, self -> module . bytecode, self -> module . bytecode_count, t_index))
         return;
-    }
     
-    self -> module . bytecode[self -> module . bytecode_count - 1] = p_byte;
+    self -> module . bytecode[t_index] = p_byte;
 }
 
 static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value)
@@ -992,41 +984,34 @@ static void __emit_constant(MCScriptModuleBuilderRef self, MCValueRef p_constant
             return;
         }
     
-    if (!MCMemoryResizeArray(self -> module . value_count + 1, self -> module . values, self -> module . value_count))
-    {
-        r_index = 0;
-        self -> valid = false;
+    uindex_t t_vindex;
+    if (!__extend_array(self, self -> module . values, self -> module . value_count, t_vindex))
         return;
-    }
     
-    self -> module . values[self -> module . value_count - 1] = MCValueRetain(p_constant);
+    self -> module . values[t_vindex] = MCValueRetain(p_constant);
     
-    r_index = self -> module . value_count;
+    r_index = t_vindex + 1;
 }
 
 static void __begin_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeOp p_operation)
 {
-    if (!MCMemoryResizeArray(self -> instruction_count + 1, self -> instructions, self -> instruction_count))
-    {
-        self -> valid = false;
+    uindex_t t_index;
+    if (!__extend_array(self, self -> instructions, self -> instruction_count, t_index))
         return;
-    }
     
-    self -> instructions[self -> instruction_count - 1] . file = self -> current_file;
-    self -> instructions[self -> instruction_count - 1] . line = self -> current_line;
+    self -> instructions[t_index] . file = self -> current_file;
+    self -> instructions[t_index] . line = self -> current_line;
     
-    self -> instructions[self -> instruction_count - 1] . operation = p_operation;
-    self -> instructions[self -> instruction_count - 1] . arity = 0;
-    self -> instructions[self -> instruction_count - 1] . operands = self -> operand_count;
+    self -> instructions[t_index] . operation = p_operation;
+    self -> instructions[t_index] . arity = 0;
+    self -> instructions[t_index] . operands = self -> operand_count;
 }
 
 static void __continue_instruction(MCScriptModuleBuilderRef self, uindex_t p_argument)
 {
-    if (!MCMemoryResizeArray(self -> operand_count + 1, self -> operands, self -> operand_count))
-    {
-        self -> valid = false;
+    uindex_t t_op_index;
+    if (!__extend_array(self, self -> operands, self -> operand_count, t_op_index))
         return;
-    }
     
     if (self -> instructions[self -> instruction_count - 1] . arity == 256)
     {
@@ -1035,7 +1020,7 @@ static void __continue_instruction(MCScriptModuleBuilderRef self, uindex_t p_arg
     }
     
     self -> instructions[self -> instruction_count - 1] . arity += 1;
-    self -> operands[self -> operand_count - 1] = p_argument;
+    self -> operands[t_op_index] = p_argument;
 }
 
 static void __end_instruction(MCScriptModuleBuilderRef self)
@@ -1069,15 +1054,13 @@ static void __emit_position(MCScriptModuleBuilderRef self, uindex_t p_address, u
         t_last_pos -> line == p_line)
         return;
     
-    if (!MCMemoryResizeArray(self -> module . position_count + 1, self -> module . positions, self -> module . position_count))
-    {
-        self -> valid = false;
+    uindex_t t_pindex;
+    if (!__extend_array(self, self -> module . positions, self -> module . position_count, t_pindex))
         return;
-    }
     
-    self -> module . positions[self -> module . position_count - 1] . address = p_address;
-    self -> module . positions[self -> module . position_count - 1] . file = p_file;
-    self -> module . positions[self -> module . position_count - 1] . line = p_line;
+    self -> module . positions[t_pindex] . address = p_address;
+    self -> module . positions[t_pindex] . file = p_file;
+    self -> module . positions[t_pindex] . line = p_line;
 }
 
 void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
@@ -1223,16 +1206,16 @@ void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef self, MCNameR
     MCScriptHandlerDefinition *t_handler;
     t_handler = static_cast<MCScriptHandlerDefinition *>(self -> module . definitions[self -> current_handler]);
     
-    if (!MCMemoryResizeArray(t_handler -> local_type_count + 1, t_handler -> local_types, t_handler -> local_type_count) ||
-        !MCMemoryResizeArray(t_handler -> local_name_count + 1, t_handler -> local_names, t_handler -> local_name_count))
+    uindex_t t_tindex, t_nindex;
+    if (!__extend_array(self, t_handler -> local_types, t_handler -> local_type_count, t_tindex) ||
+        !__extend_array(self, t_handler -> local_names, t_handler -> local_name_count, t_nindex))
     {
         r_index = 0;
-        self -> valid = false;
         return;
     }
 
-    t_handler -> local_types[t_handler -> local_type_count - 1] = p_type;
-    t_handler -> local_names[t_handler -> local_name_count - 1] = MCValueRetain(p_name);
+    t_handler -> local_types[t_tindex] = p_type;
+    t_handler -> local_names[t_nindex] = MCValueRetain(p_name);
     
     r_index = self -> current_param_count + t_handler -> local_type_count - 1;
 }
@@ -1242,16 +1225,16 @@ void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef self, uindex
     if (self == nil || !self -> valid)
         return;
  
-    if (!MCMemoryResizeArray(self -> label_count + 1, self -> labels, self -> label_count))
+    uindex_t t_lindex;
+    if (!__extend_array(self, self -> labels, self -> label_count, t_lindex))
     {
         r_label = 0;
-        self -> valid = false;
         return;
     }
     
-    self -> labels[self -> label_count - 1] . instruction = UINDEX_MAX;
+    self -> labels[t_lindex] . instruction = UINDEX_MAX;
     
-    r_label = self -> label_count;
+    r_label = t_lindex + 1;
 }
 
 void MCScriptResolveLabelForBytecodeInModule(MCScriptModuleBuilderRef self, uindex_t p_label)
@@ -1418,14 +1401,12 @@ void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef self, MCNameRef p_fil
             return;
         }
     
-    if (!MCMemoryResizeArray(self -> module . source_file_count + 1, self -> module . source_files, self -> module . source_file_count))
-    {
-        self -> valid = false;
+    uindex_t t_findex;
+    if (!__extend_array(self, self -> module . source_files, self -> module . source_file_count, t_findex))
         return;
-    }
     
-    self -> module . source_files[self -> module . source_file_count - 1] = MCValueRetain(p_file);
-    self -> current_file = self -> module . source_file_count - 1;
+    self -> module . source_files[t_findex] = MCValueRetain(p_file);
+    self -> current_file = t_findex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
