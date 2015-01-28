@@ -544,13 +544,6 @@ struct MCScriptFrame
 	uindex_t *mapping;
 };
 
-enum MCScriptInvokeResult
-{
-    kMCScriptInvokeInferResult,
-    kMCScriptInvokeNoResult,
-    kMCScriptInvokeHasResult,
-};
-
 static inline bool MCScriptIsRegisterValidInFrame(MCScriptFrame *p_frame, int p_register)
 {
     return p_register >= 0 && p_register < p_frame -> handler -> slot_count;
@@ -767,7 +760,7 @@ static inline MCValueRef MCScriptFetchConstantInFrame(MCScriptFrame *p_frame, in
     return p_frame -> instance -> module -> values[p_index];
 }
 
-static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity, MCScriptInvokeResult p_has_result)
+static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
     MCTypeInfoRef t_signature;
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
@@ -775,15 +768,9 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
     // If the signature of the handler includes a return value, then the first
     // argument will be the register to place it in.
     uindex_t t_result_reg;
-    if (p_has_result != kMCScriptInvokeNoResult &&
-        MCHandlerTypeInfoGetReturnType(t_signature) != kMCNullTypeInfo)
-    {
-        t_result_reg = p_arguments[0];
-        p_arity += 1;
-        p_arguments -= 1;
-    }
-    else
-        t_result_reg = UINDEX_MAX;
+    t_result_reg = p_arguments[0];
+    p_arity -= 1;
+    p_arguments += 1;
     
     // If the number of remaining arguments is not the same as the parameter count then
     // it is an error.
@@ -1139,7 +1126,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     return true;
 }
 
-static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity, MCScriptInvokeResult p_has_result)
+static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
     if (p_handler -> function == nil)
     {
@@ -1152,15 +1139,9 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
     
     uindex_t t_result_reg;
-    if (p_has_result != kMCScriptInvokeNoResult &&
-        MCHandlerTypeInfoGetReturnType(t_signature) != kMCNullTypeInfo)
-    {
-        t_result_reg = p_arguments[0];
-        p_arity += 1;
-        p_arguments -= 1;
-    }
-    else
-        t_result_reg = UINDEX_MAX;
+    t_result_reg = p_arguments[0];
+    p_arity -= 1;
+    p_arguments += 1;
     
     if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_arity)
         return MCScriptThrowWrongNumberOfArgumentsForInvokeError(p_instance -> module, p_handler, p_arity);
@@ -1600,7 +1581,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     return t_success;
 }
 
-static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity, MCScriptInvokeResult p_result)
+static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
     x_frame -> address = x_next_bytecode - x_frame -> instance -> module -> bytecode;
     
@@ -1611,14 +1592,14 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 		MCScriptHandlerDefinition *t_handler;
 		t_handler = MCScriptDefinitionAsHandler(p_handler);
         
-		return MCScriptPerformScriptInvoke(x_frame, x_next_bytecode, p_instance, t_handler, p_arguments, p_arity, p_result);
+		return MCScriptPerformScriptInvoke(x_frame, x_next_bytecode, p_instance, t_handler, p_arguments, p_arity);
 	}
 	else if (p_handler -> kind == kMCScriptDefinitionKindForeignHandler)
 	{
 		MCScriptForeignHandlerDefinition *t_foreign_handler;
 		t_foreign_handler = MCScriptDefinitionAsForeignHandler(p_handler);
 		
-		return MCScriptPerformForeignInvoke(x_frame, p_instance, t_foreign_handler, p_arguments, p_arity, p_result);
+		return MCScriptPerformForeignInvoke(x_frame, p_instance, t_foreign_handler, p_arguments, p_arity);
 	}
 	
 	/* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition passed to invoke");
@@ -1626,7 +1607,7 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
     return false;
 }
 
-static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity, MCScriptInvokeResult p_invoke_result)
+static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
     MCScriptDefinitionGroupDefinition *t_group;
     t_group = MCScriptDefinitionAsDefinitionGroup(p_handler);
@@ -1727,7 +1708,7 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
     }
     
     if (t_min_score_def != NULL)
-        return MCScriptPerformInvoke(x_frame, x_next_bytecode, t_min_score_inst, t_min_score_def, p_arguments, p_arity, p_invoke_result);
+        return MCScriptPerformInvoke(x_frame, x_next_bytecode, t_min_score_inst, t_min_score_def, p_arguments, p_arity);
     
     MCAutoProperListRef t_args;
     if (!MCProperListCreateMutable(&t_args))
@@ -2050,9 +2031,9 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCScriptResolveDefinitionInFrame(t_frame, t_index, t_instance, t_definition);
 
                 if (t_definition -> kind != kMCScriptDefinitionKindDefinitionGroup)
-                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_result_then_args, t_result_then_arg_count, kMCScriptInvokeInferResult);
+                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_result_then_args, t_result_then_arg_count);
                 else
-                    t_success = MCScriptPerformMultiInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_result_then_args, t_result_then_arg_count, kMCScriptInvokeInferResult);
+                    t_success = MCScriptPerformMultiInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_result_then_args, t_result_then_arg_count);
             }
             break;
             case kMCScriptBytecodeOpInvokeIndirect:
@@ -2086,7 +2067,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     t_result_then_arg_count = t_arity - 1;
                     t_result_then_args = &t_arguments[1];
                     
-                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_context -> instance, t_context -> definition, t_result_then_args, t_result_then_arg_count, kMCScriptInvokeHasResult);
+                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_context -> instance, t_context -> definition, t_result_then_args, t_result_then_arg_count);
                 }
                 else if (t_success)
                 {
