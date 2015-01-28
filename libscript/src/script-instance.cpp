@@ -2093,43 +2093,43 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     t_linear_args = nil;
                     if (t_success)
                         t_success = MCMemoryNewArray(t_arg_count, t_linear_args);
-                    
+                
+                    for(int i = 0; t_success && i < t_arg_count; i++)
+                        t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arg_regs[i], t_linear_args[i]);
+                
+                    MCValueRef t_result;
+                    t_result = nil;
+                    if (t_success)
+                        t_success = MCHandlerInvoke((MCHandlerRef)t_handler, t_linear_args, t_arg_count, t_result);
+                        
+                    // If the call succeeded, we must copy back all 'out' / 'inout' mode parameters
+                    // to the register file, and also the result.
                     if (t_success)
                     {
-                        for(int i = 0; t_success && i < t_arg_count; i++)
-                            t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arg_regs[i], t_linear_args[i]);
+                        MCTypeInfoRef t_signature;
+                        t_signature = MCValueGetTypeInfo(t_handler);
                         
-                        MCValueRef t_result;
-                        t_result = nil;
-                        if (t_success)
-                            t_success = MCHandlerInvoke((MCHandlerRef)t_handler, t_linear_args, t_arg_count, t_result);
-                        
-                        // If the call succeeded, we must copy back all 'out' / 'inout' mode parameters
-                        // to the register file, and also the result.
-                        if (t_success)
+                        // This loop doesn't terminate on failure as we must free all out values
+                        // (an error at this point would be a typecheck when storing - we shouldn't
+                        // do any more storing, but must release the rest of the out's).
+                        for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
                         {
-                            MCTypeInfoRef t_signature;
-                            t_signature = MCValueGetTypeInfo(t_handler);
+                            if (MCHandlerTypeInfoGetParameterMode(t_signature, i) == kMCHandlerTypeFieldModeIn)
+                                continue;
                             
-                            for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
-                            {
-                                if (MCHandlerTypeInfoGetParameterMode(t_signature, i) == kMCHandlerTypeFieldModeIn)
-                                    continue;
-                                
-                                if (t_success)
-                                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_arg_regs[i], t_linear_args[i]);
-                                
-                                MCValueRelease(t_linear_args[i]);
-                            }
-
                             if (t_success)
-                                t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_result_reg, t_result);
+                                t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_arg_regs[i], t_linear_args[i]);
                             
-                            MCValueRelease(t_result);
+                            MCValueRelease(t_linear_args[i]);
                         }
+
+                        if (t_success)
+                            t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_result_reg, t_result);
                         
-                        MCMemoryDeleteArray(t_linear_args);
+                        MCValueRelease(t_result);
                     }
+                    
+                    MCMemoryDeleteArray(t_linear_args);
                 }
             }
             break;
