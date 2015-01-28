@@ -260,6 +260,9 @@ struct MCScriptHandlerDefinition: public MCScriptCommonHandlerDefinition
     uindex_t *local_types;
     uindex_t local_type_count;
     
+    MCNameRef *local_names;
+    uindex_t local_name_count;
+    
 	uindex_t start_address;
 	uindex_t finish_address;
     

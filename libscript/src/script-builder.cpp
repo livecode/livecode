@@ -1223,7 +1223,8 @@ void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef self, MCNameR
     MCScriptHandlerDefinition *t_handler;
     t_handler = static_cast<MCScriptHandlerDefinition *>(self -> module . definitions[self -> current_handler]);
     
-    if (!MCMemoryResizeArray(t_handler -> local_type_count + 1, t_handler -> local_types, t_handler -> local_type_count))
+    if (!MCMemoryResizeArray(t_handler -> local_type_count + 1, t_handler -> local_types, t_handler -> local_type_count) ||
+        !MCMemoryResizeArray(t_handler -> local_name_count + 1, t_handler -> local_names, t_handler -> local_name_count))
     {
         r_index = 0;
         self -> valid = false;
@@ -1231,6 +1232,7 @@ void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef self, MCNameR
     }
 
     t_handler -> local_types[t_handler -> local_type_count - 1] = p_type;
+    t_handler -> local_names[t_handler -> local_name_count - 1] = MCValueRetain(p_name);
     
     r_index = self -> current_param_count + t_handler -> local_type_count - 1;
 }
