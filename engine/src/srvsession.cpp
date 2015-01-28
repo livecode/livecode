@@ -696,7 +696,7 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 	
 	MCAutoDataRef t_randombytes;
     
-	/* UNCHECKED */ MCDataCreateRandom (64, &t_randombytes);
+	/* UNCHECKED */ MCSRandomData (64, &t_randombytes);
 	
 	md5_state_t t_state;
 	md5_byte_t t_digest[16];

@@ -36,10 +36,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Return a random number in the range [0, 1).  If any random number
- * generation error occurs, returns a quiet NaN. */
-real64_t MCMathRandom (void);
-
 // Convert from base 10 to a string in the desired base. Destination base should be between 2 and 32 inclusive.
 bool MCMathConvertFromBase10(uint32_t p_value, bool p_negative, integer_t p_dest_base, MCStringRef& r_result);
 

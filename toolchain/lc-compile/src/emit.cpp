@@ -271,26 +271,54 @@ void EmitEndModule(void)
             const char *t_name;
             GetStringOfNameLiteral(s_module_name, &t_name);
             fprintf(t_output, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_string, t_name);
+            
+            free(t_modified_string);
         }
         else if (t_output != NULL)
         {
             fwrite(t_buffer, 1, t_size, t_output);
-            fclose(t_output);
         }
         
+        if (t_output != NULL)
+            fclose(t_output);
+        
+        bool t_success;
+        t_success = true;
+        
         MCStreamRef t_stream;
-        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
+        t_stream = nil;
+        if (t_success)
+            t_success = MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
+        
         MCScriptModuleRef t_module;
-        MCScriptCreateModuleFromStream(t_stream, t_module);
-        MCValueRelease(t_stream);
+        t_module = nil;
+        if (t_success)
+            t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
+        
+        if (t_stream != nil)
+            MCValueRelease(t_stream);
+        
         MCStreamRef t_output_stream;
-        MCMemoryOutputStreamCreate(t_output_stream);
-        MCScriptWriteInterfaceOfModule(t_module, t_output_stream);
-        MCScriptReleaseModule(t_module);
+        t_output_stream = nil;
+        if (t_success)
+            t_success = MCMemoryOutputStreamCreate(t_output_stream);
+        
+        if (t_success)
+            t_success = MCScriptWriteInterfaceOfModule(t_module, t_output_stream);
+        
+        if (t_module != nil)
+            MCScriptReleaseModule(t_module);
+        
         void *t_inf_buffer;
         size_t t_inf_size;
-        MCMemoryOutputStreamFinish(t_output_stream, t_inf_buffer, t_inf_size);
-        MCValueRelease(t_output_stream);
+        t_inf_buffer = nil;
+        t_inf_size = 0;
+        if (t_success)
+            t_success = MCMemoryOutputStreamFinish(t_output_stream, t_inf_buffer, t_inf_size);
+        
+        if (t_output_stream != nil)
+            MCValueRelease(t_output_stream);
+        
         FILE *t_import;
         t_import = OpenImportedModuleFile(t_module_string);
         if (t_import != NULL)
@@ -298,6 +326,8 @@ void EmitEndModule(void)
             fwrite(t_inf_buffer, 1, t_inf_size, t_import);
             fclose(t_import);
         }
+        
+        free(t_inf_buffer);
     }
 
     free(t_buffer);

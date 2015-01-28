@@ -21,10 +21,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * aren't available yet. */
 #define _FILE_OFFSET_BITS 64
 
-#include <foundation.h>
-#include <foundation-auto.h>
+#include "system-private.h"
 
-#include "foundation-private.h"
+#include <foundation-auto.h>
 
 #include <errno.h>
 
@@ -46,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  *    be used within libfoundation (e.g. for creating file IO
  *    streams).
  *
- * 2) Use e.g. MCStreamGetStandardOutput() to obtain one of the three
+ * 2) Use e.g. MCSStreamGetStandardOutput() to obtain one of the three
  *    "standard" streams.
  *
  * FIXME known issues:
@@ -76,13 +75,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * C stdio errors
  * ================================================================ */
 
-static MCTypeInfoRef kMCStdioStreamIOErrorTypeInfo;
-static MCTypeInfoRef kMCStdioStreamEndOfFileErrorTypeInfo;
+static MCTypeInfoRef kMCSStreamIOErrorTypeInfo;
+static MCTypeInfoRef kMCSStreamEndOfFileErrorTypeInfo;
 
 static bool
-__MCStdioStreamCreateNamedErrorType (MCNameRef p_name,
-                                     MCStringRef p_message,
-                                     MCTypeInfoRef & r_error_type)
+__MCSStreamCreateNamedErrorType (MCNameRef p_name,
+                                 MCStringRef p_message,
+                                 MCTypeInfoRef & r_error_type)
 {
 	MCAutoTypeInfoRef t_raw_typeinfo, t_typeinfo;
 
@@ -100,36 +99,36 @@ __MCStdioStreamCreateNamedErrorType (MCNameRef p_name,
 }
 
 static bool
-__MCStdioStreamInitializeErrors (void)
+__MCSStreamInitializeErrors (void)
 {
-	if (!__MCStdioStreamCreateNamedErrorType(
-	        MCNAME("livecode.lang.StdioStreamIOError"),
+	if (!__MCSStreamCreateNamedErrorType(
+	        MCNAME("com.livecode.stream.IOError"),
 	        MCSTR("Stream input/output error: %{description}"),
-	        kMCStdioStreamIOErrorTypeInfo))
+	        kMCSStreamIOErrorTypeInfo))
 		return false;
 
-	if (!__MCStdioStreamCreateNamedErrorType(
-	         MCNAME("livecode.lang.StdioStreamEndOfFileError"),
+	if (!__MCSStreamCreateNamedErrorType(
+	         MCNAME("com.livecode.stream.EndOfFileError"),
 	         MCSTR("Reached end of file while reading from stream"),
-	         kMCStdioStreamEndOfFileErrorTypeInfo))
+	         kMCSStreamEndOfFileErrorTypeInfo))
 		return false;
 
 	return true;
 }
 
 static void
-__MCStdioStreamFinalizeErrors (void)
+__MCSStreamFinalizeErrors (void)
 {
-	MCValueRelease (kMCStdioStreamIOErrorTypeInfo);
-	MCValueRelease (kMCStdioStreamEndOfFileErrorTypeInfo);
+	MCValueRelease (kMCSStreamIOErrorTypeInfo);
+	MCValueRelease (kMCSStreamEndOfFileErrorTypeInfo);
 }
 
 /* Create and throw an error that wraps the system error code p_errno.
  * If p_message is non-NULL, uses it instead of the default error
  * message format string. */
 static bool
-__MCStdioStreamThrowIOError (MCStringRef p_message,
-                             int p_errno)
+__MCSStreamThrowIOError (MCStringRef p_message,
+                         int p_errno)
 {
 	MCAutoStringRef t_description;
 	MCAutoNumberRef t_error_code;
@@ -137,7 +136,7 @@ __MCStdioStreamThrowIOError (MCStringRef p_message,
 	if (p_errno != 0)
 	{
 		if (!(MCStringCreateWithCString (strerror (p_errno),
-		                                &t_description) &&
+		                                 &t_description) &&
 		      MCNumberCreateWithInteger (p_errno,
 		                                 &t_error_code)))
 			return false;
@@ -150,7 +149,7 @@ __MCStdioStreamThrowIOError (MCStringRef p_message,
 
 	if (NULL != p_message)
 	{
-		return MCErrorCreateAndThrowWithMessage (kMCStdioStreamIOErrorTypeInfo,
+		return MCErrorCreateAndThrowWithMessage (kMCSStreamIOErrorTypeInfo,
 		                                         p_message,
 		                                         "description", *t_description,
 		                                         "error_code", *t_error_code,
@@ -158,7 +157,7 @@ __MCStdioStreamThrowIOError (MCStringRef p_message,
 	}
 	else
 	{
-		return MCErrorCreateAndThrow (kMCStdioStreamIOErrorTypeInfo,
+		return MCErrorCreateAndThrow (kMCSStreamIOErrorTypeInfo,
 		                              "description", *t_description,
 		                              "error_code", *t_error_code,
 		                              NULL);
@@ -167,9 +166,9 @@ __MCStdioStreamThrowIOError (MCStringRef p_message,
 
 /* Create and throw an end-of-file error. */
 static bool
-__MCStdioStreamThrowEOFError (void)
+__MCSStreamThrowEOFError (void)
 {
-	return MCErrorCreateAndThrow (kMCStdioStreamEndOfFileErrorTypeInfo, NULL);
+	return MCErrorCreateAndThrow (kMCSStreamEndOfFileErrorTypeInfo, NULL);
 }
 
 /* ================================================================
@@ -177,31 +176,31 @@ __MCStdioStreamThrowEOFError (void)
  * ================================================================ */
 
 /* Forward declaration for the vtable */
-extern MCStreamCallbacks __kMCStdioStreamCallbacks;
+extern MCStreamCallbacks __kMCSStdioStreamCallbacks;
 
-struct __MCStdioStream
+struct __MCSStdioStream
 {
 	FILE *m_cstream;
 };
 
-/* Helper function for obtaining the __MCStdioStream pointer from a
+/* Helper function for obtaining the __MCSStdioStream pointer from a
  * MCStreamRef.  Also does some validation that the stream pointer is
  * valid. */
-static __MCStdioStream *
-__MCStdioStreamFromStreamRef (MCStreamRef p_stream)
+static __MCSStdioStream *
+__MCSStdioStreamFromStreamRef (MCStreamRef p_stream)
 {
 	MCAssert (p_stream);
-	MCAssert (&__kMCStdioStreamCallbacks == MCStreamGetCallbacks (p_stream));
+	MCAssert (&__kMCSStdioStreamCallbacks == MCStreamGetCallbacks (p_stream));
 
-	return (__MCStdioStream *) MCStreamGetExtraBytesPtr (p_stream);
+	return (__MCSStdioStream *) MCStreamGetExtraBytesPtr (p_stream);
 }
 
 /* Helper function for obtaining the FILE pointer from an
  * MCStreamRef. */
 static FILE *
-__MCStdioStreamGetCStream (MCStreamRef p_stream)
+__MCSStdioStreamGetCStream (MCStreamRef p_stream)
 {
-	return __MCStdioStreamFromStreamRef (p_stream)->m_cstream;
+	return __MCSStdioStreamFromStreamRef (p_stream)->m_cstream;
 }
 
 /* ================================================================
@@ -214,16 +213,16 @@ __MCStdioStreamGetCStream (MCStreamRef p_stream)
  * fseek(3) here, because it doesn't make any difference whether it
  * succeeds or not. */
 static bool
-__MCStdioStreamInterleave (MCStreamRef p_stream)
+__MCSStdioStreamInterleave (MCStreamRef p_stream)
 {
-	/* UNCHECKED */ fseek (__MCStdioStreamGetCStream (p_stream), 0, SEEK_END);
+	/* UNCHECKED */ fseek (__MCSStdioStreamGetCStream (p_stream), 0, SEEK_END);
 	return true;
 }
 
 static void
-__MCStdioStreamDestroy (MCStreamRef p_stream)
+__MCSStdioStreamDestroy (MCStreamRef p_stream)
 {
-	__MCStdioStream *self = __MCStdioStreamFromStreamRef (p_stream);
+	__MCSStdioStream *self = __MCSStdioStreamFromStreamRef (p_stream);
 
 	/* Note that there's no point in checking for errors in fclose(); if it
 	 * fails, there's no sane recovery that can be performed. */
@@ -240,14 +239,14 @@ __MCStdioStreamDestroy (MCStreamRef p_stream)
  * FIXME see the "known issues" at the top of this file.
  */
 static bool
-__MCStdioStreamRead (MCStreamRef p_stream,
-                    void *x_buffer,
-                    size_t p_amount)
+__MCSStdioStreamRead (MCStreamRef p_stream,
+                      void *x_buffer,
+                      size_t p_amount)
 {
 	bool t_success = true;
-	FILE *t_stream = __MCStdioStreamGetCStream (p_stream);
+	FILE *t_stream = __MCSStdioStreamGetCStream (p_stream);
 
-	if (!__MCStdioStreamInterleave (p_stream))
+	if (!__MCSStdioStreamInterleave (p_stream))
 		return false;
 
 	byte_t *t_buffer;
@@ -275,13 +274,13 @@ __MCStdioStreamRead (MCStreamRef p_stream,
 
 		/* Check for EOF */
 		if (feof (t_stream))
-			t_success = __MCStdioStreamThrowEOFError();
+			t_success = __MCSStreamThrowEOFError();
 
 		/* Check for error */
 		if (ferror (t_stream) && errno != EINTR)
 		{
 			clearerr (t_stream);
-			t_success = __MCStdioStreamThrowIOError (MCSTR("Failed to read from stream: %{description}"), t_save_errno);
+			t_success = __MCSStreamThrowIOError (MCSTR("Failed to read from stream: %{description}"), t_save_errno);
 		}
 	}
 
@@ -299,14 +298,14 @@ __MCStdioStreamRead (MCStreamRef p_stream,
  * FIXME see the "known issues" at the top of this file.
  */
 static bool
-__MCStdioStreamWrite (MCStreamRef p_stream,
-                     const void *p_buffer,
-                     size_t p_amount)
+__MCSStdioStreamWrite (MCStreamRef p_stream,
+                       const void *p_buffer,
+                       size_t p_amount)
 {
 	bool t_success = true;
-	FILE *t_stream = __MCStdioStreamGetCStream (p_stream);
+	FILE *t_stream = __MCSStdioStreamGetCStream (p_stream);
 
-	if (!__MCStdioStreamInterleave (p_stream))
+	if (!__MCSStdioStreamInterleave (p_stream))
 		return false;
 
 	size_t t_total_written = 0;
@@ -333,7 +332,7 @@ __MCStdioStreamWrite (MCStreamRef p_stream,
 		{
 			clearerr (t_stream);
 
-			t_success = __MCStdioStreamThrowIOError (MCSTR("Failed to write to stream: %{description}"), t_save_errno);
+			t_success = __MCSStreamThrowIOError (MCSTR("Failed to write to stream: %{description}"), t_save_errno);
 		}
 	}
 
@@ -342,56 +341,56 @@ __MCStdioStreamWrite (MCStreamRef p_stream,
 
 
 static bool
-__MCStdioStreamIsFinished (MCStreamRef p_stream,
-                          bool & r_finished)
+__MCSStdioStreamIsFinished (MCStreamRef p_stream,
+                            bool & r_finished)
 {
-	r_finished = feof (__MCStdioStreamGetCStream (p_stream));
+	r_finished = feof (__MCSStdioStreamGetCStream (p_stream));
 	return true;
 }
 
 static bool
-__MCStdioStreamSeek (MCStreamRef p_stream,
-                    filepos_t p_position)
+__MCSStdioStreamSeek (MCStreamRef p_stream,
+                      filepos_t p_position)
 {
-	FILE *t_stream = __MCStdioStreamGetCStream (p_stream);
+	FILE *t_stream = __MCSStdioStreamGetCStream (p_stream);
 
 	errno = 0;
 	int status = fseeko (t_stream, p_position, SEEK_SET);
 
 	if (status != 0)
-		return __MCStdioStreamThrowIOError (MCSTR("Failed to seek in stream: %{description}"), errno);
+		return __MCSStreamThrowIOError (MCSTR("Failed to seek in stream: %{description}"), errno);
 
 	return true;
 }
 
 static bool
-__MCStdioStreamTell (MCStreamRef p_stream,
-                    filepos_t & r_position)
+__MCSStdioStreamTell (MCStreamRef p_stream,
+                      filepos_t & r_position)
 {
-	FILE *t_stream = __MCStdioStreamGetCStream (p_stream);
+	FILE *t_stream = __MCSStdioStreamGetCStream (p_stream);
 
 	errno = 0;
 	filepos_t t_offset = ftello (t_stream);
 
 	if (t_offset == -1)
-		return __MCStdioStreamThrowIOError (MCSTR("Failed to get position in stream: %{description}"), errno);
+		return __MCSStreamThrowIOError (MCSTR("Failed to get position in stream: %{description}"), errno);
 
 	r_position = t_offset;
 	return true;
 }
 
-MCStreamCallbacks __kMCStdioStreamCallbacks = {
-    __MCStdioStreamDestroy,
-    __MCStdioStreamIsFinished,
+MCStreamCallbacks __kMCSStdioStreamCallbacks = {
+    __MCSStdioStreamDestroy,
+    __MCSStdioStreamIsFinished,
     nil,
-    __MCStdioStreamRead,
+    __MCSStdioStreamRead,
     nil,
-    __MCStdioStreamWrite,
+    __MCSStdioStreamWrite,
     nil,
     nil,
     nil,
-    __MCStdioStreamTell,
-    __MCStdioStreamSeek,
+    __MCSStdioStreamTell,
+    __MCSStdioStreamSeek,
 };
 
 /* ================================================================
@@ -399,16 +398,16 @@ MCStreamCallbacks __kMCStdioStreamCallbacks = {
  * ================================================================ */
 
 bool
-__MCStdioStreamCreate (FILE *p_cstream,
-                       MCStreamRef & r_stream)
+__MCSStreamCreateWithStdio (FILE *p_cstream,
+                            MCStreamRef & r_stream)
 {
 	MCStreamRef t_stream;
-	if (!MCStreamCreate (&__kMCStdioStreamCallbacks,
-	                     sizeof (__MCStdioStream),
+	if (!MCStreamCreate (&__kMCSStdioStreamCallbacks,
+	                     sizeof (__MCSStdioStream),
 	                     t_stream))
 		return false;
 
-	__MCStdioStream *t_state = __MCStdioStreamFromStreamRef (t_stream);
+	__MCSStdioStream *t_state = __MCSStdioStreamFromStreamRef (t_stream);
 	t_state->m_cstream = p_cstream;
 
 	r_stream = t_stream;
@@ -424,17 +423,17 @@ static MCStreamRef s_standard_input_stream;
 static MCStreamRef s_standard_error_stream;
 
 static bool
-__MCStreamGetStandardStream (FILE *p_cstream,
-                             MCStreamRef & x_static_stream,
-                             MCStreamRef & r_stream)
+__MCSStreamGetStandardStream (FILE *p_cstream,
+                              MCStreamRef & x_static_stream,
+                              MCStreamRef & r_stream)
 {
 	/* Recreate the MCStreamRef if it hasn't been created yet or if it doesn't
 	 * match the current C library value */
 	if (NULL == x_static_stream ||
-	    p_cstream != __MCStdioStreamGetCStream (x_static_stream))
+	    p_cstream != __MCSStdioStreamGetCStream (x_static_stream))
 	{
 		MCValueRelease (x_static_stream);
-		if (!__MCStdioStreamCreate (p_cstream, x_static_stream))
+		if (!__MCSStreamCreateWithStdio (p_cstream, x_static_stream))
 			return false;
 	}
 
@@ -443,27 +442,27 @@ __MCStreamGetStandardStream (FILE *p_cstream,
 }
 
 bool
-MCStreamGetStandardOutput (MCStreamRef & r_stream)
+MCSStreamGetStandardOutput (MCStreamRef & r_stream)
 {
-	return __MCStreamGetStandardStream (stdout,
-	                                    s_standard_output_stream,
-	                                    r_stream);
+	return __MCSStreamGetStandardStream (stdout,
+	                                     s_standard_output_stream,
+	                                     r_stream);
 }
 
 bool
-MCStreamGetStandardInput (MCStreamRef & r_stream)
+MCSStreamGetStandardInput (MCStreamRef & r_stream)
 {
-	return __MCStreamGetStandardStream (stdin,
-	                                    s_standard_input_stream,
-	                                    r_stream);
+	return __MCSStreamGetStandardStream (stdin,
+	                                     s_standard_input_stream,
+	                                     r_stream);
 }
 
 bool
-MCStreamGetStandardError (MCStreamRef & r_stream)
+MCSStreamGetStandardError (MCStreamRef & r_stream)
 {
-	return __MCStreamGetStandardStream (stderr,
-	                                    s_standard_error_stream,
-	                                    r_stream);
+	return __MCSStreamGetStandardStream (stderr,
+	                                     s_standard_error_stream,
+	                                     r_stream);
 }
 
 /* ================================================================
@@ -471,25 +470,25 @@ MCStreamGetStandardError (MCStreamRef & r_stream)
  * ================================================================ */
 
 bool
-__MCStdioStreamInitialize (void)
+__MCSStreamInitialize (void)
 {
 	s_standard_output_stream = NULL;
 	s_standard_input_stream = NULL;
 	s_standard_error_stream = NULL;
 
 	/* Create error types */
-	if (!__MCStdioStreamInitializeErrors())
+	if (!__MCSStreamInitializeErrors())
 		return false;
 
     return true;
 }
 
 void
-__MCStdioStreamFinalize (void)
+__MCSStreamFinalize (void)
 {
 	MCValueRelease (s_standard_output_stream);
 	MCValueRelease (s_standard_input_stream);
 	MCValueRelease (s_standard_error_stream);
 
-	__MCStdioStreamFinalizeErrors();
+	__MCSStreamFinalizeErrors();
 }
