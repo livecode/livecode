@@ -831,6 +831,8 @@ end syntax
 public foreign handler MCCanvasTransformConcat(inout xTransformA as Transform, in pTransformB as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformScale(inout xTransform as Transform, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformScaleWithList(inout xTransform as Transform, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSkew(inout xTransform as Transform, in pSkewX as CanvasFloat, in pSkewY as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSkewWithList(inout xTransform as Transform, in pSkew as list) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformRotate(inout xTransform as Transform, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformTranslate(inout xTransform as Transform, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformTranslateWithList(inout xTransform as Transform, in pTranslation as list) as undefined binds to "<builtin>"
@@ -876,7 +878,7 @@ mTransform:		An expression which evaluates to a transform.
 mScale:			An expression which evaluates to a list of 1 or 2 numbers, the x-axis scale and y-axis scale, or the uniform scale when only a single value is given.
 
 Description:
-Apply the given scale to <mTransform>
+	Apply the given scale to <mTransform>
 
 Example:
 	variable tTransform
@@ -892,6 +894,31 @@ syntax TransformOperationScale is statement
 	"scale" <mTransform: Expression> "by" <mScale: Expression>
 begin
     MCCanvasTransformScaleWithList(mTransform, mScale)
+end syntax
+
+/*
+Summary:		Apply a skew to a transform.
+
+mTransform:		An expression which evaluates to a transform.
+mSkew:			An expression which evaluates to a list of 2 numbers, the x-axis skew and y-axis skew.
+
+Description:
+	Apply the given skew to <mTransform>
+
+Example:
+	variable tTransform
+	// Create a new transform
+	put the identity transform into tTransform
+	// Apply a skew to the transform
+	skew tTransform by [1, 0]
+
+Tags: Canvas
+*/
+
+syntax TransformOperationSkew is statement
+	"skew" <mTransform: Expression> "by" <mSkew: Expression>
+begin
+	MCCanvasTransformSkewWithList(mTransform, mSkew)
 end syntax
 
 /*
