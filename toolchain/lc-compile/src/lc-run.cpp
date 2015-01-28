@@ -36,6 +36,7 @@ struct MCRunConfiguration
 {
 	MCStringRef m_filename;
 	MCNameRef m_handler;
+	bool m_list_handlers;
 };
 
 static void MCRunUsage (int p_exit_status) ATTRIBUTE_NORETURN;
@@ -61,6 +62,7 @@ MCRunUsage (int p_exit_status)
 "\n"
 "Options:\n"
 "  -H, --handler NAME   Specify name of handler to run.\n"
+"  --list-handlers      List possible entry points in LCMFILE and exit.\n"
 "  -h, --help           Print this message.\n"
 "  --                   Treat next argument as bytecode filename.\n"
 "\n"
@@ -241,6 +243,12 @@ MCRunParseCommandLine (int argc,
 				continue;
 			}
 
+			if (MC_RUN_STRING_EQUAL (t_arg, "--list-handlers"))
+			{
+				x_config.m_list_handlers = true;
+				continue;
+			}
+
 			if (MC_RUN_STRING_EQUAL (t_arg, "--"))
 			{
 				/* No more options */
@@ -321,6 +329,46 @@ MCRunLoadModule (MCStringRef p_filename,
 	return true;
 }
 
+/* List all handlers in p_module that are public and take no
+ * arguments. */
+static bool
+MCRunListHandlers (MCScriptModuleRef p_module)
+{
+	MCAutoProperListRef t_handler_list; /* List of MCNameRef */
+	MCAutoStringRef t_message;
+
+	if (!MCScriptCopyHandlersOfModule (p_module, &t_handler_list))
+		return false;
+
+	if (!MCStringMutableCopy (kMCEmptyString, &t_message))
+		return false;
+
+	MCValueRef t_handler_val;
+	uintptr_t t_handler_iter = 0;
+	while (MCProperListIterate (*t_handler_list, t_handler_iter, t_handler_val))
+	{
+		MCNameRef t_handler_name;
+		MCTypeInfoRef t_signature;
+		MCAssert (MCTypeInfoConforms (MCValueGetTypeInfo (t_handler_val),
+		                              kMCNameTypeInfo));
+		t_handler_name = (MCNameRef) t_handler_val;
+
+		if (!MCScriptQueryHandlerOfModule (p_module, t_handler_name,
+		                                   t_signature))
+			return false;
+
+		/* Only accept handlers with arity 0 */
+		if (0 != MCHandlerTypeInfoGetParameterCount (t_signature))
+			continue;
+
+		if (!MCStringAppendFormat (*t_message, "%@\n", t_handler_name))
+			return false;
+	}
+
+	MCRunPrintMessage (stdout, *t_message);
+	return true;
+}
+
 
 /* ----------------------------------------------------------------
  * Main program
@@ -339,6 +387,7 @@ main (int argc,
 	MCRunConfiguration t_config;
 	t_config.m_filename = MCValueRetain (kMCEmptyString);
 	t_config.m_handler = MCValueRetain (MCNAME("main"));
+	t_config.m_list_handlers = false;
 
 	/* ---------- Process command-line arguments */
 	if (!MCRunParseCommandLine (argc, argv, t_config))
@@ -352,14 +401,22 @@ main (int argc,
 	if (!MCRunLoadModule (t_config.m_filename, &t_module))
 		MCRunStartupError();
 
-	if (!MCScriptCreateInstanceOfModule (*t_module, &t_instance))
-		MCRunStartupError();
+	if (t_config.m_list_handlers)
+	{
+		if (!MCRunListHandlers (*t_module))
+			MCRunHandlerError();
+	}
+	else
+	{
+		if (!MCScriptCreateInstanceOfModule (*t_module, &t_instance))
+			MCRunStartupError();
 
-	if (!MCScriptCallHandlerOfInstance(*t_instance,
-	                                   t_config.m_handler,
-	                                   NULL, 0,
-	                                   &t_ignored_retval))
-		MCRunHandlerError();
+		if (!MCScriptCallHandlerOfInstance(*t_instance,
+		                                   t_config.m_handler,
+		                                   NULL, 0,
+		                                   &t_ignored_retval))
+			MCRunHandlerError();
+	}
 
 	MCScriptFinalize();
 	MCSFinalize();
