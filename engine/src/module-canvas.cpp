@@ -1605,6 +1605,14 @@ void MCCanvasTransformSkew(MCCanvasTransformRef &x_transform, MCProperListRef p_
 	MCCanvasTransformSkew(x_transform, t_skew.x, t_skew.y);
 }
 
+void MCCanvasTransformMultiply(MCCanvasTransformRef p_left, MCCanvasTransformRef p_right, MCCanvasTransformRef &r_transform)
+{
+	MCGAffineTransform t_transform;
+	t_transform = MCGAffineTransformConcat(*MCCanvasTransformGet(p_left), *MCCanvasTransformGet(p_right));
+	
+	MCCanvasTransformMake(t_transform, r_transform);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Image

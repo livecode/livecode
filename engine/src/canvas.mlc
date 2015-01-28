@@ -836,6 +836,7 @@ public foreign handler MCCanvasTransformSkewWithList(inout xTransform as Transfo
 public foreign handler MCCanvasTransformRotate(inout xTransform as Transform, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformTranslate(inout xTransform as Transform, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformTranslateWithList(inout xTransform as Transform, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMultiply(in pTransformA as Transform, in pTransformB as Transform, out rTransform as Transform) as undefined binds to "<builtin>"
 
 /*
 Summary:		Concatenate transform a with transform b.
@@ -971,7 +972,43 @@ begin
     MCCanvasTransformTranslateWithList(mTransform, mTranslation)
 end syntax
 
-// TODO - add SkewTransform?
+/*
+Summary:		Multiply two transforms together.
+
+Left:		An expression which evaluates to a transform.
+Right:		An expression which evaluates to a transform.
+
+Description:
+	Returns the transform created by concatentating <Left> with <Right>
+
+Example:
+	// Create a rotation transform
+	variable tRotate
+	put transform with rotation by 45 into tRotate
+
+	// Create a scale transform
+	variable tScale
+	put transform with scale [2,3] into tScale
+
+	// Create a translation transform
+	variable tTranslate
+	put transform with translation [50,100] into tTranslate
+
+	// Combine transforms by multiplying them together
+	variable tTransform
+	put tTranslate * tRotate * tScale into tTransform
+
+Note:
+	The order of the arguments is important when multiplying transforms. <Left> * <Right> can result in a different transform from <Right> * <Left> (in mathematical terms, transform multiplication is non-commutative).
+
+Tags: Canvas
+*/
+
+syntax TransformOperationMultiply is left binary operator with precedence 3
+	<Left: Expression> "*" <Right: Expression>
+begin
+	MCCanvasTransformMultiply(Left, Right, output)
+end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
 // Solid Paint
