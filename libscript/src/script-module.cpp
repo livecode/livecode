@@ -128,7 +128,8 @@ MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
     MC_PICKLE_UINDEX(type)
-    MC_PICKLE_ARRAY_OF_UINDEX(locals, local_count)
+    MC_PICKLE_ARRAY_OF_UINDEX(local_types, local_type_count)
+    MC_PICKLE_ARRAY_OF_NAMEREF(local_names, local_name_count)
     MC_PICKLE_UINDEX(start_address)
     MC_PICKLE_UINDEX(finish_address)
 MC_PICKLE_END_RECORD()
@@ -296,18 +297,11 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
-                    case kMCScriptBytecodeOpFetchLocal:
-                    case kMCScriptBytecodeOpStoreLocal:
+                    case kMCScriptBytecodeOpFetch:
+                    case kMCScriptBytecodeOpStore:
                         // check arity is 2
-                        // check local index is in range
-                        // check definition[index] is variable
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
-                        break;
-                    case kMCScriptBytecodeOpFetchGlobal:
-                    case kMCScriptBytecodeOpStoreGlobal:
-                        // check arity is 2
-                        // check glob index is in definition range
                         // check definition[index] is variable or handler
+                        // check level is appropriate.
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                 }
@@ -322,8 +316,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             // The total number of slots we need is params (inc result) + temps.
             MCTypeInfoRef t_signature;
             t_signature = self -> types[t_handler -> type] -> typeinfo;
-            t_handler -> register_offset = MCHandlerTypeInfoGetParameterCount(t_signature) + t_handler -> local_count;
-            t_handler -> slot_count = t_handler -> register_offset + t_temporary_count;
+            t_handler -> slot_count = MCHandlerTypeInfoGetParameterCount(t_signature) + t_handler -> local_type_count + t_temporary_count;
         }
     
     return true;
@@ -899,10 +892,13 @@ MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef self, MCScrip
     MCScriptHandlerDefinition *t_handler;
     t_handler = static_cast<MCScriptHandlerDefinition *>(p_definition);
     
-    if (t_handler -> local_name_count != 0)
-        return t_handler -> local_names[p_index];
+    MCScriptHandlerType *t_type;
+    t_type = static_cast<MCScriptHandlerType *>(self -> types[t_handler -> type]);
     
-    return kMCEmptyName;
+    if (p_index < t_type -> parameter_name_count)
+        return t_type -> parameter_names[p_index];
+    
+    return t_handler -> local_names[p_index - t_type -> parameter_name_count];
 }
 
 MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef self, uindex_t p_index)
