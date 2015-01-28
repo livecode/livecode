@@ -663,6 +663,8 @@ bool MCGPathTransform(MCGPathRef self, const MCGAffineTransform &p_transform)
 	SkMatrix t_matrix;
 	MCGAffineTransformToSkMatrix(p_transform, t_matrix);
 	self->path->transform(t_matrix);
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
