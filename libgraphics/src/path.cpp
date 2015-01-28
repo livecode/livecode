@@ -118,7 +118,9 @@ bool MCGPathIsEqualTo(MCGPathRef a, MCGPathRef b)
 
 void MCGPathCopy(MCGPathRef self, MCGPathRef& r_new_path)
 {
-	if(!self -> is_mutable)
+	if (!MCGPathIsValid(self))
+		r_new_path = nil;
+	else if(!self -> is_mutable)
 		r_new_path = MCGPathRetain(self);
 	else
 	{
@@ -130,6 +132,11 @@ void MCGPathCopy(MCGPathRef self, MCGPathRef& r_new_path)
 		{	
 			t_new_path -> is_mutable = false;
 			r_new_path = t_new_path;
+		}
+		else
+		{
+			MCGPathDestroy(t_new_path);
+			r_new_path = nil;
 		}
 	}
 }
