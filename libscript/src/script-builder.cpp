@@ -1326,6 +1326,8 @@ void MCScriptEmitReturnUndefinedInModule(MCScriptModuleBuilderRef self)
     if (self == nil || !self -> valid)
         return;
     
+    // If the zero argument form of Return is used, then the return value is
+    // taken to be undefined.
     __emit_instruction(self, kMCScriptBytecodeOpReturn, 0);
 }
 
@@ -1370,10 +1372,13 @@ void MCScriptEmitFetchInModule(MCScriptModuleBuilderRef self, uindex_t p_dst_reg
     if (self == nil || !self -> valid)
         return;
     
+    // To Fetch from level 0, the 2 argument variant must be used.
+    // To Fetch from level n > 0, the 3 argument variant must be used with the third
+    // argument level - 1.
     if (p_level == 0)
         __emit_instruction(self, kMCScriptBytecodeOpFetch, 2, p_dst_reg, p_index);
     else
-        __emit_instruction(self, kMCScriptBytecodeOpFetch, 3, p_dst_reg, p_index, p_level);
+        __emit_instruction(self, kMCScriptBytecodeOpFetch, 3, p_dst_reg, p_index, p_level - 1);
 }
 
 void MCScriptEmitStoreInModule(MCScriptModuleBuilderRef self, uindex_t p_src_reg, uindex_t p_index, uindex_t p_level)
@@ -1381,10 +1386,13 @@ void MCScriptEmitStoreInModule(MCScriptModuleBuilderRef self, uindex_t p_src_reg
     if (self == nil || !self -> valid)
         return;
     
+    // To Store from level 0, the 2 argument variant must be used.
+    // To Store from level n > 0, the 3 argument variant must be used with the third
+    // argument level - 1.
     if (p_level == 0)
         __emit_instruction(self, kMCScriptBytecodeOpStore, 2, p_src_reg, p_index);
     else
-        __emit_instruction(self, kMCScriptBytecodeOpStore, 3, p_src_reg, p_index, p_level);
+        __emit_instruction(self, kMCScriptBytecodeOpStore, 3, p_src_reg, p_index, p_level - 1);
 }
 
 void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef self, MCNameRef p_file, uindex_t p_line)
