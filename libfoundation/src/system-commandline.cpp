@@ -210,6 +210,7 @@ __MCSCommandLineInitialize (void)
 {
 	s_arguments = NULL;
 	s_name = NULL;
+	return true;
 }
 
 void
