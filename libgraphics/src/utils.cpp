@@ -820,24 +820,44 @@ MCGAffineTransform MCGAffineTransformConcat(const MCGAffineTransform& p_transfor
 	return t_result;
 }
 
-MCGAffineTransform MCGAffineTransformRotate(const MCGAffineTransform &p_transform, MCGFloat p_angle)
+MCGAffineTransform MCGAffineTransformPreRotate(const MCGAffineTransform &p_transform, MCGFloat p_angle)
 {
 	return MCGAffineTransformConcat(MCGAffineTransformMakeRotation(p_angle), p_transform);
 }
 
-MCGAffineTransform MCGAffineTransformTranslate(const MCGAffineTransform &p_transform, MCGFloat p_xoffset, MCGFloat p_yoffset)
+MCGAffineTransform MCGAffineTransformPostRotate(const MCGAffineTransform &p_transform, MCGFloat p_angle)
+{
+	return MCGAffineTransformConcat(p_transform, MCGAffineTransformMakeRotation(p_angle));
+}
+
+MCGAffineTransform MCGAffineTransformPreTranslate(const MCGAffineTransform &p_transform, MCGFloat p_xoffset, MCGFloat p_yoffset)
 {
 	return MCGAffineTransformConcat(MCGAffineTransformMakeTranslation(p_xoffset, p_yoffset), p_transform);
 }
 
-MCGAffineTransform MCGAffineTransformScale(const MCGAffineTransform &p_transform, MCGFloat p_xscale, MCGFloat p_yscale)
+MCGAffineTransform MCGAffineTransformPostTranslate(const MCGAffineTransform &p_transform, MCGFloat p_xoffset, MCGFloat p_yoffset)
+{
+	return MCGAffineTransformConcat(p_transform, MCGAffineTransformMakeTranslation(p_xoffset, p_yoffset));
+}
+
+MCGAffineTransform MCGAffineTransformPreScale(const MCGAffineTransform &p_transform, MCGFloat p_xscale, MCGFloat p_yscale)
 {
 	return MCGAffineTransformConcat(MCGAffineTransformMakeScale(p_xscale, p_yscale), p_transform);
 }
 
-MCGAffineTransform MCGAffineTransformSkew(const MCGAffineTransform &p_transform, MCGFloat p_xskew, MCGFloat p_yskew)
+MCGAffineTransform MCGAffineTransformPostScale(const MCGAffineTransform &p_transform, MCGFloat p_xscale, MCGFloat p_yscale)
+{
+	return MCGAffineTransformConcat(p_transform, MCGAffineTransformMakeScale(p_xscale, p_yscale));
+}
+
+MCGAffineTransform MCGAffineTransformPreSkew(const MCGAffineTransform &p_transform, MCGFloat p_xskew, MCGFloat p_yskew)
 {
 	return MCGAffineTransformConcat(MCGAffineTransformMakeSkew(p_xskew, p_yskew), p_transform);
+}
+
+MCGAffineTransform MCGAffineTransformPostSkew(const MCGAffineTransform &p_transform, MCGFloat p_xskew, MCGFloat p_yskew)
+{
+	return MCGAffineTransformConcat(p_transform, MCGAffineTransformMakeSkew(p_xskew, p_yskew));
 }
 
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& p_transform)

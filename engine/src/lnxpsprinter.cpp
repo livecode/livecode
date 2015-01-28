@@ -1497,7 +1497,7 @@ void MCPSMetaContext::fillpattern(MCPatternRef p_pattern, MCPoint p_origin)
 	
 	// IM-2014-05-14: [[ HiResPatterns ]] Update pattern access to use lock function
 	/* UNCHECKED */ MCPatternLockForContextTransform(p_pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform);
-	t_transform = MCGAffineTransformTranslate(t_transform, p_origin.x, cardheight - p_origin.y);
+	t_transform = MCGAffineTransformPreTranslate(t_transform, p_origin.x, cardheight - p_origin.y);
 	
 	if (!pattern_created(t_image))
 		create_pattern(t_image);
