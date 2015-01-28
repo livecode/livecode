@@ -1223,16 +1223,16 @@ void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef self, MCNameR
     MCScriptHandlerDefinition *t_handler;
     t_handler = static_cast<MCScriptHandlerDefinition *>(self -> module . definitions[self -> current_handler]);
     
-    if (!MCMemoryResizeArray(t_handler -> local_count + 1, t_handler -> locals, t_handler -> local_count))
+    if (!MCMemoryResizeArray(t_handler -> local_type_count + 1, t_handler -> local_types, t_handler -> local_type_count))
     {
         r_index = 0;
         self -> valid = false;
         return;
     }
 
-    t_handler -> locals[t_handler -> local_count - 1] = p_type;
+    t_handler -> local_types[t_handler -> local_type_count - 1] = p_type;
     
-    r_index = self -> current_param_count + t_handler -> local_count - 1;
+    r_index = self -> current_param_count + t_handler -> local_type_count - 1;
 }
 
 void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef self, uindex_t& r_label)
@@ -1336,6 +1336,14 @@ void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef self, uindex_t p_src_re
     __emit_instruction(self, kMCScriptBytecodeOpReturn, 1, p_src_reg);
 }
 
+void MCScriptEmitReturnUndefinedInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __emit_instruction(self, kMCScriptBytecodeOpReturn, 0);
+}
+
 void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
 {
     if (self == nil || !self -> valid)
@@ -1345,28 +1353,6 @@ void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handl
     __continue_instruction(self, p_handler_index);
     __continue_instruction(self, p_result_reg);
 }
-
-#if 0
-void MCScriptBeginInvokeAssignInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
-{
-    if (self == nil || !self -> valid)
-        return;
-    
-    __begin_instruction(self, kMCScriptBytecodeOpInvokeAssign);
-    __continue_instruction(self, p_handler_index);
-    __continue_instruction(self, p_result_reg);
-}
-
-void MCScriptBeginInvokeEvaluateInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
-{
-    if (self == nil || !self -> valid)
-        return;
-    
-    __begin_instruction(self, kMCScriptBytecodeOpInvokeEvaluate);
-    __continue_instruction(self, p_handler_index);
-    __continue_instruction(self, p_result_reg);
-}
-#endif
 
 void MCScriptBeginInvokeIndirectInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_reg, uindex_t p_result_reg)
 {
@@ -1394,36 +1380,26 @@ void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef self)
     __end_instruction(self);
 }
 
-void MCScriptEmitFetchLocalInModule(MCScriptModuleBuilderRef self, uindex_t p_dst_reg, uindex_t p_local_index)
+void MCScriptEmitFetchInModule(MCScriptModuleBuilderRef self, uindex_t p_dst_reg, uindex_t p_index, uindex_t p_level)
 {
     if (self == nil || !self -> valid)
         return;
     
-    __emit_instruction(self, kMCScriptBytecodeOpFetchLocal, 2, p_dst_reg, p_local_index);
+    if (p_level == 0)
+        __emit_instruction(self, kMCScriptBytecodeOpFetch, 2, p_dst_reg, p_index);
+    else
+        __emit_instruction(self, kMCScriptBytecodeOpFetch, 3, p_dst_reg, p_index, p_level);
 }
 
-void MCScriptEmitStoreLocalInModule(MCScriptModuleBuilderRef self, uindex_t p_src_reg, uindex_t p_local_index)
+void MCScriptEmitStoreInModule(MCScriptModuleBuilderRef self, uindex_t p_src_reg, uindex_t p_index, uindex_t p_level)
 {
     if (self == nil || !self -> valid)
         return;
     
-    __emit_instruction(self, kMCScriptBytecodeOpStoreLocal, 2, p_src_reg, p_local_index);
-}
-
-void MCScriptEmitFetchGlobalInModule(MCScriptModuleBuilderRef self, uindex_t p_dst_reg, uindex_t p_glob_index)
-{
-    if (self == nil || !self -> valid)
-        return;
-    
-    __emit_instruction(self, kMCScriptBytecodeOpFetchGlobal, 2, p_dst_reg, p_glob_index);
-}
-
-void MCScriptEmitStoreGlobalInModule(MCScriptModuleBuilderRef self, uindex_t p_src_reg, uindex_t p_glob_index)
-{
-    if (self == nil || !self -> valid)
-        return;
-    
-    __emit_instruction(self, kMCScriptBytecodeOpStoreGlobal, 2, p_src_reg, p_glob_index);
+    if (p_level == 0)
+        __emit_instruction(self, kMCScriptBytecodeOpStore, 2, p_src_reg, p_index);
+    else
+        __emit_instruction(self, kMCScriptBytecodeOpStore, 3, p_src_reg, p_index, p_level);
 }
 
 void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef self, MCNameRef p_file, uindex_t p_line)
