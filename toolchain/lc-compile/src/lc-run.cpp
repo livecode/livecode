@@ -35,6 +35,7 @@ enum {
 struct MCRunConfiguration
 {
 	MCStringRef m_filename;
+	MCNameRef m_handler;
 };
 
 static void MCRunUsage (int p_exit_status) ATTRIBUTE_NORETURN;
@@ -59,6 +60,7 @@ MCRunUsage (int p_exit_status)
 "Run a compiled Modular Livecode bytecode file.\n"
 "\n"
 "Options:\n"
+"  -H, --handler NAME   Specify name of handler to run.\n"
 "  -h, --help           Print this message.\n"
 "  --                   Treat next argument as bytecode filename.\n"
 "\n"
@@ -222,6 +224,23 @@ MCRunParseCommandLine (int argc,
 				MCRunUsage (kMCRunExitStatusSuccess);
 			}
 
+			if (MC_RUN_STRING_EQUAL (t_arg, "--handler") ||
+			    MC_RUN_STRING_EQUAL (t_arg, "-H"))
+			{
+				if (NULL == t_argopt)
+					MCRunBadOptionArgError (t_arg, t_argopt);
+
+				++t_arg_idx; /* Consume option argument */
+
+				/* Set top-level handler */
+				MCNewAutoNameRef t_handler_name;
+				if (!MCNameCreate (t_argopt, &t_handler_name))
+					return false;
+
+				MCValueAssign (x_config.m_handler, *t_handler_name);
+				continue;
+			}
+
 			if (MC_RUN_STRING_EQUAL (t_arg, "--"))
 			{
 				/* No more options */
@@ -319,6 +338,7 @@ main (int argc,
 	/* Defaults */
 	MCRunConfiguration t_config;
 	t_config.m_filename = MCValueRetain (kMCEmptyString);
+	t_config.m_handler = MCValueRetain (MCNAME("main"));
 
 	/* ---------- Process command-line arguments */
 	if (!MCRunParseCommandLine (argc, argv, t_config))
@@ -335,7 +355,9 @@ main (int argc,
 	if (!MCScriptCreateInstanceOfModule (*t_module, &t_instance))
 		MCRunStartupError();
 
-	if (!MCScriptCallHandlerOfInstance(*t_instance, MCNAME("main"), NULL, 0,
+	if (!MCScriptCallHandlerOfInstance(*t_instance,
+	                                   t_config.m_handler,
+	                                   NULL, 0,
 	                                   &t_ignored_retval))
 		MCRunHandlerError();
 
