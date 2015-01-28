@@ -1013,6 +1013,17 @@
         EmitPosition(Position)
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Result)
 
+    'rule' GenerateBody(Result, Context, put(Position, Source, slot(_, Id))):
+        EmitPosition(Position)
+        GenerateInvoke_EvaluateArgumentForIn(Result, Context, Source)
+        EmitGetRegisterAttachedToExpression(Source -> SrcReg)
+        QuerySymbolId(Id -> Info)
+        Info'Kind -> Kind
+        Info'Index -> Index
+        EmitStoreVar(Kind, SrcReg, Index)
+        GenerateInvoke_FreeArgument(Source)
+        EmitAssignUndefined(Result)
+
     'rule' GenerateBody(Result, Context, put(Position, Source, Target)):
         EmitPosition(Position)
         GenerateInvoke_EvaluateArgumentForIn(Result, Context, Source)
@@ -1024,7 +1035,7 @@
         GenerateInvoke_FreeArgument(Source)
         GenerateInvoke_FreeArgument(Target)
         EmitAssignUndefined(Result)
-        
+
     'rule' GenerateBody(Result, Context, get(Position, Value)):
         GenerateExpression(Result, Context, Value -> Reg)
         EmitAssign(Result, Reg)
