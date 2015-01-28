@@ -331,6 +331,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  FIXED WIDTH INTEGER TYPES
 //
 
+#ifndef __VISUALC__
+#include <stdint.h>
+#else
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef unsigned short uint16_t;
@@ -356,25 +359,27 @@ typedef signed long int int64_t;
 #endif
 #endif
 
-#define UINT8_MIN (0U)
 #define UINT8_MAX (255U)
 #define INT8_MIN (-128)
 #define INT8_MAX (127)
 
-#define UINT16_MIN (0U)
 #define UINT16_MAX (65535U)
 #define INT16_MIN (-32768)
 #define INT16_MAX (32767)
 
-#define UINT32_MIN (0U)
 #define UINT32_MAX (4294967295U)
 #define INT32_MIN (-2147483647 - 1L)
 #define INT32_MAX (2147483647)
 
-#define UINT64_MIN (0ULL)
 #define UINT64_MAX (18446744073709551615ULL)
 #define INT64_MIN (-9223372036854775808LL)
 #define INT64_MAX (9223372036854775807LL)
+#endif
+
+#define UINT8_MIN (0U)
+#define UINT16_MIN (0U)
+#define UINT32_MIN (0U)
+#define UINT64_MIN (0ULL)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
