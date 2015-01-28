@@ -505,14 +505,14 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
                 if (t_success)
                     t_success = r_bitmap  . asImageInfo(&t_image_info);
                 
-                SkData *t_data;
+                SkData *t_data = NULL;
                 if (t_success)
                 {
                     t_data = SkData::NewFromMalloc(p_raster . pixels, p_raster . stride * p_raster . height);
                     t_success = t_data != NULL;
                 }
                 
-				SkMallocPixelRef *t_pixelref;
+				SkMallocPixelRef *t_pixelref = NULL;
                 if (t_success)
                 {
                     t_pixelref = SkMallocPixelRef::NewWithData(t_image_info, p_raster . stride, NULL, t_data, 0);
