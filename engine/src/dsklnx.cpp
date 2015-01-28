@@ -201,13 +201,15 @@ static void configureSerialPort(int sRefNum)
             parseSerialControlStr(str, &theTermios);
         str = each;
     }
-    delete controlptr;
+
     //configure the serial output device
     parseSerialControlStr(str,&theTermios);
     if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
     {
         MCLog("Error setting terminous attributes", nil);
     }
+
+    delete[] controlptr;
     return;
 }
 
