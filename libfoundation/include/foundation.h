@@ -332,7 +332,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 #ifndef __VISUALC__
-#include <stdint.h>
+#	define __STDC_LIMIT_MACROS
+#	include <stdint.h>
 #else
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
