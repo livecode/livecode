@@ -1051,16 +1051,26 @@
         EmitPosition(Position)
         (|
             where(Value -> nil)
-            EmitCreateRegister(-> ReturnReg)
-            EmitAssignUndefined(ReturnReg)
+            EmitReturnNothing()
         ||
             GenerateExpression(Result, Context, Value -> ReturnReg)
+            EmitReturn(ReturnReg)
         |)
-        EmitReturn(ReturnReg)
         
     'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):
         EmitPosition(Position)
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Result)
+
+    'rule' GenerateBody(Result, Context, put(Position, Source, slot(_, Id))):
+        EmitPosition(Position)
+        GenerateInvoke_EvaluateArgumentForIn(Result, Context, Source)
+        EmitGetRegisterAttachedToExpression(Source -> SrcReg)
+        QuerySymbolId(Id -> Info)
+        Info'Kind -> Kind
+        Info'Index -> Index
+        EmitStoreVar(Kind, SrcReg, Index)
+        GenerateInvoke_FreeArgument(Source)
+        EmitAssignUndefined(Result)
 
     'rule' GenerateBody(Result, Context, put(Position, Source, Target)):
         EmitPosition(Position)
@@ -1148,6 +1158,16 @@
     'rule' GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, nil):
         -- do nothing for nil arguments.
 
+    'rule' GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        Info'Index -> Register
+        EmitAttachRegisterToExpression(Register, Expr)
+
     'rule' GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr):
         EmitCreateRegister(-> OutputReg)
         EmitAttachRegisterToExpression(OutputReg, Expr)
@@ -1164,6 +1184,16 @@
         EmitAttachRegisterToExpression(OutputReg, Invoke)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, Signature, Arguments)
+
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, Expr:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        Info'Index -> Register
+        EmitAttachRegisterToExpression(Register, Expr)
 
     'rule' GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, Slot:slot(_, _)):
         EmitCreateRegister(-> OutputReg)
@@ -1192,6 +1222,16 @@
         EmitEndInvoke()
         EmitDestroyRegister(IgnoredResultReg)
         GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
+
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, Expr:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        Info'Index -> Register
+        EmitAttachRegisterToExpression(Register, Expr)
 
     'rule' GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, Slot:slot(_, _)):
         EmitCreateRegister(-> OutputReg)
@@ -1239,6 +1279,15 @@
         GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
         
     'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Slot:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        -- Nothing more to do as the invoke will have done the assign.
+
+    'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Slot:slot(_, Id)):
         EmitGetRegisterAttachedToExpression(Slot -> InputReg)
         QuerySymbolId(Id -> Info)
         Info'Kind -> Kind
@@ -1266,6 +1315,15 @@
         |]
         GenerateInvoke_FreeArguments(Arguments)
     
+    'rule' GenerateInvoke_FreeArgument(Expr:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        EmitDetachRegisterFromExpression(Expr)
+
     'rule' GenerateInvoke_FreeArgument(Expr):
         [|
             EmitGetRegisterAttachedToExpression(Expr -> Reg)
