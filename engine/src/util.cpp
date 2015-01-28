@@ -2618,13 +2618,12 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
 	{
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 
 		// Send "putURL" message
 		Boolean oldlock = MClockmessages;
 		MClockmessages = False;
 		MCParameter p1;
-		p1 . setvalueref_argument(*t_data);
+		p1 . setvalueref_argument(p_data);
 		MCParameter p2;
 		p2 . setvalueref_argument(p_url);
 		p1.setnext(&p2);
@@ -2637,6 +2636,7 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 		case ES_PASS:
 			// Either there was no message handler, or the handler passed the message,
 			// so process the URL in the engine.
+			/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 			MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
 			break;
 
