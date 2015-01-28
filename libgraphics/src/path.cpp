@@ -143,7 +143,9 @@ void MCGPathCopy(MCGPathRef self, MCGPathRef& r_new_path)
 
 void MCGPathCopyAndRelease(MCGPathRef self, MCGPathRef& r_new_path)
 {
-	if (!self -> is_mutable)
+	if (!MCGPathIsValid(self))
+		r_new_path = nil;
+	else if (!self -> is_mutable)
 		r_new_path = self;
 	else if (self -> references == 1)
 	{
@@ -153,16 +155,10 @@ void MCGPathCopyAndRelease(MCGPathRef self, MCGPathRef& r_new_path)
 	else
 	{
 		MCGPathRef t_new_path;
-		MCGPathCreateMutable(t_new_path);
-		if (MCGPathIsValid(t_new_path))
-			MCGPathAddPath(t_new_path, self);
-		if (MCGPathIsValid(t_new_path))
-		{	
-			t_new_path -> is_mutable = false;
-			r_new_path = t_new_path;
-		}
-		MCGPathRelease(self);
-	}		
+		MCGPathCopy(self, r_new_path);
+		if (MCGPathIsValid(r_new_path))
+			MCGPathRelease(self);
+	}
 }
 
 void MCGPathMutableCopy(MCGPathRef self, MCGPathRef& r_new_path)
