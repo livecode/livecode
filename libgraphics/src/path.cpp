@@ -449,7 +449,7 @@ void MCGPathAddPolygon(MCGPathRef self, const MCGPoint *p_points, uindex_t p_ari
 	if (t_success)
 		t_success = self -> is_mutable;
 	
-	SkPoint *t_points;
+	SkPoint *t_points = NULL;
 	if (t_success)
 		t_success = MCMemoryNewArray(p_arity, t_points);
 	
