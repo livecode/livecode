@@ -331,10 +331,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  FIXED WIDTH INTEGER TYPES
 //
 
-#ifndef __VISUALC__
+#if !defined(__VISUALC__)
+#	define __HAVE_STDINT_H__
 #	define __STDC_LIMIT_MACROS
 #	include <stdint.h>
-#else
+#endif
+
+#if !defined(__HAVE_STDINT_H__)
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef unsigned short uint16_t;
@@ -375,7 +378,7 @@ typedef signed long int int64_t;
 #define UINT64_MAX (18446744073709551615ULL)
 #define INT64_MIN (-9223372036854775808LL)
 #define INT64_MAX (9223372036854775807LL)
-#endif
+#endif /* !__HAVE_STDINT_H__ */
 
 #define UINT8_MIN (0U)
 #define UINT16_MIN (0U)
@@ -395,35 +398,40 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
-#if defined(__WINDOWS__)
+#if !defined(__HAVE_STDINT_H__)
+#	if defined(__WINDOWS__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
 typedef unsigned int size_t;
-#elif defined(__LINUX__)
+#	elif defined(__LINUX__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
 typedef unsigned int size_t;
-#elif defined(__ANDROID__)
+#	elif defined(__ANDROID__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
 typedef unsigned int size_t;
-#else
+#	else
 typedef long signed int intptr_t;
 typedef long unsigned int uintptr_t;
 typedef unsigned long size_t;
-#endif
-
-#define INTPTR_MIN INT32_MIN
-#define INTPTR_MAX INT32_MAX
-#define UINTPTR_MIN UINT32_MIN
-#define UINTPTR_MAX UINT32_MAX
+#	endif
+#endif /* !__HAVE_STDINT_H__ */
 
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
 #define UINTEGER_MIN UINT32_MIN
 #define UINTEGER_MAX UINT32_MAX
 
-#else
+#define UINTPTR_MIN UINT32_MIN
+
+#if !defined(__HAVE_STDINT_H__)
+#define INTPTR_MIN INT32_MIN
+#define INTPTR_MAX INT32_MAX
+#define UINTPTR_MAX UINT32_MAX
+#endif /* !__HAVE_STDINT_H__ */
+
+#else /* !__32_BIT__ */
 
 typedef int32_t integer_t;
 typedef uint32_t uinteger_t;
@@ -431,36 +439,40 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
-// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#ifndef _UINTPTR_T
-#define _UINTPTR_T
-#ifdef __LP64__
+#if !defined(__HAVE_STDINT_H__)
+#	ifndef _UINTPTR_T
+#		define _UINTPTR_T
+#		ifdef __LP64__
 typedef uint64_t uintptr_t;
-#else
+#		else
 typedef uint32_t uintptr_t;
-#endif
-#endif
+#		endif
+#	endif
 
-#ifndef _INTPTR_T
-#define _INTPTR_T
-#ifdef __LP64__
+#	ifndef _INTPTR_T
+#		define _INTPTR_T
+#		ifdef __LP64__
 typedef int64_t intptr_t;
-#else
+#		else
 typedef int32_t intptr_t;
-#endif
-#endif
-
-#define INTPTR_MIN INT64_MIN
-#define INTPTR_MAX INT64_MAX
-#define UINTPTR_MIN UINT64_MIN
-#define UINTPTR_MAX UINT64_MAX
+#		endif
+#	endif
+#endif /* !__HAVE_STDINT_H__ */
 
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
 #define UINTEGER_MIN UINT32_MIN
 #define UINTEGER_MAX UINT32_MAX
 
-#endif
+#define UINTPTR_MIN UINT64_MIN
+
+#if !defined(__HAVE_STDINT_H__)
+#define INTPTR_MIN INT64_MIN
+#define INTPTR_MAX INT64_MAX
+#define UINTPTR_MAX UINT64_MAX
+#endif /* !__HAVE_STDINT_H__ */
+
+#endif /* !__32_BIT__ */
 
 #if defined(__SMALL__) || defined(__MEDIUM__)
 
