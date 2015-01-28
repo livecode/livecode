@@ -678,8 +678,12 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 
 	for (int i = 0; i < t_num_entries; ++i)
 	{
+#ifdef __LINUX__
 		if (!MCStringCreateWithSysString (t_raw_entries[i]->d_name,
 		                                  t_entries[i]))
+#else
+        if (!MCStringCreateWithBytes((const byte_t *)t_raw_entries[i]->d_name, strlen(t_raw_entries[i]->d_name), kMCStringEncodingUTF8, false, t_entries[i]))
+#endif
 			goto error_cleanup;
 	}
 
