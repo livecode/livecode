@@ -1206,7 +1206,11 @@ LCError LCWaitBreak(LCWaitRef wait);
 LCError LCWaitReset(LCWaitRef wait);
 
 ////////////////////////////////////////////////////////////////////////////////
+    
+// SN-2015-01-28: [[ Bug 13781 ]] Image functions disabled as they were using
+//  imagePixmapId and maskPixmapId, which are no longer working reliably.
 
+/*
 typedef enum LCImageRasterFormat
 {
 	// The raster uses the gray colorspace with 1-bit per pixel (i.e. it is a
@@ -1353,6 +1357,8 @@ LCError LCImageUpdate(LCImageRef image);
 //   top-left of the image.
 //	
 LCError LCImageUpdateRect(LCImageRef image, int top, int left, int right, int bottom);
+
+*/
 	
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1955,8 +1955,12 @@ LCError LCObjectPostV(LCObjectRef p_object, const char *p_message, const char *p
 	t_context . object = (MCObjectRef)p_object;
 	t_context . message = p_message;
 	t_context . signature = p_signature;
-	t_context . args = p_args;
+    // SN-2015-01-28: [[ Bug 13781 ]] Use va_copy instead of assigning.
+    va_copy(t_context . args, p_args);
+    
 	s_interface -> engine_run_on_main_thread((void *)LCObjectPostV_perform, &t_context, kMCRunOnMainThreadSend | kMCRunOnMainThreadOptional | kMCRunOnMainThreadUnsafe | kMCRunOnMainThreadImmediate);
+    
+    va_end(t_context . args);
 	return t_context . result;
 }
 
@@ -2247,6 +2251,10 @@ LCError LCWaitReset(LCWaitRef p_wait)
 	
 /////////
 
+// SN-2015-01-28: [[ Bug 13781 ]] Bitmap functions removed, as imagePixmapId and maskPixmapId
+//  does not work reliably
+    
+/*
 struct Mobile_Bitmap
 {
 	int width;
@@ -2490,6 +2498,7 @@ LCError LCImageUpdateRect(LCImageRef p_image, int p_left, int p_top, int p_right
 	
 	return (LCError)s_interface -> object_update((MCObjectRef)p_image -> object, kMCExternalObjectUpdateOptionRect, t_rect);
 }
+*/
 
 /////////
 
