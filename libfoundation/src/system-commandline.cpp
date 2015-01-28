@@ -122,7 +122,7 @@ __MCSCommandLineStringCreate(const char *in, MCStringRef &out)
 #if defined(__LINUX__)
 	return MCStringCreateWithSysString (in, out);
 #else
-	return MCStringCreateWithBytes (in, strlen(in), kMCStringEncodingUTF8,
+	return MCStringCreateWithBytes ((const byte_t *)in, strlen(in), kMCStringEncodingUTF8,
 	                                false, out);
 #endif
 }
@@ -210,6 +210,7 @@ __MCSCommandLineInitialize (void)
 {
 	s_arguments = NULL;
 	s_name = NULL;
+	return true;
 }
 
 void
