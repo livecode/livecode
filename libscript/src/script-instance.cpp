@@ -2274,11 +2274,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 if (!MCMemoryNewArray(t_arity - 1, t_values))
                     t_success = false;
                 
-                if (t_success)
-                {
-                    for(uindex_t i = 1; t_success && i < t_arity; i++)
-                        t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[i], t_values[i - 1]);
-                }
+                for(uindex_t i = 1; t_success && i < t_arity; i++)
+                    t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[i], t_values[i - 1]);
                 
                 MCProperListRef t_list;
                 t_list = nil;
