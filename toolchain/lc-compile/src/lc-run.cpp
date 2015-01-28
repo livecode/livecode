@@ -40,6 +40,7 @@ struct MCRunConfiguration
 static void MCRunUsage (int p_exit_status) ATTRIBUTE_NORETURN;
 static void MCRunStartupError (void) ATTRIBUTE_NORETURN;
 static void MCRunHandlerError (void) ATTRIBUTE_NORETURN;
+static void MCRunBadOptionError (MCStringRef p_arg) ATTRIBUTE_NORETURN;
 static void MCRunPrintMessage (FILE *p_stream, MCStringRef p_message);
 
 
@@ -55,6 +56,10 @@ MCRunUsage (int p_exit_status)
 "Usage: lc-run LCMFILE [ARGS ...]\n"
 "\n"
 "Run a compiled Modular Livecode bytecode file.\n"
+"\n"
+"Options:\n"
+"  -h, --help           Print this message.\n"
+"  --                   Treat next argument as bytecode filename.\n"
 "\n"
 "Any ARGS are available in \"the command arguments\".\n"
 "\n"
@@ -103,6 +108,20 @@ MCRunHandlerError (void)
 	exit (kMCRunExitStatusUncaughtError);
 }
 
+/* Print an error message due to an unrecognised command-line
+ * option */
+static void
+MCRunBadOptionError (MCStringRef p_arg)
+{
+	MCAutoStringRef t_message;
+	/* UNCHECKED */ MCStringFormat (&t_message,
+	                                "ERROR: Unknown option '%@'\n\n",
+	                                p_arg);
+
+	MCRunPrintMessage (stderr, *t_message);
+	MCRunUsage (kMCRunExitStatusBadArgs);
+}
+
 static void
 MCRunPrintMessage (FILE *p_stream,
                    MCStringRef p_message)
@@ -123,6 +142,9 @@ MCRunPrintMessage (FILE *p_stream,
  * Command-line argument processing
  * ---------------------------------------------------------------- */
 
+#define MC_RUN_STRING_EQUAL(s,c) \
+	(MCStringIsEqualToCString ((s),(c),kMCStringOptionCompareExact))
+
 static bool
 MCRunParseCommandLine (int argc,
                        const char *argv[],
@@ -137,6 +159,7 @@ MCRunParseCommandLine (int argc,
 #endif
 
 	bool t_have_filename = false;
+	bool t_accept_options = true;
 	MCAutoStringRef t_filename;
 	MCAutoProperListRef t_raw_args, t_args;
 
@@ -156,10 +179,38 @@ MCRunParseCommandLine (int argc,
 		                              kMCStringTypeInfo));
 		MCStringRef t_arg = (MCStringRef) t_arg_val;
 
+		if (t_accept_options)
+		{
+			if (MC_RUN_STRING_EQUAL (t_arg, "--help") ||
+			    MC_RUN_STRING_EQUAL (t_arg, "-h"))
+			{
+				/* Print help message */
+				MCRunUsage (kMCRunExitStatusSuccess);
+			}
+
+			if (MC_RUN_STRING_EQUAL (t_arg, "--"))
+			{
+				/* No more options */
+				t_accept_options = false;
+				continue;
+			}
+
+			if (MCStringBeginsWithCString (t_arg, (const char_t *) "-",
+			                               kMCStringOptionCompareExact))
+			{
+				/* Don't accept any unrecognised options */
+				MCRunBadOptionError (t_arg);
+			}
+		}
+
+		/* If we haven't got a filename yet, this argument must be it.
+		 * Otherwise, queue any remaining arguments to pass as "the
+		 * command arguments". */
 		if (!t_have_filename)
 		{
 			t_filename = MCValueRetain (t_arg);
 			t_have_filename = true;
+			t_accept_options = false;
 		}
 		else
 		{
