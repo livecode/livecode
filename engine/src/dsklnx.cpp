@@ -1739,6 +1739,8 @@ public:
             t_mode = IO_UPDATE_MODE;
         else if (p_mode == kMCOpenFileModeAppend)
             t_mode = IO_APPEND_MODE;
+		else /* No access requested */
+			return NULL;
 
         t_fptr = fopen(*t_path_sys, t_mode);
 
