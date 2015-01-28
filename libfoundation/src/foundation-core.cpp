@@ -77,19 +77,11 @@ bool MCInitialize(void)
     if (!__MCStreamInitialize())
         return false;
     
-	if (!__MCStdioStreamInitialize())
-		return false;
-
-	if (!__MCFileInitialize())
-		return false;
-
 	return true;
 }
 
 void MCFinalize(void)
 {
-	__MCFileFinalize();
-	__MCStdioStreamFinalize();
     __MCStreamFinalize();
     __MCProperListFinalize();
 	__MCLocaleFinalize();
