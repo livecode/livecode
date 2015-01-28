@@ -784,6 +784,7 @@ void MCInterfaceSetLookAndFeel(MCExecContext& ctxt, intenum_t p_value)
 				if (oldtheme != NULL)
 					oldtheme -> unload();
 				delete oldtheme;
+				oldtheme = NULL;
 				MClook = MCcurtheme->getthemefamilyid();
 			}
 			else
