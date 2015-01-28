@@ -514,6 +514,8 @@ end syntax
 public foreign handler MCCanvasTransformMakeIdentity(out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeScale(in pScaleX as CanvasFloat, in pScaleY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeScaleWithList(in pScale as list, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeSkew(in pSkewX as CanvasFloat, in pSkewY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeSkewWithList(in pSkew as list, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeRotation(in pRotation as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeTranslation(in pX as CanvasFloat, in pY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeTranslationWithList(in pTranslation as list, out rTransform as Transform) as undefined binds to "<builtin>"
@@ -563,6 +565,27 @@ syntax TransformMakeScale is prefix operator with precedence 4
 	"transform" "with" "scale" <mScale: Expression>
 begin
     MCCanvasTransformMakeScaleWithList(mScale, output)
+end syntax
+
+/*
+Summary:	Creates a new skewing transform value.
+
+mScale:		An expression which evaluates to a list of 2 numbers, the x-axis skew and y-axis skew.
+
+Returns:	A new skew transform.
+
+Example:
+	// Create skew transform
+	variable tTransform
+	put transform with skew [1,0] into tTransform
+
+Tags: Canvas
+*/
+
+syntax TransformMakeSkew is prefix operator with precedence 4
+	"transform" "with" "skew" <mSkew: Expression>
+begin
+	MCCanvasTransformMakeSkewWithList(mSkew, output)
 end syntax
 
 /*
