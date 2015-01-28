@@ -15,13 +15,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "system-private.h"
 
-#include <foundation.h>
 #include <foundation-auto.h>
-#include <foundation-file.h>
-
-#include "foundation-private.h"
-#include "foundation-file-private.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -37,11 +33,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * the whole file into a preallocated buffer of the correct size.
  * This is the preferred and most efficient option. */
 static bool
-__MCFileGetContentsRegular (MCStringRef p_native_path,
-                            struct stat *p_stat_buf,
-                            int x_fd,
-                            byte_t *& r_contents,
-                            size_t & r_length)
+__MCSFileGetContentsRegular (MCStringRef p_native_path,
+                             struct stat *p_stat_buf,
+                             int x_fd,
+                             byte_t *& r_contents,
+                             size_t & r_length)
 {
 	MCAssert (p_stat_buf);
 
@@ -69,7 +65,7 @@ __MCFileGetContentsRegular (MCStringRef p_native_path,
 		else if (t_read_len < 0)
 		{
 			int t_save_errno = errno;
-			t_success = __MCFileThrowReadErrorWithErrno (p_native_path, t_save_errno);
+			t_success = __MCSFileThrowReadErrorWithErrno (p_native_path, t_save_errno);
 		}
 	}
 
@@ -91,13 +87,13 @@ __MCFileGetContentsRegular (MCStringRef p_native_path,
 /* If the file is not a regular file, use the cstdio API to read the
  * file in incremental chunks into a buffer that grows as necessary
  * until the end of the the file has been found.  This is much less
- * efficient than __MCFileGetContentsRegular(); it will usually
+ * efficient than __MCSFileGetContentsRegular(); it will usually
  * require multiple memory reallocations and memory copies. */
 static bool
-__MCFileGetContentsStream (MCStringRef p_native_path,
-                           FILE *p_cstream,
-                           byte_t *& r_contents,
-                           size_t & r_length)
+__MCSFileGetContentsStream (MCStringRef p_native_path,
+                            FILE *p_cstream,
+                            byte_t *& r_contents,
+                            size_t & r_length)
 {
 	MCAssert (p_cstream);
 
@@ -147,7 +143,7 @@ __MCFileGetContentsStream (MCStringRef p_native_path,
 
 		if (t_success && ferror (p_cstream))
 		{
-			t_success = __MCFileThrowReadErrorWithErrno (p_native_path, t_save_errno);
+			t_success = __MCSFileThrowReadErrorWithErrno (p_native_path, t_save_errno);
 		}
 
 		if (t_success && 0 == t_read_len)
@@ -176,12 +172,12 @@ __MCFileGetContentsStream (MCStringRef p_native_path,
  file_too_large:
 	MCMemoryDeallocate (t_buffer);
 	/* UNCHECKED */ fclose (p_cstream);
-	return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("File '%{path}' is too large"), 0);
+	return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("File '%{path}' is too large"), 0);
 }
 
 bool
-__MCFileGetContents (MCStringRef p_native_path,
-                     MCDataRef & r_data)
+__MCSFileGetContents (MCStringRef p_native_path,
+                      MCDataRef & r_data)
 {
 	errno = 0;
 
@@ -199,7 +195,7 @@ __MCFileGetContents (MCStringRef p_native_path,
 	if (t_fd < 0)
 	{
 		int t_save_errno = errno;
-		return __MCFileThrowOpenErrorWithErrno (p_native_path, t_save_errno);
+		return __MCSFileThrowOpenErrorWithErrno (p_native_path, t_save_errno);
 	}
 
 	/* If the file is a regular file of finite size, read it in one
@@ -209,13 +205,14 @@ __MCFileGetContents (MCStringRef p_native_path,
 	if (fstat (t_fd, &t_stat_buf) < 0)
 	{
 		int t_save_errno = errno;
-		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to get the attributes of file '%{path}': %{description}"), t_save_errno);
+		close (t_fd);
+		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to get the attributes of file '%{path}': %{description}"), t_save_errno);
 	}
 
 	if (t_stat_buf.st_size > 0 && S_ISREG (t_stat_buf.st_mode))
 	{
-		if (!__MCFileGetContentsRegular (p_native_path, &t_stat_buf, t_fd,
-		                                 t_buffer, t_length))
+		if (!__MCSFileGetContentsRegular (p_native_path, &t_stat_buf, t_fd,
+		                                  t_buffer, t_length))
 			return false; /* Error should already be set */
 	}
 	else
@@ -226,11 +223,11 @@ __MCFileGetContents (MCStringRef p_native_path,
 		if (NULL == t_cstream)
 		{
 			int t_save_errno = errno;
-			return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR ("Failed to open file '%{path}': fdopen() failed: %{description"), t_save_errno);
+			return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR ("Failed to open file '%{path}': fdopen() failed: %{description"), t_save_errno);
 		}
 
-		if (!__MCFileGetContentsStream (p_native_path, t_cstream,
-		                                t_buffer, t_length))
+		if (!__MCSFileGetContentsStream (p_native_path, t_cstream,
+		                                 t_buffer, t_length))
 			return false; /* Error should already be set */
 	}
 
@@ -253,8 +250,8 @@ __MCFileGetContents (MCStringRef p_native_path,
 }
 
 bool
-__MCFileSetContents (MCStringRef p_native_path,
-                     MCDataRef p_data)
+__MCSFileSetContents (MCStringRef p_native_path,
+                      MCDataRef p_data)
 {
 	bool t_success = true;
 
@@ -273,7 +270,7 @@ __MCFileSetContents (MCStringRef p_native_path,
 
 	MCAutoStringRefAsSysString t_temp_path_sys;
 	if (!t_temp_path_sys.Lock (*t_temp_native_path))
-	    return false;
+		return false;
 
 	/* mkstemp() modifies its argument.  The char array belongs to the
 	 * MCAutoStringRefAsSysString instance, so this is a bit of a hack
@@ -283,21 +280,27 @@ __MCFileSetContents (MCStringRef p_native_path,
 
 	if (0 > t_temp_fd)
 	{
-		return __MCFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to create temporary file '%{path}': %s"), errno);
+		return __MCSFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to create temporary file '%{path}': %s"), errno);
 	}
 
 	/* Set the mode.  The default permissions are the same as if the
 	 * file had been created by opening a stream for writing,
 	 * i.e. 0666 modified by the effective umask. */
 	mode_t t_mode;
+	mode_t t_umask = ~0;
+
+	t_umask = umask (t_umask); /* Get the umask */
+
 	t_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-	t_mode = umask (t_mode);
+	t_mode &= ~t_umask;
+
+	umask (t_umask); /* Reset the umask */
 
 	if (t_success)
 	{
 		if (0 != fchmod (t_temp_fd, t_mode))
 		{
-			t_success = __MCFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to set permissions of file '%{path}': %s"), errno);
+			t_success = __MCSFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to set permissions of file '%{path}': %s"), errno);
 		}
 	}
 
@@ -314,7 +317,7 @@ __MCFileSetContents (MCStringRef p_native_path,
 		                       t_amount - t_total_written);
 		if (t_written_len < 0)
 		{
-			t_success = __MCFileThrowWriteErrorWithErrno (*t_temp_native_path, errno);
+			t_success = __MCSFileThrowWriteErrorWithErrno (*t_temp_native_path, errno);
 		}
 	}
 
@@ -343,7 +346,7 @@ __MCFileSetContents (MCStringRef p_native_path,
 	{
 		if (0 != fsync (t_temp_fd))
 		{
-			return __MCFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to write to file %{path}; fsync() failed: %{description}"), errno);
+			return __MCSFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to write to file %{path}; fsync() failed: %{description}"), errno);
 		}
 	}
 
@@ -368,12 +371,12 @@ __MCFileSetContents (MCStringRef p_native_path,
 		                                           &t_description);
 		/* UNCHECKED */ MCNumberCreateWithInteger (t_save_errno,
 		                                           &t_error_code);
-		/* UNCHECKED */ __MCFilePathFromNative (p_native_path, &t_path);
-		/* UNCHECKED */ __MCFilePathFromNative (*t_temp_native_path,
-		                                        &t_temp_path);
+		/* UNCHECKED */ __MCSFilePathFromNative (p_native_path, &t_path);
+		/* UNCHECKED */ __MCSFilePathFromNative (*t_temp_native_path,
+		                                         &t_temp_path);
 
 		return MCErrorCreateAndThrowWithMessage (
-		           kMCFileIOErrorTypeInfo,
+		           kMCSFileIOErrorTypeInfo,
 		           MCSTR("Failed to rename file '%{temp_path}' to '%{path}': %{description}"),
 		           "path", *t_path,
 		           "temp_path", *t_temp_path,
@@ -396,10 +399,10 @@ __MCFileSetContents (MCStringRef p_native_path,
  * characters by POSIX APIs. */
 
 static bool
-__MCFilePathValidate (MCStringRef p_path)
+__MCSFilePathValidate (MCStringRef p_path)
 {
 	if (MCStringIsEmpty (p_path))
-		return __MCFileThrowInvalidPathError (p_path);
+		return __MCSFileThrowInvalidPathError (p_path);
 
 #if !defined(__LINUX__)
 
@@ -421,7 +424,7 @@ __MCFilePathValidate (MCStringRef p_path)
 	{
 		byte_t t_byte = MCDataGetByteAtIndex (*t_encoded, i);
 		if (t_byte == 0)
-			return __MCFileThrowInvalidPathError (p_path);
+			return __MCSFileThrowInvalidPathError (p_path);
 	}
 
 #else /* __LINUX__ */
@@ -445,7 +448,7 @@ __MCFilePathValidate (MCStringRef p_path)
 	 * be shorter than the input string. */
 	if (!MCStringIsEqualTo (p_path, *t_roundtrip, kMCStringOptionCompareExact))
 	{
-		return __MCFileThrowInvalidPathError (p_path);
+		return __MCSFileThrowInvalidPathError (p_path);
 	}
 
 #endif /* __LINUX __ */
@@ -457,17 +460,17 @@ __MCFilePathValidate (MCStringRef p_path)
  * LiveCode internal representation. */
 
 bool
-__MCFilePathToNative (MCStringRef p_path,
-                      MCStringRef & r_native_path)
+__MCSFilePathToNative (MCStringRef p_path,
+                       MCStringRef & r_native_path)
 {
 	return
-		__MCFilePathValidate (p_path) &&
+		__MCSFilePathValidate (p_path) &&
 		MCStringCopy (p_path, r_native_path);
 }
 
 bool
-__MCFilePathFromNative (MCStringRef p_native_path,
-                        MCStringRef & r_path)
+__MCSFilePathFromNative (MCStringRef p_native_path,
+                         MCStringRef & r_path)
 {
 	return MCStringCopy (p_native_path, r_path);
 }
@@ -478,9 +481,9 @@ __MCFilePathFromNative (MCStringRef p_native_path,
  * ================================================================ */
 
 bool
-__MCFileCreateStream (MCStringRef p_native_path,
-                      intenum_t p_mode,
-                      MCStreamRef & r_stream)
+__MCSFileCreateStream (MCStringRef p_native_path,
+                       intenum_t p_mode,
+                       MCStreamRef & r_stream)
 {
 	bool t_success = true;
 
@@ -493,20 +496,20 @@ __MCFileCreateStream (MCStringRef p_native_path,
 	int t_oflag = 0;
 	const char *t_stream_mode;
 
-	if (p_mode & kMCOpenFileModeRead && p_mode & kMCOpenFileModeWrite)
+	if (p_mode & kMCSFileOpenModeRead && p_mode & kMCSFileOpenModeWrite)
 	{
 		t_oflag |= O_RDWR | O_CREAT;
-		t_stream_mode = (p_mode & kMCOpenFileModeAppend) ? "a+" : "r+";
+		t_stream_mode = (p_mode & kMCSFileOpenModeAppend) ? "a+" : "r+";
 	}
-	else if (p_mode & kMCOpenFileModeRead)
+	else if (p_mode & kMCSFileOpenModeRead)
 	{
 		t_oflag |= O_RDONLY;
 		t_stream_mode = "r";
 	}
-	else if (p_mode & kMCOpenFileModeWrite)
+	else if (p_mode & kMCSFileOpenModeWrite)
 	{
 		t_oflag |= O_WRONLY | O_CREAT;
-		if (p_mode & kMCOpenFileModeAppend)
+		if (p_mode & kMCSFileOpenModeAppend)
 		{
 			t_stream_mode = "a";
 		}
@@ -516,8 +519,14 @@ __MCFileCreateStream (MCStringRef p_native_path,
 			t_oflag |= O_TRUNC;
 		}
 	}
+	else
+	{
+		/* We'll use fdopen(3) later; throw the same error that it
+		 * would throw with an invalid open mode argument. */
+		return __MCSFileThrowOpenErrorWithErrno (p_native_path, EINVAL);
+	}
 
-	if (p_mode & kMCOpenFileModeWrite && p_mode & kMCOpenFileModeCreate)
+	if (p_mode & kMCSFileOpenModeWrite && p_mode & kMCSFileOpenModeCreate)
 		t_oflag |= O_EXCL;
 
 	/* Compute the default access poermissions. */
@@ -551,7 +560,7 @@ __MCFileCreateStream (MCStringRef p_native_path,
 
 	/* Store the newly created cstdio stream in a new MCStream instance. */
 	MCStreamRef t_stream;
-	if (!__MCStdioStreamCreate (t_cstream, t_stream))
+	if (!__MCSStreamCreateWithStdio (t_cstream, t_stream))
 	{
 		/* UNCHECKED */ fclose (t_cstream);
 		return false;
@@ -566,7 +575,7 @@ __MCFileCreateStream (MCStringRef p_native_path,
  * ================================================================ */
 
 bool
-__MCFileDelete (MCStringRef p_native_path)
+__MCSFileDelete (MCStringRef p_native_path)
 {
 	/* Get a system path */
 	MCAutoStringRefAsSysString t_path_sys;
@@ -575,13 +584,13 @@ __MCFileDelete (MCStringRef p_native_path)
 
 	errno = 0;
 	if (-1 == unlink (*t_path_sys))
-		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to delete file %{path}: %{description}"), errno);
+		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to delete file %{path}: %{description}"), errno);
 
 	return true;
 }
 
 bool
-__MCFileCreateDirectory (MCStringRef p_native_path)
+__MCSFileCreateDirectory (MCStringRef p_native_path)
 {
 	/* Get a system path */
 	MCAutoStringRefAsSysString t_path_sys;
@@ -596,13 +605,13 @@ __MCFileCreateDirectory (MCStringRef p_native_path)
 
 	errno = 0;
 	if (0 != mkdir (*t_path_sys, t_mode))
-		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to create directory %{path}: %{description}"), errno);
+		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to create directory %{path}: %{description}"), errno);
 
 	return true;
 }
 
 bool
-__MCFileDeleteDirectory (MCStringRef p_native_path)
+__MCSFileDeleteDirectory (MCStringRef p_native_path)
 {
 	/* Get a system path */
 	MCAutoStringRefAsSysString t_path_sys;
@@ -610,16 +619,16 @@ __MCFileDeleteDirectory (MCStringRef p_native_path)
 		return false;
 
 	if (0 != rmdir (*t_path_sys))
-		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to delete directory %{path}: %{description}"), errno);
+		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to delete directory %{path}: %{description}"), errno);
 
 	return true;
 }
 
-/* This function is used by __MCFileGetDirectoryEntries() with
+/* This function is used by __MCSFileGetDirectoryEntries() with
  * scandir(3) in order to filter out '.' and '..' from directory
  * listings. */
 static int
-__MCFileGetDirectoryEntries_Filter (const struct dirent *p_entry)
+__MCSFileGetDirectoryEntries_Filter (const struct dirent *p_entry)
 {
 	const char *p_name;
 
@@ -636,8 +645,8 @@ __MCFileGetDirectoryEntries_Filter (const struct dirent *p_entry)
 }
 
 bool
-__MCFileGetDirectoryEntries (MCStringRef p_native_path,
-                             MCProperListRef & r_native_entries)
+__MCSFileGetDirectoryEntries (MCStringRef p_native_path,
+                              MCProperListRef & r_native_entries)
 {
 	/* Get a system path */
 	MCAutoStringRefAsSysString t_path_sys;
@@ -654,13 +663,13 @@ __MCFileGetDirectoryEntries (MCStringRef p_native_path,
 
 	errno = 0;
 	t_num_entries = scandir (*t_path_sys, &t_raw_entries,
-	                         __MCFileGetDirectoryEntries_Filter,
+	                         __MCSFileGetDirectoryEntries_Filter,
 	                         NULL);
 	if (-1 == t_num_entries)
-		return __MCFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed get entries of directory %{path}: %{description}"), errno);
+		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed get entries of directory %{path}: %{description}"), errno);
 
 	/* Convert all directory entries' names to strings. N.b. the
-	 * MCFileGetDirectoryEntries() wrapper will convert them from
+	 * MCSFileGetDirectoryEntries() wrapper will convert them from
 	 * native representation. */
 	MCAutoStringRefArray t_entries;
 

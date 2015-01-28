@@ -16,6 +16,7 @@
 
 #include "foundation.h"
 #include "foundation-auto.h"
+#include "foundation-system.h"
 #include "script.h"
 
 extern "C" void MCStringExecPutStringAfter(void);
@@ -93,6 +94,7 @@ int main(int argc, char *argv[])
     }
     
     MCInitialize();
+    MCSInitialize();
     MCScriptInitialize();
     
     // Skip command arg.

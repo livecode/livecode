@@ -206,7 +206,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 
     extern bool MCModulesInitialize();
-	if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
+    if (!MCInitialize() || !MCSInitialize() ||
+        !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
 	
     // Ensure the command line variable gets set

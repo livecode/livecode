@@ -1794,6 +1794,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidde
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
     MCInitialize();
+    MCSInitialize();
     MCModulesInitialize();
     MCScriptInitialize();
     
