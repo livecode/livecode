@@ -1550,7 +1550,7 @@ void MCCanvasTransformSetTranslationAsList(MCProperListRef p_translation, MCCanv
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, const MCGAffineTransform &p_transform)
 {
-	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(p_transform, *MCCanvasTransformGet(x_transform)), x_transform);
+	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(*MCCanvasTransformGet(x_transform), p_transform), x_transform);
 }
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, MCCanvasTransformRef p_transform)

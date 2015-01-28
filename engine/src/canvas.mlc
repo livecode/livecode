@@ -842,7 +842,7 @@ mTransformA:	An expression which evaluates to a transform.
 mTransformB:	An expression which evaluates to a transform.
 
 Description:
-Concatenating transforms modifies the original transform to produce a single transform that is the equivalent of applying the original transform followed by the other. Changing the order of concatenation will result in a transform with different effects.
+Concatenating transforms modifies the original transform to produce a single transform that is the equivalent of applying the new transform followed by the original. Changing the order of concatenation will result in a transform with different effects.
 
 Example:
 	variable tTransform
@@ -852,11 +852,11 @@ Example:
 	put transform with scale [5,10] into tScale
 	// Create a new rotation transform
 	put transform with rotation by 30 into tRotation
-	// Create a transform representing a scale followed by a rotation
+	// Create a transform representing a rotation followed by a scale
 	put tScale into tTransform
 	concat tTransform with tRotation
 
-	// Create a transform representing a rotation followed by a scale
+	// Create a transform representing a scale followed by a rotation
 	put tRotation into tTransform
 	concat tTransform with tScale
 
