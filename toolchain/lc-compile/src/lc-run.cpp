@@ -41,6 +41,7 @@ static void MCRunUsage (int p_exit_status) ATTRIBUTE_NORETURN;
 static void MCRunStartupError (void) ATTRIBUTE_NORETURN;
 static void MCRunHandlerError (void) ATTRIBUTE_NORETURN;
 static void MCRunBadOptionError (MCStringRef p_arg) ATTRIBUTE_NORETURN;
+static void MCRunBadOptionArgError (MCStringRef p_option, MCStringRef p_optarg) ATTRIBUTE_NORETURN;
 static void MCRunPrintMessage (FILE *p_stream, MCStringRef p_message);
 
 
@@ -53,7 +54,7 @@ static void
 MCRunUsage (int p_exit_status)
 {
 	fprintf (stderr,
-"Usage: lc-run LCMFILE [ARGS ...]\n"
+"Usage: lc-run [OPTIONS] [--] LCMFILE [ARGS ...]\n"
 "\n"
 "Run a compiled Modular Livecode bytecode file.\n"
 "\n"
@@ -123,6 +124,20 @@ MCRunBadOptionError (MCStringRef p_arg)
 }
 
 static void
+MCRunBadOptionArgError (MCStringRef p_option,
+                        MCStringRef p_optarg)
+{
+	MCAutoStringRef t_message;
+	if (NULL == p_optarg)
+		/* UNCHECKED */ MCStringFormat (&t_message, "ERROR: Missing argument for option '%@'\n\n", p_option);
+	else
+		/* UNCHECKED */ MCStringFormat (&t_message, "ERROR: Bad argument '%@' for option '%@'\n\n", p_optarg, p_option);
+
+	MCRunPrintMessage (stderr, *t_message);
+	MCRunUsage (kMCRunExitStatusBadArgs);
+}
+
+static void
 MCRunPrintMessage (FILE *p_stream,
                    MCStringRef p_message)
 {
@@ -171,13 +186,32 @@ MCRunParseCommandLine (int argc,
 
 	/* FIXME Once we have "real" command line arguments, process them
 	 * in this loop. */
-	MCValueRef t_arg_val;
-	uintptr_t t_raw_args_iter = 0;
-	while (MCProperListIterate (*t_raw_args, t_raw_args_iter, t_arg_val))
+	uindex_t t_num_args = MCProperListGetLength (*t_raw_args);
+	for (uindex_t t_arg_idx = 0; t_arg_idx < t_num_args; ++t_arg_idx)
 	{
+		MCValueRef t_arg_val, t_argopt_val;
+		MCStringRef t_arg, t_argopt;
+
+		t_arg_val = MCProperListFetchElementAtIndex (*t_raw_args, t_arg_idx);
 		MCAssert (MCTypeInfoConforms (MCValueGetTypeInfo (t_arg_val),
 		                              kMCStringTypeInfo));
-		MCStringRef t_arg = (MCStringRef) t_arg_val;
+		t_arg = (MCStringRef) t_arg_val;
+
+		/* If there's an argument after the current one, fetch it as a possible
+		 * option value. */
+		uindex_t t_argopt_idx = t_arg_idx + 1;
+		if (t_argopt_idx < t_num_args)
+		{
+			t_argopt_val = MCProperListFetchElementAtIndex (*t_raw_args,
+			                                                t_argopt_idx);
+			MCAssert (MCTypeInfoConforms (MCValueGetTypeInfo (t_argopt_val),
+			                              kMCStringTypeInfo));
+			t_argopt = (MCStringRef) t_argopt_val;
+		}
+		else
+		{
+			t_argopt = NULL;
+		}
 
 		if (t_accept_options)
 		{
