@@ -100,7 +100,7 @@ void MCU_init()
      * source. If that fails, fall back to constructing using some of the
      * entropy available from the properties of the current process. */
     MCAutoDataRef t_seed_data;
-    if (MCDataCreateRandom(sizeof(MCrandomseed), &t_seed_data))
+    if (MCSRandomData(sizeof(MCrandomseed), &t_seed_data))
     {
         MCMemoryCopy(&MCrandomseed, MCDataGetBytePtr(*t_seed_data),
                      sizeof(MCrandomseed));

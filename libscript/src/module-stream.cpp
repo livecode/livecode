@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-system.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,5 +43,5 @@ MCStreamExecWriteToStream(MCDataRef p_data,
 extern "C" MC_DLLEXPORT void
 MCStreamExecGetStandardOutput (MCStreamRef & r_stream)
 {
-	MCStreamGetStandardOutput (r_stream);
+	MCSStreamGetStandardOutput (r_stream);
 }

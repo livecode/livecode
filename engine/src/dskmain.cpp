@@ -151,9 +151,15 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
     if (kMCSystemLocale == nil)
         return false;
 		
+	MCSCommandLineSetName (argv[0]);
 
 	if (MCModeIsExecutableFirstArgument())
 		create_var(argv[0]);
+
+	/* This list will be used to set the argument list returned by
+	 * MCSCommandLineGetArguments(). */
+	MCAutoProperListRef t_arguments;
+	/* UNCHECKED */ MCProperListCreateMutable (&t_arguments);
 
     MCAutoStringRefAsUTF8String t_mccmd_utf8;
     /* UNCHECKED */ t_mccmd_utf8 . Lock(MCcmd);
@@ -280,8 +286,10 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		}
 		
 		create_var(argv[i]);
+		/* UNCHECKED */ MCProperListPushElementOntoBack (*t_arguments, argv[i]);
 	}
 	create_var(nvars);
+	/* UNCHECKED */ MCSCommandLineSetArguments (*t_arguments);
 
 	if (!X_open(argc, argv, envp))
 		return false;

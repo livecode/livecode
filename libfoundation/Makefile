@@ -12,8 +12,6 @@ SOURCES= \
 	foundation-data.cpp \
 	foundation-debug.cpp \
 	foundation-error.cpp \
-	foundation-file.cpp \
-	foundation-file-posix.cpp \
 	foundation-filters.cpp \
 	foundation-foreign.cpp \
 	foundation-handler.cpp \
@@ -25,18 +23,22 @@ SOURCES= \
 	foundation-number.cpp \
 	foundation-pickle.cpp \
 	foundation-proper-list.cpp \
-	foundation-random.cpp \
 	foundation-record.cpp \
 	foundation-set.cpp \
 	foundation-stream.cpp \
-	foundation-stream-stdio.cpp \
 	foundation-string.cpp \
 	foundation-text.cpp \
 	foundation-typeconvert.cpp \
 	foundation-typeinfo.cpp \
 	foundation-unicodechars.cpp \
 	foundation-unicode.cpp \
-	foundation-value.cpp
+	foundation-value.cpp \
+	system-commandline.cpp \
+	system-file.cpp \
+	system-file-posix.cpp \
+	system-init.cpp \
+	system-random.cpp \
+	system-stream.cpp
 
 CUSTOM_DEFINES=
 

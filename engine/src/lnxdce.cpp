@@ -138,8 +138,9 @@ Boolean MCScreenDC::abortkey()
 			if (tptr->event->type == GDK_KEY_PRESS)
 			{
 				GdkEventKey *kpevent = (GdkEventKey*)tptr->event;
-                if (kpevent->state & GDK_CONTROL_MASK
-                    && kpevent->keyval == XK_Break || kpevent->keyval == 0x2e /*XK_period*/)
+				if ((kpevent->state & GDK_CONTROL_MASK
+				     && kpevent->keyval == XK_Break) ||
+				    kpevent->keyval == 0x2e /*XK_period*/)
 				{
 					abort = True;
 					tptr->remove
@@ -309,7 +310,7 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 			{
 				GdkEventButton *bpevent = (GdkEventButton *)tptr->event;
 				if (button == 0
-				        || bpevent->state >> 8 & 0x1F & ~(0x1L << button - 1))
+				    || bpevent->state >> 8 & 0x1F & ~(0x1L << (button - 1)))
 				{
 					setmods(bpevent->state, 0, bpevent->button, False);
 					
@@ -338,7 +339,7 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 			{
 				GdkEventButton *brevent = (GdkEventButton *)tptr->event;
 				if (button == 0
-				        || brevent->state >> 8 & 0x1F & ~(0x1L << button - 1))
+				    || brevent->state >> 8 & 0x1F & ~(0x1L << (button - 1)))
 				{
 					setmods(brevent->state, 0, brevent->button, False);
 					releaseptr = tptr;
@@ -395,11 +396,12 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			IO_cleanprocesses();
 
 		if (modalclosed ||
-			(MCNotifyDispatch(dispatch == True) ||
-			 dispatch && MCEventQueueDispatch() ||
-			 handle(dispatch, anyevent, abort, reset) ||
-			 donepending) && anyevent ||
-			 abort)
+		    ((MCNotifyDispatch(dispatch == True) ||
+		      (dispatch && MCEventQueueDispatch()) ||
+		      handle(dispatch, anyevent, abort, reset) ||
+		      donepending) &&
+		     anyevent) ||
+		    abort)
 			break;
 
 		if (MCquit)

@@ -1085,7 +1085,7 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
             {
                 p_node -> descent . index = *x_next_mark;
                 x_mapping[p_other_node -> descent . index] = *x_next_mark;
-                x_next_mark++;
+                (*x_next_mark) += 1;
             }
             else
                 x_mapping[p_other_node -> descent . index] = p_node -> descent . index;
@@ -1666,7 +1666,6 @@ void GenerateSyntaxRules(void)
 	int t_index;
 	SyntaxRuleGroupRef t_group;
 
-    t_template = OpenTemplateFile();
     t_output = OpenOutputFile();
     
     if (t_output != NULL)
@@ -1674,6 +1673,7 @@ void GenerateSyntaxRules(void)
     else
         s_output = t_output = stderr;
     
+    t_template = OpenTemplateFile();
     if (t_template != NULL)
     {
         char t_line[128];
@@ -1692,6 +1692,8 @@ void GenerateSyntaxRules(void)
             if (t_length > 5 && strncmp(t_line, "--*--", 5) == 0)
                 break;
         }
+        
+        fclose(t_template);
     }
 
     t_index = 0;

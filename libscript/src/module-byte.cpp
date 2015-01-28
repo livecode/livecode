@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-system.h>
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
@@ -209,7 +210,7 @@ extern "C" MC_DLLEXPORT bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRe
 extern "C" MC_DLLEXPORT void
 MCDataExecRandomBytes (uindex_t p_count, MCDataRef & r_data)
 {
-	/* UNCHECKED */ MCDataCreateRandom (p_count, r_data);
+	/* UNCHECKED */ MCSRandomData (p_count, r_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

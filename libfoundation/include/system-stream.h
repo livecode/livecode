@@ -15,47 +15,32 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <foundation.h>
-#include <foundation-system.h>
-
-/* ================================================================
- * System identification
- * ================================================================ */
-
-extern "C" MC_DLLEXPORT void
-MCSystemExecGetOperatingSystem (MCStringRef & r_string)
-{
-	const char t_os[] =
-#if defined(__IOS__)
-		"ios"
-#elif defined(__MAC__)
-		"mac"
-#elif defined(__WINDOWS__)
-		"windows"
-#elif defined(__ANDROID__)
-		"android"
-#elif defined(__LINUX__)
-		"linux"
-#else
-#  error "Unrecognized operating system"
+#if !defined(__MCS_SYSTEM_H_INSIDE__)
+#	error "Only <foundation-system.h> can be included directly"
 #endif
-		;
-
-	/* UNCHECKED */ MCStringCreateWithCString (t_os, r_string);
-}
 
 /* ================================================================
- * Command-line information
+ * C stdio-based streams
  * ================================================================ */
 
-extern "C" MC_DLLEXPORT void
-MCSystemExecGetCommandName (MCStringRef & r_string)
-{
-	/* UNCHECKED */ MCSCommandLineGetName (r_string);
-}
+// Standard streams
+MC_DLLEXPORT bool MCSStreamGetStandardOutput(MCStreamRef & r_stdout);
+MC_DLLEXPORT bool MCSStreamGetStandardInput(MCStreamRef & r_stdin);
+MC_DLLEXPORT bool MCSStreamGetStandardError(MCStreamRef & r_stderr);
 
-extern "C" MC_DLLEXPORT void
-MCSystemExecGetCommandArguments (MCProperListRef & r_list)
-{
-	/* UNCHECKED */ MCSCommandLineGetArguments (r_list);
-}
+#ifdef __MCS_INTERNAL_API__
+
+bool __MCSStreamCreateWithStdio (FILE *, MCStreamRef & r_stream);
+
+#endif
+
+/* ================================================================
+ * Initialization
+ * ================================================================ */
+
+#ifdef __MCS_INTERNAL_API__
+
+bool __MCSStreamInitialize (void);
+void __MCSStreamFinalize (void);
+
+#endif
