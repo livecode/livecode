@@ -973,10 +973,7 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 	MCAutoStringRef t_filename;
     if (!ctxt . EvalExprAsStringRef(m_filename, EE_IDE_EXTRACT_BADFILENAME, &t_filename))
         return;
-		
-	if (!ctxt . HasError())
-        return;
-    
+
 	void *t_data;
 	uint32_t t_data_size;
     Exec_stat t_stat;
