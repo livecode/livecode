@@ -161,11 +161,21 @@ void MCGPathCopyAndRelease(MCGPathRef self, MCGPathRef& r_new_path)
 void MCGPathMutableCopy(MCGPathRef self, MCGPathRef& r_new_path)
 {
 	MCGPathRef t_new_path;
-	MCGPathCreateMutable(t_new_path);
-	if (MCGPathIsValid(t_new_path))
+	t_new_path = nil;
+	
+	if (MCGPathIsValid(self))
+	{
+		MCGPathCreateMutable(t_new_path);
 		MCGPathAddPath(t_new_path, self);
+	}
+	
 	if (MCGPathIsValid(t_new_path))
 		r_new_path = t_new_path;
+	else
+	{
+		MCGPathDestroy(t_new_path);
+		r_new_path = nil;
+	}
 }
 
 void MCGPathMutableCopyAndRelease(MCGPathRef self, MCGPathRef& r_new_path)
