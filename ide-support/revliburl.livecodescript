@@ -208,6 +208,7 @@ end getUrl
 
 on postUrl y,x
    local newUrl,tRetResult,tRetData
+   put textEncode(y, "native") into y
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of keys(laLoadingUrls) then
@@ -258,6 +259,7 @@ end postUrl
 
 on putUrl y,x
    local newUrl,tRetResult,tRetData
+   put textEncode(y, "native") into y
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of keys(laLoadingUrls) then

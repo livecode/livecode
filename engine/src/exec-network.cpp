@@ -439,11 +439,13 @@ void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url)
+void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCValueRef p_data, MCStringRef p_url)
 // SJT-2014-09-11: [[ URLMessages ]] Send "postURL" messages on all platforms.
 {
 	if (MCU_couldbeurl(MCStringGetOldString(p_url)))
 	{
+		MCAutoDataRef t_data;
+
 		// Send "postURL" message.
 		MCParameter p1;
 		p1 . setvalueref_argument(p_data);
@@ -458,7 +460,8 @@ void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p
 		case ES_PASS:
 			// Either there was no message handler, or the handler passed the message,
 			// so process the URL in the engine.
-			MCS_posttourl(ctxt . GetObject(), p_data, p_url);
+			/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+			MCS_posttourl(ctxt . GetObject(), *t_data, p_url);
 			// don't break!
 
 		default:
