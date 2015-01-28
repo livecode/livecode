@@ -1348,7 +1348,7 @@ MCGAffineTransform MCCanvasTransformCompose(const MCGPoint &p_scale, MCCanvasFlo
 	MCGAffineTransform t_transform;
 	t_transform = MCGAffineTransformMakeScale(p_scale.x, p_scale.y);
 	t_transform = MCGAffineTransformPreSkew(t_transform, p_skew.x, p_skew.y);
-	t_transform = MCGAffineTransformPreRotate(t_transform, p_rotation);
+	t_transform = MCGAffineTransformPreRotate(t_transform, MCCanvasAngleFromRadians(p_rotation));
 	t_transform = MCGAffineTransformPreTranslate(t_transform, p_translation.x, p_translation.y);
 	
 	return t_transform;
