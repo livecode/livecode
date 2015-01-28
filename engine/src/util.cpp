@@ -2791,7 +2791,7 @@ uint1 MCU_wincharsettocharset(uint2 wincharset)
 uint1 MCU_charsettowincharset(uint1 charset)
 {
 	uint2 i;
-	for (i = 0; i < ELEMENTS(langtocharsets); i++)
+	for (i = 0; i < ELEMENTS(charset2wincharsets); i++)
 		if (charset2wincharsets[i].charset == charset)
 			return charset2wincharsets[i].wincharset;
 	return 0;
