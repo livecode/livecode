@@ -230,7 +230,7 @@ bool MCGDashesCreate(MCGFloat p_phase, const MCGFloat *p_lengths, uindex_t p_ari
 	if (t_success)
 		t_success = MCMemoryNew(t_dashes);	
 	
-	MCGFloat *t_lengths;
+	MCGFloat *t_lengths = NULL;
 	if (t_success)
 		t_success = MCMemoryNewArray(p_arity, t_lengths);
 	
