@@ -23,6 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * C stdio-based streams
  * ================================================================ */
 
+#include <stdio.h>
+
 // Standard streams
 MC_DLLEXPORT bool MCSStreamGetStandardOutput(MCStreamRef & r_stdout);
 MC_DLLEXPORT bool MCSStreamGetStandardInput(MCStreamRef & r_stdin);
