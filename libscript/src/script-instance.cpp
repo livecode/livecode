@@ -673,7 +673,7 @@ static inline MCTypeInfoRef MCScriptGetRegisterTypeInFrame(MCScriptFrame *p_fram
         return MCHandlerTypeInfoGetParameterType(t_handler_type, p_register);
     
     if (p_register < t_parameter_count + p_frame -> handler -> local_type_count)
-        return p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo;
+        return p_frame -> instance -> module -> types[p_frame -> handler -> local_types[p_register - t_parameter_count]] -> typeinfo;
     
     return nil;
 }
@@ -685,6 +685,9 @@ static bool MCScriptGetRegisterTypeIsOptionalInFrame(MCScriptFrame *p_frame, int
     
     MCTypeInfoRef t_type;
     t_type = MCScriptGetRegisterTypeInFrame(p_frame, p_register);
+    
+    if (t_type == nil)
+        return true;
     
     MCResolvedTypeInfo t_resolved_type;
     if (!MCTypeInfoResolve(t_type, t_resolved_type))
@@ -748,7 +751,7 @@ static bool MCScriptCheckedStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_
         !MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_type))
         return MCScriptThrowInvalidValueForLocalVariableError(p_frame -> instance -> module, p_frame -> handler, p_register, t_type, p_value);
     
-    MCScriptStoreToRegisterInFrame(p_frame -> caller, p_register, p_value);
+    MCScriptStoreToRegisterInFrame(p_frame, p_register, p_value);
     
     return true;
 }
@@ -822,7 +825,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
         if (t_mode != kMCHandlerTypeFieldModeIn)
             t_needs_mapping = true;
         
-        t_callee -> slots[i] = MCValueRetain(t_value);
+        MCValueAssign(t_callee -> slots[i], t_value);
     }
     
     if (t_needs_mapping)
@@ -1427,6 +1430,8 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                             t_result_value = MCValueRetain(kMCNull);
                     }
                 }
+                else
+                    t_result_value = MCValueRetain(kMCNull);
             }
         }
         else
@@ -1550,7 +1555,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             
             if (t_type != nil &&
                 !MCTypeInfoConforms(MCValueGetTypeInfo(t_result_value), t_type))
-                t_success = MCScriptThrowInvalidValueForLocalVariableError(x_frame -> instance -> module, x_frame -> handler, t_result_reg, t_type, t_result_value);
+                t_success = MCScriptThrowInvalidValueForResultError(x_frame -> instance -> module, x_frame -> handler, t_type, t_result_value);
         }
     }
     
@@ -2271,7 +2276,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 if (t_success)
                 {
-                    for(uindex_t i = 1; i < t_success && t_arity; i++)
+                    for(uindex_t i = 1; t_success && i < t_arity; i++)
                         t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[i], t_values[i - 1]);
                 }
                 
