@@ -206,10 +206,8 @@
     EmitBeginAssignList
     EmitContinueAssignList
     EmitEndAssignList
-    EmitFetchLocal
-    EmitStoreLocal
-    EmitFetchGlobal
-    EmitStoreGlobal
+    EmitFetch
+    EmitStore
     EmitReturn
     EmitReturnNothing
     EmitAttachRegisterToExpression
@@ -525,10 +523,8 @@
 'action' EmitContinueAssignList(Register: INT)
 'action' EmitEndAssignList()
 'action' EmitAssign(Dst: INT, Src: INT)
-'action' EmitFetchLocal(Register: INT, Var: INT)
-'action' EmitStoreLocal(Register: INT, Var: INT)
-'action' EmitFetchGlobal(Register: INT, Var: INT)
-'action' EmitStoreGlobal(Register: INT, Var: INT)
+'action' EmitFetch(Register: INT, Var: INT, Level: INT)
+'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
 'action' EmitPosition(Position: POS)

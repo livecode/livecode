@@ -629,12 +629,16 @@
         Info'Index -> DefIndex
         EmitBeginHandlerDefinition(DefIndex, Position, Name, TypeIndex)
         GenerateParameters(Parameters)
+        CreateParameterRegisters(Parameters)
+        CreateVariableRegisters(Body)
         EmitCreateRegister(-> ContextReg)
         EmitCreateRegister(-> ResultReg)
         GenerateBody(ResultReg, ContextReg, Body)
         EmitDestroyRegister(ContextReg)
         EmitDestroyRegister(ResultReg)
         EmitReturnNothing()
+        DestroyVariableRegisters(Body)
+        DestroyParameterRegisters(Parameters)
         EmitEndHandlerDefinition()
 
     'rule' GenerateDefinitions(foreignhandler(Position, _, Id, Signature, Binding)):
@@ -765,6 +769,51 @@
     'rule' GenerateParameters(nil):
         -- nothing
         
+'action' CreateParameterRegisters(PARAMETERLIST)
+
+    'rule' CreateParameterRegisters(parameterlist(parameter(_, _, _, _), Rest)):
+        EmitCreateRegister(-> Register)
+        CreateParameterRegisters(Rest)
+
+    'rule' CreateParameterRegisters(nil):
+        -- nothing
+
+'action' CreateVariableRegisters(STATEMENT)
+
+    'rule' CreateVariableRegisters(sequence(Left, Right)):
+        CreateVariableRegisters(Left)
+        CreateVariableRegisters(Right)
+
+    'rule' CreateVariableRegisters(variable(_, _, _)): 
+        EmitCreateRegister(-> Register)
+
+    'rule' CreateVariableRegisters(_):
+        -- nothing
+
+'action' DestroyParameterRegisters(PARAMETERLIST)
+
+    'rule' DestroyParameterRegisters(parameterlist(parameter(_, _, Id, _), Rest)):
+        QuerySymbolId(Id -> Info)
+        Info'Index -> Index
+        EmitDestroyRegister(Index)
+        DestroyParameterRegisters(Rest)
+
+    'rule' DestroyParameterRegisters(nil):
+        -- nothing
+
+'action' DestroyVariableRegisters(STATEMENT)
+
+    'rule' DestroyVariableRegisters(sequence(Left, Right)):
+        DestroyVariableRegisters(Left)
+        DestroyVariableRegisters(Right)
+
+    'rule' DestroyVariableRegisters(variable(_, Id, _)):
+        QuerySymbolId(Id -> Info)
+        Info'Index -> Index
+        EmitDestroyRegister(Index)
+
+    'rule' DestroyVariableRegisters(_):
+        -- nothing
 
 'action' GenerateBody(INT, INT, STATEMENT)
 
@@ -1495,22 +1544,22 @@
 'action' EmitStoreVar(SYMBOLKIND, INT, INT)
 
     'rule' EmitStoreVar(variable, Reg, Var):
-        EmitStoreGlobal(Reg, Var)
+        EmitStore(Reg, Var, 0)
         
     'rule' EmitStoreVar(_, Reg, Var):
-        EmitStoreLocal(Reg, Var)
+        EmitAssign(Var, Reg)
 
 'action' EmitFetchVar(SYMBOLKIND, INT, INT)
 
     'rule' EmitFetchVar(local, Reg, Var):
-        EmitFetchLocal(Reg, Var)
+        EmitAssign(Reg, Var)
 
     'rule' EmitFetchVar(parameter, Reg, Var):
-        EmitFetchLocal(Reg, Var)
+        EmitAssign(Reg, Var)
 
     -- This catches all module-scope things, including variables and handler references.
     'rule' EmitFetchVar(_, Reg, Var):
-        EmitFetchGlobal(Reg, Var)
+        EmitFetch(Reg, Var, 0)
         
 'action' EmitInvokeRegisterList(INTLIST)
 

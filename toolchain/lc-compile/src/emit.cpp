@@ -128,10 +128,8 @@ extern "C" void EmitAssignString(long reg, long value);
 extern "C" void EmitBeginAssignList(long reg);
 extern "C" void EmitContinueAssignList(long reg);
 extern "C" void EmitEndAssignList(void);
-extern "C" void EmitFetchLocal(long reg, long var);
-extern "C" void EmitStoreLocal(long reg, long var);
-extern "C" void EmitFetchGlobal(long reg, long var);
-extern "C" void EmitStoreGlobal(long reg, long var);
+extern "C" void EmitFetch(long reg, long var, long level);
+extern "C" void EmitStore(long reg, long var, long level);
 extern "C" void EmitReturn(long reg);
 extern "C" void EmitReturnNothing(void);
 extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
@@ -1100,28 +1098,16 @@ void EmitAssign(long dst, long src)
 
 /////////
 
-void EmitFetchLocal(long reg, long var)
+void EmitFetch(long reg, long var, long level)
 {
-    MCScriptEmitFetchLocalInModule(s_builder, reg, var);
-    MCLog("[Emit] FetchLocal(%ld, %ld)", reg, var);
+    MCScriptEmitFetchInModule(s_builder, reg, var, level);
+    MCLog("[Emit] Fetch(%ld, %ld, $ld)", reg, var, level);
 }
 
-void EmitStoreLocal(long reg, long var)
+void EmitStore(long reg, long var, long level)
 {
-    MCScriptEmitStoreLocalInModule(s_builder, reg, var);
-    MCLog("[Emit] StoreLocal(%ld, %ld)", reg, var);
-}
-
-void EmitFetchGlobal(long reg, long var)
-{
-    MCScriptEmitFetchGlobalInModule(s_builder, reg, var);
-    MCLog("[Emit] FetchGlobal(%ld, %ld)", reg, var);
-}
-
-void EmitStoreGlobal(long reg, long var)
-{
-    MCScriptEmitStoreGlobalInModule(s_builder, reg, var);
-    MCLog("[Emit] StoreGlobal(%ld, %ld)", reg, var);
+    MCScriptEmitStoreInModule(s_builder, reg, var, level);
+    MCLog("[Emit] Store(%ld, %ld, %ld)", reg, var, level);
 }
 
 void EmitReturn(long reg)
@@ -1132,11 +1118,8 @@ void EmitReturn(long reg)
 
 void EmitReturnNothing(void)
 {
-    long t_reg;
-    EmitCreateRegister(t_reg);
-    EmitAssignUndefined(t_reg);
-    EmitReturn(t_reg);
-    EmitDestroyRegister(t_reg);
+    MCScriptEmitReturnUndefinedInModule(s_builder);
+    MCLog("[Emit] ReturnUndefined()", 0);
 }
 
 ////////
