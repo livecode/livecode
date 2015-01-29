@@ -867,11 +867,11 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 	{
 		(*t_combiner) -> x_coef_a = STOP_INT_MAX * -wy / d;
 		(*t_combiner) -> x_coef_b = STOP_INT_MAX * wx / d;
-		(*t_combiner) -> x_inc = (uint4) (STOP_INT_MAX * (int64_t)((*t_combiner) -> origin . x * wy + ((int32_t) r_clip . origin .y - (*t_combiner) -> origin . y) * wx) / d);
+		(*t_combiner) -> x_inc = (uint4) (STOP_INT_MAX * (int64_t)((*t_combiner) -> origin . x * wy + ((int64_t) r_clip . origin .y - (*t_combiner) -> origin . y) * wx) / d);
 		
 		(*t_combiner) -> y_coef_a = STOP_INT_MAX * vy / d;
 		(*t_combiner) -> y_coef_b = STOP_INT_MAX * -vx / d;
-		(*t_combiner) -> y_inc = (uint4) (STOP_INT_MAX * -(int64_t)((*t_combiner) -> origin . x * vy + ((int32_t) r_clip . origin .y - (*t_combiner) -> origin . y) * vx) / d);
+		(*t_combiner) -> y_inc = (uint4) (STOP_INT_MAX * -(int64_t)((*t_combiner) -> origin . x * vy + ((int64_t) r_clip . origin .y - (*t_combiner) -> origin . y) * vx) / d);
 	}
     
     // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
