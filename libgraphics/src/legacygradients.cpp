@@ -1028,7 +1028,7 @@ MCGLegacyGradientShader::MCGLegacyGradientShader(SkFlattenableReadBuffer &p_read
 {
 }
 
-void MCGLegacyGradientShader::flatten(SkFlattenableWriteBuffer &p_write_buffer)
+void MCGLegacyGradientShader::flatten(SkFlattenableWriteBuffer &p_write_buffer) const
 {
 }
 

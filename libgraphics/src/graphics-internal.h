@@ -504,7 +504,7 @@ public:
 	
 protected:
     MCGLegacyGradientShader(SkFlattenableReadBuffer& );
-    virtual void flatten(SkFlattenableWriteBuffer& );
+    virtual void flatten(SkFlattenableWriteBuffer& ) const SK_OVERRIDE;
     virtual Factory getFactory() const { return CreateProc; }
 	
 	MCGGradientRef			m_gradient_ref;
