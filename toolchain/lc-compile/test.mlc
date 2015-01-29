@@ -453,7 +453,13 @@ public handler testArray(inout xResults as list)
 	delete tTest["key"]
 	
 	testLog("Array", "DeleteElement", the number of elements in tTest is 0, xResults)
-
+	
+	variable tArrayWithUndefined as array
+	put the empty array into tArrayWithUndefined
+	put undefined into tArrayWithUndefined["a"]
+	variable tUndefined
+ 	put tArrayWithUndefined["a"] into tUndefined
+	testLog("Array", "UndefinedElement", tUndefined is not defined, xResults)
 end handler
 
 public handler testBitwise(inout xResults as list)
@@ -853,6 +859,13 @@ public handler testList(inout xResults as list)
 	delete the first element of tTest
 	testLog("List", "DeleteFirstElement", tTest[1] is 2, xResults)	
 
+	variable tListWithUndefined as list
+	put the empty list into tListWithUndefined
+	push undefined onto tListWithUndefined
+	variable tUndefined
+ 	put the head of tListWithUndefined into tUndefined
+	testLog("List", "UndefinedElement", tUndefined is not defined, xResults)
+	
 end handler
 
 public handler testSort(inout xResults as list)
