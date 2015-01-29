@@ -184,6 +184,8 @@ public handler testEncoding(inout xResults as list)
     variable tData as data
     encode "?" using "native"
     put the result into tData
+	testLog("Encoding", "NativeLength", the number of bytes in tData is 1, xResults)
+
 	encode tString using "native" with replacement tData
 	testLog("Encoding", "InvalidNativeChar", the result is tData, xResults)
 	

@@ -1959,10 +1959,19 @@ MC_DLLEXPORT bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_cha
 // terminated, but this is not reflected in the char count.
 MC_DLLEXPORT bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 
-// Converts the contents of the string to native - using p_replacement as the unmappable char,
-// or, if p_replacement is nil and an unmappable char is encountered, the function returns false.
-// The caller takes ownership of the char array. Note that the returned array is NUL
-// terminated, but this is not reflected in the char count.
+// Converts the contents of the string to the native encoding if
+// p_ascii is false, or to ASCII if p_ascii is true.
+//
+// A newly-allocated array is stored in r_chars, and the number of
+// encoded characters is stored in r_char_count.  The caller takes
+// ownership of r_chars.  Note that r_chars is nul-terminated, but
+// r_char_count is exclusive of the trailing nul.
+//
+// If an unmappable character is found in the string, it is replaced
+// in r_chars by the contents of p_replacement.  If p_replacement is
+// nil and an unmappable character is found, returns false.
+// p_replacement is copied into r_chars verbatim, even if it contains
+// data that is invalid in the target encoding.
 MC_DLLEXPORT bool MCStringConvertToNativeWithReplacement(MCStringRef self, MCDataRef p_replacement, bool p_ascii, char_t*& r_chars, uindex_t& r_char_count);
     
 // Normalizes and converts to native

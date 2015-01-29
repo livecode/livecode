@@ -2225,48 +2225,151 @@ bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, u
 
 bool MCStringConvertToNativeWithReplacement(MCStringRef self, MCDataRef p_replacement, bool p_ascii, char_t*& r_chars, uindex_t& r_char_count)
 {
-    // Get the native chars, but excludes any char belonging to the extended part of the ASCII -
-    char_t *t_chars;
-    uindex_t t_char_count = MCStringGetLength(self);
-    if (!MCMemoryNewArray(t_char_count + 1, t_chars))
-        return false;
-    
-    char_t t_replacement;
-    if (p_replacement != nil)
-        t_replacement = MCDataGetByteAtIndex(p_replacement, 0);
-    
-    uindex_t t_new_char_count;
-    MCStringGetNativeCharsWithReplacement(self, MCRangeMake(0, t_char_count), p_replacement != nil ? &t_replacement : nil, 1, t_chars, t_char_count + 1, t_new_char_count);
-    
-    bool t_valid;
-    t_valid = true;
-    
-    if (p_replacement == nil && t_new_char_count != t_char_count)
-        t_valid = false;
-    
-    if (p_ascii)
-    {
-        for (uindex_t i = 0; t_valid && i < t_char_count; ++i)
-        {
-            if (t_chars[i] > 127)
-            {
-                if (p_replacement == nil)
-                    t_valid = false;
-                
-                t_chars[i] =  MCDataGetByteAtIndex(p_replacement, 1);
-            }
-        }
-    }
-    
-    if (!t_valid)
-        MCMemoryDeleteArray(t_chars);
-    else
-    {
-        r_chars = t_chars;
-        r_char_count = t_char_count;
-    }
-    
-    return t_valid;
+	/* Get the raw data & length of the replacement bytes, if available. */
+	const char_t *t_replacement;
+	uindex_t t_replacement_len;
+
+	if (NULL != p_replacement)
+	{
+		t_replacement = (const char_t *) MCDataGetBytePtr (p_replacement);
+		t_replacement_len = MCDataGetLength (p_replacement);
+	}
+	else
+	{
+		t_replacement = NULL;
+		t_replacement_len = 0;
+	}
+
+	/* Allocate an estimated length for the result buffer.  Note that the
+	 * result is supposed to be nul-terminated. */
+	uindex_t t_result_len = MCStringGetLength (self);
+	MCAutoArray<char_t> t_buffer;
+
+	while (true)
+	{
+		/* Overflow check */
+		if (t_result_len == UINDEX_MAX)
+			return false; /* NOPE */
+
+		/* Expand buffer */
+		if (!t_buffer.Resize (t_result_len + 1))
+			return false;
+
+		/* Attempt to fill the result buffer. */
+		if (!MCStringGetNativeCharsWithReplacement (
+		            self, MCRangeMake (0, MCStringGetLength (self)),
+		            t_replacement, t_replacement_len,
+		            t_buffer.Ptr(), t_buffer.Size() - 1,
+		            t_result_len))
+			return false;
+
+		if (t_result_len < t_buffer.Size())
+			break;
+	}
+
+	/* ---------- Restrict to ASCII */
+
+	if (!p_ascii)
+	{
+		/* Nothing to do */
+	}
+	else if (NULL == t_replacement)
+	{
+		/* If there's no replacement, non-ASCII characters are an error. */
+		for (uindex_t i = 0; i < t_result_len; ++i)
+		{
+			if (127 < t_buffer[i])
+				return false;
+		}
+	}
+	else if (1 == t_replacement_len)
+	{
+		/* If the replacement is sensible (i.e. a single byte) then
+		 * perform the replacement in place :-) */
+		for (uindex_t i = 0; i < t_result_len; ++i)
+		{
+			if (127 < t_buffer[i])
+				t_buffer[i] = *t_replacement;
+		}
+	}
+	else if (0 == t_replacement_len)
+	{
+		/* Delete non-ASCII characters )-: */
+
+		/* Take from index i, put into index j */
+		for (uindex_t i = 0, j = 0; j < t_result_len; ++i, ++j)
+		{
+			if (127 < t_buffer[i])
+			{
+				--j;
+				--t_result_len;
+			}
+			else
+			{
+				t_buffer[j] = t_buffer[i];
+			}
+		}
+
+		/* Maintain nul-termination */
+		t_buffer[t_result_len] = '\0';
+
+		if (!t_buffer.Resize (t_result_len + 1))
+			return false;
+	}
+	else
+	{
+		/* Multibyte replacement string. D-: */
+
+		/* Count the number of replacements needed */
+		uindex_t t_count_non_ascii = 0;
+		for (uindex_t i = 0; i < t_result_len; ++i)
+			if (127 < t_buffer[i]) ++t_count_non_ascii;
+
+		/* Calculate additional space needed in array */
+		uindex_t t_extend_by = t_count_non_ascii * (t_replacement_len - 1);
+
+		/* Overflow checks */
+		if (t_count_non_ascii != 0 &&
+		    t_extend_by / t_count_non_ascii != (t_replacement_len - 1))
+			return false;
+		if (t_buffer.Size() > UINDEX_MAX - t_extend_by)
+			return false;
+
+		/* Construct new result array, inserting replacement string
+		 * where required */
+		MCAutoArray<char_t> t_ascii;
+		uindex_t t_ascii_len = t_result_len + t_extend_by;
+		if (!t_ascii.New (t_ascii_len + 1)) /* Space for nul */
+			return false;
+
+		for (uindex_t i = 0, j = 0;
+		     i < t_result_len && j < t_ascii_len;
+		     ++i, ++j)
+		{
+			if (127 >= t_buffer[i])
+			{
+				t_ascii[j] = t_buffer[i];
+				continue;
+			}
+
+			MCMemoryCopy (&t_ascii[j], t_replacement, t_replacement_len);
+			j += t_replacement_len - 1;
+		}
+
+		uindex_t t_ignored;
+		t_ascii.Take (r_chars, t_ignored);
+		r_char_count = t_ascii_len;
+		MCAssert (t_ascii_len < t_ignored);
+
+		return true;
+	}
+
+	uindex_t t_ignored;
+	t_buffer.Take (r_chars, t_ignored);
+	r_char_count = t_result_len;
+	MCAssert (t_result_len < t_ignored);
+
+	return true;
 }
 
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
