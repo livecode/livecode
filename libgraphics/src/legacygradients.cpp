@@ -902,7 +902,9 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 					t_combiner -> combine = MCGradientFillCombine<kMCGradientKindSqrtXY>;
 					return t_combiner;
 			}
+			break;
 		}
+			
 		case kMCGImageFilterLow:
 		case kMCGImageFilterMedium:
         case kMCGImageFilterHigh:
@@ -940,6 +942,7 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 					MCGradientFillDeleteCombiner(t_combiner);
 					return NULL;
 			}
+			break;
 		}
 	}
 	
