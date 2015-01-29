@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum Operation
+enum BitwiseOperation
 {
 	// Bitwise
 	OPERATION_CLEAR, // 0
@@ -49,9 +49,12 @@ enum Operation
 	OPERATION_OR_INVERTED,
 	OPERATION_NAND,
 	OPERATION_SET,
-	
+};
+
+enum ArithmeticOperation
+{
 	// Arithmetic
-	OPERATION_BLEND, // 16
+	OPERATION_BLEND = OPERATION_SET + 1, // 16
 	OPERATION_ADD_PIN,
 	OPERATION_ADD_OVER,
 	OPERATION_SUB_PIN,
@@ -59,9 +62,12 @@ enum Operation
 	OPERATION_AD_MAX,
 	OPERATION_SUB_OVER,
 	OPERATION_AD_MIN,
-	
+};
+
+enum BasicImagingOperation
+{
 	// Basic Imaging Blends
-	OPERATION_BLEND_CLEAR, // 24
+	OPERATION_BLEND_CLEAR = OPERATION_AD_MIN + 1, // 24
 	OPERATION_BLEND_SRC,
 	OPERATION_BLEND_DST,
 	OPERATION_BLEND_SRC_OVER,
@@ -76,9 +82,12 @@ enum Operation
 	OPERATION_BLEND_PLUS, //36
 	OPERATION_BLEND_MULTIPLY,
 	OPERATION_BLEND_SCREEN,
-	
+};
+
+enum AdvancedImagingOperation
+{
 	// Advanced Imaging Blends
-	OPERATION_BLEND_OVERLAY,
+	OPERATION_BLEND_OVERLAY = OPERATION_BLEND_SCREEN + 1,
 	OPERATION_BLEND_DARKEN,
 	OPERATION_BLEND_LIGHTEN,
 	OPERATION_BLEND_DODGE,
@@ -87,9 +96,6 @@ enum Operation
 	OPERATION_BLEND_SOFT_LIGHT,
 	OPERATION_BLEND_DIFFERENCE,
 	OPERATION_BLEND_EXCLUSION,
-	
-	OPERATION_SRC_BIC = OPERATION_AND_REVERSE,
-	OPERATION_NOT_SRC_BIC = OPERATION_AND,
 };
 
 static uint16_t s_sqrt_table[1024] = 
@@ -398,7 +404,7 @@ template<typename Type> INLINE Type fastmax(Type a, Type b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<Operation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t bitwise_combiner(uint32_t dst, uint32_t src)
+template<BitwiseOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t bitwise_combiner(uint32_t dst, uint32_t src)
 {
 	uint8_t sa, da;
 	uint32_t r, s, d;
@@ -495,7 +501,7 @@ template<Operation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32
 	return r;
 }
 
-template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t arithmetic_combiner(uint32_t dst, uint32_t src)
+template<ArithmeticOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t arithmetic_combiner(uint32_t dst, uint32_t src)
 {
 	uint8_t sa, da;
 	uint32_t s, d;
@@ -624,7 +630,7 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t ari
 	return r;
 }
 
-template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t basic_imaging_combiner(uint32_t dst, uint32_t src)
+template<BasicImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t basic_imaging_combiner(uint32_t dst, uint32_t src)
 {
 	uint32_t r;
 	switch(x_combiner)
@@ -725,7 +731,7 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t bas
 	return r;
 }
 
-template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t advanced_imaging_combiner(uint32_t dst, uint32_t src)
+template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t advanced_imaging_combiner(uint32_t dst, uint32_t src)
 {
 	uint8_t t_src_red, t_src_green, t_src_blue, t_src_alpha;
 	uint8_t t_dst_red, t_dst_green, t_dst_blue, t_dst_alpha;
@@ -952,16 +958,24 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t adv
 	return t_red | (t_green << 8) | (t_blue << 16);
 }
 
-template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t pixel_combine(uint32_t dst, uint32_t src)
+template<BitwiseOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t pixel_combine(uint32_t dst, uint32_t src)
 {
-	if (x_combiner <= OPERATION_SET)
-		return bitwise_combiner<(Operation)x_combiner, x_dst_alpha, x_src_alpha>(dst, src);
-	else if (x_combiner <= OPERATION_AD_MIN)
-		return arithmetic_combiner<(Operation)x_combiner, x_dst_alpha, x_src_alpha>(dst, src);
-	else if (x_combiner <= OPERATION_BLEND_SCREEN)
-		return basic_imaging_combiner<(Operation)x_combiner, x_dst_alpha, x_src_alpha>(dst, src);
-	else
-		return advanced_imaging_combiner<x_combiner, x_dst_alpha, x_src_alpha>(dst, src);
+	return bitwise_combiner<x_combiner, x_dst_alpha, x_src_alpha>(dst, src);
+}
+
+template<ArithmeticOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t pixel_combine(uint32_t dst, uint32_t src)
+{
+	return arithmetic_combiner<x_combiner, x_dst_alpha, x_src_alpha>(dst, src);
+}
+
+template<BasicImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t pixel_combine(uint32_t dst, uint32_t src)
+{
+	return basic_imaging_combiner<x_combiner, x_dst_alpha, x_src_alpha>(dst, src);
+}
+
+template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t pixel_combine(uint32_t dst, uint32_t src)
+{
+	return advanced_imaging_combiner<x_combiner, x_dst_alpha, x_src_alpha>(dst, src);
 }
 
 template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> void surface_combine(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity)
