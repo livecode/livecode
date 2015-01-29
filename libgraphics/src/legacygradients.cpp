@@ -1035,12 +1035,4 @@ void MCGLegacyGradientShader::shadeSpan(int x, int y, SkPMColor dstC[], int coun
 	}
 }
 
-MCGLegacyGradientShader::MCGLegacyGradientShader(SkFlattenableReadBuffer &p_read_buffer)
-{
-}
-
-void MCGLegacyGradientShader::flatten(SkFlattenableWriteBuffer &p_write_buffer) const
-{
-}
-
 ////////////////////////////////////////////////////////////////////////////////

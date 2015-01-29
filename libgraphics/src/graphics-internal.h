@@ -497,15 +497,9 @@ public:
     virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
 	virtual SkShader::BitmapType asABitmap(SkBitmap*, SkMatrix*, TileMode[2]) const SK_OVERRIDE;
 	
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)
-	{ 
-        return SkNEW_ARGS(MCGLegacyGradientShader, (buffer));
-    }	
-	
 protected:
-    MCGLegacyGradientShader(SkFlattenableReadBuffer& );
-    virtual void flatten(SkFlattenableWriteBuffer& ) const SK_OVERRIDE;
-    virtual Factory getFactory() const { return CreateProc; }
+	virtual void flatten(SkFlattenableWriteBuffer& ) const SK_OVERRIDE {} ;
+    virtual Factory getFactory() const SK_OVERRIDE { return nil; }
 	
 	MCGGradientRef			m_gradient_ref;
 	int32_t					m_y;
