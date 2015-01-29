@@ -182,12 +182,30 @@ public handler testEncoding(inout xResults as list)
 	testLog("Encoding", "InvalidASCIIChar", the result is not defined, xResults)
 
     variable tData as data
-    encode "?" using "ASCII"
-    put the result into tData
-	testLog("Encoding", "ASCIILength", the number of bytes in tData is 1, xResults)
+	variable tEncoded as data
+	encode "" using "ASCII"
+	put the result into tData
+
+	testLog("Encoding", "ASCIIEncodeEmpty", the number of bytes in tData is 0, xResults)
 
 	encode tString using "ASCII" with replacement tData
-	testLog("Encoding", "InvalidASCIIChar", the result is tData, xResults)
+	put the result into tEncoded
+	testLog("Encoding", "InvalidASCIICharEmptyReplacement", tEncoded is tData, xResults)
+	testLog("Encoding", "InvalidASCIICharEmptyReplacement2", 0 is the number of bytes in tEncoded, xResults)
+
+    encode "_" using "ASCII"
+    put the result into tData
+	testLog("Encoding", "ASCIIEncodeSingleChar", the number of bytes in tData is 1, xResults)
+
+	encode tString using "ASCII" with replacement tData
+	testLog("Encoding", "InvalidASCIICharSingleReplacement", the result is tData, xResults)
+
+	encode "__" using "ASCII"
+	put the result into tData
+	testLog("Encoding", "ASCIIEncodeLength2", the number of bytes in tData is 2, xResults)
+
+	encode tString using "ASCII" with replacement tData
+	testLog("Encoding", "InvalidASCIICharMultibyteReplacement", the result is tData, xResults)
 	
 	encode "A" using "utf32"
 	decode byte 1 to 3 of the result using "utf32" with replacement "?"
