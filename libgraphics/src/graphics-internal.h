@@ -495,7 +495,7 @@ public:
     virtual uint32_t getFlags();
     virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
     virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
-    virtual bool asABitmap(SkBitmap*, SkMatrix*, TileMode*);
+	virtual SkShader::BitmapType asABitmap(SkBitmap*, SkMatrix*, TileMode[2]) const SK_OVERRIDE;
 	
     static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)
 	{ 

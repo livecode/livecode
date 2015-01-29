@@ -1001,9 +1001,9 @@ uint32_t MCGLegacyGradientShader::getFlags()
 	return 0; 
 }
 
-bool MCGLegacyGradientShader::asABitmap(SkBitmap*, SkMatrix*, TileMode*) 
+SkShader::BitmapType MCGLegacyGradientShader::asABitmap(SkBitmap*, SkMatrix*, TileMode[2]) const
 {
-	return false; 
+	return SkShader::kNone_BitmapType;
 }
 
 void MCGLegacyGradientShader::shadeSpan16(int x, int y, uint16_t dstC[], int count) 
