@@ -349,22 +349,6 @@
 
     'rule' Apply(TYPE'named(_, Name)):
         ApplyId(Name)
-        
-    'rule' Apply(TYPE'opaque(_, BaseType, Fields)):
-        -- Apply the base type
-        Apply(BaseType)
-        
-        -- Enter a new scope for fields
-        EnterScope
-        
-        -- Declare the fields first
-        DeclareFields(Fields)
-        
-        -- Now apply all id's in the fields
-        Apply(Fields)
-        
-        -- Leave the fields scope
-        LeaveScope
     
     'rule' Apply(TYPE'record(_, BaseType, Fields)):
         -- Apply the base type

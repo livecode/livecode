@@ -1731,10 +1731,6 @@
         GenerateHandlerTypeParameters(Parameters)
         EmitEndHandlerType(-> Index)
 
-    'rule' GenerateBaseType(opaque(_, _, _) -> Index):
-        -- TODO
-        EmitUndefinedType(-> Index)
-
     'rule' GenerateBaseType(any(_) -> Index):
         EmitAnyType(-> Index)
     'rule' GenerateBaseType(undefined(_) -> Index):

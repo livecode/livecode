@@ -50,7 +50,6 @@
 --   BD2) DEFINITION'property(Getter, Setter) - both id's must be handlers or variables
 --
 --   BT1) TYPE'named(Id) - Id must be bound to a type.
---   BT2) TYPE'opaque(FIELD'action(Handler)) - Handler must be bound to a handler.
 --
 --   BS1) STATEMENT'repeatupto(Slot) - Slot must be bound to a variable
 --   BS2) STATEMENT'repeatdownto(Slot) - Slot must be bound to a variable
