@@ -566,6 +566,20 @@ bool __MCCustomDefaultMutableCopy(MCValueRef, bool, MCValueRef &);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Returns the sequence of native chars making up the given range in
+// 'chars' and returns the number of chars generated. If 'chars' is
+// nil, just the number of chars that would be generated is
+// returned. Any unmappable chars get generated as '?'.
+uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
+
+// Returns the sequence of native chars making up the given range in
+// 'chars' and returns the number of chars generated. If 'chars' is
+// nil, just the number of chars that would be generated is
+// returned. Any unmappable chars get generated as the replacement
+// char. If the replacement char is nil, the length returned is the
+// number of generated chars.
+uindex_t MCStringGetNativeCharsWithReplacement(MCStringRef self, MCRange p_range, char_t *p_replacement, char_t *p_chars);
+
 hash_t MCNativeCharsHash(const char_t *chars, uindex_t char_count, MCStringOptions p_options);
 
 bool MCNativeCharsEqualExact(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
