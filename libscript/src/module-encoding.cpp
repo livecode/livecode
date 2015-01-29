@@ -140,12 +140,6 @@ extern "C" MC_DLLEXPORT MCStringRef MCEncodingExecDecodeTextUsingEncodingString(
 
 extern "C" MC_DLLEXPORT MCDataRef MCEncodingExecEncodeTextUsingEncodingStringWithReplacement(MCStringRef p_target, MCStringRef p_encoding, MCDataRef p_replacement)
 {
-    if (MCDataGetLength(p_replacement) != 1)
-    {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 byte"), nil);
-        return nil;
-    }
-    
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
@@ -216,12 +210,6 @@ extern "C" MC_DLLEXPORT void MCEncodingEvalTextDecodedUsingEncodingString(MCData
 
 extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncodingStringWithReplacement(MCStringRef p_target, MCStringRef p_encoding, MCDataRef p_replacement, MCDataRef& r_encoded)
 {
-    if (MCDataGetLength(p_replacement) != 1)
-    {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 byte"), nil);
-        return;
-    }
-    
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
