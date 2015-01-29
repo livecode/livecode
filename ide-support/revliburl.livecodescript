@@ -58,8 +58,25 @@ local laUrlByFile ##used by libUrlUploadFile to track which files go to which ur
 ------------------------------------------------
 on libraryStack
    if the target is not me then pass libraryStack
+   
+   // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when stack becomes in use
+   initialiseCustomProps
 end libraryStack
 ------------------------------------------------
+on initialiseCustomProps
+   # initialise ftp codes prop set
+   local tFtpCodes
+   put "ABOR:225,226|Connect:220|CWD:250|DELE:250|LIST:125,150|MKD:257|MODE:200|NLST:125,150|PASS:230,202|PASV:227|PORT:200|PWD:257|QUIT:221|RETR:125,150|RMD:250|SIZE:213|STOR:125,150|transferComplete:226|TYPE:200|USER:230,331" into tFtpCodes
+   split tFtpCodes by "|" and ":"
+   set the customProperties["cFtpGoodCodes"] of me to tFtpCodes
+   
+   # initialise default header
+   set the cDefaultHeader of me to "METHOD --- HTTP/1.1" & return & "Host:" & return & "User-Agent: "
+   
+   #initialise version
+   set the cVersion of me to "1.2.0"
+
+end initialiseCustomProps
 
 ## for debugging ##
 function md5 pString
