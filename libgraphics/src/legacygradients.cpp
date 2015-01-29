@@ -826,7 +826,11 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 		case kMCGLegacyGradientSqrtXY:
 			t_kind = kMCGradientKindSqrtXY;
 			break;
-	}	
+			
+		default:
+			// Unrecognised gradient type
+			return nil;
+	}
 	
 	if (!MCMemoryNewArray(p_gradient_ref -> ramp_length, (*t_combiner)->ramp))
 		return nil;
