@@ -483,7 +483,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCGradientCombiner MCGradientCombiner_t;
+typedef struct MCGradientAffineCombiner MCGradientCombiner_t;
 
 class MCGLegacyGradientShader : public SkShader
 {

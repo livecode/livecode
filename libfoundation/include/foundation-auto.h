@@ -600,7 +600,7 @@ private:
 	T *m_ptr;
 };
 
-template<typename T, void (*FREE)(const void*)> class MCAutoCustomPointer
+template<typename T, void (*FREE)(T*)> class MCAutoCustomPointer
 {
 	
 public:
@@ -614,32 +614,39 @@ public:
 		FREE(m_ptr);
 	}
 	
-	T operator = (T value)
+	T *operator = (T *value)
 	{
 		FREE(m_ptr);
 		m_ptr = value;
 		return value;
 	}
 	
-	T& operator & (void)
+	T*& operator & (void)
 	{
 		MCAssert(m_ptr == nil);
 		return m_ptr;
 	}
 	
-	T operator * (void) const
+	T *operator * (void) const
 	{
 		return m_ptr;
 	}
 	
-	void Take(T&r_ptr)
+	void Take(T*&r_ptr)
 	{
 		r_ptr = m_ptr;
 		m_ptr = nil;
 	}
 	
+	T *Take()
+	{
+		T *t_ptr = m_ptr;
+		m_ptr = nil;
+		return t_ptr;
+	}
+	
 private:
-	T m_ptr;
+	T *m_ptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
