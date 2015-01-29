@@ -19,6 +19,8 @@
 #include "foundation-system.h"
 #include "script.h"
 
+extern bool MCModulesInitialize(void);
+
 extern "C" void MCStringExecPutStringAfter(void);
 extern "C" void MCArithmeticExecAddIntegerToInteger(void);
 extern "C" void MCCharFetchCharOf(void);
@@ -96,6 +98,7 @@ int main(int argc, char *argv[])
     MCInitialize();
     MCSInitialize();
     MCScriptInitialize();
+    MCModulesInitialize();
     
     // Skip command arg.
     argc -= 1;

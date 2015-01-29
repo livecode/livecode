@@ -35,6 +35,8 @@ References: ResolveScriptObject(statement), MyScriptObject(expression)
 
 module com.livecode.engine
 
+use com.livecode.foreign
+
 public foreign type ScriptObject binds to "kMCEngineScriptObjectTypeInfo"
 
 public foreign handler MCEngineExecResolveScriptObject(in pObjectId) as ScriptObject binds to "<builtin>"

@@ -41,6 +41,7 @@
     MakeNameLiteral
     GetStringOfNameLiteral
     IsNameEqualToString
+    IsStringEqualToString
 
     InitializeScopes
     FinalizeScopes
@@ -316,6 +317,8 @@
 
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
+
+'condition' IsStringEqualToString(STRING, STRING)
 
 --------------------------------------------------------------------------------
 

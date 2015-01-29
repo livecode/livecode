@@ -542,32 +542,6 @@
     'rule' Type(-> optional(Position, Base)):
         "optional" @(-> Position) Type(-> Base)
 
-    'rule' Type(-> pointer(Position)):
-        "pointer" @(-> Position)
-
-    'rule' Type(-> bool(Position)):
-        "bool" @(-> Position)
-
-    'rule' Type(-> int(Position)):
-        "int" @(-> Position)
-    
-    'rule' Type(-> uint(Position)):
-        "uint" @(-> Position)
-
-    'rule' Type(-> int(Position)):
-        "index" @(-> Position)
-    
-    'rule' Type(-> uint(Position)):
-        "uindex" @(-> Position)
-
-    'rule' Type(-> float(Position)):
-        "float" @(-> Position)
-
-    'rule' Type(-> double(Position)):
-        "double" @(-> Position)
-
-    --
-
     'rule' Type(-> any(Position)):
         "any" @(-> Position)
 
