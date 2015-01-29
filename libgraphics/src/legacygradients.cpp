@@ -773,12 +773,22 @@ template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCGradientFillDeleteCombiner(MCGradientCombiner *p_combiner)
+{
+	if (p_combiner == nil)
+		return;
+	
+	MCMemoryDeleteArray(p_combiner->ramp);
+	MCMemoryDeleteArray(((MCGradientAffineCombiner*)p_combiner)->buffer);
+	MCMemoryDelete(p_combiner);
+}
+
 MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, MCGRectangle &r_clip)
 {
     // MM-2014-07-31: [[ ThreadedRendering ]] Removed use of single static combiner to make things thread safe.
 	MCGradientAffineCombiner *t_combiner;
-	t_combiner = new MCGradientAffineCombiner;
-	MCMemoryClear(t_combiner, sizeof(MCGradientAffineCombiner));
+	/* UNCHECKED */ MCMemoryNew(t_combiner);
+	
 	t_combiner -> begin = gradient_combiner_begin;
 	t_combiner -> advance = gradient_affine_combiner_advance;
 	t_combiner -> combine = NULL;
@@ -899,7 +909,7 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 		{
 			t_combiner -> end = gradient_bilinear_affine_combiner_end;
 			t_combiner -> buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(r_clip . size . width);
-			t_combiner -> buffer = new uint4[GRADIENT_AA_SCALE * t_combiner -> buffer_width];
+			/* UNCHECKED */ MCMemoryNewArray(GRADIENT_AA_SCALE * t_combiner -> buffer_width, t_combiner -> buffer);
 			
 			t_combiner -> x_inc += (t_combiner -> x_coef_a + t_combiner -> x_coef_b) >> 2;
 			t_combiner -> y_inc += (t_combiner -> y_coef_a + t_combiner -> y_coef_b) >> 2;
@@ -927,9 +937,7 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 					t_combiner -> combine = MCGradientFillBilinearCombine<kMCGradientKindSqrtXY>;
 					return t_combiner;
 				default:
-					delete t_combiner -> buffer;
-					delete t_combiner -> ramp;
-					delete t_combiner;
+					MCGradientFillDeleteCombiner(t_combiner);
 					return NULL;
 			}
 		}
@@ -953,12 +961,7 @@ MCGLegacyGradientShader::~MCGLegacyGradientShader()
 {
 	MCGGradientRelease(m_gradient_ref);
 	MCMemoryDeallocate(m_mask);
-    if (m_gradient_combiner != NULL)
-    {
-        delete m_gradient_combiner -> ramp;
-        delete ((MCGradientAffineCombiner *)m_gradient_combiner) -> buffer;
-        delete m_gradient_combiner;
-    }
+	MCGradientFillDeleteCombiner(m_gradient_combiner);
 }
 
 bool MCGLegacyGradientShader::setContext(const SkBitmap& p_bitmap, const SkPaint& p_paint, const SkMatrix& p_matrix)
