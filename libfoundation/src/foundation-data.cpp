@@ -156,28 +156,6 @@ bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
     return t_success;
 }
 
-bool
-MCDataCreateRandom (uindex_t p_length,
-                    MCDataRef & r_data)
-{
-	MCDataRef t_mutable;
-	byte_t *t_buffer;
-
-	if (!MCDataCreateMutable (p_length, t_mutable))
-		return false;
-
-	t_buffer = (byte_t *) MCDataGetBytePtr (t_mutable);
-
-	if (!__MCRandomBytes (t_buffer, p_length))
-	{
-		MCValueRelease (t_mutable);
-		return false;
-	}
-
-	return MCDataCopyAndRelease (t_mutable, r_data);
-}
-
-
 bool MCDataIsEmpty(MCDataRef p_data)
 {
     if (__MCDataIsIndirect(p_data))
@@ -246,6 +224,10 @@ bool MCDataCreateMutable(uindex_t p_initial_capacity, MCDataRef& r_data)
 	{
         self->flags |= kMCDataFlagIsMutable;
 		r_data = self;
+	}
+	else
+	{
+		MCValueRelease (self);
 	}
     
 	return t_success;

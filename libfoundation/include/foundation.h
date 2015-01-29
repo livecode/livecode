@@ -2298,9 +2298,6 @@ MC_DLLEXPORT bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange
 MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
 #endif
 
-// Create a data buffer filled with uniformly-distributed random bytes
-MC_DLLEXPORT bool MCDataCreateRandom (uindex_t p_length, MCDataRef & r_data);
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  ARRAY DEFINITIONS
@@ -2505,8 +2502,19 @@ MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCN
 //  HANDLER DEFINITIONS
 //
 
-MC_DLLEXPORT void *MCHandlerGetDefinition(MCHandlerRef handler);
-MC_DLLEXPORT void *MCHandlerGetInstance(MCHandlerRef handler);
+struct MCHandlerCallbacks
+{
+    size_t size;
+    void (*release)(void *context);
+    bool (*invoke)(void *context, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+};
+
+MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbacks *callbacks, void *context, MCHandlerRef& r_handler);
+
+MC_DLLEXPORT void *MCHandlerGetContext(MCHandlerRef handler);
+MC_DLLEXPORT const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef handler);
+    
+MC_DLLEXPORT bool MCHandlerInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2573,10 +2581,6 @@ MC_DLLEXPORT bool MCForeignValueExport(MCTypeInfoRef typeinfo, MCValueRef value,
 //
 //  STREAM DEFINITIONS
 //
-
-MC_DLLEXPORT extern MCStreamRef kMCStdinStream;
-MC_DLLEXPORT extern MCStreamRef kMCStdoutStream;
-MC_DLLEXPORT extern MCStreamRef kMCStderrStream;
 
 // Basic stream creation.
 
@@ -2746,11 +2750,6 @@ MC_DLLEXPORT bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
 // easy encoding/decoding of any value type (that supports serialization).
 MC_DLLEXPORT bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
 
-// Standard streams
-MC_DLLEXPORT bool MCStreamGetStandardOutput(MCStreamRef & r_stdout);
-MC_DLLEXPORT bool MCStreamGetStandardInput(MCStreamRef & r_stdin);
-MC_DLLEXPORT bool MCStreamGetStandardError(MCStreamRef & r_stderr);
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  PROPER LIST DEFINITIONS
@@ -2782,7 +2781,9 @@ MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, 
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
-// Create an immutable list taking ownership of the given array of values.
+// Create an immutable list taking ownership of the given array of
+// values.  Takes ownership of both the underlying MCValueRef
+// references, and the p_values buffer.
 bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list);
     
 // Make an immutable copy of the given list. If the 'copy and release' form is
@@ -2814,8 +2815,8 @@ typedef bool (*MCProperListApplyCallback)(void *context, MCValueRef element);
 MC_DLLEXPORT bool MCProperListApply(MCProperListRef list, MCProperListApplyCallback p_callback, void *context);
 
 // Apply the callback to each element of list to create a new list.
-typedef bool (*MCProperListMapCallback)(MCValueRef element, MCValueRef& r_new_element);
-MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list);
+typedef bool (*MCProperListMapCallback)(void *context, MCValueRef element, MCValueRef& r_new_element);
+MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context);
 
 // Sort list by comparing elements using the provided callback.
 typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);

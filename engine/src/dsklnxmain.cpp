@@ -57,7 +57,8 @@ int main(int argc, char *argv[], char *envp[])
 	MCsysencoding = strclone(nl_langinfo(CODESET));
 	
 	extern bool MCModulesInitialize();
-	if (!MCInitialize() || !MCModulesInitialize() || !MCScriptInitialize())
+	if (!MCInitialize() || !MCSInitialize() ||
+	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
     
 	// Convert the argv array to StringRefs

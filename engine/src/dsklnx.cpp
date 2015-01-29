@@ -201,13 +201,15 @@ static void configureSerialPort(int sRefNum)
             parseSerialControlStr(str, &theTermios);
         str = each;
     }
-    delete controlptr;
+
     //configure the serial output device
     parseSerialControlStr(str,&theTermios);
     if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
     {
         MCLog("Error setting terminous attributes", nil);
     }
+
+    delete[] controlptr;
     return;
 }
 
@@ -266,7 +268,7 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
 
 static Boolean MCS_lnx_nodelay(int4 fd)
 {
-    return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
+	return fcntl(fd, F_SETFL, (fcntl(fd, F_GETFL, 0) & O_APPEND) | O_NONBLOCK)
            >= 0;
 }
 
@@ -1739,6 +1741,8 @@ public:
             t_mode = IO_UPDATE_MODE;
         else if (p_mode == kMCOpenFileModeAppend)
             t_mode = IO_APPEND_MODE;
+		else /* No access requested */
+			return NULL;
 
         t_fptr = fopen(*t_path_sys, t_mode);
 
@@ -3231,8 +3235,8 @@ public:
             if (MCsockets[i]->resolve_state != kMCSocketStateResolving &&
                MCsockets[i]->resolve_state != kMCSocketStateError)
             {
-                if (MCsockets[i]->connected && !MCsockets[i]->closing
-                    && !MCsockets[i]->shared || MCsockets[i]->accepting)
+	            if ((MCsockets[i]->connected && !MCsockets[i]->closing
+	                 && !MCsockets[i]->shared) || MCsockets[i]->accepting)
                     FD_SET(MCsockets[i]->fd, &rmaskfd);
                 if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
                     FD_SET(MCsockets[i]->fd, &wmaskfd);

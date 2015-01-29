@@ -410,6 +410,15 @@ struct __MCForeignValue: public __MCValue
     MCTypeInfoRef typeinfo;
 };
 
+////////
+
+struct __MCHandler: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    const MCHandlerCallbacks *callbacks;
+    char context[1];
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern const uindex_t __kMCValueHashTableSizes[];
@@ -537,18 +546,13 @@ hash_t __MCForeignValueHash(__MCForeignValue *self);
 bool __MCForeignValueIsEqualTo(__MCForeignValue *self, __MCForeignValue *other_self);
 bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_description);
 
+void __MCHandlerDestroy(__MCHandler *self);
+hash_t __MCHandlerHash(__MCHandler *self);
+bool __MCHandlerIsEqualTo(__MCHandler *self, __MCHandler *other_self);
+bool __MCHandlerCopyDescription(__MCHandler *self, MCStringRef& r_description);
+
 bool __MCStreamInitialize(void);
 void __MCStreamFinalize(void);
-
-bool __MCStdioStreamCreate(FILE *, MCStreamRef &);
-
-bool __MCStdioStreamInitialize(void);
-void __MCStdioStreamFinalize(void);
-
-bool __MCFileInitialize(void);
-void __MCFileFinalize(void);
-
-bool __MCRandomBytes (void *, size_t);
 
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */

@@ -706,6 +706,10 @@ static bool MCStringCreateMutableUnicode(uindex_t p_initial_capacity, MCStringRe
 		self->char_count = 0;
 		r_string = self;
 	}
+	else
+	{
+		MCValueRelease (self);
+	}
     
 	return t_success;
 }
@@ -728,6 +732,10 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 		self -> flags |= kMCStringFlagIsMutable;
 		self->char_count = 0;
 		r_string = self;
+	}
+	else
+	{
+		MCValueRelease (self);
 	}
 
 	return t_success;
@@ -1080,8 +1088,12 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
                 /* UNCHECKED */ MCStringFormat(&t_string, t_value == kMCTrue ? "<true>" : "<false>");
 			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNull)
                 /* UNCHECKED */ MCStringFormat(&t_string, "<null>");
+            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeHandler)
+                /* UNCHECKED */ MCStringFormat(&t_string, "<handler>");
+            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeTypeInfo)
+                /* UNCHECKED */ MCStringFormat(&t_string, "<type>");
             else
-				MCAssert(false);
+                /* UNCHECKED */ MCStringFormat(&t_string, "<unknown>");
 
 			if (t_range == nil)
 				t_success = MCStringAppend(t_buffer, *t_string);
@@ -1092,6 +1104,8 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 
 	if (t_success)
 		t_success = MCStringCopyAndRelease(t_buffer, r_string);
+	else
+		MCValueRelease (t_buffer);
 	
 	return t_success;
 }
@@ -2076,6 +2090,7 @@ bool MCStringConvertToBytesWithReplacement(MCStringRef self, MCStringEncoding p_
                     else
                         t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
                 }
+				MCMemoryDeleteArray (t_bytes);
                 r_bytes = (byte_t*&)t_buffer;
                 r_byte_count = t_char_count * sizeof(unichar_t);
                 return true;
@@ -2285,7 +2300,10 @@ bool MCStringConvertToUTF8(MCStringRef p_string, char*& r_utf8string, uindex_t& 
     t_byte_count = MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, nil, 0);
     
     if (!MCMemoryNewArray(t_byte_count + 1, r_utf8string))
+	{
+		MCMemoryDeleteArray (t_unichars);
         return false;
+	}
     
     MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string, t_byte_count);
 	r_utf8_chars = t_byte_count;
