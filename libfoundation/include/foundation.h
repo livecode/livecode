@@ -1767,10 +1767,16 @@ MC_DLLEXPORT bool MCStringEvalTextEncoding(MCStringRef encoding, MCStringEncodin
 MC_DLLEXPORT bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
 MC_DLLEXPORT bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
     
-// Encode the given string with the specified encoding. Characters
-// which cannot be represented in the target encoding are replaced by
-// the replacement bytes.  If p_replacement is nil, returns false when
-// invalid bytes are found.
+// Encode a string with the specified encoding p_encoding.
+//
+// If a character is found that cannot be represented in the target
+// encoding, it is replaced in r_data by the contents of
+// p_replacement.  If p_replacement is nil and an unmappable character
+// is found, returns false.  p_replacement is copied into r_data
+// verbatim, even if it contains data that is invalid in the requested
+// encoding.
+//
+// p_is_external_rep should normally be false.
 MC_DLLEXPORT bool MCStringEncodeWithReplacement(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef p_replacement, MCDataRef& r_data);
 
 // Decode the given data, intepreting in the given encoding.
