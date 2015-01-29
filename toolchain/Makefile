@@ -5,7 +5,7 @@ ifeq ($(MODE),debug)
     CFLAGS += -D_DEBUG -DYYDEBUG=1
 endif
 
-all: lc-compile
+all: lc-compile lc-run
 
 check: lc-test-check
 
@@ -510,6 +510,48 @@ lci: $(COMPILE_stagedir)/stamp-lci
 .PHONY: lci mlc-clean
 
 ################################################################
+# Bytecode runner
+################################################################
+
+########## Configuration
+
+RUN_sources = \
+	lc-run.cpp \
+	module-helper.cpp
+
+RUN_CPPFLAGS = $(TEST_CPPFLAGS)
+RUN_CXXFLAGS = $(TEST_CXXFLAGS)
+RUN_LDFLAGS = $(TEST_LDFLAGS)
+RUN_LDLIBS = $(TEST_LDLIBS)
+
+########## Directories & output executable
+
+RUN_exe = $(BUILD_DIR)/lc-run
+
+RUN_srcdir = lc-compile/src
+RUN_objdir = $(CACHE_DIR)lc-run
+
+# Make sure to rebuild when the libraries are updated
+$(RUN_exe): $(BUILD_DIR)/libfoundation.a $(BUILD_DIR)/libstdscript.a
+
+########## C++ compilation rules
+
+RUN_objs = $(patsubst %.cpp,$(RUN_objdir)/%.o,$(RUN_sources))
+
+$(RUN_objdir)/%.o: $(RUN_srcdir)/%.cpp
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(RUN_CPPFLAGS) $(RUN_CXXFLAGS) -c -o $@ $<
+$(RUN_exe): $(RUN_objs)
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(RUN_LDFLAGS) -o $@ $^ $(RUN_LDLIBS)
+
+########## Convenience targets
+
+lc-run: $(RUN_exe)
+
+.PHONY: lc-run
+
+################################################################
 # Test runner
 ################################################################
 
@@ -583,4 +625,4 @@ lc-test-check: $(CHECK_lcm) $(LC_TEST)
 	    $(LC_TEST) $$test_lcm || exit $$? ; \
 	done
 
-.PHONY: lc-test-check;
+.PHONY: lc-test-check
