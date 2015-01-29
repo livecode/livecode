@@ -466,19 +466,11 @@ public:
 	virtual bool asCoeff(Coeff* src, Coeff* dst) const;
 	virtual bool asMode(Mode* mode) const;
 	
-    virtual Factory getFactory() const { return CreateProc; }
-    virtual void flatten(SkFlattenableWriteBuffer&);
-	
-protected:
-    MCGLegacyBlendMode(SkFlattenableReadBuffer& rb);
+    virtual Factory getFactory() const SK_OVERRIDE { return nil; }
+	virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE {}
 	
 private:
 	uint32_t m_function;
-	
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)
-	{
-		return SkNEW_ARGS(MCGLegacyBlendMode, (buffer));
-	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////

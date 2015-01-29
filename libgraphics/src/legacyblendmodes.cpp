@@ -1545,12 +1545,4 @@ SkPMColor MCGLegacyBlendMode::xferColor(SkPMColor src, SkPMColor dst) const
 	return s_pixel_combiners[m_function](dst, src);
 }
 
-MCGLegacyBlendMode::MCGLegacyBlendMode(SkFlattenableReadBuffer& buffer) : SkXfermode(buffer)
-{
-}
-
-void MCGLegacyBlendMode::flatten(SkFlattenableWriteBuffer& buffer)
-{
-}
-
 ////////////////////////////////////////////////////////////////////////////////
