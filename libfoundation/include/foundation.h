@@ -1938,11 +1938,19 @@ MC_DLLEXPORT bool MCStringUnmapIndices(MCStringRef, MCCharChunkType, MCRange p_c
 // but this is not reflected in the byte count.
 MC_DLLEXPORT bool MCStringConvertToBytes(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count);
 
-// Converts the contents of the string to bytes using the given encoding. The caller
-// takes ownership of the byte array. Note that the returned array is NUL terminated,
-// but this is not reflected in the byte count. Any string characters that cannot be
-// encoded using the given encoding are replaced with the replacement byte, or, if
-// p_replacement is nil, the function returns false.
+// Converts the contents of the string to the specified destination
+// encoding p_encoding.
+//
+// A newly-allocated array is stored in r_bytes, and the number of
+// encoded bytes is stored in r_byte_count.  The caller takes
+// ownership of r_bytes.  Note that r_bytes is nul-terminated, but
+// r_byte_count is exclusive of the trailing nul.
+//
+// If an unmappable character is found in the string, it is replaced
+// in r_bytes by the contents of p_replacement.  If p_replacement is
+// nil and an unmappable character is found, returns false.
+// p_replacement is copied into r_bytes verbatim, even if it contains
+// data that is invalid in the requested encoding.
 MC_DLLEXPORT bool MCStringConvertToBytesWithReplacement(MCStringRef self, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef p_replacement, byte_t*& r_bytes, uindex_t& r_byte_count);
     
 // [[ Bug 12204 ]] textEncode ASCII support is actually native
