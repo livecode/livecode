@@ -618,70 +618,88 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_co
     return t_success;
 }
 
-bool MCStringCreateWithAsciiCharsAndReplacement(const char_t *p_chars, uindex_t p_char_count, MCStringRef p_replacement, MCStringRef& r_string)
+bool
+MCStringCreateWithAsciiCharsAndReplacement (const char_t *p_chars,
+                                            uindex_t p_char_count,
+                                            MCStringRef p_replacement,
+                                            MCStringRef & r_string)
 {
-    if (p_replacement)
-    {
-        if (MCStringGetLength(p_replacement) != 1)
-            return false;
-    
-        if (MCStringGetCharAtIndex(p_replacement, 0) > 127)
-            return false;
-    }
-    
-    bool t_success;
-    t_success = true;
-    
-    if (p_char_count == 0 && kMCEmptyString != nil)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-    __MCString *self;
-    self = nil;
-    if (t_success)
-        t_success = __MCValueCreate(kMCValueTypeCodeString, self);
-    
-    if (t_success)
-        t_success = MCMemoryNewArray(p_char_count + 1, self -> native_chars);
-    
-    for (uindex_t i = 0; t_success && i < p_char_count; ++i)
-    {
-        char_t t_ascii_char;
-        t_ascii_char = p_chars[i];
-        
-        if (t_ascii_char > 127)
-        {
-            if (p_replacement == nil)
-            {
-                t_success = false;
-                continue;
-            }
-            
-            t_ascii_char = MCStringGetNativeCharAtIndex(p_replacement, 0);
-        }
-            
-        self -> native_chars[i] = t_ascii_char;
-    }
-    
-    
-    if (t_success)
-        MCMemoryCopy(self -> native_chars, p_chars, p_char_count);
-    else
-    {
-        if (self != nil)
-            MCMemoryDeleteArray(self -> native_chars);
-        MCMemoryDelete(self);
-    }
-    
-    if (t_success)
-    {
-        self -> char_count = p_char_count;
-        r_string = self;
-    }
-    
-    return t_success;
+	/* Validate p_chars by checking for non-ASCII bytes. If no
+	 * replacement is specified, give up as soon as possible. */
+	uindex_t t_count_non_ascii = 0;
+	for (uindex_t i = 0; i < p_char_count; ++i)
+	{
+		if (p_chars[i] < 128)
+			continue;
+		else if (NULL != p_replacement)
+			++t_count_non_ascii;
+		else
+			return false;
+	}
+
+	/* Get the replacement string as a character array */
+	const unichar_t *t_replacement_chars = NULL;
+	uindex_t t_replacement_len = 0;
+	if (0 < t_count_non_ascii && NULL != p_replacement)
+	{
+		t_replacement_chars = MCStringGetCharPtr (p_replacement);
+		t_replacement_len = MCStringGetLength (p_replacement);
+	}
+
+	/* Compute the number of characters in the result, checking for
+	 * overflow. */
+	uindex_t t_result_len = p_char_count;
+	if (0 < t_count_non_ascii &&
+	    1 != t_replacement_len)
+	{
+		if (0 == t_replacement_len)
+		{
+			t_result_len -= t_count_non_ascii;
+		}
+		else
+		{
+			uindex_t t_extra = t_replacement_len * t_count_non_ascii;
+			if (t_extra / t_count_non_ascii != t_replacement_len)
+				return false; /* Overflow */
+			if (t_result_len > UINDEX_MAX - t_extra)
+				return false; /* Overflow */
+			t_result_len += t_extra;
+		}
+	}
+
+	/* Shortcut for empty strings. It's possible that we might be
+	 * constructing kMCEmptyString, so check that it's been
+	 * initialised. */
+	if (0 == t_result_len && nil != kMCEmptyString)
+	{
+		r_string = MCValueRetain (kMCEmptyString);
+		return true;
+	}
+
+	/* Allocate the result array */
+	MCAutoArray<unichar_t> t_result_chars;
+	if (!t_result_chars.New (t_result_len))
+		return false;
+
+	/* Construct result. Source index i, destination index j */
+	for (uindex_t i = 0, j = 0; i < p_char_count && j < t_result_len; ++i, ++j)
+	{
+		if (p_chars[i] < 128)
+		{
+			t_result_chars[j] = p_chars[i];
+			continue;
+		}
+
+		MCMemoryCopy (&t_result_chars[j], t_replacement_chars,
+		              t_replacement_len);
+		/* N.b. number of *extra* chars. This deliberately underflows
+		 * for j = 0 because j gets incremented by the 'for' loop
+		 * before its next use. */
+		j += t_replacement_len - 1;
+	}
+
+	return MCStringCreateWithChars (t_result_chars.Ptr(), t_result_len,
+	                                r_string);
 }
 
 static bool MCStringCreateMutableUnicode(uindex_t p_initial_capacity, MCStringRef& r_string)

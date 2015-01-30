@@ -1733,8 +1733,8 @@ MC_DLLEXPORT bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_
 
 // Create an immutable string from the given ASCII char sequence. If
 // any chars are out of range for ASCII (i.e. > 127) then the
-// replacement string is substituted.  If p_replacement is nil, the
-// function returns false.
+// replacement string is substituted.  If p_replacement is nil and
+// out-of-range characters are found, returns false.
 MC_DLLEXPORT bool MCStringCreateWithAsciiCharsAndReplacement(const char_t *p_chars, uindex_t p_char_count, MCStringRef p_replacement, MCStringRef& r_string);
     
 // Create an immutable string from the given (native) c-string.
