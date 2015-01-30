@@ -205,6 +205,11 @@ lc-bootstrap-compile: libscript libfoundation libffi
 lc-compile-clean:
 	$(MAKE) -C ./toolchain clean
 
+########## Module runner
+
+lc-run: libstdscript libfoundation
+	$(MAKE) -C ./toolchain lc-run
+
 ########## Test runner
 lc-test: libstdscript libfoundation
 	$(MAKE) -C ./toolchain lc-test
@@ -226,7 +231,7 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
-all: lc-test
+all: lc-run lc-test
 
 bootstrap: lc-bootstrap-compile
 
