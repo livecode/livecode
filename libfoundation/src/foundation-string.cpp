@@ -2099,7 +2099,6 @@ bool MCStringConvertToBytesWithReplacement(MCStringRef self, MCStringEncoding p_
     
     switch(p_encoding)
     {
-    // [[ Bug 12204 ]] textEncode ASCII support is actually native
     case kMCStringEncodingASCII:
         return MCStringConvertToNativeWithReplacement(self, p_replacement, true, (char_t*&)r_bytes, r_byte_count);
     case kMCStringEncodingNative:
@@ -2228,48 +2227,61 @@ bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, u
 
 bool MCStringConvertToNativeWithReplacement(MCStringRef self, MCDataRef p_replacement, bool p_ascii, char_t*& r_chars, uindex_t& r_char_count)
 {
-    // Get the native chars, but excludes any char belonging to the extended part of the ASCII -
-    char_t *t_chars;
-    uindex_t t_char_count = MCStringGetLength(self);
-    if (!MCMemoryNewArray(t_char_count + 1, t_chars))
-        return false;
-    
-    char_t t_replacement;
-    if (p_replacement != nil)
-        t_replacement = MCDataGetByteAtIndex(p_replacement, 0);
-    
-    uindex_t t_new_char_count;
-    MCStringGetNativeCharsWithReplacement(self, MCRangeMake(0, t_char_count), p_replacement != nil ? &t_replacement : nil, 1, t_chars, t_char_count + 1, t_new_char_count);
-    
-    bool t_valid;
-    t_valid = true;
-    
-    if (p_replacement == nil && t_new_char_count != t_char_count)
-        t_valid = false;
-    
-    if (p_ascii)
-    {
-        for (uindex_t i = 0; t_valid && i < t_char_count; ++i)
-        {
-            if (t_chars[i] > 127)
-            {
-                if (p_replacement == nil)
-                    t_valid = false;
-                
-                t_chars[i] =  MCDataGetByteAtIndex(p_replacement, 1);
-            }
-        }
-    }
-    
-    if (!t_valid)
-        MCMemoryDeleteArray(t_chars);
-    else
-    {
-        r_chars = t_chars;
-        r_char_count = t_char_count;
-    }
-    
-    return t_valid;
+	/* Get the raw data & length of the replacement bytes, if available. */
+	const char_t *t_replacement = NULL;
+	uindex_t t_replacement_len = 0;
+
+	if (NULL != p_replacement)
+	{
+		t_replacement = (const char_t *) MCDataGetBytePtr (p_replacement);
+		t_replacement_len = MCDataGetLength (p_replacement);
+	}
+
+	/* Allocate an estimated length for the result buffer.  Note that the
+	 * result is supposed to be nul-terminated. */
+	uindex_t t_result_len = MCStringGetLength (self);
+	MCAutoArray<char_t> t_buffer;
+
+	while (true)
+	{
+		/* Overflow check */
+		if (t_result_len == UINDEX_MAX)
+			return false; /* NOPE */
+
+		/* Expand buffer */
+		if (!t_buffer.Resize (t_result_len + 1))
+			return false;
+
+		/* Attempt to fill the result buffer. */
+		if (p_ascii)
+		{
+			if (!MCStringGetAsciiCharsWithReplacement (
+			            self, MCRangeMake (0, MCStringGetLength (self)),
+			            t_replacement, t_replacement_len,
+			            t_buffer.Ptr(), t_buffer.Size() - 1,
+			            t_result_len))
+				return false;
+		}
+		else
+		{
+			if (!MCStringGetNativeCharsWithReplacement (
+			            self, MCRangeMake (0, MCStringGetLength (self)),
+			            t_replacement, t_replacement_len,
+			            t_buffer.Ptr(), t_buffer.Size() - 1,
+			            t_result_len))
+				return false;
+		}
+
+		if (t_result_len < t_buffer.Size())
+			break;
+	}
+
+	uindex_t t_ignored;
+	t_buffer.Take (r_chars, t_ignored);
+	r_char_count = t_result_len;
+	MCAssert (t_result_len < t_ignored);
+
+	return true;
 }
 
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
