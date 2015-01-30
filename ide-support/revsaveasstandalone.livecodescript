@@ -81,56 +81,38 @@ on initialiseLibrary
    
    # Database
    put "cRevDatabase" into sPatternsA["Database"]["Property"]
-   put "revDatabase" into sPatternsA["Database"]["Root"]
-   put "revdb_" into sPatternsA["Database"]["Root"]
-   repeat for each item tHandler in "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase"
-      put tHandler into sPatternsA["Database"]["Script"]
-   end repeat
+   put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
+   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
    
    # Internet
    put "libUrl" into sPatternsA["Internet"]["Root"]
-   repeat for each item tHandler in "cachedURL,cachedURLs,ftp,http,https,SSL & Encryption,load,post,resetAll,URL,URLStatus"
-      put tHandler into sPatternsA["Internet"]["Script"]
-   end repeat
+   put "cachedURL,cachedURLs,ftp,http,https,SSL & Encryption,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
    
    # XML
    put "revXML" into sPatternsA["XML"]["Root"]
-   repeat for each item tHandler in "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute"
-      put tHandler into sPatternsA["XML"]["Script"]
-   end repeat
+   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XML"]["Script"]
    
    # Speech
-   repeat for each item tHandler in "revIsSpeaking,revSetSpeechPitch,revSetSpeechSpeed,revSetSpeechVoice,revSpeak,revSpeechVoices,revStopSpeech,revUnloadSpeech"
-      put tHandler into sPatternsA["Speech"]["Script"]
-   end repeat
+   put "revIsSpeaking,revSetSpeechPitch,revSetSpeechSpeed,revSetSpeechVoice,revSpeak,revSpeechVoices,revStopSpeech,revUnloadSpeech" into sPatternsA["Speech"]["Script"]
    
    # Video Grabber
-   repeat for each item tHandler in "revCloseVideoGrabber,revInitializeVideoGrabber,revPreviewVideo,revRecordVideo,revSetVideoGrabberRect,revSetVideoGrabSettings,revStopPreviewingVideo,revStopRecordingVideo,revVideoFrameImage,revVideoGrabDialog,revVideoGrabIdle,revVideoGrabSettings"
-      put tHandler into sPatternsA["Video Grabber"]["Script"]
-   end repeat
+   put "revCloseVideoGrabber,revInitializeVideoGrabber,revPreviewVideo,revRecordVideo,revSetVideoGrabberRect,revSetVideoGrabSettings,revStopPreviewingVideo,revStopRecordingVideo,revVideoFrameImage,revVideoGrabDialog,revVideoGrabIdle,revVideoGrabSettings" into sPatternsA["Video Grabber"]["Script"]
    
    # SSL & Encryption 
-   repeat for each item tHandler in "secure,encrypt,decrypt,cipherNames,randomBytes"
-      put tHandler into sPatternsA["SSL & Encryption"]["Script"]
-   end repeat
+   put "secure,encrypt,decrypt,cipherNames,randomBytes" into sPatternsA["SSL & Encryption"]["Script"]
    
    # Printing
-   repeat for each item tHandler in "revPrintField,revPrintText,revShowPrintDialog"
-      put tHandler into sPatternsA["Printing"]["Script"]
-   end repeat
+   put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["Printing"]["Script"]
    
    # Browser
-   repeat for each item tHandler in "revBrowser,xBrowser"
-      put tHandler into sPatternsA["Browser"]["Script"]
-   end repeat
+   put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
    
    # revFont
-   repeat for each item tHandler in "revFontLoad,revFontUnload"
-      put tHandler into sPatternsA["Font Support"]["Script"]
-   end repeat
+   put "revFontLoad,revFontUnload"into sPatternsA["Font Support"]["Script"]
    
    # revZip
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
+   
    put true into sInitialised
 end initialiseLibrary
 
@@ -2430,6 +2412,14 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    put pStackFilePath into tDeployInfo["stackfile"]
    put pStandalonePath into tDeployInfo["output"]
    
+   # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions and startup script to the deploy parameters
+   if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then
+      put line 1 of sStandaloneSettingsA["auxiliary_stackfiles"] into tDeployInfo["auxiliary_stackfiles"]
+   end if
+   if sStandaloneSettingsA["startup_script"] is not empty then
+      //put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
+   end if
+   
    if pPlatform begins with "MacOSX" then
       -- MW-2013-06-13: [[ CloneAndRun ]] If installed do things in the usual way, otherwise pass
       --    through in 'engine' (so it builds using archs present there).
@@ -2653,6 +2643,9 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
    lock messages
    
    if pSearchForInclusions then
+      put the effective filename of stack "revInitialisationLibrary" into sStandaloneSettingsA["auxiliary_stackfiles"]
+      put "insert the script of stack revInitialisationLibrary into back" into sStandaloneSettingsA["startup_script"]
+      
       put empty into sStandaloneSettingsA["scriptLibraries"]
       put true into sStandaloneSettingsA["cursors"]
       put false into sStandaloneSettingsA["answerDialog"]
@@ -2701,17 +2694,29 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
    end if
 end revSmartChecking
 
+private command revAddLibrary pLibrary, pAuxStackFile
+   if pLibrary is "Internet" then
+      put return & the effective filename of stack "revLibURL" after sStandaloneSettingsA["auxiliary_stackfiles"]
+      put "; revInternal__LoadLibrary revLibUrl" after sStandaloneSettingsA["startup_script"]
+   else if pAuxStackFile then
+      put return & the effective filename of stack pLibrary after sStandaloneSettingsA["auxiliary_stackfiles"]
+      put "; revInternal__LoadLibrary" && quote & pLibrary & quote after sStandaloneSettingsA["startup_script"]
+   else
+      if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
+      put pLibrary after sStandaloneSettingsA["scriptLibraries"]
+   end if
+end revAddLibrary
+
 private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
    # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] Use script locals to check for library inclusions
    if pSearchForInclusions then
       local tProps, tLib, tProperty
       put the customPropertySets of pObject into tProps
       repeat for each key tLib in sPatternsA
-         repeat for each key tProperty in sPatternsA[tLib]["Property"]
+         repeat for each item tProperty in sPatternsA[tLib]["Property"]
             if lineOffset(tProperty, tProps) is not 0 \
                   and lineOffset(tLib, sStandaloneSettingsA["scriptLibraries"]) is 0 then
-               if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
-               put tLib after sStandaloneSettingsA["scriptLibraries"]
+               revAddLibrary tLib
             end if
          end repeat
       end repeat
@@ -2736,10 +2741,9 @@ private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
             end if
             
             local tHandler
-            repeat for each key tHandler in sPatternsA[tLib]["Script"]
+            repeat for each item tHandler in sPatternsA[tLib]["Script"]
                if lineOffset(tHandler,tScript) is not 0 then
-                  if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
-                  put tLib after sStandaloneSettingsA["scriptLibraries"]
+                  revAddLibrary tLib
                   # AL-2015-01-29: If we are including this lib then go on to the next one
                   exit repeat
                end if
@@ -2751,10 +2755,9 @@ private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
             end if
             
             local tRoot
-            repeat for each key tRoot in sPatternsA[tLib]["Root"]
+            repeat for each item tRoot in sPatternsA[tLib]["Root"]
                if lineOffset(tRoot,tScript) is not 0 then
-                  if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
-                  put tLib after sStandaloneSettingsA["scriptLibraries"]
+                  revAddLibrary tLib
                   # AL-2015-01-29: If we are including this lib then go on to the next one
                   exit repeat
                end if

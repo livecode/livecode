@@ -152,11 +152,11 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	MCDeployFileRef *t_aux_stackfiles;
 	t_aux_stackfiles = nil;
 	if (t_success)
-		t_success = MCMemoryNewArray(p_params . auxillary_stackfile_count, t_aux_stackfiles);
+		t_success = MCMemoryNewArray(p_params . auxiliary_stackfile_count, t_aux_stackfiles);
 	if (t_success)
-		for(uint32_t i = 0; i < p_params . auxillary_stackfile_count && t_success; i++)
+		for(uint32_t i = 0; i < p_params . auxiliary_stackfile_count && t_success; i++)
 		{
-			if (t_success && !MCDeployFileOpen(p_params . auxillary_stackfiles[i], "rb", t_aux_stackfiles[i]))
+			if (t_success && !MCDeployFileOpen(p_params . auxiliary_stackfiles[i], "rb", t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
 				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
@@ -184,7 +184,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployCapsuleGenerate(t_capsule, p_output, t_spill, x_offset);
 
 	MCDeployCapsuleDestroy(t_capsule);
-	for(uint32_t i = 0; i < p_params . auxillary_stackfile_count; i++)
+	for(uint32_t i = 0; i < p_params . auxiliary_stackfile_count; i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
 	MCMemoryDeleteArray(t_aux_stackfiles);
 	MCDeployFileClose(t_spill);
@@ -500,7 +500,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 		t_stat = fetch_filepath(ep2, t_array, "stackfile", t_params . stackfile);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath_array(ep2, t_array, "auxillary_stackfiles", t_params . auxillary_stackfiles, t_params . auxillary_stackfile_count);
+		t_stat = fetch_filepath_array(ep2, t_array, "auxiliary_stackfiles", t_params . auxiliary_stackfiles, t_params . auxiliary_stackfile_count);
 	if (t_stat == ES_NORMAL)
 		t_stat = fetch_cstring_array(ep2, t_array, "externals", t_params . externals, t_params . external_count);
 	if (t_stat == ES_NORMAL)
@@ -593,7 +593,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	delete t_params . output;
 	delete t_params . spill;
 	delete t_params . stackfile;
-	MCCStringArrayFree(t_params . auxillary_stackfiles, t_params . auxillary_stackfile_count);
+	MCCStringArrayFree(t_params . auxiliary_stackfiles, t_params . auxiliary_stackfile_count);
 	MCCStringArrayFree(t_params . externals, t_params . external_count);
 	delete t_params . startup_script;
 	MCCStringArrayFree(t_params . redirects, t_params . redirect_count);

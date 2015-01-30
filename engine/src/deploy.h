@@ -34,9 +34,9 @@ struct MCDeployParameters
 
 	// The root stackfile to be included in the standalone.
 	char *stackfile;
-	// The array of auxillary stackfiles to be included in the standalone.
-	char **auxillary_stackfiles;
-	uint32_t auxillary_stackfile_count;
+	// The array of auxiliary stackfiles to be included in the standalone.
+	char **auxiliary_stackfiles;
+	uint32_t auxiliary_stackfile_count;
 	// The array of externals to be loaded on startup by the standalone.
 	char **externals;
 	uint32_t external_count;

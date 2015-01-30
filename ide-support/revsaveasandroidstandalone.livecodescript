@@ -571,7 +571,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       -- If the datagrid is used, then include the library as an aux stack
       if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-         put the effective filename of stack "revDataGridLibrary" into tDeploy["auxillary_stackfiles"]
+         put the effective filename of stack "revDataGridLibrary" into tDeploy["auxiliary_stackfiles"]
       end if
       
       -- Externals to reference (on Android we include drivers in this list)
