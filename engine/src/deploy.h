@@ -56,7 +56,7 @@ struct MCDeployParameters
     // When building for Mac/iOS, you can specify a min os version per arch
     // slice.
     MCDeployMinOSVersion *min_os_versions;
-    uint32_t min_os_version_count;
+    uindex_t min_os_version_count;
     
 	// The root stackfile to be included in the standalone.
 	char *stackfile;

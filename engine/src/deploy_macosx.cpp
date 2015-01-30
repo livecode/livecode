@@ -1155,6 +1155,8 @@ static bool MCDeployToMacOSXFetchMinOSVersion(const MCDeployParameters& p_params
         t_arch = kMCDeployArchitecture_PPC;
     else if (p_header . cputype == CPU_TYPE_POWERPC64)
         t_arch = kMCDeployArchitecture_PPC64;
+    else
+        t_arch = kMCDeployArchitecture_Unknown;
     
     // Search for both the architecture in the mach header and for the 'unknown'
     // architecture. If the real arch is found, then we use that version; otherwise
@@ -1165,16 +1167,16 @@ static bool MCDeployToMacOSXFetchMinOSVersion(const MCDeployParameters& p_params
     t_found_index = -1;
     for(uindex_t i = 0; i < p_params . min_os_version_count; i++)
         if (p_params . min_os_versions[i] . architecture == t_arch &&
-            t_found_index == -1)
+            t_found_index < 0)
             t_found_index = (signed)i;
         else if (p_params . min_os_versions[i] . architecture == kMCDeployArchitecture_Unknown &&
-                 t_unknown_index == -1)
+                 t_unknown_index < 0)
             t_unknown_index = -1;
     
-    if (t_found_index == -1 && t_unknown_index == -1)
+    if (t_found_index < 0 && t_unknown_index < 0)
         return false;
     
-    if (t_found_index == -1)
+    if (t_found_index >= 0)
     {
         r_version = p_params . min_os_versions[t_unknown_index] . version;
         return true;
