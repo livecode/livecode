@@ -5,35 +5,58 @@ local sLoadedLibraries
 
 command revInternal__LoadLibrary pLibraryName
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
-   set the itemdel to "/"
-   local tLibraryPath
-   put revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript" into tLibraryPath
+   //set the itemdel to "/"
    
-   // Check if the stack file exists
-   if there is not a file tLibraryPath then return "no file for that library:" && tLibraryPath
+   if sLoadedLibraries[pLibraryName] then
+      return "Library already loaded"
+   end if
    
-   try
-      // Open the stack
-      go stack tLibraryPath
+   if the environment is "development" then      
+      local tLibraryPath
+      if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript" into tLibraryPath
+      else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & ".livecodescript" into tLibraryPath
+      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript" into tLibraryPath
+      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & ".livecodescript" into tLibraryPath
+      else return "no file for that library:" && tLibraryPath 
       
-      // Get it's name
-      local tStackName
-      put the name of stack tLibraryPath into tStackName
+      try
+      	local tDefaultStack
+      	put the defaultStack into tDefaultStack
+         // Open the stack
+         go stack tLibraryPath
+         
+         set the defaultStack to tDefaultStack
+         
+         // Get it's name
+         local tStackName
+         put the name of stack tLibraryPath into tStackName
+         
+         // Insert the script into the backscript
+         send "revLoadLibrary" to stack tStackName
+         
+         put true into sLoadedLibraries[pLibraryName]
+         
+         return true
+      catch tError
+         put tError
+         return "Error while loading stack:" && tLibraryPath
+      end try
       
-      // Insert the script into the backscript
-      send "revLoadLibrary" to stack tStackName
-      
-      put true into sLoadedLibraries[pLibraryName]
-      
-      return true
-   catch tError
-      return "Error while loading stack:" && tLibraryPath
-   end try
+   else
+      try
+         send "revLoadLibrary" to stack pLibraryName
+      catch tError
+         return "Error while loading stack:" && pLibraryName
+      end try
+   end if
 end revInternal__LoadLibrary
 
 command revInternal__UnloadLibrary pLibraryName
    // Check if the library is loaded
-   if pLibraryName is not among the keys of sLoadedLibraries then return "Library not loaded"
+   if sLoadedLibraries[pLibraryName] is not true then
+      return "Library not loaded"
+   end if
+   
    if there is not a stack tStackName then return "library not loaded"
    
    try

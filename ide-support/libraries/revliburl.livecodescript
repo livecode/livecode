@@ -1,6 +1,14 @@
 ﻿script "revLibURL"
 ##libUrl v1.2.0 2010-09-16
 #
+on revLoadLibrary
+   # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
+   insert the script of me into back
+end revLoadLibrary
+
+on revUnloadLibrary
+   remove the script of me from back
+end revUnloadLibrary
 ---------------------------------------------------------------------
 ##shared locals
 local lvCount,lvBlockingUrl,lvBlockBypass,lvAuthBlockBypass,lvLogField, lvTickle
