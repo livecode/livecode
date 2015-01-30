@@ -1456,46 +1456,88 @@ uindex_t MCStringGetChars(MCStringRef self, MCRange p_range, unichar_t *p_chars)
 	return t_count;
 }
 
-uindex_t MCStringGetNativeCharsWithReplacement(MCStringRef self, MCRange p_range, char_t *p_replacement, char_t *p_chars)
+bool
+MCStringGetNativeCharsWithReplacement(MCStringRef self,
+                                      MCRange p_range,
+                                      const char_t *p_replacement,
+                                      uindex_t p_replacement_len,
+                                      char_t *x_chars,
+                                      uindex_t p_chars_len,
+                                      uindex_t & r_num_chars)
 {
-    if (__MCStringIsIndirect(self))
-        self = self -> string;
-    
-    uindex_t t_count;
-    t_count = 0;
-    
-    for(uindex_t i = p_range . offset; i < p_range . offset + p_range . length; i++)
-    {
-        if (i >= self -> char_count)
-            break;
-        
-        char_t t_native_char;
-        if (MCStringIsNative(self))
-            t_native_char = self -> native_chars[i];
-        else
-        {
-            if (!MCUnicodeCharMapToNative(self -> chars[i], t_native_char))
-            {
-                if (p_replacement)
-                    t_native_char = *p_replacement;
-                else
-                    return t_count;
-            }
-        }
-            if (p_chars != nil)
-                p_chars[i - p_range . offset] = t_native_char;
-        
-        t_count += 1;
-    }
-    
-    return t_count;
+	if (__MCStringIsIndirect (self))
+		self = self->string;
+
+	uindex_t t_count = 0;
+
+	for (uindex_t i = p_range.offset; i < p_range.offset + p_range.length; ++i)
+	{
+		if (i >= self->char_count) break;
+
+		char_t t_native_char;
+		const char_t *t_native_chars_ptr = &t_native_char;
+		uindex_t t_native_chars_len = 1;
+		if (MCStringIsNative (self))
+		{
+			t_native_char = self->native_chars[i];
+		}
+		else if (MCUnicodeCharMapToNative (self->chars[i], t_native_char))
+		{
+			/* Successfully converted to native */
+		}
+		else
+		{
+			t_native_chars_ptr = p_replacement;
+			t_native_chars_len = p_replacement_len;
+		}
+
+		/* If we can't represent the current Unicode character in the
+		 * native encoding, bail out now. */
+		if (NULL == t_native_chars_ptr)
+		{
+			r_num_chars = t_count;
+			return false;
+		}
+
+		/* Overflow check */
+		MCAssert (t_count < UINDEX_MAX - t_native_chars_len);
+
+		/* If there's no space in the output buffer, or no output
+		 * buffer was provided, don't update the buffer but carry on
+		 * to discover required buffer size. */
+		if (NULL != x_chars && t_count + t_native_chars_len <= p_chars_len)
+		{
+			if (1 == t_native_chars_len)
+				x_chars[t_count] = *t_native_chars_ptr;
+			else
+				MCMemoryCopy (&x_chars[t_count], t_native_chars_ptr,
+				              t_native_chars_len);
+
+			t_count += t_native_chars_len;
+		}
+		else
+		{
+			t_count += t_native_chars_len;
+			continue;
+		}
+	}
+
+	r_num_chars = t_count;
+	return true;
 }
 
-uindex_t MCStringGetNativeChars(MCStringRef self, MCRange p_range, char_t *p_chars)
+bool
+MCStringGetNativeChars(MCStringRef self,
+                       MCRange p_range,
+                       char_t *x_chars,
+                       uindex_t p_chars_len,
+                       uindex_t & r_num_chars)
 {
-    char_t t_char;
-    t_char = '?';
-    return MCStringGetNativeCharsWithReplacement(self, p_range, &t_char, p_chars);
+	const char_t t_char = '?';
+    return MCStringGetNativeCharsWithReplacement(self, p_range,
+                                                 &t_char, 1,
+                                                 x_chars, p_chars_len,
+                                                 r_num_chars);
 }
 
 void MCStringNativize(MCStringRef self)
@@ -2197,7 +2239,7 @@ bool MCStringConvertToNativeWithReplacement(MCStringRef self, MCDataRef p_replac
         t_replacement = MCDataGetByteAtIndex(p_replacement, 0);
     
     uindex_t t_new_char_count;
-    t_new_char_count = MCStringGetNativeCharsWithReplacement(self, MCRangeMake(0, t_char_count), p_replacement != nil ? &t_replacement : nil, t_chars);
+    MCStringGetNativeCharsWithReplacement(self, MCRangeMake(0, t_char_count), p_replacement != nil ? &t_replacement : nil, 1, t_chars, t_char_count + 1, t_new_char_count);
     
     bool t_valid;
     t_valid = true;
@@ -2257,8 +2299,11 @@ bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
     t_length = MCStringGetLength(p_string);
     if (!MCMemoryNewArray(t_length + 1, r_cstring))
         return false;
-    
-    MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), (char_t*)r_cstring);
+
+	uindex_t t_final_length;
+	MCStringGetNativeChars(p_string, MCRangeMake(0, t_length),
+	                       (char_t*)r_cstring, t_length,
+	                       t_final_length);
     r_cstring[t_length] = '\0';
     
     return true;
