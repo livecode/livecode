@@ -52,7 +52,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       throw "not supported on this platform"
    end if
    
-   start using stack "revSBLibrary" of stack "revStandaloneSettings"
+   start using stack "revSBLibrary"
    revStandaloneResetWarnings
    
    local tSettings
