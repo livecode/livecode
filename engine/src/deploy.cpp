@@ -120,6 +120,9 @@ static bool MCDeployMapArchitectureString(const MCString& p_string, MCDeployArch
 
 static Exec_stat MCDeployPushMinOSVersion(MCDeployParameters& p_params, MCDeployArchitecture p_arch, const char *p_vers_string)
 {
+    // Use sscanf to parse out the version string. We don't check the return value of
+    // sscanf as we don't care - any malformed / missing components will come out as
+    // 0.
     int t_major, t_minor, t_inc;
     t_major = t_minor = t_inc = 0;
     sscanf(p_vers_string, "%d.%d.%d", &t_major, &t_minor, &t_inc);
