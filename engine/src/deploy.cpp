@@ -850,7 +850,7 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 	}
 
 	if (!ctxt . HasError())
-		for(uint32_t i = 0; i < t_items . Size() && !ctxt . HasError(); i++)
+		for(uindex_t i = 0; i < t_items . Size() && !ctxt . HasError(); i++)
 		{
 			MCValueRef t_val = nil;
 			if (!MCArrayFetchValueAtIndex(*t_array, i + 1, t_val))
