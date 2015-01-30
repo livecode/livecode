@@ -2297,7 +2297,7 @@ bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_cha
 }
 
 bool
-MCStringGetAsciiCharsWithReplacement(MCString self,
+MCStringGetAsciiCharsWithReplacement(MCStringRef self,
                                      MCRange p_range,
                                      const char_t *p_replacement,
                                      uindex_t p_replacement_len,

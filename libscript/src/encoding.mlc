@@ -191,8 +191,9 @@ end syntax
 
 public foreign handler MCEncodingEvaluateTextEncoding(in pType as int, out rType as int) as undefined binds to "<builtin>"
 
+-- Note that "native" encoding is blocked; we require encodings to be specific.
 syntax TextEncoding is phrase
-	("ascii" <Encoding=0> | "cp1252" <Encoding=1> | "macroman" <Encoding=2> | "iso8859-1" <Encoding=3> | "utf-8" <Encoding=4> | "utf-16le" <Encoding=5> | "utf16be" <Encoding=6> | "utf-32le" <Encoding=7> | "utf-32be" <Encoding=8> | "utf-16" <Encoding=9> | "utf-32" <Encoding=10> | "native" <Encoding=11>)
+	("ascii" <Encoding=0> | "cp1252" <Encoding=1> | "macroman" <Encoding=2> | "iso8859-1" <Encoding=3> | "utf-8" <Encoding=4> | "utf-16le" <Encoding=5> | "utf16be" <Encoding=6> | "utf-32le" <Encoding=7> | "utf-32be" <Encoding=8> | "utf-16" <Encoding=9> | "utf-32" <Encoding=10> /* | "native" <Encoding=11> */ )
 begin
 	MCEncodingEvaluateTextEncoding(Encoding, output)
 end syntax

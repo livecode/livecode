@@ -106,8 +106,22 @@ extern "C" MC_DLLEXPORT void MCEncodingEvaluateTextEncoding(integer_t p_type, in
     r_type = p_type;
 }
 
+static inline bool
+__MCEncodingCheckNativeEncoding (MCStringRef p_encoding)
+{
+	if (!MCStringIsEqualToCString (p_encoding, "native",
+	                               kMCStringOptionCompareCaseless))
+		return true;
+	else
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("invalid text encoding"), nil);
+	return false;
+}
+
 extern "C" MC_DLLEXPORT MCDataRef MCEncodingExecEncodeTextUsingEncodingString(MCStringRef p_target, MCStringRef p_encoding)
 {
+	if (!__MCEncodingCheckNativeEncoding (p_encoding))
+		return nil;
+
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
@@ -124,6 +138,9 @@ extern "C" MC_DLLEXPORT MCDataRef MCEncodingExecEncodeTextUsingEncodingString(MC
 
 extern "C" MC_DLLEXPORT MCStringRef MCEncodingExecDecodeTextUsingEncodingString(MCDataRef p_target, MCStringRef p_encoding)
 {
+	if (!__MCEncodingCheckNativeEncoding (p_encoding))
+		return nil;
+
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
@@ -140,12 +157,9 @@ extern "C" MC_DLLEXPORT MCStringRef MCEncodingExecDecodeTextUsingEncodingString(
 
 extern "C" MC_DLLEXPORT MCDataRef MCEncodingExecEncodeTextUsingEncodingStringWithReplacement(MCStringRef p_target, MCStringRef p_encoding, MCDataRef p_replacement)
 {
-    if (MCDataGetLength(p_replacement) != 1)
-    {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 byte"), nil);
-        return nil;
-    }
-    
+	if (!__MCEncodingCheckNativeEncoding (p_encoding))
+		return nil;
+
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
@@ -162,6 +176,9 @@ extern "C" MC_DLLEXPORT MCDataRef MCEncodingExecEncodeTextUsingEncodingStringWit
 
 extern "C" MC_DLLEXPORT MCStringRef MCEncodingExecDecodeTextUsingEncodingStringWithReplacement(MCDataRef p_target, MCStringRef p_encoding, MCStringRef p_replacement)
 {
+	if (!__MCEncodingCheckNativeEncoding (p_encoding))
+		return nil;
+
     if (MCStringGetLength(p_replacement) != 1)
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 codeunit"), nil);
@@ -184,6 +201,9 @@ extern "C" MC_DLLEXPORT MCStringRef MCEncodingExecDecodeTextUsingEncodingStringW
 
 extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncodingString(MCStringRef p_target, MCStringRef p_encoding, MCDataRef& r_encoded)
 {
+	if (!__MCEncodingCheckNativeEncoding (p_encoding))
+		return;
+
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
@@ -200,6 +220,9 @@ extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncodingString(MCStri
 
 extern "C" MC_DLLEXPORT void MCEncodingEvalTextDecodedUsingEncodingString(MCDataRef p_target, MCStringRef p_encoding, MCStringRef& r_decoded)
 {
+	if (!__MCEncodingCheckNativeEncoding (p_encoding))
+		return;
+
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
@@ -216,12 +239,9 @@ extern "C" MC_DLLEXPORT void MCEncodingEvalTextDecodedUsingEncodingString(MCData
 
 extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncodingStringWithReplacement(MCStringRef p_target, MCStringRef p_encoding, MCDataRef p_replacement, MCDataRef& r_encoded)
 {
-    if (MCDataGetLength(p_replacement) != 1)
-    {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 byte"), nil);
-        return;
-    }
-    
+	if (!__MCEncodingCheckNativeEncoding (p_encoding))
+		return;
+
     MCStringEncoding t_encoding;
     if (!MCStringEvalTextEncoding(p_encoding, t_encoding))
     {
@@ -238,6 +258,9 @@ extern "C" MC_DLLEXPORT void MCEncodingEvalTextEncodedUsingEncodingStringWithRep
 
 extern "C" MC_DLLEXPORT void MCEncodingEvalTextDecodedUsingEncodingStringWithReplacement(MCDataRef p_target, MCStringRef p_encoding, MCStringRef p_replacement, MCStringRef& r_decoded)
 {
+	if (!__MCEncodingCheckNativeEncoding (p_encoding))
+		return;
+
     if (MCStringGetLength(p_replacement) != 1)
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("replacement must be exactly 1 codeunit"), nil);

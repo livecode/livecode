@@ -178,16 +178,16 @@ public handler testEncoding(inout xResults as list)
 	testLog("Encoding", "Endianness 3", the result is tString, xResults)
 	
 	// invalid data
-	encode tString using "native"
-	testLog("Encoding", "InvalidNativeChar", the result is not defined, xResults)
+	encode tString using "ASCII"
+	testLog("Encoding", "InvalidASCIIChar", the result is not defined, xResults)
 
     variable tData as data
-    encode "?" using "native"
+    encode "?" using "ASCII"
     put the result into tData
-	testLog("Encoding", "NativeLength", the number of bytes in tData is 1, xResults)
+	testLog("Encoding", "ASCIILength", the number of bytes in tData is 1, xResults)
 
-	encode tString using "native" with replacement tData
-	testLog("Encoding", "InvalidNativeChar", the result is tData, xResults)
+	encode tString using "ASCII" with replacement tData
+	testLog("Encoding", "InvalidASCIIChar", the result is tData, xResults)
 	
 	encode "A" using "utf32"
 	decode byte 1 to 3 of the result using "utf32" with replacement "?"
@@ -219,7 +219,7 @@ public handler testEncoding(inout xResults as list)
 
 	variable tElement as string
     variable tTest as string
-	repeat for each element tElement in ["utf8","utf16be","utf16le","utf16","utf32le","utf32le","utf32","ascii","native"]
+	repeat for each element tElement in ["utf8","utf16be","utf16le","utf16","utf32le","utf32le","utf32","ascii"]
 		encode tString using tElement
 		decode the result using tElement
 		testLog("Encoding", tElement & "RoundTrip", true, xResults)
