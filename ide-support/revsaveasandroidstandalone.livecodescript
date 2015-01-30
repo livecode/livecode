@@ -53,7 +53,7 @@ private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClas
 end buildAPK
 
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
-   start using stack "revSBLibrary" of stack "revStandaloneSettings"
+   start using stack "revSBLibrary"
    
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
    
