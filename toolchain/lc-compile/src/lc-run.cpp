@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation-system.h>
 #include <foundation-auto.h>
 #include <script.h>
+#include <script-auto.h>
 
 #if defined(__WINDOWS__)
 #	include <windows.h>
@@ -309,7 +310,7 @@ MCRunLoadModule (MCStringRef p_filename,
 {
 	MCAutoDataRef t_module_data;
 	MCAutoValueRefBase<MCStreamRef> t_stream;
-	MCAutoValueRefBase<MCScriptModuleRef> t_module;
+	MCAutoScriptModuleRef t_module;
 
 	if (!MCSFileGetContents (p_filename, &t_module_data))
 		return false;
@@ -394,8 +395,8 @@ main (int argc,
 		MCRunStartupError();
 
 	/* ---------- Start VM */
-	MCAutoValueRefBase<MCScriptModuleRef> t_module;
-	MCAutoValueRefBase<MCScriptInstanceRef> t_instance;
+	MCAutoScriptModuleRef t_module;
+	MCAutoScriptInstanceRef t_instance;
 	MCAutoValueRef t_ignored_retval;
 
 	if (!MCRunLoadModule (t_config.m_filename, &t_module))
