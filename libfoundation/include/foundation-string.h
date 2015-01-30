@@ -188,11 +188,6 @@ char_t MCStringGetNativeCharAtIndex(MCStringRef string, uindex_t index);
 // would be generated is returned.
 uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 
-// Returns the sequence of native chars making up the given range in 'chars' and
-// returns the number of chars generated. If 'chars' is nil, just the number of chars
-// that would be generated is returned. Any unmappable chars get generated as '?'.
-uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
-
 /////////
 
 // Converts the contents of the string to unicode. The caller takes ownership of the

@@ -2165,8 +2165,6 @@ void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, u
 void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCDataRef& r_byte);
 void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef byte, integer_t& r_codepoint);
 
-bool MCStringsEvalTextEncoding(MCStringRef encoding, MCStringEncoding& r_encoding);
-
 void MCStringsEvalTextDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCDataRef p_encoded_text, MCStringRef& r_decoded_text);
 void MCStringsEvalTextEncode(MCExecContext& ctxt, MCStringRef p_encoding, MCStringRef p_decoded_text, MCDataRef& r_encoded_text);
 

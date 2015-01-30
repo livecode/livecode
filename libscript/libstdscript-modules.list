@@ -7,6 +7,7 @@ bitwise.mlc
 byte.mlc
 char.mlc
 date.mlc
+encoding.mlc
 file.mlc
 list.mlc
 logic.mlc

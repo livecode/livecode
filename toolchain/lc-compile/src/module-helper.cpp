@@ -56,7 +56,7 @@ builtin_module_descriptor* g_builtin_modules[] =
     &__com_livecode_byte_module_info,
     &__com_livecode_char_module_info,
     &__com_livecode_date_module_info,
-    //&__com_livecode_encoding_module_info,
+    &__com_livecode_encoding_module_info,
     &__com_livecode_file_module_info,
     //&__com_livecode_item_module_info,
     //&__com_livecode_line_module_info,
@@ -82,6 +82,7 @@ extern void (*MCBitwiseEvalBitwiseAnd)();
 extern void (*MCByteEvalNumberOfBytesIn)();
 extern void (*MCCharEvalNumberOfCharsIn)();
 extern void (*MCDateExecGetLocalTime)();
+extern void (*MCEncodingEvalEncodedUsingBase64)();
 extern void (*MCFileExecGetContents)();
 extern void (*MCListEvalHeadOf)();
 extern void (*MCLogicEvalNot)();
@@ -104,6 +105,7 @@ void *g_builtin_ptrs[] =
     &MCByteEvalNumberOfBytesIn,
     &MCCharEvalNumberOfCharsIn,
     &MCDateExecGetLocalTime,
+    &MCEncodingEvalEncodedUsingBase64,
     &MCFileExecGetContents,
     &MCListEvalHeadOf,
     &MCLogicEvalNot,
