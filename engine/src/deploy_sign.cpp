@@ -879,7 +879,9 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	PKCS7_SIGNER_INFO *t_signer_info;
 	t_signer_info = sk_PKCS7_SIGNER_INFO_value(p_signature -> d . sign -> signer_info, 0);
 
-	// Build a request to send to the time-stamp authority
+	// Build a request to send to the time-stamp authority. If there is a 'blob'
+    // field in this request, then we must reset the signature field before freeing
+    // it as that is borrowed from elsewhere.
 	SpcTimeStampRequest *t_request;
 	t_request = nil;
 	if (t_success)
@@ -1034,6 +1036,9 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	// the sig.
 	if (t_request != nil)
 	{
+        // If we have a 'blob' field then we will have potentially borrowed a
+        // signature from another data structure so must unhook that here to
+        // stop it being freed in SpcTimeStampRequest_free.
         if (t_request -> blob != nil)
             t_request -> blob -> signature = nil;
 		SpcTimeStampRequest_free(t_request);
