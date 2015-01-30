@@ -756,19 +756,43 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
             // SN-2014-07-01: [[ ExternalsApiV6 ]] Obj-C types can now be returned when asked so
             // so no further conversion is required
 			case kLCValueOptionAsObjcNumber:
-				t_options_to_use = kMCOptionAsObjcNumber;
-				t_options_to_use |= LCValueOptionsGetConvertOctals(p_options);
-				t_value_to_use = r_value;
+                if (s_interface -> version < 6)
+                {
+                    t_options_to_use = kMCOptionAsReal;
+                    t_value_to_use = &t_number_value;
+                }
+                else
+                {
+                    t_options_to_use = kMCOptionAsObjcNumber;
+                    t_options_to_use |= LCValueOptionsGetConvertOctals(p_options);
+                    t_value_to_use = r_value;
+                }
 				break;
 			case kLCValueOptionAsObjcString:
-				t_options_to_use = kMCOptionAsObjcString;
-				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
-				t_value_to_use = r_value;
+                if (s_interface -> version < 6)
+                {
+                    t_options_to_use = kMCOptionAsCString;
+                    t_value_to_use = &t_cstring_value;
+                }
+                else
+                {
+                    t_options_to_use = kMCOptionAsObjcString;
+                    t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
+                    t_value_to_use = r_value;
+                }
 				break;
 			case kLCValueOptionAsObjcData:
-				t_options_to_use = kMCOptionAsObjcData;
-				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
-				t_value_to_use = r_value;
+                if (s_interface -> version < 6)
+                {
+                    t_options_to_use = kMCOptionAsString;
+                    t_value_to_use = &t_cdata_value;
+                }
+                else
+                {
+                    t_options_to_use = kMCOptionAsObjcData;
+                    t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
+                    t_value_to_use = r_value;
+                }
 				break;
 			case kLCValueOptionAsObjcArray:
                 if (s_interface -> version < 6)
