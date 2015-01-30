@@ -84,6 +84,7 @@ on initialiseCustomProps
    # initialise top level domains
    local tTopLevelDomains
    put "biz,com,info,name,net,org,pro,aero,asia,cat,coop,edu,gov,int,jobs,mil,mobi,museum,tel,travel,arpa,nato,example,invalid,localhost,test,bitnet,csnet,local,root,uucp,onion,exit,berlin,lat,nyc,bzh,cym,gal,sco,geo,mail,kids,post,shop,web,xxx,ac,ad,ae,af,ag,ai,al,am,an,ao,aq,ar,as,at,au,aq,ax,az,ac,ad,ae,af,ag,ai,al,am,an,ao,aq,ar,as,at,au,aw,ax,az,ba,bb,bd,be,bf,bg,bh,bi,bj,bm,bn,bo,br,bs,bt,bw,by,bz,ca,cc,cd,cf,cg,ch,ci,ck,cl,cm,cn,co,cr,cu,cv,cx,cy,cz,de,dj,dk,dm,do,dz,ec,ee,eg,er,es,et,eu,fi,fj,fk,fm,fo,fr,ga,gd,ge,gf,gg,gh,gi,gl,gm,gn,gp,gq,gr,gs,gt,gu,gw,gy,hk,hm,hn,hr,ht,hu,id,ie,il,im,in,io,iq,ir,is,it,je,jm,jo,jp,ke,kg,kh,ki,km,kn,kp,kr,kw,ky,kz,la,lb,lc,li,lk,lr,ls,lt,lu,lv,ly,ma,mc,md,me,mg,mh,mk,ml,mm,mn,mo,mp,mq,mr,ms,mt,mu,mv,mw,mx,my,mz,na,nc,ne,nf,ng,ni,nl,no,np,nr,nu,nz,om,pa,pe,pf,pg,ph,pk,pl,pn,pr,ps,pt,pw,py,qa,re,ro,rs,ru,rw,sa,sb,sc,sd,se,sg,sh,si,sk,sl,sm,sn,sr,st,su,sv,sy,sz,tc,td,tf,tg,th,tj,tk,tl,tm,tn,to,tr,tt,tv,tw,tz,ua,ug,uk,us,uy,uz,va,vc,ve,vg,vi,vn,vu,wf,ws,ye,za,zm,zw,um,bl,eh,mf,bv,gb,pm,sj,so,yt,tp,yu,cs,zr" into tTopLevelDomains
+   replace comma with return in tTopLevelDomains
    set the cTopLevelDomains of me to tTopLevelDomains
 end initialiseCustomProps
 
@@ -4727,7 +4728,7 @@ private function _proxyConfig_LocatePACFileUsingWPAD
       
       -- Filter out known suffixes.
       --
-      if item 1 of tHostName is among the items of the cTopLevelDomains of me then
+      if item 1 of tHostName is among the lines of the cTopLevelDomains of me then
          exit repeat
       end if
       
