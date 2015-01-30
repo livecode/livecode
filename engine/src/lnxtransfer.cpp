@@ -699,7 +699,7 @@ bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
 {
     MCAutoArray<MCTransferType> t_list;
     uint32_t t_top = 0;
-    uint32_t t_index;
+    int32_t t_index;
     uint32_t t_count = 0;
     
     if (m_entries != NULL)
@@ -710,6 +710,9 @@ bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
             for (uint32_t i = 0; i < m_entry_count; i++)
             {
                 t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+				if (-1 == t_index)
+					continue;
+
                 if (XTransfer_lookup_table[t_index].priority > t_top)
                     t_top = XTransfer_lookup_table[t_index].priority;
             }
@@ -717,6 +720,9 @@ bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
             for (uint32_t i = 0; i < m_entry_count; i++)
             {
                 t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+				if (-1 == t_index)
+					continue;
+
                 if ((XTransfer_lookup_table[t_index].priority == t_top) && should_include(t_list.Ptr(), t_count, m_entries[i].m_type))
                 {
                     t_list.Extend(++t_count);

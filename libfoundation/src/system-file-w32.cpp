@@ -15,6 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#define __MCS_INTERNAL_API__
 #include <foundation.h>
 #include <foundation-system.h>
 #include <foundation-auto.h>
@@ -597,7 +598,7 @@ __MCSFileCreateStream (MCStringRef p_native_path,
 
 	/* Store the newly-created cstdio stream in a new MCStream instance. */
 	MCStreamRef t_stream;
-	if (!__MCStdioStreamCreate (t_cstream, t_stream))
+	if (!__MCSStreamCreateWithStdio (t_cstream, t_stream))
 	{
 		/* UNCHECKED */ fclose (t_cstream); /* Also closes underlying handle */
 	}
@@ -661,19 +662,19 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 	 * However, the input path might already end in a directory
 	 * separator.  If so, remove it. */
 	MCAutoStringRef t_native_path;
-	if (MCStringEndsWithCString (p_native_path, "\\",
+	if (MCStringEndsWithCString (p_native_path, (const char_t*)"\\",
 	                             kMCStringOptionCompareExact))
 		/* Trim last character */
 		MCStringCopySubstring (p_native_path,
 		    MCRangeMake (0, MCStringGetLength (p_native_path) - 1),
 		    &t_native_path);
 	else
-		MCStringCopy (p_native_path, t_native_path);
+		MCStringCopy (p_native_path, &t_native_path);
 
 	/* Add the glob suffix */
 	MCAutoStringRef t_native_search_path;
 	if (!MCStringFormat (&t_native_search_path, "%@\\*",
-	                     *t_native_path, MCSTR(t_wildcard_suffix)))
+	                     *t_native_path))
 		return false;
 
 	/* Get a system path */
@@ -737,8 +738,8 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 			goto error_cleanup;
 
 		/* Skip "." and ".." */
-		if (MCStringIsEqualTo (t_entry_name, t_curdir) ||
-		    MCStringIsEqualTo (t_entry_name, t_parentdir))
+		if (MCStringIsEqualTo (t_entry_name, t_curdir, kMCStringOptionCompareExact) ||
+		    MCStringIsEqualTo (t_entry_name, t_parentdir, kMCStringOptionCompareExact))
 		{
 			MCValueRelease (t_entry_name);
 			continue;
@@ -750,7 +751,7 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 
 	/* Clean up and return the list of directory entries */
 	FindClose (t_find_handle);
-	return t_entries->TakeAsProperList (r_native_entries);
+	return t_entries.TakeAsProperList (r_native_entries);
 
  error_cleanup:
 	FindClose (t_find_handle);
