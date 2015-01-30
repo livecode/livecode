@@ -681,4 +681,23 @@ unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Converts a selected range of string to ASCII, storing the result in
+// x_chars and storing the number of chars used in r_num_chars.
+// x_chars is not nul-terminated.
+//
+// If the selected range contains any characters that cannot be
+// represented in the ASCII encoding, they are replaced by the
+// character sequence p_replacement, which is of length
+// p_replacement_len.
+//
+// If p_replacement is nil and a unrepresentable character is found,
+// returns false and stores the number of successfully converted
+// characters in r_num_chars.  Otherwise, returns true.
+//
+// If more than p_chars_len characters are required or x_chars is nil,
+// the required character buffer length is stored in r_num_chars.
+bool MCStringGetAsciiCharsWithReplacement(MCStringRef self, MCRange p_range, const char_t *p_replacement, uindex_t p_replacement_len, char_t *x_chars, uindex_t p_chars_len, uindex_t & r_num_chars);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif

@@ -2284,6 +2284,79 @@ bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_cha
     return MCStringConvertToNativeWithReplacement(self, *t_replacement, false, r_chars, r_char_count);
 }
 
+bool
+MCStringGetAsciiCharsWithReplacement(MCString self,
+                                     MCRange p_range,
+                                     const char_t *p_replacement,
+                                     uindex_t p_replacement_len,
+                                     char_t *x_chars,
+                                     uindex_t p_chars_len,
+                                     uindex_t & r_num_chars)
+{
+	if (__MCStringIsIndirect(self))
+		self = self->string;
+
+	uindex_t t_count = 0;
+	for (uindex_t i = p_range.offset; i < p_range.offset + p_range.length; ++i)
+	{
+		if (i >= self->char_count) break;
+
+		unichar_t t_char;
+		if (MCStringIsNative (self))
+			t_char = MCUnicodeCharMapFromNative (self->native_chars[i]);
+		else
+			t_char = self->chars[i];
+
+		/* ASCII are the first 128 Unicode codepoints */
+		char_t t_ascii_char;
+		const char_t *t_ascii_chars_ptr = &t_ascii_char;
+		uindex_t t_ascii_chars_len = 1;
+
+		if (127 >= t_char)
+		{
+			t_ascii_char = (char_t) t_char;
+		}
+		else
+		{
+			t_ascii_chars_ptr = p_replacement;
+			t_ascii_chars_len = p_replacement_len;
+		}
+
+		/* If we can't represent the current Unicode character in
+		 * ASCII, bail out now */
+		if (NULL == t_ascii_chars_ptr)
+		{
+			r_num_chars = t_count;
+			return false;
+		}
+
+		/* Overflow check */
+		MCAssert (t_count < UINDEX_MAX - t_ascii_chars_len);
+
+		/* If there's no space in the output buffer, or no output
+		 * buffer was provided, don't update the buffer but carry on
+		 * to discover required buffer size. */
+		if (NULL != x_chars && t_count + t_ascii_chars_len <= p_chars_len)
+		{
+			if (1 == t_ascii_chars_len)
+				x_chars[t_count] = *t_ascii_chars_ptr;
+			else
+				MCMemoryCopy (&x_chars[t_count], t_ascii_chars_ptr,
+				              t_ascii_chars_len);
+
+			t_count += t_ascii_chars_len;
+		}
+		else
+		{
+			t_count += t_ascii_chars_len;
+			continue;
+		}
+	}
+
+	r_num_chars = t_count;
+	return true;
+}
+
 bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring)
 {
     MCAutoStringRef t_normalized;
