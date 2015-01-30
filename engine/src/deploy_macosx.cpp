@@ -100,6 +100,7 @@ typedef uint32_t       cpu_subtype_t;
 #define CPU_TYPE_MC98000        ((cpu_type_t) 10)
 #define CPU_TYPE_HPPA           ((cpu_type_t) 11)
 #define CPU_TYPE_ARM            ((cpu_type_t) 12)
+#define CPU_TYPE_ARM64          (CPU_TYPE_ARM | CPU_ARCH_ABI64)
 #define CPU_TYPE_MC88000        ((cpu_type_t) 13)
 #define CPU_TYPE_SPARC          ((cpu_type_t) 14)
 #define CPU_TYPE_I860           ((cpu_type_t) 15)
@@ -188,6 +189,30 @@ typedef uint32_t       cpu_subtype_t;
 #define CPU_SUBTYPE_POWERPC_7400        ((cpu_subtype_t) 10)
 #define CPU_SUBTYPE_POWERPC_7450        ((cpu_subtype_t) 11)
 #define CPU_SUBTYPE_POWERPC_970         ((cpu_subtype_t) 100)
+
+/*
+ *	ARM subtypes
+ */
+#define CPU_SUBTYPE_ARM_ALL             ((cpu_subtype_t) 0)
+#define CPU_SUBTYPE_ARM_V4T             ((cpu_subtype_t) 5)
+#define CPU_SUBTYPE_ARM_V6              ((cpu_subtype_t) 6)
+#define CPU_SUBTYPE_ARM_V5TEJ           ((cpu_subtype_t) 7)
+#define CPU_SUBTYPE_ARM_XSCALE		((cpu_subtype_t) 8)
+#define CPU_SUBTYPE_ARM_V7		((cpu_subtype_t) 9)
+#define CPU_SUBTYPE_ARM_V7F		((cpu_subtype_t) 10) /* Cortex A9 */
+#define CPU_SUBTYPE_ARM_V7S		((cpu_subtype_t) 11) /* Swift */
+#define CPU_SUBTYPE_ARM_V7K		((cpu_subtype_t) 12) /* Kirkwood40 */
+#define CPU_SUBTYPE_ARM_V6M		((cpu_subtype_t) 14) /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V7M		((cpu_subtype_t) 15) /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V7EM		((cpu_subtype_t) 16) /* Not meant to be run under xnu */
+
+#define CPU_SUBTYPE_ARM_V8		((cpu_subtype_t) 13)
+
+/*
+ *  ARM64 subtypes
+ */
+#define CPU_SUBTYPE_ARM64_ALL           ((cpu_subtype_t) 0)
+#define CPU_SUBTYPE_ARM64_V8            ((cpu_subtype_t) 1)
 
 #define FAT_MAGIC       0xcafebabe
 #define FAT_CIGAM       0xbebafeca      /* NXSwapLong(FAT_MAGIC) */
@@ -862,6 +887,18 @@ struct dyld_info_command
 	uint32_t export_size;
 };
 
+/*
+ * The version_min_command contains the min OS version on which this
+ * binary was built to run.
+ */
+struct version_min_command {
+    uint32_t	cmd;		/* LC_VERSION_MIN_MACOSX or
+                             LC_VERSION_MIN_IPHONEOS  */
+    uint32_t	cmdsize;	/* sizeof(struct min_version_command) */
+    uint32_t	version;	/* X.Y.Z is encoded in nibbles xxxx.yy.zz */
+    uint32_t	sdk;		/* X.Y.Z is encoded in nibbles xxxx.yy.zz */
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct mach_32bit
@@ -963,6 +1000,11 @@ static void swap_relocation_info(bool p_to_network, relocation_info& x)
 	MCDeployByteSwapRecord(p_to_network, "ll", &x, sizeof(relocation_info));
 }
 
+static void swap_version_min_command(bool p_to_network, version_min_command& x)
+{
+    MCDeployByteSwapRecord(p_to_network, "llll", &x, sizeof(version_min_command));
+}
+
 static void swap_load_command(bool p_to_network, uint32_t p_type, load_command* x)
 {
 	switch(p_type)
@@ -998,7 +1040,12 @@ static void swap_load_command(bool p_to_network, uint32_t p_type, load_command* 
 			swap_load_command_hdr(p_to_network, *x);
 			break;
 
-		default:
+        case LC_VERSION_MIN_MACOSX:
+        case LC_VERSION_MIN_IPHONEOS:
+            swap_version_min_command(p_to_network, *(version_min_command *)x);
+            break;
+		
+        default:
 			swap_load_command_hdr(p_to_network, *x);
 			break;
 	}
@@ -1087,6 +1134,55 @@ static void relocate_function_starts_command(linkedit_data_command *x, int32_t p
 #define MACHO_ALIGN(x) ((x + MACHO_ALIGNMENT - 1) & ~(MACHO_ALIGNMENT - 1))
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static bool MCDeployToMacOSXFetchMinOSVersion(const MCDeployParameters& p_params, mach_header& p_header, uint32_t& r_version)
+{
+    // First work out what DeployArchitecture to look for.
+    MCDeployArchitecture t_arch;
+    if (p_header . cputype == CPU_TYPE_X86)
+        t_arch = kMCDeployArchitecture_I386;
+    else if (p_header . cputype == CPU_TYPE_X86_64)
+        t_arch = kMCDeployArchitecture_X86_64;
+    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V6)
+        t_arch = kMCDeployArchitecture_ARMV6;
+    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V7)
+        t_arch = kMCDeployArchitecture_ARMV7;
+    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V7S)
+        t_arch = kMCDeployArchitecture_ARMV7S;
+    else if (p_header . cputype == CPU_TYPE_ARM64)
+        t_arch = kMCDeployArchitecture_ARM64;
+    else if (p_header . cputype == CPU_TYPE_POWERPC)
+        t_arch = kMCDeployArchitecture_PPC;
+    else if (p_header . cputype == CPU_TYPE_POWERPC64)
+        t_arch = kMCDeployArchitecture_PPC64;
+    
+    // Search for both the architecture in the mach header and for the 'unknown'
+    // architecture. If the real arch is found, then we use that version; otherwise
+    // if there is an unknown arch then we use that version. If neither are found we
+    // return false which means the caller can do nothing.
+    int t_unknown_index, t_found_index;
+    t_unknown_index = -1;
+    t_found_index = -1;
+    for(uindex_t i = 0; i < p_params . min_os_version_count; i++)
+        if (p_params . min_os_versions[i] . architecture == t_arch &&
+            t_found_index == -1)
+            t_found_index = (signed)i;
+        else if (p_params . min_os_versions[i] . architecture == kMCDeployArchitecture_Unknown &&
+                 t_unknown_index == -1)
+            t_unknown_index = -1;
+    
+    if (t_found_index == -1 && t_unknown_index == -1)
+        return false;
+    
+    if (t_found_index == -1)
+    {
+        r_version = p_params . min_os_versions[t_unknown_index] . version;
+        return true;
+    }
+    
+    r_version = p_params . min_os_versions[t_found_index] . version;
+    return true;
+}
 
 template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_params, bool p_big_endian, MCDeployFileRef p_engine, uint32_t p_engine_offset, uint32_t t_engine_size, uint32_t& x_offset, MCDeployFileRef p_output, mach_header& t_header, load_command **t_commands, uint32_t t_command_count)
 {
@@ -1240,7 +1336,7 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
 		{
 			switch(t_commands[i] -> cmd)
 			{
-                    // Relocate the commands we know about that contain file offset
+                // Relocate the commands we know about that contain file offset
                 case LC_SEGMENT:
                     relocate_segment_command<mach_32bit>((segment_command *)t_commands[i], t_file_delta, t_address_delta);
                     break;
@@ -1269,7 +1365,7 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
                     relocate_function_starts_command((linkedit_data_command *)t_commands[i], t_file_delta, t_address_delta);
                     break;
 					
-                    // These commands have no file offsets
+                // These commands have no file offsets
                 case LC_UUID:
                 case LC_THREAD:
                 case LC_UNIXTHREAD:
@@ -1278,14 +1374,25 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
                 case LC_LOAD_DYLINKER:
                 case LC_ENCRYPTION_INFO:
                 case LC_ENCRYPTION_INFO_64:
-                case LC_VERSION_MIN_MACOSX:
-                case LC_VERSION_MIN_IPHONEOS:
                 case LC_SOURCE_VERSION:
                 case LC_MAIN:
                     break;
                     
-                    // Any others that are present are an error since we don't know
-                    // what to do with them.
+                // We rewrite the contents of these commands as appropriate to
+                // the 'min_os_versions' list in the params.
+                case LC_VERSION_MIN_MACOSX:
+                case LC_VERSION_MIN_IPHONEOS:
+                {
+                    // Notice that we leave the SDK version alone - this is tied
+                    // to linkage and so is probably unwise to adjust.
+                    uint32_t t_version;
+                    if (MCDeployToMacOSXFetchMinOSVersion(p_params, t_header, t_version))
+                        ((version_min_command *)t_commands[i]) -> version = t_version;
+                }
+                break;
+                    
+                // Any others that are present are an error since we don't know
+                // what to do with them.
                 default:
                     t_success = MCDeployThrow(kMCDeployErrorMacOSXUnknownLoadCommand);
                     break;
