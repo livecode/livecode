@@ -21,8 +21,6 @@
 
 'export'
     MODULE MODULELIST MODULEKIND
-    METADATA
-    IMPORT
     DEFINITION SIGNATURE ACCESS
     TYPE FIELD FIELDLIST
     PARAMETER MODE PARAMETERLIST
@@ -54,19 +52,12 @@
     application
 
 'type' MODULE
-    module(Position: POS, Kind: MODULEKIND, Name: ID, Metadata: METADATA, Imports: IMPORT, Definitions: DEFINITION)
-
-'type' METADATA
-    metadata(Position: POS, Key: NAME, Value: STRING, Rest: METADATA)
-    nil
-
-'type' IMPORT
-    sequence(Left: IMPORT, Right: IMPORT)
-    import(Position: POS, Name: ID)
-    nil
+    module(Position: POS, Kind: MODULEKIND, Name: ID, Definitions: DEFINITION)
     
 'type' DEFINITION
     sequence(Left: DEFINITION, Right: DEFINITION)
+    import(Position: POS, Name: ID)
+    metadata(Position: POS, Key: STRING, Value: STRING)
     type(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)

@@ -132,37 +132,30 @@
 
 'nonterm' Module(-> MODULE)
 
-    'rule' Module(-> module(Position, module, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, module, Name, Definitions)):
         OptionalSeparator
         "module" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, widget, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, widget, Name, Definitions)):
         OptionalSeparator
         "widget" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "widget" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, library, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, library, Name, Definitions)):
         OptionalSeparator
         "library" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "library" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, import, Name, nil, Imports, Definitions)):
+    'rule' Module(-> module(Position, import, Name, Definitions)):
         OptionalSeparator
         "import" "module" @(-> Position) Identifier(-> Name) Separator
-        Imports(-> Imports)
         ImportDefinitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
@@ -178,6 +171,9 @@
         
 'nonterm' ImportDefinition(-> DEFINITION)
 
+    'rule' ImportDefinition(-> Import):
+        Import(-> Import)
+
     'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
         "foreign" @(-> Position) "type" Identifier(-> Id)
     
@@ -191,35 +187,22 @@
 -- Metadata Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' Metadata(-> METADATA)
+'nonterm' Metadata(-> DEFINITION)
 
-    'rule' Metadata(-> metadata(Position, Key, Value, Next)):
-        "metadata" @(-> Position) NAME_LITERAL(-> Key) "is" STRING_LITERAL(-> Value) Separator
-        Metadata(-> Next)
+    'rule' Metadata(-> metadata(Position, Key, Value)):
+        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" STRING_LITERAL(-> Value)
         
-    'rule' Metadata(-> nil):
-        -- empty
-
 --------------------------------------------------------------------------------
 -- Import Syntax
 --------------------------------------------------------------------------------
-
-'nonterm' Imports(-> IMPORT)
-
-    'rule' Imports(-> sequence(Head, Tail)):
-        Import(-> Head) Separator
-        Imports(-> Tail)
         
-    'rule' Imports(-> nil):
-        -- empty
-        
-'nonterm' Import(-> IMPORT)
+'nonterm' Import(-> DEFINITION)
 
-    'rule' Import(-> ImportList):
+    'rule' Import(-> Imports):
         "use" @(-> Position) IdentifierList(-> Identifiers)
-        ExpandImports(Position, Identifiers -> ImportList)
+        ExpandImports(Position, Identifiers -> Imports)
 
-'action' ExpandImports(POS, IDLIST -> IMPORT)
+'action' ExpandImports(POS, IDLIST -> DEFINITION)
 
     'rule' ExpandImports(Position, idlist(Id, nil) -> import(Position, Id)):
         Id'Name -> Name
@@ -247,6 +230,12 @@
         -- empty
         
 'nonterm' Definition(-> DEFINITION)
+
+    'rule' Definition(-> Metadata):
+        Metadata(-> Metadata)
+        
+    'rule' Definition(-> Import):
+        Import(-> Import)
 
     'rule' Definition(-> Constant):
         ConstantDefinition(-> Constant)
@@ -1105,6 +1094,15 @@
             Error_MalformedEscapedString(Position, EscapedValue)
             where(EscapedValue -> Value)
         |)
+
+'nonterm' StringOrNameLiteral(-> STRING)
+
+    'rule' StringOrNameLiteral(-> String):
+        StringLiteral(-> String)
+        
+    'rule' StringOrNameLiteral(-> String):
+        NAME_LITERAL(-> Name)
+        GetStringOfNameLiteral(Name -> String)
 
 'token' NAME_LITERAL (-> NAME)
 'token' INTEGER_LITERAL (-> INT)
