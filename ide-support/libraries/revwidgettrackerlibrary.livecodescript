@@ -1,11 +1,11 @@
 ﻿script "revwidgettrackerlibrary"
 
 on revLoadLibrary
-   insert the script of me into back
+   insert the script of me into front
 end revLoadLibrary
 
 on revUnloadLibrary
-   remove the script of me from back
+   remove the script of me from front
 end revUnloadLibrary
 
 local lTrackingIcon, lTracking, lCancelID
