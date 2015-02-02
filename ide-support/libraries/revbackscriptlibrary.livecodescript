@@ -1,4 +1,13 @@
-﻿script "revBackScript"
+﻿script "revbackscriptlibrary"
+
+on revLoadLibrary
+   insert the script of me into back
+end revLoadLibrary
+
+on revUnloadLibrary
+   remove the script of me from back
+end revUnloadLibrary
+
 global gREVSuppressMessages
 global gREVStackStatus
 
@@ -1474,36 +1483,32 @@ on newTool
    end repeat
    if the tool is "browse tool" then
       if "button id 1109" is in the frontScripts then
-         remove script of btn "revShortCuts" of stack "revLibrary" from front
-         insert script of btn "revShortCuts" of stack "revLibrary" into back
+         remove script of stack "revShortCutsLibrary" from front
+         insert script of stack "revShortCutsLibrary" into back
          go (the topStack) -- keyboard focus for shortcuts to the running stack
       end if
       set the defaultStack to the topStack
       if the editBg then set the editBg to false
       if the mode of stack "revApplicationOverview" is not 0 \
-      and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
+            and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
          send "revRefreshControls true, true" to stack "revApplicationOverview"
       end if
    else if the tool is "pointer tool" and "button id 1109" is in the backScripts then
-      remove script of btn "revShortCuts" of stack "revLibrary" from back
-      insert script of btn "revShortCuts" of stack "revLibrary" into front
+      remove script of stack "revShortCutsLibrary" from back
+      insert script of stack "revShortCutsLibrary" into front
    end if
    
-   if the long id of btn "revReshape" of cd 1 of stack "revLibrary" is among the lines of the frontScripts then
-      select empty
-      send "revSetMarkers true" to btn "revReshape" of cd 1 of stack "revLibrary"
-      remove script of btn "revReshape" of cd 1 of stack "revLibrary" from front
-   end if
+   send "revNewTool" to stack "revReshapeLibrary"
    
    if word 1 of the tool is not in "pointerbrowseselectpencilbucketrectanglelineroundedovalbrusheraserspraypolygoncurveregulardropper" then
       revNewObjectName
       do "if there is a template" & word 1 of the tool && "then select the template"&word 1 of the tool
-      send "selectedObjectChanged" to btn "revbackScript" of stack "revLibrary"
+      send "selectedObjectChanged" to me
    else if (the selObj) is not empty and the id of the selObj is 0 then
       do "set the selected of" && (line 1 of the selObj) && "to false"
    end if
    if the tool is "pointer tool" or the tool is "browse tool" then
-      send "selectedObjectChanged" to btn "revBackScript" of stack "revLibrary"
+      send "selectedObjectChanged" to me
       lock messages
       repeat with i = 1 to the number of btns in group "graphics" of stack "revTools"
          set the hilite of btn i of group "graphics" of stack "revTools" to false
@@ -1634,7 +1639,7 @@ on reloadStack pStackName, pFileName
       if gREVSuppressMessages then
          lock messages
          send "revInsertMessageBlock" to me in 100 milliseconds
-         remove script of btn "revNoMessages" of stack "revLibrary" from front
+         revInternal__UnloadLibrary "revNoMessagesLibrary"
       end if
       
       local tLockMessages
@@ -1679,7 +1684,7 @@ on revAOUpdateForDeleteStack pStackName
 end revAOUpdateForDeleteStack
 
 on revInsertMessageBlock
-  insert script of btn "revNoMessages" of stack "revLibrary" into front
+   revInternal__LoadLibrary "revNoMessagesLibrary"
 end revInsertMessageBlock
 
 function revExtensionShow
@@ -1695,51 +1700,51 @@ end revExtensionShow
 ---------------------------------------- Rulers ----------------------------------------
 
 on revCalculateRulers
-  lock messages
-  hide stack "revRulersH"
-  hide stack "revRulersV"
-  switch the cREVRulerMeasurement of stack "revPreferences"
-   case "centimeters"
-     set the icon of btn 1 of stack "revRulersH" to 200708
-     set the icon of btn 1 of stack "revRulersV" to 200711
-     break
-   case "inches"
-     set the icon of btn 1 of stack "revRulersH" to 200709
-     set the icon of btn 1 of stack "revRulersV" to 200712
-     break
-   case "pixels"
-     set the icon of btn 1 of stack "revRulersH" to 200705
-     set the icon of btn 1 of stack "revRulersV" to 200713
-     break
-  end switch
-  if the platform is "MacOS" then
-    set the width of stack "revRulersH" to the width of the topStack+26
-    set the left of btn 1 of stack "revRulersV" to -1
-    set the height of stack "revRulersV" to the height of the topStack+3
-    set the top of btn 1 of stack "revRulersV" to -31
-    set the left of btn 1 of stack "revRulersH" to -2
-    set the top of btn 1 of stack "revRulersH" to -1
-    set the topLeft of stack "revRulersV" to item 1 of the topLeft of the topStack - 20,item 2 of the topLeft of the topStack + 5
-  else
-    set the top of btn 1 of stack "revRulersH" to 0
-    set the width of stack "revRulersH" to the width of the topStack+24
-    set the left of btn 1 of stack "revRulersV" to 0
-    set the height of stack "revRulersV" to the height of the topStack+3
-    set the top of btn 1 of stack "revRulersV" to -30
-    set the left of btn 1 of stack "revRulersH" to -1
-    set the topLeft of stack "revRulersV" to item 1 of the topLeft of the topStack - 20,item 2 of the topLeft of the topStack + 1
-  end if
-  set the topLeft of stack "revRulersH" to item 1 of the bottomLeft of the topStack - 20, item 2 of the bottomLeft of the topStack+3
-  set the cREVHSubtract of stack "revRulersH" to item 1 of the topLeft of the topStack - item 1 of the topLeft of stack "revRulersH"
-  set the cREVVSubtract of stack "revRulersH" to item 2 of the topLeft of the topStack - item 2 of the topLeft of stack "revRulersH"
-  set the cREVHSubtract of stack "revRulersV" to item 1 of the topLeft of the topStack - item 1 of the topLeft of stack "revRulersV"
-  set the cREVVSubtract of stack "revRulersV" to item 2 of the topLeft of the topStack - item 2 of the topLeft of stack "revRulersV"
-  set the cREVCurrentStack of stack "revRulersH" to the short name of the topStack
-  set the right of grc "end marker" of stack "revRulersH" to the width of the topStack + 27
-  insert script of btn "revRulersScript" of stack "revLibrary" into front
-  show stack "revRulersH"
-  show stack "revRulersV"
-  unlock messages
+   lock messages
+   hide stack "revRulersH"
+   hide stack "revRulersV"
+   switch the cREVRulerMeasurement of stack "revPreferences"
+      case "centimeters"
+         set the icon of btn 1 of stack "revRulersH" to 200708
+         set the icon of btn 1 of stack "revRulersV" to 200711
+         break
+      case "inches"
+         set the icon of btn 1 of stack "revRulersH" to 200709
+         set the icon of btn 1 of stack "revRulersV" to 200712
+         break
+      case "pixels"
+         set the icon of btn 1 of stack "revRulersH" to 200705
+         set the icon of btn 1 of stack "revRulersV" to 200713
+         break
+   end switch
+   if the platform is "MacOS" then
+      set the width of stack "revRulersH" to the width of the topStack+26
+      set the left of btn 1 of stack "revRulersV" to -1
+      set the height of stack "revRulersV" to the height of the topStack+3
+      set the top of btn 1 of stack "revRulersV" to -31
+      set the left of btn 1 of stack "revRulersH" to -2
+      set the top of btn 1 of stack "revRulersH" to -1
+      set the topLeft of stack "revRulersV" to item 1 of the topLeft of the topStack - 20,item 2 of the topLeft of the topStack + 5
+   else
+      set the top of btn 1 of stack "revRulersH" to 0
+      set the width of stack "revRulersH" to the width of the topStack+24
+      set the left of btn 1 of stack "revRulersV" to 0
+      set the height of stack "revRulersV" to the height of the topStack+3
+      set the top of btn 1 of stack "revRulersV" to -30
+      set the left of btn 1 of stack "revRulersH" to -1
+      set the topLeft of stack "revRulersV" to item 1 of the topLeft of the topStack - 20,item 2 of the topLeft of the topStack + 1
+   end if
+   set the topLeft of stack "revRulersH" to item 1 of the bottomLeft of the topStack - 20, item 2 of the bottomLeft of the topStack+3
+   set the cREVHSubtract of stack "revRulersH" to item 1 of the topLeft of the topStack - item 1 of the topLeft of stack "revRulersH"
+   set the cREVVSubtract of stack "revRulersH" to item 2 of the topLeft of the topStack - item 2 of the topLeft of stack "revRulersH"
+   set the cREVHSubtract of stack "revRulersV" to item 1 of the topLeft of the topStack - item 1 of the topLeft of stack "revRulersV"
+   set the cREVVSubtract of stack "revRulersV" to item 2 of the topLeft of the topStack - item 2 of the topLeft of stack "revRulersV"
+   set the cREVCurrentStack of stack "revRulersH" to the short name of the topStack
+   set the right of grc "end marker" of stack "revRulersH" to the width of the topStack + 27
+   revInternal__LoadLibrary "revRulersScriptLibrary"
+   show stack "revRulersH"
+   show stack "revRulersV"
+   unlock messages
 end revCalculateRulers
 
 on revPartCalculateRulers
@@ -1783,7 +1788,7 @@ local lTimerID
 
 on selectedObjectChanged
   if "updateForSelectedObjectChanged" is in the pendingMessages then cancel lTimerID
-  send "updateForSelectedObjectChanged" to btn "revBackScript" of stack "revLibrary" in 200 milliseconds
+  send "updateForSelectedObjectChanged" to me in 200 milliseconds
   put the result into lTimerID
 end selectedObjectChanged
 
@@ -4622,7 +4627,7 @@ command revIDEHandleMouseDown pWhich, pTarget
          if the platform is "MacOS" and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then 
             revShowPopupmenu tTarget
          end if
-         send "selectedObjectChanged" to btn "revBackScript" of stack "revLibrary"
+         send "selectedObjectChanged" to me
       end if
       if the mode of stack "revSaving" is 0 then put "edited" into gREVStackStatus[revTargetStack(tTarget)]
       return "exit to top"

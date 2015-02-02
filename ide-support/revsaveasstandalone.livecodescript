@@ -848,7 +848,7 @@ private command revCopyScriptLibraries pStack, pPlatform
    end if
    
    if sStandaloneSettingsA["includeProfiles"] = "" then 
-      delete button "revProfileBack" of group "revLibraries" of card 1 of stack pStack
+      --delete button "revProfileBack" of group "revLibraries" of card 1 of stack pStack
    end if
    
    set the cScriptLibraries of group "revLibraries" of card 1 of stack pStack to sUserScriptLibraries
