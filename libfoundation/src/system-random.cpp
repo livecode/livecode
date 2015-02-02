@@ -26,6 +26,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #  include <dlfcn.h>
 #endif
 
+#include <foundation-math.h>
+
 /* ================================================================
  * Random value generation
  * ================================================================ */
