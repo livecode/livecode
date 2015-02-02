@@ -222,7 +222,7 @@ lc-test-check: lc-test
 ###############################################################################
 # All Targets
 
-.PHONY: all bootstrap clean
+.PHONY: all bootstrap thirdparty clean
 .DEFAULT_GOAL := all
 
 all: revzip server-revzip
@@ -234,6 +234,10 @@ all: revpdfprinter revandroid
 all: lc-run lc-test
 
 bootstrap: lc-bootstrap-compile
+
+thirdparty: libffi libz libjpeg libpcre libpng libgif libopenssl libskia
+thirdparty: libcairopdf libpq libmysql libsqlite libiodbc libxml libxslt
+thirdparty: libzip
 
 check: lc-test-check
 
