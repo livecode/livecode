@@ -879,3 +879,85 @@ command revSBResaveScriptOnlyStackAsProperStackFile pStackName, pStackFilePath, 
    end if
    unlock messages
 end revSBResaveScriptOnlyStackAsProperStackFile
+
+# AL-2015-02-02: [[ Scriptify IDE ]] As we remove buttons from revLIbrary, we'll need to add to
+# this function to return the 'common' name of each of the libraries.
+function revSBScriptLibraryNameFromStackName pStack
+   switch pStack
+      case "revLibUrl"
+         return "Internet"
+      case "revPrintLibrary"
+         return "Printing"
+      default
+         if pStack begins with "rev" then
+            delete char 1 to 3 of pStack
+            if pStack ends with "Library" then
+               delete char -7 to -1 of pStack
+            end if
+            put toUpper(char 1 of pStack) into char 1 of pStack
+         end if
+         break
+   end switch
+   
+   return pStack
+end revSBScriptLibraryNameFromStackName
+
+function revSBStackNameFromScriptLibraryName pLib
+   switch pLib
+      case "Internet"
+         return "revLibUrl"
+      case "Printing"
+         return "revPrintLibrary"
+      case "Geometry"
+      case "Animation"
+      case "XMLRPC"
+      case "WidgetTracker"
+         return "rev" & pLib & "Library"
+      default
+         return empty
+   end switch
+   return pLib
+end revSBStackNameFromScriptLibraryName
+
+function revSBLibraryList
+   local tPath,tSave,tLibraries,tBtn,tExternals
+   -- rev script libraries
+   local tLoadedLibs
+   put revInternal__ListLoadedLibraries() into tLoadedLibs
+   repeat for each line tLine in tLoadedLibs
+      get revSBScriptLibraryNameFromStackName(tLine) 
+      if it is not empty then put it & CR after tLibraries
+   end repeat
+   
+   repeat with X=1 to the number of btns of group "revLibraries" of stack "revLibrary"
+      put the short name of button X of group "revLibraries" of stack "revLibrary" into tBtn
+      if tBtn is not among the items of "revCommon,revDatabase,revProfileBack" and char 1 to 3 of tBtn = "rev" then
+         delete char 1 to 3 of tBtn
+         if char -4 to -1 of tBtn = "Back" then delete char -4 to -1 of tBtn
+         if tBtn = "LibURL" then put "Internet" into tBtn
+         if tBtn = "Print" then put "Printing" into tBtn
+         put tBtn & cr after tLibraries
+      end if
+   end repeat
+   -- rev externals
+   put revExternalsList() & cr after tLibraries
+   -- user script libraries
+   
+   local tEnvironmentScripts
+   put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentScripts
+   
+   local tUserScripts
+   put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserScripts
+   
+   local tFiles
+   put revCombineFilePaths(tUserScripts,tEnvironmentScripts) into tFiles
+   repeat for each line tLine in tFiles
+      if there is a stack tLine then put the short name of stack tLine & cr after tLibraries
+   end repeat
+   put "SSL & Encryption" & cr after tLibraries
+   if "Browser" is among the lines of tLibraries then
+      put "Browser (CEF)" & cr after tLibraries
+   end if
+   
+   return tLibraries
+end revSBLibraryList

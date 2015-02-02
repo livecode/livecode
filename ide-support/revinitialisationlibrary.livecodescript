@@ -57,11 +57,11 @@ command revInternal__UnloadLibrary pLibraryName
       return "Library not loaded"
    end if
    
-   if there is not a stack tStackName then return "library not loaded"
+   if there is not a stack pLibraryName then return "library not loaded"
    
    try
       // Request the library shuts down
-      send "revUnloadLibrary" to stack tStackName
+      send "revUnloadLibrary" to stack pLibraryName
       
       delete variable sLoadedLibraries[pLibraryName]
       
@@ -70,3 +70,10 @@ command revInternal__UnloadLibrary pLibraryName
       return "Error while unloading library. Library" && pLibraryName && "did not complete the reVUnloadLibrary request"
    end try
 end revInternal__UnloadLibrary
+
+function revInternal__ListLoadedLibraries
+   local tLibs
+   put the keys of sLoadedLibraries into tLibs
+   sort tLibs
+   return tLibs
+end revInternal__ListLoadedLibraries
