@@ -580,15 +580,7 @@ end revStandaloneAddWarning
 ----------
 
 command revStandaloneProgress pMessage
-   put pMessage into field 1 of stack "revStandaloneProgress"
-   if the mode of stack "revStandaloneProgress" is 0 then 
-      lock messages
-      modeless "revStandaloneProgress"
-      set the loc of stack "revStandaloneProgress" to the screenLoc
-      unlock messages
-   end if
-   unlock screen
-   wait 0 ticks with messages -- allow for progress update
+   send "revUpdateStandaloneProgress pMessage" to stack "revStandaloneSettings"
 end revStandaloneProgress
 
 # This is an event handler, not a command.
@@ -869,3 +861,21 @@ function utilityMakePathRelative pFile, pFolder
   
   return tFile
 end utilityMakePathRelative
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+command revSBResaveScriptOnlyStackAsProperStackFile pStackName, pStackFilePath, pOutputStackFilePath
+   lock messages
+   if there is a stack pStackName then
+      set the name of stack pStackName to "__keep_this_around__"
+   end if
+   create invisible stack "__temp_real_stack__"
+   set the script of stack "__temp_real_stack__" to the script of stack pStackFilePath
+   set the name of stack "__temp_real_stack__" to pStackName
+   save stack pStackName as pOutputStackFilePath
+   delete stack pStackName
+   if there is a stack "__keep_this_around__" then
+      set the name of stack "__keep_this_around__" to pStackName
+   end if
+   unlock messages
+end revSBResaveScriptOnlyStackAsProperStackFile

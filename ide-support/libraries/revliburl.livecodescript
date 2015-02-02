@@ -3,11 +3,11 @@
 #
 on revLoadLibrary
    # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
-   insert the script of me into back
+   insert the script of stack "revLibUrl" into back
 end revLoadLibrary
 
 on revUnloadLibrary
-   remove the script of me from back
+   remove the script of stack "revLibUrl" from back
 end revUnloadLibrary
 ---------------------------------------------------------------------
 ##shared locals

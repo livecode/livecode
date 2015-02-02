@@ -229,7 +229,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	}
 	break;
 			
-	case kMCCapsuleSectionTypeAuxillaryStack:
+	case kMCCapsuleSectionTypeAuxiliaryStack:
 	{
 		MCStack *t_aux_stack;
 		if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)

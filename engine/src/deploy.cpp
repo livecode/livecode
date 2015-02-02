@@ -148,7 +148,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	if (t_success)
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
 
-	// Now we add the auxillary stackfiles, if any
+	// Now we add the auxiliary stackfiles, if any
 	MCDeployFileRef *t_aux_stackfiles;
 	t_aux_stackfiles = nil;
 	if (t_success)
@@ -159,7 +159,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 			if (t_success && !MCDeployFileOpen(p_params . auxiliary_stackfiles[i], "rb", t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
-				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
+				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxiliaryStack, t_aux_stackfiles[i]);
 		}
 	
 	// Now add the externals, if any

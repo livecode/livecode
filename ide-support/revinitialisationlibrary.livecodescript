@@ -46,7 +46,7 @@ command revInternal__LoadLibrary pLibraryName
       try
          send "revLoadLibrary" to stack pLibraryName
       catch tError
-         return "Error while loading stack:" && pLibraryName
+         return "Error" && tError && "while loading stack:" && pLibraryName
       end try
    end if
 end revInternal__LoadLibrary

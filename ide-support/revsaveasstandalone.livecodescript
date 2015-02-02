@@ -2414,10 +2414,16 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions and startup script to the deploy parameters
    if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then
-      put line 1 of sStandaloneSettingsA["auxiliary_stackfiles"] into tDeployInfo["auxiliary_stackfiles"]
+      repeat for each line tStackFile in sStandaloneSettingsA["auxiliary_stackfiles"]
+         local tTempStackFile
+         put the tempname into tTempStackFile
+         revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
+         put tTempStackFile & return after tDeployInfo["auxiliary_stackfiles"]
+      end repeat
+      delete the last char of tDeployInfo["auxiliary_stackfiles"]
    end if
    if sStandaloneSettingsA["startup_script"] is not empty then
-      //put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
+      put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
    end if
    
    if pPlatform begins with "MacOSX" then
@@ -2697,10 +2703,10 @@ end revSmartChecking
 private command revAddLibrary pLibrary, pAuxStackFile
    if pLibrary is "Internet" then
       put return & the effective filename of stack "revLibURL" after sStandaloneSettingsA["auxiliary_stackfiles"]
-      put "; revInternal__LoadLibrary revLibUrl" after sStandaloneSettingsA["startup_script"]
+      put return & "revInternal__LoadLibrary revLibUrl" after sStandaloneSettingsA["startup_script"]
    else if pAuxStackFile then
       put return & the effective filename of stack pLibrary after sStandaloneSettingsA["auxiliary_stackfiles"]
-      put "; revInternal__LoadLibrary" && quote & pLibrary & quote after sStandaloneSettingsA["startup_script"]
+      put return & "revInternal__LoadLibrary" && quote & pLibrary & quote after sStandaloneSettingsA["startup_script"]
    else
       if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
       put pLibrary after sStandaloneSettingsA["scriptLibraries"]
