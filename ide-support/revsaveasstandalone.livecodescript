@@ -77,12 +77,12 @@ on initialiseLibrary
    put "cRevAnimation" into sPatternsA["revAnimationLibrary"]["Property"]
    
    # Table
-   put "cRevTable" into sPatternsA["Table"]["Property"]
+   put "cRevTable" into sPatternsA["revTableLibrary"]["Property"]
    
    # Database
-   put "cRevDatabase" into sPatternsA["Database"]["Property"]
-   put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
-   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
+   put "cRevDatabase" into sPatternsA["revDatabaseLibrary"]["Property"]
+   put "revDatabase,revdb_" into sPatternsA["revDatabaseLibrary"]["Root"]
+   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["revDatabaseLibrary"]["Script"]
    
    # Internet
    put "libUrl" into sPatternsA["revLibUrl"]["Root"]
@@ -844,7 +844,7 @@ private command revCopyScriptLibraries pStack, pPlatform
       end if
    end repeat
    if sStandaloneSettingsA["databaseDrivers"] = "" then 
-      delete button "revDatabase" of group "revLibraries" of card 1 of stack pStack
+      --delete button "revDatabase" of group "revLibraries" of card 1 of stack pStack
    end if
    
    if sStandaloneSettingsA["includeProfiles"] = "" then 

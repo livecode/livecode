@@ -912,6 +912,8 @@ function revSBStackNameFromScriptLibraryName pLib
       case "Animation"
       case "XMLRPC"
       case "WidgetTracker"
+      case "Database"
+      case "Table"
          return "rev" & pLib & "Library"
       default
          return empty
