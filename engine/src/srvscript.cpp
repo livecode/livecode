@@ -451,7 +451,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
                 }
                 
                 if (*t_encoding_str != NULL)
-                    MCStringsEvalTextEncoding(*t_encoding_str, t_encoding);
+                    MCStringEvalTextEncoding(*t_encoding_str, t_encoding);
             }
         }
     }

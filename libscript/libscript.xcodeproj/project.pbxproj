@@ -72,6 +72,8 @@
 		C741ECD11A6933CF0096D171 /* stream.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C741ECC71A6932E60096D171 /* stream.mlc */; };
 		C7A74E1A1A6D08290031099F /* date.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C73CD34E1A6D01690021F87A /* date.mlc */; };
 		C7A74E1B1A6D083D0031099F /* system.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C73CD3511A6D01690021F87A /* system.mlc */; };
+		76FEC2C11A601FDF00188FD4 /* encoding.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B66F1A273BA000DD750C /* encoding.mlc */; };
+		76FEC2C41A601FE800188FD4 /* module-encoding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65E1A273BA000DD750C /* module-encoding.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -562,6 +564,8 @@
 			files = (
 				C741ECD11A6933CF0096D171 /* stream.mlc in Sources */,
 				76FEC2361A5D43E000188FD4 /* file.mlc in Sources */,
+				76FEC2C41A601FE800188FD4 /* module-encoding.cpp in Sources */,
+				76FEC2C11A601FDF00188FD4 /* encoding.mlc in Sources */,
 				5DDE27B91A37909500D5ABD2 /* math-foundation.mlc in Sources */,
 				7661138D1A31FE1B0042DE7F /* array.mlc in Sources */,
 				766113441A2F298E0042DE7F /* list.mlc in Sources */,

@@ -147,39 +147,186 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 {
     MCAssert(!p_is_external_rep);
     
+    // The behavior when converting invalid UTF-16 and UTF-32 data in LiveCode script is incompatible
+    //  with that of LiveCode builder - in the former case we need to ignore wrong numbers of bytes and allow
+    //  unpaired surrogates. So we deal with those cases separately here, as LCB always calls
+    //  MCStringCreateWithBytesAndReplacement.
+    switch (p_encoding)
+    {
+        case kMCStringEncodingUTF32:
+        case kMCStringEncodingUTF32LE:
+        case kMCStringEncodingUTF32BE:
+        {
+            // Round the byte count to a multiple of UTF-32 units
+            p_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
+            
+            // Convert the string to UTF-16 first. The UTF-16 string cannot be longer than the UTF-32 string
+            MCAutoArray<unichar_t> t_buffer;
+            t_buffer.Extend(p_byte_count / sizeof(uint32_t));
+            uindex_t t_in_offset;
+            uindex_t t_out_offset = 0;
+            for (t_in_offset = 0; t_in_offset < p_byte_count; t_in_offset += sizeof(uint32_t))
+            {
+                // BMP characters are output unchanged, non-BMP requires surrogate pairs
+                codepoint_t t_codepoint;
+                t_codepoint = *(uint32_t*)&p_bytes[t_in_offset];
+                
+                if (p_encoding == kMCStringEncodingUTF32BE)
+                    t_codepoint = MCSwapInt32BigToHost(t_codepoint);
+                else if (p_encoding == kMCStringEncodingUTF32LE)
+                    t_codepoint = MCSwapInt32LittleToHost(t_codepoint);
+                
+                if (t_codepoint < 0x10000)
+                {
+                    t_buffer[t_out_offset] = unichar_t(t_codepoint);
+                    t_out_offset += 1;
+                }
+                else
+                {
+                    // Split to surrogate pairs
+                    unichar_t t_lead, t_trail;
+                    t_lead =  unichar_t((t_codepoint - 0x10000) >> 10) + 0xD800;
+                    t_trail = unichar_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
+                    t_buffer[t_out_offset] = t_lead;
+                    t_buffer[t_out_offset + 1] = t_trail;
+                    t_out_offset += 2;
+                }
+            }
+            
+            return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
+        }
+        case kMCStringEncodingUTF16:
+            return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
+            // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.
+        case kMCStringEncodingUTF16LE:
+        case kMCStringEncodingUTF16BE:
+            {
+                unichar_t *t_buffer;
+                uindex_t t_length = p_byte_count / 2;
+                MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
+                
+                for (uindex_t i = 0; i < t_length; i++)
+                {
+                    if (p_encoding == kMCStringEncodingUTF16BE)
+                        t_buffer[i] = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i]);
+                    else
+                        t_buffer[i] = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i]);
+                }
+                return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
+            }
+        default:
+            return MCStringCreateWithBytesAndReplacement(p_bytes, p_byte_count, p_encoding, p_is_external_rep, MCSTR("?"), r_string);
+    }
+}
+
+// Create an immutable string from the given bytes, interpreting them using
+// the specified encoding.
+bool MCStringCreateWithBytesAndReplacement(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef p_replacement, MCStringRef& r_string)
+{
+    MCAssert(!p_is_external_rep);
+    
     switch (p_encoding)
     {
         case kMCStringEncodingASCII:
+            return MCStringCreateWithAsciiCharsAndReplacement(p_bytes, p_byte_count, p_replacement, r_string);
         case kMCStringEncodingNative:
             return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
         case kMCStringEncodingUTF16:
-            return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
-        // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.    
+        // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.
         case kMCStringEncodingUTF16LE:
         case kMCStringEncodingUTF16BE:
         {
+            bool t_can_be_valid;
+            t_can_be_valid = p_byte_count % 2 == 0;
+            
+            if (p_replacement == nil && !t_can_be_valid)
+                return false;
+
             unichar_t *t_buffer;
             uindex_t t_length = p_byte_count / 2;
-            MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
-
-            for (uindex_t i = 0; i < t_length; i++)
+            
+            if (!t_can_be_valid)
+                t_length++;
+            
+            if (!MCMemoryNewArray(t_length, t_buffer))
+                return false;
+            
+            bool t_is_valid;
+            t_is_valid = true;
+            
+            for (uindex_t i = 0; t_is_valid && i < t_length; i++)
             {
+                unichar_t t_lead;
                 if (p_encoding == kMCStringEncodingUTF16BE)
-                    t_buffer[i] = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i]);
+                    t_lead = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i]);
+                else if (p_encoding == kMCStringEncodingUTF16LE)
+                    t_lead = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i]);
                 else
-                    t_buffer[i] = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i]);
+                    t_lead = ((unichar_t *)p_bytes)[i];
+                
+                // Validate UTF-16 data
+                if (MCUnicodeCodepointIsHighSurrogate(t_lead))
+                {
+                    if (i + 1 >= t_length)
+                        t_is_valid = false;
+                    
+                    unichar_t t_tail;
+                    if (t_is_valid)
+                    {
+                        if (p_encoding == kMCStringEncodingUTF16BE)
+                            t_tail = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i + 1]);
+                        else if (p_encoding == kMCStringEncodingUTF16LE)
+                            t_tail = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i + 1]);
+                        else
+                            t_tail = ((unichar_t *)p_bytes)[i + 1];
+                    
+                        if (!MCUnicodeCodepointIsLowSurrogate(t_tail))
+                            t_is_valid = false;
+                    }
+                    
+                    if (t_is_valid)
+                    {
+                        t_buffer[i] = t_lead;
+                        t_buffer[i++] = t_tail;
+                        continue;
+                    }
+                }
+                else if (MCUnicodeCodepointIsLowSurrogate(t_lead))
+                    t_is_valid = false;
+                
+                if (!t_is_valid && p_replacement)
+                {
+                    t_lead = MCStringGetCharAtIndex(p_replacement, 0);
+                    t_is_valid = true;
+                }
+                
+                t_buffer[i] = t_lead;
             }
-            return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
+            
+            if (t_is_valid)
+            {
+                if (!t_can_be_valid)
+                    t_buffer[t_length - 1] = MCStringGetCharAtIndex(p_replacement, 0);
+                return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
+            }
+            
+            MCMemoryDeleteArray(t_buffer);
+            return false;
         }
             
         case kMCStringEncodingUTF8:
         {
             unichar_t *t_chars;
             uindex_t t_char_count;
-            t_char_count = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, nil, 0);
+            t_char_count = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, nil, 0, nil);
             if (!MCMemoryNewArray(t_char_count, t_chars))
                 return false;
-            MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, t_chars, t_char_count);
+            uindex_t t_mapped;
+            t_mapped = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, t_chars, t_char_count, p_replacement != nil ? MCStringGetCharPtr(p_replacement) : nil);
+            
+            if (p_replacement == nil && t_mapped != t_char_count)
+                return false;
+            
             if (!MCStringCreateWithCharsAndRelease(t_chars, t_char_count, r_string))
             {
                 MCMemoryDeleteArray(t_chars);
@@ -191,45 +338,55 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         case kMCStringEncodingUTF32:
         case kMCStringEncodingUTF32LE:
         case kMCStringEncodingUTF32BE:
-		{
-			// Round the byte count to a multiple of UTF-32 units
-			p_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
-			
-			// Convert the string to UTF-16 first. The UTF-16 string cannot be longer than the UTF-32 string
-			MCAutoArray<unichar_t> t_buffer;
-			t_buffer.Extend(p_byte_count / sizeof(uint32_t));
-			uindex_t t_in_offset;
-			uindex_t t_out_offset = 0;
-			for (t_in_offset = 0; t_in_offset < p_byte_count; t_in_offset += sizeof(uint32_t))
-			{
-				// BMP characters are output unchanged, non-BMP requires surrogate pairs
-				codepoint_t t_codepoint;
-				t_codepoint = *(uint32_t*)&p_bytes[t_in_offset];
+        {
+            bool t_can_be_valid;
+            t_can_be_valid = p_byte_count % 4 == 0;
+            
+            if (p_replacement == nil && !t_can_be_valid)
+                return false;
+            
+            // Round the byte count up to a multiple of UTF-32 units
+            uindex_t t_byte_count;
+            t_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
+            
+            // Convert the string to UTF-16 first. The UTF-16 string cannot be longer than the UTF-32 string
+            MCAutoArray<unichar_t> t_buffer;
+            t_buffer.Extend(t_byte_count / sizeof(uint32_t));
+            uindex_t t_in_offset;
+            uindex_t t_out_offset = 0;
+            for (t_in_offset = 0; t_in_offset + sizeof(uint32_t) < p_byte_count; t_in_offset += sizeof(uint32_t))
+            {
+                // BMP characters are output unchanged, non-BMP requires surrogate pairs
+                codepoint_t t_codepoint;
+                t_codepoint = *(uint32_t*)&p_bytes[t_in_offset];
                 
                 if (p_encoding == kMCStringEncodingUTF32BE)
                     t_codepoint = MCSwapInt32BigToHost(t_codepoint);
                 else if (p_encoding == kMCStringEncodingUTF32LE)
                     t_codepoint = MCSwapInt32LittleToHost(t_codepoint);
                 
-				if (t_codepoint < 0x10000)
-				{
-					t_buffer[t_out_offset] = unichar_t(t_codepoint);
-					t_out_offset += 1;
-				}
-				else
-				{
-					// Split to surrogate pairs
-					unichar_t t_lead, t_trail;
-					t_lead =  unichar_t((t_codepoint - 0x10000) >> 10) + 0xD800;
-					t_trail = unichar_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
-					t_buffer[t_out_offset] = t_lead;
-					t_buffer[t_out_offset + 1] = t_trail;
-					t_out_offset += 2;
-				}
-			}
-			
-			return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
-		}
+                if (t_codepoint < 0x10000)
+                {
+                    t_buffer[t_out_offset] = unichar_t(t_codepoint);
+                    t_out_offset += 1;
+                }
+                else
+                {
+                    // Split to surrogate pairs
+                    unichar_t t_lead, t_trail;
+                    t_lead =  unichar_t((t_codepoint - 0x10000) >> 10) + 0xD800;
+                    t_trail = unichar_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
+                    t_buffer[t_out_offset] = t_lead;
+                    t_buffer[t_out_offset + 1] = t_trail;
+                    t_out_offset += 2;
+                }
+            }
+            
+            if (!t_can_be_valid)
+                t_buffer[t_out_offset++] = MCStringGetCharAtIndex(p_replacement, 0);
+            
+            return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
+        }
             break;
 #if !defined(__LINUX__) && !defined(__ANDROID__)
         case kMCStringEncodingISO8859_1:
@@ -461,6 +618,90 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_co
     return t_success;
 }
 
+bool
+MCStringCreateWithAsciiCharsAndReplacement (const char_t *p_chars,
+                                            uindex_t p_char_count,
+                                            MCStringRef p_replacement,
+                                            MCStringRef & r_string)
+{
+	/* Validate p_chars by checking for non-ASCII bytes. If no
+	 * replacement is specified, give up as soon as possible. */
+	uindex_t t_count_non_ascii = 0;
+	for (uindex_t i = 0; i < p_char_count; ++i)
+	{
+		if (p_chars[i] < 128)
+			continue;
+		else if (NULL != p_replacement)
+			++t_count_non_ascii;
+		else
+			return false;
+	}
+
+	/* Get the replacement string as a character array */
+	const unichar_t *t_replacement_chars = NULL;
+	uindex_t t_replacement_len = 0;
+	if (0 < t_count_non_ascii && NULL != p_replacement)
+	{
+		t_replacement_chars = MCStringGetCharPtr (p_replacement);
+		t_replacement_len = MCStringGetLength (p_replacement);
+	}
+
+	/* Compute the number of characters in the result, checking for
+	 * overflow. */
+	uindex_t t_result_len = p_char_count;
+	if (0 < t_count_non_ascii &&
+	    1 != t_replacement_len)
+	{
+		if (0 == t_replacement_len)
+		{
+			t_result_len -= t_count_non_ascii;
+		}
+		else
+		{
+			uindex_t t_extra = t_replacement_len * t_count_non_ascii;
+			if (t_extra / t_count_non_ascii != t_replacement_len)
+				return false; /* Overflow */
+			if (t_result_len > UINDEX_MAX - t_extra)
+				return false; /* Overflow */
+			t_result_len += t_extra;
+		}
+	}
+
+	/* Shortcut for empty strings. It's possible that we might be
+	 * constructing kMCEmptyString, so check that it's been
+	 * initialised. */
+	if (0 == t_result_len && nil != kMCEmptyString)
+	{
+		r_string = MCValueRetain (kMCEmptyString);
+		return true;
+	}
+
+	/* Allocate the result array */
+	MCAutoArray<unichar_t> t_result_chars;
+	if (!t_result_chars.New (t_result_len))
+		return false;
+
+	/* Construct result. Source index i, destination index j */
+	for (uindex_t i = 0, j = 0; i < p_char_count && j < t_result_len; ++i, ++j)
+	{
+		if (p_chars[i] < 128)
+		{
+			t_result_chars[j] = p_chars[i];
+			continue;
+		}
+
+		MCMemoryCopy (&t_result_chars[j], t_replacement_chars,
+		              t_replacement_len);
+		/* N.b. number of *extra* chars. This deliberately underflows
+		 * for j = 0 because j gets incremented by the 'for' loop
+		 * before its next use. */
+		j += t_replacement_len - 1;
+	}
+
+	return MCStringCreateWithChars (t_result_chars.Ptr(), t_result_len,
+	                                r_string);
+}
+
 static bool MCStringCreateMutableUnicode(uindex_t p_initial_capacity, MCStringRef& r_string)
 {
 	bool t_success;
@@ -520,11 +761,103 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStringEncode(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
+struct MCStringEncodingName
+{
+    const char *m_name;
+    MCStringEncoding m_encoding;
+};
+
+// These names must match the formatting of character encoding names as output
+// by the algorithm described in section 1.4 of the Unicode Consortium TR22.
+static MCStringEncodingName MCStringEncodingNames[] =
+{
+    {"ascii", kMCStringEncodingASCII},
+    {"iso88591", kMCStringEncodingISO8859_1},
+    {"macroman", kMCStringEncodingMacRoman},
+    {"native", kMCStringEncodingNative},
+    {"utf16", kMCStringEncodingUTF16},
+    {"utf16be", kMCStringEncodingUTF16BE},
+    {"utf16le", kMCStringEncodingUTF16LE},
+    {"utf32", kMCStringEncodingUTF32},
+    {"utf32be", kMCStringEncodingUTF32BE},
+    {"utf32le", kMCStringEncodingUTF32LE},
+    {"utf8", kMCStringEncodingUTF8},
+    {"cp1252", kMCStringEncodingWindows1252},
+    
+    {NULL, 0},
+};
+
+bool MCStringEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding)
+{
+    // First, map the incoming charset name according to the rules in Unicode TR22:
+    //  Delete all characters except a-zA-Z0-9
+    //  Map A-Z to a-z
+    //  From left-to-right, delete each 0 not preceded by a digit
+    MCAutoArray<char_t> t_cleaned;
+    t_cleaned.New(MCStringGetLength(p_encoding) + 1);   // Cannot exceed incoming length
+    
+    uindex_t t_cleaned_len;
+    t_cleaned_len = 0;
+    
+    bool t_in_number;
+    t_in_number = false;
+    for (uindex_t i = 0; i < MCStringGetLength(p_encoding); i++)
+    {
+        unichar_t t_char;
+        t_char = MCStringGetCharAtIndex(p_encoding, i);
+        
+        // All important characters are in the ASCII range (filtering here
+        // avoids problems with the subsequent tolower call and non-ASCII chars)
+        if (t_char > 128)
+        {
+            t_in_number = false;
+            continue;
+        }
+        
+        t_char = tolower(t_char);
+        
+        if (t_char >= 'a' && t_char <= 'z')
+        {
+            t_in_number = false;
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+        else if (t_char == '0' && t_in_number)
+        {
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+        else if (t_char >= '1' && t_char <= '9')
+        {
+            t_in_number = true;
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+    }
+    
+    // Terminate the cleaned name
+    t_cleaned[t_cleaned_len++] = '\0';
+    
+    // Search the encoding table
+    uindex_t t_index;
+    t_index = 0;
+    while (MCStringEncodingNames[t_index].m_name != NULL)
+    {
+        if (strncmp(MCStringEncodingNames[t_index].m_name, (const char*)&t_cleaned[0], t_cleaned_len) == 0)
+        {
+            r_encoding = MCStringEncodingNames[t_index].m_encoding;
+            return true;
+        }
+        
+        t_index++;
+    }
+    
+    // Encoding could not be recognised
+    return false;
+}
+
+bool MCStringEncodeWithReplacement(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef p_replacement, MCDataRef& r_data)
 {
     byte_t *t_bytes;
     uindex_t t_byte_count;
-    if (!MCStringConvertToBytes(p_string, p_encoding, p_is_external_rep, t_bytes, t_byte_count))
+    if (!MCStringConvertToBytesWithReplacement(p_string, p_encoding, p_is_external_rep, p_replacement, t_bytes, t_byte_count))
         return false;
     
     if (!MCDataCreateWithBytesAndRelease(t_bytes, t_byte_count, r_data))
@@ -534,6 +867,17 @@ bool MCStringEncode(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is
     }
 
     return true;
+}
+
+bool MCStringEncode(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
+{
+    MCAutoDataRef t_replacement;
+    byte_t t_byte;
+    t_byte = '?';
+    if (!MCDataCreateWithBytes(&t_byte, 1, &t_replacement))
+        return false;
+    
+    return MCStringEncodeWithReplacement(p_string, p_encoding, p_is_external_rep, *t_replacement, r_data);
 }
 
 bool MCStringEncodeAndRelease(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
@@ -547,6 +891,11 @@ bool MCStringEncodeAndRelease(MCStringRef p_string, MCStringEncoding p_encoding,
     r_data = t_data;
     
     return true;
+}
+
+bool MCStringDecodeWithReplacement(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef p_replacement, MCStringRef& r_string)
+{
+    return MCStringCreateWithBytesAndReplacement(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), p_encoding, p_is_external_rep, p_replacement, r_string);
 }
 
 bool MCStringDecode(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
@@ -1125,28 +1474,88 @@ uindex_t MCStringGetChars(MCStringRef self, MCRange p_range, unichar_t *p_chars)
 	return t_count;
 }
 
-uindex_t MCStringGetNativeChars(MCStringRef self, MCRange p_range, char_t *p_chars)
+bool
+MCStringGetNativeCharsWithReplacement(MCStringRef self,
+                                      MCRange p_range,
+                                      const char_t *p_replacement,
+                                      uindex_t p_replacement_len,
+                                      char_t *x_chars,
+                                      uindex_t p_chars_len,
+                                      uindex_t & r_num_chars)
 {
-    if (__MCStringIsIndirect(self))
-        self = self -> string;
-    
-	uindex_t t_count;
-	t_count = 0;
+	if (__MCStringIsIndirect (self))
+		self = self->string;
 
-	for(uindex_t i = p_range . offset; i < p_range . offset + p_range . length; i++)
+	uindex_t t_count = 0;
+
+	for (uindex_t i = p_range.offset; i < p_range.offset + p_range.length; ++i)
 	{
-		if (i >= self -> char_count)
-			break;
-        
-        if (MCStringIsNative(self))
-            p_chars[i - p_range . offset] = self -> native_chars[i];
-        else
-            p_chars[i - p_range . offset] = MCStrCharMapToNative(self -> chars[i]);
+		if (i >= self->char_count) break;
 
-		t_count += 1;
+		char_t t_native_char;
+		const char_t *t_native_chars_ptr = &t_native_char;
+		uindex_t t_native_chars_len = 1;
+		if (MCStringIsNative (self))
+		{
+			t_native_char = self->native_chars[i];
+		}
+		else if (MCUnicodeCharMapToNative (self->chars[i], t_native_char))
+		{
+			/* Successfully converted to native */
+		}
+		else
+		{
+			t_native_chars_ptr = p_replacement;
+			t_native_chars_len = p_replacement_len;
+		}
+
+		/* If we can't represent the current Unicode character in the
+		 * native encoding, bail out now. */
+		if (NULL == t_native_chars_ptr)
+		{
+			r_num_chars = t_count;
+			return false;
+		}
+
+		/* Overflow check */
+		MCAssert (t_count < UINDEX_MAX - t_native_chars_len);
+
+		/* If there's no space in the output buffer, or no output
+		 * buffer was provided, don't update the buffer but carry on
+		 * to discover required buffer size. */
+		if (NULL != x_chars && t_count + t_native_chars_len <= p_chars_len)
+		{
+			if (1 == t_native_chars_len)
+				x_chars[t_count] = *t_native_chars_ptr;
+			else
+				MCMemoryCopy (&x_chars[t_count], t_native_chars_ptr,
+				              t_native_chars_len);
+
+			t_count += t_native_chars_len;
+		}
+		else
+		{
+			t_count += t_native_chars_len;
+			continue;
+		}
 	}
 
-	return t_count;
+	r_num_chars = t_count;
+	return true;
+}
+
+bool
+MCStringGetNativeChars(MCStringRef self,
+                       MCRange p_range,
+                       char_t *x_chars,
+                       uindex_t p_chars_len,
+                       uindex_t & r_num_chars)
+{
+	const char_t t_char = '?';
+    return MCStringGetNativeCharsWithReplacement(self, p_range,
+                                                 &t_char, 1,
+                                                 x_chars, p_chars_len,
+                                                 r_num_chars);
 }
 
 void MCStringNativize(MCStringRef self)
@@ -1694,15 +2103,24 @@ bool MCStringUnmapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_cu
 
 bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool p_is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count)
 {
+    MCAutoDataRef t_replacement;
+    byte_t t_byte;
+    t_byte = '?';
+    if (!MCDataCreateWithBytes(&t_byte, 1, &t_replacement))
+        return false;
+    return MCStringConvertToBytesWithReplacement(self, p_encoding, p_is_external_rep, *t_replacement, r_bytes, r_byte_count);
+}
+
+bool MCStringConvertToBytesWithReplacement(MCStringRef self, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef p_replacement, byte_t*& r_bytes, uindex_t& r_byte_count)
+{
     MCAssert(!p_is_external_rep);
     
     switch(p_encoding)
     {
-    // [[ Bug 12204 ]] textEncode ASCII support is actually native
     case kMCStringEncodingASCII:
-        return MCStringConvertToAscii(self, (char_t*&)r_bytes, r_byte_count);
+        return MCStringConvertToNativeWithReplacement(self, p_replacement, true, (char_t*&)r_bytes, r_byte_count);
     case kMCStringEncodingNative:
-        return MCStringConvertToNative(self, (char_t*&)r_bytes, r_byte_count);
+        return MCStringConvertToNativeWithReplacement(self, p_replacement, false, (char_t*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF16:
         {
             uindex_t t_char_count;
@@ -1793,23 +2211,14 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
 
 bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char_count)
 {
-    // Get the native chars, but excludes any char belonging to the extended part of the ASCII -
-    char_t *t_chars;
-    uindex_t t_char_count = MCStringGetLength(self);
-    if (!MCMemoryNewArray(t_char_count + 1, t_chars))
+    MCAutoDataRef t_replacement;
+    byte_t t_byte;
+    t_byte = '?';
+    
+    if (!MCDataCreateWithBytes(&t_byte, 1, &t_replacement))
         return false;
     
-    t_char_count = MCStringGetNativeChars(self, MCRangeMake(0, t_char_count), t_chars);
-    
-    for (uindex_t i = 0; i < t_char_count; ++i)
-    {
-        if (t_chars[i] > 127)
-            t_chars[i] = '?';
-    }
-    
-    r_chars = t_chars;
-    r_char_count = t_char_count;
-    return true;
+    return MCStringConvertToNativeWithReplacement(self, *t_replacement, true, r_chars, r_char_count);
 }
 
 bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r_char_count)
@@ -1834,16 +2243,147 @@ bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, u
     return MCStringConvertToNative(*t_normalized, r_chars, r_char_count);
 }
 
+bool MCStringConvertToNativeWithReplacement(MCStringRef self, MCDataRef p_replacement, bool p_ascii, char_t*& r_chars, uindex_t& r_char_count)
+{
+	/* Get the raw data & length of the replacement bytes, if available. */
+	const char_t *t_replacement = NULL;
+	uindex_t t_replacement_len = 0;
+
+	if (NULL != p_replacement)
+	{
+		t_replacement = (const char_t *) MCDataGetBytePtr (p_replacement);
+		t_replacement_len = MCDataGetLength (p_replacement);
+	}
+
+	/* Allocate an estimated length for the result buffer.  Note that the
+	 * result is supposed to be nul-terminated. */
+	uindex_t t_result_len = MCStringGetLength (self);
+	MCAutoArray<char_t> t_buffer;
+
+	while (true)
+	{
+		/* Overflow check */
+		if (t_result_len == UINDEX_MAX)
+			return false; /* NOPE */
+
+		/* Expand buffer */
+		if (!t_buffer.Resize (t_result_len + 1))
+			return false;
+
+		/* Attempt to fill the result buffer. */
+		if (p_ascii)
+		{
+			if (!MCStringGetAsciiCharsWithReplacement (
+			            self, MCRangeMake (0, MCStringGetLength (self)),
+			            t_replacement, t_replacement_len,
+			            t_buffer.Ptr(), t_buffer.Size() - 1,
+			            t_result_len))
+				return false;
+		}
+		else
+		{
+			if (!MCStringGetNativeCharsWithReplacement (
+			            self, MCRangeMake (0, MCStringGetLength (self)),
+			            t_replacement, t_replacement_len,
+			            t_buffer.Ptr(), t_buffer.Size() - 1,
+			            t_result_len))
+				return false;
+		}
+
+		if (t_result_len < t_buffer.Size())
+			break;
+	}
+
+	uindex_t t_ignored;
+	t_buffer.Take (r_chars, t_ignored);
+	r_char_count = t_result_len;
+	MCAssert (t_result_len < t_ignored);
+
+	return true;
+}
+
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
 {
-	// Allocate an array of chars one byte bigger than needed. As the allocated array
-	// is filled with zeros, this will naturally NUL terminate the string.
-	char_t *t_chars;
-	if (!MCMemoryNewArray(MCStringGetLength(self) + 1, t_chars))
-		return false;
+    MCAutoDataRef t_replacement;
+    byte_t t_byte;
+    t_byte = '?';
+    
+    if (!MCDataCreateWithBytes(&t_byte, 1, &t_replacement))
+        return false;
+    
+    return MCStringConvertToNativeWithReplacement(self, *t_replacement, false, r_chars, r_char_count);
+}
 
-	r_char_count = MCStringGetNativeChars(self, MCRangeMake(0, MCStringGetLength(self)), t_chars);
-	r_chars = t_chars;
+bool
+MCStringGetAsciiCharsWithReplacement(MCStringRef self,
+                                     MCRange p_range,
+                                     const char_t *p_replacement,
+                                     uindex_t p_replacement_len,
+                                     char_t *x_chars,
+                                     uindex_t p_chars_len,
+                                     uindex_t & r_num_chars)
+{
+	if (__MCStringIsIndirect(self))
+		self = self->string;
+
+	uindex_t t_count = 0;
+	for (uindex_t i = p_range.offset; i < p_range.offset + p_range.length; ++i)
+	{
+		if (i >= self->char_count) break;
+
+		unichar_t t_char;
+		if (MCStringIsNative (self))
+			t_char = MCUnicodeCharMapFromNative (self->native_chars[i]);
+		else
+			t_char = self->chars[i];
+
+		/* ASCII are the first 128 Unicode codepoints */
+		char_t t_ascii_char;
+		const char_t *t_ascii_chars_ptr = &t_ascii_char;
+		uindex_t t_ascii_chars_len = 1;
+
+		if (127 >= t_char)
+		{
+			t_ascii_char = (char_t) t_char;
+		}
+		else
+		{
+			t_ascii_chars_ptr = p_replacement;
+			t_ascii_chars_len = p_replacement_len;
+		}
+
+		/* If we can't represent the current Unicode character in
+		 * ASCII, bail out now */
+		if (NULL == t_ascii_chars_ptr)
+		{
+			r_num_chars = t_count;
+			return false;
+		}
+
+		/* Overflow check */
+		MCAssert (t_count < UINDEX_MAX - t_ascii_chars_len);
+
+		/* If there's no space in the output buffer, or no output
+		 * buffer was provided, don't update the buffer but carry on
+		 * to discover required buffer size. */
+		if (NULL != x_chars && t_count + t_ascii_chars_len <= p_chars_len)
+		{
+			if (1 == t_ascii_chars_len)
+				x_chars[t_count] = *t_ascii_chars_ptr;
+			else
+				MCMemoryCopy (&x_chars[t_count], t_ascii_chars_ptr,
+				              t_ascii_chars_len);
+
+			t_count += t_ascii_chars_len;
+		}
+		else
+		{
+			t_count += t_ascii_chars_len;
+			continue;
+		}
+	}
+
+	r_num_chars = t_count;
 	return true;
 }
 
@@ -1862,8 +2402,11 @@ bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
     t_length = MCStringGetLength(p_string);
     if (!MCMemoryNewArray(t_length + 1, r_cstring))
         return false;
-    
-    MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), (char_t*)r_cstring);
+
+	uindex_t t_final_length;
+	MCStringGetNativeChars(p_string, MCRangeMake(0, t_length),
+	                       (char_t*)r_cstring, t_length,
+	                       t_final_length);
     r_cstring[t_length] = '\0';
     
     return true;
@@ -1930,7 +2473,7 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
         
         t_chars = MCStringGetNativeCharPtrAndLength(self, t_char_count);
         
-        if (!MCMemoryAllocate(t_char_count + 1, t_codepoints))
+        if (!MCMemoryNewArray(t_char_count + 1, t_codepoints))
             return false;
         
         for (uindex_t i = 0 ; i < t_char_count; ++i)
@@ -1991,7 +2534,7 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
             ++t_codepoint_count;
         }
         
-        t_codepoints . Shrink(t_codepoint_count + 1);
+        t_codepoints . Shrink(t_codepoint_count);
         t_codepoints . Take(r_codepoints, r_char_count);
         return true;
     }

@@ -566,6 +566,37 @@ bool __MCCustomDefaultMutableCopy(MCValueRef, bool, MCValueRef &);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Converts a selected range a string to native representation,
+// storing the result in x_chars and returning the number of chars
+// used in r_num_chars.  x_chars is not nul-terminated.
+//
+// If the selected range contains any characters that cannot be
+// represented in the native encoding, they are replaced by the
+// character '?'.
+//
+// If more than p_chars_len characters are required or x_chars is nil,
+// the required character buffer length is stored in r_num_chars.
+//
+// Returns true.
+bool MCStringGetNativeChars(MCStringRef self, MCRange p_range, const char_t *x_chars, uindex_t p_chars_len, uindex_t & r_num_chars);
+
+// Converts a selected range of string to native representation,
+// storing the result in x_chars and storing the number of chars used
+// in r_num_chars.  x_chars is not nul-terminated.
+//
+// If the selected range contains any characters that cannot be
+// represented in the native encoding, they are replaced by the
+// character sequence p_replacement, which is of length
+// p_replacement_len.
+//
+// If p_replacement is nil and a unrepresentable character is found,
+// returns false and stores the number of successfully converted
+// characters in r_num_chars.  Otherwise, returns true.
+//
+// If more than p_chars_len characters are required or x_chars is nil,
+// the required character buffer length is stored in r_num_chars.
+bool MCStringGetNativeCharsWithReplacement(MCStringRef self, MCRange p_range, const char_t *p_replacement, uindex_t p_replacement_len, char_t *x_chars, uindex_t p_chars_len, uindex_t & r_num_chars);
+
 hash_t MCNativeCharsHash(const char_t *chars, uindex_t char_count, MCStringOptions p_options);
 
 bool MCNativeCharsEqualExact(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
@@ -636,7 +667,7 @@ bool MCUnicodeCharsMapToNative(const unichar_t *uchars, uindex_t uchar_count, ch
 void MCUnicodeCharsMapFromNative(const char_t *chars, uindex_t char_count, unichar_t *uchars);
 
 uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes, uindex_t utf8byte_count);
-uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count);
+uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count, const unichar_t *p_replacement);
 
 bool MCUnicodeCharMapToNative(unichar_t uchar, char_t& r_nchar);
 char_t MCUnicodeCharMapToNativeLossy(unichar_t nchar);
@@ -647,6 +678,25 @@ unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 //unichar_t MCUnicodeCharLowercase(unichar_t);
 
 //unichar_t MCUnicodeCharUppercase(unichar_t);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Converts a selected range of string to ASCII, storing the result in
+// x_chars and storing the number of chars used in r_num_chars.
+// x_chars is not nul-terminated.
+//
+// If the selected range contains any characters that cannot be
+// represented in the ASCII encoding, they are replaced by the
+// character sequence p_replacement, which is of length
+// p_replacement_len.
+//
+// If p_replacement is nil and a unrepresentable character is found,
+// returns false and stores the number of successfully converted
+// characters in r_num_chars.  Otherwise, returns true.
+//
+// If more than p_chars_len characters are required or x_chars is nil,
+// the required character buffer length is stored in r_num_chars.
+bool MCStringGetAsciiCharsWithReplacement(MCStringRef self, MCRange p_range, const char_t *p_replacement, uindex_t p_replacement_len, char_t *x_chars, uindex_t p_chars_len, uindex_t & r_num_chars);
 
 ////////////////////////////////////////////////////////////////////////////////
 
