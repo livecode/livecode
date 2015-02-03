@@ -1478,8 +1478,6 @@ end deleteStack
 
 on newTool
    global gREVMessageDispatch
-   put true into gRevDevelopment
-   breakpoint
    repeat for each line l in gREVMessageDispatch["revNewTool"]
       send "revNewTool" to this cd of stack l
    end repeat
