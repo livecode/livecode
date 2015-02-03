@@ -52,7 +52,7 @@ fails with an error.
 Tags: IO
 */
 syntax WriteToStream is statement
-	"write" <Buffer: Expression> "to" "stream" <Destination: Expression>
+	"write" <Buffer: Expression> "to" <Destination: Expression>
 begin
 	MCStreamExecWriteToStream(Buffer, Destination)
 end syntax
