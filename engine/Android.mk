@@ -2,7 +2,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-DERIVED_SRC = ../_cache/mac/Debug/kernel.build/DerivedSources
+DERIVED_SRC = ../_cache/mac/Release/kernel.build/DerivedSources
 
 TARGET_PLATFORM=android-8
 

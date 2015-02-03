@@ -41,7 +41,7 @@ MCStringRef s_filename = NULL;
 /* Windows-specific functions for getting the command line arguments
  * encoded as UTF-16 rather than using the system codepage. */
 static bool __MCSWindowsCommandLineGet (uindex_t &, unichar_t **&);
-static bool __MCSWindowsCommandLineFree (uindex_t &, unichar_t **& );
+static void __MCSWindowsCommandLineFree (uindex_t &, unichar_t **& );
 
 /* ================================================================
  * Setters and getters
@@ -262,8 +262,8 @@ static bool
 __MCSWindowsCommandLineGet (uindex_t & r_argc,
                             unichar_t **& r_argv)
 {
-	const LPWSTR t_args_w32;
-	uindex_t t_arg_count_w32;
+	LPCWSTR t_args_w32;
+	int t_arg_count_w32;
 	LPWSTR *t_arg_array_w32;
 
 	t_args_w32 = GetCommandLineW ();

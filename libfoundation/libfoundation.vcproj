@@ -176,18 +176,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\foundation-file-private.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\foundation-file-w32.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\foundation-file.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\foundation-filters.cpp"
 				>
 			</File>
@@ -236,19 +224,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\foundation-random.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\foundation-record.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\foundation-set.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\foundation-stream-stdio.cpp"
 				>
 			</File>
 			<File
@@ -285,6 +265,34 @@
 			</File>
 			<File
 				RelativePath=".\src\foundation-value.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\system-commandline.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\system-file-w32.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\system-file.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\system-init.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\system-private.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\system-random.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\system-stream.cpp"
 				>
 			</File>
 		</Filter>
@@ -334,6 +342,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\foundation-system.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\foundation-text.h"
 				>
 			</File>
@@ -343,6 +355,26 @@
 			</File>
 			<File
 				RelativePath=".\include\foundation.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\system-commandline.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\system-file.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\system-init.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\system-random.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\system-stream.h"
 				>
 			</File>
 		</Filter>
