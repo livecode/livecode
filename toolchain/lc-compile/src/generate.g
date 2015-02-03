@@ -657,6 +657,12 @@
         GenerateSyntaxMethods(Methods)
         EmitEndSyntaxDefinition()
         
+    'rule' GenerateDefinitions(import(_, _)):
+        -- do nothing
+
+    'rule' GenerateDefinitions(metadata(_, _, _)):
+        -- do nothing
+
     'rule' GenerateDefinitions(nil):
         -- nothing
 

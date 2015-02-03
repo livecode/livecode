@@ -121,6 +121,12 @@
     'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
 
+    'rule' DeclareImportedDefinitions(import(_, _)):
+        -- do nothing
+        
+    'rule' DeclareImportedDefinitions(metadata(_, _, _)):
+        -- do nothing
+
     'rule' DeclareImportedDefinitions(nil):
         -- do nothing
 
