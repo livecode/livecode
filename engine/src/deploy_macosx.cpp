@@ -1171,18 +1171,18 @@ static bool MCDeployToMacOSXFetchMinOSVersion(const MCDeployParameters& p_params
             t_found_index = (signed)i;
         else if (p_params . min_os_versions[i] . architecture == kMCDeployArchitecture_Unknown &&
                  t_unknown_index < 0)
-            t_unknown_index = -1;
+            t_unknown_index = (signed)i;
     
     if (t_found_index < 0 && t_unknown_index < 0)
         return false;
     
     if (t_found_index >= 0)
     {
-        r_version = p_params . min_os_versions[t_unknown_index] . version;
+        r_version = p_params . min_os_versions[t_found_index] . version;
         return true;
     }
     
-    r_version = p_params . min_os_versions[t_found_index] . version;
+    r_version = p_params . min_os_versions[t_unknown_index] . version;
     return true;
 }
 
