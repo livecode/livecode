@@ -796,15 +796,8 @@ end revOutputDirectories
 # OK-2007-08-09 Copies the appropriate script libraries (i.e. group revLibraries of the appropriate revLibrary.rev)
 # to the stack being built. Will remove any existing group called revLibraries from card 1 of the stack.
 private command revCopyScriptLibraries pStack, pPlatform
-   if there is a group "revLibraries" of card 1 of stack pStack then
-      delete group "revLibraries" of card 1 of stack pStack
-   end if
-   
-   # Normally we copy the scripts from the current revLibrary.rev stack, however in the case of building 
-   # a Mac OS Classic standalone, we need to use an older version of the library that will compile with 2.6.1 engines.
-   copy group "revLibraries" of stack "revLibrary" to card 1 of stack pStack
-   
-   hide group "revLibraries" of card 1 of stack pStack
+   # AL-2015-02-03: [[ Scriptify IDE ]] Ensure revCommonLibrary is always included in a standalone
+   revAddLibrary "revCommonLibrary"
    
    -- data grid
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
