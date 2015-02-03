@@ -1062,27 +1062,23 @@ end revCopyMobileStackFiles
 private function revGetMinimumOSByArch pMinimumOS 
    local tMinimumOSByArch  
    -- MM-2013-09-23: We only support iOS 4.3 and later
-   -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version
-   -- depends on the arch - and we only support version >= 5.0
+   -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version is the
+   --  same for all archs, and we only support version >= 5.1
    --
-   if pMinimumOS is empty or pMinimumOS < "5.0" then
-      put "5.0.0" into tMinimumOSByArch["i386"]
+   if pMinimumOS is empty or pMinimumOS < "5.1" then
+      put "5.1.0" into tMinimumOSByArch["i386"]
    else
       put pMinimumOS & ".0" after tMinimumOSByArch["i386"]
    end if
-   if pMinimumOS is empty or pMinimumOS < "7.0" then
-      put "7.0.0" into tMinimumOSByArch["x86_64"]
-   else
-      put pMinimumOS & ".0" after tMinimumOSByArch["x86_64"]
-   end if
    
-   -- Assign the correct value to the other architectures
-   -- i386, x86_64, armv6, armv7, armv7s, arm64, ppc, ppc64
-   -- is the list of the possible architectures.
+   -- Assign the same value to the other architectures.
+   -- Possible architectures:
+   --   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
    put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv6"]
    put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv7"]
    put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv7s"]
-   put tMinimumOSByArch["x86_64"] into tMinimumOSByArch["arm64"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["arm64"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["x86-64"]
    return tMinimumOSByArch
 end revGetMinimumOSByArch
 
@@ -1211,8 +1207,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
-   replace "${MINIMUM_OS_i386_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in tPlist
-   replace "${MINIMUM_OS_x86_64_SUPPORT}" with "<string>" & tMinimumOSByArch["x86_64"] & "</string>" in tPlist
+   replace "${MINIMUM_OS_SUPPORT}" with tMinimumOSByArch["i386"] in tPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in tPlist
    
    get empty
