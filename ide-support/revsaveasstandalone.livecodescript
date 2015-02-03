@@ -2394,6 +2394,10 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       delete the last char of tDeployInfo["auxiliary_stackfiles"]
    end if
    
+   # AL-2015-01-29: [[ Scriptify IDE ]] Make sure externals initialisation is included here in the initialise script
+   if sStandaloneSettingsA["startup_script"] is not empty then put return after sStandaloneSettingsA["startup_script"]
+   put "revInternal__InitialiseExternals" after sStandaloneSettingsA["startup_script"]
+   
    # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
    repeat for each line tLine in sUserScriptLibraries
       put return & "if there is a stack" && tLine && "then library" && tLine after sStandaloneSettingsA["startup_script"]
@@ -2405,7 +2409,7 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    end if
    if sStandaloneSettingsA["OSX,smallappicon"]  is not empty then
       put return & "revInternal__SetSmallAppIcon" && sStandaloneSettingsA["OSX,smallappicon"] after sStandaloneSettingsA["startup_script"]
-   end if
+   end if   
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the startup script to the deploy parameters
    if sStandaloneSettingsA["startup_script"] is not empty then

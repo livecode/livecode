@@ -89,3 +89,22 @@ command revInternal__SetSmallAppIcon pSmallAppIcon
    set the paintCompression to "png" -- match the engine
    put pSmallAppIcon into gRevAppIcon
 end revInternal__SetSmallAppIcon
+
+command revInternal__InitialiseExternals
+  local tName,tExternalList
+  if (the platform <> "MacOS" or char 1 of the systemVersion = 1) and there is a stack "revExternalLibrary" then
+    set the itemDel to "/"
+    put the effective filename of this stack into tName
+    repeat for each line tLine in the cExternals of stack "revExternalLibrary"
+       put item 1 to -2 of tName&"/"&tLine&cr after tExternalList
+    end repeat
+    delete char -1 of tExternalList
+    set the externals of stack "revExternalLibrary" to tExternalList
+    
+    lock messages -- fix bug 2284
+    toplevel stack "revExternalLibrary"
+    start using stack "revExternalLibrary"
+    close stack "revExternalLibrary"
+    unlock messages -- fix bug 2284
+  end if
+end revInternal__InitialiseExternals
