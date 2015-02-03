@@ -1,16 +1,17 @@
 ﻿script "revdatabaselibrary"
 
 on revLoadLibrary
-	if the target is not me then
-		pass "revLoadLibrary"
-	end if	
+   if the target is not me then
+      pass "revLoadLibrary"
+   end if	
    insert the script of me into front
+   revDBInit
 end revLoadLibrary
 
 on revUnloadLibrary
-	if the target is not me then
-		pass "revUnloadLibrary"
-	end if	
+   if the target is not me then
+      pass "revUnloadLibrary"
+   end if	
    remove the script of me from front
 end revUnloadLibrary
 
@@ -2382,4 +2383,29 @@ private command log pMessage
   --put pMessage & return after msg
 end log
 
-
+# OK-2007-09-24 : Legacy driver support. Rewrote this handler as it seemed to have deprecated code, the old handler is 
+# commented out above.
+command revDBInit
+  try
+    if there is a stack "home" then
+      local tDataPath
+      if the cREVUseLegacyDrivers of stack "revPreferences" then
+        put revEnvironmentUserExternalsPath() & "/Legacy/Database Drivers" into tDataPath
+      else
+        put revEnvironmentExternalsPath() & "/Database Drivers" into tDataPath
+      end if
+      
+      local tRootPath
+      put revEnvironmentUserExternalsPath() Into tRootPath
+      if there is a folder tRootPath then 
+        put return & tRootPath & "/Database Drivers" after tDataPath
+      end if
+    else
+      put the effective filename of this stack into tDataPath
+      set the itemDelimiter to "/"
+      put "Externals/database_drivers" into item -1 of tDataPath
+    end if
+     
+    revSetDatabaseDriverPath tDataPath
+  end try
+end revDBInit
