@@ -593,7 +593,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
     // If multiple entries are present, then the 'unknown' mapping is used for any
     // architecture not explicitly specified. The current architecture strings that are
     // known are:
-    //   i386, x86_64, armv6, armv7, armv7s, arm64, ppc, ppc64
+    //   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
     // The empty string is taken to be 'unknown'.
     if (t_stat == ES_NORMAL)
     {
