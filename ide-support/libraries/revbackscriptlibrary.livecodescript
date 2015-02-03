@@ -1481,22 +1481,19 @@ on newTool
    repeat for each line l in gREVMessageDispatch["revNewTool"]
       send "revNewTool" to this cd of stack l
    end repeat
+   
+	if "revShortCutsLibrary" is in revInternal__ListLoadedLibraries() then	
+   		send "revNewTool" to stack "revShortCutsLibrary"
+   	end if
+   
    if the tool is "browse tool" then
-      if "button id 1109" is in the frontScripts then
-         remove script of stack "revShortCutsLibrary" from front
-         insert script of stack "revShortCutsLibrary" into back
-         go (the topStack) -- keyboard focus for shortcuts to the running stack
-      end if
       set the defaultStack to the topStack
       if the editBg then set the editBg to false
       if the mode of stack "revApplicationOverview" is not 0 \
             and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
          send "revRefreshControls true, true" to stack "revApplicationOverview"
       end if
-   else if the tool is "pointer tool" and "button id 1109" is in the backScripts then
-      remove script of stack "revShortCutsLibrary" from back
-      insert script of stack "revShortCutsLibrary" into front
-   end if
+	end if
    
    if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
 	   send "revNewTool" to stack "revReshapeLibrary"

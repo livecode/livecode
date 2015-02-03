@@ -8,6 +8,19 @@ on revUnloadLibrary
    remove the script of me from front
 end revUnloadLibrary
 
+on revNewTool
+   if the tool is "browse tool" then
+      if "button id 1109" is in the frontScripts then
+         remove script of me from front
+         insert script of me into back
+         go (the topStack) -- keyboard focus for shortcuts to the running stack
+      end if
+    else the tool is "pointer tool" then
+    	remove script of me from back
+    	insert script of me into front
+    end if
+end revNewTool
+
 # OK-2008-03-19 : gREVSuppressMessages was being used with no declaration in multiple places
 global gREVSuppressMessages
 
