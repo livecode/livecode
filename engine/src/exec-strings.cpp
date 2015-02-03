@@ -903,7 +903,11 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
 	MCStringRef t_substring;
 	t_substring = nil;
     
-    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset))))
+    // SN-2015-02-03: [[ Bug 14481 ]] Assign a string for this regex *before* the loop - to avoid
+    //  a redundant translation of a native string.
+    MCR_assign_string(t_compiled, p_string);
+    
+    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset))))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;
