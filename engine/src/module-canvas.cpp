@@ -397,6 +397,8 @@ MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
+MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Constant refs
@@ -3053,7 +3055,7 @@ bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *r_points)
 		}
 		else
 		{
-			// TODO - throw point type error
+			MCCanvasThrowError(kMCCanvasPathPointListFormatErrorTypeInfo);
 			t_success = false;
 		}
 	}
@@ -5588,6 +5590,9 @@ void MCCanvasErrorsInitialize()
 	
 	kMCCanvasGradientTypeErrorTypeInfo = nil;
 	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.GradientTypeError"), MCSTR("Unrecognised gradient type."), kMCCanvasGradientTypeErrorTypeInfo);
+	
+	kMCCanvasPathPointListFormatErrorTypeInfo = nil;
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.PathPointListFormatError"), MCSTR("Invalid value in list of points."), kMCCanvasPathPointListFormatErrorTypeInfo);
 	
 }
 
