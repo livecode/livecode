@@ -617,6 +617,8 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		if (t_success)
 		{
 			MCImageSetMask(t_copy, (uint8_t*)MCDataGetBytePtr(p_data), t_length, !p_flatten);
+            // PM-2015-02-03: [[ Bug 14483 ]] Unlock bitmap to prevent a crash/hang when repeatedly setting the alphaData
+            unlockbitmap(t_copy);
 			setbitmap(t_copy, 1.0);
 		}
 		
