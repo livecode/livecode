@@ -5,7 +5,11 @@ on revLoadLibrary
       pass "revLoadLibrary"
    end if	
    insert the script of me into front
-   revDBInit
+    -- MW-2009-07-09: We only do this if we are in a standalone environment
+    -- ( note that 'runtime' check can be removed if you reading this :o) )
+	if the environment is not "browser" and the environment is not "player" and the environment is not "runtime" then
+   		revDBInit
+   	end if
 end revLoadLibrary
 
 on revUnloadLibrary
