@@ -1478,6 +1478,8 @@ end deleteStack
 
 on newTool
    global gREVMessageDispatch
+   put true into gRevDevelopment
+   breakpoint
    repeat for each line l in gREVMessageDispatch["revNewTool"]
       send "revNewTool" to this cd of stack l
    end repeat
@@ -1498,7 +1500,9 @@ on newTool
       insert script of stack "revShortCutsLibrary" into front
    end if
    
-   send "revNewTool" to stack "revReshapeLibrary"
+   if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
+	   send "revNewTool" to stack "revReshapeLibrary"
+	end if	
    
    if word 1 of the tool is not in "pointerbrowseselectpencilbucketrectanglelineroundedovalbrusheraserspraypolygoncurveregulardropper" then
       revNewObjectName

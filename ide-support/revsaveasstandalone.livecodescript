@@ -811,44 +811,12 @@ private command revCopyScriptLibraries pStack, pPlatform
       set the mainStack of stack "revDataGridLibrary" to pStack
    end if
    
-   local tButtonCount
-   put the number of buttons of group "revLibraries" of stack "revLibrary" into tButtonCount
-   repeat with tButtonNumber = tButtonCount down to 1
-      local tLibraryName
-      put the short name of button tButtonNumber of group "revLibraries" of stack "revLibrary" into tLibraryName
-      if tLibraryName is not among the items of "revCommon,revDatabase,revProfileBack" and char 1 to 3 of tLibraryName = "rev" then
-         local tButtonToDelete
-         put tLibraryName into tButtonToDelete
-         
-         delete char 1 to 3 of tLibraryName
-         if char -4 to -1 of tLibraryName = "Back" then 
-            delete char -4 to -1 of tLibraryName
-         end if
-         
-         if char -3 to -1 of tLibraryName = "RPC" then
-            delete char -3 to -1 of tLibraryName
-         end if
-         
-         -- for some reason these buttons are named differently to the libraries ???
-         if tLibraryName = "LibURL" then 
-            put "Internet" into tLibraryName
-         end if
-         
-         if tLibraryName = "Print" then 
-            put "Printing" into tLibraryName
-         end if
-         
-         if tLibraryName is not among the lines of sStandaloneSettingsA["scriptLibraries"] then 
-            delete button tButtonToDelete of group "revLibraries" of card 1 of stack pStack
-         end if 
-      end if
-   end repeat
    if sStandaloneSettingsA["databaseDrivers"] = "" then 
-      --delete button "revDatabase" of group "revLibraries" of card 1 of stack pStack
+      revAddLibrary "revDatabaseLibrary"
    end if
    
    if sStandaloneSettingsA["includeProfiles"] = "" then 
-      --delete button "revProfileBack" of group "revLibraries" of card 1 of stack pStack
+      revAddLibrary "revProfilesLibrary"
    end if
    
    set the cScriptLibraries of group "revLibraries" of card 1 of stack pStack to sUserScriptLibraries

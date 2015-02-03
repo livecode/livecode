@@ -931,16 +931,6 @@ function revSBLibraryList
       if it is not empty then put it & CR after tLibraries
    end repeat
    
-   repeat with X=1 to the number of btns of group "revLibraries" of stack "revLibrary"
-      put the short name of button X of group "revLibraries" of stack "revLibrary" into tBtn
-      if tBtn is not among the items of "revCommon,revDatabase,revProfileBack" and char 1 to 3 of tBtn = "rev" then
-         delete char 1 to 3 of tBtn
-         if char -4 to -1 of tBtn = "Back" then delete char -4 to -1 of tBtn
-         if tBtn = "LibURL" then put "Internet" into tBtn
-         if tBtn = "Print" then put "Printing" into tBtn
-         put tBtn & cr after tLibraries
-      end if
-   end repeat
    -- rev externals
    put revExternalsList() & cr after tLibraries
    -- user script libraries

@@ -20,12 +20,12 @@ command revInternal__LoadLibrary pLibraryName
       else return "no file for that library:" && tLibraryPath 
       
       try
-      	local tDefaultStack
-      	put the defaultStack into tDefaultStack
+      	--local tDefaultStack
+      	--put the defaultStack into tDefaultStack
          // Open the stack
-         go stack tLibraryPath
+        -- go stack tLibraryPath
          
-         set the defaultStack to tDefaultStack
+         --set the defaultStack to tDefaultStack
          
          // Get it's name
          local tStackName

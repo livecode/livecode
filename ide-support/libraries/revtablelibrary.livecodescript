@@ -1,10 +1,16 @@
 ﻿script "revtablelibrary"
 
 on revLoadLibrary
+	if the target is not me then
+		pass "revLoadLibrary"
+	end if	
    insert the script of me into front
 end revLoadLibrary
 
 on revUnloadLibrary
+	if the target is not me then
+		pass "revUnloadLibrary"
+	end if	
    remove the script of me from front
 end revUnloadLibrary
 
