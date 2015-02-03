@@ -1,5 +1,6 @@
 # This file must be in dependency order; no file must depend on files
 # later in the list.
+foreign.mlc
 arithmetic.mlc
 array.mlc
 binary.mlc
