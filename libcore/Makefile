@@ -3,7 +3,7 @@ TYPE=archive
 
 include ../rules/environment.linux.makefile
 
-SOURCES=core.cpp binary.cpp module.cpp thread.cpp filesystem.cpp
+SOURCES=core.cpp module.cpp thread.cpp filesystem.cpp
 
 CUSTOM_DEFINES=
 
