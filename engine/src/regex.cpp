@@ -369,32 +369,76 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
 		{
 			MCregexcache[i] = MCregexcache[i - 1];
-		}
+        }
+        
+        // SN-2015-02-03: [[ Bug 14481 ]] Initialise to nil the string(ref) pointers
+        re -> string = nil;
+        re -> stringref = nil;
 		MCregexcache[0] = re;
 	}
 	
 	return re;
 }
 
-int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
+// SN-2015-02-03: [[ Bug 14481 ]] Caches the stringreg assigned to this regex.
+bool MCR_assign_string(regexp *prog, MCStringRef p_string)
 {
-    // AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
-    int status;
-	int flags = 0;
+    // SN-2015-02-03: [[ Bug 14481 ]] Release both unichar string
+    // and stringref.
+    MCMemoryDeleteArray(prog -> string);
+    prog -> string = nil;
+    MCValueRelease(prog -> stringref);
     
-    if (MCStringIsNative(string))
+    // AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
+    if (MCStringIsNative(p_string))
     {
+        // SN-2015-02-03: [[ Bug 14481 ]] If we have native chars,
+        //  we want to cache the uncodified string (the cost of
+        //  doing it for each matchText iteration is too important).
+        
         uindex_t t_length;
         unichar_t *t_string_chars;
         t_string_chars = nil;
+        t_length = MCStringGetLength(p_string);
         
-        MCMemoryAllocate(MCStringGetLength(string) * sizeof(unichar_t), t_string_chars);
-        t_length = MCStringGetChars(string, p_range, t_string_chars);
-        status = regexec(&prog->rexp, t_string_chars, t_length, NSUBEXP, prog->matchinfo, flags);
-        MCMemoryDeallocate(t_string_chars);
+        if (!MCMemoryAllocate(t_length * sizeof(unichar_t), t_string_chars))
+            return false;
+        
+        t_length = MCStringGetChars(p_string, MCRangeMake(0, t_length), t_string_chars);
+        
+        // SN-2015-02-03: [[ Bug 14482 ]] The regex stores the unichars and the
+        //  reference to the stringref from which they got translated.
+        prog -> string = t_string_chars;
     }
     else
-        status = regexec(&prog->rexp, MCStringGetCharPtr(string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
+        prog -> stringref = MCValueRetain(p_string);
+
+    return true;
+}
+
+static const unichar_t *MCR_getunichars(regexp *prog)
+{
+    if (prog -> string != nil)
+        return prog -> string;
+    else
+        return MCStringGetCharPtr(prog -> stringref);
+}
+
+// SN-2015-02-03: [[ Bug 14481 ]] Keep the same behaviour for this prototype.
+int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
+{
+    if (!MCR_assign_string(prog, string))
+        return REG_ESPACE;
+    
+    return MCR_exec(prog, p_range);
+}
+
+int MCR_exec(regexp *prog, MCRange p_range)
+{
+    int status;
+	int flags = 0;
+    
+    status = regexec(&prog->rexp, MCR_getunichars(prog) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
 
 	if (status != REG_OKAY)
 	{
@@ -416,6 +460,11 @@ void MCR_free(regexp *prog)
 		regfree(&prog->rexp);
 		// MW-2013-07-01: [[ EnhancedFilter ]] Release the pattern.
 		MCValueRelease(prog->pattern);
+        
+        // SN-2015-02-03: [[ Bug 14481 ]] Free the possibly allocated unichars
+        //  or stringref.
+        MCMemoryDeleteArray(prog -> string);
+        MCValueRelease(prog -> stringref);
 		delete prog;
 	}
 }

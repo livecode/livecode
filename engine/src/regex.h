@@ -58,6 +58,11 @@ typedef struct _regexp
     int flags;
 	uint2 nsubs;
 	regmatch_t matchinfo[NSUBEXP];
+    
+    // SN-2015-02-03: [[ Bug 14481 ]] The regex can now cache a Unichar string,
+    //  in case the input stringRef is native, or a stringref otherwise
+    unichar_t *string;
+    MCStringRef stringref;
 }
 regexp;
 
@@ -65,6 +70,9 @@ regexp;
 // MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's no reason not to use the cache.
 regexp *MCR_compile(MCStringRef exp, bool casesensitive);
 int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range);
+// SN-2015-02-03: [[ Bug 14481 ]] Added new functions for storing searched-for strings
+int MCR_exec(regexp *prog, MCRange p_range);
+bool MCR_assign_string(regexp *prog, MCStringRef p_string);
 void MCR_copyerror(MCStringRef &r_error);
 void MCR_free(regexp *prog);
 
