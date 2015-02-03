@@ -562,7 +562,7 @@ bool MCCStringClone(const char *p_string, char *& r_new_string)
 		return true;
 	}
 
-	if (!MCMemoryAllocate(p_string == nil ? 1 : strlen(p_string) + 1, r_new_string))
+	if (!MCMemoryAllocate(strlen(p_string) + 1, r_new_string))
 		return false;
 	strcpy(r_new_string, p_string);
 	return true;
