@@ -2502,7 +2502,7 @@ void MCCanvasGradientTransformToPoints(const MCGAffineTransform &p_transform, MC
 	r_via = MCGPointApplyAffineTransform(MCGPointMake(0, 1), p_transform);
 }
 
-bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
+void MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
 {
 	MCGAffineTransform t_transform;
 	t_transform . a = p_to . x - p_from . x;
@@ -2513,8 +2513,6 @@ bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint 
 	t_transform . ty = p_from . y;
 	
 	r_transform = t_transform;
-	
-	return true;
 }
 
 void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCGAffineTransform &r_transform)
@@ -2543,10 +2541,7 @@ void MCCanvasGradientGetPoints(MCCanvasGradientRef p_gradient, MCGPoint &r_from,
 void MCCanvasGradientSetPoints(MCCanvasGradientRef &x_gradient, const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via)
 {
 	MCGAffineTransform t_transform;
-	if (!MCCanvasGradientTransformFromPoints(p_from, p_to, p_via, t_transform))
-	{
-		// TODO - throw error
-	}
+	MCCanvasGradientTransformFromPoints(p_from, p_to, p_via, t_transform);
 	MCCanvasGradientSetTransform(x_gradient, t_transform);
 }
 
