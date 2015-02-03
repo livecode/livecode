@@ -60,14 +60,14 @@ command revIDESuspendDevelopmentTools
    else
       put the frontScripts into tScriptsList
       repeat for each line l in tScriptsList
-         if the short name of l is among the items of "revFrontScript,revDebugger,revShortCuts" then
+         if the short name of l is among the items of "revFrontScriptLibrary,revDebugger,revShortCutsLibrary" then
             put l & cr after tRemoveFrontList
             remove script of l from front
          end if
       end repeat
       put the backScripts into tScriptsList
       repeat for each line l in tScriptsList
-         if the short name of l is "revBackScript,revShortCuts" then
+         if the short name of l is "revBackScriptLibrary,revShortCutsLibrary" then
             put l & cr after tRemoveBackList
             remove script of l from back
          end if

@@ -819,9 +819,11 @@ private command revCopyScriptLibraries pStack, pPlatform
       revAddLibrary "revProfilesLibrary"
    end if
    
+   /*
    set the cScriptLibraries of group "revLibraries" of card 1 of stack pStack to sUserScriptLibraries
    set the cAppIcon of group "revLibraries" of card 1 of stack pStack to sStandaloneSettingsA["OSX,appicon"]
    set the cSmallAppIcon of group "revLibraries" of card 1 of stack pStack to sStandaloneSettingsA["OSX,smallappicon"]
+   */
 end revCopyScriptLibraries
 
 #####################################################################
@@ -2380,7 +2382,7 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    put pStackFilePath into tDeployInfo["stackfile"]
    put pStandalonePath into tDeployInfo["output"]
    
-   # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions and startup script to the deploy parameters
+   # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions to the deploy parameters
    repeat for each line tLibrary in sStandaloneSettingsA["scriptLibraries"]
       if there is a stack tLibrary then
          put return & the effective filename of stack tLibrary after sStandaloneSettingsA["auxiliary_stackfiles"]
@@ -2398,6 +2400,21 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       end repeat
       delete the last char of tDeployInfo["auxiliary_stackfiles"]
    end if
+   
+   # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
+   repeat for each line tLine in sUserScriptLibraries
+      put return & "if there is a stack" && tLine && "then library" && tLine after sStandaloneSettingsA["startup_script"]
+   end repeat
+   
+   # AL-2015-01-29: [[ Scriptify IDE ]] Add OSX App icons to deploy parameters
+   if sStandaloneSettingsA["OSX,appicon"]  is not empty then
+      put return & "revInternal__SetAppIcon" && sStandaloneSettingsA["OSX,appicon"] after sStandaloneSettingsA["startup_script"]
+   end if
+   if sStandaloneSettingsA["OSX,smallappicon"]  is not empty then
+      put return & "revInternal__SetSmallAppIcon" && sStandaloneSettingsA["OSX,smallappicon"] after sStandaloneSettingsA["startup_script"]
+   end if
+   
+   # AL-2015-01-29: [[ Scriptify IDE ]] Add the startup script to the deploy parameters
    if sStandaloneSettingsA["startup_script"] is not empty then
       put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
    end if

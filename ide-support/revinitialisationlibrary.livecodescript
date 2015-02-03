@@ -77,3 +77,15 @@ function revInternal__ListLoadedLibraries
    sort tLibs
    return tLibs
 end revInternal__ListLoadedLibraries
+
+command revInternal__SetAppIcon pAppIcon
+   global gRevAppIcon
+   set the paintCompression to "png" -- match the engine
+   put pAppIcon into gRevAppIcon
+end revInternal__SetAppIcon
+
+command revInternal__SetSmallAppIcon pSmallAppIcon
+   global gRevSmallAppIcon
+   set the paintCompression to "png" -- match the engine
+   put pSmallAppIcon into gRevAppIcon
+end revInternal__SetSmallAppIcon
