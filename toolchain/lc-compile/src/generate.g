@@ -102,8 +102,24 @@
         OutputBeginManifest()
         Id'Name -> Name
         OutputWrite("<package version=\"0.0\">\n")
-        OutputWrite("  <license>community</license>\n")
         OutputWriteI("  <name>", Name, "</name>\n")
+        [|
+            QueryMetadata(Definitions, "title" -> TitleString)
+            OutputWriteS("  <title>", TitleString, "</title>\n")
+        |]
+        [|
+            QueryMetadata(Definitions, "author" -> AuthorString)
+            OutputWriteS("  <author>", AuthorString, "</author>\n")
+        |]
+        [|
+            QueryMetadata(Definitions, "description" -> DescriptionString)
+            OutputWriteS("  <description>", DescriptionString, "</description>\n")
+        |]
+        [|
+            QueryMetadata(Definitions, "version" -> VersionString)
+            OutputWriteS("  <version>", VersionString, "</version>\n")
+        |]
+        OutputWrite("  <license>community</license>\n")
         (|
             where(Kind -> widget)
             OutputWrite("  <type>widget</type>\n")
@@ -117,6 +133,17 @@
         GenerateManifestDefinitions(Definitions)
         OutputWrite("</package>")
         OutputEnd()
+
+'condition' QueryMetadata(DEFINITION, STRING -> STRING)
+
+    'rule' QueryMetadata(sequence(Left, _), Key -> Value):
+        QueryMetadata(Left, Key -> Value)
+
+    'rule' QueryMetadata(sequence(_, Right), Key -> Value):
+        QueryMetadata(Right, Key -> Value)
+        
+    'rule' QueryMetadata(metadata(_, Key, Value), WantedKey -> Value):
+        IsStringEqualToString(Key, WantedKey)
 
 'action' AddModuleToDependencyList(NAME)
 
@@ -144,9 +171,19 @@
         GenerateManifestDefinitions(Right)
         
     'rule' GenerateManifestDefinitions(metadata(_, Key, Value)):
-        OutputWriteS("  <metadata key=\"", Key, "\">")
-        OutputWriteS("", Value, "</metadata>\n")
-        
+        (|
+            IsStringEqualToString(Key, "title")
+        ||
+            IsStringEqualToString(Key, "author")
+        ||
+            IsStringEqualToString(Key, "description")
+        ||
+            IsStringEqualToString(Key, "version")
+        ||
+            OutputWriteS("  <metadata key=\"", Key, "\">")
+            OutputWriteS("", Value, "</metadata>\n")
+        |)
+
     'rule' GenerateManifestDefinitions(type(_, public, Name, _)):
     
     'rule' GenerateManifestDefinitions(constant(_, public, Name, _)):
