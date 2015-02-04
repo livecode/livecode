@@ -280,6 +280,7 @@ void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef builder, MCNameRef d
 
 void MCScriptAddExportToModule(MCScriptModuleBuilderRef builder, uindex_t index);
 void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, uindex_t type, uindex_t& r_index);
+void MCScriptAddImportToModuleWithIndex(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, uindex_t type, uindex_t p_index);
 
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef builder, uindex_t index, uindex_t& r_type);
 void MCScriptAddForeignTypeToModule(MCScriptModuleBuilderRef builder, MCStringRef p_binding, uindex_t& r_type);
