@@ -881,6 +881,7 @@ static bool __split_binding(MCStringRef& x_string, codepoint_t p_char, MCStringR
     else
     {
         MCValueRelease(x_string);
+		MCValueRelease(t_tail);
         x_string = t_head;
     }
     
