@@ -204,10 +204,40 @@ void MCScriptAddExportToModule(MCScriptModuleBuilderRef self, uindex_t p_definit
     }
 }
 
+void MCScriptAddImportToModuleWithIndex(MCScriptModuleBuilderRef self, uindex_t p_module_index, MCNameRef p_name, MCScriptDefinitionKind p_kind, uindex_t p_type_index, uindex_t p_def_index)
+{
+    uindex_t t_imp_index;
+    if (!__extend_array(self, self -> module . imported_definitions, self -> module . imported_definition_count, t_imp_index) ||
+        !MCMemoryNew((MCScriptExternalDefinition*&)self -> module . definitions[p_def_index]))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    __assign_definition_name(self, p_def_index, p_name);
+    
+    MCScriptImportedDefinition *t_import;
+    t_import = &self -> module . imported_definitions[t_imp_index];
+    
+    t_import -> module = p_module_index;
+    t_import -> kind = p_kind;
+    t_import -> name = MCValueRetain(p_name);
+    // t_import -> type = MCValueRetain(p_type);
+    
+    MCScriptExternalDefinition *t_definition;
+    t_definition = static_cast<MCScriptExternalDefinition *>(self -> module . definitions[p_def_index]);
+    
+    t_definition -> kind = kMCScriptDefinitionKindExternal;
+    t_definition -> index = t_imp_index;
+}
+
 void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, MCNameRef p_name, MCScriptDefinitionKind p_kind, uindex_t p_type_index, uindex_t& r_index)
 {
     if (self == nil || !self -> valid)
+    {
+        r_index = 0;
         return;
+    }
     
     for(uindex_t i = 0; i < self -> module . imported_definition_count; i++)
         if (MCNameIsEqualTo(p_name, self -> module . imported_definitions[i] . name) &&
@@ -224,32 +254,11 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
                 }
         }
     
-    uindex_t t_imp_index, t_def_index;
-    if (!__extend_array(self, self -> module . imported_definitions, self -> module . imported_definition_count, t_imp_index) ||
-        !__extend_array(self, self -> module . definitions, self -> module . definition_count, t_def_index) ||
-        !MCMemoryNew((MCScriptExternalDefinition*&)self -> module . definitions[t_def_index]) ||
-        !__append_definition_name(self, p_name))
-    {
+    MCScriptAddDefinitionToModule(self, r_index);
+    MCScriptAddImportToModuleWithIndex(self, p_index, p_name, p_kind, p_type_index, r_index);
+    
+    if (!self -> valid)
         r_index = 0;
-        self -> valid = false;
-        return;
-    }
-    
-    MCScriptImportedDefinition *t_import;
-    t_import = &self -> module . imported_definitions[t_imp_index];
-    
-    t_import -> module = p_index;
-    t_import -> kind = p_kind;
-    t_import -> name = MCValueRetain(p_name);
-    // t_import -> type = MCValueRetain(p_type);
-    
-    MCScriptExternalDefinition *t_definition;
-    t_definition = static_cast<MCScriptExternalDefinition *>(self -> module . definitions[t_def_index]);
-    
-    t_definition -> kind = kMCScriptDefinitionKindExternal;
-    t_definition -> index = t_imp_index;
-
-    r_index = t_def_index;
 }
 
 void MCScriptAddDefinitionToModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
