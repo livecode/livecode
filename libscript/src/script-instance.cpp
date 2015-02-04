@@ -1742,50 +1742,6 @@ bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCSc
     return true;
 }
 
-static bool MCScriptMapValueToType(MCValueRef p_value, MCResolvedTypeInfo& p_input_type, MCResolvedTypeInfo& p_output_type, MCValueRef& r_transformed)
-{
-    bool t_success;
-    t_success = true;
-    
-    if (MCTypeInfoIsForeign(p_input_type . type))
-    {
-        if (MCTypeInfoIsForeign(p_output_type . type))
-        {
-            // Both foreign and conform, which means they are compatible.
-            r_transformed = p_value;
-        }
-        else
-        {
-            // Input foreign, output not foreign - need to import.
-            const MCForeignTypeDescriptor *t_descriptor;
-            t_descriptor = MCForeignTypeInfoGetDescriptor(p_input_type . type);
-            // If the doimport method is nil, then there is no bridge, so we just
-            // propagate the type itself.
-            if (t_descriptor -> doimport == nil)
-                r_transformed = p_value;
-            else if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(p_value), false, r_transformed))
-                t_success = false;
-        }
-    }
-    else
-    {
-        if (MCTypeInfoIsForeign(p_output_type . type))
-        {
-            // Input not foreign, output foreign so need to export.
-            if (!MCForeignValueExport(p_output_type . named_type, p_value, (MCForeignValueRef&)r_transformed))
-                t_success = false;
-        }
-        else
-        {
-            // Input is not foreign, output is not foreign so they must be
-            // compatible.
-            r_transformed = p_value;
-        }
-    }
-    
-    return t_success;
-}
-
 bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHandlerDefinition *p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
     // As this method is called internally, we can be sure that the arguments conform
