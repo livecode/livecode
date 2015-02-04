@@ -339,7 +339,7 @@ void EmitModuleDependency(NameRef p_name, long& r_index)
     MCScriptAddDependencyToModule(s_builder, to_mcnameref(p_name), t_index);
     r_index = t_index + 1;
     
-    MCLog("[Emit] ModuleDependency(%@ -> 0)", to_mcnameref(p_name), t_index + 1);
+    MCLog("[Emit] ModuleDependency(%@ -> %d)", to_mcnameref(p_name), t_index + 1);
 }
 
 void EmitImportedType(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
@@ -425,7 +425,44 @@ void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef 
     else
         t_binding_str = to_mcstringref(p_binding);
     
-    MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, *t_binding_str, p_index);
+    if (strncmp((const char *)p_binding, "lcb:", 4) != 0)
+        MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, *t_binding_str, p_index);
+    else
+    {
+        // The string should be of the form:
+        //   lcb:<module>.<handler>
+        
+        const char *t_separator;
+        t_separator = strrchr((const char *)p_binding, '.');
+        
+        const char *t_handler;
+        const char *t_module;
+        if (t_separator != nil)
+        {
+            t_module = (const char *)p_binding + 4;
+            t_handler = t_separator + 1;
+        }
+        else
+        {
+            t_module = nil;
+            t_handler = (const char *)p_binding + 4;
+        }
+        
+        long t_module_dep;
+        if (t_module == nil)
+            EmitModuleDependency(s_module_name, t_module_dep);
+        else
+        {
+            NameRef t_mod_name;
+            MakeNameLiteralN(t_module, t_separator - t_module, &t_mod_name);
+            EmitModuleDependency(t_mod_name, t_module_dep);
+        }
+        
+        NameRef t_hand_name;
+        MakeNameLiteral(t_handler, &t_hand_name);
+        
+        MCScriptAddImportToModuleWithIndex(s_builder, t_module_dep - 1, to_mcnameref(t_hand_name), kMCScriptDefinitionKindHandler, p_type_index, p_index);
+    }
     
     MCLog("[Emit] ForeignHandlerDefinition(%ld, %@, %ld, %@)", p_index, to_mcnameref(p_name), p_type_index, to_mcstringref(p_binding));
 }
