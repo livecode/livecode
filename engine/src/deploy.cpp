@@ -166,7 +166,7 @@ static bool MCDeployGetArchitectures(void *context, MCArrayRef array, MCNameRef 
     if (!MCDeployMapArchitectureString(MCNameGetString(key), t_arch))
         return false;
 
-    if (MCDeployPushMinOSVersion(t_context -> params, t_arch, *t_value_as_string))
+    if (!MCDeployPushMinOSVersion(t_context -> params, t_arch, *t_value_as_string))
         return false;
 
     return true;
