@@ -1134,7 +1134,7 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         t_target_address = self -> instructions[self -> labels[t_operands[t_address_index] - 1] . instruction] . address - t_address;
         
         uindex_t t_encoded_target_address;
-        if (t_target_address > 0)
+        if (t_target_address >= 0)
             t_encoded_target_address = t_target_address * 2;
         else if (t_target_address < 0)
             t_encoded_target_address = (-t_target_address) * 2 + 1;
