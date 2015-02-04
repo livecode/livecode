@@ -171,6 +171,17 @@ static MCStringRef to_mcstringref(long p_string)
     return t_uniq_string;
 }
 
+static NameRef nameref_from_mcstringref(MCStringRef p_string)
+{
+    MCAutoPointer<char> t_utf8_string;
+    MCStringConvertToUTF8String(p_string, &t_utf8_string);
+    
+    NameRef t_name;
+    MakeNameLiteral(*t_utf8_string, &t_name);
+    
+    return t_name;
+}
+
 //////////
 
 static MCScriptModuleBuilderRef s_builder;
@@ -425,43 +436,33 @@ void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef 
     else
         t_binding_str = to_mcstringref(p_binding);
     
-    if (strncmp((const char *)p_binding, "lcb:", 4) != 0)
+    if (!MCStringBeginsWithCString(*t_binding_str, (const char_t *)"lcb:", kMCStringOptionCompareExact))
         MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, *t_binding_str, p_index);
     else
     {
         // The string should be of the form:
         //   lcb:<module>.<handler>
         
-        const char *t_separator;
-        t_separator = strrchr((const char *)p_binding, '.');
+        MCAutoStringRef t_module_dot_handler;
+        MCStringCopySubstring(*t_binding_str, MCRangeMake(4, UINDEX_MAX), &t_module_dot_handler);
         
-        const char *t_handler;
-        const char *t_module;
-        if (t_separator != nil)
-        {
-            t_module = (const char *)p_binding + 4;
-            t_handler = t_separator + 1;
-        }
+        MCAutoStringRef t_module, t_handler;
+        uindex_t t_offset;
+        if (MCStringLastIndexOfChar(*t_module_dot_handler, '.', UINDEX_MAX, kMCStringOptionCompareExact, t_offset))
+            MCStringDivideAtIndex(*t_module_dot_handler, t_offset, &t_module, &t_handler);
         else
-        {
-            t_module = nil;
-            t_handler = (const char *)p_binding + 4;
-        }
-        
+            t_handler = *t_module_dot_handler;
+
         long t_module_dep;
-        if (t_module == nil)
+        if (*t_module == nil)
             EmitModuleDependency(s_module_name, t_module_dep);
         else
-        {
-            NameRef t_mod_name;
-            MakeNameLiteralN(t_module, t_separator - t_module, &t_mod_name);
-            EmitModuleDependency(t_mod_name, t_module_dep);
-        }
+            EmitModuleDependency(nameref_from_mcstringref(*t_module), t_module_dep);
         
-        NameRef t_hand_name;
-        MakeNameLiteral(t_handler, &t_hand_name);
+        MCNewAutoNameRef t_hand_name;
+        MCNameCreate(*t_handler, &t_hand_name);
         
-        MCScriptAddImportToModuleWithIndex(s_builder, t_module_dep - 1, to_mcnameref(t_hand_name), kMCScriptDefinitionKindHandler, p_type_index, p_index);
+        MCScriptAddImportToModuleWithIndex(s_builder, t_module_dep - 1, *t_hand_name, kMCScriptDefinitionKindHandler, p_type_index, p_index);
     }
     
     MCLog("[Emit] ForeignHandlerDefinition(%ld, %@, %ld, %@)", p_index, to_mcnameref(p_name), p_type_index, to_mcstringref(p_binding));
