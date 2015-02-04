@@ -31,7 +31,7 @@
 
 'action' Generate(MODULE)
 
-    'rule' Generate(Module:module(_, Kind, Id, _, Imports, Definitions)):
+    'rule' Generate(Module:module(_, Kind, Id, Imports, Definitions)):
         ModuleDependencyList <- nil
         
         QueryModuleId(Id -> Info)
@@ -98,32 +98,12 @@
 
 'action' GenerateManifest(MODULE)
 
-    'rule' GenerateManifest(module(_, Kind, Id, Metadata, Imports, Definitions)):
+    'rule' GenerateManifest(module(_, Kind, Id, Imports, Definitions)):
         OutputBeginManifest()
         Id'Name -> Name
         OutputWrite("<package version=\"0.0\">\n")
-        [|
-            QueryMetadata(Metadata, "label" -> LabelString)
-            OutputWriteS("  <label>", LabelString, "</label>\n")
-        |]
-        [|
-            QueryMetadata(Metadata, "description" -> DescriptionString)
-            OutputWriteS("  <description>", DescriptionString, "</description>\n")
-        |]
         OutputWrite("  <license>community</license>\n")
         OutputWriteI("  <name>", Name, "</name>\n")
-        [|
-            QueryMetadata(Metadata, "version" -> VersionString)
-            OutputWriteS("  <version>", VersionString, "</version>\n")
-        |]
-        [|
-            QueryMetadata(Metadata, "author" -> AuthorString)
-            OutputWriteS("  <author>", AuthorString, "</author>\n")
-        |]
-        [|
-            QueryMetadata(Metadata, "title" -> TitleString)
-            OutputWriteS("  <title>", TitleString, "</title>\n")
-        |]
         (|
             where(Kind -> widget)
             OutputWrite("  <type>widget</type>\n")
@@ -137,14 +117,6 @@
         GenerateManifestDefinitions(Definitions)
         OutputWrite("</package>")
         OutputEnd()
-        
-'condition' QueryMetadata(METADATA, STRING -> STRING)
-
-    'rule' QueryMetadata(metadata(_, Key, Value, Rest), WantedKey -> Value):
-        IsNameEqualToString(Key, WantedKey)
-        
-    'rule' QueryMetadata(metadata(_, _, _, Rest), WantedKey -> Value):
-        QueryMetadata(Rest, WantedKey -> Value)
 
 'action' AddModuleToDependencyList(NAME)
 
@@ -170,6 +142,10 @@
     'rule' GenerateManifestDefinitions(sequence(Left, Right)):
         GenerateManifestDefinitions(Left)
         GenerateManifestDefinitions(Right)
+        
+    'rule' GenerateManifestDefinitions(metadata(_, Key, Value)):
+        OutputWriteS("  <metadata key=\"", Key, "\">")
+        OutputWriteS("", Value, "</metadata>\n")
         
     'rule' GenerateManifestDefinitions(type(_, public, Name, _)):
     
@@ -681,6 +657,9 @@
         GenerateSyntaxMethods(Methods)
         EmitEndSyntaxDefinition()
         
+    'rule' GenerateDefinitions(metadata(_, _, _)):
+        -- do nothing
+
     'rule' GenerateDefinitions(nil):
         -- nothing
 

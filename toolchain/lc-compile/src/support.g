@@ -279,6 +279,7 @@
     Error_VariableMustHaveHighLevelType
     Error_CannotAssignToHandlerId
     Error_NonHandlerTypeVariablesCannotBeCalled
+    Warning_MetadataClausesShouldComeAfterUseClauses
 
 
 --------------------------------------------------------------------------------
@@ -609,5 +610,7 @@
 
 'action' Error_CannotAssignToHandlerId(Position: POS, Identifier: NAME)
 'action' Error_NonHandlerTypeVariablesCannotBeCalled(Position: POS)
+
+'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 
 --------------------------------------------------------------------------------
