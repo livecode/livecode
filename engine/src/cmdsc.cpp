@@ -2343,18 +2343,48 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 	initpoint(sp);
     
     if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION) == PS_NORMAL)
+	{
         is_extension = true;
-    else
-        sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
-
-	if (sp.parseexp(False, True, &url) != PS_NORMAL)
-	{
-		MCperror->add(PE_LOAD_BADURLEXP, sp);
-		return PS_ERROR;
+		
+		if (sp.parseexp(False, True, &url) != PS_NORMAL)
+		{
+			MCperror->add(PE_LOAD_BADEXTENSION, sp);
+			return PS_ERROR;
+		}
+		
+		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+		{
+			has_resource_path = true;
+			
+			if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_RESOURCE) != PS_NORMAL)
+			{
+				MCperror->add(PE_LOAD_NORESOURCE, sp);
+				return PS_ERROR;
+			}
+			
+			if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_PATH) != PS_NORMAL)
+			{
+				MCperror->add(PE_LOAD_NOPATH, sp);
+				return PS_ERROR;
+			}
+			
+			if (sp.parseexp(False, True, &message) != PS_NORMAL)
+			{
+				MCperror->add(PE_LOAD_BADRESOURCEPATH, sp);
+				return PS_ERROR;
+			}
+		}
 	}
-    
-	if (!is_extension)
+    else
 	{
+        sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
+		
+		if (sp.parseexp(False, True, &url) != PS_NORMAL)
+		{
+			MCperror->add(PE_LOAD_BADURLEXP, sp);
+			return PS_ERROR;
+		}
+		
 		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 		{
 			sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED);
@@ -2400,10 +2430,14 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
 	if (is_extension)
 	{
 		MCAutoStringRef t_filename;
-		if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_filename))
+		MCAutoStringRef t_resource_path;
+		if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADEXTENSION, &t_filename))
 			return;
-        
-        MCEngineExecLoadExtension(ctxt, *t_filename);
+		
+		if (has_resource_path && !ctxt . EvalExprAsStringRef(message, EE_LOAD_BADRESOURCEPATH, &t_resource_path))
+			return;
+		
+        MCEngineExecLoadExtension(ctxt, *t_filename, *t_resource_path);
 	}
 	else
     {

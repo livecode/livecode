@@ -158,7 +158,7 @@ bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef
 	return false;
 }
 
-void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
 {
     MCAutoStringRef t_resolved_filename;
     /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
@@ -185,6 +185,8 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     MCValueRelease(t_stream);
     
     MCEngineAddExtensionFromModule(*t_resolved_filename, t_module);
+	if (p_resource_path != nil)
+		MCEngineAddResourcePathForModule(t_module, p_resource_path);
     
     MCScriptReleaseModule(t_module);
     
