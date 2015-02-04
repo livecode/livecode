@@ -96,7 +96,6 @@ MC_PICKLE_BEGIN_RECORD(MCScriptImportedDefinition)
     MC_PICKLE_UINDEX(module)
     MC_PICKLE_INTENUM(MCScriptDefinitionKind, kind)
     MC_PICKLE_NAMEREF(name)
-    // MC_PICKLE_TYPEINFOREF(type)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptSyntaxMethod)
