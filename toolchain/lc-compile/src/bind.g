@@ -31,17 +31,17 @@
 -- the defining id.
 'action' Bind(MODULE, MODULELIST)
 
-    'rule' Bind(Module:module(Position, Kind, Name, _, Imports, Definitions), ImportedModules):
+    'rule' Bind(Module:module(Position, Kind, Name, Definitions), ImportedModules):
         DefineModuleId(Name)
 
         -- Make sure all the imported modules are bound
-        BindImports(Imports, ImportedModules)
+        BindImports(Definitions, ImportedModules)
 
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.
         EnterScope
         -- Import all the used modules
-        DeclareImports(Imports, ImportedModules)
+        DeclareImports(Definitions, ImportedModules)
         -- Declare the predefined ids
         DeclarePredefinedIds
         -- Assign the defining id to all top-level names.
@@ -55,7 +55,7 @@
         
         --DumpBindings(Module)
 
-'action' BindImports(IMPORT, MODULELIST)
+'action' BindImports(DEFINITION, MODULELIST)
 
     'rule' BindImports(sequence(Left, Right), Imports):
         BindImports(Left, Imports)
@@ -72,11 +72,11 @@
             Bind(Module, Imports)
         |)
         
-    'rule' BindImports(nil, _):
+    'rule' BindImports(_, _):
         -- do nothing
 --
 
-'action' DeclareImports(IMPORT, MODULELIST)
+'action' DeclareImports(DEFINITION, MODULELIST)
 
     'rule' DeclareImports(sequence(Left, Right), Imports):
         DeclareImports(Left, Imports)
@@ -88,7 +88,7 @@
         Module'Definitions -> Definitions
         DeclareImportedDefinitions(Definitions)
         
-    'rule' DeclareImports(nil, _):
+    'rule' DeclareImports(_, _):
         -- do nothing
         
 'action' DeclareImportedDefinitions(DEFINITION)
@@ -120,6 +120,12 @@
 
     'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
+
+    'rule' DeclareImportedDefinitions(import(_, _)):
+        -- do nothing
+        
+    'rule' DeclareImportedDefinitions(metadata(_, _, _)):
+        -- do nothing
 
     'rule' DeclareImportedDefinitions(nil):
         -- do nothing
@@ -176,6 +182,12 @@
 
     'rule' Declare(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
+    
+    'rule' Declare(metadata(_, _, _)):
+        -- do nothing
+        
+    'rule' Declare(import(_, _)):
+        -- do nothing
     
     'rule' Declare(nil):
         -- do nothing
@@ -247,7 +259,13 @@
     'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, Methods)):
         DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
     
-    'rule' Define(ModuleId, nil):
+    'rule' Define(_, metadata(_, _, _)):
+        -- do nothing
+        
+    'rule' Define(_, import(_, _)):
+        -- do nothing
+    
+    'rule' Define(_, nil):
         -- do nothing
 
 'action' DefineParameters(ID, PARAMETERLIST)
@@ -680,12 +698,11 @@
 
 'sweep' DumpBindings(ANY)
 
-    'rule' DumpBindings(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
+    'rule' DumpBindings(MODULE'module(_, Kind, Name, Definitions)):
         DumpId("module", Name)
-        DumpBindings(Imports)
         DumpBindings(Definitions)
         
-    'rule' DumpBindings(IMPORT'import(_, Name)):
+    'rule' DumpBindings(DEFINITION'import(_, Name)):
         DumpId("import", Name)
         
     'rule' DumpBindings(DEFINITION'type(_, _, Name, Type)):
