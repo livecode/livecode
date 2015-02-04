@@ -46,6 +46,13 @@ void __MCScriptHandlerRelease(void *context);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This is the module of the most recent LCB stack frame on the current thread's
+// stack. It is set before and after a foreign handler call so that the native
+// code can get some element of context.
+static MCScriptModuleRef s_current_module = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module, MCScriptInstanceRef& r_instance)
 {
     bool t_success;
@@ -1604,7 +1611,16 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 		MCScriptForeignHandlerDefinition *t_foreign_handler;
 		t_foreign_handler = MCScriptDefinitionAsForeignHandler(p_handler);
 		
-		return MCScriptPerformForeignInvoke(x_frame, p_instance, t_foreign_handler, p_arguments, p_arity);
+        MCScriptModuleRef t_previous_module;
+        t_previous_module = s_current_module;
+        s_current_module = x_frame -> instance -> module;
+        
+		bool t_success;
+        t_success = MCScriptPerformForeignInvoke(x_frame, p_instance, t_foreign_handler, p_arguments, p_arity);
+        
+        s_current_module = t_previous_module;
+        
+        return t_success;
 	}
 	
 	/* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition passed to invoke");
@@ -2347,6 +2363,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     }
     
     return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCScriptModuleRef MCScriptGetCurrentModule(void)
+{
+    return s_current_module;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
