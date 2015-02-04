@@ -90,6 +90,7 @@
     RepeatSyntaxGrammar
     PushEmptySyntaxGrammar
     PushKeywordSyntaxGrammar
+    PushUnreservedKeywordSyntaxGrammar
     PushMarkedDescentSyntaxGrammar
     PushDescentSyntaxGrammar
     PushMarkedTrueSyntaxGrammar
@@ -381,6 +382,7 @@
 'action' RepeatSyntaxGrammar()
 'action' PushEmptySyntaxGrammar()
 'action' PushKeywordSyntaxGrammar(Token: STRING)
+'action' PushUnreservedKeywordSyntaxGrammar(Token: STRING)
 'action' PushMarkedDescentSyntaxGrammar(Index: INT, Rule: NAME, LMode: INT, RMode: INT)
 'action' PushDescentSyntaxGrammar(Rule: NAME)
 'action' PushMarkedTrueSyntaxGrammar(Index: INT)

@@ -948,6 +948,9 @@
         
     'rule' AtomicSyntax(-> keyword(Position, Value)):
         STRING_LITERAL(-> Value) @(-> Position)
+
+    'rule' AtomicSyntax(-> unreservedkeyword(Position, Value)):
+        STRING_LITERAL(-> Value) @(-> Position) "!"
         
     'rule' AtomicSyntax(-> rule(Position, Name)):
         "<" @(-> Position) Identifier(-> Name) ">"
@@ -1052,6 +1055,13 @@
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier
+        
+    'rule' Identifier(-> Id):
+        CustomKeywords(-> String) @(-> Position)
+        MakeNameLiteral(String -> Identifier)
+        Id::ID
+        Id'Position <- Position
+        Id'Name <- Identifier
 
 'nonterm' StringyIdentifier(-> ID)
 
@@ -1142,6 +1152,11 @@
 'nonterm' CustomIterators(-> EXPRESSION)
     'rule' CustomIterators(-> nil):
         "THISCANNEVERHAPPEN"
+'nonterm' CustomKeywords(-> STRING)
+    'rule' CustomKeywords(-> String):
+        "THISCANNEVERHAPPEN"
+        where("THISCANNEVERHAPPEN" -> String)
+
 
 
 
