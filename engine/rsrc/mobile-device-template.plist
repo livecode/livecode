@@ -57,7 +57,7 @@
 	<key>CFBundleDisplayName</key>
 		${BUNDLE_DISPLAY_NAME_SUPPORT}
 	<key>MinimumOSVersion</key>
-		${MINIMUM_OS_SUPPORT}
+	<string>${MINIMUM_OS_SUPPORT}</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		${DEVICE_SUPPORT}
