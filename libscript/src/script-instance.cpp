@@ -2157,30 +2157,33 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     if (t_handler_definition -> function == nil)
                     {
                         if (!MCScriptPrepareForeignFunction(t_frame, t_instance, t_handler_definition, false, t_bound))
-                            return false;
+	                        t_success = false;
                     }
                     else
                         t_bound = true;
                     
-                    if (t_bound)
+                    if (t_success)
                     {
-                        // The context struct is 'moved' into the handlerref.
-                        __MCScriptHandlerContext t_context;
-                        t_context . instance = MCScriptRetainInstance(t_instance);
-                        t_context . definition = t_handler_definition;
+	                    if (t_bound)
+	                    {
+		                    // The context struct is 'moved' into the handlerref.
+		                    __MCScriptHandlerContext t_context;
+		                    t_context . instance = MCScriptRetainInstance(t_instance);
+		                    t_context . definition = t_handler_definition;
                         
-                        MCHandlerRef t_value;
-                        t_success = MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value);
+		                    MCHandlerRef t_value;
+		                    t_success = MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value);
                         
-                        if (t_success)
-                        {
-                            t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
-                            MCValueRelease(t_value);
-                        }
-                    }
-                    else
-                    {
-                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, kMCNull);
+		                    if (t_success)
+		                    {
+			                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
+			                    MCValueRelease(t_value);
+		                    }
+	                    }
+	                    else
+	                    {
+		                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, kMCNull);
+	                    }
                     }
                 }
             }
