@@ -831,7 +831,10 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
     if (t_needs_mapping)
     {
         if (!MCMemoryNewArray(p_arity, t_callee -> mapping))
+		{
+			MCScriptDestroyFrame (t_callee);
             return false;
+		}
         
         MCMemoryCopy(t_callee -> mapping, p_arguments, sizeof(int) * p_arity);
     }
