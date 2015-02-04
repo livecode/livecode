@@ -56,7 +56,7 @@
 	<string>6A1052c</string>
 	<key>CFBundleDisplayName</key>
 		${BUNDLE_DISPLAY_NAME_SUPPORT}
-	<key>LSMinimumOSVersion</key>
+	<key>MinimumOSVersion</key>
 	<string>${MINIMUM_OS_SUPPORT}</string>
 	<key>UIDeviceFamily</key>
 	<array>

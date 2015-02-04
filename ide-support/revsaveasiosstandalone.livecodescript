@@ -1063,10 +1063,10 @@ private function revGetMinimumOSByArch pMinimumOS
    local tMinimumOSByArch  
    -- MM-2013-09-23: We only support iOS 4.3 and later
    -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version is the
-   --  same for all archs, and we only support version >= 5.1
+   --  same for all archs, and we only support version >= 5.1.1
    --
-   if pMinimumOS is empty or pMinimumOS < "5.1" then
-      put "5.1.0" into tMinimumOSByArch["i386"]
+   if pMinimumOS is empty or pMinimumOS <= "5.1" then
+      put "5.1.1" into tMinimumOSByArch["i386"]
    else
       put pMinimumOS & ".0" after tMinimumOSByArch["i386"]
    end if
