@@ -53,8 +53,10 @@ Protocol) format.
 
 module com.livecode.unittest
 
-use com.livecode.system
-use com.livecode.stream
+public foreign handler MCUnitPlan(in Count as number) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitPlan"
+public foreign handler MCUnitDiagnostic(in Message as string) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitDiagnostic"
+
+foreign handler MCUnitOutputTest(in Condition as boolean, in Description as string, in Directive as string, in Reason as string) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitOutputTest"
 
 ----------------------------------------------------------------
 -- Test syntax
@@ -176,74 +178,6 @@ end syntax
 
 public handler MCUnitTestFailsDescriptionAndReason(in pDescription as string, in pCondition as boolean, in pReason as string)
 	MCUnitOutputTest(pCondition, pDescription, "TODO", pReason)
-end handler
-
-----------------------------------------------------------------
--- Main functions used by tests
-----------------------------------------------------------------
-
-public handler MCUnitPlan(in pCount as number)
-	variable tNumberString as string
-	put pCount formatted as string into tNumberString
-
-	-- We have to do a bit of a dance to format strings correctly
-	-- at the moment
-	if "." is in tNumberString then
-		variable tDotOffset
-		put the first offset of "." in tNumberString into tDotOffset
-		delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
-	end if
-
-	MCUnitOutput("1.." & tNumberString)
-end handler
-
-public handler MCUnitDiagnostic(in pMessage as string)
-	MCUnitOutput("#" && pMessage)
-end handler
-
-----------------------------------------------------------------
--- Helper functions for outputting test results
-----------------------------------------------------------------
-
-handler MCUnitOutputTest(in pCondition as boolean, in pDescription as string, in pDirective as string, in pReason as string)
-	variable tMessage as string
-
-	if pCondition then
-		put "ok" into tMessage
-	else
-		put "not ok" into tMessage
-	end if
-
-	if pDescription is not empty then
-		put " " & pDescription after tMessage
-	end if
-
-	if pDirective is not empty then
-		put " #" && pDirective after tMessage
-
-		if pReason is not empty then
-			put " " & pReason after tMessage
-		end if
-	end if
-
-	MCUnitOutput(tMessage)
-end handler
-
-foreign handler MCStringEncode(in String as string, in Encoding as int, in IsExternalRep as bool, out Encoded as data) as bool binds to "<builtin>"
-
-handler MCUnitOutput(in pMessage as string)
-	variable tEncoded as data
-
-	if the last char of pMessage is not "\n" then
-		put "\n" after pMessage
-	end if
-
-	-- Encode as UTF-8, always.
-	-- FIXME this should use LCB encoding library rather than directly
-	-- calling into libfoundation
-	MCStringEncode(pMessage, 4 /* UTF-8 */, false, tEncoded)
-
-	write tEncoded to stream the output stream
 end handler
 
 end module
