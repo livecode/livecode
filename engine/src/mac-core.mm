@@ -1846,8 +1846,13 @@ void MCMacPlatformSyncMouseBeforeDragging(void)
 			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release, false);
 		MCPlatformCallbackSendMouseLeave(s_mouse_window);
 		
-		MCPlatformReleaseWindow(s_mouse_window);
-		s_mouse_window = nil;
+        // SN-2015-01-13: [[ Bug 14350 ]] The user can close the stack in
+        //  a mouseLeave handler
+        if (s_mouse_window != nil)
+        {
+            MCPlatformReleaseWindow(s_mouse_window);
+            s_mouse_window = nil;
+        }
 	}
 }
 

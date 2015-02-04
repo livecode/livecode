@@ -123,6 +123,7 @@ static bool MCS_file_exists_at_path(const char *path)
 //   the path is taken to be a directory and is always redirected if is within
 //   Contents/MacOS. If p_is_file is true, then the file is only redirected if
 //   the original doesn't exist, and the redirection does.
+// SN-2015-01-16:[[ Bug 14392 ]] The function is no longer static - used in osxspec.cpp
 bool MCS_apply_redirect(char*& x_path, bool p_is_file)
 {
     // If the original file exists, do nothing.

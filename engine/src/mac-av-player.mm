@@ -1128,7 +1128,10 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
                 t_size . height = 244;
             }
             // PM-2014-12-17: [[ Bug 14232 ]] Check if the file is corrupted
-            if (t_size . width == 0 && t_size . height == 0)
+            // PM-2015-01-08: [[ Bug 14345 ]] Make sure we mark a filename as invalid if it has a movie rect ze of 0 and is not audio file. Previously we checked only if the movie rect size was 0, and this caused audio files to be marked as invalid.
+            bool t_has_audio;
+            t_has_audio = ( [[[[m_player currentItem] asset] tracksWithMediaType:AVMediaTypeAudio] count] != 0);
+            if (t_size . width == 0 && t_size . height == 0 && !t_has_audio)
                 m_has_invalid_filename = true;
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, t_size . width, t_size . height);
 		}

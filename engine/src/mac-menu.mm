@@ -203,7 +203,9 @@ enum MCShadowedItemTags
     if ([[t_item keyEquivalent] isEqualToString: @"q"])
         t_quit_accelerator_present = [(com_runrev_livecode_MCMenuDelegate *)[[t_item menu] delegate] platformMenuRef] -> quit_item != nil;
     
-	if (s_menu_select_lock == 0 || t_quit_accelerator_present)
+    // SN-2015-01-12: [[ Bug 14346 ]] Menu items with a submenu should not be selectable
+	if (![t_item hasSubmenu]
+            && (s_menu_select_lock == 0 || t_quit_accelerator_present))
 		MCPlatformCallbackSendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
     
     // SN-2014-11-06: [[ Bug 13836 ]] s_menu_select_occured was not used.

@@ -1304,8 +1304,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    
    ----------
    -- PM-2014-10-20: [[ Bug 13590]] Set the location authorization type and description
-   
-   if tRequiredCapabilities["gps"] or tRequiredCapabilities["location-services"] then
+   -- PM-2014-10-20: [[ Bugs 13764 and 14290]] gps and location-services should work even if n/a is selected in standalone settings
+   if tRequiredCapabilities["gps"] is not false or tRequiredCapabilities["location-services"] is not false then
       local tLocationAuthType
       put pSettings["ios,location auth type"] into tLocationAuthType
       if tLocationAuthType is empty then
