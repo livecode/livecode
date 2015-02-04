@@ -261,47 +261,84 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                 switch(t_operation)
                 {
                     case kMCScriptBytecodeOpJump:
-                        // check arity == 1
+                        // jump <offset>
+                        if (t_arity != 1)
+                            return false;
+                        
                         // check resolved address is within handler
                         break;
                     case kMCScriptBytecodeOpJumpIfFalse:
                     case kMCScriptBytecodeOpJumpIfTrue:
-                        // check arity == 2
+                        // jumpiftrue <register>, <offset>
+                        // jumpiffalse <register>, <offset>
+                        if (t_arity != 2)
+                            return false;
+                        
                         // check resolved address is within handler
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpAssignConstant:
-                        // check arity == 2
+                        // assignconst <dst>, <index>
+                        if (t_arity != 2)
+                            return false;
+                        
                         // check index argument is within value pool range
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpAssign:
-                        // check arity == 2
+                        // assign <dst>, <src>
+                        if (t_arity != 2)
+                            return false;
+                        
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         t_temporary_count = MCMax(t_temporary_count, t_operands[1] + 1);
                         break;
                     case kMCScriptBytecodeOpReturn:
-                        // check arity == 1
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
+                        // return
+                        // return <value>
+                        if (t_arity != 0 && t_arity != 1)
+                            return false;
+                        
+                        if (t_arity == 1)
+                            t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpInvoke:
+                        // invoke <index>, <result>, [ <arg_1>, ..., <arg_n> ]
+                        if (t_arity < 2)
+                            return false;
+                        
                         // check index operand is within definition range
                         // check definition[index] is handler or definition group
                         // check signature of defintion[index] conforms with invoke arity
                         for(uindex_t i = 1; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
-                    case kMCScriptBytecodeOpAssignList:
                     case kMCScriptBytecodeOpInvokeIndirect:
+                        // invoke *<src>, <result>, [ <arg_1>, ..., <arg_n> ]
+                        if (t_arity < 2)
+                            return false;
+                        
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
                     case kMCScriptBytecodeOpFetch:
                     case kMCScriptBytecodeOpStore:
-                        // check arity is 2
+                        // fetch <dst>, <index>
+                        // store <src>, <index>
+                        if (t_arity != 2)
+                            return false;
+                        
                         // check definition[index] is variable or handler
                         // check level is appropriate.
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
+                        break;
+                    case kMCScriptBytecodeOpAssignList:
+                        // assignlist <dst>, [ <elem_1>, ..., <elem_n> ]
+                        if (t_arity < 1)
+                            return false;
+                        
+                        for(uindex_t i = 0; i < t_arity; i++)
+                            t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
                 }
             }
