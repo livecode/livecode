@@ -484,6 +484,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    -- Output file to create
    put pAppBundle & slash & tName into tDeploy["output"]
    
+   put revGetMinimumOSByArch(tSettings["ios,minimum os"]) into tDeploy["min_os_version"]
+   
    -- Splash to use (if non-commercial)
    if line 3 of the revLicenseInfo is among the words of "Educational Personal" then
       -- MM-2011-09-28: Descend through possible spash settings until a splash is found.
@@ -1057,6 +1059,29 @@ end revCopyMobileStackFiles
 
 ################################################################################
 
+private function revGetMinimumOSByArch pMinimumOS 
+   local tMinimumOSByArch  
+   -- MM-2013-09-23: We only support iOS 4.3 and later
+   -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version is the
+   --  same for all archs, and we only support version >= 5.1.1
+   --
+   if pMinimumOS is empty or pMinimumOS <= "5.1" then
+      put "5.1.1" into tMinimumOSByArch["i386"]
+   else
+      put pMinimumOS & ".0" after tMinimumOSByArch["i386"]
+   end if
+   
+   -- Assign the same value to the other architectures.
+   -- Possible architectures:
+   --   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv6"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv7"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv7s"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["arm64"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["x86-64"]
+   return tMinimumOSByArch
+end revGetMinimumOSByArch
+
 private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    local tTemplateFile
    put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Settings.plist") into tTemplateFile
@@ -1066,7 +1091,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    
    ----------
    
-   local tExeName, tBundleId, tBundleVersion
+   local tExeName, tBundleId, tBundleVersion,tMinimumOSByArch
    put pSettings["name"] into tExeName
    put pSettings["ios,bundle id"] into tBundleId
    put pSettings["ios,bundle version"] into tBundleVersion
@@ -1094,11 +1119,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    if tDisplayName is empty then
       put tExeName into tDisplayName
    end if
-   -- MM-2013-09-23: We only support iOS 4.3 and later
-   --
-   if tMinimumOS is empty or tMinimumOS < "4.3" then
-      put "4.3" into tMinimumOS
-   end if
+   
+   put revGetMinimumOSByArch(tMinimumOS) into tMinimumOSByArch
    if tDeviceFamily is empty then
       put "1" into tDeviceFamily
    end if
@@ -1184,7 +1206,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    replace "${BUNDLE_IDENTIFIER}" with tBundleId in tPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
-   replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOS & "</string>" in tPlist
+   -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
+   replace "${MINIMUM_OS_SUPPORT}" with tMinimumOSByArch["i386"] in tPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in tPlist
    
    get empty
