@@ -1905,7 +1905,8 @@ bool deserialize_data(const char *p_stream, uint32_t p_stream_size, uint32_t &r_
 		if (r_data == nil)
 		{
 			t_size = t_data_size;
-			MCMemoryAllocate(t_size, t_data);
+			if (!MCMemoryAllocate(t_size, t_data))
+				return false;
 		}
 		else
 		{
