@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <StoreKit/StoreKit.h>
 
 static MCPurchase *s_purchase_request = nil;
+static bool s_did_restore = false;
 
 typedef struct
 {
@@ -361,6 +362,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 				break;
 			case SKPaymentTransactionStateRestored:
 				p_purchase->state = kMCPurchaseStateRestored;
+                s_did_restore = true;
 				break;
 			case SKPaymentTransactionStateFailed:
 			{
@@ -456,6 +458,17 @@ void update_purchase_state(MCPurchase *p_purchase)
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
 {
+    // PM-2015-02-04: [[ Bug 14402 ]] Display an alert msg in case there is nothing to restore
+    if (!s_did_restore)
+    {
+        UIAlertView *t_alert = [[UIAlertView alloc] initWithTitle:@"Warning"
+                                                        message:@"You have no previous purchases to restore"
+                                                       delegate:nil
+                                              cancelButtonTitle:@"OK"
+                                              otherButtonTitles:nil];
+        [t_alert show];
+        [t_alert release];
+    }
 }
 
 @end
