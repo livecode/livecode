@@ -1372,7 +1372,8 @@ static const char **nametable[] =
     &MCnullstring, &MCscrollbarstring,
     &MCimagestring, &MCgraphicstring,
     &MCepsstring, &MCmagnifierstring,
-    &MCcolorstring, &MCfieldstring
+    &MCcolorstring, &MCwidgetstring,
+    &MCfieldstring
 };
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
