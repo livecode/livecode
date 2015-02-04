@@ -995,6 +995,9 @@
 		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E864B42115BDAB5200F5361C /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */; };
 		E8AF7D2319F7E3BF000F68E9 /* graphics_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */; };
+		E8CFD72A1A824E540073D392 /* filepath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7291A824E540073D392 /* filepath.cpp */; };
+		E8CFD72B1A824E540073D392 /* filepath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7291A824E540073D392 /* filepath.cpp */; };
+		E8CFD72C1A8251380073D392 /* filepath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7291A824E540073D392 /* filepath.cpp */; };
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
 /* End PBXBuildFile section */
 
@@ -2483,6 +2486,8 @@
 		E8AE103215D90DE700A517E8 /* exec-scripting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-scripting.cpp"; path = "src/exec-scripting.cpp"; sourceTree = "<group>"; };
 		E8AF4890174D5563000B2F9E /* libskia.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libskia.xcodeproj; path = ../thirdparty/libskia/libskia.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphics_util.cpp; path = src/graphics_util.cpp; sourceTree = "<group>"; };
+		E8CFD7281A824DE20073D392 /* filepath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filepath.h; path = src/filepath.h; sourceTree = "<group>"; };
+		E8CFD7291A824E540073D392 /* filepath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = filepath.cpp; path = src/filepath.cpp; sourceTree = "<group>"; };
 		E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep.cpp; path = src/image_rep.cpp; sourceTree = "<group>"; };
 		E8EBC31D13E04C29003F6AA3 /* srvmultipart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvmultipart.h; path = src/srvmultipart.h; sourceTree = "<group>"; };
 		E8EBC31E13E04C29003F6AA3 /* srvmultipart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmultipart.cpp; path = src/srvmultipart.cpp; sourceTree = "<group>"; };
@@ -4075,6 +4080,8 @@
 				4DFDDAB61074D70900FAE527 /* eventqueue.cpp */,
 				4D1B954810A2CA8B0039C679 /* eventqueue.h */,
 				4D587DD40B8096E600200116 /* filedefs.h */,
+				E8CFD7291A824E540073D392 /* filepath.cpp */,
+				E8CFD7281A824DE20073D392 /* filepath.h */,
 				4D8387241678B2F4003BEC7C /* flst.h */,
 				4D587E4E0B8096FD00200116 /* globals.cpp */,
 				4D587DDF0B8096E600200116 /* globals.h */,
@@ -5005,6 +5012,7 @@
 				4CF4B865199E05F300E33AEE /* customprinter.cpp in Sources */,
 				4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */,
 				4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */,
+				E8CFD72B1A824E540073D392 /* filepath.cpp in Sources */,
 				4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */,
 				4D1F9DA5171C682E0091C6CB /* tilecachesw.cpp in Sources */,
 				4D1F9DA6171C682E0091C6CB /* paragrafattr.cpp in Sources */,
@@ -5243,6 +5251,7 @@
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
 				7269ECBC1A1DFEC1000723DB /* text-run.cpp in Sources */,
+				E8CFD72A1A824E540073D392 /* filepath.cpp in Sources */,
 				4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */,
 				4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */,
 				4DEE2AE60FDE42710009423C /* osxprinter.cpp in Sources */,
@@ -5518,6 +5527,7 @@
 				7699BDC41A1CD51E00636397 /* osxprinter.cpp in Sources */,
 				7699BDC51A1CD51E00636397 /* osxstack.cpp in Sources */,
 				7699BDC61A1CD51E00636397 /* osxtheme.cpp in Sources */,
+				E8CFD72C1A8251380073D392 /* filepath.cpp in Sources */,
 				7699BDC71A1CD51E00636397 /* paragraf.cpp in Sources */,
 				7699BDC81A1CD51E00636397 /* param.cpp in Sources */,
 				7699BDC91A1CD51E00636397 /* parentscript.cpp in Sources */,
