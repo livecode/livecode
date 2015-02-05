@@ -97,9 +97,15 @@ private:
     
     MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
 };
+
 template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)> class MCAutoMutableValueRefBase: public MCAutoValueRefBase<T>
 {
 public:
+	T operator = (T value)
+	{
+        return MCAutoValueRefBase<T>::operator =(value);
+	}
+    
     bool MakeMutable(void)
     {
         return MutableCopyAndRelease((T)m_value, (T&)m_value);
