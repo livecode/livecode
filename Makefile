@@ -215,9 +215,11 @@ lc-test: libstdscript libfoundation
 	$(MAKE) -C ./toolchain lc-test
 
 ########## Tests
-lc-test-check: lc-test
+lc-run-check: lc-compile lc-run
+	$(MAKE) -C ./tests/lc-run check
+lc-test-check: lc-compile lc-test
 	$(MAKE) -C ./toolchain lc-test-check
-.PHONY: mlc-check
+.PHONY: lc-run-check lc-test-check
 
 ###############################################################################
 # All Targets
@@ -239,7 +241,7 @@ thirdparty: libffi libz libjpeg libpcre libpng libgif libopenssl libskia
 thirdparty: libcairopdf libpq libmysql libsqlite libiodbc libxml libxslt
 thirdparty: libzip
 
-check: lc-test-check
+check: lc-run-check lc-test-check
 
 clean:
 	-rm -rf _build/linux _cache/linux
