@@ -440,7 +440,7 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
                 t_new_element = t_element;
                 
                 // Attempt to convert it to a script type.
-                if (!MCExtensionConvertToScriptType(ctxt, t_new_element . InOut()))
+                if (!MCExtensionConvertToScriptType(ctxt, InOut(t_new_element)))
                     return false;
                 
                 // If the value has changed then we must do a store.
@@ -450,12 +450,12 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
                     // array.
                     if (*t_mutated_value == nil)
                     {
-                        if (!MCArrayMutableCopy((MCArrayRef)x_value, t_mutated_value . Out()))
+                        if (!MCArrayMutableCopy((MCArrayRef)x_value, Out(t_mutated_value)))
                             return false;
                     }
                     
                     // Store the element in the array.
-                    if (!MCArrayStoreValue(t_mutated_value . In(), true, t_key, t_new_element . In()))
+                    if (!MCArrayStoreValue(In(t_mutated_value), true, t_key, In(t_new_element)))
                         return false;
                     
                     continue;
@@ -638,7 +638,7 @@ static bool __script_ensure_names_are_strings(MCValueRef p_input, MCValueRef& r_
         {
             // Ensure the element's names are all strings.
             MCAutoValueRef t_mutated_element;
-            if (!__script_ensure_names_are_strings(t_element, t_mutated_element . Out()))
+            if (!__script_ensure_names_are_strings(t_element, Out(t_mutated_element)))
                 return false;
             
             // If something changed then we must replace the existing value.
@@ -647,12 +647,12 @@ static bool __script_ensure_names_are_strings(MCValueRef p_input, MCValueRef& r_
                 // First make sure we have a copy of the original to mutate.
                 if (*t_mutated_input == nil)
                 {
-                    if (!MCArrayMutableCopy((MCArrayRef)p_input, t_mutated_input . Out()))
+                    if (!MCArrayMutableCopy((MCArrayRef)p_input, Out(t_mutated_input)))
                         return false;
                 }
                 
                 // Now store the value.
-                if (!MCArrayStoreValue(t_mutated_input . In(), true, t_key, t_mutated_element . In()))
+                if (!MCArrayStoreValue(In(t_mutated_input), true, t_key, In(t_mutated_element)))
                     return false;
                 
                 // We are done for this element.
@@ -927,7 +927,7 @@ static bool __script_try_to_convert_to_list(MCExecContext& ctxt, MCValueRef& x_v
     if (t_is_array && MCArrayIsSequence((MCArrayRef)x_value))
     {
         MCAutoProperListRef t_proper_list;
-        if (!MCProperListCreateMutable(t_proper_list . Out()))
+        if (!MCProperListCreateMutable(Out(t_proper_list)))
             return false;
         
         for(uindex_t i = 0; i < MCArrayGetCount((MCArrayRef)x_value); i++)
@@ -941,7 +941,7 @@ static bool __script_try_to_convert_to_list(MCExecContext& ctxt, MCValueRef& x_v
             if (!__script_ensure_names_are_strings(t_element, &t_revised_element))
                 return false;
                 
-            if (!MCProperListPushElementOntoBack(t_proper_list . In(), *t_revised_element == nil ? t_element : *t_revised_element))
+            if (!MCProperListPushElementOntoBack(In(t_proper_list), *t_revised_element == nil ? t_element : In(t_revised_element)))
                 return false;
         }
         
