@@ -41,10 +41,10 @@ Example:
 		skip test "Skipped 4" because "Not supported on this platform"
 
 		test diagnostic "Tests which are expected to fail"
-		test fails when false
-		test "Failed 2" fails when false
-		test fails when false because "broken"
-		test "Failed 4" fails when false because "really broken"
+		broken test false
+		broken test "Failed 2" when false
+		broken test false because "broken"
+		broken test "Failed 4" when false because "really broken"
 	end handler
 
 The test results are output on standard output in TAP (Test Anything
@@ -141,7 +141,7 @@ end handler
 ----------------------------------------------------------------
 
 syntax UnitTestFails is statement
-	"test" "fails" "when" <Condition: Expression>
+	"broken" "test" <Condition: Expression>
 begin
 	MCUnitTestFails(Condition)
 end syntax
@@ -151,7 +151,7 @@ public handler MCUnitTestFails(in pCondition as boolean)
 end handler
 
 syntax UnitTestFailsDescription is statement
-	"test" <Description: Expression> "fails" "when" <Condition: Expression>
+	"broken" "test" <Description: Expression> "when" <Condition: Expression>
 begin
 	MCUnitTestFailsDescription(Description, Condition)
 end syntax
@@ -161,7 +161,7 @@ public handler MCUnitTestFailsDescription(in pDescription as string, in pConditi
 end handler
 
 syntax UnitTestFailsReason is statement
-	"test" "fails" "when" <Condition: Expression> "because" <Reason: Expression>
+	"broken" "test" <Condition: Expression> "because" <Reason: Expression>
 begin
 	MCUnitTestFailsReason(Condition, Reason)
 end syntax
@@ -171,7 +171,7 @@ public handler MCUnitTestFailsReason(in pCondition as boolean, in pReason as str
 end handler
 
 syntax UnitTestFailsDescriptionAndReason is statement
-	"test" <Description: Expression> "fails" "when" <Condition: Expression> "because" <Reason: Expression>
+	"broken" "test" <Description: Expression> "when" <Condition: Expression> "because" <Reason: Expression>
 begin
 	MCUnitTestFailsDescriptionAndReason(Description, Condition, Reason)
 end syntax
