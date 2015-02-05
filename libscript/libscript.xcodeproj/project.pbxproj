@@ -218,6 +218,9 @@
 		C73CD3511A6D01690021F87A /* system.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = system.mlc; path = src/system.mlc; sourceTree = "<group>"; };
 		C741ECC61A6932E60096D171 /* module-stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-stream.cpp"; path = "src/module-stream.cpp"; sourceTree = "<group>"; };
 		C741ECC71A6932E60096D171 /* stream.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = stream.mlc; path = src/stream.mlc; sourceTree = "<group>"; };
+		C77AA97E1A83861900AAE40E /* libstdscript-modules.list */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "libstdscript-modules.list"; sourceTree = "<group>"; };
+		C793E7751A83789000D5E682 /* unittest-impl.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "unittest-impl.mlc"; path = "src/unittest-impl.mlc"; sourceTree = "<group>"; };
+		C793E7761A83789000D5E682 /* unittest.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = unittest.mlc; path = src/unittest.mlc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -322,6 +325,7 @@
 		4D79B6581A273B8100DD750C /* Library Source */ = {
 			isa = PBXGroup;
 			children = (
+				C77AA97E1A83861900AAE40E /* libstdscript-modules.list */,
 				4D79B6591A273BA000DD750C /* module-arithmetic.cpp */,
 				766113881A31FB640042DE7F /* module-array.cpp */,
 				4D79B65A1A273BA000DD750C /* module-binary.cpp */,
@@ -364,6 +368,8 @@
 				C73CD3511A6D01690021F87A /* system.mlc */,
 				4D79B67D1A273BA000DD750C /* type-convert.mlc */,
 				4D79B67E1A273BA000DD750C /* type.mlc */,
+				C793E7761A83789000D5E682 /* unittest.mlc */,
+				C793E7751A83789000D5E682 /* unittest-impl.mlc */,
 			);
 			name = "Library Source";
 			sourceTree = "<group>";
@@ -545,8 +551,6 @@
 				4D79B6831A273BA000DD750C /* module-byte.cpp in Sources */,
 				4D79B6851A273BA000DD750C /* module-encoding.cpp in Sources */,
 				4D21B60119E3DFED00B64BEF /* script-package.cpp in Sources */,
-				C7A74E161A6D07CC0031099F /* module-system.cpp in Sources */,
-				C7A74E171A6D07DF0031099F /* module-date.cpp in Sources */,
 				4D79B68F1A273BA000DD750C /* module-type.cpp in Sources */,
 				766113891A31FB640042DE7F /* module-array.cpp in Sources */,
 				4D79B6811A273BA000DD750C /* module-binary.cpp in Sources */,
