@@ -209,7 +209,6 @@ struct MCScriptImportedDefinition
     uindex_t module;
     MCScriptDefinitionKind kind;
     MCNameRef name;
-    //MCTypeInfoRef type;
     
     // The resolved definition - not pickled
     MCScriptDefinition *definition;
