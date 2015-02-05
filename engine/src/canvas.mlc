@@ -1705,6 +1705,7 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasImageMakeWithPath(in pPath as string, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithResource(in pResourcePath as string, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixels(in pWidth as int, in pHeight as int, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as list, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
@@ -1730,6 +1731,27 @@ syntax ImageMakeFromFile is prefix operator with precedence 4
 	"image" "from" "file" <mPath: Expression>
 begin
 	MCCanvasImageMakeWithPath(mPath, output)
+end syntax
+
+/*
+Summary:	Creates a new image.
+
+mResource:		An expression which evaluates to a string.
+
+Returns:	A new image decoded from the named module resource file.
+
+Example:
+	// Load image from a bundled resource file
+	variable tImage
+	put image from resource "images/logo.png" into tImage
+
+Tags: Canvas
+*/
+
+syntax ImageMakeFromResource is prefix operator with precedence 4
+	"image" "from" "resource" <mResource: Expression>
+begin
+	MCCanvasImageMakeWithResource(mResource, output)
 end syntax
 
 syntax ImageMakeFromData is prefix operator with precedence 4

@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "filepath.h"
 
+#include "module-resources.h"
+
 //////////////////////////////////////////////////////////////////////
 
 // MW-2014-07-17: [[ ImageMetadata ]] Convert array to the metadata struct.
@@ -446,6 +448,15 @@ bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, 
 		r_rep = t_rep;
 	
 	return t_success;
+}
+
+bool MCImageGetFileRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep)
+{
+	MCAutoStringRef t_path;
+	if (!MCResourceResolvePath(p_resource_file, &t_path))
+		return false;
+	
+	return MCImageRepGetDensityMapped(*t_path, r_rep);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
