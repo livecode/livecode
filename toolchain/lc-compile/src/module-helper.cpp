@@ -46,6 +46,7 @@ extern builtin_module_descriptor __com_livecode_string_module_info;
 extern builtin_module_descriptor __com_livecode_system_module_info;
 extern builtin_module_descriptor __com_livecode_type_module_info;
 extern builtin_module_descriptor __com_livecode_typeconvert_module_info;
+extern builtin_module_descriptor __com_livecode_unittest_module_info;
 
 builtin_module_descriptor* g_builtin_modules[] =
 {
@@ -70,7 +71,8 @@ builtin_module_descriptor* g_builtin_modules[] =
     &__com_livecode_string_module_info,
     &__com_livecode_system_module_info,
     &__com_livecode_type_module_info,
-    &__com_livecode_typeconvert_module_info
+    &__com_livecode_typeconvert_module_info,
+    &__com_livecode_unittest_module_info,
 };
 
 unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);

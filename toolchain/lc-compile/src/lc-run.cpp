@@ -326,7 +326,7 @@ MCRunLoadModule (MCStringRef p_filename,
 	if (!MCScriptEnsureModuleIsUsable (*t_module))
 		return false;
 
-	r_module = MCValueRetain(*t_module);
+	r_module = MCScriptRetainModule (*t_module);
 	return true;
 }
 
