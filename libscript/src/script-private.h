@@ -210,8 +210,10 @@ struct MCScriptImportedDefinition
     MCScriptDefinitionKind kind;
     MCNameRef name;
     
+    // The module the definition resides in.
+    MCScriptModuleRef resolved_module;
     // The resolved definition - not pickled
-    MCScriptDefinition *definition;
+    MCScriptDefinition *resolved_definition;
 };
 
 struct MCScriptPosition

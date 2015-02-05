@@ -461,6 +461,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
         if (t_module -> module_kind == kMCScriptModuleKindWidget)
             return false;
         
+        // A used module must be usable - do this before resolving imports so
+        // chained imports work.
+        if (!MCScriptEnsureModuleIsUsable(t_module))
+            return false;
+        
         // Check all the imported definitions from the module, and compute indicies.
         for(uindex_t t_import = 0; t_import < self -> imported_definition_count; t_import++)
         {
@@ -473,6 +478,17 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             if (!MCScriptLookupDefinitionInModule(t_module, t_import_def -> name, t_def))
                 return false;
             
+            MCScriptModuleRef t_mod;
+            if (t_def -> kind == kMCScriptDefinitionKindExternal)
+            {
+                MCScriptExternalDefinition *t_ext_def;
+                t_ext_def = static_cast<MCScriptExternalDefinition *>(t_def);
+                t_mod = t_module -> imported_definitions[t_ext_def -> index] . resolved_module;
+                t_def = t_module -> imported_definitions[t_ext_def -> index] . resolved_definition;
+            }
+            else
+                t_mod = t_module;
+            
             if (t_def -> kind != t_import_def -> kind)
             {
                 if (t_import_def -> kind != kMCScriptDefinitionKindHandler ||
@@ -482,12 +498,9 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             
             // Check that signatures match.
             
-            t_import_def -> definition = t_def;
+            t_import_def -> resolved_definition = t_def;
+            t_import_def -> resolved_module = t_mod;
         }
-        
-        // A used module must be usable.
-        if (!MCScriptEnsureModuleIsUsable(t_module))
-            return false;
         
         // Now create the instance we need.
         if (!MCScriptCreateInstanceOfModule(t_module, self -> dependencies[i] . instance))
@@ -567,8 +580,8 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_import = &self -> imported_definitions[t_ext_def -> index];
                     
                     MCScriptModuleRef t_module;
-                    t_module = self -> dependencies[t_import -> module] . instance -> module;
-                    t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> definition) -> type] -> typeinfo;
+                    t_module = t_import -> resolved_module;
+                    t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> resolved_definition) -> type] -> typeinfo;
                 }
                 else
                     return false;

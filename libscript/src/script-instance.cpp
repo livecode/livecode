@@ -657,8 +657,8 @@ static inline void MCScriptResolveDefinitionInFrame(MCScriptFrame *p_frame, uind
         MCScriptImportedDefinition *t_import_def;
         t_import_def = &t_instance -> module -> imported_definitions[t_ext_def -> index];
         
-        t_instance = t_instance -> module -> dependencies[t_import_def -> module] . instance;
-        t_definition = t_import_def -> definition;
+        t_instance = t_import_def -> resolved_module -> shared_instance;
+        t_definition = t_import_def -> resolved_definition;
     }
 
     r_instance = t_instance;
