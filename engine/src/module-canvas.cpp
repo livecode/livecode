@@ -5827,7 +5827,7 @@ bool MCCanvasEffectTypeToString(MCCanvasEffectType p_type, MCStringRef &r_string
 
 bool MCCanvasEffectTypeFromString(MCStringRef p_string, MCCanvasEffectType &r_type)
 {
-	return _mcenumfromstring<MCCanvasEffectType, kMCGFillRuleCount>(s_effect_type_map, p_string, r_type);
+	return _mcenumfromstring<MCCanvasEffectType, _MCCanvasEffectTypeCount>(s_effect_type_map, p_string, r_type);
 }
 
 bool MCCanvasFillRuleToString(MCGFillRule p_fill_rule, MCStringRef &r_string)
