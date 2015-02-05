@@ -23,6 +23,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template<typename T> class MCAutoValueRefBase;
+
+template<typename T> inline T In(const MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . In();
+}
+
+template<typename T> inline T& Out(MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . Out();
+}
+
+template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . InOut();
+}
+
 template<typename T> class MCAutoValueRefBase
 {
 public:
@@ -77,9 +94,9 @@ public:
         return t_value;
     }
     
-    friend T In(const MCAutoValueRefBase<T>&);
-    friend T& Out(MCAutoValueRefBase<T>&);
-    friend T& InOut(MCAutoValueRefBase<T>&);
+    friend T In<>(const MCAutoValueRefBase<T>&);
+    friend T& Out<>(MCAutoValueRefBase<T>&);
+    friend T& InOut<>(MCAutoValueRefBase<T>&);
     
 protected:
 	T m_value;
@@ -129,21 +146,6 @@ private:
     MCAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& operator = (MCAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& x);
 };
 
-template<typename T> inline T In(const MCAutoValueRefBase<T>& p_auto)
-{
-    return p_auto . In();
-}
-
-template<typename T> inline T& Out(MCAutoValueRefBase<T>& p_auto)
-{
-    return p_auto . Out();
-}
-
-template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
-{
-    return p_auto . InOut();
-}
-
 typedef MCAutoValueRefBase<MCValueRef> MCAutoValueRef;
 typedef MCAutoValueRefBase<MCNumberRef> MCAutoNumberRef;
 typedef MCAutoMutableValueRefBase<MCStringRef, MCStringMutableCopyAndRelease, MCStringCopyAndRelease> MCAutoStringRef;
@@ -157,7 +159,6 @@ typedef MCAutoValueRefBase<MCTypeInfoRef> MCAutoTypeInfoRef;
 typedef MCAutoMutableValueRefBase<MCRecordRef, MCRecordMutableCopyAndRelease, MCRecordCopyAndRelease> MCAutoRecordRef;
 typedef MCAutoValueRefBase<MCErrorRef> MCAutoErrorRef;
 typedef MCAutoMutableValueRefBase<MCProperListRef, MCProperListMutableCopyAndRelease, MCProperListCopyAndRelease> MCAutoProperListRef;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
