@@ -5034,7 +5034,12 @@ static bool __MCStringCreateIndirect(__MCString *string, __MCString*& r_string)
     self -> flags |= kMCStringFlagIsIndirect | kMCStringFlagIsMutable;
     
     if (!MCStringIsNative(string))
+    {
         self -> flags |= kMCStringFlagIsNotNative;
+        // AL-2015-02-05: [[ Bug 14504 ]] Ensure 'CanBeNative' flag is preserved when making a string indirect
+        if (MCStringCanBeNative(string))
+            self -> flags |= kMCStringFlagCanBeNative;
+    }
     
     r_string = self;
     return true;
@@ -5091,6 +5096,9 @@ static bool __MCStringMakeIndirect(__MCString *self)
     {
         t_string -> chars = self -> chars;
         t_string -> flags |= kMCStringFlagIsNotNative;
+        // AL-2015-02-05: [[ Bug 14504 ]] Ensure 'CanBeNative' flag is preserved when making a string indirect
+        if (MCStringCanBeNative(self))
+            t_string -> flags |= kMCStringFlagCanBeNative;
     }
 
 	// 'self' now becomes indirect with a reference to the new string.
@@ -5123,6 +5131,9 @@ static bool __MCStringResolveIndirect(__MCString *self)
         {
             self -> chars = t_string -> chars;
             self -> flags |= kMCStringFlagIsNotNative;
+            // AL-2015-02-05: [[ Bug 14504 ]] Ensure 'CanBeNative' flag is preserved when making resolving an indirect string.
+            if (MCStringCanBeNative(t_string))
+                self -> flags |= kMCStringFlagCanBeNative;
         }
 
 		t_string -> char_count = 0;
@@ -5152,6 +5163,10 @@ static bool __MCStringResolveIndirect(__MCString *self)
                 return false;
             
             self -> flags |= kMCStringFlagIsNotNative;
+            
+            // AL-2015-02-05: [[ Bug 14504 ]] Ensure 'CanBeNative' flag is preserved when making resolving an indirect string.
+            if (MCStringCanBeNative(t_string))
+                self -> flags |= kMCStringFlagCanBeNative;
         }
         
         // SN-2015-01-13: [[ Bug 14354 ]] We can release now release the string,
@@ -5194,6 +5209,9 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
         {
             t_string -> chars = self -> chars;
             t_string -> flags |= kMCStringFlagIsNotNative;
+            // AL-2015-02-05: [[ Bug 14504 ]] Ensure 'CanBeNative' flag is preserved when making resolving an indirect string.
+            if (MCStringCanBeNative(self))
+                t_string -> flags |= kMCStringFlagCanBeNative;
         }
         t_string -> capacity = 0;
     }
