@@ -853,6 +853,8 @@
 				"$(SRCROOT)/../../engine/src/engine.mlc",
 				"$(SRCROOT)/../../libscript/src/stream.mlc",
 				"$(SRCROOT)/../../libscript/src/system.mlc",
+				"$(SRCROOT)/../../libscript/libstdscript-modules.list",
+				"$(SRCROOT)/../../libscritp/src/unittest.mlc",
 			);
 			name = Bootstrap;
 			outputPaths = (
@@ -860,7 +862,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\necho \"${BUILT_PRODUCTS_DIR}/modules\"\nmkdir -p \"_G_\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/modules\"\nLIBSCRIPT_SRCDIR=\"${SRCROOT}/../../libscript/src\"\nENGINE_SRCDIR=\"${SRCROOT}/../../engine/src\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" \"${ENGINE_SRCDIR}/canvas.mlc\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" \"${ENGINE_SRCDIR}/engine.mlc\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" \"${ENGINE_SRCDIR}/widget.mlc\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" --bootstrap  --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" --template \"${SRCROOT}/src/grammar.g\" --output \"${SRCROOT}/src/grammar_full.g\" \"${LIBSCRIPT_SRCDIR}/string.mlc\" \"${LIBSCRIPT_SRCDIR}/binary.mlc\" \"${LIBSCRIPT_SRCDIR}/arithmetic.mlc\" \"${LIBSCRIPT_SRCDIR}/bitwise.mlc\" \"${LIBSCRIPT_SRCDIR}/byte.mlc\" \"${LIBSCRIPT_SRCDIR}/char.mlc\" \"${LIBSCRIPT_SRCDIR}/list.mlc\" \"${LIBSCRIPT_SRCDIR}/type-convert.mlc\" \"${LIBSCRIPT_SRCDIR}/logic.mlc\" \"${LIBSCRIPT_SRCDIR}/sort.mlc\" \"${LIBSCRIPT_SRCDIR}/array.mlc\" \"${LIBSCRIPT_SRCDIR}/math.mlc\" \"${LIBSCRIPT_SRCDIR}/math-foundation.mlc\" \"${LIBSCRIPT_SRCDIR}/type.mlc\" \"${LIBSCRIPT_SRCDIR}/file.mlc\" \"${LIBSCRIPT_SRCDIR}/stream.mlc\" \"${LIBSCRIPT_SRCDIR}/system.mlc\" \"${LIBSCRIPT_SRCDIR}/date.mlc\" \"${ENGINE_SRCDIR}/canvas.mlc\" \"${ENGINE_SRCDIR}/engine.mlc\" \"${ENGINE_SRCDIR}/widget.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "LIBSCRIPT_SRCDIR=\"${SRCROOT}/../../libscript/src\"\nLIBSCRIPT_LIST=\"${SRCROOT}/../../libscript/libstdscript-modules.list\"\nENGINE_SRCDIR=\"${SRCROOT}/../../engine/src\"\nENGINE_LIST=\"${SRCROOT}/../../engine/libkernel-modules.list\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\nLC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\"\nGRAMMAR_TEMPLATE=\"${SRCROOT}/src/grammar.g\"\nGRAMMAR_OUTPUT=\"${SRCROOT}/src/grammar_full.g\"\n\ncd src\necho \"${MODULE_DIR}\"\nmkdir -p \"_G_\"\n\n# Function for creating a list of MLC files for bootstrapping\nbootstrap_list () {\n    listfile=\"$1\"\n    srcdir=\"$2\"\n    for f in $(grep -v '^[\\#!]' < ${listfile}); do\n        echo \"${srcdir}/${f}\"\n    done\n}\n\nbootstrap_mlc () {\n    bootstrap_list ${LIBSCRIPT_LIST} ${LIBSCRIPT_SRCDIR}\n    bootstrap_list ${ENGINE_LIST} ${ENGINE_SRCDIR}\n}\n\n# Generate LCI files for all of the input MLC files\necho '### Generating interface files...'\nmkdir -p ${MODULE_DIR}\nfor f in $(bootstrap_mlc); do\n    ${LC_COMPILE} --modulepath ${MODULE_DIR} ${f} || exit $?\ndone\n\necho '### Generating grammar...'\n# Bootstrap all of the MLC files into a grammar file\n${LC_COMPILE} --bootstrap --modulepath ${MODULE_DIR} --template ${GRAMMAR_TEMPLATE} --output ${GRAMMAR_OUTPUT} $(bootstrap_mlc) || exit $?\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

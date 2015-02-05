@@ -14,7 +14,10 @@ LC_COMPILE ?= $(shell PATH=$(BUILD_DIR):$(PATH) \
 	              which lc-compile 2>/dev/null || \
 	              echo "lc-compile")
 
-MLC_SOURCES = $(shell cat $(MLC_LIST) | grep -v '^\#')
+# Remove comments and '!' prefixes to filenames (the flag indicates
+# that they shouldn't be used when bootstrapping, but since we're
+# building normally we can ignore that flag now)
+MLC_SOURCES = $(shell cat $(MLC_LIST) | grep -v '^\#' | sed -e's:^!::')
 
 MLC_BUILT_SOURCES = $(patsubst %.mlc,_mlc/%.c,$(MLC_SOURCES))
 

@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
     
     MCValueRef t_result;
     if (t_success)
-        t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("test"), nil, 0, t_result);
+        t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("Test"), nil, 0, t_result);
     
 	MCAutoStringRef t_message;
 	MCErrorRef t_error;
