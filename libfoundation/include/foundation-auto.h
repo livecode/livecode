@@ -26,7 +26,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 template<typename T> class MCAutoValueRefBase
 {
 public:
-
 	MCAutoValueRefBase(void)
 	{
 		m_value = nil;
@@ -92,9 +91,10 @@ public:
         return t_value;
     }
     
-private:
+protected:
 	T m_value;
-    
+
+private:
     MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
 };
 
@@ -108,17 +108,15 @@ public:
     
     bool MakeMutable(void)
     {
-        return MutableCopyAndRelease((T)m_value, (T&)m_value);
+        return MutableCopyAndRelease(MCAutoValueRefBase<T>::m_value, MCAutoValueRefBase<T>::m_value);
     }
     
     bool MakeImmutable(void)
     {
-        return ImmutableCopyAndRelease((T)m_value, (T&)m_value);
+        return ImmutableCopyAndRelease(MCAutoValueRefBase<T>::m_value, MCAutoValueRefBase<T>::m_value);
     }
     
 private:
-	T m_value;
-    
     MCAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& operator = (MCAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& x);
 };
 
