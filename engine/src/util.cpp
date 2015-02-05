@@ -1541,9 +1541,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 	Boolean allvalid = True;
 	uint2 npoints = 0;
 	uint4 l = MCStringGetLength(data);
-    char *t_data;
-    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
-	const char *sptr = t_data;
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
+	const char *sptr = *t_data;
 	while (l)
 	{
 		Boolean done1, done2;
@@ -1580,9 +1580,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 
 Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
-    char *t_data;
-    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
-	const char *sptr = t_data;
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
+	const char *sptr = *t_data;
 	uint4 l = MCStringGetLength(data);
 	Boolean done1, done2;
 	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.

@@ -2167,6 +2167,9 @@ void MCField::fscroll(Field_translations function, MCStringRef p_string, KeySym 
 		vscroll(getfheight() - fheight, True);
 		newval = texty;
 	break;
+    default:
+        // If no scroll action is given, then scroll hasn't changed so do nothing.
+        return;
 	}
 	resetscrollbars(True);
 	message_with_args(MCM_scrollbar_drag, newval);
