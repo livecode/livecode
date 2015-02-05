@@ -245,6 +245,15 @@ public class AmazonBillingProvider implements BillingProvider
             requestIds = new HashMap<String, String>();
         }
         
+        public void alert(String message)
+        {
+            AlertDialog.Builder bld = new AlertDialog.Builder(getActivity());
+            bld.setMessage(message);
+            bld.setNeutralButton("OK", null);
+            Log.d(TAG, "Showing alert dialog: " + message);
+            bld.create().show();
+        }
+        
         
         /**
          * Invoked once the observer is registered with the Puchasing Manager If the boolean is false, the application is
@@ -344,6 +353,10 @@ public class AmazonBillingProvider implements BillingProvider
             Log.v(TAG, "PurchaseUpdatesRequestStatus:" + response.getPurchaseUpdatesRequestStatus());
             Log.v(TAG, "RequestID:" + response.getRequestId());
             
+            // PM-2015-02-05: [[ Bug 14402 ]] Display a msg in case there are no previous purchases to restore
+            boolean t_did_restore;
+            t_did_restore = false;
+            
             // No implementation required when dealing solely with consumables
             switch (response.getPurchaseUpdatesRequestStatus())
             {
@@ -370,6 +383,7 @@ public class AmazonBillingProvider implements BillingProvider
                                 ownedItems.add(receipt.getSku());
                                 // onPurchaseStateChanged to be called with state = 5 (restored)
                                 mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),5);
+                                t_did_restore = true;
                                 break;
                             }
                             case SUBSCRIPTION:
@@ -393,6 +407,7 @@ public class AmazonBillingProvider implements BillingProvider
                                     ownedItems.add(receipt.getSku());
                                     // onPurchaseStateChanged to be called with state = 5 (restored)
                                     mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),5);
+                                    t_did_restore = true;
                                 }
                                 break;
                         }
@@ -408,6 +423,11 @@ public class AmazonBillingProvider implements BillingProvider
                 case FAILED:
                     // Provide the user access to any previously persisted entitlements.
                     break;
+            }
+            
+            if(!t_did_restore)
+            {
+                alert("You have no previous purchases to restore");
             }
         }
         

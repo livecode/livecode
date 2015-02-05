@@ -79,6 +79,10 @@ public class SamsungBillingProvider implements BillingProvider
     {
         public void OnSucceedGetInboxList(ArrayList<InBoxVO> inboxList)
         {
+            // PM-2015-02-05: [[ Bug 14402 ]] Display a msg in case there are no previous purchases to restore
+            boolean t_did_restore;
+            t_did_restore = false;
+
             for (InBoxVO inboxItem : inboxList)
             {
                 final String tItemId = inboxItem.getItemId();
@@ -92,9 +96,14 @@ public class SamsungBillingProvider implements BillingProvider
                     Log.d(TAG, "Item restored :" + tItemId);
                     // onPurchaseStateChanged to be called with state = 5 (restored)
                     mPurchaseObserver.onPurchaseStateChanged(tItemId, 5);
-
+                    t_did_restore = true;
                 }
 
+            }
+
+            if(!t_did_restore)
+            {
+                alert("You have no previous purchases to restore");
             }
 
             if (pendingPurchaseItemId != null)
@@ -115,6 +124,16 @@ public class SamsungBillingProvider implements BillingProvider
     /////////////////////////
 
     /* HELPER METHODS */
+
+    void alert(String message)
+    {
+        AlertDialog.Builder bld = new AlertDialog.Builder(getActivity());
+        bld.setMessage(message);
+        bld.setNeutralButton("OK", null);
+        Log.d(TAG, "Showing alert dialog: " + message);
+        bld.create().show();
+    }
+
 
     boolean loadBaseToLocalInventory(BaseVO baseVO)
     {

@@ -496,14 +496,25 @@ public class GoogleBillingProvider implements BillingProvider
 
             Log.d(TAG, "Initial inventory query finished; enabling main UI.");
 
+			// PM-2015-02-05: [[ Bug 14402 ]] Display a msg in case there are no previous purchases to restore
+			boolean t_did_restore;
+			t_did_restore = false;
+
             List<Purchase> purchaseList = inventory.getallpurchases();
+
             for (Purchase p : purchaseList)
             {
                 addPurchaseToLocalInventory(p);
 				ownedItems.add(p.getSku());
 				// onPurchaseStateChanged to be called with state = 5 (restored)
 				mPurchaseObserver.onPurchaseStateChanged(p.getSku(), 5);
+				t_did_restore = true;
             }
+
+			if(!t_did_restore)
+			{
+				alert("You have no previous purchases to restore");
+			}
         }
     };
 

@@ -461,7 +461,7 @@ void update_purchase_state(MCPurchase *p_purchase)
     // PM-2015-02-04: [[ Bug 14402 ]] Display an alert msg in case there is nothing to restore
     if (!s_did_restore)
     {
-        UIAlertView *t_alert = [[UIAlertView alloc] initWithTitle:@"Warning"
+        UIAlertView *t_alert = [[UIAlertView alloc] initWithTitle:@""
                                                         message:@"You have no previous purchases to restore"
                                                        delegate:nil
                                               cancelButtonTitle:@"OK"
