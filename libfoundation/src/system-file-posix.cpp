@@ -272,36 +272,24 @@ __MCSFileSetContents (MCStringRef p_native_path,
 	if (!t_temp_path_sys.Lock (*t_temp_native_path))
 		return false;
 
+	/* Save the umask, and set it to forbid group/other access to new
+	 * files.  We'll restore it after calling mkstemp. */
+	mode_t t_umask = ~(S_IRUSR | S_IWUSR);
+	t_umask = umask (t_umask);
+
 	/* mkstemp() modifies its argument.  The char array belongs to the
 	 * MCAutoStringRefAsSysString instance, so this is a bit of a hack
 	 * that depends on the char array not being shared. */
 	int t_temp_fd;
 	t_temp_fd = mkstemp ((char *) *t_temp_path_sys);
+	int t_save_errno = errno;
+
+	/* Restore the umask to its original value */
+	umask (t_umask);
 
 	if (0 > t_temp_fd)
 	{
-		return __MCSFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to create temporary file '%{path}': %s"), errno);
-	}
-
-	/* Set the mode.  The default permissions are the same as if the
-	 * file had been created by opening a stream for writing,
-	 * i.e. 0666 modified by the effective umask. */
-	mode_t t_mode;
-	mode_t t_umask = ~0;
-
-	t_umask = umask (t_umask); /* Get the umask */
-
-	t_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-	t_mode &= ~t_umask;
-
-	umask (t_umask); /* Reset the umask */
-
-	if (t_success)
-	{
-		if (0 != fchmod (t_temp_fd, t_mode))
-		{
-			t_success = __MCSFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to set permissions of file '%{path}': %s"), errno);
-		}
+		return __MCSFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to create temporary file '%{path}': %s"), t_save_errno);
 	}
 
 	/* Write the data into the temporary file */
@@ -318,6 +306,22 @@ __MCSFileSetContents (MCStringRef p_native_path,
 		if (t_written_len < 0)
 		{
 			t_success = __MCSFileThrowWriteErrorWithErrno (*t_temp_native_path, errno);
+		}
+	}
+
+	/* Set the mode.  The default permissions are the same as if the
+	 * file had been created by opening a stream for writing,
+	 * i.e. 0666 modified by the effective umask. */
+	mode_t t_mode;
+
+	t_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+	t_mode &= ~t_umask;
+
+	if (t_success)
+	{
+		if (0 != fchmod (t_temp_fd, t_mode))
+		{
+			t_success = __MCSFileThrowIOErrorWithErrno (*t_temp_native_path, MCSTR("Failed to set permissions of file '%{path}': %s"), errno);
 		}
 	}
 

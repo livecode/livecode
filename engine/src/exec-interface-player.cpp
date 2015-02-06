@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "player.h"
 #include "exec-interface.h"
+#include "filepath.h"
 
 #include "player.h"
 
@@ -249,23 +250,6 @@ void MCPlayer::Redraw(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]] Update to MCStringRef
-static bool MCPathIsAbsolute(MCStringRef p_path)
-{
-    if (MCStringIsEmpty(p_path))
-        return false;
-
-    return MCStringGetCharAtIndex(p_path, 0) == '/'
-            || MCStringGetCharAtIndex(p_path, 0) == ':';
-}
-
-static bool MCPathIsRemoteURL(MCStringRef p_path)
-{
-    return MCStringBeginsWithCString(p_path, (char_t*)"http://", kMCStringOptionCompareCaseless) ||
-            MCStringBeginsWithCString(p_path, (char_t*)"https://", kMCStringOptionCompareCaseless) ||
-            MCStringBeginsWithCString(p_path, (char_t*)"ftp://", kMCStringOptionCompareCaseless);
-}
 
 // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
 bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename)

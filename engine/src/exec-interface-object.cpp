@@ -3480,7 +3480,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
     
             // MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
             //   'filename' of an image if it is non-empty or the image has a filename.
-            if (s_preprocess_props[j].prop == P_FILE_NAME && gettype() == CT_IMAGE &&
+            if (te->which == P_FILE_NAME && gettype() == CT_IMAGE &&
                 MCValueIsEmpty(t_value) && !getflag(F_HAS_FILENAME))
                 continue;
             

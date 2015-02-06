@@ -50,7 +50,6 @@
 --   BD2) DEFINITION'property(Getter, Setter) - both id's must be handlers or variables
 --
 --   BT1) TYPE'named(Id) - Id must be bound to a type.
---   BT2) TYPE'opaque(FIELD'action(Handler)) - Handler must be bound to a handler.
 --
 --   BS1) STATEMENT'repeatupto(Slot) - Slot must be bound to a variable
 --   BS2) STATEMENT'repeatdownto(Slot) - Slot must be bound to a variable
@@ -861,7 +860,9 @@
         (|
             where(Type -> boolean(_))
         ||
-            where(Type -> bool(_))
+            where(Type -> named(_, Id))
+            Id'Name -> Name
+            IsNameEqualToString(Name, "bool")
         ||
             Error_IterateSyntaxMethodMustReturnBoolean(Position)
         |)
@@ -1427,6 +1428,7 @@
 
 --------------------------------------------------------------------------------
 
+-- TODO: Remove - we don't restrict types anymore - caveat coder!
 'sweep' CheckDeclaredTypes(ANY)
 
     'rule' CheckDeclaredTypes(DEFINITION'variable(Position, _, _, Type)):
@@ -1434,7 +1436,7 @@
         (|
             IsHighLevelType(Type)
         ||
-            Error_VariableMustHaveHighLevelType(Position)
+            --Error_VariableMustHaveHighLevelType(Position)
         |)
         
     'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(_, _, _, Signature, _)):
@@ -1445,7 +1447,7 @@
         (|
             IsHighLevelType(Type)
         ||
-            Error_ParameterMustHaveHighLevelType(Position)
+            --Error_ParameterMustHaveHighLevelType(Position)
         |)
         
     'rule' CheckDeclaredTypes(STATEMENT'variable(Position, _, Type)):
@@ -1453,7 +1455,7 @@
         (|
             IsHighLevelType(Type)
         ||
-            Error_VariableMustHaveHighLevelType(Position)
+            --Error_VariableMustHaveHighLevelType(Position)
         |)
 
 'condition' IsHighLevelType(TYPE)
@@ -1473,7 +1475,6 @@
         IsHighLevelType(Type)
     'rule' IsHighLevelType(handler(_, _)):
     'rule' IsHighLevelType(record(_, _, _)):
-    'rule' IsHighLevelType(pointer(_)):
     'rule' IsHighLevelType(boolean(_)):
     'rule' IsHighLevelType(integer(_)):
     'rule' IsHighLevelType(real(_)):

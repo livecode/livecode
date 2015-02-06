@@ -91,6 +91,7 @@
     RepeatSyntaxGrammar
     PushEmptySyntaxGrammar
     PushKeywordSyntaxGrammar
+    PushUnreservedKeywordSyntaxGrammar
     PushMarkedDescentSyntaxGrammar
     PushDescentSyntaxGrammar
     PushMarkedTrueSyntaxGrammar
@@ -320,6 +321,8 @@
 'condition' IsNameEqualToString(NAME, STRING)
 'condition' IsStringEqualToString(STRING, STRING)
 
+'condition' IsStringEqualToString(STRING, STRING)
+
 --------------------------------------------------------------------------------
 
 'action' ReorderOperatorExpression(Sentinal: INT)
@@ -384,6 +387,7 @@
 'action' RepeatSyntaxGrammar()
 'action' PushEmptySyntaxGrammar()
 'action' PushKeywordSyntaxGrammar(Token: STRING)
+'action' PushUnreservedKeywordSyntaxGrammar(Token: STRING)
 'action' PushMarkedDescentSyntaxGrammar(Index: INT, Rule: NAME, LMode: INT, RMode: INT)
 'action' PushDescentSyntaxGrammar(Rule: NAME)
 'action' PushMarkedTrueSyntaxGrammar(Index: INT)

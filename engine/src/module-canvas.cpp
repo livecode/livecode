@@ -1697,6 +1697,21 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	MCImageRepRelease(t_image_rep);
 }
 
+void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef &r_image)
+{
+	MCImageRep *t_image_rep;
+	t_image_rep = nil;
+	
+	if (!MCImageGetFileRepForResource(p_resource, t_image_rep))
+	{
+		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
+		return;
+	}
+	
+	MCCanvasImageMake(t_image_rep, r_image);
+	MCImageRepRelease(t_image_rep);
+}
+
 void MCCanvasImageMakeWithData(MCDataRef p_data, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
@@ -5557,7 +5572,7 @@ bool MCCanvasCreateNamedErrorType(MCNameRef p_name, MCStringRef p_message, MCTyp
 
 bool MCCanvasThrowError(MCTypeInfoRef p_error_type)
 {
-	MCAutoValueRefBase<MCErrorRef> t_error;
+	MCAutoErrorRef t_error;
 	if (!MCErrorCreate(p_error_type, nil, &t_error))
 		return false;
 	
@@ -5671,7 +5686,7 @@ void MCCanvasStringsInitialize()
 	MCMemoryClear(s_effect_type_map, sizeof(s_effect_type_map));
 	MCMemoryClear(s_effect_property_map, sizeof(s_effect_property_map));
 	MCMemoryClear(s_gradient_type_map, sizeof(s_gradient_type_map));
-	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_gradient_type_map));
+	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_canvas_fillrule_map));
 	MCMemoryClear(s_image_filter_map, sizeof(s_image_filter_map));
 	MCMemoryClear(s_join_style_map, sizeof(s_join_style_map));
 	MCMemoryClear(s_cap_style_map, sizeof(s_cap_style_map));

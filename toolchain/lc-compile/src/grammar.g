@@ -324,10 +324,6 @@
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
         Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
 
-    'rule' TypeDefinition(-> type(Position, Access, Name, opaque(Position, Base, Fields))):
-        Access(-> Access) "opaque" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
-            TypeFields(-> Fields)
-        "end" "type"
         
     'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
         Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
@@ -554,32 +550,6 @@
         
     'rule' Type(-> optional(Position, Base)):
         "optional" @(-> Position) Type(-> Base)
-
-    'rule' Type(-> pointer(Position)):
-        "pointer" @(-> Position)
-
-    'rule' Type(-> bool(Position)):
-        "bool" @(-> Position)
-
-    'rule' Type(-> int(Position)):
-        "int" @(-> Position)
-    
-    'rule' Type(-> uint(Position)):
-        "uint" @(-> Position)
-
-    'rule' Type(-> int(Position)):
-        "index" @(-> Position)
-    
-    'rule' Type(-> uint(Position)):
-        "uindex" @(-> Position)
-
-    'rule' Type(-> float(Position)):
-        "float" @(-> Position)
-
-    'rule' Type(-> double(Position)):
-        "double" @(-> Position)
-
-    --
 
     'rule' Type(-> any(Position)):
         "any" @(-> Position)
@@ -957,6 +927,9 @@
         
     'rule' AtomicSyntax(-> keyword(Position, Value)):
         STRING_LITERAL(-> Value) @(-> Position)
+
+    'rule' AtomicSyntax(-> unreservedkeyword(Position, Value)):
+        STRING_LITERAL(-> Value) @(-> Position) "!"
         
     'rule' AtomicSyntax(-> rule(Position, Name)):
         "<" @(-> Position) Identifier(-> Name) ">"
@@ -1061,6 +1034,13 @@
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier
+        
+    'rule' Identifier(-> Id):
+        CustomKeywords(-> String) @(-> Position)
+        MakeNameLiteral(String -> Identifier)
+        Id::ID
+        Id'Position <- Position
+        Id'Name <- Identifier
 
 'nonterm' StringyIdentifier(-> ID)
 
@@ -1160,6 +1140,11 @@
 'nonterm' CustomIterators(-> EXPRESSION)
     'rule' CustomIterators(-> nil):
         "THISCANNEVERHAPPEN"
+'nonterm' CustomKeywords(-> STRING)
+    'rule' CustomKeywords(-> String):
+        "THISCANNEVERHAPPEN"
+        where("THISCANNEVERHAPPEN" -> String)
+
 
 
 

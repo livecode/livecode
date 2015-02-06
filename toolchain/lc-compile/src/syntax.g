@@ -107,6 +107,9 @@
     'rule' GenerateSyntax(SYNTAX'keyword(_, Value)):
         PushKeywordSyntaxGrammar(Value)
 
+    'rule' GenerateSyntax(SYNTAX'unreservedkeyword(_, Value)):
+        PushUnreservedKeywordSyntaxGrammar(Value)
+
     'rule' GenerateSyntax(SYNTAX'markedrule(_, Variable, Id)):
         Id'Name -> Name
         Variable'Meaning -> syntaxmark(Info)

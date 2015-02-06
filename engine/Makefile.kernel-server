@@ -9,6 +9,7 @@ SOURCES=\
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	date.cpp debug.cpp dispatch.cpp dllst.cpp \
 	express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
+	filepath.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp \
 	igif.cpp iimport.cpp ijpg.cpp \
@@ -65,6 +66,7 @@ SOURCES=\
 	modules.cpp \
 	module-canvas.cpp \
 	module-engine.cpp \
+	module-resources.cpp \
 	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
 	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
 	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \

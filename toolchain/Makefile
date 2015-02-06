@@ -452,7 +452,9 @@ lc-compile-clean:
 SCRIPT_mlcdir = $(top_srcdir)/libscript/src
 SCRIPT_mlc_list = $(top_srcdir)/libscript/libstdscript-modules.list
 
-SCRIPT_mlc = $(shell cat $(SCRIPT_mlc_list) | grep -v '^\#')
+# Filter out all filenames with names prefixed with ! (because they
+# should be omitted from bootstrapping), as well as comments.
+SCRIPT_mlc = $(shell cat $(SCRIPT_mlc_list) | grep -v '^[!\#]')
 
 ########## engine MLC
 
