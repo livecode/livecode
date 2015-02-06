@@ -71,19 +71,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    
    local tSDKs
    if pTarget is "Device" then      
-      if revIDEDeployIOSSanatizeSystemVersion() < 100700 then   
-         
-         get revIDEDeployIOSGetDeviceSDK("5.0")
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") then
-            throw "performing iOS device builds requires the iOS 5.0 SDK platform to be installed (available with XCode 4.2)"
-         end if 
-         
-         put it into tSDKs["arm"]["root path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["arm"]["sdk path"]
-         put "5_0" into tSDKs["arm"]["suffix"] 
-         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
-         
-      else if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
+      -- PM-2015-02-06: [[ Bug 14422 ]] Drop support for OSX 10.6 and iOS 5.0 
+      if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
          
          -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
          --  
