@@ -2607,7 +2607,7 @@ void MCMakeGroup::exec_ctxt(MCExecContext& ctxt)
 			
 			// MW-2013-06-20: [[ Bug 10863 ]] Only objects which are controls, and have a
 			//   parent are groupable.
-			if (optr->gettype() > CT_FIELD ||
+			if (optr->gettype() > CT_LAST_CONTROL ||
 				optr->gettype() < CT_GROUP ||
 				optr->getparent() == NULL ||
 				optr->getparent()->gettype() != CT_CARD)
