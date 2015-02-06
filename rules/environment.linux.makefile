@@ -37,17 +37,17 @@ PRODUCT_DIR=$(BUILD_DIR)
 
 PREBUILT_LIB_DIR=$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)
 
-ifeq ($(OBJCOPY),)
-  	OBJCOPY=objcopy
-endif
+OBJCOPY ?= objcopy
+STRIP ?= strip
+AR ?= ar
 
-ifeq ($(STRIP),)
-	STRIP=strip
-endif
+LC_COMPILE ?= $(shell PATH=$(BUILD_DIR):$(PATH) \
+	              which lc-compile 2>/dev/null || \
+	              echo "lc-compile")
 
-ifeq ($(AR),)
-	AR=ar
-endif
+LC_RUN ?= $(shell PATH=$(BUILD_DIR):$(PATH) \
+	          which lc-run 2>/dev/null || \
+	          echo "lc-run")
 
 # Sometimes it's useful to print actions that a make rule is
 # performing as if they're being run by make.  In that case, use the
