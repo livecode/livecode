@@ -5557,7 +5557,7 @@ bool MCCanvasCreateNamedErrorType(MCNameRef p_name, MCStringRef p_message, MCTyp
 
 bool MCCanvasThrowError(MCTypeInfoRef p_error_type)
 {
-	MCAutoValueRefBase<MCErrorRef> t_error;
+	MCAutoErrorRef t_error;
 	if (!MCErrorCreate(p_error_type, nil, &t_error))
 		return false;
 	

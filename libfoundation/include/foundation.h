@@ -1240,7 +1240,20 @@ template<typename T> inline T MCValueRetain(T value)
 // Utility function for assigning to MCValueRef vars.
 template<typename T> inline void MCValueAssign(T& dst, T src)
 {
+    if (src == dst)
+        return;
+    
 	MCValueRetain(src);
+	MCValueRelease(dst);
+	dst = src;
+}
+
+// Utility function for assigning to MCValueRef vars.
+template<typename T> inline void MCValueAssignAndRelease(T& dst, T src)
+{
+    if (src == dst)
+        return;
+    
 	MCValueRelease(dst);
 	dst = src;
 }
