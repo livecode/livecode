@@ -9,6 +9,7 @@ SOURCES=\
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	customprinter.cpp date.cpp debug.cpp dispatch.cpp dllst.cpp \
 	express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
+	filepath.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp \
 	graphicscontext.cpp \
 	group.cpp \
@@ -79,6 +80,7 @@ SOURCES=\
 	exec-interface-vclip.cpp exec-keywords.cpp exec-legacy.cpp exec-dialog.cpp exec-strings-chunk.cpp \
 	module-canvas.cpp \
 	module-engine.cpp \
+	module-resources.cpp \
 	modules.cpp \
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \

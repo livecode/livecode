@@ -56,6 +56,7 @@ struct MCLoadedExtension
 {
     MCLoadedExtension *next;
     MCStringRef filename;
+	MCStringRef resource_path;
     MCScriptModuleRef module;
     MCScriptInstanceRef instance;
 };
@@ -128,7 +129,36 @@ bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_
     return true;
 }
 
-void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
+bool MCEngineAddResourcePathForModule(MCScriptModuleRef p_module, MCStringRef p_resource_path)
+{
+	for (MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext->next)
+	{
+		if (t_ext->module == p_module)
+		{
+			MCAutoStringRef t_resolved_path;
+			if (!MCS_resolvepath(p_resource_path, &t_resolved_path))
+				return false;
+			
+			MCValueAssign(t_ext->resource_path, *t_resolved_path);
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef &r_resource_path)
+{
+	for (const MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext->next)
+	{
+		if (t_ext->module == p_module)
+			return MCStringCopy(t_ext->resource_path != nil ? t_ext->resource_path : kMCEmptyString, r_resource_path);
+	}
+	
+	return false;
+}
+
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
 {
     MCAutoStringRef t_resolved_filename;
     /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
@@ -155,6 +185,8 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     MCValueRelease(t_stream);
     
     MCEngineAddExtensionFromModule(*t_resolved_filename, t_module);
+	if (p_resource_path != nil)
+		MCEngineAddResourcePathForModule(t_module, p_resource_path);
     
     MCScriptReleaseModule(t_module);
     
@@ -173,6 +205,7 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
                 MCScriptReleaseInstance(t_ext -> instance);
             MCScriptReleaseModule(t_ext -> module);
             MCValueRelease(t_ext -> filename);
+			MCValueRelease(t_ext -> resource_path);
             if (t_previous != nil)
                 t_previous -> next = t_ext -> next;
             else

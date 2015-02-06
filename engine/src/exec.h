@@ -3806,7 +3806,7 @@ void MCEngineExecUnlockMessages(MCExecContext& ctxt);
 void MCEngineExecSet(MCExecContext& ctxt, MCProperty *target, MCValueRef value);
 void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef value);
 
-void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename);
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename, MCStringRef resource_path);
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename);
 
 void MCEngineSetCaseSensitive(MCExecContext& ctxt, bool p_value);
