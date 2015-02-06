@@ -215,6 +215,8 @@ lc-test: libstdscript libfoundation
 	$(MAKE) -C ./toolchain lc-test
 
 ########## Tests
+lc-stdlib-check: lc-compile lc-run
+	$(MAKE) -C ./tests/lcb-stdlib
 lc-run-check: lc-compile lc-run
 	$(MAKE) -C ./tests/lc-run check
 lc-test-check: lc-compile lc-test
@@ -241,9 +243,9 @@ thirdparty: libffi libz libjpeg libpcre libpng libgif libopenssl libskia
 thirdparty: libcairopdf libpq libmysql libsqlite libiodbc libxml libxslt
 thirdparty: libzip
 
-check: lc-run-check lc-test-check
+check: lc-run-check lc-test-check lc-stdlib-check
 
 clean:
-	-rm -rf _build/linux _cache/linux
+	-rm -rf _build/linux _cache/linux _tests
 	-rm -rf `find . -type d -name _mlc`
 clean: lc-compile-clean
