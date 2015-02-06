@@ -11,6 +11,8 @@
 		4D21B5FF19E3DFCB00B64BEF /* script-module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B5FE19E3DFCB00B64BEF /* script-module.cpp */; };
 		4D21B60319E3DFF800B64BEF /* script-instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60219E3DFF800B64BEF /* script-instance.cpp */; };
 		4D322F2219DD95A4008476D3 /* script-object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D322F2119DD95A4008476D3 /* script-object.cpp */; };
+		4D4067D11A84DCD200A5B6BC /* unittest.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C793E7761A83789000D5E682 /* unittest.mlc */; };
+		4D4067D21A84DCD200A5B6BC /* unittest-impl.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C793E7751A83789000D5E682 /* unittest-impl.mlc */; };
 		4D44E3641A139F460073FFA2 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D322F1619DD945E008476D3 /* libscript.a */; };
 		4D44E3651A139F480073FFA2 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E35F1A139D8F0073FFA2 /* libfoundation.a */; };
 		4D44E3671A139F590073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3661A139F590073FFA2 /* CoreFoundation.framework */; };
@@ -74,6 +76,13 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
+		4D4067D61A84DCD200A5B6BC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D79B6B11A273C4E00DD750C /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C72BED781A838B0D009B3CEB;
+			remoteInfo = "lc-run";
+		};
 		4D44E35E1A139D8F0073FFA2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */;
@@ -367,6 +376,7 @@
 				4D79B6BB1A273C4E00DD750C /* lc-compile */,
 				4D79B6BD1A273C4E00DD750C /* lc-bootstrap-compile */,
 				4D79B6BF1A273C4E00DD750C /* lc-test */,
+				4D4067D71A84DCD200A5B6BC /* lc-run */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -487,6 +497,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		4D4067D71A84DCD200A5B6BC /* lc-run */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-run";
+			remoteRef = 4D4067D61A84DCD200A5B6BC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		4D44E35F1A139D8F0073FFA2 /* libfoundation.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -534,6 +551,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D4067D11A84DCD200A5B6BC /* unittest.mlc in Sources */,
+				4D4067D21A84DCD200A5B6BC /* unittest-impl.mlc in Sources */,
 				4D4EAFDD1A7A671D0067E90B /* foreign.mlc in Sources */,
 				C741ECD11A6933CF0096D171 /* stream.mlc in Sources */,
 				76FEC2361A5D43E000188FD4 /* file.mlc in Sources */,

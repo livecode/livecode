@@ -924,7 +924,7 @@
 				"$(SRCROOT)/../../libscript/src/system.mlc",
 				"$(SRCROOT)/../../libscript/src/foreign.mlc",
 				"$(SRCROOT)/../../libscript/libstdscript-modules.list",
-				"$(SRCROOT)/../../libscritp/src/unittest.mlc",
+				"$(SRCROOT)/../../libscript/src/unittest.mlc",
 			);
 			name = Bootstrap;
 			outputPaths = (
@@ -1456,6 +1456,7 @@
 				C72BED7D1A838B0D009B3CEB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
