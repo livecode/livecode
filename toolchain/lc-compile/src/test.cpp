@@ -19,6 +19,8 @@
 #include "foundation-system.h"
 #include "script.h"
 
+extern bool MCModulesInitialize(void);
+
 extern "C" void MCStringExecPutStringAfter(void);
 extern "C" void MCArithmeticExecAddIntegerToInteger(void);
 extern "C" void MCCharFetchCharOf(void);
@@ -96,6 +98,7 @@ int main(int argc, char *argv[])
     MCInitialize();
     MCSInitialize();
     MCScriptInitialize();
+    MCModulesInitialize();
     
     // Skip command arg.
     argc -= 1;
@@ -125,7 +128,7 @@ int main(int argc, char *argv[])
     
     MCValueRef t_result;
     if (t_success)
-        t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("test"), nil, 0, t_result);
+        t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("Test"), nil, 0, t_result);
     
 	MCAutoStringRef t_message;
 	MCErrorRef t_error;

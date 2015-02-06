@@ -49,3 +49,15 @@ ifeq ($(AR),)
 	AR=ar
 endif
 
+# Sometimes it's useful to print actions that a make rule is
+# performing as if they're being run by make.  In that case, use the
+# $(_PRINT_RULE) macro, e.g.
+#
+# mytarget:
+#         @for foo in $(LIST); do \
+#           echo "$(TOOL) $$foo" $(_PRINT_RULE); \
+#           $(TOOL) $$foo || exit $?; \
+#         done
+ifneq (,$(findstring s,$(MAKEFLAGS)))
+	_PRINT_RULE = > /dev/null
+endif

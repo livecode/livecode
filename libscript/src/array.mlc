@@ -20,6 +20,8 @@ This library consists of the operations on arrays included in the standard libra
 
 module com.livecode.array
 
+use com.livecode.foreign
+
 public foreign handler MCArrayEvalKeysOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
 public foreign handler MCArrayEvalElementsOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
 

@@ -260,8 +260,7 @@ void MakeStringLiteral(const char *p_token, long *r_literal)
     *r_literal = (long)t_value;
 }
 
-                    
-void MakeNameLiteral(const char *p_token, NameRef *r_literal)
+void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_literal)
 {
     NameRef t_name;
     for(t_name = s_names; t_name != NULL; t_name = t_name -> next)
@@ -274,7 +273,7 @@ void MakeNameLiteral(const char *p_token, NameRef *r_literal)
         if (t_name == NULL)
             Fatal_OutOfMemory();
         
-        t_name -> token = strdup(p_token);
+        t_name -> token = strndup(p_token, p_token_length);
         if (t_name -> token == NULL)
             Fatal_OutOfMemory();
         
@@ -285,6 +284,11 @@ void MakeNameLiteral(const char *p_token, NameRef *r_literal)
     *r_literal = t_name;
 }
 
+void MakeNameLiteral(const char *p_token, NameRef *r_literal)
+{
+    MakeNameLiteralN(p_token, strlen(p_token), r_literal);
+}
+
 void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
 {
     *r_string = ((NameRef)p_literal) -> token;
@@ -293,6 +297,11 @@ void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
 int IsNameEqualToString(NameRef p_name, const char *p_string)
 {
     return strcmp(p_name -> token, p_string) == 0;
+}
+
+int IsStringEqualToString(const char *p_left, const char *p_right)
+{
+    return strcmp(p_left, p_right) == 0;
 }
 
 void NegateReal(long p_real, long *r_real)

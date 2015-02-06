@@ -20,6 +20,8 @@ This library consists of the operations on lists included in the standard librar
 
 module com.livecode.list
 
+use com.livecode.foreign
+
 public foreign handler MCListEvalHeadOf(in Target as list, out Value as optional any) as undefined binds to "<builtin>"
 public foreign handler MCListEvalTailOf(in Target as list, out Value as optional any) as undefined binds to "<builtin>"
 

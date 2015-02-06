@@ -271,19 +271,6 @@
         OutputWrite("array")
     'rule' GenerateManifestTypeBody(list(_, _)):
         OutputWrite("list")
-        
-    'rule' GenerateManifestTypeBody(pointer(_)):
-        OutputWrite("pointer")
-    'rule' GenerateManifestTypeBody(bool(_)):
-        OutputWrite("bool")
-    'rule' GenerateManifestTypeBody(int(_)):
-        OutputWrite("int")
-    'rule' GenerateManifestTypeBody(uint(_)):
-        OutputWrite("uint")
-    'rule' GenerateManifestTypeBody(float(_)):
-        OutputWrite("float")
-    'rule' GenerateManifestTypeBody(double(_)):
-        OutputWrite("double")
 
     'rule' GenerateManifestTypeBody(Type):
         print(Type)
@@ -778,17 +765,10 @@
     'rule' CreateParameterRegisters(nil):
         -- nothing
 
-'action' CreateVariableRegisters(STATEMENT)
+'sweep' CreateVariableRegisters(ANY)
 
-    'rule' CreateVariableRegisters(sequence(Left, Right)):
-        CreateVariableRegisters(Left)
-        CreateVariableRegisters(Right)
-
-    'rule' CreateVariableRegisters(variable(_, _, _)): 
+    'rule' CreateVariableRegisters(STATEMENT'variable(_, _, _)):
         EmitCreateRegister(-> Register)
-
-    'rule' CreateVariableRegisters(_):
-        -- nothing
 
 'action' DestroyParameterRegisters(PARAMETERLIST)
 
@@ -1731,10 +1711,6 @@
         GenerateHandlerTypeParameters(Parameters)
         EmitEndHandlerType(-> Index)
 
-    'rule' GenerateBaseType(opaque(_, _, _) -> Index):
-        -- TODO
-        EmitUndefinedType(-> Index)
-
     'rule' GenerateBaseType(any(_) -> Index):
         EmitAnyType(-> Index)
     'rule' GenerateBaseType(undefined(_) -> Index):
@@ -1756,19 +1732,6 @@
         EmitArrayType(-> Index)
     'rule' GenerateBaseType(list(_, _) -> Index):
         EmitListType(-> Index)
-        
-    'rule' GenerateBaseType(pointer(_) -> Index):
-        EmitPointerType(-> Index)
-    'rule' GenerateBaseType(bool(_) -> Index):
-        EmitBoolType(-> Index)
-    'rule' GenerateBaseType(int(_) -> Index):
-        EmitIntType(-> Index)
-    'rule' GenerateBaseType(uint(_) -> Index):
-        EmitUIntType(-> Index)
-    'rule' GenerateBaseType(float(_) -> Index):
-        EmitFloatType(-> Index)
-    'rule' GenerateBaseType(double(_) -> Index):
-        EmitDoubleType(-> Index)
 
     'rule' GenerateBaseType(Type -> 0):
         print(Type)
