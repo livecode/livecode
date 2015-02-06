@@ -198,6 +198,7 @@ bool MCFiltersUrlDecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
 
     if (!t_buffer . New(t_srclen))
     {
+        MCMemoryDeleteArray(t_srcptr);
         return false;
     }
 
