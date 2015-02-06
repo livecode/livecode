@@ -1165,10 +1165,19 @@ bool MCStringIsNative(MCStringRef self)
 	return (self -> flags & kMCStringFlagIsNotNative) == 0;
 }
 
+// AL-2015-02-06: [[ Bug 14504 ]] Ensure 'checked' flag is checked against the direct string.
+static bool MCStringIsChecked(MCStringRef self)
+{
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    return (self -> flags & kMCStringFlagIsChecked) != 0;
+}
+
 bool MCStringCantBeNative(MCStringRef self, MCStringOptions p_options)
 {
     return ((!MCStringCanBeNative(self) && (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded))
-            || ((self -> flags & kMCStringFlagIsChecked) != 0 && MCStringIsUncombined(self)));
+            || (MCStringIsChecked(self) && MCStringIsUncombined(self)));
 }
 
 bool MCStringCanBeNative(MCStringRef self)
@@ -1182,13 +1191,21 @@ bool MCStringCanBeNative(MCStringRef self)
 	return (self -> flags & kMCStringFlagCanBeNative) != 0;
 }
 
+// AL-2015-02-06: [[ Bug 14504 ]] Ensure 'simple' flag is checked against the direct string.
 bool MCStringIsSimple(MCStringRef self)
 {
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
     return (self -> flags & kMCStringFlagIsSimple) != 0;
 }
 
+// AL-2015-02-06: [[ Bug 14504 ]] Ensure 'uncombined' flag is checked against the direct string.
 bool MCStringIsUncombined(MCStringRef self)
 {
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
     return (self -> flags & kMCStringFlagIsUncombined) != 0;
 }
 
@@ -1280,6 +1297,10 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
 bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &r_out_range)
 {    
     MCAssert(self != nil);
+    
+    // AL-2015-02-06: [[ Bug 14504 ]] Use direct string for checks here, as the flags are not set on the indirect string.
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
     
     // Shortcut for strings containing only BMP characters
     if (MCStringIsNative(self) || (MCStringIsSimple(self) && MCStringIsUncombined(self)))
@@ -1383,7 +1404,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
 {
     // SN-2014-04-11 [[ FasterStrings ]] Process a checking of the string - in case we can ensure it is
     // combining chars/surrogate pairs-free
-    if ((self -> flags & kMCStringFlagIsChecked) == 0)
+    if (!MCStringIsChecked(self))
     {        
         MCRange t_input, t_out;
         t_input . offset = 0;
@@ -1522,7 +1543,7 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
 {
     // SN-2014-04-11 [[ FasterStrings ]] Process a checking of the string - in case we can ensure it is
     // combining chars/surrogate pairs-free
-    if ((self -> flags & kMCStringFlagIsChecked) == 0)
+    if (!MCStringIsChecked(self))
     {
         MCRange t_input, t_out;
         t_input . offset = 0;
@@ -5033,14 +5054,6 @@ static bool __MCStringCreateIndirect(__MCString *string, __MCString*& r_string)
     self -> string = MCValueRetain(string);
     self -> flags |= kMCStringFlagIsIndirect | kMCStringFlagIsMutable;
     
-    if (!MCStringIsNative(string))
-    {
-        self -> flags |= kMCStringFlagIsNotNative;
-        // AL-2015-02-05: [[ Bug 14504 ]] Ensure 'CanBeNative' flag is preserved when making a string indirect
-        if (MCStringCanBeNative(string))
-            self -> flags |= kMCStringFlagCanBeNative;
-    }
-    
     r_string = self;
     return true;
 }
@@ -5209,7 +5222,7 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
         {
             t_string -> chars = self -> chars;
             t_string -> flags |= kMCStringFlagIsNotNative;
-            // AL-2015-02-05: [[ Bug 14504 ]] Ensure 'CanBeNative' flag is preserved when making resolving an indirect string.
+            // AL-2015-02-05: [[ Bug 14504 ]] Ensure 'CanBeNative' flag is preserved when making a new direct string.
             if (MCStringCanBeNative(self))
                 t_string -> flags |= kMCStringFlagCanBeNative;
         }
