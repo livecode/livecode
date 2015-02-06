@@ -76,8 +76,14 @@ static void _PrintPosition(long p_position)
 static void _Error(long p_position, const char *p_message)
 {
     _PrintPosition(p_position);
-    fprintf(stderr, "%s\n", p_message);
+    fprintf(stderr, "error: %s\n", p_message);
     s_error_count += 1;
+}
+
+static void _Warning(long p_position, const char *p_message)
+{
+    _PrintPosition(p_position);
+    fprintf(stderr, "warning: %s\n", p_message);
 }
 
 static void _ErrorS(long p_position, const char *p_message, const char *p_string)
@@ -174,6 +180,11 @@ DEFINE_ERROR(ParameterMustHaveHighLevelType, "Inappropriate type for parameter")
 DEFINE_ERROR_I(CannotAssignToHandlerId, "'%s' is a handler id and cannot be assigned to")
 
 DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler type to be called")
+
+#define DEFINE_WARNING(Name, Message) \
+    void Warning_##Name(long p_position) { _Warning(p_position, Message); }
+
+DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses should come after use clauses")
 
 ////////////////////////////////////////////////////////////////////////////////
 

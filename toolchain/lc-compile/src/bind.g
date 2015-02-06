@@ -31,7 +31,7 @@
 -- the defining id.
 'action' Bind(MODULE, MODULELIST)
 
-    'rule' Bind(Module:module(Position, Kind, Name, _, Imports, Definitions), ImportedModules):
+    'rule' Bind(Module:module(Position, Kind, Name, Imports, Definitions), ImportedModules):
         DefineModuleId(Name)
 
         -- Make sure all the imported modules are bound
@@ -128,6 +128,9 @@
     'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
 
+    'rule' DeclareImportedDefinitions(metadata(_, _, _)):
+        -- do nothing
+
     'rule' DeclareImportedDefinitions(nil):
         -- do nothing
 
@@ -184,6 +187,9 @@
     'rule' Declare(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
     
+    'rule' Declare(metadata(_, _, _)):
+        -- do nothing
+        
     'rule' Declare(nil):
         -- do nothing
 
@@ -254,7 +260,10 @@
     'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, Methods)):
         DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
     
-    'rule' Define(ModuleId, nil):
+    'rule' Define(_, metadata(_, _, _)):
+        -- do nothing
+        
+    'rule' Define(_, nil):
         -- do nothing
 
 'action' DefineParameters(ID, PARAMETERLIST)
@@ -671,7 +680,7 @@
 
 'sweep' DumpBindings(ANY)
 
-    'rule' DumpBindings(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
+    'rule' DumpBindings(MODULE'module(_, Kind, Name, Imports, Definitions)):
         DumpId("module", Name)
         DumpBindings(Imports)
         DumpBindings(Definitions)

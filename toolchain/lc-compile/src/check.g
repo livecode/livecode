@@ -1134,7 +1134,7 @@
 
 'sweep' CheckInvokes(ANY)
 
-    'rule' CheckInvokes(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
+    'rule' CheckInvokes(MODULE'module(_, Kind, Name, Imports, Definitions)):
         (|
             ne(Kind, widget)
             (|
