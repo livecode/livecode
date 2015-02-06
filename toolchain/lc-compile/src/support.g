@@ -321,8 +321,6 @@
 'condition' IsNameEqualToString(NAME, STRING)
 'condition' IsStringEqualToString(STRING, STRING)
 
-'condition' IsStringEqualToString(STRING, STRING)
-
 --------------------------------------------------------------------------------
 
 'action' ReorderOperatorExpression(Sentinal: INT)
