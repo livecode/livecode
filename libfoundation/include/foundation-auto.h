@@ -294,6 +294,7 @@ public:
     MCAutoStringRefAsUTF8String(void)
     {
         m_utf8string = nil;
+		m_size = 0;
     }
     
     ~MCAutoStringRefAsUTF8String(void)
