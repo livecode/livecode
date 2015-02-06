@@ -2456,6 +2456,7 @@
 		BEF9B8641A3758C000D3B706 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = rsrc/pt.lproj/Localisation.strings; sourceTree = "<group>"; };
 		BEFE81D317B2B32800C9D14F /* dskmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmac.cpp; path = src/dskmac.cpp; sourceTree = "<group>"; };
 		C74D7EE51A263A2200BC7FE8 /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = /Users/peterbrett/git/livecode/thirdparty/libffi/../../_build/mac/Debug/libffi.a; sourceTree = "<absolute>"; };
+		C77AA9811A83868600AAE40E /* libkernel-modules.list */ = {isa = PBXFileReference; lastKnownFileType = text; path = "libkernel-modules.list"; sourceTree = "<group>"; };
 		E8189EB515D17E8000194F25 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
 		E82206E0184F810A00117D10 /* resolution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resolution.cpp; path = src/resolution.cpp; sourceTree = "<group>"; };
 		E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
@@ -3154,6 +3155,7 @@
 		4D79B7291A275A7C00DD750C /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				C77AA9811A83868600AAE40E /* libkernel-modules.list */,
 				4DD9D7661A3B185A0006366D /* engine.mlc */,
 				4D79B8AA1A37104800DD750C /* widget.mlc */,
 				4D79B7301A275ADE00DD750C /* canvas.mlc */,

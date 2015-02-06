@@ -1,4 +1,4 @@
-module test
+module Test
 
 use com.livecode.math
 use com.livecode.file
@@ -6,7 +6,7 @@ use com.livecode.stream
 use com.livecode.system
 use com.livecode.date
 
-public handler test()
+public handler Test()
     variable tResults as list
     put the empty list into tResults
     	testFile(tResults)
