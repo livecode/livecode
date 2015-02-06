@@ -40,14 +40,21 @@
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.
         EnterScope
+
         -- Import all the used modules
         DeclareImports(Imports, ImportedModules)
+        
+        EnterScope
+
         -- Declare the predefined ids
         DeclarePredefinedIds
         -- Assign the defining id to all top-level names.
         Declare(Definitions)
         -- Resolve all references to id's.
         Apply(Definitions)
+        
+        LeaveScope
+
         LeaveScope
         
         -- Step 2: Ensure all definitions have their appropriate meaning

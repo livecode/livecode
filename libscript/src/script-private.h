@@ -209,10 +209,11 @@ struct MCScriptImportedDefinition
     uindex_t module;
     MCScriptDefinitionKind kind;
     MCNameRef name;
-    //MCTypeInfoRef type;
     
+    // The module the definition resides in.
+    MCScriptModuleRef resolved_module;
     // The resolved definition - not pickled
-    MCScriptDefinition *definition;
+    MCScriptDefinition *resolved_definition;
 };
 
 struct MCScriptPosition

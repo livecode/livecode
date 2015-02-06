@@ -669,10 +669,12 @@ static uint32_t unix_date_to_hfs_date(uint32_t p_date)
 
 Exec_stat MCDeployDmgBuild(MCDeployDmgParameters& p_params)
 {
+    return ES_NORMAL;
+    
+#if 0
 	bool t_success;
 	t_success = true;
 
-#if 0
 	// Open the output file
 	MCDeployFileRef t_output;
 	t_output = nil;
@@ -1282,9 +1284,9 @@ Exec_stat MCDeployDmgBuild(MCDeployDmgParameters& p_params)
 	MCMemoryDeleteArray(t_leaves);
 
 	MCDeployFileClose(t_output);
-#endif
-
+    
 	return t_success ? ES_NORMAL : ES_ERROR;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

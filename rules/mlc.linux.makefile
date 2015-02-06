@@ -12,9 +12,12 @@ MLC_SRC_DIR = $(SRC_DIR)/_mlc
 
 LC_COMPILE ?= $(shell PATH=$(BUILD_DIR):$(PATH) \
 	              which lc-compile 2>/dev/null || \
-	              echo "lc-compile" )
+	              echo "lc-compile")
 
-MLC_SOURCES = $(shell cat $(MLC_LIST) | grep -v '^\#')
+# Remove comments and '!' prefixes to filenames (the flag indicates
+# that they shouldn't be used when bootstrapping, but since we're
+# building normally we can ignore that flag now)
+MLC_SOURCES = $(shell cat $(MLC_LIST) | grep -v '^\#' | sed -e's:^!::')
 
 MLC_BUILT_SOURCES = $(patsubst %.mlc,_mlc/%.c,$(MLC_SOURCES))
 
@@ -25,6 +28,7 @@ $(MLC_STAMP): $(MLC_SOURCES) $(MLC_LIST) $(LC_COMPILE)
 	@for f in $(MLC_SOURCES); do \
 	    mlcfile=$(SRC_DIR)/$$f ; \
 	    cfile=$(MLC_SRC_DIR)/`echo $$f | sed -e's:mlc$$:c:'` ; \
+	    echo "$(LC_COMPILE) --modulepath $(MODULE_DIR) --outputc $$cfile $$mlcfile" $(_PRINT_RULE); \
 	    $(LC_COMPILE) --modulepath $(MODULE_DIR) --outputc $$cfile $$mlcfile \
 	        || exit $$? ; \
 	done

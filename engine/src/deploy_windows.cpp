@@ -1092,26 +1092,29 @@ static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 
 static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-    MCWindowsVersionInfo *t_string;
+    // If there is no context, then we have nothing to add the entry to.
+    if (p_context == nil)
+        return true;
+    
     MCExecContext ctxt(nil, nil, nil);
 	MCAutoStringRef t_value;
-	/* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
-	byte_t *t_bytes;
-	uindex_t t_byte_count;
-	/* UNCHECKED */ MCStringConvertToBytes(*t_value, kMCStringEncodingUTF16LE, false, t_bytes, t_byte_count);
+	if (!ctxt . ConvertToString(p_value, &t_value))
+        return false;
+    
+	MCAutoArray<byte_t> t_bytes;
+	if (!MCStringConvertToBytes(*t_value, kMCStringEncodingUTF16LE, false, t_bytes . PtrRef(), t_bytes . SizeRef()))
+        return false;
     
     // FG-2014-09-17: [[ Bugfix 13463 ]] Convert may return 0 bytes for the empty string
-	if (t_byte_count == 0 || t_bytes[t_byte_count - 1] != '\0' || t_bytes[t_byte_count - 2] != '\0')
+	if (t_bytes . Size() == 0 || t_bytes[t_bytes . Size() - 1] != '\0' || t_bytes[t_bytes . Size() - 2] != '\0')
 	{
-		byte_t* temp = t_bytes;                       
-		t_bytes = new byte_t[t_byte_count + 2];		
-		memcpy(t_bytes, temp, t_byte_count); 
-		t_byte_count +=2;
-		delete temp;
-		t_bytes[t_byte_count - 2] = '\0';
-		t_bytes[t_byte_count - 1] = '\0';	 
+        if (!t_bytes . Push('\0') ||
+            !t_bytes . Push('\0'))
+            return false;
 	}
-	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes, t_byte_count, t_string);
+	
+    MCWindowsVersionInfo *t_string;
+    return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes . Ptr(), t_bytes . Size(), t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
