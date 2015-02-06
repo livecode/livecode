@@ -5686,7 +5686,7 @@ void MCCanvasStringsInitialize()
 	MCMemoryClear(s_effect_type_map, sizeof(s_effect_type_map));
 	MCMemoryClear(s_effect_property_map, sizeof(s_effect_property_map));
 	MCMemoryClear(s_gradient_type_map, sizeof(s_gradient_type_map));
-	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_gradient_type_map));
+	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_canvas_fillrule_map));
 	MCMemoryClear(s_image_filter_map, sizeof(s_image_filter_map));
 	MCMemoryClear(s_join_style_map, sizeof(s_join_style_map));
 	MCMemoryClear(s_cap_style_map, sizeof(s_cap_style_map));
