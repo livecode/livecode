@@ -76,14 +76,14 @@ static void _PrintPosition(long p_position)
 static void _Error(long p_position, const char *p_message)
 {
     _PrintPosition(p_position);
-    fprintf(stderr, "%s\n", p_message);
+    fprintf(stderr, "error: Error - %s\n", p_message);
     s_error_count += 1;
 }
 
 static void _Warning(long p_position, const char *p_message)
 {
     _PrintPosition(p_position);
-    fprintf(stderr, "%s\n", p_message);
+    fprintf(stderr, "warning: %s\n", p_message);
 }
 
 static void _ErrorS(long p_position, const char *p_message, const char *p_string)
