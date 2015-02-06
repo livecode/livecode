@@ -1697,7 +1697,7 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	MCImageRepRelease(t_image_rep);
 }
 
-void MCCanvasImageMakeWithResource(MCStringRef p_resource, MCCanvasImageRef &r_image)
+void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
