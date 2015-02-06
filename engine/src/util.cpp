@@ -1421,7 +1421,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
 	{
-		delete points;
+		delete[] points;
 		points = new MCPoint[4 * QA_NPOINTS + 1];
 	}
 
