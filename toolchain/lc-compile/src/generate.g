@@ -778,17 +778,10 @@
     'rule' CreateParameterRegisters(nil):
         -- nothing
 
-'action' CreateVariableRegisters(STATEMENT)
+'sweep' CreateVariableRegisters(ANY)
 
-    'rule' CreateVariableRegisters(sequence(Left, Right)):
-        CreateVariableRegisters(Left)
-        CreateVariableRegisters(Right)
-
-    'rule' CreateVariableRegisters(variable(_, _, _)): 
+    'rule' CreateVariableRegisters(STATEMENT'variable(_, _, _)):
         EmitCreateRegister(-> Register)
-
-    'rule' CreateVariableRegisters(_):
-        -- nothing
 
 'action' DestroyParameterRegisters(PARAMETERLIST)
 

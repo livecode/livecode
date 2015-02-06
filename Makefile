@@ -205,6 +205,11 @@ lc-bootstrap-compile: libscript libfoundation libffi
 lc-compile-clean:
 	$(MAKE) -C ./toolchain clean
 
+########## Module runner
+
+lc-run: libstdscript libfoundation
+	$(MAKE) -C ./toolchain lc-run
+
 ########## Test runner
 lc-test: libstdscript libfoundation
 	$(MAKE) -C ./toolchain lc-test
@@ -217,7 +222,7 @@ lc-test-check: lc-test
 ###############################################################################
 # All Targets
 
-.PHONY: all bootstrap clean
+.PHONY: all bootstrap thirdparty clean
 .DEFAULT_GOAL := all
 
 all: revzip server-revzip
@@ -226,9 +231,13 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
-all: lc-test
+all: lc-run lc-test
 
 bootstrap: lc-bootstrap-compile
+
+thirdparty: libffi libz libjpeg libpcre libpng libgif libopenssl libskia
+thirdparty: libcairopdf libpq libmysql libsqlite libiodbc libxml libxslt
+thirdparty: libzip
 
 check: lc-test-check
 

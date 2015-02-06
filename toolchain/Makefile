@@ -5,7 +5,7 @@ ifeq ($(MODE),debug)
     CFLAGS += -D_DEBUG -DYYDEBUG=1
 endif
 
-all: lc-compile
+all: lc-compile lc-run
 
 check: lc-test-check
 
@@ -320,14 +320,14 @@ $(COMPILE_stagedir)/stamp-gentle: $(COMPILE_gentle_inputs)
 	for gfile in $(subst $(COMPILE_srcdir),.,$(COMPILE_gentle_inputs)); do \
 	    gbase=`basename $$gfile` && \
 	    if [ ! -f $(COMPILE_stagesubdir)/$$gbase ]; then \
-	        echo "cp $$gfile $(COMPILE_stagesubdir)"; \
+	        echo "cp $$gfile $(COMPILE_stagesubdir)" $(_PRINT_RULE); \
 	        cp $$gfile $(COMPILE_stagesubdir) || exit $$? ; \
 	    fi; \
 	done
 	@cd $(COMPILE_stagedir) && \
 	for gfile in $(COMPILE_gentle_inputs); do \
 	    gbase=`basename $$gfile` && \
-	    echo "$(GENTLE) $$gbase"; \
+	    echo "$(GENTLE) $$gbase" $(_PRINT_RULE); \
 	    $(GENTLE) $$gbase || exit $$?; \
 	done
 	touch $@
@@ -423,10 +423,10 @@ ifeq ($(STAGE),4)
 	fi
 	-for f in $(COMPILE_bootstrap_check_exes); do rm $$f-strip; done
 	@if ! cmp $< $@; then \
-	    echo "cp $< $@"; \
+	    echo "cp $< $@" $(_PRINT_RULE); \
 	    cp $< $@; \
 	else \
-	    echo "touch $@"; \
+	    echo "touch $@" $(_PRINT_RULE); \
 	    touch $@; \
 	fi
 endif
@@ -474,7 +474,7 @@ ALL_mlc = \
 $(COMPILE_stagedir)/stamp-lci: $(ALL_mlc) $(SCRIPT_mlc_list)
 	$(MKDIR_P) $(MODULE_DIR) $(dir $@)
 	@for mlcfile in $(ALL_mlc); do \
-	    echo $(LC_COMPILE) --modulepath $(MODULE_DIR) $$mlcfile ; \
+	    echo "$(LC_COMPILE) --modulepath $(MODULE_DIR) $$mlcfile" $(_PRINT_RULE); \
 	    $(LC_COMPILE) --modulepath $(MODULE_DIR) $$mlcfile || exit $$?; \
 	done
 	touch $@
@@ -508,6 +508,48 @@ $(GRAMMAR_output): $(GRAMMAR_inputs) $(GRAMMAR_template)
 lci: $(COMPILE_stagedir)/stamp-lci
 
 .PHONY: lci mlc-clean
+
+################################################################
+# Bytecode runner
+################################################################
+
+########## Configuration
+
+RUN_sources = \
+	lc-run.cpp \
+	module-helper.cpp
+
+RUN_CPPFLAGS = $(TEST_CPPFLAGS)
+RUN_CXXFLAGS = $(TEST_CXXFLAGS)
+RUN_LDFLAGS = $(TEST_LDFLAGS)
+RUN_LDLIBS = $(TEST_LDLIBS)
+
+########## Directories & output executable
+
+RUN_exe = $(BUILD_DIR)/lc-run
+
+RUN_srcdir = lc-compile/src
+RUN_objdir = $(CACHE_DIR)lc-run
+
+# Make sure to rebuild when the libraries are updated
+$(RUN_exe): $(BUILD_DIR)/libfoundation.a $(BUILD_DIR)/libstdscript.a
+
+########## C++ compilation rules
+
+RUN_objs = $(patsubst %.cpp,$(RUN_objdir)/%.o,$(RUN_sources))
+
+$(RUN_objdir)/%.o: $(RUN_srcdir)/%.cpp
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(RUN_CPPFLAGS) $(RUN_CXXFLAGS) -c -o $@ $<
+$(RUN_exe): $(RUN_objs)
+	$(MKDIR_P) $(dir $@)
+	$(CXX) $(RUN_LDFLAGS) -o $@ $^ $(RUN_LDLIBS)
+
+########## Convenience targets
+
+lc-run: $(RUN_exe)
+
+.PHONY: lc-run
 
 ################################################################
 # Test runner
@@ -579,8 +621,8 @@ $(MODULE_DIR)/%.lcm: %.mlc $(LC_COMPILE)
 
 lc-test-check: $(CHECK_lcm) $(LC_TEST)
 	for test_lcm in $(CHECK_lcm); do \
-	    echo "$(LC_TEST) $$test_lcm"; \
+	    echo "$(LC_TEST) $$test_lcm" $(_PRINT_RULE); \
 	    $(LC_TEST) $$test_lcm || exit $$? ; \
 	done
 
-.PHONY: lc-test-check;
+.PHONY: lc-test-check
