@@ -71,19 +71,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    
    local tSDKs
    if pTarget is "Device" then      
-      if revIDEDeployIOSSanatizeSystemVersion() < 100700 then   
-         
-         get revIDEDeployIOSGetDeviceSDK("5.0")
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") then
-            throw "performing iOS device builds requires the iOS 5.0 SDK platform to be installed (available with XCode 4.2)"
-         end if 
-         
-         put it into tSDKs["arm"]["root path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["arm"]["sdk path"]
-         put "5_0" into tSDKs["arm"]["suffix"] 
-         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
-         
-      else if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
+      -- PM-2015-02-06: [[ Bug 14422 ]] Drop support for OSX 10.6 and iOS 5.0 
+      if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
          
          -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
          --  
@@ -128,12 +117,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       
       -- MM-2012-09-18: We now only support the 4.3 simulators or later.
       -- For sim builds we just need the suffix (so we can extract the correct external) and where to look for the engines (runtime folder).
+      -- SN-2015-02-05: [[ Bug 14422 ]] We only support 5.1 simulator or later.
       --
-      if pTarget contains "4.3" then
-         put "4_3" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "5.0" then
-         put "5_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "5.1" then
+      if pTarget contains "5.1" then
          put "5_1" into tSDKs["sim"]["suffix"]
       else if pTarget contains "6.0" then
          put "6_0" into tSDKs["sim"]["suffix"]
@@ -354,7 +340,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          -- MW-2013-06-25: [[ PIE ]] Make sure we make the minversion 4.3 so we can make
          --   ARMv7+ PIE builds.
          -- Make the minimum run version of the engine 4.3
-         put "-miphoneos-version-min=4.3" & return after tLinkCommand
+         -- SN-2015-02-05: [[ Bug 14422 ]] Now make the minimum version 5.1.1
+         put "-miphoneos-version-min=5.1.1" & return after tLinkCommand
          
          -- MW-2013-06-26: [[ CloneAndRun ]] Only dead strip if an installed env.
          if revEnvironmentIsInstalled() then
@@ -1208,7 +1195,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
-   replace "${MINIMUM_OS_SUPPORT}" with tMinimumOSByArch["i386"] in tPlist
+   replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in tPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in tPlist
    
    get empty
