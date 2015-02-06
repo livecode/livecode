@@ -18,6 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.unittest.__IMPL
 -- DON'T USE THIS MODULE, USE com.livecode.unittest INSTEAD
 
+use com.livecode.foreign
+
 ----------------------------------------------------------------
 -- Main functions used by tests
 ----------------------------------------------------------------

@@ -20,6 +20,8 @@ This library consists of the operations on binary strings provided by the standa
 
 module com.livecode.binary
 
+use com.livecode.foreign
+
 public foreign handler MCBinaryExecPutBytesBefore(in Source as data, inout Target as data) as undefined binds to "<builtin>"
 public foreign handler MCBinaryExecPutBytesAfter(in Source as data, inout Target as data) as undefined binds to "<builtin>"
 

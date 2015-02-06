@@ -22,6 +22,8 @@ LiveCode programs.
 
 module com.livecode.system
 
+use com.livecode.foreign
+
 ----------------------------------------------------------------
 -- Platform identification
 ----------------------------------------------------------------

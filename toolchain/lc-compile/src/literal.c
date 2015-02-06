@@ -299,6 +299,11 @@ int IsNameEqualToString(NameRef p_name, const char *p_string)
     return strcmp(p_name -> token, p_string) == 0;
 }
 
+int IsStringEqualToString(const char *p_left, const char *p_right)
+{
+    return strcmp(p_left, p_right) == 0;
+}
+
 void NegateReal(long p_real, long *r_real)
 {
     double *t_value;
