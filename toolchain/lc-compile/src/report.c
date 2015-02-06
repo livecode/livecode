@@ -76,7 +76,7 @@ static void _PrintPosition(long p_position)
 static void _Error(long p_position, const char *p_message)
 {
     _PrintPosition(p_position);
-    fprintf(stderr, "error: Error - %s\n", p_message);
+    fprintf(stderr, "error: %s\n", p_message);
     s_error_count += 1;
 }
 
