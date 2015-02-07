@@ -1368,8 +1368,8 @@ void * operator new (size_t p_amount)
 #endif
 {
 	void *t_result;
-	if (!MCMemoryAllocate(p_amount, t_result))
-		return nil;
+	// MDW-2015-02-06: [[ feature_reduce_warnings ]] This will return nil on error anyway
+	MCMemoryAllocate(p_amount, t_result);
 	return t_result;
 }
 
