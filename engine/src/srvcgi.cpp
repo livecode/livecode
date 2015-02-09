@@ -1001,8 +1001,6 @@ typedef struct
 	uint32_t file_size;
 	MCMultiPartFileStatus file_status;
 
-    MCArrayRef file_variable;
-
     MCStringRef boundary;
 	
     MCStringRef post_variable;
@@ -1021,7 +1019,6 @@ static void cgi_dispose_multipart_context(cgi_multipart_context_t *p_context)
 	if (p_context->file_handle != NULL)
 		MCS_close(p_context->file_handle);
 
-    MCValueRelease(p_context->file_variable);
     MCValueRelease(p_context->post_binary_variable);
     MCValueRelease(p_context->post_variable);
 	
@@ -1068,21 +1065,29 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 				if (MCCStringEqualCaseless(p_header->param_name[i], "name"))
                 {
                     MCAutoStringRef t_name;
-                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], &t_name);
+                    // SN-2015-02-06: [[ Bug 14477 ]] We don't want to release this values
+                    //  that are released again later in srvmultipart.cpp
+                    MCStringCreateWithCString(p_header->param_value[i], &t_name);
                     MCNameCreate(*t_name, t_context->name);
                 }
 				else if (MCCStringEqualCaseless(p_header->param_name[i], "filename"))
-                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], t_context->file_name);
+                    // SN-2015-02-06: [[ Bug 14477 ]] We don't want to release this values
+                    //  that are released again later in srvmultipart.cpp
+                    MCStringCreateWithCString(p_header->param_value[i], t_context->file_name);
 			}
 		}
 		else if (MCCStringEqualCaseless(p_header->name, "Content-Type"))
 		{
-            MCStringCreateWithCStringAndRelease(p_header->value, t_context->type);
+            // SN-2015-02-06: [[ Bug 14477 ]] We don't want to release this values
+            //  that are released again later in srvmultipart.cpp
+            MCStringCreateWithCString(p_header->value, t_context->type);
 			
 			for (uint32_t i = 0; i < p_header->param_count; i++)
 			{
 				if (MCCStringEqualCaseless(p_header->param_name[i], "boundary"))
-                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], t_context->boundary);
+                    // SN-2015-02-06: [[ Bug 14477 ]] We don't want to release this values
+                    //  that are released again later in srvmultipart.cpp
+                    MCStringCreateWithCString(p_header->param_value[i], t_context->boundary);
 			}
 		}
 	}
@@ -1095,11 +1100,23 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 			{
                 // We need to reset the binary data fetched from the global variable
                 // and create a mutable DataRef
-                cgi_fetch_valueref_for_key(s_cgi_post, t_context->name, (MCValueRef&)t_context->post_variable);
+                // SN-2015-02-06: [[ Bug 14477 ]] We want to copy the valueRef in
+                //  t_context->post_variable, as it will be released in the end.
+                MCValueRef t_value;
+                cgi_fetch_valueref_for_key(s_cgi_post, t_context->name, t_value);
 
-                cgi_fetch_valueref_for_key(s_cgi_post_binary, t_context -> name, (MCValueRef&)t_context->post_binary_variable);
-                MCValueRelease(t_context->post_binary_variable);
-                MCDataCreateMutable(0, t_context->post_binary_variable);
+                if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
+                    t_context->post_variable = (MCStringRef)MCValueRetain(t_value);
+                else
+                    t_success = false;
+            }
+
+            if (t_success)
+            {
+                // SN-2015-02-06: [[ Bug 14477 ]] We want to replace the data with a new,
+                //  empty one
+                t_success = MCDataCreateMutable(0, t_context->post_binary_variable)
+                        && cgi_store_control_value(s_cgi_post_binary, t_context -> name, t_context -> post_binary_variable);
 			}
 		}
 		else if (cgi_context_is_file(t_context))
@@ -1157,7 +1174,20 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 		
 		if (t_success && (p_finished || p_truncated))
         {
-            cgi_fetch_valueref_for_key(s_cgi_files, t_context->name, (MCValueRef &)t_context->file_variable);
+            // SN-2015-02-06: [[ Bug 14477 ]] We want to copy the valueRef from
+            //  s_cgi_files, since it will be released in the end.
+            //  If the value was not an array (like kMCExecValueTypeNone), we
+            //  create a new *mutable* array.
+            //  We then store the changed array in place of the value we fetched
+            MCValueRef t_file_variable;
+            MCAutoArrayRef t_file_array;
+
+            cgi_fetch_valueref_for_key(s_cgi_files, t_context->name, t_file_variable);
+
+            if (MCValueIsArray(t_file_variable))
+                t_file_array = (MCArrayRef)MCValueRetain(t_file_variable);
+            else
+                t_success = MCArrayCreateMutable(&t_file_array);
 			
 			if (t_context->file_status == kMCFileStatusOK && t_context->file_size == 0)
 				t_context->file_status = kMCFileStatusFailed;
@@ -1170,14 +1200,17 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 
             MCNumberCreateWithUnsignedInteger(t_context->file_size, &t_size);
 
-            MCArrayStoreValue(t_context->file_variable, false, MCNAME("name"), t_context->file_name);
-            MCArrayStoreValue(t_context->file_variable, false, MCNAME("type"), t_context->type);
-            MCArrayStoreValue(t_context->file_variable, false, MCNAME("filename"), t_context->temp_name);
-            MCArrayStoreValue(t_context->file_variable, false, MCNAME("size"), *t_size);
+            MCArrayStoreValue(*t_file_array, false, MCNAME("name"), t_context->file_name);
+            MCArrayStoreValue(*t_file_array, false, MCNAME("type"), t_context->type);
+            MCArrayStoreValue(*t_file_array, false, MCNAME("filename"), t_context->temp_name);
+            MCArrayStoreValue(*t_file_array, false, MCNAME("size"), *t_size);
 
             if (t_context->file_status != kMCFileStatusOK
                     && MCMultiPartGetErrorMessage(t_context->file_status, &t_error))
-                MCArrayStoreValue(t_context->file_variable, false, MCNAME("error"), *t_error);
+                MCArrayStoreValue(*t_file_array, false, MCNAME("error"), *t_error);
+
+            if (t_success)
+                cgi_store_control_value(s_cgi_files, t_context->name, *t_file_array);
 		}
 	}
 	
@@ -1196,6 +1229,9 @@ static bool cgi_store_form_multipart(IO_handle p_stream)
 	
 	cgi_multipart_context_t t_context;
 	MCMemoryClear(&t_context, sizeof(t_context));
+    // SN-2015-02-06: [[ Bug 14477 ]] Initialise the temp_name (which is
+    //  only reassigned, never directly set).
+    t_context . temp_name = MCValueRetain(kMCEmptyString);
 	
 	uint32_t t_bytes_read = 0;
 	
