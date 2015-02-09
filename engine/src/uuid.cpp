@@ -49,7 +49,7 @@ bool MCUuidGenerateRandom(MCUuid& r_uuid)
 	// Fill the UUID with random bytes (returns false if not enough random data
 	// is available).
     MCAutoDataRef t_data;
-	if (!MCU_random_bytes(sizeof(MCUuid), &t_data))
+	if (!MCSRandomData (sizeof(MCUuid), &t_data))
 		return false;
     MCMemoryCopy(&r_uuid, MCDataGetBytePtr(*t_data), sizeof(MCUuid));
     

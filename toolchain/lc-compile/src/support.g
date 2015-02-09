@@ -37,9 +37,11 @@
     MakeIntegerLiteral
     MakeDoubleLiteral
     MakeStringLiteral
+    UnescapeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
     IsNameEqualToString
+    IsStringEqualToString
 
     InitializeScopes
     FinalizeScopes
@@ -89,6 +91,7 @@
     RepeatSyntaxGrammar
     PushEmptySyntaxGrammar
     PushKeywordSyntaxGrammar
+    PushUnreservedKeywordSyntaxGrammar
     PushMarkedDescentSyntaxGrammar
     PushDescentSyntaxGrammar
     PushMarkedTrueSyntaxGrammar
@@ -205,10 +208,8 @@
     EmitBeginAssignList
     EmitContinueAssignList
     EmitEndAssignList
-    EmitFetchLocal
-    EmitStoreLocal
-    EmitFetchGlobal
-    EmitStoreGlobal
+    EmitFetch
+    EmitStore
     EmitReturn
     EmitReturnNothing
     EmitAttachRegisterToExpression
@@ -228,6 +229,7 @@
     Error_UnableToFindImportedModule
     Error_MalformedToken
     Error_MalformedSyntax
+    Error_MalformedEscapedString
     Error_IdentifierPreviouslyDeclared
     Error_IdentifierNotDeclared
     Error_InvalidNameForSyntaxMarkVariable
@@ -277,6 +279,10 @@
     Error_SyntaxNotAllowedInThisContext
     Error_ParameterMustHaveHighLevelType
     Error_VariableMustHaveHighLevelType
+    Error_CannotAssignToHandlerId
+    Error_NonHandlerTypeVariablesCannotBeCalled
+    Warning_MetadataClausesShouldComeAfterUseClauses
+
 
 --------------------------------------------------------------------------------
 
@@ -308,10 +314,12 @@
 'action' MakeIntegerLiteral(Token: STRING -> Literal: INT)
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
+'condition' UnescapeStringLiteral(String: STRING -> UnescapedString: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
 
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
+'condition' IsStringEqualToString(STRING, STRING)
 
 --------------------------------------------------------------------------------
 
@@ -377,6 +385,7 @@
 'action' RepeatSyntaxGrammar()
 'action' PushEmptySyntaxGrammar()
 'action' PushKeywordSyntaxGrammar(Token: STRING)
+'action' PushUnreservedKeywordSyntaxGrammar(Token: STRING)
 'action' PushMarkedDescentSyntaxGrammar(Index: INT, Rule: NAME, LMode: INT, RMode: INT)
 'action' PushDescentSyntaxGrammar(Rule: NAME)
 'action' PushMarkedTrueSyntaxGrammar(Index: INT)
@@ -519,10 +528,8 @@
 'action' EmitContinueAssignList(Register: INT)
 'action' EmitEndAssignList()
 'action' EmitAssign(Dst: INT, Src: INT)
-'action' EmitFetchLocal(Register: INT, Var: INT)
-'action' EmitStoreLocal(Register: INT, Var: INT)
-'action' EmitFetchGlobal(Register: INT, Var: INT)
-'action' EmitStoreGlobal(Register: INT, Var: INT)
+'action' EmitFetch(Register: INT, Var: INT, Level: INT)
+'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
 'action' EmitPosition(Position: POS)
@@ -548,6 +555,7 @@
 
 'action' Error_MalformedToken(Position: POS, Token: STRING)
 'action' Error_MalformedSyntax(Position: POS)
+'action' Error_MalformedEscapedString(Position: POS, Token: STRING)
 'action' Error_IdentifierPreviouslyDeclared(Position: POS, Identifier: NAME, PreviousPosition: POS)
 'action' Error_IdentifierNotDeclared(Position: POS, Identifier: NAME)
 'action' Error_InvalidNameForSyntaxMarkVariable(Position: POS, Name: NAME)
@@ -603,5 +611,10 @@
 
 'action' Error_ParameterMustHaveHighLevelType(Position: POS)
 'action' Error_VariableMustHaveHighLevelType(Position: POS)
+
+'action' Error_CannotAssignToHandlerId(Position: POS, Identifier: NAME)
+'action' Error_NonHandlerTypeVariablesCannotBeCalled(Position: POS)
+
+'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 
 --------------------------------------------------------------------------------

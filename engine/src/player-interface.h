@@ -186,7 +186,10 @@ public:
     virtual void setforegroundcolor(const MCInterfaceNamedColor& p_color) = 0;
     virtual void getforegrouncolor(MCInterfaceNamedColor& r_color) = 0;
     virtual void sethilitecolor(const MCInterfaceNamedColor& p_color) = 0;
-    virtual void gethilitecolor(MCInterfaceNamedColor& r_color) = 0;
+    virtual void gethilitecolor(MCInterfaceNamedColor& r_color) = 0;    
+
+    // SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]] Update to MCStringRef
+    virtual bool resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename) = 0;
     
 	////////// PROPERTY SUPPORT METHODS
     

@@ -125,6 +125,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////////////////////////////////////////////////////////////////
 //
+//  FOUNDATION SYSTEM LIBRARY
+//
+
+#include <foundation-system.h>
+
+//////////////////////////////////////////////////////////////////////
+//
 //  LEGACY INCLUDES AND DEFINES
 //
 
@@ -1325,9 +1332,10 @@ enum Chunk_term {
     CT_EPS,
     CT_MAGNIFY,
     CT_COLOR_PALETTE,
-    CT_FIELD,
     CT_WIDGET,
-	CT_LAST_CONTROL = CT_WIDGET,
+    CT_FIELD,
+	CT_LAST_CONTROL = CT_FIELD,
+    CT_FIRST_TEXT_CHUNK = CT_FIELD,
     CT_LINE,
     CT_PARAGRAPH,
     CT_SENTENCE,

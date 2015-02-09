@@ -794,8 +794,9 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
     double t_result;
 
     // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    // SN-2014-12-22: [[ Bug 14277 ]] Check whether the evaluation went well before doing any conversion
     p_expr -> eval_ctxt(*this, t_value);
-    if (!MCExecTypeIsNumber(t_value . type))
+    if (!HasError() && !MCExecTypeIsNumber(t_value . type))
         MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &t_result);
     
     while (t_can_debug && (t_failure = HasError()) &&
@@ -807,7 +808,8 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
         if (t_can_debug)
         {
             p_expr -> eval_ctxt(*this, t_value);
-            if (!MCExecTypeIsNumber(t_value . type))
+            // SN-2014-12-22: [[ Bug 14277 ]] Check whether the evaluation went well before doing any conversion
+            if (!HasError() && !MCExecTypeIsNumber(t_value . type))
                 MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &t_result);
         }
     }

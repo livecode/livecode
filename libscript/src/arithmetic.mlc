@@ -20,6 +20,8 @@ This library consists of the basic arithmetic operations of standard library of 
 
 module com.livecode.arithmetic
 
+use com.livecode.foreign
+
 --
 
 public foreign handler MCArithmeticExecAddIntegerToInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"
@@ -83,9 +85,12 @@ public foreign handler MCArithmeticEvalNotEqualToReal(in Left as double, in Righ
 public foreign handler MCArithmeticEvalNotEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalNumberFormattedAsString(in Target as number, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalStringParsedAsNumber(in Target as string, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalStringParsedAsNumber(in Target as string, out Value as optional number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecFormatNumberAsString(in Target as number) as string binds to "<builtin>"
+public foreign handler MCArithmeticExecParseStringAsNumber(in Target as string) as optional number binds to "<builtin>"
 
-public foreign handler MCArithmeticEvalListOfStringParsedAsListOfNumber(in Target as list, out Value as list) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalListOfStringParsedAsListOfNumber(in Target as list, out Value as optional list) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecParseListOfStringAsListOfNumber(in Target as list) as optional list binds to "<builtin>"
 
 --
 
@@ -519,27 +524,89 @@ begin
 end syntax
 
 /*
+Summary:	Formats a numeric value as a string
+
+Operand:	An expression that evaluates to a number.
+
+The result:	<Operand> formatted as a string.
+
+Example:
+	variable tNum as number
+	put 5 into tNum
+	format tNum as string -- the result contains "5"
+
+Description:
+Use <FormatNumberAsString> when you want to manipulate a numeric value as text.
+*/
+
+syntax FormatNumberAsString is statement
+    "format" <Operand: Expression> "as" "string"
+begin
+    MCArithmeticExecFormatNumberAsString(Operand)
+end syntax
+
+/*
 Summary:	Parses a string as an number
 
 Operand:	An expression that evaluates to a string.
 
-Returns:	<Operand> parsed as a number.
+Returns:	<Operand> parsed as a number, or undefined.
 
 Example:
 	variable tString as string
-	variable tNum as number
+	variable tNum as optional number
 	put "5.6" into tString
 	put tString parsed as number into tNum -- tNum contains 5.6
 
+Example:
+	variable tNum as optional number
+	put "aaaa" parsed as number into tNum
+	
+	if tNum is not defined then
+		put 0 into tNum
+	end if
+	
+	// tNum contains 0
+	
 Description:
-Use <StringParsedAsNumber> when you want to interpret text numerically.
-
->*Note:* Any input which cannot be parsed as a number will cause an error to be thrown.
+Use <StringParsedAsNumber> when you want to interpret text numerically. undefined is returned if parsing was not possible.
 */
+
 syntax StringParsedAsNumber is postfix operator with precedence 1
     <Operand: Expression> "parsed" "as" "number"
 begin
     MCArithmeticEvalStringParsedAsNumber(Operand, output)
+end syntax
+
+/*
+Summary:	Parses a string as an number
+
+Operand:	An expression that evaluates to a string.
+
+The result:	<Operand> parsed as a number, or undefined.
+
+Example:
+	variable tString as string
+	put "5.6" into tString
+	parse tString as number -- the result is 5.6
+
+Example:
+	variable tResult as string
+	variable tNum as optional number
+	parse "aaaa" as number
+	
+	if the result is not defined then
+		put "unable to parse string" into tResult
+	end if
+
+Description:
+Use <ParseStringAsNumber> when you want to interpret text numerically. The result is not defined if parsing was not possible.
+*/
+
+syntax ParseStringAsNumber is statement
+    "parse" <Operand: Expression> "as" "number"
+begin
+    MCArithmeticExecParseStringAsNumber(Operand)
 end syntax
 
 /*
@@ -555,15 +622,54 @@ Example:
 	split "1,2,3,4" by "," into tListOfString
 	put tListOfString parsed as list of number into tNum -- tListOfNum contains [ 1, 2, 3, 4 ]
 
-Description:
-Use <ListOfStringParsedAsListOfNumber> when you want to interpret pieces of text numerically.
+Example: 
+	variable tList as list
+	put ["1", "b", "3"] parsed as list of number into tList
+	
+	variable tElt as number
+	repeat with tElt from 1 up to the number of elements in tList
+		if tList[tElt] is not defined then
+			put 0 into element tElt of tList
+		end if
+	end repeat
 
->*Note:* Any input list which contain elements which cannot be parsed as numbers will cause an error to be thrown.
+	// tList contains [ 1, 0, 3 ]
+
+Description:
+Use <ListOfStringParsedAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be undefined.
+
+*Note:* It is an error if any element of <Operand> is not as string.
 */
+
 syntax ListOfStringParsedAsListOfNumber is postfix operator with precedence 1
     <Operand: Expression> "parsed" "as" "list" "of" "number"
 begin
     MCArithmeticEvalListOfStringParsedAsListOfNumber(Operand, output)
+end syntax
+
+/*
+Summary:	Parses a list of strings as a list of numbers
+
+Operand:	An expression that evaluates to a list of strings.
+
+The result:	<Operand> parsed as a list of numbers.
+
+Example:
+	variable tListOfString as list
+	variable tListOfNum as list
+	split "1,2,3,4" by "," into tListOfString
+	parse tListOfString as list of number -- the result contains [ 1, 2, 3, 4 ]
+
+Description:
+Use <ParseListOfStringAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be undefined.
+
+*Note:* It is an error if any element of <Operand> is not as string.
+*/
+
+syntax ParseListOfStringAsListOfNumber is statement
+    "parse" <Operand: Expression> "as" "list" "of" "number"
+begin
+    MCArithmeticExecParseListOfStringAsListOfNumber(Operand)
 end syntax
 
 end module

@@ -335,7 +335,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					curref = new MCCRef;
 					if (oterm == CT_UNDEFINED)
 					{
-						if (nterm >= CT_FIELD || nterm == CT_URL)
+						if (nterm >= CT_FIRST_TEXT_CHUNK || nterm == CT_URL)
 						{
 							sp.backup();
 							nterm = CT_CARD;
@@ -833,7 +833,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 				MCeerror->add(EE_GO_BADWINDOWEXP, line, pos);
 				return ES_ERROR;
 			}
-			if (ep.ton() == ES_NORMAL && MCscreen->uint4towindow(ep.getuint4(), w))
+			if (ep.ton() == ES_NORMAL && MCscreen->uinttowindow(ep.getuint4(), w))
 				oldstack = MCdispatcher->findstackd(w);
 			else
 				oldstack = ep.getobj()->getstack()->findstackname(ep.getsvalue());

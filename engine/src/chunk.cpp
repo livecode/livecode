@@ -369,7 +369,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						{
 							if (sp.lookup(SP_FACTOR, ite) == PS_NORMAL
 							        && ite->type == TT_CHUNK
-							        && ite->which >= CT_LAYER && ite->which <= CT_FIELD)
+							        && ite->which >= CT_LAYER && ite->which <= CT_LAST_CONTROL)
 							{
 								curref->ptype = curref->otype;
 								nterm = curref->otype = (Chunk_term)ite->which;
@@ -384,7 +384,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 							curref->etype = CT_ID;
 						else
 							curref->etype = CT_EXPRESSION;
-						if (sp.parseexp(curref->otype <= CT_FIELD, False,
+						if (sp.parseexp(curref->otype <= CT_LAST_CONTROL, False,
 						                &curref->startpos) != PS_NORMAL)
 						{
 							MCperror->add(PE_CHUNK_NOSTARTEXP, sp);

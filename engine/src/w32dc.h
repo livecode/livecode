@@ -245,7 +245,7 @@ public:
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
-	                      int2 dx, int2 dy, uint4 rop);
+                          int2 dx, int2 dy, uint4 rop);
 																	
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
@@ -254,9 +254,9 @@ public:
 	virtual MCCursorRef createcursor(MCImageBitmap *image, int2 xhot, int2 yhot);
 	virtual void freecursor(MCCursorRef c);
 
-	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4towindow(uint4, Window &w);
-	virtual void getbeep(uint4 property, int4& r_value);
+    virtual uintptr_t dtouint(Drawable d);
+    virtual Boolean uinttowindow(uintptr_t, Window &w);
+    virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
 	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();

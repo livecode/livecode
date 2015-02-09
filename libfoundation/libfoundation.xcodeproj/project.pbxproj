@@ -43,6 +43,12 @@
 		761D53EC19EBC70B00DBF726 /* foundation-typeconvert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 761D53EB19EBC70B00DBF726 /* foundation-typeconvert.cpp */; };
 		7653455919F656650032E6E2 /* foundation-proper-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7653455819F656640032E6E2 /* foundation-proper-list.cpp */; };
 		7696676D19E81D92008B0972 /* foundation-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7696676C19E81D92008B0972 /* foundation-chunk.cpp */; };
+		76D74D631A78F51D00B1BA64 /* system-commandline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D74D5C1A78F51D00B1BA64 /* system-commandline.cpp */; };
+		76D74D661A78F51D00B1BA64 /* system-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D74D5F1A78F51D00B1BA64 /* system-file.cpp */; };
+		76D74D671A78F51D00B1BA64 /* system-init.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D74D601A78F51D00B1BA64 /* system-init.cpp */; };
+		76D74D681A78F51D00B1BA64 /* system-random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D74D611A78F51D00B1BA64 /* system-random.cpp */; };
+		76D74D691A78F51D00B1BA64 /* system-stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D74D621A78F51D00B1BA64 /* system-stream.cpp */; };
+		76D74D6A1A78F5B600B1BA64 /* system-file-posix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D74D5D1A78F51D00B1BA64 /* system-file-posix.cpp */; };
 		76E711FC1A0BA24B00B68F93 /* foundation-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76E711FB1A0BA24B00B68F93 /* foundation-math.cpp */; };
 		76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */; };
 		BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE19F5D718FE92600001B410 /* foundation-bidi.cpp */; };
@@ -131,10 +137,24 @@
 		769372131A03AF360001A9FF /* foundation-filters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-filters.h"; path = "include/foundation-filters.h"; sourceTree = "<group>"; };
 		7696676B19E81D88008B0972 /* foundation-chunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-chunk.h"; path = "include/foundation-chunk.h"; sourceTree = "<group>"; };
 		7696676C19E81D92008B0972 /* foundation-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-chunk.cpp"; path = "src/foundation-chunk.cpp"; sourceTree = "<group>"; };
+		76D74D5C1A78F51D00B1BA64 /* system-commandline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "system-commandline.cpp"; path = "src/system-commandline.cpp"; sourceTree = "<group>"; };
+		76D74D5D1A78F51D00B1BA64 /* system-file-posix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "system-file-posix.cpp"; path = "src/system-file-posix.cpp"; sourceTree = "<group>"; };
+		76D74D5E1A78F51D00B1BA64 /* system-file-w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "system-file-w32.cpp"; path = "src/system-file-w32.cpp"; sourceTree = "<group>"; };
+		76D74D5F1A78F51D00B1BA64 /* system-file.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "system-file.cpp"; path = "src/system-file.cpp"; sourceTree = "<group>"; };
+		76D74D601A78F51D00B1BA64 /* system-init.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "system-init.cpp"; path = "src/system-init.cpp"; sourceTree = "<group>"; };
+		76D74D611A78F51D00B1BA64 /* system-random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "system-random.cpp"; path = "src/system-random.cpp"; sourceTree = "<group>"; };
+		76D74D621A78F51D00B1BA64 /* system-stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "system-stream.cpp"; path = "src/system-stream.cpp"; sourceTree = "<group>"; };
 		76E711FB1A0BA24B00B68F93 /* foundation-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-math.cpp"; path = "src/foundation-math.cpp"; sourceTree = "<group>"; };
 		76E711FD1A0BA45300B68F93 /* foundation-math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-math.h"; path = "include/foundation-math.h"; sourceTree = "<group>"; };
+		76FEC2131A5C2C2A00188FD4 /* foundation-file.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-file.cpp"; path = "src/foundation-file.cpp"; sourceTree = "<group>"; };
+		76FEC2351A5D3F5C00188FD4 /* foundation-file.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-file.h"; path = "include/foundation-file.h"; sourceTree = "<group>"; };
 		BE19F5D718FE92600001B410 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
 		BE19F5D918FE93490001B410 /* foundation-bidi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-bidi.h"; path = "include/foundation-bidi.h"; sourceTree = "<group>"; };
+		C7264E531A669AF100BFD8E3 /* foundation-random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-random.cpp"; path = "src/foundation-random.cpp"; sourceTree = "<group>"; usesTabs = 1; };
+		C741ECCA1A6933310096D171 /* foundation-file-posix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-file-posix.cpp"; path = "src/foundation-file-posix.cpp"; sourceTree = "<group>"; };
+		C741ECCB1A6933310096D171 /* foundation-file-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-file-private.h"; path = "src/foundation-file-private.h"; sourceTree = "<group>"; };
+		C741ECCC1A6933310096D171 /* foundation-file-w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-file-w32.cpp"; path = "src/foundation-file-w32.cpp"; sourceTree = "<group>"; };
+		C741ECCD1A6933310096D171 /* foundation-stream-stdio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-stream-stdio.cpp"; path = "src/foundation-stream-stdio.cpp"; sourceTree = "<group>"; };
 		C74D7EDD1A2639F200BC7FE8 /* libffi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libffi.xcodeproj; path = ../thirdparty/libffi/libffi.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -186,6 +206,7 @@
 				721CAAAB1834D13300858545 /* foundation-unicode.h */,
 				BE19F5D918FE93490001B410 /* foundation-bidi.h */,
 				7237187618E3210B0006C484 /* foundation-text.h */,
+				76FEC2351A5D3F5C00188FD4 /* foundation-file.h */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -224,6 +245,29 @@
 		4DF42A570B048683003F2D95 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				76D74D5B1A78F50900B1BA64 /* Foundation */,
+				76D74D5A1A78F50100B1BA64 /* System */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		76D74D5A1A78F50100B1BA64 /* System */ = {
+			isa = PBXGroup;
+			children = (
+				76D74D5C1A78F51D00B1BA64 /* system-commandline.cpp */,
+				76D74D5D1A78F51D00B1BA64 /* system-file-posix.cpp */,
+				76D74D5E1A78F51D00B1BA64 /* system-file-w32.cpp */,
+				76D74D5F1A78F51D00B1BA64 /* system-file.cpp */,
+				76D74D601A78F51D00B1BA64 /* system-init.cpp */,
+				76D74D611A78F51D00B1BA64 /* system-random.cpp */,
+				76D74D621A78F51D00B1BA64 /* system-stream.cpp */,
+			);
+			name = System;
+			sourceTree = "<group>";
+		};
+		76D74D5B1A78F50900B1BA64 /* Foundation */ = {
+			isa = PBXGroup;
+			children = (
 				72897B2A1A434667000D7A87 /* foundation-custom.cpp */,
 				76E711FB1A0BA24B00B68F93 /* foundation-math.cpp */,
 				4D7FA7971594E09500EEF440 /* foundation-private.h */,
@@ -236,13 +280,19 @@
 				4D7FA7901594E09500EEF440 /* foundation-core.cpp */,
 				4D7FA7911594E09500EEF440 /* foundation-debug.cpp */,
 				4D7FA7921594E09500EEF440 /* foundation-error.cpp */,
+				C741ECCB1A6933310096D171 /* foundation-file-private.h */,
+				C741ECCA1A6933310096D171 /* foundation-file-posix.cpp */,
+				76FEC2131A5C2C2A00188FD4 /* foundation-file.cpp */,
+				C741ECCC1A6933310096D171 /* foundation-file-w32.cpp */,
 				4D7FA7931594E09500EEF440 /* foundation-list.cpp */,
 				4D7FA7941594E09500EEF440 /* foundation-name.cpp */,
 				4D7FA7951594E09500EEF440 /* foundation-nativechars.cpp */,
 				4D7FA7961594E09500EEF440 /* foundation-number.cpp */,
 				7653455819F656640032E6E2 /* foundation-proper-list.cpp */,
+				C7264E531A669AF100BFD8E3 /* foundation-random.cpp */,
 				4D7FA7981594E09500EEF440 /* foundation-set.cpp */,
 				4D7FA7991594E09500EEF440 /* foundation-stream.cpp */,
+				C741ECCD1A6933310096D171 /* foundation-stream-stdio.cpp */,
 				4DB3EBE316A5C00800E90D30 /* foundation-string-cf.cpp */,
 				4D7FA79A1594E09500EEF440 /* foundation-string.cpp */,
 				4D7FA79B1594E09500EEF440 /* foundation-unicodechars.cpp */,
@@ -258,7 +308,7 @@
 				4D44E3761A13A4080073FFA2 /* foundation-handler.cpp */,
 				4D44E4BF1A238EF30073FFA2 /* foundation-foreign.cpp */,
 			);
-			name = Source;
+			name = Foundation;
 			sourceTree = "<group>";
 		};
 		C74D7EDE1A2639F200BC7FE8 /* Products */ = {
@@ -338,9 +388,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76D74D631A78F51D00B1BA64 /* system-commandline.cpp in Sources */,
 				4D79B7191A27517600DD750C /* foundation-filters.cpp in Sources */,
 				761D53EC19EBC70B00DBF726 /* foundation-typeconvert.cpp in Sources */,
+				76D74D681A78F51D00B1BA64 /* system-random.cpp in Sources */,
 				4D7FA79D1594E09500EEF440 /* foundation-array.cpp in Sources */,
+				76D74D6A1A78F5B600B1BA64 /* system-file-posix.cpp in Sources */,
 				4D7FA79E1594E09500EEF440 /* foundation-core.cpp in Sources */,
 				72897B2B1A434667000D7A87 /* foundation-custom.cpp in Sources */,
 				4D7FA79F1594E09500EEF440 /* foundation-debug.cpp in Sources */,
@@ -355,15 +408,18 @@
 				4DDA1F7D1A0D1452001B0CA2 /* foundation-record.cpp in Sources */,
 				4D7FA7A61594E09500EEF440 /* foundation-stream.cpp in Sources */,
 				4D7FA7A71594E09500EEF440 /* foundation-string.cpp in Sources */,
+				76D74D671A78F51D00B1BA64 /* system-init.cpp in Sources */,
 				4D7FA7A81594E09500EEF440 /* foundation-unicodechars.cpp in Sources */,
 				4D7FA7A91594E09500EEF440 /* foundation-value.cpp in Sources */,
 				4D44E4C01A238EF30073FFA2 /* foundation-foreign.cpp in Sources */,
+				76D74D661A78F51D00B1BA64 /* system-file.cpp in Sources */,
 				4DB3EBE416A5C00800E90D30 /* foundation-string-cf.cpp in Sources */,
 				4D5837A31806A024006DE6A2 /* foundation-objc.mm in Sources */,
 				76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */,
 				721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */,
 				4DBBAEED1A0CEA6C004AAC31 /* foundation-typeinfo.cpp in Sources */,
 				721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */,
+				76D74D691A78F51D00B1BA64 /* system-stream.cpp in Sources */,
 				BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */,
 				7237187918E42F580006C484 /* foundation-text.cpp in Sources */,
 				76E711FC1A0BA24B00B68F93 /* foundation-math.cpp in Sources */,

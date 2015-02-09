@@ -1,0 +1,31 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.foreign
+
+public foreign type bool binds to "kMCBoolTypeInfo"
+public foreign type uint binds to "kMCUIntTypeInfo"
+public foreign type int binds to "kMCIntTypeInfo"
+public foreign type float binds to "kMCFloatTypeInfo"
+public foreign type double binds to "kMCDoubleTypeInfo"
+public foreign type pointer binds to "kMCPointerTypeInfo"
+
+public foreign type index binds to "kMCIntTypeInfo"
+public foreign type uindex binds to "kMCUIntTypeInfo"
+
+public foreign type NativeCString binds to "kMCNativeCStringTypeInfo"
+
+end module

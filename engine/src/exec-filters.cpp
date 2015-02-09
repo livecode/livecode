@@ -120,7 +120,6 @@ static const char *url_table[256] =
 
 bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result)
 {
-    char *t_utf8_string;
     char *s;
     uint4 l;
     int4 size;
@@ -129,10 +128,9 @@ bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
     // but rather to encode it in UTF-8 and write the bytes (a '%' will be added).
     if (p_use_utf8)
     {
-        if (!MCStringConvertToUTF8(p_source, t_utf8_string, l))
+        if (!MCStringConvertToUTF8(p_source, s, l))
             return false;
-        
-        s = t_utf8_string;
+
         size = l + 1;
     }
     else
@@ -145,34 +143,45 @@ bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
     size = l + 1;
     size += size / 4;
 
+    bool t_success;
+    t_success = true;
+    
 	MCAutoNativeCharArray buffer;
-	if (!buffer . New(size))
-		return false;
+    t_success = buffer . New(size);
 
-	char_t *dptr = buffer . Chars();
-	while (l--)
-	{
-		if (dptr - buffer . Chars() + 7 > size)
-		{
-			uint4 newsize = size + size / 4 + 7;
-			uint4 offset = dptr - buffer . Chars();
-			if (!buffer . Extend(newsize))
-				return false;
-			dptr = buffer . Chars() + offset;
-			size = newsize;
-		}
-		const char_t *sptr = (const char_t *)url_table[(uint1)*s++];
-		do
-		{
-			*dptr++ = *sptr++;
-		}
-		while (*sptr);
-	}
-	
-	buffer . Shrink(dptr - buffer . Chars());
+    if (t_success)
+    {
+        char_t *dptr;
+        dptr = buffer . Chars();
+        while (l--)
+        {
+            if (dptr - buffer . Chars() + 7 > size)
+            {
+                uint4 newsize = size + size / 4 + 7;
+                uint4 offset = dptr - buffer . Chars();
+                if (!buffer . Extend(newsize))
+                {
+                    t_success = false;
+                    break;
+                }
+                
+                dptr = buffer . Chars() + offset;
+                size = newsize;
+            }
+            const char_t *sptr = (const char_t *)url_table[(uint1)*s++];
+            do
+            {
+                *dptr++ = *sptr++;
+            }
+            while (*sptr);
+        }
+        buffer . Shrink(dptr - buffer . Chars());
+    }
 
-    if (p_use_utf8)
-        MCMemoryDeleteArray(t_utf8_string);
+    MCMemoryDeleteArray(s);
+    if (!t_success)
+        return false;
+    
 	return buffer . CreateStringAndRelease(r_result);
 }
 
@@ -188,7 +197,10 @@ bool MCFiltersUrlDecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
         return false;
 
     if (!t_buffer . New(t_srclen))
+    {
+        MCMemoryDeleteArray(t_srcptr);
         return false;
+    }
 
 	const uint1 *sptr = (uint1 *)t_srcptr;
     const uint1 *eptr = sptr + t_srclen;

@@ -18,7 +18,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-DERIVED_SRC = ../_cache/mac/Debug/stdscript.build/DerivedSources
+DERIVED_SRC = ../_cache/mac/Release/stdscript.build/DerivedSources
 
 SCRIPT_SRC_FILES = \
 	src/script-builder.cpp \
@@ -32,7 +32,9 @@ SCRIPT_SRC_FILES = \
 	src/module-bitwise.cpp \
 	src/module-byte.cpp \
 	src/module-char.cpp \
+	src/module-date.cpp \
 	src/module-encoding.cpp \
+	src/module-foreign.cpp \
 	src/module-file.cpp \
 	src/module-list.cpp \
 	src/module-logic.cpp \
@@ -40,6 +42,7 @@ SCRIPT_SRC_FILES = \
 	src/module-math_foundation.cpp \
 	src/module-math.cpp \
 	src/module-sort.cpp \
+	src/module-stream.cpp \
 	src/module-string.cpp \
 	src/module-type_convert.cpp \
 	src/module-type.cpp \
@@ -50,6 +53,9 @@ SCRIPT_SRC_FILES = \
 	$(DERIVED_SRC)/bitwise.mlc.c \
 	$(DERIVED_SRC)/byte.mlc.c \
 	$(DERIVED_SRC)/char.mlc.c \
+	$(DERIVED_SRC)/date.mlc.c \
+	$(DERIVED_SRC)/file.mlc.c \
+	$(DERIVED_SRC)/foreign.mlc.c \
 	$(DERIVED_SRC)/item.mlc.c \
 	$(DERIVED_SRC)/line.mlc.c \
 	$(DERIVED_SRC)/list.mlc.c \
@@ -58,12 +64,13 @@ SCRIPT_SRC_FILES = \
 	$(DERIVED_SRC)/math.mlc.c \
 	$(DERIVED_SRC)/segmentchunk.mlc.c \
 	$(DERIVED_SRC)/sort.mlc.c \
+	$(DERIVED_SRC)/stream.mlc.c \
 	$(DERIVED_SRC)/string.mlc.c \
 	$(DERIVED_SRC)/type-convert.mlc.c \
 	$(DERIVED_SRC)/type.mlc.c
 
 #############################################################
-#   build the ffi static library
+#   build the libscript static library
 #
 
 TARGET_PLATFORM=android-8

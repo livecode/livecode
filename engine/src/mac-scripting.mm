@@ -203,7 +203,8 @@ sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)Jav
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool p_utf8 = false);
 
 static bool ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string)
 {

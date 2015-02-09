@@ -691,6 +691,9 @@ LT factor_table[] =
         {"casesensitive", TT_PROPERTY, P_CASE_SENSITIVE},
         {"cd", TT_CHUNK, CT_CARD},
         {"cds", TT_CLASS, CT_CARD},
+		// MDW-2014-08-23 : [[ feature_floor ]]
+        {"ceil", TT_FUNCTION, F_CEIL},
+        {"ceiling", TT_FUNCTION, F_CEIL},
         {"centered", TT_PROPERTY, P_CENTERED},
         {"centerrect", TT_PROPERTY, P_CENTER_RECTANGLE},
         {"centerrectangle", TT_PROPERTY, P_CENTER_RECTANGLE},
@@ -915,6 +918,8 @@ LT factor_table[] =
 		{"flaggedranges", TT_PROPERTY, P_FLAGGED_RANGES},
         {"fld", TT_CHUNK, CT_FIELD},
         {"flds", TT_CLASS, CT_FIELD},
+		// MDW-2014-08-23 : [[ feature_floor ]]
+        {"floor", TT_FUNCTION, F_FLOOR},
         {"flushevents", TT_FUNCTION, F_FLUSH_EVENTS},
         {"focuscolor", TT_PROPERTY, P_FOCUS_COLOR},
         {"focusedobject", TT_FUNCTION, F_FOCUSED_OBJECT},
@@ -2106,6 +2111,7 @@ static LT sugar_table[] =
 		{"open", TT_UNDEFINED, SG_OPEN},
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},
+		{"path", TT_UNDEFINED, SG_PATH},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'pattern'.
 		{"pattern", TT_UNDEFINED, SG_PATTERN},
 		// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
@@ -2113,6 +2119,7 @@ static LT sugar_table[] =
         {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'regex'.
 		{"regex", TT_UNDEFINED, SG_REGEX},
+		{"resource", TT_UNDEFINED, SG_RESOURCE},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},

@@ -31,7 +31,7 @@
 
 'action' Generate(MODULE)
 
-    'rule' Generate(Module:module(_, Kind, Id, _, Imports, Definitions)):
+    'rule' Generate(Module:module(_, Kind, Id, Imports, Definitions)):
         ModuleDependencyList <- nil
         
         QueryModuleId(Id -> Info)
@@ -98,32 +98,28 @@
 
 'action' GenerateManifest(MODULE)
 
-    'rule' GenerateManifest(module(_, Kind, Id, Metadata, Imports, Definitions)):
+    'rule' GenerateManifest(module(_, Kind, Id, Imports, Definitions)):
         OutputBeginManifest()
         Id'Name -> Name
         OutputWrite("<package version=\"0.0\">\n")
-        [|
-            QueryMetadata(Metadata, "label" -> LabelString)
-            OutputWriteS("  <label>", LabelString, "</label>\n")
-        |]
-        [|
-            QueryMetadata(Metadata, "description" -> DescriptionString)
-            OutputWriteS("  <description>", DescriptionString, "</description>\n")
-        |]
-        OutputWrite("  <license>community</license>\n")
         OutputWriteI("  <name>", Name, "</name>\n")
         [|
-            QueryMetadata(Metadata, "version" -> VersionString)
-            OutputWriteS("  <version>", VersionString, "</version>\n")
+            QueryMetadata(Definitions, "title" -> TitleString)
+            OutputWriteS("  <title>", TitleString, "</title>\n")
         |]
         [|
-            QueryMetadata(Metadata, "author" -> AuthorString)
+            QueryMetadata(Definitions, "author" -> AuthorString)
             OutputWriteS("  <author>", AuthorString, "</author>\n")
         |]
         [|
-            QueryMetadata(Metadata, "title" -> TitleString)
-            OutputWriteS("  <title>", TitleString, "</title>\n")
+            QueryMetadata(Definitions, "description" -> DescriptionString)
+            OutputWriteS("  <description>", DescriptionString, "</description>\n")
         |]
+        [|
+            QueryMetadata(Definitions, "version" -> VersionString)
+            OutputWriteS("  <version>", VersionString, "</version>\n")
+        |]
+        OutputWrite("  <license>community</license>\n")
         (|
             where(Kind -> widget)
             OutputWrite("  <type>widget</type>\n")
@@ -137,14 +133,17 @@
         GenerateManifestDefinitions(Definitions)
         OutputWrite("</package>")
         OutputEnd()
-        
-'condition' QueryMetadata(METADATA, STRING -> STRING)
 
-    'rule' QueryMetadata(metadata(_, Key, Value, Rest), WantedKey -> Value):
-        IsNameEqualToString(Key, WantedKey)
+'condition' QueryMetadata(DEFINITION, STRING -> STRING)
+
+    'rule' QueryMetadata(sequence(Left, _), Key -> Value):
+        QueryMetadata(Left, Key -> Value)
+
+    'rule' QueryMetadata(sequence(_, Right), Key -> Value):
+        QueryMetadata(Right, Key -> Value)
         
-    'rule' QueryMetadata(metadata(_, _, _, Rest), WantedKey -> Value):
-        QueryMetadata(Rest, WantedKey -> Value)
+    'rule' QueryMetadata(metadata(_, Key, Value), WantedKey -> Value):
+        IsStringEqualToString(Key, WantedKey)
 
 'action' AddModuleToDependencyList(NAME)
 
@@ -171,6 +170,20 @@
         GenerateManifestDefinitions(Left)
         GenerateManifestDefinitions(Right)
         
+    'rule' GenerateManifestDefinitions(metadata(_, Key, Value)):
+        (|
+            IsStringEqualToString(Key, "title")
+        ||
+            IsStringEqualToString(Key, "author")
+        ||
+            IsStringEqualToString(Key, "description")
+        ||
+            IsStringEqualToString(Key, "version")
+        ||
+            OutputWriteS("  <metadata key=\"", Key, "\">")
+            OutputWriteS("", Value, "</metadata>\n")
+        |)
+
     'rule' GenerateManifestDefinitions(type(_, public, Name, _)):
     
     'rule' GenerateManifestDefinitions(constant(_, public, Name, _)):
@@ -271,19 +284,6 @@
         OutputWrite("array")
     'rule' GenerateManifestTypeBody(list(_, _)):
         OutputWrite("list")
-        
-    'rule' GenerateManifestTypeBody(pointer(_)):
-        OutputWrite("pointer")
-    'rule' GenerateManifestTypeBody(bool(_)):
-        OutputWrite("bool")
-    'rule' GenerateManifestTypeBody(int(_)):
-        OutputWrite("int")
-    'rule' GenerateManifestTypeBody(uint(_)):
-        OutputWrite("uint")
-    'rule' GenerateManifestTypeBody(float(_)):
-        OutputWrite("float")
-    'rule' GenerateManifestTypeBody(double(_)):
-        OutputWrite("double")
 
     'rule' GenerateManifestTypeBody(Type):
         print(Type)
@@ -629,12 +629,16 @@
         Info'Index -> DefIndex
         EmitBeginHandlerDefinition(DefIndex, Position, Name, TypeIndex)
         GenerateParameters(Parameters)
+        CreateParameterRegisters(Parameters)
+        CreateVariableRegisters(Body)
         EmitCreateRegister(-> ContextReg)
         EmitCreateRegister(-> ResultReg)
         GenerateBody(ResultReg, ContextReg, Body)
         EmitDestroyRegister(ContextReg)
         EmitDestroyRegister(ResultReg)
         EmitReturnNothing()
+        DestroyVariableRegisters(Body)
+        DestroyParameterRegisters(Parameters)
         EmitEndHandlerDefinition()
 
     'rule' GenerateDefinitions(foreignhandler(Position, _, Id, Signature, Binding)):
@@ -677,6 +681,9 @@
         GenerateSyntaxMethods(Methods)
         EmitEndSyntaxDefinition()
         
+    'rule' GenerateDefinitions(metadata(_, _, _)):
+        -- do nothing
+
     'rule' GenerateDefinitions(nil):
         -- nothing
 
@@ -765,6 +772,44 @@
     'rule' GenerateParameters(nil):
         -- nothing
         
+'action' CreateParameterRegisters(PARAMETERLIST)
+
+    'rule' CreateParameterRegisters(parameterlist(parameter(_, _, _, _), Rest)):
+        EmitCreateRegister(-> Register)
+        CreateParameterRegisters(Rest)
+
+    'rule' CreateParameterRegisters(nil):
+        -- nothing
+
+'sweep' CreateVariableRegisters(ANY)
+
+    'rule' CreateVariableRegisters(STATEMENT'variable(_, _, _)):
+        EmitCreateRegister(-> Register)
+
+'action' DestroyParameterRegisters(PARAMETERLIST)
+
+    'rule' DestroyParameterRegisters(parameterlist(parameter(_, _, Id, _), Rest)):
+        QuerySymbolId(Id -> Info)
+        Info'Index -> Index
+        EmitDestroyRegister(Index)
+        DestroyParameterRegisters(Rest)
+
+    'rule' DestroyParameterRegisters(nil):
+        -- nothing
+
+'action' DestroyVariableRegisters(STATEMENT)
+
+    'rule' DestroyVariableRegisters(sequence(Left, Right)):
+        DestroyVariableRegisters(Left)
+        DestroyVariableRegisters(Right)
+
+    'rule' DestroyVariableRegisters(variable(_, Id, _)):
+        QuerySymbolId(Id -> Info)
+        Info'Index -> Index
+        EmitDestroyRegister(Index)
+
+    'rule' DestroyVariableRegisters(_):
+        -- nothing
 
 'action' GenerateBody(INT, INT, STATEMENT)
 
@@ -1000,12 +1045,28 @@
         
     'rule' GenerateBody(Result, Context, return(Position, Value)):
         EmitPosition(Position)
-        GenerateExpression(Result, Context, Value -> ReturnReg)
-        EmitReturn(ReturnReg)
+        (|
+            where(Value -> nil)
+            EmitReturnNothing()
+        ||
+            GenerateExpression(Result, Context, Value -> ReturnReg)
+            EmitReturn(ReturnReg)
+        |)
         
     'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):
         EmitPosition(Position)
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Result)
+
+    'rule' GenerateBody(Result, Context, put(Position, Source, slot(_, Id))):
+        EmitPosition(Position)
+        GenerateInvoke_EvaluateArgumentForIn(Result, Context, Source)
+        EmitGetRegisterAttachedToExpression(Source -> SrcReg)
+        QuerySymbolId(Id -> Info)
+        Info'Kind -> Kind
+        Info'Index -> Index
+        EmitStoreVar(Kind, SrcReg, Index)
+        GenerateInvoke_FreeArgument(Source)
+        EmitAssignUndefined(Result)
 
     'rule' GenerateBody(Result, Context, put(Position, Source, Target)):
         EmitPosition(Position)
@@ -1093,6 +1154,16 @@
     'rule' GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, nil):
         -- do nothing for nil arguments.
 
+    'rule' GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        Info'Index -> Register
+        EmitAttachRegisterToExpression(Register, Expr)
+
     'rule' GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr):
         EmitCreateRegister(-> OutputReg)
         EmitAttachRegisterToExpression(OutputReg, Expr)
@@ -1109,6 +1180,16 @@
         EmitAttachRegisterToExpression(OutputReg, Invoke)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(ResultReg, ContextReg, Signature, Arguments)
+
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, Expr:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        Info'Index -> Register
+        EmitAttachRegisterToExpression(Register, Expr)
 
     'rule' GenerateInvoke_EvaluateArgumentForOut(ResultReg, ContextReg, Slot:slot(_, _)):
         EmitCreateRegister(-> OutputReg)
@@ -1137,6 +1218,16 @@
         EmitEndInvoke()
         EmitDestroyRegister(IgnoredResultReg)
         GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
+
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, Expr:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        Info'Index -> Register
+        EmitAttachRegisterToExpression(Register, Expr)
 
     'rule' GenerateInvoke_EvaluateArgumentForInOut(ResultReg, ContextReg, Slot:slot(_, _)):
         EmitCreateRegister(-> OutputReg)
@@ -1184,6 +1275,15 @@
         GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
         
     'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Slot:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        -- Nothing more to do as the invoke will have done the assign.
+
+    'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Slot:slot(_, Id)):
         EmitGetRegisterAttachedToExpression(Slot -> InputReg)
         QuerySymbolId(Id -> Info)
         Info'Kind -> Kind
@@ -1211,6 +1311,15 @@
         |]
         GenerateInvoke_FreeArguments(Arguments)
     
+    'rule' GenerateInvoke_FreeArgument(Expr:slot(_, Id)):
+        QuerySymbolId(Id -> Info)
+        (|
+            Info'Kind -> parameter
+        ||
+            Info'Kind -> local
+        |)
+        EmitDetachRegisterFromExpression(Expr)
+
     'rule' GenerateInvoke_FreeArgument(Expr):
         [|
             EmitGetRegisterAttachedToExpression(Expr -> Reg)
@@ -1347,21 +1456,45 @@
 
 ----
 
+'action' FullyResolveType(TYPE -> TYPE)
+
 'action' GenerateCallInRegister(INT, INT, POS, ID, EXPRESSIONLIST, INT)
 
     'rule' GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output):
         QuerySymbolId(Handler -> Info)
         Info'Index -> Index
         Info'Kind -> Kind
-        Info'Type -> handler(_, signature(HandlerSig, _))
+        Info'Type -> Type
+        FullyResolveType(Type -> handler(_, signature(HandlerSig, _)))
         GenerateCall_GetInvokeSignature(HandlerSig, 0 -> InvokeSig)
 
+        (|
+            -- If the Id is not a handler it must be a variable
+            ne(Kind, handler)
+            EmitCreateRegister(-> HandlerReg)
+            EmitFetchVar(Kind, HandlerReg, Index)
+        ||
+            where(-1 -> HandlerReg)
+        |)
+        
         GenerateInvoke_EvaluateArguments(Result, Context, InvokeSig, Arguments)
-        EmitBeginInvoke(Index, Context, Output)
+        
+        (|
+            ne(Kind, handler)
+            EmitBeginIndirectInvoke(HandlerReg, Context, Output)
+        ||
+            EmitBeginInvoke(Index, Context, Output)
+        |)
+        
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke
         GenerateInvoke_AssignArguments(Result, Context, InvokeSig, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
+        
+        [|
+            ne(Kind, handler)
+            EmitDestroyRegister(HandlerReg)
+        |]
 
 'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT -> INVOKESIGNATURE)
 
@@ -1430,6 +1563,7 @@
         EmitBeginAssignList(Output)
         GenerateAssignList(ListRegs)
         EmitEndAssignList()
+        EmitDestroyRegisterList(ListRegs)
     
     'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments), Output):
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output)
@@ -1464,19 +1598,23 @@
 'action' EmitStoreVar(SYMBOLKIND, INT, INT)
 
     'rule' EmitStoreVar(variable, Reg, Var):
-        EmitStoreGlobal(Reg, Var)
+        EmitStore(Reg, Var, 0)
         
     'rule' EmitStoreVar(_, Reg, Var):
-        EmitStoreLocal(Reg, Var)
+        EmitAssign(Var, Reg)
 
 'action' EmitFetchVar(SYMBOLKIND, INT, INT)
 
-    'rule' EmitFetchVar(variable, Reg, Var):
-        EmitFetchGlobal(Reg, Var)
-        
-    'rule' EmitFetchVar(_, Reg, Var):
-        EmitFetchLocal(Reg, Var)
+    'rule' EmitFetchVar(local, Reg, Var):
+        EmitAssign(Reg, Var)
 
+    'rule' EmitFetchVar(parameter, Reg, Var):
+        EmitAssign(Reg, Var)
+
+    -- This catches all module-scope things, including variables and handler references.
+    'rule' EmitFetchVar(_, Reg, Var):
+        EmitFetch(Reg, Var, 0)
+        
 'action' EmitInvokeRegisterList(INTLIST)
 
     'rule' EmitInvokeRegisterList(intlist(Head, Tail)):
@@ -1589,10 +1727,6 @@
         GenerateHandlerTypeParameters(Parameters)
         EmitEndHandlerType(-> Index)
 
-    'rule' GenerateBaseType(opaque(_, _, _) -> Index):
-        -- TODO
-        EmitUndefinedType(-> Index)
-
     'rule' GenerateBaseType(any(_) -> Index):
         EmitAnyType(-> Index)
     'rule' GenerateBaseType(undefined(_) -> Index):
@@ -1614,19 +1748,6 @@
         EmitArrayType(-> Index)
     'rule' GenerateBaseType(list(_, _) -> Index):
         EmitListType(-> Index)
-        
-    'rule' GenerateBaseType(pointer(_) -> Index):
-        EmitPointerType(-> Index)
-    'rule' GenerateBaseType(bool(_) -> Index):
-        EmitBoolType(-> Index)
-    'rule' GenerateBaseType(int(_) -> Index):
-        EmitIntType(-> Index)
-    'rule' GenerateBaseType(uint(_) -> Index):
-        EmitUIntType(-> Index)
-    'rule' GenerateBaseType(float(_) -> Index):
-        EmitFloatType(-> Index)
-    'rule' GenerateBaseType(double(_) -> Index):
-        EmitDoubleType(-> Index)
 
     'rule' GenerateBaseType(Type -> 0):
         print(Type)

@@ -132,34 +132,33 @@
 
 'nonterm' Module(-> MODULE)
 
-    'rule' Module(-> module(Position, module, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, module, Name, Imports, Definitions)):
         OptionalSeparator
         "module" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, widget, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, widget, Name, Imports, sequence(PreImportDefs, Definitions))):
         OptionalSeparator
         "widget" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
+        PreImportMetadata(-> PreImportDefs)
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "widget" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, library, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, library, Name, Imports, sequence(PreImportDefs, Definitions))):
         OptionalSeparator
         "library" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
+        PreImportMetadata(-> PreImportDefs)
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "library" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, import, Name, nil, Imports, Definitions)):
+    'rule' Module(-> module(Position, import, Name, Imports, Definitions)):
         OptionalSeparator
         "import" "module" @(-> Position) Identifier(-> Name) Separator
         Imports(-> Imports)
@@ -191,15 +190,22 @@
 -- Metadata Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' Metadata(-> METADATA)
+'nonterm' PreImportMetadata(-> DEFINITION)
 
-    'rule' Metadata(-> metadata(Position, Key, Value, Next)):
-        "metadata" @(-> Position) NAME_LITERAL(-> Key) "is" STRING_LITERAL(-> Value) Separator
-        Metadata(-> Next)
+    'rule' PreImportMetadata(-> sequence(Left, Right)):
+        Metadata(-> Left) Separator
+        PreImportMetadata(-> Right)
+        where(Left -> metadata(Position, _, _))
+        Warning_MetadataClausesShouldComeAfterUseClauses(Position)
+
+    'rule' PreImportMetadata(-> nil):
+        -- do nothing
+
+'nonterm' Metadata(-> DEFINITION)
+
+    'rule' Metadata(-> metadata(Position, Key, Value)):
+        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" STRING_LITERAL(-> Value)
         
-    'rule' Metadata(-> nil):
-        -- empty
-
 --------------------------------------------------------------------------------
 -- Import Syntax
 --------------------------------------------------------------------------------
@@ -248,6 +254,9 @@
         
 'nonterm' Definition(-> DEFINITION)
 
+    'rule' Definition(-> Metadata):
+        Metadata(-> Metadata)
+        
     'rule' Definition(-> Constant):
         ConstantDefinition(-> Constant)
         
@@ -315,10 +324,6 @@
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
         Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
 
-    'rule' TypeDefinition(-> type(Position, Access, Name, opaque(Position, Base, Fields))):
-        Access(-> Access) "opaque" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
-            TypeFields(-> Fields)
-        "end" "type"
         
     'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
         Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
@@ -545,32 +550,6 @@
         
     'rule' Type(-> optional(Position, Base)):
         "optional" @(-> Position) Type(-> Base)
-
-    'rule' Type(-> pointer(Position)):
-        "pointer" @(-> Position)
-
-    'rule' Type(-> bool(Position)):
-        "bool" @(-> Position)
-
-    'rule' Type(-> int(Position)):
-        "int" @(-> Position)
-    
-    'rule' Type(-> uint(Position)):
-        "uint" @(-> Position)
-
-    'rule' Type(-> int(Position)):
-        "index" @(-> Position)
-    
-    'rule' Type(-> uint(Position)):
-        "uindex" @(-> Position)
-
-    'rule' Type(-> float(Position)):
-        "float" @(-> Position)
-
-    'rule' Type(-> double(Position)):
-        "double" @(-> Position)
-
-    --
 
     'rule' Type(-> any(Position)):
         "any" @(-> Position)
@@ -885,7 +864,7 @@
         DOUBLE_LITERAL(-> Value) @(-> Position)
 
     'rule' ConstantTermExpression(-> string(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position)
+        StringLiteral(-> Value) @(-> Position)
 
 ----------
 
@@ -948,6 +927,9 @@
         
     'rule' AtomicSyntax(-> keyword(Position, Value)):
         STRING_LITERAL(-> Value) @(-> Position)
+
+    'rule' AtomicSyntax(-> unreservedkeyword(Position, Value)):
+        STRING_LITERAL(-> Value) @(-> Position) "!"
         
     'rule' AtomicSyntax(-> rule(Position, Name)):
         "<" @(-> Position) Identifier(-> Name) ">"
@@ -1009,13 +991,29 @@
         "+" DOUBLE_LITERAL(-> Value) @(-> Position)
 
     'rule' Constant(-> string(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position)
+        StringLiteral(-> Value) @(-> Position)
 
     'rule' Constant(-> variable(Position, Value)):
         Identifier(-> Value) @(-> Position)
 
     'rule' Constant(-> indexedvariable(Position, Value, Index)):
         Identifier(-> Value) @(-> Position) "[" INTEGER_LITERAL(-> Index) "]"
+        
+    'rule' Constant(-> variable(Position, Value)):
+        "output" @(-> Position)
+        MakeNameLiteral("output" -> Identifier)
+        Value::ID
+        Value'Position <- Position
+        Value'Name <- Identifier
+        Value'Meaning <- nil
+
+    'rule' Constant(-> variable(Position, Value)):
+        "input" @(-> Position)
+        MakeNameLiteral("input" -> Identifier)
+        Value::ID
+        Value'Position <- Position
+        Value'Name <- Identifier
+        Value'Meaning <- nil
 
 --------------------------------------------------------------------------------
 -- Identifier Syntax
@@ -1036,11 +1034,18 @@
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier
+        
+    'rule' Identifier(-> Id):
+        CustomKeywords(-> String) @(-> Position)
+        MakeNameLiteral(String -> Identifier)
+        Id::ID
+        Id'Position <- Position
+        Id'Name <- Identifier
 
 'nonterm' StringyIdentifier(-> ID)
 
     'rule' StringyIdentifier(-> Id):
-        STRING_LITERAL(-> String) @(-> Position)
+        StringLiteral(-> String) @(-> Position)
         MakeNameLiteral(String -> Identifier)
         Id::ID
         Id'Position <- Position
@@ -1079,6 +1084,26 @@
 -- Tokens
 --------------------------------------------------------------------------------
 
+'nonterm' StringLiteral(-> STRING)
+
+    'rule' StringLiteral(-> Value):
+        STRING_LITERAL(-> EscapedValue) @(-> Position)
+        (|
+            UnescapeStringLiteral(EscapedValue -> Value)
+        ||
+            Error_MalformedEscapedString(Position, EscapedValue)
+            where(EscapedValue -> Value)
+        |)
+
+'nonterm' StringOrNameLiteral(-> STRING)
+
+    'rule' StringOrNameLiteral(-> String):
+        StringLiteral(-> String)
+        
+    'rule' StringOrNameLiteral(-> String):
+        NAME_LITERAL(-> Name)
+        GetStringOfNameLiteral(Name -> String)
+
 'token' NAME_LITERAL (-> NAME)
 'token' INTEGER_LITERAL (-> INT)
 'token' DOUBLE_LITERAL (-> DOUBLE)
@@ -1115,6 +1140,11 @@
 'nonterm' CustomIterators(-> EXPRESSION)
     'rule' CustomIterators(-> nil):
         "THISCANNEVERHAPPEN"
+'nonterm' CustomKeywords(-> STRING)
+    'rule' CustomKeywords(-> String):
+        "THISCANNEVERHAPPEN"
+        where("THISCANNEVERHAPPEN" -> String)
+
 
 
 

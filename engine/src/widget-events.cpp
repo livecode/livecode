@@ -424,6 +424,12 @@ bool MCWidgetEventManager::mouseDown(MCWidget* p_widget, uinteger_t p_which)
     if (!widgetIsInRunMode(p_widget))
         return false;
     
+    // The click position is updated regardless of what happens.
+    m_click_x = m_mouse_x;
+    m_click_y = m_mouse_y;
+    m_click_time = MCeventtime;
+    m_click_button = p_which;
+    
     // If the widget handles clicks or mouse down events, accept the event
     bool t_accepted;
     t_accepted = false;
@@ -520,11 +526,6 @@ void MCWidgetEventManager::mouseClick(MCWidget* p_widget, uinteger_t p_which)
         p_widget->OnClick(m_mouse_x, m_mouse_y, p_which, 1);
     }
     
-    // Update the time and location for the last mouse button event
-    m_click_x = m_mouse_x;
-    m_click_y = m_mouse_y;
-    m_click_time = MCeventtime;
-    m_click_button = p_which;
 }
 
 bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)

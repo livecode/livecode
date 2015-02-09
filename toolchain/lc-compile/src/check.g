@@ -50,7 +50,6 @@
 --   BD2) DEFINITION'property(Getter, Setter) - both id's must be handlers or variables
 --
 --   BT1) TYPE'named(Id) - Id must be bound to a type.
---   BT2) TYPE'opaque(FIELD'action(Handler)) - Handler must be bound to a handler.
 --
 --   BS1) STATEMENT'repeatupto(Slot) - Slot must be bound to a variable
 --   BS2) STATEMENT'repeatdownto(Slot) - Slot must be bound to a variable
@@ -114,8 +113,7 @@
         CheckBindings(Body)
 
     'rule' CheckBindings(STATEMENT'call(_, Handler, Arguments)):
-        -- TODO: Implement indirect calls
-        /* B4 */ CheckBindingIsHandlerId(Handler)
+        /* B4 */ CheckBindingIsCallableVariableOrHandlerId(Handler)
         CheckBindings(Arguments)
 
     --
@@ -124,8 +122,7 @@
         /* BE1 */ CheckBindingIsVariableOrHandlerId(Name)
 
     'rule' CheckBindings(EXPRESSION'call(_, Handler, Arguments)):
-        -- TODO: Implement indirect calls
-        /* BE2 */ CheckBindingIsHandlerId(Handler)
+        /* BE2 */ CheckBindingIsCallableVariableOrHandlerId(Handler)
         CheckBindings(Arguments)
         
     --
@@ -236,6 +233,38 @@
         Error_NotBoundToAVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
+
+'action' FullyResolveType(TYPE -> TYPE)
+
+    'rule' FullyResolveType(optional(_, Type) -> Base):
+        FullyResolveType(Type -> Base)
+    
+    'rule' FullyResolveType(named(_, Id) -> Base):
+        QuerySymbolId(Id -> Named)
+        Named'Type -> Type
+        FullyResolveType(Type -> Base)
+        
+    'rule' FullyResolveType(Type -> Type):
+
+'action' CheckBindingIsCallableVariableOrHandlerId(ID)
+
+    'rule' CheckBindingIsCallableVariableOrHandlerId(Id):
+        CheckBindingIsVariableOrHandlerId(Id)
+        [|
+            QuerySymbolId(Id -> Info)
+            Info'Kind -> Kind
+            -- If we get here the symbol is either a handler or variable (local or global)
+            ne(Kind, handler)
+            Info'Type -> Type
+            FullyResolveType(Type -> BaseType)
+            (|
+                where(BaseType -> handler(_, Signature))
+            ||
+                Id'Position -> Position
+                Error_NonHandlerTypeVariablesCannotBeCalled(Position)
+            |)
+        |]
+            
 
 'action' CheckBindingIsSyntaxRuleOfExpressionType(ID)
 
@@ -831,7 +860,9 @@
         (|
             where(Type -> boolean(_))
         ||
-            where(Type -> bool(_))
+            where(Type -> named(_, Id))
+            Id'Name -> Name
+            IsNameEqualToString(Name, "bool")
         ||
             Error_IterateSyntaxMethodMustReturnBoolean(Position)
         |)
@@ -1103,7 +1134,7 @@
 
 'sweep' CheckInvokes(ANY)
 
-    'rule' CheckInvokes(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
+    'rule' CheckInvokes(MODULE'module(_, Kind, Name, Imports, Definitions)):
         (|
             ne(Kind, widget)
             (|
@@ -1122,8 +1153,12 @@
         CheckInvokes(Definitions)
 
     'rule' CheckInvokes(STATEMENT'call(Position, Handler, Arguments)):
-        QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
-        CheckCallArguments(Position, Parameters, Arguments)
+        [|
+            -- This call will fail if Handler is an untyped or generic handler type variable
+            QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
+            CheckCallArguments(Position, Parameters, Arguments)
+            CheckInvokes(Arguments)
+        |]
 
     'rule' CheckInvokes(STATEMENT'invoke(Position, Info, Arguments)):
         (|
@@ -1134,6 +1169,7 @@
             ||
                 Fatal_InternalInconsistency("No execute method for statement syntax")
             |)
+            CheckInvokes(Arguments)
         ||
             Error_SyntaxNotAllowedInThisContext(Position)
         |)
@@ -1141,29 +1177,40 @@
     'rule' CheckInvokes(STATEMENT'put(Position, Source, Target)):
         CheckExpressionIsEvaluatable(Source)
         CheckExpressionIsAssignable(Target)
+        CheckInvokes(Source)
+        CheckInvokes(Target)
         
     'rule' CheckInvokes(STATEMENT'repeatcounted(Position, Count, Body)):
         CheckExpressionIsEvaluatable(Count)
+        CheckInvokes(Count)
         CheckInvokes(Body)
         
     'rule' CheckInvokes(STATEMENT'repeatwhile(Position, Condition, Body)):
         CheckExpressionIsEvaluatable(Condition)
+        CheckInvokes(Condition)
         CheckInvokes(Body)
 
     'rule' CheckInvokes(STATEMENT'repeatuntil(Position, Condition, Body)):
         CheckExpressionIsEvaluatable(Condition)
+        CheckInvokes(Condition)
         CheckInvokes(Body)
 
     'rule' CheckInvokes(STATEMENT'repeatupto(Position, Slot, Start, Finish, Step, Body)):
         CheckExpressionIsEvaluatable(Start)
         CheckExpressionIsEvaluatable(Finish)
         CheckExpressionIsEvaluatable(Step)
+        CheckInvokes(Start)
+        CheckInvokes(Finish)
+        CheckInvokes(Step)
         CheckInvokes(Body)
 
     'rule' CheckInvokes(STATEMENT'repeatdownto(Position, Slot, Start, Finish, Step, Body)):
         CheckExpressionIsEvaluatable(Start)
         CheckExpressionIsEvaluatable(Finish)
         CheckExpressionIsEvaluatable(Step)
+        CheckInvokes(Start)
+        CheckInvokes(Finish)
+        CheckInvokes(Step)
         CheckInvokes(Body)
 
     'rule' CheckInvokes(STATEMENT'repeatforeach(Position, invoke(IteratorPosition, IteratorInvoke, IteratorArguments), Container, Body)):
@@ -1175,24 +1222,33 @@
             ||
                 Fatal_InternalInconsistency("No iterate method for repeat for each syntax")
             |)
+            CheckInvokes(IteratorArguments)
         ||
             Error_SyntaxNotAllowedInThisContext(Position)
         |)
         CheckExpressionIsEvaluatable(Container)
+        CheckInvokes(IteratorArguments)
+        CheckInvokes(Container)
         CheckInvokes(Body)
         
     'rule' CheckInvokes(STATEMENT'return(Position, Value)):
         [|
             ne(Value, nil)
             CheckExpressionIsEvaluatable(Value)
+            CheckInvokes(Value)
         |]
 
     'rule' CheckInvokes(STATEMENT'throw(Position, Error)):
         CheckExpressionIsEvaluatable(Error)
+        CheckInvokes(Error)
 
     'rule' CheckInvokes(EXPRESSION'call(Position, Handler, Arguments)):
-        QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
-        CheckCallArguments(Position, Parameters, Arguments)
+        [|
+            -- This call will fail if Handler is an untyped or generic handler type variable
+            QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
+            CheckCallArguments(Position, Parameters, Arguments)
+            CheckInvokes(Arguments)
+        |]
     
     'rule' CheckInvokes(EXPRESSION'invoke(Position, Info, Arguments)):
         (|
@@ -1203,6 +1259,7 @@
             ||
                 Error_NonEvaluatableExpressionUsedForInContext(Position)
             |)
+            CheckInvokes(Arguments)
         ||
             Error_SyntaxNotAllowedInThisContext(Position)
         |)
@@ -1210,10 +1267,14 @@
     'rule' CheckInvokes(EXPRESSION'logicaland(Position, Left, Right)):
         CheckExpressionIsEvaluatable(Left)
         CheckExpressionIsEvaluatable(Right)
+        CheckInvokes(Left)
+        CheckInvokes(Right)
 
     'rule' CheckInvokes(EXPRESSION'logicalor(Position, Left, Right)):
         CheckExpressionIsEvaluatable(Left)
         CheckExpressionIsEvaluatable(Right)
+        CheckInvokes(Left)
+        CheckInvokes(Right)
 
 
 'action' CheckCallArguments(POS, PARAMETERLIST, EXPRESSIONLIST)
@@ -1292,8 +1353,12 @@
             Error_SyntaxNotAllowedInThisContext(Position)
         |)
         
-    'rule' CheckExpressionIsAssignable(slot(_, _)):
-        -- variables are assignable
+    'rule' CheckExpressionIsAssignable(slot(Position, Id)):
+        [|
+            QueryKindOfSymbolId(Id -> handler)
+            Id'Name -> Name
+            Error_CannotAssignToHandlerId(Position, Name)
+        |]
         
     'rule' CheckExpressionIsAssignable(Expr):
         -- everything else is not
@@ -1363,6 +1428,7 @@
 
 --------------------------------------------------------------------------------
 
+-- TODO: Remove - we don't restrict types anymore - caveat coder!
 'sweep' CheckDeclaredTypes(ANY)
 
     'rule' CheckDeclaredTypes(DEFINITION'variable(Position, _, _, Type)):
@@ -1370,7 +1436,7 @@
         (|
             IsHighLevelType(Type)
         ||
-            Error_VariableMustHaveHighLevelType(Position)
+            --Error_VariableMustHaveHighLevelType(Position)
         |)
         
     'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(_, _, _, Signature, _)):
@@ -1381,7 +1447,7 @@
         (|
             IsHighLevelType(Type)
         ||
-            Error_ParameterMustHaveHighLevelType(Position)
+            --Error_ParameterMustHaveHighLevelType(Position)
         |)
         
     'rule' CheckDeclaredTypes(STATEMENT'variable(Position, _, Type)):
@@ -1389,7 +1455,7 @@
         (|
             IsHighLevelType(Type)
         ||
-            Error_VariableMustHaveHighLevelType(Position)
+            --Error_VariableMustHaveHighLevelType(Position)
         |)
 
 'condition' IsHighLevelType(TYPE)
@@ -1407,8 +1473,8 @@
         |)
     'rule' IsHighLevelType(optional(_, Type)):
         IsHighLevelType(Type)
+    'rule' IsHighLevelType(handler(_, _)):
     'rule' IsHighLevelType(record(_, _, _)):
-    'rule' IsHighLevelType(pointer(_)):
     'rule' IsHighLevelType(boolean(_)):
     'rule' IsHighLevelType(integer(_)):
     'rule' IsHighLevelType(real(_)):
@@ -1426,6 +1492,12 @@
         QueryId(Id -> symbol(Info))
         Info'Kind -> handler
         Info'Type -> handler(_, Signature)
+        
+    'rule' QueryHandlerIdSignature(Id -> Signature)
+        QueryId(Id -> symbol(Info))
+        Info'Kind -> variable
+        Info'Type -> Type
+        FullyResolveType(Type -> handler(_, Signature))
 
 'condition' QueryKindOfSymbolId(ID -> SYMBOLKIND)
 

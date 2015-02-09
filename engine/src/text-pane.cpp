@@ -16,6 +16,8 @@
 
 #include "prefix.h"
 
+#include <foundation-math.h>
+
 #include "text-pane.h"
 
 #include "text-paragraph.h"

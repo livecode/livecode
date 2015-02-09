@@ -323,6 +323,9 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 		return;
 	}
 	
+    if (t_ranges != nil)
+        MCMemoryDeallocate(t_ranges);
+    
 	ctxt . LegacyThrow(EE_PROPERTY_BADPRINTPROP);
 }
 
@@ -828,7 +831,8 @@ void MCPrintingGetPrintDeviceOutput(MCExecContext& ctxt, MCPrintingPrintDeviceOu
 	
 	if (t_output_type == PRINTER_OUTPUT_FILE)
 	{
-		if (!MCStringCreateWithCString(MCprinter -> GetDeviceOutputLocation(), r_output . location))
+        // SN-2014-12-22: [[ Bug 14278 ]] Output location now stored as a UTF-8 string.
+		if (!MCStringCreateWithBytes((byte_t*)MCprinter -> GetDeviceOutputLocation(), strlen(MCprinter->GetDeviceOutputLocation()), kMCStringEncodingUTF8, false, r_output . location))
 		{
 			ctxt . Throw();
 			return;

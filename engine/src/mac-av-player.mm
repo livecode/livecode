@@ -155,8 +155,6 @@ private:
     bool m_synchronizing : 1;
     bool m_frame_changed_pending : 1;
     bool m_finished : 1;
-    bool m_loaded : 1;
-    bool m_stepped : 1;
     bool m_has_invalid_filename : 1;
 };
 
@@ -277,13 +275,11 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_synchronizing = false;
     m_frame_changed_pending = false;
     m_finished = false;
-    m_loaded = false;
     
     m_time_scale = 0;
     
     m_selection_start = 0;
     m_selection_finish = 0;
-    m_stepped = false;
     m_buffered_time = 0;
     
     m_time_observer_token = nil;
@@ -354,7 +350,6 @@ void MCAVFoundationPlayer::MovieIsLoading(CMTimeRange p_timerange)
 void MCAVFoundationPlayer::MovieFinished(void)
 {
     m_finished = true;
-    m_stepped = false;
     
     if (m_offscreen)
         CVDisplayLinkStop(m_display_link);
@@ -366,6 +361,38 @@ void MCAVFoundationPlayer::MovieFinished(void)
     }
     else
     {
+        // PM-2104-12-119: [[ Bug 14253 ]] For some videos, when looping and playSelection are true, the controller thumb does not update after one or two loops. To prevent this, remove and re-add the periodicTimeObserver in each loop
+        if (m_time_observer_token != nil)
+        {
+            [m_player removeTimeObserver:m_time_observer_token];
+            m_time_observer_token = nil;
+        }
+        m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(30, 1000) queue:nil usingBlock:^(CMTime time) {
+            
+            /*
+             When alwaysBuffer is true and movie finishes, the CVDisplayLink stops. After that, in case currenttime changes
+             (for example when user clicks on the controller well), we have to re-start the CVDisplayLink so as to update
+             the current movie frame
+             */
+            
+            if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
+                CVDisplayLinkStart(m_display_link);
+            
+            if (CMTimeCompare(time, m_observed_time) == 0)
+                return;
+            
+            m_observed_time = time;
+            
+            // MW-2014-10-22: [[ Bug 13267 ]] If offscreen and this is called when the rate is 0,
+            //   we must have just been paused by an endtime observer, so force a refresh by updating
+            //   the frame.
+            if (!m_offscreen)
+                HandleCurrentTimeChanged();
+            else if ([m_player rate] == 0.0)
+                DoUpdateCurrentFrame(this);
+            
+        }];
+
         // PM-2014-07-15: [[ Bug 12812 ]] Make sure we loop within start and finish time when playSelection is true 
         if (m_play_selection_only && m_selection_duration > 0)
             // Note: Calling breakSeekToTimeAndWait(m_selection_start) here causes loop property to break
@@ -540,8 +567,6 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
         t_player -> m_current_frame = t_image;
     }
 
-    // Now video is loaded
-    t_player -> m_loaded = true;
 	MCPlatformCallbackSendPlayerFrameChanged(t_player);
     
     if (t_player -> IsPlaying())
@@ -698,9 +723,6 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
     m_has_invalid_filename = false;
 
-    // Reset this to false when loading a new movie, so as the first frame of the new movie to be displayed
-    m_loaded = false;
-
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
     //CVDisplayLinkStop(m_display_link);
 
@@ -762,6 +784,11 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(timeJumped:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
     m_time_scale = [m_player currentItem] . asset . duration . timescale;
+    
+    // Reset to default values when loading a new video
+    m_selection_duration = 0;
+    m_selection_finish = 0;
+    m_selection_start = 0;
 }
 
 
@@ -854,8 +881,10 @@ void MCAVFoundationPlayer::Start(double rate)
                                                                        queue: nil usingBlock: ^(void) {
                                                                            [m_player pause];
                                                                            [m_player seekToTime: t_original_end_time toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-                                                                           // PM-2014-11-10: [[ Bug 13968 ]] Make sure we loop within start and finish time when playSelection is true 
+                                                                           // PM-2014-11-10: [[ Bug 13968 ]] Make sure we loop within start and finish time when playSelection is true
                                                                            MovieFinished();
+                                                                           MCPlatformBreakWait();
+                                                                
                                                                        }];
     }
     
@@ -887,7 +916,6 @@ void MCAVFoundationPlayer::Start(double rate)
     
     m_playing = true;
     m_finished = false;
-    m_stepped = false;
     [m_player setRate:rate];
 }
 
@@ -901,7 +929,6 @@ void MCAVFoundationPlayer::Stop(void)
 void MCAVFoundationPlayer::Step(int amount)
 {
     [[m_player currentItem] stepByCount:amount];
-    m_stepped = true;
 }
 
 void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)

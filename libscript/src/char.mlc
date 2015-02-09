@@ -20,6 +20,8 @@ This library consists of the operations on chars included in the standard librar
 
 module com.livecode.char
 
+use com.livecode.foreign
+
 public foreign handler MCCharFetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
 public foreign handler MCCharStoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 public foreign handler MCCharFetchCharRangeOf(in Start as index, in Finish as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
@@ -27,7 +29,7 @@ public foreign handler MCCharStoreCharRangeOf(in Value as string, in Start as in
 
 public foreign handler MCCharEvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as string, in Source as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as string, in Target as string, out Value as bool) as undefined binds to "<builtin>"
 
 public foreign handler MCCharStoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 public foreign handler MCCharStoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
@@ -43,6 +45,18 @@ public foreign handler MCCharEvalEndsWith(in Source as string, in Suffix as stri
 public foreign handler MCCharEvalNewlineCharacter(out Value as string) as undefined binds to "<builtin>"
 
 public foreign handler MCCharRepeatForEachChar(inout Iterator as optional pointer, out Iterand as string, in Container as string) as bool binds to "<builtin>"
+
+public foreign handler MCCharFetchFirstCharOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreFirstCharOf(in Value as string, inout Target as string) as undefined binds to "<builtin>"
+
+public foreign handler MCCharFetchLastCharOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreLastCharOf(in Value as string, inout Target as string) as undefined binds to "<builtin>"
+
+public foreign handler MCCharExecDeleteCharOf(in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteCharRangeOf(in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+
+public foreign handler MCCharExecDeleteLastCharOf(inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteFirstCharOf(inout Target as string) as undefined binds to "<builtin>"
 
 --
 
@@ -132,12 +146,168 @@ begin
 	MCCharStoreCharRangeOf(input, Start, Finish, Target)
 end syntax
 
+/*
+
+Summary:            Designates the first char in <Target>.
+Target:				An expression which evaluates to a string.
+
+Example:
+	variable tVar as string
+	put "char" into tVar
+	
+	variable tFirst as string
+	put the last char of tVar into tFirst -- tFirst contains "c"
+
+Description:
+Either locates the first char for use as the target container of another operation, or evaluates the first char as the source of another operation.
+
+>*Note:* It is an error if <Target> is empty.
+
+Tags: Strings
+*/
+
+syntax FirstCharOf is prefix operator with precedence 1
+	"the" "first" "char" "of" <Target: Expression>
+begin
+	MCCharFetchFirstCharOf(Target, output)
+	MCCharStoreFirstCharOf(input, Target)
+end syntax
+
+/*
+
+Summary:            Designates the last char in <Target>.
+Target:				An expression which evaluates to a string.
+
+Example:
+	variable tVar as string
+	put "char" into tVar
+	
+	variable tLast as string
+	put the last char of tVar into tLast -- tLast contains "r"
+
+Description:
+Either locates the last char for use as the target container of another operation, or evaluates the last char as the source of another operation.
+
+>*Note:* It is an error if <Target> is empty.
+
+Tags: Strings
+*/
+
+syntax LastCharOf is prefix operator with precedence 1
+	"the" "last" "char" "of" <Target: Expression>
+begin
+	MCCharFetchLastCharOf(Target, output)
+	MCCharStoreLastCharOf(input, Target)
+end syntax
+
 --
 
 /*
-Summary:            Determines whether <Needle> is in <Source>.
+
+Summary:            Deletes the char at index <Index> in <Target>.
+Index: 				An expression which evaluates to a valid integer index of <Target>.
+Target:				A string container.
+
+Example:
+	variable tVar as string
+	put "thorough" into tVar
+	delete char 3 of tVar -- tVar contains "through"
+
+Description:
+Replaces the char at the given index with the empty string.
+
+>*Note:* It is an error if <Index> is out of range.
+
+Tags: Strings
+*/
+
+syntax DeleteSingletonCharOf is statement
+	"delete" "char" <Index: Expression> "of" <Target: Expression>
+begin
+	MCCharExecDeleteCharOf(Index, Target)
+end syntax
+
+/*
+
+Summary:            Deletes the chars between indices <Start> and <Finish> in <Target>.
+
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
+Target:             A string container.
+
+Example:
+	variable tVar as string
+	put "surround" into tVar
+	delete char 2 to 4 of tVar -- tVar contains "sound"
+
+Description:
+Replaces the chars between the given indices with the empty string.
+
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
+
+Tags: Strings
+*/
+
+syntax DeleteRangeCharOf is statement
+	"delete" "char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	MCCharExecDeleteCharRangeOf(Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Deletes the first char in <Target>.
+Target:				A string container.
+
+Example:
+	variable tVar as string
+	put "seven" into tVar
+	delete the first char of tVar -- tVar contains "even"
+
+Description:
+Replaces the first char in <Target> with the empty string.
+
+>*Note:* It is an error if <Target> is the empty string.
+
+Tags: Strings
+*/
+
+syntax DeleteFirstCharOf is statement
+	"delete" "the" "first" "char" "of" <Target: Expression>
+begin
+	MCCharExecDeleteFirstCharOf(Target)
+end syntax
+
+/*
+
+Summary:            Deletes the last char in <Target>.
+Target:				A string container.
+
+Example:
+	variable tVar as string
+	put "deadliness" into tVar
+	delete the last char of tVar -- tVar contains "deadlines"
+
+Description:
+Replaces the last char in <Target> with the empty string.
+
+>*Note:* It is an error if <Target> is the empty string.
+
+Tags: Strings
+*/
+
+syntax DeleteLastCharOf is statement
+	"delete" "the" "last" "char" "of" <Target: Expression>
+begin
+	MCCharExecDeleteLastCharOf(Target)
+end syntax
+
+--
+
+/*
+Summary:            Determines whether <Needle> is in <Target>.
 Needle: 			An expression which evaluates to a char.
-Source: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
 
 Returns: 	True if <Needle> is among the chars of <Target>, and false otherwise.
 
@@ -147,7 +317,7 @@ Description:
 Tags: Strings
 */
 
-syntax CharIsIn is neutral binary operator with precedence 1
+syntax CharIsInString is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Source: Expression>
 begin
     MCCharEvalIsAmongTheCharsOf(Needle, Source, output)

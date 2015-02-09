@@ -86,6 +86,7 @@ xcuserdata/
 _build/
 _cache/
 build/
+/_tests/
 
 # SDKs          #
 #################

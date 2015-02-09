@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
+# Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation-server.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493578999}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpcre", "thirdparty\libpcre\libpcre-server.vcproj", "{279EE836-3C2C-4BBB-8EBF-BEA4833957FA}"
@@ -33,6 +33,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgraphics", "libgraphics\libgraphics.vcproj", "{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libskia", "thirdparty\libskia\libskia.vcproj", "{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libscript", "libscript\libscript.vcproj", "{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stdscript", "libscript\stdscript.vcproj", "{56CD2637-6005-4DD6-9ADF-F85C7774BB88}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libffi", "thirdparty\libffi\libffi.vcproj", "{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,6 +131,24 @@ Global
 		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Debug|Win32.Build.0 = Debug|Win32
 		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Release|Win32.ActiveCfg = Release|Win32
 		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Release|Win32.Build.0 = Release|Win32
+		{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}.Debug - CGI mode|Win32.ActiveCfg = Debug|Win32
+		{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}.Debug - CGI mode|Win32.Build.0 = Debug|Win32
+		{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}.Debug|Win32.Build.0 = Debug|Win32
+		{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}.Release|Win32.ActiveCfg = Release|Win32
+		{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}.Release|Win32.Build.0 = Release|Win32
+		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Debug - CGI mode|Win32.ActiveCfg = Debug|Win32
+		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Debug - CGI mode|Win32.Build.0 = Debug|Win32
+		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Debug|Win32.ActiveCfg = Debug|Win32
+		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Debug|Win32.Build.0 = Debug|Win32
+		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Release|Win32.ActiveCfg = Release|Win32
+		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Release|Win32.Build.0 = Release|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Debug - CGI mode|Win32.ActiveCfg = Debug|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Debug - CGI mode|Win32.Build.0 = Debug|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Debug|Win32.Build.0 = Debug|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Release|Win32.ActiveCfg = Release|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -202,6 +202,9 @@ MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef module);
 // Release a module.
 void MCScriptReleaseModule(MCScriptModuleRef module);
 
+// Gets the module ptr for the most recent LCB stack frame on the current thread's stack.
+MCScriptModuleRef MCScriptGetCurrentModule(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Create an instance of the given module. If the module is single-instance it
@@ -277,6 +280,7 @@ void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef builder, MCNameRef d
 
 void MCScriptAddExportToModule(MCScriptModuleBuilderRef builder, uindex_t index);
 void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, uindex_t type, uindex_t& r_index);
+void MCScriptAddImportToModuleWithIndex(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, uindex_t type, uindex_t p_index);
 
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef builder, uindex_t index, uindex_t& r_type);
 void MCScriptAddForeignTypeToModule(MCScriptModuleBuilderRef builder, MCStringRef p_binding, uindex_t& r_type);
@@ -331,17 +335,13 @@ void MCScriptEmitBeginAssignListInModule(MCScriptModuleBuilderRef builder, uinde
 void MCScriptEmitContinueAssignListInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 void MCScriptEmitEndAssignListInModule(MCScriptModuleBuilderRef builder);
 void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
+void MCScriptEmitReturnUndefinedInModule(MCScriptModuleBuilderRef builder);
 void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
 void MCScriptBeginInvokeIndirectInModule(MCScriptModuleBuilderRef builder, uindex_t handler_reg, uindex_t result_reg);
-void MCScriptBeginInvokeEvaluateInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
-void MCScriptBeginInvokeAssignInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
 void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t arg_reg);
 void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef builder);
-void MCScriptEmitFetchLocalInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t local_index);
-void MCScriptEmitStoreLocalInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t local_index);
-void MCScriptEmitFetchGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t glob_index);
-void MCScriptEmitStoreGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t glob_index);
-void MCScriptEmitThrowInModule(MCScriptModuleBuilderRef builder, uindex_t err_reg);
+void MCScriptEmitFetchInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t index, uindex_t level);
+void MCScriptEmitStoreInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t index, uindex_t level);
 
 void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef builder, MCNameRef file, uindex_t line);
 

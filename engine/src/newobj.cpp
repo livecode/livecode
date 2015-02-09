@@ -788,6 +788,12 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCTrunc;
     case F_UNICODE_CHAR_TO_NUM:
         return new MCUnicodeCharToNum;
+	// MDW-2014-08-23 : [[ feature_floor ]]
+	case F_FLOOR:
+		return new MCFloor;
+	// MDW-2014-08-23 : [[ feature_floor ]]
+	case F_CEIL:
+		return new MCCeil;
 	case F_VALUE:
 		return new MCValue;
 	case F_VARIABLES:

@@ -20,6 +20,9 @@ This library consists of the sorting operations provided by the standard library
 
 module com.livecode.sort
 
+public foreign handler MCSortExecSortListAscending(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescending(inout Target as list) as undefined binds to "<builtin>"
+
 public foreign handler MCSortExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
@@ -33,28 +36,80 @@ public foreign handler MCSortExecSortListDescendingDateTime(inout Target as list
 
 /* 
 
+Summary:        Sorts <Target> in ascending order.
+Target:         An expression that evaluates to a list.
+
+Example:
+    variable tTestList as list
+	put [4,3,1,5,2] into tTestList
+	
+    sort tTestList -- tTestList is [1,2,3,4,5]
+	
+Description:
+Generic sort is performed by comparing the elements of a homogeneous list according to the default comparison function associated to the type of its elements.
+>*Note:* It is an error if <Target> is not homogeneous, i.e. if it contains any elements of differing type.
+
+Tags: Sorting
+*/
+
+syntax SortListAscending is statement
+    "sort" <Target: Expression> ["in" "ascending" "order"]
+begin 
+    MCSortExecSortListAscending(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending text order.
+Target:         An expression that evaluates to a list of strings.
+
+Example:
+   	variable tTestList as list
+	put ["a", "b", "c"] into tTestList
+	
+    sort tTestList in descending order -- tTestList is ["c", "b", "a"]
+
+Description:
+Generic sort is performed by comparing the elements of a homogeneous list according to the default comparison function associated to the type of its elements.
+>*Note:* It is an error if <Target> is not homogeneous, i.e. if it contains any elements of differing type.
+
+Tags: Sorting
+*/
+
+syntax SortListDescending is statement
+    "sort" <Target: Expression> "in" "descending" "order"
+begin 
+    MCSortExecSortListDescending(Target)
+end syntax
+
+--
+
+/* 
+
 Summary:        Sorts <Target> in ascending text order.
 Target:         An expression that evaluates to a list of strings.
 
 Example:
     variable tTestList as list
-    put the empty list into tTestList
-
-    push "xyz" onto tTestList
-    push 2 onto tTestList
-    push "abcd" onto tTestList
-    push 1 onto tTestList
-
-    sort tTestList in ascending order -- tTestList is ["abcd", "xyz", 2, 1]
+	
+	variable tChar
+	repeat for each char tChar in "spoilage"
+		push tChar onto tTestList
+	end repeat
+		
+    sort tTestList in ascending text order
+    variable tString as string
+    combine tTestList with "" into tString -- tString is "aegilops"
 
 Description:
-Text sort is performed by comparing string elements on a codepoint by codepoint basis. Non-string elements come after all string elements in the sort order. The sort is stable, so that non-string elements are not re-ordered relative to each other.
+Text sort is performed by comparing string elements on a codepoint by codepoint basis.
+>*Note:* It is an error if <Target> contains any elements of non-string type.
 
 Tags: Sorting
 */
 
 syntax SortListAscendingText is statement
-    "sort" <Target: Expression> "in" "ascending" ["text"] "order"
+    "sort" <Target: Expression> "in" "ascending" "text" "order"
 begin 
     MCSortExecSortListAscendingText(Target)
 end syntax
@@ -69,20 +124,19 @@ Example:
     put the empty list into tTestList
 
     push "abcd" onto tTestList
-    push 1 onto tTestList
     push "xyz" onto tTestList
-    push 2 onto tTestList
 
-    sort tTestList in descending order -- tTestList is ["xyz", "abcd", 1, 2]
+    sort tTestList in descending text order -- tTestList is ["xyz", "abcd"]
 
 Description:
-Text sort is performed by comparing string elements on a codepoint by codepoint basis. Non-string elements come after all string elements in the sort order. The sort is stable, so that non-string elements are not re-ordered relative to each other.
+Text sort is performed by comparing string elements on a codepoint by codepoint basis.
+>*Note:* It is an error if <Target> contains any elements of non-string type.
 
 Tags: Sorting
 */
 
 syntax SortListDescendingText is statement
-    "sort" <Target: Expression> "in" "descending" ["text"] "order"
+    "sort" <Target: Expression> "in" "descending" "text" "order"
 begin 
     MCSortExecSortListDescendingText(Target)
 end syntax
@@ -95,7 +149,8 @@ Summary:        Sorts <Target> in ascending binary order.
 Target:         An expression that evaluates to a list of binary data.
 
 Description:
-Binary sort is performed by comparing data elements on a byte by byte basis. Non-data elements come after all data elements in the sort order. The sort is stable, so that non-data elements are not re-ordered relative to each other.
+Binary sort is performed by comparing data elements on a byte by byte basis.
+>*Note:* It is an error if <Target> contains any elements of non-data type.
 
 Tags: Sorting
 */
@@ -112,7 +167,8 @@ Summary:        Sorts <Target> in descending binary order.
 Target:         An expression that evaluates to a list of binary data.
 
 Description:
-Binary sort is performed by comparing data elements on a byte by byte basis. Non-data elements come after all data elements in the sort order. The sort is stable, so that non-data elements are not re-ordered relative to each other.
+Binary sort is performed by comparing data elements on a byte by byte basis.
+>*Note:* It is an error if <Target> contains any elements of non-data type.
 
 Tags: Sorting
 */
@@ -132,17 +188,13 @@ Target:         An expression that evaluates to a list of numbers.
 
 Example:
     variable tTestList as list
-    put the empty list into tTestList
+    put [3,4,5,1,2] into tTestList
 
-    push "abcd" onto tTestList
-    push 1 onto tTestList
-    push "xyz" onto tTestList
-    push 2 onto tTestList
+    sort tTestList in ascending numeric order -- tTestList is [1,2,3,4,5]
 
-    sort tTestList in ascending numeric order -- tTestList is [1, 2, "abcd", "xyz"]
-    
 Description:
-Numeric sort is performed by comparing numeric elements by cardinality. Non-numeric elements come after all numeric elements in the sort order. The sort is stable, so that non-numeric elements are not re-ordered relative to each other.
+Numeric sort is performed by comparing numeric elements by cardinality.
+>*Note:* It is an error if <Target> contains any elements of non-numeric type.
 
 Tags: Sorting
 */
@@ -160,17 +212,13 @@ Target:         An expression that evaluates to a list of numbers.
 
 Example:
     variable tTestList as list
-    put the empty list into tTestList
+    put [3,4,5,1,2] into tTestList
 
-    push "abcd" onto tTestList
-    push 1 onto tTestList
-    push "xyz" onto tTestList
-    push 2 onto tTestList
-
-    sort tTestList in descending numeric order -- tTestList is [2, 1, "abcd", "xyz"]
+    sort tTestList in descending numeric order -- tTestList is [5,4,3,2,1]
     	
 Description:
-Numeric sort is performed by comparing numeric elements by cardinality. Non-numeric elements come after all numeric elements in the sort order. The sort is stable, so that non-numeric elements are not re-ordered relative to each other.
+Numeric sort is performed by comparing numeric elements by cardinality.
+>*Note:* It is an error if <Target> contains any elements of non-numeric type.
 
 Tags: Sorting
 */

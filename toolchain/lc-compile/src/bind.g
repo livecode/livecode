@@ -31,7 +31,7 @@
 -- the defining id.
 'action' Bind(MODULE, MODULELIST)
 
-    'rule' Bind(Module:module(Position, Kind, Name, _, Imports, Definitions), ImportedModules):
+    'rule' Bind(Module:module(Position, Kind, Name, Imports, Definitions), ImportedModules):
         DefineModuleId(Name)
 
         -- Make sure all the imported modules are bound
@@ -40,14 +40,21 @@
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.
         EnterScope
+
         -- Import all the used modules
         DeclareImports(Imports, ImportedModules)
+        
+        EnterScope
+
         -- Declare the predefined ids
         DeclarePredefinedIds
         -- Assign the defining id to all top-level names.
         Declare(Definitions)
         -- Resolve all references to id's.
         Apply(Definitions)
+        
+        LeaveScope
+
         LeaveScope
         
         -- Step 2: Ensure all definitions have their appropriate meaning
@@ -121,6 +128,9 @@
     'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
 
+    'rule' DeclareImportedDefinitions(metadata(_, _, _)):
+        -- do nothing
+
     'rule' DeclareImportedDefinitions(nil):
         -- do nothing
 
@@ -177,6 +187,9 @@
     'rule' Declare(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
     
+    'rule' Declare(metadata(_, _, _)):
+        -- do nothing
+        
     'rule' Declare(nil):
         -- do nothing
 
@@ -247,7 +260,10 @@
     'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, Methods)):
         DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
     
-    'rule' Define(ModuleId, nil):
+    'rule' Define(_, metadata(_, _, _)):
+        -- do nothing
+        
+    'rule' Define(_, nil):
         -- do nothing
 
 'action' DefineParameters(ID, PARAMETERLIST)
@@ -349,22 +365,6 @@
 
     'rule' Apply(TYPE'named(_, Name)):
         ApplyId(Name)
-        
-    'rule' Apply(TYPE'opaque(_, BaseType, Fields)):
-        -- Apply the base type
-        Apply(BaseType)
-        
-        -- Enter a new scope for fields
-        EnterScope
-        
-        -- Declare the fields first
-        DeclareFields(Fields)
-        
-        -- Now apply all id's in the fields
-        Apply(Fields)
-        
-        -- Leave the fields scope
-        LeaveScope
     
     'rule' Apply(TYPE'record(_, BaseType, Fields)):
         -- Apply the base type
@@ -680,7 +680,7 @@
 
 'sweep' DumpBindings(ANY)
 
-    'rule' DumpBindings(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
+    'rule' DumpBindings(MODULE'module(_, Kind, Name, Imports, Definitions)):
         DumpId("module", Name)
         DumpBindings(Imports)
         DumpBindings(Definitions)

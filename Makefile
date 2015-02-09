@@ -17,6 +17,9 @@ libexternal:
 libexternalv1:
 	$(MAKE) -C ./libexternalv1 libexternalv1
 
+libffi:
+	$(MAKE) -C ./thirdparty/libffi libffi
+
 libz:
 	$(MAKE) -C ./thirdparty/libz libz
 
@@ -38,7 +41,7 @@ libopenssl:
 libskia:
 	$(MAKE) -C ./thirdparty/libskia libskia
 
-libfoundation:
+libfoundation: libffi
 	$(MAKE) -C ./libfoundation libfoundation
 
 libscript:
@@ -193,28 +196,35 @@ libstdscript: lc-compile
 	$(MAKE) -C ./libscript libstdscript
 
 ########## Compiler
-lc-compile: libscript libfoundation
+lc-compile: libscript libfoundation libffi
 	$(MAKE) -C ./toolchain lc-compile
 
-lc-bootstrap-compile: libscript libfoundation
+lc-bootstrap-compile: libscript libfoundation libffi
 	$(MAKE) -C ./toolchain bootstrap
 
 lc-compile-clean:
 	$(MAKE) -C ./toolchain clean
+
+########## Module runner
+
+lc-run: libstdscript libfoundation
+	$(MAKE) -C ./toolchain lc-run
 
 ########## Test runner
 lc-test: libstdscript libfoundation
 	$(MAKE) -C ./toolchain lc-test
 
 ########## Tests
-lc-test-check: lc-test
+lc-run-check: lc-compile lc-run
+	$(MAKE) -C ./tests/lc-run check
+lc-test-check: lc-compile lc-test
 	$(MAKE) -C ./toolchain lc-test-check
-.PHONY: mlc-check
+.PHONY: lc-run-check lc-test-check
 
 ###############################################################################
 # All Targets
 
-.PHONY: all bootstrap clean
+.PHONY: all bootstrap thirdparty clean
 .DEFAULT_GOAL := all
 
 all: revzip server-revzip
@@ -223,11 +233,15 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
-all: lc-test
+all: lc-run lc-test
 
 bootstrap: lc-bootstrap-compile
 
-check: lc-test-check
+thirdparty: libffi libz libjpeg libpcre libpng libgif libopenssl libskia
+thirdparty: libcairopdf libpq libmysql libsqlite libiodbc libxml libxslt
+thirdparty: libzip
+
+check: lc-run-check lc-test-check
 
 clean:
 	-rm -rf _build/linux _cache/linux

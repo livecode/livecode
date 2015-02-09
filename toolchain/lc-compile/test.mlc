@@ -1,12 +1,20 @@
-module test
+module Test
 
-public handler test()
+use com.livecode.math
+use com.livecode.file
+use com.livecode.stream
+use com.livecode.system
+use com.livecode.date
+
+public handler Test()
     variable tResults as list
     put the empty list into tResults
+    	testFile(tResults)
 
     variable tDelimiter as string
     put newline into tDelimiter
 	
+
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
 	testLog("__Test", "Succeed", true, tResults)
@@ -15,6 +23,8 @@ public handler test()
 	testRepeat(tResults)
 	testLogicStructural(tResults)
     testPrecedence(tResults)
+    
+    testParseAndFormat(tResults)
 
     --com.livecode.type
     testType(tResults)
@@ -55,6 +65,18 @@ public handler test()
 	--com.livecode.type
 	testType(tResults)
 	
+	--com.livecode.file
+	testFile(tResults)
+
+	--com.livecode.stream
+	testStream(tResults)
+
+	--com.livecode.system
+	testSystem(tResults)
+
+	--com.livecode.date
+	testDate(tResults)
+	
 	--com.livecode.binary
 	--com.livecode.byte
 	--com.livecode.item
@@ -62,6 +84,7 @@ public handler test()
 	--com.livecode.segmentchunk
 
     return newline & testSummary (tResults)
+
 end handler
 
 /*
@@ -89,7 +112,7 @@ public handler testSummary(in pResults as list)
         push tReport onto tSummaryItems
     end repeat
 
-    push (tFailureCount converted to base 10) && "TESTS FAILED (" & (tSuccessCount converted to base 10) && "PASSED)" onto tSummaryItems
+    push tFailureCount converted to base 10 && "TESTS FAILED (" & tSuccessCount converted to base 10 && "PASSED)" onto tSummaryItems
 
     variable tSummaryString as string
     combine tSummaryItems with newline into tSummaryString
@@ -127,6 +150,47 @@ public handler boolWithSideEffect(in tResult as boolean, inout tVar as string) a
 	return tResult
 end handler
 
+public handler testParseAndFormat(inout xResults as list)
+
+	// some formatting tests will fail until we have
+	// context vars (number format) and distinct reals/ints
+	
+	testLog("Arithmetic", "StringParsedAsNumber", "1.5" parsed as number is 1.5, xResults)
+
+	variable tInt as integer
+	put 3 into tInt
+	testLog("Arithmetic", "NumberFormattedAsString", tInt formatted as string is "3", xResults)
+
+	variable tVar as optional number
+	put "dfsdf" parsed as number into tVar
+
+	testLog("Arithmetic", "StringParsedAsNumberFail", tVar is not defined, xResults)
+	
+	variable tList as list
+	put ["1", "b", "3"] parsed as list of number into tList
+	
+	variable tElt as number
+	repeat with tElt from 1 up to the number of elements in tList
+		if tList[tElt] is not defined then
+			put 0 into element tElt of tList
+		end if
+	end repeat
+
+	testLog("Arithmetic", "ListOfStringParsedAsListOfNumberFail", tList is [ 1, 0, 3 ], xResults)
+	testLog("Arithmetic", "ListOfStringParsedAsListOfNumber", ["1", "2", "3"] parsed as list of number is [ 1, 2, 3 ], xResults)
+	
+	parse "0.5" as number
+	testLog("Arithmetic", "ParseAsNumber", the result is 0.5, xResults)
+	
+	testLog("Logic", "ParseAsBool", "true" parsed as boolean, xResults)
+	testLog("Logic", "ParseAsBool2", not "false" parsed as boolean, xResults)
+	
+	variable tBool
+	put "sdgfds" parsed as boolean into tBool
+	testLog("Logic", "ParseAsBoolFail", tBool is not defined, xResults)
+	
+end handler
+
 public handler testType(inout xResults as list)
 
     variable tVar
@@ -144,7 +208,7 @@ end handler
 
 public handler testPrecedence(inout xResults as list)
 
-    testLog("Precedence", "Tan,Over,LessThan", the tan of pi / 4 < 0.00000000001, xResults)
+    testLog("Precedence", "Tan,Over,LessThan", the tangent of pi / 4 < 0.00000000001, xResults)
 
 end handler
 
@@ -169,19 +233,39 @@ public handler testMath(inout xResults as list)
 
 	testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
 	testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
-	
-	testLog("Math", "Sin", the sin of (pi / 2) is 1, xResults)
-	testLog("Math", "Cos", the cos of pi is -1, xResults)
-	testLog("Math", "Tan", (the tan of (pi / 4) - 1) < 0.00000000001, xResults)
 
-	testLog("Math", "Exp", the exp of 3 > 20, xResults)
-	testLog("Math", "Exp", the exp of 3 < 20.1, xResults)
+	// trig functions
+	testLog("Math", "Sin", sin(pi / 2) is 1, xResults)	
+	testLog("Math", "Sin", the sine of (pi / 2) is 1, xResults)
+	
+	testLog("Math", "Cos", cos(pi) is -1, xResults)
+	testLog("Math", "Cos", the cosine of pi is -1, xResults)
+
+	testLog("Math", "Tan", the tangent of (pi / 4) - 1 < 0.00000000001, xResults)
+	testLog("Math", "Tan", tan(pi / 4) - 1 < 0.00000000001, xResults)
+
+	// inverse trig functions
+	testLog("Math", "Arcsin", the arcsine of 1 is pi / 2, xResults)
+	testLog("Math", "Arcsin", asin(1) is pi / 2, xResults)
+
+	testLog("Math", "Arccos", acos(-1) is pi, xResults)		
+	testLog("Math", "Arccos", the arccosine of -1 is pi, xResults)
+
+	testLog("Math", "Arctan", atan(1) is pi / 4, xResults)	
+	testLog("Math", "Arctan", the arctangent of 1 is pi / 4, xResults)
+	
+	testLog("Math", "Arctan2", atan2(-1,-1) is -3 * pi / 4, xResults)
+	testLog("Math", "Arctan2", the binary arctangent of -1 and -1 is -3 * pi / 4, xResults)
+
+
+	testLog("Math", "Exp", the exponential of 3 > 20, xResults)
+	testLog("Math", "Exp", the exponential of 3 < 20.1, xResults)
 	
 	testLog("Math", "Ln", the natural log of 55 > 4, xResults)
 	testLog("Math", "Ln", the natural log of 55 < 4.01, xResults)
 	
-	testLog("Math", "ExpLog", the abs of ((the natural log of the exp of 3) - 3) < 0.00000000001, xResults)
-	testLog("Math", "LogExp", the abs of ((the exp of the natural log of 80) - 80) < 0.00000000001, xResults)
+	testLog("Math", "ExpLog", the abs of the natural log of the exponential of 3 - 3 < 0.00000000001, xResults)
+	testLog("Math", "LogExp", the abs of the exponential of the natural log of 80 - 80 < 0.00000000001, xResults)
 	
 	testLog("Math", "Trunc", the trunc of 5.5 is 5, xResults)
 	
@@ -190,10 +274,10 @@ public handler testMath(inout xResults as list)
 	
 	variable tNum
 	put any number into tNum
-	testLog("Math", "Random", tNum >= 0, xResults)
-	testLog("Math", "Random", tNum <= 1, xResults)
+	testLog("Math", "RandomRangeLower", tNum >= 0, xResults)
+	testLog("Math", "RandomRangeHigher", tNum <= 1, xResults)
 	
-	testLog("Math", "Random", tNum is not any number, xResults)
+	testLog("Math", "RandomMatch", tNum is not any number, xResults)
 
 	variable tLeft as integer
 	variable tRight as integer
@@ -201,25 +285,27 @@ public handler testMath(inout xResults as list)
 	put 4 into tLeft
 	put 5 into tRight
 	
-	testLog("Math", "Min", the min of 3 and 5 is 3, xResults)
-	testLog("Math", "Min", the min of 5.5 and 5.4 is 5.4, xResults)
-	
-	testLog("Math", "MinInt", the min of tLeft and tRight is tLeft, xResults)
-	testLog("Math", "MinInt", the min of tRight and tLeft is tLeft, xResults)
-	
-	testLog("Math", "Max", the max of 3 and 5 is 5, xResults)
-	testLog("Math", "Max", the max of 5.5 and 5.4 is 5.5, xResults)
-	
-	testLog("Math", "MaxInt", the max of tLeft and tRight is tRight, xResults)
-	testLog("Math", "MaxInt", the max of tRight and tLeft is tRight, xResults)
+	testLog("Math", "Min", the minimum of 3 and 5 is 3, xResults)
+	testLog("Math", "Min", min(5.5,5.4) is 5.4, xResults)
 
-	testLog("Math", "ConvertFromBase", ("6A" converted from base 16) is 106, xResults)
-	testLog("Math", "ConvertFromBase", ("1001010" converted from base 2) is 74, xResults)
+	testLog("Math", "Min", the minimum value of [5,4,1,3,2] is 1, xResults)
 	
-	testLog("Math", "ConvertToBase", (7 converted to base 2) is "111", xResults)
-	testLog("Math", "ConvertToBase", (500 converted to base 12) is "358", xResults)
+	testLog("Math", "MinInt", the minimum of tLeft and tRight is tLeft, xResults)
+	testLog("Math", "MinInt", min(tRight,tLeft) is tLeft, xResults)
 	
-	testLog("Math", "ConvertFromBaseToBase", ("1122" converted from base 4 to base 14) is "66", xResults)
+	testLog("Math", "Max", the maximum of 3 and 5 is 5, xResults)
+	testLog("Math", "Max", max(5.5,5.4) is 5.5, xResults)
+	
+	testLog("Math", "MaxInt", the maximum of tLeft and tRight is tRight, xResults)
+	testLog("Math", "MaxInt", max(tRight,tLeft) is tRight, xResults)
+
+	testLog("Math", "ConvertFromBase", "6A" converted from base 16 is 106, xResults)
+	testLog("Math", "ConvertFromBase", "1001010" converted from base 2 is 74, xResults)
+	
+	testLog("Math", "ConvertToBase", 7 converted to base 2 is "111", xResults)
+	testLog("Math", "ConvertToBase", 500 converted to base 12 is "358", xResults)
+	
+	testLog("Math", "ConvertFromBaseToBase", "1122" converted from base 4 to base 14 is "66", xResults)
 
 end handler
 
@@ -327,8 +413,8 @@ public handler testArray(inout xResults as list)
 	testLog("Array", "ElementsOf2", "value2" is in tElements, xResults)
 	testLog("Array", "ElementsOf3", "value3" is in tElements, xResults)
 		
-	--testLog("Array", "IsAmongTheKeys", "key1" is among the keys of tArray, xResults)
-	--testLog("Array", "IsAmongTheElements", "value1" is among the keys of tArray, xResults)
+	testLog("Array", "IsAmongTheKeys", "key1" is among the keys of tArray, xResults)
+	testLog("Array", "IsAmongTheElements", "value1" is among the elements of tArray, xResults)
 	
 	testLog("Array", "SingletonElementOf", tArray["key1"] is "value1", xResults)
 
@@ -360,6 +446,20 @@ public handler testArray(inout xResults as list)
     
     testLog("Array", "RepeatForEachElement", tSum is 6, xResults)
 
+	variable tTest as array
+	put the empty array into tTest
+	put "value" into tTest["key"]
+
+	delete tTest["key"]
+	
+	testLog("Array", "DeleteElement", the number of elements in tTest is 0, xResults)
+	
+	variable tArrayWithUndefined as array
+	put the empty array into tArrayWithUndefined
+	put undefined into tArrayWithUndefined["a"]
+	variable tUndefined
+ 	put tArrayWithUndefined["a"] into tUndefined
+	testLog("Array", "UndefinedElement", tUndefined is not defined, xResults)
 end handler
 
 public handler testBitwise(inout xResults as list)
@@ -506,7 +606,37 @@ public handler testChar(inout xResults as list)
 		subtract 1 from tCount
 	end repeat 	
 	
-	testLog("Char", "CharExample", tVar is "1,2,3", xResults)	
+	testLog("Char", "CharExample", tVar is "1,2,3", xResults)
+
+    variable tTest as string
+    put "abc" into tTest
+
+    put "X" into char 1 of tTest
+    testLog("Char", "FirstCharFetch", the first char of tTest is "X", xResults)
+
+    put "a" into the first char of tTest
+    testLog("Char", "FirstCharStore", char 1 of tTest is "a", xResults)
+    
+    put "Z" into char -1 of tTest
+    testLog("Char", "LastCharFetch", the last char of tTest is "Z", xResults)
+
+    put "c" into the last char of tTest
+    testLog("Char", "LastCharStore", char -1 of tTest is "c", xResults)
+    
+    delete char 1 of tTest
+    testLog("Char", "DeleteChar", tTest is "bc", xResults)
+    
+    delete char 1 to 2 of tTest
+    testLog("Char", "DeleteChars", tTest is the empty string, xResults)
+
+	put "abc" into tTest
+
+	delete the last char of tTest
+	testLog("Char", "DeleteLastChar", tTest is "ab", xResults)	
+
+	delete the first char of tTest
+	testLog("Char", "DeleteFirstChar", tTest is "b", xResults)	
+
 end handler
 
 public handler testArithmetic(inout xResults as list)
@@ -660,8 +790,8 @@ public handler testList(inout xResults as list)
 	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
 	testLog("List", "IsNot", tSubList is not ["Abcd", 1], xResults)
 
-    --testLog("List", "IsIn", "abcd" is in tSubList, xResults)
-    --testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
+    testLog("List", "IsIn", "abcd" is in ["abcd", "efgh"], xResults)
+    testLog("List", "IsNotIn", not "dsf" is in ["abcd", "efgh"], xResults)
 
     variable tString as string
     pop front of tSubList into tString
@@ -700,26 +830,126 @@ public handler testList(inout xResults as list)
 	put tAnotherList into element 1 to 2 of tAnotherList 
 	testLog("List", "ElementRangeOf3", element -2 of tAnotherList is [1,2,3], xResults)
 
+    variable tTest as list
+    put [1,2,3] into tTest
+
+    put "X" into element 1 of tTest
+    testLog("List", "FirstElementFetch", the first element of tTest is "X", xResults)
+
+    put 0 into the first element of tTest
+    testLog("List", "FirstElementStore", element 1 of tTest is 0, xResults)
+   
+    put "Z" into element -1 of tTest
+    testLog("List", "LastElementFetch", the last element of tTest is "Z", xResults)
+
+    put 4 into the last element of tTest
+    testLog("List", "LastElementStore", element -1 of tTest is 4, xResults)
+    
+    delete element 1 of tTest
+    testLog("List", "DeleteElement", tTest is [2,4], xResults)
+    
+    delete element 1 to 2 of tTest
+    testLog("List", "DeleteElements", tTest is the empty list, xResults)
+
+	put [1,2,3] into tTest
+
+	delete the last element of tTest
+	testLog("List", "DeleteLastElement", tTest is [1,2], xResults)	
+
+	delete the first element of tTest
+	testLog("List", "DeleteFirstElement", tTest[1] is 2, xResults)	
+
+	variable tListWithUndefined as list
+	put the empty list into tListWithUndefined
+	push undefined onto tListWithUndefined
+	variable tUndefined
+ 	put the head of tListWithUndefined into tUndefined
+	testLog("List", "UndefinedElement", tUndefined is not defined, xResults)
+	
 end handler
 
 public handler testSort(inout xResults as list)
-    variable tTestList as list
-    put the empty list into tTestList
-
-    push "xyz" onto tTestList
-    push 2 onto tTestList
-    push "abcd" onto tTestList
-    push 1 onto tTestList
+    variable tNumericList as list
+	put [4,3,5,1,2] into tNumericList
     
-    sort tTestList in ascending numeric order
+    sort tNumericList in descending numeric order
 
-    testLog("Sort", "AscendingNumeric", the head of tTestList is 1, xResults)
-    testLog("Sort", "NumericStable", the tail of tTestList is "abcd", xResults)
+    testLog("Sort", "DescendingNumeric", tNumericList is [5,4,3,2,1], xResults)
+    
+    sort tNumericList in ascending numeric order
+    
+    testLog("Sort", "AscendingNumeric", tNumericList is [1,2,3,4,5], xResults)
 
-    sort tTestList in ascending text order
+	variable tStringList as list
+	put ["a", "c", "b"] into tStringList
 
-    testLog("Sort", "AscendingText", the head of tTestList is "abcd", xResults)
-    testLog("Sort", "TextStable", the tail of tTestList is 2, xResults)
+    sort tStringList in ascending text order
+
+    testLog("Sort", "AscendingText", tStringList is ["a", "b", "c"], xResults)
+    
+    sort tStringList in descending text order
+
+    testLog("Sort", "DescendingText", tStringList is ["c", "b", "a"], xResults)
+    
+    sort tStringList
+    
+    testLog("Sort", "AscendingGeneric", tStringList is ["a", "b", "c"], xResults)
+    
+    sort tNumericList in descending order
+    
+    testLog("Sort", "DescendingGeneric", tNumericList is [5,4,3,2,1], xResults)
+        
+end handler
+
+public handler testData(inout xResults as list)
+/*
+    variable tTest as string
+    put "abc" into tTest
+
+    put "X" into char 1 of tTest
+    testLog("Char", "FirstCharFetch", the first char of tTest is "X", xResults)
+
+    put "a" into the first char of tTest
+    testLog("Char", "FirstCharStore", char 1 of tTest is "a", xResults)
+    
+    put "Z" into char -1 of tTest
+    testLog("Char", "LastCharFetch", the last char of tTest is "Z", xResults)
+
+    put "c" into the last char of tTest
+    testLog("Char", "LastCharStore", char -1 of tTest is "c", xResults)
+    
+    delete char 1 of tTest
+    testLog("Char", "DeleteChar", tTest is "bc", xResults)
+    
+    delete char 1 to 2 of tTest
+    testLog("Char", "DeleteChars", tTest is the empty string, xResults)
+
+	put "abc" into tTest
+
+	delete the last char of tTest
+	testLog("Char", "DeleteLastChar", tTest is "ab", xResults)	
+
+	delete the first char of tTest
+	testLog("Char", "DeleteFirstChar", tTest is "b", xResults)	
+*/
+end handler
+
+public handler testFile(inout xResults as list)
+	variable tData as data
+	put the contents of file "/dev/null" into tData
+	testLog("File", "GetEmptyContents", tData is empty, xResults)
+end handler
+
+public handler testStream(inout xResults as list)
+
+end handler
+
+public handler testSystem(inout xResults as list)
+	testLog("System", "OperatingSystemNonEmpty", the operating system is not empty, xResults)
+end handler
+
+public handler testDate(inout xResults as list)
+testLog("Date", "LocalTimeListLength", the number of elements in the local time is 6, xResults)
 end handler
 
 end module

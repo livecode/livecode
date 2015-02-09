@@ -56,6 +56,7 @@ struct MCLoadedExtension
 {
     MCLoadedExtension *next;
     MCStringRef filename;
+	MCStringRef resource_path;
     MCScriptModuleRef module;
     MCScriptInstanceRef instance;
 };
@@ -128,7 +129,36 @@ bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_
     return true;
 }
 
-void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
+bool MCEngineAddResourcePathForModule(MCScriptModuleRef p_module, MCStringRef p_resource_path)
+{
+	for (MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext->next)
+	{
+		if (t_ext->module == p_module)
+		{
+			MCAutoStringRef t_resolved_path;
+			if (!MCS_resolvepath(p_resource_path, &t_resolved_path))
+				return false;
+			
+			MCValueAssign(t_ext->resource_path, *t_resolved_path);
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef &r_resource_path)
+{
+	for (const MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext->next)
+	{
+		if (t_ext->module == p_module)
+			return MCStringCopy(t_ext->resource_path != nil ? t_ext->resource_path : kMCEmptyString, r_resource_path);
+	}
+	
+	return false;
+}
+
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
 {
     MCAutoStringRef t_resolved_filename;
     /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
@@ -155,6 +185,8 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     MCValueRelease(t_stream);
     
     MCEngineAddExtensionFromModule(*t_resolved_filename, t_module);
+	if (p_resource_path != nil)
+		MCEngineAddResourcePathForModule(t_module, p_resource_path);
     
     MCScriptReleaseModule(t_module);
     
@@ -173,6 +205,7 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
                 MCScriptReleaseInstance(t_ext -> instance);
             MCScriptReleaseModule(t_ext -> module);
             MCValueRelease(t_ext -> filename);
+			MCValueRelease(t_ext -> resource_path);
             if (t_previous != nil)
                 t_previous -> next = t_ext -> next;
             else
@@ -421,6 +454,60 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
         case kMCValueTypeCodeName:
         case kMCValueTypeCodeData:
             return true;
+        
+        case kMCValueTypeCodeArray:
+        {
+            // We start off with no new value - we only create a new array if one
+            // of the elements changes.
+            MCAutoArrayRef t_mutated_value;
+            t_mutated_value = nil;
+            
+            MCNameRef t_key;
+            MCValueRef t_element;
+            uintptr_t t_iterator;
+            t_iterator = 0;
+            while(MCArrayIterate((MCArrayRef)x_value, t_iterator, t_key, t_element))
+            {
+                // 'Copy' the value (as we don't own it).
+                MCAutoValueRef t_new_element;
+                t_new_element = t_element;
+                
+                // Attempt to convert it to a script type.
+                if (!MCExtensionConvertToScriptType(ctxt, InOut(t_new_element)))
+                    return false;
+                
+                // If the value has changed then we must do a store.
+                if (*t_new_element != t_element)
+                {
+                    // If we haven't had to change anything yet, we must copy the original
+                    // array.
+                    if (*t_mutated_value == nil)
+                    {
+                        if (!MCArrayMutableCopy((MCArrayRef)x_value, Out(t_mutated_value)))
+                            return false;
+                    }
+                    
+                    // Store the element in the array.
+                    if (!MCArrayStoreValue(In(t_mutated_value), true, t_key, In(t_new_element)))
+                        return false;
+                    
+                    continue;
+                }
+    
+                // If we get here then we haven't had to mutate the input array yet
+                // and this element has not changed through conversion so there is
+                // nothing to do!
+                
+                continue;
+            }
+            
+            // If we get here then all is well. If we had to mutate the input value
+            // then return it in x_value (after releasing the original value since
+            // it is an inout).
+            if (*t_mutated_value != nil)
+                MCValueAssignAndRelease(x_value, (MCValueRef)t_mutated_value . Take());
+        }
+        return true;
             
         // ProperLists map to sequences (arrays with numeric keys)
         case kMCValueTypeCodeProperList:
@@ -557,6 +644,71 @@ bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_as_ty
         return true;
     
     return MCExtensionThrowTypeConversionError(p_as_type, x_value);
+}
+
+// Ensure that if the input value is a name it comes out as a string.
+// Ensure that if the input value is an array, all elements that are names (recursed)
+// come out as strings.
+// If r_output is nil, then no mutation occured; otherwise it is the mutated value.
+static bool __script_ensure_names_are_strings(MCValueRef p_input, MCValueRef& r_output)
+{
+    if (MCValueGetTypeCode(p_input) == kMCValueTypeCodeName)
+    {
+        r_output = MCValueRetain(MCNameGetString((MCNameRef)p_input));
+        return true;
+    }
+    
+    if (MCValueGetTypeCode(p_input) == kMCValueTypeCodeArray)
+    {
+        MCAutoArrayRef t_mutated_input;
+        t_mutated_input = nil;
+        
+        MCNameRef t_key;
+        MCValueRef t_element;
+        uintptr_t t_iterator;
+        t_iterator = 0;
+        while(MCArrayIterate((MCArrayRef)p_input, t_iterator, t_key, t_element))
+        {
+            // Ensure the element's names are all strings.
+            MCAutoValueRef t_mutated_element;
+            if (!__script_ensure_names_are_strings(t_element, Out(t_mutated_element)))
+                return false;
+            
+            // If something changed then we must replace the existing value.
+            if (*t_mutated_element != nil)
+            {
+                // First make sure we have a copy of the original to mutate.
+                if (*t_mutated_input == nil)
+                {
+                    if (!MCArrayMutableCopy((MCArrayRef)p_input, Out(t_mutated_input)))
+                        return false;
+                }
+                
+                // Now store the value.
+                if (!MCArrayStoreValue(In(t_mutated_input), true, t_key, In(t_mutated_element)))
+                    return false;
+                
+                // We are done for this element.
+                continue;
+            }
+            
+            // If we get here then nothing has changed, so there's nothing to do.
+        }
+        
+        // Either return the original or the mutated version depending on whether
+        // any of its elements mutated.
+        if (*t_mutated_input == nil)
+            r_output = nil;
+        else
+            r_output = t_mutated_input . Take();
+        
+        return true;
+    }
+    
+    // If no changes are made, return nil for the output.
+    r_output = nil;
+    
+    return true;
 }
 
 // Convert a script value to a boolean following standard lax-scripting rules.
@@ -757,6 +909,13 @@ static bool __script_try_to_convert_to_array(MCExecContext& ctxt, MCValueRef& x_
     // If it is already an array, we are done.
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeArray)
     {
+        MCValueRef t_mutated_value;
+        if (!__script_ensure_names_are_strings(x_value, t_mutated_value))
+            return false;
+        
+        if (t_mutated_value != nil)
+            MCValueAssignAndRelease(x_value, t_mutated_value);
+        
         r_converted = true;
         return true;
     }
@@ -800,28 +959,32 @@ static bool __script_try_to_convert_to_list(MCExecContext& ctxt, MCValueRef& x_v
     // we can convert.
     if (t_is_array && MCArrayIsSequence((MCArrayRef)x_value))
     {
-        MCProperListRef t_proper_list;
-        if (!MCProperListCreateMutable(t_proper_list))
+        MCAutoProperListRef t_proper_list;
+        if (!MCProperListCreateMutable(Out(t_proper_list)))
             return false;
+        
         for(uindex_t i = 0; i < MCArrayGetCount((MCArrayRef)x_value); i++)
         {
             // We know this will succeed as we have a sequence.
             MCValueRef t_element;
             MCArrayFetchValueAtIndex((MCArrayRef)x_value, i + 1, t_element);
-            if (!MCProperListPushElementOntoBack(t_proper_list, t_element))
-            {
-                MCValueRelease(t_proper_list);
+            
+            // Deal with the name/string issue.
+            MCAutoValueRef t_revised_element;
+            if (!__script_ensure_names_are_strings(t_element, &t_revised_element))
                 return false;
-            }
+                
+            if (!MCProperListPushElementOntoBack(In(t_proper_list), *t_revised_element == nil ? t_element : In(t_revised_element)))
+                return false;
         }
-        if (!MCProperListCopyAndRelease(t_proper_list, t_proper_list))
-        {
-            MCValueRelease(t_proper_list);
+        
+        if (!t_proper_list . MakeImmutable())
             return false;
-        }
-        MCValueRelease(x_value);
-        x_value = t_proper_list;
+        
+        MCValueAssignAndRelease(x_value, (MCValueRef)t_proper_list . Take());
+        
         r_converted = true;
+
         return true;
     }
     

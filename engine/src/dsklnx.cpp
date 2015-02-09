@@ -201,13 +201,15 @@ static void configureSerialPort(int sRefNum)
             parseSerialControlStr(str, &theTermios);
         str = each;
     }
-    delete controlptr;
+
     //configure the serial output device
     parseSerialControlStr(str,&theTermios);
     if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
     {
         MCLog("Error setting terminous attributes", nil);
     }
+
+    delete[] controlptr;
     return;
 }
 
@@ -1739,6 +1741,8 @@ public:
             t_mode = IO_UPDATE_MODE;
         else if (p_mode == kMCOpenFileModeAppend)
             t_mode = IO_APPEND_MODE;
+		else /* No access requested */
+			return NULL;
 
         t_fptr = fopen(*t_path_sys, t_mode);
 
@@ -1972,6 +1976,19 @@ public:
         closedir(dirptr);
 
         return t_success;
+    }
+    
+    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
+    virtual bool GetExecutablePath(MCStringRef &r_executable)
+    {
+        char t_executable[PATH_MAX];
+		ssize_t t_size;
+        t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
+		if (t_size >= PATH_MAX || t_size < 0)
+            return false;
+        
+        t_executable[t_size] = 0;
+        return MCStringCreateWithSysString(t_executable, r_executable);
     }
 
     virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)

@@ -156,8 +156,6 @@ bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
     return t_success;
 }
 
-
-
 bool MCDataIsEmpty(MCDataRef p_data)
 {
     if (__MCDataIsIndirect(p_data))
@@ -226,6 +224,10 @@ bool MCDataCreateMutable(uindex_t p_initial_capacity, MCDataRef& r_data)
 	{
         self->flags |= kMCDataFlagIsMutable;
 		r_data = self;
+	}
+	else
+	{
+		MCValueRelease (self);
 	}
     
 	return t_success;
