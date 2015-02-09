@@ -50,6 +50,10 @@ public:
 	{
 		m_stream = p_stream;
 		m_table = NULL;
+        // SN-2015-02-09: [[ Bug 14477 ]] Initialise to NULL,
+        //  otherwise setBoundary calls MCValueRelease on some
+        //  random position in the memory.
+        m_boundary = NULL;
 		
 		setBoundary(p_boundary);
 		
@@ -59,6 +63,8 @@ public:
 	~MCBoundaryReader()
 	{
 		MCMemoryDeleteArray(m_table);
+        // SN-2015-02-09: [[ Bug 14477 ]] Release what we retained.
+        MCValueRelease(m_boundary);
 	}
 	
 	void setBoundary(MCStringRef p_boundary)
