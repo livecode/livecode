@@ -224,7 +224,7 @@ lc-test-check: lc-compile lc-test
 ###############################################################################
 # All Targets
 
-.PHONY: all bootstrap thirdparty clean
+.PHONY: all server-all server-install bootstrap thirdparty clean
 .DEFAULT_GOAL := all
 
 all: revzip server-revzip
@@ -234,6 +234,14 @@ all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgres
 all: development standalone installer server
 all: revpdfprinter revandroid
 all: lc-run lc-test
+
+server-all: server
+server-all: server-revzip server-revxml
+server-all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
+server-all: lc-run lc-test
+
+server-install: server-all
+	$(MAKE) -C ./engine -f Makefile.server server-install
 
 bootstrap: lc-bootstrap-compile
 
