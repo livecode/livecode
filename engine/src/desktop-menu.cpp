@@ -437,7 +437,7 @@ void MCButton::macopenmenu(void)
 		case WM_CASCADE:
 		case WM_POPUP:
             // MW-2014-07-29: [[ Bug 12990 ]] Popups always popup without an item selected.
-			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), UINDEX_MAX)/*&& s_popup_menupick != nil*/)
+			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), UINDEX_MAX))
 			{
 				setmenuhistoryprop(s_popup_menuitem + 1);
 
