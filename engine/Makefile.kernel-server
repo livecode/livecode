@@ -63,6 +63,7 @@ SOURCES=\
 	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
     graphicscontext.cpp lnxflst.cpp lnxflstold.cpp lnxelevate.cpp \
 	linux-theme.cpp \
+	linuxstubs.cpp \
 	modules.cpp \
 	module-canvas.cpp \
 	module-engine.cpp \
