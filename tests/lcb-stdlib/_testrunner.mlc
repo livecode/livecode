@@ -128,6 +128,11 @@ handler GetModuleTempPath(in pModulePath as string) as string
 	return pModulePath & ".tmp"
 end handler
 
+----------------------------------------------------------------
+-- Try and make the module path prettier, for presentation purposes
+--
+-- Eliminate any common prefix between the module path and the path to
+-- the test runner's module file, then remove ".lcm" suffix.
 handler GetModulePrettyPath(in pModulePath as string) as string
 	-- FIXME HACK HACK HACK
 	variable tPrefix as string
@@ -136,6 +141,12 @@ handler GetModulePrettyPath(in pModulePath as string) as string
 
 	if 1 is the first offset of tPrefix in pModulePath then
 		delete char 1 to (the number of chars in tPrefix) of pModulePath
+	end if
+
+	variable tLen as number
+	put the number of chars in pModulePath into tLen
+	if (tLen-3) is the last offset of ".lcm" in pModulePath then
+		delete char (tLen-3) to tLen of pModulePath
 	end if
 	return pModulePath
 end handler
@@ -188,8 +199,8 @@ handler GetTestOutput(in pModulePath as string, in pHandlerName as string, out r
 	variable tCommand as string
 	put sLcRunPath && "--handler" && pHandlerName && pModulePath && ">" & tTempPath into tCommand
 
-	-- Make sure that the command that was run appears in the log
-	put "#" && tCommand && "\n\n" into rOutput
+	-- Put something helpful into the output
+	put "###" && GetModulePrettyPath(pModulePath) && pHandlerName && "\n\n" into rOutput
 
 	variable tExitStatus as number
 	put Shell(tCommand) into tExitStatus
@@ -388,6 +399,7 @@ end handler
 
 ----------------------------------------------------------------
 -- Print a pretty summary of the test results
+--
 handler PrintTestSummary(in tPass as number, in tXPass as number, in tXFail as number, in tFail as number, in tSkip as number)
 
 	variable tSummaryString as string
@@ -397,49 +409,40 @@ handler PrintTestSummary(in tPass as number, in tXPass as number, in tXFail as n
 
 	--
 	if tXFail is 0 and tFail is 0 then
-		put "All" && FormatInt(tTotal) && "tests passed" into tSummaryString
+		put "All" && FormatInt(tTotal) && "tests passed\n" into tSummaryString
 
 	else if tFail is 0 then
-		put "All" && FormatInt(tTotal) && "tests behaved as expected" into tSummaryString
+		put "All" && FormatInt(tTotal) && "tests behaved as expected\n" into tSummaryString
 
 	else
-		put FormatInt(tFail) && "OF" && FormatInt(tTotal) && "TESTS FAILED" into tSummaryString
+		put FormatInt(tFail) && "OF" && FormatInt(tTotal) && "TESTS FAILED\n" into tSummaryString
 	end if
 
 	-- Format extra summary information from expected failure annotations
-	variable tExtras as list
-	put the empty list into tExtras
 	if tXPass > 0 then
-		push FormatInt(tXPass) && "unexpected pass" onto tExtras
+		put "\t" & FormatInt(tXPass) && "unexpected passes\n" after tSummaryString
 	end if
 	if tXFail > 0 then
-		push FormatInt(tXFail) && "expected fails" onto tExtras
+		put "\t" & FormatInt(tXFail) && "expected failures\n" after tSummaryString
 	end if
 	if tSkip > 0 then
-		push FormatInt(tSkip) && "skip" onto tExtras
+		put "\t" & FormatInt(tSkip) && "skipped\n" after tSummaryString
 	end if
 
-	if tExtras is not empty then
-		variable tExtraInfo as string
-		combine tExtras with ", " into tExtraInfo
-		put " (" & tExtraInfo & ")" after tSummaryString
-	end if
-
-	-- Make it pretty
 	variable tDecoration as string
-	put the empty string into tDecoration
+	put "================================================================\n" into tDecoration
+	put tDecoration & tSummaryString & tDecoration into tSummaryString
 
-	variable N as number
-	repeat with N from 1 up to the number of chars in tSummaryString
-		put "=" after tDecoration
-	end repeat
-	put "\n" after tDecoration
-
-	write EncodeUTF8(tDecoration & tSummaryString & "\n" & tDecoration) to stream the error stream
+	write EncodeUTF8(tSummaryString) to stream the error stream
 end handler
 
 ----------------------------------------------------------------
 -- Main entry point for test summary mode
+--
+-- Must be called like this:
+--
+--     lc-run --handler SummarizeTests -- \
+--         _testrunner.lcm --summary-log /path/to/summary [LOGFILE ...]
 --
 public handler SummarizeTests()
 
@@ -534,7 +537,7 @@ public handler SummarizeTests()
 	end repeat
 
 	---------- Write out the summary log
-	--put EncodeUTF8(tSummaryLog) into the contents of file tSummaryLogPath
+	put EncodeUTF8(tSummaryLog) into the contents of file tSummaryLogPath
 
 	---------- Format test summary
 	PrintTestSummary(tPassCount, tXPassCount, tXFailCount, tFailCount, tSkipCount)
