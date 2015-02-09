@@ -1,1 +1,1 @@
-Trying to get  array fails since server version 7.
+Trying to get $_FILES array fails since server version 7.
