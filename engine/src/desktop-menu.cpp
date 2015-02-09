@@ -437,15 +437,15 @@ void MCButton::macopenmenu(void)
 		case WM_CASCADE:
 		case WM_POPUP:
             // MW-2014-07-29: [[ Bug 12990 ]] Popups always popup without an item selected.
-            // PM-2015-02-09: [[ Bug 14521 ]] Do not send a menuPick msg if s_popup_menupick is nil
-			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), UINDEX_MAX)&& s_popup_menupick != nil)
+			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), UINDEX_MAX)/*&& s_popup_menupick != nil*/)
 			{
 				setmenuhistoryprop(s_popup_menuitem + 1);
 
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
                 //  in case some menus are nested
                 MCStringRef t_menupick;
-                t_menupick = s_popup_menupick;
+                // PM-2015-02-09: [[ Bug 14521 ]] Make sure we don't pass nil to message_with_valueref_args
+                t_menupick = !MCStringIsEmpty(s_popup_menupick) ? s_popup_menupick : kMCEmptyString;
                 s_popup_menupick = nil;
                 
 				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
