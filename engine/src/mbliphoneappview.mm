@@ -255,7 +255,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 - (BOOL)textView: (UITextView *)textView shouldChangeTextInRange: (NSRange)range replacementText: (NSString*)text
 {
 	uint32_t t_key_code, t_char_code;
-	if (range . location == 0)
+    // PM-2015-01-16: Prevent crash when deleting accented characters
+	if (range . location == 0 || [text length] == 0)
 	{
 		t_key_code = 0xff08;
 		t_char_code = 0;
@@ -263,7 +264,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 	else
 	{
 		t_key_code = 0;
-		t_char_code = [text characterAtIndex: 0];
+        t_char_code = [text characterAtIndex: 0];
 	}
 	
 	if (t_char_code == 10)
