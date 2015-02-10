@@ -887,7 +887,7 @@ static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
 	MCCanvasColorRef t_color = static_cast<MCCanvasColorRef>(p_value);
 
-	if (1 < MCCanvasColorGetAlpha (t_color)) /* Opaque case */
+	if (1 <= MCCanvasColorGetAlpha (t_color)) /* Opaque case */
 		return MCStringFormat (r_desc, "<color: %g, %g, %g>",
 		                       MCCanvasColorGetRed (t_color),
 		                       MCCanvasColorGetGreen (t_color),
