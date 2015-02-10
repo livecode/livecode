@@ -1663,8 +1663,14 @@ static hash_t __MCCanvasImageHash(MCValueRef p_value)
 
 static bool __MCCanvasImageDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+	MCCanvasImageRef t_image = static_cast<MCCanvasImageRef>(p_value);
+
+	uint32_t t_width, t_height;
+	if (!MCImageRepGetGeometry(MCCanvasImageGetImageRep (t_image),
+	                           t_width, t_height))
+		return MCStringCopy (MCSTR("<image>"), r_desc);
+
+	return MCStringFormat(r_desc, "<image %ux%u>", t_width, t_height);
 }
 
 bool MCCanvasImageCreateWithImageRep(MCImageRep *p_image, MCCanvasImageRef &r_image)
