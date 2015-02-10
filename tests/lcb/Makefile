@@ -13,8 +13,8 @@ clean:
 
 ################################################################
 
-STDLIB_MLC = $(shell find . -name '*.mlc' | sed -e's:^\./::' | grep -v '^\.')
-STDLIB_LCM = $(patsubst %.mlc,$(TEST_DIR)/%.lcm,$(STDLIB_MLC))
+STDLIB_LCB = $(shell find . -name '*.lcb' | sed -e's:^\./::' | grep -v '^\.')
+STDLIB_LCM = $(patsubst %.lcb,$(TEST_DIR)/%.lcm,$(STDLIB_LCB))
 STDLIB_LOGS = $(patsubst %.lcm,%.log,$(STDLIB_LCM))
 
 LCC_FLAGS = --modulepath $(TEST_DIR) --modulepath $(MODULE_DIR)
@@ -24,11 +24,11 @@ TEST_RUNNER_LCM = $(TEST_DIR)/_testrunner.lcm
 lcb-check: $(LC_RUN) $(LC_COMPILE)
 	-rm -f $(STDLIB_LCM) _test_suite.log
 	mkdir -p $(TEST_DIR)
-	@for mlcfile in $(STDLIB_MLC); do \
-	    lcmfile=$(TEST_DIR)/`echo $$mlcfile | sed -e's:mlc$$:lcm:'` ; \
-	    echo "$(LC_COMPILE) $(LCC_FLAGS) --output $$lcmfile $$mlcfile" \
+	@for lcbfile in $(STDLIB_LCB); do \
+	    lcmfile=$(TEST_DIR)/`echo $$lcbfile | sed -e's:lcb$$:lcm:'` ; \
+	    echo "$(LC_COMPILE) $(LCC_FLAGS) --output $$lcmfile $$lcbfile" \
 	        $(_PRINT_RULE); \
-	    $(LC_COMPILE) $(LCC_FLAGS) --output $$lcmfile $$mlcfile || exit $$? ; \
+	    $(LC_COMPILE) $(LCC_FLAGS) --output $$lcmfile $$lcbfile || exit $$? ; \
 	done
 	@echo
 	@for lcmfile in $(STDLIB_LCM); do \
