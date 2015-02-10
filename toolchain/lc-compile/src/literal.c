@@ -163,9 +163,9 @@ int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
                     t_ptr += 1;
                     if (t_ptr < t_limit && *t_ptr == '{')
                     {
-                        int t_char;
+                        int t_char, i;
                         t_char = 0;
-                        for(int i = 0; i < 6; i++)
+                        for(i = 0; i < 6; i++)
                         {
                             // Advance the input ptr - if we are at the end here
                             // it is an error.
