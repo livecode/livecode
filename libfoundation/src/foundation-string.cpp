@@ -748,8 +748,6 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 				t_string = (MCStringRef)t_value;
 			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeName)
 				t_string = MCNameGetString((MCNameRef)t_value);
-			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
-                /* UNCHECKED */ MCStringFormat(&t_string, t_value == kMCTrue ? "<true>" : "<false>");
             else
 				/* UNCHECKED */ MCValueCopyDescription (t_value, &t_string);
 

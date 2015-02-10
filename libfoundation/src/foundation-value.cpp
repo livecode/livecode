@@ -306,7 +306,7 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 	case kMCValueTypeCodeNull:
 		return MCStringCopy (MCSTR("<null>"), r_desc);
 	case kMCValueTypeCodeBoolean:
-		return MCStringFormat(r_desc, "<%s>", p_value == kMCTrue ? "true" : "false");
+		return MCStringCopy (MCSTR(p_value == kMCTrue ? "true" : "false"), r_desc);
 	case kMCValueTypeCodeNumber:
 		return __MCNumberCopyDescription((__MCNumber *)p_value, r_desc);
 	case kMCValueTypeCodeString:
