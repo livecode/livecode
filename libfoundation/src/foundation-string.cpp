@@ -759,8 +759,6 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
                 /* UNCHECKED */ MCStringFormat(&t_string, "<null>");
             else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeHandler)
                 /* UNCHECKED */ MCStringFormat(&t_string, "<handler>");
-            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeTypeInfo)
-                /* UNCHECKED */ MCStringFormat(&t_string, "<type>");
             else
 				/* UNCHECKED */ MCValueCopyDescription (t_value, &t_string);
 
