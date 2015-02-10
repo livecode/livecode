@@ -4242,6 +4242,12 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         if (islinechunk() && t_info == nil)
             t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
         
+        // SN-2015-02-10: [[ Bug 14467 ]] Even if the chunk is not an explicit line, it should be
+        //  possible to get the property of the line containing this chunk (same as bug 14053)
+        if (t_info == nil && !islinechunk())
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeLine);
+
+        
         if (t_info == nil || t_info -> getter == nil)
         {
             MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
