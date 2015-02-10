@@ -607,7 +607,7 @@
         
     'rule' Statements(-> nil):
         -- empty
-        
+
 'nonterm' Statement(-> STATEMENT)
 
     'rule' Statement(-> variable(Position, Name, Type)):
@@ -687,6 +687,9 @@
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+
+    'rule' Statement(-> postfixinto(Position, Statement, Target)):
+        CustomStatements(-> Statement) "into" @(-> Position) Expression(-> Target)
 
     'rule' Statement(-> Statement):
         CustomStatements(-> Statement)
@@ -1109,7 +1112,7 @@
     'rule' StringLiteral(-> Value):
         STRING_LITERAL(-> EscapedValue) @(-> Position)
         (|
-            UnescapeStringLiteral(EscapedValue -> Value)
+            UnescapeStringLiteral(Position, EscapedValue -> Value)
         ||
             Error_MalformedEscapedString(Position, EscapedValue)
             where(EscapedValue -> Value)

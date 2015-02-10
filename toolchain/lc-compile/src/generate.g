@@ -1105,6 +1105,23 @@
         EmitDestroyRegister(Reg)
         EmitAssignUndefined(Result)
         
+    'rule' GenerateBody(Result, Context, postfixinto(Position, Command, slot(_, Id))):
+        QuerySymbolId(Id -> Info)
+        Info'Kind -> Kind
+        Info'Index -> Index
+        IsVariableInRegister(Kind)
+        GenerateBody(Index, Context, Command)
+        EmitAssignUndefined(Result)
+
+    'rule' GenerateBody(Result, Context, postfixinto(Position, Command, Target)):
+        EmitPosition(Position)
+        GenerateInvoke_EvaluateArgumentForOut(Result, Context, Target)
+        EmitGetRegisterAttachedToExpression(Target -> DstReg)
+        GenerateBody(DstReg, Context, Command)
+        GenerateInvoke_AssignArgument(Result, Context, Target)
+        GenerateInvoke_FreeArgument(Target)
+        EmitAssignUndefined(Result)
+
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
 
@@ -1686,20 +1703,26 @@
     'rule' EmitListConstant(nil):
         -- nothing
 
-'action' EmitStoreVar(SYMBOLKIND, INT, INT)
+'condition' IsVariableInRegister(SYMBOLKIND)
 
-    'rule' EmitStoreVar(variable, Reg, Var):
-        EmitStore(Reg, Var, 0)
+    'rule' IsVariableInRegister(local):
+    'rule' IsVariableInRegister(parameter):
+
+
+'action' EmitStoreVar(SYMBOLKIND, INT, INT)
         
-    'rule' EmitStoreVar(_, Reg, Var):
+    'rule' EmitStoreVar(Kind, Reg, Var):
+        IsVariableInRegister(Kind)
         EmitAssign(Var, Reg)
+
+    -- This catches all module-scope things, including variables and handler references.
+    'rule' EmitStoreVar(_, Reg, Var):
+        EmitStore(Reg, Var, 0)
 
 'action' EmitFetchVar(SYMBOLKIND, INT, INT)
 
-    'rule' EmitFetchVar(local, Reg, Var):
-        EmitAssign(Reg, Var)
-
-    'rule' EmitFetchVar(parameter, Reg, Var):
+    'rule' EmitFetchVar(Kind, Reg, Var):
+        IsVariableInRegister(Kind)
         EmitAssign(Reg, Var)
 
     -- This catches all module-scope things, including variables and handler references.

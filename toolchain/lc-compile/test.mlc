@@ -115,7 +115,8 @@ public handler testSummary(in pResults as list)
     push tFailureCount converted to base 10 && "TESTS FAILED (" & tSuccessCount converted to base 10 && "PASSED)" onto tSummaryItems
 
     variable tSummaryString as string
-    combine tSummaryItems with newline into tSummaryString
+    combine tSummaryItems with newline
+    put the result into tSummaryString
 
     return tSummaryString
 end handler
@@ -314,11 +315,13 @@ public handler testTypeConvert(inout xResults as list)
 	put "a,b,c,d,e" into tString
 	
 	variable tList as list
-	split tString by "," into tList
+	split tString by ","
+    put the result into tList
 	
 	testLog("TypeConvert", "Split", tList is ["a","b", "c", "d", "e"], xResults)
 	
-	combine tList with "," into tString
+	combine tList with ","
+    put the result into tString
 	
 	testLog("TypeConvert", "Combine", tString is "a,b,c,d,e", xResults)
 	
@@ -398,7 +401,8 @@ public handler testArray(inout xResults as list)
 	testLog("Array", "KeysOfCount", the number of elements in tKeys is 3, xResults)
 
 	variable tKeysString as string
-	combine tKeys with "," into tKeysString
+	combine tKeys with ","
+    put the result into tKeysString
 	
 	testLog("Array", "KeysOf1", tKeysString contains "key1", xResults)
 	testLog("Array", "KeysOf2", tKeysString contains "key2", xResults)

@@ -189,6 +189,8 @@ DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expr
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 
 DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses should come after use clauses")
+DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
+DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 
 ////////////////////////////////////////////////////////////////////////////////
 
