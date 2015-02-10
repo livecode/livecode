@@ -221,27 +221,35 @@ lc-test-check: lc-compile lc-test
 	$(MAKE) -C ./toolchain lc-test-check
 .PHONY: lc-run-check lc-test-check
 
+
 ###############################################################################
-# All Targets
+# Server Targets
 
-.PHONY: all server-all server-install bootstrap thirdparty clean
-.DEFAULT_GOAL := all
-
-all: revzip server-revzip
-all: revxml server-revxml
-all: revdb dbodbc dbsqlite dbmysql dbpostgresql
-all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
-all: development standalone installer server
-all: revpdfprinter revandroid
-all: lc-run lc-test
+.PHONY: server-all server-install
 
 server-all: server
-server-all: server-revzip server-revxml
+server-all: server-revzip
+server-all: server-revxml
 server-all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 server-all: lc-run lc-test
 
 server-install: server-all
 	$(MAKE) -C ./engine -f Makefile.server server-install
+
+
+###############################################################################
+# All Targets
+
+.PHONY: all bootstrap thirdparty clean
+.DEFAULT_GOAL := all
+
+all: revzip
+all: revxml
+all: revdb dbodbc dbsqlite dbmysql dbpostgresql
+all: development standalone installer server
+all: revpdfprinter revandroid
+all: server-all
+all: lc-run lc-test
 
 bootstrap: lc-bootstrap-compile
 
