@@ -129,6 +129,7 @@
     EmitImportedHandler
     EmitImportedSyntax
     EmitTypeDefinition
+    EmitConstantDefinition
     EmitVariableDefinition
     EmitBeginHandlerDefinition
     EmitEndHandlerDefinition
@@ -199,12 +200,16 @@
     EmitContinueInvoke
     EmitEndInvoke
     EmitAssign
-    EmitAssignUndefined
-    EmitAssignTrue
-    EmitAssignFalse
-    EmitAssignInteger
-    EmitAssignReal
-    EmitAssignString
+    EmitAssignConstant
+    EmitUndefinedConstant
+    EmitTrueConstant
+    EmitFalseConstant
+    EmitIntegerConstant
+    EmitRealConstant
+    EmitStringConstant
+    EmitBeginListConstant
+    EmitContinueListConstant
+    EmitEndListConstant
     EmitBeginAssignList
     EmitContinueAssignList
     EmitEndAssignList
@@ -254,6 +259,7 @@
     Error_NotBoundToAVariable
     Error_NotBoundToAConstantSyntaxValue
     Error_NotBoundToAVariableOrHandler
+    Error_NotBoundToAConstantOrVariableOrHandler
     Error_TooManyArgumentsPassedToHandler
     Error_TooFewArgumentsPassedToHandler
     Error_HandlersBoundToSyntaxMustNotReturnAValue
@@ -280,6 +286,8 @@
     Error_ParameterMustHaveHighLevelType
     Error_VariableMustHaveHighLevelType
     Error_CannotAssignToHandlerId
+    Error_CannotAssignToConstantId
+    Error_ConstantsMustBeSimple
     Error_NonHandlerTypeVariablesCannotBeCalled
     Warning_MetadataClausesShouldComeAfterUseClauses
 
@@ -441,6 +449,7 @@
 'action' EmitDefinitionIndex(-> Index: INT)
 
 'action' EmitTypeDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
+'action' EmitConstantDefinition(Index: INT, Position: POS, Name: NAME, ConstIndex: INT)
 'action' EmitVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitEndHandlerDefinition()
@@ -518,16 +527,20 @@
 'action' EmitBeginInvoke(Index: INT, ContextRegister: INT, ResultRegister: INT)
 'action' EmitContinueInvoke(Register: INT)
 'action' EmitEndInvoke()
-'action' EmitAssignUndefined(Register: INT)
-'action' EmitAssignTrue(Register: INT)
-'action' EmitAssignFalse(Register: INT)
-'action' EmitAssignInteger(Register: INT, Value: INT)
-'action' EmitAssignReal(Register: INT, Value: DOUBLE)
-'action' EmitAssignString(Register: INT, Value: STRING)
+'action' EmitAssign(Dst: INT, Src: INT)
+'action' EmitAssignConstant(Register: INT, ConstIndex: INT)
+'action' EmitUndefinedConstant(-> ConstIndex: INT)
+'action' EmitTrueConstant(-> ConstIndex: INT)
+'action' EmitFalseConstant(-> ConstIndex: INT)
+'action' EmitIntegerConstant(Value: INT -> ConstIndex: INT)
+'action' EmitRealConstant(Value: DOUBLE -> ConstIndex: INT)
+'action' EmitStringConstant(Value: STRING -> ConstIndex: INT)
+'action' EmitBeginListConstant()
+'action' EmitContinueListConstant(ConstIndex: INT)
+'action' EmitEndListConstant(-> ConstIndex: INT)
 'action' EmitBeginAssignList(Register: INT)
 'action' EmitContinueAssignList(Register: INT)
 'action' EmitEndAssignList()
-'action' EmitAssign(Dst: INT, Src: INT)
 'action' EmitFetch(Register: INT, Var: INT, Level: INT)
 'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
@@ -582,6 +595,7 @@
 'action' Error_NotBoundToAHandler(Position: POS, Name: NAME)
 'action' Error_NotBoundToAVariable(Position: POS, Name: NAME)
 'action' Error_NotBoundToAVariableOrHandler(Position: POS, Name: NAME)
+'action' Error_NotBoundToAConstantOrVariableOrHandler(Position: POS, Name: NAME)
 
 'action' Error_NonAssignableExpressionUsedForOutContext(Position: POS)
 'action' Error_NonEvaluatableExpressionUsedForInContext(Position: POS)
@@ -613,7 +627,10 @@
 'action' Error_VariableMustHaveHighLevelType(Position: POS)
 
 'action' Error_CannotAssignToHandlerId(Position: POS, Identifier: NAME)
+'action' Error_CannotAssignToConstantId(Position: POS, Identifier: NAME)
 'action' Error_NonHandlerTypeVariablesCannotBeCalled(Position: POS)
+
+'action' Error_ConstantsMustBeSimple(Position: POS)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 

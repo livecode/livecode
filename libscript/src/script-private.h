@@ -240,7 +240,7 @@ struct MCScriptTypeDefinition: public MCScriptDefinition
 
 struct MCScriptConstantDefinition: public MCScriptDefinition
 {
-	MCValueRef value;
+	uindex_t value;
 };
 
 struct MCScriptVariableDefinition: public MCScriptDefinition
