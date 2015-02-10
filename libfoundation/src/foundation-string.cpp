@@ -746,23 +746,8 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			MCAutoStringRef t_string;
 			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
 				t_string = (MCStringRef)t_value;
-			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeName)
-				t_string = MCNameGetString((MCNameRef)t_value);
-			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
-				if (MCNumberIsInteger((MCNumberRef)t_value))
-					/* UNCHECKED */ MCStringFormat(&t_string, "%d", MCNumberFetchAsInteger((MCNumberRef)t_value));
-				else
-					/* UNCHECKED */ MCStringFormat(&t_string, "%f", MCNumberFetchAsReal((MCNumberRef)t_value));
-			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
-                /* UNCHECKED */ MCStringFormat(&t_string, t_value == kMCTrue ? "<true>" : "<false>");
-			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNull)
-                /* UNCHECKED */ MCStringFormat(&t_string, "<null>");
-            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeHandler)
-                /* UNCHECKED */ MCStringFormat(&t_string, "<handler>");
-            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeTypeInfo)
-                /* UNCHECKED */ MCStringFormat(&t_string, "<type>");
             else
-                /* UNCHECKED */ MCStringFormat(&t_string, "<unknown>");
+				/* UNCHECKED */ MCValueCopyDescription (t_value, &t_string);
 
 			if (t_range == nil)
 				t_success = MCStringAppend(t_buffer, *t_string);

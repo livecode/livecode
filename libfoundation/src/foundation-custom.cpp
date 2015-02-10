@@ -58,7 +58,7 @@ bool
 __MCCustomDefaultDescribe (MCValueRef self,
                            MCStringRef & r_desc)
 {
-	return false;
+	return MCStringFormat(r_desc, "<custom: %p>", self);
 }
 
 bool
@@ -73,4 +73,20 @@ __MCCustomDefaultMutableCopy (MCValueRef self,
                               MCValueRef & r_value)
 {
 	return false;
+}
+
+bool
+__MCCustomCopyDescription (MCValueRef self,
+                           MCStringRef & r_desc)
+{
+	MCTypeInfoRef t_typeinfo;
+	t_typeinfo = __MCCustomValueResolveTypeInfo((__MCValue *) self);
+
+	bool (*t_describe_func)(MCValueRef, MCStringRef &);
+	t_describe_func = t_typeinfo -> custom . callbacks . describe;
+
+	if (NULL == t_describe_func)
+		t_describe_func = __MCCustomDefaultDescribe;
+
+	return t_describe_func (self, r_desc);
 }

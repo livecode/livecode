@@ -43,6 +43,7 @@ struct __MCScriptHandlerContext
 extern MCHandlerCallbacks __kMCScriptHandlerCallbacks;
 bool __MCScriptHandlerInvoke(void *context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value);
 void __MCScriptHandlerRelease(void *context);
+bool __MCScriptHandlerDescribe(void *context, MCStringRef &r_desc);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2356,6 +2357,7 @@ MCHandlerCallbacks __kMCScriptHandlerCallbacks =
     sizeof(__MCScriptHandlerContext),
     __MCScriptHandlerRelease,
     __MCScriptHandlerInvoke,
+	__MCScriptHandlerDescribe,
 };
 
 bool __MCScriptHandlerInvoke(void *p_context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_result)
@@ -2374,6 +2376,26 @@ void __MCScriptHandlerRelease(void *p_context)
     __MCScriptHandlerContext *context;
     context = (__MCScriptHandlerContext *)p_context;
     MCScriptReleaseInstance(context -> instance);
+}
+
+bool
+__MCScriptHandlerDescribe (void *p_context,
+                           MCStringRef & r_desc)
+{
+	__MCScriptHandlerContext *context;
+	context = (__MCScriptHandlerContext *)p_context;
+
+	MCScriptModuleRef t_module;
+	t_module = MCScriptGetModuleOfInstance (context->instance);
+
+	MCNameRef t_module_name;
+	t_module_name = MCScriptGetNameOfModule (t_module);
+
+	MCNameRef t_handler_name;
+	t_handler_name = MCScriptGetNameOfDefinitionInModule(t_module,
+	                                                     context->definition);
+
+	return MCStringFormat(r_desc, "%@.%@()", t_module_name, t_handler_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
