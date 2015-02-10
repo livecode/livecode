@@ -257,7 +257,7 @@ struct MCScriptContextVariableDefinition: public MCScriptDefinition
     uindex_t type;
     uindex_t default_value;
     
-    // (compute) The index of the variable in the context slot table - not pickled
+    // (computed) The index of the variable in the context slot table - not pickled
     uindex_t slot_index;
 };
 
