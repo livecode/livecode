@@ -1721,13 +1721,16 @@ end revSaveToFolder
 #
 #####################################################################
 
-private function revStandaloneExternalsPath pPlatform, pArchitecture
+private function revStandaloneDatabaseDriversPath pPlatform
+   local tCurrentFolder, tDetailsA
+   put revStandalonePlatformDetails(pPlatform) into tDetailsA
+   
    # There are no legacy drivers for linux as we didn't have a linux version at the time the legacy drivers were current
    # If the legacy drivers are turned on but the folder is not present, we default to using the normal drivers, as the user could 
    # have deleted it.
    if the cREVUseLegacyDrivers of stack "revPreferences" and pPlatform is not "Linux" then
       local tLegacyFolder
-      put revEnvironmentUserRuntimePath() & slash & pPlatform & slash & pArchitecture & "/Externals/Legacy" into tLegacyFolder
+      put revEnvironmentUserRuntimePath() & slash & tDetailsA["platform"] & slash & tDetailsA["architecture"] & "/Externals/Legacy" into tLegacyFolder
       if there is a folder tLegacyFolder then
          return tLegacyFolder
       else
@@ -1736,14 +1739,13 @@ private function revStandaloneExternalsPath pPlatform, pArchitecture
       end if
    end if
    
-   local tCurrentFolder
-   put revEnvironmentRuntimePath() & slash & pPlatform & slash & pArchitecture & "/Externals" into tCurrentFolder
+   put tDetailsA["externals_folder"] into tCurrentFolder
    if there is no folder tCurrentFolder then
       revStandaloneAddWarning "Database drivers not found at location: " & tCurrentFolder
    end if
    
    return tCurrentFolder
-end revStandaloneExternalsPath
+end revStandaloneDatabaseDriversPath
 
 private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePath, pEnginePath
    local tOriginalDriverPath,tNewDriverPath,tHomePath,tStandaloneFolder,tPlatformFile,tCurrentFileType
@@ -1751,237 +1753,108 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    
    revStandaloneProgress "Copying database drivers..."
    
-   -- MW-2013-06-13: [[ CloneAndRun ]] If we are not installed then use a different source path.
-   if revEnvironmentIsInstalled() then
-      # OK-2010-02-10: Bug 8307 - Abstracted location for Externals so that revdb comes from the legacy folder
-      # if required and present.
-      local tWindowsDBLib
-      --   put revEnvironmentRuntimePath() & "/Windows/x86-32/Externals" into tWindowsDBLib
-      if pPlatform is "Windows" then
-         put revStandaloneExternalsPath("Windows", "x86-32") into tWindowsDBLib
-      end if
-      
-      -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
-      local tMacOSXDBLib
-      switch pPlatform
-         case "MacOSX"
-         case "MacOSX PowerPC-32"
-         case "MacOSX x86-32"
-            --         put revEnvironmentRuntimePath() & "/Mac OS X/x86-32/Externals" into tMacOSXDBLib
-            put revStandaloneExternalsPath("Mac OS X", "x86-32") into tMacOSXDBLib
-            break
-      end switch
-      
-      # OK-2007-08-14 : Reinstated linux support
-      local tLinuxDBLib
-      if pPlatform is "Linux" then
-         put revEnvironmentRuntimePath() & "/Linux/x86-32/Externals" into tLinuxDBLib
-      else if pPlatform is "Linux x64" then
-         -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
-         put revEnvironmentRuntimePath() & "/Linux/x86-64/Externals" into tLinuxDBLib
-      else if pPlatform is "Linux armv6-hf" then
-         -- FG-2014-08-19: [[ RPi ]] Compute the correct path for ARMv6 Linux
-         put revEnvironmentRuntimePath() & "/Linux/armv6-hf/Externals" into tLinuxDBLib
-      end if
-   else
-      if the platform is "win32" then
-         put revEnvironmentBinariesPath() into tWindowsDBLib
-      else if the platform is "macos" then
-         put revEnvironmentBinariesPath() into tMacOSXDBLib
-      else if the platform is "linux" then
-         put revEnvironmentBinariesPath() into tLinuxDBLib
-      end if
+   if sStandaloneSettingsA["databaseDrivers"] is empty then
+      exit revCopyDatabaseDrivers
    end if
+   
+   # AL-2015-02-06: [[ SB Inclusions ]] Ensure revDatabaseLibrary stack is included
+   put return & "revDatabaseLibrary" after sStandaloneSettingsA["scriptLibraries"]
+   
+   local tDBLibPath
+   put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
+   
+   local tExternalsFolder, tExtension, tSharedExtension, tPlatform, tArch
+   local tDetailsA
+   put revStandalonePlatformDetails(pPlatform) into tDetailsA
+   put tDetailsA["externals_folder"] into tExternalsFolder
+   put tDetailsA["loadable_extension"] into tExtension
+   if tDetailsA["shared_extension"] is not empty then
+      put tDetailsA["shared_extension"] into tSharedExtension
+   else
+      put tExtension into tSharedExtension
+   end if
+   put tDetailsA["platform"] into tPlatform
+   put tDetailsA["architecture"] into tArch
    
    set the itemDel to "/"
    put pStandalonePath into tNewDriverPath
    put pStandalonePath into tStandaloneFolder
    put "" into item -1 of tStandaloneFolder
    put "Externals/database_drivers/" into item -1 of tNewDriverPath
-   if sStandaloneSettingsA["databaseDrivers"] is not empty then
-      ensureExternalLibrary pStackFilePath
+   
+   if there is not a folder (tStandaloneFolder&"Externals") then 
+      create folder (tStandaloneFolder&"Externals")
+   end if
+   
+   if not revResourceExists(tDBLibPath) then
+      revStandaloneAddWarning tPlatform & ", cannot find database driver:" && quote & tDBLibPath & quote
+   else
+      revCopyModule tPlatform, "revdb", "revdb" & tExtension, tDBLibPath, tStandaloneFolder, "Externals", tPlatform is "MacOSX"
+      if the result is not empty then
+         revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tDBLibPath & slash & "revdb" & tExtension & quote
+      else
+         if tPlatform is "MacOSX" and there is no file (tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo") then
+            -- missing PkgInfo file, so copy it in quietly
+            put "BNDL????" into URL ("binfile:" & tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo")
+         end if
+         revAddExternal "revdb"
+      end if
+   end if
+   
+   if there is not a folder tNewDriverPath then 
+      create folder tNewDriverPath
+   end if
+   
+   -- loop over drivers
+   repeat for each line tDriver in sStandaloneSettingsA["databaseDrivers"]
       
-      if there is not a folder (tStandaloneFolder&"Externals") then 
-         create folder (tStandaloneFolder&"Externals")
+      # OK-2010-01-13 : No Oracle support
+      if tPlatform is "Linux" and tDriver is "Oracle" then
+         revStandaloneAddWarning "Linux, Oracle is not currently supported on this platform"
+         next repeat
       end if
       
-      switch
-         case pPlatform contains "MacOSX"
-            
-            revAddExternal "Externals/revdb.bundle"
-            if the platform is "MacOS" and char 1 of the systemVersion is among the items of "9/1" then
-               if char 1 of the systemVersion = "9" then
-                  revCopyPackage tMacOSXDBLib & "/revdb.bundle",tStandaloneFolder&"Externals"
-               else
-                  if not revResourceExists(tMacOSXDBLib) then
-                     revStandaloneAddWarning "MacOS, cannot find database driver:" && quote & tMacOSXDBLib & quote
-                  else
-                     --revCopyFile tMacOSXDBLib & "/revdb.bundle",tStandaloneFolder&"Externals"
-                     revSBCopyFolderToDestination tMacOSXDBLib & "/revdb.bundle", tStandaloneFolder & "Externals", "revStandaloneProgressCallback", the long id of me
-                     if the result is not empty then
-                        revStandaloneAddWarning "MacOS, failed to copy revdb bundle"
-                     else if there is no file (tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo") then
-                        -- missing PkgInfo file, so copy it in quietly
-                        put "BNDL????" into URL ("binfile:" & tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo")
-                     end if
-                  end if
-               end if
-            else
-               if there is a folder tMacOSXDBLib then
-                  --revCopyFolder__Standalone tMacOSXDBLib & "/revdb.bundle",tStandaloneFolder&"Externals"
-                  revSBCopyFolderToDestination tMacOSXDBLib & "/revdb.bundle", tStandaloneFolder & "Externals", "revStandaloneProgressCallback", the long id of me
-                  if the result is not empty then
-                     revStandaloneAddWarning "MacOS, database library failed to copy:" && quote & tMacOSXDBLib & quote
-                  else if there is no file (tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo") then
-                     put "BNDL????" into URL ("binfile:" & tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo")
-                  end if
-               else
-                  revStandaloneAddWarning "MacOS, database library not found:" && quote & tMacOSXDBLib & quote
-               end if
-            end if
-            break
-         case pPlatform = "Windows"
-            revAddExternal "Externals/revdb.dll"
-            if there is a file (tWindowsDBLib & "/revdb.dll") then
-               --put url ("binfile:"&tWindowsDBLib&"/revdb.dll") into url ("binfile:"&tStandaloneFolder&"Externals/revdb.dll")
-               revSBCopyFile tWindowsDBLib & "/revdb.dll", tStandaloneFolder & "Externals/revdb.dll", "revStandaloneProgressCallback", the long id of me
-            else
-               revStandaloneAddWarning "Windows, revdb.dll not found:" && quote & tWindowsDBLib & "/revdb.dll" & quote
-            end if
-            break
-            
-            # OK-2010-01-13: Bug 8536 - revdb.so not included on linux when database auto-detected,
-            # this was just forgotten when linux support was added back into the standalone builder.
-            // SN-2015-01-13: [[ Bug 14348 ]] Changed to contains, to take 'Linux x64' and 'Linux ARMv6-HF' in consideration
-         case pPlatform contains "Linux"
-            revAddExternal "Externals/revdb.so"
-            if there is a file (tLinuxDBLib & "/revdb.so") then
-               revSBCopyFile tLinuxDBLib & "/revdb.so", tStandaloneFolder & "Externals/revdb.so", "revStandaloneProgressCallback", the long id of me
-            else
-               revStandaloneAddWarning "Linux, revdb.so not found:" && quote & tLinuxDBLib & "/revdb.so" & quote
-            end if
-            break
-      end switch
+      put revDBDriverPath(tDriver, tPlatform, tArch) into tDriverPath
+      if tDriverPath is empty then
+         revStandaloneAddWarning tPlatform && tArch & ", database driver not found:" & quote & tDriver & quote
+         next repeat
+      end if
       
-      -- loop over drivers
-      repeat for each line tDriver in sStandaloneSettingsA["databaseDrivers"]
-         switch
-            case pPlatform contains "MacOSX"
-               
-               -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
-               local tMacName
-               put "Mac (x86-32)" into tMacName
-               
-               put revDBDriverPath(tDriver, "MacOSX", word 2 of pPlatform) into tDriverPath
-               
-               if tDriverPath is not empty then
-                  if there is not a folder tNewDriverPath then 
-                     create folder tNewDriverPath
-                  end if
-                  if the platform is "MacOS" and char 1 of the systemVersion is among the items of "9/1" and char -7 to -1 of tDriverPath is ".bundle" then
-                     if char 1 of the systemVersion is "9" then
-                        revCopyPackage tDriverPath, tNewDriverPath
-                     else
-                        if not revResourceExists(tDriverPath) then
-                           revStandaloneAddWarning (tMacName, "database driver file not found:" && quote & tDriverPath & quote)
-                        else
-                           --revCopyFile tDriverPath, tNewDriverPath
-                           revSBCopyFolderToDestination tDriverPath, tNewDriverPath, "revStandaloneProgressCallback", the long id of me
-                           if the result is not empty then
-                              revStandaloneAddWarning (tMacName, "database driver failed to copy:" && quote & tDriverPath & quote)
-                           else if there is no file (tNewDriverPath & "/" & (item -1 of tDriverPath) & "/Contents/PkgInfo") then
-                              if ".bundle" is in item -1 of tDriverPath then
-                                 put "BNDL????" into URL ("binfile:" & tNewDriverPath & "/" & (item -1 of tDriverPath) & "/Contents/PkgInfo")
-                              end if
-                           end if
-                        end if
-                     end if
-                  else
-                     if there is a folder tDriverPath then
-                        revSBCopyFolderToDestination tDriverPath, tNewDriverPath, "revStandaloneProgressCallback", the long id of me
-                        if the result is not empty then
-                           revStandaloneAddWarning (tMacName, "Mac, database driver failed to copy:" && quote & tDriverPath & quote)
-                        else if the itemDelimiter is "/" and ".bundle" is in item -1 of tDriverPath and there is no file (tNewDriverPath & "/" & (item -1 of tDriverPath) & "/Contents/PkgInfo") then
-                           put "BNDL????" into URL ("binfile:" & (tNewDriverPath & "/" & (item -1 of tDriverPath) & "/Contents/PkgInfo"))
-                        end if
-                     else
-                        revStandaloneAddWarning (tMacName, "Mac, database driver folder not found:" && quote & tDriverPath & quote)
-                     end if
-                     if tDriver = "Valentina" then
-                        set the itemDel to slash
-                        if there is not a folder (item 1 to -2 of tStandaloneFolder&"/Frameworks") then create folder (item 1 to -2 of tStandaloneFolder&"/Frameworks")
-                        revSBCopyFolderToDestination (item 1 to -2 of tStandaloneFolder&"/MacOS/Externals/database_drivers/VXCMD_macho.bundle/Contents/Frameworks/VSDK.framework"),(item 1 to -2 of tStandaloneFolder&"/Frameworks"), "revStandaloneProgressCallback", the long id of me
-                        if the result is not empty then
-                           revStandaloneAddWarning (tMacName, " failed to copy Valentina framework")
-                        end if
-                     end if 
-                  end if
-               end if 
-               break
-               
-               # OK-2007-08-14 : Reinstated linux support
-            case pPlatform contains "Linux"
-               
-               # OK-2010-01-13 : No Oracle support
-               if tDriver is "Oracle" then
-                  revStandaloneAddWarning "Linux, Oracle is not currently supported on this platform"
-                  next repeat
-               end if
-               
-               // SN-2015-01-13: [[ Bug 14348 ]] Call revDBDriverPath with 'Linux' as a first arg
-               if pPlatform is "Linux" then
-                  put revDBDriverPath(tDriver, "Linux", "x86-32") into tDriverPath
-               else if pPlatform is "Linux x64" then
-                  -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
-                  put revDBDriverPath(tDriver, "Linux", "x86-64") into tDriverPath
-               else -- if pPlatform is "Linux armv6-hf" then
-                  -- FG-2014-08-19: [[ RPi ]] Compute the correct path for 64-bit Linux
-                  put revDBDriverPath(tDriver, "Linux", "armv6-hf") into tDriverPath
-               end if
-               
-               if there is no folder tNewDriverPath then
-                  create directory tNewDriverPath
-               end if
-               
-               set the itemDelimiter to slash
-               if there is a file (line 1 of tDriverPath) then
-                  revSBCopyFile line 1 of tDriverPath, tNewDriverPath & item -1 of line 1 of tDriverPath, "revStandaloneProgressCallback", the long id of me
-               else
-                  revStandaloneAddWarning "Linux, driver file not found:" && quote & (line 1 of tDriverPath) & quote
-               end if
-               
-               if line 2 of tDriverPath is not empty then 
-                  revSBCopyFile line 2 of tDriverPath, tStandaloneFolder & item -1 of line 2 of tDriverPath, "revStandaloneProgressCallback", the long id of me
-               end if
-               set the itemDel to comma
-               
-               break
-               
-            default
-               put revDBDriverPath(tDriver,"Windows") into tDriverPath
-               
-               if there is not a folder tNewDriverPath then 
-                  create directory tNewDriverPath
-               end if
-               set the itemDel to "/"
-               -- copy to database drivers folder
-               if there is a file (line 1 of tDriverPath) then
-                  --put url ("binfile:"&line 1 of tDriverPath) into url ("binfile:"&tNewDriverPath & item -1 of line 1 of tDriverPath)
-                  revSBCopyFile line 1 of tDriverPath, tNewDriverPath & item -1 of line 1 of tDriverPath, "revStandaloneProgressCallback", the long id of me
-               else
-                  revStandaloneAddWarning "Windows, driver file not found:" && quote & (line 1 of tDriverPath) & quote
-               end if
-               -- copy to 1st level next to app
-               if line 2 of tDriverPath is not empty then 
-                  --put url ("binfile:"&line 2 of tDriverPath) into url ("binfile:"&tStandaloneFolder&item -1 of line 2 of tDriverPath)
-                  revSBCopyFile line 2 of tDriverPath, tStandaloneFolder & item -1 of line 2 of tDriverPath, "revStandaloneProgressCallback", the long id of me
-               end if
-               set the itemDel to comma
-               
-               break
-         end switch
+      if not revResourceExists(line 1 of tDriverPath) then
+         revStandaloneAddWarning tPlatform && tArch & ", database driver file not found:" & quote & tDriverPath & quote
+         next repeat
+      end if
+      
+      # Copy the resource for possible two lines of the associated driver path
+      local tLineCount
+      put 1 into tLineCount
+      
+      local tResourceName
+      put tolower(tDriver) into tResourceName
+      repeat for each line tLine in tDriverPath
+         if the number of lines in tDriverPath > 1 then
+            put tLineCount after tResourceName
+         end if
+         revCopyModule tPlatform, tResourceName, item -1 of tLine, item 1 to -2 of tLine, tStandaloneFolder, "Externals/database_drivers", tPlatform is "MacOSX"
+         if the result is not empty then
+            revStandaloneAddWarning tPlatform && tArch & ", database driver" && the result & ":" && quote & tDriverPath & quote
+         else
+            if tPlatform is "MacOSX" and there is no file (tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo") then
+               -- missing PkgInfo file, so copy it in quietly
+               put "BNDL????" into URL ("binfile:" & tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo")
+            end if
+         end if
       end repeat
-   end if
+      
+      # Special case MacOS Valentina driver
+      if tPlatform is "MacOSX" and tDriver = "Valentina" then
+         if there is not a folder (item 1 to -2 of tStandaloneFolder&"/Frameworks") then create folder (item 1 to -2 of tStandaloneFolder&"/Frameworks")
+         revSBCopyFolderToDestination (item 1 to -2 of tStandaloneFolder&"/MacOS/Externals/database_drivers/VXCMD_macho.bundle/Contents/Frameworks/VSDK.framework"),(item 1 to -2 of tStandaloneFolder&"/Frameworks"), "revStandaloneProgressCallback", the long id of me
+         if the result is not empty then
+            revStandaloneAddWarning ("Mac x86-32, failed to copy Valentina framework")
+         end if
+      end if 
+   end repeat
 end revCopyDatabaseDrivers
 
 #####################################################################
