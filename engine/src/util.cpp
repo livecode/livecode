@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 
 #include "globals.h"
+#include "dispatch.h"
 
 
 // MDW-2014-07-06: [[ oval_points ]]
@@ -2919,6 +2920,53 @@ bool MCU_random_bytes(size_t p_count, void *p_buffer)
 {
 	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
 	return MCS_random_bytes(p_count, p_buffer);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading where
+//  p_module can be a universal module name, where a mapping from module names to
+// relative paths has been provided.
+MCSysModuleHandle MCU_loadmodule(const char *p_module)
+{
+    char *t_path;
+    t_path = nil;
+    
+    if (!MCdispatcher || !MCdispatcher -> fetchlibrarymapping(p_module, t_path))
+    {
+        if (!MCCStringClone(p_module, t_path))
+            return nil;
+    }
+
+    MCSysModuleHandle t_handle;
+    t_handle = MCS_loadmodule(t_path);
+    
+    if (t_handle != nil)
+        return t_handle;
+    
+    char *t_filename;
+    if (t_path[0] == '/')
+    {
+        if (!MCCStringClone(t_path, t_filename))
+            return nil;
+    }
+    else if (!MCCStringFormat(t_filename, "%.*s/%s", strrchr(MCcmd, '/') - MCcmd, MCcmd, t_path))
+        return nil;
+
+    t_handle = MCS_loadmodule(t_filename);
+    delete t_filename;
+    
+    return t_handle;
+}
+
+void MCU_unloadmodule(MCSysModuleHandle p_module)
+{
+    MCS_unloadmodule(p_module);
+}
+
+void *MCU_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
+{
+    return MCS_resolvemodulesymbol(p_module, p_symbol);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
