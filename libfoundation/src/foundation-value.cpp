@@ -29,7 +29,7 @@ static void __MCValueUninter(__MCValue *value);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value)
+MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value)
 {
     __MCCustomValue *t_value;
     t_value = (__MCCustomValue*)p_value;
@@ -322,15 +322,7 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
     case kMCValueTypeCodeData:
         return __MCDataCopyDescription((__MCData*)p_value, r_desc);
 	case kMCValueTypeCodeCustom:
-		{
-			MCTypeInfoRef t_typeinfo;
-			bool (*t_describe_func)(MCValueRef, MCStringRef &);
-			t_typeinfo = __MCCustomValueResolveTypeInfo(self);
-			t_describe_func = t_typeinfo -> custom . callbacks . describe;
-			return ((t_describe_func != NULL) ?
-			        t_describe_func (p_value, r_desc) :
-			        __MCCustomDefaultDescribe (p_value, r_desc));
-		}
+		return __MCCustomCopyDescription((__MCCustomValue *) p_value, r_desc);
     case kMCValueTypeCodeProperList:
         return __MCProperListCopyDescription((__MCProperList*)p_value, r_desc);
     case kMCValueTypeCodeRecord:
