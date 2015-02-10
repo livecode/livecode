@@ -427,6 +427,11 @@ bool MCCanvasJoinStyleFromString(MCStringRef p_string, MCGJoinStyle &r_style);
 bool MCCanvasCapStyleToString(MCGCapStyle p_style, MCStringRef &r_string);
 bool MCCanvasCapStyleFromString(MCStringRef p_string, MCGCapStyle &r_style);
 
+MCCanvasFloat MCCanvasColorGetRed(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetGreen(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetBlue(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetAlpha(MCCanvasColorRef color);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCNameRef s_blend_mode_map[kMCGBlendModeCount];
@@ -880,8 +885,19 @@ static hash_t __MCCanvasColorHash(MCValueRef p_value)
 
 static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+	MCCanvasColorRef t_color = static_cast<MCCanvasColorRef>(p_value);
+
+	if (1 < MCCanvasColorGetAlpha (t_color)) /* Opaque case */
+		return MCStringFormat (r_desc, "<color: %g, %g, %g>",
+		                       MCCanvasColorGetRed (t_color),
+		                       MCCanvasColorGetGreen (t_color),
+		                       MCCanvasColorGetBlue (t_color));
+	else
+		return MCStringFormat (r_desc, "<color: %g, %g, %g, %g>",
+		                       MCCanvasColorGetRed (t_color),
+		                       MCCanvasColorGetGreen (t_color),
+		                       MCCanvasColorGetBlue (t_color),
+		                       MCCanvasColorGetAlpha (t_color));
 }
 
 //////////
