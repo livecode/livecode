@@ -1876,15 +1876,8 @@ bool MCDispatch::loadexternal(const char *p_external)
 		delete t_filename;
 		return true;
 	}
-#elif !defined(_SERVER)
-	if (p_external[0] == '/')
-	{
-		if (!MCCStringClone(p_external, t_filename))
-			return false;
-	}
-	else if (!MCCStringFormat(t_filename, "%.*s/%s", strrchr(MCcmd, '/') - MCcmd, MCcmd, p_external))
-		return false;
 #else
+    // AL-2015-02-10: [[ SB Inclusions ]] New module loading utility deals with path resolution
 	if (!MCCStringClone(p_external, t_filename))
 		return false;
 #endif
