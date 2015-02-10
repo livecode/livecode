@@ -127,6 +127,9 @@ extern "C" void EmitFalseConstant(long *idx);
 extern "C" void EmitIntegerConstant(long value, long *idx);
 extern "C" void EmitRealConstant(long value, long *idx);
 extern "C" void EmitStringConstant(long value, long *idx);
+extern "C" void EmitBeginListConstant(void);
+extern "C" void EmitContinueListConstant(long idx);
+extern "C" void EmitEndListConstant(long *idx);
 extern "C" void EmitBeginAssignList(long reg);
 extern "C" void EmitContinueAssignList(long reg);
 extern "C" void EmitEndAssignList(void);
@@ -1117,6 +1120,24 @@ void EmitStringConstant(long value, long *idx)
     MCStringCreateWithBytes((const byte_t *)value, strlen((const char *)value), kMCStringEncodingUTF8, false, &t_string);
     MCScriptAddValueToModule(s_builder, *t_string, (uindex_t&)*idx);
     MCLog("[Emit] StringConstant(\"%s\" -> %ld)", (const char *)value, *idx);
+}
+
+void EmitBeginListConstant(void)
+{
+    MCScriptBeginListValueInModule(s_builder);
+    MCLog("[Emit] BeginListConstant()", 0);
+}
+
+void EmitContinueListConstant(long idx)
+{
+    MCScriptContinueListValueInModule(s_builder, idx);
+    MCLog("[Emit] ContinueListConstant(%ld)", idx);
+}
+
+void EmitEndListConstant(long *idx)
+{
+    MCScriptEndListValueInModule(s_builder, (uindex_t&)*idx);
+    MCLog("[Emit] EndListConstant(-> %ld)", *idx);
 }
 
 void EmitBeginAssignList(long reg)

@@ -183,6 +183,8 @@ DEFINE_ERROR_I(CannotAssignToConstantId, "'%s' is a constant id and cannot be as
 
 DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler type to be called")
 
+DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a simple expression (i.e. a direct constant or list of direct constants)")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 

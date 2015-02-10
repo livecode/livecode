@@ -62,6 +62,8 @@ struct MCScriptModuleBuilder
     
     uindex_t current_file;
     uindex_t current_line;
+    
+    MCProperListRef current_list_value;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +124,8 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     self -> current_file = 0;
     self -> current_line = 0;
     
+    self -> current_list_value = nil;
+    
     r_builder = self;
 }
 
@@ -158,6 +162,8 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
     MCMemoryDeleteArray(self -> labels);
     MCMemoryDeleteArray(self -> instructions);
     MCMemoryDeleteArray(self -> operands);
+    
+    MCValueRelease(self -> current_list_value);
     
     MCMemoryDelete(self);
 
@@ -280,6 +286,43 @@ void MCScriptAddValueToModule(MCScriptModuleBuilderRef self, MCValueRef p_value,
         return;
     
     __emit_constant(self, p_value, r_index);
+}
+
+void MCScriptBeginListValueInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_list_value != nil ||
+        !MCProperListCreateMutable(self -> current_list_value))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptContinueListValueInModule(MCScriptModuleBuilderRef self, uindex_t p_const_idx)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_list_value == nil ||
+        !MCProperListPushElementOntoBack(self -> current_list_value, self -> module . values[p_const_idx]))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptEndListValueInModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    MCScriptAddValueToModule(self, self -> current_list_value, r_index);
+    
+    MCValueRelease(self -> current_list_value);
+    self -> current_list_value = nil;
 }
 
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)

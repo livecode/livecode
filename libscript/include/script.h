@@ -283,6 +283,9 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, uindex_t module
 void MCScriptAddImportToModuleWithIndex(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, uindex_t type, uindex_t p_index);
 
 void MCScriptAddValueToModule(MCScriptModuleBuilderRef builder, MCValueRef value, uindex_t& r_index);
+void MCScriptBeginListValueInModule(MCScriptModuleBuilderRef builder);
+void MCScriptContinueListValueInModule(MCScriptModuleBuilderRef builder, uindex_t index);
+void MCScriptEndListValueInModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
 
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef builder, uindex_t index, uindex_t& r_type);
 void MCScriptAddForeignTypeToModule(MCScriptModuleBuilderRef builder, MCStringRef p_binding, uindex_t& r_type);

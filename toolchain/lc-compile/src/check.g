@@ -73,7 +73,12 @@
     --
 
     'rule' CheckBindings(DEFINITION'constant(Position, _, _, Value)):
-        /* BD1 */ CheckBindingsOfConstantExpression(Value)
+        --/* BD1 */ CheckBindingsOfConstantExpression(Value)
+        (|
+            IsExpressionSimpleConstant(Value)
+        ||
+            Error_ConstantsMustBeSimple(Position)
+        |)
 
     'rule' CheckBindings(DEFINITION'property(Position, _, _, Getter, OptionalSetter)):
         /* BD2 */ CheckBindingIsVariableOrHandlerId(Getter)
@@ -372,6 +377,26 @@
         Error_NotBoundToASyntaxMark(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
+
+'condition' IsExpressionSimpleConstant(EXPRESSION)
+
+    'rule' IsExpressionSimpleConstant(undefined(_)):
+    'rule' IsExpressionSimpleConstant(true(_)):
+    'rule' IsExpressionSimpleConstant(false(_)):
+    'rule' IsExpressionSimpleConstant(integer(_, _)):
+    'rule' IsExpressionSimpleConstant(real(_, _)):
+    'rule' IsExpressionSimpleConstant(string(_, _)):
+    'rule' IsExpressionSimpleConstant(list(_, List)):
+        IsExpressionListSimpleConstant(List)
+        
+'condition' IsExpressionListSimpleConstant(EXPRESSIONLIST)
+
+    'rule' IsExpressionListSimpleConstant(expressionlist(Head, Tail)):
+        IsExpressionSimpleConstant(Head)
+        IsExpressionListSimpleConstant(Tail)
+
+    'rule' IsExpressionListSimpleConstant(nil):
+        -- nothing
 
 --------------------------------------------------------------------------------
 

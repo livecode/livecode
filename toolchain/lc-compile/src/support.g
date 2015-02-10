@@ -207,6 +207,9 @@
     EmitIntegerConstant
     EmitRealConstant
     EmitStringConstant
+    EmitBeginListConstant
+    EmitContinueListConstant
+    EmitEndListConstant
     EmitBeginAssignList
     EmitContinueAssignList
     EmitEndAssignList
@@ -284,6 +287,7 @@
     Error_VariableMustHaveHighLevelType
     Error_CannotAssignToHandlerId
     Error_CannotAssignToConstantId
+    Error_ConstantsMustBeSimple
     Error_NonHandlerTypeVariablesCannotBeCalled
     Warning_MetadataClausesShouldComeAfterUseClauses
 
@@ -531,6 +535,9 @@
 'action' EmitIntegerConstant(Value: INT -> ConstIndex: INT)
 'action' EmitRealConstant(Value: DOUBLE -> ConstIndex: INT)
 'action' EmitStringConstant(Value: STRING -> ConstIndex: INT)
+'action' EmitBeginListConstant()
+'action' EmitContinueListConstant(ConstIndex: INT)
+'action' EmitEndListConstant(-> ConstIndex: INT)
 'action' EmitBeginAssignList(Register: INT)
 'action' EmitContinueAssignList(Register: INT)
 'action' EmitEndAssignList()
@@ -622,6 +629,8 @@
 'action' Error_CannotAssignToHandlerId(Position: POS, Identifier: NAME)
 'action' Error_CannotAssignToConstantId(Position: POS, Identifier: NAME)
 'action' Error_NonHandlerTypeVariablesCannotBeCalled(Position: POS)
+
+'action' Error_ConstantsMustBeSimple(Position: POS)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 
