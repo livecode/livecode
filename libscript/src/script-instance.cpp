@@ -286,6 +286,11 @@ bool MCScriptThrowNotAHandlerValueError(MCValueRef p_value)
     return MCErrorCreateAndThrow(kMCScriptNotAHandlerValueErrorTypeInfo, "value", p_value, nil);
 }
 
+bool MCScriptThrowCannotCallContextHandlerError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler)
+{
+    return MCErrorCreateAndThrow(kMCScriptCannotCallContextHandlerErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), nil);
+}
+
 ///////////
 
 MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *self)
@@ -464,6 +469,11 @@ static bool MCScriptCallHandlerOfInstanceDirect(MCScriptInstanceRef self, MCScri
     // Get the signature of the handler.
     MCTypeInfoRef t_signature;
     t_signature = self -> module -> types[p_handler -> type] -> typeinfo;
+    
+    // If the handler is of context scope, then we cannot call it directly - only
+    // from a LCB frame.
+    if (p_handler -> scope == kMCScriptHandlerScopeContext)
+        return MCScriptThrowCannotCallContextHandlerError(self -> module, p_handler);
     
     // Check the number of arguments.
     uindex_t t_required_param_count;
