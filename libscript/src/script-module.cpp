@@ -118,7 +118,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptTypeDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptConstantDefinition)
-    MC_PICKLE_VALUEREF(value)
+    MC_PICKLE_UINDEX(value)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptVariableDefinition)
@@ -1088,6 +1088,11 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                         __writeln(stream, "foreign type %@", t_def_name);
                         break;
                 }
+            }
+            break;
+            case kMCScriptDefinitionKindConstant:
+            {
+                __writeln(stream, "constant %@", t_def_name);
             }
             break;
             case kMCScriptDefinitionKindVariable:

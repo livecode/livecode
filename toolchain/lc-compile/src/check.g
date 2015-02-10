@@ -73,7 +73,12 @@
     --
 
     'rule' CheckBindings(DEFINITION'constant(Position, _, _, Value)):
-        /* BD1 */ CheckBindingsOfConstantExpression(Value)
+        --/* BD1 */ CheckBindingsOfConstantExpression(Value)
+        (|
+            IsExpressionSimpleConstant(Value)
+        ||
+            Error_ConstantsMustBeSimple(Position)
+        |)
 
     'rule' CheckBindings(DEFINITION'property(Position, _, _, Getter, OptionalSetter)):
         /* BD2 */ CheckBindingIsVariableOrHandlerId(Getter)
@@ -119,7 +124,7 @@
     --
 
     'rule' CheckBindings(EXPRESSION'slot(_, Name)):
-        /* BE1 */ CheckBindingIsVariableOrHandlerId(Name)
+        /* BE1 */ CheckBindingIsConstantOrVariableOrHandlerId(Name)
 
     'rule' CheckBindings(EXPRESSION'call(_, Handler, Arguments)):
         /* BE2 */ CheckBindingIsCallableVariableOrHandlerId(Handler)
@@ -234,6 +239,34 @@
         -- Mark this id as being in error.
         Id'Meaning <- error
 
+'action' CheckBindingIsConstantOrVariableOrHandlerId(ID)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        -- Do nothing if the meaning is error.
+        QueryId(Id -> error)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> constant)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> variable)
+        
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> parameter)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> local)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> handler)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Error_NotBoundToAConstantOrVariableOrHandler(Position, Name)
+        -- Mark this id as being in error.
+        Id'Meaning <- error
+
 'action' FullyResolveType(TYPE -> TYPE)
 
     'rule' FullyResolveType(optional(_, Type) -> Base):
@@ -344,6 +377,26 @@
         Error_NotBoundToASyntaxMark(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
+
+'condition' IsExpressionSimpleConstant(EXPRESSION)
+
+    'rule' IsExpressionSimpleConstant(undefined(_)):
+    'rule' IsExpressionSimpleConstant(true(_)):
+    'rule' IsExpressionSimpleConstant(false(_)):
+    'rule' IsExpressionSimpleConstant(integer(_, _)):
+    'rule' IsExpressionSimpleConstant(real(_, _)):
+    'rule' IsExpressionSimpleConstant(string(_, _)):
+    'rule' IsExpressionSimpleConstant(list(_, List)):
+        IsExpressionListSimpleConstant(List)
+        
+'condition' IsExpressionListSimpleConstant(EXPRESSIONLIST)
+
+    'rule' IsExpressionListSimpleConstant(expressionlist(Head, Tail)):
+        IsExpressionSimpleConstant(Head)
+        IsExpressionListSimpleConstant(Tail)
+
+    'rule' IsExpressionListSimpleConstant(nil):
+        -- nothing
 
 --------------------------------------------------------------------------------
 
@@ -1179,7 +1232,7 @@
         CheckExpressionIsAssignable(Target)
         CheckInvokes(Source)
         CheckInvokes(Target)
-        
+
     'rule' CheckInvokes(STATEMENT'repeatcounted(Position, Count, Body)):
         CheckExpressionIsEvaluatable(Count)
         CheckInvokes(Count)
@@ -1354,11 +1407,16 @@
         |)
         
     'rule' CheckExpressionIsAssignable(slot(Position, Id)):
-        [|
+        (|
             QueryKindOfSymbolId(Id -> handler)
             Id'Name -> Name
             Error_CannotAssignToHandlerId(Position, Name)
-        |]
+        ||
+            QueryKindOfSymbolId(Id -> constant)
+            Id'Name -> Name
+            Error_CannotAssignToConstantId(Position, Name)
+        ||
+        |)
         
     'rule' CheckExpressionIsAssignable(Expr):
         -- everything else is not

@@ -236,8 +236,8 @@
         |]
     
     'rule' Define(ModuleId, constant(Position, Access, Name, Value)):
-        ComputeTypeOfConstantTermExpression(Value -> Type)
-        DefineSymbolId(Name, ModuleId, Access, constant, Type)
+        --ComputeTypeOfConstantTermExpression(Value -> Type)
+        DefineSymbolId(Name, ModuleId, Access, constant, undefined(Position))
     
     'rule' Define(ModuleId, variable(Position, Access, Name, Type)):
         DefineSymbolId(Name, ModuleId, Access, variable, Type)

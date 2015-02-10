@@ -282,6 +282,11 @@ void MCScriptAddExportToModule(MCScriptModuleBuilderRef builder, uindex_t index)
 void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, uindex_t type, uindex_t& r_index);
 void MCScriptAddImportToModuleWithIndex(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, uindex_t type, uindex_t p_index);
 
+void MCScriptAddValueToModule(MCScriptModuleBuilderRef builder, MCValueRef value, uindex_t& r_index);
+void MCScriptBeginListValueInModule(MCScriptModuleBuilderRef builder);
+void MCScriptContinueListValueInModule(MCScriptModuleBuilderRef builder, uindex_t index);
+void MCScriptEndListValueInModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
+
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef builder, uindex_t index, uindex_t& r_type);
 void MCScriptAddForeignTypeToModule(MCScriptModuleBuilderRef builder, MCStringRef p_binding, uindex_t& r_type);
 void MCScriptAddOptionalTypeToModule(MCScriptModuleBuilderRef builder, uindex_t type, uindex_t& r_new_type);
@@ -295,7 +300,7 @@ void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef builder, uindex_t& r
 void MCScriptAddDefinitionToModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
 
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index);
-void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCValueRef value, uindex_t index);
+void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t const_idx, uindex_t index);
 void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index);
 
 void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t signature, uindex_t index);
@@ -329,7 +334,7 @@ void MCScriptEmitJumpIfUndefinedInModule(MCScriptModuleBuilderRef builder, uinde
 void MCScriptEmitJumpIfDefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
 void MCScriptEmitJumpIfFalseInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
 void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
-void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, MCValueRef constant);
+void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t const_idx);
 void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t src_reg);
 void MCScriptEmitBeginAssignListInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 void MCScriptEmitContinueAssignListInModule(MCScriptModuleBuilderRef builder, uindex_t reg);

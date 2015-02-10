@@ -477,7 +477,7 @@
         GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(constant(_, _, Name, _)):
-        -- GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(variable(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
@@ -611,7 +611,10 @@
         
     'rule' GenerateDefinitions(constant(Position, _, Id, Value)):
         QuerySymbolId(Id -> Info)
-        -- Do something
+        Id'Name -> Name
+        Info'Index -> DefIndex
+        EmitConstant(Value -> Index)
+        EmitConstantDefinition(DefIndex, Position, Name, Index)
         
     'rule' GenerateDefinitions(variable(Position, _, Id, Type)):
         GenerateType(Type -> TypeIndex)
@@ -1523,6 +1526,8 @@
 
 ----
 
+'condition' IsExpressionSimpleConstant(EXPRESSION)
+
 'action' GenerateExpression(INT, INT, EXPRESSION -> INT)
 
     'rule' GenerateExpression(Result, Context, Expr -> Output):
@@ -1575,12 +1580,18 @@
     'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _), Output):
         -- TODO
     
-    'rule' GenerateExpressionInRegister(Result, Context, list(Position, List), Output):
-        GenerateExpressionList(Result, Context, List -> ListRegs)
-        EmitBeginAssignList(Output)
-        GenerateAssignList(ListRegs)
-        EmitEndAssignList()
-        EmitDestroyRegisterList(ListRegs)
+    'rule' GenerateExpressionInRegister(Result, Context, List:list(Position, Elements), Output):
+        (|
+            IsExpressionSimpleConstant(List)
+            EmitConstant(List -> Index)
+            EmitAssignConstant(Output, Index)
+        ||
+            GenerateExpressionList(Result, Context, Elements -> ListRegs)
+            EmitBeginAssignList(Output)
+            GenerateAssignList(ListRegs)
+            EmitEndAssignList()
+            EmitDestroyRegisterList(ListRegs)
+        |)
     
     'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments), Output):
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output)
@@ -1611,6 +1622,86 @@
 
     'rule' GenerateAssignList(nil):
         -- finished
+
+'action' EmitAssignUndefined(INT)
+
+    'rule' EmitAssignUndefined(Reg):
+        EmitUndefinedConstant(-> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitAssignTrue(INT)
+
+    'rule' EmitAssignTrue(Reg):
+        EmitTrueConstant(-> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitAssignFalse(INT)
+
+    'rule' EmitAssignFalse(Reg):
+        EmitFalseConstant(-> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitAssignInteger(INT, INT)
+
+    'rule' EmitAssignInteger(Reg, Value):
+        EmitIntegerConstant(Value -> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitAssignReal(INT, DOUBLE)
+
+    'rule' EmitAssignReal(Reg, Value):
+        EmitRealConstant(Value -> Index)
+        EmitAssignConstant(Reg, Index)
+        
+'action' EmitAssignString(INT, STRING)
+
+    'rule' EmitAssignString(Reg, Value):
+        EmitStringConstant(Value -> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitConstant(EXPRESSION -> INT)
+
+    'rule' EmitConstant(undefined(_) -> Index):
+        EmitUndefinedConstant(-> Index)
+
+    'rule' EmitConstant(true(_) -> Index):
+        EmitTrueConstant(-> Index)
+
+    'rule' EmitConstant(false(_) -> Index):
+        EmitFalseConstant(-> Index)
+
+    'rule' EmitConstant(integer(_, IntValue) -> Index):
+        EmitIntegerConstant(IntValue -> Index)
+
+    'rule' EmitConstant(real(_, RealValue) -> Index):
+        EmitRealConstant(RealValue -> Index)
+
+    'rule' EmitConstant(string(_, StringValue) -> Index):
+        EmitStringConstant(StringValue -> Index)
+
+    'rule' EmitConstant(list(_, Elements) -> Index):
+        EmitListConstantElements(Elements -> Indicies)
+        EmitBeginListConstant()
+        EmitListConstant(Indicies)
+        EmitEndListConstant(-> Index)
+
+'action' EmitListConstantElements(EXPRESSIONLIST -> INTLIST)
+
+    'rule' EmitListConstantElements(expressionlist(Head, Tail) -> intlist(Index, Rest)):
+        EmitConstant(Head -> Index)
+        EmitListConstantElements(Tail -> Rest)
+        
+    'rule' EmitListConstantElements(nil -> nil):
+        -- nothing
+
+'action' EmitListConstant(INTLIST)
+
+    'rule' EmitListConstant(intlist(Head, Tail)):
+        EmitContinueListConstant(Head)
+        EmitListConstant(Tail)
+        
+    'rule' EmitListConstant(nil):
+        -- nothing
 
 'condition' IsVariableInRegister(SYMBOLKIND)
 
