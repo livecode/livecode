@@ -828,7 +828,8 @@ hash_t __MCDataHash(__MCData *self)
 
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description)
 {
-    return false;
+	return MCStringFormat (r_description, "<data: %u B>",
+	                       MCDataGetLength (self));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
