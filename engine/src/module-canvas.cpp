@@ -717,8 +717,10 @@ static hash_t __MCCanvasPointHash(MCValueRef p_value)
 
 static bool __MCCanvasPointDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe point
-	return false;
+	MCGPoint t_point;
+	MCCanvasPointGetMCGPoint (static_cast<MCCanvasPointRef>(p_value), t_point);
+
+	return MCStringFormat (r_desc, "(%g, %g)", t_point.x, t_point.y);
 }
 
 bool MCCanvasPointCreateWithMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &r_point)
