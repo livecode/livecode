@@ -774,7 +774,27 @@ bool __MCProperListIsEqualTo(__MCProperList *self, __MCProperList *other_self)
 
 bool __MCProperListCopyDescription(__MCProperList *self, MCStringRef& r_string)
 {
-	return false;
+	/* Shortcut for empty lists */
+	if (MCProperListIsEmpty (self))
+		return MCStringCopy (MCSTR("[]"), r_string);
+
+	MCAutoListRef t_contents_list;
+	if (!MCListCreateMutable (MCSTR(", "), &t_contents_list))
+		return false;
+
+	uintptr_t t_iter;
+	MCValueRef t_value;
+	while (MCProperListIterate (self, t_iter, t_value))
+	{
+		if (!MCListAppend (*t_contents_list, t_value))
+			return false;
+	}
+
+	MCAutoStringRef t_contents_string;
+	if (!MCListCopyAsString (*t_contents_list, &t_contents_string))
+		return false;
+
+	return MCStringFormat(r_string, "[%@]", *t_contents_string);
 }
 
 bool __MCProperListImmutableCopy(__MCProperList *self, bool p_release, __MCProperList*& r_immutable_self)
