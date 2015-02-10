@@ -155,80 +155,53 @@ int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
                     t_value[t_length++] = '\t';
                 else if (*t_ptr == '\\')
                     t_value[t_length++] = '\\';
-                else if (*t_ptr == 'x')
-                {
-                    t_ptr += 1;
-                    
-                    if (t_ptr + 1 < t_limit)
-                    {
-                        int t_nibble_1, t_nibble_2;
-                        int t_char;
-                        
-                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
-                            goto error_exit;
-                        
-                        t_char = (t_nibble_1 << 4) | t_nibble_2;
-                        append_utf8_char(t_value, &t_length, t_char);
-                    }
-                }
                 else if (*t_ptr == 'u')
                 {
+                    // We expect the form:
+                    //   \u{ABCDEF}
+                    // With BCDEF all optional.
                     t_ptr += 1;
-                    
-                    if (t_ptr + 3 < t_limit)
+                    if (t_ptr < t_limit && *t_ptr == '{')
                     {
-                        int t_nibble_1, t_nibble_2, t_nibble_3, t_nibble_4;
                         int t_char;
+                        t_char = 0;
+                        for(int i = 0; i < 6; i++)
+                        {
+                            // Advance the input ptr - if we are at the end here
+                            // it is an error.
+                            t_ptr += 1;
+                            if (t_ptr >= t_limit)
+                                goto error_exit;
+                            
+                            // If we get a } we are done, unless we haven't seen
+                            // a nibble yet, in which case it is an error.
+                            if (*t_ptr == '}')
+                            {
+                                if (i == 0)
+                                    goto error_exit;
+                                break;
+                            }
+                            
+                            // Parse the next nibble, shift and add it.
+                            int t_nibble;
+                            if (!char_to_nibble(*t_ptr, &t_nibble))
+                                goto error_exit;
+                            
+                            t_char = t_char << 4;
+                            t_char |= t_nibble;
+                        }
                         
-                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_3))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_4))
+                        // If we get here and we are not looking at } then it
+                        // is an error.
+                        if (*t_ptr != '}')
                             goto error_exit;
                         
-                        t_char = (t_nibble_1 << 12) | (t_nibble_2 << 8) | (t_nibble_3  << 4) | t_nibble_4;
+                        t_ptr += 1;
+                        
                         append_utf8_char(t_value, &t_length, t_char);
                     }
-                }
-                else if (*t_ptr == 'U')
-                {
-                    t_ptr += 1;
-                    
-                    if (t_ptr + 5 < t_limit)
-                    {
-                        int t_nibble_1, t_nibble_2, t_nibble_3, t_nibble_4, t_nibble_5, t_nibble_6;
-                        int t_char;
-                        
-                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_3))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_4))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_5))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_6))
-                            goto error_exit;
-                        
-                        t_char = (t_nibble_1 << 20) | (t_nibble_2 << 16) | (t_nibble_3 << 12) | (t_nibble_4 << 8) | (t_nibble_5 << 4) | t_nibble_6;
-                        append_utf8_char(t_value, &t_length, t_char);
-                    }
+                    else
+                        goto error_exit;
                 }
                 else
                     goto error_exit;
