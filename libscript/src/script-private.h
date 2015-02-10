@@ -276,6 +276,8 @@ struct MCScriptHandlerDefinition: public MCScriptCommonHandlerDefinition
 	uindex_t start_address;
 	uindex_t finish_address;
     
+    MCScriptHandlerScope scope;
+    
     // The number of slots required in a frame in order to execute this handler - computed.
     uindex_t slot_count;
 };

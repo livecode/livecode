@@ -44,6 +44,7 @@ extern "C" void EmitConstantDefinition(long p_index, PositionRef p_position, Nam
 extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitContextVariableDefinition(long index, PositionRef position, NameRef name, long type_index, long default_index);
 extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitBeginContextHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitEndHandlerDefinition(void);
 extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
 extern "C" void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index);
@@ -504,9 +505,16 @@ void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, l
 
 void EmitBeginHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
-    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
+    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeNormal, to_mcnameref(p_name), p_type_index, p_index);
     
     MCLog("[Emit] BeginHandlerDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
+}
+
+void EmitBeginContextHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+{
+    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeContext, to_mcnameref(p_name), p_type_index, p_index);
+    
+    MCLog("[Emit] BeginContextHandlerDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
 
 void EmitEndHandlerDefinition(void)

@@ -136,6 +136,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
     MC_PICKLE_ARRAY_OF_NAMEREF(local_names, local_name_count)
     MC_PICKLE_UINDEX(start_address)
     MC_PICKLE_UINDEX(finish_address)
+    MC_PICKLE_INTENUM(MCScriptHandlerScope, scope)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptForeignHandlerDefinition)

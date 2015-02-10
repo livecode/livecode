@@ -2171,17 +2171,25 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     MCScriptContextVariableDefinition *t_var_definition;
                     t_var_definition = static_cast<MCScriptContextVariableDefinition *>(t_definition);
                     
+                    // If we are a normal handler we use the current frame.
+                    // If we are context handler, we use the caller's frame.
+                    MCScriptFrame *t_target_frame;
+                    if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
+                        t_target_frame = t_frame;
+                    else if (t_frame -> caller != nil)
+                        t_target_frame = t_frame -> caller;
+                    
                     // If there is no context table, or the value of the slot at the given
                     // index is nil then we use the default.
                     MCValueRef t_value;
-                    if (t_frame -> context == nil ||
-                        t_frame -> context -> count < t_var_definition -> slot_index ||
-                        t_frame -> context -> slots[t_var_definition -> slot_index] == nil)
-                        t_value = kMCFalse; // t_instance -> module -> values[t_var_definition -> default_value];
+                    if (t_target_frame -> context == nil ||
+                        t_target_frame -> context -> count < t_var_definition -> slot_index ||
+                        t_target_frame -> context -> slots[t_var_definition -> slot_index] == nil)
+                        t_value = t_instance -> module -> values[t_var_definition -> default_value];
                     else
-                        t_value = t_frame -> context -> slots[t_var_definition -> slot_index];
+                        t_value = t_target_frame -> context -> slots[t_var_definition -> slot_index];
                     
-                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
+                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_target_frame, t_dst, t_value);
                 }
                 else if (t_definition -> kind == kMCScriptDefinitionKindHandler)
                 {
@@ -2291,20 +2299,28 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         !MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_output_type))
                         t_success = MCScriptThrowInvalidValueForContextVariableError(t_frame -> instance -> module, t_index, t_output_type, t_value);
                     
+                    // If we are a normal handler we use the current frame.
+                    // If we are context handler, we use the caller's frame.
+                    MCScriptFrame *t_target_frame;
+                    if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
+                        t_target_frame = t_frame;
+                    else if (t_frame -> caller != nil)
+                        t_target_frame = t_frame -> caller;
+                    
                     if (t_success &&
-                        (t_frame -> context == nil ||
-                         t_frame -> context -> count <= t_var_definition -> slot_index))
+                        (t_target_frame -> context == nil ||
+                         t_target_frame -> context -> count <= t_var_definition -> slot_index))
                     {
                         // Note that MCScriptFrameContext has an implement MCValueRef
                         // so we don't need to adjust index to be a count.
-                        if (MCMemoryReallocate(t_frame -> context, sizeof(MCScriptFrameContext) + (sizeof(MCValueRef) * t_var_definition -> slot_index), t_frame -> context))
-                            t_frame -> context -> count = t_var_definition -> slot_index + 1;
+                        if (MCMemoryReallocate(t_target_frame -> context, sizeof(MCScriptFrameContext) + (sizeof(MCValueRef) * t_var_definition -> slot_index), t_target_frame -> context))
+                            t_target_frame -> context -> count = t_var_definition -> slot_index + 1;
                         else
                             t_success = false;
                     }
                     
                     if (t_success)
-                        MCValueAssign(t_frame -> context -> slots[t_var_definition -> slot_index], t_value);
+                        MCValueAssign(t_target_frame -> context -> slots[t_var_definition -> slot_index], t_value);
                 }
                 else
                     MCUnreachable();

@@ -274,6 +274,14 @@ enum MCScriptHandlerTypeParameterMode
     kMCScriptHandlerTypeParameterMode__Last
 };
 
+enum MCScriptHandlerScope
+{
+    kMCScriptHandlerScopeNormal,
+    kMCScriptHandlerScopeContext,
+    
+	kMCScriptHandlerScope__Last,
+};
+
 void MCScriptBeginModule(MCScriptModuleKind kind, MCNameRef name, MCScriptModuleBuilderRef& r_builder);
 bool MCScriptEndModule(MCScriptModuleBuilderRef builder, MCStreamRef stream);
 
@@ -305,7 +313,7 @@ void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef nam
 void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index);
 void MCScriptAddContextVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index, uindex_t def_index);
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t signature, uindex_t index);
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCScriptHandlerScope scope, MCNameRef name, uindex_t signature, uindex_t index);
 void MCScriptAddParameterToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t& r_index);
 void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t& r_index);
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef builder);

@@ -186,7 +186,7 @@
     'rule' ImportDefinition(-> variable(Position, public, Id, Type)):
         "variable" @(-> Position) Identifier(-> Id) "as" Type(-> Type)
 
-    'rule' ImportDefinition(-> handler(Position, public, Id, Signature, nil, nil)):
+    'rule' ImportDefinition(-> handler(Position, public, Id, normal, Signature, nil, nil)):
         "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
     'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
@@ -412,12 +412,16 @@
 
 'nonterm' HandlerDefinition(-> DEFINITION)
 
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, normal, Signature, nil, Body)):
         Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
         
-    --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, context, Signature, nil, Body)):
+        Access(-> Access) "context" @(-> Position) "handler" Identifier(-> Name) Signature(-> Signature) Separator
+            Statements(-> Body)
+        "end" "handler"
+            --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
     --    Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
     --        Definitions(-> Definitions)
     --    "begin"

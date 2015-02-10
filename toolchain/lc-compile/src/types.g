@@ -71,7 +71,7 @@
     constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     contextvariable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE, Default: EXPRESSION)
-    handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
+    handler(Position: POS, Access: ACCESS, Name: ID, Scope: SCOPE, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
     property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
     event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)

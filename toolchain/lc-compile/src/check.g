@@ -264,6 +264,9 @@
         QueryKindOfSymbolId(Id -> local)
 
     'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> context)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
         QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
