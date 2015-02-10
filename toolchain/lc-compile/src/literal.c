@@ -208,7 +208,7 @@ int UnescapeStringLiteral(long p_position, const char *p_string, long *r_unescap
                         if (t_overflow)
                         {
                             Warning_UnicodeEscapeTooBig(p_position + (t_escape - p_string));
-                            t_char = 0x10FFFF;
+                            t_char = 0xFFFD;
                         }
                         
                         append_utf8_char(t_value, &t_length, t_char);

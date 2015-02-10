@@ -186,7 +186,7 @@ DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler
 
 DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses should come after use clauses")
 DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
-DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, character clamped to \\u{10FFFF}");
+DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 
 ////////////////////////////////////////////////////////////////////////////////
 
