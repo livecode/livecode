@@ -141,6 +141,7 @@ DEFINE_ERROR_I(SyntaxMarkVariableAlreadyDefinedWithDifferentType, "Mark variable
 DEFINE_ERROR_I(NotBoundToAHandler, "'%s' is not a handler")
 DEFINE_ERROR_I(NotBoundToAVariable, "'%s' is not a variable")
 DEFINE_ERROR_I(NotBoundToAVariableOrHandler, "'%s' is not a variable or handler")
+DEFINE_ERROR_I(NotBoundToAConstantOrVariableOrHandler, "'%s' is not a constant, a variable nor a handler")
 DEFINE_ERROR_I(NotBoundToAPhrase, "'%s' is not a syntax phrase")
 DEFINE_ERROR_I(NotBoundToASyntaxMark, "'%s' is not a mark variable")
 DEFINE_ERROR_I(NotBoundToASyntaxRule, "'%s' is not a syntax rule")
@@ -178,6 +179,7 @@ DEFINE_ERROR(VariableMustHaveHighLevelType, "Inappropriate type for variable")
 DEFINE_ERROR(ParameterMustHaveHighLevelType, "Inappropriate type for parameter")
 
 DEFINE_ERROR_I(CannotAssignToHandlerId, "'%s' is a handler id and cannot be assigned to")
+DEFINE_ERROR_I(CannotAssignToConstantId, "'%s' is a constant id and cannot be assigned to")
 
 DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler type to be called")
 

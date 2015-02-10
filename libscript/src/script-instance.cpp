@@ -2122,8 +2122,10 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCScriptDefinition *t_definition;
                 MCScriptResolveDefinitionInFrame(t_frame, t_index, t_instance, t_definition);
                 
-                // Fetch the value - if it is a variable fetch from the slot; if
-                // it is a handler construct a handler value.
+                // Fetch the value:
+                //   - variables get fetched from the slot
+                //   - constants from the constant pool
+                //   - handlers have a value constructed
                 if (t_definition -> kind == kMCScriptDefinitionKindVariable)
                 {
                     MCScriptVariableDefinition *t_var_definition;
@@ -2138,6 +2140,18 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     if (t_success)
                         t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
+                }
+                else if (t_definition -> kind == kMCScriptDefinitionKindConstant)
+                {
+                    MCScriptConstantDefinition *t_constant_definition;
+                    t_constant_definition = static_cast<MCScriptConstantDefinition *>(t_definition);
+                    
+                    MCValueRef t_value;
+                    t_value = t_instance -> module -> values[t_constant_definition -> value];
+                    
+                    if (t_success)
+                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
+                    
                 }
                 else if (t_definition -> kind == kMCScriptDefinitionKindHandler)
                 {

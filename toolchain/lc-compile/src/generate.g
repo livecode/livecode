@@ -477,7 +477,7 @@
         GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(constant(_, _, Name, _)):
-        -- GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(variable(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
@@ -611,7 +611,28 @@
         
     'rule' GenerateDefinitions(constant(Position, _, Id, Value)):
         QuerySymbolId(Id -> Info)
-        -- Do something
+        Id'Name -> Name
+        Info'Index -> DefIndex
+        (|
+            where(Value -> undefined(_))
+            EmitUndefinedConstant(-> Index)
+        ||
+            where(Value -> true(_))
+            EmitTrueConstant(-> Index)
+        ||
+            where(Value -> false(_))
+            EmitFalseConstant(-> Index)
+        ||
+            where(Value -> integer(_, IntValue))
+            EmitIntegerConstant(IntValue -> Index)
+        ||
+            where(Value -> real(_, RealValue))
+            EmitRealConstant(RealValue -> Index)
+        ||
+            where(Value -> string(_, StringValue))
+            EmitStringConstant(StringValue -> Index)
+        |)
+        EmitConstantDefinition(DefIndex, Position, Name, Index)
         
     'rule' GenerateDefinitions(variable(Position, _, Id, Type)):
         GenerateType(Type -> TypeIndex)
@@ -1594,6 +1615,42 @@
 
     'rule' GenerateAssignList(nil):
         -- finished
+
+'action' EmitAssignUndefined(INT)
+
+    'rule' EmitAssignUndefined(Reg):
+        EmitUndefinedConstant(-> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitAssignTrue(INT)
+
+    'rule' EmitAssignTrue(Reg):
+        EmitTrueConstant(-> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitAssignFalse(INT)
+
+    'rule' EmitAssignFalse(Reg):
+        EmitFalseConstant(-> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitAssignInteger(INT, INT)
+
+    'rule' EmitAssignInteger(Reg, Value):
+        EmitIntegerConstant(Value -> Index)
+        EmitAssignConstant(Reg, Index)
+
+'action' EmitAssignReal(INT, DOUBLE)
+
+    'rule' EmitAssignReal(Reg, Value):
+        EmitRealConstant(Value -> Index)
+        EmitAssignConstant(Reg, Index)
+        
+'action' EmitAssignString(INT, STRING)
+
+    'rule' EmitAssignString(Reg, Value):
+        EmitStringConstant(Value -> Index)
+        EmitAssignConstant(Reg, Index)
 
 'action' EmitStoreVar(SYMBOLKIND, INT, INT)
 

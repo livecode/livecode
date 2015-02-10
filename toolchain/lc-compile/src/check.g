@@ -119,7 +119,7 @@
     --
 
     'rule' CheckBindings(EXPRESSION'slot(_, Name)):
-        /* BE1 */ CheckBindingIsVariableOrHandlerId(Name)
+        /* BE1 */ CheckBindingIsConstantOrVariableOrHandlerId(Name)
 
     'rule' CheckBindings(EXPRESSION'call(_, Handler, Arguments)):
         /* BE2 */ CheckBindingIsCallableVariableOrHandlerId(Handler)
@@ -231,6 +231,34 @@
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToAVariableOrHandler(Position, Name)
+        -- Mark this id as being in error.
+        Id'Meaning <- error
+
+'action' CheckBindingIsConstantOrVariableOrHandlerId(ID)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        -- Do nothing if the meaning is error.
+        QueryId(Id -> error)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> constant)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> variable)
+        
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> parameter)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> local)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> handler)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Error_NotBoundToAConstantOrVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
 
@@ -1179,7 +1207,7 @@
         CheckExpressionIsAssignable(Target)
         CheckInvokes(Source)
         CheckInvokes(Target)
-        
+
     'rule' CheckInvokes(STATEMENT'repeatcounted(Position, Count, Body)):
         CheckExpressionIsEvaluatable(Count)
         CheckInvokes(Count)
@@ -1354,11 +1382,16 @@
         |)
         
     'rule' CheckExpressionIsAssignable(slot(Position, Id)):
-        [|
+        (|
             QueryKindOfSymbolId(Id -> handler)
             Id'Name -> Name
             Error_CannotAssignToHandlerId(Position, Name)
-        |]
+        ||
+            QueryKindOfSymbolId(Id -> constant)
+            Id'Name -> Name
+            Error_CannotAssignToConstantId(Position, Name)
+        ||
+        |)
         
     'rule' CheckExpressionIsAssignable(Expr):
         -- everything else is not
