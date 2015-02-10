@@ -781,6 +781,8 @@ static struct { NSString* const* name; SEL selector; } s_player_notifications[] 
         [m_overlay removeTarget: self action: @selector(playerWindowTouched:) forControlEvents: UIControlEventTouchDown];
         [m_overlay removeFromSuperview];
         [m_overlay release];
+        // PM-2015-02-10: [[ Bug 14525 ]] Make sure m_overlay will not be cleared again in MCNativePlayerDelegate::dealloc
+        m_overlay = nil;
     }
     
 	NSObject *t_value;
