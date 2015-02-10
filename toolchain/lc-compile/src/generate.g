@@ -1054,6 +1054,7 @@
         ||
             GenerateExpression(Result, Context, Value -> ReturnReg)
             EmitReturn(ReturnReg)
+            EmitDestroyRegister(ReturnReg)
         |)
         
     'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):
@@ -1105,12 +1106,19 @@
         EmitDestroyRegister(Reg)
         EmitAssignUndefined(Result)
         
-    'rule' GenerateBody(Result, Context, postfixinto(Position, Command, slot(_, Id))):
+    'rule' GenerateBody(Result, Context, postfixinto(Position, invoke(_, Invokes, Arguments), slot(_, Id))):
         QuerySymbolId(Id -> Info)
         Info'Kind -> Kind
-        Info'Index -> Index
+        Info'Index -> VarIndex
         IsVariableInRegister(Kind)
-        GenerateBody(Index, Context, Command)
+        --
+        GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
+        GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
+        EmitBeginInvoke(Index, Context, VarIndex)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
+        GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
+        GenerateInvoke_FreeArguments(Arguments)
         EmitAssignUndefined(Result)
 
     'rule' GenerateBody(Result, Context, postfixinto(Position, Command, Target)):
