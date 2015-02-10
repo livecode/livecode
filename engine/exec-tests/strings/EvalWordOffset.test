@@ -1,0 +1,34 @@
+setup
+
+local tWords
+put "abc  def   "&quote&"ghi jkl"&quote&" " into tWords
+put tWords after tWords
+
+test wordOffset("g", tWords) is 3
+test wordOffset("def", tWords) is 2
+test wordOffset("x", tWords) is 0
+test wordOffset("ABC", tWords) is 1
+
+test wordOffset("def", tWords, 1) is 1
+test wordOffset("def", tWords, 2) is 3
+test wordOffset("def", tWords, 5) is 0
+
+set the wholematches to true
+
+test wordOffset("g", tWords) is 0
+test wordOffset(quote&"ghi jkl"&quote, tWords) is 3
+
+set the wholematches to false
+set the caseSensitive to true
+
+test wordOffset("ab", tWords) is 1
+test wordOffset("AB", tWords) is 0
+
+set the wholematches to true
+
+test wordOffset("ab", tWords) is 0
+test wordOffset("AB", tWords) is 0
+test wordOffset("abc", tWords) is 1
+test wordOffset("ABC", tWords) is 0
+
+teardown

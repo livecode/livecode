@@ -20,26 +20,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
+#include "osspec.h"
 
 #include "object.h"
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "param.h"
 #include "handler.h"
 #include "util.h"
 #include "globals.h"
 
 #include "socket.h"
-#include "core.h"
 #include "notify.h"
 
 #include "ports.cpp"
 
 // MW-2010-08-24: Make sure we include 'wspiapi' making it think we are
 //   targetting Win2K to ensure that it 'makes' getaddrinfo.
-#if defined(_WINDOWS_DESKTOP)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 #include "w32prefix.h"
 #include <ws2tcpip.h>
 #include <wspiapi.h>
@@ -150,7 +150,7 @@ bool platform_launch_thread(_thread_function p_thread, void *p_context)
 
 	return t_success;
 }
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_LINUX_SERVER) || defined(_MAC_SERVER)
 void * pthread_thread(void *p_context)
 {
 	_thread_info *t_info = (_thread_info*)p_context;
@@ -323,9 +323,17 @@ bool MCSocketHostNameResolve(const char *p_name, const char *p_port, int p_sockt
 		t_success = (MCCStringClone(p_name, t_info->m_name) &&
 			MCCStringClone(p_port, t_info->m_port));
 	}
+    // SN-2014-12-16: [[ Bug 14181 ]] We can't notify on servers as there is no RunLoop.
+    //  We do not create a thread to resolve the hostname.
 	if (t_success)
+#ifdef _SERVER
+    {
+        hostname_resolve_thread((void*)t_info);
+        hostname_resolve_notify_callback((void*)t_info);
+    }
+#else
 		t_success = launch_thread_with_notify(hostname_resolve_thread, hostname_resolve_notify_callback, t_info);
-
+#endif
 	if (t_success)
 	{
 		g_name_resolution_count += 1;
@@ -357,71 +365,81 @@ bool hostname_resolve_first_sockaddr_callback(void *p_context, bool p_resolved, 
 }
 
 
-bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in *r_addr, MCHostNameResolveCallback p_callback, void *p_context)
+bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCHostNameResolveCallback p_callback, void *p_context)
 {
-	// get port & id if set
+    // get port & id if set
 	// if callback provided then start name resolve thread with that callback
 	// else start name resolve thread with our own callback and wait for thread to finish
+    
+	
+    
 	if (!MCS_init_sockets())
 		return false;
-
-	char *t_name;
-	t_name = strclone(p_name_in);
-
-	char *idstring = strchr(t_name, '|');
-
-	if (idstring != NULL)
-		*idstring = '\0'; // support multiple opens to same host:port
-
-	char *portstring = strchr(t_name, ':');
-	int2 port = 80;
-	if (portstring != NULL)
-	{
-		*portstring++ = '\0';
-		if (!MCU_stoi2(portstring, port))
+    
+	MCAutoStringRef t_name_in, t_name, t_port;
+    uindex_t t_or, t_colon;
+    
+    // support multiple opens to same host:port
+    if (MCStringFirstIndexOfChar(p_name_in, '|', 0, kMCCompareExact, t_or))
+    {
+        /* UNCHECKED */ MCStringCopySubstring(p_name_in, MCRangeMake(0, t_or), &t_name_in);
+    }
+    else
+        t_name_in = MCValueRetain(p_name_in);
+    
+    uinteger_t port = 80;
+    if (MCStringFirstIndexOfChar(*t_name_in, ':', 0, kMCCompareExact, t_colon))
+    {
+        /* UNCHECKED */ MCStringDivideAtIndex(*t_name_in, t_colon, &t_name, &t_port);
+        MCAutoNumberRef t_port_number;
+        if (!MCNumberParse(*t_port, &t_port_number))
 		{
 			uint2 i;
 			for (i = 0 ; i < ELEMENTS(port_table) ; i++)
 			{
-				if (strequal(portstring, port_table[i].name))
+                if (MCStringIsEqualToCString(*t_port, port_table[i].name, kMCCompareExact))
 				{
 					port = port_table[i].port;
 					break;
 				}
 			}
-
+            
 			if (i == ELEMENTS(port_table))
 			{
 				MCresult->sets("not a valid port");
 				return false;
 			}
 		}
-	}
-
+        else
+            port = MCNumberFetchAsInteger(*t_port_number);
+    }
+    else
+        t_name = MCValueRetain(*t_name_in);
+    
 	bool t_success = true;
-
+    
 	memset((char *)r_addr, 0, sizeof(struct sockaddr_in));
 	r_addr->sin_family = AF_INET;
 	r_addr->sin_port = MCSwapInt16HostToNetwork(port);
-
+    
+    MCAutoPointer<char> t_name_cstring;
+    /* UNCHECKED */ MCStringConvertToCString(*t_name, &t_name_cstring);
 	if (p_callback == NULL)
 	{
-		t_success = MCSocketHostNameResolve(t_name, NULL, SOCK_STREAM, true,
-			hostname_resolve_first_sockaddr_callback, r_addr);
+		t_success = MCSocketHostNameResolve(*t_name_cstring, NULL, SOCK_STREAM, true,
+                                            hostname_resolve_first_sockaddr_callback, r_addr);
 	}
 	else
-		t_success = MCSocketHostNameResolve(t_name, NULL, SOCK_STREAM, false,
-		p_callback, p_context);
-	delete t_name;
-
+		t_success = MCSocketHostNameResolve(*t_name_cstring, NULL, SOCK_STREAM, false,
+                                            p_callback, p_context);
+    
 	return t_success;
 }
 
-bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in &r_addr)
+bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr)
 {
-	return MCS_name_to_sockaddr(p_name_in, &r_addr, NULL, NULL);
+	return MCS_name_to_sockaddr(p_name, &r_addr, NULL, NULL);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -516,73 +534,76 @@ bool MCSocketAddrToString(struct sockaddr *p_sockaddr, int p_addrlen, bool p_loo
 	return t_success;
 }
 
-struct _sockaddr_name_info
-{
-	bool m_resolved;
-	char *m_name;
-};
-
-void sockaddr_to_string_callback(void *p_context, bool p_resolved, const char *p_name)
-{
-	struct _sockaddr_name_info* t_info = (_sockaddr_name_info*) p_context;
-
-	t_info->m_resolved = p_resolved;
-	if (p_resolved)
-		t_info->m_resolved = MCCStringClone(p_name, t_info->m_name);
-}
-
-bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string,
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, bool p_blocking,
 							MCSockAddrToStringCallback p_callback, void *p_context)
 {
 	bool t_success = true;
 
-	MCSockAddrToStringCallback t_callback = p_callback;
-	void *t_context = p_context;
-
-	_sockaddr_name_info *t_info = NULL;
-
-	if (t_callback == NULL)
-	{
-		t_callback = sockaddr_to_string_callback;
-
-		t_success = MCMemoryNew(t_info);
-		t_context = t_info;
-	}
-
+	if (p_callback == NULL)
+		return false;
 
 	if (!p_lookup_hostname)
 	{
-		// MW-2010-06-01: If there was no callback specified, then we don't want to keep the
-		//   string that is returned here. This is because our callback clones it.
 		char *t_string;
         t_string = NULL;
 		t_success = sockaddr_to_string(p_addr, p_addrlen, false, t_string);
-		t_callback(t_context, t_success, t_string);
-		if (t_info == nil)
-			r_string = t_string;
-		else
-			MCCStringFree(t_string);
+		p_callback(p_context, t_success, t_string);
+		MCCStringFree(t_string);
 	}
 	else
 	{
-		t_success = MCSocketAddrToString(p_addr, p_addrlen, p_lookup_hostname, (p_callback == NULL), t_callback, t_context);
-	}
-
-	if (t_info != NULL)
-	{
-		if (t_success)
-		{
-			r_string = t_info->m_name;
-			t_success = t_info->m_resolved;
-		}
-		MCMemoryDelete(t_info);
+		t_success = MCSocketAddrToString(p_addr, p_addrlen, p_lookup_hostname, p_blocking, p_callback, p_context);
 	}
 
 	return t_success;
 }
 
-bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string)
+struct _sockaddr_to_string_context
 {
-	return MCS_sockaddr_to_string(p_addr, p_addrlen, p_lookup_hostname, r_string, NULL, NULL);
+	bool success;
+	char *name;
+};
+
+void sockaddr_to_string_callback(void *p_context, bool p_resolved, const char *p_name)
+{
+	struct _sockaddr_to_string_context* t_info = (_sockaddr_to_string_context*) p_context;
+
+	t_info->success = p_resolved && MCCStringClone(p_name, t_info->name);
 }
 
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string)
+{
+	struct _sockaddr_to_string_context t_info;
+	t_info.success = true;
+	t_info.name = nil;
+	if (MCS_sockaddr_to_string(p_addr, p_addrlen, p_lookup_hostname, true, sockaddr_to_string_callback, &t_info) &&
+		t_info.success)
+	{
+		r_string = t_info.name;
+		return true;
+	}
+
+	return false;
+}
+
+struct _sockaddr_to_stringref_context
+{
+	bool success;
+	MCAutoStringRef name;
+};
+
+void sockaddr_to_stringref_callback(void *p_context, bool p_resolved, const char *p_name)
+{
+	struct _sockaddr_to_stringref_context* t_info = (_sockaddr_to_stringref_context*) p_context;
+
+	t_info->success = p_resolved && MCStringCreateWithNativeChars((const char_t*)p_name, MCCStringLength(p_name), &t_info->name);
+}
+
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, MCStringRef& r_string)
+{
+	struct _sockaddr_to_stringref_context t_info;
+	t_info.success = true;
+
+	return MCS_sockaddr_to_string(p_addr, p_addrlen, p_lookup_hostname, true, sockaddr_to_stringref_callback, &t_info) &&
+		t_info.success && MCStringCopy(*t_info.name, r_string);
+}

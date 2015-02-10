@@ -40,7 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "newobj.h"
@@ -84,7 +85,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef LEGACY_EXEC
 enum MCInternalType
 {
 	INTERNAL_TYPE_VOID,
@@ -186,6 +187,7 @@ static Exec_stat internal_get_value(MCExecPoint& ep, MCInternalType p_type, void
 
 	return ES_NORMAL;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,12 +202,11 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
+    void exec_ctxt(MCExecContext &ctxt)
 	{
 #if defined(WIN32) && defined(_DEBUG)
 		_CrtDbgBreak();
-#endif
-		return ES_NORMAL;
+#endif;
 	}
 };
 
@@ -233,15 +234,16 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
-	{
-		if (m_noun -> eval(ep) != ES_NORMAL)
-			return ES_ERROR;
+    void exec_ctxt(MCExecContext &ctxt)
+    {
+#ifdef LEGACY_EXEC
+        if (m_noun -> eval(ep) != ES_NORMAL)
+            return ES_ERROR;
 
 		MCInternalMethod *t_method;
 		t_method = NULL;
 		for(int n = 0; n < s_internal_method_count; ++n)
-			if (ep . getsvalue() == s_internal_methods[n] . name)
+            if (ep . getsvalue() == s_internal_methods[n] . name)
 			{
 				t_method = &s_internal_methods[n];
 				break;
@@ -249,16 +251,17 @@ public:
 
 		if (t_method == NULL)
 		{
-			MCeerror -> add(EE_PUT_CANTSET, line, pos);
-			return ES_ERROR;
+            MCeerror -> add(EE_PUT_CANTSET, line, pos);
+            return ES_ERROR;
 		}
 
 		void *t_value;
-		t_method -> pointer(&t_value);
-		if (internal_get_value(ep, t_method -> return_type, t_value) != ES_NORMAL)
-			return ES_ERROR;
+        t_method -> pointer(&t_value);
+        if (internal_get_value(ep, t_method -> return_type, t_value) != ES_NORMAL)
+            return ES_ERROR;
 
-		return MCresult -> store(ep, False);
+        return MCresult -> set(ep);
+#endif
 	}
 
 private:
@@ -300,37 +303,28 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
-	{
+    void exec_ctxt(MCExecContext &ctxt)
+    {
 		bool t_success;
 		t_success = true;
 
-		char *t_old_filename;
-		t_old_filename = nil;
-		if (t_success && m_old_file -> eval(ep) == ES_NORMAL)
-			t_old_filename = ep . getsvalue() . clone();
-		else
-			t_success = false;
+		MCAutoStringRef t_old_filename;
+        if (!ctxt . EvalExprAsStringRef(m_old_file, EE_INTERNAL_BSDIFF_BADOLD, &t_old_filename))
+            return;
 
-		char *t_new_filename;
-		t_new_filename = nil;
-		if (t_success && m_new_file -> eval(ep) == ES_NORMAL)
-			t_new_filename = ep . getsvalue() . clone();
-		else
-			t_success = false;
+		MCAutoStringRef t_new_filename;
+        if (!ctxt . EvalExprAsStringRef(m_new_file, EE_INTERNAL_BSDIFF_BADNEW, &t_new_filename))
+            return;
 
-		char *t_patch_filename;
-		t_patch_filename = nil;
-		if (t_success && m_patch_file -> eval(ep) == ES_NORMAL)
-			t_patch_filename = ep . getsvalue() . clone();
-		else
-			t_success = false;
+		MCAutoStringRef t_patch_filename;
+        if (!ctxt . EvalExprAsStringRef(m_patch_file, EE_INTERNAL_BSDIFF_BADPATCH, &t_patch_filename))
+            return;
 
 		IO_handle t_old_handle;
 		t_old_handle = nil;
 		if (t_success)
 		{
-			t_old_handle = MCS_open(t_old_filename, IO_READ_MODE, False, False, 0);
+			t_old_handle = MCS_open(*t_old_filename, kMCOpenFileModeRead, False, False, 0);
 			if (t_old_handle == nil)
 				t_success = false;
 		}
@@ -339,7 +333,7 @@ public:
 		t_new_handle = nil;
 		if (t_success)
 		{
-			t_new_handle = MCS_open(t_new_filename, IO_READ_MODE, False, False, 0);
+			t_new_handle = MCS_open(*t_new_filename, kMCOpenFileModeRead, False, False, 0);
 			if (t_new_handle == nil)
 				t_success = false;
 		}
@@ -348,7 +342,7 @@ public:
 		t_patch_handle = nil;
 		if (t_success)
 		{
-			t_patch_handle = MCS_open(t_patch_filename, IO_WRITE_MODE, False, False, 0);
+			t_patch_handle = MCS_open(*t_patch_filename, kMCOpenFileModeWrite, False, False, 0);
 			if (t_patch_handle == nil)
 				t_success = false;
 		}
@@ -364,22 +358,16 @@ public:
 		}
 
 		if (t_success)
-			MCresult -> clear();
+            ctxt . SetTheResultToEmpty();
 		else
-			MCresult -> sets("patch building failed");
+            ctxt . SetTheResultToCString("patch building failed");
 
 		if (t_patch_handle != nil)
 			MCS_close(t_patch_handle);
 		if (t_new_handle != nil)
 			MCS_close(t_new_handle);
 		if (t_old_handle != nil)
-			MCS_close(t_old_handle);
-
-		delete t_patch_filename;
-		delete t_new_filename;
-		delete t_old_filename;
-		
-		return ES_NORMAL;
+            MCS_close(t_old_handle);
 	}
 
 private:
@@ -395,7 +383,7 @@ private:
 
 		bool ReadBytes(void *p_buffer, uint32_t p_count)
 		{
-			return IO_read_bytes(p_buffer, p_count, handle) == IO_NORMAL;
+			return IO_read(p_buffer, p_count, handle) == IO_NORMAL;
 
 		}
 
@@ -456,17 +444,21 @@ public:
 		return PS_NORMAL;
 	}
 
-	Exec_stat exec(MCExecPoint& ep)
-	{
-		if (m_stackfile -> eval(ep) != ES_NORMAL)
-			return ES_ERROR;
+    void exec_ctxt(MCExecContext &ctxt)
+    {
+        MCNewAutoNameRef t_name;
+        if (!ctxt . EvalExprAsNameRef(m_stackfile, EE_INTERNAL_BOOTSTRAP_BADSTACK, &t_name))
+            return;
 
-		MCStack *t_new_home;
-		t_new_home = MCdispatcher -> findstackname(ep . getsvalue() . getstring());
+        MCStack *t_new_home;
+		t_new_home = MCdispatcher -> findstackname(*t_name);
 
 		if (t_new_home == nil &&
-			MCdispatcher -> loadfile(ep . getcstring(), t_new_home) != IO_NORMAL)
-			return ES_ERROR;
+			MCdispatcher -> loadfile(MCNameGetString(*t_name), t_new_home) != IO_NORMAL)
+        {
+            ctxt . Throw();
+            return;
+        }
 
 		MCdispatcher -> changehome(t_new_home);	
 
@@ -475,9 +467,7 @@ public:
 		MCdefaultstackptr -> getcard() -> message(MCM_start_up);
 		MCdefaultstackptr -> setextendedstate(false, ECS_DURING_STARTUP);
 		if (!MCquit)
-			t_new_home -> open();
-
-		return ES_NORMAL;
+            t_new_home -> open();
 	}
 
 private:
@@ -579,10 +569,10 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 				uint8_t t_properties_changed;
 				t_properties_changed = t_listener -> object -> Get() -> propertieschanged();
 				if (t_properties_changed != kMCPropertyChangedMessageTypeNone)
-				{			
-					MCExecPoint ep(nil, nil, nil);
-					t_listener -> object -> Get() -> getprop(0, P_LONG_ID, ep, False);			
-					
+                {
+                    MCExecContext ctxt(nil, nil, nil);
+					MCAutoStringRef t_string;
+					t_listener -> object -> Get() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);			
 					MCObjectListenerTarget *t_target;
 					t_target = nil;
 					MCObjectListenerTarget *t_prev_target;
@@ -605,16 +595,16 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 							else
 							{
 								// MM-2012-11-06: Added resizeControl(Started/Ended) and gradientEdit(Started/Ended) messages.
-								if (t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)								
-									t_target -> target -> Get() -> message_with_args(MCM_property_changed, ep . getsvalue());
+								if (t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)				
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
 								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)								
-									t_target -> target -> Get() -> message_with_args(MCM_resize_control_started, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);
 								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)								
-									t_target -> target -> Get() -> message_with_args(MCM_resize_control_ended, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
 								if (t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)								
-									t_target -> target -> Get() -> message_with_args(MCM_gradient_edit_started, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
 								if (t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)								
-									t_target -> target -> Get() -> message_with_args(MCM_gradient_edit_ended, ep . getsvalue());
+									t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
 								
 								t_prev_target = t_target;					
 							}
@@ -635,6 +625,7 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 	}
 }
 
+#ifdef LEGACY_EXEC
 void MCInternalObjectListenerListListeners(MCExecPoint &ep)
 {
 	ep . clear();
@@ -683,6 +674,57 @@ void MCInternalObjectListenerListListeners(MCExecPoint &ep)
 			t_listener = s_object_listeners;
 	}
 }
+#endif
+
+void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_listeners, uindex_t& r_count)
+{
+	MCObjectHandle *t_current_object;
+	t_current_object = ctxt . GetObject() -> gethandle();
+	
+	MCObjectListener *t_prev_listener;
+	t_prev_listener = nil;
+	
+	MCObjectListener *t_listener;
+	t_listener = s_object_listeners;
+    
+    MCAutoArray<MCStringRef> t_listeners;
+	while(t_listener != nil)
+	{
+        MCStringRef t_string;
+		if (!t_listener -> object -> Exists())
+			remove_object_listener_from_list(t_listener, t_prev_listener);
+		else
+		{
+			MCObjectListenerTarget *t_target;
+			t_target = nil;
+			MCObjectListenerTarget *t_prev_target;
+			t_prev_target = nil;
+            
+            MCAutoValueRef t_long_id;
+			t_listener -> object -> Get() -> names(P_LONG_ID, &t_long_id);
+            
+			for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
+			{
+				if (!t_target -> target -> Exists())
+					remove_object_listener_target_from_list(t_target, t_prev_target, t_listener, t_prev_listener);
+				else if (t_target -> target ==  t_current_object)
+                {
+                    ctxt . ConvertToString(*t_long_id, t_string);
+                    t_listeners . Push(t_string);
+                }
+			}
+			
+			t_prev_listener = t_listener;
+		}
+		
+		if (t_listener != nil)
+			t_listener = t_listener -> next;
+		else
+			t_listener = s_object_listeners;
+	}
+    t_listeners . Take(r_listeners, r_count);
+}
+
 
 class MCInternalObjectListen: public MCStatement
 {
@@ -715,14 +757,14 @@ public:
 		return PS_NORMAL;		
 	}
 	
-	Exec_stat exec(MCExecPoint& ep)
-	{
+    void exec_ctxt(MCExecContext &ctxt)
+    {
 		MCObject *t_object;
 		uint4 parid;
-		if (m_object -> getobj(ep, t_object, parid, True) != ES_NORMAL)
+        if (!m_object -> getobj(ctxt, t_object, parid, True))
 		{
-			MCeerror -> add(EE_NO_MEMORY, line, pos);
-			return ES_ERROR;
+            ctxt . LegacyThrow(EE_NO_MEMORY);
+            return;
 		}		
 		
 		MCObjectListener *t_listener;
@@ -741,8 +783,8 @@ public:
 		{
 			if (!MCMemoryNew(t_listener))
 			{
-				MCeerror -> add(EE_NO_MEMORY, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_NO_MEMORY);
+                return;
 			}
 			t_object -> listen();
 			t_listener -> object = t_object_handle;
@@ -757,7 +799,7 @@ public:
 		t_target = nil;
 		
 		MCObjectHandle *t_target_object;
-		t_target_object = ep . getobj() -> gethandle();
+        t_target_object = ctxt . GetObjectHandle();
 		
 		for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
 		{
@@ -769,16 +811,14 @@ public:
 		{
 			if (!MCMemoryNew(t_target))
 			{
-				MCeerror -> add(EE_NO_MEMORY, line, pos);
-				return ES_ERROR;
+                ctxt . LegacyThrow(EE_NO_MEMORY);
+                return;
 			}
 			t_target -> target = t_target_object;
 			t_target -> target -> Retain();
 			t_target -> next = t_listener -> targets;
 			t_listener -> targets = t_target;						
-		}
-		
-		return ES_NORMAL;
+        }
 	}
 	
 private:
@@ -821,12 +861,16 @@ public:
 		return PS_NORMAL;
 	}
 	
-	Exec_stat exec(MCExecPoint& ep)
+    void exec_ctxt(MCExecContext &ctxt)
 	{
 		MCObject *t_object;
 		uint4 parid;
-		if (m_object -> getobj(ep, t_object, parid, True) != ES_NORMAL)
-			return ES_NORMAL;
+        if (!m_object -> getobj(ctxt, t_object, parid, True))
+        {
+            // Was formerly returning ES_NORMAL
+            ctxt . IgnoreLastError();
+            return;
+        }
 		
 		MCObjectListener *t_prev_listener;
 		t_prev_listener = nil;
@@ -851,20 +895,18 @@ public:
 			t_prev_target = nil;
 			
 			MCObjectHandle *t_target_object;
-			t_target_object = ep . getobj() -> gethandle();
+            t_target_object = ctxt . GetObjectHandle();
 			
 			for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
 			{
 				if (t_target -> target == t_target_object)
 				{
 					remove_object_listener_target_from_list(t_target, t_prev_target, t_listener, t_prev_listener);
-					return ES_NORMAL;
+                    return;
 				}
 				t_prev_target = t_target;
 			}			
-		}
-		
-		return ES_NORMAL;
+        }
 	}
 	
 private:
@@ -883,7 +925,7 @@ template<class T> inline MCStatement *class_factory(void)
 MCInternalVerbInfo MCinternalverbs[] =
 {
 	{ "break", nil, class_factory<MCInternalBreak> },
-	{ "call", nil, class_factory<MCInternalCall> },
+    { "call", nil, class_factory<MCInternalCall> },
 	{ "deploy", nil, class_factory<MCIdeDeploy> },
 	{ "sign", nil, class_factory<MCIdeSign> },
 	{ "diet", nil, class_factory<MCIdeDiet> },
@@ -904,12 +946,16 @@ MCInternalVerbInfo MCinternalverbs[] =
 	{ "listen", nil, class_factory<MCInternalObjectListen> },
 	{ "cancel", nil, class_factory<MCInternalObjectUnListen> },
 #endif
+	{ "syntax", "tokenize", class_factory<MCIdeSyntaxTokenize> },
+	{ "syntax", "recognize", class_factory<MCIdeSyntaxRecognize> },
+	{ "syntax", "compile", class_factory<MCIdeSyntaxCompile> },
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
 	{ nil, nil, nil }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 void internal_generate_uuid(void **r_result)
 {
 	static char t_result[128];
@@ -925,4 +971,7 @@ void internal_notify_association_changed(void **r_result)
 {
 	SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
 }
+
+#endif
+
 #endif

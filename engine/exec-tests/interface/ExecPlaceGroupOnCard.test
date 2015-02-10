@@ -1,0 +1,17 @@
+setup
+
+create button
+
+create button
+
+select button 1 and button 2
+
+group
+
+create card
+
+place background 1 onto the current card
+
+test (there is a button 1 on the current card and there is a button 2 on the current card)
+
+teardown

@@ -1,0 +1,1 @@
+# revExecuteSQL writes incomplete data into SQLite BLOB columns

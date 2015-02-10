@@ -122,9 +122,9 @@ enum MCIPhoneApplicationStatus
     // We store the payload from a pending push notification here until the stack has become active and is ready to receive the message with the data.
     NSString *m_pending_push_notification;
     // We store the device token for push notification here
-    MCString m_device_token;
+    MCStringRef m_device_token;
     // We store the wakeup token for custom URL schemes here
-    MCString m_launch_url;
+    MCStringRef m_launch_url;
     // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
     // We need to know if there is a pending launch url that was received.
     // We do not want to send a URL message again, should the app become active again.
@@ -205,9 +205,9 @@ enum MCIPhoneApplicationStatus
 // MM-2014-10-15: [[ Bug 13665 ]] Returns the currently active view controller.
 - (UIViewController *)fetchCurrentViewController;
 // Returns the device token that is used for push notificaiton.
-- (const char *)fetchDeviceToken;
+- (MCStringRef)fetchDeviceToken;
 // Returns the URL from which the device was launched.
-- (const char *)fetchLaunchUrl;
+- (MCStringRef)fetchLaunchUrl;
 
 // Start an autorotation operation
 - (void)beginAutorotation;

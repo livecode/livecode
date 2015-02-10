@@ -17,7 +17,6 @@
 #include <Cocoa/Cocoa.h>
 #include <Carbon/Carbon.h>
 
-#include "core.h"
 #include "typedefs.h"
 #include "platform.h"
 #include "platform-internal.h"
@@ -166,7 +165,7 @@ enum
 
 //////////
 
-- (id)initWithArgc:(int)argc argv:(char**)argv envp:(char **)envp
+- (id)initWithArgc:(int)argc argv:(MCStringRef *)argv envp:(MCStringRef*)envp
 {
 	self = [super init];
 	if (self == nil)
@@ -293,8 +292,8 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     
 	// Dispatch the startup callback.
 	int t_error_code;
-	char *t_error_message;
-	MCPlatformCallbackSendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, t_error_message);
+	MCAutoStringRef t_error_message;
+	MCPlatformCallbackSendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, &t_error_message);
 	
 	[t_pool release];
 	
@@ -302,11 +301,12 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	if (t_error_code != 0)
 	{
 		// If the error message is non-nil, report it in a suitable way.
-		if (t_error_message!= nil)
-		{
-			fprintf(stderr, "Startup error - %s\n", t_error_message);
-			free(t_error_message);
-		}
+		if (*t_error_message != nil)
+        {
+            MCAutoStringRefAsUTF8String t_utf8_message;
+            t_utf8_message . Lock(*t_error_message);
+			fprintf(stderr, "Startup error - %s\n", *t_utf8_message);
+        }
 		
 		// Finalize everything
 		[self finalizeModules];
@@ -1982,19 +1982,60 @@ int main(int argc, char *argv[], char *envp[])
 	
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
+    
+	
+	if (!MCInitialize())
+		exit(-1);
+	
+	// On OSX, argv and envp are encoded as UTF8
+	MCStringRef *t_new_argv;
+	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
+	
+	for (int i = 0; i < argc; i++)
+	{
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
+	}
+	
+	MCStringRef *t_new_envp;
+	/* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
+	
+	int i = 0;
+	uindex_t t_envp_count = 0;
+	
+	while (envp[i] != NULL)
+	{
+		t_envp_count++;
+		uindex_t t_count = i;
+		/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
+		i++;
+	}
+	
+	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
+	t_new_envp[i] = nil;
 	
 	// Setup our delegate
 	com_runrev_livecode_MCApplicationDelegate *t_delegate;
-	t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: argv envp: envp];
+	t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: t_new_argv envp: t_new_envp];
 	
 	// Assign our delegate
 	[t_application setDelegate: t_delegate];
 	
 	// Run the application - this never returns!
-	[t_application run];
+	[t_application run];    
+	
+	for (i = 0; i < argc; i++)
+		MCValueRelease(t_new_argv[i]);
+	for (i = 0; i < t_envp_count; i++)
+		MCValueRelease(t_new_envp[i]);    
+	
+	MCMemoryDeleteArray(t_new_argv);
+	MCMemoryDeleteArray(t_new_envp);
 	
 	// Drain the autorelease pool.
 	[t_pool release];
+	
+	MCFinalize();
 	
 	return 0;
 }

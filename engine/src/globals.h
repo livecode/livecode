@@ -23,6 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcstring.h"
 #include "imagelist.h"
 
+#include "foundation-locale.h"
+
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
 
@@ -37,9 +39,9 @@ extern int MCidleRate;
 
 
 extern Boolean MCaqua;
-extern char *MCcmd;
-extern char *MCfiletype;
-extern char *MCstackfiletype;
+extern MCStringRef MCcmd;
+extern MCStringRef MCfiletype;
+extern MCStringRef MCstackfiletype;
 
 extern Boolean MCuseXft ;
 extern Boolean MCuselibgnome ;
@@ -55,7 +57,7 @@ extern Boolean MCXVideo ;
 extern Window MClastvideowindow ;
 #endif
 
-extern char **MCstacknames;
+extern MCStringRef *MCstacknames;
 
 extern int2 MCnstacks;
 extern Boolean MCnofiles;
@@ -102,11 +104,11 @@ extern real8 MCgamma;
 extern MCColor MCzerocolor;
 extern MCColor MConecolor;
 extern MCColor MCpencolor;
-extern char *MCpencolorname;
+extern MCStringRef MCpencolorname;
 extern MCColor MCbrushcolor;
 extern MCColor MChilitecolor;
 extern MCColor MCgraycolor;
-extern char *MCbrushcolorname;
+extern MCStringRef MCbrushcolorname;
 extern uint4 MCpenpmid;
 extern MCPatternRef MCpenpattern;
 extern uint4 MCbrushpmid;
@@ -115,11 +117,11 @@ extern uint4 MCbackdroppmid;
 extern MCPatternRef MCbackdroppattern;
 extern MCImageList *MCpatternlist;
 extern MCColor MCaccentcolor;
-extern char *MCaccentcolorname;
+extern MCStringRef MCaccentcolorname;
 extern MCColor MChilitecolor;
-extern char *MChilitecolorname;
+extern MCStringRef MChilitecolorname;
 extern MCColor MCselectioncolor;
-extern char *MCselectioncolorname;
+extern MCStringRef MCselectioncolorname;
 extern Linkatts MClinkatts;
 extern Boolean MCrelayergrouped;
 extern Boolean MCselectgrouped;
@@ -137,7 +139,7 @@ extern char MCrecordinput[5];
 extern Boolean MCuselzw;
 
 extern real8 MCinfinity;
-extern char *MCstackbottom;
+extern char* MCstackbottom;
 extern Boolean MCcheckstack;
 extern Boolean MCswapbytes;
 extern Boolean MCtranslatechars;
@@ -215,7 +217,7 @@ extern MCUIDC *MCscreen;
 extern MCPrinter *MCprinter;
 extern MCPrinter *MCsystemprinter;
 
-extern char *MCscriptfont;
+extern MCStringRef MCscriptfont;
 extern uint2 MCscriptsize;
 extern uint2 MCfocuswidth;
 extern uint2 MCsizewidth;
@@ -251,19 +253,16 @@ extern Boolean MCsystemCS;
 extern Boolean MCsystemPS;
 extern Boolean MChidewindows;
 extern Boolean MCbufferimages;
-extern char *MCserialcontrolsettings;
-extern char *MCshellcmd;
-extern char *MCvcplayer;
-extern char *MCbackdropcolor;
+extern MCStringRef MCserialcontrolsettings;
+extern MCStringRef MCshellcmd;
+extern MCStringRef MCvcplayer;
 
-extern char *MCftpproxyhost;
+extern MCStringRef MCftpproxyhost;
 extern uint2 MCftpproxyport;
 
-extern char *MChttpproxy;
+extern MCStringRef MChttpproxy;
 
-extern char *MClongdateformat;
-extern char *MCshortdateformat;
-extern char *MChttpheaders;
+extern MCStringRef MChttpheaders;
 extern int4 MCrandomseed;
 extern Boolean MCshowinvisibles;
 extern MCObjectList *MCbackscripts;
@@ -280,8 +279,7 @@ extern MCVariable *MCresult;
 extern MCVariable *MCurlresult;
 extern MCVariable *MCglobals;
 extern MCVariable *MCdialogdata;
-extern char *MChcstat;
-extern char *MCcurdir;
+extern MCStringRef MChcstat;
 extern Boolean MCexitall;
 extern int4 MCretcode;
 extern Boolean MCrecording;
@@ -298,8 +296,8 @@ extern Boolean MCmainstackschanged;
 // global properties
 
 extern uint2 MClook;
-extern const char *MCttbgcolor;
-extern const char *MCttfont;
+extern MCStringRef MCttbgcolor;
+extern MCStringRef MCttfont;
 extern uint2 MCttsize;
 extern uint2 MCtrylock;
 extern uint2 MCerrorlock;
@@ -362,12 +360,6 @@ extern uint4 MCmajorosversion;
 extern Boolean MCignorevoiceoversensitivity;
 extern uint4 MCqtidlerate;
 
-extern uint4 MCiconid;
-extern char *MCiconmenu;
-extern uint4 MCstatusiconid;
-extern char *MCstatusiconmenu;
-extern char *MCstatusicontooltip;
-
 #ifdef _LINUX_DESKTOP
 extern Window MCgtkthemewindow;
 #endif
@@ -412,6 +404,13 @@ extern MCPoint MCgroupedobjectoffset;
 //   addresses will work.
 extern Boolean MCallowdatagrambroadcasts;
 
+// Character encoding used by the system
+extern char *MCsysencoding;
+
+// Locales
+extern MCLocaleRef kMCBasicLocale;
+extern MCLocaleRef kMCSystemLocale;
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
 extern MCThreadMutexRef MCanimationmutex;
 extern MCThreadMutexRef MCpatternmutex;
@@ -419,7 +418,6 @@ extern MCThreadMutexRef MCimagerepmutex;
 extern MCThreadMutexRef MCfieldmutex;
 extern MCThreadMutexRef MCthememutex;
 extern MCThreadMutexRef MCgraphicmutex;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 

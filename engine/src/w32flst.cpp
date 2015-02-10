@@ -25,15 +25,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "w32flst.h"
 #include "w32printer.h"
 #include "w32dc.h"
 
+#include <strsafe.h>
+
 typedef struct _x2W32Font
 {
-	char *Xfontname;
-	char *W32fontname;
+	const unichar_t *Xfontname;
+	const unichar_t *W32fontname;
 }
 X2W32FontTable;
 
@@ -50,20 +52,20 @@ X2W32FontTable;
 
 static X2W32FontTable XWfonts[MAX_XFONT2W32FONT] =
     { //X&WIN font table
-        { "Charter", "Courier New" },
-        { "Chicago", "MS Sans Serif" },
-        { "Charcoal", "MS Sans Serif" },
-        { "Clean", "Courier New" },
-        { "Courier", "Courier New" },
-        { "fixed", "MS Sans Serif" },
-        { "Geneva", "MS Sans Serif" },
-        { "Helvetica", "Arial" },
-        { "Lucida", "Lucida Console" },
-        { "LucidaBright", "Lucida Console" },
-        { "LucidaTypewriter", "Lucida Console" },
-        { "New Century Schoolbook", "Times New Roman" },
-        { "terminal", "Courier New" },
-        { "Times", "Times New Roman" }
+        { L"Charter", L"Courier New" },
+        { L"Chicago", L"MS Sans Serif" },
+        { L"Charcoal", L"MS Sans Serif" },
+        { L"Clean", L"Courier New" },
+        { L"Courier", L"Courier New" },
+        { L"fixed", L"MS Sans Serif" },
+        { L"Geneva", L"MS Sans Serif" },
+        { L"Helvetica", L"Arial" },
+        { L"Lucida", L"Lucida Console" },
+        { L"LucidaBright", L"Lucida Console" },
+        { L"LucidaTypewriter", L"Lucida Console" },
+        { L"New Century Schoolbook", L"Times New Roman" },
+        { L"terminal", L"Courier New" },
+        { L"Times", L"Times New Roman" }
     };
 
 uint2 weighttable[] =
@@ -94,20 +96,22 @@ uint2 weighttable[] =
    FWIDTH_ULTRA_EXPANDED,
    };*/
 
-static void mapfacename(char *buffer, const char *source, bool printer)
+static void mapfacename(unichar_t *buffer, const unichar_t *source, bool printer)
 {
-	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, strlen(source));
-	strncpy(buffer, source, maxlength);
-	buffer[maxlength] = '\0';
-	uint2 i;
-	for (i = 0; i < MAX_XFONT2W32FONT; i++)
-		if (!MCU_strncasecmp(buffer, XWfonts[i].Xfontname, strlen(buffer) + 1))
+	for (int i = 0; i < MAX_XFONT2W32FONT; i++)
+	{
+		if (lstrcmpiW(source, XWfonts[i].Xfontname) == 0)
 		{
-			strcpy(buffer, XWfonts[i].W32fontname);
+			/* UNCHECKED */ StringCchCopyW(buffer, LF_FACESIZE, XWfonts[i].W32fontname);
 			return;
 		}
+	}
+
+	// Mapping not found
 	if (printer)
-		strcpy(buffer, "Arial");
+		StringCchCopyW(buffer, LF_FACESIZE, L"Arial");
+	else if (buffer != source)
+		StringCchCopyW(buffer, LF_FACESIZE, source);
 }
 
 struct Language2FontCharset
@@ -138,10 +142,10 @@ static Language2FontCharset s_fontcharsetmap[] =
 	{LCH_UNICODE, ANSI_CHARSET}
 };
 
-MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
-                       uint2 style, Boolean printer)
+MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
-	reqname = fname.clone();
+	// MW-2012-05-03: [[ Values* ]] 'reqname' is now an autoref type.
+	reqname = fname;
 	reqsize = size;
 	reqstyle = style;
 	reqprinter = printer;
@@ -151,23 +155,32 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
 		memset(font, 0, sizeof(MCFontStruct));
 		return;
 	}
-	LOGFONTA logfont;
-	memset(&logfont, 0, sizeof(LOGFONTA));
-	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, fname.getlength());
-	strncpy(logfont.lfFaceName, fname.getstring(), maxlength);
-	logfont.lfFaceName[maxlength] = '\0';
+	LOGFONTW logfont;
+	memset(&logfont, 0, sizeof(LOGFONTW));
+
+    
+    //parse font and encoding
+    MCStringRef t_name = MCNameGetString(fname);
+    MCAutoStringRef t_font_name;
+    uindex_t t_offset;
+	if (MCStringFirstIndexOfChar(t_name, ',', 0, kMCCompareExact, t_offset))
+    {
+        MCStringCopySubstring(t_name, MCRangeMake(0, t_offset), &t_font_name);
+        t_name = *t_font_name;
+    }
+    
+	MCAutoStringRefAsWString t_fname_wstr;
+	if (!t_fname_wstr.Lock(t_name))
+		return;
+
+	// Copy the family name
+	if (StringCchCopyW(logfont.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
+		return;
 
 	// MW-2012-05-03: [[ Bug 10180 ]] Make sure the default charset for the font
 	//   is chosen - otherwise things like WingDings don't work!
 	logfont.lfCharSet = DEFAULT_CHARSET;
 
-	//parse font and encoding
-	char *sptr = logfont.lfFaceName;
-	if (sptr = strchr(logfont.lfFaceName, ','))
-	{
-		*sptr = '\0';
-		sptr++;
-	}
 	HDC hdc;
 
 	// MW-2013-11-07: [[ Bug 11393 ]] 'printer' in the fontstruct now means use ideal
@@ -183,15 +196,16 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
 	if (style & FA_OBLIQUE)
 		logfont.lfOrientation = 3600 - 150; /* 15 degree forward slant */
 	
-	HFONT newfont = CreateFontIndirectA(&logfont);
+	HFONT newfont = CreateFontIndirectW(&logfont);
 	SelectObject(hdc, newfont);
-	char testname[LF_FACESIZE];
-	memset(testname, 0, LF_FACESIZE);
-	GetTextFaceA(hdc, LF_FACESIZE, testname);
+
+	unichar_t t_testname[LF_FACESIZE];
+	memset(t_testname, 0, LF_FACESIZE * sizeof(unichar_t));
+	GetTextFaceW(hdc, LF_FACESIZE, t_testname);
 
 	// MW-2012-02-13: If we failed to find an exact match then remap the font name and
 	//   try again.
-	if (newfont == NULL || (MCU_strncasecmp(testname, logfont.lfFaceName, strlen(testname) + 1)))
+	if (newfont == NULL || lstrcmpiW(t_testname, logfont.lfFaceName) != 0)
 	{
 		if (newfont != NULL)
 			DeleteObject(newfont);
@@ -202,15 +216,15 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
 		// we get strange UI symbol font on XP).
 		logfont.lfCharSet = ANSI_CHARSET;
 		logfont.lfOutPrecision = OUT_TT_ONLY_PRECIS;
-		newfont = CreateFontIndirectA(&logfont);
+		newfont = CreateFontIndirectW(&logfont);
 		SelectObject(hdc, newfont);
 	}
 
 	// At this point we will have either found an exact match for the textFont, mapped
 	// using the defaults table and found a match, or been given a default truetype font.
 
-	TEXTMETRICA tm;
-	GetTextMetricsA(hdc, &tm);
+	TEXTMETRICW tm;
+	GetTextMetricsW(hdc, &tm);
 	font->fid = (MCSysFontHandle)newfont;
 	font->size = size;
 	// MW-2013-12-19: [[ Bug 11606 ]] Use Mac-style metric adjustment in printer (ideal
@@ -230,17 +244,17 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
 
 MCFontnode::~MCFontnode()
 {
-	delete reqname;
 	if (MCnoui)
 		return;
 	DeleteObject((HFONT)font->fid);
 	delete font;
 }
 
-MCFontStruct *MCFontnode::getfont(const MCString &fname, uint2 size,
+MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size,
                                   uint2 style, Boolean printer)
 {
-	if (fname != reqname || printer != reqprinter)
+	// MW-2012-05-03: [[ Values* ]] Match the font name caselessly. 
+	if (!MCNameIsEqualTo(fname, *reqname) || printer != reqprinter)
 		return NULL;
 	if (size == 0)
 		return font;
@@ -264,8 +278,7 @@ MCFontlist::~MCFontlist()
 	}
 }
 
-MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size,
-                                  uint2 style, Boolean printer)
+MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 	MCFontnode *tmp = fonts;
 	if (tmp != NULL)
@@ -301,9 +314,140 @@ void MCFontlist::freeprinterfonts()
 	while (tmp != fonts);
 }
 
-static MCExecPoint *epptr;
+int CALLBACK fontnames_FontFamProc(const LOGFONTW * lpelf,
+								   const TEXTMETRICW * lpntm,
+								   DWORD FontType, LPARAM lParam)
+{
+	MCListRef t_list = (MCListRef)lParam;
+	MCAutoStringRef t_name;
+
+	size_t t_length;
+	if (StringCchLength(lpelf->lfFaceName, LF_FACESIZE, &t_length) != S_OK)
+		return False;
+
+	if (!MCStringCreateWithChars(lpelf->lfFaceName, t_length, &t_name))
+		return False;
+
+	// Skip names that we have already added to the list
+	MCAutoStringRef t_list_string;
+	/* UNCHECKED */ MCListCopyAsString(t_list, &t_list_string);
+	if (MCStringContains(*t_list_string, *t_name, kMCStringOptionCompareCaseless))
+		return True;
+
+	return MCListAppend(t_list, *t_name) ? True : False;
+}
+
+bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
+{
+	if (MCnoui)
+	{
+		r_names = MCValueRetain(kMCEmptyList);
+		return true;
+	}
+
+	MCAutoListRef t_list;
+
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	HDC hdc;
+#ifdef _DESKTOP
+	// MM-2013-09-13:: [[ RefactorGraphics ]] Tweak to get things compiling for server.
+	if (MCStringIsEqualToCString(p_type, "printer", kMCCompareCaseless))
+		hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
+	else
+#endif
+		hdc = pms->getsrchdc();
+	LOGFONTW lf;
+	lf.lfCharSet = DEFAULT_CHARSET;
+	lf.lfFaceName[0] = '\0';
+	lf.lfPitchAndFamily = 0;
+	if (EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontnames_FontFamProc, (LPARAM)*t_list, 0) != True)
+		return false;
+
+	return MCListCopy(*t_list, r_names);
+}
+
+typedef struct
+{
+	bool success;
+	MCListRef list;
+	uint2 *sizes;
+	uindex_t size_count;
+} fontsizes_context;
+
+int CALLBACK fontsizes_FontFamProc(const ENUMLOGFONTW* lpelf,
+								   const NEWTEXTMETRICW* lpntm,
+								   DWORD FontType, LPARAM lParam)
+{
+	fontsizes_context *context = (fontsizes_context*)lParam;
+	if (!(FontType & TRUETYPE_FONTTYPE))
+	{ //if not true-type font
+		uint2 size = uint2((((lpelf->elfLogFont.lfHeight * 72)
+		               / SCREEN_WIDTH_FOR_FONT_USE) * 8 / 7));
+		for (uindex_t i = 0; i < context->size_count; i++)
+			if (context->sizes[i] == size)
+				return True; //return to callback function again
+		context->success = MCMemoryResizeArray(context->size_count + 1, context->sizes, context->size_count);
+		if (context->success)
+		{
+			context->sizes[context->size_count - 1] = size;
+			context->success = MCListAppendInteger(context->list, size);
+		}
+		return context->success ? True : False;
+	}
+	else
+	{ //if true-type font, size is always 0.
+		context->success = MCListAppendInteger(context->list, 0);
+		return False; //stop right here. no more callback function
+	}
+}
+
+bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
+{
+	if (MCnoui)
+	{
+		r_sizes = MCValueRetain(kMCEmptyList);
+		return true;
+	}
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	fontsizes_context context;
+	context.list = *t_list;
+	context.success = true;
+	context.sizes = nil;
+	context.size_count = 0;
+
+	MCAutoStringRefAsWString t_fname_wstr;
+	if (!t_fname_wstr.Lock(p_fname))
+		return false;
+
+	MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	HDC hdc = pms->getsrchdc();
+
+	LOGFONTW lf;
+	lf.lfCharSet = DEFAULT_CHARSET;
+	lf.lfPitchAndFamily = 0;
+
+	// Copy the font family name
+	if (StringCchCopy(lf.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
+		return false;
+
+	EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontsizes_FontFamProc, (LPARAM)&context, 0);
+
+	MCMemoryDeleteArray(context.sizes);
+	if (context.success)
+		return MCListCopy(*t_list, r_sizes);
+
+	return false;
+}
+
+#ifdef FOR_TRUE_TYPE_ONLY
 static uint2 nfonts;
-static uint2 *sizes;
+static MCListRef s_style_list;
 enum FontQueryType {
     FQ_NAMES,
     FQ_SIZES,
@@ -316,42 +460,23 @@ int CALLBACK MyFontFamProc(ENUMLOGFONTA FAR* lpelf,
 {
 	switch (lParam)
 	{
-	case FQ_NAMES:
-		epptr->concatcstring(lpelf->elfLogFont.lfFaceName, EC_RETURN, nfonts++ == 0);
-		break;
-	case FQ_SIZES:
-		if (!(FontType & TRUETYPE_FONTTYPE))
-		{ //if not true-type font
-			uint2 size = uint2((((lpelf->elfLogFont.lfHeight * 72)
-			               / SCREEN_WIDTH_FOR_FONT_USE) * 8 / 7));
-			uint2 i;
-			for (i = 0; i < nfonts; i++)
-				if (sizes[i] == size)
-					return True; //return to callback function again
-			MCU_realloc((char **)&sizes, nfonts, nfonts + 1, sizeof(uint2));
-			sizes[nfonts] = size;
-			epptr->concatuint(size, EC_RETURN, nfonts++ == 0);
-			break;
-		}
-		else
-		{ //if true-type font, size is always 0.
-			epptr->concatuint(0, EC_RETURN, nfonts++ == 0);
-			return False; //stop right here. no more callback function
-		}
 	case FQ_STYLES:
 		{
 			if (!(FontType & TRUETYPE_FONTTYPE))
 			{ //not true-type font
-				epptr->setstaticcstring("plain\nbold\nitalic\nbold-italic");
+				/* UNCHECKED */ MCListAppend(s_style_list, MCN_plain) &&
+					MCListAppend(s_style_list, MCN_bold) &&
+					MCListAppend(s_style_list, MCN_italic) &&
+					MCListAppend(s_style_list, MCN_bold_italic);
 				return False;  //stop right here, do not continue looping through callback
 			}
 			char *style = (char *)lpelf->elfStyle;
 			if (strequal(style, "Regular"))
-				epptr->concatcstring("plain", EC_RETURN, nfonts++ == 0);
+				/* UNCHECKED */ MCListAppend(s_style_list, MCN_plain);
 			else if (strequal(style, "Bold Italic"))
-				epptr->concatcstring("bold-italic", EC_RETURN, nfonts++ == 0);
+				/* UNCHECKED */ MCListAppend(s_style_list, MCN_bold_italic)
 			else
-				epptr->concatcstring((char*)lpelf->elfStyle, EC_RETURN, nfonts++ == 0);
+				/* UNCHECKED */ MCListAppendCString(s_style_list, (char*)lpelf->elfStyle);
 			break;
 		}
 	default:
@@ -359,60 +484,40 @@ int CALLBACK MyFontFamProc(ENUMLOGFONTA FAR* lpelf,
 	}
 	return True;
 }
-
-void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
-{
-	ep.clear();
-	if (MCnoui)
-		return;
-	epptr = &ep;
-	nfonts = 0;
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	HDC hdc;
-#ifdef _DESKTOP
-	// MM-2013-09-13:: [[ RefactorGraphics ]] Tweak to get things compiling for server.
-	if (!MCU_strncasecmp(type, "Printer", strlen(type) + 1))
-		hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
-	else
 #endif
-		hdc = pms->getsrchdc();
-	EnumFontFamiliesA(hdc, NULL, (FONTENUMPROCA)MyFontFamProc, FQ_NAMES);
-}
 
-void MCFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
+bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
-	ep.clear();
 	if (MCnoui)
-		return;
-	epptr = &ep;
-	nfonts = 0;
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	HDC hdc = pms->getsrchdc();
-	EnumFontFamiliesA(hdc, fname, (FONTENUMPROCA)MyFontFamProc, FQ_SIZES);
-	delete sizes;
-	sizes = NULL;
-}
+	{
+		r_styles = MCValueRetain(kMCEmptyList);
+		return true;
+	}
 
-void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
-{
-	ep.clear();
-	if (MCnoui)
-		return;
-	ep.setstaticcstring("plain\nbold\nitalic\nbold-italic");
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	bool t_success = true;
 #ifdef FOR_TRUE_TYPE_ONLY
-
-	epptr = &ep;
+	s_style_list = *t_list;
 	nfonts = 0;
 	char mappedName[LF_FACESIZE];
 	mapfacename(mappedName, fname);
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	HDC hdc = pms->getmemsrchdc();
 	EnumFontFamiliesA(hdc, mappedName, (FONTENUMPROC)MyFontFamProc, FQ_STYLES);
-	ep.lower();
+#else
+	t_success = MCListAppend(*t_list, MCN_plain) &&
+		MCListAppend(*t_list, MCN_bold) &&
+		MCListAppend(*t_list, MCN_italic) &&
+		MCListAppend(*t_list, MCN_bold_italic);
 #endif
+
+	return t_success && MCListCopy(*t_list, r_styles);
 }
 
-bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
+bool MCFontlist::getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
 {
 	MCFontnode *t_font = fonts;
 	while (t_font != NULL)

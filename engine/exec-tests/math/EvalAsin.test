@@ -1,0 +1,16 @@
+setup
+
+test-error asin(1.0001)
+test-error asin(-1.0001)
+
+test asin(-1) is -(pi) / 2
+test asin(-0.5) is -(pi) / 6
+test asin(0) is 0
+test asin(0.5) is pi / 6
+test asin(1) is pi / 2
+
+//repeat with i = -1 to 1 step 0.01
+//	test sin(asin(i)) is i
+//end repeat
+
+teardown

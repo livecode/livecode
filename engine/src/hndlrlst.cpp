@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "hndlrlst.h"
 #include "handler.h"
 #include "keywords.h"
@@ -33,14 +32,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "debug.h"
 #include "parentscript.h"
+#include "variable.h"
 
 #include "globals.h"
+
+#include "syntax.h"
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCVariable **MCHandlerlist::s_old_variables = NULL;
 uint32_t MCHandlerlist::s_old_variable_count = 0;
 uint32_t *MCHandlerlist::s_old_variable_map;
 
-////
+////////////////////////////////////////////////////////////////////////////////
 
 MCHandlerArray::MCHandlerArray(void)
 {
@@ -157,7 +161,7 @@ void MCHandlerlist::reset(void)
 	}
 
 	for(uint32_t i = 0; i < nvars; i++)
-		MCNameDelete(vinits[i]);
+		MCValueRelease(vinits[i]);
 	delete vinits;
 	vinits = NULL;
 	nvars = 0;
@@ -169,7 +173,7 @@ void MCHandlerlist::reset(void)
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
 		MCNameDelete(cinfo[i] . name);
-		MCNameDelete(cinfo[i] . value);
+		MCValueRelease(cinfo[i] . value);
 	}
 	delete cinfo;
 	cinfo = NULL;
@@ -237,10 +241,10 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 
 	if (MCdebugcontext != MAXUINT2)
 	{
-		MCExecPoint *epptr = MCexecutioncontexts[MCdebugcontext];
-		if (epptr->gethlist() != this)
-			if (epptr->gethandler()->findvar(p_name, dptr) != PS_NORMAL)
-				return epptr->gethlist()->findvar(p_name, false, dptr);
+		MCExecContext *ctxtptr = MCexecutioncontexts[MCdebugcontext];
+		if (ctxtptr->GetHandlerList() != this)
+			if (ctxtptr->GetHandler()->findvar(p_name, dptr) != PS_NORMAL)
+				return ctxtptr->GetHandlerList()->findvar(p_name, false, dptr);
 			else
 				return PS_NORMAL;
 	}
@@ -248,7 +252,7 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 	return PS_NO_MATCH;
 }
 
-Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCNameRef p_init, MCVarref **newptr, Boolean initialised)
+Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **newptr, Boolean initialised)
 {
 	MCVariable *t_new_variable;
 
@@ -292,12 +296,12 @@ Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCNameRef p_init, MCVarref **
 	if (initialised)
 	{
 		if (p_init != nil)
-			lastvar->setnameref_unsafe(p_init);
+			lastvar->setvalueref(p_init);
 		else
 		{
 			// MW-2011-08-22: [[ Bug ]] We are initializing a UQL in server script
 			//   scope - so set it as a UQL.
-			lastvar->setnameref_unsafe(p_name);
+			lastvar->setvalueref(p_name);
 			lastvar->setuql();
 		}
 	}
@@ -308,9 +312,9 @@ Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCNameRef p_init, MCVarref **
 	// MW-2008-10-28: [[ ParentScripts ]] Extend the vinits array
 	// MW-2011-08-22: [[ Bug ]] Don't clone the init when we are creating a UQL in
 	//   global script scope (never used as parentscript so irrelevant).
-	MCU_realloc((char **)&vinits, nvars, nvars + 1, sizeof(MCNameRef));
+	MCU_realloc((char **)&vinits, nvars, nvars + 1, sizeof(MCValueRef));
 	if (p_init != nil)
-		/* UNCHECKED */ MCNameClone(p_init, vinits[nvars]);
+		/* UNCHECKED */ vinits[nvars] = MCValueRetain(p_init);
 	else
 		vinits[nvars] = p_init;
 
@@ -332,29 +336,51 @@ Parse_stat MCHandlerlist::findconstant(MCNameRef p_name, MCExpression **dptr)
 	return PS_NO_MATCH;
 }
 
-Parse_stat MCHandlerlist::newconstant(MCNameRef p_name, MCNameRef p_value)
+Parse_stat MCHandlerlist::newconstant(MCNameRef p_name, MCValueRef p_value)
 {
 	MCU_realloc((char **)&cinfo, nconstants, nconstants + 1, sizeof(MCHandlerConstantInfo));
 	/* UNCHECKED */ MCNameClone(p_name, cinfo[nconstants].name);
-	/* UNCHECKED */ MCNameClone(p_value, cinfo[nconstants++].value);
+	/* UNCHECKED */ cinfo[nconstants++].value = MCValueRetain(p_value);
 	return PS_NORMAL;
 }
 
-void MCHandlerlist::appendlocalnames(MCExecPoint &ep)
+bool MCHandlerlist::getlocalnames(MCListRef& r_list)
 {
-	MCVariable *tmp;
-	for (tmp = vars ; tmp != NULL ; tmp = tmp->getnext())
-		ep.concatnameref(tmp->getname(), EC_COMMA, tmp == vars);
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+	for (MCVariable *t_var = vars; t_var != nil; t_var = t_var->getnext())
+		if (!MCListAppend(*t_list, t_var->getname()))
+			return false;
+
+	return MCListCopy(*t_list, r_list);
 }
 
-void MCHandlerlist::appendglobalnames(MCExecPoint &ep, bool first)
+void MCHandlerlist::appendlocalnames(MCStringRef& r_string)
 {
-	uint2 i;
-	for (i = 0 ; i < nglobals ; i++)
-	{
-		ep.concatnameref(globals[i]->getname(), EC_COMMA, first);
-		first = false;
-	}
+	MCAutoListRef t_list;
+	/* UNCHECKED */ getlocalnames(&t_list);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
+}
+
+bool MCHandlerlist::getglobalnames(MCListRef& r_list)
+{
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+	for (uinteger_t i = 0 ; i < nglobals ; i++)
+		if (!MCListAppend(*t_list, globals[i]->getname()))
+			return false;
+
+	return MCListCopy(*t_list, r_list);
+}
+
+void MCHandlerlist::appendglobalnames(MCStringRef& r_string, bool first)
+{
+	MCAutoListRef t_list;
+	/* UNCHECKED */ getglobalnames(&t_list);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
+
 }
 
 // OK-2008-06-25: <Bug where the variableNames property would return duplicate global names>
@@ -386,7 +412,7 @@ void MCHandlerlist::newglobal(MCNameRef p_name)
 	globals[nglobals++] = gptr;
 }
 
-Parse_stat MCHandlerlist::parse(MCObject *objptr, const char *script)
+Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 {
 	Parse_stat status = PS_NORMAL;
 
@@ -615,25 +641,35 @@ void MCHandlerlist::addhandler(Handler_type type, MCHandler *handler)
 	handlers[type - 1] . sort();
 }
 
-static bool enumerate_handlers(MCExecPoint& ep, const char *p_type, MCHandlerArray& p_handlers, bool p_first = false, MCObject *p_object = NULL)
+#ifdef LEGACY_EXEC
+static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArray& p_handlers, bool p_first = false, MCObject *p_object = NULL)
 {
 	for(uint32_t j = 0; j < p_handlers . count(); ++j)
 	{
 		MCHandler *t_handler;
 		t_handler = p_handlers . get()[j];
 
-		if (!p_first)
-			ep.appendchar('\n');
-
-		ep . appendstringf("%s%s %s %d %d", t_handler -> isprivate() ? "P" : "", p_type, t_handler -> getname_cstring(), t_handler -> getstartline(), t_handler -> getendline());
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringFormat(&t_string, 
+										"%s%s%@ %@ %d %d", 
+										p_first ? "" : "\n",
+										t_handler->isprivate() ? "P" : "",
+										p_type,
+										t_handler->getname(),
+										t_handler->getstartline(),
+										t_handler->getendline());
+		
+		ep.concatstringref(*t_string, EC_NONE, p_first);
 
 		// OK-2008-07-23 : Add the object long id to the first handler from each object. This will
 		// allow the script editor to look up handlers faster.
 		if (p_first && p_object != NULL)
 		{
 			MCExecPoint t_ep;
-			p_object -> getprop(0, P_LONG_ID, t_ep, False);
-			ep . concatmcstring(t_ep . getsvalue(), EC_SPACE, false);
+			MCExecContext t_ctxt(t_ep);
+			MCAutoStringRef t_long_id;
+			p_object -> GetLongId(t_ctxt, &t_long_id);
+			ep.concatstringref(*t_long_id, EC_SPACE, false);
 		}	
 
 		p_first = false;
@@ -641,21 +677,137 @@ static bool enumerate_handlers(MCExecPoint& ep, const char *p_type, MCHandlerArr
 	
 	return p_first;
 }
+#endif 
 
+#ifdef LEGACY_EXEC
 bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
 {
 	// OK-2008-07-23 : Added parent object reference for script editor.
 	MCObject *t_object;
 	t_object = getparent();
 
-	p_first = enumerate_handlers(ep, "M", handlers[0], p_first, t_object);
-	p_first = enumerate_handlers(ep, "F", handlers[1], p_first, t_object);
-	p_first = enumerate_handlers(ep, "G", handlers[2], p_first, t_object);
-	p_first = enumerate_handlers(ep, "S", handlers[3], p_first, t_object);
+	p_first = enumerate_handlers(ep, MCSTR("M"), handlers[0], p_first, t_object);
+	p_first = enumerate_handlers(ep, MCSTR("F"), handlers[1], p_first, t_object);
+	p_first = enumerate_handlers(ep, MCSTR("G"), handlers[2], p_first, t_object);
+	p_first = enumerate_handlers(ep, MCSTR("S"), handlers[3], p_first, t_object);
 	
 	// MW-2012-09-07: [[ BeforeAfter ]] Make sure before/after appear in the handlerlist.
-	p_first = enumerate_handlers(ep, "B", handlers[4], p_first, t_object);
-	p_first = enumerate_handlers(ep, "A", handlers[5], p_first, t_object);
+	p_first = enumerate_handlers(ep, MCSTR("B"), handlers[4], p_first, t_object);
+	p_first = enumerate_handlers(ep, MCSTR("A"), handlers[5], p_first, t_object);
 	
 	return p_first;
 }
+#endif
+
+static const char *s_handler_types[] =
+{
+    "M",
+    "F",
+    "G",
+    "S",
+	// MW-2012-09-07: [[ BeforeAfter ]] Make sure before/after appear in the handlerlist.
+    "B",
+    "A",
+};
+
+static bool enumerate_handlers(MCExecContext& ctxt, const char *p_type, MCHandlerArray& p_handlers, uindex_t& r_count, MCStringRef*& r_handlers, bool p_first = false, MCObject *p_object = nil)
+{
+    MCAutoArray<MCStringRef> t_handlers;
+    MCAutoStringRef t_long_id;
+	for(uint32_t j = 0; j < p_handlers . count(); ++j)
+	{
+		MCHandler *t_handler;
+		t_handler = p_handlers . get()[j];
+        
+		MCStringRef t_string;
+        const char *t_format;
+        
+        // OK-2008-07-23 : Add the object long id to the first handler from each object. This will
+		// allow the script editor to look up handlers faster.
+		if (p_first && p_object != nil)
+        {
+            t_format = "%s%s %@ %d %d %@";
+            p_object -> GetLongId(ctxt, &t_long_id);
+        }
+        else
+            t_format = "%s%s %@ %d %d";
+        
+        /* UNCHECKED */ MCStringFormat(t_string,
+                                       t_format,
+                                       t_handler->isprivate() ? "P" : "",
+                                       p_type,
+                                       t_handler->getname(),
+                                       t_handler->getstartline(),
+                                       t_handler->getendline(),
+                                       *t_long_id);
+		
+		t_handlers . Push(t_string);
+		p_first = false;
+	}
+	
+    t_handlers . Take(r_handlers, r_count);
+	return p_first;
+}
+
+bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+	// OK-2008-07-23 : Added parent object reference for script editor.
+	MCObject *t_object;
+	t_object = getparent();
+    
+    MCAutoArray<MCStringRef> t_handlers;
+    
+    for (uindex_t i = 0; i < 6; i++)
+    {
+        MCStringRef *t_handler_array;
+        t_handler_array = nil;
+        uindex_t t_count;
+        
+        p_first = enumerate_handlers(ctxt, s_handler_types[i], handlers[i], t_count, t_handler_array, p_first, t_object);
+        for (uindex_t j = 0; j < t_count; j++)
+            t_handlers . Push(t_handler_array[j]);
+        
+        MCMemoryDeleteArray(t_handler_array);
+    }
+    
+    t_handlers . Take(r_handlers, r_count);
+	return p_first;
+}
+
+void MCHandlerlist::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
+{
+	// TODO: Implement execution outside of a handler.
+	ctxt. Unimplemented();
+}
+
+void MCHandlerlist::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
+{
+	// TODO: Implement execution outside of a handler.
+	ctxt. Unimplemented();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCHandlerlist::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginHandlerList(ctxt);
+	
+	for(uindex_t i = 0; i < nglobals; i++)
+		MCSyntaxFactoryDefineGlobal(ctxt, globals[i] -> getname());
+
+	for(uindex_t i = 0; i < nconstants; i++)
+		MCSyntaxFactoryDefineConstant(ctxt, cinfo[i] . name, cinfo[i] . value);
+	
+	MCVariable *t_var;
+	t_var = vars;
+	for(uindex_t i = 0; t_var != nil; t_var = t_var -> getnext(), i++)
+		MCSyntaxFactoryDefineLocal(ctxt, t_var -> getname(), vinits[i]);
+
+	for(uindex_t i = 0; i < 6; i++)
+		for(uindex_t j = 0; j < handlers[i] . count(); j++)
+			handlers[i] . get()[j] -> compile(ctxt);
+			
+	MCSyntaxFactoryEndHandlerList(ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////

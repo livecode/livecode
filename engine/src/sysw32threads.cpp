@@ -17,7 +17,6 @@
 #include "w32prefix.h"
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"

@@ -217,7 +217,7 @@ RTFReader::RTFReader(void)
 RTFReader::~RTFReader(void)
 {
 	MCNameDelete(m_attributes . text_link);
-	MCNameDelete(m_attributes . text_metadata);
+    MCValueRelease(m_attributes . text_metadata);
 
 	if (m_font_name != NULL)
 		free(m_font_name);
@@ -601,6 +601,8 @@ RTFStatus RTFReader::ParseToken(RTFToken& r_token, int4& r_parameter)
 			t_char = *m_input;
 			m_input++;
 		}
+        else
+            t_char = '\0';
 	
 		m_input_binary_count -= 1;
 		if (m_input_binary_count == 0)
@@ -801,7 +803,7 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 	break;
 
 	case kRTFTokenPlain:
-		m_state . SetFontName(NULL);
+		m_state . SetFontName(nil);
 		m_state . SetFontStyle(kRTFFontStyleNone);
 		m_state . SetFontSize(0);
 		m_attributes_changed = true;
@@ -1188,9 +1190,11 @@ void RTFReader::ProcessField(void)
 	{
 		MCNameRef t_name;
 		/* UNCHECKED */ MCNameCreateWithCString(t_data, t_name);
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithCString(t_data, &t_string);
 		if (MCU_strcasecmp(t_type, "HYPERLINK") == 0)
 		{
-			m_state . SetHyperlink(t_name);
+            m_state . SetHyperlink(t_name);
 			m_state . SetFontStyle(m_state . GetFontStyle() | kRTFFontStyleLink);
 		}
 		else if (MCU_strcasecmp(t_type, "LCANCHOR") == 0)
@@ -1198,16 +1202,12 @@ void RTFReader::ProcessField(void)
 			m_state . SetHyperlink(t_name);
 		}
 		else if (MCU_strcasecmp(t_type, "LCMETADATA") == 0)
-		{
-			MCNameRef t_name;
-			/* UNCHECKED */ MCNameCreateWithCString(t_data, t_name);
-			m_state . SetMetadata(t_name);
+        {
+            m_state . SetMetadata(*t_string);
 		}
 		else if (MCU_strcasecmp(t_type, "LCLINEMETADATA") == 0)
-		{
-			MCNameRef t_name;
-			/* UNCHECKED */ MCNameCreateWithCString(t_data, t_name);
-			m_state . SetParagraphMetadata(t_name);
+        {
+            m_state . SetParagraphMetadata(*t_string);
 		}
 		MCNameDelete(t_name);
 	}
@@ -1590,10 +1590,10 @@ RTFStatus RTFReader::Flush(bool p_force)
 		else
 			t_block . text_link = nil;
 
-		if (m_state . GetMetadata() != kMCEmptyName)
-			MCNameClone(m_state . GetMetadata(), t_block . text_metadata);
+        if (m_state . GetMetadata() != kMCEmptyString)
+            /* UNCHECKED */ MCStringCopy(m_state . GetMetadata(), t_block . text_metadata);
 		else
-			t_block . text_metadata = nil;
+			t_block . text_metadata = MCValueRetain(kMCEmptyString);
 
 		t_block . string_native = false;
 		t_block . string_buffer = NULL;
@@ -1635,8 +1635,8 @@ RTFStatus RTFReader::Flush(bool p_force)
 
 	if (t_changed)
 	{
-		MCNameDelete(m_attributes . text_metadata);
-		MCNameDelete(m_attributes . text_link);
+        MCValueRelease(m_attributes . text_metadata);
+        MCNameDelete(m_attributes . text_link);
 		memcpy(&m_attributes, &t_block, sizeof(MCTextBlock));
 		m_attributes_changed = false;
 	}

@@ -1,0 +1,9 @@
+setup
+
+test ln(1) is 0
+
+repeat with i = 1 to 10
+	test ln(exp(i)) is i
+end repeat
+
+teardown

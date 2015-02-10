@@ -237,11 +237,8 @@ bool MCPDFPrintingDevice::BeginDocument(const MCCustomPrinterDocument& p_documen
 {
 	bool t_success = true;
 
-#ifdef _MACOSX
-	t_success = MCCStringFromNative(p_document . filename, m_filename);
-#else
-	t_success = MCCStringClone(p_document.filename, m_filename);
-#endif
+    // SN-2014-12-22: [[ Bug 14278 ]] p_document.filename is now a UTF-8 string.
+	t_success = get_filename(p_document.filename, m_filename);
 
 	if (t_success)
 	{

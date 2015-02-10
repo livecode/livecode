@@ -16,13 +16,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "date.h"
 
 #if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
@@ -164,46 +163,31 @@ bool MCS_secondstodatetime(double p_seconds, MCDateTime& r_datetime)
 
 static MCDateTimeLocale *s_datetime_locale = nil;
 
-static char *string_prepend(const char *trunk, const char *prefix)
+static MCStringRef string_prepend(MCStringRef t_string, unichar_t t_char)
 {
-	char *t_new_string;
-	t_new_string = new char[strlen(trunk) + strlen(prefix) + 1];
-	strcpy(t_new_string, prefix);
-	strcat(t_new_string, trunk);
-	delete trunk;
-	return t_new_string;
+	MCStringRef t_result;
+	MCStringFormat(t_result, "%lc%@", t_char, t_string);
+	MCValueRelease(t_string);
+	return t_result;
 }
 
-
-static char *query_locale(uint4 t_index)
+static MCStringRef query_locale(uint4 t_index)
 {
 	char *t_buffer;
+	MCStringRef t_result;
 	t_buffer = nl_langinfo(t_index);
-	return strdup(t_buffer);
+	MCStringCreateWithCString(t_buffer, t_result);
+	return t_result;
 }
 
-
-
-char * swap_time_tokens ( char * p_instr ) 
+static MCStringRef swap_time_tokens(MCStringRef p_instr)
 {
-	char * t_ptr = p_instr ;
-	while (*t_ptr != '\0')
-	{
-		switch (*t_ptr)
-		{
-			case 'l':
-				*t_ptr = 'I' ;
-			break;
-
-			case 'P':
-				*t_ptr = 'p' ;
-			break;
-		}
-		t_ptr ++ ;
-	}
-	return (p_instr);
+	MCStringRef t_new;
+	MCStringMutableCopy(p_instr, t_new);
+	MCStringFindAndReplaceChar(t_new, 'l', 'I', kMCStringOptionCompareExact);
+	MCStringFindAndReplaceChar(t_new, 'p', 'P', kMCStringOptionCompareExact);
+	return t_new;
 }
-
 
 static void cache_locale(void)
 {
@@ -230,45 +214,45 @@ static void cache_locale(void)
 	}
 
 	
-	s_datetime_locale -> date_formats[0] = string_prepend(query_locale(D_FMT), "^");
-	s_datetime_locale -> date_formats[1] = "%a, %b %#d, %#Y";
-	s_datetime_locale -> date_formats[2] = "%A, %B %#d, %#Y" ;
+	s_datetime_locale -> date_formats[0] = string_prepend(query_locale(D_FMT), '^');
+	s_datetime_locale -> date_formats[1] = MCSTR("%a, %b %#d, %#Y");
+	s_datetime_locale -> date_formats[2] = MCSTR("%A, %B %#d, %#Y");
 
-    const char *t_time_ampm;
+    MCStringRef t_time_ampm;
     t_time_ampm = query_locale(T_FMT_AMPM);
     
     // AL-2014-01-16: [[ Bug 11672 ]] If the locale doesn't use AM/PM, then always use 24-hour time.
-    if (t_time_ampm[0] == '\0')
+    if (MCStringIsEmpty(t_time_ampm))
     {
-        s_datetime_locale -> time_formats[0] = "!%H:%M" ;
-        s_datetime_locale -> time_formats[1] = "!%H:%M:%S" ;
+        s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");
+        s_datetime_locale -> time24_formats[1] = MCSTR("!%H:%M:%S");
     }
     else
     {
-        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(strdup(t_time_ampm)), "!");
-        s_datetime_locale -> time_formats[1] = string_prepend(swap_time_tokens(strdup(t_time_ampm)), "");
+        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(t_time_ampm), '!');
+        s_datetime_locale -> time_formats[1] = swap_time_tokens(t_time_ampm);
     }
     
-	s_datetime_locale -> time24_formats[0] = "!%H:%M" ;
-	s_datetime_locale -> time24_formats[1] = "!%H:%M:%S" ;
+	s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");
+	s_datetime_locale -> time24_formats[1] = MCSTR("!%H:%M:%S");
 
-	s_datetime_locale -> time_morning_suffix = "AM";
-	s_datetime_locale -> time_evening_suffix = "PM";
+	s_datetime_locale -> time_morning_suffix = MCSTR("AM");
+	s_datetime_locale -> time_evening_suffix = MCSTR("PM");
 	
 
 }
-extern MCDateTimeLocale *g_english_locale;
+
 const MCDateTimeLocale *MCS_getdatetimelocale(void)
 {
 	if (s_datetime_locale == NULL)
 	{
 		char *old_locale, *stored_locale;
-		old_locale = setlocale(LC_ALL, NULL);		// Query the current locale
+		old_locale = setlocale(LC_TIME, NULL);		// Query the current locale
 		stored_locale = strdup(old_locale);
 	
-		setlocale(LC_ALL, "");						// Set the locale using the LANG environment
+		setlocale(LC_TIME, "");						// Set the locale using the LANG environment
 		cache_locale();
-		setlocale(LC_ALL, stored_locale);			// Restore the locale
+		setlocale(LC_TIME, stored_locale);			// Restore the locale
 		free(stored_locale);
 	}
 	
@@ -279,8 +263,8 @@ const MCDateTimeLocale *MCS_getdatetimelocale(void)
 
 const MCDateTimeLocale *MCS_getdatetimelocale(void)
 {
-	extern MCDateTimeLocale g_english_locale;
-	return &g_english_locale;
+	extern MCDateTimeLocale *g_basic_locale;
+	return g_basic_locale;
 }
 
 #endif

@@ -1,0 +1,23 @@
+setup " <a> is among the tokens of <b> "
+
+test "func" is among the tokens of "var is among the tokens of func(arg1, arg2) && token"
+test "arg1" is among the tokens of "var is among the tokens of func(arg1, arg2) && token"
+test "," is among the tokens of "var is among the tokens of func(arg1, arg2) && token"
+test "(" is among the tokens of "var is among the tokens of func(arg1, arg2) && token"
+
+test not ("x" is among the tokens of "var is among the tokens of func(arg1, arg2) && token")
+
+teardown
+
+
+setup " <a> is not among the tokens of <b> "
+
+test not ("func" is not among the tokens of "var is among the tokens of func(arg1, arg2) && token")
+test not ("arg1" is not among the tokens of "var is among the tokens of func(arg1, arg2) && token")
+test not ("," is not among the tokens of "var is among the tokens of func(arg1, arg2) && token")
+test not ("(" is not among the tokens of "var is among the tokens of func(arg1, arg2) && token")
+
+test "x" is not among the tokens of "var is among the tokens of func(arg1, arg2) && token"
+
+teardown
+

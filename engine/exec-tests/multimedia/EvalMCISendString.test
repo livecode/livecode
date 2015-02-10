@@ -1,0 +1,16 @@
+setup
+
+if the platform is not "win32" then
+	test mcisendstring("") is "not supported"
+else
+	local tQuantity
+	put mcisendstring("sysinfo all quantity") into tQuantity
+	test tQuantity is not empty
+	test tQuantity is an integer
+	
+	
+	test mcisendstring("invalid command") is empty
+	test the result is not empty
+end if
+
+teardown

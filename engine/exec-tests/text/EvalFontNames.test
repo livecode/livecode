@@ -1,0 +1,15 @@
+setup
+if the platform is "server" then
+  test the fontnames is empty
+else
+  test the fontnames is not empty
+end if
+
+if the platform is "win32" then
+  test "Arial" is among the lines of the fontnames
+else
+  -- TODO - check for standard fonts on other platforms
+  test false
+end if
+
+teardown

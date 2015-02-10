@@ -1,0 +1,1 @@
+# formatting hex string crashes LiveCode 7.0

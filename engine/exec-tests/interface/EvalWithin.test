@@ -1,0 +1,79 @@
+setup "button"
+
+local tleft, ttop, tright, tbottom
+put 50 into tleft
+put 50 into ttop
+put tleft + 100 - 1 into tright
+put ttop + 50 - 1 into tbottom
+
+create button
+set the rect of it to tleft,ttop,tright + 1,tbottom + 1
+
+test within(button 1, the loc of button 1)
+
+test within(button 1, (tleft, ttop))
+test not within(button 1, (tleft - 1, ttop))
+test not within(button 1, (tleft, ttop - 1))
+
+test within(button 1, (tright, ttop))
+test not within(button 1, (tright + 1, ttop))
+test not within(button 1, (tright, ttop - 1))
+
+test within(button 1, (tright, tbottom))
+test not within(button 1, (tright + 1, tbottom))
+test not within(button 1, (tright, tbottom + 1))
+
+test within(button 1, (tleft, tbottom))
+test not within(button 1, (tleft - 1, tbottom))
+test not within(button 1, (tleft, tbottom + 1))
+
+teardown
+
+setup "graphic"
+
+create graphic
+set the style of it to "oval"
+set the rect of it to 0,0,200,200
+set the opaque of it to true
+
+test within(graphic 1, (50, 50))
+test within(graphic 1, (150, 50))
+test within(graphic 1, (150, 150))
+test within(graphic 1, (50, 150))
+
+test not within(graphic 1, (25, 25))
+test not within(graphic 1, (175, 25))
+test not within(graphic 1, (175, 175))
+test not within(graphic 1, (25, 175))
+
+teardown
+
+setup "image"
+// create image mask with alternating (checkerboard) opaque / transparent pixels
+// and black imagedata
+
+local tMaskdata, tImageData
+repeat with y = 1 to 100
+	repeat with x = 1 to 100
+		if (x + y) mod 2 is 0 then
+			put numtobyte(255) after tmaskdata
+		else
+			put null after tmaskdata
+		end if
+		put null&null&null&null after tImagedata
+	end repeat
+end repeat
+
+create image
+set the rect of it to 0, 0, 100, 100
+set the imagedata of it to tImagedata
+set the maskdata of it to tMaskdata
+
+test within(image 1, (0, 0))
+test not within(image 1, (1, 0))
+test within(image 1, (2, 0))
+test not within(image 1, (2, 1))
+test within(image 1, (3, 1))
+test not within(image 1, (3, 2))
+
+teardown

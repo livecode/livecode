@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -33,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "eventqueue.h"
 #include "osspec.h"
+#include "exec.h"
 
 
 #include <jni.h>
@@ -145,6 +145,7 @@ typedef enum
     kMCInputDataTypeEmailAddress = 0x2,
     kMCInputDataTypePhoneNumber = 0x4,
     kMCInputDataTypeMapAddress = 0x8,
+    kMCInputDataTypeAll = (0x1 | 0x2 | 0x4 | 0x8)
 } MCInputDataType;
 
 static MCNativeControlEnumEntry s_datadetectortype_enum[] =
@@ -190,16 +191,61 @@ static MCNativeControlEnumEntry s_verticalalign_enum[] =
 
 class MCAndroidInputControl: public MCAndroidControl
 {
+protected:
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
+
 public:
     MCAndroidInputControl(void);
     
 	virtual MCNativeControlType GetType(void);
-    
+#ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif
+
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetMultiLine(bool p_multiline);
+    
+    void SetMultiLine(MCExecContext& ctxt, bool p_multiline);
+    void SetText(MCExecContext& ctxt, MCStringRef p_string);
+    void SetTextColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
+    void SetTextSize(MCExecContext& ctxt, uinteger_t p_size);
+    void SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align);
+    void SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align);
+    void SetEnabled(MCExecContext& ctxt, bool p_value);
+    void SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type);
+    void SetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType p_type);
+    void SetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType p_type);
+    void SetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType p_key);
+    void SetContentType(MCExecContext& ctxt, MCNativeControlInputContentType p_type);
+    void SetScrollingEnabled(MCExecContext& ctxt, bool p_value);
+    void SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type);
+    void SetSelectedRange(MCExecContext& ctxt, const MCNativeControlRange& p_range);
+    
+    void GetMultiLine(MCExecContext& ctxt, bool& r_multiline);
+    void GetText(MCExecContext& ctxt, MCStringRef& r_string);
+    void GetTextColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
+    void GetTextSize(MCExecContext& ctxt, uinteger_t& r_size);
+    void GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align);
+    void GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align);
+    void GetEnabled(MCExecContext& ctxt, bool& r_value);
+    void GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type);
+    void GetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType& r_type);
+    void GetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType& r_type);
+    void GetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType& r_key);
+    void GetContentType(MCExecContext& ctxt, MCNativeControlInputContentType& r_type);
+    void GetScrollingEnabled(MCExecContext& ctxt, bool& r_value);
+    void GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type);
+    void GetSelectedRange(MCExecContext& ctxt, MCNativeControlRange& r_range);
+    
+	// Input-specific actions
+	void ExecFocus(MCExecContext& ctxt);
     
 protected:
     virtual ~MCAndroidInputControl(void);
@@ -210,6 +256,47 @@ private:
     bool m_is_multiline;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCAndroidInputControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(P_MULTI_LINE, Bool, MCAndroidInputControl, MultiLine)
+    DEFINE_RW_CTRL_PROPERTY(P_TEXT, String, MCAndroidInputControl, Text)
+    DEFINE_RW_CTRL_PROPERTY(P_UNICODE_TEXT, String, MCAndroidInputControl, Text)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_TEXT_COLOR, NativeControlColor, MCAndroidInputControl, TextColor)
+    DEFINE_RW_CTRL_PROPERTY(P_FONT_SIZE, UInt32, MCAndroidInputControl, TextSize)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_TEXT_ALIGN, NativeControlInputTextAlign, MCAndroidInputControl, TextAlign)
+    DEFINE_RW_CTRL_PROPERTY(P_ENABLED, Bool, MCAndroidInputControl, Enabled)
+    DEFINE_RW_CTRL_PROPERTY(P_EDITABLE, Bool, MCAndroidInputControl, Enabled)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTO_CAPITALIZATION_TYPE, NativeControlInputCapitalizationType, MCAndroidInputControl, AutoCapitalizationType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTOCORRECTION_TYPE, NativeControlInputAutocorrectionType, MCAndroidInputControl, AutoCorrectionType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_KEYBOARD_TYPE, NativeControlInputKeyboardType, MCAndroidInputControl, KeyboardType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_RETURN_KEY_TYPE, NativeControlInputReturnKeyType, MCAndroidInputControl, ReturnKey)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(P_CONTENT_TYPE, NativeControlInputContentType, MCAndroidInputControl, ContentType)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCAndroidInputControl, ScrollingEnabled)
+    DEFINE_RW_CTRL_SET_PROPERTY(P_DATA_DETECTOR_TYPES, NativeControlInputDataDetectorType, MCAndroidInputControl, DataDetectorTypes)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_SELECTED_RANGE, NativeControlRange, MCAndroidInputControl, SelectedRange)
+};
+
+MCObjectPropertyTable MCAndroidInputControl::kPropertyTable =
+{
+	&MCAndroidControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidInputControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCAndroidInputControl::kActionTable =
+{
+    &MCAndroidControl::kActionTable,
+    0,
+    nil,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -237,6 +324,550 @@ void MCAndroidInputControl::SetMultiLine(bool p_multiline)
         MCAndroidObjectRemoteCall(t_view, "setMultiLine", "vb", nil, p_multiline);
 }
 
+void MCAndroidInputControl::SetMultiLine(MCExecContext& ctxt, bool p_multiline)
+{
+    jobject t_view = GetView();
+    
+    m_is_multiline = p_multiline;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setMultiLine", "vb", nil, p_multiline);
+}
+
+void MCAndroidInputControl::SetText(MCExecContext& ctxt, MCStringRef p_string)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setText", "vx", nil, p_string);
+}
+
+void MCAndroidInputControl::SetTextColor(MCExecContext& ctxt, const MCNativeControlColor& p_color)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setTextColor", "viiii", nil, p_color . r >> 8, p_color . g >> 8, p_color . b >> 8, p_color . a >> 8);
+}
+
+void MCAndroidInputControl::SetTextSize(MCExecContext& ctxt, uinteger_t p_size)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setTextSize", "vi", nil, p_size);
+}
+
+void MCAndroidInputControl::SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        MCInputTextAlign t_align;
+        
+        switch (p_align)
+        {
+            case kMCNativeControlInputTextAlignCenter:
+                t_align = kMCInputTextAlignCenter;
+                break;
+            case kMCNativeControlInputTextAlignLeft:
+                t_align = kMCInputTextAlignLeft;
+                break;
+            case kMCNativeControlInputTextAlignRight:
+                t_align = kMCInputTextAlignRight;
+                break;
+        }
+        
+        MCAndroidObjectRemoteCall(t_view, "setTextAlign", "vi", nil, t_align);
+    }
+}
+
+void MCAndroidInputControl::SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        MCInputVerticalAlign t_align;
+        
+        switch (p_align)
+        {
+            case kMCNativeControlInputVerticalAlignCenter:
+                t_align = kMCInputVerticalAlignCenter;
+                break;
+            case kMCNativeControlInputVerticalAlignTop:
+                t_align = kMCInputVerticalAlignTop;
+                break;
+            case kMCNativeControlInputVerticalAlignBottom:
+                t_align = kMCInputVerticalAlignBottom;
+                break;
+        }
+        
+        MCAndroidObjectRemoteCall(t_view, "setVerticalAlign", "vi", nil, t_align);
+    }
+}
+
+void MCAndroidInputControl::SetEnabled(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setEnabled", "vb", nil, p_value);
+}
+
+void MCAndroidInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        MCInputCapitalizationType t_type;
+        switch (p_type)
+        {
+            case kMCNativeControlInputCapitalizeNone:
+                t_type = kMCInputCapitalizeNone;
+                break;
+            case kMCNativeControlInputCapitalizeWords:
+                t_type = kMCInputCapitalizeWords;
+                break;
+            case kMCNativeControlInputCapitalizeSentences:
+                t_type = kMCInputCapitalizeSentences;
+                break;
+            case kMCNativeControlInputCapitalizeCharacters:
+                t_type = kMCInputCapitalizeCharacters;
+                break;
+        }
+        MCAndroidObjectRemoteCall(t_view, "setCapitalization", "vi", nil, t_type);
+    }
+}
+
+void MCAndroidInputControl::SetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType p_type)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        bool t_autocorrect;
+        t_autocorrect = p_type != kMCNativeControlInputAutocorrectionNo;
+        MCAndroidObjectRemoteCall(t_view, "setAutocorrect", "vb", nil, t_autocorrect);
+    }
+}
+
+void MCAndroidInputControl::SetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType p_type)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        MCInputKeyboardType t_type;
+        switch (p_type)
+        {
+            case kMCNativeControlInputKeyboardTypeDefault:
+            case kMCNativeControlInputKeyboardTypeAlphabet:
+                t_type = kMCInputKeyboardTypeAlphabet;
+                break;
+            case kMCNativeControlInputKeyboardTypeDecimal:
+            case kMCNativeControlInputKeyboardTypeNumeric:
+                t_type = kMCInputKeyboardTypeNumeric;
+                break;
+            case kMCNativeControlInputKeyboardTypeURL:
+                t_type = kMCInputKeyboardTypeURL;
+                break;
+            case kMCNativeControlInputKeyboardTypeNumber:
+                t_type = kMCInputKeyboardTypeNumber;
+                break;
+            case kMCNativeControlInputKeyboardTypePhone:
+                t_type = kMCInputKeyboardTypePhone;
+                break;
+            case kMCNativeControlInputKeyboardTypeContact:
+                t_type = kMCInputKeyboardTypeContact;
+                break;
+            case kMCNativeControlInputKeyboardTypeEmail:
+                t_type = kMCInputKeyboardTypeEmail;
+                break;
+        }
+        MCAndroidObjectRemoteCall(t_view, "setKeyboardType", "vi", nil, t_type);
+    }
+}
+
+void MCAndroidInputControl::SetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType p_key)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        MCInputReturnKeyType t_type;
+        switch (p_key)
+        {
+            case kMCNativeControlInputReturnKeyTypeDefault:
+                t_type = kMCInputReturnKeyTypeDefault;
+                break;
+            case kMCNativeControlInputReturnKeyTypeGo:
+                t_type = kMCInputReturnKeyTypeGo;
+                break;
+            case kMCNativeControlInputReturnKeyTypeNext:
+                t_type = kMCInputReturnKeyTypeNext;
+                break;
+            case kMCNativeControlInputReturnKeyTypeSearch:
+                t_type = kMCInputReturnKeyTypeSearch;
+                break;
+            case kMCNativeControlInputReturnKeyTypeSend:
+                t_type = kMCInputReturnKeyTypeSend;
+                break;
+            case kMCNativeControlInputReturnKeyTypeDone:
+                t_type = kMCInputReturnKeyTypeDone;
+                break;
+        }
+        MCAndroidObjectRemoteCall(t_view, "setReturnKeyType", "vix", nil, t_type, kMCEmptyString);
+    }
+}
+
+void MCAndroidInputControl::SetContentType(MCExecContext& ctxt, MCNativeControlInputContentType p_type)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        bool t_is_password;
+        t_is_password = p_type == kMCNativeControlInputContentTypePassword;
+     
+        MCAndroidObjectRemoteCall(t_view, "setIsPassword", "vb", nil, t_is_password);
+    }
+}
+
+void MCAndroidInputControl::SetScrollingEnabled(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setScrollingEnabled", "vb", nil, p_value);
+}
+
+void MCAndroidInputControl::SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        uint32_t t_type;
+        t_type = 0;
+        
+        if (p_type & kMCNativeControlInputDataDetectorTypeAll)
+            t_type |= kMCInputDataTypeAll;
+        if (p_type & kMCNativeControlInputDataDetectorTypeWebUrl)
+            t_type |= kMCInputDataTypeWebUrl;
+        if (p_type & kMCNativeControlInputDataDetectorTypeMapAddress)
+            t_type |= kMCInputDataTypeMapAddress;
+        if (p_type & kMCNativeControlInputDataDetectorTypePhoneNumber)
+            t_type |= kMCInputDataTypePhoneNumber;
+        if (p_type & kMCNativeControlInputDataDetectorTypeEmailAddress)
+            t_type |= kMCInputDataTypeEmailAddress;
+
+        MCAndroidObjectRemoteCall(t_view, "setDataDetectorTypes", "vi", nil, t_type);
+    }
+}
+
+void MCAndroidInputControl::SetSelectedRange(MCExecContext& ctxt, const MCNativeControlRange& p_range)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setSelectedRange", "vii", nil, p_range . start, p_range . length);
+}
+
+void MCAndroidInputControl::GetMultiLine(MCExecContext& ctxt, bool& r_multiline)
+{
+    jobject t_view = GetView();
+
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getMultiLine", "b", &r_multiline);
+}
+
+void MCAndroidInputControl::GetText(MCExecContext& ctxt, MCStringRef& r_string)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getText", "x", &r_string);
+    else
+        r_string = MCValueRetain(kMCEmptyString);
+}
+
+void MCAndroidInputControl::GetTextColor(MCExecContext& ctxt, MCNativeControlColor& r_color)
+{
+    jobject t_view;
+    t_view = GetView();
+    int32_t t_color = 0;
+
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getTextColor", "i", &t_color);
+    
+    MCJavaColorToComponents(t_color, r_color . r, r_color . g, r_color . b, r_color . a);
+}
+
+void MCAndroidInputControl::GetTextSize(MCExecContext& ctxt, uinteger_t& r_size)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getTextSize", "i", &r_size);
+    else
+        r_size = 0;
+}
+
+void MCAndroidInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCInputTextAlign t_align;
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getTextAlign", "v", &t_align);
+        
+    switch (t_align)
+    {
+        case kMCInputTextAlignCenter:
+            r_align = kMCNativeControlInputTextAlignCenter;
+            return;
+        case kMCInputTextAlignRight:
+            r_align = kMCNativeControlInputTextAlignRight;
+            return;
+        case kMCInputTextAlignLeft:
+        default:
+            r_align = kMCNativeControlInputTextAlignLeft;
+            return;
+    }
+}
+
+void MCAndroidInputControl::GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCInputVerticalAlign t_align;
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getVerticalAlign", "i", &t_align);
+        
+    switch (t_align)
+    {
+        case kMCInputVerticalAlignTop:
+            r_align = kMCNativeControlInputVerticalAlignTop;
+            return;
+        case kMCInputVerticalAlignBottom:
+            r_align = kMCNativeControlInputVerticalAlignBottom;
+            return;
+        case kMCInputVerticalAlignCenter:
+        default:
+            r_align = kMCNativeControlInputVerticalAlignCenter;
+            return;
+    }
+}
+
+void MCAndroidInputControl::GetEnabled(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getEnabled", "b", &r_value);
+    else
+        r_value = false;
+}
+
+void MCAndroidInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCInputCapitalizationType t_type;
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getCapitalization", "i", &t_type);
+
+    switch (t_type)
+    {
+        case kMCInputCapitalizeWords:
+            r_type = kMCNativeControlInputCapitalizeWords;
+            return;
+        case kMCInputCapitalizeSentences:
+            r_type = kMCNativeControlInputCapitalizeSentences;
+            return;
+        case kMCInputCapitalizeCharacters:
+            r_type = kMCNativeControlInputCapitalizeCharacters;
+            return;
+        case kMCInputCapitalizeNone:
+        default:
+            r_type = kMCNativeControlInputCapitalizeNone;
+            return;
+    }
+}
+
+void MCAndroidInputControl::GetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType& r_type)
+{
+    jobject t_view;
+    t_view = GetView();
+
+    bool t_autocorrect = true;
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getAutocorrect", "b", &t_autocorrect);
+    
+    r_type = t_autocorrect ? kMCNativeControlInputAutocorrectionYes : kMCNativeControlInputAutocorrectionNo;
+}
+
+void MCAndroidInputControl::GetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType& r_type)
+{
+    jobject t_view;
+    t_view = GetView();
+
+    MCInputKeyboardType t_type;
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getKeyboardType", "v", &t_type);
+
+    switch (t_type)
+    {
+        case kMCInputKeyboardTypeNumeric:
+            r_type = kMCNativeControlInputKeyboardTypeNumeric;
+            return;
+        case kMCInputKeyboardTypeURL:
+            r_type = kMCNativeControlInputKeyboardTypeURL;
+            return;
+        case kMCInputKeyboardTypeNumber:
+            r_type = kMCNativeControlInputKeyboardTypeNumber;
+            return;
+        case kMCInputKeyboardTypePhone:
+            r_type = kMCNativeControlInputKeyboardTypePhone;
+            return;
+        case kMCInputKeyboardTypeContact:
+            r_type = kMCNativeControlInputKeyboardTypeContact;
+            return;
+        case kMCInputKeyboardTypeEmail:
+            r_type = kMCNativeControlInputKeyboardTypeEmail;
+            return;
+        case kMCInputKeyboardTypeAlphabet:
+        default:
+            r_type = kMCNativeControlInputKeyboardTypeAlphabet;
+            return;
+    }
+}
+
+void MCAndroidInputControl::GetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType& r_type)
+{
+    jobject t_view;
+    t_view = GetView();
+
+    MCInputReturnKeyType t_type;
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getReturnKeyType", "i", &t_type);
+    
+    switch (t_type)
+    {
+        case kMCInputReturnKeyTypeGo:
+            r_type = kMCNativeControlInputReturnKeyTypeGo;
+            break;
+        case kMCInputReturnKeyTypeNext:
+            r_type = kMCNativeControlInputReturnKeyTypeNext;
+            break;
+        case kMCInputReturnKeyTypeSearch:
+            r_type = kMCNativeControlInputReturnKeyTypeSearch;
+            break;
+        case kMCInputReturnKeyTypeSend:
+            r_type = kMCNativeControlInputReturnKeyTypeSend;
+            break;
+        case kMCInputReturnKeyTypeDone:
+            r_type = kMCNativeControlInputReturnKeyTypeDone;
+            break;
+        case kMCInputReturnKeyTypeDefault:
+        default:
+            r_type = kMCNativeControlInputReturnKeyTypeDefault;
+            break;
+    }
+}
+
+void MCAndroidInputControl::GetContentType(MCExecContext& ctxt, MCNativeControlInputContentType& r_type)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_is_password;
+    t_is_password = false;
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getIsPassword", "b", &t_is_password);
+    
+    r_type = t_is_password ? kMCNativeControlInputContentTypePassword : kMCNativeControlInputContentTypePlain;
+}
+
+void MCAndroidInputControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getScrollingEnabled", "b", nil, &r_value);
+}
+
+void MCAndroidInputControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    uint32_t t_type;
+    t_type = 0;
+    
+    uint32_t t_detector_types;
+    t_detector_types = 0;
+    
+    if (t_view != nil)
+    {
+        MCAndroidObjectRemoteCall(t_view, "getDataDetectorTypes", "i", &t_type);
+    
+        if (t_type & kMCInputDataTypeWebUrl)
+            t_detector_types |= kMCNativeControlInputDataDetectorTypeWebUrl;
+        if (t_type & kMCInputDataTypeMapAddress)
+            t_detector_types |= kMCNativeControlInputDataDetectorTypeMapAddress;
+        if (t_type & kMCInputDataTypePhoneNumber)
+            t_type |= kMCNativeControlInputDataDetectorTypePhoneNumber;
+        if (t_detector_types & kMCInputDataTypeEmailAddress)
+            t_detector_types |= kMCNativeControlInputDataDetectorTypeEmailAddress;
+    }
+    
+    r_type = (MCNativeControlInputDataDetectorType)t_detector_types;
+}
+
+void MCAndroidInputControl::GetSelectedRange(MCExecContext& ctxt, MCNativeControlRange& r_range)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        MCAndroidObjectRemoteCall(t_view, "getSelectedRangeStart", "i", &r_range . start);
+        MCAndroidObjectRemoteCall(t_view, "getSelectedRangeLength", "i", &r_range . length);
+    }
+}
+
+#ifdef /* MCAndroidInputControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidInputControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -251,12 +882,13 @@ Exec_stat MCAndroidInputControl::Set(MCNativeControlProperty p_property, MCExecP
     switch (p_property)
     {
         case kMCNativeControlPropertyText:
-            MCAndroidObjectRemoteCall(t_view, "setText", "vS", nil, &(ep.getsvalue()));
+		case kMCNativeControlPropertyUnicodeText:
+		{
+			MCAutoStringRef t_string;
+			UNCHECKED ep . copyasstringref(&t_string);
+            MCAndroidObjectRemoteCall(t_view, "setText", "vx", nil, *t_string);
             return ES_NORMAL;
-            
-        case kMCNativeControlPropertyUnicodeText:
-            MCAndroidObjectRemoteCall(t_view, "setText", "vU", nil, &(ep.getsvalue()));
-            return ES_NORMAL;
+		}
 
         case kMCNativeControlPropertyTextColor:
         {
@@ -333,7 +965,9 @@ Exec_stat MCAndroidInputControl::Set(MCNativeControlProperty p_property, MCExecP
         {
             if (!ParseEnum(ep, s_return_key_type_enum, t_enum))
                 return ES_ERROR;
-            MCAndroidObjectRemoteCall(t_view, "setReturnKeyType", "viS", nil, t_enum, &(ep.getsvalue()));
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ep . copyasstringref(&t_string);
+            MCAndroidObjectRemoteCall(t_view, "setReturnKeyType", "vix", nil, t_enum, *t_string);
             return ES_NORMAL;
         }
             
@@ -385,7 +1019,9 @@ Exec_stat MCAndroidInputControl::Set(MCNativeControlProperty p_property, MCExecP
     
     return MCAndroidControl::Set(p_property, ep);
 }
+#endif /* MCAndroidInputControl::Set */
 
+#ifdef /* MCAndroidInputControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidInputControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -396,23 +1032,14 @@ Exec_stat MCAndroidInputControl::Get(MCNativeControlProperty p_property, MCExecP
     switch (p_property)
     {
         case kMCNativeControlPropertyText:
+		case kMCNativeControlPropertyUnicodeText:
         {
-            MCString t_text;
-            MCAndroidObjectRemoteCall(t_view, "getText", "S", &t_text);
-            ep.setsvalue(t_text);
-            ep.grabsvalue();
+            MCAutoStringRef t_text;
+            MCAndroidObjectRemoteCall(t_view, "getText", "x", &t_text);
+            /* UNCHECKED */ ep.setvalueref(*t_text);
             return ES_NORMAL;
         }
-            
-        case kMCNativeControlPropertyUnicodeText:
-        {
-            MCString t_text;
-            MCAndroidObjectRemoteCall(t_view, "getText", "U", &t_text);
-            ep.setsvalue(t_text);
-            ep.grabsvalue();
-            return ES_NORMAL;
-        }
-            
+                       
         case kMCNativeControlPropertyTextColor:
         {
             int32_t t_color;
@@ -535,7 +1162,9 @@ Exec_stat MCAndroidInputControl::Get(MCNativeControlProperty p_property, MCExecP
     
     return MCAndroidControl::Get(p_property, ep);
 }
+#endif /* MCAndroidInputControl::Get */
 
+#ifdef /* MCAndroidInputControl::Do */ LEGACY_EXEC
 Exec_stat MCAndroidInputControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
     jobject t_view;
@@ -552,6 +1181,18 @@ Exec_stat MCAndroidInputControl::Do(MCNativeControlAction p_action, MCParameter 
     }
     
     return MCAndroidControl::Do(p_action, p_parameters);
+}
+#endif /* MCAndroidInputControl::Do */
+
+void MCAndroidInputControl::ExecFocus(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+        
+    MCAndroidObjectRemoteCall(t_view, "focusControl", "v", nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,10 +22,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcio.h"
 
+#include "exec.h"
+
 #include "dispatch.h"
 #include "handler.h"
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "cmds.h"
 #include "chunk.h"
 #include "mcerror.h"
@@ -53,10 +55,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcssl.h"
 
 #include "iquantization.h"
+#include "syntax.h"
+#include "variable.h"
 
-#include "core.h"
+#include "exec-interface.h"
 
 #include "resolution.h"
+#include "regex.h"
 
 MCClose::~MCClose()
 {
@@ -111,7 +116,7 @@ Parse_stat MCClose::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCClose::exec(MCExecPoint &ep)
+void MCClose::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCClose */ LEGACY_EXEC
 	char *name;
@@ -199,10 +204,94 @@ Exec_stat MCClose::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCClose */
+
+	if (arg == OA_OBJECT)
+    {
+		if (stack == NULL)
+			MCInterfaceExecCloseDefaultStack(ctxt);
+		else
+		{
+			MCObject *optr;
+            uint4 parid;
+
+            if (!stack->getobj(ctxt, optr, parid, True)
+                    || optr->gettype() != CT_STACK)
+			{
+                ctxt . LegacyThrow(EE_CLOSE_NOOBJ);
+                return;
+			}
+			MCInterfaceExecCloseStack(ctxt, (MCStack *)optr);
+		}
+	}
+	else if (arg == OA_PRINTING)
+		MCPrintingExecClosePrinting(ctxt);
+	else
+    {
+        MCNewAutoNameRef t_name;
+        if (!ctxt . EvalExprAsNameRef(fname, EE_CLOSE_BADNAME, &t_name))
+            return;
+
+		switch (arg)	
+		{	
+		case OA_DRIVER:
+			MCFilesExecCloseDriver(ctxt, *t_name);
+			break;	
+		case OA_FILE:
+			MCFilesExecCloseFile(ctxt, *t_name);
+			break;	
+		case OA_PROCESS:	
+			MCFilesExecCloseProcess(ctxt, *t_name);
+			break;
+		case OA_SOCKET:
+			MCNetworkExecCloseSocket(ctxt, *t_name);
+			break;
+		default:
+			break;
+		}
+    }
 }
 
+void MCClose::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
+	if (arg == OA_OBJECT)
+	{
+		if (stack == nil)
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCloseDefaultStackMethodInfo);
+		else
+		{
+			stack -> compile_object_ptr(ctxt);
+		
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCloseStackMethodInfo);
+		}
+	}
+	else if (arg == OA_PRINTING)
+		MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecClosePrintingMethodInfo);
+	else
+	{
+		fname -> compile(ctxt);
+		switch (arg)	
+		{	
+		case OA_DRIVER:
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCloseDriverMethodInfo);
+			break;	
+		case OA_FILE:
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCloseFileMethodInfo);
+			break;	
+		case OA_PROCESS:	
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCloseProcessMethodInfo);
+			break;
+		case OA_SOCKET:
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecCloseSocketMethodInfo);
+			break;
+		default:
+			break;
+		}
+	}
 
+	MCSyntaxFactoryEndStatement(ctxt);
+}
 
 MCEncryptionOp::~MCEncryptionOp()
 {
@@ -210,7 +299,6 @@ MCEncryptionOp::~MCEncryptionOp()
 	delete source;
 	delete keystr;
 	delete keylen;
-	delete it;
 	delete salt;
 	delete iv;
 
@@ -366,7 +454,6 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 			}
 		}
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 
 }
@@ -432,7 +519,7 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 			t_rsa_key, t_rsa_keylength, t_rsa_passphrase, t_rsa_out, t_rsa_out_length, t_result, t_error))
 		{
 			MCVariable *t_var;
-			t_var = it -> evalvar(ep);
+			t_var = ep.getit() -> evalvar(ep);
 			if (t_var != NULL)
 				t_var -> grab(t_rsa_out, t_rsa_out_length);
 			else
@@ -458,7 +545,7 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 }
 #endif /* MCEncryptionOp::exec_rsa */
 
-Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
+void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCEncryptionOp */ LEGACY_EXEC
 	MCresult->clear(False);
@@ -559,7 +646,7 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 	else
 	{
 		MCVariable *t_var;
-		t_var = it -> evalvar(ep);
+		t_var = ep.getit() -> evalvar(ep);
 		if (t_var != NULL)
 			t_var -> grab(outstr, outlen);
 		else
@@ -572,6 +659,134 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 	delete ivstr;
 	return ES_NORMAL;
 #endif /* MCEncryptionOp */
+
+    ctxt . SetTheResultToEmpty();
+
+	if (is_rsa)
+	{
+        MCAutoStringRef t_key;
+        if (!ctxt . EvalExprAsStringRef(rsa_key, EE_OPEN_BADNAME, &t_key))
+            return;
+
+		MCAutoStringRef t_passphrase;
+        if (!ctxt . EvalOptionalExprAsStringRef(rsa_passphrase, kMCEmptyString, EE_OPEN_BADNAME, &t_passphrase))
+            return;
+
+        MCAutoStringRef t_data;
+        if (!ctxt . EvalExprAsStringRef(source, EE_OPEN_BADNAME, &t_data))
+            return;
+
+		if (isdecrypt)
+			MCSecurityExecRsaDecrypt(ctxt, *t_data, rsa_keytype != RSAKEY_PRIVKEY, *t_key, *t_passphrase);
+		else
+			MCSecurityExecRsaEncrypt(ctxt, *t_data, rsa_keytype != RSAKEY_PRIVKEY, *t_key, *t_passphrase);
+	}
+	else
+	{
+        MCNewAutoNameRef t_cipher;
+        if (!ctxt . EvalExprAsNameRef(ciphername, EE_OPEN_BADNAME, &t_cipher))
+            return;
+
+        MCAutoStringRef t_key;
+        if (!ctxt . EvalExprAsStringRef(keystr, EE_OPEN_BADNAME, &t_key))
+            return;
+		
+        uinteger_t keybits;
+        if (!ctxt . EvalOptionalExprAsUInt(keylen, 0, EE_OPEN_BADNAME, keybits)
+                || keybits > 65535) // Ensure that keybits is an uint2
+            return;
+
+		MCAutoStringRef t_iv;
+		MCAutoStringRef t_salt;
+        if (salt != nil && !ctxt . EvalExprAsStringRef(salt, EE_OPEN_BADNAME, &t_salt))
+            return;
+
+        if (iv != nil && !ctxt . EvalExprAsStringRef(iv, EE_OPEN_BADNAME, &t_iv))
+            return;
+
+        MCAutoStringRef t_data;
+        if (!ctxt . EvalExprAsStringRef(source, EE_READ_BADAT, &t_data))
+            return;
+
+		if (ispassword)
+		{
+			if (isdecrypt)
+				MCSecurityExecBlockDecryptWithPassword(ctxt, *t_data, *t_cipher, *t_key, *t_salt, *t_iv, keybits);
+			else
+				MCSecurityExecBlockEncryptWithPassword(ctxt, *t_data, *t_cipher, *t_key, *t_salt, *t_iv, keybits);
+		}
+		else
+		{
+			if (isdecrypt)
+				MCSecurityExecBlockDecryptWithKey(ctxt, *t_data, *t_cipher, *t_key, *t_iv, keybits);
+			else
+				MCSecurityExecBlockEncryptWithKey(ctxt, *t_data, *t_cipher, *t_key, *t_iv, keybits);
+		}
+    }
+}
+
+void MCEncryptionOp::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+
+	if (is_rsa)
+	{
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, rsa_keytype != RSAKEY_PRIVKEY);
+		rsa_key -> compile(ctxt);
+
+		if (rsa_passphrase != nil)
+			rsa_passphrase -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (isdecrypt)
+			MCSyntaxFactoryExecMethod(ctxt, kMCSecurityExecRsaDecryptMethodInfo);
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCSecurityExecRsaEncryptMethodInfo);
+	}
+	else
+	{
+		ciphername -> compile(ctxt);
+		keystr -> compile(ctxt);
+		
+		if (ispassword)
+		{
+			if (salt)
+				salt -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+		}
+		
+		if (iv)
+			iv -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (keylen)
+			keylen -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantUInt(ctxt, 0);
+
+		if (ispassword)
+		{
+			if (isdecrypt)
+				MCSyntaxFactoryExecMethod(ctxt, kMCSecurityExecBlockDecryptWithPasswordMethodInfo);
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCSecurityExecBlockEncryptWithPasswordMethodInfo);
+		}
+		else
+		{
+			if (isdecrypt)
+				MCSyntaxFactoryExecMethod(ctxt, kMCSecurityExecBlockDecryptWithKeyMethodInfo);			
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCSecurityExecBlockEncryptWithKeyMethodInfo);
+		}
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCExport::~MCExport()
@@ -840,7 +1055,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCExport::exec(MCExecPoint &ep)
+void MCExport::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCExport */ LEGACY_EXEC
 	MCImageBitmap *t_bitmap = nil;
@@ -900,7 +1115,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			}
 			sdisp = ep.getsvalue().clone();
 		}
-		
+
 		MCPoint t_wanted_size;
 		if (size != NULL)
 		{
@@ -1179,46 +1394,272 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 	return t_status;
 #endif /* MCExport */
+
+    MCAutoDataRef t_return_data;
+    MCAutoStringRef t_filename;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_EXPORT_BADNAME, &t_filename))
+        return;
+
+	MCAutoStringRef t_mask_filename;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_EXPORT_BADNAME, &t_mask_filename))
+        return;
+    
+    // MERG-2014-07-11: metadata array
+    MCAutoArrayRef t_metadata_array;
+    MCImageMetadata t_metadata;
+    MCImageMetadata *t_metadata_ptr;
+    t_metadata_ptr = NULL;
+    if (!ctxt . EvalOptionalExprAsArrayRef(metadata, kMCEmptyArray , EE_EXPORT_NOSELECTED, &t_metadata_array))
+        return;
+
+    MCImageParseMetadata(ctxt, *t_metadata_array, t_metadata);
+
+	MCObject *optr = NULL;
+	if (image != NULL)
+	{
+		//get image from chunk
+		uint4 parid;
+        if (!image->getobj(ctxt, optr, parid, True))
+        {
+            ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
+            return;
+        }
+	}
+
+	MCInterfaceImagePaletteSettings t_settings;
+	MCInterfaceImagePaletteSettings *t_settings_ptr = nil;
+
+    switch (palette_type)
+    {
+    case kMCImagePaletteTypeCustom:
+        {
+        MCColor *t_colors;
+        uindex_t t_count;
+        MCAutoStringRef t_input;
+        if (!ctxt . EvalExprAsStringRef(palette_color_list, EE_EXPORT_BADPALETTE, &t_input))
+            return;
+
+        if (MCStringIsEmpty(*t_input)
+                || !MCImageParseColourList(*t_input, t_count, t_colors))
+        {
+            ctxt . LegacyThrow(EE_EXPORT_BADPALETTE);
+            return;
+        }
+
+        MCInterfaceMakeCustomImagePaletteSettings(ctxt, t_colors, t_count, t_settings);
+        t_settings_ptr = &t_settings;
+        }
+        break;
+    case kMCImagePaletteTypeOptimal:
+        {
+        integer_t *t_count_ptr = nil;
+        integer_t t_count;
+        if (!ctxt . EvalOptionalExprAsInt(palette_color_count, 0, EE_EXPORT_BADPALETTESIZE, t_count))
+            return;
+
+        if (t_count != 0)
+            t_count_ptr = &t_count;
+
+        MCInterfaceMakeOptimalImagePaletteSettings(ctxt, t_count_ptr, t_settings);
+        t_settings_ptr = &t_settings;
+        }
+        break;
+    case kMCImagePaletteTypeWebSafe:
+        MCInterfaceMakeWebSafeImagePaletteSettings(ctxt, t_settings);
+        t_settings_ptr = &t_settings;
+        break;
+    case kMCImagePaletteTypeEmpty:
+        t_settings . type = kMCImagePaletteTypeEmpty;
+        break;
+    }
+
+    // AL-2014-10-27: [[ Bug 13804 ]] Make sure execution stops here if there was an error creating palette settings
+    if (ctxt . HasError())
+        return;
+    
+    bool t_success;
+    t_success = true;
+    if (sformat == EX_SNAPSHOT)
+    {
+        MCRectangle *t_rect_ptr;
+        MCRectangle t_rect;
+
+        t_rect_ptr = &t_rect;
+
+        t_success = ctxt . EvalOptionalExprAsRectangle(exsrect, nil, EE_IMPORT_BADNAME, t_rect_ptr);
+            
+        MCPoint t_size;
+        MCPoint *t_size_ptr = nil;
+            
+        t_size_ptr = &t_size;
+        
+        if (t_success)
+            t_success = ctxt . EvalOptionalExprAsPoint(size, nil, EE_EXPORT_NOSELECTED, t_size_ptr);
+       
+        if (t_success)
+        {
+            if (exsstack != NULL)
+            {
+                MCAutoStringRef t_stack_name, t_display;
+                
+                t_success = ctxt . EvalExprAsStringRef(exsstack, EE_EXPORT_NOSELECTED, &t_stack_name);
+                
+                if (t_success)
+                    t_success = ctxt . EvalOptionalExprAsNullableStringRef(exsdisplay, EE_EXPORT_NOSELECTED, &t_display);
+                
+                if (t_success)
+                {
+					if (*t_filename == nil)
+						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
+					else
+						MCInterfaceExecExportSnapshotOfStackToFile(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
+				}
+			}
+            else if (optr != NULL)
+            {
+                
+                if (*t_filename == nil)
+                    MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
+                else
+                    MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
+            }
+            else
+            {
+                if (*t_filename == nil)
+                    MCInterfaceExecExportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
+                else
+                    MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
+            }
+        }
+	}
+	else
+	{
+		if (*t_filename == nil)
+			MCInterfaceExecExportImage(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_metadata, &t_return_data);
+		else
+			MCInterfaceExecExportImageToFile(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
+	}
+    
+    MCInterfaceImagePaletteSettingsFree(ctxt, t_settings);
+
+	if (*t_return_data != nil)
+	{
+        dest->set(ctxt, PT_INTO, *t_return_data);
+
+        if (ctxt . HasError())
+		{
+            ctxt . LegacyThrow(EE_EXPORT_CANTWRITE);
+            return;
+        }
+    }
+}
+
+void MCExport::compile(MCSyntaxFactoryRef ctxt)
+{
+	if (sformat == EX_SNAPSHOT)
+	{
+		if (exsstack != nil)
+		{
+			exsstack -> compile(ctxt);
+			
+			if (exsdisplay != nil)
+				exsdisplay -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+		}
+		else if (image != nil)
+			image -> compile_object_ptr(ctxt);
+        
+		if (exsrect != nil)
+			exsrect -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+        
+		if (image != nil)
+			MCSyntaxFactoryEvalConstantBool(ctxt, with_effects);
+            
+        if (size != nil)
+            size -> compile(ctxt);
+        else
+            MCSyntaxFactoryEvalConstantNil(ctxt);
+	}
+	else
+		image -> compile_object_ptr(ctxt);
+    
+	MCSyntaxFactoryEvalConstantInt(ctxt, format);
+    
+	switch (palette_type)
+	{
+        case kMCImagePaletteTypeCustom:
+            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+            palette_color_list -> compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo);
+            MCSyntaxFactoryEndExpression(ctxt);
+            break;
+            
+        case kMCImagePaletteTypeOptimal:
+            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+            if (palette_color_count != nil)
+                palette_color_count -> compile(ctxt);
+            else
+                MCSyntaxFactoryEvalConstantNil(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo);
+            MCSyntaxFactoryEndExpression(ctxt);
+            break;
+            
+        case kMCImagePaletteTypeWebSafe:
+            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeWebSafeImagePaletteSettingsMethodInfo);
+            MCSyntaxFactoryEndExpression(ctxt);
+            break;
+            
+        default:
+            MCSyntaxFactoryEvalConstantNil(ctxt);
+	}
+    
+	if (fname != nil)
+	{
+		fname -> compile(ctxt);
+		if (mname != nil)
+			mname -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+		if (sformat == EX_SNAPSHOT)
+		{
+			if (exsstack != nil)
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecExportSnapshotOfStackToFileMethodInfo);
+			else if (image != nil)
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecExportSnapshotOfObjectToFileMethodInfo);
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecExportSnapshotOfScreenToFileMethodInfo);
+		}
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecExportImageToFileMethodInfo);
+	}
+	else
+	{
+		dest -> compile_out(ctxt);
+		if (sformat == EX_SNAPSHOT)
+		{
+			if (exsstack != nil)
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecExportSnapshotOfStackMethodInfo);
+			else if (image != nil)
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecExportSnapshotOfObjectMethodInfo);
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecExportSnapshotOfScreenMethodInfo);
+		}
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecExportImageMethodInfo);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// JS-2013-07-01: [[ EnhancedFilter ]] Implementation of pattern matching classes.
-
-MCPatternMatcher::~MCPatternMatcher()
-{
-	delete pattern;
-}
-
-Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
-{
-	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
-	//   no reason not to use the cache.
-	compiled = MCR_compile(pattern, casesensitive);
-	if (compiled == NULL)
-	{
-		MCeerror->add
-		(EE_MATCH_BADPATTERN, line, pos, MCR_geterror());
-		return ES_ERROR;
-	}
-    return ES_NORMAL;
-}
-
-Boolean MCRegexMatcher::match(char *s)
-{
-	return MCR_exec(compiled, s, strlen(s));
-}
-
-Exec_stat MCWildcardMatcher::compile(uint2 line, uint2 pos)
-{
-    // wildcard patterns are not compiled
-    return ES_NORMAL;
-}
-
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-/* static */ Boolean MCWildcardMatcher::match(char *s, char *p, Boolean casesensitive)
+#ifdef /* MCWildcardMatcher::match */ LEGACY_EXEC
+/* static */ Boolean MCWildcardMatcher::match(const char *s, const char *p, Boolean casesensitive)
 {
 	uint1 scc, c;
     
@@ -1228,12 +1669,12 @@ Exec_stat MCWildcardMatcher::compile(uint2 line, uint2 pos)
 		c = *p++;
 		switch (c)
 		{
-            case OPEN_BRACKET:
+		case OPEN_BRACKET:
 			{
 				Boolean ok = False;
 				int lc = -1;
 				int notflag = 0;
-                
+
 				if (*p == '!' )
 				{
 					notflag = 1;
@@ -1313,22 +1754,17 @@ Exec_stat MCWildcardMatcher::compile(uint2 line, uint2 pos)
 		p++;
 	return *p == 0;
 }
-
-Boolean MCWildcardMatcher::match(char *s)
-{
-	char *p = pattern;
-	return match(s, p, casesensitive);
-}
+#endif /* MCWildcardMatcher::match */
 
 MCFilter::~MCFilter()
 {
 	delete container;
 	delete target;
-	delete it;
 	delete source;
 	delete pattern;
 }
 
+#ifdef /* MCFilter::filterdelimited */ LEGACY_EXEC
 // JS-2013-07-01: [[ EnhancedFilter ]] Replacement for filterlines which takes a delimiter and
 //   pattern matching class.
 char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher)
@@ -1423,6 +1859,7 @@ char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher 
 	dstring[offset] = '\0';
 	return dstring;
 }
+#endif /* MCFilter::filterdelimited */
 
 // JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new filter syntax.
 Parse_stat MCFilter::parse(MCScriptPoint &sp)
@@ -1516,8 +1953,6 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 			if (target->parse(sp, False) != PS_NORMAL)
 				t_error = PE_FILTER_BADDEST;
         }
-        else if (container == NULL)
-			getit(sp, it);
 	}
 
 	// If we encountered an error, add it to the parse error stack and fail.
@@ -1532,7 +1967,7 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 }
 
 // JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new syntax.
-Exec_stat MCFilter::exec(MCExecPoint &ep)
+void MCFilter::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCFilter */ LEGACY_EXEC
 	Exec_stat stat;
@@ -1596,8 +2031,8 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	delete dptr;
 
 	// Now put the filtered data into the correct container
-	if (it != NULL)
-		stat = it->set(ep);
+	if (container == NULL && target == NULL)
+		stat = ep.getit()->set(ep);
 	else if (target != NULL)
 		stat = target->set(ep, PT_INTO);
 	else
@@ -1611,6 +2046,103 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	// Success!
 	return ES_NORMAL;
 #endif /* MCFilter */
+
+    MCAutoStringRef t_source;
+    MCAutoStringRef t_pattern;
+    MCAutoStringRef t_output;
+    bool stat;
+    
+	// Evaluate the container or source expression
+	if (container != NULL)
+    {
+        if (!ctxt . EvalExprAsStringRef(container, EE_FILTER_CANTGET, &t_source))
+            return;
+    }
+	else
+    {
+        if (!ctxt . EvalExprAsStringRef(source, EE_FILTER_CANTGET, &t_source))
+            return;
+    }
+
+    if (!ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern))
+        return;
+    
+    if (container == nil && target == nil)
+    {
+        if (matchmode == MA_REGEX)
+            MCStringsExecFilterRegexIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
+        else
+            MCStringsExecFilterWildcardIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
+    }
+    else
+    {
+        if (matchmode == MA_REGEX)
+            MCStringsExecFilterRegex(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output);
+        else
+            MCStringsExecFilterWildcard(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output);
+    }
+    
+    
+    if ((target != nil || container != nil) && *t_output != nil)
+    {
+        if (target != nil)
+            stat = target -> set(ctxt, PT_INTO, *t_output);
+        else
+            stat = container -> set(ctxt, PT_INTO, *t_output);
+        
+        if (!stat)
+        {
+            ctxt . LegacyThrow(EE_FILTER_CANTSET);
+            return;
+        }
+    }
+
+    if (ctxt . HasError())
+        ctxt . LegacyThrow(EE_FILTER_CANTSET);
+}
+
+void MCFilter::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+    if (container != nil)
+    {
+        if (target != nil)
+            container -> compile_in(ctxt);
+        else
+            container -> compile_inout(ctxt);
+    }
+    else
+        source -> compile(ctxt);
+    
+	pattern -> compile(ctxt);
+	MCSyntaxFactoryEvalConstantBool(ctxt, discardmatches);
+    MCSyntaxFactoryEvalConstantBool(ctxt, chunktype == CT_LINE);
+    
+    if (container == nil && target == nil)
+    {
+        if (matchmode == MA_REGEX)
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterRegexIntoItMethodInfo);
+        else
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterWildcardIntoItMethodInfo);
+    }
+    else
+    {
+        if (target != nil)
+            target -> compile_out(ctxt);
+        
+        if (matchmode == MA_REGEX)
+        {
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterRegexMethodInfo);
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCStringsExecFilterRegexMethodInfo, 0, 1, 2, 0);
+        }
+        else
+        {
+            MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecFilterWildcardMethodInfo);
+            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCStringsExecFilterWildcardMethodInfo, 0, 1, 2, 0);
+        }
+    }
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1721,7 +2253,6 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 		}
-		
 		return PS_NORMAL;
 	}
 	if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
@@ -1765,7 +2296,7 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCImport::exec(MCExecPoint &ep)
+void MCImport::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCImport */ LEGACY_EXEC
 	if (format == EX_SNAPSHOT)
@@ -1863,7 +2394,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			}
 			delete mfile;
 		}
-		
+
 		MCPoint t_wanted_size;
 		if (size != NULL)
 		{
@@ -2054,6 +2585,199 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 	
 	return stat;
 #endif /* MCImport */
+
+	if (format == EX_SNAPSHOT)
+    {
+        MCRectangle t_rectangle;
+        MCRectangle *t_rect_ptr;
+
+        t_rect_ptr = &t_rectangle;
+
+        if (!ctxt . EvalOptionalExprAsRectangle(fname, nil, EE_IMPORT_BADNAME, t_rect_ptr))
+            return;
+
+        MCPoint t_size;
+        MCPoint *t_size_ptr = &t_size;
+        
+        if (!ctxt . EvalOptionalExprAsPoint(size, nil, EE_IMPORT_NOSELECTED, t_size_ptr))
+            return;
+        
+		if (container != NULL)
+		{
+			MCObject *t_parent = nil;
+			uint4 parid;
+
+            if (!container->getobj(ctxt, t_parent, parid, True))
+			{
+                ctxt . LegacyThrow(EE_IMPORT_BADNAME);
+                return;
+			}
+
+			MCInterfaceExecImportSnapshotOfObject(ctxt, t_parent, t_rect_ptr, with_effects, t_size_ptr);
+		}
+        else if (mname != NULL)
+        {
+            MCAutoStringRef t_stack;
+            if (!ctxt . EvalExprAsStringRef(mname, EE_IMPORT_BADNAME, &t_stack))
+                return;
+
+			MCAutoStringRef t_display;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(dname, EE_IMPORT_BADNAME, &t_display))
+                return;
+			// MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
+			MCInterfaceExecImportSnapshotOfStack(ctxt, *t_stack, *t_display, t_rect_ptr, t_size_ptr);
+		}
+		else
+            // MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
+			MCInterfaceExecImportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr);
+	}
+	else
+	{
+		MCAutoStringRef t_filename;
+        if (!ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_IMPORT_BADNAME, &t_filename))
+            return;
+
+		switch (format)
+		{
+            case EX_AUDIO_CLIP:
+                MCInterfaceExecImportAudioClip(ctxt, *t_filename);
+                break;
+            case EX_VIDEO_CLIP:
+                MCInterfaceExecImportVideoClip(ctxt, *t_filename);
+                break;
+            case EX_EPS:
+                MCLegacyExecImportEps(ctxt, *t_filename);
+                break;
+            case EX_STACK:
+                MCLegacyExecImportHypercardStack(ctxt, *t_filename);
+                break;
+            default:
+			{
+				MCObject *parent = NULL;
+				if (container != NULL)
+				{
+                    uint4 parid;
+                    if (!container->getobj(ctxt, parent, parid, True)
+                            || (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD))
+					{
+                        ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
+                        return;
+					}
+				}
+				MCAutoStringRef t_mask_filename;
+
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_IMPORT_BADNAME, &t_mask_filename))
+                    return;
+
+				MCInterfaceExecImportImage(ctxt, *t_filename, *t_mask_filename, parent);
+			}
+                break;
+		}
+    }
+}
+
+void MCImport::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+    
+	if (format == EX_SNAPSHOT)
+	{
+		if (container != NULL)
+		{
+			container -> compile_object_ptr(ctxt);
+            
+			if (fname != nil)
+				fname -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
+			MCSyntaxFactoryEvalConstantBool(ctxt, with_effects);
+            
+			if (size != nil)
+				size -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportSnapshotOfObjectMethodInfo);
+		}
+		else if (mname != NULL)
+		{
+			mname -> compile(ctxt);
+			
+			if (dname != nil)
+				dname -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
+			if (fname != nil)
+				fname -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
+            if (size != nil)
+				size -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportSnapshotOfStackMethodInfo);
+		}
+		else
+		{
+			if (fname != nil)
+				fname -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
+            if (size != nil)
+				size -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportSnapshotOfScreenMethodInfo);
+		}
+	}
+	else
+	{
+		if (fname != nil)
+			fname -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+        
+		switch (format)
+		{
+            case EX_AUDIO_CLIP:
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportAudioClipMethodInfo);
+                break;
+                
+            case EX_VIDEO_CLIP:
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportVideoClipMethodInfo);
+                break;
+                
+            case EX_EPS:
+                MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecImportEpsMethodInfo);
+                break;
+                
+            case EX_STACK:
+                MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecImportHypercardStackMethodInfo);
+                break;
+                
+            default:
+                if (mname != nil)
+                    mname -> compile(ctxt);
+                else
+                    MCSyntaxFactoryEvalConstantNil(ctxt);
+                
+                if (container != nil)
+                    container -> compile_object_ptr(ctxt);
+                else
+                    MCSyntaxFactoryEvalConstantNil(ctxt);
+                
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportImageMethodInfo);
+                break;
+		}
+	}
+    
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 typedef struct
@@ -2080,11 +2804,11 @@ static ST signal_table[] = {
 #endif
                            };
 
-int4 MCKill::lookup(const MCString &s)
+int4 MCKill::lookup(MCStringRef s)
 {
 	uint2 size = ELEMENTS(signal_table);
 	while(size--)
-		if (s == signal_table[size].token)
+		if (MCStringIsEqualToCString(s, signal_table[size].token, kMCCompareCaseless));
 			return signal_table[size].which;
 	return SIGTERM;
 }
@@ -2122,7 +2846,7 @@ Parse_stat MCKill::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCKill::exec(MCExecPoint &ep)
+void MCKill::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCKill */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_PROCESS)
@@ -2187,8 +2911,34 @@ Exec_stat MCKill::exec(MCExecPoint &ep)
 			MCS_kill(pid, number);
 	}
 	delete name;
-	return ES_NORMAL;
+	return ES_NORMAL; 
 #endif /* MCKill */
+
+    MCAutoStringRef t_signal;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(sig, EE_KILL_BADNUMBER, &t_signal))
+        return;
+    
+    MCAutoStringRef t_process;
+    if (!ctxt . EvalExprAsStringRef(pname, EE_KILL_BADNAME, &t_process))
+        return;
+    
+    MCFilesExecKillProcess(ctxt, *t_process, *t_signal);
+}
+
+void MCKill::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	pname -> compile(ctxt);
+
+	if (sig != nil)
+		sig -> compile(ctxt);
+	else
+		MCSyntaxFactoryEvalConstantNil(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecKillProcessMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCOpen::~MCOpen()
@@ -2196,7 +2946,8 @@ MCOpen::~MCOpen()
 	delete fname;
 	delete message;
 	delete go;
-	delete destination;
+    delete encoding;
+	MCValueRelease(destination);
 	delete certificate;
 	delete verifyhostname;
 }
@@ -2246,7 +2997,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 
-			destination = sp . gettoken() . clone();
+            destination = MCValueRetain(sp . gettoken_stringref());
 
 			if (sp . parseexp(False, True, &fname) != PS_NORMAL)
 			{
@@ -2292,28 +3043,57 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 			(PE_OPEN_NOMODE, sp);
 			return PS_ERROR;
 		}
-		if (sp.lookup(SP_MODE, te) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_OPEN_BADMODE, sp);
-			return PS_ERROR;
-		}
+
+        // SN-2014-02-13: text encoding option added to the 'open' function
+        // SN-2014-05-06 [[ Bug 12360 ]] 'open' doesn't take expressions as encoding type
+        // Now check for the encoding as an expression instead of a token        
+        if (sp.lookup(SP_MODE, te) != PS_NORMAL)
+        {
+            // Look for an encoding at first
+            if (sp.backup() != PS_NORMAL || sp.parseexp(True, True, &encoding) != PS_NORMAL)
+            {
+                MCperror -> add(PE_OPEN_BADENCODING, sp);
+                return PS_ERROR;
+            }
+            
+            if (sp.next(type) != PS_NORMAL)
+            {
+                MCperror -> add(PE_OPEN_BADMODE, sp);
+                return PS_ERROR;
+            }
+        }
+        
+        if (sp.lookup(SP_MODE, te) != PS_NORMAL)
+        {
+            MCperror -> add(PE_OPEN_BADMODE, sp);
+            return PS_ERROR;
+        }
+        
+        if (encoding != NULL && te->which == OM_BINARY)
+        {
+            MCperror->add(PE_OPEN_BADBINARYENCODING, sp);
+            return PS_ERROR;
+        }
+
 		if (te->which == OM_BINARY || te->which == OM_TEXT)
-		{
-			textmode = te->which == OM_TEXT;
+        {
+            // AL-2014-05-27: [[ Bug 12493 ]] Make sure binary open is done as binary
+            textmode = te->which == OM_TEXT;
 			if (sp.next(type) != PS_NORMAL)
 			{
 				MCperror->add
 				(PE_OPEN_NOMODE, sp);
 				return PS_ERROR;
-			}
+            }
+
 			if (sp.lookup(SP_MODE, te) != PS_NORMAL)
 			{
 				MCperror->add
 				(PE_OPEN_BADMODE, sp);
 				return PS_ERROR;
 			}
-		}
+        }
+
 		mode = (Open_mode)te->which;
 	}
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
@@ -2359,7 +3139,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCOpen::exec(MCExecPoint &ep)
+void MCOpen::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCOpen */ LEGACY_EXEC
 	if (go != NULL)
@@ -2386,19 +3166,19 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 				MCeerror -> add(EE_OPEN_BADNAME, line, pos);
 				t_stat = ES_ERROR;
 			}
-
+			
 			char *t_filename;
 			t_filename = nil;
 			if (t_stat == ES_NORMAL)
 				t_filename = ep . getsvalue() . clone();
-
+			
 			if (t_stat == ES_NORMAL &&
 				options != nil && options -> eval(ep) != ES_NORMAL)
 			{
 				MCeerror -> add(EE_OPEN_BADOPTIONS, line, pos);
 				t_stat = ES_ERROR;
 			}
-
+			
 			extern Exec_stat MCCustomPrinterCreate(const char *, const char *, MCVariableValue *, MCPrinter*&);
 			if (t_stat == ES_NORMAL)
 				t_stat = MCCustomPrinterCreate(destination, t_filename, ep . getformat() == VF_ARRAY ? ep . getarray() : nil, MCprinter);
@@ -2410,7 +3190,7 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 
 			return t_stat;
 		}
-
+		
 		// If 'with dialog' was specified do an 'answer printer' here. Note that
 		// we exit if 'cancel' is returned for backwards compatibility. This form
 		// the open printing command is, however, deprecated.
@@ -2478,7 +3258,7 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 		MCU_realloc((char **)&MCfiles, MCnfiles, MCnfiles + 1, sizeof(Streamnode));
 		MCfiles[MCnfiles].name = name;
 		MCfiles[MCnfiles].mode = mode;
-		MCfiles[MCnfiles].textmode = textmode;
+        MCfiles[MCnfiles].textmode = textmode;
 		MCfiles[MCnfiles].ihandle = istream;
 		MCfiles[MCnfiles++].ohandle = ostream;
 		break;
@@ -2556,6 +3336,236 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCOpen */
+
+	if (go != NULL)
+        return go->exec_ctxt(ctxt);
+
+    ctxt . SetTheResultToEmpty();
+
+	if (arg == OA_PRINTING)
+	{
+		// Handle custom printer formt
+		if (destination != NULL)
+		{
+            MCAutoStringRef t_filename;
+            MCAutoArrayRef t_options;
+            if (!ctxt . EvalExprAsStringRef(fname, EE_OPEN_BADNAME, &t_filename))
+                return;
+
+            if (!ctxt . EvalOptionalExprAsNullableArrayRef(options, EE_OPEN_BADOPTIONS, &t_options))
+                return;
+
+			MCPrintingExecOpenPrintingToDestination(ctxt, destination, *t_filename, *t_options);
+		}
+		else if (dialog)
+		{
+			// If 'with dialog' was specified do an 'answer printer' here. Note that
+			// we exit if 'cancel' is returned for backwards compatibility. This form
+			// the open printing command is, however, deprecated.
+			MCPrintingExecOpenPrintingWithDialog(ctxt, sheet == True);
+		}
+		else
+			MCPrintingExecOpenPrinting(ctxt);
+	}
+	else
+	{
+        MCNewAutoNameRef t_name;
+        MCNewAutoNameRef t_message_name;
+        MCAutoStringRef t_encoding_as_string;
+        Encoding_type t_encoding;
+
+        if (!ctxt . EvalExprAsNameRef(fname, EE_OPEN_BADNAME, &t_name))
+            return;
+        
+        if (encoding != NULL)
+        {
+            extern bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding);
+            
+            if (!ctxt . EvalExprAsStringRef(encoding, EE_OPEN_BADENCODING, &t_encoding_as_string))
+                return;
+            
+            if (MCStringIsEqualToCString(*t_encoding_as_string, "binary", kMCStringOptionCompareCaseless))
+                t_encoding = EN_BINARY;
+            else
+            {
+                MCStringEncoding t_string_encoding;
+                if (!MCStringsEvalTextEncoding(*t_encoding_as_string, (MCStringEncoding&)t_string_encoding))
+                {
+                    ctxt . LegacyThrow(EE_OPEN_BADENCODING);
+                    return;
+                }
+                                
+                switch (t_string_encoding)
+                {
+                    case kMCStringEncodingUTF8:
+                        t_encoding = EN_UTF8;
+                        break;
+                        
+                    case kMCStringEncodingUTF16LE:
+                        t_encoding = EN_UTF16LE;
+                        break;
+                        
+                    case kMCStringEncodingUTF16BE:
+                        t_encoding = EN_UTF16BE;
+                        break;
+                        
+                    case kMCStringEncodingUTF16:
+                        t_encoding = EN_UTF16;
+                        break;
+                        
+                    case kMCStringEncodingNative:
+                        t_encoding = EN_NATIVE;
+                        break;
+                    
+                    case kMCStringEncodingUTF32:
+                        t_encoding = EN_UTF32;
+                        break;
+                        
+                    case kMCStringEncodingUTF32LE:
+                        t_encoding = EN_UTF32LE;
+                        break;
+                        
+                    case kMCStringEncodingUTF32BE:
+                        t_encoding = EN_UTF32BE;
+                        break;
+                        
+                    default:
+                        // ASCII
+                        ctxt . LegacyThrow(EE_OPEN_UNSUPPORTED_ENCODING);
+                        return;
+                }        
+            }
+        }
+        else if (!textmode)
+            t_encoding = EN_BINARY;
+        else
+            t_encoding = EN_BOM_BASED;
+
+		switch (arg)
+		{
+        case OA_DRIVER:
+            MCFilesExecOpenDriver(ctxt, *t_name, mode, t_encoding);
+			break;
+        case OA_FILE:
+            MCFilesExecOpenFile(ctxt, *t_name, mode, t_encoding);
+			break;
+		case OA_PROCESS:
+			if (elevated)
+                MCFilesExecOpenElevatedProcess(ctxt, *t_name, mode, t_encoding);
+			else
+                MCFilesExecOpenProcess(ctxt, *t_name, mode, t_encoding);
+			break;
+		case OA_SOCKET:
+        {                
+            if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
+                return;
+            
+            // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+            MCNewAutoNameRef t_end_hostname;
+            if (!ctxt . EvalOptionalExprAsNameRef(verifyhostname, kMCEmptyName, EE_OPEN_BADHOST, &t_end_hostname))
+                return;
+
+			if (datagram)
+				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
+			else if (secure)
+				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_message_name, *t_end_hostname, secureverify);
+			else
+				MCNetworkExecOpenSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
+			break;
+        }
+		default:
+			break;
+		}
+    }
+}
+
+void MCOpen::compile(MCSyntaxFactoryRef ctxt)
+{
+	if (go != NULL)
+	{
+		go -> compile(ctxt);
+		return;
+	}
+
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (arg == OA_PRINTING)
+	{
+		if (destination != NULL)
+		{
+			MCSyntaxFactoryEvalConstant(ctxt, destination);
+			fname -> compile(ctxt);
+
+			if (options != nil)
+				options -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecOpenPrintingToDestinationMethodInfo);
+		}
+		else if (dialog)
+		{
+			MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecOpenPrintingWithDialogMethodInfo);
+		}
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecOpenPrintingMethodInfo);
+	}
+	else
+	{
+		fname -> compile(ctxt);
+
+		switch (arg)
+		{
+		case OA_DRIVER:
+			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
+            encoding -> compile(ctxt);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenDriverMethodInfo);
+			break;
+
+		case OA_FILE:
+			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
+            encoding -> compile(ctxt);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenFileMethodInfo);
+			break;
+
+		case OA_PROCESS:
+			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
+            encoding -> compile(ctxt);
+
+			if (elevated)
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenElevatedProcessMethodInfo);
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenProcessMethodInfo);
+			break;
+
+		case OA_SOCKET:
+			if (message != nil)
+				message -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+
+			if (datagram)
+				MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecOpenDatagramSocketMethodInfo);
+			else if (secure)
+			{
+				MCSyntaxFactoryEvalConstantBool(ctxt, secureverify);
+
+				MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecOpenSecureSocketMethodInfo);
+			}
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecOpenSocketMethodInfo);
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCRead::~MCRead()
@@ -2563,10 +3573,10 @@ MCRead::~MCRead()
 	delete fname;
 	delete maxwait;
 	delete stop;
-	delete it;
 	delete at;
 }
 
+#ifdef LEGACY_EXEC
 IO_stat MCRead::readfor(IO_handle stream, int4 pindex, File_unit unit,
                         uint4 count, MCExecPoint &ep, real8 duration)
 {
@@ -2604,8 +3614,8 @@ IO_stat MCRead::readfor(IO_handle stream, int4 pindex, File_unit unit,
 		size = bsize = count;
 		break;
 	}
-	char *tptr = ep.getbuffer(bsize + 1);
-	ep.clear();
+	char *tptr;
+	UNCHECKED ep . reserve(bsize + 1, tptr);
 	char *dptr;
 	if (bsize == size)
 		dptr = tptr;
@@ -2728,7 +3738,7 @@ IO_stat MCRead::readfor(IO_handle stream, int4 pindex, File_unit unit,
 		}
 		break;
 	default:
-		ep.setlength(tsize);
+		ep.commit(tsize);
 		break;
 	}
 	if (bsize != size)
@@ -2740,8 +3750,11 @@ IO_stat MCRead::readuntil(IO_handle stream, int4 pindex, uint4 count,
                           const char *sptr, MCExecPoint &ep,
                           Boolean words, real8 duration)
 {
-	char *dptr = ep.getbuffer(BUFSIZ);
-	uint4 tsize = ep.getbuffersize();
+	uint4 tsize;
+	tsize = BUFSIZ;
+	MCAutoNativeCharArray t_buffer;
+	UNCHECKED t_buffer.New(BUFSIZ);
+
 	uint4 fullsize;
 	if (sptr[0] == '\004')
 		fullsize = BUFSIZ;
@@ -2757,10 +3770,10 @@ IO_stat MCRead::readuntil(IO_handle stream, int4 pindex, uint4 count,
 		uint4 rsize = fullsize;
 		if (size + rsize > tsize)
 		{
-			MCU_realloc((char **)&dptr, tsize, tsize + BUFSIZ, sizeof(char));
+			UNCHECKED t_buffer.Extend(tsize + BUFSIZ);
 			tsize += BUFSIZ;
 		}
-		stat = MCS_read(&dptr[size], sizeof(char), rsize, stream);
+		stat = MCS_read(t_buffer.Chars() + size, sizeof(char_t), rsize, stream);
 		size += rsize;
 		if (rsize < fullsize)
 		{
@@ -2794,11 +3807,11 @@ IO_stat MCRead::readuntil(IO_handle stream, int4 pindex, uint4 count,
 			{
 				if (doingspace)
 				{
-					if (!isspace((uint1)dptr[size - 1]))
+					if (!isspace(t_buffer.Chars()[size - 1]))
 						doingspace = False;
 				}
 				else
-					if (isspace((uint1)dptr[size - 1]))
+					if (isspace(t_buffer.Chars()[size - 1]))
 						if (--count == 0)
 							break;
 						else
@@ -2810,19 +3823,19 @@ IO_stat MCRead::readuntil(IO_handle stream, int4 pindex, uint4 count,
 				{
 					uint4 i = endcount;
 					uint4 j = size - 1;
-					while (i && j && dptr[j] == sptr[i])
+					while (i && j && t_buffer.Chars()[j] == sptr[i])
 					{
 						i--;
 						j--;
 					}
-					if (i == 0 && (dptr[j] == sptr[0]
-					               || sptr[0] == '\n' && dptr[j] == '\r'))
+					if (i == 0 && (t_buffer.Chars()[j] == sptr[0]
+					               || sptr[0] == '\n' && t_buffer.Chars()[j] == '\r'))
 					{
 						// MW-2008-08-15: [[ Bug 6580 ]] This clause looks ahead for CR LF sequences
 						//   if we have just encountered CR. However, it was previousy using MCS_seek_cur
 						//   to retreat, which *doesn't* work for process streams.
 						if (sptr[0] == '\n' && endcount == 0
-						        && dptr[j] == '\r')
+						        && t_buffer.Chars()[j] == '\r')
 						{
 							uint1 term;
 							uint4 nread = 1;
@@ -2830,7 +3843,7 @@ IO_stat MCRead::readuntil(IO_handle stream, int4 pindex, uint4 count,
 								if (term != '\n')
 									MCS_putback(term, stream);
 								else
-									dptr[j] = '\n';
+									t_buffer.Chars()[j] = '\n';
 						}
 						if (--count == 0)
 							break;
@@ -2839,15 +3852,20 @@ IO_stat MCRead::readuntil(IO_handle stream, int4 pindex, uint4 count,
 			}
 		}
 	}
-	ep.setbuffer(dptr, tsize);
-	ep.setlength(size);
+	MCAutoStringRef t_string;
+	t_buffer.Shrink(size);
+	UNCHECKED t_buffer.CreateStringAndRelease(&t_string);
+	UNCHECKED ep.setvalueref(*t_string);
 	return stat;
 }
 
 IO_stat MCRead::readuntil_binary(IO_handle stream, int4 pindex, uint4 count, const MCString &sptr, MCExecPoint &ep,Boolean words, real8 duration)
 {
-	char *dptr = ep.getbuffer(BUFSIZ);
-	uint4 tsize = ep.getbuffersize();
+	uint4 tsize;
+	tsize = BUFSIZ;
+	MCAutoNativeCharArray t_buffer;
+	UNCHECKED t_buffer.New(BUFSIZ);
+
 	uint4 fullsize;
 	if (sptr . getlength() == 0)
 		fullsize = BUFSIZ;
@@ -2865,10 +3883,10 @@ IO_stat MCRead::readuntil_binary(IO_handle stream, int4 pindex, uint4 count, con
 		uint4 rsize = fullsize;
 		if (size + rsize > tsize)
 		{
-			MCU_realloc((char **)&dptr, tsize, tsize + BUFSIZ, sizeof(char));
+			UNCHECKED t_buffer.Extend(tsize + BUFSIZ);
 			tsize += BUFSIZ;
 		}
-		stat = MCS_read(&dptr[size], sizeof(char), rsize, stream);
+		stat = MCS_read(t_buffer.Chars() + size, sizeof(char_t), rsize, stream);
 		size += rsize;
 		if (rsize < fullsize)
 		{
@@ -2904,11 +3922,11 @@ IO_stat MCRead::readuntil_binary(IO_handle stream, int4 pindex, uint4 count, con
 			{
 				if (doingspace)
 				{
-					if (!isspace((uint1)dptr[size - 1]))
+					if (!isspace(t_buffer.Chars()[size - 1]))
 						doingspace = False;
 				}
 				else
-					if (isspace((uint1)dptr[size - 1]))
+					if (isspace(t_buffer.Chars()[size - 1]))
 						if (--count == 0)
 							break;
 						else
@@ -2920,12 +3938,12 @@ IO_stat MCRead::readuntil_binary(IO_handle stream, int4 pindex, uint4 count, con
 				{
 					uint4 i = endcount;
 					uint4 j = size - 1;
-					while (i && j && dptr[j] == sptr . getstring()[i])
+					while (i && j && t_buffer.Chars()[j] == sptr . getstring()[i])
 					{
 						i--;
 						j--;
 					}
-					if (i == 0 && (dptr[j] == sptr . getstring()[0]))
+					if (i == 0 && (t_buffer.Chars()[j] == sptr . getstring()[0]))
 					{
 						if (--count == 0)
 							break;
@@ -2934,10 +3952,13 @@ IO_stat MCRead::readuntil_binary(IO_handle stream, int4 pindex, uint4 count, con
 			}
 		}
 	}
-	ep.setbuffer(dptr, tsize);
-	ep.setlength(size);
+	MCAutoStringRef t_string;
+	t_buffer.Shrink(size);
+	 UNCHECKED  t_buffer.CreateStringAndRelease(&t_string);
+	 UNCHECKED  ep.setvalueref(*t_string);
 	return stat;
 }
+#endif
 
 Parse_stat MCRead::parse(MCScriptPoint &sp)
 {
@@ -3002,7 +4023,10 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 			(PE_READ_BADMESS, sp);
 			return PS_ERROR;
 		}
-		cond = RF_WITH;
+		if (arg == OA_SOCKET)
+			cond = RF_UNTIL;
+		else
+			cond = RF_WITH;
 		return PS_NORMAL;
 	}
 	cond = (Repeat_form)te->which;
@@ -3037,11 +4061,10 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 			(PE_READ_BADMESS, sp);
 			return PS_ERROR;
 		}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
-Exec_stat MCRead::exec(MCExecPoint &ep)
+void MCRead::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCRead */ LEGACY_EXEC
 	IO_handle stream = NULL;
@@ -3078,7 +4101,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 		if (!MCnoui && MCS_isatty(0))
 		{
 			MCresult->sets("eof");
-			it->clear();
+			ep.getit()->clear();
 			return ES_NORMAL;
 		}
 		else
@@ -3216,7 +4239,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 					MCS_read_socket(MCsockets[index], ep, 0, sptr, t_message_name);
 				}
 				if (t_message_name == NULL)
-					it->set(ep);
+					ep.getit()->set(ep);
 			}
 			else
 				MCresult->sets("socket is not open");
@@ -3324,7 +4347,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 	}
 	if (textmode)
 		ep.texttobinary();
-	it->set(ep);
+	ep.getit()->set(ep);
 
 #if !defined _WIN32 && !defined _MACOSX
 	if (arg == OA_FILE || arg == OA_DRIVER)
@@ -3333,6 +4356,337 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCRead */
+
+    real8 t_max_wait;
+    if (!ctxt . EvalOptionalExprAsDouble(maxwait, MAXUINT4, EE_READ_BADEXP, t_max_wait))
+        return;
+
+    ctxt . SetTheResultToEmpty();
+    MCNewAutoNameRef t_message;
+    MCNewAutoNameRef t_source;
+	bool t_is_end = false;
+	int64_t t_at = 0;
+    
+	if (arg != OA_STDIN)
+	{
+        if (!ctxt . EvalExprAsNameRef(fname, EE_OPEN_BADNAME, &t_source))
+            return;
+        switch (arg)
+		{
+            case OA_DRIVER:
+            case OA_FILE:
+                if (at != NULL)
+                {
+                    MCAutoStringRef t_temp;
+                    if (!ctxt . EvalExprAsStringRef(at, EE_READ_BADAT, &t_temp))
+                        return;
+                    
+                    if (MCStringGetNativeCharAtIndex(*t_temp, 0) == '\004' || MCStringIsEqualToCString(*t_temp, "eof", kMCCompareCaseless))
+                    {
+                        t_is_end = true;
+                        t_at = 0;
+                    }
+                    else
+                    {
+                        double n;
+                        if (!MCStringToDouble(*t_temp, n))
+                        {
+                            ctxt . SetTheResultToCString("error seeking in file");
+                            return;
+                        }
+                        else
+                        {
+                            if (n < 0)
+                            {
+                                t_is_end = true;
+                                t_at = (int64_t)n;
+                            }
+                            else
+                            {
+                                t_is_end = false;
+                                t_at = (int64_t)n - 1;
+                            }
+                        }
+                    }
+                }
+                break;
+            case OA_SOCKET:
+                if (!ctxt . EvalOptionalExprAsNullableNameRef(at, EE_WRITE_BADEXP, &t_message))
+                    return;
+                break;
+            default:
+                break;
+		}
+	}
+    switch (cond)
+	{
+        case RF_FOR:
+        {
+            uint4 size;
+            if (!ctxt . EvalExprAsUInt(stop, EE_READ_NONUMBER, size))
+            {
+                MCshellfd = -1;
+                return;
+            }
+            
+            switch (arg)
+            {
+                case OA_FILE:
+                case OA_DRIVER:
+                    if (at != NULL)
+                    {
+                        if (t_is_end)
+                            MCFilesExecReadFromFileOrDriverAtEndFor(ctxt, arg == OA_DRIVER, *t_source, t_at, size, unit, t_max_wait, timeunits);
+                        else
+                            MCFilesExecReadFromFileOrDriverAtFor(ctxt, arg == OA_DRIVER, *t_source, t_at, size, unit, t_max_wait, timeunits);
+                    }
+                    else
+                        MCFilesExecReadFromFileOrDriverFor(ctxt, arg == OA_DRIVER, *t_source, size, unit, t_max_wait, timeunits);
+                    break;
+                case OA_PROCESS:
+                    MCFilesExecReadFromProcessFor(ctxt, *t_source, size, unit, t_max_wait, timeunits);
+                    break;
+                case OA_SOCKET:
+                    MCNetworkExecReadFromSocketFor(ctxt, *t_source, size, unit, *t_message);
+                    break;
+                case OA_STDIN:
+                    MCFilesExecReadFromStdinFor(ctxt, size, unit, t_max_wait, timeunits);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        }
+            
+        case RF_UNTIL:
+        {
+            MCAutoStringRef t_sentinel;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(stop, EE_READ_NOCHARACTER, &t_sentinel))
+            {
+                MCshellfd = -1;
+                return;
+            }
+        
+            switch (arg)
+            {
+                case OA_FILE:
+                case OA_DRIVER:
+                    if (at != NULL)
+                    {
+                        if (t_is_end)
+                            MCFilesExecReadFromFileOrDriverAtEndUntil(ctxt, arg == OA_DRIVER, *t_source, t_at, *t_sentinel, t_max_wait, timeunits);
+                        else
+                            MCFilesExecReadFromFileOrDriverAtUntil(ctxt, arg == OA_DRIVER, *t_source, t_at, *t_sentinel, t_max_wait, timeunits);
+                    }
+                    else
+                        MCFilesExecReadFromFileOrDriverUntil(ctxt, arg == OA_DRIVER, *t_source, *t_sentinel, t_max_wait, timeunits);
+                    break;
+                case OA_PROCESS:
+                    MCFilesExecReadFromProcessUntil(ctxt, *t_source, *t_sentinel, t_max_wait, timeunits);
+                    break;
+                case OA_SOCKET:
+                    MCNetworkExecReadFromSocketUntil(ctxt, *t_source, *t_sentinel, *t_message);
+                    break;
+                case OA_STDIN:
+                    MCFilesExecReadFromStdinUntil(ctxt, *t_sentinel, t_max_wait, timeunits);
+                    break;
+                default:
+                    break;
+            }
+        }
+            break;
+		default:
+        ctxt . LegacyThrow(EE_READ_BADCOND);
+		MCshellfd = -1;
+		return;
+	}
+}
+
+void MCRead::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (cond == RF_FOR)
+	{
+		switch (arg)
+		{
+		case OA_FILE:
+		case OA_DRIVER:
+			MCSyntaxFactoryEvalConstantBool(ctxt, arg == OA_DRIVER);
+			fname -> compile(ctxt);
+
+			if (at != NULL)
+			{
+				at -> compile(ctxt);
+				stop -> compile(ctxt);
+				MCSyntaxFactoryEvalConstantInt(ctxt, unit);
+
+				if (maxwait != nil)
+				{
+					maxwait -> compile(ctxt);
+					MCSyntaxFactoryEvalConstantInt(ctxt, timeunits);
+				}
+				else
+				{
+					MCSyntaxFactoryEvalConstantUInt(ctxt, MAXUINT4);
+					MCSyntaxFactoryEvalConstantInt(ctxt, F_UNDEFINED);
+				}
+
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromFileOrDriverAtEndForLegacyMethodInfo);
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromFileOrDriverAtForMethodInfo);
+			}
+			else
+			{
+				stop -> compile(ctxt);
+				MCSyntaxFactoryEvalConstantInt(ctxt, unit);
+
+				if (maxwait != nil)
+				{
+					maxwait -> compile(ctxt);
+					MCSyntaxFactoryEvalConstantInt(ctxt, timeunits);
+				}
+				else
+				{
+					MCSyntaxFactoryEvalConstantUInt(ctxt, MAXUINT4);
+					MCSyntaxFactoryEvalConstantInt(ctxt, F_UNDEFINED);
+				}
+
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromFileOrDriverForMethodInfo);
+			}
+			break;
+
+		case OA_PROCESS:
+			fname -> compile(ctxt);
+			stop -> compile(ctxt);
+			MCSyntaxFactoryEvalConstantInt(ctxt, unit);
+
+			if (maxwait != nil)
+			{
+				maxwait -> compile(ctxt);
+				MCSyntaxFactoryEvalConstantInt(ctxt, timeunits);
+			}
+			else
+			{
+				MCSyntaxFactoryEvalConstantUInt(ctxt, MAXUINT4);
+				MCSyntaxFactoryEvalConstantInt(ctxt, F_UNDEFINED);
+			}
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromProcessForMethodInfo);
+			break;
+
+		case OA_SOCKET:
+			fname -> compile(ctxt);
+			stop -> compile(ctxt);
+			MCSyntaxFactoryEvalConstantInt(ctxt, unit);
+
+			if (at != nil)
+				at -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecReadFromSocketForMethodInfo);
+			break;
+
+		case OA_STDIN:
+			stop -> compile(ctxt);
+			MCSyntaxFactoryEvalConstantInt(ctxt, unit);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromStdinForMethodInfo);
+			break;
+
+		default:
+			break;
+		}
+	}
+	else if (cond == RF_UNTIL)
+	{
+		switch (arg)
+		{
+		case OA_FILE:
+		case OA_DRIVER:
+			MCSyntaxFactoryEvalConstantBool(ctxt, arg == OA_DRIVER);
+			fname -> compile(ctxt);
+
+			if (at != NULL)
+			{
+				at -> compile(ctxt);
+				stop -> compile(ctxt);
+
+				if (maxwait != nil)
+				{
+					maxwait -> compile(ctxt);
+					MCSyntaxFactoryEvalConstantInt(ctxt, timeunits);
+				}
+				else
+				{
+					MCSyntaxFactoryEvalConstantUInt(ctxt, MAXUINT4);
+					MCSyntaxFactoryEvalConstantInt(ctxt, F_UNDEFINED);
+				}
+
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromFileOrDriverAtEndUntilLegacyMethodInfo);
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromFileOrDriverAtUntilMethodInfo);
+			}
+			else
+			{
+				stop -> compile(ctxt);
+
+				if (maxwait != nil)
+				{
+					maxwait -> compile(ctxt);
+					MCSyntaxFactoryEvalConstantInt(ctxt, timeunits);
+				}
+				else
+				{
+					MCSyntaxFactoryEvalConstantUInt(ctxt, MAXUINT4);
+					MCSyntaxFactoryEvalConstantInt(ctxt, F_UNDEFINED);
+				}
+
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromFileOrDriverForMethodInfo);
+			}
+			break;
+
+		case OA_PROCESS:
+			fname -> compile(ctxt);
+			stop -> compile(ctxt);
+
+			if (maxwait != nil)
+			{
+				maxwait -> compile(ctxt);
+				MCSyntaxFactoryEvalConstantInt(ctxt, timeunits);
+			}
+			else
+			{
+				MCSyntaxFactoryEvalConstantUInt(ctxt, MAXUINT4);
+				MCSyntaxFactoryEvalConstantInt(ctxt, F_UNDEFINED);
+			}
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromProcessUntilMethodInfo);
+			break;
+
+		case OA_SOCKET:
+			fname -> compile(ctxt);
+			stop -> compile(ctxt);
+
+			if (at != nil)
+				at -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecReadFromSocketUntilMethodInfo);
+			break;
+
+		case OA_STDIN:
+			stop -> compile(ctxt);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecReadFromStdinForMethodInfo);
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCSeek::~MCSeek()
@@ -3395,7 +4749,7 @@ Parse_stat MCSeek::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSeek::exec(MCExecPoint &ep)
+void MCSeek::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSeek */ LEGACY_EXEC
 	if (fname->eval(ep) != ES_NORMAL)
@@ -3444,6 +4798,44 @@ Exec_stat MCSeek::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCSeek */
+
+    MCNewAutoNameRef t_file;
+    if (!ctxt . EvalExprAsNameRef(fname, EE_SEEK_BADNAME, &t_file))
+        return;
+    
+    MCAutoStringRef t_temp;
+    if (ctxt . EvalExprAsStringRef(where, EE_UNDEFINED, &t_temp))
+    {
+        if (MCStringGetNativeCharAtIndex(*t_temp, 0) == '\004' || MCStringIsEqualToCString(*t_temp, "eof", kMCCompareCaseless))
+            MCFilesExecSeekToEofInFile(ctxt, *t_file);
+        else
+        {
+            double n;
+            if (!MCStringToDouble(*t_temp, n))
+            {
+                ctxt . LegacyThrow(EE_SEEK_BADWHERE);
+				return;
+            }
+            if (mode == PT_TO)
+				MCFilesExecSeekAbsoluteInFile(ctxt,(int64_t)n, *t_file);
+			else
+				MCFilesExecSeekRelativeInFile(ctxt, (int64_t)n, *t_file);
+        }
+    }
+}
+
+void MCSeek::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	where -> compile(ctxt);
+	fname -> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecSeekToEofInFileLegacyMethodInfo);
+	if (mode == PT_TO)
+		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecSeekAbsoluteInFileMethodInfo);
+	else
+		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecSeekRelativeInFileMethodInfo);	
 }
 
 MCWrite::~MCWrite()
@@ -3517,7 +4909,7 @@ Parse_stat MCWrite::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCWrite::exec(MCExecPoint &ep)
+void MCWrite::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCWrite */ LEGACY_EXEC
 	uint2 index;
@@ -3749,6 +5141,125 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 	MCresult->clear(False);
 	return ES_NORMAL;
 #endif /* MCWrite */
+
+    ctxt . SetTheResultToEmpty();
+	MCAutoStringRef t_data;
+    if (!ctxt . EvalExprAsStringRef(source, EE_WRITE_BADEXP, &t_data))
+        return;
+	
+    if (arg == OA_STDERR)
+		MCFilesExecWriteToStderr(ctxt, *t_data, unit);
+	else
+		if (arg == OA_STDOUT)
+			MCFilesExecWriteToStdout(ctxt, *t_data, unit);
+		else
+		{
+			MCNewAutoNameRef t_target;
+            if (!ctxt . EvalExprAsNameRef(fname, EE_WRITE_BADEXP, &t_target))
+                return;
+            switch (arg)
+			{
+                case OA_DRIVER:
+                case OA_FILE:
+                    if (at != NULL)
+                    {
+                        MCAutoStringRef t_temp;
+                        if (!ctxt . EvalExprAsStringRef(at, EE_WRITE_BADEXP, &t_temp))
+                            return;
+                        if (MCStringGetNativeCharAtIndex(*t_temp, 0) == '\004' || MCStringIsEqualToCString(*t_temp, "eof", kMCCompareCaseless))
+                            MCFilesExecWriteToFileOrDriverAtEnd(ctxt, *t_target, *t_data, unit);
+                        else
+                        {
+                            double n;
+                            if (!MCStringToDouble(*t_temp, n))
+                            {
+                                ctxt . SetTheResultToCString("error seeking in file");
+                                return;
+                            }
+                            MCFilesExecWriteToFileOrDriverAt(ctxt, *t_target, *t_data, unit, (int64_t)n);
+                        }
+                    }
+                    else
+                        MCFilesExecWriteToFileOrDriver(ctxt, *t_target, *t_data, unit);
+                    break;
+                case OA_PROCESS:
+                    MCFilesExecWriteToProcess(ctxt, *t_target, *t_data, unit);
+                    break;
+                case OA_SOCKET:
+				{
+                    MCNewAutoNameRef t_message;
+                    if (!ctxt . EvalOptionalExprAsNullableNameRef(at, EE_WRITE_BADEXP, &t_message))
+                        return;
+                    MCNetworkExecWriteToSocket(ctxt, *t_target, *t_data, *t_message);
+				}
+                    break;
+                default:
+                    break;
+			}
+		}
+}
+
+void MCWrite::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (arg == OA_STDERR)
+	{
+		source -> compile(ctxt);
+		MCSyntaxFactoryEvalConstantInt(ctxt, unit);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecWriteToStderrMethodInfo);
+	}
+	else
+	{
+		if (arg == OA_STDOUT)
+		{
+			source -> compile(ctxt);
+			MCSyntaxFactoryEvalConstantInt(ctxt, unit);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecWriteToStdoutMethodInfo);
+		}
+		else
+		{
+			fname -> compile(ctxt);
+			source -> compile(ctxt);
+			MCSyntaxFactoryEvalConstantInt(ctxt, unit);
+
+			switch (arg)
+			{
+			case OA_DRIVER:
+			case OA_FILE:
+				if (at != NULL)
+				{
+					at -> compile(ctxt);
+					
+					MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecWriteToFileOrDriverAtEndLegacyMethodInfo);
+					MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecWriteToFileOrDriverAtMethodInfo);
+				}
+				else
+					MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecWriteToFileOrDriverMethodInfo);
+				break;
+
+			case OA_PROCESS:
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecWriteToProcessMethodInfo);
+				break;
+
+			case OA_SOCKET:
+				if (at != NULL)
+					at -> compile(ctxt);
+				else
+					MCSyntaxFactoryEvalConstantNil(ctxt);
+
+				MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecWriteToSocketMethodInfo);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3847,7 +5358,7 @@ Parse_stat MCSecure::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSecure::exec(MCExecPoint &ep)
+void MCSecure::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSecure */ LEGACY_EXEC
 	
@@ -3887,4 +5398,28 @@ Exec_stat MCSecure::exec(MCExecPoint &ep)
 	
 	return ES_NORMAL;
 #endif /* MCSecure */
+    
+    MCNewAutoNameRef t_name;
+    if (!ctxt . EvalExprAsNameRef(m_sock_name, EE_SECURE_BADNAME, &t_name))
+        return;
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+	MCNewAutoNameRef t_host_name;
+    if (!ctxt . EvalOptionalExprAsNullableNameRef(m_verify_host_name, EE_SECURE_BADHOST, &t_host_name))
+        return;
+
+    MCSecurityExecSecureSocket(ctxt, *t_name, secureverify == True, *t_host_name);
+}
+
+void MCSecure::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+    
+    m_sock_name -> compile(ctxt);
+    
+    MCSyntaxFactoryEvalConstantBool(ctxt, secureverify == True);
+    
+    MCSyntaxFactoryExecMethod(ctxt, kMCSecurityExecSecureSocketMethodInfo);
+    
+    MCSyntaxFactoryEndStatement(ctxt);
 }

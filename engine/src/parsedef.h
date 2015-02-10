@@ -73,78 +73,12 @@ enum Ask_type {
 	AT_HINT,
 };
 
-// Chunks, containers and ordinals (and dest for Go command)
-enum Chunk_term {
-    CT_UNDEFINED,
-    CT_START,
-    CT_BACKWARD,
-    CT_FORWARD,
-    CT_FINISH,
-    CT_HOME,
-	// MW-2009-03-03: The chunk type of the invisible 'script' object that
-	//   holds the SERVER mode state.
-	CT_SERVER_SCRIPT,
-    CT_HELP,
-    CT_DIRECT,
-    CT_RECENT,
-    CT_THIS,
-    CT_FIRST,
-    CT_SECOND,
-    CT_THIRD,
-    CT_FOURTH,
-    CT_FIFTH,
-    CT_SIXTH,
-    CT_SEVENTH,
-    CT_EIGHTH,
-    CT_NINTH,
-    CT_TENTH,
-    CT_LAST,
-    CT_NEXT,
-    CT_PREV,
-    CT_MIDDLE,
-    CT_ANY,
-    CT_ORDINAL,
-    CT_ID,
-    CT_EXPRESSION,
-    CT_RANGE,
-    CT_URL,
-    CT_URL_HEADER,
-    CT_ALIAS,
-	CT_DOCUMENT,
-    CT_TOP_LEVEL,
-    CT_MODELESS,
-    CT_PALETTE,
-    CT_MODAL,
-    CT_PULLDOWN,
-    CT_POPUP,
-    CT_OPTION,
-
-    CT_STACK,
-    CT_AUDIO_CLIP,
-    CT_VIDEO_CLIP,
-    CT_BACKGROUND,
-    CT_CARD,
-    CT_MARKED,
-    CT_GROUP,
-    CT_LAYER,
-    CT_BUTTON,
-    CT_MENU,
-    CT_SCROLLBAR,
-    CT_PLAYER,
-    CT_IMAGE,
-    CT_GRAPHIC,
-    CT_EPS,
-    CT_MAGNIFY,
-    CT_COLOR_PALETTE,
-    CT_FIELD,
-	CT_ELEMENT,
-    CT_LINE,
-    CT_ITEM,
-    CT_WORD,
-    CT_TOKEN,
-    CT_CHARACTER,
-    CT_TYPES,
-	CT_KEY
+enum Assert_type {
+    TYPE_NONE,
+    TYPE_TRUE,
+    TYPE_FALSE,
+    TYPE_SUCCESS,
+    TYPE_FAILURE,
 };
 
 inline Chunk_term ct_class(Chunk_term src)
@@ -192,7 +126,8 @@ enum Dest_type {
     DT_ME,
     DT_MENU_OBJECT,
     DT_TARGET,
-    DT_BUTTON,
+	DT_FIRST_OBJECT,
+    DT_BUTTON = DT_FIRST_OBJECT,
     DT_CARD,
     DT_FIELD,
     DT_GROUP,
@@ -204,6 +139,7 @@ enum Dest_type {
     DT_VIDEO_CLIP,
     DT_PLAYER,
     DT_STACK,
+	DT_LAST_OBJECT,
     DT_SELECTED,
     DT_ERROR,
     DT_TOP_STACK,
@@ -217,7 +153,6 @@ enum Dest_type {
 	// MW-2013-08-05: [[ ThisMe ]] Access to the behavior object (this me).
 	DT_THIS_ME,
 };
-
 
 enum Encryption_constants
 {
@@ -320,17 +255,23 @@ enum Factor_rank {
 
 enum File_unit {
     FU_UNDEFINED,
+    FU_BYTE,
     FU_CHARACTER,
+    FU_CODEPOINT,
+    FU_CODEUNIT,
     FU_INT1,
     FU_INT2,
     FU_INT4,
     FU_INT8,
     FU_ITEM,
     FU_LINE,
+    FU_PARAGRAPH,
     FU_REAL4,
     FU_REAL8,
     FU_TOKEN,
+    FU_SENTENCE,
     FU_WORD,
+    FU_TRUEWORD,
     FU_UINT1,
     FU_UINT2,
     FU_UINT4,
@@ -373,9 +314,12 @@ enum Functions {
     F_BASE_CONVERT,
     F_BASE64_DECODE,
     F_BASE64_ENCODE,
+    // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+    F_BIDI_DIRECTION,
     F_BINARY_DECODE,
     F_BINARY_ENCODE,
     F_BUILD_NUMBER,
+    F_BYTE_OFFSET,
     F_CACHED_URLS,
     F_CAPS_LOCK_KEY,
 	F_BYTE_TO_NUM,
@@ -392,6 +336,8 @@ enum Functions {
     F_CLICK_TEXT,
     F_CLICK_V,
     F_CLIPBOARD,
+    F_CODEPOINT_OFFSET,
+    F_CODEUNIT_OFFSET,
     F_COLOR_NAMES,
     F_COMMAND_KEY,
     F_COMMAND_NAMES,
@@ -499,7 +445,10 @@ enum Functions {
     F_MOUSE_V,
     F_MOVIE,
     F_MOVING_CONTROLS,
+    F_NATIVE_CHAR_TO_NUM,
     F_NUM_TO_CHAR,
+    F_NUM_TO_NATIVE_CHAR,
+    F_NUM_TO_UNICODE_CHAR,
 	F_NUM_TO_BYTE,
     F_OFFSET,
     F_OPEN_FILES,
@@ -512,6 +461,7 @@ enum Functions {
 	//   tag.
 	F_OWNER,
     F_PA,
+    F_PARAGRAPH_OFFSET,
     F_PARAM,
     F_PARAMS,
     F_PARAM_COUNT,
@@ -552,6 +502,7 @@ enum Functions {
     F_SELECTED_LOC,
     F_SELECTED_TEXT,
     F_SELECTED_OBJECT,
+    F_SENTENCE_OFFSET,
     F_SET_REGISTRY,
     F_SET_RESOURCE,
     F_SHELL,
@@ -586,6 +537,8 @@ enum Functions {
     F_TEMPLATE_VIDEO_CLIP,
     F_TEMPLATE_PLAYER,
     F_TEMPLATE_STACK,
+    F_TEXT_DECODE,
+    F_TEXT_ENCODE,
     F_TEXT_HEIGHT_SUM,
     F_TICKS,
     F_TIME,
@@ -593,7 +546,9 @@ enum Functions {
     F_TO_UPPER,
     F_TOP_STACK,
     F_TRANSPOSE,
+    F_TRUEWORD_OFFSET,
     F_TRUNC,
+    F_UNICODE_CHAR_TO_NUM,
     F_UNI_DECODE,
     F_UNI_ENCODE,
     F_URL_DECODE,
@@ -625,6 +580,10 @@ enum Functions {
     // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
     F_MEASURE_TEXT,
     F_MEASURE_UNICODE_TEXT,
+    
+    F_NORMALIZE_TEXT,
+    
+    F_CODEPOINT_PROPERTY,
 };
 
 enum Handler_type {
@@ -907,6 +866,7 @@ enum Properties {
 	P_WORKING,
     // local properties
     P_CASE_SENSITIVE,
+    P_FORM_SENSITIVE,
     P_CENTURY_CUTOFF,
     P_CONVERT_OCTALS,
     P_ITEM_DELIMITER,
@@ -1588,7 +1548,7 @@ enum Properties {
 	// MW-2011-11-24: [[ UpdateScreen ]] Property controlling whether stack updates should
 	//   occur after every command.
 	P_DEFER_SCREEN_UPDATES,
-	
+
 	// MM-2012-09-05: [[ Property Listener ]] Property listing all the currently active object property listeners.
 	P_REV_OBJECT_LISTENERS, // DEVELOPMENT only
 	P_REV_PROPERTY_LISTENER_THROTTLE_TIME, // DEVELOPMENT only
@@ -1612,6 +1572,10 @@ enum Properties {
 	P_USE_PIXEL_SCALING,
 	P_SCREEN_PIXEL_SCALE,
 	P_SCREEN_PIXEL_SCALES,
+	
+    // RTL/Bidirectional properties
+    P_CURSORMOVEMENT,
+    P_TEXTDIRECTION,
     
     // MW-2014-06-19: [[ ImageCenterRect ]] Tag for the centerRect property.
     P_CENTER_RECTANGLE,
@@ -1637,6 +1601,81 @@ enum Properties {
 	P_BITMAP_EFFECT_INNER_GLOW,
 	P_BITMAP_EFFECT_COLOR_OVERLAY,
     P_TEXT_STYLE,
+    
+    // NATIVE CONTROL PROPERTIES
+    P_URL,
+    P_CAN_BOUNCE,
+    P_SCROLLING_ENABLED,
+    P_CAN_ADVANCE,
+    P_CAN_RETREAT,
+    P_ALPHA,
+    P_BACKGROUND_COLOR,
+    // SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+    P_IGNORE_VOICE_OVER_SENSITIVITY,
+    P_MULTI_LINE,
+    P_TEXT_COLOR,
+    P_FONT_SIZE,
+    P_FONT_NAME,
+    P_EDITABLE,
+    P_EDITING,
+    P_AUTO_CAPITALIZATION_TYPE,
+    P_AUTOCORRECTION_TYPE,
+    P_KEYBOARD_TYPE,
+    P_KEYBOARD_STYLE,
+    P_RETURN_KEY_TYPE,
+    P_CONTENT,
+    P_CONTENT_TYPE,
+    P_DATA_DETECTOR_TYPES,
+    P_SELECTED_RANGE,
+    P_NATURAL_SIZE,
+    P_CONTENT_RECT,
+    P_SHOW_HORIZONTAL_INDICATOR,
+    P_SHOW_VERTICAL_INDICATOR,
+    P_TRACKING,
+    P_DRAGGING,
+    P_AUTO_FIT,
+    P_DELAY_REQUESTS,
+    P_ALLOWS_INLINE_MEDIA_PLAYBACK,
+    P_MEDIA_PLAYBACK_REQUIRES_USER_ACTION,
+    P_MANAGE_RETURN_KEY,
+    P_MINIMUM_FONT_SIZE,
+    P_AUTO_CLEAR,
+    P_CLEAR_BUTTON_MODE,
+    P_BORDER_STYLE,
+    P_VERTICAL_TEXT_ALIGN,
+    P_CAN_SCROLL_TO_TOP,
+    P_CAN_CANCEL_TOUCHES,
+    P_DELAY_TOUCHES,
+    P_PAGING_ENABLED,
+    P_DECELERATION_RATE,
+    P_INDICATOR_STYLE,
+    P_INDICATOR_INSETS,
+    P_LOCK_DIRECTION,
+    P_DECELERATING,
+    P_PRESERVE_ASPECT,
+    P_USE_APPLICATION_AUDIO_SESSION,
+    P_SHOULD_AUTOPLAY,
+    P_ALLOWS_AIR_PLAY,
+    P_PLAYABLE_DURATION,
+    P_IS_PREPARED_TO_PLAY,
+    P_LOAD_STATE,
+    P_PLAYBACK_STATE,
+    
+    // MOBILE STORE PROPERTIES
+    P_PRODUCT_IDENTIFIER,
+    P_PURCHASE_QUANTITY,
+    P_PURCHASE_DATE,
+    P_TRANSACTION_IDENTIFIER,
+    P_RECEIPT,
+    P_ORIGINAL_PURCHASE_DATE,
+    P_ORIGINAL_TRANSACTION_IDENTIFIER,
+    P_ORIGINAL_RECEIPT,
+    P_DEVELOPER_PAYLOAD,
+    P_SIGNED_DATA,
+    P_SIGNATURE,
+    P_LOCALIZED_TITLE,
+    P_LOCALIZED_DESCRIPTION,
+    P_LOCALIZED_PRICE,
 };
 
 enum Look_and_feel {
@@ -1649,6 +1688,15 @@ enum Look_and_feel {
     LF_NATIVEWIN,
     LF_NATIVEMAC,
     LF_NATIVEGTK
+};
+
+enum Relayer_relation
+{
+	RR_NONE,
+	RR_BEFORE,
+	RR_AFTER,
+	RR_FRONT,
+	RR_BACK
 };
 
 enum Repeat_form {
@@ -1753,7 +1801,7 @@ enum Show_object {
 };
 
 enum Sort_type {
-    ST_UNDEFINED,
+    ST_UNDEF,
     ST_OF,
     ST_BY,
     ST_LINES,
@@ -1761,6 +1809,7 @@ enum Sort_type {
     ST_MARKED,
     ST_CARDS,
     ST_TEXT,
+    ST_BINARY,
     ST_NUMERIC,
     ST_INTERNATIONAL,
     ST_DATETIME,
@@ -1993,6 +2042,7 @@ enum Statements {
 //   a uint32_t since as a independent var, it makes more sense for it to be that).
 typedef uint32_t Symbol_type;
 enum {
+    ST_UNDEFINED,
     ST_ERR,
     ST_EOF,
     ST_EOL,

@@ -64,7 +64,7 @@ bool OSXSpeechNarrator::Finalize(void)
 	return false;
 }
 
-bool OSXSpeechNarrator::Start(const char* p_string)
+bool OSXSpeechNarrator::Start(const char* p_string, bool p_is_utf8)
 {
 	if (SpeechStart(true) == false)
 	{
@@ -73,7 +73,7 @@ bool OSXSpeechNarrator::Start(const char* p_string)
     
     if (speechtext != nil)
         CFRelease(speechtext);
-    speechtext = CFStringCreateWithCString(kCFAllocatorDefault, p_string, kCFStringEncodingMacRoman);
+    speechtext = CFStringCreateWithCString(kCFAllocatorDefault, p_string, p_is_utf8 ? kCFStringEncodingUTF8 : kCFStringEncodingMacRoman);
 	SpeakCFString(spchannel, speechtext, nil);
 	return true;
 }

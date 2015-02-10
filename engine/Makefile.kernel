@@ -8,7 +8,7 @@ SOURCES=\
 	cdata.cpp chunk.cpp cmds.cpp cmdsc.cpp cmdse.cpp cmdsf.cpp \
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	customprinter.cpp date.cpp debug.cpp dispatch.cpp dllst.cpp \
-	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
+	express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp \
 	graphicscontext.cpp \
 	group.cpp \
@@ -35,6 +35,7 @@ SOURCES=\
 	scriptpt.cpp \
 	scrolbar.cpp \
 	scrollbardraw.cpp \
+	segment.cpp \
 	sellst.cpp \
 	stack.cpp \
 	stack2.cpp \
@@ -48,31 +49,44 @@ SOURCES=\
 	eps.cpp mcssl.cpp opensslsocket.cpp socket_resolve.cpp \
 	answer.cpp ask.cpp external.cpp stacke.cpp player.cpp surface.cpp \
 	combiners.cpp path.cpp metacontext.cpp \
-	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
+	printer.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
 	pathprocess.cpp \
-	variablearray.cpp objectstream.cpp \
+	objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp uuid.cpp \
-	dskspec.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
+	sysspec.cpp dsklnx.cpp dskspec.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	lnxpasteboard.cpp lnxtransfer.cpp lnxclipboard.cpp \
 	lnxdc.cpp lnxdce.cpp lnxdcs.cpp lnxdclnx.cpp lnxflst.cpp lnxflstold.cpp \
-	lnxstack.cpp lnxspec.cpp lnxans.cpp \
+	lnxstack.cpp lnxans.cpp \
 	lnxgtktheme.cpp lnxgtkthemedrawing.cpp lnximagecache.cpp lnxpsprinter.cpp \
 	lnxdnd.cpp lnxmplayer.cpp lnxaudio.cpp lnxkeymapping.cpp \
 	lnxtextlayout.cpp lnxcolor.cpp lnxcursor.cpp lnxelevate.cpp lnxflst.cpp lnxmisc.cpp \
 	lnximage.cpp dskmain.cpp dsklnxmain.cpp \
 	linuxstubs.cpp notify.cpp eventqueue.cpp \
-	objectprops.cpp objectpropsets.cpp variablevalue.cpp internal.cpp mcutility.cpp name.cpp \
+	objectprops.cpp objectpropsets.cpp internal.cpp mcutility.cpp \
 	redraw.cpp tilecache.cpp tilecachesw.cpp syslnxregion.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp stackcache.cpp quicktime.cpp \
-	sysunxthreads.cpp, stacktile.cpp
+	fonttable.cpp fieldrtf.cpp fieldhtml.cpp syslnxfs.cpp stackcache.cpp  quicktime.cpp \
+	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
+	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
+	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
+	exec-ide.cpp exec-server.cpp exec-interface2.cpp exec.cpp \
+	exec-interface-aclip.cpp exec-interface-button.cpp exec-interface-card.cpp exec-interface-control.cpp \
+	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
+	exec-interface-object.cpp exec-interface-field-chunk.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
+	exec-interface-vclip.cpp exec-keywords.cpp exec-legacy.cpp exec-dialog.cpp exec-strings-chunk.cpp \
+	syntax.cpp \
+	foundation-legacy.cpp legacy_spec.cpp \
+	sysunxthreads.cpp, stacktile.cpp \
+	mcstring.cpp
 
-linuxstubs.cpp: src/linux.stubs
-	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp
+linuxstubs.cpp: src/linux.stubs ../util/weak_stub_maker.pl
+#	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp
+	../util/weak_stub_maker.pl <./src/linux.stubs >./src/linuxstubs.cpp
 
-include/revbuild.h: include/revbuild.h.in ../version
-	../prebuilt/bin/Revolution.lnx "./encode_version.rev" "./"
+include/revbuild.h: include/revbuild.h.in ../version ../util/encode_version.pl
+#	../prebuilt/bin/Revolution.lnx "./encode_version.rev" "./"
+	../util/encode_version.pl
 
 $(CACHE_DIR)/mcstring.o: include/revbuild.h
 

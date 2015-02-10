@@ -1,0 +1,5 @@
+setup
+
+test compound(0.5, 20) is ((1 + 0.5) ^ 20)
+
+teardown

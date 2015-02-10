@@ -1,0 +1,6 @@
+setup
+
+test the platform is not empty
+test the platform is among the items of "Win32,MacOS,Linux,wince,iphone,android"
+
+teardown

@@ -1,0 +1,7 @@
+setup
+if the platform is not "linux" and the qtversion is not "0.0" then
+  test the qteffects is not empty
+else
+  test the qteffects is empty
+end if
+teardown

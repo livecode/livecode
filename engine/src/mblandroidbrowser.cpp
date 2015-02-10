@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -33,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "eventqueue.h"
 #include "osspec.h"
+#include "exec.h"
 
 
 #include <jni.h>
@@ -48,43 +48,110 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 class MCAndroidBrowserControl: public MCAndroidControl
 {
+protected:
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
+
 public:
     MCAndroidBrowserControl(void);
     
 	virtual MCNativeControlType GetType(void);
-
+#ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif
 
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
+    
+    void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
+    void SetCanBounce(MCExecContext& ctxt, bool p_value);
+    void SetScrollingEnabled(MCExecContext& ctxt, bool p_value);
+    
+    void GetUrl(MCExecContext& ctxt, MCStringRef& r_url);
+    void GetCanBounce(MCExecContext& ctxt, bool& r_value);
+    void GetScrollingEnabled(MCExecContext& ctxt, bool& r_value);
+    void GetCanAdvance(MCExecContext& ctxt, bool& r_value);
+    void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
+    
+	// Browser-specific actions
+	void ExecAdvance(MCExecContext& ctxt, integer_t p_steps);
+	void ExecRetreat(MCExecContext& ctxt, integer_t p_steps);
+	void ExecReload(MCExecContext& ctxt);
+    void ExecStop(MCExecContext& ctxt);
+	void ExecExecute(MCExecContext& ctxt, MCStringRef p_script);
+	void ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html);
+    
     void HandleStartEvent(const char *p_url);
 	void HandleFinishEvent(const char *p_url);
     void HandleLoadFailed(const char *p_url, const char *p_error);
 
-    static char *s_js_tag;
-    static char *s_js_result;
+    static MCStringRef s_js_tag;
+    static MCStringRef s_js_result;
 
 protected:
     virtual ~MCAndroidBrowserControl(void);
     virtual jobject CreateView(void);
     virtual void DeleteView(jobject view);
     
-    char *ExecuteJavaScript(const char *p_javascript);
+    bool ExecuteJavaScript(MCStringRef p_javascript, MCStringRef& r_result);
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidBrowserControl::s_js_tag = nil;
-char *MCAndroidBrowserControl::s_js_result = nil;
+MCPropertyInfo MCAndroidBrowserControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(P_URL, String, MCAndroidBrowserControl, Url)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_BOUNCE, Bool, MCAndroidBrowserControl, CanBounce)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCAndroidBrowserControl, ScrollingEnabled)
+    DEFINE_RO_CTRL_PROPERTY(P_CAN_ADVANCE, Bool, MCAndroidBrowserControl, CanAdvance)
+    DEFINE_RO_CTRL_PROPERTY(P_CAN_RETREAT, Bool, MCAndroidBrowserControl, CanRetreat)
+};
+
+MCObjectPropertyTable MCAndroidBrowserControl::kPropertyTable =
+{
+	&MCAndroidControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidBrowserControl::kActions[] =
+{
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Advance, MCAndroidBrowserControl, Int32, Advance)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Retreat, MCAndroidBrowserControl, Int32, Retreat)
+    DEFINE_CTRL_EXEC_METHOD(Reload, MCAndroidBrowserControl, Reload)
+    DEFINE_CTRL_EXEC_METHOD(Stop, MCAndroidBrowserControl, Stop)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, MCAndroidBrowserControl, String, String, Load)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, MCAndroidBrowserControl, String, Execute)
+};
+
+MCNativeControlActionTable MCAndroidBrowserControl::kActionTable =
+{
+    &MCAndroidControl::kActionTable,
+    sizeof(kActions) / sizeof(kActions[0]),
+    &kActions[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCStringRef MCAndroidBrowserControl::s_js_tag = nil;
+MCStringRef MCAndroidBrowserControl::s_js_result = nil;
 
 MCAndroidBrowserControl::MCAndroidBrowserControl(void)
 {
+    s_js_tag = MCValueRetain(kMCEmptyString);
+    s_js_result = MCValueRetain(kMCEmptyString);
 }
 
 MCAndroidBrowserControl::~MCAndroidBrowserControl(void)
 {
-    
+    MCValueRelease(s_js_tag);
+    MCValueRelease(s_js_result);
 }
 
 MCNativeControlType MCAndroidBrowserControl::GetType(void)
@@ -92,16 +159,111 @@ MCNativeControlType MCAndroidBrowserControl::GetType(void)
     return kMCNativeControlTypeBrowser;
 }
 
-Exec_stat MCAndroidBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
+void MCAndroidBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
 {
     jobject t_view;
     t_view = GetView();
     
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setUrl", "vx", nil, p_url);
+}
+
+void MCAndroidBrowserControl::SetCanBounce(MCExecContext& ctxt, bool p_value)
+{
+    // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
+    //   the WebView.
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setCanBounce", "vb", nil, p_value);
+}
+
+void MCAndroidBrowserControl::SetScrollingEnabled(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setScrollingEnabled", "vb", nil, p_value);
+}
+
+void MCAndroidBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAutoStringRef t_url;
+    if (t_view != nil)
+    {
+        MCAndroidObjectRemoteCall(t_view, "getUrl", "x", &t_url);
+        r_url = MCValueRetain(*t_url);
+    }
+}
+
+void MCAndroidBrowserControl::GetCanAdvance(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_can_retreat = false;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "canGoForward", "b", &t_can_retreat);
+    
+    r_value = t_can_retreat;
+}
+
+void MCAndroidBrowserControl::GetCanRetreat(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_can_retreat = false;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "canGoBack", "b", &t_can_retreat);
+    
+    r_value = t_can_retreat;
+}
+
+void MCAndroidBrowserControl::GetCanBounce(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_can_bounce = false;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getCanBounce", "b", &t_can_bounce);
+    
+    r_value = t_can_bounce;
+}
+
+void MCAndroidBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_scroll_enabled = false;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getScrollingEnabled", "b", &t_scroll_enabled);
+    
+    r_value = t_scroll_enabled;
+}
+
+#ifdef /* MCAndroidBrowserControl::Set */ LEGACY_EXEC
+Exec_stat MCAndroidBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
+{
+    jobject t_view;
+    t_view = GetView();
+
     switch (p_property)
     {
         case kMCNativeControlPropertyUrl:
             if (t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "setUrl", "vS", nil, &(ep.getsvalue()));
+			{
+				MCAutoStringRef t_value;
+				/* UNCHECKED */ ep . copyasstringref(&t_value);
+                MCAndroidObjectRemoteCall(t_view, "setUrl", "vx", nil, *t_value);
+			}
             return ES_NORMAL;
             
 			// MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
@@ -121,7 +283,9 @@ Exec_stat MCAndroidBrowserControl::Set(MCNativeControlProperty p_property, MCExe
     
     return MCAndroidControl::Set(p_property, ep);
 }
+#endif /* MCAndroidBrowserControl::Set */
 
+#ifdef /* MCAndroidBrowserControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -131,12 +295,11 @@ Exec_stat MCAndroidBrowserControl::Get(MCNativeControlProperty p_property, MCExe
     {
         case kMCNativeControlPropertyUrl:
         {
-            char *t_url = nil;
+            MCAutoStringRef t_url;
             if (t_view != nil)
             {
-                MCAndroidObjectRemoteCall(t_view, "getUrl", "s", &t_url);
-                ep.setcstring(t_url);
-                ep.grabsvalue();
+                MCAndroidObjectRemoteCall(t_view, "getUrl", "x", &t_url);
+                /* UNCHECKED */ ep.setvalueref(*t_url);
             }
             return ES_NORMAL;
         }
@@ -183,7 +346,9 @@ Exec_stat MCAndroidBrowserControl::Get(MCNativeControlProperty p_property, MCExe
     
     return MCAndroidControl::Get(p_property, ep);
 }
+#endif /* MCAndroidBrowserControl::Get */
 
+#ifdef /* MCAndroidBrowserControl::Do */ LEGACY_EXEC
 Exec_stat MCAndroidBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
     jobject t_view;
@@ -277,39 +442,114 @@ Exec_stat MCAndroidBrowserControl::Do(MCNativeControlAction p_action, MCParamete
     
     return MCAndroidControl::Do(p_action, p_parameters);
 }
+#endif /* MCAndroidBrowserControl::Do */
+
+// Browser-specific actions
+void MCAndroidBrowserControl::ExecAdvance(MCExecContext& ctxt, integer_t p_steps)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+
+    MCAndroidObjectRemoteCall(t_view, "goForward", "vi", nil, p_steps);
+}
+
+void MCAndroidBrowserControl::ExecRetreat(MCExecContext& ctxt, integer_t p_steps)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+    
+    MCAndroidObjectRemoteCall(t_view, "goBack", "vi", nil, p_steps);
+}
+
+void MCAndroidBrowserControl::ExecReload(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+    
+    MCAndroidObjectRemoteCall(t_view, "reload", "v", nil);
+}
+
+void MCAndroidBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html)
+{    
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+    
+    MCAndroidObjectRemoteCall(t_view, "loadData", "vxx", nil, p_url, p_html);
+}
+
+void MCAndroidBrowserControl::ExecStop(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "stop", "v", nil);
+}
+
+void MCAndroidBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+    
+    MCAutoStringRef t_result;
+    
+    if (!ExecuteJavaScript(p_script, &t_result))
+    {
+        ctxt.SetTheResultToCString("error");
+        return;
+    }
+    
+    ctxt.SetTheResultToValue(*t_result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidBrowserControl::ExecuteJavaScript(const char *p_script)
+bool MCAndroidBrowserControl::ExecuteJavaScript(MCStringRef p_script, MCStringRef& r_result)
 {
     char *t_result = nil;
-    if (s_js_tag != nil)
-        return nil;
+    if (!MCStringIsEmpty(s_js_tag))
+        return false;
     
-    MCAndroidObjectRemoteCall(GetView(), "executeJavaScript", "ss", &s_js_tag, p_script);
+    MCAndroidObjectRemoteCall(GetView(), "executeJavaScript", "xx", &s_js_tag, p_script);
     
     // wait for result, timeout after 30 seconds    
     real8 t_current_time = MCS_time();
     real8 t_timeout = t_current_time + 30.0;
     
-    while (s_js_tag != nil && t_current_time < t_timeout)
+    while (!MCStringIsEmpty(s_js_tag) && t_current_time < t_timeout)
     {
         MCscreen->wait(t_timeout - t_current_time, False, True);
         t_current_time = MCS_time();
     }
     
-    if (s_js_tag != nil)
+    if (!MCStringIsEmpty(s_js_tag))
     {
         // timeout
-        MCCStringFree(s_js_tag);
-        s_js_tag = nil;
-        return nil;
+        MCValueRelease(s_js_tag);
+        s_js_tag = MCValueRetain(kMCEmptyString);
+        return false;
     }
     
-    t_result = s_js_result;
-    s_js_result = nil;
+    r_result = MCValueRetain(s_js_result);
+    MCValueRelease(s_js_result);
+	s_js_result = nil;
     
-    return t_result;
+    return true;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
@@ -319,14 +559,15 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doJS
     bool t_match = true;
     char *t_tag = nil;
     MCJavaStringToNative(MCJavaGetThreadEnv(), tag, t_tag);
-    if (t_tag == nil || MCAndroidBrowserControl::s_js_tag == nil || !MCCStringEqual(t_tag, MCAndroidBrowserControl::s_js_tag))
+	
+    if (t_tag == nil || MCStringIsEmpty(MCAndroidBrowserControl::s_js_tag) || !MCStringIsEqualToCString(MCAndroidBrowserControl::s_js_tag, t_tag, kMCCompareExact))
         t_match = false;
     
     if (t_match)
     {
-        MCJavaStringToNative(MCJavaGetThreadEnv(), result, MCAndroidBrowserControl::s_js_result);
-        MCCStringFree(MCAndroidBrowserControl::s_js_tag);
-        MCAndroidBrowserControl::s_js_tag = nil;
+        MCJavaStringToStringRef(MCJavaGetThreadEnv(), result, MCAndroidBrowserControl::s_js_result);
+        MCValueRelease(MCAndroidBrowserControl::s_js_tag);
+        MCAndroidBrowserControl::s_js_tag = MCValueRetain(kMCEmptyString);
     }
     
     MCCStringFree(t_tag);
@@ -402,9 +643,11 @@ void MCAndroidBrowserControl::HandleStartEvent(const char *p_url)
     t_target = GetOwner();
     if (t_target != nil)
     {
+        MCAutoStringRef t_url;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
         MCNativeControl *t_old_target;
         t_old_target = ChangeTarget(this);
-        t_target -> message_with_args(MCM_browser_started_loading, p_url);
+        t_target -> message_with_valueref_args(MCM_browser_started_loading, *t_url);
         ChangeTarget(t_old_target);
     }
 }
@@ -415,9 +658,11 @@ void MCAndroidBrowserControl::HandleFinishEvent(const char *p_url)
     t_target = GetOwner();
     if (t_target != nil)
     {
+        MCAutoStringRef t_url;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
         MCNativeControl *t_old_target;
         t_old_target = ChangeTarget(this);
-        t_target -> message_with_args(MCM_browser_finished_loading, p_url);
+        t_target -> message_with_valueref_args(MCM_browser_finished_loading, *t_url);
         ChangeTarget(t_old_target);
     }
 }
@@ -428,9 +673,12 @@ void MCAndroidBrowserControl::HandleLoadFailed(const char *p_url, const char *p_
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-		MCNativeControl *t_old_target;
+		MCAutoStringRef t_url, t_error;
+        /* UNCHECKED */ MCStringCreateWithCString(p_url, &t_url);
+        /* UNCHECKED */ MCStringCreateWithCString(p_error, &t_error);
+        MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_args(MCM_browser_load_failed, p_url, p_error);
+		t_target -> message_with_valueref_args(MCM_browser_load_failed, *t_url, *t_error);
 		ChangeTarget(t_old_target);
 	}
 }

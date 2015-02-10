@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -24,15 +23,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "param.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "object.h"
 #include "mode.h"
 
 #include "globals.h"
-
+#include "system.h"
 #include "osspec.h"
-#include "filesystem.h"
 
 #include "license.h"
 
@@ -142,21 +140,26 @@ void SeedSSL(UINT iMsg, WPARAM wParam, LPARAM lParam)
 #endif
 
 //error buf should have a buffer of at least 256 bytes.
-unsigned long SSLError(char *errbuf)
+unsigned long SSLError(MCStringRef& errbuf)
 {
 	if (!InitSSLCrypt())
 	{
-		strcpy(errbuf,"ssl library not found");
+		errbuf = MCSTR("ssl library not found");
 		return 0;
 	}
 #ifdef MCSSL
 	unsigned long ecode = ERR_get_error();
-	if (errbuf)
+	if (!MCStringIsEmpty(errbuf))
 	{
 		if (ecode)
-			ERR_error_string_n(ecode,errbuf,255);
+        {
+            MCAutoPointer<char> t_errbuf;
+            t_errbuf = new char[256];
+            ERR_error_string_n(ecode,&t_errbuf,255);
+            /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
+        }
 		else
-			errbuf[0] = '\0';
+			errbuf = MCValueRetain(kMCEmptyString);
 	}
 	return ecode;
 #else
@@ -165,7 +168,6 @@ unsigned long SSLError(char *errbuf)
 }
 
 #ifdef MCSSL
-
 bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, EVP_PKEY *&r_key)
 {
 	bool t_success = true;
@@ -212,6 +214,23 @@ bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, con
 	if (t_success)
 		r_key = t_key;
 
+	return t_success;
+}
+/* WRAPPER */ bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, MCStringRef p_key, MCStringRef p_passphrase, MCStringRef &r_message_out, MCStringRef &r_result, uint32_t &r_error)
+{
+	char *t_message_out;
+	uint32_t t_message_out_length;
+    char *t_result = nil;
+	MCAutoPointer<char>t_message_in, t_key, t_passphrase;
+    /* UNCHECKED */ MCStringConvertToCString(p_message_in, &t_message_in);
+    /* UNCHECKED */ MCStringConvertToCString(p_key, &t_key);
+    /* UNCHECKED */ MCStringConvertToCString(p_passphrase, &t_passphrase);
+    
+    bool t_success = MCCrypt_rsa_op(p_encrypt, p_is_public ? RSAKEY_PUBKEY : RSAKEY_PRIVKEY, *t_message_in, MCStringGetLength(p_message_in),*t_key, MCStringGetLength(p_key), p_passphrase != nil ? *t_passphrase : nil, t_message_out, t_message_out_length, t_result, r_error);
+	if (t_success)
+		/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *) t_message_out, t_message_out_length, r_message_out);
+	else
+		/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *) t_result, strlen(t_result), r_result);
 	return t_success;
 }
 
@@ -324,12 +343,6 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 }
 
 #else // !defined(MCSSL)
-
-bool MCCrypt_random_bytes_static(uint32_t p_bytecount, void *r_buffer)
-{
-	return false;
-}
-
 bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_message_in, uint32_t p_message_in_length,
 			const char *p_key, uint32_t p_key_length, const char *p_passphrase,
 			char *&r_message_out, uint32_t &r_message_out_length, char *&r_result, uint32_t &r_error)
@@ -337,10 +350,72 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 	return false;
 }
 
+bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, MCStringRef p_key, MCStringRef p_passphrase, 
+					MCStringRef &r_message_out, MCStringRef &r_result, uint32_t &r_error)
+{
+	return false;
+}
 #endif
 
-char *SSL_encode(Boolean isdecrypt, char *ciphername,
-                 const char *data, uint4 inlen,uint4 &outlen, //data to decrypt, length of that data, and pointer to descypted data length
+/* WRAPPER */ bool SSL_encode(bool p_is_decrypt, MCNameRef p_cipher, MCStringRef p_data, MCStringRef p_key, bool p_is_password,
+							  MCStringRef p_salt, MCStringRef p_iv, uint2 p_bit_rate, MCStringRef &r_output, MCStringRef &r_result, uint32_t &r_error)
+{
+	if (!InitSSLCrypt())
+	{
+		/* UNCHECKED */ MCStringCreateWithCString("ssl library not found", r_result);
+		return false;
+	}
+
+#ifdef MCSSL
+	uint4 t_outlen;
+	char *t_ssl_encode;
+
+    MCAutoPointer<char>t_data, t_key, t_salt, t_iv, t_cipher;
+    /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(p_cipher), &t_cipher);
+    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
+    /* UNCHECKED */ MCStringConvertToCString(p_key, &t_key);
+
+    if (p_salt != nil)
+        /* UNCHECKED */ MCStringConvertToCString(p_salt, &t_salt);
+    if (p_iv != nil)
+        /* UNCHECKED */ MCStringConvertToCString(p_iv, &t_iv);
+    
+    t_ssl_encode = SSL_encode(p_is_decrypt, *t_cipher, *t_data, MCStringGetLength(p_data), t_outlen, *t_key, MCStringGetLength(p_key), p_is_password, p_bit_rate, p_salt != nil ? *t_salt : nil, p_salt != nil ? MCStringGetLength(p_salt) : 0, p_iv != nil ? *t_iv : nil, p_iv != nil ? MCStringGetLength(p_iv) : 0);
+
+	if (!t_ssl_encode)
+	{
+		if (t_outlen == 789)
+			/* UNCHECKED */ MCStringCreateWithCString("invalid cipher name", r_result);
+		else if (t_outlen == 790)
+			/* UNCHECKED */ MCStringCreateWithCString("invalid keystring for specified keysize", r_result);
+		else if (t_outlen == 791)
+			r_error = EE_NO_MEMORY;
+		else
+		{
+			uint32_t t_err;
+            char *t_result = nil;
+			t_err = ERR_get_error();
+			if (t_err)
+			{
+				const char *t_ssl_error = ERR_reason_error_string(t_err);
+				MCCStringAppendFormat(t_result, " (SSL error: %s)", t_ssl_error);
+				/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *) t_result, strlen(t_result), r_result);
+			}
+		}
+		return false;
+	}
+	else
+	{
+		/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *)t_ssl_encode, t_outlen, r_output);
+		return true;
+	}
+#else
+	return false;
+#endif
+}
+
+char *SSL_encode(Boolean isdecrypt, const char *ciphername,
+                 const char *data, uint4 inlen, uint4 &outlen, //data to decrypt, length of that data, and pointer to descypted data length
                  const char *keystr, int4 keystrlen, Boolean ispassword, uint2 keylen,
                  const char *saltstr,  uint2 saltlen, const char *ivstr, uint2 ivlen)
 { //password or key, optional key length
@@ -486,45 +561,75 @@ char *SSL_encode(Boolean isdecrypt, char *ciphername,
 #endif
 }
 
-static bool isfirstcipher = false;
 #ifdef MCSSL
+
+typedef struct _ciphernames_context
+{
+	MCListRef list;
+	bool success;
+} ciphernames_context;
+
 //list ciphers and default key lengths for each
 void list_ciphers_cb(const OBJ_NAME *name,void *buffer)
 {
 	if(!islower((unsigned char)*name->name))
 		return;
-	MCExecPoint *ep = (MCExecPoint *)buffer;
+
+	ciphernames_context *t_context = (ciphernames_context*)buffer;
+	if (!t_context->success)
+		return;
+
 	if (*name->name)
 	{
-		ep->concatcstring(name->name,EC_RETURN,isfirstcipher);
-		isfirstcipher = false;
-		
-
+		MCAutoStringRef t_string;
 		const EVP_CIPHER *cipher=EVP_get_cipherbyname(name->name);
 		if (cipher)
-			ep->concatuint(EVP_CIPHER_key_length(cipher) * 8, EC_COMMA, false);
+			t_context->success = MCStringFormat(&t_string, "%s,%d", name->name, EVP_CIPHER_key_length(cipher) * 8) &&
+			MCListAppend(t_context->list, *t_string);
+		else
+			t_context->success = MCListAppendCString(t_context->list, name->name);
 	}
 }
-#endif
-void SSL_ciphernames(MCExecPoint &ep)
+
+bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error)
 {
-#ifdef MCSSL
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	ciphernames_context t_context;
+	t_context.list = *t_list;
+	t_context.success = true;
+
 	// MW-2004-12-29: Integrate Tuviah's fixes
-	isfirstcipher = True;
-	ep.clear();
 	if (!InitSSLCrypt())
 	{
-		char sslerrbuf[256];
-		SSLError(sslerrbuf);
-		MCresult->copysvalue(sslerrbuf);
+		MCAutoStringRef sslerrbuf;
+		SSLError(&sslerrbuf);
+        r_error = MCValueRetain(*sslerrbuf);
 	}
 	else
-		OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_CIPHER_METH, list_ciphers_cb, &ep);
+	{
+		OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_CIPHER_METH, list_ciphers_cb, &t_context);
+	}
+
+	return t_context.success && MCListCopy(t_context.list, r_list);
+}
+
 #else
-	// MW-2013-01-15: [[ Bug 10631 ]] Make sure we clear the return value if no
-	//   SSL!
-	ep . clear();
+bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error)
+{
+	r_list = MCValueRetain(kMCEmptyList);
+	return true;
+}
 #endif
+
+bool SSL_random_bytes(const void *p_buffer, uindex_t p_count)
+{
+#ifdef MCSSL
+	return RAND_bytes((unsigned char *)p_buffer, p_count) == 1;
+#endif
+	return false;
 }
 
 // MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
@@ -532,7 +637,6 @@ void InitialiseSSL(void)
 {
 #ifdef MCSSL
 	cryptinited = False;
-	isfirstcipher = false;
 #endif
 }
 
@@ -549,7 +653,6 @@ void ShutdownSSL()
 		finalise_weak_link_ssl();
 #endif
 		cryptinited = False;
-		isfirstcipher = false;
 	}
 #endif
 }
@@ -564,7 +667,7 @@ bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path);
 bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path);
 bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx);
 
-bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, char **r_error)
+bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, MCStringRef *r_error)
 {
 	bool t_success;
 	t_success = true;
@@ -580,26 +683,27 @@ bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, char **r_error)
 			uint2 i;
 			for (i = 0; t_success && i < ncerts; i++)
 			{
-				char *oldcertpath = certs[i].clone();
+                MCAutoStringRef t_oldcertpath;
+                if (t_success)
+                    t_success = MCStringCreateWithOldString(certs[i], &t_oldcertpath);
 				
-#ifdef _MACOSX
-
-				char *certpath = path2utf(MCS_resolvepath(oldcertpath));
-#else
-
-				char *certpath = MCS_resolvepath(oldcertpath);
-#endif
-
-				delete oldcertpath;
+                MCAutoStringRef t_certpath;
+                if (t_success)
+                    t_success = MCS_resolvepath(*t_oldcertpath, &t_certpath);
+                
+                MCAutoStringRefAsUTF8String t_certpath_utf8;
+                if (t_success)
+                    t_success = t_certpath_utf8.Lock(*t_certpath);
+                
+                if (t_success)
+                    t_success = (MCS_exists(*t_certpath, True) && load_ssl_ctx_certs_from_file(p_ssl_ctx, *t_certpath_utf8)) ||
+                    (MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(p_ssl_ctx, *t_certpath_utf8));
 				
-				t_success = (MCS_exists(certpath, True) && load_ssl_ctx_certs_from_file(p_ssl_ctx, certpath)) ||
-						(MCS_exists(certpath, False) && load_ssl_ctx_certs_from_folder(p_ssl_ctx, certpath));
 				if (!t_success)
 				{
 					if (r_error != nil)
-						MCCStringFormat(*r_error, "Error loading CA file and/or directory %s", certpath);
+						MCStringFormat(*r_error, "Error loading CA file and/or directory %@", *t_certpath);
 				}
-				delete certpath;
 			}
 		}
 		if (certs != NULL)
@@ -610,7 +714,7 @@ bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, char **r_error)
 		if (!ssl_set_default_certificates(p_ssl_ctx))
 		{
 			if (r_error != nil)
-				MCCStringClone("Error loading default CAs", *r_error);
+				*r_error = MCSTR("Error loading default CAs");
 			
 			t_success = false;
 		}
@@ -627,17 +731,22 @@ struct cert_folder_load_context_t
 	SSL_CTX *ssl_context;
 };
 
-bool cert_dir_list_callback(void *context, const MCFileSystemEntry& entry)
+bool cert_dir_list_callback(void *context, const MCSystemFolderEntry *p_entry)
 {
 	bool t_success = true;
 	cert_folder_load_context_t *t_context = (cert_folder_load_context_t*)context;
 	
-	if (entry.type != kMCFileSystemEntryFolder && MCCStringEndsWith(entry.filename, ".pem"))
+	if (!p_entry -> is_folder && MCStringEndsWith(p_entry -> name, MCSTR(".pem"), kMCCompareCaseless))
 	{
-		char *t_file_path = nil;
-		t_success = MCCStringFormat(t_file_path, "%s/%s", t_context->path, entry.filename);
+		MCAutoStringRef t_file_path;
+		t_success = MCStringFormat(&t_file_path, "%s/%@", t_context->path, p_entry -> name);
+        
+        MCAutoStringRefAsUTF8String t_certpath_utf8;
+        if (t_success)
+            t_success = t_certpath_utf8.Lock(*t_file_path);
+        
 		if (t_success)
-			t_success = load_ssl_ctx_certs_from_file(t_context->ssl_context, t_file_path);
+			t_success = load_ssl_ctx_certs_from_file(t_context->ssl_context, *t_certpath_utf8);
 	}
 	return t_success;
 }
@@ -651,7 +760,7 @@ bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
 	
 	t_context.ssl_context = p_ssl_ctx;
 	
-	t_success = MCFileSystemListEntries(p_path, 0, cert_dir_list_callback, &t_context);
+	t_success = MCsystem -> ListFolderEntries((MCSystemListFolderEntriesCallback)cert_dir_list_callback, &t_context);
 	
 	return t_success;
 }
@@ -766,7 +875,7 @@ bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
 	t_path_count = sizeof(s_ssl_bundle_paths) / sizeof(const char*);
 	for (uint32_t i = 0; t_success && !t_found && i < t_path_count; i++)
 	{
-		if (MCS_exists(s_ssl_bundle_paths[i], true))
+		if (MCS_exists(MCSTR(s_ssl_bundle_paths[i]), true))
 		{
 			t_success = load_ssl_ctx_certs_from_file(p_ssl_ctx, s_ssl_bundle_paths[i]);
 			if (t_success)
@@ -777,7 +886,7 @@ bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
 	t_path_count = sizeof(s_ssl_hash_dir_paths) / sizeof(const char*);
 	for (uint32_t i = 0; t_success && !t_found && i < t_path_count; i++)
 	{
-		if (MCS_exists(s_ssl_hash_dir_paths[i], false))
+		if (MCS_exists(MCSTR(s_ssl_hash_dir_paths[i]), false))
 		{
 			t_success = load_ssl_ctx_certs_from_folder(p_ssl_ctx, s_ssl_bundle_paths[i]);
 			if (t_success)

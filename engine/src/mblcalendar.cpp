@@ -32,117 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblcalendar.h"
 
-void MCShowEventExec(MCExecContext& p_ctxt, const char* p_event_id)
-{
-#ifdef /* MCShowEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemShowEvent(p_event_id, t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCShowEventExec */
-}
-
-void MCCreateEventExec(MCExecContext& p_ctxt)
-{
-#ifdef /* MCCreateEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemCreateEvent(t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCCreateEventExec */
-}
-
-void MCUpdateEventExec(MCExecContext& p_ctxt, const char* p_event_id)
-{
-#ifdef /* MCUpdateEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemUpdateEvent(p_event_id, t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCUpdateEventExec */
-}
-
-void MCGetEventDataExec(MCExecContext& p_ctxt, const char* p_event_id)
-{
-#ifdef /* MCGetEventDataExec */ LEGACY_EXEC
-    MCVariableValue *r_event_data = nil;
-    MCSystemGetEventData(p_ctxt, p_event_id, r_event_data);
-    if (r_event_data == nil)
-        p_ctxt.SetTheResultToEmpty();
-    else
-        p_ctxt.GetEP().setarray(r_event_data, True);
-#endif /* MCGetEventDataExec */
-}
-
-void MCRemoveEventExec(MCExecContext& p_ctxt, bool p_reocurring, const char* p_event_id)
-{    
-#ifdef /* MCRemoveEventExec */ LEGACY_EXEC
-    char  *t_event_id_deleted;
-    t_event_id_deleted = nil;
-    MCSystemRemoveEvent (p_event_id, p_reocurring, t_event_id_deleted);
-    if (t_event_id_deleted != nil)
-        p_ctxt.SetTheResultToCString(t_event_id_deleted);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_event_id_deleted);
-#endif /* MCRemoveEventExec */
-}
-
-void MCAddEventExec(MCExecContext& p_ctxt, MCCalendar p_new_event_data)
-{
-#ifdef /* MCAddEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemAddEvent(p_new_event_data, t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCAddEventExec */
-}
-
-void MCGetCalendarsEventExec(MCExecContext& p_ctxt)
-{
-#ifdef /* MCGetCalendarsEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemGetCalendarsEvent(t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCGetCalendarsEventExec */
-}
-
-void MCFindEventExec(MCExecContext& p_ctxt, MCDateTime p_start_date, MCDateTime p_end_date)
-{
-#ifdef /* MCFindEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemFindEvent(p_start_date, p_end_date, t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCFindEventExec */
-}
-
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifdef /* MCParameterDataToCalendar */ LEGACY_EXEC
 MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_result)
 {
@@ -250,7 +141,174 @@ MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_re
 }
 #endif /* MCParameterDataToCalendar */
 
-void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCVariableValue *&r_result)
+bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
+{
+    bool t_success;
+    
+    MCValueRelease(r_calendar.mcnote);
+    MCValueRelease(r_calendar.mctitle);
+    MCValueRelease(r_calendar.mclocation);
+    MCValueRelease(r_calendar.mccalendar);
+    MCValueRelease(r_calendar.mcfrequency);    
+    
+    t_success = MCArrayGetCount(p_array) > 0;
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_allday;
+        MCNameCreateWithCString("allday", &t_key_allday);
+        MCValueRef t_str_allday;
+    
+        t_success = MCArrayFetchValue(p_array, false, *t_key_allday, t_str_allday);
+        
+        if (t_success)
+        {
+            if (MCStringIsEqualTo((MCStringRef)t_str_allday, kMCTrueString, kMCCompareCaseless))
+                r_calendar.mcallday = true;
+            else
+                r_calendar.mcallday = false;
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_note;
+        MCNameCreateWithCString("note", &t_key_note);
+        MCValueRef t_str_note;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_note, t_str_note);
+        
+        if (t_success)
+            t_success = MCStringCopy((MCStringRef)t_str_note, r_calendar.mcnote);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_title;
+        MCNameCreateWithCString("title", &t_key_title);
+        MCValueRef t_str_title;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_title, t_str_title);
+        
+        if (t_success)
+            t_success = MCStringCopy((MCStringRef)t_str_title, r_calendar.mctitle);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_location;
+        MCNameCreateWithCString("location", &t_key_location);
+        MCValueRef t_str_location;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_location, t_str_location);
+        
+        if (t_success)
+            t_success = MCStringCopy((MCStringRef)t_str_location, r_calendar.mclocation);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_calendar;
+        MCNameCreateWithCString("calendar", &t_key_calendar);
+        MCValueRef t_str_calendar;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_calendar, t_str_calendar);
+        
+        if (t_success)
+            t_success = MCStringCopy((MCStringRef)t_str_calendar, r_calendar.mccalendar);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_frequency;
+        MCNewAutoNameRef t_key_frequency_count;
+        MCNewAutoNameRef t_key_frequency_interval;
+        MCNameCreateWithCString("frequency", &t_key_frequency);
+        MCNameCreateWithCString("frequencycount", &t_key_frequency_count);
+        MCNameCreateWithCString("frequencyinterval", &t_key_frequency_interval);
+        MCValueRef t_str_frequency;
+        MCValueRef t_int_frequency_count;
+        MCValueRef t_int_frequency_interval;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_frequency, t_str_frequency);
+        
+        if (t_success)
+            t_success = MCStringCopy((MCStringRef)t_str_frequency, r_calendar.mcfrequency);
+        
+        if (t_success)
+            t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_count, t_int_frequency_count);
+            
+        if (t_success)
+            r_calendar.mcfrequencycount = MCNumberFetchAsInteger((MCNumberRef)t_int_frequency_count);
+        
+        if (t_success)
+            t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_interval, t_int_frequency_interval);
+        
+        if (t_success)
+            r_calendar.mcfrequencyinterval = MCNumberFetchAsInteger((MCNumberRef)t_int_frequency_interval);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_alert1;
+        MCNameCreateWithCString("alert1", &t_key_alert1);
+        MCValueRef t_int_alert1;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_alert1, t_int_alert1);
+        
+        if (t_success)
+            r_calendar.mcalert1 = MCNumberFetchAsInteger((MCNumberRef)t_int_alert1);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_alert2;
+        MCNameCreateWithCString("alert2", &t_key_alert2);
+        MCValueRef t_int_alert2;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_alert2, t_int_alert2);
+        
+        if (t_success)
+            r_calendar.mcalert2 = MCNumberFetchAsInteger((MCNumberRef)t_int_alert2);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_startdate;
+        MCNameCreateWithCString("startdate", &t_key_startdate);
+        MCValueRef t_int_startdate;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_startdate, t_int_startdate);
+        
+        if (t_success)
+        {
+            MCExecContext ctxt(nil, nil, nil);
+			
+            t_success = MCD_convert_to_datetime(ctxt, (MCNumberRef)t_int_startdate, CF_SECONDS, CF_SECONDS, r_calendar.mcstartdate);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_enddate;
+        MCNameCreateWithCString("enddate", &t_key_enddate);
+        MCValueRef t_int_enddate;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_enddate, t_int_enddate);
+        
+        if (t_success)
+        {
+            MCExecContext ctxt(nil, nil, nil);
+			
+            t_success = MCD_convert_to_datetime(ctxt, t_int_enddate, CF_SECONDS, CF_SECONDS, r_calendar.mcenddate);
+        }
+    }
+    
+    return t_success;
+}
+
+
+bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayRef &r_result)
 {
 #ifdef /* MCCalendarToArrayData */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
@@ -317,175 +375,158 @@ void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCVari
         }
     }
 #endif /* MCCalendarToArrayData */
-}
 
-////////////////////////////////////////////////////////////////////////////////
-
-Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleShowEvent */ LEGACY_EXEC
-    const char* t_event_id = NULL;
-    int32_t r_result;
-    MCExecPoint ep(nil, nil, nil);
-	ep . clear();
-    // Handle parameters.
-    if (p_parameters)
-    {
-        p_parameters->eval(ep);
-        t_event_id = ep.getsvalue().getstring();
-    }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    // Call the Exec implementation
-    MCShowEventExec(t_ctxt, t_event_id);
-    // Set return value
-	return t_ctxt.GetStat();
-#endif /* MCHandleShowEvent */
-}
-
-Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleUpdateEvent */ LEGACY_EXEC
-    const char* t_event_id = NULL;
-    int32_t r_result;
-    MCExecPoint ep(nil, nil, nil);
-	ep . clear();
-    // Handle parameters.
-    if (p_parameters)
-    {
-        p_parameters->eval(ep);
-        t_event_id = ep.getsvalue().getstring();
-    }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    // Call the Exec implementation
-    MCUpdateEventExec(t_ctxt, t_event_id);
-    // Set return value
-	return t_ctxt.GetStat();
-#endif /* MCHandleUpdateEvent */
-}
-
-Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleCreateEvent */ LEGACY_EXEC
-    int32_t r_result;
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    // Call the Exec implementation
-    MCCreateEventExec(t_ctxt);
-    // Set return value
-	return t_ctxt.GetStat();
-#endif /* MCHandleCreateEvent */
-}
-
-Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleGetEventData */ LEGACY_EXEC
-    MCExecPoint ep(nil, nil, nil);
-	ep . clear();
-    const char* t_event_id = NULL;
-    // Handle parameters.
-    if (p_parameters)
-    {
-        p_parameters->eval(ep);
-        t_event_id = ep.getsvalue().getstring();
-    }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    // Call the Exec implementation
-    MCGetEventDataExec(t_ctxt, t_event_id);
-    if (MCresult->isempty())
-        MCresult->store(ep, True);
-	return t_ctxt.GetStat();
-#endif /* MCHandleGetEventData */
-}
-
-Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleRemoveEvent */ LEGACY_EXEC
-    MCExecPoint ep(nil, nil, nil);
-	ep . clear();
-    const char* t_event_id = NULL;
-    bool t_reocurring = false;
-    bool t_success = true;
-    // Handle parameters.
-    t_success = MCParseParameters(p_parameters, "s", &t_event_id);
+    bool t_success = false;
+    
+    if (!MCArrayIsMutable(r_result))
+        t_success = MCArrayCreateMutable(r_result);
     
     if (t_success)
     {
-        t_success = MCParseParameters(p_parameters, "b", &t_reocurring);
+        MCNewAutoNameRef t_key_allday;
+        MCNameCreateWithCString("allday", &t_key_allday);
+        MCAutoStringRef t_str_allday;
+        
+        if (p_calendar.mcallday == true)
+            t_success = MCStringCopy(kMCTrueString, &t_str_allday);
+        else
+            t_success = MCStringCopy(kMCFalseString, &t_str_allday);
+        
+        t_success = MCArrayStoreValue(r_result, false, *t_key_allday, *t_str_allday);
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    // Call the Exec implementation
-    MCRemoveEventExec(t_ctxt, t_reocurring, t_event_id);
-    // Set return value
-    return t_ctxt.GetStat();
-#endif /* MCHandleRemoveEvent */
-}
-
-Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleAddEvent */ LEGACY_EXEC
-    MCExecPoint ep(nil, nil, nil);
-    // Handle parameters. We are doing that in a dedicated call
-    MCCalendar t_new_event_data;
-    t_new_event_data = MCParameterDataToCalendar(p_parameters, t_new_event_data);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    // Call the Exec implementation
-    MCAddEventExec(t_ctxt, t_new_event_data);
-    // Set return value
-    return t_ctxt.GetStat();
-#endif /* MCHandleAddEvent */
-}
-
-Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleGetCalendarsEvent */ LEGACY_EXEC
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    // Call the Exec implementation
-    MCGetCalendarsEventExec(t_ctxt);
-    // Set return value
-    return t_ctxt.GetStat();
-#endif /* MCHandleGetCalendarsEvent */
-}
-
-Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleFindEvent */ LEGACY_EXEC
-    MCDateTime t_start_date;
-    MCDateTime t_end_date;
-    bool t_success = true;
-    const char *r_result = NULL;
-    MCExecPoint ep(nil, nil, nil);
-	ep . clear();
-    // Handle parameters.
-    if (p_parameters)
+    if (t_success)
     {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
+        MCNewAutoNameRef t_key_note;
+        MCNameCreateWithCString("note", &t_key_note);
+        if (MCStringGetLength(p_calendar.mcnote) > 0)
         {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
-        }
-        p_parameters = p_parameters->getnext();
-    }
-    if (t_success && p_parameters != nil)
-    {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
-        {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+            t_success = MCArrayStoreValue(r_result, false, *t_key_note, p_calendar.mcnote);
         }
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    // Call the Exec implementation
-    MCFindEventExec(t_ctxt, t_start_date, t_end_date);
-    // Set return value
-    return t_ctxt.GetStat();
-#endif /* MCHandleFindEvent */
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_title;
+        MCNameCreateWithCString("title", &t_key_title);
+        
+        if (MCStringGetLength(p_calendar.mctitle) > 0)
+        {
+            t_success = MCArrayStoreValue(r_result, false, *t_key_title, p_calendar.mctitle);
+        }
+    }
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_location;
+        MCNameCreateWithCString("location", &t_key_location);
+        if (MCStringGetLength(p_calendar.mclocation) > 0)
+        {
+            MCArrayStoreValue(r_result, false, *t_key_location, p_calendar.mclocation);
+        }
+    }
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_calendar;
+        MCNameCreateWithCString("calendar", &t_key_calendar);
+        MCAutoStringRef t_str_calendar;
+        
+        if (MCStringGetLength(p_calendar.mccalendar) > 0)
+        {
+            t_success = MCArrayStoreValue(r_result, false, *t_key_calendar, p_calendar.mccalendar);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_frequency;
+        MCNewAutoNameRef t_key_frequency_count;
+        MCNewAutoNameRef t_key_frequency_interval;
+        MCNameCreateWithCString("frequency", &t_key_frequency);
+        MCNameCreateWithCString("frequencycount", &t_key_frequency_count);
+        MCNameCreateWithCString("frequencyinterval", &t_key_frequency_interval);
+        MCAutoNumberRef t_int_frequency_count;
+        MCAutoNumberRef t_int_frequency_interval;
+        
+        if (MCStringGetLength(p_calendar.mcfrequency) > 0)
+        {
+            t_success = MCArrayStoreValue(r_result, false, *t_key_frequency, p_calendar.mcfrequency);
+            
+            if (t_success)
+                t_success = MCNumberCreateWithInteger(p_calendar.mcfrequencycount, &t_int_frequency_count);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_frequency_count, *t_int_frequency_count);
+            
+            if (t_success)
+                t_success = MCNumberCreateWithInteger(p_calendar.mcfrequencyinterval, &t_int_frequency_interval);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_frequency_interval, *t_int_frequency_interval);
+        }
+    }
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_alert1;
+        MCNameCreateWithCString("alert1", &t_key_alert1);
+        MCAutoNumberRef t_int_alert1;
+        
+        if (p_calendar.mcalert1 >= 0)
+        {
+            t_success = MCNumberCreateWithInteger(p_calendar.mcalert1, &t_int_alert1);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_alert1, *t_int_alert1);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_alert2;
+        MCNameCreateWithCString("alert2", &t_key_alert2);
+        MCAutoNumberRef t_int_alert2;
+        
+        if (p_calendar.mcalert2 >= 0)
+        {
+            t_success = MCNumberCreateWithInteger(p_calendar.mcalert2, &t_int_alert2);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_alert2, *t_int_alert2);
+        }
+    }
+    
+    if (t_success)
+    {
+        // Convert the start date to seconds
+		MCAutoValueRef t_time;
+        if (MCD_convert_from_datetime(ctxt, p_calendar.mcstartdate, CF_SECONDS, CF_SECONDS, &t_time))
+        {
+            MCNewAutoNameRef t_key_startdate;
+            MCNameCreateWithCString("startdate", &t_key_startdate);
+            MCAutoNumberRef t_int_startdate;
+            
+            t_success = ctxt.ConvertToNumber(*t_time, &t_int_startdate);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_startdate, *t_int_startdate);
+        }
+    }
+    
+    if (t_success)
+    {
+        // Convert the start date to seconds
+		MCAutoValueRef t_time;
+        if (MCD_convert_from_datetime(ctxt, p_calendar.mcenddate, CF_SECONDS, CF_SECONDS, &t_time))
+        {
+            MCNewAutoNameRef t_key_enddate;
+            MCNameCreateWithCString("enddate", &t_key_enddate);
+            MCAutoNumberRef t_int_enddate;
+            
+            t_success = ctxt.ConvertToNumber(*t_time, &t_int_enddate);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_enddate, *t_int_enddate);
+        }
+    }
+    
+    return t_success;
 }
+
+////////////////////////////////////////////////////////////////////////////////

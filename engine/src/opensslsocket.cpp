@@ -26,7 +26,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
-#include "execpt.h"
+#include "exec.h"
+//#include "execpt.h"
+
 #include "param.h"
 #include "handler.h"
 #include "util.h"
@@ -35,13 +37,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "ports.cpp"
 
-#include "core.h"
 #include "notify.h"
 #include "socket.h"
+#include "system.h"
 
-#include "filesystem.h"
-
-#if defined(_WINDOWS_DESKTOP)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 #include "w32prefix.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -53,7 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SystemConfiguration/SCDynamicStore.h>
 #include <SystemConfiguration/SCDynamicStoreKey.h>
 #include <SystemConfiguration/SCSchemaDefinitions.h>
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool p_utf8_string);
 #endif
 
 #include <sys/types.h>
@@ -61,7 +62,7 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 
 #ifdef MCSSL
 
-#ifndef _WINDOWS
+#if !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
 #include <sys/uio.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -96,17 +97,23 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 
 #include "mcssl.h"
 
-#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE))
+#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE)) && !defined(_LINUX_SERVER) && !defined(_MAC_SERVER)
 #define socklen_t int
 #endif
 
+extern bool MCNetworkGetHostFromSocketId(MCStringRef p_socket, MCStringRef& r_host);
+
 extern real8 curtime;
 
-static char *sslerror = NULL;
+static MCStringRef sslerror = NULL;
 static long post_connection_check(SSL *ssl, char *host);
 static int verify_callback(int ok, X509_STORE_CTX *store);
 
-#ifdef _WINDOWS
+#ifdef _MACOSX
+extern bool path2utf(MCStringRef p_path, MCStringRef& r_utf);
+#endif
+
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 extern Boolean wsainit(void);
 extern HWND sockethwnd;
 extern "C" char *strdup(const char *);
@@ -164,9 +171,14 @@ Boolean MCS_handle_sockets()
 {
 	return MCS_poll(0.0, 0.0);
 }
+#else
+Boolean MCS_handle_sockets()
+{
+    return True;
+}
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 typedef SOCKADDR_IN mc_sockaddr_in_t;
 
 bool MCS_init_sockets()
@@ -204,7 +216,7 @@ static int MCS_socket_ioctl(MCSocketHandle p_socket, long p_command, unsigned lo
 
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 int inet_aton(const char *cp, struct in_addr *inp)
 {
 	unsigned long rv = inet_addr(cp);
@@ -215,7 +227,7 @@ int inet_aton(const char *cp, struct in_addr *inp)
 }
 #endif
 
-bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b)
+bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b)
 {
 	struct sockaddr_in t_host_a, t_host_b;
 
@@ -232,119 +244,119 @@ bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b)
 // IP / hostname lookup functions
 //
 
-void MCS_ha(MCExecPoint &ep, MCSocket *s)
+bool MCS_ha(MCSocket *s, MCStringRef& r_string)
 {
 	mc_sockaddr_in_t addr;
 
 	socklen_t addrsize = sizeof(addr);
 	getsockname(s->fd, (sockaddr *)&addr, &addrsize);
-	char *t_name = NULL;
-	if (MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, t_name))
-	{
-		ep.copysvalue(t_name, strlen(t_name));
-		MCCStringFree(t_name);
-	}
+
+	return MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, r_string);
 }
 
-void MCS_hn(MCExecPoint &ep)
+bool MCS_hn(MCStringRef& r_string)
 {
 	if (!MCS_init_sockets())
 	{
-		ep.clear();
-		return;
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
 	}
 
-	gethostname(ep.getbuffer(MAXHOSTNAMELEN + 1), MAXHOSTNAMELEN);
-	ep.setstrlen();
+	MCAutoNativeCharArray t_buffer;
+	if (!t_buffer.Resize(MAXHOSTNAMELEN + 1))
+		return false;
+
+	gethostname((char*)t_buffer.Chars(), MAXHOSTNAMELEN);
+	t_buffer.Shrink(MCCStringLength((char*)t_buffer.Chars()));
+
+	return t_buffer.CreateStringAndRelease(r_string);
 }
 
-void MCS_aton(MCExecPoint &ep)
+bool MCS_aton(MCStringRef p_address, MCStringRef& r_name)
 {
 	if (!MCS_init_sockets())
 	{
-		ep.clear();
-		return;
+		r_name = MCValueRetain(kMCEmptyString);
+		return true;
 	}
 
-	char *n = ep.getsvalue().clone();
-	strtok(n, "|:"); // strip extra stuff
+	MCAutoStringRef t_host;
+	if (!MCNetworkGetHostFromSocketId(p_address, &t_host))
+		return false;
 
-	char *t_name = NULL;
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;
-	t_success = MCS_name_to_sockaddr(n, t_addr);
+	t_success = MCS_name_to_sockaddr(*t_host, t_addr);
 	if (t_success)
 	{
-		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), true, t_name);
+		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), true, r_name);
 	}
 	if (t_success)
 	{
 		MCresult->sets("");
-		ep.copysvalue(t_name, strlen(t_name));
 	}
 	else
 	{
 		MCresult->sets("invalid host address");
-		ep.clear();
+		r_name = MCValueRetain(kMCEmptyString);
+		t_success = true;
 	}
 
-	MCCStringFree(t_name);
-
-	delete n;
+	return t_success;
 }
 
-char *MCS_dnsresolve(const char *p_hostname)
+
+bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 {
 	if (!MCS_init_sockets())
-		return NULL;
+		return false;
 
-	char *t_name = NULL;
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;
 	t_success = MCS_name_to_sockaddr(p_hostname, t_addr);
 	if (t_success)
 	{
-		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), false, t_name);
+
+		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), false, r_dns);
 	}
 
 	if (t_success)
-		return t_name;
+		return true;
 	else
-		return NULL;
+		return false;
 }
 
 bool ntoa_callback(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen)
 {
 	if (p_resolved)
 	{
-		char *t_name;
-		MCExecPoint *t_ep = (MCExecPoint*)p_context;
-		if (MCS_sockaddr_to_string(p_addr, p_addrlen, false, t_name))
-		{
-			t_ep->concatcstring(t_name, EC_RETURN, t_ep->isempty() == True);
-			MCCStringFree(t_name);
-		}
+		MCListRef t_list = (MCListRef) p_context;
+		MCAutoStringRef t_name;
+		if (MCS_sockaddr_to_string(p_addr, p_addrlen, false, &t_name))
+			return MCListAppend(t_list, *t_name);
 	}
 	return true;
 }
 
 typedef struct _mc_ntoa_message_callback_info
 {
-	MCExecPoint *m_ep;
-	char *m_name;
-	MCNameRef m_message;
+	MCObjectHandle *target;
+	MCStringRef name;
+	MCNameRef message;
+	MCListRef list;
 } MCNToAMessageCallbackInfo;
 
 static void free_ntoa_message_callback_info(MCNToAMessageCallbackInfo *t_info)
 {
 	if (t_info != NULL)
 	{
-		MCNameDelete(t_info->m_message);
-		MCCStringFree(t_info->m_name);
-		delete t_info->m_ep;
-
+		MCValueRelease(t_info->message);
+		MCValueRelease(t_info->name);
+		MCValueRelease(t_info->list);
+		if (t_info->target)
+			t_info->target->Release();
 		MCMemoryDelete(t_info);
 	}
 }
@@ -352,49 +364,59 @@ static void free_ntoa_message_callback_info(MCNToAMessageCallbackInfo *t_info)
 bool ntoa_message_callback(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen)
 {
 	MCNToAMessageCallbackInfo *t_info = (MCNToAMessageCallbackInfo*)p_context;
-	ntoa_callback(t_info->m_ep, p_resolved, p_final, p_addr, p_addrlen);
+	ntoa_callback(t_info->list, p_resolved, p_final, p_addr, p_addrlen);
 
 	if (p_final)
 	{
-		MCscreen->delaymessage(t_info->m_ep->getobj(), t_info->m_message, strclone(t_info->m_name), strclone(t_info->m_ep->getcstring()));
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCListCopyAsString(t_info->list, &t_string);
+		MCscreen->delaymessage(t_info->target->Get(), t_info->message, t_info->name, *t_string);
 		free_ntoa_message_callback_info(t_info);
 	}
 	return true;
 }
 
-void MCS_ntoa(MCExecPoint &ep, MCExecPoint &ep2)
+bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr)
 {
 	if (!MCS_init_sockets())
 	{
-		ep.clear();
-		return;
+		r_addr = MCValueRetain(kMCEmptyList);
+		return true;
 	}
 
-	char *n = ep.getsvalue().clone();
-	strtok(n, "|:"); // strip extra stuff
+	MCAutoStringRef t_host;
+	if (!MCNetworkGetHostFromSocketId(p_hostname, &t_host))
+		return false;
+
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 
 	bool t_success = true;
+    MCAutoPointer<char> t_host_cstring;
+    /* UNCHECKED */ MCStringConvertToCString(*t_host, &t_host_cstring);
 
-	if (ep2.isempty())
+	if (MCNameIsEqualTo(p_message, kMCEmptyName))
 	{
-		ep.clear();
-		t_success = MCSocketHostNameResolve(n, NULL, SOCK_STREAM, true, ntoa_callback, &ep);
+		t_success = MCSocketHostNameResolve(*t_host_cstring, NULL, SOCK_STREAM, true, ntoa_callback, *t_list);
 	}
 	else
 	{
 		MCNToAMessageCallbackInfo *t_info = NULL;
 		t_success = MCMemoryNew(t_info);
 		if (t_success)
-			t_success = MCNameCreateWithCString(ep2.getcstring(), t_info->m_message)
-				&& MCCStringClone(ep.getcstring(), t_info->m_name);
-		ep.clear();
-		if (t_success)
 		{
-			t_info->m_ep = new MCExecPoint(ep);
-			t_success = (t_info->m_ep != NULL);
+			t_info->message = MCValueRetain(p_message);
+			t_success = MCStringCopy(p_hostname, t_info->name);
 		}
 		if (t_success)
-			t_success = MCSocketHostNameResolve(n, NULL, SOCK_STREAM, false, ntoa_message_callback, t_info);
+			t_success = MCListCreateMutable('\n', t_info->list);
+
+		if (t_success)
+		{
+			t_info->target = p_target->gethandle();
+			t_success = MCSocketHostNameResolve(*t_host_cstring, NULL, SOCK_STREAM, false, ntoa_message_callback, t_info);
+		}
 		
 		if (!t_success)
 			free_ntoa_message_callback_info(t_info);
@@ -402,6 +424,7 @@ void MCS_ntoa(MCExecPoint &ep, MCExecPoint &ep2)
 
 	if (!t_success)
 	{
+		/* RESULT - !t_success doesn't necessarily mean an invalid address here */
 		MCresult->sets("invalid host address");
 	}
 	else
@@ -409,21 +432,25 @@ void MCS_ntoa(MCExecPoint &ep, MCExecPoint &ep2)
 		MCresult->sets("");
 	}
 
-	delete n;
+	if (t_success)
+		t_success = MCListCopy(*t_list, r_addr);
+
+	return t_success;
 }
 
-void MCS_pa(MCExecPoint &ep, MCSocket *s)
+bool MCS_pa(MCSocket *s, MCStringRef& r_string)
 {
 	struct sockaddr_in addr;
 	socklen_t addrsize = sizeof(addr);
-	getpeername(s->fd, (sockaddr *)&addr, &addrsize);
-	char *t_name;
-
-	if (MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, t_name))
-	{
-		ep.copysvalue(t_name, strlen(t_name));
-		MCCStringFree(t_name);
-	}
+    
+	if (getpeername(s->fd, (sockaddr *)&addr, &addrsize) == 0)
+        return MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, r_string);
+    else
+    {
+        // Backwards compatibility
+        r_string = MCValueRetain(kMCEmptyString);
+        return false;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -438,7 +465,9 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 		if (MCdefaultnetworkinterface != NULL)
 		{
 			struct sockaddr_in t_bind_addr;
-			if (!MCS_name_to_sockaddr(MCdefaultnetworkinterface, t_bind_addr))
+			MCAutoStringRef MCdefaultnetworkinterface_string;
+			/* UNCHECKED */ MCStringCreateWithCString(MCdefaultnetworkinterface, &MCdefaultnetworkinterface_string);
+			if (!MCS_name_to_sockaddr(*MCdefaultnetworkinterface_string, t_bind_addr))
 			{
 				p_socket->error = strclone("can't resolve network interface");
 				p_socket->doclose();
@@ -457,7 +486,7 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 		
 		p_socket->setselect();
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		if (connect(p_socket->fd, (struct sockaddr *)p_addr, sizeof(struct sockaddr_in)) == SOCKET_ERROR && errno != EINTR)
 		{
@@ -515,7 +544,7 @@ bool open_socket_resolve_callback(void *p_context, bool p_resolved, bool p_final
 }
 
 // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, char *sslcertfile, char* hostname)
+MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef hostname)
 {
 	if (!MCS_init_sockets())
 		return NULL;
@@ -523,7 +552,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 	struct sockaddr_in t_addr;
 	if (mess == NULL)
 	{
-		if (!MCS_name_to_sockaddr(name, t_addr))
+		if (!MCS_name_to_sockaddr(MCNameGetString(name), t_addr))
 			return NULL;
 	}
 
@@ -531,7 +560,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 
 	if (!MCS_valid_socket(sock))
 	{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		MCS_seterrno(WSAGetLastError());
 #endif
 		MCresult->sets("can't create socket");
@@ -559,7 +588,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 		
 		// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 		if (s -> sslverify)
-			s -> endhostname = hostname;
+			s -> endhostname = MCValueRetain(hostname);
 
 		if (mess == NULL)
 		{
@@ -580,14 +609,14 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 			MCMemoryNew(t_info);
 			t_info->m_socket = s;
 			s->resolve_state = kMCSocketStateResolving;
-			if (!MCS_name_to_sockaddr(s->name, &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
+			if (!MCS_name_to_sockaddr(MCNameGetString(s->name), &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
 			{
 				MCMemoryDelete(t_info);
 				s->name = nil;
 				delete s;
 				s = nil;
 
-				if (MCresult->isempty())
+				if (MCresult->isclear())
 					MCresult->sets("can't resolve hostname");
 			}
 		}
@@ -599,7 +628,7 @@ void MCS_close_socket(MCSocket *s)
 {
 	s->deletereads();
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	if (s->wevents == NULL)
 #else
 	if (s->wevents == NULL || (s->secure && s->sslstate & SSLRETRYFLAGS))
@@ -609,25 +638,28 @@ void MCS_close_socket(MCSocket *s)
 	s->closing = True;
 }
 
-void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MCNameRef mptr)
+// PM-2015-01-20: [[ Bug 14409 ]] Return nil in case of failure
+MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr)
 {
-	ep.clear();
+    MCDataRef t_data;
+    t_data = nil;
+    
 	if (s->datagram)
 	{
 		MCNameDelete(s->message);
 		/* UNCHECKED */ MCNameClone(mptr, s -> message);
-		s->object = ep.getobj();
-		delete until;
+		
+		s->object = ctxt . GetObject();
 	}
 	else
 	{
-		MCSocketread *eptr = new MCSocketread(length, until, ep.getobj(), mptr);
+		MCSocketread *eptr = new MCSocketread(length, until != nil ? strdup(until) : nil, ctxt . GetObject(), mptr);
 		eptr->appendto(s->revents);
 		s->setselect();
 		if (s->accepting)
 		{
 			MCresult->sets("can't read from this socket");
-			return;
+			return t_data;
 		}
 		if (until == NULL)
 		{
@@ -640,7 +672,7 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 		}
 		if (mptr != NULL)
 		{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 			if (MCnoui)
 				s->doread = True;
 			else
@@ -649,7 +681,7 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 			s->doread = True;
 #endif
 			s->processreadqueue();
-			MCresult->clear(True);
+			ctxt . SetTheResultToEmpty();
 			
 		}
 		
@@ -664,7 +696,7 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 					if (until != NULL && *until == '\n' && !*(until + 1)
 					        && size && s->rbuffer[size - 1] == '\r')
 						size--;
-					ep.copysvalue(s->rbuffer, size);
+					/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)s->rbuffer, size, t_data);
 					s->nread -= eptr->size;
 					// MW-2010-11-19: [[ Bug 9182 ]] This should be a memmove (I think)
 					memmove(s->rbuffer, s->rbuffer + eptr->size, s->nread);
@@ -696,11 +728,12 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 			(s->revents);
 			delete eptr;
 			s->waiting = False;
+            return t_data;
 		}
 	}
 }
 
-void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef mptr)
+void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef mptr)
 {
 	if (s->datagram)
 	{
@@ -710,32 +743,38 @@ void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef 
 		t_broadcast = MCallowdatagrambroadcasts ? 1 : 0;
 		setsockopt(s -> fd, SOL_SOCKET, SO_BROADCAST, (const char *)&t_broadcast, sizeof(t_broadcast));
 	
+        MCAutoPointer<char> temp_d;
+        /* UNCHECKED */ MCStringConvertToCString(d, &temp_d);
 		if (s->shared)
 		{
-			char *portptr = strchr(s->name, ':');
+            char *t_name_copy;
+            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(s->name), t_name_copy);
+            
+			char *portptr = strchr(t_name_copy, ':');
 			*portptr = '\0';
 			struct sockaddr_in to;
 			memset((char *)&to, 0, sizeof(to));
 			to.sin_family = AF_INET;
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
-			if (!inet_aton(s->name, (in_addr *)&to.sin_addr.s_addr)
-			        || sendto(s->fd, d.getstring(), d.getlength(), 0,
-			                  (sockaddr *)&to, sizeof(to)) < 0)
+			if (!inet_aton(t_name_copy, (in_addr *)&to.sin_addr.s_addr)
+				|| sendto(s->fd, *temp_d, MCStringGetLength(d), 0,
+						  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
 				MCresult->sets("error sending datagram");
 			}
-			*portptr = ':';
+            
+            delete[] t_name_copy;
 		}
-		else if (send(s->fd, d.getstring(), d.getlength(), 0) < 0)
+		else if (send(s->fd, *temp_d, MCStringGetLength(d), 0) < 0)
 		{
 			mptr = NULL;
 			MCresult->sets("error sending datagram");
 		}
 		if (mptr != NULL)
 		{
-			MCscreen->delaymessage(optr, mptr, strclone(s->name));
+			MCscreen->delaymessage(optr, mptr, MCNameGetString(s->name));
 			s->added = True;
 		}
 	}
@@ -792,7 +831,7 @@ void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef 
 	}
 }
 
-MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean datagram,Boolean secure,Boolean sslverify,char *sslcertfile)
+MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile)
 {
 	if (!MCS_init_sockets())
 		return NULL;
@@ -800,7 +839,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	MCSocketHandle sock = socket(AF_INET, datagram ? SOCK_DGRAM : SOCK_STREAM, 0);
 	if (!MCS_valid_socket(sock))
 	{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		MCS_seterrno(WSAGetLastError());
 #endif
 		MCresult->sets("can't create socket");
@@ -820,7 +859,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = MCSwapInt32HostToNetwork(INADDR_ANY);
 	addr.sin_port = MCSwapInt16HostToNetwork(port);
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))
 	        || (!datagram && listen(sock, SOMAXCONN))
@@ -847,12 +886,15 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 	char *portname = new char[U2L];
 	sprintf(portname, "%d", port);
-	return new MCSocket(portname, object, message, datagram, sock, True, False, secure);
+
+	MCNewAutoNameRef t_portname;
+	MCNameCreateWithNativeChars((char_t*)portname, U2L, &t_portname);
+	return new MCSocket(*t_portname, object, message, datagram, sock, True, False, secure);
 }
 
 // MM-2014-02-12: [[ SecureSocket ]] New secure socket command. If socket is not already secure, flag as secure to ensure future communications are encrypted.
 // MM-2014-06-13: [[ Bug 12567 ]] Added support for passing in host name to verify against.
-void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname)
+void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname)
 {
 	if (!s -> secure)
 	{
@@ -861,7 +903,7 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname)
 		s -> sslstate |= SSTATE_RETRYCONNECT;
 		
 		if (s -> sslverify)
-			s -> endhostname = hostname;
+			s -> endhostname = MCValueRetain(end_hostname);
 	}
 }
 
@@ -875,7 +917,7 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname)
 // 'internet gateway' defined - but it isn't clear how one might do that.
 //
 
-char *MCS_hostaddress(void)
+bool MCS_hostaddress(MCStringRef &r_host_address)
 {
 #if defined(_WINDOWS)
 	if (!wsainit())
@@ -894,7 +936,7 @@ char *MCS_hostaddress(void)
 				if ((t_interfaces[i] . iiFlags & IFF_UP) != 0 &&
 					(t_interfaces[i] . iiFlags & IFF_LOOPBACK) == 0 &&
 					t_interfaces[i] . iiAddress . Address . sa_family == AF_INET)
-					return strdup(inet_ntoa(t_interfaces[i] . iiAddress . AddressIn . sin_addr));
+					return MCStringCreateWithCString(inet_ntoa(t_interfaces[i] . iiAddress . AddressIn . sin_addr), r_host_address);
 			}
 		}
 	}
@@ -967,7 +1009,7 @@ char *MCS_hostaddress(void)
 			CFStringRef t_string;
 			t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
 			if (t_string != NULL)
-				t_result = osx_cfstring_to_cstring(t_string, false);
+				t_result = osx_cfstring_to_cstring(t_string, false, false);
 		}
 	}
 	
@@ -986,13 +1028,14 @@ char *MCS_hostaddress(void)
 	if (t_store != NULL)
 		CFRelease(t_store);
 
-	return t_result;
+	return MCStringCreateWithCString(t_result, r_host_address);
 
 #elif defined(_LINUX)
 #else
 #endif
 
-	return NULL;
+	r_host_address = MCValueRetain(kMCEmptyString);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1015,13 +1058,13 @@ MCSocketread::~MCSocketread()
 	delete until;
 }
 
-MCSocketwrite::MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m, Boolean securewrite)
+MCSocketwrite::MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m, Boolean securewrite)
 {
-	if (m != NULL)
-		buffer = d.clone();
-	else
-		buffer = (char *)d.getstring();
-	size = d.getlength();
+    char *temp_d;
+    /* UNCHECKED */ MCStringConvertToCString(d, temp_d);
+	
+    buffer = temp_d;
+	size = MCStringGetLength(d);
 	timeout = curtime + MCsockettimeout;
 	secure = securewrite;
 	optr = o;
@@ -1043,9 +1086,9 @@ MCSocketwrite::~MCSocketwrite()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSocket::MCSocket(char *n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure)
+MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure)
 {
-	name = n;
+	name = MCValueRetain(n);
 	object = o;
 	if (m != nil)
 		/* UNCHECKED */ MCNameClone(m, message);
@@ -1071,12 +1114,12 @@ MCSocket::MCSocket(char *n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle 
 	init(fd);
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-	endhostname = NULL;
+	endhostname = MCValueRetain(kMCEmptyName);
 }
 
 MCSocket::~MCSocket()
 {
-	delete name;
+	MCNameDelete(name);
 	MCNameDelete(message);
 	deletereads();
 	deletewrites();
@@ -1084,7 +1127,7 @@ MCSocket::~MCSocket()
 	delete rbuffer;
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-	delete endhostname;
+	MCValueRelease(endhostname);
 }
 
 void MCSocket::deletereads()
@@ -1173,7 +1216,7 @@ Boolean MCSocket::read_done()
 	return False;
 }
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 void MCSocket::acceptone()
 {
 	struct sockaddr_in addr;
@@ -1182,15 +1225,17 @@ void MCSocket::acceptone()
 	if (newfd > 0)
 	{
 		char *t = inet_ntoa(addr.sin_addr);
-		char *n = new char[strlen(t) + I4L];
-		sprintf(n, "%s:%d", t, newfd);
+		MCAutoStringRef n;
+		MCStringFormat(&n, "%s:%d", t, newfd);
 		MCU_realloc((char **)&MCsockets, MCnsockets,
 		            MCnsockets + 1, sizeof(MCSocket *));
-		MCsockets[MCnsockets] = new MCSocket(n, object, NULL,
+		MCNameRef t_name;
+		MCNameCreate(*n, t_name);
+		MCsockets[MCnsockets] = new MCSocket(t_name, object, NULL,
 		                                     False, newfd, False, False,False);
 		MCsockets[MCnsockets]->connected = True;
 		MCsockets[MCnsockets++]->setselect();
-		MCscreen->delaymessage(object, message, strclone(n), strclone(name));
+		MCscreen->delaymessage(object, message, *n, MCNameGetString(name));
 		added = True;
 	}
 }
@@ -1208,7 +1253,7 @@ void MCSocket::readsome()
 		l = t_available;
 
 		char *dbuffer = new char[l + 1]; // don't allocate 0
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		l++; // Not on MacOS/UNIX?
 		if ((l = recvfrom(fd, dbuffer, l, 0, (struct sockaddr *)&addr, &addrsize))
@@ -1239,22 +1284,29 @@ void MCSocket::readsome()
 			else
 			{
 				char *t = inet_ntoa(addr.sin_addr);
-				char *n = new char[strlen(t) + U2L];
-				sprintf(n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
-				uint2 index;
-				if (accepting && !IO_findsocket(n, index))
+				MCAutoStringRef n;
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCStringCreateMutable(strlen(t) + U2L, &n);
+				/* UNCHECKED */ MCStringAppendFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				/* UNCHECKED */ MCNameCreate(*n, &t_name);
+				uindex_t index;
+				if (accepting && !IO_findsocket(*t_name, index))
 				{
 					MCU_realloc((char **)&MCsockets, MCnsockets,
 					            MCnsockets + 1, sizeof(MCSocket *));
-					MCsockets[MCnsockets++] = new MCSocket(strclone(n), object, NULL,
+					MCsockets[MCnsockets++] = new MCSocket(*t_name, object, NULL,
 					                                       True, fd, False, True,False);
 				}
+				
+				MCAutoDataRef t_data;
+				/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)dbuffer, l, &t_data);
+				
 				MCParameter *params = new MCParameter;
-				params->setbuffer(n, strlen(n));
+				params->setvalueref_argument(*t_name);
 				params->setnext(new MCParameter);
-				params->getnext()->setbuffer(dbuffer, l);
+				params->getnext()->setvalueref_argument(*t_data);
 				params->getnext()->setnext(new MCParameter);
-				params->getnext()->getnext()->setbuffer(strclone(name), strlen(name));
+				params->getnext()->getnext()->setvalueref_argument(name);
 				MCscreen->addmessage(object, message, curtime, params);
 			}
 		}
@@ -1265,7 +1317,7 @@ void MCSocket::readsome()
 	{
 		if (accepting)
 		{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 			acceptone();
 			added = True;
 #else
@@ -1276,17 +1328,22 @@ void MCSocket::readsome()
 				int val = 1;
 				ioctl(newfd, FIONBIO, (char *)&val);
 				char *t = inet_ntoa(addr.sin_addr);
-				char *n = new char[strlen(t) + U2L];
-				sprintf(n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				MCAutoStringRef n;
+				MCNewAutoNameRef t_name;
+                // SN-2014-05-08 [[ Bug 12407 ]] 'Garbage' with read from socket
+                // Was creating a string with the data length, and then appending instead of putting data inside
+				/* UNCHECKED */ MCStringFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				/* UNCHECKED */ MCNameCreate(*n, &t_name);
+				uindex_t index;
 				MCU_realloc((char **)&MCsockets, MCnsockets,
 							MCnsockets + 1, sizeof(MCSocket *));
-				MCsockets[MCnsockets] = new MCSocket(n, object, NULL,
+				MCsockets[MCnsockets] = new MCSocket(*t_name, object, NULL,
 													 False, newfd, False, False,secure);
 				MCsockets[MCnsockets]->connected = True;
 				if (secure)
 					MCsockets[MCnsockets]->sslaccept();
 				MCsockets[MCnsockets++]->setselect();
-				MCscreen->delaymessage(object, message, strclone(n), strclone(name));
+				MCscreen->delaymessage(object, message, MCNameGetString(*t_name), MCNameGetString(name));
 				added = True;
 			}
 #endif
@@ -1322,7 +1379,7 @@ void MCSocket::readsome()
 					rsize = newsize;
 				}
 				errno = 0;
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 				// MM-2014-02-12: [[ SecureSocket ]] If a scoket is secured, all data read should be assumed to be encrypted.
 				if ((l = read(rbuffer + nread, l, secure)) <= 0 || l == SOCKET_ERROR )
@@ -1354,7 +1411,7 @@ void MCSocket::readsome()
 				}
 				else
 				{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 					if (l == 0)
 					{
 						doclose();
@@ -1383,21 +1440,23 @@ void MCSocket::processreadqueue()
 				if (size > 1 && revents->until != NULL && *revents->until == '\n'
 				        && !*(revents->until + 1) && rbuffer[size - 1] == '\r')
 					rbuffer[--size] = '\n';
-				char *datacopy = new char[MCU_max((uint4)size, (uint4)1)]; // can't malloc 0
-				memcpy(datacopy, rbuffer, size);
+
+				MCAutoDataRef t_data;
+				/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)rbuffer, size, &t_data);
+				
 				nread -= revents->size;
 				// MW-2010-11-19: [[ Bug 9182 ]] This should be a memmove (I think)
 				memmove(rbuffer, rbuffer + revents->size, nread);
 				MCSocketread *e = revents->remove
 				                  (revents);
 				MCParameter *params = new MCParameter;
-				params->setbuffer(strclone(name), strlen(name));
+				params->setvalueref_argument(name);
 				params->setnext(new MCParameter);
-				params->getnext()->setbuffer(datacopy, size);
+				params->getnext()->setvalueref_argument(*t_data);
 				MCscreen->addmessage(e->optr, e->message, curtime, params);
 				delete e;
 				if (nread == 0 && fd == 0)
-					MCscreen->delaymessage(object, MCM_socket_closed, strclone(name));
+					MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
 				added = True;
 			}
 			else
@@ -1407,14 +1466,14 @@ void MCSocket::processreadqueue()
 
 void MCSocket::writesome()
 {
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	if (!connected && message != NULL)
 	{
 #else
 	if (!accepting && !connected && message != NULL)
 	{
 #endif
-		MCscreen->delaymessage(object, message, strclone(name));
+		MCscreen->delaymessage(object, message, MCNameGetString(name));
 		added = True;
 		MCNameDelete(message);
 		message = NULL;
@@ -1428,7 +1487,7 @@ void MCSocket::writesome()
 		// MM-2014-02-12: [[ SecureSocket ]] The write should only be encrypted if the write object has been flagged as secured.
 		//  (Was previously using the secure flag stored against the socket).
 		int4 nwritten = write( wevents->buffer + wevents->done, towrite, wevents->secure);
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		if (nwritten == SOCKET_ERROR)
 		{
@@ -1459,7 +1518,7 @@ void MCSocket::writesome()
 			{
 				MCSocketwrite *e = wevents->remove
 				                   (wevents);
-				MCscreen->delaymessage(e->optr, e->message, strclone(name));
+				MCscreen->delaymessage(e->optr, e->message, MCNameGetString(name));
 				added = True;
 				delete e;
 			}
@@ -1467,7 +1526,7 @@ void MCSocket::writesome()
 				break;
 		}
 	}
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	if (closing && wevents == NULL)
 #else
 	if (closing && (wevents == NULL || errno == EPIPE))
@@ -1487,13 +1546,15 @@ void MCSocket::doclose()
 	{
 		if (error != NULL)
 		{
-			MCscreen->delaymessage(object, MCM_socket_error, strclone(name), error);
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCString(error, &t_error);
+			MCscreen->delaymessage(object, MCM_socket_error, MCNameGetString(name), *t_error);
 			added = True;
 		}
 		else
 			if (nread == 0)
 			{
-				MCscreen->delaymessage(object, MCM_socket_closed, strclone(name));
+				MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
 				added = True;
 			}
 	}
@@ -1505,7 +1566,7 @@ void MCSocket::setselect()
 	uint2 bioselectstate = 0;
 	if (fd)
 	{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		if (connected && !closing && (!shared && revents != NULL || accepting || datagram))
 #else
 
@@ -1521,7 +1582,7 @@ void MCSocket::setselect()
 
 void MCSocket::setselect(uint2 sflags)
 {
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	if (!MCnoui)
 	{
 		long event = FD_CLOSE;
@@ -1578,7 +1639,7 @@ void MCSocket::close()
 			rlref = NULL;
 		}
 #endif
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		closesocket(fd);
 #else
 
@@ -1606,7 +1667,7 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 	if (securewrite)
 	{
 		sslstate &= ~SSTATE_RETRYWRITE;
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		if (sslstate & SSTATE_RETRYCONNECT ||
 		        sslstate & SSTATE_RETRYREAD)
@@ -1656,7 +1717,7 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 		return rc;
 	}
 	else
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		return send(fd, buffer, towrite, 0);
 #else
@@ -1672,7 +1733,7 @@ int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 	if (secureread)
 	{
 		sslstate &= ~SSTATE_RETRYREAD;
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		if (sslstate & SSTATE_RETRYCONNECT || sslstate & SSTATE_RETRYWRITE)
 		{
@@ -1718,7 +1779,7 @@ int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 		return rc;
 	}
 	else
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		return recv(fd, buffer, toread, 0);
 #else
@@ -1734,9 +1795,11 @@ char *MCSocket::sslgraberror()
 
 	if (!sslinited)
 		return strclone("cannot load SSL library");
-	if (sslerror)
+	if (sslerror != nil)
 	{
-		terror = sslerror;
+		char *t_sslerror;
+        /* UNCHECKED */ MCStringConvertToCString(sslerror, t_sslerror);
+        terror = t_sslerror;
 		sslerror = NULL;
 	}
 	else
@@ -1818,26 +1881,30 @@ Boolean MCSocket::sslconnect()
 	{
 		if (sslverify)
 		{
+			MCAutoStringRef t_hostname;
 			// MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
 			//   Otherwise, use the socket name as before.
-			char *t_hostname;
-			if (endhostname != NULL)
-				t_hostname = strdup(endhostname);
-			else
-				t_hostname = strdup(name);
-			if (strchr(t_hostname, ':') != NULL)
-				strchr(t_hostname, ':')[0] = '\0';
-			else if (strchr(t_hostname, '|') != NULL)
-				strchr(t_hostname, '|')[0] = '\0';
-
-			rc = post_connection_check(_ssl_conn, t_hostname);
-
-			free(t_hostname);
-
+            if (!MCNameIsEmpty(endhostname))
+                /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(endhostname), &t_hostname);
+            else
+                /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
+            
+            uindex_t t_pos;
+            if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
+            /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+            else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
+            /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+			
+            MCAutoPointer<char> t_host;
+            /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
+			
+            rc = post_connection_check(_ssl_conn, *t_host);
+            
 			if (rc != X509_V_OK)
 			{
-				const char *t_message = X509_verify_cert_error_string(rc);
-				sslerror = strdup(t_message);
+				MCAutoStringRef t_message;
+				/* UNCHECKED */ MCStringCreateWithCString(X509_verify_cert_error_string(rc), &t_message);
+				sslerror = MCValueRetain(*t_message);
 				errno = EPIPE;
 				return False;
 			}
@@ -1862,7 +1929,7 @@ Boolean MCSocket::sslconnect()
 		else if (errno == SSL_ERROR_WANT_READ)
 			setselect(BIONB_TESTWRITE);
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		setselect(BIONB_TESTREAD | BIONB_TESTWRITE);
 #endif
@@ -2003,16 +2070,18 @@ Boolean MCSocket::sslaccept()
 	{
 		if (sslverify)
 		{
-			char *t_hostname;
-			t_hostname = strdup(name);
-			if (strchr(t_hostname, ':') != NULL)
-				strchr(t_hostname, ':')[0] = '\0';
-			else if (strchr(t_hostname, '|') != NULL)
-				strchr(t_hostname, '|')[0] = '\0';
+			MCAutoStringRef t_hostname;
+            /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
+            uindex_t t_pos;
+            if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
+                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+            else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
+                /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+			
+            MCAutoPointer<char> t_host;
+            /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
+			rc = post_connection_check(_ssl_conn, *t_host);
 
-			rc = post_connection_check(_ssl_conn, t_hostname);
-
-			free(t_hostname);
 			if (rc != X509_V_OK)
 				return False;
 		}
@@ -2064,17 +2133,18 @@ static int verify_callback(int ok, X509_STORE_CTX *store)
 		X509 *cert = X509_STORE_CTX_get_current_cert(store);
 		int  depth = X509_STORE_CTX_get_error_depth(store);
 		int  err = X509_STORE_CTX_get_error(store);
-		sslerror = new char[3000];
-		int certlen = strlen(sslerror);
-		sprintf(sslerror, "-Error with certificate at depth: %i\n", depth);
+		
+		/* UNCHECKED */ MCStringCreateMutable(0, sslerror);
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "-Error with certificate at depth: %i\n", depth);
 		X509_NAME_oneline(X509_get_issuer_name(cert), data, 256);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  issuer   = %s\n", data);
+		
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  issuer   = %s\n", data);
 		X509_NAME_oneline(X509_get_subject_name(cert), data, 256);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  subject  = %s\n", data);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  subject  = %s\n", data);
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		
+		/* UNCHECKED */ MCStringCopyAndRelease(sslerror, sslerror);
 	}
 
 	return ok;

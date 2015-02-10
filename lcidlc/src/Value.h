@@ -17,9 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __VALUE__
 #define __VALUE__
 
-#ifndef __MC_CORE__
-#include <core.h>
-#endif
+#include "foundation.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,5 +74,10 @@ int64_t NumberGetInteger(ValueRef value);
 double NumberGetReal(ValueRef value);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// MERG-2013-06-14: [[ ExternalsApiV5 ]] Implement boolean ValueRef type.
+bool BooleanCreateWithBool(bool value, ValueRef& r_value);
+
+bool BooleanGetBool(ValueRef value);
 
 #endif

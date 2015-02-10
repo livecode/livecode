@@ -106,7 +106,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeColor,
 	
 	kMCPlatformPropertyTypeNativeCString,
-	kMCPlatformPropertyTypeUTF8CString,
+	kMCPlatformPropertyTypeMCString,
 	
 	kMCPlatformPropertyTypeWindowStyle,
 	kMCPlatformPropertyTypeWindowMask,
@@ -534,8 +534,8 @@ void MCPlatformScreenSnapshotOfWindowArea(uint32_t window_id, MCRectangle p_area
 
 typedef class MCPlatformLoadedFont *MCPlatformLoadedFontRef;
 
-bool MCPlatformLoadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
-bool MCPlatformUnloadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef loaded_font);
+bool MCPlatformLoadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
+bool MCPlatformUnloadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef loaded_font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -602,7 +602,7 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu);
 void MCPlatformRetainMenu(MCPlatformMenuRef menu);
 void MCPlatformReleaseMenu(MCPlatformMenuRef menu);
 
-void MCPlatformSetMenuTitle(MCPlatformMenuRef menu, const char *title);
+void MCPlatformSetMenuTitle(MCPlatformMenuRef menu, MCStringRef title);
 
 void MCPlatformCountMenuItems(MCPlatformMenuRef menu, uindex_t& r_count);
 
@@ -948,13 +948,14 @@ enum MCPlatformFileDialogKind
 	kMCPlatformFileDialogKindOpenMultiple,
 };
 
-void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, const char *p_title, const char *p_message, const char *p_initial);
-MCPlatformDialogResult MCPlatformEndFolderDialog(char*& r_selected_folder);
+void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial);
+MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef & r_selected_folder);
 
-void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, const char *p_title, const char *p_prompt,  char * const p_types[], uint4 p_type_count, const char *p_initial);
-MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, char*& r_paths, char*& r_type);
 
-void MCPlatformBeginColorDialog(const char *p_title, const MCColor& p_color);
+void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt,  MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial);
+MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef& r_paths, MCStringRef& r_type);
+
+void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color);
 MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_new_color);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1023,6 +1024,8 @@ enum MCPlatformPlayerHotSpotProperty
 {
 };
 
+// SN-2014-06-25 [[ PlatformPlayer ]]
+// MCPlatformPlayerQTVRConstraints must follow the definition of MCMultimediaQTVRConstraints
 struct MCPlatformPlayerQTVRConstraints
 {
 	double x_min, x_max;
@@ -1074,11 +1077,13 @@ typedef struct MCPlatformScriptEnvironment *MCPlatformScriptEnvironmentRef;
 
 typedef char *(*MCPlatformScriptEnvironmentCallback)(const char * const *arguments, uindex_t argument_count);
 
-void MCPlatformScriptEnvironmentCreate(const char *language, MCPlatformScriptEnvironmentRef& r_env);
+// SN-2014-07-23: [[ Bug 12907 ]]
+//  Update as well MCSreenDC::createscriptenvironment (and callees)
+void MCPlatformScriptEnvironmentCreate(MCStringRef language, MCPlatformScriptEnvironmentRef& r_env);
 void MCPlatformScriptEnvironmentRetain(MCPlatformScriptEnvironmentRef env);
 void MCPlatformScriptEnvironmentRelease(MCPlatformScriptEnvironmentRef env);
 bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const char *function, MCPlatformScriptEnvironmentCallback callback);
-void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, const char *script, char*& r_result);
+void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, MCStringRef script, MCStringRef& r_result);
 void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1180,7 +1185,7 @@ double MCPlatformSoundRecorderGetLoudness(MCPlatformSoundRecorderRef recorder);
 
 // Start sound recording to the given file. If the sound recorder is already recording then
 // the existing recording should be cancelled (stop and delete output file).
-bool MCPlatformSoundRecorderStart(MCPlatformSoundRecorderRef recorder, const char *filename);
+bool MCPlatformSoundRecorderStart(MCPlatformSoundRecorderRef recorder, MCStringRef filename);
 // Stop the sound recording.
 void MCPlatformSoundRecorderStop(MCPlatformSoundRecorderRef recorder);
 

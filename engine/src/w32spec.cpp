@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "param.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "object.h"
 #include "stack.h"
@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "socket.h"
 #include "notify.h"
 #include "osspec.h"
+
+#include "exec.h"
 
 #include "w32dc.h"
 
@@ -47,688 +49,95 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <float.h>
 #include <iphlpapi.h>
 
-int *g_mainthread_errno;
-
-// MW-2004-11-28: A null FPE signal handler.
-static void handle_fp_exception(int p_signal)
+#ifdef /* MCS_loadfile_dsk_w32 */ LEGACY_SYSTEM
+void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 {
-	p_signal = p_signal;
-}
-
-static bool handle_is_pipe(MCWinSysHandle p_handle)
-{
-	DWORD t_flags;
-
-	int t_result;
-	t_result = GetNamedPipeInfo((HANDLE)p_handle, &t_flags, NULL, NULL, NULL);
-
-	return t_result != 0;
-}
-
-void MCS_init()
-{
-	IO_stdin = new IO_header((MCWinSysHandle)GetStdHandle(STD_INPUT_HANDLE), NULL, 0, 0);
-	IO_stdin -> is_pipe = handle_is_pipe(IO_stdin -> fhandle);
-	IO_stdout = new IO_header((MCWinSysHandle)GetStdHandle(STD_OUTPUT_HANDLE), NULL, 0, 0);
-	IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
-	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
-	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
-
-	setlocale(LC_CTYPE, MCnullstring);
-	setlocale(LC_COLLATE, MCnullstring);
-
-	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
-	((unsigned short *)_pctype)[160] &= ~_SPACE;
-
-	MCinfinity = HUGE_VAL;
-	MCS_time(); // force init
-	if (timeBeginPeriod(1) == TIMERR_NOERROR)
-		MCS_reset_time();
-	else
-		MClowrestimers = True;
-	MCExecPoint ep;
-	ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
-	MCS_query_registry(ep, NULL);
-	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
+	if (!MCSecureModeCanAccessDisk())
 	{
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
-		MCS_query_registry(ep, NULL);
-		if (ep.getsvalue().getlength())
-			MChttpproxy = ep . getsvalue() . clone();
-	}
-	else
-	{
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
-		MCS_query_registry(ep, NULL);
-		if (ep.getsvalue().getlength())
-		{
-			char *t_host;
-			int4 t_port;
-			t_host = ep.getsvalue().clone();
-			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
-			MCS_query_registry(ep, NULL);
-			ep.ston();
-			t_port = ep.getint4();
-			ep.setstringf("%s:%d", t_host, t_port);
-			ep . setstrlen();
-			MChttpproxy = ep . getsvalue() . clone();
-			delete t_host;
-		}
-	}
-
-	// On NT systems 'cmd.exe' is the command processor
-	MCshellcmd = strclone("cmd.exe");
-
-	// MW-2005-05-26: Store a global variable containing major OS version...
-	OSVERSIONINFOA osv;
-	memset(&osv, 0, sizeof(OSVERSIONINFOA));
-	osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-	GetVersionExA(&osv);
-	MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
-
-	// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
-	if (MCmajorosversion >= 0x0500)
-	{
-		MCttsize = 11;
-		MCttfont = "Tahoma";
-	}
-	else if (MCmajorosversion >= 0x0600)
-	{
-		MCttsize = 11;
-		MCttfont = "Segoe UI";
-	}
-
-	OleInitialize(NULL); //for drag & drop
-
-	// MW-2004-11-28: Install a signal handler for FP exceptions - these should be masked
-	//   so it *should* be unnecessary but Win9x plays with the FP control word.
-	signal(SIGFPE, handle_fp_exception);
-}
-
-void MCS_shutdown()
-{
-	OleUninitialize();
-}
-
-// MW-2007-12-14: [[ Bug 5113 ]] Slow-down on mathematical operations - make sure
-//   we access errno directly to stop us having to do a thread-local-data lookup.
-void MCS_seterrno(int value)
-{
-	*g_mainthread_errno = value;
-}
-
-int MCS_geterrno()
-{
-	return *g_mainthread_errno;
-}
-
-static MMRESULT tid;
-
-void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
-{
-	MCalarm = True;
-}
-
-void MCS_alarm(real8 secs)
-{ //no action
-	if (!MCnoui)
-		if (secs == 0)
-		{
-			if (tid != 0)
-			{
-				timeKillEvent(tid);
-				tid = 0;
-			}
-		}
-		else
-			if (tid == 0)
-				tid = timeSetEvent((UINT)(secs * 1000.0), 100, MCS_tp,
-				                   0, TIME_PERIODIC);
-}
-
-void MCS_checkprocesses()
-{
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-		if (MCprocesses[i].phandle != NULL)
-		{
-			DWORD err = WaitForSingleObject(MCprocesses[i].phandle, 0);
-			if (err == WAIT_OBJECT_0 || err == WAIT_FAILED)
-			{
-				// MW-2010-05-17: Make sure we keep the process around long enough to
-				//   read in all its data.
-				uint32_t t_available;
-				if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
-					t_available = 0;
-				if (t_available != 0)
-					return;
-
-				// MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
-				if (MCprocesses[i] . ihandle != nil)
-					MCprocesses[i] . ihandle -> flags |= IO_ATEOF;
-
-				DWORD retcode;
-				GetExitCodeProcess(MCprocesses[i].phandle, &retcode);
-				MCprocesses[i].retcode = retcode;
-				MCprocesses[i].pid = 0;
-				MCprocesses[i].phandle = NULL;
-				Sleep(0);
-				if (MCprocesses[i].thandle != NULL)
-				{
-					TerminateThread(MCprocesses[i].thandle, 0);
-					MCprocesses[i].thandle = NULL;
-				}
-			}
-		}
-}
-
-void MCS_closeprocess(uint2 index)
-{
-	if (MCprocesses[index].thandle  != NULL)
-	{
-		TerminateThread(MCprocesses[index].thandle, 0);
-		MCprocesses[index].thandle = NULL;
-	}
-	if (MCprocesses[index].ihandle != NULL)
-	{
-		MCS_close(MCprocesses[index].ihandle);
-		MCprocesses[index].ihandle = NULL;
-	}
-	if (MCprocesses[index].ohandle != NULL)
-	{
-		MCS_close(MCprocesses[index].ohandle);
-		MCprocesses[index].ohandle = NULL;
-	}
-	MCprocesses[index].mode = OM_NEITHER;
-}
-
-void MCS_kill(int4 pid, int4 sig)
-{
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-	{
-		if (pid == MCprocesses[i].pid)
-		{
-			if (MCprocesses[i].thandle  != NULL)
-			{
-				TerminateThread(MCprocesses[i].thandle, 0);
-				MCprocesses[i].thandle = NULL;
-			}
-			TerminateProcess(MCprocesses[i].phandle, 0);
-			MCprocesses[i].phandle = NULL;
-			MCprocesses[i].pid = 0;
-			break;
-		}
-	}
-}
-
-void MCS_killall()
-{
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-	{
-		//kill MCprocesses[i] here
-		if (MCprocesses[i].ihandle != NULL || MCprocesses[i].ohandle != NULL)
-			TerminateProcess(MCprocesses[i].phandle, 0);
-		MCprocesses[i].phandle = NULL;
-	}
-}
-
-// MW-2005-02-22: Make this global for now so it is accesible by opensslsocket.cpp
-real8 curtime;
-static real8 starttime;
-static DWORD startcount;
-
-real8 MCS_time()
-{
-	if (startcount)
-	{
-		DWORD newcount = timeGetTime();
-		if (newcount < startcount)
-			startcount = newcount;
-		else
-		{
-			curtime = starttime + (newcount - startcount) / 1000.0;
-			return curtime;
-		}
-	}
-	struct _timeb timebuffer;
-	_ftime(&timebuffer);
-	starttime = timebuffer.time + timebuffer.millitm / 1000.0;
-	return starttime;
-}
-
-real8 MCS_starttime(void)
-{
-	return starttime;
-}
-
-void MCS_reset_time()
-{
-	if (!MClowrestimers)
-	{
-		startcount = 0;
-		MCS_time();
-		startcount = timeGetTime();
-	}
-}
-
-void MCS_sleep(real8 delay)
-{
-	Sleep((DWORD)(delay * 1000.0));  //takes milliseconds as parameter
-}
-
-char *MCS_getenv(const char *name)
-{
-	return getenv(name);
-}
-
-void MCS_setenv(const char *name, const char *value)
-{
-	char *dptr = new char[strlen(name) + strlen(value) + 2];
-	sprintf(dptr, "%s=%s", name, value);
-	_putenv(dptr);
-
-	// MW-2005-10-29: Memory leak
-	delete[] dptr;
-}
-
-void MCS_unsetenv(const char *name)
-{
-	char *dptr = new char[strlen(name) + 2];
-	sprintf(dptr, "%s=", name);
-	_putenv(dptr);
-
-	// MW-2005-10-29: Memory leak
-	delete[] dptr;
-}
-
-int4 MCS_rawopen(const char *path, int4 flags)
-{
-	return 0;
-}
-
-int4 MCS_rawclose(int4 fd)
-{
-	return 0;
-}
-
-Boolean MCS_rename(const char *oldname, const char *newname)
-{
-	char *op = MCS_resolvepath(oldname);
-	char *np = MCS_resolvepath(newname);
-	Boolean done = rename(op, np) == 0;
-	delete op;
-	delete np;
-	return done;
-}
-
-Boolean MCS_backup(const char *oname, const char *nname)
-{
-	return MCS_rename(oname, nname);
-}
-
-Boolean MCS_unbackup(const char *oname, const char *nname)
-{
-	return MCS_rename(oname, nname);
-}
-
-Boolean MCS_unlink(const char *path)
-{
-	char *p = MCS_resolvepath(path);
-	Boolean done = remove
-		               (p) == 0;
-	if (!done)
-	{ // bug in NT serving: can't delete full path from current dir
-		char dir[PATH_MAX];
-		GetCurrentDirectoryA(PATH_MAX, dir);
-		if (p[0] == '\\' && p[1] == '\\' && dir[0] == '\\' && dir[1] == '\\')
-		{
-			SetCurrentDirectoryA("C:\\");
-			done = remove(p) == 0;
-			SetCurrentDirectoryA(dir);
-		}
-	}
-	delete p;
-	return done;
-}
-
-// returns in native path format
-const char *MCS_tmpnam()
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	
-	// MW-2008-06-19: Make sure fname is stored in a static to keep the (rather
-	//   unplesant) current semantics of the call.
-	static char *fname;
-	if (fname != NULL)
-		delete fname;
-
-	// TS-2008-06-18: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
-	fname = _tempnam("\\tmp", "tmp");
-
-	char *t_ptr = (char*)strrchr(fname, '\\');
-	if (t_ptr != NULL)
-		*t_ptr = 0 ;
-	
-	MCU_path2std(fname);
-	ep.setsvalue(fname);
-	MCS_longfilepath(ep);
-
-	if (t_ptr != NULL)
-		ep.appendstringf("/%s", ++t_ptr);
-
-	// MW-2008-06-19: Make sure we delete this version of fname, since we don't
-	//   need it anymore.
-	delete fname;
-
-	// MW-2008-06-19: Use ep . getsvalue() . clone() to make sure we get a copy
-	//   of the ExecPoint's string as a NUL-terminated (C-string) string.
-	fname = ep . getsvalue() . clone();
-
-	return fname;
-}
-
-// returns in native path format
-char *MCS_resolvepath(const char *path)
-{
-	if (path == NULL)
-	{
-		char *tpath = MCS_getcurdir();
-		MCU_path2native(tpath);
-		return tpath;
-	}
-	char *cstr = strclone(path);
-	MCU_path2native(cstr);
-	return cstr;
-}
-
-static inline bool is_legal_drive(char p_char)
-{
-	return (p_char >= 'a' && p_char <= 'z') || (p_char >= 'A' && p_char <= 'Z');
-}
-
-char *MCS_get_canonical_path(const char *path)
-{
-	char *t_path = NULL;
-	char *t_curdir = NULL;
-
-	if (path == NULL)
-		return NULL;
-
-	if (path[0] == '/' && path[1] != '/')
-	{
-		// path in root of current drive
-		t_curdir = MCS_getcurdir();
-
-		int t_path_len;
-		t_path_len = strlen(path);
-		while (path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
-		
-		t_path = (char*)malloc(3 + t_path_len + 1);
-		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
-		strcpy(t_path + 3, path);
-	}
-	else if (is_legal_drive(path[0]) && path[1] == ':')
-	{
-		// absolute path
-		t_path = strclone(path);
-	}
-	else
-	{
-		// relative to current folder
-		t_curdir = MCS_getcurdir();
-		int t_curdir_len;
-		t_curdir_len = strlen(t_curdir);
-
-		while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
-			t_curdir_len--;
-
-		int t_path_len;
-		t_path_len = strlen(path);
-
-		while (t_path_len > 0 && path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
-
-		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
-		memcpy(t_path, t_curdir, t_curdir_len);
-		t_path[t_curdir_len] = '/';
-		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
-	}
-
-	MCU_fix_path(t_path);
-	return t_path;
-}
-
-char *MCS_getcurdir()
-{
-	char *dptr = new char[PATH_MAX + 2];
-	GetCurrentDirectoryA(PATH_MAX +1, (LPSTR)dptr);
-	MCU_path2std(dptr);
-	return dptr;
-}
-
-Boolean MCS_setcurdir(const char *path)
-{
-	char *newpath = MCS_resolvepath(path);
-	BOOL done = SetCurrentDirectoryA((LPCSTR)newpath);
-	delete newpath;
-	return done;
-}
-
-#define ENTRIES_CHUNK 4096
-
-// MH-2007-03-30: [[ Bug 4293 ]] This bug is a Mac bug, but caused a prototype change to the MCS_getentries function and the use of an ExecPont to return information.
-void MCS_getentries(MCExecPoint &p_context, bool p_files, bool p_detailed)
-{
-	p_context . clear();
-
-	WIN32_FIND_DATAA data;
-	HANDLE ffh;            //find file handle
-	uint4 t_entry_count;
-	t_entry_count = 0;
-	Boolean ok = False;
-	char *tpath = MCS_getcurdir();
-	MCU_path2native(tpath);
-	char *spath = new char [strlen(tpath) + 5];//path to be searched
-	strcpy(spath, tpath);
-	if (tpath[strlen(tpath) - 1] != '\\')
-		strcat(spath, "\\");
-	strcat(spath, "*.*");
-	delete tpath;
-	/*
-	* Now open the directory for reading and iterate over the contents.
-	*/
-	ffh = FindFirstFileA(spath, &data);
-	if (ffh == INVALID_HANDLE_VALUE)
-	{
-		delete spath;
+		ep.clear();
+		MCresult->sets("can't open file");
 		return;
 	}
-	MCExecPoint ep(NULL, NULL, NULL);
-	do
-	{
-		if (strequal(data.cFileName, "."))
-			continue;
-		if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !p_files
-		        || !(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && p_files)
-		{
-			char tbuf[PATH_MAX * 3 + U4L * 4 + 22];
-			if (p_detailed)
-			{
-				ep.copysvalue(data.cFileName, strlen(data.cFileName));
-				MCU_urlencode(ep);
-				struct _stati64 buf;
-				_stati64(data.cFileName, &buf);
-				// MW-2007-02-26: [[ Bug 4474 ]] - Fix issue with detailed files not working on windows due to time field lengths
-				// MW-2007-12-10: [[ Bug 606 ]] - Make unsupported fields appear as empty
-				sprintf(tbuf, "%*.*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
-				        (int)ep.getsvalue().getlength(), (int)ep.getsvalue().getlength(),
-				        ep.getsvalue().getstring(), buf.st_size, (long)buf.st_ctime,
-				        (long)buf.st_mtime, (long)buf.st_atime, buf.st_mode & 0777);
-			}
-
-			if (p_detailed)
-				p_context . concatcstring(tbuf, EC_RETURN, t_entry_count == 0);
-			else
-				p_context . concatcstring(data.cFileName, EC_RETURN, t_entry_count == 0);
-
-			t_entry_count += 1;
-		}
-	}
-	while (FindNextFileA(ffh, &data));
-	FindClose(ffh);
-	delete spath;
-}
-
-
-void MCS_getDNSservers(MCExecPoint &ep)
-{
+	char *tpath = ep.getsvalue().clone();
+	char *newpath = MCS_resolvepath(tpath);
 	ep.clear();
-
-			ULONG bl = sizeof(FIXED_INFO);
-			FIXED_INFO *fi = (FIXED_INFO *)new char[bl];
-			memset(fi, 0, bl);
-	if ((errno = GetNetworkParams(fi, &bl)) == ERROR_BUFFER_OVERFLOW)
-			{
-				delete fi;
-				fi = (FIXED_INFO *)new char[bl];
-				memset(fi, 0, bl);
-		errno = GetNetworkParams(fi, &bl);
-			}
-			IP_ADDR_STRING *pIPAddr = &fi->DnsServerList;
-			if (errno == ERROR_SUCCESS && *pIPAddr->IpAddress.String)
-			{
-				uint2 i = 0;
-				do
-				{
-					ep.concatcstring(pIPAddr->IpAddress.String, EC_RETURN, i++ == 0);
-					pIPAddr = pIPAddr->Next;
-				}
-				while (pIPAddr != NULL);
-			}
-			delete fi;
-
-	if (ep.getsvalue().getlength() == 0)
-	{
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		ep.setstaticcstring("HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\NameServer");
-		MCS_query_registry(ep, NULL);
-		char *sptr = ep.getbuffer(0);
-		uint4 l = ep.getsvalue().getlength();
-		while (l--)
-			if (sptr[l] == ' ' || sptr[l] == ',')
-				sptr[l] = '\n';
-	}
-}
-
-Boolean MCS_getdevices(MCExecPoint &ep)
-{
-	ep.clear();
-	return True;
-}
-
-Boolean MCS_getdrives(MCExecPoint &ep)
-{
-	DWORD maxsize = GetLogicalDriveStringsA(0, NULL);
-	char *sptr = ep.getbuffer(maxsize);
-	char *dptr = sptr;
-	GetLogicalDriveStringsA(maxsize, sptr);
-	while (True)
-	{
-		if (*sptr == '\\')
-			sptr++;
-		else
-		{
-			*dptr = *sptr++;
-			if (*dptr++ == '\0')
-				if (*sptr == '\0')
-					break;
-				else
-					*(dptr - 1) = '\n';
-		}
-	}
-	ep.setstrlen();
-	return True;
-}
-
-Boolean MCS_noperm(const char *path)
-{
-	struct stat buf;
-	if (stat(path, &buf))
-		return False;
-	if (buf.st_mode & S_IFDIR)
-		return True;
-	if (!(buf.st_mode & _S_IWRITE))
-		return True;
-	return False;
-}
-
-Boolean MCS_exists(const char *path, Boolean file)
-{
-	char *newpath = MCS_resolvepath(path);
-	//MS's stat() fails if there is a trailing '\\'. Workaround is to delete it
-	// MW-2004-04-20: [[ Purify ]] If *newpath == 0 then we should return False
-	if (*newpath == '\0')
-	{
-		delete newpath;
-		return False;
-	}
-	
-	// MW-2008-01-15: [[ Bug 4981 ]] - It seems that stat will fail for checking
-	//   a folder 'C:' and requires that it be 'C:\'
-	if (strlen(newpath) == 2 && newpath[1] == ':')
-	{
-		// newpath is of form "<driveletter>:"
-		char *t_modified_path;
-		t_modified_path = new char[strlen(newpath) + 2];
-		strcpy(t_modified_path, newpath);
-		strcat(t_modified_path, "\\");
-		delete newpath;
-		newpath = t_modified_path;
-		// newpath is of form "<driverletter>:\"
-	}
-
-	// OK-2007-12-05 : Bug 5555, modified to allow paths with trailing backslashes on Windows.
-	if ((newpath[strlen(newpath) - 1] == '\\' || newpath[strlen(newpath) - 1] == '/')
-	        && (strlen(newpath) != 3 || newpath[1] != ':'))
-		newpath[strlen(newpath) - 1] = '\0';
-
-	// MW-2010-10-22: [[ Bug 8259 ]] Use a proper Win32 API function - otherwise network shares don't work.
-	DWORD t_attrs;
-	t_attrs = GetFileAttributesA(newpath);
+	delete tpath;
+	HANDLE hf = CreateFileA(newpath, GENERIC_READ, FILE_SHARE_READ, NULL,
+                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	delete newpath;
-
-	if (t_attrs == INVALID_FILE_ATTRIBUTES)
-		return False;
-
-	return file == ((t_attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
-}
-
-int64_t MCS_fsize(IO_handle stream)
-{
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_fsize(stream);
-
-	if (stream->flags & IO_FAKE)
-		return stream->len;
+	if (hf == INVALID_HANDLE_VALUE)
+	{
+		MCS_seterrno(GetLastError());
+		MCresult->sets("can't open file");
+	}
 	else
 	{
-		DWORD t_high_word, t_low_word;
-		t_low_word = GetFileSize(stream -> fhandle, &t_high_word);
-		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
-			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
+		DWORD fsize;
+		DWORD nread = 0;
+		if ((fsize = GetFileSize(hf, NULL)) == 0xFFFFFFFF
+            || ep.getbuffer(fsize) == NULL
+            || !ReadFile(hf, ep.getbuffer(fsize), fsize, &nread, NULL)
+            || nread != fsize)
+		{
+			ep.clear();
+			MCS_seterrno(GetLastError());
+			MCresult->sets("error reading file");
+		}
+		else
+		{
+			ep.setlength(fsize);
+			if (!binary)
+				ep.texttobinary();
+			MCresult->clear(False);
+		}
+		CloseHandle(hf);
 	}
-	return 0;
 }
+#endif /* MCS_loadfile_dsk_w32 */
 
+#ifdef /* MCS_savefile_dsk_w32 */ LEGACY_SYSTEM
+void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
+{
+	if (!MCSecureModeCanAccessDisk())
+	{
+		MCresult->sets("can't open file");
+		return;
+	}
+
+	char *tpath = fname.clone();
+	char *newpath = MCS_resolvepath(tpath);
+	delete tpath;
+	HANDLE hf = CreateFileA(newpath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL,
+	                       OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	delete newpath;
+	if (hf == INVALID_HANDLE_VALUE)
+	{
+		MCS_seterrno(GetLastError());
+		MCresult->sets("can't open file");
+	}
+	else
+	{
+		if (!binary)
+			data.binarytotext();
+		DWORD nwrote;
+		if (!WriteFile(hf, data.getsvalue().getstring(),
+		               data.getsvalue().getlength(), &nwrote, NULL)
+		        || nwrote != (DWORD)data.getsvalue().getlength())
+		{
+			MCS_seterrno(GetLastError());
+			MCresult->sets("error writing file");
+		}
+		else
+		{
+			SetEndOfFile(hf);
+			MCresult->clear(False);
+		}
+		CloseHandle(hf);
+	}
+}
+#endif /* MCS_savefile_dsk_w32 */
+
+#ifdef LEGACY_SYSTEM
 Boolean MCS_nodelay(int4 fd)
 {
 	return True;
@@ -2865,5 +2274,6 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 
 	return 0;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

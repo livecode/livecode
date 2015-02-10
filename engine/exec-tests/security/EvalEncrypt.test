@@ -1,0 +1,5 @@
+setup
+
+test mcencrypt("secret message") is "J_qx"&quote&".u"&quote&"NF4}i{"
+
+teardown

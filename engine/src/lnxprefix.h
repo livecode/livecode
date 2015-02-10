@@ -16,16 +16,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globdefs.h"
 
-#include <X11/Xos.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/cursorfont.h>
+#include <gdk/gdk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include <X11/extensions/XShm.h>
-#include <X11/extensions/shape.h>
+// Nasty workaround to avoid having to change all uses of the Window, Pixmap and
+// Drawable types in the engine to avoid clashes with the X11 headers.
+namespace x11
+{
+#include <gdk/gdkx.h>
+}
 
-extern Display *MCdpy;
+extern GdkDisplay *MCdpy;
 
 typedef struct
 {

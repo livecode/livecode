@@ -1,0 +1,9 @@
+setup
+
+create button
+
+clone invisible button 1 as "foo"
+
+test the short name of it is "foo" and the visible of it is false
+
+teardown

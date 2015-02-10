@@ -1,0 +1,15 @@
+setup "up"
+test the commandKey is "up"
+teardown
+
+
+setup "down"
+create button
+
+put "on mouseDown|set the cCommandKey of me to commandKey()|end mouseDown" into tScript
+replace "|" with return in tScript
+set the script of the last button to tScript
+
+click at the loc of the last button with commandKey
+test the cCommandKey of the last button is "down"
+teardown

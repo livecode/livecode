@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "dispatch.h"
 #include "image.h"
@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "bitmapeffect.h"
 #include "bitmapeffectblur.h"
+#include "exec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -224,166 +225,6 @@ static void MCBitmapEffectColorFromMCColor(MCColor &p_color, uint32_t &r_color)
 	r_color = MCGPixelPack(kMCGPixelFormatBGRA, r, g, b, a);
 }
 
-// Fetch the given property from the specified type of effect. Note that we assume that 'which'
-// is valid for 'type' and that 'ep' is empty.
-static Exec_stat MCBitmapEffectGetProperty(MCBitmapEffect *effect, MCBitmapEffectProperty which, MCExecPoint& ep)
-{
-	// Now dispatch on property
-	switch(which)
-	{
-		// LAYER EFFECTS
-
-		case kMCBitmapEffectPropertyColor:
-		{
-			MCColor t_color;
-			MCBitmapEffectColorToMCColor(effect->layer.color, t_color);
-			ep . setcolor(t_color.red >> 8, t_color.green >> 8, t_color.blue >> 8);
-		}
-		break;
-
-		case kMCBitmapEffectPropertyBlendMode:
-			if (effect->layer.blend_mode == kMCBitmapEffectBlendModeNormal)
-				ep.setstaticcstring("normal");
-			else if (effect->layer.blend_mode == kMCBitmapEffectBlendModeMultiply)
-				ep.setstaticcstring("multiply");
-			else if (effect->layer.blend_mode == kMCBitmapEffectBlendModeColorDodge)
-				ep.setstaticcstring("colordodge");
-
-			break;
-
-		case kMCBitmapEffectPropertyOpacity:
-            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
-			ep . setuint(MCGPixelGetAlpha(kMCGPixelFormatBGRA, effect -> layer . color));
-			break;
-		
-		// BLUR EFFECTS
-
-		case kMCBitmapEffectPropertyFilter:
-			switch (effect->blur.filter)
-			{
-			case kMCBitmapEffectFilterFastGaussian:
-				ep.setstaticcstring("gaussian");
-				break;
-			case kMCBitmapEffectFilterOnePassBox:
-				ep.setstaticcstring("box1pass");
-				break;
-			case kMCBitmapEffectFilterTwoPassBox:
-				ep.setstaticcstring("box2pass");
-				break;
-			case kMCBitmapEffectFilterThreePassBox:
-				ep.setstaticcstring("box3pass");
-				break;
-			}
-			break;
-
-		case kMCBitmapEffectPropertySize:
-			ep . setuint(effect -> blur . size);
-			break;
-
-		case kMCBitmapEffectPropertySpread:
-			ep . setuint(effect -> blur . spread);
-			break;
-		
-		// SHADOW EFFECTS
-
-		case kMCBitmapEffectPropertyDistance:
-			ep . setuint(effect -> shadow . distance);
-			break;
-			
-		case kMCBitmapEffectPropertyAngle:
-			ep . setuint(effect -> shadow . angle);
-			break;
-
-		case kMCBitmapEffectPropertyKnockOut:
-			ep . setboolean(effect -> shadow . knockout);
-			break;
-
-		// GLOW EFFECTS
-
-		case kMCBitmapEffectPropertyRange:
-			ep . setuint(effect -> glow . range);
-			break;
-
-		case kMCBitmapEffectPropertySource:
-			ep . setstaticcstring(effect -> glow . source == kMCBitmapEffectSourceEdge ? "edge" : "center");
-			break;
-
-		default:
-			break;
-	}
-
-	return ES_NORMAL;
-}
-
-Exec_stat MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties which_type, MCExecPoint& ep, MCNameRef prop)
-{
-	// Reset ep to empty, the default value.
-	ep . clear();
-
-	// First map the property type
-	MCBitmapEffectType t_type;
-	t_type = (MCBitmapEffectType)(which_type - P_BITMAP_EFFECT_DROP_SHADOW);
-
-	// If 'prop' is the empty string, this is a whole array op.
-	bool t_is_array;
-	t_is_array = MCNameIsEqualTo(prop, kMCEmptyName, kMCCompareCaseless);
-
-	// Now fetch the bitmap effect we are processing - note that if this is
-	// NULL it means it isn't set. In this case we still carry on since we
-	// need to report a invalid key error (if applicable).
-	MCBitmapEffect *t_effect;
-	if (self != NULL && (self -> mask & (1 << t_type)) != 0)
-		t_effect = &self -> effects[t_type];
-	else
-		t_effect = NULL;
-
-	// If prop is not the empty string, then this is a single property fetch.
-	if (!t_is_array)
-	{
-		MCBitmapEffectProperty t_property;
-		if (MCBitmapEffectLookupProperty(t_type, prop, t_property) != ES_NORMAL)
-			return ES_ERROR;
-
-		// If there is no effect set for this type, then we are done.
-		if (t_effect == NULL)
-			return ES_NORMAL;
-			
-		// Otherwise fetch for the appropriate effect.
-		return MCBitmapEffectGetProperty(&self -> effects[t_type], t_property, ep);
-	}
-
-	// If there is no effect set for this type, then we are done.
-	if (t_effect == NULL)
-		return ES_NORMAL;
-
-	// Otherwise we have an array get, so first create a new value
-	MCVariableValue *v;
-	v = new MCVariableValue;
-	if (v == NULL)
-		return ES_ERROR;
-
-	// Initialize it to an array
-	v -> assign_new_array(8);
-
-	// Now loop through all the properties, getting the ones applicable to this type.
-	for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
-		if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
-		{
-			// Attempt to fetch the property, then store it into the array.
-			if (MCBitmapEffectGetProperty(t_effect, s_bitmap_effect_properties[i] . value, ep) != ES_NORMAL ||
-				v -> store_element(ep, s_bitmap_effect_properties[i] . token) != ES_NORMAL)
-			{
-				delete v;
-				return ES_ERROR;
-			}
-		}
-
-	// Give the array to the ep
-	ep . setarray(v, True);
-
-	return ES_NORMAL;
-}
-
 // Set the given effect to default values for its type.
 static void MCBitmapEffectDefault(MCBitmapEffect *p_effect, MCBitmapEffectType p_type)
 {
@@ -427,7 +268,7 @@ static void MCBitmapEffectDefault(MCBitmapEffect *p_effect, MCBitmapEffectType p
 	}
 }
 
-static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, const MCString& p_data, uint4 p_current_value, uint4& r_new_value, Boolean& r_dirty)
+static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, MCStringRef p_data, uint4 p_current_value, uint4& r_new_value, Boolean& r_dirty)
 {
 	uint4 t_value;
 	if (!MCU_stoui4(p_data, t_value))
@@ -445,332 +286,19 @@ static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, const MCString
 	return ES_NORMAL;
 }
 
-static Exec_stat MCBitmapEffectSetBooleanProperty(const MCString& p_data, bool p_current_value, bool& r_new_value, Boolean& r_dirty)
+static Exec_stat MCBitmapEffectSetBooleanProperty(MCStringRef p_data, bool p_current_value, bool& r_new_value, Boolean& r_dirty)
 {
-	Boolean t_value;
+	bool t_value;
 	if (!MCU_stob(p_data, t_value))
 	{
 		MCeerror -> add(EE_BITMAPEFFECT_BADBOOLEAN, 0, 0, p_data);
 		return ES_ERROR;
 	}
 
-	bool t_bvalue;
-	t_bvalue = t_value == True;
-	if (t_bvalue != p_current_value)
+	if (t_value != p_current_value)
 		r_dirty = True;
 
-	r_new_value = t_bvalue;
-
-	return ES_NORMAL;
-}
-
-Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty which, MCExecPoint& ep, Boolean& r_dirty)
-{
-	MCString t_data;
-	t_data = ep . getsvalue();
-
-	switch(which)
-	{
-		// LAYER EFFECTS
-
-		case kMCBitmapEffectPropertyColor:
-		{
-			MCColor t_mc_color;
-			char *t_name;
-			t_name = NULL;
-			if (!MCscreen -> parsecolor(t_data, &t_mc_color, &t_name))
-			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADCOLOR, 0, 0, t_data);
-				return ES_ERROR;
-			}
-
-            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
-			uint4 t_new_color;
-			t_new_color = MCGPixelPack(kMCGPixelFormatBGRA, t_mc_color.red >> 8, t_mc_color.green >> 8, t_mc_color.blue >> 8, MCGPixelGetAlpha(kMCGPixelFormatBGRA, self->layer.color));
-
-			if (t_new_color != self -> layer . color)
-			{
-				self -> layer . color = t_new_color;
-				r_dirty = True;
-			}
-		}
-		break;
-
-		case kMCBitmapEffectPropertyBlendMode:
-		{
-			MCBitmapEffectBlendMode t_new_mode;
-			if (t_data == "normal")
-				t_new_mode = kMCBitmapEffectBlendModeNormal;
-			else if (t_data == "multiply")
-				t_new_mode = kMCBitmapEffectBlendModeMultiply;
-			else if (t_data == "colordodge")
-				t_new_mode = kMCBitmapEffectBlendModeColorDodge;
-			else
-			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADBLENDMODE, 0, 0, t_data);
-				return ES_ERROR;
-			}
-
-			if (t_new_mode != self -> layer . blend_mode)
-			{
-				self -> layer . blend_mode = t_new_mode;
-				r_dirty = True;
-			}
-		}
-		break;
-
-		case kMCBitmapEffectPropertyOpacity:
-		{
-            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
-			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, MCGPixelGetAlpha(kMCGPixelFormatBGRA, self -> layer . color), t_value, r_dirty) != ES_NORMAL)
-				return ES_ERROR;
-			
-			uint8_t r, g, b, a;
-			MCGPixelUnpack(kMCGPixelFormatBGRA, self->layer.color, r, g, b, a);
-			
-			self -> layer . color = MCGPixelPack(kMCGPixelFormatBGRA, r, g, b, t_value);
-		}
-		break;
-
-		// BLUR EFFECTS
-
-		case kMCBitmapEffectPropertyFilter:
-		{
-			MCBitmapEffectFilter t_new_filter;
-			if (t_data == "gaussian")
-				t_new_filter = kMCBitmapEffectFilterFastGaussian;
-			else if (t_data == "box1pass")
-				t_new_filter = kMCBitmapEffectFilterOnePassBox;
-			else if (t_data == "box2pass")
-				t_new_filter = kMCBitmapEffectFilterTwoPassBox;
-			else if (t_data == "box3pass")
-				t_new_filter = kMCBitmapEffectFilterThreePassBox;
-			else
-			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADFILTER, 0, 0, t_data);
-				return ES_ERROR;
-			}
-
-			if (t_new_filter != self -> blur . filter)
-			{
-				self -> blur . filter = t_new_filter;
-				r_dirty = True;
-			}
-		}
-		break;
-			
-		case kMCBitmapEffectPropertySize:
-		{
-			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, self -> blur . size, t_value, r_dirty) != ES_NORMAL)
-				return ES_ERROR;
-			
-			self -> blur . size = t_value;
-		}
-		break;
-
-		case kMCBitmapEffectPropertySpread:
-		{
-			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, self -> blur . spread, t_value, r_dirty) != ES_NORMAL)
-				return ES_ERROR;
-			
-			self -> blur . spread = t_value;
-		}
-		break;
-
-		// SHADOW EFFECTS
-
-		case kMCBitmapEffectPropertyDistance:
-		{
-			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(32767, t_data, self -> shadow . distance, t_value, r_dirty) != ES_NORMAL)
-				return ES_ERROR;
-			
-			self -> shadow . distance = t_value;
-		}
-		break;
-			
-		case kMCBitmapEffectPropertyAngle:
-		{
-			uint4 t_value;
-			if (!MCU_stoui4(t_data, t_value))
-			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADNUMBER, 0, 0, t_data);
-				return ES_ERROR;
-			}
-
-			t_value %= 360;
-
-			if (t_value != self -> shadow . angle)
-			{
-				self -> shadow . angle = t_value;
-				r_dirty = True;
-			}
-		}
-		break;
-		
-		case kMCBitmapEffectPropertyKnockOut:
-		{
-			bool t_value;
-			if (MCBitmapEffectSetBooleanProperty(t_data, self -> shadow . knockout, t_value, r_dirty) != ES_NORMAL)
-				return ES_ERROR;
-
-			self -> shadow . knockout = t_value;
-		}
-		break;
-
-		// GLOW EFFECTS
-
-		case kMCBitmapEffectPropertyRange:
-		{
-			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, self -> glow . range, t_value, r_dirty) != ES_NORMAL)
-				return ES_ERROR;
-			
-			self -> glow . range = t_value;
-		}
-		break;
-
-		case kMCBitmapEffectPropertySource:
-		{
-			MCBitmapEffectSource t_new_source;
-			if (t_data == "edge")
-				t_new_source = kMCBitmapEffectSourceEdge;
-			else if (t_data == "center")
-				t_new_source = kMCBitmapEffectSourceCenter;
-			else
-			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADSOURCE, 0, 0, t_data);
-				return ES_ERROR;
-			}
-
-			if (t_new_source != self -> glow . source)
-			{
-				self -> glow . source = t_new_source;
-				r_dirty = True;
-			}
-		}
-		break;
-
-		default:
-			break;
-	}
-
-	return ES_NORMAL;
-}
-
-Exec_stat MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties which_type, MCExecPoint& ep, MCNameRef prop, Boolean& r_dirty)
-{
-	// First map the property type
-	MCBitmapEffectType t_type;
-	t_type = (MCBitmapEffectType)(which_type - P_BITMAP_EFFECT_DROP_SHADOW);
-
-	// If 'prop' is the empty string, this is a whole array op.
-	bool t_is_array;
-	t_is_array = MCNameIsEqualTo(prop, kMCEmptyName, kMCCompareCaseless);
-
-	// First handle the 'clear' action (i.e. carray is empty and ep is 'empty')
-	if (t_is_array && (ep . getformat() != VF_ARRAY || ep . getarray() == NULL))
-	{
-		if (self == NULL || (self -> mask & (1 << t_type)) == 0)
-			return ES_NORMAL;
-
-		// We are set, so just unset our bit in the mask
-		self -> mask &= ~(1 << t_type);
-
-		// If we are now empty, then clear.
-		if (self -> mask == 0)
-			MCBitmapEffectsClear(self);
-		
-		// Mark the object as dirty
-		r_dirty = True;
-
-		return ES_NORMAL;
-	}
-
-	// A temporary boolean to store the dirtiness
-	Boolean t_dirty;
-
-	// Fetch (a copy of) the bitmap effect we are processing, otherwise
-	// initialize one with defaults for the type.
-	MCBitmapEffect t_effect;
-	if (self != NULL && (self -> mask & (1 << t_type)) != 0)
-	{
-		t_effect = self -> effects[t_type];
-
-		// At this point we have made no changes.
-		t_dirty = False;
-	}
-	else
-	{
-		MCBitmapEffectDefault(&t_effect, t_type);
-
-		// If the effect doesn't yet exist, it means we will dirty the object
-		// regardless.
-		t_dirty = True;
-	}
-
-	// Now update the copy of the effect with any newly set properties
-	if (!t_is_array)
-	{
-		// If carray is not the empty string, then this is a single property store
-		
-		// Lookup the property and ensure it is appropriate for our type.
-		MCBitmapEffectProperty t_property;
-		if (MCBitmapEffectLookupProperty(t_type, prop, t_property) != ES_NORMAL)
-			return ES_ERROR;
-
-		// Set the property in our (copy of the) bitmap effect.
-		if (MCBitmapEffectSetProperty(&t_effect, t_property, ep, t_dirty) != ES_NORMAL)
-			return ES_ERROR;
-	}
-	else if (ep . getarray() != NULL)
-	{
-		// We are storing an array of properties
-		MCVariableValue *v;
-		v = ep . getarray();
-
-		// Loop through all the properties in the table and apply the relevant
-		// ones.
-		for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
-			if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
-			{
-				// If we don't have the given element, then move to the next one
-				if (!v -> has_element(ep, s_bitmap_effect_properties[i] . token))
-					continue;
-				
-				// Otherwise, fetch the keys value and attempt to set the property
-				if (v -> fetch_element(ep, s_bitmap_effect_properties[i] . token) != ES_NORMAL ||
-					MCBitmapEffectSetProperty(&t_effect, s_bitmap_effect_properties[i] . value, ep, t_dirty) != ES_NORMAL)
-					return ES_ERROR;
-			}
-	}
-
-	// If no changes have been made, we have nothing to do.
-	if (!t_dirty)
-		return ES_NORMAL;
-
-	// Otherwise we must commit the changes
-
-	// If we are currently empty, then allocate a new object
-	if (self == NULL)
-	{
-		self = new MCBitmapEffects;
-		if (self == NULL)
-			return ES_ERROR;
-
-		// Only need to initialize the mask.
-		self -> mask = 0;
-	}
-
-	// Now copy in the updated effect.
-	self -> mask |= (1 << t_type);
-	self -> effects[t_type] = t_effect;
-
-	// Return the dirtiness.
-	r_dirty = t_dirty;
+	r_new_value = t_value;
 
 	return ES_NORMAL;
 }
@@ -1102,6 +630,474 @@ void MCBitmapEffectsComputeBounds(MCBitmapEffectsRef self, const MCRectangle& p_
 		t_bounds = MCU_union_rect(t_bounds, MCOuterGlowEffectComputeBounds(&self -> effects[kMCBitmapEffectTypeOuterGlow] . glow, p_shape));
 
 	r_bounds = t_bounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void MCBitmapEffectFetchProperty(MCExecContext& ctxt, MCBitmapEffect *effect, MCBitmapEffectProperty p_prop, MCExecValue& r_value)
+{
+    if (effect == nil)
+    {
+        r_value . stringref_value = MCValueRetain(kMCEmptyString);
+        r_value . type = kMCExecValueTypeStringRef;
+        return;
+    }
+    switch(p_prop)
+    {
+        case kMCBitmapEffectPropertyColor:
+            MCBitmapEffectColorToMCColor(effect->layer.color, r_value . color_value);
+            r_value . type = kMCExecValueTypeColor;
+            break;
+            
+        case kMCBitmapEffectPropertyBlendMode:
+            MCExecFormatEnum(ctxt, kMCInterfaceBitmapEffectBlendModeTypeInfo, (intenum_t)effect->layer.blend_mode, r_value);
+            break;
+            
+        case kMCBitmapEffectPropertyFilter:
+            MCExecFormatEnum(ctxt, kMCInterfaceBitmapEffectFilterTypeInfo, (intenum_t)effect->blur.filter, r_value);
+            break;
+            
+        case kMCBitmapEffectPropertySource:
+            MCExecFormatEnum(ctxt, kMCInterfaceBitmapEffectSourceTypeInfo, (intenum_t)effect -> glow . source, r_value);
+            break;
+            
+        case kMCBitmapEffectPropertyOpacity:
+            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
+            r_value . uint_value = MCGPixelGetAlpha(kMCGPixelFormatBGRA, effect -> layer . color);
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertySize:
+            r_value . uint_value = effect -> blur . size;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertySpread:
+            r_value . uint_value = effect -> blur . spread;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertyDistance:
+            r_value . uint_value = effect -> shadow . distance;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertyAngle:
+            r_value . uint_value = effect -> shadow . angle;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertyRange:
+            r_value . uint_value = effect -> glow . range;
+            r_value . type = kMCExecValueTypeUInt;
+            break;
+            
+        case kMCBitmapEffectPropertyKnockOut:
+            r_value . bool_value = effect -> shadow . knockout;
+            r_value . type = kMCExecValueTypeBool;
+            break;
+            
+        default:
+            break;
+    }
+}
+
+bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCExecValue& r_value)
+{
+    // First map the property type
+	MCBitmapEffectType t_type;
+	t_type = (MCBitmapEffectType)(which - P_BITMAP_EFFECT_DROP_SHADOW);
+    
+    // If 'p_index' is the empty name, this is a whole array op.
+    bool t_is_array;
+    t_is_array = MCNameIsEmpty(p_index);
+    
+	// Now fetch the bitmap effect we are processing - note that if this is
+	// NULL it means it isn't set. In this case we still carry on since we
+	// need to report a invalid key error (if applicable).
+	MCBitmapEffect *t_effect;
+	if (self != nil && (self  -> mask & (1 << t_type)) != 0)
+		t_effect = &self -> effects[t_type];
+	else
+		t_effect = nil;
+    
+    MCBitmapEffectProperty t_prop;
+    if (!MCNameIsEmpty(p_index) && MCBitmapEffectLookupProperty(t_type, p_index, t_prop) != ES_NORMAL)
+        return false;
+
+    if (t_is_array)
+    {
+        if (t_effect == nil)
+        {
+            r_value . stringref_value = MCValueRetain(kMCEmptyString);
+            r_value . type = kMCExecValueTypeStringRef;
+            return true;
+        }
+        
+        // Otherwise we have an array get, so first create a new value
+        MCAutoArrayRef v;
+        if (MCArrayCreateMutable(&v))
+        {
+            // Now loop through all the properties, getting the ones applicable to this type.
+            for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
+            {
+                if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
+                {
+                    MCExecValue t_value;
+                    MCAutoValueRef t_valueref;
+                    // Fetch the property, then store it into the array.
+                    MCBitmapEffectFetchProperty(ctxt, t_effect, s_bitmap_effect_properties[i] . value, t_value);
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &(&t_valueref));
+                    MCArrayStoreValue(*v, ctxt . GetCaseSensitive(), MCNAME(s_bitmap_effect_properties[i] . token), *t_valueref);
+                }
+            }
+            r_value . arrayref_value = MCValueRetain(*v);
+            r_value . type = kMCExecValueTypeArrayRef;
+            return true;
+        }
+    }
+    else
+    {
+        MCBitmapEffectFetchProperty(ctxt, t_effect, t_prop, r_value);
+        return true;
+    }
+
+    return false;
+}
+
+static void MCBitmapEffectsSetColorProperty(MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, MCColor p_color, bool& x_dirty)
+{
+    switch (p_prop)
+    {
+        case kMCBitmapEffectPropertyColor:
+        {
+            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
+			uint4 t_new_color;
+			t_new_color = MCGPixelPack(kMCGPixelFormatBGRA, p_color.red >> 8, p_color.green >> 8, p_color.blue >> 8, MCGPixelGetAlpha(kMCGPixelFormatBGRA, x_effect . layer . color));
+            
+            if (t_new_color != x_effect . layer . color)
+            {
+                x_effect . layer . color = t_new_color;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+static void MCBitmapEffectsSetEnumProperty(MCExecContext& ctxt, MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, MCExecValue p_value, bool& x_dirty)
+{
+    intenum_t t_value;
+    switch (p_prop)
+    {
+        case kMCBitmapEffectPropertyBlendMode:
+        {
+            MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectBlendModeTypeInfo, p_value, t_value);
+            if (!ctxt . HasError())
+            {
+                MCBitmapEffectBlendMode t_new_mode;
+                t_new_mode = (MCBitmapEffectBlendMode)t_value;
+                if (t_new_mode != x_effect . layer . blend_mode)
+                {
+                    x_effect . layer . blend_mode = t_new_mode;
+                    x_dirty = true;
+                }
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertyFilter:
+        {
+            MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectFilterTypeInfo, p_value, t_value);
+            if (!ctxt . HasError())
+            {
+                MCBitmapEffectFilter t_new_filter;
+                t_new_filter = (MCBitmapEffectFilter)t_value;
+                if (t_new_filter != x_effect . blur . filter)
+                {
+                    x_effect . blur . filter = t_new_filter;
+                    x_dirty = true;
+                }
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertySource:
+        {
+            MCExecParseEnum(ctxt, kMCInterfaceBitmapEffectSourceTypeInfo, p_value, t_value);
+            if (!ctxt . HasError())
+            {
+                MCBitmapEffectSource t_new_source;
+                t_new_source = (MCBitmapEffectSource)t_value;
+                if (t_new_source != x_effect . glow . source)
+                {
+                    x_effect . glow . source = t_new_source;
+                    x_dirty = true;
+                }
+            }
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+static void MCBitmapEffectsSetUIntProperty(MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, uinteger_t p_uint, bool& x_dirty)
+{
+    switch (p_prop)
+    {
+        case kMCBitmapEffectPropertyOpacity:
+        {
+            p_uint = MCU_min(p_uint, (uint4)255);
+            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
+            if (p_uint != MCGPixelGetAlpha(kMCGPixelFormatBGRA, x_effect . layer . color))
+            {
+                uint8_t r, g, b, a;
+                MCGPixelUnpack(kMCGPixelFormatBGRA, x_effect . layer . color, r, g, b, a);
+                
+                x_effect . layer . color = MCGPixelPack(kMCGPixelFormatBGRA, r, g, b, p_uint);
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertySize:
+        {
+            p_uint = MCU_min(p_uint, (uint4)255);
+            if (p_uint != x_effect . blur . size)
+            {
+                x_effect . blur . size = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertySpread:
+        {
+            p_uint = MCU_min(p_uint, (uint4)255);
+            if (p_uint != x_effect . blur . spread)
+            {
+                x_effect . blur . spread = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertyDistance:
+        {
+            p_uint = MCU_min(p_uint, (uint4)32767);
+            if (p_uint != x_effect . shadow . distance)
+            {
+                x_effect . shadow . distance = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        case kMCBitmapEffectPropertyAngle:
+        {
+            p_uint %= 360;
+            if (p_uint != x_effect . shadow . angle)
+            {
+                x_effect . shadow . angle = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        // AL-2014-11-25: [[ Bug 14092 ]] Can't set glow range property
+        case kMCBitmapEffectPropertyRange:
+        {
+            p_uint = MCU_min(p_uint, (uint4)255);
+            if (p_uint != x_effect . glow . range)
+            {
+                x_effect . glow . range = p_uint;
+                x_dirty = true;
+            }
+        }
+            break;
+    }
+}
+
+static void MCBitmapEffectsSetBooleanProperty(MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, bool p_setting, bool& x_dirty)
+{
+    switch (p_prop)
+    {
+        // AL-2014-11-25: [[ Bug 14092 ]] Can't set shadow knockout property
+        case kMCBitmapEffectPropertyKnockOut:
+        {
+            if (p_setting != x_effect . shadow . knockout)
+            {
+                x_effect . shadow . knockout = p_setting;
+                x_dirty = true;
+            }
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+static void MCBitmapEffectStoreProperty(MCExecContext& ctxt, MCBitmapEffect& x_effect, MCBitmapEffectProperty p_prop, MCExecValue p_value, bool& r_dirty)
+{
+    switch (p_prop)
+    {
+        case kMCBitmapEffectPropertyColor:
+        {
+            MCColor t_color;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeColor, &t_color);
+            MCBitmapEffectsSetColorProperty(x_effect, p_prop, t_color, r_dirty);
+        }
+            break;
+        case kMCBitmapEffectPropertyBlendMode:
+        case kMCBitmapEffectPropertyFilter:
+        case kMCBitmapEffectPropertySource:
+            MCBitmapEffectsSetEnumProperty(ctxt, x_effect, p_prop, p_value, r_dirty);
+            break;
+        case kMCBitmapEffectPropertyOpacity:
+        case kMCBitmapEffectPropertySize:
+        case kMCBitmapEffectPropertySpread:
+        case kMCBitmapEffectPropertyDistance:
+        case kMCBitmapEffectPropertyAngle:
+        // AL-2014-11-25: [[ Bug 14092 ]] Can't set glow range property
+        case kMCBitmapEffectPropertyRange:
+        {
+            uinteger_t t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeUInt, &t_value);
+            MCBitmapEffectsSetUIntProperty(x_effect, p_prop, t_value, r_dirty);
+        }
+            break;
+        // AL-2014-11-25: [[ Bug 14092 ]] Can't set shadow knockout property
+        case kMCBitmapEffectPropertyKnockOut:
+        {
+            bool t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeBool, &t_value);
+            MCBitmapEffectsSetBooleanProperty(x_effect, p_prop, t_value, r_dirty);
+        }
+            break;
+        default:
+            break;
+    }
+}
+
+bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, MCNameRef p_index, Properties which, MCExecValue p_value, bool& r_dirty)
+{
+    // First map the property type
+	MCBitmapEffectType t_type;
+	t_type = (MCBitmapEffectType)(which - P_BITMAP_EFFECT_DROP_SHADOW);
+    
+    // If 'p_index' is the empty name, this is a whole array op.
+    bool t_is_array;
+    t_is_array = MCNameIsEmpty(p_index);
+
+    // AL-2014-05-21: [[ Bug 12459 ]] Ensure setting bitmap effect array to anything
+    //  that isn't an array does the same as setting it to 'empty'.
+    // AL_2014-05-23: [[ Bug 12483 ]] Only do this if we are setting all the properties at once.
+    if (t_is_array &&
+        (p_value . type == kMCExecValueTypeValueRef &&
+        (MCValueIsEmpty(p_value . valueref_value) ||
+         (MCValueGetTypeCode(p_value . valueref_value) != kMCValueTypeCodeArray))))
+    {
+        if (self == nil || (self -> mask & (1 << t_type)) == 0)
+        {
+            r_dirty = false;
+            return true;
+        }
+
+		// We are set, so just unset our bit in the mask
+		self -> mask &= ~(1 << t_type);
+        
+		// If we are now empty, then clear.
+		if (self -> mask == 0)
+			MCBitmapEffectsClear(self);
+		
+		// Mark the object as dirty
+		r_dirty = true;
+        
+		return true;
+    }
+    
+    MCBitmapEffectProperty t_prop;
+    MCBitmapEffect effect;
+    bool t_dirty;
+    
+    // Now fetch the bitmap effect we are processing - note that if this is
+    // NULL it means it isn't set. In this case we still carry on since we
+    // need to report a invalid key error (if applicable).
+    if (self != nil && (self  -> mask & (1 << t_type)) != 0)
+    {
+        effect = self -> effects[t_type];
+        t_dirty = false;
+    }
+    else
+    {
+        MCBitmapEffectDefault(&effect, t_type);
+        // If the effect doesn't yet exist, it means we will dirty the object
+        // regardless.
+        t_dirty = true;
+    }
+    
+    // Lookup the property and ensure it is appropriate for our type.
+    if (!MCNameIsEmpty(p_index) && MCBitmapEffectLookupProperty(t_type, p_index, t_prop) != ES_NORMAL)
+        return false;
+    
+    if (t_is_array)
+    {
+        bool t_dirty_array;
+        t_dirty_array = false;
+        MCAutoArrayRef t_array;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeArrayRef, &(&t_array));
+        // Loop through all the properties in the table and apply the relevant
+        // ones.
+        for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
+            if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
+            {
+                MCValueRef t_prop_value;
+                MCNewAutoNameRef t_key;
+                
+                /* UNCHECKED */ MCNameCreateWithCString(s_bitmap_effect_properties[i] . token, &t_key);
+                // If we don't have the given element, then move to the next one
+                if (!MCArrayFetchValue(*t_array, kMCCompareExact, *t_key, t_prop_value))
+                    continue;
+                
+                // Otherwise, fetch the keys value and attempt to set the property
+                MCExecValue t_value;
+                t_value . valueref_value = MCValueRetain(t_prop_value);
+                t_value . type = kMCExecValueTypeValueRef;
+                MCBitmapEffectStoreProperty(ctxt, effect, s_bitmap_effect_properties[i] . value, t_value, t_dirty_array);
+            }
+        if (t_dirty_array)
+            t_dirty = true;
+        
+    }
+    else
+        MCBitmapEffectStoreProperty(ctxt, effect, t_prop, p_value, t_dirty);
+    
+    if (t_dirty)
+    {
+        // If we are currently empty, then allocate a new object
+        if (self == nil)
+        {
+            self = new MCBitmapEffects;
+            if (self == nil)
+                return false;
+            
+            // Only need to initialize the mask.
+            self -> mask = 0;
+        }
+        
+        // Now copy in the updated effect.
+        self -> mask |= (1 << t_type);
+        self -> effects[t_type] = effect;
+    }
+    
+    r_dirty = t_dirty;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

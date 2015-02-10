@@ -14,12 +14,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <core.h>
 #include <stdio.h>
 
 #include "Scanner.h"
 #include "Parser.h"
 #include "Interface.h"
+#include "foundation-locale.h"
 
 #define canvas_idl "/Users/mark/Workspace/revolution/externals/rrecanvas/rrecanvas.lcidl.txt"
 #define error_idl "/Users/mark/Workspace/revolution/trunk/lcidlc/interface_error_test.txt"
@@ -30,20 +30,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // Improve XCode error output.
 const char *g_input_filename = nil;
 
+// SN-20140-07-02: [[ ExternalsApiV6 ]] Added needed extern variable in libfoundation...
+MCLocaleRef kMCBasicLocale;
+
 int main(int argc, char *argv[])
 {
+    MCInitialize();
+    
 	bool t_success;
 	t_success = true;
 
 	if (argc != 3)
 	{
-		fprintf(stderr, "Syntax: lcidlc <input file> <output file>\n");
+		fprintf(stderr, "Syntax: lcidlc <input file> <output file/folder>\n");
 		return 1;
 	}
 	
 	// Improve XCode error output.
 	g_input_filename = argv[1];
-	
+    
 	ScannerRef t_scanner;
 	t_scanner = nil;
 	if (t_success)

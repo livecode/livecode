@@ -189,7 +189,7 @@ protected:
         bool ignore_mouse_events_changed : 1;
 	} m_changes;
 	MCPlatformWindowStyle m_style;
-	char *m_title;
+	MCStringRef m_title;
 	MCPlatformWindowMaskRef m_mask;
 	float m_opacity;
 	MCRectangle m_content;
@@ -242,7 +242,7 @@ public:
     
     virtual void BeginDialog(void) = 0;
     virtual MCPlatformDialogResult EndDialog(void) = 0;
-    virtual bool StartRecording(const char *filename) = 0;
+    virtual bool StartRecording(MCStringRef filename) = 0;
     virtual void StopRecording(void) = 0;
     virtual void PauseRecording(void) = 0;
     virtual void ResumeRecording(void) = 0;
@@ -254,7 +254,7 @@ public:
 protected:
 
     bool m_recording;;
-    char *m_filename;
+    MCStringRef m_filename;
     
     // The recorder's current configuration settings.
      MCPlatformSoundRecorderConfiguration m_configuration;
@@ -269,7 +269,7 @@ void MCPlatformWindowDeathGrip(MCPlatformWindowRef window);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformCallbackSendApplicationStartup(int argc, char **argv, char **envp, int& r_error_code, char*& r_error_message);
+void MCPlatformCallbackSendApplicationStartup(int argc, MCStringRef *argv, MCStringRef *envp, int& r_error_code, MCStringRef& r_error_message);
 void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code);
 void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate);
 void MCPlatformCallbackSendApplicationRun(bool& r_continue);

@@ -17,7 +17,6 @@
 #include <Cocoa/Cocoa.h>
 #include <QTKit/QTKit.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "imagebitmap.h"
 #include "region.h"
@@ -85,7 +84,7 @@ protected:
     virtual void Unrealize(void);
     
 private:
-    void Load(const char *filename, bool is_url);
+    void Load(MCStringRef filename, bool is_url);
     void Synchronize(void);
     void Switch(bool new_offscreen);
     
@@ -422,19 +421,22 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
     return False;
 }
 
-void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
+void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
 {
     NSError *t_error;
 	t_error = nil;
-	
+    
+    MCStringRef t_filename;
     if (p_filename == nil)
-        p_filename = "";
+        t_filename = kMCEmptyString;
+    else
+        t_filename = p_filename;
     
     id t_filename_or_url;
     if (!p_is_url)
-        t_filename_or_url = [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding];
+        t_filename_or_url = [NSString stringWithMCStringRef: t_filename];
     else
-        t_filename_or_url = [NSURL URLWithString: [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding]];
+        t_filename_or_url = [NSURL URLWithString: [NSString stringWithMCStringRef: t_filename]];
     
 	NSDictionary *t_attrs;
     extern NSString **QTMovieFileNameAttribute_ptr;
@@ -631,11 +633,11 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 	switch(p_property)
 	{
 		case kMCPlatformPlayerPropertyURL:
-			Load(*(const char **)p_value, true);
+			Load(*(MCStringRef*)p_value, true);
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyFilename:
-			Load(*(const char **)p_value, false);
+			Load(*(MCStringRef*)p_value, false);
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyOffscreen:
@@ -901,7 +903,7 @@ void MCQTKitPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProp
 			unsigned char t_name[256];
 			MediaGetName(t_handler, t_name, 0, nil);
 			p2cstr(t_name);
-			*(char **)r_value = strdup((const char *)t_name);
+            MCStringCreateWithCString((char*)t_name, *(MCStringRef*)r_value);
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:

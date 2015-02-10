@@ -1,0 +1,9 @@
+setup
+
+set the ID of the templateStack to 2000
+
+reset the templateStack
+
+test the ID of the templateStack is 1001
+
+teardown

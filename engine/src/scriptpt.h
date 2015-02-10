@@ -37,21 +37,25 @@ struct Cvalue
 
 class MCScriptPoint
 {
-	char *script;
 	MCObject *curobj;
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
-	const uint1 *curptr;
-	const uint1 *tokenptr;
-	const uint1 *backupptr;
-	char *lowered;
+	const unichar_t *curptr;
+	const unichar_t *tokenptr;
+	const unichar_t *backupptr;
+    const unichar_t *endptr;
 	MCString token;
 	MCNameRef token_nameref;
-	uint2 loweredsize;
 	uint2 line;
 	uint2 pos;
 	Boolean escapes;
+	Symbol_type m_type;
 	
+    uint32_t length;
+    MCDataRef utf16_script;
+    codepoint_t codepoint;
+    uint1 curlength;
+    
 	// MW-2011-06-23: If this is true, then we parse the script in 'tag' mode.
 	Boolean tagged;
 	// MW-2011-06-23: This is true if we are currently consuming tokens inside
@@ -62,23 +66,18 @@ class MCScriptPoint
 
 public:
 	MCScriptPoint(MCScriptPoint &sp);
-	MCScriptPoint(MCObject *, MCHandlerlist *, const char *);
+	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
+#ifdef LEGACY_EXEC
 	MCScriptPoint(MCExecPoint &ep);
-	MCScriptPoint(const MCString &s);
+    MCScriptPoint(const MCString &s);
+#endif
+    MCScriptPoint(MCExecContext &ctxt);
+    MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string);
+	MCScriptPoint(MCStringRef p_string);
+
 	~MCScriptPoint();
-	MCScriptPoint& operator=(const MCScriptPoint& sp)
-	{
-		curobj = sp.curobj;
-		curhlist = sp.curhlist;
-		curhandler = sp.curhandler;
-		curptr = sp.curptr;
-		tokenptr = sp.tokenptr;
-		backupptr = sp.backupptr;
-		token = sp.token;
-		line = sp.line;
-		pos = sp.pos;
-		return *this;
-	}
+	MCScriptPoint& operator=(const MCScriptPoint& sp);
+	
 	void allowescapes(Boolean which)
 	{
 		escapes = which;
@@ -104,17 +103,14 @@ public:
 		return pos > (curptr - backupptr)
 		       ?  pos - (curptr - backupptr) : 1;
 	}
-	MCString &gettoken()
-	{
-		return token;
-	}
+	bool token_is_cstring(const char *p_cstring);
 
+#ifdef LEGACY_EXEC
+	MCString gettoken_oldstring(void);
+#endif
 	MCNameRef gettoken_nameref(void);
+	MCStringRef gettoken_stringref(void);
 
-	const char *getscript()
-	{
-		return script;
-	}
 	MCObject *getobj()
 	{
 		return curobj;
@@ -132,10 +128,16 @@ public:
 		return curhlist;
 	}
 
-	const uint1 *getcurptr(void)
+	const unichar_t *getcurptr(void)
 	{
 		return curptr;
 	}
+    
+    uindex_t getindex(void)
+    {
+        // AL-2014-07-28: [[ Bug 12729 ]] Fix the initial index of a token with quotation marks.
+        return (const unichar_t *)token . getstring() + length - endptr;
+    }
 
 	Parse_stat skip_space();
 	Parse_stat skip_eol();
@@ -144,6 +146,7 @@ public:
 	Parse_stat nexttoken();
 	void cleartoken(void);
 	Parse_stat lookup(Script_point, const LT *&);
+    bool lookupconstantvalue(const char*& r_value);
 	Parse_stat lookupconstant(MCExpression **);
 	Parse_stat skip_token(Script_point, Token_type, uint2 n = 0);
 	MCExpression *insertfactor(MCExpression *nfact, MCExpression *&cfact,
@@ -151,9 +154,6 @@ public:
 	MCExpression *insertbinop(MCExpression *nfact, MCExpression *&cfact,
 	                          MCExpression **top);
 	Parse_stat parseexp(Boolean single, Boolean items, MCExpression **);
-	Exec_stat getcommands(MCExecPoint &ep);
-	Exec_stat getfactors(MCExecPoint &ep, Token_type which);
-	Exec_stat getconstants(MCExecPoint &ep);
 	
 	// Search for an existing variable in scope, returning an error if it
 	// doesn't exist.
@@ -167,6 +167,27 @@ public:
 	// doesn't exist. A uql-var starts off with the same content as its
 	// name, but as soon as its used as a container becomes empty.
 	Parse_stat finduqlvar(MCNameRef name, MCVarref** r_var);
+    
+    Symbol_type gettype(codepoint_t p_codepoint);
+    
+    // A codepoint can be an initial character of an identifier if it
+    // - has type ST_ID
+    // - is a Unicode letter
+    // It can be part of an identifier if it can be an initial character, or it
+    // - has type ST_NUM
+    // - is a Unicode digit
+    // - is a Unicode combining mark
+    // - is a Unicode connector punctuation mark
+    bool is_identifier(codepoint_t p_codepoint, bool p_initial);
+    
+    // Increment the index
+    void advance(uindex_t number = 1);
+    
+    codepoint_t getcurrent();
+    codepoint_t getnext();
+    codepoint_t getcodepointatindex(uindex_t index);
+    
+    void setcurptr(const unichar_t *ptr);
 };
 #endif
 

@@ -134,7 +134,7 @@ public:
 
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
-	void drawsegments(MCSegment *segments, uint2 nsegs);
+	void drawsegments(MCLineSegment *segments, uint2 nsegs);
 	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false);
 	void drawrect(const MCRectangle& rect);
 	void fillrect(const MCRectangle& rect);
@@ -156,7 +156,7 @@ public:
 
 	void drawimage(const MCImageDescriptor& info, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
 
-	void drawlink(const char *link, const MCRectangle& region);
+	void drawlink(MCStringRef link, const MCRectangle& region);
 
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 

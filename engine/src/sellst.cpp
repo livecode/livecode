@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -34,9 +34,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "util.h"
 #include "stacklst.h"
+#include "variable.h"
 
 #include "globals.h"
-#include "core.h"
 
 MCSelnode::MCSelnode(MCObject *object)
 {
@@ -74,21 +74,28 @@ MCObject *MCSellist::getfirst()
 		return NULL;
 }
 
-void MCSellist::getids(MCExecPoint &ep)
+bool MCSellist::getids(MCListRef& r_list)
 {
-	ep.clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	if (objects != NULL)
 	{
 		MCSelnode *tptr = objects;
-		MCExecPoint ep2(ep);
 		do
 		{
-			tptr->ref->getprop(0, P_LONG_ID, ep2, False);
-			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, tptr == objects);
+			MCAutoValueRef t_string;
+			if (!tptr->ref->names(P_LONG_ID, &t_string))
+				return false;
+			if (!MCListAppend(*t_list, *t_string))
+				return false;
 			tptr = tptr->next();
 		}
 		while (tptr != objects);
 	}
+
+	return MCListCopy(*t_list, r_list);
 }
 
 void MCSellist::clear(Boolean message)
@@ -169,23 +176,24 @@ void MCSellist::remove(MCObject *objptr, bool p_sendmessage)
 void MCSellist::sort()
 {
 	MCSelnode *optr = objects;
-	MCSortnode *items = NULL;
+	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	MCCard *cptr = optr->ref->getcard();
 	do
 	{
-		MCU_realloc((char **)&items, nitems, nitems + 1, sizeof(MCSortnode));
+		items.Extend(nitems + 1);
 		items[nitems].data = (void *)optr;
 		uint2 num = 0;
 		cptr->count(CT_LAYER, CT_UNDEFINED, optr->ref, num, True);
-		items[nitems].nvalue = (real8)num;
+		/* UNCHECKED */ MCNumberCreateWithUnsignedInteger(num, items[nitems].nvalue);
 		nitems++;
 		optr = optr->next();
 	}
 	while (optr != objects);
 	if (nitems > 1)
 	{
-		MCU_sort(items, nitems, ST_ASCENDING, ST_NUMERIC);
+        extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
+		MCStringsSort(items.Ptr(), nitems, ST_ASCENDING, ST_NUMERIC, kMCStringOptionCompareExact);
 		uint4 i;
 		MCSelnode *newobjects = NULL;
 		for (i = 0 ; i < nitems ; i++)
@@ -196,7 +204,6 @@ void MCSellist::sort()
 		}
 		objects = newobjects;
 	}
-	delete items;
 }
 
 uint32_t MCSellist::count()
@@ -340,8 +347,8 @@ bool MCSellist::clipboard(bool p_is_cut)
 		// First we construct the pickle of the list of selected objects
 		MCPickleContext *t_context;
 		
-		// MW-2012-03-04: [[ StackFile5500 ]] When pickling for the clipboard, make sure it
-		//   includes both 2.7 and 5.5 stackfile formats.
+        // AL-2014-02-14: [[ UnicodeFileFormat ]] When pickling for the clipboard, make sure it
+        //   includes 2.7, 5.5 and 7.0 stackfile formats.
 		t_context = MCObject::startpickling(true);
 
 		MCSelnode *t_node;
@@ -370,27 +377,21 @@ bool MCSellist::clipboard(bool p_is_cut)
 		bool t_success;
 		t_success = true;
 
-		MCSharedString *t_pickle;
-		t_pickle = MCObject::stoppickling(t_context);
-		if (t_pickle == NULL)
+		MCAutoDataRef t_pickle;
+		MCObject::stoppickling(t_context, &t_pickle);
+		if (*t_pickle == nil)
 			t_success = false;
 
 		// OK-2008-08-06: [[Bug 6794]] - Return here before writing to the clipboard to preserve the message in the result.
 		if (!t_objects_were_copied)
-		{
-			// MW-2008-08-08: Make sure we release the pickle even if its empty (otherwise we will
-			//   have a memory leak).
-			if (t_pickle != NULL)
-				t_pickle -> Release();
 			return false;
-		}
 
 		// Now attempt to write it to the clipboard
 		MCclipboarddata -> Open();
 
 		if (t_success)
 		{
-			if (!MCclipboarddata -> Store(TRANSFER_TYPE_OBJECTS, t_pickle))
+			if (!MCclipboarddata -> Store(TRANSFER_TYPE_OBJECTS, *t_pickle))
 				t_success = false;
 		}
 
@@ -398,19 +399,16 @@ bool MCSellist::clipboard(bool p_is_cut)
 		if (t_success)
 			if (objects == objects -> next() && objects -> ref -> gettype() == CT_IMAGE)
 			{
-				MCSharedString *t_data;
-				t_data = static_cast<MCImage *>(objects -> ref) -> getclipboardtext();
-				if (t_data != NULL)
-				{
-					MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, t_data);
-					t_data -> Release();
-				}
+				MCAutoDataRef t_data;
+				static_cast<MCImage *>(objects -> ref) -> getclipboardtext(&t_data);
+				if (*t_data != nil)
+					MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_data);
 			}
 		
 		if (!MCclipboarddata -> Close())
 			t_success = false;
 
-		// If we succeeded remove the objects if it's a cut operation
+		// If we succeeded remove the objects if its a cut operation
 		if (t_success)
 		{
 			if (p_is_cut)
@@ -439,9 +437,6 @@ bool MCSellist::clipboard(bool p_is_cut)
 		}
 		else
 			MCresult -> sets("can't write to clipboard");
-
-		if (t_pickle != NULL)
-			t_pickle -> Release();
 
 		return true;
 	}
@@ -591,7 +586,7 @@ void MCSellist::redraw()
 		if (cptr -> gettype() <= CT_CARD)
 			cptr -> getstack() -> dirtyall();
 		else
-			cptr -> layer_redrawall();
+		cptr -> layer_redrawall();
 
 		tptr = tptr->next();
 	}

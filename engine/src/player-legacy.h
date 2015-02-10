@@ -16,69 +16,32 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //
 // MCPlayer class declarations
+// This implementation is only made if FEATURE_PLATFORM_PLAYER is not set
 //
 #ifndef	PLAYER_LEGACY_H
 #define	PLAYER_LEGACY_H
 
+#ifndef FEATURE_PLATFORM_PLAYER
+
 #include "control.h"
+#include "player-interface.h"
+#include "exec-interface.h"
 
 #ifdef FEATURE_QUICKTIME
-enum QTstate {
-    QT_NOT_INITTED,
-    QT_INITTED,
-    QT_FAILED
-};
-
-enum QTVRstate {
-    QTVR_NOT_INITTED,
-    QTVR_INITTED,
-    QTVR_FAILED
-};
-#endif
-
-#ifndef FEATURE_PLATFORM_PLAYER
+// Forward declaration
 struct MCPlayerOffscreenBuffer;
 #endif
 
-#ifdef FEATURE_PLATFORM_PLAYER
-struct MCPlayerCallback
-{
-    MCNameRef message;
-    MCNameRef parameter;
-    uint32_t time;
-};
-#endif
-
-class MCPlayer : public MCControl
-{
-	MCPlayer *nextplayer;
-	char *filename;
-	uint2 framerate;
-	Boolean disposable;
-	Boolean istmpfile;
-	real8 scale;
-	real8 rate;
-	uint4 starttime;
-	uint4 endtime;
-	char *userCallbackStr;  //string contains user movie callbacks
-	uint2 formattedwidth;
-	uint2 formattedheight;
-	uint2 loudness;
-	int4 lasttime;
-
-#ifdef FEATURE_PLATFORM_PLAYER
-	MCPlatformPlayerRef m_platform_player;
-    MCPlayerCallback *m_callbacks;
-    uindex_t m_callback_count;
-#endif
-	
+// SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
+//  since we use &MCControl::kPropertyTable
+class MCPlayer : public MCControl, public MCPlayerInterface
+{	
 #ifdef FEATURE_MPLAYER
 	char *command;
 	Atom atom;
 	MPlayer *m_player ;
 #endif
 	
-#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	static QTstate qtstate;
 	static long qtversion;
@@ -116,19 +79,31 @@ class MCPlayer : public MCControl
 #endif
 
 #endif
-#endif
+	MCPlayer *nextplayer;
+    
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 
 public:
 	MCPlayer();
 	MCPlayer(const MCPlayer &sref);
-	// virtual functions from MCObject
 	virtual ~MCPlayer();
+    
+    MCPlayer *getnextplayer()
+    {
+        return (MCPlayer*)nextplayer;
+    }
+    
+	// virtual functions from MCObject
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+    
 	virtual void open();
 	virtual void close();
-	virtual Boolean kdown(const char *string, KeySym key);
-	virtual Boolean kup(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
+	virtual Boolean kup(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean mdown(uint2 which);
@@ -137,71 +112,30 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-
+#ifdef LEGACY_EXEC
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#endif
+    
 	// MW-2011-09-23: [[ Bug ]] Implement buffer / unbuffer at the point of
 	//   selection to stop redraw issues.
 	virtual void select(void);
 	virtual void deselect(void);
-
+    
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
-
+    
 	// virtual functions from MCControl
-	IO_stat load(IO_handle stream, const char *version);
-	IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
+	IO_stat load(IO_handle stream, uint32_t version);
+	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
-
+    
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
-	// MCPlayer functions
-	MCPlayer *getnextplayer()
-	{
-		return nextplayer;
-	}
-
+    
 	// MW-2005-08-02: Return the rectangle of the player that bounds the active area
 	MCRectangle getactiverect(void);
-
-	void getversion(MCExecPoint &ep);
-	void freetmp();
-	uint4 getduration();    //get movie duration/length
-	uint4 gettimescale();  //get movie time scale
-	uint4 getmoviecurtime();//get movie current time
-	void getminwait(real8 &wait);
-	void setcurtime(uint4 curtime);
-	void setselection();                  //set movie selection
-	void setlooping(Boolean loop);        //to loop or not to loop a movie
-	void setplayrate();                   //set the movie playing rate
-	Boolean setInterestingTimeCB();       //True, if set, False, if not
-	void showbadge(Boolean show);         //show & hide the movie's badge
-	void showcontroller(Boolean show);
-	void editmovie(Boolean edit);
-	void playselection(Boolean play);     //play the selected part of QT moive only
-	Boolean ispaused();
-	void setpause();
-
-	MCRegionRef makewindowregion();
-
-	MCRectangle getpreferredrect();
-	uint2 getloudness();
-	void setloudness();
-	void gettracks(MCExecPoint &ep);
-	void getenabledtracks(MCExecPoint &ep);
-	Boolean setenabledtracks(const MCString &s);
-	void getnodes(MCExecPoint &ep);
-	void gethotspots(MCExecPoint &ep);
-
-	// MW-2011-09-23: Ensures the buffering state is consistent with current flags
-	//   and such.
-	void syncbuffering(MCContext *dc);
-
-#ifdef FEATURE_PLATFORM_PLAYER
-	MCRectangle resize(MCRectangle rect);
-	void SynchronizeUserCallbacks(void);
-	Boolean isbuffering(void);
-#endif
+    // End MCObjet functions
 	
 #ifdef _LINUX_DESKTOP
 	const char *getcommand()
@@ -210,24 +144,110 @@ public:
 	}
 	Boolean syncxanim();
 #endif
+    
+    // virtual function from MCPlayerInterface
+	virtual bool getversion(MCStringRef& r_string);
+	virtual void freetmp();
+	virtual uint4 getduration();    //get movie duration/length
+	virtual uint4 gettimescale();  //get movie time scale
+	virtual uint4 getmoviecurtime();//get movie current time
+	virtual void setcurtime(uint4 curtime, bool notify);
+	virtual void setselection(bool notify);                  //set movie selection
+	virtual void setlooping(Boolean loop);        //to loop or not to loop a movie
+	virtual void setplayrate();                   //set the movie playing rate
+	virtual void showbadge(Boolean show);         //show & hide the movie's badge
+	virtual void showcontroller(Boolean show);
+	virtual void editmovie(Boolean edit);
+	virtual void playselection(Boolean play);     //play the selected part of QT moive only
+	virtual Boolean ispaused();
+	virtual MCRectangle getpreferredrect();
+    virtual uint2 getloudness();
+	virtual void setloudness();
+	virtual Boolean setenabledtracks(MCStringRef s);
 
-#ifndef FEATURE_PLATFORM_PLAYER
+	virtual Boolean prepare(MCStringRef options);
+	virtual Boolean playstart(MCStringRef options);
+	virtual Boolean playpause(Boolean on);
+    virtual void playstepforward();
+	virtual void playstepback();
+	virtual Boolean playstop();
+	virtual void setvolume(uint2 tloudness);
+	virtual void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp);
+    
+	virtual void setstarttime(uint4 stime)
+	{
+		starttime = stime;
+	}
+	virtual void setendtime(uint4 etime)
+	{
+		endtime = etime;
+	}
+	virtual void setlasttime(int4 ltime)
+	{
+		lasttime = ltime;
+	}
+    
+    virtual void syncbuffering(MCContext *dc);
+    
+    virtual void setcallbacks(MCStringRef p_callbacks);
+    
+    virtual void setmoviecontrollerid(integer_t p_id);
+    virtual integer_t getmoviecontrollerid();
+    virtual integer_t getmediatypes();
+    virtual uinteger_t getcurrentnode();
+    virtual bool changecurrentnode(uinteger_t p_node_id);
+	virtual real8 getpan();
+	virtual bool changepan(real8 pan);
+	virtual real8 gettilt();
+	virtual bool changetilt(real8 tilt);
+	virtual real8 getzoom();
+	virtual bool changezoom(real8 zoom);
+    virtual void gettracks(MCStringRef &r_tracks);
+    virtual uinteger_t gettrackcount();
+    virtual void getnodes(MCStringRef &r_nodes);
+    virtual void gethotspots(MCStringRef &r_nodes);
+    virtual void getconstraints(MCMultimediaQTVRConstraints &r_constraints);
+    virtual void getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    
+    virtual void updatevisibility();
+    virtual void updatetraversal();
+    
+    virtual void setforegroundcolor(const MCInterfaceNamedColor& p_color);
+    virtual void getforegrouncolor(MCInterfaceNamedColor& r_color);
+    virtual void sethilitecolor(const MCInterfaceNamedColor& p_color);
+    virtual void gethilitecolor(MCInterfaceNamedColor& r_color);
+
+    // SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]]
+    virtual bool resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename);
+    
+    // End of virtual functions from MCPlayerInterface
+    
+	//////////////////////////////
+	// QT ACCESSORS
+
+	void getqtvrconstraints(uint1 index, real4& minrange, real4& maxrange);
+	uint2 getnodecount();
+	virtual bool getnode(uindex_t index, uint2 &id, MCMultimediaQTVRNodeType &type);
+	virtual uint2 gethotspotcount();
+	virtual bool gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType &type);
+    
+    
 #if !defined(FEATURE_QUICKTIME)
-	Boolean isbuffering()
+	virtual Boolean isbuffering()
 	{
 		return False;
 	}
 #else
 	void initqt();
 	void initqtvr();
-
+    
 	MCRectangle resize(MCRectangle rect);
 	void checktimes();
-
+    
 	// MW-2005-05-15: Augment call with extra title field for consistency
 	void handlerecord();
 	void reloadcallbacks(Boolean reloadstopmovie, long p_from_time);
-
+    
 	void *getmovie()
 	{
 		return theMovie;
@@ -254,15 +274,15 @@ public:
 	Boolean prepareQT();
 	void bufferDraw(bool p_resize); //direct movie controller to draw to Offscreen buffer
 	void unbufferDraw(); //direct movie controller to draw to Screen/Window
-
-	Boolean isbuffering()
+    
+	virtual Boolean isbuffering()
 	{
 		return (m_offscreen != NULL);
 	}
 	
 #ifdef _WINDOWS_DESKTOP
 	void changewindow(MCSysWindowHandle p_old_window);
-
+    
 	Boolean prepareAVI();
 	uint32_t getDeviceID()
 	{
@@ -275,62 +295,9 @@ public:
 	{
 		return hwndMovie;
 	}
-#endif
-#endif
-#endif
-
-	Boolean isdisposable()
-	{
-		return disposable;
-	}
-	void setscale(real8 &s)
-	{
-		scale = s;
-	}
-	Boolean prepare(const char *options);
-	Boolean playstart(const char *options);
-	Boolean playpause(Boolean on);
-	void playstepforward();
-	void playstepback();
-	Boolean playstop();
-	void setvolume(uint2 tloudness);
-	void setfilename(const char *vcname, char *fname, Boolean istmp);
-	uint4 getstarttime()
-	{
-		return starttime;
-	}
-	uint4 getendtime()
-	{
-		return endtime;
-	}
-	int4 getlasttime()
-	{
-		return lasttime;
-	}
-	void setstarttime(uint4 stime)
-	{
-		starttime = stime;
-	}
-	void setendtime(uint4 etime)
-	{
-		endtime = etime;
-	}
-	void setlasttime(int4 ltime)
-	{
-		lasttime = ltime;
-	}
-
-#ifdef FEATURE_PLATFORM_PLAYER
-	MCPlatformPlayerRef getplatformplayer(void)
-	{
-		return m_platform_player;
-	}
-    
-    void markerchanged(uint32_t p_time);
-    void selectionchanged(void);
+#endif    
 #endif
 	
-#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);
 	Boolean qt_playpause(Boolean on);
@@ -353,13 +320,19 @@ public:
 	MCRectangle qt_getpreferredrect(void);
 	uint2 qt_getloudness(void);
 	void qt_setloudness(uint2 loudn);
+#ifdef LEGACY_EXEC
 	void qt_gettracks(MCExecPoint& ep);
 	void qt_getenabledtracks(MCExecPoint& ep);
-	Boolean qt_setenabledtracks(const MCString& s);
+#endif
+    void qt_gettracks(MCStringRef &r_tracks);
+    void qt_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    Boolean qt_setenabledtracks(MCStringRef s);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);
 	void qt_move(int2 x, int2 y);
 	void qt_click(bool p_state, uint4 p_button);
 	void qt_key(bool p_state, uint4 p_key);
+	void qt_enablekeys(Boolean enable);
+	void qt_setcontrollervisible();
 
 #ifdef _WINDOWS_DESKTOP
 	Boolean avi_prepare(void);
@@ -383,9 +356,13 @@ public:
 	MCRectangle avi_getpreferredrect(void);
 	uint2 avi_getloudness(void);
 	void avi_setloudness(uint2 loudn);
+#ifdef LEGACY_EXEC
 	void avi_gettracks(MCExecPoint& ep);
 	void avi_getenabledtracks(MCExecPoint& ep);
-	Boolean avi_setenabledtracks(const MCString& s);
+#endif
+    void avi_gettracks(MCStringRef &r_tracks);
+    void avi_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    Boolean avi_setenabledtracks(MCStringRef s);
 	void avi_draw(MCDC *dc, const MCRectangle& dirty);
 
 	bool mode_avi_closewindowonplaystop();
@@ -415,16 +392,94 @@ public:
 	void x11_editmovie(Boolean edit) {}
 	void x11_playselection(Boolean play) {}
 	void x11_showcontroller(Boolean show) {}
-	MCRectangle x11_getpreferredrect(void) {MCRectangle t_rect; t_rect.x = 0;t_rect.y = 0;t_rect.width=0;t_rect.height=0; return t_rect;}
+    MCRectangle x11_getpreferredrect(void) { MCRectangle t_rect; t_rect.x = 0;t_rect.y = 0;t_rect.width=0;t_rect.height=0; return t_rect;}
+#ifdef LEGACY_EXEC
 	void x11_gettracks(MCExecPoint& ep) {}
 	void x11_getenabledtracks(MCExecPoint& ep) {}
-	Boolean x11_setenabledtracks(const MCString& s) {return False;}
+#endif
+    void x11_gettracks(MCStringRef &r_tracks) { r_tracks = MCValueRetain(kMCEmptyString); }
+    void x11_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) { r_count = 0; }
+    Boolean x11_setenabledtracks(MCStringRef & s) { return False;}
 	void x11_draw(MCDC *dc, const MCRectangle& dirty) {}
 	
 	pid_t getpid(void);
 	void  shutdown(void);
 #endif
-#endif
+    
+	////////// PROPERTY SUPPORT METHODS
+    
+	virtual void Redraw(void);
+    virtual void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
+    
+	////////// PROPERTY ACCESSORS
+    
+	virtual void GetFileName(MCExecContext& ctxt, MCStringRef& r_name);
+	virtual void SetFileName(MCExecContext& ctxt, MCStringRef p_name);
+	virtual void GetDontRefresh(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetDontRefresh(MCExecContext& ctxt, bool setting);
+	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time);
+	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time);
+	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration);
+    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_time);
+	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetLooping(MCExecContext& ctxt, bool setting);
+	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetPaused(MCExecContext& ctxt, bool setting);
+	virtual void GetAlwaysBuffer(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
+	virtual void GetPlayRate(MCExecContext& ctxt, double& r_rate);
+	virtual void SetPlayRate(MCExecContext& ctxt, double p_rate);
+	virtual void GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time);
+	virtual void SetStartTime(MCExecContext& ctxt, uinteger_t* p_time);
+	virtual void GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time);
+	virtual void SetEndTime(MCExecContext& ctxt, uinteger_t* p_time);
+	virtual void GetShowBadge(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetShowBadge(MCExecContext& ctxt, bool setting);
+	virtual void GetShowController(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetShowController(MCExecContext& ctxt, bool setting);
+	virtual void GetPlaySelection(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetPlaySelection(MCExecContext& ctxt, bool setting);
+	virtual void GetShowSelection(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetShowSelection(MCExecContext& ctxt, bool setting);
+	virtual void GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks);
+	virtual void SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks);
+	virtual void GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale);
+	virtual void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
+	virtual void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
+	virtual void GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id);
+	virtual void SetMovieControllerId(MCExecContext& ctxt, integer_t p_id);
+	virtual void GetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness);
+	virtual void SetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness);
+	virtual void GetTrackCount(MCExecContext& ctxt, uinteger_t& r_count);
+	virtual void GetMediaTypes(MCExecContext& ctxt, intset_t& r_types);
+	virtual void GetCurrentNode(MCExecContext& ctxt, uinteger_t& r_node);
+	virtual void SetCurrentNode(MCExecContext& ctxt, uinteger_t p_node);
+	virtual void GetPan(MCExecContext& ctxt, double& r_pan);
+	virtual void SetPan(MCExecContext& ctxt, double p_pan);
+	virtual void GetTilt(MCExecContext& ctxt, double& r_tilt);
+	virtual void SetTilt(MCExecContext& ctxt, double p_tilt);
+	virtual void GetZoom(MCExecContext& ctxt, double& r_zoom);
+	virtual void SetZoom(MCExecContext& ctxt, double p_zoom);
+    
+	virtual void GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks);
+    
+	virtual void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints);
+	virtual void GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes);
+	virtual void GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots);
+    
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
+    
+    virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);
+    
+    virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
+    virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+    virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
+    virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
 };
+#endif // FEATURE_PLATFORM_PLAYER
 
-#endif
+#endif // PLAYER_LEGACY_H

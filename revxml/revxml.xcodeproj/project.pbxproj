@@ -318,6 +318,8 @@
 /* Begin PBXProject section */
 		4D6758CF0A79F96300FA96D2 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D6758D00A79F96300FA96D2 /* Build configuration list for PBXProject "revxml" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;

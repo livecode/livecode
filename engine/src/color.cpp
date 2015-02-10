@@ -18,7 +18,6 @@
 
 #include "prefix.h"
 
-#include "core.h"
 #include "graphics.h"
 #include "color.h"
 

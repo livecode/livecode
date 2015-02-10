@@ -1,0 +1,15 @@
+setup
+
+local tTestKey = "HKEY_CURRENT_USER\Software\LiveCode\Tests\DeleteRegistry\"
+
+// set test reg entry
+test setRegistry(tTestKey, "deleteRegistryTest", "string")
+// test presence of test entry
+test queryRegistry(tTestKey) is "deleteRegistryTest"
+// delete test key
+test deleteRegistry(tTestKey)
+// test absence of test entry
+test queryRegistry(tTestKey) is empty
+test the result is "bad key"
+
+teardown

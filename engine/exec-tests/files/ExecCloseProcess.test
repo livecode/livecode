@@ -1,0 +1,23 @@
+setup
+
+local taskList
+
+put shell("tasklist /V") into taskList
+
+if taskList contains "cmd.exe" then
+	get shell("taskkill /IM cmd.exe")
+end if
+
+open process "cmd.exe"
+
+close process "cmd.exe"
+
+put shell("tasklist /V") into taskList
+
+log taskList
+
+test not taskList contains "cmd.exe"
+
+close process "cmd.exe"
+
+teardown

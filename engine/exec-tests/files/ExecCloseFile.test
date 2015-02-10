@@ -1,0 +1,13 @@
+setup
+   
+open file "test.tmp" for write
+
+close file "test.tmp"
+
+close file "test.tmp"
+
+test the result is "File is not open"
+
+delete file "test.tmp"
+
+teardown

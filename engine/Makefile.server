@@ -19,19 +19,15 @@ CUSTOM_INCLUDES=\
 
 CUSTOM_DEPS=libkernel-server.a
 
-CUSTOM_LIBS=pcre png jpeg z core gif graphics skia kernel-server
-CUSTOM_STATIC_LIBS=curl ssl crypto rt
-CUSTOM_DYNAMIC_LIBS=dl m pthread
+CUSTOM_LIBS=pcre png jpeg z foundation gif graphics skia kernel-server
+CUSTOM_STATIC_LIBS=curl icudata icui18n icuio icule iculx icuuc customssl customcrypto $(MODE_STATIC_LIBS)
+CUSTOM_DYNAMIC_LIBS=dl m pthread rt
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \
 	-fmessage-length=0 
 
-CUSTOM_LDFLAGS=-export-dynamic -Wl,-x
-
-linuxstubs.cpp: src/linux.stubs
-	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp
-
+CUSTOM_LDFLAGS_LTO=-export-dynamic -Wl,-x
 
 include ../rules/application.linux.makefile
 

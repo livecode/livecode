@@ -1,0 +1,19 @@
+setup
+
+create field
+
+create field
+
+put foo into field 1
+
+select text of field 1
+
+cut
+
+select after char 0 of field 2
+
+paste
+
+test field 1 is empty and field 2 is "foo"
+
+teardown

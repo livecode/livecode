@@ -1,0 +1,6 @@
+setup
+
+open file "non-existant file" for read
+test the result is "can't open that file"
+
+teardown

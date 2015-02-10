@@ -66,7 +66,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+#include "exec.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -86,6 +87,108 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 extern Boolean InitSSLCrypt(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
+{
+	MCStringRef t_temp_string;
+	MCArrayRef t_temp_array;
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("engine_ppc"), false, t_temp_string))
+		return false;
+	MCValueAssign(engine_ppc, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("engine_x86"), false, t_temp_string))
+		return false;
+	MCValueAssign(engine_x86, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (MCStringIsEmpty(engine_ppc) && MCStringIsEmpty(engine_x86))
+	{
+		if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("engine"), false, t_temp_string))
+			return false;
+		MCValueAssign(engine, t_temp_string);
+		MCValueRelease(t_temp_string);
+	}
+	
+	if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
+		return false;
+	MCValueAssign(stackfile, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("auxiliary_stackfiles"), false, t_temp_array))
+		return false;
+	MCValueAssign(auxiliary_stackfiles, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+    // The externals listed by the IDE are LF separated
+	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("externals"), false, t_temp_string))
+		return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(externals, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
+	
+	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("startup_script"), false, t_temp_string))
+		return false;
+	MCValueAssign(startup_script, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+    // The redirects listed by the IDE are LF separated
+	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("redirects"), false, t_temp_string))
+		return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(redirects, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
+	
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch the resource mappings, if any.
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("library"), false, t_temp_string))
+        return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(library, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
+    
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("appicon"), false, t_temp_string))
+		return false;
+	MCValueAssign(app_icon, t_temp_string);
+	MCValueRelease(t_temp_string);
+
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("docicon"), false, t_temp_string))
+		return false;
+	MCValueAssign(doc_icon, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("manifest"), false, t_temp_string))
+		return false;
+	MCValueAssign(manifest, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("payload"), false, t_temp_string))
+		return false;
+	MCValueAssign(payload, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("spill"), false, t_temp_string))
+		return false;
+	MCValueAssign(spill, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("output"), false, t_temp_string))
+		return false;
+	MCValueAssign(output, t_temp_string);
+	MCValueRelease(t_temp_string);
+	
+	if (!ctxt.CopyOptElementAsArray(p_array, MCNAME("version"), false, t_temp_array))
+		return false;
+	MCValueAssign(version_info, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+	return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -120,13 +223,13 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	// Open the stackfile.
 	MCDeployFileRef t_stackfile;
 	t_stackfile = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . stackfile, "rb", t_stackfile))
+	if (t_success && !MCDeployFileOpen(p_params . stackfile, kMCOpenFileModeRead, t_stackfile))
 		t_success = MCDeployThrow(kMCDeployErrorNoStackfile);
 
 	// Open the spill file, if required
 	MCDeployFileRef t_spill;
 	t_spill = NULL;
-	if (t_success && p_params . spill != nil && !MCDeployFileOpen(p_params . spill, "wb+", t_spill))
+	if (t_success && !MCStringIsEmpty(p_params . spill) && !MCDeployFileOpen(p_params . spill, kMCOpenFileModeCreate, t_spill))
 		t_success = MCDeployThrow(kMCDeployErrorNoSpill);
 
 	// First create our deployment capsule
@@ -141,9 +244,13 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 
 	// Add any redirects
 	if (t_success)
-		for(uint32_t i = 0; i < p_params . redirect_count && t_success; i++)
-			t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeRedirect, p_params . redirects[i], MCCStringLength(p_params . redirects[i]) + 1);
-
+		for(uint32_t i = 0; i < MCArrayGetCount(p_params.redirects) && t_success; i++)
+		{
+			MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.redirects, i + 1, t_val);
+			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeRedirect, (MCStringRef)t_val);
+		}
+			
 	// Now we add the main stack
 	if (t_success)
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
@@ -152,11 +259,13 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	MCDeployFileRef *t_aux_stackfiles;
 	t_aux_stackfiles = nil;
 	if (t_success)
-		t_success = MCMemoryNewArray(p_params . auxiliary_stackfile_count, t_aux_stackfiles);
+		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . auxiliary_stackfiles), t_aux_stackfiles);
 	if (t_success)
-		for(uint32_t i = 0; i < p_params . auxiliary_stackfile_count && t_success; i++)
+		for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxiliary_stackfiles) && t_success; i++)
 		{
-			if (t_success && !MCDeployFileOpen(p_params . auxiliary_stackfiles[i], "rb", t_aux_stackfiles[i]))
+			MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxiliary_stackfiles, i + 1, t_val);
+			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCOpenFileModeRead, t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
 				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxiliaryStack, t_aux_stackfiles[i]);
@@ -164,17 +273,25 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	
     // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.
     if (t_success)
-        for(uint32_t i = 0; i < p_params . library_count && t_success; i++)
-            t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeLibrary, p_params . library[i], MCCStringLength(p_params . library[i]) + 1);
+        for(uint32_t i = 0; i < MCArrayGetCount(p_params.library) && t_success; i++)
+        {
+            MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.library, i + 1, t_val);
+            t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeLibrary, (MCStringRef)t_val);
+        }
     
 	// Now add the externals, if any
 	if (t_success)
-		for(uint32_t i = 0; i < p_params . external_count && t_success; i++)
-			t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeExternal, p_params . externals[i], MCCStringLength(p_params . externals[i]) + 1);
-
+		for(uint32_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
+		{
+			MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.externals, i + 1, t_val);
+			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeExternal, (MCStringRef)t_val);
+		}
+			
 	// Now add the startup script, if any.
-	if (t_success && p_params . startup_script != nil)
-		t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script, MCCStringLength(p_params . startup_script) + 1);
+	if (t_success && (!MCStringIsEmpty(p_params . startup_script)))
+		t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script);
 
 	// Now a digest
 	if (t_success)
@@ -189,7 +306,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployCapsuleGenerate(t_capsule, p_output, t_spill, x_offset);
 
 	MCDeployCapsuleDestroy(t_capsule);
-	for(uint32_t i = 0; i < p_params . auxiliary_stackfile_count; i++)
+	for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxiliary_stackfiles); i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
 	MCMemoryDeleteArray(t_aux_stackfiles);
 	MCDeployFileClose(t_spill);
@@ -226,7 +343,7 @@ bool MCDeployWriteProject(const MCDeployParameters& p_params, bool p_to_network,
 	{
 		uint32_t t_swapped_size;
 		t_swapped_size = t_project_size;
-		if (p_params . spill != NULL)
+		if (!MCStringIsEmpty(p_params . spill))
 			t_swapped_size |= 1U << 31;
 		MCDeployByteSwap32(p_to_network, t_swapped_size); 
 		t_success = MCDeployFileWriteAt(p_output, &t_swapped_size, sizeof(uint32_t), p_output_offset);
@@ -250,7 +367,7 @@ bool MCDeployWritePayload(const MCDeployParameters& p_params, bool p_to_network,
 	// First try to open the payload file
 	MCDeployFileRef t_payload;
 	t_payload = nil;
-	if (t_success && !MCDeployFileOpen(p_params . payload, "rb", t_payload))
+	if (t_success && !MCDeployFileOpen(p_params . payload, kMCOpenFileModeRead, t_payload))
 		t_success = MCDeployThrow(kMCDeployErrorNoPayload);
 
 	// Next measure the file to find out how big it is
@@ -305,23 +422,23 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 	Symbol_type t_type;
 	if (sp . next(t_type) == PS_NORMAL && t_type == ST_ID)
 	{
-		if (sp . gettoken() == "windows")
+		if (sp . token_is_cstring("windows"))
 			m_platform = PLATFORM_WINDOWS;
-		else if (sp . gettoken() == "linux")
+		else if (sp . token_is_cstring("linux"))
 			m_platform = PLATFORM_LINUX;
-		else if (sp . gettoken() == "macosx")
+		else if (sp . token_is_cstring("macosx"))
 			m_platform = PLATFORM_MACOSX;
-		else if (sp . gettoken() == "ios")
+		else if (sp . token_is_cstring("ios"))
 			m_platform = PLATFORM_IOS;
-		else if (sp . gettoken() == "android")
+		else if (sp . token_is_cstring("android"))
 			m_platform = PLATFORM_ANDROID;
-		else if (sp . gettoken() == "winmobile")
+		else if (sp . token_is_cstring("winmobile"))
 			m_platform = PLATFORM_WINMOBILE;
-		else if (sp . gettoken() == "linuxmobile")
+		else if (sp . token_is_cstring("linuxmobile"))
 			m_platform = PLATFORM_LINUXMOBILE;
-		else if (sp . gettoken() == "iosembedded")
+		else if (sp . token_is_cstring("iosembedded"))
 			m_platform = PLATFORM_IOS_EMBEDDED;
-		else if (sp . gettoken() == "androidembedded")
+		else if (sp . token_is_cstring("androidembedded"))
 			m_platform = PLATFORM_ANDROID_EMBEDDED;
 		else
 			return PS_ERROR;
@@ -332,221 +449,30 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_params);
 }
 
-static Exec_stat fetch_opt_cstring(MCExecPoint& ep, MCVariableValue *array, const char *key, char*& r_result)
+void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 {
-	if (array -> fetch_element(ep, key) != ES_NORMAL)
-		return ES_ERROR;
-	if (ep . getsvalue() == MCnullmcstring)
-		r_result = NULL;
-	else
-		r_result = ep . getsvalue() . clone();
-	return ES_NORMAL;
-}
-
-static Exec_stat fetch_opt_uint32(MCExecPoint& ep, MCVariableValue *array, const char *key, uint32_t& r_result)
-{
-	if (array -> fetch_element(ep, key) != ES_NORMAL)
-		return ES_ERROR;
-	if (ep . ston() != ES_NORMAL)
-		return ES_ERROR;
-	r_result = ep . getuint4();
-	return ES_NORMAL;
-}
-
-static Exec_stat fetch_opt_filepath(MCExecPoint& ep, MCVariableValue *array, const char *key, char*& r_result)
-{
-	if (array -> fetch_element(ep, key) != ES_NORMAL)
-		return ES_ERROR;
-	if (ep . getsvalue() == MCnullmcstring)
-		r_result = NULL;
-	else
-		r_result = MCS_resolvepath(ep . getcstring());
-	return ES_NORMAL;
-}
-
-static Exec_stat fetch_opt_boolean(MCExecPoint& ep, MCVariableValue *array, const char *key, bool& r_result)
-{
-	if (array -> fetch_element(ep, key) != ES_NORMAL)
-		return ES_ERROR;
-	if (ep . getsvalue() == MCtruemcstring)
-		r_result = true;
-	else if (ep . getsvalue() == MCfalsemcstring)
-		r_result = false;
-	else if (!ep . isempty())
-		return ES_ERROR;
-	return ES_NORMAL;
-}
-
-static Exec_stat fetch_cstring(MCExecPoint& ep, MCVariableValue *array, const char *key, char *& r_result)
-{
-	if (!array -> has_element(ep, key))
-		return ES_ERROR;
-	return fetch_opt_cstring(ep, array, key, r_result);
-}
-
-static Exec_stat fetch_uint32(MCExecPoint& ep, MCVariableValue *array, const char *key, uint32_t& r_result)
-{
-	if (!array -> has_element(ep, key))
-		return ES_ERROR;
-	return fetch_opt_uint32(ep, array, key, r_result);
-}
-
-static Exec_stat fetch_filepath(MCExecPoint& ep, MCVariableValue *array, const char *key, char *& r_result)
-{
-	if (!array -> has_element(ep, key))
-		return ES_ERROR;
-	return fetch_opt_filepath(ep, array, key, r_result);
-}
-
-static Exec_stat fetch_filepath_array(MCExecPoint& ep, MCVariableValue *array, const char *key, char**& r_filepaths, uint32_t& r_filepath_count)
-{
-	bool t_success;
-	t_success = true;
-	
-	char *t_paths_string;
-	t_paths_string = nil;
-	if (t_success)
-		if (fetch_opt_cstring(ep, array, key, t_paths_string) == ES_ERROR)
-			t_success = false;
-	
-	char **t_paths;
-	uint32_t t_path_count;
-	t_paths = nil;
-	t_path_count = 0;
-	if (t_success)
-		t_success = MCCStringSplit(t_paths_string, '\n', t_paths, t_path_count);
-	
-	if (t_success)
-		for(uint32_t i = 0; i < t_path_count; i++)
-		{
-			char *t_unresolved_path;
-			t_unresolved_path = t_paths[i];
-			t_paths[i] = MCS_resolvepath(t_unresolved_path);
-			MCCStringFree(t_unresolved_path);
-		}
-	
-	if (t_success)
-	{
-		r_filepaths = t_paths;
-		r_filepath_count = t_path_count;
-	}
-	else
-		MCCStringArrayFree(t_paths, t_path_count);
-	
-	MCCStringFree(t_paths_string);
-	
-	return t_success ? ES_NORMAL : ES_ERROR;
-}
-
-static Exec_stat fetch_cstring_array(MCExecPoint& ep, MCVariableValue *array, const char *key, char**& r_strings, uint32_t& r_string_count)
-{
-	bool t_success;
-	t_success = true;
-	
-	char *t_strings_list;
-	t_strings_list = nil;
-	if (t_success)
-		if (fetch_opt_cstring(ep, array, key, t_strings_list) == ES_ERROR)
-			t_success = false;
-	
-	char **t_strings;
-	uint32_t t_string_count;
-	t_strings = nil;
-	t_string_count = 0;
-	if (t_success)
-		t_success = MCCStringSplit(t_strings_list, '\n', t_strings, t_string_count);
-	
-	if (t_success)
-	{
-		r_strings = t_strings;
-		r_string_count = t_string_count;
-	}
-	
-	MCCStringFree(t_strings_list);
-	
-	return t_success ? ES_NORMAL : ES_ERROR;
-	
-}
-
-Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
-{
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
 	bool t_soft_error;
 	t_soft_error = false;
-
-	// Clear the result as we return an error there
-	MCresult -> clear();
-
-	if (t_stat == ES_NORMAL)
-		t_stat = m_params -> eval(ep);
-
-	MCVariableValue *t_array;
-	if (t_stat == ES_NORMAL)
-	{
-		t_array = ep . getarray();
-		if (t_array == NULL)
-			return ES_ERROR;
-	}
-
-	MCExecPoint ep2(ep);
+    bool t_has_error;
+    t_has_error = false;
+    
+    // Clear the result as we return an error there
+	ctxt . SetTheResultToEmpty();
+    
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
+        return;
 
 	MCDeployParameters t_params;
-	memset(&t_params, 0, sizeof(MCDeployParameters));
-
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "engine_ppc", t_params . engine_ppc);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "engine_x86", t_params . engine_x86);
-	if (t_stat == ES_NORMAL && t_params . engine_ppc == NULL && t_params . engine_x86 == NULL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "engine", t_params . engine);
-
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "stackfile", t_params . stackfile);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath_array(ep2, t_array, "auxiliary_stackfiles", t_params . auxiliary_stackfiles, t_params . auxiliary_stackfile_count);
-    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch the resource mappings, if any.    
-    if (t_stat == ES_NORMAL)
-        t_stat = fetch_cstring_array(ep2, t_array, "library", t_params . library, t_params . library_count);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_cstring_array(ep2, t_array, "externals", t_params . externals, t_params . external_count);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "startup_script", t_params . startup_script);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_cstring_array(ep2, t_array, "redirects", t_params . redirects, t_params . redirect_count);
-
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "appicon", t_params . app_icon);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "docicon", t_params . doc_icon);
-
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "manifest", t_params . manifest);
-
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "payload", t_params . payload);
-
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "spill", t_params . spill);
-
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "output", t_params . output);
-
-	if (t_stat == ES_NORMAL)
-	{
-		t_stat = t_array -> fetch_element(ep2, "version");
-		if (t_stat == ES_NORMAL && ep2 . getarray() != NULL)
-			t_params . version_info = new MCVariableValue(*ep2 . getarray());
-	}
+    t_has_error = !t_params.InitWithArray(ctxt, *t_array);
 	
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
-	if (t_stat == ES_NORMAL && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
+	if (!t_has_error && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
 	{
-		MCresult -> sets("ios deployment not supported on this platform");
+		ctxt . SetTheResultToCString("ios deployment not supported on this platform");
 		t_soft_error = true;
-		t_stat = ES_ERROR;
+        t_has_error = true;
 	}
 #endif
 
@@ -570,12 +496,12 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 
 	if (!t_is_licensed)
 	{
-		MCresult -> sets("not licensed to deploy to target platform");
+		ctxt . SetTheResultToCString("not licensed to deploy to target platform");
 		t_soft_error = true;
-		t_stat = ES_ERROR;
+		t_has_error = true;
 	}
 
-	if (t_stat == ES_NORMAL)
+	if (!t_has_error)
 	{
 		if (m_platform == PLATFORM_WINDOWS)
 			MCDeployToWindows(t_params);
@@ -593,31 +519,13 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+            ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 		else
-			MCresult -> clear();
+            ctxt . SetTheResultToEmpty();
 	}
-
-	delete t_params . output;
-	delete t_params . spill;
-	delete t_params . stackfile;
-	MCCStringArrayFree(t_params . auxiliary_stackfiles, t_params . auxiliary_stackfile_count);
-	MCCStringArrayFree(t_params . externals, t_params . external_count);
-	delete t_params . startup_script;
-	MCCStringArrayFree(t_params . redirects, t_params . redirect_count);
-	delete t_params . app_icon;
-	delete t_params . doc_icon;
-	delete t_params . manifest;
-	delete t_params . payload;
-	delete t_params . engine;
-	delete t_params . engine_ppc;
-	delete t_params . engine_x86;
-	delete t_params . version_info;
-
-	if (t_stat == ES_ERROR && t_soft_error)
-		return ES_NORMAL;
-
-	return t_stat;
+    
+    if (t_has_error && !t_soft_error)
+        ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -638,11 +546,11 @@ Parse_stat MCIdeSign::parse(MCScriptPoint& sp)
 
 	if (sp . next(t_type) == PS_NORMAL && t_type == ST_ID)
 	{
-		if (sp . gettoken() == "windows")
+		if (sp . token_is_cstring("windows"))
 			m_platform = PLATFORM_WINDOWS;
-		else if (sp . gettoken() == "linux")
+		else if (sp . token_is_cstring("linux"))
 			m_platform = PLATFORM_LINUX;
-		else if (sp . gettoken() == "macosx")
+		else if (sp . token_is_cstring("macosx"))
 			m_platform = PLATFORM_MACOSX;
 		else
 			return PS_ERROR;
@@ -653,66 +561,61 @@ Parse_stat MCIdeSign::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_params);
 }
 
-Exec_stat MCIdeSign::exec(MCExecPoint& ep)
+void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
 	// Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
 
-	if (t_stat == ES_NORMAL)
-		t_stat = m_params -> eval(ep);
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
+        return;
+    MCDeploySignParameters t_params;
 
-	MCVariableValue *t_array;
-	if (t_stat == ES_NORMAL)
-	{
-		t_array = ep . getarray();
-		if (t_array == NULL)
-			return ES_ERROR;
-	}
-
-	MCExecPoint ep2(ep);
-
-	MCDeploySignParameters t_params;
-	memset(&t_params, 0, sizeof(MCDeploySignParameters));
-
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "passphrase", t_params . passphrase);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "certificate", t_params . certificate);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "privatekey", t_params . privatekey);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "certstore", t_params . certstore);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "timestamper", t_params . timestamper);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "description", t_params . description);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "url", t_params . url);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "input", t_params . input);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "output", t_params . output);
-
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("passphrase"), false, t_params.passphrase))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("certificate"), false, t_params.certificate))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("privatekey"), false, t_params.privatekey))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsFilepath(*t_array, MCNAME("certstore"), false, t_params.certstore))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("timestamper"), false, t_params.timestamper))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("description"), false, t_params.description))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsString(*t_array, MCNAME("url"), false, t_params.url))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("input"), false, t_params.input))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("output"), false, t_params.output))
+			ctxt . Throw();
+	
+	if (!ctxt . HasError())
 		if (t_params . certstore != NULL && (t_params . certificate != NULL || t_params . privatekey != NULL))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 		if (t_params . certstore == NULL && (t_params . certificate == NULL || t_params . privatekey == NULL))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 
 	bool t_can_sign;
 	t_can_sign = true;
-	if (t_stat == ES_NORMAL && !InitSSLCrypt())
+	if (!ctxt . HasError() && !InitSSLCrypt())
 	{
-		MCresult -> sets("could not initialize SSL");
+		ctxt . SetTheResultToCString("could not initialize SSL");
 		t_can_sign = false;
 	}
 
-	if (t_can_sign && t_stat == ES_NORMAL)
+	if (t_can_sign && !ctxt . HasError())
 	{
 		if (m_platform == PLATFORM_WINDOWS)
 			MCDeploySignWindows(t_params);
@@ -720,20 +623,10 @@ Exec_stat MCIdeSign::exec(MCExecPoint& ep)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+			ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 	}
 
-	delete t_params . passphrase;
-	delete t_params . certificate;
-	delete t_params . privatekey;
-	delete t_params . certstore;
-	delete t_params . timestamper;
-	delete t_params . description;
-	delete t_params . url;
-	delete t_params . input;
-	delete t_params . output;
-
-	return t_stat;
+	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -754,11 +647,11 @@ Parse_stat MCIdeDiet::parse(MCScriptPoint& sp)
 
 	if (sp . next(t_type) == PS_NORMAL && t_type == ST_ID)
 	{
-		if (sp . gettoken() == "windows")
+		if (sp . token_is_cstring("windows"))
 			m_platform = PLATFORM_WINDOWS;
-		else if (sp . gettoken() == "linux")
+		else if (sp . token_is_cstring("linux"))
 			m_platform = PLATFORM_LINUX;
-		else if (sp . gettoken() == "macosx")
+		else if (sp . token_is_cstring("macosx"))
 			m_platform = PLATFORM_MACOSX;
 		else
 			return PS_ERROR;
@@ -769,51 +662,44 @@ Parse_stat MCIdeDiet::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_params);
 }
 
-Exec_stat MCIdeDiet::exec(MCExecPoint& ep)
+void MCIdeDiet::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
 	// Clear the result as we return an error there
-	MCresult -> clear();
-
-	if (t_stat == ES_NORMAL)
-		t_stat = m_params -> eval(ep);
-
-	MCVariableValue *t_array;
-	if (t_stat == ES_NORMAL)
-	{
-		t_array = ep . getarray();
-		if (t_array == NULL)
-			return ES_ERROR;
-	}
-
-	MCExecPoint ep2(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
+        return;
 
 	MCDeployDietParameters t_params;
-	memset(&t_params, 0, sizeof(MCDeployDietParameters));
 
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "input", t_params . input);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "output", t_params . output);
+	if (!ctxt . HasError())
+		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("input"), false, t_params.input))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyElementAsFilepath(*t_array, MCNAME("output"), false, t_params.output))
+            ctxt . Throw();	
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_x86"), false, t_params.keep_x86))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_x86_64"), false, t_params.keep_x86_64))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_ppc"), false, t_params.keep_ppc))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_ppc64"), false, t_params.keep_ppc64))
+			ctxt . Throw();
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_arm"), false, t_params.keep_arm))
+			ctxt . Throw();
 
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_x86", t_params . keep_x86);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_x86_64", t_params . keep_x86_64);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_ppc", t_params . keep_ppc);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_ppc64", t_params . keep_ppc64);
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_arm", t_params . keep_arm);
+	if (!ctxt . HasError())
+		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_debug_symbols"), false, t_params.keep_debug_symbols))
+			ctxt . Throw();
 
-	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_debug_symbols", t_params . keep_debug_symbols);
-
-
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 	{
 		if (m_platform == PLATFORM_MACOSX)
 			MCDeployDietMacOSX(t_params);
@@ -821,13 +707,8 @@ Exec_stat MCIdeDiet::exec(MCExecPoint& ep)
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
-			MCresult -> sets(MCDeployErrorToString(t_error));
+			ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
 	}
-
-	delete t_params . input;
-	delete t_params . output;
-
-	return t_stat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -857,26 +738,28 @@ Parse_stat MCIdeDmgDump::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_filename);
 }
 
-Exec_stat MCIdeDmgDump::exec(MCExecPoint& ep)
+void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
 	// Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
 
-	if (t_stat == ES_NORMAL)
-		t_stat = m_filename -> eval(ep);
-
-	if (t_stat == ES_NORMAL)
+    MCAutoStringRef t_string;
+    if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
+        return;
+	
+	if (!ctxt . HasError())
 	{
+        MCAutoPointer<char> temp;
+        if (!MCStringConvertToCString(*t_string, &temp))
+        {
+            ctxt . Throw();
+            return;
+        }
 		FILE *t_output;
 		t_output = fopen("C:\\Users\\Mark\\Desktop\\dmg.txt", "w");
-		MCDeployDmgDump(ep . getcstring(), stdfile_log, t_output);
+		MCDeployDmgDump(*temp, stdfile_log, t_output);
 		fclose(t_output);
-	}
-
-	return ES_NORMAL;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -904,122 +787,112 @@ Parse_stat MCIdeDmgBuild::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCIdeDmgBuild::exec(MCExecPoint& ep)
+void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-
-	// Clear the result as we return an error there
-	MCresult -> clear();
+    // Clear the result as we return an error there
+	ctxt . SetTheResultToEmpty();
 
 	/////////
 
-	if (t_stat == ES_NORMAL)
-		t_stat = m_items -> eval(ep);
-		
-	if (t_stat == ES_NORMAL && ep . getformat() != VF_ARRAY)
-		t_stat = ES_ERROR;
-
-	MCVariableArray *t_array;
-	if (t_stat == ES_NORMAL)
-	{
-		t_array = ep . getarray() -> get_array();
-		if (!t_array -> issequence())
-			t_stat = ES_ERROR;
-	}
-
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(m_items, EE_UNDEFINED, &t_array))
+        return;
+    
+    if (!MCArrayIsSequence(*t_array))
+    {
+        ctxt . Throw();
+        return;
+    }
+	
 	MCDeployDmgItem *t_items;
 	uint32_t t_item_count;
 	t_items = nil;
 	t_item_count = 0;
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 	{
-		if (MCMemoryNewArray(t_array -> getnfilled(), t_items))
-			t_item_count = t_array -> getnfilled();
+		if (MCMemoryNewArray(MCArrayGetCount(*t_array), t_items))
+			t_item_count = MCArrayGetCount(*t_array);
 		else
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 	}
 
-	MCExecPoint ep2(ep);
-	if (t_stat == ES_NORMAL)
-		for(uint32_t i = 0; i < t_item_count && t_stat == ES_NORMAL; i++)
+	if (!ctxt . HasError())
+		for(uint32_t i = 0; i < t_item_count && !ctxt . HasError(); i++)
 		{
-			MCHashentry *t_element;
-			t_element = t_array -> lookupindex(i + 1, False);
-			if (t_element == nil)
-				t_stat = ES_ERROR;
+			MCValueRef t_val = nil;
+			if (!MCArrayFetchValueAtIndex(*t_array, i + 1, t_val))
+				ctxt . Throw();
+			
+			MCAutoArrayRef t_item_array;
+			if (!ctxt . HasError())
+				if (!ctxt.ConvertToArray(t_val, &t_item_array))
+					ctxt . Throw();
 
-			if (t_stat == ES_NORMAL)
-				t_stat = t_element -> value . fetch(ep2);
 
-			MCVariableValue *t_item_array;
-			if (t_stat == ES_NORMAL)
+			if (!ctxt . HasError())
 			{
-				t_item_array = ep2 . getarray();
-				if (t_item_array == nil)
-					t_stat = ES_ERROR;
-			}
-
-			if (t_stat == ES_NORMAL)
-			{
-				t_stat = t_item_array -> fetch_element(ep2, "type");
-				if (t_stat == ES_NORMAL)
+				MCAutoStringRef t_type;
+				if (ctxt.CopyOptElementAsString(*t_item_array, MCNAME("type"), false, &t_type))
 				{
-					if (ep2 . getsvalue() == "folder")
-						t_items[i] . is_folder = true;
-					else if (ep2 . getsvalue() == "file")
-						t_items[i] . is_folder = false;
+					if (MCStringIsEqualToCString(*t_type, "folder", kMCCompareCaseless))
+						t_items[i].is_folder = true;
+					else if (MCStringIsEqualToCString(*t_type, "file", kMCCompareCaseless))
+						t_items[i].is_folder = false;
 					else
-						t_stat = ES_ERROR;
+						ctxt . Throw();
 				}
+				else
+					ctxt . Throw();
 			}
 
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_uint32(ep2, t_item_array, "parent", t_items[i] . parent);
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_cstring(ep2, t_item_array, "name", t_items[i] . name);
+			if (!ctxt . HasError())
+				if (!ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("parent"), false, t_items[i].parent))
+					ctxt . Throw();
+			if (!ctxt . HasError())
+				if (!ctxt.CopyElementAsString(*t_item_array, MCNAME("name"), false, t_items[i].name))
+					ctxt . Throw();
 
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "owner_id", t_items[i] . owner_id);
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "group_id", t_items[i] . group_id);
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "file_mode", t_items[i] . file_mode);
-
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "create_date", t_items[i] . create_date);
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "content_mod_date", t_items[i] . content_mod_date);
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "attribute_mod_date", t_items[i] . attribute_mod_date);
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "access_date", t_items[i] . access_date);
-			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "backup_date", t_items[i] . backup_date);
+			if (!ctxt . HasError())
+			{
+				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("owner_id"), false, t_items[i].owner_id);
+				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("group_id"), false, t_items[i].group_id);
+				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("file_mode"), false, t_items[i].group_id);
+				
+				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("create_date"), false, t_items[i].create_date);
+				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("content_mod_date"), false, t_items[i].content_mod_date);
+				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("attribute_mod_date"), false, t_items[i].attribute_mod_date);
+				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("access_date"), false, t_items[i].access_date);
+				ctxt.CopyElementAsUnsignedInteger(*t_item_array, MCNAME("backup_date"), false, t_items[i].backup_date);
+			}
 		}
 
 	/////////
 
-	if (t_stat == ES_NORMAL)
-		t_stat = m_filename -> eval(ep);
+    MCAutoStringRef t_string;
+	if (!ctxt . HasError())
+    {
+        /* UNCHECKED */ ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string);
+    }
 
-	if (t_stat == ES_NORMAL)
+	if (!ctxt . HasError())
 	{
+        MCAutoPointer<char> temp;
+        if (!MCStringConvertToCString(*t_string, &temp))
+        {
+            ctxt . Throw();
+            return;
+        }
 		MCDeployDmgParameters t_params;
 		t_params . items = t_items;
 		t_params . item_count = t_item_count;
-		t_params . output = (char *)ep . getcstring();
+		t_params . output = *temp;
 		if (!MCDeployDmgBuild(t_params))
-			t_stat = ES_ERROR;
+			ctxt . Throw();
 	}
 
 	////////
 
-	for(uint32_t i = 0; i < t_item_count; i++)
-		MCCStringFree(t_items[i] . name);
-	MCMemoryDeleteArray(t_items);
-
-	return ES_NORMAL;
+	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1029,7 +902,6 @@ MCIdeExtract::MCIdeExtract(void)
 	m_filename = nil;
 	m_segment_name = nil;
 	m_section_name = nil;
-	m_it = nil;
 }
 
 MCIdeExtract::~MCIdeExtract(void)
@@ -1037,7 +909,6 @@ MCIdeExtract::~MCIdeExtract(void)
 	delete m_filename;
 	delete m_segment_name;
 	delete m_section_name;
-	delete m_it;
 }
 
 // _internal extract x y from z
@@ -1052,55 +923,38 @@ Parse_stat MCIdeExtract::parse(MCScriptPoint& sp)
 	if (sp . parseexp(False, True, &m_filename) != PS_NORMAL)
 		return PS_ERROR;
 	
-	getit(sp, m_it);
-	
 	return PS_NORMAL;
 }
 
-Exec_stat MCIdeExtract::exec(MCExecPoint& ep)
+void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_stat t_stat;
-	t_stat = ES_NORMAL;
 	
-	char *t_segment;
-	t_segment = nil;
-	if (t_stat == ES_NORMAL)
-		t_stat = m_segment_name -> eval(ep);
-	if (t_stat == ES_NORMAL)
-		t_segment = ep . getsvalue() . clone();
+	MCAutoStringRef t_segment;
+    if (!ctxt . EvalExprAsStringRef(m_segment_name, EE_IDE_EXTRACT_BADSEGMENT, &t_segment))
+        return;
 	
-	char *t_section;
-	t_section = nil;
-	if (t_stat == ES_NORMAL)
-		t_stat = m_section_name -> eval(ep);
-	if (t_stat == ES_NORMAL)
-		t_section = ep . getsvalue() . clone();
+	MCAutoStringRef t_section;
+    if (!ctxt . EvalExprAsStringRef(m_section_name, EE_IDE_EXTRACT_BADSECTION, &t_section))
+        return;
 	
-	char *t_filename;
-	t_filename = nil;
-	if (t_stat == ES_NORMAL)
-		t_stat = m_filename -> eval(ep);
-	if (t_stat == ES_NORMAL)
-		t_filename = ep . getsvalue() . clone();
-	
+	MCAutoStringRef t_filename;
+    if (!ctxt . EvalExprAsStringRef(m_filename, EE_IDE_EXTRACT_BADFILENAME, &t_filename))
+        return;
+		
 	void *t_data;
 	uint32_t t_data_size;
-	if (t_stat == ES_NORMAL)
-		t_stat = MCDeployExtractMacOSX(t_filename, t_segment, t_section, t_data, t_data_size);
+    Exec_stat t_stat;
+	if (!ctxt . HasError())
+		t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
 	
 	if (t_stat == ES_NORMAL)
 	{
-		ep . grabbuffer((char *)t_data, t_data_size);
-		m_it -> set(ep);
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)t_data, t_data_size, &t_string);
+        ctxt . SetItToValue(*t_string);
 	}
 	else
-		m_it -> clear();
-	
-	delete t_filename;
-	delete t_section;
-	delete t_segment;
-	
-	return ES_NORMAL;
+        ctxt . SetItToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

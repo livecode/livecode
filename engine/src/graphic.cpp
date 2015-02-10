@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "sellst.h"
 #include "stack.h"
@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphic.h"
 #include "mcerror.h"
 #include "globals.h"
-#include "core.h"
 
 #include "path.h"
 #include "context.h"
@@ -38,14 +37,76 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "font.h"
 
+#include "exec.h"
+#include "exec-interface.h"
 #include "systhreads.h"
+
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
 #define GRAPHIC_EXTRA_FILLGRADIENT		(1UL << 1)
 #define GRAPHIC_EXTRA_STROKEGRADIENT	(1UL << 2)
 #define GRAPHIC_EXTRA_MARGINS			(1UL << 3)
 
-bool effective_points_only(int graphic_type);
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCGraphic::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_ANTI_ALIASED, Bool, MCGraphic, AntiAliased)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_FILL_RULE, InterfaceGraphicFillRule, MCGraphic, FillRule)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_EDIT_MODE, InterfaceGraphicEditMode, MCGraphic, EditMode)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_CAP_STYLE, InterfaceGraphicCapStyle, MCGraphic, CapStyle)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_JOIN_STYLE, InterfaceGraphicJoinStyle, MCGraphic, JoinStyle)
+	DEFINE_RW_OBJ_PROPERTY(P_MITER_LIMIT, Double, MCGraphic, MiterLimit)
+	DEFINE_RW_OBJ_PROPERTY(P_LINE_SIZE, Int16, MCGraphic, LineSize)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_WIDTH, Int16, MCGraphic, LineSize)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_HEIGHT, Int16, MCGraphic, LineSize)
+	DEFINE_RW_OBJ_PROPERTY(P_POLY_SIDES, Int16, MCGraphic, PolySides)
+	DEFINE_RW_OBJ_PROPERTY(P_ANGLE, Int16, MCGraphic, Angle)
+	DEFINE_RW_OBJ_PROPERTY(P_START_ANGLE, Int16, MCGraphic, StartAngle)
+	DEFINE_RW_OBJ_PROPERTY(P_ARC_ANGLE, Int16, MCGraphic, ArcAngle)
+	DEFINE_RW_OBJ_PROPERTY(P_ROUND_RADIUS, Int16, MCGraphic, RoundRadius)
+	DEFINE_RW_OBJ_PROPERTY(P_ARROW_SIZE, Int16, MCGraphic, ArrowSize)
+	DEFINE_RW_OBJ_PROPERTY(P_START_ARROW, Bool, MCGraphic, StartArrow)
+	DEFINE_RW_OBJ_PROPERTY(P_END_ARROW, Bool, MCGraphic, EndArrow)
+	DEFINE_RW_OBJ_PROPERTY(P_MARKER_LSIZE, Int16, MCGraphic, MarkerLineSize)
+	DEFINE_RW_OBJ_PROPERTY(P_MARKER_DRAWN, Bool, MCGraphic, MarkerDrawn)
+	DEFINE_RW_OBJ_PROPERTY(P_MARKER_OPAQUE, Bool, MCGraphic, MarkerOpaque)
+	DEFINE_RW_OBJ_PROPERTY(P_ROUND_ENDS, Bool, MCGraphic, RoundEnds)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_RESIZE, Bool, MCGraphic, DontResize)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_STYLE, InterfaceGraphicStyle, MCGraphic, Style)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_NAME, Bool, MCGraphic, ShowName)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_LABEL, String, MCGraphic, Label)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_LABEL, String, MCGraphic, Label)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, BinaryString, MCGraphic, UnicodeLabel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, BinaryString, MCGraphic, UnicodeLabel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TEXT, String, MCGraphic, Label)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TEXT, String, MCGraphic, Label)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, BinaryString, MCGraphic, UnicodeLabel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, BinaryString, MCGraphic, UnicodeLabel)
+	DEFINE_RW_OBJ_PROPERTY(P_FILLED, Bool, MCGraphic, Filled)
+	DEFINE_RW_OBJ_PROPERTY(P_OPAQUE, Bool, MCGraphic, Filled)
+    
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_FILL, MCGraphic, GradientFill)
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_STROKE, MCGraphic, GradientStroke)
+    
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
+    // AL-2014-09-23: [[ Bug 13521 ]] Mark non-effective versions of properties as such
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    // SN-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+};
+
+MCObjectPropertyTable MCGraphic::kPropertyTable =
+{
+	&MCControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCGraphic::MCGraphic()
 {
@@ -88,14 +149,7 @@ MCGraphic::MCGraphic(const MCGraphic &gref) : MCControl(gref)
 	for (i = 0 ; i < nmarkerpoints ; i++)
 		markerpoints[i] = gref.markerpoints[i];
 	oldpoints = NULL;
-	label = NULL;
-	labelsize = 0;
-	if (gref.label)
-	{
-		labelsize = gref.labelsize;
-		label = new char[labelsize];
-		memcpy(label, gref.label, labelsize);
-	}
+	label = MCValueRetain(gref.label);
 
 	m_fill_gradient = MCGradientFillCopy(gref.m_fill_gradient);
 	m_stroke_gradient = MCGradientFillCopy(gref.m_stroke_gradient);
@@ -130,8 +184,7 @@ void MCGraphic::initialise(void)
 	realpoints = NULL;
 	markerpoints = NULL;
 	oldpoints = NULL;
-	label = NULL;
-	labelsize = 0;
+	label = MCValueRetain(kMCEmptyString);
 
 	setfillrule(kMCFillRuleNone);
 	m_fill_gradient = NULL;
@@ -153,7 +206,7 @@ void MCGraphic::finalise(void)
 	delete realpoints;
 	delete markerpoints;
 	delete oldpoints;
-	delete label;
+	MCValueRelease(label);
 
 	if (m_fill_gradient != NULL)
 		MCGradientFillFree(m_fill_gradient);
@@ -283,7 +336,7 @@ Boolean MCGraphic::mdown(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			if (message_with_args(MCM_mouse_down, "1") != ES_NORMAL && m_edit_tool != NULL)
+			if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) != ES_NORMAL && m_edit_tool != NULL)
 			{
 				if (m_edit_tool->mdown(mx, my, which))
 					return True;
@@ -326,9 +379,9 @@ Boolean MCGraphic::mup(uint2 which, bool p_release)
 			if (m_edit_tool != NULL)
 				m_edit_tool->mup(mx, my, which);
 			if (!p_release && MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "1");
+				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			else
-				message_with_args(MCM_mouse_release, "1");
+				message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 			break;
 		case T_GRAPHIC:
 		case T_POINTER:
@@ -462,7 +515,8 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 	}
 }
 
-Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
 	int graphic_type;
@@ -775,33 +829,18 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		break;
 #endif /* MCGraphic::getprop */
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
-
-// MDW-2014-06-21: [[ oval_points ]] refactoring
-bool effective_points_only(int graphic_type)
-{
-	bool effective_only = False;
-	
-	switch (graphic_type)
-	{
-		case F_ROUNDRECT:
-		case F_G_RECTANGLE:
-		case F_REGULAR:
-		case F_OVAL:
-			effective_only = True;
-	}
-	return (effective_only);
-}
+#endif
 
 // MDW-2014-06-18: [[ rect_points ]] refactoring: return points for rectangles, round rects, and regular polygons
 bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count)
 {
 	r_points = NULL;
 	r_point_count = 0;
-	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0);
+	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
 	return (true);
 }
 
@@ -857,31 +896,34 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 		tRadius = rect.height;
 	else
 		tRadius = rect.width;
-	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle);
+	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
 	return (true);
 }
 
+#ifdef LEGACY_EXEC
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
+#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
 	case P_GRADIENT_FILL:
 		return MCGradientFillGetProperty(m_fill_gradient, ep, key);
 	break;
 	case P_GRADIENT_STROKE:
 		return MCGradientFillGetProperty(m_stroke_gradient, ep, key);
 	break;
-	
+#endif /* MCGraphic::getarrayprop */
 	default:
-		return MCControl::getarrayprop(parid, which, ep, key, effective);
+		return MCControl::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
-#endif /* MCGraphic::getarrayprop */
 }
+#endif
 
-Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+
+#ifdef LEGACY_EXEC
+Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	int2 i1;
@@ -1374,7 +1416,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 		break;
 #endif /* MCGraphic::setprop */
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty)
 	{
@@ -1390,9 +1432,12 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 	}
 	return ES_NORMAL;
 }
+#endif
+
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 #ifdef /* MCGraphic::setarrayprop */ LEGACY_EXEC
 	Boolean dirty;
@@ -1405,8 +1450,11 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 			return ES_ERROR;
 		if (m_fill_gradient != NULL)
 		{
-			setcolor(P_BACK_COLOR - P_FORE_COLOR, MCnullmcstring);
-			setpattern(P_BACK_PATTERN - P_FORE_PATTERN, MCnullmcstring);
+			MCInterfaceNamedColor t_color;
+			t_color . name = kMCEmptyString;
+			MCExecContext ctxt(ep);
+			SetColor(ctxt, P_BACK_COLOR - P_FORE_COLOR, t_color);
+			setpattern(P_BACK_PATTERN - P_FORE_PATTERN, kMCEmptyString);
 		}
 	}
 	break;
@@ -1416,13 +1464,16 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 			return ES_ERROR;
 		if (m_stroke_gradient != NULL)
 		{
-			setcolor(P_FORE_COLOR - P_FORE_COLOR, MCnullmcstring);
-			setpattern(P_FORE_COLOR - P_FORE_COLOR, MCnullmcstring);
+			MCInterfaceNamedColor t_color;
+			t_color . name = kMCEmptyString;
+			MCExecContext ctxt(ep);
+			SetColor(ctxt, P_FORE_COLOR - P_FORE_COLOR, t_color);
+			setpattern(P_FORE_COLOR - P_FORE_COLOR, kMCEmptyString);
 		}
 	}
 	break;
 	default:
-		return MCControl::setarrayprop(parid, which, ep, key, effective);
+		return MCControl::setarrayprop_legacy(parid, which, ep, key, effective);
 	}
 
 	if (dirty && opened)
@@ -1430,10 +1481,10 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
-	
-	return ES_NORMAL;
 #endif /* MCGraphic::setarrayprop */
+	return ES_NORMAL;
 }
+#endif
 
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 {
@@ -1906,29 +1957,17 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 	}
 }
 
-void MCGraphic::getlabeltext(MCString &s, bool& isunicode)
+MCStringRef MCGraphic::getlabeltext()
 {
-	// MW-2012-02-29: [[ Bug 10038 ]] Make sure we set the 'isunicode' param to the
-	//   appropriate value.
-	if (label != NULL)
-	{
-		s.set(label,labelsize);
-
-		// Whether the label is unicode depends on the hasunicode() setting.
-		isunicode = hasunicode();
-	}
-	else
-	{
-		s = getname_oldstring();
-
-		// The name is always native (at the moment).
-		isunicode = false;
-	}
+	if (!MCStringIsEmpty(label))
+		return label;
+	
+	return MCNameGetString(getname());
 }
 
-void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCString &s, bool isunicode, uint2 fstyle)
+void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCStringRef &s, uint2 fstyle)
 {
-	dc -> drawtext(sx, sy, s.getstring(), s.getlength(), m_font, false, isunicode);
+	drawdirectionaltext(dc, sx, sy, s, m_font);
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
@@ -2153,17 +2192,16 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			                  -realpoints[last].x, -realpoints[last].y);
         MCThreadMutexUnlock(MCgraphicmutex);
 	}
-	MCString slabel;
-	bool isunicode;
-	getlabeltext(slabel, isunicode);
-	if (flags & F_G_SHOW_NAME &&  slabel.getstring() != NULL)
+	MCStringRef slabel = getlabeltext();
+	if (flags & F_G_SHOW_NAME &&  !MCStringIsEmpty(slabel))
 	{
 		setforeground(dc, DI_FORE, False);
 
-		MCString *lines = NULL;
-		uint2 nlines = 0;
-		MCU_break_string(slabel, lines, nlines, isunicode);
-
+		// Split the string on newlines
+		MCAutoArrayRef lines;
+		/* UNCHECKED */ MCStringSplit(slabel, MCSTR("\n"), nil, kMCCompareExact, &lines);
+		uindex_t nlines = MCArrayGetCount(*lines);
+		
 		uint2 fheight;
 		fheight = gettextheight();
 
@@ -2184,8 +2222,13 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)
 		{
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
+            // Note: 'lines' is an array of strings
+			MCValueRef lineval = nil;
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
+			MCStringRef line = (MCStringRef)(lineval);
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            twidth = MCFontMeasureText(m_font, line, getstack() -> getdevicetransform());
+			
 			switch (flags & F_ALIGNMENT)
 			{
 			case F_ALIGN_LEFT:
@@ -2200,10 +2243,10 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			}
 			if (flags & F_DISABLED && MClook != LF_MOTIF)
 			{
-				drawlabel(dc, sx + 1, sy + 1, twidth, trect, lines[i], isunicode, fontstyle);
+				drawlabel(dc, sx + 1, sy + 1, twidth, trect, line, fontstyle);
 				setforeground(dc, DI_BOTTOM, False);
 			}
-			drawlabel(dc, sx, sy, twidth, trect, lines[i], isunicode, fontstyle);
+			drawlabel(dc, sx, sy, twidth, trect, line, fontstyle);
 			sy += fheight;
 		}
 		if (state & CS_KFOCUSED)
@@ -2217,7 +2260,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			dc->drawrect(trect);
 			dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
 		}
-		delete lines;
 	}
 	dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
 
@@ -2340,9 +2382,9 @@ uint2 MCGraphic::getjoinstyle()
 	case F_JOINMITER:
 		return JoinMiter;
 	default:
-		assert(true);
-		return 0;
+		break;
 	}
+	return 0;
 }
 
 void MCGraphic::setjoinstyle(uint2 p_style)
@@ -2372,9 +2414,9 @@ uint2 MCGraphic::getfillrule()
 	case F_FILLRULEEVENODD:
 		return kMCFillRuleEvenOdd;
 	default:
-		assert(true);
-		return 0;
+		break;
 	}
+	return 0;
 }
 
 void MCGraphic::setfillrule(uint2 p_rule)
@@ -2478,7 +2520,7 @@ IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -2557,6 +2599,18 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	uint2 i;
 	IO_stat stat;
 
+	// Ensure that the F_G_LABEL and FF_HAS_UNICODE flags is set correctly
+	if (MCStringIsEmpty(label))
+		flags &= ~F_G_LABEL;
+	else 
+		flags |= F_G_LABEL;
+		
+	if (MCStringIsNative(label))
+		m_font_flags &= ~FF_HAS_UNICODE;
+	else
+		m_font_flags |= FF_HAS_UNICODE;
+
+	
 	if ((stat = IO_write_uint1(OT_GRAPHIC, stream)) != IO_NORMAL)
 		return stat;
 
@@ -2638,13 +2692,27 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			if ((stat = IO_write_int1(dashes[i], stream)) != IO_NORMAL)
 				return stat;
 	}
-	if (flags & F_G_LABEL)
-		if ((stat = IO_write_string(label, labelsize, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
+    if (flags & F_G_LABEL)
+	{
+		if (MCstackfileversion < 7000)
+		{
+			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_write_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+	}
+
 	return savepropsets(stream);
 }
 
-IO_stat MCGraphic::load(IO_handle stream, const char *version)
+IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 {
 	uint2 i;
 	IO_stat stat;
@@ -2655,7 +2723,7 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined
-	if (strncmp(version, "2.7", 3) < 0)
+	if (version < 2700)
 		flags &= ~F_G_ANTI_ALIASED;
 //----
 
@@ -2718,9 +2786,9 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 					return stat;
 			}
 		}
-		if (strncmp(version, "1.4", 3) < 0)
+		if (version < 1400)
 			loaddashes = True;
-		if (strncmp(version, "1.4", 3) <= 0)
+		if (version <= 1400)
 			arrowsize = DEFAULT_ARROW_SIZE;
 		break;
 	}
@@ -2748,12 +2816,22 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 			}
 		}
 	}
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_G_LABEL)
 	{
-		uint4 tlabelsize;
-		if ((stat = IO_read_string(label, tlabelsize, stream, hasunicode())) != IO_NORMAL)
-			return stat;
-		labelsize = tlabelsize;
-	}
-	return loadpropsets(stream);
+		if (version < 7000)
+		{
+			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+    }
+	
+    return loadpropsets(stream, version);
 }

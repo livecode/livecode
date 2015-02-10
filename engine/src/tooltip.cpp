@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "dispatch.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "stack.h"
 #include "card.h"
 #include "tooltip.h"
@@ -37,7 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MCTooltip::MCTooltip()
 {
 	setname_cstring("Tool Tip");
-	tooltip = NULL;
+	tip = MCValueRetain(kMCEmptyString);
 	state |= CS_NO_MESSAGES;
 	card = NULL;
 	cards = MCtemplatecard->clone(False, False);
@@ -73,7 +73,7 @@ void MCTooltip::mousemove(int2 x, int2 y, MCCard *c)
 	mx = x;
 	my = y;
 	card = c;
-	if (tooltip != NULL)
+	if (!MCStringIsEmpty(tip))
 		if (opened)
 			MCscreen->addtimer(this, MCM_internal2, MCtooltime);
 		else
@@ -87,32 +87,44 @@ void MCTooltip::clearmatch(MCCard *c)
 		card = NULL;
 }
 
-void MCTooltip::settip(const char *tip)
+
+void MCTooltip::cleartip()
 {
-	if (tip != tooltip)
+	if (!MCStringIsEmpty(tip))
 	{
-		tooltip = tip;
 		state &= ~CS_NO_FOCUS;
 		if (opened && !(state & CS_IGNORE_CLOSE))
-		{
 			close();
-			if (tooltip == NULL)
-				MCscreen->cancelmessageobject(this, NULL);
-			else
-				opentip();
-		}
-		else
-			if (tooltip == NULL)
-				MCscreen->cancelmessageobject(this, NULL);
-			else
-				if (MCtooltipdelay != 0)
-					MCscreen->addtimer(this, MCM_internal, MCtooltipdelay);
+		MCscreen->cancelmessageobject(this, NULL);
 	}
+	MCValueAssign(tip, kMCEmptyString);
+}
+
+void MCTooltip::settip(MCStringRef p_tip)
+{	
+	if (MCStringIsEqualTo(tip, p_tip, kMCStringOptionCompareExact))
+		return;
+	
+	if (MCStringIsEmpty(p_tip))
+	{
+		cleartip();
+		return;
+	}
+	
+	MCValueAssign(tip, p_tip);
+	state &= ~CS_NO_FOCUS;
+	if (opened && !(state & CS_IGNORE_CLOSE))
+	{
+		close();
+		opentip();
+	}
+	else if (MCtooltipdelay != 0)
+		MCscreen->addtimer(this, MCM_internal, MCtooltipdelay);
 }
 
 void MCTooltip::opentip()
 {
-	if (tooltip == NULL || card == NULL)
+	if (MCStringIsEmpty(tip) || card == NULL)
 		return;
 
 	MCStack *sptr = card->getstack();
@@ -128,13 +140,10 @@ void MCTooltip::opentip()
 	if (!MCModeMakeLocalWindows())
 	{
 		MCColor t_color;
-		char *t_colorname;
-		t_colorname = nil;
-		MCscreen -> parsecolor(MCttbgcolor, &t_color, &t_colorname);
-		delete t_colorname;
+		MCscreen -> parsecolor(MCttbgcolor, t_color, nil);
 		MCModeShowToolTip(trect . x, trect . y + 16,
 				MCttsize, (t_color . red >> 8) | (t_color . green & 0xFF00) | ((t_color . blue & 0xFF00) << 8), MCttfont,
-				tooltip);
+				tip);
 		MCscreen->addtimer(this, MCM_internal2, MCtooltime);
 		openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
 		state |= CS_NO_FOCUS;
@@ -147,7 +156,7 @@ void MCTooltip::opentip()
 	// MW-2012-02-17: [[ LogFonts ]] Convert the tooltip font string to
 	//   a name and create the font.
 	MCAutoNameRef t_tt_font;
-	t_tt_font . CreateWithCString(MCttfont);
+    /* UNCHECKED */ MCNameCreate(MCttfont, t_tt_font);
 	/* UNCHECKED */ MCFontCreate(t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
 
 	rect.width = 0;
@@ -160,29 +169,20 @@ void MCTooltip::opentip()
 	int32_t t_fheight;
 	t_fheight = MCFontGetAscent(m_font) + MCFontGetDescent(m_font);
 
-	const char *t_tooltip;
-	t_tooltip = tooltip;
-	do
+	// Split the tooltip into lines in order to measure its bounding box
+	MCAutoArrayRef lines;
+	/* UNCHECKED */ MCStringSplit(tip, MCSTR("\n"), nil, kMCCompareExact, &lines);
+	uindex_t nlines = MCArrayGetCount(*lines);
+	for (uindex_t i = 0; i < nlines; i++)
 	{
-		const char *t_next_line;
-		t_next_line = strchr(t_tooltip, 10);
-
-		if (t_next_line == NULL)
-			t_next_line = t_tooltip + strlen(t_tooltip);
-
-		// MW-2012-03-13: [[ UnicodeToolTip ]] Convert the UTF-8 to UTF-16 and measure.
-		MCExecPoint ep;
-		ep . setsvalue(MCString(t_tooltip, t_next_line - t_tooltip));
-		ep . utf8toutf16();
-		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-		rect.width = MCU_max(MCFontMeasureText(m_font, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), true, getstack() -> getdevicetransform()) + 8, rect.width);
-		rect.height += t_fheight + 3;
-
-		t_tooltip = t_next_line;
-		if (*t_tooltip == 10)
-			t_tooltip += 1;
+		MCStringRef t_line = nil;
+		MCValueRef t_lineval = nil;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, t_lineval);
+		t_line = (MCStringRef)t_lineval;
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        rect.width = MCU_max(MCFontMeasureText(m_font, t_line, getstack() -> getdevicetransform()) + 8, rect.width);
+		rect.height += t_fheight +3;
 	}
-	while(*t_tooltip != '\0');
 
 	openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
 	state |= CS_NO_FOCUS;
@@ -210,6 +210,7 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 	// stale update events.
 	if (!opened)
 		return;
+
 	MCRectangle trect;
 	MCU_set_rect(trect, 0, 0, rect.width, rect.height);
 
@@ -232,31 +233,22 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 	int32_t t_fheight;
 	t_fheight = MCFontGetAscent(m_font) + MCFontGetDescent(m_font);
 
-	int t_y;
-	const char *t_tooltip;
-	t_tooltip = tooltip;
-	t_y = 0;
-	do
+	// Split the tooltip into lines in order to measure its bounding box
+	int t_y = 0;
+	MCAutoArrayRef lines;
+	/* UNCHECKED */ MCStringSplit(tip, MCSTR("\n"), nil, kMCCompareExact, &lines);
+	uindex_t nlines = MCArrayGetCount(*lines);
+	for (uindex_t i = 0; i < nlines; i++)
 	{
-		const char *t_next_line;
-		t_next_line = strchr(t_tooltip, 10);
-
-		if (t_next_line == NULL)
-			t_next_line = t_tooltip + strlen(t_tooltip);
-
-		// MW-2012-03-13: [[ UnicodeToolTip ]] Convert the UTF-8 to UTF-16 and draw.
-		MCExecPoint ep;
-		ep . setsvalue(MCString(t_tooltip, t_next_line - t_tooltip));
-		ep . utf8toutf16();
-        dc -> drawtext(4, t_y + t_fheight, ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_font, false, true);
+		MCStringRef t_line = nil;
+		MCValueRef t_lineval = nil;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, t_lineval);
+		t_line = (MCStringRef)t_lineval;
+        
+        drawdirectionaltext(dc, 4, t_y + t_fheight, t_line, m_font);
 
 		t_y += t_fheight + 3;
-
-		t_tooltip = t_next_line;
-		if (*t_tooltip == 10)
-			t_tooltip += 1;
 	}
-	while(*t_tooltip != '\0');
 
 	if (!MCaqua && !t_themed)
 		drawborder(dc, trect, 1);

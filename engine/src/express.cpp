@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcerror.h"
 #include "param.h"
 #include "object.h"
@@ -34,6 +34,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "globals.h"
+
+#include "syntax.h"
+#include "statemnt.h"
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCExpression::MCExpression()
 {
@@ -55,14 +60,28 @@ MCVarref *MCExpression::getrootvarref(void)
 	return NULL;
 }
 
+#ifdef LEGACY_EXEC
 MCVariable *MCExpression::evalvar(MCExecPoint& ep)
 {
 	return NULL;
 }
+#endif
 
-Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_ref)
+MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
+{
+    return NULL;
+}
+
+#ifdef LEGACY_EXEC
+Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	return ES_ERROR;
+}
+#endif
+
+bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+{
+    return false;
 }
 
 Parse_stat MCExpression::getexps(MCScriptPoint &sp, MCExpression *earray[],
@@ -392,64 +411,58 @@ Parse_stat MCExpression::getparams(MCScriptPoint &sp, MCParameter **params)
 	return PS_NORMAL;
 }
 
+/* struct compare_arrays_t
+{
+	MCArrayRef other_array;
+	bool case_sensitive;
+	MCExecPoint *ep;
+	compare_t result;
+};
+
+bool MCExpression::compare_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
+{
+	compare_arrays_t *ctxt;
+	ctxt = (compare_arrays_t *)p_context;
+
+	MCValueRef t_other_value;
+	if (MCArrayFetchValue(ctxt -> other_array, ctxt -> case_sensitive, p_key, t_other_value))
+	{
+		MCExecPoint ep1(*(ctxt -> ep)), ep2(*(ctxt -> ep));
+		ep1 . setvalueref(p_value);
+		ep2 . setvalueref(t_other_value);
+		ctxt -> result = MCExpression::compare_values(ep1, ep2, ctxt -> ep, true);
+		if (ctxt -> result == 0)
+			return true;
+	}
+	else
+		ctxt -> result = MAXUINT2;
+
+	return false;
+}
+
 // OK-2009-02-17: [[Bug 7693]] - This function implements array comparison.
 // The return value is 0 if the arrays are equal, non-zero otherwise. For now this is left as an int2
 // for more easy compatibility with compare_values.
 int2 MCExpression::compare_arrays(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoint *p_context)
 {
-	MCVariableArray *t_array1, *t_array2;
-	t_array1 = ep1 . getarray() -> get_array();
-	t_array2 = ep2 . getarray() -> get_array();
+	MCArrayRef t_array1, t_array2;
+	t_array1 = ep1 . getarrayref();
+	t_array2 = ep2 . getarrayref();
 
-	// If one of the arrays has more keys it is bigger, otherwise we don't know yet.
-	if (t_array1 -> getnfilled() > t_array2 -> getnfilled())
+	if (MCArrayGetCount(t_array1) > MCArrayGetCount(t_array2))
 		return 1;
-	else if (t_array2 -> getnfilled() > t_array1 -> getnfilled())
+
+	if (MCArrayGetCount(t_array1) < MCArrayGetCount(t_array2))
 		return -1;
-		
-	// From here onwards, we know that the arrays have the same number of elements, so begin
-	// iterating through to compare them.
-	uint4 t_index1, t_index2;
-	t_index1 = 0;
-	t_index2 = 0;
-
-	MCHashentry *t_entry1, *t_entry2;
-	t_entry1 = NULL;
-	t_entry2 = NULL;
 	
-	int2 t_result;
-	t_result = 0;
-	do
-	{
-		t_entry1 = t_array1 -> getnextkey(t_index1, t_entry1);
+	compare_arrays_t t_ctxt;
+	t_ctxt . other_array = t_array2;
+	t_ctxt . case_sensitive = p_context -> getcasesensitive() == True;
+	t_ctxt . ep = p_context;
+	t_ctxt . result = 0;
+	MCArrayApply(t_array1, compare_array_element, &t_ctxt);
 
-		// As we know the two arrays have the same number of elements, if this number of elements happens to be zero, we
-		// can straight away say they are equal, without bothering to lookup the corresponding element in the other array.
-		if (t_entry1 == NULL)
-			return 0;
-
-		t_entry2 = t_array2 -> lookuphash(t_entry1 -> string, p_context -> getcasesensitive(), false);
-
-		// If the corresponding element in the second array cannot be found, this means we have been asked to compare two
-		// arrays with the same number of elements, but different keys. If this is the case, we cannot compare them beyond
-		// saying that they are not equal (however this is all we need for now anyway).
-		if (t_entry2 == NULL)
-			return MAXINT2;
-
-		// Given that the two key names are the same, we need to compare the values.
-		// This is done simply by making a recursive call to compare_values. We create
-		// new exec points from p_context to ensure nothing gets messed up.
-		MCExecPoint t_ep1(*p_context);
-		MCExecPoint t_ep2(*p_context);
-		t_entry1 -> value . fetch(t_ep1, false);
-		t_entry2 -> value . fetch(t_ep2, false);
-		t_result = compare_values(t_ep1, t_ep2, p_context, true);
-		if (t_result != 0)
-			return t_result;
-
-	} while (t_entry1 != NULL);
-	
-	return t_result;
+	return t_ctxt . result;
 }
 
 int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoint *p_context, bool p_compare_arrays)
@@ -465,8 +478,8 @@ int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoin
 	if (p_compare_arrays)
 	{
 		bool t_ep1_array, t_ep2_array;
-		t_ep1_array = ep1 . getformat() == VF_ARRAY;
-		t_ep2_array = ep2 . getformat() == VF_ARRAY;
+		t_ep1_array = ep1 . isarray()
+		t_ep2_array = ep2 . isarray();
 		if (t_ep1_array && t_ep2_array)
 			return compare_arrays(ep1, ep2, p_context);
 		if (t_ep1_array)
@@ -477,7 +490,7 @@ int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoin
 
 	Boolean n1 = True;
 	Boolean n2 = True;
-	if (ep1.getformat() == VF_STRING)
+	if (ep1.isstring())
 	{
 		n1 = False;
 		const char *sptr = ep1.getsvalue().getstring();
@@ -494,7 +507,7 @@ int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoin
 		}
 	}
 	if (n1)
-		if (ep2.getformat() == VF_STRING)
+		if (ep2.isstring())
 		{
 			n2 = False;
 			const char *sptr = ep2.getsvalue().getstring();
@@ -544,7 +557,6 @@ int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoin
 	return i;
 }
 
-
 Exec_stat MCExpression::compare(MCExecPoint &ep1, int2 &i, bool p_compare_arrays)
 {
 	MCExecPoint ep2(ep1);
@@ -571,7 +583,7 @@ Exec_stat MCExpression::compare(MCExecPoint &ep1, int2 &i, bool p_compare_arrays
 	i = compare_values(ep1, ep2, &t_original_ep, p_compare_arrays);
 	
 	return ES_NORMAL;
-}
+}*/
 
 Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -579,10 +591,38 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCExpression::eval(MCExecPoint &ep)
 {
-	return ES_ERROR;
+    MCAssert(false);
+    MCExecContext ctxt(ep . GetEC());
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+    {
+        ep . setvalueref(*t_value);
+		return ES_NORMAL;
+    }
+	
+	return ctxt . Catch(line, pos);
 }
+#endif
+
+void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    fprintf(stderr, "ERROR: eval method for expression not implemented properly\n");
+    abort();
+}
+
+void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void *r_value)
+{
+	MCExecValue t_value;
+	eval_ctxt(ctxt, t_value);
+	if (!ctxt . HasError())
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , p_type, r_value);
+}
+
 
 void MCExpression::initpoint(MCScriptPoint &sp)
 {
@@ -590,12 +630,34 @@ void MCExpression::initpoint(MCScriptPoint &sp)
 	pos = sp.getpos();
 }
 
+void MCExpression::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef _MOBILE
+extern bool MCIsPlatformMessage(MCNameRef handler_name);
+extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
+#endif 
+
 MCFuncref::MCFuncref(MCNameRef inname)
 {
 	/* UNCHECKED */ MCNameClone(inname, name);
 	handler = nil;
 	params = NULL;
 	resolved = false;
+    platform_message = false;
 }
 
 MCFuncref::~MCFuncref()
@@ -618,11 +680,21 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 		MCperror->add(PE_FUNCTION_BADPARAMS, sp);
 		return PS_ERROR;
 	}
+#ifdef _MOBILE
+    if (MCIsPlatformMessage(name))
+    {
+        platform_message = true;
+        resolved = true;
+    }
+#endif
+    
 	return PS_NORMAL;
 }
 
+#if /* MCFuncref::eval */ LEGACY_EXEC
 Exec_stat MCFuncref::eval(MCExecPoint &ep)
 {
+	MCExecContext ctxt(ep);
 	if (MCscreen->abortkey())
 	{
 		MCeerror->add(EE_HANDLER_ABORT, line, pos);
@@ -652,7 +724,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 			handler = t_resolved_handler;
 
 		resolved = true;
-		}
+    }
 
 	// Go through all the parameters to the function, if they are not variables, clear their current value. Each parameter stores an expression
 	// which allows its value to be re-evaluated in a given context. Re-evaluate each in the context of ep and set it to the new value.
@@ -668,8 +740,9 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 		{
 			tptr -> clear_argument();
 			Exec_stat stat;
+			MCExecContext ctxt(ep);
 			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, line, pos, EE_FUNCTION_BADSOURCE);
+				MCB_error(ctxt, line, pos, EE_FUNCTION_BADSOURCE);
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
@@ -686,46 +759,54 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 	// MW-2008-12-17: [[ Bug 7463 ]] Make sure we use the object from the execpoint, rather
 	//   than the 'parent' field in this.
 	MCObject *p = ep.getobj();
-	MCExecPoint *oldep = MCEPptr;
-	MCEPptr = &ep;
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
 	Exec_stat stat = ES_NOT_HANDLED;
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
 		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
-	
+    
+#ifdef _MOBILE
+    if (platform_message)
+    {
+        stat = MCHandlePlatformMessage(name, params);
+    }
+#endif
+    
 	if (handler != nil)
-	{
-		// MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
-		//   parent, then use a special method.
-		// MW-2009-01-28: [[ Inherited parentScripts ]]
-		// If we are in parentScript context, then pass the parentScript in use to execparenthandler.
-		if (ep . getparentscript() == NULL)
-			stat = parent -> exechandler(handler, params);
-		else
-			stat = ep.getobj() -> execparenthandler(handler, params, ep . getparentscript());
-
-		switch(stat)
-		{
-		case ES_ERROR:
-		case ES_PASS:
-			MCeerror->add(EE_FUNCTION_BADFUNCTION, line, pos, handler -> getname());
-			if (MCerrorptr == NULL)
-				MCerrorptr = parent;
-			stat = ES_ERROR;
-			break;
-
-		case ES_EXIT_HANDLER:
-			stat = ES_NORMAL;
-			break;
-
-		default:
-			break;
-		}
-		MCEPptr = oldep;
+	{   
+        // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
+        //   parent, then use a special method.
+        // MW-2009-01-28: [[ Inherited parentScripts ]]
+        // If we are in parentScript context, then pass the parentScript in use to execparenthandler.
+        if (ep . getparentscript() == NULL)
+            stat = parent -> exechandler(handler, params);
+        else
+            stat = ep.getobj() -> execparenthandler(handler, params, ep . getparentscript());
+        
+        switch(stat)
+        {
+            case ES_ERROR:
+            case ES_PASS:
+                MCeerror->add(EE_FUNCTION_BADFUNCTION, line, pos, handler -> getname());
+                if (MCerrorptr == NULL)
+                    MCerrorptr = parent;
+                stat = ES_ERROR;
+                break;
+                
+            case ES_EXIT_HANDLER:
+                stat = ES_NORMAL;
+                break;
+                
+            default:
+                break;
+        }
+        
+		MCECptr = oldctxt;
 		if (added)
 			MCnexecutioncontexts--;
 	}
@@ -742,12 +823,12 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 			if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 				stat = ES_PASS;
 		}
-		MCEPptr = oldep;
+		MCECptr = oldctxt;
 		MCdynamicpath = olddynamic;
 		if (added)
 			MCnexecutioncontexts--;
 	}
-	
+     
 	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
 	//   exception.
 	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
@@ -756,11 +837,33 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	MCresult->fetch(ep);
-	if (ep.getformat() == VF_STRING || ep.getformat() == VF_BOTH)
-		ep.grabsvalue();
-	else if (ep.getformat() == VF_ARRAY)
-		ep.grabarray();
-
+	MCresult->eval(ep);
+    
 	return ES_NORMAL;
 }
+#endif
+
+void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, platform_message, true);
+    
+    Exec_stat stat = ctxt . GetExecStat();
+    
+   	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
+	//   exception.
+	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
+	{
+		ctxt . LegacyThrow(EE_FUNCTION_BADFUNCTION, name);
+		return;
+	}
+
+	if (MCresult->eval(ctxt, r_value . valueref_value))
+	{
+        r_value . type = kMCExecValueTypeValueRef;
+		return;
+    }
+    
+    ctxt . Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////

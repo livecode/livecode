@@ -1,0 +1,16 @@
+setup
+
+test-error stddev("string", 1)
+
+test stddev() is 0
+test stddev("1, 2, 3") is 1
+test stddev(1,2,3) is 1
+test stddev(0.5,1,1.5) is 0.5
+
+local tArray
+repeat with i = 1 to 5
+	put 6 - i into tArray[i]
+end repeat
+test stddev(tArray) is stddev(1,2,3,4,5)
+
+teardown

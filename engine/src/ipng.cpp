@@ -29,10 +29,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "core.h"
 #include "imageloader.h"
 
 #define NATIVE_ALPHA_BEFORE ((kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == kMCGPixelAlphaPositionFirst)
+
 #define NATIVE_ORDER_BGR ((kMCGPixelFormatNative & kMCGPixelOrderRGB) == 0)
 
 #if NATIVE_ALPHA_BEFORE
@@ -91,7 +91,7 @@ extern "C" void stream_read(png_structp png_ptr, png_bytep data, png_size_t leng
 
 	uint4 t_length;
 	t_length = length;
-	if (IO_read(data, sizeof(uint1), t_length, t_stream) != IO_NORMAL)
+	if (IO_read(data, length, t_stream) != IO_NORMAL)
 		png_error(png_ptr, (char *)"pnglib read error");
 }
 
@@ -115,7 +115,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatPNG; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -140,7 +140,7 @@ MCPNGImageLoader::~MCPNGImageLoader()
 		png_destroy_read_struct(&m_png, &m_info, &m_end_info);
 }
 
-bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
+bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -182,7 +182,7 @@ bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		r_height = t_height;
 		
 		r_xhot = r_yhot = 0;
-		r_name = nil;
+		r_name = MCValueRetain(kMCEmptyString);
 		r_frame_count = 1;
 	}
 

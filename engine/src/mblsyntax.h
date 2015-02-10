@@ -33,13 +33,14 @@ enum MCPhotoSourceType
 	kMCPhotoSourceTypeUnknown,
 	kMCPhotoSourceTypeAlbum,
 	kMCPhotoSourceTypeLibrary,
+    kMCPhotoSourceTypeCamera,
 	kMCPhotoSourceTypeFrontCamera,
 	kMCPhotoSourceTypeRearCamera,
 };
-
+/*
 void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height);
 void MCCameraExecAcquirePhoto(MCExecContext& ctxt, MCPhotoSourceType p_photo);
-
+*/
 enum MCCameraSourceType
 {
 	kMCCameraSourceTypeUnknown,
@@ -47,15 +48,39 @@ enum MCCameraSourceType
 	kMCCameraSourceTypeRear,
 };
 
+enum
+{
+    kMCCameraFeatureTypePhoto,
+    kMCCameraFeatureTypeVideo,
+    kMCCameraFeatureTypeFlash,
+    kMCCameraFeatureRearShift = 3,
+};
+
 typedef uint32_t MCCameraFeaturesType;
 enum
 {
-	kMCCameraFeaturePhoto = 1 << 0,
-	kMCCameraFeatureVideo = 1 << 1,
-	kMCCameraFeatureFlash = 1 << 2,
+	kMCCameraFeaturePhoto = 1 << kMCCameraFeatureTypePhoto,
+	kMCCameraFeatureVideo = 1 << kMCCameraFeatureTypeVideo,
+	kMCCameraFeatureFlash = 1 << kMCCameraFeatureTypeFlash,
 };
 
-void MCCameraGetFeatures(MCExecContext& ctxt, MCCameraSourceType p_camera, char*& r_features);
+typedef uint32_t MCCamerasFeaturesType;
+enum
+{
+    kMCCamerasFeatureFrontPhoto = 1 << kMCCameraFeatureTypePhoto,
+    kMCCamerasFeatureFrontVideo = 1 << kMCCameraFeatureTypeVideo,
+    kMCCamerasFeatureFrontFlash = 1 << kMCCameraFeatureTypeFlash,
+    kMCCamerasFeatureRearPhoto = 1 << (kMCCameraFeatureTypePhoto + kMCCameraFeatureRearShift),
+    kMCCamerasFeatureRearVideo = 1 << (kMCCameraFeatureTypeVideo + kMCCameraFeatureRearShift),
+    kMCCamerasFeatureRearFlash = 1 << (kMCCameraFeatureTypeFlash + kMCCameraFeatureRearShift),
+};
+
+//void MCCameraGetFeatures(MCExecContext& ctxt, MCCameraSourceType p_camera, char*& r_features);
+MCCameraFeaturesType MCSystemGetSpecificCameraFeatures(MCCameraSourceType p_source);
+MCCamerasFeaturesType MCSystemGetAllCameraFeatures();
+
+bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source);
+bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size, MCStringRef& r_result);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Sensor module
@@ -68,23 +93,6 @@ enum MCSensorType
     kMCSensorTypeAcceleration,
     kMCSensorTypeRotationRate,
 };
-
-void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor, bool p_loosely);
-void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor);
-
-void MCSensorGetSensorAvailable(MCExecContext& ctxt, MCSensorType p_sensor);
-
-void MCSensorGetDetailedLocation(MCExecContext& ctxt, MCVariableValue *&r_detailed_location);
-void MCSensorGetLocation(MCExecContext& ctxt, char *&r_location);
-void MCSensorGetDetailedHeading(MCExecContext& ctxt, MCVariableValue *&r_detailed_heading);
-void MCSensorGetHeading(MCExecContext& ctxt, char *&r_heading);
-void MCSensorGetDetailedAcceleration(MCExecContext& ctxt, MCVariableValue *&r_detailed_acceleration);
-void MCSensorGetAcceleration(MCExecContext& ctxt, char *&r_acceleration);
-void MCSensorGetDetailedRotationRate(MCExecContext& ctxt, MCVariableValue *&r_detailed_rotation_rate);
-void MCSensorGetRotationRate(MCExecContext& ctxt, char *&r_rotation_rate);
-
-void MCSensorSetLocationCalibration(MCExecContext& ctxt, int32_t p_timeout);
-void MCSensorGetLocationCalibration(MCExecContext& ctxt, int32_t& r_timeout);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Busy Indicator
@@ -114,15 +122,13 @@ enum
 	kMCActivityIndicatorGray,       // This is a legacy version with no text or background
 };
 
-void MCActivityIndicatorExecStart (MCExecContext& ctxt, MCActivityIndicatorType p_indicator, MCLocation p_location);
-void MCActivityIndicatorExecStop (MCExecContext& ctxt);
+bool MCSystemBusyIndicatorStart (intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity);
+bool MCSystemBusyIndicatorStop ();
+bool MCSystemActivityIndicatorStart (intenum_t p_indicator, integer_t p_location_x, integer_t p_location_y);
+bool MCSystemActivityIndicatorStop ();
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Dialog module
-
-void MCDialogExecPickDate(MCExecContext& ctxt, MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect);
-void MCDialogExecPickTime(MCExecContext& ctxt, MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect);
-void MCDialogExecPickDateAndTime(MCExecContext& ctxt, MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect);
 
 struct const_int32_array_t
 {
@@ -144,20 +150,19 @@ enum
     kMCItems,    
 };
 
-void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType chunk_type, const_cstring_array_t *option_lists, const char *initial_choice, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, char *&r_picked_options);
-void MCDialogExecPickOptionByIndex(MCExecContext &p_ctxt, MCChunkType chunk_type, const_cstring_array_t *option_lists, const_int32_array_t initial_indices, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, const_int32_array_t &r_picked_options);
-
 typedef uint32_t MCMediaType;
 enum
 {
-    kMCunknownMediaType = 0,
-    kMCpodcasts =         1 << 0,
-    kMCsongs =            1 << 1,
-    kMCaudiobooks =       1 << 2,
-    kMCmovies =           1 << 3,
-    kMCmusicvideos =      1 << 4,
-    kMCtv =               1 << 5,
-    kMCvideopodcasts =    1 << 6,
+    kMCUnknownMediaType = 0,
+    kMCMediaTypePodcasts =         1 << 0,
+    kMCMediaTypeSongs =            1 << 1,
+    kMCMediaTypeAudiobooks =       1 << 2,
+    kMCMediaTypeMovies =           1 << 3,
+    kMCMediaTypeMusicVideos =      1 << 4,
+    kMCMediaTypeTv =               1 << 5,
+    kMCMediaTypeVideoPodcasts =    1 << 6,
+    kMCMediaTypeAnyAudio =         kMCMediaTypePodcasts + kMCMediaTypeSongs + kMCMediaTypeAudiobooks,
+    kMCMediaTypeAnyVideo =         kMCMediaTypeMovies + kMCMediaTypeMusicVideos + kMCMediaTypeTv + kMCMediaTypeVideoPodcasts,
 };
 
 typedef uint32_t MCMediaScope;
@@ -168,40 +173,37 @@ enum
     kMCmedia,
 };
 
-void MCDialogExecPickMedia(MCExecContext &p_ctxt, MCMediaType *p_media_type, bool p_multiple);
-void MCDialogExecPickMedia(MCExecContext &p_ctxt, char *p_media_expression, MCMediaScope *p_media_scope, bool p_multiple);
-
 ///////////////////////////////////////////////////////////////////////////////
 // from Alert
 
-void MCBeepExec (MCExecContext& ctxt);
-void MCVibrateExec (MCExecContext& ctxt);
+//void MCBeepExec (MCExecContext& ctxt);
+//void MCVibrateExec (MCExecContext& ctxt);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Local Notification
 
-void MCLocalNotificationExec (MCExecContext& p_ctxt, const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value);
-void MCGetRegisteredNotificationsExec (MCExecContext& p_ctxt);
-void MCCancelLocalNotificationExec (MCExecContext& p_ctxt, const char *t_alert_descriptor);
-void MCCancelAllLocalNotificationsExec (MCExecContext& p_ctxt);
-void MCGetNotificationBadgeValueExec (MCExecContext& p_ctxt);
-void MCSetNotificationBadgeValueExec (MCExecContext p_ctxt);
+//void MCLocalNotificationExec (MCExecContext& p_ctxt, const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value);
+//void MCGetRegisteredNotificationsExec (MCExecContext& p_ctxt);
+//void MCCancelLocalNotificationExec (MCExecContext& p_ctxt, const char *t_alert_descriptor);
+//void MCCancelAllLocalNotificationsExec (MCExecContext& p_ctxt);
+//void MCGetNotificationBadgeValueExec (MCExecContext& p_ctxt);
+//void MCSetNotificationBadgeValueExec (MCExecContext p_ctxt);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Push Notification
 
-void MCGetDeviceTokenExec (MCExecContext& p_ctxt);
+//void MCGetDeviceTokenExec (MCExecContext& p_ctxt);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Custom URL Schemes
 
-void MCGetLaunchUrlExec (MCExecContext& p_ctxt);
+//void MCGetLaunchUrlExec (MCExecContext& p_ctxt);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Text Messaging
 
-void MCCanSendTextMessageExec(MCExecContext& ctxt, bool& r_can_send);
-void MCComposeTextMessageExec(MCExecContext& ctxt, const char *p_recipients, const char *p_body);
+bool MCSystemCanSendTextMessage();
+bool MCSystemComposeTextMessage(MCStringRef p_recipients, MCStringRef p_body);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Sound module
@@ -223,33 +225,70 @@ enum MCSoundChannelStatus
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
 enum MCSoundAudioCategory
 {
-    kMCMCSoundAudioCategoryUnknown,
-    kMCMCSoundAudioCategoryAmbient,
-    kMCMCSoundAudioCategorySoloAmbient,
-    kMCMCSoundAudioCategoryPlayback,
-    kMCMCSoundAudioCategoryRecord,
-    kMCMCSoundAudioCategoryPlayAndRecord,
-    kMCMCSoundAudioCategoryAudioProcessing
+    kMCSoundAudioCategoryUnknown,
+    kMCSoundAudioCategoryAmbient,
+    kMCSoundAudioCategorySoloAmbient,
+    kMCSoundAudioCategoryPlayback,
+    kMCSoundAudioCategoryRecord,
+    kMCSoundAudioCategoryPlayAndRecord,
+    kMCSoundAudioCategoryAudioProcessing
 };
 
-void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, const char *p_channel, const char *p_file, MCSoundChannelPlayType p_type);
-void MCSoundExecStopSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
-void MCSoundExecPauseSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
-void MCSoundExecResumeSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
-void MCSoundExecDeleteChannel(MCExecContext& ctxt, const char *p_channel);
+bool MCSystemSoundInitialize();
+bool MCSystemSoundFinalize();
+bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object);
+bool MCSystemStopSoundChannel(MCStringRef p_channel);
+bool MCSystemPauseSoundChannel(MCStringRef p_channel);
+bool MCSystemResumeSoundChannel(MCStringRef p_channel);
+bool MCSystemDeleteSoundChannel(MCStringRef p_channel);
+bool MCSystemSetSoundChannelVolume(MCStringRef p_channel, int32_t p_volume);
+bool MCSystemSoundChannelVolume(MCStringRef p_channel, int32_t& r_volume);
+bool MCSystemSoundChannelStatus(MCStringRef p_channel, intenum_t& r_status);
+bool MCSystemSoundOnChannel(MCStringRef p_channel, MCStringRef &r_sound);
+bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef &r_sound);
+bool MCSystemListSoundChannels(MCStringRef &r_channels);
+bool MCSystemSetAudioCategory(intenum_t p_category);
 
-void MCSoundSetVolumeOfChannel(MCExecContext& ctxt, const char *p_channel, int32_t p_volume);
 
-bool MCSoundGetVolumeOfChannel(MCExecContext& ctxt, const char *p_channel, int32_t& r_volume);
-bool MCSoundGetStatusOfChannel(MCExecContext& ctxt, const char *p_channel, MCSoundChannelStatus& r_status);
-bool MCSoundGetSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound);
-bool MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound);
-bool MCSoundGetSoundChannels(MCExecContext& ctxt, char*& r_channels);
+///////////////////////////////////////////////////////////////////////////////
+// from Calendar
 
-bool MCSoundSetAudioCategory(MCExecContext &ctxt, MCSoundAudioCategory p_category);
+typedef struct
+{
+    MCStringRef   mceventid;           //
+    MCStringRef   mctitle;             //                                     RW
+    MCStringRef   mcnote;              //                                     RW
+    MCStringRef   mclocation;          //                                     RW
+    bool          mcalldayset;         //
+    bool          mcallday;            //                                     RW
+    bool          mcstartdateset;      //
+    MCDateTime    mcstartdate;         //                                     RW
+    bool          mcenddateset;        //
+    MCDateTime    mcenddate;           //                                     RW
+    int           mcalert1;            //                                     RW
+    int           mcalert2;            //                                     RW
+    MCStringRef   mcfrequency;         // EKReocurrenceFrequency              RW
+    int           mcfrequencycount;    //                                     RW
+    int           mcfrequencyinterval; //                                     RW
+    MCStringRef   mccalendar;          //
+} MCCalendar;
+
+//bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
+bool MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_contact, MCArrayRef &r_result);
+bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar);
+bool MCSystemShowEvent(MCStringRef p_event_id, MCStringRef& r_result);
+bool MCSystemCreateEvent(MCStringRef& r_result);
+bool MCSystemUpdateEvent(MCStringRef p_event_id, MCStringRef& r_result);
+bool MCSystemGetEventData(MCExecContext &r_ctxt, MCStringRef p_event_id, MCArrayRef& r_event_data);
+bool MCSystemRemoveEvent(MCStringRef p_event_id, bool p_reocurring, MCStringRef& r_event_id_deleted);
+bool MCSystemAddEvent(MCCalendar p_new_calendar_data, MCStringRef& r_result);
+bool MCSystemGetCalendarsEvent(MCStringRef& r_result);
+bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringRef& r_result);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Ad module
+
+class MCAd;
 
 enum MCAdType {
     kMCAdTypeUnknown,
@@ -263,17 +302,223 @@ struct MCAdTopLeft {
     uint32_t y;
 };
 
-void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, const char *p_key);
-void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, MCAdTopLeft p_top_left, MCVariableValue *p_meta_data);
-void MCAdExecDeleteAd(MCExecContext& ctxt, const char *p_name);
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCArrayRef p_meta_data);
 
-bool MCAdGetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft &r_top_left);
-bool MCAdGetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool &r_visible);
-bool MCAdGetAds(MCExecContext& ctxt, char*& r_ads);
-
-void MCAdSetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft p_top_left);
-void MCAdSetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool p_visible);
+//void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, const char *p_key);
+//void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, MCAdTopLeft p_top_left, MCVariableValue *p_meta_data);
+//void MCAdExecDeleteAd(MCExecContext& ctxt, const char *p_name);
+//
+//bool MCAdGetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft &r_top_left);
+//bool MCAdGetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool &r_visible);
+//bool MCAdGetAds(MCExecContext& ctxt, char*& r_ads);
+//
+//void MCAdSetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft p_top_left);
+//void MCAdSetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool p_visible);
 
 ///////////////////////////////////////////////////////////////////////////////
+// from Orientation module
+
+typedef enum
+{
+	ORIENTATION_UNKNOWN_BIT = 0,
+    ORIENTATION_PORTRAIT_BIT = 1,
+    ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT = 2,
+    ORIENTATION_LANDSCAPE_RIGHT_BIT = 3,
+    ORIENTATION_LANDSCAPE_LEFT_BIT = 4,
+    ORIENTATION_FACE_UP_BIT = 5,
+    ORIENTATION_FACE_DOWN_BIT = 6,
+} MCOrientation;
+
+typedef enum
+{
+	ORIENTATION_UNKNOWN = 1 << ORIENTATION_UNKNOWN_BIT,
+	ORIENTATION_PORTRAIT = 1 << ORIENTATION_PORTRAIT_BIT,
+	ORIENTATION_PORTRAIT_UPSIDE_DOWN = 1 << ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT,
+	ORIENTATION_LANDSCAPE_RIGHT = 1 << ORIENTATION_LANDSCAPE_RIGHT_BIT,
+	ORIENTATION_LANDSCAPE_LEFT = 1 << ORIENTATION_LANDSCAPE_LEFT_BIT,
+	ORIENTATION_FACE_UP = 1 << ORIENTATION_FACE_UP_BIT,
+	ORIENTATION_FACE_DOWN = 1 << ORIENTATION_FACE_DOWN_BIT
+} MCOrientationSet;
+
+void MCSystemGetAllowedOrientations(uint32_t& r_orientations);
+void MCSystemSetAllowedOrientations(uint32_t p_orientations);
+void MCSystemGetOrientation(MCOrientation& r_orientation);
+void MCSystemGetDeviceOrientation(MCOrientation& r_orientation);
+void MCSystemLockOrientation();
+void MCSystemUnlockOrientation();
+void MCSystemGetOrientationLocked(bool &r_locked);
+
+///////////////////////////////////////////////////////////////////////////////
+// from Mail module
+
+enum MCMailType
+{
+	kMCMailTypePlain,
+	kMCMailTypeUnicode,
+	kMCMailTypeHtml
+};
+
+struct MCAttachmentData
+{
+	MCDataRef data;
+	MCStringRef file;
+	MCStringRef type;
+	MCStringRef name;
+};
+
+void MCSystemMailResult(MCStringRef& r_result);
+void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body, MCStringRef& r_result);
+void MCSystemSendMailWithAttachments(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, MCAttachmentData *p_attachments, uindex_t p_attachment_count, MCStringRef& r_result);
+void MCSystemGetCanSendMail(bool& r_result);
+
+
+////////////////////////////////////////////////////////////////////////////////
+// from Idle Timer
+
+void MCSystemLockIdleTimer();
+void MCSystemUnlockIdleTimer();
+bool MCSystemIdleTimerLocked();
+
+///////////////////////////////////////////////////////////////////////////////
+// from Dialog module
+
+typedef enum
+{
+    kMCPickButtonNone,
+    kMCPickButtonCancel,
+    kMCPickButtonDone,
+    kMCPickButtonCancelAndDone
+} MCPickButtonType;
+
+struct MCPickList
+{
+    MCStringRef *options;
+    uindex_t option_count;
+    uindex_t initial;
+};
+
+bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
+bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
+bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
+
+bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, uindex_t *&r_result, uindex_t &r_result_count, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect);
+
+bool MCSystemPickMedia(MCMediaType p_media_type, bool p_multiple, MCStringRef& r_result);
+
+
+////////////////////////////////////////////////////////////////////////////////
+// From Notification module
+
+typedef struct
+{
+    MCStringRef body;
+    MCStringRef action;
+    MCStringRef user_info;
+    uint32_t time; // in seconds
+    uint32_t badge_value;
+    bool play_sound;
+} MCNotification;
+
+bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id);
+bool MCSystemGetRegisteredNotifications (MCStringRef& r_registered_alerts);
+bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification);
+bool MCSystemCancelLocalNotification(uint32_t p_alert_descriptor);
+bool MCSystemCancelAllLocalNotifications ();
+bool MCSystemGetNotificationBadgeValue (uint32_t &r_badge_value);
+bool MCSystemSetNotificationBadgeValue (uint32_t r_badge_value);
+
+////////////////////////////////////////////////////////////////////////////////
+// From Misc module
+
+bool MCSystemGetDeviceToken (MCStringRef& r_device_token);
+bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url);
+
+bool MCSystemBeep(int32_t p_number_of_times);
+bool MCSystemVibrate(int32_t p_number_of_times);
+
+bool MCSystemGetDeviceResolution(MCStringRef& p_resolution);
+bool MCSystemGetPixelDensity(real64_t& r_density);
+bool MCSystemSetDeviceUseResolution(bool p_use_device_res, bool p_use_control_device_res);
+bool MCSystemGetDeviceScale(real64_t& r_scale);
+
+bool MCSystemSetStatusBarStyle(intenum_t p_style);
+bool MCSystemShowStatusBar();
+bool MCSystemHideStatusBar();
+
+bool MCSystemSetKeyboardType(intenum_t p_type);
+bool MCSystemSetKeyboardReturnKey(intenum_t p_type);
+
+bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages);
+bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale);
+
+bool MCSystemClearTouches();
+
+bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier);
+bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier);
+bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier);
+
+bool MCSystemSetReachabilityTarget(MCStringRef p_hostname);
+bool MCSystemGetReachabilityTarget(MCStringRef& r_hostname);
+
+// SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension, bool p_is_raw_data = true);
+
+bool MCSystemSetRedrawInterval(int32_t p_interval);
+bool MCSystemSetAnimateAutorotation(bool p_enabled);
+
+bool MCSystemFileSetDoNotBackup(MCStringRef p_path, bool p_no_backup);
+bool MCSystemFileGetDoNotBackup(MCStringRef p_path, bool& r_no_backup);
+bool MCSystemFileSetDataProtection(MCStringRef p_path, MCStringRef p_protection_string, MCStringRef& r_status);
+bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection_string);
+
+bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value);
+
+bool MCSystemEnableRemoteControl();
+bool MCSystemDisableRemoteControl();
+bool MCSystemGetRemoteControlEnabled(bool& r_enabled);
+bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_array);
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+bool MCSystemGetIsVoiceOverRunning(bool& r_is_vo_running);
+
+enum MCMiscStatusBarStyle
+{
+    kMCMiscStatusBarStyleDefault,
+    kMCMiscStatusBarStyleTranslucent,
+    kMCMiscStatusBarStyleOpaque
+};
+
+enum MCMiscKeyboardType
+{
+    kMCMiscKeyboardTypeDefault,
+    kMCMiscKeyboardTypeAlphabet,
+    kMCMiscKeyboardTypeNumeric,
+    kMCMiscKeyboardTypeDecimal,
+    kMCMiscKeyboardTypeNumber,
+    kMCMiscKeyboardTypePhone,
+    kMCMiscKeyboardTypeEmail,
+    kMCMiscKeyboardTypeUrl,
+    kMCMiscKeyboardTypeContact
+};
+
+enum MCMiscKeyboardReturnKey
+{
+    kMCMiscKeyboardReturnKeyDefault,
+    kMCMiscKeyboardReturnKeyGo,
+    kMCMiscKeyboardReturnKeyGoogle,
+    kMCMiscKeyboardReturnKeyJoin,
+    kMCMiscKeyboardReturnKeyNext,
+    kMCMiscKeyboardReturnKeyRoute,
+    kMCMiscKeyboardReturnKeySearch,
+    kMCMiscKeyboardReturnKeySend,
+    kMCMiscKeyboardReturnKeyYahoo,
+    kMCMiscKeyboardReturnKeyDone,
+    kMCMiscKeyboardReturnKeyEmergencyCall
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// From Url module
+
+bool MCSystemLaunchUrl(MCStringRef p_url);
 
 #endif

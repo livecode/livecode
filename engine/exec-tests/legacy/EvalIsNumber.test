@@ -1,0 +1,4 @@
+setup
+test not isNumber("NaN")
+test isNumber("-1.0e100")
+teardown

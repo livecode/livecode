@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -58,6 +57,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "revbuild.h"
 #include "parentscript.h"
+#include "chunk.h"
+#include "scriptpt.h"
 
 #include "resolution.h"
 #include "group.h"
@@ -84,12 +85,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
  void X_main_loop(void);
 
+//////////
+
+bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2012-09-05: [[ Property Listener ]]
 #ifdef FEATURE_PROPERTY_LISTENER
 void MCInternalObjectListenerMessagePendingListeners(void);
+#ifdef LEGACY_EXEC
 void MCInternalObjectListenerListListeners(MCExecPoint &ep);
+#endif
+void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_listeners, uindex_t& r_count);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +124,59 @@ MCNameRef MCmessageboxlasthandler = nil;
 uint32_t MCmessageboxlastline = 0;
 
 Boolean MCcrashreportverbose = False;
-char *MCcrashreportfilename = NULL;
+MCStringRef MCcrashreportfilename = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Property tables specific to DEVELOPMENT mode
+//
+
+MCPropertyInfo MCObject::kModeProperties[] =
+{
+	DEFINE_RO_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
+	DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
+    DEFINE_RO_OBJ_ARRAY_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariables)
+    DEFINE_RO_OBJ_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariablesNonArray)
+};
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+	nil,
+	sizeof(kModeProperties) / sizeof(kModeProperties[0]),
+	&kModeProperties[0],
+};
+
+MCPropertyInfo MCStack::kModeProperties[] =
+{
+    DEFINE_RW_OBJ_PROPERTY(P_IDE_OVERRIDE, Bool, MCStack, IdeOverride)
+    DEFINE_RO_OBJ_PROPERTY(P_REFERRING_STACK, String, MCStack, ReferringStack)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfUInt, MCStack, UnplacedGroupIds)
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+    &MCObject::kModePropertyTable,
+	sizeof(kModeProperties) / sizeof(kModeProperties[0]),
+	&kModeProperties[0],
+};
+
+MCPropertyInfo MCProperty::kModeProperties[] =
+{    
+	DEFINE_RW_PROPERTY(P_REV_CRASH_REPORT_SETTINGS, Array, Mode, RevCrashReportSettings)
+    DEFINE_RO_PROPERTY(P_REV_MESSAGE_BOX_LAST_OBJECT, String, Mode, RevMessageBoxLastObject)
+    DEFINE_RW_PROPERTY(P_REV_MESSAGE_BOX_REDIRECT, String, Mode, RevMessageBoxRedirect)
+	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
+    DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
+    DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, Mode, RevLicenseLimits)
+    DEFINE_RO_PROPERTY(P_REV_OBJECT_LISTENERS, LinesOfString, Mode, RevObjectListeners)
+    DEFINE_RW_PROPERTY(P_REV_PROPERTY_LISTENER_THROTTLE_TIME, UInt32, Mode, RevPropertyListenerThrottleTime)
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+	sizeof(kModeProperties) / sizeof(kModeProperties[0]),
+	&kModeProperties[0],
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -132,26 +192,24 @@ public:
 	
 	virtual ~MCRevRelicense();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 };
 
-static char *s_command_path = NULL;
+static MCStringRef s_command_path = nil;
 
 static void restart_revolution(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
-	_spawnl(_P_NOWAIT, s_command_path, s_command_path, NULL);
-#elif defined(TARGET_PLATFORM_MACOS_X)
+    MCAutoStringRefAsUTF8String t_command_path;
+    t_command_path . Lock(s_command_path);
+	_spawnl(_P_NOWAIT, *t_command_path, *t_command_path, NULL);
+#elif defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_LINUX)
 	if (fork() == 0)
 	{
+        MCAutoStringRefAsUTF8String t_mccmd;
+        t_mccmd . Lock(MCcmd);
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
-	}
-#elif defined(TARGET_PLATFORM_LINUX)
-	if (fork() == 0)
-	{
-		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(*t_mccmd, *t_mccmd, NULL);
 	}
 #else
 #error restart not defined
@@ -169,7 +227,7 @@ Parse_stat MCRevRelicense::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
+void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 {
 	switch(MCdefaultstackptr -> getcard() -> message(MCM_shut_down_request))
 	{
@@ -178,21 +236,20 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 		break;
 		
 	default:
-		MCresult -> sets("cancelled");
-		
-		return ES_NORMAL;
+        ctxt . SetTheResultToCString("cancelled");
+        return;
 	}
 	
-	if (MClicenseparameters . license_token == NULL || strlen(MClicenseparameters . license_token) == 0)
+    if (MClicenseparameters . license_token == NULL || MCStringIsEmpty(MClicenseparameters . license_token))
 	{
-		MCresult -> sets("no token");
-		return ES_NORMAL;
+		ctxt . SetTheResultToCString("no token");
+		return;
 	}
-	
-	if (!MCS_unlink(MClicenseparameters . license_token))
+
+    if (!MCS_unlink(MClicenseparameters . license_token))
 	{
-		MCresult -> sets("token deletion failed");
-		return ES_NORMAL;
+		ctxt . SetTheResultToCString("token deletion failed");
+		return;
 	}
 
 	MCretcode = 0;
@@ -201,12 +258,13 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	MCtracestackptr = NULL;
 	MCtraceabort = True;
 	MCtracereturn = True;
+    
+    MCAutoStringRef t_command_path;
+    MCS_resolvepath(MCcmd, &t_command_path);
 	
-	s_command_path = MCS_resolvepath(MCcmd);
+	s_command_path = MCValueRetain(*t_command_path);
 
 	atexit(restart_revolution);
-	
-	return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -227,9 +285,15 @@ IO_stat MCDispatch::startup(void)
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
+    MCAutoStringRef t_startdir;
+    MCS_getcurdir(&t_startdir);
 	
-	startdir = MCS_getcurdir();
-	enginedir = strclone(MCcmd);
+    char *t_startdir_cstring, *t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(*t_startdir, t_startdir_cstring);
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
+    startdir = t_startdir_cstring;
+    enginedir = t_mccmd;
+
 
 	char *eptr;
 	eptr = strrchr(enginedir, PATH_SEPARATOR);
@@ -238,11 +302,13 @@ IO_stat MCDispatch::startup(void)
 	else
 		*enginedir = '\0';
 
-	MCExecPoint ep;
-	ep . setstaticbytes(MCstartupstack, MCstartupstack_length);
-	MCDecompress::do_decompress(ep, 0, 0);
-
-	IO_handle stream = MCS_fakeopen(ep . getsvalue());
+	MCDataRef t_decompressed;
+	MCDataRef t_compressed;
+	/* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
+	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
+	MCValueRelease(t_compressed);
+    
+    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);
@@ -251,9 +317,9 @@ IO_stat MCDispatch::startup(void)
 
 	MCS_close(stream);
 
-	memset((void *)ep . getsvalue() . getstring(), 0, ep . getsvalue() . getlength());
-	ep . clear();
-	
+	/* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
+	MCValueRelease(t_decompressed);
+
 	// Temporary fix to make sure environment stack doesn't get lost behind everything.
 #if defined(_MACOSX)
 	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
@@ -263,7 +329,7 @@ IO_stat MCDispatch::startup(void)
 #endif
 	
 	MCenvironmentactive = True;
-	sptr -> setfilename(strclone(MCcmd));
+	sptr -> setfilename(MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
 
 	{
@@ -273,24 +339,35 @@ IO_stat MCDispatch::startup(void)
 	}
 	
 	if (!MCquit)
-	{
-		MCresult -> fetch(ep);
-		ep . appendchar('\0');
-		if (ep . getsvalue() . getlength() == 1)
+    {
+        MCExecContext ctxt(nil, nil, nil);
+        MCValueRef t_valueref;
+        t_valueref = nil;
+        MCValueRef t_valueref2;
+        t_valueref2 = nil;
+		MCresult -> eval(ctxt, t_valueref);
+		
+		if (MCValueIsEmpty(t_valueref))
 		{
 			sptr -> open();
 			MCImage::init();
 			
 			X_main_loop();
-
-			MCresult -> fetch(ep);
-			ep . appendchar('\0');
-			if (ep . getsvalue() . getlength() == 1)
+			MCresult -> eval(ctxt, t_valueref2);
+			if (MCValueIsEmpty(t_valueref2))
+            {
+                MCValueRelease(t_valueref);
+                MCValueRelease(t_valueref2);
 				return IO_NORMAL;
+            }
+            else
+                MCValueAssign(t_valueref, t_valueref2);
+                
 		}
 
-		if (sptr -> getscript() != NULL)
-			memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
+		// TODO: Script Wiping
+		// if (sptr -> getscript() != NULL)
+		//	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
 
 		destroystack(sptr, True);
 		MCtopstackptr = NULL;
@@ -298,10 +375,16 @@ IO_stat MCDispatch::startup(void)
 		MCenvironmentactive = False;
 
 		send_relaunch();
+        MCNewAutoNameRef t_name;
+        ctxt . ConvertToName(t_valueref, &t_name);
 
-		sptr = findstackname(ep . getsvalue() . getstring());
+		sptr = findstackname(*t_name);
+        if (t_valueref != nil)
+            MCValueRelease(t_valueref);
+        if (t_valueref2 != nil)
+            MCValueRelease(t_valueref2);
 
-		if (sptr == NULL && (stat = loadfile(ep . getsvalue() . getstring(), sptr)) != IO_NORMAL)
+		if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
 			return stat;
 	}
 
@@ -320,82 +403,15 @@ IO_stat MCDispatch::startup(void)
 	return IO_NORMAL;
 }
 
-bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters)
-{
-	Boolean t_old_allow_interrupts;
-	MCStack *t_old_stacks;
-	MCObjectList *t_old_frontscripts, *t_old_backscripts;
-	MCStack **t_old_using;
-	uint2 t_old_nusing;
-	MCStack *t_old_defaultstack;
-	MCStack *t_old_staticdefaultstack;
-	MCStack *t_old_topstackptr;
-	t_old_allow_interrupts = MCallowinterrupts;
-	t_old_stacks = stacks;
-	t_old_frontscripts = MCfrontscripts;
-	t_old_backscripts = MCbackscripts;
-	t_old_using = MCusing;
-	t_old_nusing = MCnusing;
-	t_old_defaultstack = MCdefaultstackptr;
-	t_old_staticdefaultstack = MCstaticdefaultstackptr;
-	t_old_topstackptr = MCtopstackptr;
-
-	MCallowinterrupts = False;
-	stacks = nil;
-	MCnusing = 0;
-	MCusing = nil;
-	MCbackscripts = nil;
-	MCfrontscripts = nil;
-	
-	// Load the stack
-	MCExecPoint ep;
-	ep . setstaticbytes(p_stack_data, p_stack_data_length);
-	MCDecompress::do_decompress(ep, 0, 0);
-
-	bool t_success;
-	MCStack *t_stack;
-	IO_handle t_stream;
-	t_success = false;
-	t_stack = nil;
-	t_stream = MCS_fakeopen(ep . getsvalue());
-	if (MCdispatcher -> readfile(NULL, NULL, t_stream, t_stack) == IO_NORMAL)
-	{
-		MCdefaultstackptr = MCstaticdefaultstackptr = MCtopstackptr = stacks;
-
-		MCAutoNameRef t_message_name;
-		/* UNCHECKED */ t_message_name . CreateWithCString(p_message);
-
-		if (t_stack -> message(t_message_name, p_parameters, True, True, False) == ES_NORMAL)
-			t_success = true;
-
-		destroystack(t_stack, True);
-	}
-
-	MCS_close(t_stream);
-
-	memset((void *)ep . getsvalue() . getstring(), 0, ep . getsvalue() . getlength());
-	ep . clear();
-
-	MCtopstackptr = t_old_topstackptr;
-	MCstaticdefaultstackptr = t_old_staticdefaultstack;
-	MCdefaultstackptr = t_old_defaultstack;
-	MCnusing = t_old_nusing;
-	MCusing = t_old_using;
-	MCbackscripts = t_old_backscripts;
-	MCfrontscripts = t_old_frontscripts;
-	stacks = t_old_stacks;
-	MCallowinterrupts = t_old_allow_interrupts;
-
-	return t_success;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCStack::mode* hooks for DEVELOPMENT mode.
 //
 
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
+#ifdef /* MCStack::mode_getprop */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_REFERRING_STACK:
@@ -434,10 +450,16 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 		return ES_NOT_HANDLED;
 	}
 	return ES_NORMAL;
+#endif /* MCStack::mode_getprop */
+    return ES_ERROR;
 }
+#endif
 
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &cprop, const MCString &carray, Boolean effective)
+
+#ifdef LEGACY_EXEC
+Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
+#ifdef /* MCStack::mode_setprop */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_IDE_OVERRIDE:
@@ -456,7 +478,10 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 	}
 
 	return ES_NORMAL;
+#endif /* MCStack::mode_setprop */
+    return ES_ERROR;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -467,13 +492,15 @@ void MCStack::mode_load(void)
 		MCAutoNameRef t_ide_override_name;
 		/* UNCHECKED */ t_ide_override_name . CreateWithCString("ideOverride");
 
-		MCExecPoint ep;
 		MClockmessages++;
-		getcustomprop(ep, kMCEmptyName, t_ide_override_name);
+        MCExecValue t_value;
+        MCExecContext ctxt(nil, nil, nil);
+        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, t_value);
 		MClockmessages--;
 
-		Boolean t_treat_as_ide;
-		if (MCU_stob(ep . getsvalue(), t_treat_as_ide) && t_treat_as_ide)
+		bool t_treat_as_ide;
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeBool, &t_treat_as_ide);
+        if (!ctxt . HasError() && t_treat_as_ide)
 			setextendedstate(true, ECS_IDE);
 	}
 }
@@ -490,11 +517,6 @@ void MCStack::mode_takewindow(MCStack *other)
 void MCStack::mode_takefocus(void)
 {
 	MCscreen->setinputfocus(window);
-}
-
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
 }
 
 bool MCStack::mode_needstoopen(void)
@@ -546,6 +568,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, bool p_first)
 {
 	if (p_object == NULL)
@@ -600,7 +623,9 @@ static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, b
 	
 	return p_first;
 }
+#endif
 
+#ifdef LECACY_EXEC
 static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore, MCExecPoint &ep, bool p_first)
 {
 	if (p_list == NULL)
@@ -620,6 +645,7 @@ static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore
 	
 	return p_first;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -692,8 +718,10 @@ void MCObjectListFree(MCObjectList *p_list)
 	delete p_list;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
 {
+#ifdef /* MCObject::mode_getprop */ LEGACY_EXEC
 	switch(which)
 	{
 	// MW-2010-07-09: [[ Bug 8848 ]] Previously scripts were being compiled into
@@ -781,26 +809,19 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 			return ES_NORMAL;
 		}
 
-		char *t_key;
-		t_key = carray . clone();
-		if (t_key == NULL)
-			return ES_NORMAL;
-
-		char *t_comma;
-		t_comma = strchr(t_key, ',');
-		if (t_comma == NULL)
+		uindex_t t_comma_pos;
+        if (!MCStringFirstIndexOfChar(carray, ',', 0, kMCCompareExact, t_comma_pos))
 		{
-			free(t_key);
 			return ES_NORMAL;
 		}
 
 		// The handler name begins after the comma character
-		char *t_handler_name_cstring;
-		t_handler_name_cstring = t_comma + 1;
+		uindex_t t_handler_name_pos;
+        t_handler_name_pos = t_comma_pos + 1;
 
 		// The handler code must be the first char of the string
 		char t_handler_code;
-		t_handler_code = *t_key;
+		t_handler_code = MCStringGetNativeCharAtIndex(carray, 0);
 		t_handler_code = MCS_toupper(t_handler_code);
 
 		Handler_type t_handler_type;
@@ -824,9 +845,12 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		default:
 			t_handler_type = HT_MESSAGE;
 		}
+        
+        MCAutoStringRef t_handler_substring;
+        MCStringCopySubstring(carray, MCRangeMake(t_handler_name_pos, MCStringGetLength(carray) - t_handler_name_pos), &t_handler_substring);
 
 		MCAutoNameRef t_handler_name;
-		/* UNCHECKED */ t_handler_name . CreateWithCString(t_handler_name_cstring);
+		MCNameCreate(*t_handler_substring, t_handler_name);
 
 		Exec_stat t_status;
 
@@ -835,14 +859,12 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		t_status = hlist -> findhandler(t_handler_type, t_handler_name, t_handler);
 		if (t_status != ES_NORMAL)
 		{
-			free(t_key);
 			return ES_NORMAL;
 		}
 
 		if (t_handler != NULL)
 			t_handler -> getvarnames(ep, true);
 
-		free(t_key);
 		return ES_NORMAL;
 	}
 	break;
@@ -852,31 +874,34 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 	}
 
 	return ES_NORMAL;
+#endif /* MCObject::mode_getprop */
+    return ES_ERROR;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCProperty::mode_eval/mode_set for DEVELOPMENT mode.
 //
 
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 {
+#ifdef /* MCProperty::mode_set */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_REV_CRASH_REPORT_SETTINGS:
 		{
-			MCVariableValue *t_settings;
-			t_settings = ep . getarray();
-
-			if (t_settings == NULL)
+			MCAutoArrayRef t_settings;
+			if (!ep . copyasarrayref(&t_settings))
 				break;
 
 			MCExecPoint ep_key(ep);
 
-			if (t_settings -> fetch_element(ep_key, "verbose") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "verbose") == ES_NORMAL)
 				MCU_stob(ep_key . getsvalue(), MCcrashreportverbose);
 
-			if (t_settings -> fetch_element(ep_key, "filename") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "filename") == ES_NORMAL)
 			{
 				if (MCcrashreportfilename != NULL)
 					delete MCcrashreportfilename;
@@ -890,23 +915,22 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 			if(!MCenvironmentactive)
 				break;
 
-			MCVariableValue *t_settings = ep.getarray();
-
-			if (t_settings == NULL)
+			MCAutoArrayRef t_settings;
+			if (!ep . copyasarrayref(&t_settings))
 				break;
 
 			MCExecPoint ep_key(ep);
 
-			if (t_settings -> fetch_element(ep_key, "token") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "token"))
 				MClicenseparameters . license_token = ep_key . getsvalue() . clone();
 
-			if (t_settings -> fetch_element(ep_key, "name") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "name"))
 				MClicenseparameters . license_name = ep_key . getsvalue() . clone();
 
-			if (t_settings -> fetch_element(ep_key, "organization") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "organization"))
 				MClicenseparameters . license_organization = ep_key . getsvalue() . clone();
 
-			if (t_settings -> fetch_element(ep_key, "class") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "class"))
 			{
 				static struct { const char *tag; uint32_t value; } s_class_map[] =
 				{
@@ -924,22 +948,22 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 				MClicenseparameters . license_class = s_class_map[t_index] . value;
 			}
 
-			if (t_settings -> fetch_element(ep_key, "multiplicity") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "multiplicity") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . license_multiplicity = ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "scriptlimit") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "scriptlimit") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . script_limit = ep_key . getnvalue() <= 0 ? 0 : ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "dolimit") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "dolimit") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . do_limit = ep_key . getnvalue() <= 0 ? 0 : ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "usinglimit") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "usinglimit") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . using_limit = ep_key . getnvalue() <= 0 ? 0 : ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "insertlimit") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "insertlimit") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . insert_limit = ep_key . getnvalue() <= 0 ? 0 : ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "deploy") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "deploy"))
 			{
 				static struct { const char *tag; uint32_t value; } s_deploy_map[] =
 				{
@@ -976,8 +1000,8 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 				}
 			}
 
-			if (t_settings -> fetch_element(ep_key, "addons") == ES_NORMAL && ep_key . getformat() == VF_ARRAY)
-				MClicenseparameters . addons = new MCVariableValue(*(ep_key . getarray()));
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "addons") && ep_key . isarray())
+				/* UNCHECKED */ ep_key . copyasarrayref(MClicenseparameters . addons);
 		}
 		break;
 
@@ -1005,22 +1029,28 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCProperty::mode_set */
+    return ES_ERROR;
 }
+#endif
 
+
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
+#ifdef /* MCProperty::mode_eval */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_REV_MESSAGE_BOX_LAST_OBJECT:
 		if (MCmessageboxlastobject != NULL && MCmessageboxlastobject->Exists())
 		{
-			MCmessageboxlastobject->Get()->names(P_LONG_ID, ep, 0);
+			MCmessageboxlastobject->Get()->names_old(P_LONG_ID, ep, 0);
 			ep.concatnameref(MCmessageboxlasthandler, EC_COMMA, false);
 			ep.concatuint(MCmessageboxlastline, EC_COMMA, false);
 			if (MCmessageboxlastobject->Get()->getparentscript() != nil)
 			{
 				MCExecPoint ep2;
-				MCmessageboxlastobject->Get()->getparentscript()->GetObject()->names(P_LONG_ID, ep2, 0);
+				MCmessageboxlastobject->Get()->getparentscript()->GetObject()->names_old(P_LONG_ID, ep2, 0);
 				ep.concatmcstring(ep2.getsvalue(), EC_COMMA, false);
 			}
 		}
@@ -1029,9 +1059,8 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 		break;
 	case P_REV_MESSAGE_BOX_REDIRECT:
 		if (MCmessageboxredirect != NULL)
-			MCmessageboxredirect -> names(P_LONG_ID, ep, 0);
-		else
-			ep . clear();
+			return MCmessageboxredirect -> names_old(P_LONG_ID, ep, 0);
+		ep . clear();
 		break;
 	case P_REV_LICENSE_LIMITS:
 		ep.clear();
@@ -1089,21 +1118,9 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 			ep . appendnewline();
 			if (MClicenseparameters . addons != nil)
 			{
-				MCHashentry *t_entry;
-				uint32_t t_index;
-				bool t_first;
-				t_first = true;
-				t_entry = NULL;
-				t_index = 0;
-				for(;;)
-				{
-					t_entry = MClicenseparameters . addons -> get_array() -> getnextkey(t_index, t_entry);
-					if (t_entry == NULL)
-						break;
-
-					ep . concatcstring(t_entry -> string, EC_COMMA, t_first);
-					t_first = false;
-				}
+				MCAutoStringRef t_keys;
+				/* UNCHECKED */ MCArrayListKeys(MClicenseparameters . addons, ',', &t_keys);
+				/* UNCHECKED */ ep . concatstringref(*t_keys, EC_RETURN, false);
 			}
 
 			ep . concatcstring(MCnullmcstring == MClicenseparameters . license_token ? "Global" : "Local", EC_RETURN, false);
@@ -1111,7 +1128,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 		else
 		{
 			if (MClicenseparameters . addons == nil ||
-				MClicenseparameters . addons -> fetch_element(ep, ep . getsvalue(), false) != ES_NORMAL)
+				!ep . fetcharrayelement_oldstring(MClicenseparameters . addons, ep . getsvalue()))
 				ep . clear();
 		}
 	}
@@ -1130,7 +1147,10 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCProperty::mode_eval */
+    return ES_ERROR;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1138,15 +1158,15 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 //
 
 // All stacks can be saved in development mode, so this is a no-op.
-IO_stat MCModeCheckSaveStack(MCStack *stack, const MCString& filename)
+IO_stat MCModeCheckSaveStack(MCStack *stack, const MCStringRef p_filename)
 {
 	return IO_NORMAL;
 }
 
 // For development mode, the environment depends on the license edition
-const char *MCModeGetEnvironment(void)
+MCNameRef MCModeGetEnvironment(void)
 {
-	return "development";
+	return MCN_development;
 }
 
 uint32_t MCModeGetEnvironmentType(void)
@@ -1174,10 +1194,10 @@ bool MCModeShouldLoadStacksOnStartup(void)
 }
 
 // In development mode, we just issue a generic error.
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
-	r_caption = "Initialization Error";
-	r_text = "Error while initializing development environment";
+	r_caption = MCSTR("Initialization Error");
+	r_text = MCSTR("Error while initializing development environment");
 }
 
 // In development mode, we can set any object's script.
@@ -1192,7 +1212,7 @@ bool MCModeShouldCheckCantStandalone(void)
 	return false;
 }
 
-bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
+bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 {
 	// IM-2013-04-16: [[ BZ 10836 ]] update revMessageBoxLastObject
 	// if the source of the change is not within the message box
@@ -1202,13 +1222,13 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 	else
 	{
 		if (MCmbstackptr == nil)
-			MCmbstackptr = MCdispatcher->findstackname(MCmessagenamestring);
+			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
 		t_msg_box = MCmbstackptr;
 	}
 	
 	MCObject *t_src_object = nil;
-	if (ep.getobj() != nil)
-		t_src_object = ep.getobj();
+	if (ctxt.GetObject() != nil)
+		t_src_object = ctxt.GetObject();
 	
 	bool t_in_msg_box = false;
 	
@@ -1231,9 +1251,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 		
 		MCNameDelete(MCmessageboxlasthandler);
 		MCmessageboxlasthandler = nil;
-		MCNameClone(ep.gethandler()->getname(), MCmessageboxlasthandler);
+		MCNameClone(ctxt.GetHandler()->getname(), MCmessageboxlasthandler);
 		
-		MCmessageboxlastline = ep.getline();
+        MCmessageboxlastline = ctxt . GetLine();
 	}
 	
 	if (MCmessageboxredirect != NULL)
@@ -1254,17 +1274,17 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			((MCField *)MCmessageboxredirect) -> settext(0, ep . getsvalue(), False);
+			((MCField *)MCmessageboxredirect) -> settext(0, p_string, False);
 		}
 		else
 		{
 			MCAutoNameRef t_msg_changed;
 			/* UNCHECKED */ t_msg_changed . CreateWithCString("msgchanged");
 			
-			bool t_added;
-			if (MCnexecutioncontexts < MAX_CONTEXTS && ep . getobj() != nil)
+			bool t_added = false;
+			if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
 			{
-				MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+				MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 				t_added = true;
 			}
 			
@@ -1280,9 +1300,9 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 	return false;
 }
 
-bool MCModeHandleRelaunch(const char *& r_id)
+bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
-	r_id = "LiveCodeTools";
+	r_id = MCSTR("LiveCodeTools");
 	return true;
 }
 
@@ -1341,7 +1361,7 @@ Window MCModeGetParentWindow(void)
 	return t_window;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }
@@ -1361,7 +1381,7 @@ void MCModeQueueEvents(void)
 #endif
 }
 
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script)
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script)
 {
 	MCeerror -> add(EE_ENVDO_NOTSUPPORTED, 0, 0);
 	return ES_ERROR;
@@ -1381,9 +1401,11 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 {
 	if (!p_enabled)
 		MCscreen -> clearIME(p_stack -> getwindow());
+    else
+        MCscreen -> configureIME(x, y);
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 
@@ -1413,23 +1435,23 @@ bool MCModeHasHomeStack(void)
 //  Implementation of remote dialog methods
 //
 
-void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files)
+void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value)
 {
 }
 
-void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue)
+void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue, bool& r_chosen, MCColor& r_chosen_color)
 {
 }
 
-void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial)
+void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value)
 {
 }
 
-void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
-void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
@@ -1459,13 +1481,13 @@ LONG WINAPI unhandled_exception_filter(struct _EXCEPTION_POINTERS *p_exception_i
 	HMODULE t_dbg_help_module = NULL;
 	t_dbg_help_module = LoadLibraryA("dbghelp.dll");
 
-	MiniDumpWriteDumpPtr t_write_minidump;
+	MiniDumpWriteDumpPtr t_write_minidump = NULL;
 	if (t_dbg_help_module != NULL)
 		t_write_minidump = (MiniDumpWriteDumpPtr)GetProcAddress(t_dbg_help_module, "MiniDumpWriteDump");
 
 	char *t_path = NULL;
 	if (t_write_minidump != NULL)
-		t_path = MCS_resolvepath(MCcrashreportfilename);
+		t_path = MCS_resolvepath(MCStringGetCString(MCcrashreportfilename));
 
 	HANDLE t_file = NULL;
 	if (t_path != NULL)
@@ -1529,10 +1551,9 @@ bool MCPlayer::mode_avi_closewindowonplaystop()
 // on startup depending on the usePixelScaling registry value
 bool MCModeGetPixelScalingEnabled()
 {
-	MCExecPoint ep;
-	ep.setsvalue("HKEY_CURRENT_USER\\Software\\LiveCode\\IDE\\usePixelScaling");
-
-	MCS_query_registry(ep, nil);
+    MCAutoStringRef t_type, t_error;
+    MCAutoValueRef t_value;
+	MCS_query_registry(MCSTR("HKEY_CURRENT_USER\\Software\\LiveCode\\IDE\\usePixelScaling"), &t_value, &t_type, &t_error);
 
 	if (!MCresult->isempty())
 	{
@@ -1541,7 +1562,15 @@ bool MCModeGetPixelScalingEnabled()
 	}
 
 	// IM-2014-08-14: [[ Bug 12372 ]] PixelScaling is enabled by default.
-	return ep.isempty() || ep.getsvalue() == "true";
+	if (MCValueIsEmpty(*t_value))
+        return true;
+    
+    bool t_result;
+    MCExecContext ctxt(nil, nil, nil);
+    if (!ctxt . ConvertToBool(*t_value, t_result))
+        return false;
+    
+    return t_result;
 }
 
 #endif
@@ -1576,3 +1605,594 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 }
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Refactored object property getters and setters for DEVELOPMENT mode.
+//
+
+void MCStack::GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id)
+{
+    r_id = MCValueRetain(kMCEmptyString);
+}
+
+void MCStack::GetUnplacedGroupIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)
+{
+    if (controls == nil)
+    {
+        r_count = 0;
+        return;
+    }
+
+    MCControl *t_control;
+    t_control = controls;
+    
+    MCAutoArray<uinteger_t> t_ids;
+    
+    do
+    {
+        if (t_control -> gettype() == CT_GROUP && t_control -> getparent() != curcard)
+            t_ids . Push(t_control -> getid());
+        
+        t_control = t_control -> next();
+    }
+    while(t_control != controls);
+    
+    t_ids . Take(r_ids, r_count);
+}
+
+void MCStack::GetIdeOverride(MCExecContext& ctxt, bool& r_value)
+{
+    r_value = getextendedstate(ECS_IDE);
+}
+
+void MCStack::SetIdeOverride(MCExecContext& ctxt, bool p_value)
+{
+    setextendedstate(p_value, ECS_IDE);
+}
+
+void MCObject::GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+    // MW-2010-07-09: [[ Bug 8848 ]] Previously scripts were being compiled into
+    //   separate hlists causing script local variable loss in the behavior
+    //   case. Instead we just use parsescript in non-reporting mode.
+    
+    parsescript(False);
+    if (hlist == nil)
+    {
+        r_count = 0;
+        return;
+    }
+    
+    hlist -> enumerate(ctxt, true, r_count, r_handlers);
+}
+
+void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+    bool t_first;
+    t_first = true;
+    
+    MCAutoArray<MCStringRef> t_handlers;
+    
+    // IM-2014-02-25: [[ Bug 11841 ]] Collect non-repeating objects in the message path
+    MCObjectList *t_object_list;
+    t_object_list = nil;
+    
+    bool t_success;
+    t_success = true;
+    
+    // MM-2013-09-10: [[ Bug 10634 ]] Make we search both parent scripts and library stacks for handlers.
+    t_success = MCObjectListAppend(t_object_list, MCfrontscripts, true);
+    
+    for (MCObject *t_object = this; t_success && t_object != NULL; t_object = t_object -> parent)
+    {
+        t_object -> parsescript(False);
+        t_success = MCObjectListAppend(t_object_list, t_object, true);
+    }
+    
+    if (t_success)
+        t_success = MCObjectListAppend(t_object_list, MCbackscripts, true);
+    
+    for (uint32_t i = 0; t_success && i < MCnusing; i++)
+    {
+        if (MCusing[i] == this)
+            continue;
+        t_success = MCObjectListAppend(t_object_list, MCusing[i], true);
+    }
+    
+    // IM-2014-02-25: [[ Bug 11841 ]] Enumerate the handlers for each object
+    if (t_success)
+    {
+        MCObjectList *t_object_ref;
+        t_object_ref = t_object_list;
+        do
+        {
+            // AL-2014-05-23: [[ Bug 12491 ]] The object list checks for uniqueness,
+            //  so no need to check if the object is itself a frontscript.
+            
+            t_first = true;
+            MCHandlerlist *t_handler_list;
+            
+            if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
+                t_handler_list = t_object_ref -> getobject() -> hlist;
+            else
+                t_handler_list = NULL;
+            
+            if (t_handler_list != NULL)
+            {
+                MCStringRef *t_handler_array;
+                t_handler_array = nil;
+                uindex_t t_count;
+                
+                t_first = t_handler_list -> enumerate(ctxt, t_first, t_count, t_handler_array);
+            
+                for (uindex_t i = 0; i < t_count; i++)
+                    t_handlers . Push(t_handler_array[i]);
+                
+                MCMemoryDeleteArray(t_handler_array);
+            }
+            
+            t_object_ref = t_object_ref -> next();
+        }
+        while(t_object_ref != t_object_list);
+    }
+    
+    MCObjectListFree(t_object_list);
+     
+    t_handlers . Take(r_handlers, r_count);
+}
+
+void MCObject::GetRevAvailableVariablesNonArray(MCExecContext& ctxt, MCStringRef& r_variables)
+{
+    GetRevAvailableVariables(ctxt, nil, r_variables);
+}
+
+void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables)
+{
+    // OK-2008-04-23 : Added for script editor
+    if (hlist == NULL)
+    {
+        r_variables = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    // A handler can be specified using array notation in the form <handler_type>,<handler_name>.
+    // Where handler type is a single letter using the same conventation as the revAvailableHandlers.
+    //
+    // If a handler is specified, the list of variables for that handler is returned in the same format
+    // as the variableNames property.
+    //
+    // If no handler is specified, the property returns the list of script locals for the object followed
+    // by the list of script-declared globals.
+    //
+    // At the moment, no errors are thrown, just returns empty if it doesn't like something.
+    if (p_key == nil)
+    {
+        MCAutoListRef t_list;
+        if (!MCListCreateMutable('\n', &t_list))
+            return;
+        
+        MCAutoListRef t_global_list, t_local_list;
+        
+        if (!(hlist->getlocalnames(&t_local_list) &&
+              MCListAppend(*t_list, *t_local_list)))
+        {
+            ctxt . Throw();
+            return;
+        }
+        
+        if (!(hlist->getglobalnames(&t_global_list) &&
+                MCListAppend(*t_list, *t_global_list)))
+        {
+            ctxt . Throw();
+            return;
+        }
+        MCListCopyAsString(*t_list, r_variables);
+        return;
+    }
+
+    
+    MCStringRef t_key;
+    t_key = MCNameGetString(p_key);
+    
+    // The handler name begins after the comma character
+    MCAutoStringRef t_handler_name;
+    uindex_t t_comma_offset;
+    if (!MCStringFirstIndexOfChar(t_key, ',', 0, kMCCompareExact, t_comma_offset))
+    {
+        r_variables = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    if (!MCStringCopySubstring(t_key, MCRangeMake(t_comma_offset + 1, MCStringGetLength(t_key) - t_comma_offset - 1), &t_handler_name))
+    {
+        ctxt . Throw();
+        return;
+    }
+    
+    // The handler code must be the first char of the string
+    const char_t t_handler_code = MCStringGetNativeCharAtIndex(t_key, 0);
+    
+    Handler_type t_handler_type;
+    switch (t_handler_code)
+    {
+        case 'M':
+            t_handler_type = HT_MESSAGE;
+            break;
+        case 'C':
+            t_handler_type = HT_MESSAGE;
+            break;
+        case 'F':
+            t_handler_type = HT_FUNCTION;
+            break;
+        case 'G':
+            t_handler_type = HT_GETPROP;
+            break;
+        case 'S':
+            t_handler_type = HT_SETPROP;
+            break;
+        default:
+            t_handler_type = HT_MESSAGE;
+    }
+    
+    Exec_stat t_status;
+    MCNewAutoNameRef t_name;
+    MCNameCreate(*t_handler_name, &t_name);
+    // The handler list class allows us to locate the handler, just return empty if it can't be found.
+    MCHandler *t_handler;
+    t_status = hlist -> findhandler(t_handler_type, *t_name, t_handler);
+
+    if (t_handler != NULL)
+    {
+        MCAutoListRef t_list;
+        t_handler -> getvarnames(true, &t_list);
+        MCListCopyAsString(*t_list, r_variables);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Refactored global property getters and setters for DEVELOPMENT mode.
+//
+
+void MCModeSetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef p_settings)
+{
+    bool t_case_sensitive = ctxt . GetCaseSensitive();
+    MCValueRef t_verbose, t_filename;
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("verbose"), t_verbose))
+        MCcrashreportverbose = (MCBooleanRef)t_verbose == kMCTrue;
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("filename"), t_filename))
+    {
+        if (MCcrashreportfilename != nil)
+            MCValueRelease(MCcrashreportfilename);
+        if (MCStringIsEmpty((MCStringRef)t_filename))
+            MCcrashreportfilename = nil;
+        else
+            MCcrashreportfilename = MCValueRetain((MCStringRef)t_filename);
+    }
+}
+
+void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
+{
+    if(!MCenvironmentactive)
+        return;
+    
+    bool t_case_sensitive = ctxt . GetCaseSensitive();
+    MCValueRef t_value;
+    MCStringRef t_string;
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("token"), t_value)
+            && ctxt . ConvertToString(t_value, t_string))
+    {
+        MCValueRelease(MClicenseparameters . license_token);
+        MClicenseparameters . license_token = t_string;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("name"), t_value)
+            && ctxt . ConvertToString(t_value, t_string))
+    {
+        MCValueRelease(MClicenseparameters . license_name);
+        MClicenseparameters . license_name = t_string;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("organization"), t_value)
+            && ctxt . ConvertToString(t_value, t_string))
+    {
+        MCValueRelease( MClicenseparameters . license_organization);
+         MClicenseparameters . license_organization = t_string;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("class"), t_value))
+    {
+        MCAutoStringRef t_class;
+        if (ctxt . ConvertToString(t_value, &t_class))
+        {
+            static struct { const char *tag; uint32_t value; } s_class_map[] =
+            {
+                { "community", kMCLicenseClassCommunity },
+                { "commercial", kMCLicenseClassCommercial },
+                { "professional", kMCLicenseClassProfessional },
+                { "", kMCLicenseClassNone }
+            };
+            
+            uint4 t_index;
+            for(t_index = 0; s_class_map[t_index] . tag != NULL; ++t_index)
+                if (MCStringIsEqualToCString(*t_class, s_class_map[t_index] . tag, kMCCompareCaseless))
+                    break;
+            
+            MClicenseparameters . license_class = s_class_map[t_index] . value;
+        }
+        else
+            MClicenseparameters . license_class = kMCLicenseClassNone;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("multiplicity"), t_value))
+        MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("scriptlimit"), t_value))
+    {
+        integer_t t_limit;
+        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
+        MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("dolimit"), t_value))
+    {
+        integer_t t_limit;
+        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
+        MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("usinglimit"), t_value))
+    {
+        integer_t t_limit;
+        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
+        MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("insertlimit"), t_value))
+    {
+        integer_t t_limit;
+        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
+        MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("deploy"), t_value))
+    {
+        static struct { const char *tag; uint32_t value; } s_deploy_map[] =
+        {
+            { "windows", kMCLicenseDeployToWindows },
+            { "macosx", kMCLicenseDeployToMacOSX },
+            { "linux", kMCLicenseDeployToLinux },
+            { "ios", kMCLicenseDeployToIOS },
+            { "android", kMCLicenseDeployToAndroid },
+            { "winmobile", kMCLicenseDeployToWinMobile },
+            { "meego", kMCLicenseDeployToLinuxMobile },
+            { "server", kMCLicenseDeployToServer },
+            { "ios-embedded", kMCLicenseDeployToIOSEmbedded },
+            { "android-embedded", kMCLicenseDeployToIOSEmbedded },
+        };
+        
+        MClicenseparameters . deploy_targets = 0;
+        
+        MCAutoStringRef t_params;
+        if (ctxt . ConvertToString(t_value, &t_params))
+        {
+            MCAutoArrayRef t_split_strings;
+            MCValueRef t_fetched_string;
+            if (MCStringSplit(*t_params, MCSTR(","), nil, kMCCompareExact, &t_split_strings))
+            {
+                for(uint32_t i = 0; i < MCArrayGetCount(*t_split_strings); i++)
+                {
+                    // Fetch the string value created with MCStringSplit
+                    MCArrayFetchValueAtIndex(*t_split_strings, i+1, t_fetched_string);
+                    
+                    for(uint32_t j = 0; j < sizeof(s_deploy_map) / sizeof(s_deploy_map[0]); j++)
+                        if (MCStringIsEqualToCString((MCStringRef)t_fetched_string, s_deploy_map[j] . tag, kMCStringOptionCompareCaseless))
+                        {
+                            MClicenseparameters . deploy_targets |= s_deploy_map[j] . value;
+                            break;
+                        }
+                }
+            }
+        }
+    }
+    
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("addons"), t_value) && MCValueIsArray(t_value))
+    {
+        MCValueRelease(MClicenseparameters . addons);
+        MCArrayCopy((MCArrayRef)t_value, MClicenseparameters . addons);
+    }
+}
+
+static MCObject *getobj(MCExecContext& ctxt, MCStringRef p_string)
+{    
+    MCObject *objptr = NULL;
+    MCChunk *tchunk = new MCChunk(False);
+    MCerrorlock++;
+    MCScriptPoint sp(p_string);
+    if (tchunk->parse(sp, False) == PS_NORMAL)
+    {
+        uint4 parid;
+        tchunk->getobj(ctxt, objptr, parid, True);
+    }
+    MCerrorlock--;
+    delete tchunk;
+    return objptr;
+}
+
+void MCModeSetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target)
+{
+    MCObject *t_object;
+    t_object = getobj(ctxt, p_target);
+    if (t_object != NULL)
+        MCmessageboxredirect = t_object;
+    else
+        MCmessageboxredirect = NULL;
+}
+            
+void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time)
+{
+#ifdef FEATURE_PROPERTY_LISTENER
+    // MM-2012-11-06: [[ Property Listener ]]
+    MCpropertylistenerthrottletime = p_time;
+#endif
+}
+
+void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object)
+{
+    if (MCmessageboxlastobject != NULL && MCmessageboxlastobject->Exists())
+    {
+        bool t_success;
+
+        MCAutoStringRef t_obj, t_long_id;
+        MCAutoValueRef t_id_value;
+        t_success = MCStringCreateMutable(0, &t_obj);
+        
+        if (t_success)
+            t_success = MCmessageboxlastobject->Get()->names(P_LONG_ID, &t_id_value);
+        if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
+            t_success = MCStringAppendFormat(*t_obj, "%@,%@,%u", *t_long_id, MCNameGetString(MCmessageboxlasthandler), MCmessageboxlastline);
+
+        if (t_success && MCmessageboxlastobject->Get()->getparentscript() != nil)
+        {
+            MCAutoStringRef t_long_id;
+            MCAutoValueRef t_id_value;
+
+            t_success = MCmessageboxlastobject->Get()->getparentscript()->GetObject()->names(P_LONG_ID, &t_id_value);
+            if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
+                t_success = MCStringAppendFormat(*t_obj, ",%@", *t_long_id);
+        }
+        if (t_success && MCStringCopy(*t_obj, r_object))
+            return;
+    }
+    else
+    {
+        r_object = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCModeGetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id)
+{
+    if (MCmessageboxredirect != NULL)
+    {
+        MCAutoValueRef t_long_id;
+        if (MCmessageboxredirect -> names(P_LONG_ID, &t_long_id) &&
+            ctxt . ConvertToString(*t_long_id, r_id))
+            return;
+    }
+    else
+    {
+        r_id = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCModeGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits)
+{
+    r_limits = MCValueRetain(kMCEmptyArray);
+}
+
+void MCModeGetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef& r_settings)
+{
+    r_settings = MCValueRetain(kMCEmptyArray);
+}
+
+void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
+{
+    static const char *s_class_types[] =
+    {
+        "",
+        "Community",
+        "Commercial",
+        "Professional",
+    };
+    
+    static const char *s_deploy_targets[] =
+    {
+        "Windows",
+        "Mac OS X",
+        "Linux",
+        "iOS",
+        "Android",
+        "Windows Mobile",
+        "Linux Mobile",
+        "Server",
+        "iOS Embedded",
+        "Android Embedded",
+    };
+    
+    bool t_success;
+    
+    MCAutoStringRef t_info;
+    t_success = MCStringCreateMutable(0, &t_info);
+    
+    if (t_success)
+        t_success = MCStringAppendFormat(*t_info, "%@\n%@\n%s\n%u\n", MClicenseparameters . license_name, MClicenseparameters . license_organization, s_class_types[MClicenseparameters . license_class], MClicenseparameters . license_multiplicity);
+    
+    if (MClicenseparameters . deploy_targets != 0)
+    {
+        bool t_first;
+        t_first = true;
+        for(uint32_t i = 0; t_success && i < 9; i++)
+        {
+            if ((MClicenseparameters . deploy_targets & (1 << i)) != 0)
+            {
+                t_success = MCStringAppendFormat(*t_info, t_first ? "%s" : ",%s", s_deploy_targets[i]);
+                t_first = false;
+            }
+        }
+    }
+    
+    // AL-2014-11-04: [[ Bug 13865 ]] Don't add an extra line between deploy targets and addons
+
+    if (t_success && MClicenseparameters . addons != nil)
+    {
+        MCAutoStringRef t_keys;
+        t_success = (MCArrayListKeys(MClicenseparameters . addons, ',', &t_keys) &&
+                    MCStringAppendFormat(*t_info, "\n%@", *t_keys));
+    }
+    
+    if (t_success)
+        if (MCStringAppendFormat(*t_info, "\n%s", MCStringIsEmpty(MClicenseparameters . license_token) ? "Global" : "Local") &&
+                MCStringCopy(*t_info, r_info))
+            return;
+    
+    ctxt . Throw();
+}
+
+void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_info)
+{
+    MCValueRef t_value;
+    if (MClicenseparameters . addons == nil ||
+        !MCArrayFetchValue(MClicenseparameters . addons, ctxt . GetCaseSensitive(), p_key, t_value))
+        {
+            r_info = MCValueRetain(kMCEmptyString);
+            return;
+        }
+    
+    if (ctxt . ConvertToString(t_value, r_info))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_listeners)
+{
+#ifdef FEATURE_PROPERTY_LISTENER
+    // MM-2012-09-05: [[ Property Listener ]]
+    MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
+#endif			
+    r_count = 0;
+}
+void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time)
+{
+#ifdef FEATURE_PROPERTY_LISTENER
+    r_time = MCpropertylistenerthrottletime;
+#endif			
+    r_time = 0;
+}

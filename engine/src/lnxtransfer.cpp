@@ -24,7 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include "transfer.h"
-#include "execpt.h" 
+//#include "execpt.h" 
+#include "exec.h" 
 #include "dispatch.h"
 #include "image.h"
 #include "globals.h"
@@ -32,40 +33,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "lnxtransfer.h"
 
-Atom XdndAware;
-Atom XdndSelection;
-Atom XdndEnter;
-Atom XdndLeave;
-Atom XdndPosition;
-Atom XdndDrop;
-Atom XdndFinished;
-Atom XdndStatus;
-Atom XdndActionCopy;
-Atom XdndActionMove;
-Atom XdndActionLink;
-Atom XdndActionAsk;
-Atom XdndActionPrivate;
-Atom XdndTypeList;
-Atom XdndActionList;
-Atom XdndActionDescription;
 
-Atom XdndMyAtom ;
-Atom XdndRevolutionWindow ;
-
-Atom XA_TARGETS ;
-
-
-Atom WMname ;
-Atom text ;
-Atom html ;
-Atom rtf ;
-
- 
-Time LastEventTime ;
-Time LastPositionTime ;
-
-
-char * xdnd_get_window_title ( Window w ) ;
+guint32 LastEventTime ;
+guint32 LastPositionTime ;
 
 static XdndMimeTable XTransfer_lookup_table[XDND_TYPE_TABLE_SIZE] = 
 	{ 	
@@ -87,44 +57,44 @@ static XdndMimeTable XTransfer_lookup_table[XDND_TYPE_TABLE_SIZE] =
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// MCMIMEtype implimentation
+// MCMIMEtype implementation
 
 
-MCMIMEtype::MCMIMEtype( Display * p_display, Atom p_atom )
+MCMIMEtype::MCMIMEtype(GdkDisplay * p_display, GdkAtom p_atom)
 {
-	m_display = p_display ;
-	m_atom = p_atom ;
-	m_atom_name = NULL ;
+	m_display = p_display;
+	m_atom = p_atom;
+	m_atom_name = NULL;
 }
 
 
-MCMIMEtype::MCMIMEtype ( Display * p_display, char * p_atom )
+MCMIMEtype::MCMIMEtype(GdkDisplay * p_display, const char * p_atom)
 {
-	m_display = p_display ;
-	m_atom = XInternAtom ( m_display, p_atom, false );
-	m_atom_name = NULL ;
+	m_display = p_display;
+	m_atom = gdk_atom_intern(p_atom, false);
+	m_atom_name = NULL;
 }
 
 MCMIMEtype::~MCMIMEtype(void)
 {
-	if ( m_atom_name != NULL)
-		XFree(m_atom_name);
+	if (m_atom_name != NULL)
+		g_free(m_atom_name);
 }
 
 
 char * MCMIMEtype::asString(void)
 {
-	if ( m_atom_name == NULL)
-		m_atom_name = XGetAtomName ( m_display, m_atom );
-	return (m_atom_name);
+	if (m_atom_name == NULL)
+		m_atom_name = gdk_atom_name(m_atom);
+	return m_atom_name;
 }
 
 MCTransferType MCMIMEtype::asRev ( void ) 
 {
-	for ( uint4 a = 0 ; a < XDND_TYPE_TABLE_SIZE ; a++)
-		if ( XInternAtom(m_display, XTransfer_lookup_table[a] . mime_type, false) == m_atom)
-			return XTransfer_lookup_table[a] . rev_type ;
-	return TRANSFER_TYPE_NULL ;
+	for (int a = 0; a < XDND_TYPE_TABLE_SIZE; a++)
+		if (gdk_atom_intern(XTransfer_lookup_table[a] . mime_type, false) == m_atom)
+			return XTransfer_lookup_table[a] . rev_type;
+	return TRANSFER_TYPE_NULL;
 }
 
  
@@ -135,252 +105,224 @@ MCTransferType MCMIMEtype::asRev ( void )
 
 =========================================================================================*/
 
-
-
-MCXTransferStore::MCXTransferStore ( Display *p_display ) 
+MCGdkTransferStore::MCGdkTransferStore(GdkDisplay *p_display)
+: m_entries(NULL), m_entry_count(0), m_types_list(NULL), m_types_count(0),
+    m_targets(NULL), m_display(p_display)
 {
-	m_entries = NULL ;
-	m_entry_count = 0 ;
-	m_display = p_display ;
-	m_internal_dnd = false ; 
-	m_types_list = NULL ;
-	m_types_count = 0 ;
+    ;
 }
 
-
-MCXTransferStore::~MCXTransferStore(void)
+MCGdkTransferStore::~MCGdkTransferStore()
 {
-	cleartypes();
+    cleartypes();
 }
 
-void	MCXTransferStore::cleartypes ( void ) 
+void MCGdkTransferStore::cleartypes()
 {
-
-	if ( m_entries != NULL )
-	{
-		for ( uint4 a=0; a<m_entry_count; a++)
-		{
-			if (m_entries[a].data != NULL)
-				m_entries[a].data->Release();
-			//if ( m_entries[a].format != NULL)
-				delete m_entries[a].format ;
-		}
-	}
-
-	free(m_entries ) ;	
-	m_entries = NULL ;
-	m_entry_count = 0 ;
-	m_internal_dnd = false ;
-	
-	if ( m_types_list != NULL)
-	{
-		free(m_types_list);
-		m_types_list = NULL;
-		m_types_count = 0 ;
-	}
+    if (m_entries != NULL)
+    {
+        for (int32_t i = 0; i < m_entry_count; i++)
+        {
+            if (m_entries[i].m_data != nil)
+                MCValueRelease(m_entries[i].m_data);
+            delete m_entries[i].m_mime;
+        }
+    }
+    
+    delete[] m_entries;
+    m_entries = NULL;
+    m_entry_count = 0;
+    
+    delete[] m_types_list;
+    m_types_list = NULL;
+    m_types_count = 0;
+    
+    if (m_targets != NULL)
+        g_list_free(m_targets);
+    m_targets = NULL;
 }
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 // Functions to add data into the TransferStore
 
-
-// Adds an explicit MIME type to the type list
-void MCXTransferStore::addType ( MCMIMEtype * p_mime, MCTransferType p_type, MCSharedString * p_data  ) 
+void MCGdkTransferStore::addType(MCMIMEtype* p_mime, MCTransferType p_type, MCDataRef p_data)
 {
-	MCTransferType t_type ;
-	
-	if ( p_mime == NULL ) 
-		return ;
-	
-	t_type = ( p_type == TRANSFER_TYPE_NULL ? p_mime->asRev() : p_type ) ;
-	
-	if ( t_type != TRANSFER_TYPE_NULL ) 
-	{
-		
-		m_entry_count ++ ;
-		
-		if ( m_entries == NULL ) 
-			m_entries = (Entry*)malloc(sizeof(Entry)) ;
-		else
-			m_entries = (Entry*)realloc(m_entries, (sizeof(Entry) * m_entry_count ) ) ;
-		
-		m_entries[m_entry_count-1] . format = p_mime ;
-		m_entries[m_entry_count-1] . type = t_type ;
-		m_entries[m_entry_count - 1 ] . data = p_data ;
-		
-		// Need to retain the string as it can be used multiple times.
-		if ( p_data != NULL)
-			p_data -> Retain() ;
-	}
+    if (p_mime == NULL)
+        return;
+    
+    // Use the transfer type if specified; otherwise work it out based on MIME
+    MCTransferType t_type;
+    t_type = (p_type == TRANSFER_TYPE_NULL) ? p_mime->asRev() : p_type;
+    
+    if (t_type != TRANSFER_TYPE_NULL)
+    {
+        m_entry_count++;
+        
+        m_entries = (Entry*)realloc(m_entries, sizeof(Entry)*m_entry_count);
+        
+        m_entries[m_entry_count-1].m_mime = p_mime;
+        m_entries[m_entry_count-1].m_type = t_type;
+        m_entries[m_entry_count-1].m_data = (p_data != nil) ? MCValueRetain(p_data) : nil;
+    }
 }
 
-
-
-void MCXTransferStore::addAtom ( Atom p_atom )
+void MCGdkTransferStore::addRevType(MCTransferType p_type, MCDataRef p_data)
 {
-	MCMIMEtype * t_mime ;
-	t_mime = new MCMIMEtype ( m_display, p_atom ) ;
-	addType ( t_mime, TRANSFER_TYPE_NULL, NULL ) ;
+    switch (p_type)
+    {
+        case TRANSFER_TYPE_TEXT:
+            addType(new MCMIMEtype(m_display, "text/plain"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "STRING"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "COMPOUND_TEXT"), p_type, p_data);
+            break;
+            
+        case TRANSFER_TYPE_STYLED_TEXT:
+            addType(new MCMIMEtype(m_display, "text/richtext"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "STRING"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "COMPOUND_TEXT"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "UTF8_STRING"), p_type, p_data);
+            break;
+            
+        case TRANSFER_TYPE_IMAGE:
+            if (MCImageDataIsPNG(p_data))
+                addType(new MCMIMEtype(m_display, "image/png"), p_type, p_data);
+            if (MCImageDataIsJPEG(p_data))
+                addType(new MCMIMEtype(m_display, "image/jpeg"), p_type, p_data);
+            if (MCImageDataIsGIF(p_data))
+                addType(new MCMIMEtype(m_display, "image/gif"), p_type, p_data);
+            break;
+            
+        case TRANSFER_TYPE_FILES:
+            addType(new MCMIMEtype(m_display, "text/uri-list"), p_type, p_data);
+            break;
+            
+        case TRANSFER_TYPE_OBJECTS:
+            addType(new MCMIMEtype(m_display, REV_MIME_STR), p_type, p_data);
+            break;
+    }
 }
 
-
-
-
-// Adds a Revolution DnD type -- the MIME types are then derived from this base type
-void 	MCXTransferStore::addRevType ( MCTransferType p_type, MCSharedString * p_data  )
+void MCGdkTransferStore::addAtom(GdkAtom p_atom)
 {
-		
-	switch ( p_type )
-	{
-		case TRANSFER_TYPE_TEXT: 
-			addType ( new MCMIMEtype(m_display, "text/plain"), p_type, p_data );
-			addType ( new MCMIMEtype( m_display, "STRING"), TRANSFER_TYPE_TEXT, p_data ) ;
-			addType ( new MCMIMEtype( m_display, "COMPOUND_TEXT"), TRANSFER_TYPE_TEXT, p_data ) ;
-		break ; 
-		 
-		case TRANSFER_TYPE_STYLED_TEXT:
-			addType ( new MCMIMEtype( m_display, "text/richtext"), TRANSFER_TYPE_STYLED_TEXT, p_data ) ;
-			addType ( new MCMIMEtype( m_display, "STRING"), TRANSFER_TYPE_STYLED_TEXT, p_data ) ;
-			addType ( new MCMIMEtype( m_display, "COMPOUND_TEXT"), TRANSFER_TYPE_STYLED_TEXT, p_data ) ;
-			addType ( new MCMIMEtype( m_display, "UTF8_STRING"), TRANSFER_TYPE_STYLED_TEXT, p_data );
-		break ; 
-			
-		case TRANSFER_TYPE_IMAGE:
-			if ( MCFormatImageIsPNG ( p_data ) ) 
-				addType ( new MCMIMEtype( m_display, "image/png"), p_type, p_data );
-			if ( MCFormatImageIsJPEG ( p_data ) )
-				addType ( new MCMIMEtype( m_display, "image/jpeg"), p_type, p_data );
-			if ( MCFormatImageIsGIF ( p_data ) ) 
-				addType ( new MCMIMEtype( m_display, "image/gif"), p_type, p_data );
-		break ;
-			
-		case TRANSFER_TYPE_FILES:
-			addType(new MCMIMEtype( m_display, "text/uri-list"), p_type, p_data );
-		break;
-		
-		case TRANSFER_TYPE_OBJECTS:
-			addType(new MCMIMEtype( m_display, REV_MIME_STR), p_type, p_data );
-		break;
-	} 
-	
+    MCMIMEtype* t_mime = new MCMIMEtype(m_display, p_atom);
+    addType(t_mime, TRANSFER_TYPE_NULL, NULL);
 }
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 // X11 Specific functions
 
-// Applies the whole typelist to a specified window
-void	MCXTransferStore::apply_to_window ( Window w ) 
+/*
+bool MCGdkTransferStore::GetSelection(GdkWindow *w, GdkAtom property, MCDataRef &r_data)
 {
-	Atom * typelist ;
-	
-    if ( m_entries != NULL ) 
-	{
-		typelist = (Atom*)malloc(sizeof(Atom) * m_entry_count ) ;
-		for (uint4 a = 0 ; a < m_entry_count; a++)
-			typelist[a] = m_entries[a] . format->asAtom() ;
-		XChangeProperty (m_display, w, XdndTypeList, XA_ATOM, 32, PropModeReplace, (unsigned char *) typelist, m_entry_count);
-		free ( typelist ) ;
-	}
-	
+    // TODO: could we use the gdk selection getter instead?
+    
+    MCAutoDataRef t_data;
+    if (!MCDataCreateMutable(0, &t_data))
+        return false;
+    
+    // Count of bytes read
+    uindex_t t_total_bytes = 0;
+    
+    unsigned long count, remaining;
+    
+    do
+    {
+        unsigned char *s = NULL;
+        x11::Atom actual;
+        int format;
+        
+        // The GDK equivalent of XGetWindowProperty (gdk_property_get) is to be
+        // avoided, according to the GDK documentation, in favour of just using
+        // XGetWindowProperty directly instead.
+        int t_result;
+        t_result = x11::XGetWindowProperty(x11::gdk_x11_display_get_xdisplay(m_display),
+                                           x11::gdk_x11_drawable_get_xid(w),
+                                           x11::gdk_x11_atom_to_xatom_for_display(m_display, property),
+                                           t_total_bytes / 4,
+                                           65536,
+                                           false,
+                                           AnyPropertyType,
+                                           &actual,
+                                           &format,
+                                           &count,
+                                           &remaining,
+                                           &s);
+        
+        // Given the format and count, how many bytes did we receive?
+        uindex_t t_bytes = count * (format / 8);
+        t_total_bytes += t_bytes;
+        
+        if (t_result != Success || !MCDataAppendBytes(*t_data, s, t_bytes))
+        {
+            x11::XFree(s);
+            return false;
+        }
+        
+        x11::XFree(s);
+    }
+    while (remaining > 0);
+    
+    return MCDataCopy(*t_data, r_data);
+}
+*/
+
+static bool selection_notify(GdkEvent *t_event, void *)
+{
+    return (t_event->type == GDK_SELECTION_NOTIFY);
 }
 
-
-// Applies the first 3 types in the typelist to the xevent
-void	MCXTransferStore::apply_to_message ( XEvent *xevent ) 
+static bool WaitForEventCompletion()
 {
-	if ( xevent->type == ClientMessage  && m_entries != NULL )
-	{
-		if ( xevent->xclient.message_type == XdndEnter )
-			for ( uint4 a = 0 ; a < ( m_entry_count < 3 ? m_entry_count : 3 ) ; a ++ )
-				XDND_ENTER_TYPE( xevent, a ) = m_entries[a] . format->asAtom();
-	}
-	
+    // Loop until a selection notify event is received
+    MCScreenDC *dc = (MCScreenDC*)MCscreen;
+    GdkEvent *t_notify;
+    while (!dc->GetFilteredEvent(selection_notify, t_notify, NULL))
+    {
+        // TODO: timeout
+    }
+    
+    return true;
 }
 
-
-char * buffer_append ( char * p_old, uint4 p_old_size, char * p_new, uint4 p_new_size )
+void MCGdkTransferStore::GetExternalTypes(GdkAtom p_selection, GdkWindow *p_target)
 {
-	char * t_new;
-	t_new = (char*)malloc ( p_old_size + p_new_size );
-	memcpy(t_new, p_old, p_old_size);
-	memcpy(t_new+p_old_size, p_new, p_new_size);
-	return t_new ;
+    // Get the list of targets (types) supported by the external selection
+    guchar *t_bytes;
+    gint t_byte_len;
+    GdkAtom t_property_type;
+    gint t_property_format;
+    gdk_selection_convert(p_target, p_selection, gdk_atom_intern_static_string("TARGETS"), LastEventTime);
+    
+    // Wait until the selection to be done
+    if (!WaitForEventCompletion())
+        return;
+    
+    t_byte_len = gdk_selection_property_get(p_target, &t_bytes, &t_property_type, &t_property_format);
+    
+    // The target list should be a list of 32-bit atoms
+    cleartypes();
+    if (t_property_type != GDK_SELECTION_TYPE_ATOM || t_property_format != 32)
+        return;
+    
+    for (gint i = 0; i < t_byte_len/sizeof(GdkAtom); i++)
+    {
+        addAtom(((GdkAtom*)t_bytes)[i]);
+    }
+    
+    g_free(t_bytes);
 }
 
-	
-
-char * MCXTransferStore::GetSelection ( Window w, Atom property, uint4& p_count )
-{
-    long read;
-    int error = 0;
-    unsigned long remaining;
-	unsigned long count;
-	char * t_ret = NULL ;
-
-	uint4 t_bytes = 0 ;
-	uint4 t_total_bytes = 0 ;
-	unsigned long t_count = 0;
-	
-	read = 0;
-	count = 0 ;
-    do 
-	{
-		unsigned char *s = NULL ;
-		Atom actual;
-		int format;
-		if (XGetWindowProperty (m_display, w, property, t_total_bytes / 4, 65536, false,
-					AnyPropertyType, &actual, &format,
-					&count, &remaining,
-					&s) != Success) {
-			XFree (s);
-			return NULL;
-			}
-		
-		
-		if ( s != NULL ) 
-		{
-			t_bytes = count * ( format / 8 );
-			t_count += count ;
-			
-			t_ret = buffer_append ( t_ret, t_total_bytes, (char*)s, t_bytes );
-			t_total_bytes += t_bytes ;
-
-#ifdef DEBUG_DND
-  	fprintf(stderr, "GetSelection() : Have got %d items of size %d = %d bytes\n", count, format, t_bytes ) ;
-	if ( format == 8 ) 
-		fprintf(stderr, "\tString(?) : %s\n", s);
-#endif
-	
-			XFree (s);
-		}
-    } 
-	while (remaining);
-	
-	p_count = t_count ;
-#ifdef DEBUG_DND
-	fprintf(stderr, "Returning %d items\n", t_count ) ;
-#endif
-
-	
-	return (t_ret) ;
-
-}
-
-
-
+/*
 void MCXTransferStore::GetExternalTypes ( Atom p_public_atom, Atom p_private_atom, Window w)
 {
-	XEvent xevent ;
+	gdk_selection_owner_set_for_display(m_display, w, p_private_atom, LastEventTime, TRUE);
+    gdk_selection_convert(w, p_public_atom, gdk_atom_intern_static_string("TARGETS"), LastEventTime);
+    
+    XEvent xevent ;
 	XSetSelectionOwner(m_display, p_private_atom, w, LastEventTime);
-	XConvertSelection (m_display, p_public_atom, XA_TARGETS, p_private_atom, w, LastEventTime ); 
+	XConvertSelection (m_display, p_public_atom, XA_TARGETS, p_private_atom, w, LastEventTime );
 	if ( WaitForEventCompletion(xevent) )
 	{
 		Atom * t_data ;
@@ -420,7 +362,7 @@ bool MCXTransferStore::WaitForEventCompletion(XEvent &p_xevent)
 	XEvent xevent ;
 	bool xdnd_target_done = false ;
 	
-	Time t_loop_time = LastEventTime ; 
+	guint32 t_loop_time = LastEventTime ;
 	
 	while (!xdnd_target_done )
 	{
@@ -454,20 +396,60 @@ bool MCXTransferStore::WaitForEventCompletion(XEvent &p_xevent)
 		
 	}
 }
-	
+*/
 
+bool MCGdkTransferStore::GetExternalData(MCTransferType p_type, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, MCDataRef &r_data, guint32 p_event_time)
+{
+    // Check that the selection atom is still the source
+    // Check dummied out because GDK won't create a window object for foreign
+    // windows, making this check pretty much useless.
+    //if (gdk_selection_owner_get(p_atom) == p_source)
+    {
+        // Find the MIME type corresponding to the transfer type we desire
+        MCMIMEtype *t_mime_type;
+        int32_t t_index;
+        t_index = find_entry_with_rev_type(p_type);
+        if (t_index > -1)
+        {
+            t_mime_type = m_entries[t_index].m_mime;
+            
+            // Request the source to convert the data into this type
+            gdk_selection_convert(p_target, p_atom, t_mime_type->asAtom(), p_event_time);
+            
+            // We need to wait for an event notifying us of the conversion
+            if (!WaitForEventCompletion())
+                return false;
+            
+            // Now the data has been converted, fetch it
+            guchar *t_bytes;
+            gint t_byte_len;
+            GdkAtom t_property_type;
+            gint t_property_format;
+            t_byte_len = gdk_selection_property_get(p_target, &t_bytes, &t_property_type, &t_property_format);
+            
+            MCAutoDataRef t_data;
+            bool t_success;
+            t_success = MCDataCreateWithBytes(t_bytes, t_byte_len, &t_data);
+            
+            g_free(t_bytes);
+            
+            return t_success && Convert_MIME_to_REV(*t_data, t_mime_type, r_data);
+        }
+    }
+    
+    return false;
+}
 
-
-MCSharedString * MCXTransferStore::GetExternalData ( MCTransferType p_type, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time)  
+/*
+bool MCXTransferStore::GetExternalData ( MCTransferType p_type, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time, MCDataRef& r_data)  
 {
 	XEvent xevent ;
-	MCSharedString *t_ret = NULL ;
 	
 	// Check that the Source application actually owns the XdndSelection.
 	if ( XGetSelectionOwner ( m_display, p_public_atom ) == p_source_window ) 
 	{
 
-		// Take ownership of the Xdnd Atom
+		// Take ownership of my Xdnd Atom
 		XSetSelectionOwner (m_display, p_private_atom, p_target_window, p_lock_time);
 		
 		// Now try and convert XdndSelection to XdndMyAtom as type "text/plain"
@@ -489,27 +471,18 @@ MCSharedString * MCXTransferStore::GetExternalData ( MCTransferType p_type, Atom
 			if ( WaitForEventCompletion(xevent) )
 			{
 
-				char * t_data ;
-				uint4 t_count ;
-				t_data = GetSelection ( xevent.xselection.requestor, p_private_atom , t_count) ;			
-				t_ret = MCSharedString::Create ( t_data, t_count ) ;
-				
-				MCSharedString *t_tmp ;
-				t_tmp = Convert_MIME_to_REV ( t_ret, p_mime_type ); 
-				if ( t_tmp != t_ret)
-				{
-					t_ret->Release();
-					t_ret = t_tmp;
-				}
-			}
+                char * t_data ;
+                uint4 t_count ;
+                t_data = GetSelection ( xevent.xselection.requestor, p_private_atom , t_count) ;
+                MCAutoDataRef t_ret;
+                if (MCDataCreateWithBytes((const char_t *)t_data, t_count, &t_ret )) // there was a ';' before here???
+                    return Convert_MIME_to_REV ( *t_ret, p_mime_type, r_data );
+                return false;
+            }
 		}
 	
 	}
-	
-	return ( t_ret ) ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -531,55 +504,59 @@ Atom   MCXTransferStore::asAtom  ( uint4 p_idx )
 	return 0 ;
 	
 }
+*/
 
-
-
-int4 	MCXTransferStore::find_type ( MCMIMEtype * p_type )
+int32_t MCGdkTransferStore::find_type(MCMIMEtype* p_type)
 {
-	for ( uint4 a = 0 ; a < m_entry_count ; a++)
-		if ( strcmp ( ( const char*)p_type->asString(), asString( a ) ) == 0 )
-			return a ;
-	return -1;
+	for (uint32_t i = 0; i < m_entry_count; i++)
+    {
+        if (strcmp(p_type->asString(), m_entries[i].m_mime->asString()) == 0)
+            return i;
+    }
+    return -1;
+}
+ 
+int32_t MCGdkTransferStore::find_entry_with_rev_type(MCTransferType p_type) 
+{
+	for (uint32_t i = 0; i < m_entry_count; i++)
+    {
+        if (m_entries[i].m_type == p_type)
+            return i;
+    }
+    return -1;
 }
 
-
-
-
-int4  MCXTransferStore::find_entry_with_rev_type ( MCTransferType p_type ) 
+int32_t MCGdkTransferStore::find_table_entry_with_rev_type(MCTransferType p_type) 
 {
-	for ( uint4 a = 0 ; a < m_entry_count ; a++)
-		if ( m_entries[a] . type == p_type )
-			return a;
-	
-	return -1 ;
+	for (uint32_t i = 0; i < XDND_TYPE_TABLE_SIZE; i++)
+    {
+        if (XTransfer_lookup_table[i].rev_type == p_type)
+            return i;
+    }
+    return -1;
 }
 
-int4  MCXTransferStore::find_table_entry_with_rev_type ( MCTransferType p_type ) 
+int32_t MCGdkTransferStore::find_table_entry_with_MIME_type(MCMIMEtype* p_MIME) 
 {
-	for ( uint4 a = 0 ; a < XDND_TYPE_TABLE_SIZE ; a++)
-		if ( XTransfer_lookup_table [a] . rev_type == p_type )
-			return a;
-	
-	return -1 ;
+	for (uint32_t i = 0; i < XDND_TYPE_TABLE_SIZE; i++)
+    {
+        if (strcmp(p_MIME->asString(), XTransfer_lookup_table[i].mime_type) == 0)
+            return i;
+    }
+    return -1;
 }
 
-int4  MCXTransferStore::find_table_entry_with_MIME_type ( MCMIMEtype * p_MIME ) 
+int32_t MCGdkTransferStore::find_table_entry_with_full_types(MCTransferType p_type, MCMIMEtype* p_MIME)
 {
-	for ( uint4 a = 0 ; a < XDND_TYPE_TABLE_SIZE ; a++)
-		if ( strcmp ( ( const char*)p_MIME->asString(), (char*)XTransfer_lookup_table [a] . mime_type ) == 0 )
+	for (uint32_t i = 0; i < XDND_TYPE_TABLE_SIZE; i++)
+    {
+        if (strcmp(p_MIME->asString(), XTransfer_lookup_table[i].mime_type) == 0
+            && p_type == XTransfer_lookup_table[i].rev_type)
+        {
+            return i;
+        }
+    }
 
-			return a;
-	
-	return -1 ;
-} 
-
-int4  MCXTransferStore::find_table_entry_with_full_types ( MCTransferType p_type, MCMIMEtype * p_MIME ) 
-{
-	for ( uint4 a = 0 ; a < XDND_TYPE_TABLE_SIZE ; a++)
-		if (( strcmp ( p_MIME->asString(), (char*)XTransfer_lookup_table [a] . mime_type ) == 0 ) &&
-		   ( p_type == XTransfer_lookup_table[a] . rev_type ))
-			return a;
-	
 	return -1 ;
 } 
 
@@ -589,14 +566,14 @@ int4  MCXTransferStore::find_table_entry_with_full_types ( MCTransferType p_type
 // Functions that convert between the REV and System type descriptors
 
 
-MCMIMEtype * MCXTransferStore::rev_to_MIME_stored ( MCTransferType p_type )
+MCMIMEtype * MCGdkTransferStore::rev_to_MIME_stored(MCTransferType p_type)
 {
-	int4 idx ;
-	idx = find_entry_with_rev_type ( p_type ) ;
-	if ( idx > -1 )
-		return ( m_entries[idx].format ) ;
+	int32_t idx;
+	idx = find_entry_with_rev_type(p_type);
+	if (idx > -1)
+		return (m_entries[idx].m_mime);
 	else 
-		return None ;
+		return NULL;
 }
 
 
@@ -606,6 +583,42 @@ MCMIMEtype * MCXTransferStore::rev_to_MIME_stored ( MCTransferType p_type )
 // Interface with the Clipboard
 
 
+GdkAtom *MCGdkTransferStore::QueryAtoms(size_t &r_count)
+{
+    uint32_t t_top = 0;
+    uint32_t t_index;
+    uint32_t t_count = 0;
+    
+    if (m_entries != NULL)
+    {
+        // Find the highest-priority type
+        for (uint32_t i = 0; i < m_entry_count; i++)
+        {
+            t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+            if (XTransfer_lookup_table[t_index].priority > t_top)
+                t_top = XTransfer_lookup_table[t_index].priority;
+        }
+        
+        MCAutoArray<GdkAtom> t_ret;
+        for (uint32_t i = 0; i < m_entry_count; i++)
+        {
+            t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+            t_ret.Extend(++t_count);
+            t_ret[t_count-1] = m_entries[i].m_mime->asAtom();
+        }
+        
+        GdkAtom* t_ptr;
+        uindex_t t_count;
+        t_ret.Take(t_ptr, t_count);
+        r_count = t_count;
+        return t_ptr;
+    }
+    
+    r_count = 0;
+    return NULL;
+}
+
+/*
 Atom * MCXTransferStore::QueryAtoms (uint4 & r_count)
 {
 	
@@ -652,7 +665,7 @@ Atom * MCXTransferStore::QueryAtoms (uint4 & r_count)
 	}
 	return t_ret ;
 }
-
+*/
 	
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -682,8 +695,48 @@ bool should_include ( MCTransferType * p_list, uint4 p_count, MCTransferType p_t
 }
 
 
+bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
+{
+    MCAutoArray<MCTransferType> t_list;
+    uint32_t t_top = 0;
+    uint32_t t_index;
+    uint32_t t_count = 0;
+    
+    if (m_entries != NULL)
+    {
+        if (m_types_list == NULL)
+        {
+            // Find the highest-priority type
+            for (uint32_t i = 0; i < m_entry_count; i++)
+            {
+                t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+                if (XTransfer_lookup_table[t_index].priority > t_top)
+                    t_top = XTransfer_lookup_table[t_index].priority;
+            }
+            
+            for (uint32_t i = 0; i < m_entry_count; i++)
+            {
+                t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+                if ((XTransfer_lookup_table[t_index].priority == t_top) && should_include(t_list.Ptr(), t_count, m_entries[i].m_type))
+                {
+                    t_list.Extend(++t_count);
+                    t_list[t_count-1] = m_entries[i].m_type;
+                }
+            }
+            
+            t_list.Take(m_types_list, m_types_count);
+        }
+        
+        r_type_count = m_types_count;
+        r_types = m_types_list;
+        return true;
+    }
+    
+    return false;
+}
 
-bool MCXTransferStore::Query(MCTransferType*& r_types, unsigned int& r_type_count) 
+
+/*bool MCXTransferStore::Query(MCTransferType*& r_types, unsigned int& r_type_count)
 {
 
 	
@@ -741,11 +794,46 @@ bool MCXTransferStore::Query(MCTransferType*& r_types, unsigned int& r_type_coun
 	}
 	return false ;
 }
+*/
 
+bool MCGdkTransferStore::Fetch(MCMIMEtype *p_mime_type, MCDataRef& r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, guint32 p_event_time)
+{
+    if (m_entries != NULL)
+    {
+        int32_t t_index = find_type(p_mime_type);
+        if (t_index > -1)
+        {
+            if (m_entries[t_index].m_data == NULL)
+            {
+                // We have no data for this type so fetch it from the source
+                GetExternalData(m_entries[t_index].m_type, p_atom, p_source, p_target, r_data, p_event_time);
+                if (r_data != NULL)
+                    m_entries[t_index].m_data = MCValueRetain(r_data);
+            }
+            else
+            {
+                // If this is an internal copy operation, skip the conversion.
+                // (We can tell that it is internal if we recognise the source
+                // and destination windows as being our stacks).
+                if (MCdispatcher->findstackd(p_source) && MCdispatcher->findstackd(p_target))
+                    r_data = MCValueRetain(m_entries[t_index].m_data);
+                else
+                    Convert_REV_to_MIME(m_entries[t_index].m_data, m_entries[t_index].m_type, m_entries[t_index].m_mime, r_data);
+            }
+            
+            // This may happen if the selection owner has changed
+            if (r_data == NULL)
+                return false;
+            
+            return true;
+        }
+    }
+    
+    return false;
+}
 
-
-
-bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCSharedString*& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
+/*
+bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCDataRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
 {
 #ifdef DEBUG_DND
 	fprintf(stderr, "Fetch_MIME() : Type = %s\n", p_mime_type -> asString() ) ;
@@ -757,19 +845,20 @@ bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCSharedString*& r_data, 
 		{
 			if ( m_entries[t_idx] . data == NULL )	// We SHOULD only need to get the data if we are the TARGET
 			{
-				m_entries[t_idx] . data = GetExternalData( m_entries[t_idx] . type , p_public_atom, p_private_atom, p_source_window, p_target_window, p_lock_time) ;
-				r_data = m_entries[t_idx] . data ;
+				GetExternalData( m_entries[t_idx] . type , p_public_atom, p_private_atom, p_source_window, p_target_window, p_lock_time, r_data) ;
+				if (r_data != nil)
+					m_entries[t_idx] . data = MCValueRetain(r_data);
 			}
 			else 
 			{
 				if (!m_internal_dnd) 
-					r_data = Convert_REV_to_MIME ( m_entries[ t_idx ] . data , m_entries[t_idx] . type,  m_entries [t_idx] . format ) ;
+					Convert_REV_to_MIME ( m_entries[ t_idx ] . data , m_entries[t_idx] . type,  m_entries [t_idx] . format, r_data ) ;
 				else
-					r_data = m_entries[t_idx] . data ;
+					r_data = MCValueRetain(m_entries[t_idx] . data);
 			}
 
 	
-			if ( r_data == NULL )		// This may happen if the selection owner has changed.
+			if ( r_data == nil )		// This may happen if the selection owner has changed.
 				return false ;
 		
 			return true ;
@@ -777,17 +866,21 @@ bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCSharedString*& r_data, 
 	}
 	return false ;
 }
+*/
 
+bool MCGdkTransferStore::Fetch(MCTransferType p_type, MCDataRef& r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, guint32 p_event_time)
+{
+    return Fetch(rev_to_MIME_stored(p_type), r_data, p_atom, p_source, p_target, p_event_time);
+}
 
-
-bool MCXTransferStore::Fetch(MCTransferType p_type, MCSharedString*& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
+/*
+bool MCXTransferStore::Fetch(MCTransferType p_type, MCDataRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time)
 {
 #ifdef DEBUG_DND
 	fprintf(stderr, "Fecth() : Asked for REV type %s\n", RevTypeToString (p_type));
 #endif
 	return ( Fetch ( rev_to_MIME_stored ( p_type ), r_data, p_public_atom, p_private_atom, p_source_window, p_target_window, p_lock_time ) ) ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -873,15 +966,37 @@ const char *RevTypeToString(MCTransferType p_type)
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Format conversion routines
+*/
 
+bool MCGdkTransferStore::Convert_REV_to_MIME(MCDataRef p_input, MCTransferType p_type, MCMIMEtype *p_mime, MCDataRef &r_output)
+{
+    int32_t t_index;
+    t_index = find_table_entry_with_full_types(p_type, p_mime);
+    if (t_index > -1)
+    {
+        if (XTransfer_lookup_table[t_index].f_converter_to_mime != NULL)
+        {
+            return XTransfer_lookup_table[t_index].f_converter_to_mime(p_input, p_mime->asRev(), r_output);
+        }
+        else
+        {
+            r_output = MCValueRetain(p_input);
+            return true;
+        }
+    }
+    
+    return false;
+}
 
-MCSharedString * MCXTransferStore::Convert_REV_to_MIME ( MCSharedString * p_in, MCTransferType p_type,  MCMIMEtype * p_mime ) 
+/*
+bool MCXTransferStore::Convert_REV_to_MIME ( MCDataRef p_input, MCTransferType p_type,  MCMIMEtype * p_mime, MCDataRef& r_output ) 
 {
 #ifdef DEBUG_DND
 	fprintf(stderr, "--> Converting type [%s] into [%s]\n",  RevTypeToString(p_type), p_mime->asString() ) ;
 #endif
 		
 	int4 t_idx ;
+	//t_idx = find_table_entry_with_MIME_type ( p_mime ) ;
 	t_idx = find_table_entry_with_full_types ( p_type , p_mime ) ;
 	if ( t_idx > -1 )
 		if ( XTransfer_lookup_table [ t_idx ] . f_converter_to_mime != NULL )
@@ -889,22 +1004,41 @@ MCSharedString * MCXTransferStore::Convert_REV_to_MIME ( MCSharedString * p_in, 
 #ifdef DEBUG_DND
 			fprintf(stderr, "\tHave got converter function.\n");
 #endif
-			return ( XTransfer_lookup_table [ t_idx ] . f_converter_to_mime ( p_in, p_mime->asRev() ) ) ;
+			return XTransfer_lookup_table [ t_idx ] . f_converter_to_mime ( p_input, p_mime->asRev(), r_output ) ;
 		}
 		else
 		{
 #ifdef DEBUG_DND
 			fprintf(stderr, "\tno conversion function defined... doing nothing\n");
 #endif
-			return ( p_in ) ;
+			r_output = MCValueRetain(p_input);
+			return true;
 		}
-	
-	return NULL ;
+}
+*/
+
+bool MCGdkTransferStore::Convert_MIME_to_REV(MCDataRef p_input, MCMIMEtype *p_mime, MCDataRef &r_output)
+{
+    int32_t t_index;
+    t_index = find_table_entry_with_MIME_type(p_mime);
+    if (t_index > -1)
+    {
+        if (XTransfer_lookup_table[t_index].f_converter_to_rev != NULL)
+        {
+            return XTransfer_lookup_table[t_index].f_converter_to_rev(p_input, p_mime, r_output);
+        }
+        else
+        {
+            r_output = MCValueRetain(p_input);
+            return true;
+        }
+    }
+    
+    return false;
 }
 
-
-
-MCSharedString * MCXTransferStore::Convert_MIME_to_REV ( MCSharedString * p_in, MCMIMEtype * p_MIME ) 
+/*
+bool MCXTransferStore::Convert_MIME_to_REV ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) 
 {
 #ifdef DEBUG_DND
 	fprintf(stderr, "<-- Converting type [%s] into [%s]\n", p_MIME->asString(), p_MIME->asRevString() ) ;
@@ -918,167 +1052,171 @@ MCSharedString * MCXTransferStore::Convert_MIME_to_REV ( MCSharedString * p_in, 
 #ifdef DEBUG_DND
 			fprintf(stderr, "\tHave got converter function.\n");
 #endif
-			return ( XTransfer_lookup_table [ t_idx ] . f_converter_to_rev ( p_in, p_MIME ) ) ;
+			return XTransfer_lookup_table [ t_idx ] . f_converter_to_rev ( p_input, p_MIME, r_output ) ;
 		}
 		else 
 		{
-			return ( p_in ) ;
 #ifdef DEBUG_DND
 			fprintf(stderr, "\tno conversion function defined... doing nothing\n");
 #endif
+			r_output = MCValueRetain(p_input);
+			return true;
 		}
-	
-	
-	return NULL ; 
-	
-}
+}*/
 
 // Convert from UTF8 to TRANSFER_TYPE_STYLED_TEXT
-MCSharedString * ConvertUnicodeToStyled ( MCSharedString * p_in, MCMIMEtype * p_MIME ) 
+bool ConvertUnicodeToStyled ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) 
 {
-	MCExecPoint ep ( NULL, NULL, NULL) ;
-	ep.setsvalue(p_in -> Get());
-	ep.utf8toutf16();
-	return MCConvertUnicodeToStyledText(ep . getsvalue());
+    MCAutoDataRef t_unicode;
+    if (!MCU_multibytetounicode(p_input, LCH_UTF8, &t_unicode))
+		return false;
+
+	return MCConvertUnicodeToStyledText(*t_unicode, r_output);
 }
 
 
 // Convert from TRANSFER_TYPE_STYLED_TEXT to UTF8
-MCSharedString *ConvertStyledToUnicode ( MCSharedString * p_in, MCTransferType p_type ) 
+bool ConvertStyledToUnicode ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) 
 {
-	MCExecPoint ep ( NULL, NULL, NULL ) ;
-	
 	// Convert from Styles to UTF16
-	MCSharedString *t_unicode_text;
-	t_unicode_text = MCConvertStyledTextToUnicode(p_in);
-	
-	ep . setsvalue (  t_unicode_text -> Get() ) ;
-	ep . utf16toutf8() ;
-	
-	t_unicode_text -> Release();
-	
-	return ( MCSharedString::Create( ep.getsvalue() ) ) ;
+	MCAutoDataRef t_unicode;
+    if (!MCConvertStyledTextToUnicode(p_input, &t_unicode))
+		return false;
+
+    return MCU_unicodetomultibyte(*t_unicode, LCH_UTF8, r_output);
 }
 
 
 
 // Convert from UTF8 to TRANSFER_TYPE_TEXT
-MCSharedString * ConvertUnicodeToText ( MCSharedString * p_in, MCMIMEtype * p_MIME ) 
+bool ConvertUnicodeToText ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )
 {
-	MCExecPoint ep ( NULL, NULL, NULL ) ;
-	
-	ep . setsvalue(p_in -> Get());
-	ep . utf8toutf16();
-	
-	return MCSharedString::Create(ep . getsvalue());
+    return MCU_multibytetounicode(p_input, LCH_UTF8, r_output);
 }
-	
+
 // Convert from TRANSFER_TYPE_TEXT to UTF8
-MCSharedString * ConvertTextToUnicode ( MCSharedString * p_in, MCTransferType p_type ) 
+bool ConvertTextToUnicode (MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output)
 {
-	MCExecPoint ep ( NULL, NULL, NULL ) ;
+    return MCU_unicodetomultibyte(p_input, LCH_UTF8, r_output);
+}
+
+bool ConvertStyled_rev_to_HTML ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) 
+{
+	return MCConvertStyledTextToHTML ( p_input, r_output );
+}
+
+
+bool ConvertStyled_rev_to_RTF ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output )  
+{
+	return MCConvertStyledTextToRTF ( p_input, r_output );
+}
+
+
+bool ConvertStyled_RTF_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )
+{
+	return MCConvertRTFToStyledText ( p_input, r_output );
+}
+
+
+bool ConvertStyled_HTML_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )
+{
+	return MCConvertHTMLToStyledText ( p_input, r_output );
+}
+
+
+bool ConvertStyled_rev_to_TEXT ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output ) 
+{
+	return MCConvertStyledTextToText ( p_input, r_output );
+}
+
+bool ConvertStyled_Text_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) 
+{
+	r_output = MCValueRetain(p_input);
+	return true;
+}
+
+bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output )  
+{
+
+    MCAutoStringRef t_input_files;
+    // SN-2014-10-14: [[ Bug 13660 ]] If the decoding fails, returns false
+    if (!MCStringDecode(p_input, kMCStringEncodingNative, false, &t_input_files))
+        return false;
+
+	// First break the string into chunks using return as the delimiter. This
+	// gives us an array of ranges of the pieces between delimiters.
+	MCAutoPointer<MCRange> t_ranges;
+	uindex_t t_range_count;
+	/* UNCHECKED */ MCStringBreakIntoChunks(*t_input_files, '\n', kMCStringOptionCompareExact, &t_ranges, t_range_count);
+
+	// Create a mutable list ref.
+	MCListRef t_output_files;
+	/* UNCHECKED */ MCListCreateMutable('\n', t_output_files);
+
+	// Loop through the ranges, using a formatted string and %*@ to append the appropriate portion of t_input_files as an element.
+	for(uindex_t i = 0; i < t_range_count; i++)
+		/* UNCHECKED */ MCListAppendFormat(t_output_files, "file://%*@", &(*t_ranges)[i], *t_input_files);
+
+	// Build the output stringref.
+	MCStringRef t_output_files_string;
+	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output_files, t_output_files_string);
+
+	// Finally encode as native string and encapsulate in a dataref.
+	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
+
+    return true;
+}
+
+bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )  
+{
+	MCAutoStringRef t_input_files;
+    if (!MCStringDecode(p_input, kMCStringEncodingNative, false, &t_input_files))
+        return false;
+
+	MCAutoStringRef t_input_files_livecode;
+	/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_files, &t_input_files_livecode);
+	MCAutoStringRef t_input_files_livecode_decoded;
+	MCU_urldecode(*t_input_files_livecode, true, &t_input_files_livecode_decoded);
 	
-	ep . setsvalue(p_in -> Get());
-	ep . utf16toutf8();
+	MCAutoPointer<MCRange> t_ranges;
+	uindex_t t_range_count;
+	/* UNCHECKED */ MCStringBreakIntoChunks(*t_input_files_livecode_decoded, '\n', kMCStringOptionCompareExact, &t_ranges, t_range_count);
 
-	return MCSharedString::Create(ep . getsvalue());
-}
-	
-MCSharedString * ConvertStyled_rev_to_HTML ( MCSharedString * p_in, MCTransferType p_type ) 
-{
-	return ( MCConvertStyledTextToHTML ( p_in )) ;
-}
+	// Create a mutable list ref.
+	MCListRef t_output_files;
+	/* UNCHECKED */ MCListCreateMutable('\n', t_output_files);
 
-
-MCSharedString * ConvertStyled_rev_to_RTF ( MCSharedString * p_in, MCTransferType p_type ) 
-{
-	return ( MCConvertStyledTextToRTF ( p_in ) ) ;
-}
-
-
-MCSharedString * ConvertStyled_RTF_to_rev ( MCSharedString * p_in, MCMIMEtype * p_MIME ) 
-{
-	return ( MCConvertRTFToStyledText ( p_in ) ); 
-}
-
-
-MCSharedString * ConvertStyled_HTML_to_rev ( MCSharedString * p_in, MCMIMEtype * p_MIME ) 
-{
-	return ( MCConvertHTMLToStyledText ( p_in ) ); 
-}
-
-
-MCSharedString * ConvertStyled_rev_to_TEXT ( MCSharedString * p_in, MCTransferType p_type ) 
-{
-	return ( MCConvertStyledTextToText ( p_in )) ;
-}
-
-MCSharedString * ConvertStyled_Text_to_rev ( MCSharedString * p_in, MCMIMEtype * p_MIME ) 
-{
-	p_in -> Retain();
-	return ( p_in) ;
-}
-
-
-
-
-
-
-
-MCSharedString * ConvertFile_rev_to_MIME ( MCSharedString * p_in, MCTransferType p_type ) 
-{
-	MCString *t_strings = NULL ;
-	MCExecPoint ep(NULL, NULL, NULL );
-	uint2 	 n_strings ;
-
-	MCU_break_string( p_in -> Get() , t_strings, n_strings, false);
-	
-	for (uint4 a=0; a < n_strings; a++)
+	for(uindex_t i = 0; i < t_range_count; i++)
 	{
-		ep.concatcstring("file://", EC_RETURN, (a==0) );
-		ep.concatmcstring(t_strings[a], EC_NONE, false ); 
+		MCAutoStringRef t_substring;
+		MCStringCopySubstring(*t_input_files_livecode_decoded, (*t_ranges)[i], &t_substring);
+		if (MCStringBeginsWithCString(*t_substring, (const char_t*) "file://", kMCCompareExact))  
+			/* UNCHECKED */ MCListAppendSubstring(t_output_files, *t_substring, MCRangeMake(7, MCStringGetLength(*t_substring) - 7));
 	}
-	
-	delete t_strings;
 
-	return ( MCSharedString::Create(ep . getsvalue()) ) ;
+	MCStringRef t_output_files_string;
+	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output_files, t_output_files_string);
+
+    // SN-2014-11-13: [[ Bug 13993 ]] MCPasteBoard::Fetch now returns a UTF-16 encoded string for the files
+    /* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingUTF16, false, r_output);
+
+	return true;
 }
 
-
-
- 
- 
-
-
-
-MCSharedString * ConvertFile_MIME_to_rev ( MCSharedString * p_in, MCMIMEtype * p_MIME )  
+GdkDragContext* MCGdkTransferStore::CreateDragContext(GdkWindow *p_source)
 {
-	MCString *t_strings = NULL ;
-	MCExecPoint ep(NULL, NULL, NULL );
-	uint2 	 n_strings ;
-	char * t_part ;
-	bool first = true ;
-	
-	ep.setsvalue(p_in -> Get());
-	ep.texttobinary() ;
-	MCU_urldecode(ep);
-	MCU_break_string( ep.getsvalue(), t_strings, n_strings, false);
-	
-	ep.clear() ;
-	
-	for (uint4 a=0; a < n_strings; a++)
-	{
-		t_part = (char*)t_strings[a].clone();
-		if ( strstr(t_part, "file://") != NULL)
-		{
-			ep.concatcstring((t_part + 7), EC_RETURN, first );
-			first=false;
-		}
-		delete t_part;
-	}
-	delete t_strings ;
-	
-	return ( MCSharedString::Create(ep . getsvalue()) ) ;
+    return gdk_drag_begin(p_source, ListTargets());
 }
 
-
+GList* MCGdkTransferStore::ListTargets()
+{
+    if (m_targets == NULL)
+    {
+        for (uint32_t i = 0; i < m_entry_count; i++)
+        {
+            m_targets = g_list_append(m_targets, gpointer(m_entries[i].m_mime->asAtom()));
+        }
+    }
+    
+    return m_targets;
+}

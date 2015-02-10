@@ -1,0 +1,1 @@
+# Text wrapping improperly breaks text mid-word

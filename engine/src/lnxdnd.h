@@ -26,6 +26,4 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "transfer.h"
 
-const char * SharedStringToChar ( MCSharedString * p_in ) { return ( p_in -> Get() . getstring() ) ; } ;
-
 #endif

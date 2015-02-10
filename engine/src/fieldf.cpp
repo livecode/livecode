@@ -27,13 +27,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scrolbar.h"
 #include "button.h"
 #include "field.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "paragraf.h"
 #include "sellst.h"
 #include "undolst.h"
 #include "util.h"
 #include "font.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "mode.h"
 #include "globals.h"
@@ -308,15 +308,16 @@ Field_translations MCField::lookup_mac_keybinding(KeySym p_key, uint32_t p_modif
 
 void MCField::resetparagraphs()
 {
-	int4 si = 0;
-	int4 ei = 0;
-	MCExecPoint oldhilitedlines;
-	oldhilitedlines . clear();
+	findex_t si = 0;
+	findex_t ei = 0;
 
+    vector_t<uint32_t> t_lines;
+    t_lines . elements = nil;
+    t_lines . count = 0;
 	// MW-2005-05-13: [[Fix bug 2766]] We always need to retrieve the hilitedLines
 	//   to prevent phantom selections w.r.t. focused paragraph.
 	if (flags & F_LIST_BEHAVIOR)
-		hilitedlines(oldhilitedlines);
+		hilitedlines(t_lines);
 
 	if (MCactivefield == this && focusedparagraph != NULL)
 	{
@@ -325,10 +326,11 @@ void MCField::resetparagraphs()
 		//   B) clear current hilites line, useless now, but may actually do something
 		//      in the future
 		if (flags & F_LIST_BEHAVIOR)
-			hilitedlines(oldhilitedlines);
+            hilitedlines(t_lines);
+        
 		selectedmark(False, si, ei, True);
 		if (flags & F_LIST_BEHAVIOR)
-			sethilitedlines(MCnullmcstring);
+			sethilitedlines(NULL, 0);
 		unselect(False, True);
 	}
 	curparagraph = focusedparagraph = paragraphs;
@@ -345,8 +347,10 @@ void MCField::resetparagraphs()
 	// MW-2005-01-28: Correct small integration error, != instead of ==
 	if ((flags & F_LIST_BEHAVIOR) != 0)
 	{
-		if (oldhilitedlines.getsvalue() != MCnullmcstring)
-			sethilitedlines(oldhilitedlines.getsvalue(), False);
+		if (t_lines . elements != nil)
+        {
+			sethilitedlines(t_lines . elements, t_lines . count, False);
+        }
 	}
 	else if (ei != 0)
 		seltext(si, ei, False);
@@ -419,7 +423,7 @@ void MCField::gettabs(uint2 *&t, uint2 &n, Boolean &fixed)
 		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 		int4 t_space_width;
 		if (opened)
-			t_space_width = MCFontMeasureText(m_font, " ", 1, false, getstack() -> getdevicetransform());
+            t_space_width = MCFontMeasureText(m_font, MCSTR(" "), getstack() -> getdevicetransform());
 		else
 			t_space_width = 8;
 		 
@@ -440,23 +444,29 @@ void MCField::gettabs(uint2 *&t, uint2 &n, Boolean &fixed)
 	fixed = (flags & F_VGRID) != 0;
 }
 
+void MCField::gettabaligns(intenum_t *&a, uint16_t &n)
+{
+    a = alignments;
+    n = nalignments;
+}
+
 void MCField::getlisttabs(int32_t& r_first, int32_t& r_second)
 {
-	uint2 *tabs;
-	uint2 ntabs;
+	uint2 *t_tabs;
+	uint2 t_ntabs;
 	Boolean fixed;
-	gettabs(tabs, ntabs, fixed);
+	gettabs(t_tabs, t_ntabs, fixed);
 	
 	int32_t t_first_tab, t_second_tab;
-	if (ntabs == 1)
+	if (t_ntabs == 1)
 	{
-		t_first_tab = tabs[0];
-		t_second_tab = tabs[0] * 2;
+		t_first_tab = t_tabs[0];
+		t_second_tab = t_tabs[0] * 2;
 	}
 	else
 	{
-		t_first_tab = tabs[0];
-		t_second_tab = tabs[1];
+		t_first_tab = t_tabs[0];
+		t_second_tab = t_tabs[1];
 	}
 	
 	r_first = t_first_tab;
@@ -561,7 +571,8 @@ void MCField::removecursor()
 		cursoron = False;
 		cursorfield = NULL;
 		// MW-2011-08-18: [[ Layers ]] Invalidate the cursor rect.
-		layer_redrawrect(cursorrect);
+		layer_redrawrect(cursorrectp);
+        layer_redrawrect(cursorrects);
 	}
 }
 
@@ -572,7 +583,7 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 	{
 		// MW-2012-01-27: [[ Bug 9511 ]] Make sure we don't render the win95-esque focus
 		//   border in native GTK mode.
-		if (focusedparagraph->gettextsize() && !IsMacLF() && !IsNativeGTK() && !getstate(CS_MENUFIELD))
+		if (!focusedparagraph->IsEmpty() && !IsMacLF() && !IsNativeGTK() && !getstate(CS_MENUFIELD))
 		{
 			if (MClook == LF_WIN95)
 			{
@@ -582,12 +593,16 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 				p_context->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
 				p_context->setdashes(0, dotlist, 2);
 				p_context->setfunction(GXxor);
-				p_context->drawrect(cursorrect);
+				p_context->drawrect(cursorrectp);
+                p_context->drawrect(cursorrects);
 				p_context->setfunction(GXcopy);
 				p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
 			}
 			else
-				p_context->drawrect(cursorrect);
+            {
+				p_context->drawrect(cursorrectp);
+                p_context->drawrect(cursorrects);
+            }
 		}
 	}
 	else
@@ -615,7 +630,8 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
         // MW-2014-04-10: [[ Bug 12020 ]] Make sure we use a linesize of 1 rather than 0 (hairline)
         //   to ensure caret is not too thin on retina displays.
         p_context->setlineatts(1, LineSolid, CapButt, JoinBevel);
-		p_context->drawline(cursorrect.x, cursorrect.y, cursorrect.x, cursorrect.y + cursorrect.height - 1);
+		p_context->drawline(cursorrectp.x, cursorrectp.y, cursorrectp.x, cursorrectp.y + cursorrectp.height - 1);
+        p_context->drawline(cursorrects.x, cursorrects.y, cursorrects.x, cursorrects.y + cursorrects.height - 1);
         p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
 		
 		if (t_is_opaque)
@@ -632,27 +648,39 @@ void MCField::replacecursor(Boolean force, Boolean goal)
 	if (!opened)
 		return;
 
-	MCRectangle drect;
+	MCRectangle drectp, drects;
+    // AL-2014-03-21: [[ Bug 11963 ]] If the field has list behavior, don't split
+    //  the cursor rect.
+    if (flags & F_LIST_BEHAVIOR)
+	{
+		drectp = focusedparagraph->getcursorrect(-1, fixedheight, true);
+		positioncursor(force, goal, drectp, focusedy, true);
+		return;
+	}
+    
 	if (composing && composelength)
 	{
-		int4 compsi, compei;
+		findex_t compsi, compei;
 		compsi = composeoffset + composecursorindex;
 		compei = composeoffset + composelength;
 		indextoparagraph(paragraphs,compsi,compei);
 		// MW-2012-01-25: [[ ParaStyles ]] Request the cursor-rect of the line
 		//   not including any space above/below.
-		drect = focusedparagraph->getcursorrect(compsi, fixedheight, false);
+		drectp = focusedparagraph->getsplitcursorrect(compsi, fixedheight, false, true);
+        drects = focusedparagraph->getsplitcursorrect(compsi, fixedheight, false, false);
 	}
 	else
 	{
 		// MW-2012-01-25: [[ ParaStyles ]] Request the cursor-rect of the line
 		//   not including any space above/below.
-		drect = focusedparagraph->getcursorrect(-1, fixedheight, false);
+		drectp = focusedparagraph->getsplitcursorrect(-1, fixedheight, false, true);
+        drects = focusedparagraph->getsplitcursorrect(-1, fixedheight, false, false);
 	}
-	positioncursor(force, goal, drect, focusedy);
+	positioncursor(force, goal, drects, focusedy, false);
+    positioncursor(force, goal, drectp, focusedy, true);
 }
 
-void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, int4 yoffset)
+void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, int4 yoffset, bool primary)
 {
 	if (flags & F_LIST_BEHAVIOR && MClook != LF_WIN95)
 	{
@@ -767,7 +795,10 @@ void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, in
 				drect.width += 2;
 			}
 		}
-		cursorrect = drect;
+        if (primary)
+            cursorrectp = drect;
+        else
+            cursorrects = drect;
 		cursorfield = this;
 		cursoron = True;
 		// MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
@@ -797,12 +828,12 @@ void MCField::dragtext()
 		pgheight = pgptr->getheight(fixedheight);
 	}
 	cy -= y;
-	uint2 ssi, sei;
+	findex_t ssi, sei;
 	pgptr->getclickindex(cx, cy, fixedheight, ssi, sei, False, False);
 
 	// MW-2012-01-25: [[ ParaStyles ]] Request the cursor rect without spacing.
 	MCRectangle drect = pgptr->getcursorrect(ssi, fixedheight, false);
-	positioncursor(True, False, drect, paragraphtoy(pgptr));
+	positioncursor(True, False, drect, paragraphtoy(pgptr), true);
 
 	// Compute the appropriate drag action depending the state of the keyboard
 	// MW-2007-12-11: [[ Bug 5542 ]] Wrong keyboard modifier for copying/moving text on OS X
@@ -830,7 +861,7 @@ void MCField::dragtext()
 
 void MCField::computedrag()
 {
-	int4 ti, si, ei;
+	findex_t ti, si, ei;
 	locmark(False, False, False, False, True, ti, ei);
 	selectedmark(False, si, ei, False);
 	uint2 c = ti >= si && ti < ei ? PI_ARROW : PI_IBEAM;
@@ -978,8 +1009,8 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 
 		// Compute the find range.
 		MCParagraph *foundpgptr = NULL;
-		int4 fstart = 0;
-		int4 fend = 0;
+		findex_t fstart = 0;
+		findex_t fend = 0;
 		if (foundlength != 0)
 		{
 			fstart = foundoffset;
@@ -989,7 +1020,7 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 
 		// Compute the composition range.
 		MCParagraph *comppgptr = NULL;
-		int4 compstart,compend;
+		findex_t compstart,compend;
 		compstart = compend = 0;
 		if (composelength)
 		{
@@ -1086,22 +1117,22 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			t_delta = getcontentx() - 1;
 			
 			uint2 ct = 0;
-			int4 x;
-			x = t_delta + t[0];
+			int4 t_x;
+			t_x = t_delta + t[0];
             
-			while (x <= grect.x + grect.width)
+			while (t_x <= grect.x + grect.width)
 			{
 				// MW-2012-05-03: [[ Bug 10200 ]] If set at the field level, the vGrid should start
 				//   just inside the border for backwards compatibility.
-				if (x >= grect.x)
-					dc->drawline(x, grect.y, x, grect.y + grect.height);
+				if (t_x >= grect.x)
+					dc->drawline(t_x, grect.y, t_x, grect.y + grect.height);
 
 				if (ct < nt - 1)
-					x = t_delta + t[++ct];
+					t_x = t_delta + t[++ct];
 				else if (nt == 1)
-					x += t[0];
+					t_x += t[0];
 				else
-					x += t[nt - 1] - t[nt - 2];
+					t_x += t[nt - 1] - t[nt - 2];
 				
 				// MW-2012-03-19: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
@@ -1263,7 +1294,7 @@ void MCField::setfocus(int2 x, int2 y)
 	}
 	if (!(flags & F_LOCK_TEXT))
 	{
-		int4 si,ei;
+		findex_t si,ei;
 		selectedmark(False, si, ei, False);
 		if (composing)
 			if (!(si >= composeoffset && ei <= composeoffset + composelength))
@@ -1384,7 +1415,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 				        && (focusedparagraph->isselection()
 				            || firstparagraph != lastparagraph))
 				{
-					int4 ti, si, ei;
+					findex_t ti, si, ei;
 					if (locmark(False, False, False, True, True, ti, ei))
 					{
 						selectedmark(False, si, ei, False);
@@ -1467,25 +1498,24 @@ void MCField::endselection()
 		}
 		if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
-			MCExecPoint ep;
-			selectedtext(ep);
-
-			MCSharedString *t_data;
-			t_data = MCSharedString::Create(ep . getsvalue());
-			if (t_data != NULL)
-			{
+			MCAutoStringRef t_string;
+			selectedtext(&t_string);
+			
+			MCAutoDataRef t_data;
+            MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
+			if (*t_data != nil)
+            {
                 // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
                 //  if it is Focusable
-				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, t_data)
+                if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data)
                         && flags & F_TRAVERSAL_ON)
 					MCactivefield = this;
-				t_data -> Release();
 			}
 		}
 
 		if (!(flags & F_LOCK_TEXT) && MCU_point_in_rect(rect, mx, my))
 		{
-			int4 ti, si, ei;
+			findex_t ti, si, ei;
 			locmark(False, False, False, False, True, ti, ei);
 			selectedmark(False, si, ei, False);
 			uint2 c = ti >= si && ti <= ei ? PI_ARROW : PI_IBEAM;
@@ -1508,13 +1538,13 @@ void MCField::unselect(Boolean clear, Boolean internal)
 	{
 		firstparagraph = lastparagraph = NULL;
 		if (focusedparagraph->next() == paragraphs && !(flags & F_LIST_BEHAVIOR))
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		return;
 	}
 	if (firstparagraph == NULL)
 	{
 		if (!(flags & F_LIST_BEHAVIOR))
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		return;
 	}
 	if (!(flags & F_LIST_BEHAVIOR))
@@ -1531,13 +1561,13 @@ void MCField::unselect(Boolean clear, Boolean internal)
 		drect.y += getcontenty() + focusedy;
 		focusedparagraph = firstparagraph;
 		focusedy = firsty;
-		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		updateparagraph(False, False);
 		while (focusedparagraph != lastparagraph)
 		{
 			focusedy += focusedparagraph->getheight(fixedheight);
 			focusedparagraph = focusedparagraph->next();
-			focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+			focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 			updateparagraph(False, False);
 		}
 		setfocus(drect.x, drect.y);
@@ -1567,7 +1597,7 @@ Boolean MCField::deleteselection(Boolean force)
 		// May require reflow
 		focusedparagraph->clearzeros();
 
-		int4 si, ei;
+		findex_t si, ei;
 		selectedmark(False, si, ei, False);
 		Ustruct *us = new Ustruct;
 		us->type = UT_DELETE_TEXT;
@@ -1608,12 +1638,12 @@ Boolean MCField::deleteselection(Boolean force)
 void MCField::centerfound()
 {
 	removecursor();
-	int4 fstart = foundoffset;
-	int4 fend = foundoffset + foundlength;
+	findex_t fstart = foundoffset;
+	findex_t fend = foundoffset + foundlength;
 	fstart = foundoffset;
 	MCParagraph *foundpgptr = indextoparagraph(paragraphs, fstart, fend);
 	fstart += (fend - fstart) >> 1;
-	int2 x, smally;
+	coord_t x, smally;
 	foundpgptr->indextoloc(fstart, fixedheight, x, smally);
 
 	// MW-2012-01-25: [[ FieldMetrics ]] Convert x and y to card co-ords.
@@ -1718,16 +1748,16 @@ void MCField::joinparagraphs()
 	updateparagraph(True, True);
 }
 
-void MCField::fnop(Field_translations function, const char *string, KeySym key)
+void MCField::fnop(Field_translations function, MCStringRef p_string, KeySym key)
 {
 }
 
 // MW-2012-02-13: [[ Block Unicode ]] New implementation of finsert which understands
 //   unicode text.
-void MCField::finsertnew(Field_translations function, const MCString& p_string, KeySym p_key, bool p_is_unicode)
+void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeySym p_key)
 {
 	// If there is nothing to insert, do nothing.
-	if (p_string . getlength() == 0)
+	if (MCStringIsEmpty(p_string))
 		return;
 
 	// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
@@ -1743,14 +1773,14 @@ void MCField::finsertnew(Field_translations function, const MCString& p_string, 
 	deletecomposition();
 	
 	// Compute the start and end point of the selection.
-	int4 si,ei;
+	findex_t si,ei;
 	selectedmark(False, si, ei, False);
 
-	// Defer to the paragraph method to insert the text.
-	focusedparagraph -> finsertnew(p_string, p_is_unicode);
+    // Defer to the paragraph method to insert the text.
+    focusedparagraph -> finsertnew(p_string);
 
 	// Compute the end of the selection.
-	int4 ti;
+	findex_t ti;
 	selectedmark(False, ei, ti, False);
 	if (composing)
 	{
@@ -1816,7 +1846,7 @@ void MCField::finsertnew(Field_translations function, const MCString& p_string, 
 	}
 }
 
-void MCField::fdel(Field_translations function, const char *string, KeySym key)
+void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 	//   textChanged message by a lock screen pair.
@@ -1876,7 +1906,7 @@ void MCField::fdel(Field_translations function, const char *string, KeySym key)
 				updateparagraph(True, False);
 			}
 		}
-		int4 si, ei;
+		findex_t si, ei;
 		us->type = UT_DELETE_TEXT;
 		selectedmark(False, si, ei, False);
 		us->ud.text.index = si;
@@ -1901,25 +1931,22 @@ void MCField::fdel(Field_translations function, const char *string, KeySym key)
 	textchanged();
 }
 
-void MCField::fhelp(Field_translations function,
-                    const char *string, KeySym key)
+void MCField::fhelp(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	message(MCM_help);
 }
 
-void MCField::fundo(Field_translations function,
-                    const char *string, KeySym key)
+void MCField::fundo(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	MCundos->undo();
 }
 
-void MCField::fcut(Field_translations function, const char *string, KeySym key)
+void MCField::fcut(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	cuttext();
 }
 
-void MCField::fcutline(Field_translations function,
-                       const char *string, KeySym key)
+void MCField::fcutline(Field_translations function, MCStringRef p_string, KeySym key)
 {
 #ifdef OLD_CLIPBOARD
 	if (!(state & CS_DELETING))
@@ -1950,27 +1977,24 @@ void MCField::fcutline(Field_translations function,
 #endif
 }
 
-void MCField::fcopy(Field_translations function,
-                    const char *string, KeySym key)
+void MCField::fcopy(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	copytext();
 }
 
-void MCField::fpaste(Field_translations function,
-                     const char *string, KeySym key)
+void MCField::fpaste(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	MCObject *optr;
 	MCdispatcher -> dopaste(optr);
 }
 
-void MCField::ftab(Field_translations function,
-                   const char *string, KeySym key)
+void MCField::ftab(Field_translations function, MCStringRef p_string, KeySym key)
 {
-	if (message_with_args(MCM_tab_key, string) == ES_NORMAL)
+	if (message_with_valueref_args(MCM_tab_key, p_string) == ES_NORMAL)
 		return;
     // MW-2014-08-12: [[ Bug 13166 ]] If we get a tab key message then we always insert \t
 	if (ntabs != 0 && !(flags & F_LOCK_TEXT))
-		finsertnew(FT_UNDEFINED, "\t", key, false);
+		finsertnew(FT_UNDEFINED, MCSTR("\t"), key);
 	else
 		if (MCmodifierstate & MS_SHIFT)
 			getcard()->kfocusprev(False);
@@ -1978,8 +2002,7 @@ void MCField::ftab(Field_translations function,
 			getcard()->kfocusnext(False);
 }
 
-void MCField::ffocus(Field_translations function,
-                     const char *string, KeySym key)
+void MCField::ffocus(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	switch (function)
 	{
@@ -2000,9 +2023,10 @@ void MCField::ffocus(Field_translations function,
 	}
 }
 
-void MCField::freturn(Field_translations function, const char *string, KeySym key)
+void MCField::freturn(Field_translations function, MCStringRef p_string, KeySym key)
 {
-	if (flags & F_AUTO_TAB && cursorrect.y + (cursorrect.height << 1) > rect.y + getfheight())
+    // FG-2014-09-30: [[ Bugfix 13548 ]] Use total height of cursor in calculation
+    if (flags & F_AUTO_TAB && cursorrectp.y + ((cursorrects.height + cursorrectp.height) << 1) > rect.y + getfheight())
 		getcard()->kfocusnext(False);
 	else
 	{
@@ -2017,7 +2041,7 @@ void MCField::freturn(Field_translations function, const char *string, KeySym ke
 			focusedparagraph->clearzeros();
 		textheight -= focusedparagraph->getheight(fixedheight);
 		focusedparagraph->split();
-		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
+		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 		updateparagraph(True, False);
 		focusedy += focusedparagraph->getheight(fixedheight);
 		focusedparagraph = focusedparagraph->next();
@@ -2036,7 +2060,7 @@ void MCField::freturn(Field_translations function, const char *string, KeySym ke
 	}
 }
 
-void MCField::fcenter(Field_translations function, const char *string, KeySym key)
+void MCField::fcenter(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the cursor rect, including any space
 	//   above and below.
@@ -2046,7 +2070,7 @@ void MCField::fcenter(Field_translations function, const char *string, KeySym ke
 	resetscrollbars(True);
 }
 
-void MCField::fscroll(Field_translations function, const char *string, KeySym key)
+void MCField::fscroll(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	// OK-2009-03-19: [[Bug 7667]] - If we are scrolling horizontally and have no horizontal scrollbar, do nothing
 	if (!(flags & F_HSCROLLBAR) && (function == FT_SCROLLLEFT || function == FT_SCROLLRIGHT))
@@ -2108,7 +2132,7 @@ void MCField::fscroll(Field_translations function, const char *string, KeySym ke
 	message_with_args(MCM_scrollbar_drag, newval);
 }
 
-void MCField::fmove(Field_translations function, const char *string, KeySym key)
+void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym key)
 {
 	removecursor();
 
@@ -2167,8 +2191,8 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 	}
 	else if ((function == FT_LEFTCHAR || function == FT_RIGHTCHAR)
 				&& focusedparagraph->isselection())
-	{
-		int4 si, ei;
+    {
+        findex_t si, ei;
 		selectedmark(False, si, ei, False);
 		unselect(False, True);
 		if (function == FT_LEFTCHAR)
@@ -2225,15 +2249,16 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 			MCRectangle trect;
 			switch (moved)
 			{
-				case FT_LEFTCHAR:
-				case FT_LEFTWORD:
+				case FT_BACKCHAR:
+				case FT_BACKWORD:
 				case FT_BOS:
 				case FT_LEFTPARA:
 					if (focusedparagraph != paragraphs)
 					{
 						tptr = focusedparagraph->prev();
 						tptr->fmovefocus(FT_RIGHTPARA);
-						if (moved != FT_LEFTCHAR)
+                        // AL_2014-07-29: [[ Bug 12896 ]] FT_LEFTCHAR is now FT_BACKCHAR here
+						if (moved != FT_BACKCHAR)
 							tptr->fmovefocus((Field_translations)moved);
 						// MW-2012-01-25: [[ ParaStyles ]] Fetch the cursor rect including any space.
 						trect = tptr->getcursorrect(-1, fixedheight, true);
@@ -2241,8 +2266,8 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 						drect.x = trect.x;
 					}
 					break;
-				case FT_RIGHTCHAR:
-				case FT_RIGHTWORD:
+				case FT_FORWARDCHAR:
+				case FT_FORWARDWORD:
 				case FT_EOS:
 				case FT_RIGHTPARA:
 					if (focusedparagraph != paragraphs->prev())
@@ -2252,7 +2277,8 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 						drect.y += focusedparagraph->getheight(fixedheight) - trect.y;
 						tptr = focusedparagraph->next();
 						tptr->fmovefocus(FT_LEFTPARA);
-						if (moved != FT_RIGHTCHAR)
+                        // AL_2014-07-29: [[ Bug 12896 ]] FT_RIGHTCHAR is now FT_FORWARDCHAR here
+						if (moved != FT_FORWARDCHAR)
 							tptr->fmovefocus((Field_translations)moved);
 
 						// MW-2012-01-25: [[ ParaStyles ]] Fetch the cursor rect including any space.
@@ -2282,8 +2308,7 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 	contiguous = True;
 }
 
-void MCField::setupmenu(const MCString &s, uint2 fheight,
-												Boolean scrolling, Boolean isunicode)
+void MCField::setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling)
 {
 	flags = F_VISIBLE | F_SHOW_BORDER | F_ALIGN_LEFT
 	| F_TRAVERSAL_ON | F_F_AUTO_ARM | F_SHARED_TEXT | F_FIXED_HEIGHT
@@ -2291,20 +2316,20 @@ void MCField::setupmenu(const MCString &s, uint2 fheight,
 	if (scrolling)
 	{
 		Boolean dirty;
-		setsbprop(P_VSCROLLBAR, MCtruemcstring, 0, 0,
+		setsbprop(P_VSCROLLBAR, true, 0, 0,
 							scrollbarwidth, hscrollbar, vscrollbar, dirty);
 	}
 	fontheight = fheight;
 	topmargin = bottommargin = 6;
 	borderwidth = 0;
-	settext(0, s, False, isunicode);
+	settext(0, p_string, False);
 
 	// MW-2008-03-14: [[ Bug 5750 ]] Fix to focus border problem in fields used as menu lists in
 	//   (for example) option menus. Set this as a menufield.
 	setstate(True, CS_MENUFIELD);
 }
 
-void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
+void MCField::setupentry(MCButton *bptr, MCStringRef p_string)
 {
 	parent = bptr;
 	obj_id = bptr->getid();
@@ -2322,44 +2347,53 @@ void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
 		topmargin = 6;
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE | F_FIXED_HEIGHT
 		| F_TRAVERSAL_ON | F_AUTO_TAB | F_DONT_WRAP | F_SHARED_TEXT;
-	settext(0, s, False, isunicode);
+	settext(0, p_string, False);
 }
 
 // MW-2014-05-21: [[ Bug 11878 ]] Operate on a c-string copy of newtext as the caller
 //   owns it.
-void MCField::typetext(const MCString &newtext)
+void MCField::typetext(MCStringRef newtext)
 {
-	if (newtext . getlength() == 0)
+	if (MCStringIsEmpty(newtext))
 		return;
-
-    char *t_newtext_cstring;
-    t_newtext_cstring = newtext . clone();
     
 	if (MCactivefield == this)
 		unselect(False, True);
-	if (newtext.getlength() < MAX_PASTE_MESSAGES)
+	
+	MCAutoStringRef t_remaining;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_remaining);
+	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
-		char string[2];
-		string[1] = '\0';
-		char *sptr = t_newtext_cstring;
-		while (sptr[0] != '\0')
+		uindex_t t_index = 0;
+		uindex_t t_length = MCStringGetLength(newtext);
+		while (t_index < t_length)
 		{
-			string[0] = *sptr;
-			if (message_with_args(MCM_key_down, string) == ES_NORMAL)
-				memmove(sptr, sptr + 1, strlen(sptr));
-			else
-				sptr++;
-			message_with_args(MCM_key_up, string);
-		}
+			// Send the next character in the buffer as a key down event
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCopySubstring(newtext, MCRangeMake(t_index, 1), &t_string);
+			if (message_with_valueref_args(MCM_key_down, *t_string) != ES_NORMAL)
+			{
+				// Nothing responded to the key; keep it as text
+				/* UNCHECKED */ MCStringAppendChar(*t_remaining, MCStringGetCharAtIndex(newtext, t_index));
+			}
+			
+			// Key up event then move on
+			message_with_valueref_args(MCM_key_up, *t_string);
+			t_index++;
+		}	
+		
+		// Only the non-handled keypresses should be processed further
+        newtext = *t_remaining;
 	}
-	uint2 oldfocused;
-	focusedparagraph->getselectionindex(oldfocused, oldfocused);
-	state |= CS_CHANGED;
-	if (t_newtext_cstring[0] != '\0' && focusedparagraph->finsertnew(t_newtext_cstring, false))
+	findex_t oldfocused;
+    focusedparagraph->getselectionindex(oldfocused, oldfocused);
+    state |= CS_CHANGED;
+
+    if (!MCStringIsEmpty(newtext) && focusedparagraph->finsertnew(newtext))
 	{
-		do_recompute(true);
-		int4 endindex = oldfocused + strlen(t_newtext_cstring);
-		int4 junk;
+		recompute();
+        findex_t endindex = oldfocused + MCStringGetLength(newtext);
+        findex_t junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
 		{
@@ -2372,7 +2406,6 @@ void MCField::typetext(const MCString &newtext)
 	}
 	else
 		updateparagraph(True, False);
-	delete t_newtext_cstring;
 }
 
 void MCField::startcomposition()
@@ -2383,7 +2416,12 @@ void MCField::startcomposition()
 	composelength = 0;
 }
 
-bool MCField::getcompositionrange(int32_t& si, int32_t& ei)
+void MCField::setcompositioncursoroffset(findex_t coffset)
+{
+	composecursorindex = coffset;
+}
+
+bool MCField::getcompositionrange(findex_t& si, findex_t& ei)
 {
 	if (!composing)
 		return false;
@@ -2394,12 +2432,7 @@ bool MCField::getcompositionrange(int32_t& si, int32_t& ei)
 	return true;
 }
 
-void MCField::setcompositioncursoroffset(uint2 coffset)
-{
-	composecursorindex = coffset;
-}
-
-void MCField::setcompositionconvertingrange(uint1 si, uint1 ei)
+void MCField::setcompositionconvertingrange(findex_t si, findex_t ei)
 {
 	composeconvertingsi = si;
 	composeconvertingei = ei;
@@ -2434,7 +2467,7 @@ void MCField::deletecomposition()
 		return;
 	if (composelength)
 	{
-		int4 composesi, composeei;
+		findex_t composesi, composeei;
 		composesi = composeoffset;
 		composeei = composeoffset+composelength;
 		MCParagraph *pgptr = indextoparagraph(paragraphs, composesi, composeei);
@@ -2447,9 +2480,9 @@ void MCField::deletecomposition()
     composecursorindex = 0;
 }
 
-Boolean MCField::getcompositionrect(MCRectangle &r, int2 offset)
+Boolean MCField::getcompositionrect(MCRectangle &r, findex_t offset)
 {
-	int4 si,ei;
+	findex_t si,ei;
 	if (!composing)
 		return False;
 	MCParagraph *pgptr = NULL;

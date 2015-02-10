@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -25,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "util.h"
 
@@ -45,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#ifdef /* MCS_loadfile_dsk_mac */ LEGACY_SYSTEM
 #include <mach-o/dyld.h>
 
 #define ENTRIES_CHUNK 1024
@@ -111,7 +111,7 @@ static bool MCS_file_exists_at_path(const char *path)
 	struct stat buf;
 	t_found = (stat(newpath, (struct stat *)&buf) == 0);
 	if (t_found)
-        if ((buf . st_mode & S_IFDIR) != 0)
+        if (S_ISDIR(buf.st_mode))
             t_found = false;
     
     delete newpath;
@@ -123,7 +123,7 @@ static bool MCS_file_exists_at_path(const char *path)
 //   the path is taken to be a directory and is always redirected if is within
 //   Contents/MacOS. If p_is_file is true, then the file is only redirected if
 //   the original doesn't exist, and the redirection does.
-// SN-2015-01-16:[[ Bug 14392 ]] The function is no longer static - used in osxspec.cpposxprefi
+// SN-2015-01-16:[[ Bug 14392 ]] The function is no longer static - used in osxspec.cpp
 bool MCS_apply_redirect(char*& x_path, bool p_is_file)
 {
     // If the original file exists, do nothing.
@@ -352,7 +352,9 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
     if (fptr != nil)
         fclose(fptr);
 }
+#endif /* MCS_loadfile_dsk_mac */
 
+#ifdef /* MCS_savefile_dsk_mac */ LEGACY_SYSTEM
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -396,7 +398,9 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 	delete tpath;
 	delete newpath;
 }
+#endif /* MCS_savefile_dsk_mac */
 
+#ifdef LEGACY_SYSTEM
 IO_stat MCS_close(IO_handle &stream)
 {
 	IO_stat stat = IO_NORMAL;
@@ -713,11 +717,11 @@ Boolean MCS_exists(const char *path, Boolean file)
 	if (found)
 		if (file)
 		{
-			if (buf.st_mode & S_IFDIR)
+			if (S_ISDIR(buf.st_mode))
 				found = False;
 		}
 		else
-			if (!(buf.st_mode & S_IFDIR))
+			if (!S_ISDIR(buf.st_mode))
 				found = False;
 	delete newpath;
 	return found;
@@ -2517,3 +2521,4 @@ Boolean MCS_getdrives(MCExecPoint &ep)
 	
 	return True;
 }
+#endif 

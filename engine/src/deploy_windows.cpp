@@ -21,11 +21,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
 #include "statemnt.h"
+#include "osspec.h"
 
 #include "deploy.h"
 
@@ -38,7 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 #ifndef FIELD_OFFSET
-#define FIELD_OFFSET(type, field)    ((LONG)(LONG_PTR)&(((type *)0)->field))
+#define FIELD_OFFSET(type, field)    ((LONG)(intptr_t)&(((type *)0)->field))
 #endif
 
 typedef char CHAR;
@@ -46,10 +48,11 @@ typedef unsigned short WCHAR;
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
-typedef unsigned long DWORD;
 
-typedef long *LONG_PTR;
-typedef long LONG;
+// FG-2014-09-17: [[ Bugfix 13463 ]] "long" is 64 bits on Linux x86_64
+typedef uint32_t DWORD;
+typedef int32_t LONG;
+
 
 #define IMAGE_DOS_SIGNATURE                 0x5A4D      // MZ
 #define IMAGE_OS2_SIGNATURE                 0x454E      // NE
@@ -540,7 +543,7 @@ static inline void swap_dword(DWORD& x)
 #endif
 }
 
-static inline void swap_long(long& x)
+static inline void swap_long(LONG& x)
 {
 #ifdef __BIG_ENDIAN__
 	uint32_t y;
@@ -636,9 +639,16 @@ struct MCWindowsResources
 	bool is_table;
 	union
 	{
-		struct
+		// FG-2014-09-17: [[ Bugfix 13463 ]]
+        // The members of this union should be aligned with similarly-sized
+        // fields in order to prevent issues on 64-bit systems (in particular,
+        // a bool should not be lined up with a pointer as compilers are allowed
+        // to write anything they like into the high-order bytes).
+        struct
 		{
 			uint32_t entry_count;
+            uint32_t _pad_codepage;     // PADDING
+            bool _pad_in_file;          // PADDING
 			MCWindowsResources *entries;
 		} table;
 
@@ -762,7 +772,7 @@ static void MCWindowsResourcesClearIcons(MCWindowsResources& self)
 }
 
 // This method inserts the given icon file into a set of resources using the given id.
-static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, const char *p_icon_file, uint32_t p_id, uint32_t p_culture_id)
+static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_icon_file, uint32_t p_id, uint32_t p_culture_id)
 {
 	bool t_success;
 	t_success = true;
@@ -771,7 +781,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, const char *p_ic
 	MCDeployFileRef t_icon;
 	t_icon = NULL;
 	if (t_success)
-		t_success = MCDeployFileOpen(p_icon_file, "rb", t_icon);
+		t_success = MCDeployFileOpen(p_icon_file, kMCOpenFileModeRead, t_icon);
 
 	// Next read the header - care here to ensure correct structure size
 	ICONDIR t_dir;
@@ -1070,17 +1080,43 @@ static void MCWindowsVersionInfoDestroy(MCWindowsVersionInfo *self)
 	delete self;
 }
 
-static uint64_t MCWindowsVersionInfoParseVersion(const char *p_string)
+static uint64_t MCWindowsVersionInfoParseVersion(MCStringRef p_string)
 {
 	uint32_t a, b, c, d;
-	if (sscanf(p_string, "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
+    MCAutoStringRefAsUTF8String t_string_utf8;
+    /* UNCHECKED */ t_string_utf8 . Lock(p_string);
+	if (sscanf(*t_string_utf8, "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
 		return 0;
 	return 0ULL | ((uint64_t)a << 48) | ((uint64_t)b << 32) | (c << 16) | d;
 }
 
-static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCVariableValue *p_info)
+static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
+    MCWindowsVersionInfo *t_string;
+    MCExecContext ctxt(nil, nil, nil);
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
+	byte_t *t_bytes;
+	uindex_t t_byte_count;
+	/* UNCHECKED */ MCStringConvertToBytes(*t_value, kMCStringEncodingUTF16LE, false, t_bytes, t_byte_count);
+    
+    // FG-2014-09-17: [[ Bugfix 13463 ]] Convert may return 0 bytes for the empty string
+	if (t_byte_count == 0 || t_bytes[t_byte_count - 1] != '\0' || t_bytes[t_byte_count - 2] != '\0')
+	{
+		byte_t* temp = t_bytes;                       
+		t_bytes = new byte_t[t_byte_count + 2];		
+		memcpy(t_bytes, temp, t_byte_count); 
+		t_byte_count +=2;
+		delete temp;
+		t_bytes[t_byte_count - 2] = '\0';
+		t_bytes[t_byte_count - 1] = '\0';	 
+	}
+	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes, t_byte_count, t_string);
+}
+
+static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
+{
+    MCExecContext ctxt(nil, nil, nil);
 
 	bool t_success;
 	t_success = true;
@@ -1089,10 +1125,20 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCVariabl
 	t_file_version = t_product_version = 0;
 	if (t_success)
 	{
-		if (p_info -> fetch_element(ep, "FileVersion") == ES_NORMAL)
-			t_file_version = MCWindowsVersionInfoParseVersion(ep . getcstring());
-		if (p_info -> fetch_element(ep, "ProductVersion") == ES_NORMAL)
-			t_product_version = MCWindowsVersionInfoParseVersion(ep . getcstring());
+        MCValueRef t_value;
+            
+        if (MCArrayFetchValue(p_info, false, MCNAME("FileVersion"), t_value))
+		{
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ctxt . ConvertToString(t_value, &t_string);
+            t_file_version = MCWindowsVersionInfoParseVersion(*t_string); 
+		}
+		if (MCArrayFetchValue(p_info, false, MCNAME("ProductVersion"), t_value))
+		{
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ctxt . ConvertToString(t_value, &t_string);
+            t_product_version = MCWindowsVersionInfoParseVersion(*t_string);
+		}
 	}
 	
 	MCWindowsVersionInfo *t_version_info;
@@ -1137,29 +1183,7 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCVariabl
 		t_success = MCWindowsVersionInfoAdd(t_string_file_info, "040904b0", true, NULL, 0, t_string_table);
 
 	if (t_success)
-	{
-		MCHashentry *t_entry;
-		uint32_t t_index;
-		t_entry = NULL;
-		t_index = 0;
-
-		while(t_success)
-		{
-			t_entry = p_info -> get_array() -> getnextkey(t_index, t_entry);
-			if (t_entry == NULL)
-				break;
-
-			MCWindowsVersionInfo *t_string;
-			if (t_entry -> value . fetch(ep) == ES_NORMAL)
-			{
-				if (ep . getsvalue() . getstring()[ep . getsvalue() . getlength() - 1] != '\0')
-					ep . appendchar('\0');
-				ep . nativetoutf16();
-				swap_uint16s((uint16_t *)ep . getsvalue() . getstring(), ep . getsvalue() . getlength() / 2);
-				t_success = MCWindowsVersionInfoAdd(t_string_table, t_entry -> string, true, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_string);
-			}
-		}
-	}
+		t_success = MCArrayApply(p_info, add_version_info_entry, t_string_table);
 
 	void *t_data;
 	uint32_t t_data_size;
@@ -1200,7 +1224,7 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCVariabl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCWindowsResourcesAddManifest(MCWindowsResources& self, const char *p_manifest_path)
+static bool MCWindowsResourcesAddManifest(MCWindowsResources& self, MCStringRef p_manifest_path)
 {
 	bool t_success;
 	t_success = true;
@@ -1209,7 +1233,7 @@ static bool MCWindowsResourcesAddManifest(MCWindowsResources& self, const char *
 	MCDeployFileRef t_manifest;
 	t_manifest = NULL;
 	if (t_success)
-		t_success = MCDeployFileOpen(p_manifest_path, "rb", t_manifest);
+		t_success = MCDeployFileOpen(p_manifest_path, kMCOpenFileModeRead, t_manifest);
 
 	// Measure the manifest
 	uint32_t t_size;
@@ -1572,7 +1596,7 @@ static bool MCDeployToWindowsReadHeaders(MCDeployFileRef p_file, IMAGE_DOS_HEADE
 	if (r_dos_header . e_magic != IMAGE_DOS_SIGNATURE)
 		return MCDeployThrow(kMCDeployErrorWindowsBadDOSSignature);
 
-	if (!MCDeployFileSeek(p_file, r_dos_header . e_lfanew, SEEK_SET))
+	if (!MCDeployFileSeekSet(p_file, r_dos_header . e_lfanew))
 		return MCDeployThrow(kMCDeployErrorWindowsBadDOSHeader);
 
 	if (!MCDeployFileRead(p_file, &r_nt_header, sizeof(IMAGE_NT_HEADERS)))
@@ -1583,7 +1607,7 @@ static bool MCDeployToWindowsReadHeaders(MCDeployFileRef p_file, IMAGE_DOS_HEADE
 	if (r_nt_header . Signature != IMAGE_NT_SIGNATURE)
 		return MCDeployThrow(kMCDeployErrorWindowsBadNTSignature);
 
-	if (!MCDeployFileSeek(p_file, r_dos_header . e_lfanew + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + r_nt_header . FileHeader . SizeOfOptionalHeader, SEEK_SET))
+	if (!MCDeployFileSeekSet(p_file, r_dos_header . e_lfanew + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + r_nt_header . FileHeader . SizeOfOptionalHeader))
 		return MCDeployThrow(kMCDeployErrorWindowsBadSectionHeaderOffset);
 
 	r_section_headers = new IMAGE_SECTION_HEADER[r_nt_header . FileHeader . NumberOfSections];
@@ -1624,11 +1648,11 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	t_success = true;
 
 	// First thing to do is to open the files.
-	FILE *t_engine, *t_output;
+	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . engine, "rb", t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// First load the headers we need
@@ -1644,7 +1668,7 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	if (t_success)
 	{
 		t_section_count = t_nt_header . FileHeader . NumberOfSections;
-		if (p_params . payload != nil)
+		if (!MCStringIsEmpty(p_params . payload))
 			t_payload_section = &t_section_headers[t_section_count - 3];
 		else
 			t_payload_section = nil;
@@ -1655,8 +1679,8 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	// Next we check that there are at least two sections, and they are the
 	// right ones.
 	if (t_success &&
-		(p_params . payload == nil && t_section_count < 2 ||
-			p_params . payload != nil && t_section_count < 3))
+		(MCStringIsEmpty(p_params . payload) && t_section_count < 2 ||
+			!MCStringIsEmpty(p_params . payload) && t_section_count < 3))
 		t_success = MCDeployThrow(kMCDeployErrorWindowsMissingSections);
 	if (t_success && memcmp(t_resource_section -> Name, ".rsrc", 6) != 0)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoResourceSection);
@@ -1679,16 +1703,16 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	
 	// If we are setting both app and doc icons, clear out the existing
 	// icon resources
-	if (t_success && p_params . app_icon != NULL && p_params . doc_icon != NULL)
+	if (t_success && !MCStringIsEmpty(p_params . app_icon) && !MCStringIsEmpty(p_params . doc_icon))
 		MCWindowsResourcesClearIcons(t_resources);
 
-	if (t_success && p_params . app_icon != NULL)
+	if (t_success && !MCStringIsEmpty(p_params . app_icon))
 	{
 		t_success = MCWindowsResourcesAddIcon(t_resources, p_params . app_icon, 111, 0x0409);
 		if (!t_success)
 			t_success = MCDeployThrow(kMCDeployErrorWindowsBadAppIcon);
 	}
-	if (t_success && p_params . doc_icon != NULL)
+	if (t_success && !MCStringIsEmpty(p_params . doc_icon))
 	{
 		t_success = MCWindowsResourcesAddIcon(t_resources, p_params . doc_icon, 112, 0x0409);
 		if (!t_success)
@@ -1697,11 +1721,11 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 
 	// If there is a version info array, then build a VERSIONINFO resource and
 	// add it.
-	if (t_success && p_params . version_info != NULL)
+	if (t_success && !MCArrayIsEmpty(p_params . version_info))
 		t_success = MCWindowsResourcesAddVersionInfo(t_resources, p_params . version_info);
 
 	// Add the manifest to the resources
-	if (t_success && p_params . manifest != NULL)
+	if (t_success && !MCStringIsEmpty(p_params . manifest))
 		t_success = MCWindowsResourcesAddManifest(t_resources, p_params . manifest);
 
 	// Now we have the various references we need and have prepared the
@@ -1820,10 +1844,8 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	if (t_section_headers != NULL)
 		delete[] t_section_headers;
 
-	if (t_engine != NULL)
-		fclose(t_engine);
-	if (t_output != NULL)
-		fclose(t_output);
+	MCDeployFileClose(t_engine);
+	MCDeployFileClose(t_output);
 
 	return t_success ? ES_NORMAL : ES_ERROR;
 }

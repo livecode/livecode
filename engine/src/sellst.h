@@ -75,7 +75,7 @@ public:
 	MCSellist();
 	~MCSellist();
 	MCObject *getfirst();
-	void getids(MCExecPoint &);
+	bool getids(MCListRef& r_list);
 	void clear(Boolean message);
 	void top(MCObject *objptr);
 	void replace(MCObject *objptr);
@@ -84,7 +84,7 @@ public:
 	void sort();
 	uint32_t count();
 	MCControl *clone(MCObject *target);
-	Exec_stat group(uint2 line, uint2 pos);
+	Exec_stat group(uint2 line = 0, uint2 pos = 0);
 	Boolean copy();
 	Boolean cut();
 	Boolean del();

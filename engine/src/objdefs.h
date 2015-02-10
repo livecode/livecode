@@ -47,9 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define STACK_SIZE "10000"
 #define FREE_SIZE  "0"
-#define HEAP_SPACE  "1000000"
 #define DISK_SPACE  "1000000"
-#define STACK_SPACE  "1000000"
 
 #define START_ID 1001
 
@@ -296,7 +294,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define F_HAS_SHIFT             (1UL << 16)
 #define F_HAS_BACK_COLOR        (1UL << 17)
 #define F_HAS_COLOR_NAME        (1UL << 18)
-#define F_HAS_TAB               (1UL << 19)
+// SN-2014-12-04: [[ Bug 14149 ]] Flag required for saving in legacy format.
+#define F_HAS_TAB               (1UL << 19) // [[ TabAlignments ]] No longer required
 #define F_HAS_BACK_COLOR_NAME   (1UL << 20)
 #define F_HAS_LINK              (1UL << 21)
 #define F_HAS_IMAGE             (1UL << 22)
@@ -585,11 +584,11 @@ Keynames;
 typedef struct _Linkatts
 {
 	MCColor color;
-	char *colorname;
+	MCStringRef colorname;
 	MCColor hilitecolor;
-	char *hilitecolorname;
+	MCStringRef hilitecolorname;
 	MCColor visitedcolor;
-	char *visitedcolorname;
+	MCStringRef visitedcolorname;
 	Boolean underline;
 }
 Linkatts;
@@ -668,7 +667,7 @@ enum Etch {
 enum Field_translations {
     FT_UNDEFINED,
     FT_DELBCHAR,
-	FT_DELBSUBCHAR = FT_DELBCHAR,
+	FT_DELBSUBCHAR,
     FT_DELBWORD,
     FT_DELFCHAR,
     FT_DELFWORD,
@@ -690,15 +689,15 @@ enum Field_translations {
     FT_PARAGRAPH,
 	FT_PARAGRAPHAFTER,
     FT_LEFTCHAR,
-	FT_BACKCHAR = FT_LEFTCHAR,
+	FT_BACKCHAR,
     FT_LEFTWORD,
-	FT_BACKWORD = FT_LEFTWORD,
+	FT_BACKWORD,
 	FT_LEFTPARA,
 	FT_BACKPARA = FT_LEFTPARA,
     FT_RIGHTCHAR,
-	FT_FORWARDCHAR = FT_RIGHTCHAR,
+	FT_FORWARDCHAR,
     FT_RIGHTWORD,
-	FT_FORWARDWORD = FT_RIGHTWORD,
+	FT_FORWARDWORD,
 	FT_RIGHTPARA,
 	FT_FORWARDPARA = FT_RIGHTPARA,
     FT_UP,

@@ -32,7 +32,7 @@
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
-static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_t p_size)
+static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_t p_size)
 {
 	/*CFStringRef t_name;
 	t_name = CFStringCreateWithCString(NULL, p_name, kCFStringEncodingMacRoman);
@@ -51,13 +51,8 @@ static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_
     bool t_success;
     t_success = true;
     
-    CFStringRef t_name;
-    t_name = NULL;
-    if (t_success)
-    {
-        t_name = CFStringCreateWithCString(NULL, p_name, kCFStringEncodingMacRoman);
-        t_success = t_name != NULL;
-    }
+    MCAutoStringRefAsCFString t_cf_name;
+    t_success = t_cf_name . Lock(p_name);
     
     CFDictionaryRef t_attributes;
     t_attributes = NULL;
@@ -77,9 +72,9 @@ static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_
 //            kCTFontFamilyNameAttribute,
         };
         CFTypeRef t_values[] = {
-            t_name,
-            t_name,
-            t_name,
+            *t_cf_name,
+            *t_cf_name,
+            *t_cf_name,
         };
         t_attributes = CFDictionaryCreate(NULL,
                                           (const void **)&t_keys, (const void **)&t_values,
@@ -107,13 +102,11 @@ static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_
         CFRelease(t_descriptor);
     if (t_attributes != NULL)
         CFRelease(t_attributes);
-    if (t_name != NULL)
-        CFRelease(t_name);
     
     return (void *)t_font;
 }
 
-void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic)
+void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic)
 {
     /*bool t_success;
     t_success = true;
@@ -228,31 +221,38 @@ void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t
 	return (void *)t_font;
 }
 
-void coretext_font_destroy(void *p_font)
+bool coretext_font_destroy(void *p_font)
 {
     if (p_font != NULL)
         CFRelease((CTFontRef) p_font);
+    
+    return true;
 }
 
-void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
+bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
 {
 	r_ascent = CTFontGetAscent((CTFontRef) p_font);
 	r_descent = CTFontGetDescent((CTFontRef) p_font);
+    
+    return true;
 }
 
-void coretext_get_font_names(MCExecPoint &ep)
+bool coretext_get_font_names(MCListRef &r_names)
 {
-    ep . clear();
-    
     CTFontCollectionRef t_fonts;
     t_fonts = CTFontCollectionCreateFromAvailableFonts(NULL);
     
     CFArrayRef t_descriptors;
     t_descriptors = CTFontCollectionCreateMatchingFontDescriptors(t_fonts);
     
-    char t_cstring_font_name[256];
+    MCAutoListRef t_names;
+    MCListCreateMutable('\n', &t_names);
     
-    for(CFIndex i = 0; i < CFArrayGetCount(t_descriptors); i++)
+    char t_cstring_font_name[256];
+    bool t_success;
+    t_success = true;
+    
+    for(CFIndex i = 0; t_success && i < CFArrayGetCount(t_descriptors); i++)
     {
         CTFontDescriptorRef t_font;
 		t_font = (CTFontDescriptorRef)CFArrayGetValueAtIndex(t_descriptors, i);
@@ -261,8 +261,8 @@ void coretext_get_font_names(MCExecPoint &ep)
         t_font_name = (CFStringRef)CTFontDescriptorCopyAttribute(t_font, kCTFontDisplayNameAttribute);
         
 		if (t_font_name != NULL && CFStringGetCString(t_font_name, t_cstring_font_name, 256, kCFStringEncodingMacRoman) &&
-            t_cstring_font_name[0] != '%' && t_cstring_font_name[0] != '.')
-			ep . concatcstring(t_cstring_font_name, EC_RETURN, i == 0);
+                t_cstring_font_name[0] != '%' && t_cstring_font_name[0] != '.')
+			t_success = MCListAppendCString(*t_names, t_cstring_font_name);
         
         if (t_font_name != NULL)
             CFRelease(t_font_name);
@@ -272,54 +272,62 @@ void coretext_get_font_names(MCExecPoint &ep)
         CFRelease(t_descriptors);
     if (t_fonts != NULL)
         CFRelease(t_fonts);
+    
+    if (t_success)
+        t_success = MCListCopy(*t_names, r_names);
+    return t_success;
 }
 
-void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint &ep)
-{
-	ep . clear();
-    
+bool core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles)
+{    
     CTFontRef t_font_family;
     t_font_family = (CTFontRef)coretext_font_create_with_name_and_size(p_name, p_size);
+    
+    MCAutoListRef t_styles;
+    /* UNCHECKED */ MCListCreateMutable('\n', &t_styles);
+    
+    bool t_success;
+    t_success = true;
 	
 	if (t_font_family != NULL)
 	{
 		CTFontSymbolicTraits t_traits;
 		t_traits = CTFontGetSymbolicTraits(t_font_family);
 		
-		ep . concatcstring("plain", EC_RETURN, true);
+		t_success = MCListAppendCString(*t_styles, "plain");
         
-		if (t_traits & kCTFontBoldTrait)
-			ep . concatcstring("bold", EC_RETURN, false);
+		if (t_success && t_traits & kCTFontBoldTrait)
+			t_success = MCListAppendCString(*t_styles, "bold");
 		
-		if (t_traits & kCTFontItalicTrait)
-			ep . concatcstring("italic", EC_RETURN, false);
+		if (t_success && t_traits & kCTFontItalicTrait)
+			t_success = MCListAppendCString(*t_styles, "italic");
         
-		if (t_traits & kCTFontBoldTrait && t_traits & kCTFontItalicTrait)
-			ep . concatcstring("bold-italic", EC_RETURN, false);
+		if (t_success && t_traits & kCTFontBoldTrait && t_traits & kCTFontItalicTrait)
+			t_success = MCListAppendCString(*t_styles, "bold-italic");
 	}
 	
     if (t_font_family != NULL)
         CFRelease(t_font_family);
+    
+    if (t_success)
+        t_success = MCListCopy(*t_styles, r_styles);
+    
+    return t_success;
 }
 
-bool coretext_font_load_from_path(const char *p_path, bool p_globally)
+bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally)
 {
     bool t_success;
     t_success = true;
     
-    CFStringRef t_path;
-    t_path = NULL;
-    if (t_success)
-    {
-        t_path = CFStringCreateWithCString(NULL, p_path, kCFStringEncodingUTF8);
-        t_success = t_path != NULL;
-    }
+    MCAutoStringRefAsCFString t_cf_path;
+    t_success = t_cf_path . Lock(p_path);
     
     CFURLRef t_font_url;
     t_font_url = NULL;
     if (t_success)
     {
-        t_font_url = CFURLCreateWithFileSystemPath(NULL, t_path, kCFURLPOSIXPathStyle, false);
+        t_font_url = CFURLCreateWithFileSystemPath(NULL, *t_cf_path, kCFURLPOSIXPathStyle, false);
         t_success = t_font_url != NULL;
     }
     
@@ -335,30 +343,23 @@ bool coretext_font_load_from_path(const char *p_path, bool p_globally)
     
     if (t_font_url != NULL)
         CFRelease(t_font_url);
-    if (t_path != NULL)
-        CFRelease(t_path);
     
     return t_success;
 }
 
-bool coretext_font_unload(const char *p_path, bool p_globally)
+bool coretext_font_unload(MCStringRef p_path, bool p_globally)
 {
     bool t_success;
     t_success = true;
     
-    CFStringRef t_path;
-    t_path = NULL;
-    if (t_success)
-    {
-        t_path = CFStringCreateWithCString(NULL, p_path, kCFStringEncodingUTF8);
-        t_success = t_path != NULL;
-    }
+    MCAutoStringRefAsCFString t_cf_path;
+    t_success = t_cf_path . Lock(p_path);
     
     CFURLRef t_font_url;
     t_font_url = NULL;
     if (t_success)
     {
-        t_font_url = CFURLCreateWithFileSystemPath(NULL, t_path, kCFURLPOSIXPathStyle, false);
+        t_font_url = CFURLCreateWithFileSystemPath(NULL, *t_cf_path, kCFURLPOSIXPathStyle, false);
         t_success = t_font_url != NULL;
     }
     
@@ -374,8 +375,6 @@ bool coretext_font_unload(const char *p_path, bool p_globally)
     
     if (t_font_url != NULL)
         CFRelease(t_font_url);
-    if (t_path != NULL)
-        CFRelease(t_path);
     
     return t_success;
 }

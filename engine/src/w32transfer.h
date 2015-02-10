@@ -137,7 +137,7 @@ public:
 	// Returns the data to which the object is bound. If the object is not
 	// valid (i.e. Valid() is false), or the data it is bound to is not of
 	// HGLOBAL type, the empty string is returned.
-	MCString Get(void) const;
+	void Get(MCDataRef& r_data);
 
 	// Return the HGLOBAL handle to which the object is bound, or NULL if
 	// it is not bound to such a handle.
@@ -289,7 +289,7 @@ private:
 //    Note that the pUnkForRelease member of the STGMEDIUM structure must be
 //    empty on exit.
 //
-typedef bool (*MCWindowsConversionCallback)(MCSharedString *p_input, STGMEDIUM& r_storage);
+typedef bool (*MCWindowsConversionCallback)(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -332,19 +332,19 @@ public:
 	// 
 	// Requests for the data are satisfied by processing <p_data> using
 	// <p_converter>. If <p_converter> is NULL, <p_data> is used directly.
-	bool Publish(FORMATETC *p_format, MCSharedString *p_data, MCWindowsConversionCallback p_converter);
+	bool Publish(FORMATETC *p_format, MCDataRef p_data, MCWindowsConversionCallback p_converter);
 
 	// Publish the given clipboard format in this object
 	//
 	// This is a simple wrapper around Publish(FORMATETC* ...) which just
 	// constructs a standard FORMATETC structure.
-	bool Publish(CLIPFORMAT p_format, TYMED p_storage, MCSharedString *p_data, MCWindowsConversionCallback p_converter);
+	bool Publish(CLIPFORMAT p_format, TYMED p_storage, MCDataRef p_data, MCWindowsConversionCallback p_converter);
 
 	// Publish the given Revolution transfer type in this object
 	//
 	// This call will publish appropriate external formats for the given
 	// internal format
-	bool Publish(MCTransferType p_type, MCSharedString *p_data);
+	bool Publish(MCTransferType p_type, MCDataRef p_data);
 
 	// Publish the contents of the Revolution pasteboard in this object
 	//
@@ -442,7 +442,7 @@ private:
 	{
 		FORMATETC format;
 		STGMEDIUM storage;
-		MCSharedString *data;
+		MCDataRef data;
 		MCWindowsConversionCallback converter;
 	};
 
@@ -522,7 +522,7 @@ public:
 	//
 	// If the fetch fails for any reason, false is returned.
 	//
-	bool Fetch(MCTransferType p_type, MCSharedString*& r_data);
+	bool Fetch(MCTransferType p_type, MCDataRef& r_data);
 
 private:
 	// An Entry represents a given type that is published by the underlying
@@ -534,7 +534,7 @@ private:
 	{
 		MCTransferType type;
 		CLIPFORMAT format;
-		MCSharedString *data;
+		MCDataRef data;
 	};
 
 	// The number of references to this object
@@ -582,7 +582,7 @@ private:
 //    Note when publishing text in this manner, a CF_LOCALE format should
 //    accompany it with the setting Windows-1252.
 //
-bool MCConvertTextToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -596,7 +596,7 @@ bool MCConvertTextToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_storage);
 //    This function first converts line endings from LF to CRLF, then converts
 //    the text to Unicode.
 //
-bool MCConvertTextToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -610,7 +610,7 @@ bool MCConvertTextToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_storage);
 //    This call first converts the text to UTF-8, does an LF -> CRLF mapping
 //    then converts to UTF-16 in host byte order.
 //
-bool MCConvertUnicodeToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertUnicodeToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -624,7 +624,7 @@ bool MCConvertUnicodeToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_storage
 //    This call first converts the text to UTF-8 and does an LF -> CRLF
 //    mapping, it then converts the text to the current code page.
 //
-bool MCConvertUnicodeToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertUnicodeToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -638,7 +638,7 @@ bool MCConvertUnicodeToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_storage
 //    This call chains a conversion from styled text to unicode, then unicode
 //    to windows wide.
 //
-bool MCConvertStyledTextToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertStyledTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -652,7 +652,7 @@ bool MCConvertStyledTextToWindowsWide(MCSharedString *p_input, STGMEDIUM& r_stor
 //    This call chains a conversion from styled text to text, then text to
 //    windows ansi.
 //
-bool MCConvertStyledTextToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertStyledTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -663,7 +663,7 @@ bool MCConvertStyledTextToWindowsAnsi(MCSharedString *p_input, STGMEDIUM& r_stor
 //    Convert the given input string in the internal Revolution styled text
 //    format to RTF suitable to be published on the Windows clipboard.
 //
-bool MCConvertStyledTextToWindowsRTF(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertStyledTextToWindowsRTF(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -678,7 +678,7 @@ bool MCConvertStyledTextToWindowsRTF(MCSharedString *p_input, STGMEDIUM& r_stora
 //    representing it. The image data will be composited with a background
 //    of black.
 //
-bool MCConvertImageToWindowsBitmap(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertImageToWindowsBitmap(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -692,7 +692,7 @@ bool MCConvertImageToWindowsBitmap(MCSharedString *p_input, STGMEDIUM& r_storage
 //    This call decompresses the image and creates a Windows DIBV5 structure
 //    representing it.
 //
-bool MCConvertImageToWindowsV5Bitmap(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertImageToWindowsV5Bitmap(MCDataRef p_input, STGMEDIUM& r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -707,8 +707,9 @@ bool MCConvertImageToWindowsV5Bitmap(MCSharedString *p_input, STGMEDIUM& r_stora
 //    object. The image data is rendered into the metafile using the AlphaBlend
 //    call.
 //
-bool MCConvertImageToWindowsMetafile(MCSharedString *p_input, STGMEDIUM& r_storage);
-bool MCConvertImageToWindowsEnhancedMetafile(MCSharedString *p_input, STGMEDIUM &r_storage);
+
+bool MCConvertImageToWindowsMetafile(MCDataRef p_input, STGMEDIUM& r_storage);
+bool MCConvertImageToWindowsEnhancedMetafile(MCDataRef p_input, STGMEDIUM &r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -718,6 +719,6 @@ bool MCConvertImageToWindowsEnhancedMetafile(MCSharedString *p_input, STGMEDIUM 
 //  Description:
 //    Convert the given list of files to a windows HDROP object.
 //
-bool MCConvertFilesToWindowsHDROP(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertFilesToWindowsHDROP(MCDataRef p_input, STGMEDIUM& r_storage);
 
 #endif

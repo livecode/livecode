@@ -1,0 +1,18 @@
+setup " <a> is among the keys of the clipboarddata "
+
+set the clipboarddata["unicode"] to uniencode("some text")
+test "text" is among the keys of the clipboarddata
+test "unicode" is among the keys of the clipboarddata
+test not ("not a key" is among the keys of the clipboarddata)
+
+teardown
+
+
+setup " <a> is not among the keys of the clipboarddata "
+
+set the clipboarddata["unicode"] to uniencode("some text")
+test not ("text" is not among the keys of the clipboarddata)
+test not ("unicode" is not among the keys of the clipboarddata)
+test "not a key" is not among the keys of the clipboarddata
+
+teardown

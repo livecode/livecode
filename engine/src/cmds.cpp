@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "newobj.h"
@@ -54,10 +54,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cmds.h"
 #include "mode.h"
 #include "osspec.h"
-
-#include "core.h"
+#include "hndlrlst.h"
 
 #include "securemode.h"
+#include "syntax.h"
 #include "stacksecurity.h"
 
 #include "license.h"
@@ -65,6 +65,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifdef _SERVER
 #include "srvscript.h"
 #endif
+
+#include "exec.h"
 
 MCChoose::~MCChoose()
 {
@@ -104,7 +106,7 @@ Parse_stat MCChoose::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCChoose::exec(MCExecPoint &ep)
+void MCChoose::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCChoose */ LEGACY_EXEC
 	if (etool != NULL)
@@ -114,15 +116,36 @@ Exec_stat MCChoose::exec(MCExecPoint &ep)
 			(EE_CHOOSE_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-	return MCU_choose_tool(ep, littool, line, pos);
+	return MCU_choose_tool(ep, littool, line, pos); 
 #endif /* MCChoose */
+
+    MCAutoStringRef t_string;
+    if (!ctxt . EvalOptionalExprAsStringRef(etool, kMCEmptyString, EE_CHOOSE_BADEXP, &t_string))
+        return;
+    
+    MCInterfaceExecChooseTool(ctxt, *t_string, littool);
+}
+
+void MCChoose::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (etool != nil)
+		etool -> compile(ctxt);
+	else
+		MCSyntaxFactoryEvalConstantNil(ctxt);
+
+	MCSyntaxFactoryEvalConstantInt(ctxt, littool);
+
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecChooseToolMethodInfo, 1);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCConvert::~MCConvert()
 {
 	delete container;
 	delete source;
-	delete it;
 }
 
 Parse_stat MCConvert::parse(MCScriptPoint &sp)
@@ -143,7 +166,6 @@ Parse_stat MCConvert::parse(MCScriptPoint &sp)
 			(PE_CONVERT_NOCONTAINER, sp);
 			return PS_ERROR;
 		}
-		getit(sp, it);
 	}
 	else
 		MCerrorlock--;
@@ -258,7 +280,7 @@ Parse_stat MCConvert::parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
 	return PS_NORMAL;
 }
 
-Exec_stat MCConvert::exec(MCExecPoint &ep)
+void MCConvert::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCConvert */ LEGACY_EXEC
 	MCresult->clear(False);
@@ -284,20 +306,65 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 	Exec_stat stat;
-	if (it != NULL)
-		stat = it->set
-		       (ep);
+	if (container == NULL)
+		stat = ep . getit() -> set(ep);
 	else
-		stat = container->set
-		       (ep, PT_INTO);
+		stat = container->set(ep, PT_INTO);
+	
 	if (stat != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_CONVERT_CANTSET, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
-	return ES_NORMAL;
+	return ES_NORMAL; 
 #endif /* MCConvert */
+
+    MCAutoStringRef t_input;
+	MCAutoStringRef t_output;
+	if (container != NULL)
+    {
+        if (!ctxt . EvalExprAsStringRef(container, EE_CONVERT_CANTGET, &t_input))
+            return;
+    }
+	else
+	{
+        if (!ctxt . EvalExprAsStringRef(source, EE_CONVERT_CANTGET, &t_input))
+            return;
+    }
+
+	if (container == NULL)
+        MCDateTimeExecConvertIntoIt(ctxt, *t_input, fform, fsform, pform, sform);
+	else
+	{
+		MCDateTimeExecConvert(ctxt, *t_input, fform, fsform, pform, sform, &t_output);
+        container -> set(ctxt, PT_INTO, *t_output);
+
+        if (ctxt . HasError())
+            ctxt . LegacyThrow(EE_CONVERT_CANTSET, *t_output);
+	}
+}
+
+void MCConvert::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	
+	if (container == nil)
+		source -> compile(ctxt);
+	else
+		container -> compile_inout(ctxt);
+
+	MCSyntaxFactoryEvalConstantInt(ctxt, fform);
+	MCSyntaxFactoryEvalConstantInt(ctxt, fsform);
+	MCSyntaxFactoryEvalConstantInt(ctxt, pform);
+	MCSyntaxFactoryEvalConstantInt(ctxt, sform);
+	
+	if (container == nil)
+		MCSyntaxFactoryExecMethod(ctxt, kMCDateTimeExecConvertIntoItMethodInfo);
+	else
+		MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCDateTimeExecConvertMethodInfo, 0, 1, 2, 3, 4, 0);
+	
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCDo::~MCDo()
@@ -309,7 +376,6 @@ MCDo::~MCDo()
 Parse_stat MCDo::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	h = sp.gethandler();
 	if (sp.parseexp(False, True, &source) != PS_NORMAL)
 	{
 		MCperror->add(PE_DO_BADEXP, sp);
@@ -342,7 +408,7 @@ Parse_stat MCDo::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDo::exec(MCExecPoint &ep)
+void MCDo::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCDo */ LEGACY_EXEC
 	MCExecPoint *epptr;
@@ -409,7 +475,7 @@ Exec_stat MCDo::exec(MCExecPoint &ep)
 			epptr = MCexecutioncontexts[MCnexecutioncontexts - 2];
 		}
 		else
-			epptr = &ep;
+		epptr = &ep;
 	}
 	if (source->eval(*epptr) != ES_NORMAL)
 	{
@@ -418,11 +484,79 @@ Exec_stat MCDo::exec(MCExecPoint &ep)
 		MCeerror->add(EE_DO_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	Exec_stat stat = h->doscript(*epptr, line, pos);
+	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then evaluate in context of the
+	//   server script object.
+	Exec_stat stat;
+	if (ep . gethandler() != nil)
+		stat = ep.gethandler()->doscript(*epptr, line, pos);
+	else
+		stat = ep.gethlist()->doscript(*epptr, line, pos);
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
 #endif /* MCDo */
+
+    MCAutoStringRef t_script;
+    if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
+        return;
+    
+    if (browser)
+    {
+        MCLegacyExecDoInBrowser(ctxt, *t_script);
+        return;        
+    }
+    
+    if (alternatelang != NULL)
+	{
+        MCAutoStringRef t_language;
+        if (!ctxt . EvalExprAsStringRef(alternatelang, EE_DO_BADLANG, &t_language))
+            return;
+        
+        MCScriptingExecDoAsAlternateLanguage(ctxt, *t_script, *t_language);
+        return;
+	}
+    
+    if (debug)
+	{
+		MCDebuggingExecDebugDo(ctxt, *t_script, line, pos);
+        return;
+	}
+    
+    // AL-2014-11-17: [[ Bug 14044 ]] Do in caller not implemented
+    if (caller)
+    {
+        MCEngineExecDoInCaller(ctxt, *t_script, line, pos);
+        return;
+    }
+
+	MCEngineExecDo(ctxt, *t_script, line, pos);
+}
+
+void MCDo::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+
+	if (browser)
+		MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecDoInBrowserMethodInfo);
+	else if (alternatelang != nil)
+	{
+		alternatelang -> compile(ctxt);
+		MCSyntaxFactoryExecMethod(ctxt, kMCScriptingExecDoAsAlternateLanguageMethodInfo);
+	}
+	else 
+	{
+		MCSyntaxFactoryEvalConstantInt(ctxt, line);
+		MCSyntaxFactoryEvalConstantInt(ctxt, pos);
+
+		if (debug)
+			MCSyntaxFactoryExecMethod(ctxt, kMCDebuggingExecDebugDoMethodInfo);
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecDoMethodInfo);
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 typedef struct
@@ -498,11 +632,11 @@ Scroll To Selection, Replace..., Replace Again, Comment, Uncomment,
 Set Checkpoint, Step, Step Into, Trace, Go, Trace Delay..., Abort,
 Variable Watcher, Message Watcher
 */
-const char *MCDoMenu::lookup(const MCString &s)
+const char *MCDoMenu::lookup(MCStringRef s)
 {
 	uint2 size = ELEMENTS(domenu_table);
 	while(size--)
-		if (s == domenu_table[size].token)
+		if (MCStringIsEqualToCString(s, domenu_table[size].token, kMCCompareCaseless))
 			return domenu_table[size].command;
 	return NULL;
 }
@@ -524,7 +658,7 @@ Parse_stat MCDoMenu::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCDoMenu::exec(MCExecPoint &ep)
+void MCDoMenu::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCDoMenu */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -546,8 +680,25 @@ Exec_stat MCDoMenu::exec(MCExecPoint &ep)
 	{
 		ep.getobj()->domess(dstring);
 	}
-	return ES_NORMAL;
+	return ES_NORMAL; 
 #endif /* MCDoMenu */
+
+    MCAutoStringRef t_option;
+    if (!ctxt . EvalExprAsStringRef(source, EE_DOMENU_BADEXP, &t_option))
+        return;
+    
+    MCLegacyExecDoMenu(ctxt, *t_option);
+}
+
+void MCDoMenu::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source-> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecDoMenuMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCEdit::~MCEdit()
@@ -588,7 +739,7 @@ Parse_stat MCEdit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCEdit::exec(MCExecPoint &ep)
+void MCEdit::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCEdit */ LEGACY_EXEC
 	MCObject *optr;
@@ -624,6 +775,32 @@ Exec_stat MCEdit::exec(MCExecPoint &ep)
 
 	return ES_NORMAL;
 #endif /* MCEdit */
+
+	MCObject *optr;
+    uint4 parid;
+    if (!target->getobj(ctxt, optr, parid, True))
+    {
+        ctxt . LegacyThrow(EE_EDIT_BADTARGET);
+        return;
+    }
+
+    // MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
+    MCAutoStringRef t_at;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(m_at, EE_EDIT_BADAT, &t_at))
+        return;
+
+    MCIdeExecEditScriptOfObject(ctxt, optr, *t_at);
+}
+
+void MCEdit::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	
+	target -> compile_object_ptr(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCIdeExecEditScriptOfObjectMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCFind::~MCFind()
@@ -668,7 +845,7 @@ Parse_stat MCFind::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCFind::exec(MCExecPoint &ep)
+void MCFind::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCFind */ LEGACY_EXEC
 	if (tofind->eval(ep) != ES_NORMAL)
@@ -687,12 +864,34 @@ Exec_stat MCFind::exec(MCExecPoint &ep)
 	MCdefaultstackptr->find(ep, mode, ep.getsvalue(), field);
 	return ES_NORMAL;
 #endif /* MCFind */
+
+    MCAutoStringRef t_needle;
+    if (!ctxt . EvalExprAsStringRef(tofind, EE_FIND_BADSTRING, &t_needle))
+        return;
+
+    MCInterfaceExecFind(ctxt, mode, *t_needle, field);
+    
+    // SN-2014-03-21: [[ Bug 11949 ]] 'find' shouldn't throw an error on a failure
+    // but MCInterfaceExecFind would cause the context to be set on error if finding fails
+    ctxt . IgnoreLastError();
+}
+
+void MCFind::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	MCSyntaxFactoryEvalConstantInt(ctxt, mode);
+	tofind -> compile(ctxt);
+	field -> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecFindMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCGet::~MCGet()
 {
 	delete value;
-	delete it;
 }
 
 Parse_stat MCGet::parse(MCScriptPoint &sp)
@@ -704,28 +903,41 @@ Parse_stat MCGet::parse(MCScriptPoint &sp)
 		(PE_GET_BADEXP, sp);
 		return PS_ERROR;
 	}
-	getit(sp, it);
 	return PS_NORMAL;
 }
 
-Exec_stat MCGet::exec(MCExecPoint &ep)
+void MCGet::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCGet */ LEGACY_EXEC
 	if (value->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add
-		(EE_GET_BADEXP, line, pos);
+		MCeerror->add(EE_GET_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	if (it->set
-	        (ep) != ES_NORMAL)
+	if (ep.getit()->set(ep) != ES_NORMAL)
 	{
-		MCeerror->add
-		(EE_GET_CANTSET, line, pos, ep.getsvalue());
+		MCeerror->add(EE_GET_CANTSET, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
 #endif /* MCGet */
+
+    MCAutoValueRef t_value;
+    if (!ctxt . EvalExprAsValueRef(value, EE_GET_BADEXP, &t_value))
+        return;
+
+    MCEngineExecGet(ctxt, *t_value);
+}
+
+void MCGet::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	value -> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecGetMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCMarking::~MCMarking()
@@ -835,7 +1047,7 @@ if (sp.next(type) != PS_NORMAL)
 	return PS_NORMAL;
 }
 
-Exec_stat MCMarking::exec(MCExecPoint &ep)
+void MCMarking::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCMarking */ LEGACY_EXEC
 	if (card != NULL)
@@ -862,10 +1074,63 @@ Exec_stat MCMarking::exec(MCExecPoint &ep)
 			(EE_MARK_BADSTRING, line, pos);
 			return ES_ERROR;
 		}
+        
 		MCdefaultstackptr->markfind(ep, mode, ep.getsvalue(), field, mark);
 	}
-	return ES_NORMAL;
+    return ES_NORMAL;
 #endif /* MCMarking */
+
+    if (card != NULL)
+	{
+        MCObjectPtr t_object;
+        if (!card->getobj(ctxt, t_object, True)
+            || t_object . object -> gettype() != CT_CARD)
+		{
+            ctxt . LegacyThrow(EE_MARK_BADCARD);
+            return;
+        }
+
+        if (mark)
+            MCInterfaceExecMarkCard(ctxt, t_object);
+        else
+            MCInterfaceExecUnmarkCard(ctxt, t_object);
+	}
+    // SN-2014-03-21 [[ Bug 11950 ]]: 'mark' shouldn't throw an error when failing to mark when card is nil
+    // Any error set is discarded in the end of this block - unless is was triggered by a bad string.
+    else
+    {
+        if (tofind == nil)
+        {
+            if (mark)
+            {
+                if (where != nil)
+                    MCInterfaceExecMarkCardsConditional(ctxt, where);
+                else
+                    MCInterfaceExecMarkAllCards(ctxt);
+            }
+            else
+            {
+                if (where != nil)
+                    MCInterfaceExecUnmarkCardsConditional(ctxt, where);
+                else
+                    MCInterfaceExecUnmarkAllCards(ctxt);
+            }
+        }
+        else
+        {
+            MCAutoStringRef t_needle;
+            
+            if (!ctxt . EvalExprAsStringRef(tofind, EE_MARK_BADSTRING, &t_needle))
+                return;
+            
+            if (mark)
+                MCInterfaceExecMarkFind(ctxt, mode, *t_needle, field);
+            else
+                MCInterfaceExecUnmarkFind(ctxt, mode, *t_needle, field);
+        }
+        
+        ctxt . IgnoreLastError();
+    }
 }
 
 MCPut::~MCPut()
@@ -978,8 +1243,8 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 	// Parse: put [ unicode ] ( header | content | markup ) <expr>	
 	if (sp.next(type) == PS_NORMAL)
 	{
-		if (sp.lookup(SP_SERVER, te) == PS_NORMAL && te -> type == TT_PREP)
-	{
+		if (type == ST_ID && sp.lookup(SP_SERVER, te) == PS_NORMAL && te -> type == TT_PREP)
+		{
 			prep = (Preposition_type)te -> which;
 			if (is_unicode && (prep == PT_HEADER || prep == PT_BINARY))
 			{
@@ -1039,7 +1304,7 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPut::exec(MCExecPoint &ep)
+void MCPut::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCPut */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -1105,18 +1370,190 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 				t_kind = kMCSPutNone;
 				break;
 		}
-
+		
 		if (!MCS_put(ep, t_kind, ep . getsvalue()))
 		{
 			MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 			return ES_ERROR;
 		}
-
+		
 		return ES_NORMAL;
 	}
 #endif /* MCPut */
+
+    
+    MCExecValue t_value;
+    if (!ctxt . EvaluateExpression(source, EE_PUT_BADEXP, t_value))
+        return;
+	
+    if (dest != nil)
+    {
+//        MCAutoValueRef t_valueref;
+//        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &(&t_valueref));
+//        dest -> set(ctxt, prep, *t_valueref, is_unicode);
+        dest -> set(ctxt, prep, t_value, is_unicode);
+	}
+    else
+	{        
+        if (ctxt . HasError())
+            return;
+        
+		MCAutoValueRef t_val;
+		if (is_unicode && (prep == PT_UNDEFINED || prep == PT_CONTENT || prep == PT_MARKUP))
+        {
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeDataRef, &(&t_val));
+			if (ctxt . HasError())
+			{
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+				return;
+			}
+        }
+		else
+        {
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &(&t_val));
+            if (ctxt . HasError())
+			{
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+				return;
+			}
+        }
+		
+		// Defined for convenience
+		MCStringRef t_string = (MCStringRef)*t_val;
+		MCDataRef t_data = (MCDataRef)*t_val;
+		
+		if (prep == PT_COOKIE)
+		{
+            MCAutoStringRef t_name;
+            if (!ctxt . EvalOptionalExprAsStringRef(name, kMCEmptyString, EE_PUT_CANTSETINTO, &t_name))
+                return;
+						
+			uinteger_t t_expires;
+            if (!ctxt . EvalOptionalExprAsUInt(expires, 0, EE_PUT_CANTSETINTO, t_expires))
+                return;
+						
+			MCAutoStringRef t_path;            
+			if (!ctxt . EvalOptionalExprAsStringRef(path, kMCEmptyString, EE_PUT_CANTSETINTO, &t_path))
+                return;			
+			
+			MCAutoStringRef t_domain;
+			if (!ctxt . EvalOptionalExprAsStringRef(domain, kMCEmptyString, EE_PUT_CANTSETINTO, &t_domain))
+                return;
+			
+			MCServerExecPutCookie(ctxt, *t_name, t_string, t_expires, *t_path, *t_domain, is_secure, is_httponly);
+		}
+		else if (prep == PT_UNDEFINED)
+		{
+			if (is_unicode)
+				MCEngineExecPutOutputUnicode(ctxt, t_data);
+			else
+				MCEngineExecPutOutput(ctxt, t_string);
+		}
+		else if (prep == PT_INTO || prep == PT_AFTER || prep == PT_BEFORE)
+			MCIdeExecPutIntoMessage(ctxt, t_string, prep);
+		else if (prep == PT_HEADER || prep == PT_NEW_HEADER)
+			MCServerExecPutHeader(ctxt, t_string, prep == PT_NEW_HEADER);
+		else if (prep == PT_CONTENT)
+		{
+			if (is_unicode)
+				MCServerExecPutContentUnicode(ctxt, t_data);
+			else
+				MCServerExecPutContent(ctxt, t_string);
+		}
+		else if (prep == PT_MARKUP)
+		{
+			if (is_unicode)
+				MCServerExecPutMarkupUnicode(ctxt, t_data);
+			else
+				MCServerExecPutMarkup(ctxt, t_string);
+		}
+		else if (prep == PT_BINARY)
+            MCServerExecPutBinaryOutput(ctxt, t_data);
+	}
 }
-#ifdef /* MCPut::exec_cookie */ LEGACY_EXEC
+
+void MCPut::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (dest != nil)
+	{
+		source -> compile(ctxt);
+		MCSyntaxFactoryEvalConstantInt(ctxt, prep);
+		dest -> compile_out(ctxt);
+		MCSyntaxFactoryEvalConstantBool(ctxt, is_unicode);
+		
+		MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCEngineExecPutIntoVariableMethodInfo, 0, 1, 2);
+		MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCNetworkExecPutIntoUrlMethodInfo, 0, 1, 2);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecPutIntoFieldMethodInfo);
+		MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecPutIntoObjectMethodInfo, 0, 1, 2);	
+	}
+	else if (prep == PT_COOKIE)
+	{
+		name -> compile(ctxt);
+		source -> compile(ctxt);
+			
+		if (expires != nil)
+			expires -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantUInt(ctxt, 0);
+		
+		if (path != nil)
+			path -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+	
+		if (domain != nil)
+			domain -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, is_secure);
+		MCSyntaxFactoryEvalConstantBool(ctxt, is_httponly);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCServerExecPutCookieMethodInfo);
+	}
+	else 
+	{
+		source -> compile(ctxt);
+
+		switch (prep)
+		{
+		case PT_UNDEFINED:
+			MCSyntaxFactoryEvalConstantBool(ctxt, is_unicode);
+			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecPutOutputMethodInfo);
+			break;
+		case PT_INTO:
+		case PT_AFTER:
+		case PT_BEFORE:
+			MCSyntaxFactoryEvalConstantInt(ctxt, prep);
+			MCSyntaxFactoryExecMethod(ctxt, kMCIdeExecPutIntoMessageMethodInfo);
+			break;
+		case PT_HEADER:
+		case PT_NEW_HEADER:
+			MCSyntaxFactoryEvalConstantBool(ctxt, prep == PT_NEW_HEADER);
+			MCSyntaxFactoryExecMethod(ctxt, kMCServerExecPutHeaderMethodInfo);
+			break;
+		case PT_CONTENT:
+			MCSyntaxFactoryEvalConstantBool(ctxt, is_unicode);
+			MCSyntaxFactoryExecMethod(ctxt, kMCServerExecPutContentMethodInfo);
+			break;
+		case PT_MARKUP:
+			MCSyntaxFactoryEvalConstantBool(ctxt, is_unicode);
+			MCSyntaxFactoryExecMethod(ctxt, kMCServerExecPutMarkupMethodInfo);
+			break;
+		case PT_BINARY:
+			MCSyntaxFactoryExecMethod(ctxt, kMCServerExecPutBinaryOutputMethodInfo);
+			break;
+		default:
+			break;
+		}
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
+}
+
+#ifdef LEGACY_EXEC
 #if defined(_SERVER)
 bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);
 Exec_stat MCPut::exec_cookie(MCExecPoint &ep)
@@ -1194,7 +1631,7 @@ Exec_stat MCPut::exec_cookie(MCExecPoint &ep)
 	return ES_ERROR;
 }
 #endif
-#endif /* MCPut::exec_cookie */
+#endif
 
 MCQuit::~MCQuit()
 {
@@ -1210,9 +1647,9 @@ Parse_stat MCQuit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCQuit::exec(MCExecPoint &ep)
+void MCQuit::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCQuit */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 // MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
 #ifndef _SERVER
 	switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
@@ -1227,6 +1664,7 @@ Exec_stat MCQuit::exec(MCExecPoint &ep)
 	// here on Android in the same place as (almost) everything else
 	MCdefaultstackptr->getcard()->message(MCM_shut_down);
 #endif
+
 	if (retcode != NULL && retcode->eval(ep) == ES_NORMAL
 	        && ep.ton() == ES_NORMAL)
 		MCretcode = ep.getint4();
@@ -1237,7 +1675,27 @@ Exec_stat MCQuit::exec(MCExecPoint &ep)
 	MCtraceabort = True;
 	MCtracereturn = True;
 	return ES_NORMAL;
-#endif /* MCQuit */
+#endif
+
+    integer_t t_retcode;
+    if (!ctxt . EvalOptionalExprAsInt(retcode, 0, EE_UNDEFINED, t_retcode))
+        return;
+    
+    MCEngineExecQuit(ctxt, t_retcode);
+}
+
+void MCQuit::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (retcode != nil)
+		retcode -> compile(ctxt);
+	else
+		MCSyntaxFactoryEvalConstantInt(ctxt, 0);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecQuitMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 Parse_stat MCReset::parse(MCScriptPoint &sp)
@@ -1263,7 +1721,7 @@ Parse_stat MCReset::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCReset::exec(MCExecPoint &ep)
+void MCReset::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCReset */ LEGACY_EXEC
 	switch (which)
@@ -1359,6 +1817,51 @@ Exec_stat MCReset::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCReset */
+
+    switch (which)
+	{
+		case RT_CURSORS:
+			MCInterfaceExecResetCursors(ctxt);
+			break;
+		case RT_PAINT:
+			MCGraphicsExecResetPaint(ctxt);
+			break;
+		case RT_PRINTING:
+			MCPrintingExecResetPrinting(ctxt);
+			break;
+		default:
+			MCInterfaceExecResetTemplate(ctxt, which);
+		break;
+	}
+
+	return;
+}
+
+void MCReset::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	switch (which)
+	{
+	case RT_CURSORS:
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecResetCursorsMethodInfo);
+		break;
+
+	case RT_PAINT:
+		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecResetPaintMethodInfo);
+		break;
+
+	case RT_PRINTING:
+		MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecResetPrintingMethodInfo);
+		break;
+
+	default:
+		MCSyntaxFactoryEvalConstantInt(ctxt, which);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecResetTemplateMethodInfo);
+		break;
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCReturn::~MCReturn()
@@ -1407,7 +1910,7 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
 // MW-2007-07-03: [[ Bug 4570 ]] - Using the return command now causes a
 //   RETURN_HANDLER status rather than EXIT_HANDLER. This is used to not
 //   clear the result in this case. (see MCHandler::exec).
-Exec_stat MCReturn::exec(MCExecPoint &ep)
+void MCReturn::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCReturn */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
@@ -1439,11 +1942,57 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 
 	return ES_RETURN_HANDLER;
 #endif /* MCReturn */
+	MCAutoValueRef t_result;
+
+    if (!ctxt . EvalExprAsValueRef(source, EE_RETURN_BADEXP, &t_result))
+        return;
+	
+	if (url != nil)
+	{
+		MCAutoValueRef t_url_result;
+        if (!ctxt . EvalExprAsValueRef(url, EE_RETURN_BADEXP, &t_url_result))
+            return;
+
+		MCNetworkExecReturnValueAndUrlResult(ctxt, *t_result, *t_url_result);
+	}
+	else if (var != nil)
+	{
+		MCNetworkExecReturnValueAndUrlResultFromVar(ctxt, *t_result, var);
+	}
+	else
+	{
+		MCEngineExecReturnValue(ctxt, *t_result);
+	}
+	
+	if (!ctxt . HasError())
+        ctxt . SetIsReturnHandler();
 }
 
 uint4 MCReturn::linecount()
 {
 	return 0;
+}
+
+void MCReturn::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+
+	if (url != nil)
+	{
+		url -> compile(ctxt);
+		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecReturnValueAndUrlResultMethodInfo);
+	}
+	else if (var != nil)
+	{
+		MCSyntaxFactoryEvalConstant(ctxt, var);
+		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecReturnValueAndUrlResultFromVarMethodInfo);
+	}
+	else
+		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecReturnValueMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 Parse_stat MCScriptError::parse(MCScriptPoint &sp)
@@ -1484,7 +2033,7 @@ Parse_stat MCSet::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSet::exec(MCExecPoint &ep)
+void MCSet::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSet */ LEGACY_EXEC
 	if (value->eval(ep) != ES_NORMAL)
@@ -1504,7 +2053,19 @@ Exec_stat MCSet::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCSet */
+
+    MCAutoValueRef t_value;
+    if (!ctxt . EvalExprAsValueRef(value, EE_SET_BADEXP, &t_value))
+        return;
+    
+    ctxt . SetTheResultToEmpty();
+    MCEngineExecSet(ctxt, target, *t_value);
 }
+
+/*void MCSet::compile(MCSyntaxFactoryRef ctxt)
+{
+	
+}*/
 
 MCSort::~MCSort()
 {
@@ -1573,6 +2134,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 					chunktype = CT_CARD;
 				break;
 			case ST_TEXT:
+            case ST_BINARY:
 			case ST_NUMERIC:
 			case ST_INTERNATIONAL:
 			case ST_DATETIME:
@@ -1603,7 +2165,8 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-#ifdef /* MCSort::sort_container */ LEGACY_EXEC
+
+#ifdef LEGACY_EXEC
 Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, Sort_type p_direction, Sort_type p_form, MCExpression *p_by)
 {
 	MCSortnode *t_items;
@@ -1713,85 +2276,9 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 	delete t_items;
 	return ES_NORMAL;
 }
-#endif /* MCSort::sort_container */
-
-void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCString &s, MCExpression *by)
-{
-	if (by != NULL)
-	{
-		MCerrorlock++;
-		ep.setsvalue(s);
-		MCeach->store(ep, False);
-		if (by->eval(ep) == ES_NORMAL)
-			s = ep.getsvalue();
-		else
-			s = MCnullmcstring;
-		MCerrorlock--;
-	}
-	switch (form)
-	{
-	case ST_DATETIME:
-		ep.setsvalue(s);
-		if (MCD_convert(ep, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED))
-		{
-			if (!MCU_stor8(ep.getsvalue(), items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
-		}
-		else
-			items[nitems].nvalue = -MAXREAL8;
-		break;
-	case ST_NUMERIC:
-		{
-			const char *sptr = s.getstring();
-			uint4 length = s.getlength();
-			
-			// MW-2013-03-21: [[ Bug ]] Make sure we skip any whitespace before the
-			//   number starts - making it consistent with string->number conversions
-			//   elsewhere.
-			MCU_skip_spaces(sptr, length);
-			
-		    // REVIEW - at the moment the numeric prefix of the string is used to
-			//   derive the sort key e.g. 1000abc would get processed as 1000.
-			while (length && (isdigit((uint1)*sptr) ||
-			                  *sptr == '.' || *sptr == '-' || *sptr == '+'))
-			{
-				sptr++;
-				length--;
-			}
-			s.setlength(s.getlength() - length);
-			if (!MCU_stor8(s, items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
-		}
-		break;
-	default:
-		if (ep.getcasesensitive() && by == NULL)
-			items[nitems].svalue = (char *)s.getstring();
-		else
-			if (ep.getcasesensitive())
-				items[nitems].svalue = s.clone();
-			else
-			{
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
-				if (form == ST_INTERNATIONAL)
-				{
-					extern char *MCSystemLowercaseInternational(const MCString& s);
-					items[nitems].svalue = MCSystemLowercaseInternational(s);
-				}
-				else
 #endif
 
-				{
-					items[nitems].svalue = new char[s.getlength() + 1];
-					MCU_lower(items[nitems].svalue, s);
-					items[nitems].svalue[s.getlength()] = '\0';
-				}
-			}
-		break;
-	}
-	nitems++;
-}
-
-Exec_stat MCSort::exec(MCExecPoint &ep)
+void MCSort::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSort */ LEGACY_EXEC
 	if (of == NULL && chunktype == CT_FIELD)
@@ -1861,9 +2348,93 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCSort */
+    
+    MCObjectPtr t_object;
+    MCAutoStringRef t_target;
+    
+    // SN-2014-03-21: [[ Bug 11953 ]] sort card does not work
+    t_object . object = nil;
+    t_object . part_id = 0;
+    
+	if (of != NULL)
+	{
+		MCerrorlock++;
+        of->getoptionalobj(ctxt, t_object, False);
+		if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
+		{
+			MCerrorlock--;
+
+            if (!ctxt . EvalExprAsStringRef(of, EE_SORT_BADTARGET, &t_target))
+                return;
+		}
+		else
+        {
+			MCerrorlock--;
+        }
+		if (t_object . object != nil && t_object . object->gettype() > CT_GROUP && chunktype <= CT_GROUP)
+			chunktype = CT_LINE;
+	} 
+    
+	if (chunktype == CT_CARD || chunktype == CT_MARKED)
+		MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
+	else if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
+	{
+        MCStringRef t_sorted_target;
+
+        if (*t_target == nil)
+            t_sorted_target = MCValueRetain(kMCEmptyString);
+        else
+            t_sorted_target = MCValueRetain(*t_target);
+
+        MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by);
+        if (!ctxt . HasError())
+            of -> set(ctxt, PT_INTO, t_sorted_target);
+
+        MCValueRelease(t_sorted_target);
+	}
+	else
+	{
+		if (t_object . object->gettype() != CT_FIELD || !of->nochunks())
+		{
+            ctxt . LegacyThrow(EE_SORT_CANTSORT);
+			return;
+		}
+		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by);
+	}
 }
 
+void MCSort::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
+	if (chunktype == CT_CARD || chunktype == CT_MARKED)
+	{
+		of -> compile_object_ptr(ctxt);
+		MCSyntaxFactoryEvalConstantBool(ctxt, direction == ST_ASCENDING);
+		MCSyntaxFactoryEvalConstantInt(ctxt, format);
+		by -> compile(ctxt);
+		MCSyntaxFactoryEvalConstantBool(ctxt, chunktype == CT_MARKED);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSortCardsOfStackMethodInfo);
+	}
+	else
+	{
+		of -> compile_inout(ctxt);
+
+		if (chunktype <= CT_GROUP)
+			MCSyntaxFactoryEvalConstantInt(ctxt, CT_LINE);
+		else
+			MCSyntaxFactoryEvalConstantInt(ctxt, chunktype);
+			
+		MCSyntaxFactoryEvalConstantBool(ctxt, direction == ST_ASCENDING);
+		MCSyntaxFactoryEvalConstantInt(ctxt, format);
+		by -> compile(ctxt);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSortFieldMethodInfo);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSortContainerMethodInfo);
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
+}
 
 MCWait::~MCWait()
 {
@@ -1922,7 +2493,7 @@ Parse_stat MCWait::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCWait::exec(MCExecPoint &ep)
+void MCWait::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCWait */ LEGACY_EXEC
 	while (True)
@@ -1992,6 +2563,73 @@ Exec_stat MCWait::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCWait */
+
+    if (duration == NULL)
+		MCEngineExecWaitFor(ctxt, MCmaxwait, F_UNDEFINED, messages == True);
+
+    else
+	{
+		switch (condition)
+		{
+            case RF_FOR:
+            {
+                double t_delay;
+                if (!ctxt . EvalExprAsDouble(duration, EE_WAIT_BADEXP, t_delay))
+                    return;
+                
+                MCEngineExecWaitFor(ctxt, t_delay, units, messages == True);
+                break;
+            }
+            case RF_UNTIL:
+                MCEngineExecWaitUntil(ctxt, duration, messages == True);
+                break;
+            case RF_WHILE:
+                MCEngineExecWaitWhile(ctxt, duration, messages == True);
+                break;
+            default:
+                return;
+		}
+	}
+}
+
+void MCWait::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (duration == nil)
+	{
+		MCSyntaxFactoryEvalConstantDouble(ctxt, MCmaxwait);
+		MCSyntaxFactoryEvalConstantInt(ctxt, F_UNDEFINED);
+		MCSyntaxFactoryEvalConstantBool(ctxt, messages == True);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecWaitForMethodInfo);
+	}
+	else
+	{
+		duration -> compile(ctxt);
+
+		switch (condition)
+		{
+		case RF_FOR:
+			MCSyntaxFactoryEvalConstantInt(ctxt, units);
+			MCSyntaxFactoryEvalConstantBool(ctxt, messages == True);
+			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecWaitForMethodInfo);
+			break;
+
+		case RF_UNTIL:
+			MCSyntaxFactoryEvalConstantBool(ctxt, messages == True);
+			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecWaitUntilMethodInfo);
+			break;
+
+		case RF_WHILE:
+			MCSyntaxFactoryEvalConstantBool(ctxt, messages == True);
+			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecWaitWhileMethodInfo);
+			break;
+
+		default:
+			break;
+		}
+	}
 }
 
 MCInclude::~MCInclude(void)
@@ -2012,7 +2650,7 @@ Parse_stat MCInclude::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCInclude::exec(MCExecPoint& ep)
+void MCInclude::exec_ctxt(MCExecContext& ctxt)
 {	
 #ifdef /* MCInclude */ LEGACY_EXEC
 	if (filename -> eval(ep) != ES_NORMAL)
@@ -2043,43 +2681,73 @@ Exec_stat MCInclude::exec(MCExecPoint& ep)
 	return ES_ERROR;
 #endif
 #endif /* MCInclude */
+
+    MCAutoStringRef t_filename;
+    if (!ctxt . EvalExprAsStringRef(filename, EE_INCLUDE_BADFILENAME, &t_filename))
+        return;
+    
+    MCServerExecInclude(ctxt, *t_filename, is_require);
+}
+
+void MCInclude::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	filename -> compile(ctxt);
+	MCSyntaxFactoryEvalConstantBool(ctxt, is_require);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCServerExecIncludeMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCEcho::~MCEcho(void)
 {
+	if (data != nil)
+		MCValueRelease(data);
 }
 
 Parse_stat MCEcho::parse(MCScriptPoint& sp)
 {
 	initpoint(sp);
-	data = sp . gettoken();
+	data = MCValueRetain(sp . gettoken_stringref());
 	return PS_NORMAL;
 }
 
-Exec_stat MCEcho::exec(MCExecPoint& ep)
+void MCEcho::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCEcho */ LEGACY_EXEC
 	if (!MCS_put(ep, kMCSPutBinaryOutput, data) != IO_NORMAL)
 		MCexitall = True;
-
+	
 	return ES_NORMAL;
 #endif /* MCEcho */
+
+	MCServerExecEcho(ctxt, data);
+	return;
+}
+
+void MCEcho::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	MCSyntaxFactoryEvalConstant(ctxt, data);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCServerExecEchoMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCResolveImage::~MCResolveImage(void)
 {
     delete m_relative_object;
     delete m_id_or_name;
-    delete m_it;
 }
 
 Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
 {
     Parse_stat t_stat;
     t_stat = PS_NORMAL;
-    
-    // Fetch a reference to 'it'
-    getit(p_sp, m_it);
     
     if (t_stat == PS_NORMAL)
         t_stat =  p_sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE);
@@ -2120,8 +2788,9 @@ Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
     return t_stat;
 }
 
-Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
+void MCResolveImage::exec_ctxt(MCExecContext &ctxt)
 {
+#ifdef /* MCResolveImage */ LEGACY_EXEC
     Exec_stat t_stat;
     t_stat = ES_NORMAL;
     
@@ -2148,7 +2817,11 @@ Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
             t_found_image = t_relative_object -> resolveimageid(p_ep . getuint4());
         }
         else
-            t_found_image = t_relative_object -> resolveimagename(p_ep . getsvalue());
+        {
+            MCAutoStringRef t_name;
+            /* UNCHECKED */ p_ep . copyasstringref(&t_name);
+            t_found_image = t_relative_object -> resolveimagename(*t_name);
+        }
         
         if (t_found_image != nil)
             t_stat = t_found_image -> getprop(0, P_LONG_ID, p_ep, False);
@@ -2157,10 +2830,53 @@ Exec_stat MCResolveImage::exec(MCExecPoint &p_ep)
     }
     
     if (t_stat == ES_NORMAL)
-        t_stat = m_it -> set(p_ep);
+        t_stat = p_ep.getit() -> set(p_ep);
     
     return t_stat;
+#endif /* MCResolveImage */
     
+    uint4 t_part_id;
+    MCObject *t_relative_object;
+
+
+    if (!m_relative_object -> getobj(ctxt, t_relative_object, t_part_id, True))
+    {
+            ctxt . Throw();
+            return;
+    }
+
+    if (m_is_id)
+    {
+        uinteger_t t_id;
+        if (!ctxt . EvalExprAsUInt(m_id_or_name, EE_RESOLVE_IMG_BADEXP, t_id))
+        return;
+
+        MCInterfaceExecResolveImageById(ctxt, t_relative_object, t_id);
+    }
+    else
+    {
+        MCAutoStringRef t_name;
+
+        if (!ctxt . EvalExprAsStringRef(m_id_or_name, EE_RESOLVE_IMG_BADEXP, &t_name))
+        return;
+
+        MCInterfaceExecResolveImageByName(ctxt, t_relative_object, *t_name);
+    }
+}
+
+void MCResolveImage::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+    
+    m_relative_object -> compile_object_ptr(ctxt);
+    m_id_or_name -> compile(ctxt);
+    
+    if (m_is_id)
+        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecResolveImageByIdMethodInfo);
+    else
+        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecResolveImageByNameMethodInfo);
+    
+    MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2222,9 +2938,10 @@ Parse_stat MCAssertCmd::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCAssertCmd::exec(MCExecPoint& ep)
+void MCAssertCmd::exec_ctxt(MCExecContext& ctxt)
 {
-	Exec_stat t_stat;
+#ifdef /* MCAssertCmd */ LEGACY_EXEC
+    Exec_stat t_stat;
 	t_stat = ES_NORMAL;
 	
 	t_stat = m_expr -> eval(ep);
@@ -2240,8 +2957,8 @@ Exec_stat MCAssertCmd::exec(MCExecPoint& ep)
 			// If the expression is true, we are done.
 			if (ep.getsvalue() == MCtruemcstring)
 				return ES_NORMAL;
-		break;
-		
+            break;
+            
 		case TYPE_FALSE:
 			// If the expression threw an error, then just throw.
 			if (t_stat != ES_NORMAL)
@@ -2250,13 +2967,13 @@ Exec_stat MCAssertCmd::exec(MCExecPoint& ep)
 			// If the expression is not true, we are done. (this uses the same logic as if).
 			if (ep.getsvalue() != MCtruemcstring)
 				return ES_NORMAL;
-		break;
-		
+            break;
+            
 		case TYPE_SUCCESS:
 			if (t_stat == ES_NORMAL)
 				return ES_NORMAL;
 			break;
-		
+            
 		case TYPE_FAILURE:
 			if (t_stat == ES_ERROR)
 				return ES_NORMAL;
@@ -2282,4 +2999,18 @@ Exec_stat MCAssertCmd::exec(MCExecPoint& ep)
 	t_object.sets_argument(ep.getsvalue());
 	
 	return ep.getobj() -> message(MCM_assert_error, &t_handler);
+#endif /* MCAssertCmd */
+    
+	bool t_success, t_result;
+    t_success = ctxt . EvalExprAsNonStrictBool(m_expr, EE_UNDEFINED, t_result);
+    
+    if (!t_success)
+        ctxt . IgnoreLastError();
+    
+    MCDebuggingExecAssert(ctxt, m_type, t_success, t_result);
+}
+
+void MCAssertCmd::compile(MCSyntaxFactoryRef ctxt)
+{
+
 }

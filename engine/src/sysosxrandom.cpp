@@ -16,7 +16,6 @@
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -36,7 +35,7 @@ static SecRandomCopyBytesPtr s_sec_random_copy_bytes = nil;
 
 // MW-2013-05-21: [[ RandomBytes ]] Implementation of random byte generation for
 //   Mac (Desktop and Server).
-bool MCS_random_bytes(size_t p_count, void *p_buffer)
+bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
 {
 	// IM-2014-08-06: [[ Bug 13038 ]] Enable this implementation on OSX + server
 	// so we can remove the reliance on SSL from MCU_random_bytes
@@ -44,6 +43,9 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 	// Now, on Lion and above SecRandomCopyBytes is available, so use that if
 	// possible. ( Note that as we can't link against the 10.7 SDK, we have to
 	// weak-link manually :( ).
+    
+    uint8_t *t_buffer;
+    /* UNCHECKED */ MCMemoryAllocate(p_count, t_buffer);
 	if (MCmajorosversion >= 0x1070)
 	{
 		if (s_sec_random_copy_bytes == nil)
@@ -58,8 +60,13 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 		}
 		
 		if (s_sec_random_copy_bytes != nil)
+        {
 			// IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
-			return 0 == s_sec_random_copy_bytes(NULL, p_count, (uint8_t *)p_buffer);
+			if (0 == s_sec_random_copy_bytes(NULL, p_count, t_buffer))
+                return MCDataCreateWithBytesAndRelease((byte_t*)t_buffer, p_count, r_buffer);
+            
+            return false;
+        }
 	}
 	
 	// Otherwise attempt to use /dev/urandom
@@ -72,7 +79,7 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 	uint8_t *t_bytes;
 	size_t t_bytes_read;
 	t_bytes_read = 0;
-	t_bytes = (uint8_t *)p_buffer;
+	t_bytes = t_buffer;
 	while(t_bytes_read < p_count)
 	{
 		int t_read_count;
@@ -95,7 +102,10 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 	close(t_fd);
 	
 	// If we read the correct number of bytes, then we are done.
-	return t_bytes_read == p_count;
+	if (t_bytes_read == p_count)
+        return MCDataCreateWithBytesAndRelease((byte_t*)t_buffer, p_count, r_buffer);
+    
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

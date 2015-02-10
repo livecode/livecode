@@ -1,0 +1,72 @@
+setup "default line delim"
+
+local tLines
+put "abc" & cr & "def" & cr & "ghi" & cr into tLines
+put tLines after tLines
+
+test lineOffset("g", tLines) is 3
+test lineOffset("def", tLines) is 2
+test lineOffset("x", tLines) is 0
+test lineOffset("ABC", tLines) is 1
+
+test lineOffset("def", tLines, 1) is 1
+test lineOffset("def", tLines, 2) is 3
+test lineOffset("def", tLines, 5) is 0
+
+set the wholematches to true
+
+test lineOffset("g", tLines) is 0
+test lineOffset("ghi", tLines) is 3
+
+set the wholematches to false
+set the caseSensitive to true
+
+test lineOffset("ab", tLines) is 1
+test lineOffset("AB", tLines) is 0
+
+set the wholematches to true
+
+test lineOffset("ab", tLines) is 0
+test lineOffset("AB", tLines) is 0
+test lineOffset("abc", tLines) is 1
+test lineOffset("ABC", tLines) is 0
+
+teardown
+
+
+setup "custom line delim"
+
+set the linedel to "|"
+
+local tLines
+put "abc|def|ghi|" into tLines
+put tLines after tLines
+
+test lineOffset("g", tLines) is 3
+test lineOffset("def", tLines) is 2
+test lineOffset("x", tLines) is 0
+test lineOffset("ABC", tLines) is 1
+
+test lineOffset("def", tLines, 1) is 1
+test lineOffset("def", tLines, 2) is 3
+test lineOffset("def", tLines, 5) is 0
+
+set the wholematches to true
+
+test lineOffset("g", tLines) is 0
+test lineOffset("ghi", tLines) is 3
+
+set the wholematches to false
+set the caseSensitive to true
+
+test lineOffset("ab", tLines) is 1
+test lineOffset("AB", tLines) is 0
+
+set the wholematches to true
+
+test lineOffset("ab", tLines) is 0
+test lineOffset("AB", tLines) is 0
+test lineOffset("abc", tLines) is 1
+test lineOffset("ABC", tLines) is 0
+
+teardown

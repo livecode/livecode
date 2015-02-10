@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -97,11 +96,11 @@ static bool s_in_modal = false;
 
 struct popupanswerdialog_t
 {
-	const char **buttons;
+	MCStringRef *buttons;
 	uint32_t button_count;
 	uint32_t type;
-	const char *title;
-	const char *message;
+	MCStringRef title;
+	MCStringRef message;
 	int32_t result;
 	
 	UIAlertView *alert_view;
@@ -114,9 +113,9 @@ static void dopopupanswerdialog_prewait(void *p_context)
 	ctxt = (popupanswerdialog_t *)p_context;
 	
 	NSString *t_title;
-	t_title = [NSString stringWithCString: ctxt -> title == nil ? "" : ctxt -> title encoding: NSMacOSRomanStringEncoding];
-	NSString *t_prompt;
-	t_prompt = [NSString stringWithCString: ctxt -> message == nil ? "" : ctxt -> message encoding: NSMacOSRomanStringEncoding];
+	t_title = [NSString stringWithMCStringRef: ctxt -> title == nil ? kMCEmptyString : ctxt -> title ];
+    NSString *t_prompt;
+    t_prompt = [NSString stringWithMCStringRef: ctxt -> message == nil ? kMCEmptyString : ctxt -> message ];
 
     if (MCmajorosversion < 800)
     {
@@ -132,7 +131,7 @@ static void dopopupanswerdialog_prewait(void *p_context)
         {
             [ctxt -> delegate setIndex: ctxt -> button_count - 1];
             for(uint32_t i = 0; i < ctxt -> button_count; i++)
-                [ctxt -> alert_view addButtonWithTitle: [ NSString stringWithCString: ctxt -> buttons[i] encoding: NSMacOSRomanStringEncoding ]];
+                [ctxt -> alert_view addButtonWithTitle: [ NSString stringWithMCStringRef: ctxt -> buttons[i] ]];
         }
         [ctxt -> alert_view show];
     }
@@ -162,7 +161,7 @@ static void dopopupanswerdialog_prewait(void *p_context)
             for(uint32_t i = 0; i < ctxt -> button_count; i++)
             {
                 UIAlertAction *t_action;
-                t_action = [UIAlertAction actionWithTitle: [NSString stringWithCString: ctxt -> buttons[i] encoding: NSMacOSRomanStringEncoding]
+                t_action = [UIAlertAction actionWithTitle: [NSString stringWithMCStringRef: ctxt -> buttons[i] ]
                                                     style: UIAlertActionStyleDefault
                                                   handler: ^(UIAlertAction *action)
                             {
@@ -194,7 +193,7 @@ static void dopopupanswerdialog_postwait(void *p_context)
     }
 }
 
-int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
+int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
 {
 	// MW-2010-12-18: You cannot nest alertviews on iOS, so we return an immediate cancel if we are in one
 	if (s_in_modal)
@@ -204,6 +203,7 @@ int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button
 	ctxt . buttons = p_buttons;
 	ctxt . button_count = p_button_count;
 	ctxt . type = p_type;
+    // may be nil
 	ctxt . title = p_title;
 	ctxt . message = p_message;
 	
@@ -214,7 +214,7 @@ int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button
 		MCscreen -> wait(1.0, True, True);
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_postwait, &ctxt);
-	
+    
 	return ctxt . result;
 }
 
@@ -386,9 +386,9 @@ int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button
 	m_index = p_index;
 }
 
-- (const char *)getText
+- (CFStringRef)getText
 {
-	return [m_textResult.text cStringUsingEncoding:NSMacOSRomanStringEncoding];
+	return (CFStringRef)m_textResult.text;
 }
 
 - (UITextField *)textField
@@ -401,11 +401,11 @@ int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button
 struct popupaskdialog_t
 {
 	uint32_t type;
-	const char *title;
-	const char *message;
-	const char *initial;
+	MCStringRef title;
+	MCStringRef message;
+	MCStringRef initial;
 	bool hint;
-	char *result;
+	MCStringRef result;
 	
 	TextAlertView *alert;
 	ModalDelegate *delegate;
@@ -419,13 +419,13 @@ static void dopopupaskdialog_prewait(void *p_context)
 	ctxt = (popupaskdialog_t *)p_context;
 	
     NSString *t_title;
-	t_title = [NSString stringWithCString: (ctxt -> title == nil ? "" : ctxt -> title) encoding: NSMacOSRomanStringEncoding];
+	t_title = [NSString stringWithMCStringRef: (ctxt -> title == nil ? kMCEmptyString : ctxt -> title) ];
 	NSString *t_message;
-	t_message = [NSString stringWithCString: (ctxt -> message == nil ? "" : ctxt -> message) encoding: NSMacOSRomanStringEncoding];
+	t_message = [NSString stringWithMCStringRef: (ctxt -> message == nil ? kMCEmptyString : ctxt -> message) ];
 	
     // MM-2012-03-14: [[ Bug 10084 ]] Intial text was being set to space by default meaning a space was prepended to anby data returned.
 	NSString *t_initial;
-	t_initial = [NSString stringWithCString: (ctxt -> initial == nil ? "" : ctxt -> initial) encoding: NSMacOSRomanStringEncoding];
+	t_initial = [NSString stringWithMCStringRef: (ctxt -> initial == nil ? kMCEmptyString : ctxt -> initial) ];
     
     if (MCmajorosversion < 800)
     {
@@ -532,11 +532,7 @@ static void dopopupaskdialog_prewait(void *p_context)
                            UITextField *t_text_field;
                            t_text_field = [[t_alert_controller textFields] firstObject];
                            
-                           const char *t_message_text;
-                           t_message_text = [[t_text_field text] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-                           
-                           MCMemoryAllocate(MCCStringLength(t_message_text) + 1, ctxt -> result);
-                           MCCStringClone(t_message_text, ctxt -> result);
+                           /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_text_field text], ctxt -> result);
                        }];
         [t_alert_controller addAction: t_ok_action];
         
@@ -550,39 +546,37 @@ static void dopopupaskdialog_postwait(void *p_context)
 	popupaskdialog_t *ctxt;
 	ctxt = (popupaskdialog_t *)p_context;
 	
+    MCAutoStringRef t_message_text;
+    CFStringRef t_result;
+    t_result = nil;
 	if (MCmajorosversion < 500)
 	{
-        const char *t_messageText;
+        t_result = [ctxt -> alert getText];
         
-        t_messageText = [ctxt -> alert getText];
+        if (t_result != nil)
+            MCStringCreateWithCFString(t_result, &t_message_text);
         
 		// MW-2012-10-24: [[ Bug 10491 ]] The delegate now holds the button index, not the alert view.
-        if ([ctxt -> delegate index] == 0 || t_messageText == nil || *t_messageText == '\0')
+        if ([ctxt -> delegate index] == 0 || *t_message_text == nil)
             ctxt -> result = nil;
         else
-        {
-            ctxt -> result = (char *) malloc (strlen (t_messageText) + 1);
-            strcpy (ctxt -> result, t_messageText);
-        }
+            ctxt -> result = MCValueRetain(*t_message_text);
         
         [ctxt -> alert release];
 	}
 	else if (MCmajorosversion < 800)
 	{
 #ifdef __IPHONE_5_0
-        const char* t_message_text;
         if (ctxt -> text_field != nil)
-            t_message_text = [[ctxt -> text_field text] cStringUsingEncoding:NSMacOSRomanStringEncoding];
-        else
-            t_message_text = nil;
+            t_result = (CFStringRef)[ctxt -> text_field text];
+
+        if (t_result != nil)
+            MCStringCreateWithCFString(t_result, &t_message_text);
         
-        if ([ctxt -> delegate index] == 0 || t_message_text == nil || *t_message_text == '\0')
+        if ([ctxt -> delegate index] == 0 || *t_message_text == nil)
             ctxt -> result = nil;
         else
-        {
-            MCMemoryAllocate(MCCStringLength(t_message_text) + 1, ctxt -> result);
-            MCCStringClone(t_message_text, ctxt -> result);
-        }
+            ctxt -> result = MCValueRetain(*t_message_text);
         
         [ctxt -> delegate release];
         [ctxt -> alert_view release];
@@ -591,16 +585,16 @@ static void dopopupaskdialog_postwait(void *p_context)
 }
 
 // MM-2011-09-20: [[ BZ 9730 ]] Updated ask dialogs for iOS 5 to use updated UIALertView features. Fixes layout bug in iOS 5.
-char *MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint)
+bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	if (s_in_modal)
 		return nil;
 	
 	popupaskdialog_t ctxt;
 	ctxt . type = p_type;
-	ctxt . title = p_title;
-	ctxt . message = p_message;
-	ctxt . initial = p_initial;
+	ctxt . title = MCValueRetain(p_title != nil ? p_title : kMCEmptyString);
+	ctxt . message = MCValueRetain(p_message != nil ? p_message : kMCEmptyString);
+	ctxt . initial = MCValueRetain(p_initial != nil ? p_initial : kMCEmptyString);
 	ctxt . hint = p_hint;
  
 	MCIPhoneRunOnMainFiber(dopopupaskdialog_prewait, &ctxt);
@@ -611,7 +605,14 @@ char *MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const cha
 
 	MCIPhoneRunOnMainFiber(dopopupaskdialog_postwait, &ctxt);
 	
-	return ctxt . result;
+    MCValueRelease(ctxt . title);
+    MCValueRelease(ctxt . message);
+    MCValueRelease(ctxt . initial);
+    if (ctxt . result == nil)
+        return false;
+    
+	r_result = ctxt . result;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -50,7 +50,6 @@ public:
 	Boolean load();
 	uint2 getthemeid();
 	uint2 getthemefamilyid();
-	const char *getname();
 	Boolean iswidgetsupported(Widget_Type wtype);
 	virtual int4 getmetric(Widget_Metric wmetric);
 	int4 getwidgetmetric(const MCWidgetInfo &winfo,Widget_Metric wmetric);
@@ -75,7 +74,7 @@ public:
 	virtual bool drawmenuitembackground(MCContext *context, const MCRectangle& dirty, MCButton *button);
 
 protected:
-	virtual char *getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype,char *colorbuf);
+	virtual void getthemecolor(const MCWidgetInfo &winfo, Widget_Color ctype, MCStringRef &r_colorbuf);
 	MCWinSysHandle GetTheme(Widget_Type wtype);
 	void CloseData();
 	Boolean GetThemePartAndState(const MCWidgetInfo &winfo, int4& aPart, int4& aState);

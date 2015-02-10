@@ -1,0 +1,8 @@
+setup
+
+test exp(0) is 1
+test exp(1) ^ 5 is exp(5)
+test exp(2) ^ 5 is exp(2 * 5)
+test exp(2) * exp(5) is exp(2 + 5)
+
+teardown

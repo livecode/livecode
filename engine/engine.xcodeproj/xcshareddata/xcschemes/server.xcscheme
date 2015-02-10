@@ -13,7 +13,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4DFD483D13BA2843008DB91F"
+               BlueprintIdentifier = "4DB846B3192B53E800771914"
                BuildableName = "Server-Community"
                BlueprintName = "Server-Community"
                ReferencedContainer = "container:engine.xcodeproj">
@@ -25,13 +25,13 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.GDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.GDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
-      buildConfiguration = "Debug">
+      buildConfiguration = "Release">
       <Testables>
       </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4DFD483D13BA2843008DB91F"
+            BlueprintIdentifier = "4DB846B3192B53E800771914"
             BuildableName = "Server-Community"
             BlueprintName = "Server-Community"
             ReferencedContainer = "container:engine.xcodeproj">
@@ -50,12 +50,45 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4DFD483D13BA2843008DB91F"
+            BlueprintIdentifier = "4DB846B3192B53E800771914"
             BuildableName = "Server-Community"
             BlueprintName = "Server-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Users/sebastien/Workspace/www/button.lc"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "PATH_TRANSLATED"
+            value = "/Users/sebastien/Workspace/www/session.lc"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "GATEWAY_INTERFACE"
+            value = "CGI/1.1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SERVER_PROTOCOL"
+            value = "HTTP/1.1"
+            isEnabled = "NO">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "REQUEST_METHOD"
+            value = "GET"
+            isEnabled = "NO">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "REQUEST_URI"
+            value = "/button.lc"
+            isEnabled = "NO">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -68,7 +101,7 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4DFD483D13BA2843008DB91F"
+            BlueprintIdentifier = "4DB846B3192B53E800771914"
             BuildableName = "Server-Community"
             BlueprintName = "Server-Community"
             ReferencedContainer = "container:engine.xcodeproj">

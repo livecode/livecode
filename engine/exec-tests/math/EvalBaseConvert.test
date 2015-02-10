@@ -1,0 +1,24 @@
+setup "source base range"
+test-error baseConvert("10", 1, 10)
+test-error baseConvert("10", 37, 10)
+test-no-error baseConvert("10", 10, 10)
+teardown
+
+setup "dest base range"
+test-error baseConvert("10", 10, 1)
+test-error baseConvert("10", 10, 37)
+test-no-error baseConvert("10", 10, 10)
+teardown
+
+setup "cant convert"
+test-error baseConvert(empty, 10, 10)
+test-error baseConvert("A", 10, 10)
+test-error baseConvert("=", 10, 10)
+test-no-error baseConvert("10", 10, 10)
+teardown
+
+setup
+test baseConvert("10", 10, 10) is "10"
+test baseConvert("10", 16, 10) is "16"
+test baseConvert("10", 10, 16) is "A"
+teardown

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "date.h"
 #include "sellst.h"
@@ -35,14 +35,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "globals.h"
+#include "exec.h"
 
 #if defined FEATURE_PLATFORM_AUDIO
 #include "platform.h"
 static MCPlatformSoundRef s_current_sound = nil;
 #elif defined _WINDOWS_DESKTOP
 #include "w32prefix.h"
-static HWAVEOUT hwaveout;  //handle to audio device opened
-static WAVEHDR wh;         //wave header structure
+// SN-2014-06-26 [[ PlatformPlayer ]]
+// These 2 definitions must be accessible from exec-interface-aclip
+HWAVEOUT hwaveout;  //handle to audio device opened
+WAVEHDR wh;         //wave header structure
 #elif defined _MAC_DESKTOP
 #include "osxprefix.h"
 static SndChannelPtr soundChannel; //used for playing a sound on MAC
@@ -90,6 +93,24 @@ static int2 ulaw_table[256] = {
                                   244,    228,    212,    196,    180,    164,    148,    132,
                                   120,    112,    104,     96,     88,     80,     72,     64,
                                   56,     48,     40,     32,     24,     16,      8,      0 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCAudioClip::kProperties[] =
+{
+	DEFINE_RO_OBJ_PROPERTY(P_SIZE, UInt16, MCAudioClip, Size)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_PLAY_DESTINATION, InterfacePlayDestination, MCAudioClip, PlayDestination)
+	DEFINE_RW_OBJ_PROPERTY(P_PLAY_LOUDNESS, Int16, MCAudioClip, PlayLoudness)
+};
+
+MCObjectPropertyTable MCAudioClip::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCAudioClip::MCAudioClip()
 {
@@ -173,7 +194,7 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 			{
 				MCCard *card = mstack->getcurcard();
 				if (card)
-					card->message_with_args(MCM_play_stopped, getname());
+					card->message_with_valueref_args(MCM_play_stopped, getname());
 			}
 			mstack = NULL;
 		}
@@ -181,11 +202,11 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 			delete this;
 	}
 }
-
-Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+ #ifdef LEGACY_EXEC
+Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
-	{
+    {
 #ifdef /* MCAudioClip::getprop */ LEGACY_EXEC
 	case P_SIZE:
 		ep.setint(size);
@@ -202,18 +223,20 @@ Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 		break;
 #endif /* MCAudioClip::getprop */ 
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
+#endif
 
-Exec_stat MCAudioClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	int2 i1;
 	MCString data = ep.getsvalue();
 
 	switch (p)
-	{
+    {
 #ifdef /* MCAudioClip::setprop */ LEGACY_EXEC
     // AL-2014-08-12: [[ Bug 13161 ]] Setting templateAudioClip properties shouldn't set global ones
 	case P_PLAY_DESTINATION:
@@ -238,8 +261,9 @@ Exec_stat MCAudioClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 	default:
 		break;
 	}
-	return MCObject::setprop(parid, p, ep, effective);
+	return MCObject::setprop_legacy(parid, p, ep, effective);
 }
+#endif
 
 Boolean MCAudioClip::del()
 {
@@ -386,13 +410,13 @@ void MCAudioClip::setlooping(Boolean loop)
 	looping = loop;
 }
 
-Boolean MCAudioClip::import(const char *fname, IO_handle stream)
+Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 {
 	size = (uint4)MCS_fsize(stream);
 	if (size == 0)
 		return False;
 	samples = new int1[size];
-	if (IO_read(samples, sizeof(int1), size, stream) != IO_NORMAL)
+	if (IO_read(samples, size, stream) != IO_NORMAL)
 		return False;
 	if (strnequal((char*)samples, ".snd", 4))
 	{
@@ -501,13 +525,18 @@ Boolean MCAudioClip::import(const char *fname, IO_handle stream)
 				rate = 11000;
 			}
 	}
-	const char *tname = strrchr(fname, PATH_SEPARATOR);
-	if (tname != NULL)
-		tname += 1;
-	else
-		tname = fname;
-	setname_cstring(tname);
-	return True;
+    uindex_t t_sep;
+    MCStringRef t_fname;
+    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+    else
+        t_fname = MCValueRetain(fname);
+    
+    MCNewAutoNameRef t_name;
+    if (!MCNameCreateAndRelease(t_fname, &t_name))
+        return False;
+    setname(*t_name);
+    return True;
 }
 
 #if defined FEATURE_PLATFORM_AUDIO
@@ -715,7 +744,7 @@ Boolean MCAudioClip::play()
 	{
 		real8 delay =  MCS_time() + (real8)size / (real8)(rate*nchannels*swidth);
 		MCParameter *newparam = new MCParameter;
-		newparam->setnameref_argument(getname());
+		newparam->setvalueref_argument(getname());
 		MCscreen->addmessage(MCdefaultstackptr->getcurcard(), MCM_play_stopped, delay, newparam);
 		return False;
 	}
@@ -885,7 +914,7 @@ IO_stat MCAudioClip::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCAudioClip::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCAudioClip::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -927,7 +956,7 @@ IO_stat MCAudioClip::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCAudioClip::load(IO_handle stream, const char *version)
+IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -938,7 +967,7 @@ IO_stat MCAudioClip::load(IO_handle stream, const char *version)
 	if (size != 0)
 	{
 		samples = new int1[size];
-		if ((stat = IO_read(samples, sizeof(int1), size, stream)) != IO_NORMAL)
+		if ((stat = IO_read(samples, size, stream)) != IO_NORMAL)
 			return stat;
 	}
 	if ((stat = IO_read_uint2(&format, stream)) != IO_NORMAL)
@@ -951,8 +980,8 @@ IO_stat MCAudioClip::load(IO_handle stream, const char *version)
 		return stat;
 	if (flags & F_LOUDNESS)
 		if ((stat = IO_read_uint2(&loudness, stream)) != IO_NORMAL)
-			return stat;
-	return loadpropsets(stream);
+            return stat;
+	return loadpropsets(stream, version);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

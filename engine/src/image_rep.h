@@ -89,7 +89,7 @@ public:
 	static void RemoveRep(MCCachedImageRep *p_rep);
 	static void MoveRepToHead(MCCachedImageRep *p_rep);
 
-	virtual const char *GetSearchKey() { return nil; };
+	virtual MCStringRef GetSearchKey() { return nil; };
 	
 	//////////
 	
@@ -98,7 +98,7 @@ public:
 	
 	//////////
 	
-	static bool FindWithKey(const char *p_key, MCCachedImageRep *&r_rep);
+	static bool FindWithKey(MCStringRef p_key, MCCachedImageRep *&r_rep);
 	
 	static uint32_t GetCacheUsage() { return s_cache_size; }
 	static void SetCacheLimit(uint32_t p_limit)	{ s_cache_limit = p_limit; }
@@ -202,14 +202,14 @@ protected:
 class MCReferencedImageRep : public MCEncodedImageRep
 {
 public:
-	MCReferencedImageRep(const char *p_filename, const char *p_searchkey);
+	MCReferencedImageRep(MCStringRef p_filename, MCStringRef p_searchkey);
 	~MCReferencedImageRep();
 
 	MCImageRepType GetType() { return kMCImageRepReferenced; }
 
 	//////////
 
-	const char *GetSearchKey()
+	MCStringRef GetSearchKey()
 	{
 		return m_search_key;
 	}
@@ -220,8 +220,8 @@ protected:
 	// open a datastream to the referenced image file
 	bool GetDataStream(IO_handle &r_stream);
 
-	char *m_file_name;
-	char *m_search_key;
+	MCStringRef m_file_name;
+	MCStringRef m_search_key;
 
 	// hold data from remote image
 	void *m_url_data;
@@ -356,7 +356,7 @@ protected:
 class MCDensityMappedImageRep : public MCCachedImageRep
 {
 public:
-	MCDensityMappedImageRep(const char *p_filename);
+	MCDensityMappedImageRep(MCStringRef p_filename);
 	~MCDensityMappedImageRep();
 	
 	MCImageRepType GetType() { return kMCImageRepReferenced; }
@@ -373,7 +373,7 @@ public:
 	
 	//////////
 
-	const char *GetSearchKey() { return m_filename; }
+	MCStringRef GetSearchKey() { return m_filename; }
 	
 	uint32_t GetFrameByteCount() { return 0; }
 	void ReleaseFrames() {};
@@ -397,18 +397,18 @@ protected:
 	bool m_locked;
 	uint32_t m_locked_source;
 	
-	char *m_filename;
+	MCStringRef m_filename;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageRepCreateReferencedWithSearchKey(const char *p_filename, const char *p_searchkey, MCImageRep *&r_rep);
+bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef p_searchkey, MCImageRep *&r_rep);
 
-bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep);
+bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep);
 bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
-bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep);
+bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep);
 
 // IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
 // and explicit flip params instead of scale values.

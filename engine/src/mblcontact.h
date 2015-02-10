@@ -69,18 +69,16 @@ typedef enum
 	kMCContactKeyCountryCode,	// iOS
 } MCContactEntryKey;
 
-bool MCContactAddProperty(MCExecPoint &ep, MCVariableValue *p_contact, MCNameRef p_property, MCString p_value);
-bool MCContactAddPropertyWithLabel(MCExecPoint &ep, MCVariableValue *p_contact, MCNameRef p_property, MCNameRef p_label, MCVariableValue *p_value);
-bool MCContactAddPropertyWithLabel(MCExecPoint &ep, MCVariableValue *p_contact, MCNameRef p_property, MCNameRef p_label, MCString p_value);
+bool MCContactAddProperty(MCArrayRef p_contact, MCNameRef p_property, MCStringRef p_value);
+bool MCContactAddPropertyWithLabel(MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCValueRef p_value);
 
-bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 bool MCSystemPickContact(int32_t& r_result);
 bool MCSystemShowContact(int32_t p_contact_id, int32_t& r_result);
 bool MCSystemCreateContact(int32_t& r_result);
-bool MCSystemUpdateContact(MCVariableValue *p_contact, const char *p_title, const char *p_message, const char *p_alternate_name, int32_t &r_result);
-bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCVariableValue*& r_contact_data);
+bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name, int32_t &r_result);
+bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef& r_contact_data);
 bool MCSystemRemoveContact(int32_t p_contact_id);
-bool MCSystemAddContact(MCVariableValue *p_contact, int32_t &r_result);
-bool MCSystemFindContact(const char* p_contact_name, char*& r_result);
+bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result);
+bool MCSystemFindContact(MCStringRef p_contact_name, MCStringRef& r_result);
 
 #endif

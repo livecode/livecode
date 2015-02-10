@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
 #include "mcerror.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "font.h"
 #include "dispatch.h"
@@ -33,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 
 #include "graphics_util.h"
-#include "unicode.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +61,7 @@ struct MCFont
 struct MCLoadedFont
 {
     MCLoadedFont *next;
-    char *path;
+    MCStringRef path;
     bool is_global;
     void *handle;
 };
@@ -107,7 +105,7 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 
 	uint2 t_temp_size;
 	t_temp_size = self -> size;
-	self -> fontstruct = MCdispatcher -> loadfont(MCNameGetCString(self -> name), t_temp_size, MCFontStyleToTextStyle(self -> style), (self -> style & kMCFontStylePrinterMetrics) != 0);
+	self -> fontstruct = MCdispatcher -> loadfont(self -> name, t_temp_size, MCFontStyleToTextStyle(self -> style), (self -> style & kMCFontStylePrinterMetrics) != 0);
 
 	// MW-2013-12-04: [[ Bug 11535 ]] Test to see if the font is fixed-width, at least for
 	//   Roman script.
@@ -201,12 +199,12 @@ int32_t MCFontGetDescent(MCFontRef self)
 	return self -> fontstruct -> descent;
 }
 
-void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, MCFontBreakTextCallback p_callback, void *p_callback_data)
+void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data, bool p_rtl)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (p_font -> fontstruct == nil)
 		return;
-	
+
     // If the text is small enough, don't bother trying to break it
     /*if (p_length <= (kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1)))
     {
@@ -229,42 +227,46 @@ void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bo
     // This isn't a particularly good algorithm but should suffice until full
     // Unicode support is added and a proper breaking algorithm implemented.
     uint32_t t_stride;
-    t_stride = kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1);
-    while (p_length > 0)
+    t_stride = kMCFontBreakTextCharLimit;
+    
+    uindex_t t_end = p_range.offset + p_range.length;
+    
+    uindex_t t_length = p_range.length;
+    uindex_t t_offset = (p_rtl) ? 0 : p_range.offset;
+    
+    while (t_length > 0)
     {
         int t_break_quality;
-        uint32_t t_break_point, t_index;
+        uindex_t t_break_point, t_index;
+
         t_break_quality = 0;
         t_break_point = 0;
         t_index = 0;
-       
-        uint32_t t_length;
-        t_length = p_length / (p_is_unicode ? 2 : 1);
-        
+
         // Find the best break within the next stride characters. If there are
         // no breaking points, extend beyond the stride until one is found.
         while ((t_index < t_stride || t_break_quality == 0) && t_index < t_length)
         {
-            uint32_t t_char;
-            uint32_t t_advance;
+            codepoint_t t_char;
+            uindex_t t_advance;
             
-            if (p_is_unicode)
+            if (p_rtl)
+                t_char = MCStringGetCharAtIndex(p_text, t_end - t_index - t_offset);
+            else
+                t_char = MCStringGetCharAtIndex(p_text, t_offset + t_index);
+            
+            if (MCUnicodeCodepointIsHighSurrogate(t_char))
             {
-                t_char = ((unichar_t*)p_text)[t_index];
-                if (0xD800 <= t_char && t_char < 0xDC00)
-                {
-                    // Surrogate pair
-                    t_char = ((t_char - 0xD800) << 10) + (((unichar_t*)p_text)[t_index+1] - 0xDC00);
-                    t_advance = 2;
-                }
+                // Surrogate pair
+                if (p_rtl)
+                    t_char = MCUnicodeSurrogatesToCodepoint(t_char, MCStringGetCharAtIndex(p_text, t_end - t_index - t_offset - 1));
                 else
-                {
-                    t_advance = 1;
-                }
+                    t_char = MCUnicodeSurrogatesToCodepoint(t_char, MCStringGetCharAtIndex(p_text, t_offset + t_index + 1));
+                
+                t_advance = 2;
             }
             else
             {
-                t_char = p_text[t_index];
                 t_advance = 1;
             }
             
@@ -290,9 +292,9 @@ void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bo
                 t_break_point = t_index;
                 t_break_quality = 1;
             }
-            else if (t_break_quality < 2 && 0xDC00 <= t_char && t_char <= 0xDFFF)
+            else if (t_break_quality < 2 && t_char > 0xFFFF)
             {
-                // Trailing character of surrogate pair
+                // Character outside BMP, assume can break here
                 t_break_point = t_index;
                 t_break_quality = 1;
             }
@@ -317,16 +319,49 @@ void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bo
             t_break_point = t_length;
         
         // Process this chunk of text
-        uint32_t t_byte_len;
-        t_byte_len = t_break_point * (p_is_unicode ? 2 : 1);
-        p_callback(p_font, p_text, t_byte_len, p_is_unicode, p_callback_data);
+        MCRange t_range;
+        if (p_rtl)
+            t_range = MCRangeMake(t_end - t_offset - t_break_point, t_break_point);
+        else
+            t_range = MCRangeMake(t_offset, t_break_point);
+
+#if !defined(_WIN32) && !defined(_ANDROID_MOBILE)
+        // This is a really ugly hack to get LTR/RTL overrides working correctly -
+        // ATSUI and Pango think they know better than us and won't let us suppress
+        // the BiDi algorithm they uses for text layout. So instead, we need to add
+        // an LRO or RLO character in front of every single bit of text :-(
+        MCAutoStringRef t_temp;
+        unichar_t t_override;
+        if (p_rtl)
+            t_override = 0x202E;
+        else
+            t_override = 0x202D;
+        /* UNCHECKED */ MCStringCreateMutable(0, &t_temp);
+        /* UNCHECKED */ MCStringAppendChar(*t_temp, t_override);
+        /* UNCHECKED */ MCStringAppendSubstring(*t_temp, p_text, t_range);
+        /* UNCHECKED */ MCStringAppendChar(*t_temp, 0x202C);
+        
+        p_callback(p_font, *t_temp, MCRangeMake(0, MCStringGetLength(*t_temp)), p_callback_data);
+#else
+        // Another ugly hack - this time, to avoid incoming strings being coerced
+        // into Unicode strings needlessly (because the drawing code uses unichars).
+        // Do a mutable copy (to ensure an actual copy) before drawing.
+        MCAutoStringRef t_temp;
+        /* UNCHECKED */ MCStringMutableCopySubstring(p_text, t_range, &t_temp);
+        p_callback(p_font, *t_temp, MCRangeMake(0, t_range.length), p_callback_data);
+#endif
         
         // Explicitly show breaking points
-        //p_callback(p_font, "|", 1, false, p_callback_data);
+        //p_callback(p_font, MCSTR("|"), MCRangeMake(0, 1), p_callback_data);
         
         // Move on to the next chunk
-        p_text += t_byte_len;
-        p_length -= t_byte_len;
+        t_offset += t_break_point;
+        // SN-2014-07-23: [[ Bug 12910 ]] Script editor crashes
+        //  Make sure we get 0 as a minimum, not a negative value since t_length is a uindex_t.
+        if (t_length < t_break_point)
+            t_length = 0;
+        else
+            t_length -= t_break_point;
     }
 }
 
@@ -339,10 +374,10 @@ struct font_measure_text_context
 	MCGAffineTransform m_transform;
 };
 
-static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_measure_text_context *ctxt)
+static void MCFontMeasureTextCallback(MCFontRef p_font, MCStringRef p_string, MCRange p_range, font_measure_text_context *ctxt)
 {
-    if (p_length == 0 || p_text == NULL)
-		return;
+    if (MCStringIsEmpty(p_string) || p_range.length == 0)
+        return;
 	
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
@@ -350,34 +385,29 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint
 	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
 	t_font . fixed_advance = p_font -> fixed_advance;
 	
-	// MW-2013-12-04: [[ Bug 11549 ]] Make sure unicode text is short-aligned.
-	MCExecPoint ep;
-	ep . setsvalue(MCString(p_text, p_length));
-	if (!p_is_unicode)
-		ep . nativetoutf16();
-	else if ((((uintptr_t)ep . getsvalue() . getstring()) & 1) != 0)
-		ep . grabsvalue();
-	
-	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform.
-    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font, ctxt -> m_transform);
+    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font, ctxt -> m_transform);
 }
 
-// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
-MCGFloat MCFontMeasureTextFloat(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, const MCGAffineTransform &p_transform)
+int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform)
+{
+    return (int32_t)floorf(MCFontMeasureTextSubstringFloat(p_font, p_text, p_range, p_transform));
+}
+
+int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text, const MCGAffineTransform &p_transform)
+{
+	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
+    return MCFontMeasureTextSubstring(p_font, p_text, t_range, p_transform);
+}
+
+MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string, MCRange p_range, const MCGAffineTransform &p_transform)
 {
     font_measure_text_context ctxt;
     ctxt.m_width = 0;
-	ctxt.m_transform = p_transform;
+    ctxt.m_transform = p_transform;
     
-    MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt);
-	
-	return ctxt . m_width;
-}
-
-// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
-int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, const MCGAffineTransform &p_transform)
-{
-    return (int32_t)floorf(MCFontMeasureTextFloat(p_font, p_text, p_length, p_is_unicode, p_transform));
+    MCFontBreakText(p_font, p_string, p_range, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt, false);
+    
+    return ctxt . m_width;
 }
 
 struct font_draw_text_context
@@ -386,39 +416,49 @@ struct font_draw_text_context
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the x-offset.
     MCGFloat x;
     int32_t y;
+    bool rtl;
 };
 
-static void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_draw_text_context *ctxt)
+static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange p_range, font_draw_text_context *ctxt)
 {
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
-	
-	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
+
+    // MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
 	t_font . fixed_advance = p_font -> fixed_advance;
-	
-	// MW-2013-12-04: [[ Bug 11549 ]] Make sure unicode text is short-aligned.
-	MCExecPoint ep;
-	ep . setsvalue(MCString(p_text, p_length));
-	if (!p_is_unicode)
-		ep . nativetoutf16();
-	else if ((((uintptr_t)ep . getsvalue() . getstring()) & 1) != 0)
-		ep . grabsvalue();
-	
-	MCGContextDrawPlatformText(ctxt->m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(ctxt->x, ctxt->y), t_font);
     
-    // The draw position needs to be advanced. Can this be done more efficiently?
-	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the scale of the context to make sure the measurment is correct.
-    ctxt -> x += MCGContextMeasurePlatformText(NULL, (unichar_t*)ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
+	// The drawing is done on the UTF-16 form of the text
+	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font, ctxt->rtl);
+
+    // The draw position needs to be advanced
+    // MM-2014-04-16: [[ Bug 11964 ]] Pass through the scale of the context to make sure the measurment is correct.
+    ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
 }
 
-void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
+void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break)
+{
+	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
+	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font, p_rtl, p_can_break);
+}
+
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;
     ctxt.y = y;
     ctxt.m_gcontext = p_gcontext;
+    ctxt.rtl = p_rtl;
     
-    MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt);
+    if (p_can_break)
+        MCFontBreakText(p_font, p_text, p_range, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt, p_rtl);
+    else
+    {
+        // AL-2014-08-20: [[ Bug 13186 ]] Ensure strings which skip go through the breaking algorithm
+        //  don't get permanently converted to UTF-16 when drawn
+        MCAutoStringRef t_temp;
+        /* UNCHECKED */ MCStringMutableCopy(p_text, &t_temp);
+        MCFontDrawTextCallback(p_font, *t_temp, p_range, &ctxt);
+    }
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)
@@ -467,7 +507,7 @@ void MCFontRemap(void)
 	{
 		uint2 t_temp_size;
 		t_temp_size = t_font -> size;
-		t_font -> fontstruct = MCdispatcher -> loadfont(MCNameGetCString(t_font -> name), t_temp_size, MCFontStyleToTextStyle(t_font -> style), (t_font -> style & kMCFontStylePrinterMetrics) != 0);
+		t_font -> fontstruct = MCdispatcher -> loadfont(t_font -> name, t_temp_size, MCFontStyleToTextStyle(t_font -> style), (t_font -> style & kMCFontStylePrinterMetrics) != 0);
 	}
 }
 
@@ -475,41 +515,41 @@ void MCFontRemap(void)
 
 // TD-2013-07-02: [[ DynamicFonts ]]
 // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCLoadedFont
-Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally)
+bool MCFontLoad(MCStringRef p_path, bool p_globally)
 {
-    Exec_stat t_stat;
-    t_stat = ES_NORMAL;
+    bool t_success;
+    t_success = true;
     
-    if (t_stat == ES_NORMAL)
+    if (t_success)
     {
         // check if already loaded and unload if globally is not the same as loaded version
         for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
-            if (MCU_strcasecmp(t_font -> path, p_path) == 0)
+            if (MCStringIsEqualTo(t_font -> path, p_path, kMCStringOptionCompareCaseless))
 			{
 				if (t_font -> is_global != p_globally)
 				{
-					t_stat = MCFontUnload(ep,p_path);
+					t_success = MCFontUnload(p_path);
 					break;
 				}
 				else
-					return ES_NORMAL;
+					return true;
 			}
     }
     
-    if (t_stat == ES_NORMAL)
+    if (t_success)
     {
         void * t_loaded_font_handle;
         
         if (!MCscreen -> loadfont(p_path, p_globally, t_loaded_font_handle))
-            return ES_ERROR;
+            return false;
     
         MCLoadedFontRef self;
         if (!MCMemoryNew(self))
-            return ES_ERROR;
+            return false;
         
         self -> is_global = p_globally;
         self -> handle = t_loaded_font_handle;
-        self -> path = strdup(p_path);
+        MCValueAssign(self -> path, p_path);
 		self -> next = s_loaded_fonts;
 		s_loaded_fonts = self;
 		
@@ -518,19 +558,19 @@ Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally)
 		MCstacks -> purgefonts();
     }
 
-    return t_stat;
+    return t_success;
 }
 
-Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path)
+bool MCFontUnload(MCStringRef p_path)
 {
     MCLoadedFont *t_prev_font;
     t_prev_font = nil;
     for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
     {
-        if (MCU_strcasecmp(t_font -> path, p_path) == 0)
+        if (MCStringIsEqualTo(t_font -> path, p_path, kMCStringOptionCompareCaseless))
         {
             if (!MCscreen -> unloadfont(p_path, t_font -> is_global, t_font -> handle))
-                return ES_ERROR;
+                return false;
             
             if (t_prev_font != nil)
                 t_prev_font -> next = t_font -> next;
@@ -550,16 +590,25 @@ Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path)
         t_prev_font = t_font;
     }
     
-    return ES_NORMAL;
+    return true;
 }
 
-Exec_stat MCFontListLoaded(MCExecPoint& ep)
+bool MCFontListLoaded(uindex_t& r_count, MCStringRef*& r_list)
 {
-    ep.clear();
-    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
-        ep.concatcstring(t_font -> path, EC_RETURN, t_font == s_loaded_fonts);
+    MCAutoStringRefArray t_list;
     
-    return ES_NORMAL;
+    bool t_success;
+    t_success = true;
+ 
+    // AL-2015-01-22: [[ Bug 14424 ]] 'the fontfilesinuse' can cause a crash, due to overreleasing MCStringRefs.
+    //  Property getters always release afterwards, use an MCAutoStringRefArray which increses the refcount.
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_success && t_font != nil; t_font = t_font -> next)
+        t_success = t_list . Push(t_font -> path);
+    
+    if (t_success)
+        t_list . Take(r_list, r_count);
+
+    return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,11 +654,11 @@ const char *MCF_getweightstring(uint2 style)
 	return weightstrings[weight];
 }
 
-Boolean MCF_setweightstring(uint2 &style, const MCString &data)
+Boolean MCF_setweightstring(uint2 &style, MCStringRef data)
 {
 	uint2 w;
 	for (w = MCFW_UNDEFINED ; w <= MCFW_ULTRABOLD ; w++)
-		if (data == weightstrings[w])
+		if (MCStringIsEqualToCString(data, weightstrings[w], kMCCompareCaseless))
 			break;
 	if (w <= MCFW_ULTRABOLD)
 	{
@@ -633,11 +682,11 @@ const char *MCF_getexpandstring(uint2 style)
 	return expandstrings[expand];
 }
 
-Boolean MCF_setexpandstring(uint2 &style, const MCString &data)
+Boolean MCF_setexpandstring(uint2 &style, MCStringRef data)
 {
 	uint2 w;
 	for (w = FE_UNDEFINED ; w <= FE_ULTRAEXPANDED ; w++)
-		if (data == expandstrings[w])
+		if (MCStringIsEqualToCString(data, expandstrings[w], kMCCompareCaseless))
 			break;
 	if (w <= FE_ULTRAEXPANDED)
 	{
@@ -666,14 +715,14 @@ const char *MCF_getslantlongstring(uint2 style)
 	return "";
 }
 
-Boolean MCF_setslantlongstring(uint2 &style, const MCString &data)
+Boolean MCF_setslantlongstring(uint2 &style, MCStringRef data)
 {
-	if (data == "oblique")
+	if (MCStringIsEqualToCString(data, "oblique", kMCCompareCaseless))
 	{
 		style |= FA_OBLIQUE;
 		return True;
 	}
-	if (data == "italic")
+	if (MCStringIsEqualToCString(data, "italic", kMCCompareCaseless))
 	{
 		style |= FA_ITALIC;
 		return True;
@@ -681,8 +730,8 @@ Boolean MCF_setslantlongstring(uint2 &style, const MCString &data)
 	return False;
 }
 
-Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
-                            uint4 &flags, char *&fname, uint2 &height,
+Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
+                            uint4 &flags, MCStringRef &fname, uint2 &height,
                             uint2 &size, uint2 &style)
 {
 	int2 i1;
@@ -690,16 +739,16 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 	{
 	case P_TEXT_ALIGN:
 		flags &= ~F_ALIGNMENT;
-		if (data == MCleftstring || data.getlength() == 0)
+		if (MCStringIsEqualToCString(data, MCleftstring, kMCCompareCaseless) || MCStringIsEmpty(data))
 			flags |= F_ALIGN_LEFT;
 		else
-			if (data == MCcenterstring)
+			if (MCStringIsEqualToCString(data, MCcenterstring, kMCCompareCaseless))
 				flags |= F_ALIGN_CENTER;
 			else
-				if (data == MCrightstring)
+				if (MCStringIsEqualToCString(data, MCrightstring, kMCCompareCaseless))
 					flags |= F_ALIGN_RIGHT;
 				else
-					if (data == MCjustifystring)
+					if (MCStringIsEqualToCString(data, MCjustifystring, kMCCompareCaseless))
 						flags |= F_ALIGN_JUSTIFY;
 					else
 					{
@@ -708,15 +757,13 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 					}
 		break;
 	case P_TEXT_FONT:
-		{
-			fname = data.clone();
-			
-			// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
+		{// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
 			//   fontname.
-			char *t_tag;
-			t_tag = strchr(fname, ',');
-			if (t_tag != nil)
-				t_tag[0] = '\0';
+			uindex_t t_offset;
+			if (MCStringFirstIndexOfChar(data, ',', 0, kMCCompareExact, t_offset))
+				/* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_offset + 1, MCStringGetLength(data) - (t_offset + 1)), fname);
+			else
+				fname = MCValueRetain(data);
 		}
 		break;
 	case P_TEXT_HEIGHT:
@@ -729,7 +776,7 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 		height = i1;
 		break;
 	case P_TEXT_SIZE:
-		if (data.getlength() == 0)
+		if (MCStringIsEmpty(data))
 			i1 = 0;
 		else
 			if (!MCU_stoi2(data, i1))
@@ -744,63 +791,69 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 		{
 			// MW-2012-02-17: [[ SplitTextAttrs ]] If the string is empty, then
 			//   return 0 for the style - indicating to unset the property.
-			uint4 l = data.getlength();
-			const char *sptr = data.getstring();
-			if (l == 0)
+            if (MCStringIsEmpty(data))
 				style = 0;
 			else
-			{
-				style = FA_DEFAULT_STYLE;
-				while (l)
-				{
-					const char *startptr = sptr;
-					if (!MCU_strchr(sptr, l, ','))
-					{
-						sptr += l;
-						l = 0;
-					}
-					MCString tdata(startptr, sptr - startptr);
-					MCU_skip_char(sptr, l);
-					MCU_skip_spaces(sptr, l);
-					if (MCF_setweightstring(style, tdata))
+            {
+                style = FA_DEFAULT_STYLE;
+                uindex_t t_start_pos, t_end_pos;
+                t_end_pos = 0;
+                
+                while (t_end_pos < MCStringGetLength(data))
+                {
+                    t_start_pos = t_end_pos;
+                    // skip spaces at the beginning or after a comma (if any)
+                    MCU_skip_spaces(data, t_start_pos);
+                    
+                    uindex_t t_comma;
+                    if (!MCStringFirstIndexOfChar(data, ',', t_start_pos, kMCCompareExact, t_comma))
+                        t_end_pos = MCStringGetLength(data);
+                    else
+                        t_end_pos = t_comma;
+                    
+                    MCAutoStringRef tdata;
+                    /* UNCHECKED */ MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &tdata);
+                    t_end_pos++;
+                    if (MCF_setweightstring(style, *tdata))
 						continue;
-					if (MCF_setexpandstring(style, tdata))
+					if (MCF_setexpandstring(style, *tdata))
 						continue;
-					if (MCF_setslantlongstring(style, tdata))
+					if (MCF_setslantlongstring(style, *tdata))
 						continue;
-					if (tdata == MCplainstring)
+					if (MCStringIsEqualToCString(*tdata, MCplainstring, kMCCompareCaseless))
 					{
 						style = FA_DEFAULT_STYLE;
 						continue;
 					}
-					if (tdata == MCmixedstring)
+					if (MCStringIsEqualToCString(*tdata, MCmixedstring, kMCCompareCaseless))
 					{
 						style = FA_DEFAULT_STYLE;
 						continue;
 					}
-					if (tdata == MCboxstring)
+					if (MCStringIsEqualToCString(*tdata, MCboxstring, kMCCompareCaseless))
 					{
 						style &= ~FA_3D_BOX;
 						style |= FA_BOX;
 						continue;
-					}
-					if (tdata == MCthreedboxstring)
+                    }
+                
+					if (MCStringIsEqualToCString(*tdata, MCthreedboxstring, kMCCompareCaseless))
 					{
 						style &= ~FA_BOX;
 						style |= FA_3D_BOX;
 						continue;
 					}
-					if (tdata == MCunderlinestring)
+					if (MCStringIsEqualToCString(*tdata, MCunderlinestring, kMCCompareCaseless))
 					{
 						style |= FA_UNDERLINE;
 						continue;
 					}
-					if (tdata == MCstrikeoutstring)
+					if (MCStringIsEqualToCString(*tdata, MCstrikeoutstring, kMCCompareCaseless))
 					{
 						style |= FA_STRIKEOUT;
 						continue;
 					}
-					if (tdata == MCgroupstring || tdata == MClinkstring)
+					if (MCStringIsEqualToCString(*tdata, MCgroupstring, kMCCompareCaseless) || MCStringIsEqualToCString(*tdata, MClinkstring, kMCCompareCaseless))
 					{
 						style |= FA_LINK;
 						continue;
@@ -817,9 +870,8 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 	return ES_NORMAL;
 }
 
-Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
-                              const char *name, uint2 height, uint2 size,
-                              uint2 style)
+    
+Exec_stat MCF_unparsetextatts(Properties which, uint4 flags, MCStringRef name, uint2 height, uint2 size, uint2 style, MCValueRef &r_result)
 {
 	switch (which)
 	{
@@ -827,56 +879,68 @@ Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
 		switch (flags & F_ALIGNMENT)
 		{
 		case F_ALIGN_LEFT:
-			ep.setstaticcstring(MCleftstring);
-			break;
+            r_result = MCSTR(MCleftstring);
+            break;
 		case F_ALIGN_CENTER:
-			ep.setstaticcstring(MCcenterstring);
+			r_result = MCSTR(MCcenterstring);
 			break;
 		case F_ALIGN_RIGHT:
-			ep.setstaticcstring(MCrightstring);
+			r_result = MCSTR(MCrightstring);
 			break;
 		case F_ALIGN_JUSTIFY:
-			ep.setstaticcstring(MCjustifystring);
-			break;
+			r_result = MCSTR(MCjustifystring);
+            break;
 		}
 		break;
 	case P_TEXT_FONT:
-		ep.setsvalue(name);
+        r_result = MCValueRetain(name);
 		break;
 	case P_TEXT_HEIGHT:
-		ep.setint(height);
+        {
+        MCAutoNumberRef t_height;
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(height, &t_height);
+        r_result = MCValueRetain(*t_height);
 		break;
+        }
 	case P_TEXT_SIZE:
-		ep.setint(size);
+        {
+        MCAutoNumberRef t_size;
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(size, &t_size);
+            r_result = MCValueRetain(*t_size);
 		break;
+        }
 	case P_TEXT_STYLE:
 		{
 			if (style == FA_DEFAULT_STYLE)
 			{
-				ep.setstaticcstring(MCplainstring);
+                r_result = MCSTR(MCplainstring);
 				return ES_NORMAL;
 			}
-			
-			uint32_t j;
-			j = 0;
 
-			ep.clear();
+			if (r_result != nil)
+                MCValueRelease(r_result);
+            MCAutoListRef t_list;
+            /* UNCHECKED */ MCListCreateMutable(',', &t_list);
 			if (MCF_getweightint(style) != MCFW_MEDIUM)
-				ep.concatcstring(MCF_getweightstring(style), EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCF_getweightstring(style));
 			if (style & FA_ITALIC || style & FA_OBLIQUE)
-				ep.concatcstring(MCF_getslantlongstring(style), EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCF_getslantlongstring(style));
 			if (style & FA_BOX)
-				ep.concatcstring(MCboxstring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCboxstring);
 			if (style & FA_3D_BOX)
-				ep.concatcstring(MCthreedboxstring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCthreedboxstring);
 			if (style & FA_UNDERLINE)
-				ep.concatcstring(MCunderlinestring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCunderlinestring);
 			if (style & FA_STRIKEOUT)
-				ep.concatcstring(MCstrikeoutstring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCstrikeoutstring);
 			if (style & FA_LINK)
-				ep.concatcstring(MClinkstring, EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MClinkstring);
 			if (MCF_getexpandint(style) != FE_NORMAL)
-				ep.concatcstring(MCF_getexpandstring(style), EC_COMMA, j++ == 0);
+                MCListAppendCString(*t_list, MCF_getexpandstring(style));
+            
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
+            r_result = MCValueRetain(*t_string);
 		}
 		break;
 	default:
@@ -886,27 +950,27 @@ Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
 }
 
 // MW-2011-11-23: [[ Array TextStyle ]] Convert a textStyle name into the enum.
-Exec_stat MCF_parsetextstyle(const MCString &data, Font_textstyle &style)
+Exec_stat MCF_parsetextstyle(MCStringRef data, Font_textstyle &style)
 {
-	if (data == "bold")
+	if (MCStringIsEqualToCString(data, "bold", kMCCompareCaseless))
 		style = FTS_BOLD;
-	else if (data == "condensed")
+	else if (MCStringIsEqualToCString(data, "condensed", kMCCompareCaseless))
 		style = FTS_CONDENSED;
-	else if (data == "expanded")
+	else if (MCStringIsEqualToCString(data, "expanded", kMCCompareCaseless))
 		style = FTS_EXPANDED;
-	else if (data == "italic")
+	else if (MCStringIsEqualToCString(data, "italic", kMCCompareCaseless))
 		style = FTS_ITALIC;
-	else if (data == "oblique")
+	else if (MCStringIsEqualToCString(data, "oblique", kMCCompareCaseless))
 		style = FTS_OBLIQUE;
-	else if (data == MCboxstring)
+	else if (MCStringIsEqualToCString(data, MCboxstring, kMCCompareCaseless))
 		style = FTS_BOX;
-	else if (data == MCthreedboxstring)
+	else if (MCStringIsEqualToCString(data, MCthreedboxstring, kMCCompareCaseless))
 		style = FTS_3D_BOX;
-	else if (data == MCunderlinestring)
+	else if (MCStringIsEqualToCString(data, MCunderlinestring, kMCCompareCaseless))
 		style = FTS_UNDERLINE;
-	else if (data == MCstrikeoutstring)
+	else if (MCStringIsEqualToCString(data, MCstrikeoutstring, kMCCompareCaseless))
 		style = FTS_STRIKEOUT;
-	else if (data == MCgroupstring || data == MClinkstring)
+	else if (MCStringIsEqualToCString(data, MCgroupstring, kMCCompareCaseless) || MCStringIsEqualToCString(data, MClinkstring, kMCCompareCaseless))
 		style = FTS_LINK;
 	else
 	{
@@ -969,13 +1033,13 @@ void MCF_changetextstyle(uint2& x_style_set, Font_textstyle p_style, bool p_new_
 	switch(p_style)
 	{
 	case FTS_BOLD:
-		MCF_setweightstring(x_style_set, p_new_state ? "bold" : "medium");
+		MCF_setweightstring(x_style_set, p_new_state ? MCSTR("bold") : MCSTR("medium"));
 		return;
 	case FTS_CONDENSED:
-		MCF_setexpandstring(x_style_set, p_new_state ? "condensed" : "normal");
+		MCF_setexpandstring(x_style_set, p_new_state ? MCSTR("condensed") : MCSTR("normal"));
 		return;
 	case FTS_EXPANDED:
-		MCF_setexpandstring(x_style_set, p_new_state ? "expanded" : "normal");
+		MCF_setexpandstring(x_style_set, p_new_state ? MCSTR("expanded") : MCSTR("normal"));
 		return;
 	case FTS_ITALIC:
 		t_flag = FA_ITALIC;

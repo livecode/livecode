@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "stack.h"
 
@@ -37,21 +36,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
+bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
 {
     int64_t t_id = -1;
     int32_t t_seconds;
-   MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
     
-    MCD_convert_from_datetime(ep, CF_SECONDS, CF_UNDEFINED, p_date);
-    t_seconds = ep.getint4();
+    MCAutoValueRef t_val;
+	/* UNCHECKED */ MCD_convert_from_datetime(ctxt, p_date, CF_SECONDS, CF_UNDEFINED, &t_val);
+    /* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_seconds);
 
-    MCAndroidEngineRemoteCall("createLocalNotification", "jsssibi", &t_id, p_alert_body, p_alert_action, p_user_info, t_seconds, p_play_sound, p_badge_value);
+    MCAndroidEngineRemoteCall("createLocalNotification", "jxxxibi", &t_id, p_alert_body, p_alert_action, p_user_info, t_seconds, p_play_sound, p_badge_value);
     r_id = (int32_t) t_id;
     return t_id >= 0;
 }
 
-bool MCSystemGetRegisteredNotifications (char *&r_registered_alerts)
+bool MCSystemGetRegisteredNotifications (MCStringRef &r_registered_alerts)
 {
     char *t_notifications = nil;
     
@@ -60,8 +60,7 @@ bool MCSystemGetRegisteredNotifications (char *&r_registered_alerts)
     if (t_notifications != nil)
     {
 //        MCLog("got list of notifications: %s", t_notifications);
-        r_registered_alerts = t_notifications;
-        return true;
+        return MCStringCreateWithCString(t_notifications, r_registered_alerts);
     }
     else
         return false;
@@ -91,19 +90,17 @@ JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doReturnNo
     if (t_success)
     {
 //        MCLog("doReturnNotificationDetails(%s, %s, %s, %lld, %d, %d", t_body, t_action, t_user_info, time, play_sound, badge_value);
-        s_notification->body = t_body;
-        s_notification->action = t_action;
-        s_notification->user_info = t_user_info;
+        t_success = MCStringCreateWithCString(t_body, s_notification->body);
+        t_success |= MCStringCreateWithCString(t_action, s_notification->action);
+        t_success |= MCStringCreateWithCString(t_user_info, s_notification->user_info);
         s_notification->time = (uint32_t)(time / 1000);
         s_notification->play_sound = play_sound;
         s_notification->badge_value = badge_value;
     }
-    else
-    {
-        MCCStringFree(t_body);
-        MCCStringFree(t_action);
-        MCCStringFree(t_user_info);
-    }
+    
+    MCCStringFree(t_body);
+    MCCStringFree(t_action);
+    MCCStringFree(t_user_info);
     
     return t_success;
 }
@@ -135,21 +132,22 @@ bool MCSystemSetNotificationBadgeValue (uint32_t p_badge_value)
     return false;
 }
 
-bool MCSystemGetDeviceToken (char *&r_device_token)
+bool MCSystemGetDeviceToken (MCStringRef& r_device_token)
 {
     bool t_success = true;
-    char *t_registration_id = nil;
+    MCAutoStringRef t_registration_id;
     
-    MCAndroidEngineRemoteCall("getRemoteNotificationId", "s", &t_registration_id);
-    t_success = t_registration_id != nil;
+    MCAndroidEngineRemoteCall("getRemoteNotificationId", "x", &(&t_registration_id));
+    
+    t_success = *t_registration_id != nil;
     
     if (t_success)
-        r_device_token = t_registration_id;
+        r_device_token = MCValueRetain(*t_registration_id);
     
     return t_success;
 }
 
-bool MCSystemGetLaunchUrl (char *&r_launch_url)
+bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url)
 {
     bool t_success = true;
     char *t_launch_url = nil;
@@ -158,7 +156,7 @@ bool MCSystemGetLaunchUrl (char *&r_launch_url)
     t_success = t_launch_url != nil;
     
     if (t_success)
-        r_launch_url = t_launch_url;
+        t_success = MCStringCreateWithCString(t_launch_url, r_launch_url);
     
     return t_success;
 }
@@ -168,10 +166,9 @@ bool MCSystemGetLaunchUrl (char *&r_launch_url)
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doLocalNotification(JNIEnv *env, jobject object, jstring user_info) __attribute__((visibility("default")));
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doLocalNotification(JNIEnv *env, jobject object, jstring user_info)
 {
-    char *t_user_info = nil;
-    if (MCJavaStringToNative(env, user_info, t_user_info))
-        MCNotificationPostLocalNotificationEvent(MCString(t_user_info));
-    MCCStringFree(t_user_info);
+    MCAutoStringRef t_user_info;
+	if (MCJavaStringToStringRef(env, user_info, &t_user_info))
+        MCNotificationPostLocalNotificationEvent(*t_user_info);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,26 +176,23 @@ JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doLocalNot
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteNotification(JNIEnv *env, jobject object, jstring user_info) __attribute__((visibility("default")));
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteNotification(JNIEnv *env, jobject object, jstring user_info)
 {
-    char *t_user_info = nil;
-    if (MCJavaStringToNative(env, user_info, t_user_info))
-        MCNotificationPostPushNotificationEvent(MCString(t_user_info));
-    MCCStringFree(t_user_info);
+    MCAutoStringRef t_user_info;
+	if (MCJavaStringToStringRef(env, user_info, &t_user_info))
+        MCNotificationPostPushNotificationEvent(*t_user_info);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistrationError(JNIEnv *env, jobject object, jstring error) __attribute__((visibility("default")));
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistrationError(JNIEnv *env, jobject object, jstring error)
 {
-    char *t_error = nil;
-    if (MCJavaStringToNative(env, error, t_error))
-        MCNotificationPostPushRegistrationError(MCString(t_error));
-    MCCStringFree(t_error);
+	MCAutoStringRef t_error_str;
+    if (MCJavaStringToStringRef(env, error, &t_error_str))
+        MCNotificationPostPushRegistrationError(*t_error_str);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistration(JNIEnv *env, jobject object, jstring registration_id) __attribute__((visibility("default")));
 JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doRemoteRegistration(JNIEnv *env, jobject object, jstring registration_id)
 {
-    char *t_registration_id = nil;
-    if (MCJavaStringToNative(env, registration_id, t_registration_id))
-        MCNotificationPostPushRegistered(MCString(t_registration_id));
-    MCCStringFree(t_registration_id);
+	MCAutoStringRef t_id_str;
+    if (MCJavaStringToStringRef(env, registration_id, &t_id_str))
+        MCNotificationPostPushRegistered(*t_id_str);
 }

@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "globals.h"
 
@@ -28,22 +28,62 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "param.h"
+#include "exec.h"
 
-#include "core.h"
 #include "eventqueue.h"
 
 #include "mblstore.h"
 
 #include <StoreKit/StoreKit.h>
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+void MCPurchaseGetProductIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_productIdentifier);
+void MCPurchaseGetQuantity(MCExecContext& ctxt,MCPurchase *p_purchase, uinteger_t& r_quantity);
+void MCPurchaseGetPurchaseDate(MCExecContext& ctxt,MCPurchase *p_purchase, integer_t& r_date);
+void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier);
+void MCPurchaseGetReceipt(MCExecContext& ctxt,MCPurchase *p_purchase, MCDataRef& r_receipt);
+void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier);
+void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt,MCPurchase *p_purchase, integer_t& r_date);
+void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt,MCPurchase *p_purchase, MCDataRef& r_receipt);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+void MCPurchaseSetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t p_quantity);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+static MCPropertyInfo kProperties[] =
+{
+    DEFINE_RO_STORE_PROPERTY(P_PRODUCT_IDENTIFIER, String, Purchase, ProductIdentifier)
+    DEFINE_RW_STORE_PROPERTY(P_PURCHASE_QUANTITY, UInt32, Purchase, Quantity)
+    DEFINE_RO_STORE_PROPERTY(P_PURCHASE_DATE, Int32, Purchase, PurchaseDate)
+    DEFINE_RO_STORE_PROPERTY(P_TRANSACTION_IDENTIFIER, String, Purchase, TransactionIdentifier)
+    DEFINE_RO_STORE_PROPERTY(P_RECEIPT, BinaryString, Purchase, Receipt)
+    DEFINE_RO_STORE_PROPERTY(P_ORIGINAL_PURCHASE_DATE, Int32, Purchase, OriginalPurchaseDate)
+    DEFINE_RO_STORE_PROPERTY(P_ORIGINAL_TRANSACTION_IDENTIFIER, String, Purchase, OriginalTransactionIdentifier)
+    DEFINE_RO_STORE_PROPERTY(P_ORIGINAL_RECEIPT, BinaryString, Purchase, OriginalReceipt)
+};
+
+static MCPurchasePropertyTable kPropertyTable =
+{
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+const MCPurchasePropertyTable *getpropertytable()
+{
+    return &kPropertyTable;
+}
+
 static MCPurchase *s_purchase_request = nil;
 
 typedef struct
 {
 	SKMutablePayment *payment;
-	NSString *product_id;
+	MCStringRef product_id;
 	SKPaymentTransaction *transaction;
-	char *error;
+	MCStringRef error;
 } MCiOSPurchase;
 
 bool MCPurchaseFindByTransaction(SKPaymentTransaction *p_transaction, MCPurchase *&r_purchase)
@@ -62,7 +102,7 @@ bool MCPurchaseFindByTransaction(SKPaymentTransaction *p_transaction, MCPurchase
 	return false;
 }
 
-bool MCPurchaseInit(MCPurchase *p_purchase, const char *p_product_id, void *p_context)
+bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context)
 {
 	bool t_success = true;
 
@@ -74,24 +114,27 @@ bool MCPurchaseInit(MCPurchase *p_purchase, const char *p_product_id, void *p_co
 	{
 		MCiOSPurchase *t_ios_data = nil;
 
-		t_success = p_product_id != nil;
+		t_success = !MCStringIsEmpty(p_product_id);
 		
 		if (t_success)
 			t_success = MCMemoryNew(t_ios_data);
 		
 		if (t_success)
-			t_success = nil != (t_ios_data->product_id = [NSString stringWithCString:p_product_id encoding:NSMacOSRomanStringEncoding]);
-		if (t_success)
-			t_success = nil != (t_ios_data->payment = [SKMutablePayment paymentWithProductIdentifier: t_ios_data->product_id]);
-		
+        {
+			t_ios_data->product_id = MCValueRetain(p_product_id);
+			t_success = nil != (t_ios_data->payment = [SKMutablePayment paymentWithProductIdentifier: [NSString stringWithMCStringRef:t_ios_data->product_id]]);
+		}
 		if (t_success)
 		{
-			[t_ios_data->product_id retain];
 			[t_ios_data->payment retain];
 			p_purchase->platform_data = t_ios_data;
+            t_ios_data->error = MCValueRetain(kMCEmptyString);
 		}
 		else
-			MCMemoryDelete(t_ios_data);
+        {
+            MCValueRelease(t_ios_data -> product_id);
+            MCMemoryDelete(t_ios_data);
+        }
 	}
 	
 	return t_success;
@@ -106,8 +149,9 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	if (t_ios_data == nil)
 		return;
 	
-	if (t_ios_data->error)
-		MCCStringFree(t_ios_data->error);
+	MCValueRelease(t_ios_data->error);
+    MCValueRelease(t_ios_data->product_id);
+
 	if (t_ios_data->payment)
 		[t_ios_data->payment release];
 	if (t_ios_data->transaction)
@@ -116,6 +160,7 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	MCMemoryDelete(t_ios_data);
 }
 
+#ifdef /* MCPurchaseSet */ LEGACY_EXEC
 Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
@@ -140,7 +185,9 @@ Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 	
 	return ES_NOT_HANDLED;
 }
+#endif /* MCPurchaseSet */
 
+#ifdef /* MCStoreGetPurchaseProperty */ LEGACY_EXEC
 char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_name)
 {
     bool t_success = true;
@@ -176,8 +223,56 @@ char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_n
     return temp;
 	
 }
+#endif
 
+// PM-2015-01-12: [[ Bug 14343 ]] Implemented MCStoreGetPurchaseProperty/MCStoreSetPurchaseProperty for iOS
+extern MCPropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *p_table, Properties p_which);
 
+void MCStoreGetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_prop_name, MCStringRef& r_property_value)
+{
+    MCPurchase *t_purchase = nil;
+    Properties t_property;
+    
+    MCPropertyInfo *t_info;
+    t_info = nil;
+    
+    if (MCPurchaseFindByProdId(p_product_id, t_purchase) && MCPurchaseLookupProperty(p_prop_name, t_property))
+        t_info = lookup_purchase_property(getpropertytable(), t_property);
+    
+    if (t_info != nil)
+	{
+		MCExecValue t_value;
+        MCExecFetchProperty(ctxt, t_info, t_purchase, t_value);
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
+        return;
+    }
+    
+    ctxt .Throw();
+}
+
+void MCStoreSetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_prop_name, MCStringRef p_value)
+{
+    MCPurchase *t_purchase = nil;
+	Properties t_property;
+    
+    MCPropertyInfo *t_info;
+    t_info = nil;
+    
+    if (MCPurchaseFindByProdId(p_product_id, t_purchase) && MCPurchaseLookupProperty(p_prop_name, t_property))
+        t_info = lookup_purchase_property(getpropertytable(), t_property);
+	
+	if (t_info != nil)
+	{
+		MCExecValue t_value;
+		MCExecValueTraits<MCValueRef>::set(t_value, MCValueRetain(p_value));
+        MCExecStoreProperty(ctxt, t_info, t_purchase, t_value);
+        return;
+	}
+    
+    ctxt . Throw();
+}
+
+#ifdef /* MCPurchaseGet */ LEGACY_EXEC
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
@@ -266,6 +361,208 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 	
 	return ES_NOT_HANDLED;
 }
+#endif /* MCPurchaseGet */
+
+void MCPurchaseGetProductIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_productIdentifier)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
+	
+    if (t_transaction != nil)
+		t_payment = [t_transaction payment];
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_payment != nil && MCStringCreateWithCFString((CFStringRef)[t_payment productIdentifier], r_productIdentifier))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCPurchaseGetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t& r_quantity)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
+	
+    if (t_transaction != nil)
+		t_payment = [t_transaction payment];
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_payment != nil)
+    {
+        r_quantity = [t_payment quantity];
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCPurchaseGetPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, integer_t& r_date)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
+	
+    if (t_transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_payment = [t_transaction payment];
+	}
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction != nil)
+    {
+        r_date = [[t_transaction transactionDate] timeIntervalSince1970];
+        return;
+    }
+    
+    ctxt . Throw();
+}
+// iOS
+void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_identifier)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
+	
+    if (t_transaction != nil)
+		t_payment = [t_transaction payment];
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction != nil && MCStringCreateWithCFString((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCPurchaseGetReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef& r_receipt)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
+	
+    if (t_transaction != nil)
+		t_payment = [t_transaction payment];
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction != nil)
+    {
+        NSData *t_bytes = [t_transaction transactionReceipt];
+        MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_identifier)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+    t_transaction = t_ios_data->transaction;
+	
+    if (t_transaction != nil)
+		t_original_transaction = [t_transaction originalTransaction];
+    
+    if (t_original_transaction != nil && MCStringCreateWithCString([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, integer_t& r_date)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    \
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+    t_transaction = t_ios_data->transaction;
+	
+    if (t_transaction != nil)
+		t_original_transaction = [t_transaction originalTransaction];
+    
+    if (t_original_transaction != nil)
+    {
+        r_date = [[t_original_transaction transactionDate] timeIntervalSince1970];
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef& r_receipt)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+    t_transaction = t_ios_data->transaction;
+	
+    if (t_transaction != nil)
+		t_original_transaction = [t_transaction originalTransaction];
+    
+    if (t_original_transaction != nil)
+    {
+        NSData *t_bytes = [t_original_transaction transactionReceipt];
+        MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef /* MCPurchaseSet */ LEGACY_EXEC
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+	switch (p_property)
+	{
+		case kMCPurchasePropertyQuantity:
+		{
+			if (t_ios_data->payment != nil)
+				[t_ios_data->payment setQuantity: p_quantity];
+			return ES_NORMAL;
+		}
+			break;
+		default:
+			break;
+	}
+	
+	return ES_NOT_HANDLED;
+}
+#endif /* MCPurchaseSet */
+
+void MCPurchaseSetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t p_quantity)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+    if (t_ios_data->payment == nil)
+        return;
+    
+    [t_ios_data->payment setQuantity: p_quantity];
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseSendRequest(MCPurchase *p_purchase)
 {
@@ -281,31 +578,8 @@ bool MCPurchaseSendRequest(MCPurchase *p_purchase)
 	return true;
 }
 
-bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload)
-{
-    MCPurchase *t_purchase = nil;
-    MCPurchaseFindByProdId(p_product_id, t_purchase);
-    MCExecPoint ep(nil,nil,nil);
-    ep.setcstring(p_quantity);
-    MCPurchaseSet(t_purchase, kMCPurchasePropertyQuantity, ep);
-
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)t_purchase->platform_data;
-	
-	if (t_ios_data->payment == nil)
-		return false;
-	
-	s_purchase_request = t_purchase;
-	[[SKPaymentQueue defaultQueue] addPayment: t_ios_data->payment];
-	s_purchase_request = nil;
-	
-	return true;
-}
-
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 {
-	if (p_purchase == nil || !(p_purchase->state == kMCPurchaseStatePaymentReceived || p_purchase->state == kMCPurchaseStateRestored))
-		return false;
-	
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	
 	[[SKPaymentQueue defaultQueue] finishTransaction: t_ios_data->transaction];
@@ -327,17 +601,45 @@ bool MCStoreRestorePurchases()
 	return true;
 }
 
-bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error)
-{
-	if (p_purchase == nil || p_purchase->state != kMCPurchaseStateError)
-		return false;
-	
+bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef &r_error)
+{	
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	
 	if (t_ios_data == nil)
 		return false;
 	
-	return MCCStringClone(t_ios_data->error, r_error);
+	r_error = MCValueRetain(t_ios_data->error);
+    return true;
+}
+
+bool MCStoreProductSetType(MCStringRef p_product_id, MCStringRef p_type)
+{
+    return true;
+}
+
+bool MCStoreMakePurchase(MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload)
+{
+    MCPurchase *t_purchase = nil;
+    bool t_success;    
+    t_success = true;
+    
+    if (t_success)
+        t_success = MCPurchaseFindByProdId(p_product_id, t_purchase);
+    
+    MCiOSPurchase *t_ios_data = (MCiOSPurchase*)t_purchase->platform_data;
+    
+    if (t_ios_data->payment == nil)
+        return false;
+    
+    uint32_t t_quantity;
+    MCU_stoui4(p_quantity, t_quantity);
+    [t_ios_data->payment setQuantity: t_quantity];
+    
+    s_purchase_request = t_purchase;
+    [[SKPaymentQueue defaultQueue] addPayment: t_ios_data->payment];
+    s_purchase_request = nil;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,12 +667,16 @@ void update_purchase_state(MCPurchase *p_purchase)
 			case SKPaymentTransactionStateFailed:
 			{
 				NSError *t_error = [t_ios_data->transaction error];
+                
+                if(t_error == nil)
+                    return;
 				if ([[t_error domain] isEqualToString:SKErrorDomain] && [t_error code] == SKErrorPaymentCancelled)
 					p_purchase->state = kMCPurchaseStateCancelled;
 				else
 				{
 					p_purchase->state = kMCPurchaseStateError;
-					MCCStringClone([[t_error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding], t_ios_data->error);
+                    MCValueRelease(t_ios_data->error);
+                    MCStringCreateWithCFString((CFStringRef)[t_error localizedDescription], t_ios_data->error);
 				}
 				break;
 			}
@@ -416,17 +722,16 @@ void update_purchase_state(MCPurchase *p_purchase)
 			
 			t_success = MCMemoryNew(t_ios_data);
 			if (t_success)
-				t_success = nil != (t_ios_data->product_id = [[t_transaction payment] productIdentifier]);
+				t_success = MCStringCreateWithCFString((CFStringRef)[[t_transaction payment] productIdentifier], t_ios_data->product_id);
 
 			if (t_success)
-				t_success = MCPurchaseCreate([t_ios_data->product_id cStringUsingEncoding:NSMacOSRomanStringEncoding], t_ios_data, t_purchase);
+				t_success = MCPurchaseCreate(t_ios_data->product_id, t_ios_data, t_purchase);
 
 			if (!t_success)
-				MCMemoryDelete(t_ios_data);
-			else
-			{
-				[t_ios_data->product_id retain];
-			}
+            {
+                MCValueRelease(t_ios_data -> product_id);
+                MCMemoryDelete(t_ios_data);
+            }
 		}
 		
 		if (t_purchase != nil)
@@ -490,7 +795,7 @@ bool MCStoreDisablePurchaseUpdates()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStorePostProductRequestError(const char *p_product, const char *p_error);
+bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error);
 bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 @interface MCProductsRequest : SKProductsRequest
@@ -548,7 +853,9 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
     {
         for (NSString *t_invalid_id in response.invalidProductIdentifiers)
         {
-            MCStorePostProductRequestError([t_invalid_id cStringUsingEncoding:NSMacOSRomanStringEncoding], "invalid product identifier");
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_invalid_id, &t_string);
+            MCStorePostProductRequestError(*t_string, MCSTR("invalid product identifier"));
         }
     }
     
@@ -565,23 +872,28 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 {
     [request release];
 }
+
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
 {
-    const char *t_product_id = [[(MCProductsRequest*)request getProductId] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    MCStorePostProductRequestError(t_product_id, [[error description] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+    MCAutoStringRef t_product, t_error;
+    
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[(MCProductsRequest*)request getProductId], &t_product);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error description], &t_error);
+
+    MCStorePostProductRequestError(*t_product, *t_error);
     [request release];
 }
 
 @end
 
 
-bool MCStoreRequestProductDetails(const char *p_product)
+bool MCStoreRequestProductDetails(MCStringRef p_product_id)
 {
     SKProductsRequest *t_request = nil;
     
     NSString *t_product_id = nil;
     
-    t_product_id = [NSString stringWithCString:p_product encoding:NSMacOSRomanStringEncoding];
+    t_product_id = [NSString stringWithMCStringRef: p_product_id];
     t_request = [[MCProductsRequest alloc] initWithProductId: t_product_id];
     
     [t_request setDelegate: [[MCProductsRequestDelegate alloc] init]];
@@ -591,43 +903,56 @@ bool MCStoreRequestProductDetails(const char *p_product)
     return true;
 }
 
+bool MCStoreReceiveProductDetails(MCStringRef p_product_id, MCStringRef &r_details)
+{
+    r_details = MCValueRetain(kMCEmptyString);
+    return true;
+}
+
+bool MCStoreConsumePurchase(MCStringRef p_product_id)
+{
+    return true;
+}
+
 ////////
 
 class MCStoreProductRequestErrorEvent : public MCCustomEvent
 {
 public:
-    MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error);
+    MCStoreProductRequestErrorEvent(MCStringRef p_product, MCStringRef p_error);
+    ~MCStoreProductRequestErrorEvent();
     
     void Destroy();
     void Dispatch();
     
 private:
-    char *m_product;
-    char *m_error;
+    MCStringRef m_product;
+    MCStringRef m_error;
 };
 
-MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error)
+MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(MCStringRef p_product, MCStringRef p_error)
 {
-    m_product = m_error = nil;
-    
-    MCCStringClone(p_product, m_product);
-    MCCStringClone(p_error, m_error);
+    m_product = MCValueRetain(p_product);
+    m_error = MCValueRetain(p_error);
+}
+
+MCStoreProductRequestErrorEvent::~MCStoreProductRequestErrorEvent()
+{
+    MCValueRelease(m_product);
+    MCValueRelease(m_error);
 }
 
 void MCStoreProductRequestErrorEvent::Destroy()
 {
-    MCCStringFree(m_product);
-    MCCStringFree(m_error);
-    
     delete this;
 }
 
 void MCStoreProductRequestErrorEvent::Dispatch()
 {
-    MCdefaultstackptr->getcurcard()->message_with_args(MCM_product_request_error, m_product, m_error);
+    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_product_request_error, m_product, m_error);
 }
 
-bool MCStorePostProductRequestError(const char *p_product, const char *p_error)
+bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error)
 {
     bool t_success;
     MCCustomEvent *t_event = nil;
@@ -688,7 +1013,7 @@ bool MCNSStringToUnicode(NSString *p_ns_string, unichar_t *&r_uni_string, uint32
 
 void MCStoreProductRequestResponseEvent::Dispatch()
 {
-    bool t_success = true;
+/*    bool t_success = true;
     
     const char *t_product_id = nil;
     const char *t_description = nil;
@@ -798,6 +1123,121 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     if (t_unicode_title != nil)
         MCMemoryDeleteArray(t_unicode_title);
     if (t_unicode_currency_symbol != nil)
+        MCMemoryDeleteArray(t_unicode_currency_symbol); */
+    
+    bool t_success = true;
+    
+    MCAutoStringRef t_product_id, t_description, t_title, t_currency_code, t_currency_symbol;
+    MCAutoDataRef t_utf16_title, t_utf16_description, t_utf16_currency_symbol;
+    double t_price = 0.0;
+    
+    NSString *t_locale_currency_code = nil;
+    NSString *t_locale_currency_symbol = nil;
+    
+    t_locale_currency_code = [[m_product priceLocale] objectForKey: NSLocaleCurrencyCode];
+    t_locale_currency_symbol = [[m_product priceLocale] objectForKey: NSLocaleCurrencySymbol];
+    
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[m_product productIdentifier], &t_product_id);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[m_product localizedDescription], &t_description);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[m_product localizedTitle], &t_title);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_locale_currency_code, &t_currency_code);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_locale_currency_symbol, &t_currency_symbol);
+
+    unichar_t *t_unicode_description = nil;
+    uint32_t t_unicode_description_length = 0;
+    
+    unichar_t *t_unicode_title = nil;
+    uint32_t t_unicode_title_length = 0;
+    
+    unichar_t *t_unicode_currency_symbol = nil;
+    uint32_t t_unicode_currency_symbol_length = 0;
+    
+    if (t_success)
+        t_success = MCNSStringToUnicode([m_product localizedDescription], t_unicode_description, t_unicode_description_length);
+    
+    if (t_success)
+        t_success = MCNSStringToUnicode([m_product localizedTitle], t_unicode_title, t_unicode_title_length);
+    
+    if (t_success)
+        t_success = MCNSStringToUnicode(t_locale_currency_symbol, t_unicode_currency_symbol, t_unicode_currency_symbol_length);
+    
+    /* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)t_unicode_description, t_unicode_description_length * 2, &t_utf16_description);
+    /* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)t_unicode_title, t_unicode_title_length * 2, &t_utf16_title);
+    /* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)t_unicode_currency_symbol, t_unicode_currency_symbol_length * 2, &t_utf16_currency_symbol);
+    
+    MCAutoNumberRef t_price_number;
+    
+    MCNewAutoNameRef t_price_key, t_description_key, t_title_key, t_currency_code_key, t_currency_symbol_key;
+    MCNewAutoNameRef t_unicode_description_key, t_unicode_title_key, t_unicode_currency_symbol_key;
+    
+    MCAutoArrayRef t_array;
+    if (t_success)
+        t_success = MCArrayCreateMutable(&t_array);
+    
+    if (t_success)
+        t_success = (MCNumberCreateWithReal([[m_product price] doubleValue], &t_price_number)
+                     && MCNameCreateWithCString("price", &t_price_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_price_key, *t_price_number));
+
+        
+    if (t_success && *t_description != nil)
+    {
+        t_success = (MCNameCreateWithCString("description", &t_description_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_description_key, *t_description));
+    }
+    
+    if (t_success && *t_title != nil)
+    {
+        t_success = (MCNameCreateWithCString("title", &t_title_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_title_key, *t_title));
+    }
+    
+    if (t_success && *t_currency_code != nil)
+    {
+        t_success = (MCNameCreateWithCString("currency code", &t_currency_code_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_code_key, *t_currency_code));
+    }
+    
+    if (t_success && *t_currency_symbol != nil)
+    {
+        t_success = (MCNameCreateWithCString("currency symbol", &t_currency_symbol_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_symbol_key, *t_currency_symbol));
+    }
+    
+    if (t_success && *t_unicode_description != nil)
+    {
+        t_success = (MCNameCreateWithCString("unicode description", &t_unicode_description_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_description_key, *t_utf16_description));
+    }
+    
+    if (t_success && *t_unicode_title != nil)
+    {
+        t_success = (MCNameCreateWithCString("unicode title", &t_unicode_title_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_title_key, *t_utf16_title));
+    }
+    
+    if (t_success && *t_unicode_currency_symbol != nil)
+    {
+        t_success = (MCNameCreateWithCString("unicode currency symbol", &t_unicode_currency_symbol_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_currency_symbol_key, *t_utf16_currency_symbol));
+    }
+    
+    MCParameter p1, p2;
+    p1.setvalueref_argument(*t_product_id);
+    p1.setnext(&p2);
+    if (*t_array != nil)
+        p2.setvalueref_argument(*t_array);
+    else
+        p2.setvalueref_argument(kMCEmptyArray);
+    
+    MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
+
+    
+    if (t_unicode_description != nil)
+        MCMemoryDeleteArray(t_unicode_description);
+    if (t_unicode_title != nil)
+        MCMemoryDeleteArray(t_unicode_title);
+    if (t_unicode_currency_symbol != nil)
         MCMemoryDeleteArray(t_unicode_currency_symbol);
 }
 
@@ -816,70 +1256,10 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
 {
-#ifdef /* MCHandleRequestProductDetails */ LEGACY_EXEC
-    bool t_success = true;
-    
-    char * t_product;
-    MCPurchase *t_purchase = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product);
-    
-    if (t_success)
-        MCStoreRequestProductDetails(t_product);
-    
-    return ES_NORMAL;
-#endif /* MCHandleRequestProductDetails */
+    // Not Implemented
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-bool MCStoreProductSetType(const char *p_product_id, const char *p_product_type)
-{
-    return true;
-}
-
-bool MCStoreConsumePurchase(char const*)
-{
-    return true;
-}
-
-char *MCStoreGetPurchaseList()
-{
-    bool found;
-    
-    MCExecPoint ep(nil,nil,nil);
-    for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != nil; t_purchase = t_purchase->next)
-    {
-        found = false;
-        for (MCPurchase *t_next_purchase = t_purchase->next ; t_next_purchase != nil; t_next_purchase = t_next_purchase->next)
-        {
-            if (strcmp(t_next_purchase->prod_id, t_purchase->prod_id) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-        
-        if (!found)
-        {
-            ep.concatcstring(t_purchase->prod_id, EC_RETURN, ep.isempty());
-        }
-    }
-    return strdup(ep.getcstring());
-}
-
-bool MCStoreSetPurchaseProperty(char const*, char const*, char const*)
-{
-    return true;
-}
-
-char *MCStoreReceiveProductDetails(char const*)
-{
-    return nil;
-}

@@ -1,0 +1,11 @@
+setup
+
+local tVersion
+put the qtversion into tVersion
+
+set the itemdelimiter to "."
+repeat for each item tComponent in tVersion
+   test tComponent is an integer
+end repeat
+
+teardown

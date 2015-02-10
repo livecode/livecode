@@ -1,0 +1,16 @@
+setup
+
+test-error acos(1.0001)
+test-error acos(-1.0001)
+
+test acos(-1) is pi
+test acos(-0.5) is 2 * pi / 3
+test acos(0) is pi / 2
+test acos(0.5) is pi / 3
+test acos(1) is 0
+
+//repeat with i = -1 to 1 step 0.01
+//	test cos(acos(i)) is i
+//end repeat
+
+teardown

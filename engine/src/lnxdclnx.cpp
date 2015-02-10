@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"
@@ -32,166 +32,65 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "sellst.h"
 #include "util.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "debug.h"
 #include "osspec.h"
+#include "stacklst.h"
 
 #include "globals.h"
-#include "unicode.h"
 
 #include "lnxdc.h"
 #include "lnxgtkthemedrawing.h"
 #include "lnxtransfer.h"
+#include "lnxpasteboard.h"
 
 #include "resolution.h"
 
 #define XK_Window_L 0xFF6C
 #define XK_Window_R 0xFF6D
 
-#define SELECTIONNAME "MCConvertDestination"
-
-extern int UTF8ToUnicode(const char * lpSrcStr, int cchSrc,
-                  uint2 * lpDestStr, int cchDest);
-
-int xerror(Display *dpy, XErrorEvent *ev);
-void xdnd_target_event_loop ( XEvent xevent ) ;
-extern Atom XdndEnter ;
+#include <gdk/gdkkeysyms.h>
 
 Boolean tripleclick = False;
-
-typedef struct _WM_STATE
-{
-	uint4 state;
-	uint4 windowid;
-}
-WM_STATE;
-
-Atom MCstateatom;
-Atom MCprotocolatom;
-Atom MCtakefocusatom;
-Atom MCdeletewindowatom;
-Atom MCmwmmessageatom;
-Atom MCmwmhintsatom;
-Atom MColwinatom;
-Atom MColwtotheratom;
-Atom MColwtpropatom;
-Atom MColadecoratom;
-Atom MColddecoratom;
-Atom MColresizeatom;
-Atom MColheaderatom;
-Atom MColcloseatom;
-Atom MClayeratom;
-Atom MCclipboardatom;
-
-Atom MCworkareaatom;
-Atom MCstrutpartialatom;
-Atom MCclientlistatom;
-
-static int shmopcode;
-static uint4 clicktime;
 static Boolean dragclick;
 
-
-
-void MCScreenDC::initatoms()
-{
-	XSetErrorHandler(xerror);
-	XSync( dpy, false ) ;
-	
-	int ev1, ev2;
-	int major, minor;
-	Bool pix;
-	MCshmpix = False ;
-	if (!MCshmoff )
-		if ( XQueryExtension(dpy, "MIT-SHM", &shmopcode, &ev1, &ev2))
-	        if ( XShmQueryVersion(dpy, &major, &minor, &pix))
-	{
-		MCshm = True;
-		MCshmpix = pix; // For shared memory pixmap's we need this to be true as well...
-	}
-
-	create_stipple();
-
-	selectionatom = XInternAtom(dpy, SELECTIONNAME, False);
-	
-	MCprotocolatom = XInternAtom(dpy, "WM_PROTOCOLS", False);
-	MCtakefocusatom = XInternAtom(dpy, "WM_TAKE_FOCUS", False);
-	MCdeletewindowatom = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
-	MCstateatom = XInternAtom(dpy, "WM_STATE", False);
-	MCmwmmessageatom = XInternAtom(dpy, "_MOTIF_WM_MESSAGES", True);
-	MCmwmhintsatom = XInternAtom(dpy, "_MOTIF_WM_HINTS", True);
-	
-#ifdef OLWM
-	MColwinatom = XInternAtom(dpy, "_OL_WIN_ATTR" , True);
-	MColwtotheratom = XInternAtom(dpy, "_OL_WT_OTHER", True);
-	MColwtpropatom = XInternAtom(dpy, "_OL_WT_PROP", True);
-	MColadecoratom = XInternAtom(dpy, "_OL_DECOR_ADD", True);
-	MColddecoratom = XInternAtom(dpy, "_OL_DECOR_DEL", True);
-	MColresizeatom = XInternAtom(dpy, "_OL_DECOR_RESIZE", True);
-	MColheaderatom = XInternAtom(dpy, "_OL_DECOR_HEADER", True);
-	MColcloseatom = XInternAtom(dpy, "_OL_DECOR_CLOSE", True);
-#endif
-	
-	MClayeratom = XInternAtom(dpy, "_WIN_LAYER", False);
-	MCclipboardatom = XInternAtom(dpy, "CLIPBOARD", False);
-	
-	MCclientlistatom = XInternAtom(dpy, "_NET_CLIENT_LIST", True);
-	MCstrutpartialatom = XInternAtom(dpy, "_NET_WM_STRUT_PARTIAL", True);
-	MCworkareaatom = XInternAtom(dpy, "_NET_WORKAREA", True);
-}
+extern MCGdkTransferStore* MCtransferstore;
 
 void MCScreenDC::setupcolors()
 {
 	ncolors = MCU_min(vis->colormap_size, MAX_CELLS);
 	colors = new MCColor[ncolors];
-	colornames = new char *[ncolors];
+    colornames = new MCStringRef[ncolors];
 	allocs = new int2[ncolors];
 	int2 i;
 	for (i = 0 ; i < ncolors ; i++)
 	{
 		colors[i].flags = DoRed | DoGreen | DoBlue;
 		colors[i].pixel = i;
-		colornames[i] = NULL;
+        colornames[i] = MCValueRetain(kMCEmptyString);
 		allocs[i] = 0;
 	}
 }
 
-
-
-uint2 MCScreenDC::getscreen()
+GdkScreen* MCScreenDC::getscreen()
 {
-	return vis->screen;
+	return gdk_visual_get_screen(vis);
 }
 
-Colormap MCScreenDC::getcmap()
+GdkColormap* MCScreenDC::getcmap()
 {
-
 	return cmap;
 }
 
-Visual *MCScreenDC::getvisual()
+GdkVisual* MCScreenDC::getvisual()
 {
-	return vis->visual;
-}
-
-uint2 MCScreenDC::getbitorder()
-{
-	return BitmapBitOrder(dpy);
-}
-
-uint2 MCScreenDC::getbyteorder()
-{
-	return ImageByteOrder(dpy);
-}
-
-uint2 MCScreenDC::getunit()
-{
-	return BitmapUnit(dpy);
+	return vis;
 }
 
 KeySym MCScreenDC::translatekeysym(KeySym sym, uint4 keycode)
 {
-	switch (sym)
+	// Major assumption: GDK keysyms are the same as X11 keysyms
+    switch (sym)
 	{
 	case 0:
 		switch (keycode)
@@ -228,6 +127,7 @@ KeySym MCScreenDC::translatekeysym(KeySym sym, uint4 keycode)
 	case XK_osfDelete:
 	case XK_hpDeleteChar:
 		return XK_Delete;
+	case XK_ISO_Left_Tab: /* X11 shift-tab keysym */
 	case 0x1000FF74: // HP shift-tab keysysm
 		return XK_Tab;
 	}
@@ -239,757 +139,1097 @@ static Boolean isKeyPressed(char *km, uint1 keycode)
 	return (km[keycode >> 3] >> (keycode & 7)) & 1;
 }
 
-void MCScreenDC::getkeysdown(MCExecPoint &ep)
+bool MCScreenDC::getkeysdown(MCListRef& r_list)
 {
-	char kstring[U4L];
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+
+    // GDK keymap for mapping hardware keycodes to symbols
+    GdkKeymap *t_keymap;
+    t_keymap = gdk_keymap_get_for_display(dpy);
+    
+    // GDK does not provide a wrapper for XQueryKeymap so we have to use it
+    // directly if we want to get the key state from X11.
 	char km[32];
-	ep.clear();
 	MCmodifierstate = querymods();
-	XQueryKeymap(dpy, km);
-	bool first = true;
-	uint2 i;
-	KeySym ksym;
-	for (i = 0; i < 256; i++)
+    x11::XQueryKeymap(x11::gdk_x11_display_get_xdisplay(dpy), km);
+    
+    // Translate the engine modifiers to GDK modifiers
+    gint t_mods = 0;
+    if (MCmodifierstate & (MS_SHIFT|MS_CAPS_LOCK))
+        t_mods |= GDK_SHIFT_MASK;
+    if (MCmodifierstate & MS_CONTROL)
+        t_mods |= GDK_CONTROL_MASK;
+    if (MCmodifierstate & MS_MOD1)
+        t_mods |= GDK_MOD1_MASK;
+    if (MCmodifierstate & MS_MOD2)
+        t_mods |= GDK_MOD2_MASK;
+    if (MCmodifierstate & MS_MOD3)
+        t_mods |= GDK_MOD3_MASK;
+    if (MCmodifierstate & MS_MOD4)
+        t_mods |= GDK_MOD4_MASK;
+    if (MCmodifierstate & MS_MOD5)
+        t_mods |= GDK_MOD5_MASK;
+    
+    // Loop through the list of hardware keys
+    bool t_success = true;
+	for (int i = 0; i < 256; i++)
 	{
 		if (isKeyPressed(km, i))
 		{
-			ksym = i;
-			if (MCmodifierstate & MS_SHIFT || MCmodifierstate & MS_CAPS_LOCK)
-				ksym = XKeycodeToKeysym(dpy, i, 1);
-			else
-				ksym  = XKeycodeToKeysym(dpy, i, 0);
-			if (ksym > 0)
-			{
-				ep.concatuint(ksym, EC_COMMA, first);
-				first = false;
-			}
+            guint t_keyval;
+            t_success = gdk_keymap_translate_keyboard_state(t_keymap, i, GdkModifierType(t_mods), 0, &t_keyval, NULL, NULL, NULL);
+            
+            if (t_success && t_keyval > 0)
+				if (!MCListAppendInteger(*t_list, t_keyval))
+					t_success = false;
+            
+            if (!t_success)
+                break;
 		}
 	}
+
+	return t_success && MCListCopy(*t_list, r_list);
 }
 
-void MCScreenDC::create_stipple()
-{
-	graystipple = XCreatePixmap(dpy, getroot(), 32, 32, 1);
-	gc1 = XCreateGC(dpy, graystipple, 0, NULL);
-	XSetGraphicsExposures(dpy, gc1, False);
-	XSetForeground(dpy, gc1, 1);
-	XSetBackground(dpy, gc1, 0);
-}
-
-void MCScreenDC::setmods(uint2 state, KeySym sym,
+void MCScreenDC::setmods(guint state, KeySym sym,
                          uint2 button, Boolean release)
 {
 	if (lockmods)
 		return;
+
+    // Set the button state
+    uint2 t_buttons = 0;
+    if (state & GDK_BUTTON1_MASK)
+        t_buttons |= 1;
+    if (state & GDK_BUTTON2_MASK)
+        t_buttons |= 2;
+    if (state & GDK_BUTTON3_MASK)
+        t_buttons |= 4;
+    if (state & GDK_BUTTON4_MASK)
+        t_buttons |= 8;
+    if (state & GDK_BUTTON5_MASK)
+        t_buttons |= 16;
+    
 	if (button)
-		if (release)
-			MCbuttonstate = state >> 8 & 0x1F & ~(0x1L << button - 1);
+    {
+        // Update the particular button
+        if (release)
+			MCbuttonstate = t_buttons & ~(1 << (button-1));
 		else
-			MCbuttonstate = state >> 8 & 0x1F | (0x1L << button - 1);
+			MCbuttonstate = t_buttons |  (1 << (button-1));
+    }
 	else
-		MCbuttonstate = state >> 8 & 0x1F;
+    {
+		// Update all the buttons
+        MCbuttonstate = t_buttons;
+    }
+    
+    // Assumption: GDK keysyms and X11 keysyms have the same values
 	if (sym >= XK_Shift_L && sym <= XK_Hyper_R)
 		MCmodifierstate = querymods();
 	else
 	{
-		state &= 0xFF;
-		MCmodifierstate = state >> 1 & 0xFFFE | state & 0x1;
-		if (state & 2)
-			MCmodifierstate |= MS_CAPS_LOCK;
+		// Convert the GDK modifier flags
+        MCmodifierstate = 0;
+        if (state & GDK_SHIFT_MASK)
+            MCmodifierstate |= MS_SHIFT;
+        if (state & GDK_LOCK_MASK)
+            MCmodifierstate |= MS_CAPS_LOCK;
+        if (state & GDK_CONTROL_MASK)
+            MCmodifierstate |= MS_CONTROL;
+        if (state & GDK_MOD1_MASK)
+            MCmodifierstate |= MS_MOD1;
+        if (state & GDK_MOD2_MASK)
+            MCmodifierstate |= MS_MOD2;
+        if (state & GDK_MOD3_MASK)
+            MCmodifierstate |= MS_MOD3;
+        if (state & GDK_MOD4_MASK)
+            MCmodifierstate |= MS_MOD4;
+        if (state & GDK_MOD5_MASK)
+            MCmodifierstate |= MS_MOD5;
 	}
 }
 
-//XDND
-bool xdnd_interested_in_event ( XEvent xevent ) ; 
-char * xdnd_get_window_title ( Window w ) ;
-unsigned int keyval_to_unicode (unsigned int keyval);
-
-
-unsigned int utf32_to_utf16(unsigned int p_codepoint, unsigned short *p_buffer);
-
-Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
-                           Boolean &abort, Boolean &reset)
+extern "C"
 {
-	XEvent event;
-	char buffer[XLOOKUPSTRING_SIZE];
-	KeySym keysym;
-	Boolean handled = False;
-	XAnyEvent *xanyevent =  (XAnyEvent *)&event;
-	XFocusChangeEvent *fievent = (XFocusChangeEvent *)&event;
-	XFocusChangeEvent *foevent = (XFocusChangeEvent *)&event;
-	XKeyEvent *kpevent = (XKeyEvent *)&event;
-	XKeyEvent *krevent = (XKeyEvent *)&event;
-	XCrossingEvent *cevent = (XCrossingEvent *)&event;
-	XMotionEvent *mevent = (XMotionEvent *)&event;
-	XButtonEvent *bpevent = (XButtonEvent *)&event;
-	XButtonEvent *brevent = (XButtonEvent *)&event;
-	XPropertyEvent *pevent = (XPropertyEvent *)&event;
-	XConfigureEvent *cnevent = (XConfigureEvent *)&event;
-	XDestroyWindowEvent *dwevent = (XDestroyWindowEvent *)&event;
-	XReparentEvent *rnevent = (XReparentEvent *)&event;
-	XClientMessageEvent *cmevent = (XClientMessageEvent *)&event;
-	XSelectionClearEvent *scevent = (XSelectionClearEvent *)&event;
-	XSelectionEvent *snevent = (XSelectionEvent *)&event;
-	XSelectionRequestEvent *srevent = (XSelectionRequestEvent *)&event;
-	XMappingEvent *mnevent = (XMappingEvent *)&event;
+void gtk_main_do_event(GdkEvent*);
+}
 
-	abort = reset = False;
-	while (dispatch && pendingevents != NULL || XPending(dpy))
-	{
-		Boolean live;
-		if (dispatch && pendingevents != NULL)
-		{
-			event = pendingevents->event;
-			MCEventnode *tptr = (MCEventnode *)pendingevents->remove
-			                    (pendingevents);
-			delete tptr;
-			live = False;
-		}
-		else
-		{
-			if (!XPending(dpy))
-				break;
-			XNextEvent(dpy, &event);
-			live = True;
-		}
+void DnDClientEvent(GdkEvent* p_event);
 
-		switch (event.type)
-		{
-		case Expose:
-		case GraphicsExpose:
-			XPutBackEvent(dpy, &event);
-			expose();
-			break;
-		case NoExpose:
-			break;
-		case FocusIn:
-			
-				// If the application does not currently have focus, then as we are getting this event
-				// we can assume that it now DOES have focus.
-			if ( !m_application_has_focus)
-			{
-				m_application_has_focus = true ;
-				hidebackdrop(false);
-				if (MCdefaultstackptr != NULL)
-					MCdefaultstackptr->getcard()->message(MCM_resume);
-			}
+static bool motion_event_filter_fn(GdkEvent *p_event, void*)
+{
+    return p_event->type == GDK_MOTION_NOTIFY;
+}
 
-			
-			if (dispatch)
-			{
-				if (fievent->window != MCtracewindow)
-					MCdispatcher->wkfocus(fievent->window);
-			}
-			else
-			{
-				MCEventnode *tptr = new MCEventnode(event);
-				tptr->appendto(pendingevents);
-			}
-			handled = True;
-			break;
-		case FocusOut:
-				
-				// Try and work out if this FocusOut message means one of our windows has lost focus
-				// to another of our windows, or if our whole application has lost focus.
-			bool t_lostfocus ;
-			Window t_return_window ;
-			int t_return_revert_window ;
+Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, Boolean& reset)
+{
+    // Event object. Note that GDK requires these to be disposed of after handling
+    GdkEvent *t_event = NULL;
+    
+    // Loop until both the pending event queue and GDK event queue are empty
+    abort = reset = False;
+    bool t_handled = false;
+    while (true || dispatch || g_main_context_pending(NULL) || gdk_events_pending())
+    {
+        // Place all events onto the pending event queue
+        EnqueueGdkEvents();
+        
+        bool t_queue = false;
+        if (dispatch && pendingevents != NULL)
+        {
+            // Get the next event from the queue
+            t_event = gdk_event_copy(pendingevents->event);
+            MCEventnode *tptr = (MCEventnode *)pendingevents->remove(pendingevents);
+            delete tptr;
+        }
+        
+        if (t_event == NULL)
+        {
+            break;
+        }
 
-			if ( m_application_has_focus)
-			{
-				// Get the window that focus has been turned over to.
-				XGetInputFocus ( MCdpy, &t_return_window, &t_return_revert_window );				
-				t_lostfocus = ( MCdispatcher -> findstackd(t_return_window) == NULL) ;
-
-				// Test to see if the focus has actually changed to the backdrop. As the backdrop is not 
-				// associated with any stack, the backdrop will not be found by findstackd() above.
-				if ( t_return_window == backdrop )
-					t_lostfocus = false ;
-				
-				if ( t_lostfocus )
-				{
-					m_application_has_focus = false ;
-					hidebackdrop(true) ;
-					if (MCdefaultstackptr != NULL)
-						MCdefaultstackptr->getcard()->message(MCM_suspend);
-				}
-			}
-			
-				
-			if (dispatch)
-			{
-				if (foevent->window != MCtracewindow)
-					MCdispatcher->wkunfocus(foevent->window);
-			}
-			else
-			{
-				MCEventnode *tptr = new MCEventnode(event);
-				tptr->appendto(pendingevents);
-			}
-			handled = True;
-			break;
-		case KeyPress:
-			{
-				int t_len ;
-				MCExecPoint utf_ep ;
-				uint4 t_unicode ;
-					
-		
-				
-				t_len = XLookupString(kpevent, buffer, XLOOKUPSTRING_SIZE, &keysym, NULL) ;
-				t_unicode = keyval_to_unicode ( keysym ) ;
-			
-				if (t_unicode != 0)
-				{
-					uint1 t_char;
-					unsigned short t_utf16_buffer[2];
-					uint4 t_utf16_length;
-					t_utf16_length = utf32_to_utf16(t_unicode, t_utf16_buffer);
-					if (MCUnicodeMapToNative(t_utf16_buffer, t_utf16_length, t_char))
-					{
-						buffer[0] = t_char;
-						buffer[1] = 0;
-						t_len = 1;
-					}
-					else
-					{
-						if (MCactivefield)
-						{
-							MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char*)t_utf16_buffer, t_utf16_length * 2), LCH_UNICODE, true);
-							break;
-						}
-					}
-				}
-				else
-					buffer[1] = 0, t_len = 1;
-				
-				
-				if (t_len == 0)
-					buffer[0] = 0;
-								
-				keysym = translatekeysym(keysym, kpevent->keycode);
-				setmods(kpevent->state, keysym, 0, False);
-				if (MCmodifierstate & MS_CONTROL)
-					if (keysym == XK_Break || keysym == '.')
-					{
-						if (MCallowinterrupts && !MCdefaultstackptr->cantabort())
-							abort = True;
-						else
-							MCinterrupt = True;
-					}
-				if (dispatch)
-				{
-					if (kpevent->window != MCtracewindow)
-					{
-						MCeventtime = kpevent->time;
-						MCdispatcher->wkdown(kpevent->window, buffer, keysym);
-						reset = True;
-					}
-				}
-				else
-				{
-					MCEventnode *tptr = new MCEventnode(event);
-					tptr->appendto(pendingevents);
-				}
-				handled = True;
-				break;
-			}
-		case KeyRelease:
-			buffer[0] = buffer[1] = 0;
-			XLookupString(krevent, buffer, XLOOKUPSTRING_SIZE, &keysym, NULL);
-			keysym = translatekeysym(keysym, krevent->keycode);
-			setmods(krevent->state, keysym, 0, False);
-			if (dispatch)
-			{
-				if (krevent->window != MCtracewindow)
-				{
-					MCeventtime = krevent->time;
-					MCdispatcher->wkup(krevent->window, buffer, keysym);
-					reset = True;
-				}
-			}
-			else
-			{
-				MCEventnode *tptr = new MCEventnode(event);
-				tptr->appendto(pendingevents);
-			}
-			handled = True;
-			break;
-		case EnterNotify:
-		case LeaveNotify:
-			if (event.type == EnterNotify)
-			{
-				MCmousestackptr = MCdispatcher->findstackd(cevent->window);
-				if (MCmousestackptr != NULL)
-					MCmousestackptr->resetcursor(True);
-			}
-			else
-				MCmousestackptr = NULL;
-			if (dispatch)
-			{
-				if (cevent->window != MCtracewindow)
-					if (event.type == EnterNotify)
-					{
-						if (MCmousestackptr != NULL)
-						{
-							MCdispatcher->enter(cevent->window);
-							Window root, child;
-							int rx, ry, wx, wy;
-							unsigned int state;
-							XQueryPointer(dpy, cevent->window, &root, &child, &rx, &ry,
-							              &wx, &wy, &state);
-							MCdispatcher->wmfocus(cevent->window, wx, wy);
-						}
-					}
-					else
-						MCdispatcher->wmunfocus(cevent->window);
-			}
-			else
-			{
-				MCEventnode *tptr = new MCEventnode(event);
-				tptr->appendto(pendingevents);
-			}
-			handled = True;
-			break;
-		case MotionNotify:
-		{
-			//XDND
-			// Do this so we can store the last message time stamp, which is needed later for xDnD protocol.
-			xdnd_interested_in_event ( event ) ;
-			
-			if (live)
-				while (XCheckTypedWindowEvent(dpy, mevent->window,
-				                              MotionNotify, &event))
-					;
-			setmods(mevent->state, 0, 0, False);
-			
-			// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coords to user space
-			MCGFloat t_scale;
-			t_scale = MCResGetPixelScale();
-			
-			MCPoint t_mouseloc;
-			t_mouseloc = MCPointMake(mevent->x / t_scale, mevent->y / t_scale);
-			
-			MCStack *t_mousestack;
-			t_mousestack = MCdispatcher->findstackd(mevent->window);
-			
-			// IM-2013-10-09: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
-			MCscreen->setmouseloc(t_mousestack, t_mouseloc);
-			
-			//XDND
-			if ( !dragclick && (MCU_abs(MCmousex - MCclicklocx) > 4 || MCU_abs(MCmousey - MCclicklocy) > 4) && MCbuttonstate != 0  ) 
-			{
-				last_window = mevent -> window ; 
-				dragclick = true ;
-				MCdispatcher -> wmdrag(mevent->window);
-				
-			}
-			
-			if (dispatch)
-			{
-				if (mevent->window != MCtracewindow)
-				{
-					MCeventtime = mevent->time;
-					MCdispatcher->wmfocus(mevent->window,
-					                      (int2)t_mouseloc.x, (int2)t_mouseloc.y);
-				}
-			}
-			else
-			{
-				MCEventnode *tptr = new MCEventnode(event);
-				tptr->appendto(pendingevents);
-			}
-			handled = True;
-			break;
-		}
-		case ButtonPress:
-		{
-			dragclick = false ;
-			
-			setmods(bpevent->state, 0, bpevent->button, False);
-			
-			// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coords to user space
-			MCGFloat t_scale;
-			t_scale = MCResGetPixelScale();
-			
-			MCPoint t_clickloc;
-			t_clickloc = MCPointMake(brevent->x / t_scale, brevent->y / t_scale);
-			
-			MCStack *t_old_clickstack;
-			MCPoint t_oldclickloc;
-			MCscreen->getclickloc(t_old_clickstack, t_oldclickloc);
-			
-			// IM-2013-10-09: [[ FullscreenMode ]] Update clickloc with MCscreen getters & setters
-			MCscreen->setclickloc(MCmousestackptr, t_clickloc);
-			
-			if (dispatch)
-			{
-				if (bpevent->window != MCtracewindow)
-				{					MCeventtime = bpevent->time;
-					if (MCmousestackptr != NULL
-					        && (bpevent->button == Button4 || bpevent->button == Button5))
-					{
-						MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
-						if (mfocused == NULL)
-							mfocused = MCmousestackptr -> getcard();
-						if (mfocused != NULL)
-						{
-							if (bpevent->button == Button4)
-								mfocused->kdown("", XK_WheelDown);
-							else
-								mfocused->kdown("", XK_WheelUp);
-						}
-					}
-					else
-					{
-						uint2 delay;
-						if (bpevent->time < clicktime) /* uint4 wrap */
-							delay = (bpevent->time + 10000) - (clicktime + 10000);
-						else
-							delay = bpevent->time - clicktime;
-						clicktime = bpevent->time;
-						if (backdrop != DNULL && brevent->window == backdrop)
-							MCdefaultstackptr->getcard()->message_with_args(MCM_mouse_down_in_backdrop,
-							                                      brevent->button);
-						else
-						{
-							// MM-2013-09-16: [[ Bug 11176 ]] Make sure we calculate the y delta correctly.
-							if (delay < MCdoubletime
-							        && MCU_abs(t_oldclickloc.x - t_clickloc.x) < MCdoubledelta
-							        && MCU_abs(t_oldclickloc.y - t_clickloc.y) < MCdoubledelta)
-							{
-								if (doubleclick)
-								{
-									doubleclick = False;
-									tripleclick = True;
-									MCdispatcher->wmdown(bpevent->window, bpevent->button);
-								}
-								else
-								{
-									doubleclick = True;
-									MCdispatcher->wdoubledown(bpevent->window, bpevent->button);
-								}
-							}
-							else
-							{
-								tripleclick = doubleclick = False;
-								MCdispatcher->wmfocus(bpevent->window,
-								                      (int2)t_clickloc.x, (int2)t_clickloc.y);
-								MCdispatcher->wmdown(bpevent->window, bpevent->button);
-							}
-							reset = True;
-						}
-					}
-				}
-			}
-			else
-			{
-				MCEventnode *tptr = new MCEventnode(event);
-				tptr->appendto(pendingevents);
-			}
-			handled = True;
-			break;
-		}
-		case ButtonRelease:
-			// Discard button4 or 5 release event (button4= ScrollWheel up, button5 = ScrollWheel down)
-				
-			dragclick = false ;
-			
-			if ( brevent-> button != Button4 && brevent -> button != Button5 ) 
-			{
-				setmods(brevent->state, 0, brevent->button, True);
-				if (dispatch)
-				{
-
-
-
-					if (backdrop != DNULL && brevent->window == backdrop)
-						MCdefaultstackptr->getcard()->message_with_args(MCM_mouse_up_in_backdrop,
-															  brevent->button);
-					else
-						if (brevent->window != MCtracewindow)
-						{
-							MCeventtime = brevent->time;
-							if (doubleclick)
-								MCdispatcher->wdoubleup(brevent->window, brevent->button);
-							else
-								MCdispatcher->wmup(brevent->window, brevent->button);
-							reset = True;
-						}
-				}
-				else
-				{
-					MCEventnode *tptr = new MCEventnode(event);
-					tptr->appendto(pendingevents);
-				}
-			}
-			handled = True;
-			break;
-		case PropertyNotify:
-			MCeventtime = pevent->time;
-			if (pevent->state == PropertyNewValue)
-				if (pevent->atom == MCstateatom)
-				{
-					MCStack *target = MCdispatcher->findstackd(pevent->window);
-					if (target != NULL)
-					{
-						Atom type = None;
-						int format;
-						long unsigned int nitems;
-						unsigned long extra;
-						WM_STATE *prop;
-						XGetWindowProperty(dpy, pevent->window, pevent->atom, 0,
-						                   sizeof(WM_STATE), False, AnyPropertyType,
-						                   &type, &format, &nitems, &extra,
-						                   (unsigned char **)&prop);
-						if (type != None)
-						{
-							switch (prop->state)
-							{
-							case DontCareState:
-#ifndef LINUX
-
-								if (target->getstate(CS_ISOPENING))
-								{
-									target->setstate(False,  CS_ISOPENING);
-									break;
-								}
-								target->close();
-#endif
-
-								break;
-							case IconicState:
-								target->iconify();
-								break;
-							case NormalState:
-								target->uniconify();
-								break;
-							default:
-								break;
-							}
-							XFree((char *)prop);
-						}
-					}
-				}
-			handled = True;
-			break;
-		case ConfigureNotify:
-			MCdispatcher->configure(cnevent->window);
-			break;
-		case CirculateNotify:
-			break;
-		case MapNotify:
-			break;
-		case DestroyNotify:
-			break;
-		case GravityNotify:
-			break;
-		case ReparentNotify:
-			// MW-2010-11-29: We don't want to do any reconfig on reparenting as that is only
-			//   done by the WM and will just result in our rect becoming screwed.
-			//MCdispatcher->configure(rnevent->window);
-			break;
-		case UnmapNotify:
-			break;
-		case ClientMessage:
-				
-			//XDND - If we have an XdndEnter atom, we can push over to the xdnd_target_event_loop() function to handle events .
-			last_window = cmevent->window ;
-			if ( xdnd_interested_in_event ( event ) )
-				xdnd_target_event_loop ( event ) ;
-
-				
-			if (cmevent->message_type == MCprotocolatom)
-			{
-				if (cmevent->data.l[0] == (long)MCtakefocusatom)
-					MCdispatcher->kfocusset(cmevent->window);
-				else
-					if (cmevent->data.l[0] == (long)MCdeletewindowatom)
-					{
-						Window dw = cmevent->window;
-						Window root, child;
-
-						int rx, ry, wx, wy;
-						unsigned int state;
-						XGrabPointer(dpy, dw, False,
-						             PointerMotionMask|ButtonPressMask|ButtonReleaseMask,
-						             GrabModeAsync, GrabModeAsync, None,
-						             None, CurrentTime);
-						XQueryPointer(dpy, getroot(), &root, &child, &rx, &ry,
-						              &wx, &wy, &state);
-						// if mouse is down, wait for it to go up
-						while (state & (Button1Mask | Button2Mask | Button3Mask))
-						{
-							XQueryPointer(dpy, getroot(), &root, &child, &rx, &ry,
-							              &wx, &wy, &state);
-						}
-						XUngrabPointer(dpy, CurrentTime);
-						MCdispatcher->wclose(dw);
-					}
-			}
-			handled = True;
-			break;
-		case SelectionClear:
-			if (scevent->time != MCeventtime)
-				if (scevent->selection == XA_PRIMARY)
-				{
-					if (MCactivefield != NULL)
-						MCactivefield->unselect(False, False);
-					ownselection = False;
-				}
-			break;
-		case SelectionNotify:
-			//XDND
-			if ( xdnd_interested_in_event ( event ) )
-				xdnd_target_event_loop ( event ) ;
-			break;
-		case SelectionRequest:
-			
-			XSelectionEvent sendevent;
-			sendevent.type = SelectionNotify;
-			sendevent.send_event = True;
-			sendevent.display = srevent->display;
-			sendevent.requestor = srevent->requestor;
-			sendevent.selection = srevent->selection;
-			sendevent.time = srevent->time;
-			sendevent.target = srevent->target;
-
-
-#ifdef DEBUG_DND
-			fprintf(stderr, "I have a request for %s from %x into %s\n", XGetAtomName(dpy, srevent->target),  srevent -> requestor, XGetAtomName ( dpy, srevent -> property) );
-			xdnd_get_window_title(srevent->requestor);
-#endif
-
-			if ( srevent -> target == XInternAtom(dpy,"TIMESTAMP", false))
-			{
-				
-				
-			}
-
-            // MW-2014-05-22: [[ Bug 12468 ]] Make sure we use the appropriate store when
-            //   selection is requested from another app.
-            MCXTransferStore *t_store;
-            if (sendevent . selection == XA_PRIMARY)
+        // What type of event are we dealing with?
+        switch (t_event->type)
+        {
+            case GDK_DELETE:
             {
-                if (ownsselection())
-                    t_store = m_Selection_store;
+                MCdispatcher->wclose(t_event->any.window);
+                break;
             }
-            else if (sendevent . selection = MCclipboardatom)
+            
+            case GDK_EXPOSE:
+            case GDK_DAMAGE:
             {
-                if (ownsclipboard())
-                    t_store = m_Clipboard_store;
+                // Handled separately
+                //fprintf(stderr, "GDK_EXPOSE (window %p)\n", t_event->expose.window);
+                MCEventnode *t_node = new MCEventnode(gdk_event_copy(t_event));
+                t_node->appendto(pendingevents);
+                expose();
+                break;
             }
-            else
-                t_store = nil;
-			
-            if (t_store != nil)
+                
+            case GDK_FOCUS_CHANGE:
             {
-                if ( srevent -> target == XA_TARGETS )
+                // Was focus gained or lost?
+                if (t_event->focus_change.in)
                 {
-                        
-                    uint4 t_count ;
-                    Atom *t_atoms ;
-                    t_atoms = t_store -> QueryAtoms ( t_count );
-                    
-                    if ( t_atoms != NULL)
+                    // Focus was gained. If we do not currently have focus, we
+                    // can now assume that we do.
+                    if (!m_application_has_focus)
                     {
-    #ifdef DEBUG_DND
-                        fprintf(stderr, "Responding with : \n");
-                        for ( uint4 a = 0; a < t_count; a++)
-                            fprintf(stderr, "\t%s\n", XGetAtomName (dpy, t_atoms[a]));
-    #endif
+                        m_application_has_focus = true;
+                        hidebackdrop(true);
+                        if (MCdefaultstackptr != NULL)
+                            MCdefaultstackptr->getcard()->message(MCM_resume);
                         
-                        
-                        XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-                                        srevent->target, 32, PropModeReplace,
-                                        (const unsigned char *)t_atoms,
-                                        t_count);
-
-                        XSendEvent(dpy, srevent -> requestor, False, 0, (XEvent *)&sendevent);
-                        
-                        free(t_atoms) ;
-
+                        MCstacks->hidepalettes(false);
                     }
-                }
-                else 
-                {
                     
-                    sendevent.property = None ;
-                    // If I don't own the clipboard at this point, then something has gone wrong
-                    MCSharedString * t_data;
-                    if (t_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), t_data, None, None, DNULL, DNULL, MCeventtime ))
+                    if (dispatch)
                     {
-                        XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-                                    srevent -> target, 8, PropModeReplace,
-                                    (const unsigned char *)t_data -> Get() . getstring(),
-                                    t_data -> Get() . getlength());
+                        if (t_event->focus_change.window != MCtracewindow)
+                            MCdispatcher->wkfocus(t_event->focus_change.window);
+                    }
+                    else
+                        t_queue = true;
+                }
+                else
+                {
+                    // Focus was lost. Was it to another LiveCode window or to
+                    // a different application?
+                    bool t_lostfocus = false;
+                    x11::Window t_return_window;
+                    int t_return_revert_window;
+                    
+                    if (m_application_has_focus)
+                    {
+                        // GDK doesn't let us get the focus window so we have
+                        // to use Xlib to get it. Sigh.
+                        x11::XGetInputFocus(x11::gdk_x11_display_get_xdisplay(dpy), &t_return_window, &t_return_revert_window);
                         
-                        if (srevent->property != None)
-                            sendevent.property = srevent->property;
+                        // Look up the X11 window XID in GDK's window table. If
+                        // it isn't found, it definitely isn't one of ours.
+                        GdkWindow *t_window;
+                        if ((t_window = x11::gdk_x11_window_lookup_for_display(dpy, t_return_window)) == NULL)
+                            t_lostfocus = true;
+                        
+                        // Even if we found it, it may not be ours. This is very
+                        // unlikely but could happen if we've created a GdkWindow
+                        // for it in the past (e.g. in import snapshot)
+                        if ((backdrop != NULL && t_window == backdrop) || MCdispatcher->findstackd(t_window) != NULL)
+                            t_lostfocus = false;
+                        
+                        if (t_lostfocus)
+                        {
+                            // Another application gained focus
+                            m_application_has_focus = false;
+                            hidebackdrop(true);
+                            if (MCdefaultstackptr != NULL)
+                                MCdefaultstackptr->getcard()->message(MCM_suspend);
+                            
+                            MCstacks->hidepalettes(true);
+                        }
+                    }
+                    
+                    if (dispatch)
+                    {
+                        if (t_event->focus_change.window != MCtracewindow)
+                            MCdispatcher->wkunfocus(t_event->focus_change.window);
+                    }
+                    else
+                        t_queue = true;
+                }
+                
+                t_handled = true;
+                break;
+            }
+                
+            case GDK_KEY_PRESS:
+            case GDK_KEY_RELEASE:
+            {
+                // We also want the key symbol for non-character keys etc
+                uint32_t t_keysym = translatekeysym(t_event->key.keyval, t_event->key.hardware_keycode);
+                
+                // Update the current modifier state
+                setmods(t_event->key.state, t_keysym, 0, False);
+                
+                // Check for the interrupt command
+                if (t_event->type == GDK_KEY_PRESS && MCmodifierstate & MS_CONTROL)
+                {
+                    if (t_keysym == XK_Break || t_keysym == '.')
+                    {
+                        if (MCallowinterrupts && !MCdefaultstackptr->cantabort())
+                            abort = True;
                         else
-                            sendevent.property = srevent -> target;
-
+                            MCinterrupt = true;
                     }
-
-                    XSendEvent (dpy, sendevent.requestor, False, 0, (XEvent *)&sendevent );
                 }
+                
+                if (dispatch)
+                {
+                    if (t_event->key.window != MCtracewindow)
+                    {
+                        // Let the IME have the key event first
+                        bool t_ignore = false;
+                        if (dispatch && MCactivefield != NULL && m_im_context != nil)
+                        {
+                            t_ignore = gtk_im_context_filter_keypress(m_im_context, &t_event->key);
+                        }
+                        
+                        // No further processing of the event if the IME ate it
+                        if (t_ignore)
+                        {
+                            t_handled = true;
+                            break;
+                        }
+                        
+                        // Convert the key event into a Unicode character
+                        codepoint_t t_codepoint = gdk_keyval_to_unicode(t_event->key.keyval);
+                        MCAutoStringRef t_text;
+                        if (t_codepoint != 0)
+                            /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codepoint, sizeof(t_codepoint), kMCStringEncodingUTF32, false, &t_text);
+                        else
+                            t_text = MCValueRetain(kMCEmptyString);
+                        
+                        MCeventtime = t_event->key.time;
+                        if (t_event->type == GDK_KEY_PRESS)
+                            MCdispatcher->wkdown(t_event->key.window, *t_text, t_keysym);
+                        else
+                            MCdispatcher->wkup(t_event->key.window, *t_text, t_keysym);
+                    }
+                }
+                else
+                {
+                    t_queue = true;
+                }
+                
+                t_handled = true;
+                break;
             }
-			break;
-		case MappingNotify:
-			if (mnevent->request == MappingKeyboard)
-				XRefreshKeyboardMapping(mnevent);
-			break;
-		default:
-			break;
+                
+            case GDK_ENTER_NOTIFY:
+            case GDK_LEAVE_NOTIFY:
+            {
+                if (t_event->type == GDK_ENTER_NOTIFY)
+                {
+                    // Update which stack currently contains the mouse
+                    MCmousestackptr = MCdispatcher->findstackd(t_event->crossing.window);
+                    if (MCmousestackptr != NULL)
+                        MCmousestackptr->resetcursor(True);
+                }
+                else
+                {
+                    // The mouse is not within any of our stacks
+                    MCmousestackptr = NULL;
+                }
+                if (dispatch)
+                {
+                    if (t_event->crossing.window != MCtracewindow)
+                    {
+                        if (t_event->type == GDK_ENTER_NOTIFY)
+                        {
+                            if (MCmousestackptr != NULL)
+                            {
+                                // Send a window focus event
+                                MCdispatcher->enter(t_event->crossing.window);
+                                MCdispatcher->wmfocus(t_event->crossing.window, t_event->crossing.x, t_event->crossing.y);
+                            }
+                        }
+                        else
+                        {
+                            // Send a window unfocus event
+                            MCdispatcher->wmunfocus(t_event->crossing.window);
+                        }
+                    }
+                }
+                else
+                {
+                    t_queue = true;
+                }
+                
+                t_handled = true;
+                break;
+            }
+                
+            case GDK_MOTION_NOTIFY:
+            {
+                // Get the most up-to-date motion event
+                GdkEvent *t_new_event;
+                while (GetFilteredEvent(&motion_event_filter_fn, t_new_event, NULL))
+                {
+                    gdk_event_free(t_event);
+                    t_event = t_new_event;
+                }
+                
+                // Update the modifier keys flags
+                setmods(t_event->motion.state, 0, 0, False);
+                
+                // IM-2013-08-12: [[ ResIndependence ]] Scale mouse coords to user space
+                MCGFloat t_scale;
+                t_scale = MCResGetPixelScale();
+                
+                MCPoint t_mouseloc;
+                t_mouseloc = MCPointMake(t_event->motion.x / t_scale, t_event->motion.y / t_scale);
+                
+                MCStack *t_mousestack;
+                t_mousestack = MCdispatcher->findstackd(t_event->motion.window);
+                
+                // IM-2013-10-09: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+                MCscreen->setmouseloc(t_mousestack, t_mouseloc);
+                
+                // If this is a motion hint event, request the rest
+                if (t_event->motion.is_hint)
+                    gdk_event_request_motions(&t_event->motion);
+                
+                // Detect if we should start a drag
+                if (!dragclick && (MCU_abs(MCmousex - MCclicklocx) > 4 || MCU_abs(MCmousey - MCclicklocy) > 4) && MCbuttonstate != 0)
+                {
+                    last_window = t_event->motion.window;
+                    dragclick = true;
+                    MCdispatcher->wmdrag(last_window);
+                }
+                
+                if (dispatch)
+                {
+                    if (t_event->motion.window != MCtracewindow)
+                    {
+                        MCeventtime = t_event->motion.time;
+                        MCdispatcher->wmfocus(t_event->motion.window, t_mouseloc.x, t_mouseloc.y);
+                    }
+                }
+                else
+                    t_queue = true;
+                
+                t_handled = true;
+                break;
+            }
+             
+            case GDK_SCROLL:
+            case GDK_BUTTON_PRESS:
+            {
+                // We're not dragging
+                dragclick = false;
+                
+                // Update the mouse button status
+                if (t_event->type == GDK_BUTTON_PRESS)
+                    setmods(t_event->button.state, 0, t_event->button.button, False);
+                else
+                    setmods(t_event->scroll.state, 0, 0, False);
+                
+                // IM-2013-08-12: [[ ResIndependence ]] Scale mouse coords to user space
+                MCGFloat t_scale;
+                t_scale = MCResGetPixelScale();
+                
+                // NOTE: this depends on the offsets for the x and y positions
+                // of the event being in the same place in the GdkEventButton
+                // and GdkEventScroll structures.
+                MCPoint t_clickloc;
+                t_clickloc = MCPointMake(t_event->button.x / t_scale, t_event->button.y / t_scale);
+                
+                MCStack *t_mousestack;
+                t_mousestack = MCdispatcher->findstackd(t_event->motion.window);
+                
+                // IM-2013-10-09: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+                // FG-2014-09-22: [[ Bugfix 13225 ]] Update the mouse position before the click
+                MCscreen->setmouseloc(t_mousestack, t_clickloc);
+                
+                MCStack *t_old_clickstack;
+                MCPoint  t_old_clickloc;
+                MCscreen->getclickloc(t_old_clickstack, t_old_clickloc);
+                
+                // IM-2013-10-09: [[ FullscreenMode ]] Update clicklock with MCscreen getters & setters
+                MCscreen->setclickloc(MCmousestackptr, t_clickloc);
+                
+                // Used for measuring double clicks
+                static guint32 clicktime = -1;
+                
+                if (dispatch)
+                {
+                    if (t_event->button.window != MCtracewindow)
+                    {
+                        MCeventtime = t_event->button.time;
+                        
+                        // Is this a mouse scroll event?
+                        if (MCmousestackptr != NULL && t_event->type == GDK_SCROLL)
+                        {
+                            // Find the object that should receive the scroll
+                            MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
+                            if (mfocused == NULL)
+                                mfocused = MCmousestackptr->getcard();
+                            
+                            if (mfocused != NULL)
+                            {
+                                switch (t_event->scroll.direction)
+                                {
+                                    // Up and down are switched. For some reason...
+                                    case GDK_SCROLL_UP:
+                                        mfocused->kdown(kMCEmptyString, XK_WheelDown);
+                                        break;
+                                        
+                                    case GDK_SCROLL_DOWN:
+                                        mfocused->kdown(kMCEmptyString, XK_WheelUp);
+                                        break;
+                                        
+                                    case GDK_SCROLL_LEFT:
+                                        mfocused->kdown(kMCEmptyString, XK_WheelLeft);
+                                        break;
+                                        
+                                    case GDK_SCROLL_RIGHT:
+                                        mfocused->kdown(kMCEmptyString, XK_WheelRight);
+                                        break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Not a scroll, actually a button press
+                            uint16_t t_delay;
+                            
+                            if (t_event->button.time < clicktime) /* 32-bit wrap */
+                                t_delay = (t_event->button.time + 10000) - (clicktime + 10000);
+                            else
+                                t_delay = t_event->button.time - clicktime;
+                            
+                            clicktime = t_event->button.time;
+                            
+                            // Was the click on the background window?
+                            if (backdrop != DNULL && t_event->button.window == backdrop)
+                                MCdefaultstackptr->getcard()->message_with_args(MCM_mouse_down_in_backdrop, t_event->button.button);
+                            else
+                            {
+                                // MM-2013-09-16: [[ Bugfix 11176 ]] Make sure we calculate the y delta correctly.
+                                if (t_delay < MCdoubletime
+                                    && MCU_abs(t_old_clickloc.x - t_clickloc.x) < MCdoubledelta
+                                    && MCU_abs(t_old_clickloc.y - t_clickloc.y) < MCdoubledelta)
+                                {
+                                    // If we've already detected a double-click,
+                                    // this must be a treble-click event.
+                                    if (doubleclick)
+                                    {
+                                        doubleclick = False;
+                                        tripleclick = True;
+                                        MCdispatcher->wmdown(t_event->button.window, t_event->button.button);
+                                    }
+                                    else
+                                    {
+                                        // This is a double-click event
+                                        doubleclick = True;
+                                        MCdispatcher->wdoubledown(t_event->button.window, t_event->button.button);
+                                    }
+                                    
+                                    reset = True;
+                                }
+                                else
+                                {
+                                    doubleclick = tripleclick = false;
+                                    MCdispatcher->wmfocus(t_event->button.window, t_clickloc.x, t_clickloc.y);
+                                    MCdispatcher->wmdown(t_event->button.window, t_event->button.button);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    t_queue = true;
+                }
+                
+                t_handled = true;
+                break;
+            }
+                
+            case GDK_BUTTON_RELEASE:
+            {
+                // No longer in a drag-and-drop situation
+                dragclick = false;
+                
+                // Update the current button state
+                setmods(t_event->button.state, 0, t_event->button.button, True);
+                
+                if (dispatch)
+                {
+                    if (backdrop != DNULL && t_event->button.window == backdrop)
+                    {
+                        // Don't send mouse events to the backdrop
+                        MCdefaultstackptr->getcard()->message_with_args(MCM_mouse_up_in_backdrop, t_event->button.button);
+                    }
+                    else
+                    {
+                        if (t_event->button.window != MCtracewindow)
+                        {
+                            MCeventtime = t_event->button.time;
+                            if (doubleclick)
+                                MCdispatcher->wdoubleup(t_event->button.window, t_event->button.button);
+                            else
+                                MCdispatcher->wmup(t_event->button.window, t_event->button.button);
+                            reset = True;
+                        }
+                    }
+                }
+                else
+                {
+                    t_queue = true;
+                }
+                
+                t_handled = true;
+                break;
+            }
+                
+            // This replaces the need to check for state changes in the property
+            // notify handler.
+            case GDK_WINDOW_STATE:
+            {
+                // Which window underwent a state change?
+                MCeventtime = gdk_event_get_time(t_event);
+                MCStack *t_target = MCdispatcher->findstackd(t_event->window_state.window);
+                if (t_target != NULL)
+                {
+                    // Which state flags changed?
+                    if (t_event->window_state.changed_mask & GDK_WINDOW_STATE_ICONIFIED)
+                    {
+                        // Was the iconified flag set or cleared?
+                        if (t_event->window_state.new_window_state & GDK_WINDOW_STATE_ICONIFIED)
+                            t_target->iconify();
+                        else
+                            t_target->uniconify();
+                    }
+                }
+                
+                t_handled = true;
+                break;
+            }
+                
+            case GDK_PROPERTY_NOTIFY:
+                // No longer required - only monitored for window state changes
+                // which GDK provides more explicit events for.
+                break;
+                
+            case GDK_CONFIGURE:
+            {
+                // Window geometry has changed
+                // We may need to handle window geometry limits ourselves
+                MCStack *t_stack = MCdispatcher->findstackd(t_event->configure.window);
+                if (t_stack == nil)
+                    break;
+                
+                GdkGeometry t_geom;
+                gint t_new_width, t_new_height;
+                guint t_flags = GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE;
+ 
+                t_geom.min_width = t_stack->getminwidth();
+                t_geom.max_width = t_stack->getmaxwidth();
+                t_geom.min_height = t_stack->getminheight();
+                t_geom.max_height = t_stack->getmaxheight();
+                
+                gdk_window_constrain_size(&t_geom, t_flags,
+                                         t_event->configure.width, t_event->configure.height,
+                                         &t_new_width, &t_new_height);
+                
+                if (t_new_width != t_event->configure.width || t_new_height != t_event->configure.height)
+                {
+                    gdk_window_unmaximize(t_event->configure.window);
+                    gdk_window_resize(t_event->configure.window, t_new_width, t_new_height);
+                }                        
+                
+                MCdispatcher->configure(t_event->configure.window);
+                break;
+            }
+                
+            case GDK_CLIENT_EVENT:
+                // Hmm - do we still need to react to any of these?
+                break;
+                
+            case GDK_SELECTION_CLEAR:
+            {
+                if (t_event->selection.time != MCeventtime)
+                {
+                    // Clear the active selection
+                    if (MCactivefield != NULL)
+                        MCactivefield->unselect(False, False);
+                }
+                
+                break;
+            }
+                
+            case GDK_SELECTION_NOTIFY:
+                // Handled as a drag-and-drop event
+                DnDClientEvent(t_event);
+                break;
+                
+            case GDK_SELECTION_REQUEST:
+            {
+                // MW-2014-05-22: [[ Bug 12468 ]] Make sure we use the appropriate store when
+                //   selection is requested from another app.
+                MCGdkTransferStore *t_store;
+				if (t_event->selection.selection == GDK_SELECTION_PRIMARY &&
+				    ownsselection())
+					t_store = m_Selection_store;
+				else if (t_event->selection.selection == GDK_SELECTION_CLIPBOARD &&
+				         ownsclipboard())
+					t_store = m_Clipboard_store;
+                else
+                    t_store = nil;
+                
+                // Note: we don't use a secondary selection
+                if (t_store != nil)
+                {
+                    // Convert the requestor window XID into a GdkWindow
+                    GdkWindow *t_requestor;
+                    t_requestor = x11::gdk_x11_window_foreign_new_for_display(dpy, t_event->selection.requestor);
+                    
+                    // There is a backwards-compatibility issue with the way the
+                    // ICCCM deals with selections: older clients can request a
+                    // selection but not supply a property name. In that case,
+                    // the property set should be equal to the target name.
+                    //
+                    // The GDK manual does not say whether it works around this
+                    // wrinkle so we might as well check ourselves.
+                    GdkAtom t_property;
+                    if (t_event->selection.property != GDK_NONE)
+                        t_property = t_event->selection.property;
+                    else
+                        t_property = t_event->selection.target;
+                    
+                    // What type should the selection be converted to?
+                    static GdkAtom s_targets = gdk_atom_intern_static_string("TARGETS");
+                    if (t_event->selection.target == s_targets)
+                    {
+                        // Get the list of types we can convert to
+                        size_t t_count;
+                        GdkAtom *t_atoms;
+                        t_atoms = t_store->QueryAtoms(t_count);
+                        
+                        if (t_atoms != NULL)
+                        {
+                            // Set a property on the requestor containing the
+                            // list of targets we can convert to.
+                            gdk_property_change(t_requestor, t_property,
+                                                s_targets, 32, GDK_PROP_MODE_REPLACE,
+                                                (const guchar*)t_atoms, t_count);
+                            
+                            // Notify the requestor that we have replied
+                            gdk_selection_send_notify(t_event->selection.requestor,
+                                                      t_event->selection.selection,
+                                                      t_event->selection.target,
+                                                      t_property,
+                                                      t_event->selection.time);
+                        }
+                        else
+                        {
+                            // We don't actually have anything to supply so
+                            // reject the request without supplying any data
+                            gdk_selection_send_notify(t_event->selection.requestor,
+                                                      t_event->selection.selection,
+                                                      t_event->selection.target,
+                                                      GDK_NONE,
+                                                      t_event->selection.time);
+                        }
+                    }
+                    else
+                    {
+                        // Get the data in the requested form
+                        MCAutoDataRef t_data;
+                        if (t_store->Fetch(new MCMIMEtype(dpy, t_event->selection.target), &t_data, 0, NULL, NULL, t_event->selection.time))
+                        {
+                            // Transfer the data to the requestor via the
+                            // property that it specified
+                            gdk_property_change(t_requestor, t_property,
+                                                t_event->selection.target, 8, GDK_PROP_MODE_REPLACE,
+                                                (const guchar*)MCDataGetBytePtr(*t_data),
+                                                MCDataGetLength(*t_data));
+                            
+                            // Notify the requestor that we have replied
+                            gdk_selection_send_notify(t_event->selection.requestor,
+                                                      t_event->selection.selection,
+                                                      t_event->selection.target,
+                                                      t_property,
+                                                      t_event->selection.time);
+                        }
+                        else
+                        {
+                            // Could not convert the data to the format that was
+                            // requested - reject the request.
+                            gdk_selection_send_notify(t_event->selection.requestor,
+                                                      t_event->selection.selection,
+                                                      t_event->selection.target,
+                                                      GDK_NONE,
+                                                      t_event->selection.time);
+                        }
+                    }
+                    
+                    // We don't need the requestor window handle any longer
+                    g_object_unref(t_requestor);
+                }
+                
+                break;
+            }
+            
+            case GDK_DRAG_ENTER:
+            case GDK_DRAG_LEAVE:   
+            case GDK_DRAG_MOTION:  
+            case GDK_DRAG_STATUS:
+            case GDK_DROP_START:
+            case GDK_DROP_FINISHED:
+                DnDClientEvent(t_event);
+                break;
 
-		}
-		
-#ifdef _LINUX_DESKTOP
-		if (!handled && MCcurtheme)
-			moz_gtk_handle_event(event);
-#endif
-
-		if (anyevent && handled)
-			break;
-	}
-	return handled;
+            default:
+                // Any other event types are ignored
+                break;
+        }
+        
+        // Queue the message if required. Otherwise, dispose of it
+        if (t_queue)
+        {
+            MCEventnode *tptr = new MCEventnode(t_event);
+            tptr->appendto(pendingevents);
+            t_event = NULL;
+        }
+        else if (t_event != NULL)
+        {
+            gdk_event_free(t_event);
+            t_event = NULL;
+        }
+    }
+    
+    return t_handled;
 }
 
-void MCScreenDC::waitmessage(Window w, int event_type)
+void MCScreenDC::waitmessage(GdkWindow* w, int event_type)
 {
-	real8 endtime = MCS_time() + CONFIGURE_WAIT;
-	do
-	{
-		XEvent event;
-		if (XCheckTypedWindowEvent(dpy, w, event_type, &event))
-			break;
-		XSync(dpy, False);
-
-	}
-	while (MCS_time() < endtime);
+	// Does nothing
 }
 
-int xerror(Display *dpy, XErrorEvent *ev)
-{	
-	if (ev->request_code == shmopcode)
-		MCshm = MCvcshm = False;
-	else
-	{
-		if (ev->request_code != 88 && ev->request_code != 42)
-		{
-			if (ev->request_code == 53)
-				fprintf(stderr,
-						"%s: XCreatePixmap failed, X server is out of memory --- oops\n", MCcmd);
-			else
-			{
-				// SB-2013-05-30: [[ XErrorMsg ]] Added 'XGetErrorText()' for more helpful error message.
-				char msg[80];
-	 			XGetErrorText(dpy, ev->error_code, msg, 80);
-				fprintf(stderr,
-						"%s: X error major code %d minor code %d error was %d : %s\n",
-						MCcmd, ev->request_code, ev->minor_code, ev->error_code, msg);
-			}
-		}
-	}
-	return 0;
+
+GdkAtom MCworkareaatom;
+GdkAtom MCstrutpartialatom;
+GdkAtom MCclientlistatom;
+
+
+void MCScreenDC::EnqueueGdkEvents()
+{
+    while (true)
+    {
+        // Run the GLib main loop
+        //gdk_threads_leave();
+        while (g_main_context_iteration(NULL, FALSE))
+            ;
+        //gdk_threads_enter();
+        
+        // Enqueue any further GDK events
+        GdkEvent *t_event = gdk_event_get();
+        if (t_event == NULL)
+            break;
+        
+        // GTK hasn't had a chance at this event yet
+        //gtk_main_do_event(t_event);
+        
+        MCEventnode *t_eventnode = new MCEventnode(t_event);
+        t_eventnode->appendto(pendingevents);
+    }
+}
+
+bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*, void*), GdkEvent* &r_event, void *p_context)
+{
+    // Gather all events into the pending events queue
+    EnqueueGdkEvents();
+    
+    MCEventnode *t_eventnode = pendingevents;
+    while (t_eventnode != NULL)
+    {
+        if (p_filterfn(t_eventnode->event, p_context))
+        {
+            r_event = gdk_event_copy(t_eventnode->event);
+            t_eventnode = t_eventnode->remove(pendingevents);
+            delete t_eventnode;
+            return true;
+        }
+        
+        // Remember that the list is circular
+        if (t_eventnode->next() == pendingevents)
+            t_eventnode = NULL;
+        else
+            t_eventnode = t_eventnode->next();
+    }
+    
+    return false;
+}
+
+void MCScreenDC::EnqueueEvent(GdkEvent* p_event)
+{
+    MCEventnode *t_node = new MCEventnode(p_event);
+    t_node->appendto(pendingevents);
+}
+
+void MCScreenDC::IME_OnCommit(GtkIMContext*, gchar *p_utf8_string)
+{
+    MCAutoStringRef t_text;
+    /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)p_utf8_string, strlen(p_utf8_string), kMCStringEncodingUTF8, false, &t_text);
+    
+    if (MCStringGetLength(*t_text) == 1)
+    {
+        if (MCStringIsNative(*t_text))
+            MCdispatcher->wkdown(MCactivefield->getstack()->getwindow(), *t_text, MCStringGetCodepointAtIndex(*t_text, 0));
+        else
+            MCdispatcher->wkdown(MCactivefield->getstack()->getwindow(), *t_text, MCStringGetCodepointAtIndex(*t_text, 0)|XK_Class_codepoint);
+    }
+    else
+    {
+        // Insert the text from the IME into the active field
+        MCactivefield->stopcomposition(True, False);
+        MCactivefield->finsertnew(FT_IMEINSERT, *t_text, LCH_UNICODE);
+    }
+}
+
+bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_length)
+{
+    return false;
+}
+
+void MCScreenDC::IME_OnPreeditChanged(GtkIMContext* p_context)
+{
+    if (MCactivefield == NULL)
+        return;
+    
+    // Get the string. We ignore the attributes list entirely.
+    gchar *t_utf8_string;
+    gint t_cursor_pos;
+    gtk_im_context_get_preedit_string(p_context, &t_utf8_string, NULL, &t_cursor_pos);
+    
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_utf8_string, strlen(t_utf8_string), kMCStringEncodingUTF8, false, &t_string);
+    g_free(t_utf8_string);
+    
+    // Do the insert
+    MCactivefield->startcomposition();
+    MCactivefield->finsertnew(FT_IMEINSERT, *t_string, LCH_UNICODE);
+    
+    // Update the cursor position
+    MCactivefield->setcompositioncursoroffset(t_cursor_pos);
+}
+
+void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
+{
+    if (MCactivefield == NULL)
+        return;
+    
+    MCactivefield->stopcomposition(True, False);
+}
+
+void MCScreenDC::IME_OnPreeditStart(GtkIMContext*)
+{
+    if (MCactivefield == NULL)
+        return;
+    
+    MCactivefield->startcomposition();
+}
+
+void MCScreenDC::IME_OnRetrieveSurrounding(GtkIMContext*)
+{
+    ;
+}
+
+void MCScreenDC::clearIME(Window w)
+{
+    if (!m_has_gtk)
+        return;
+    
+    gtk_im_context_reset(m_im_context);
+}
+
+void MCScreenDC::activateIME(Boolean activate)
+{
+    if (!m_has_gtk)
+        return;
+    
+    if (activate)
+    {
+        gtk_im_context_set_client_window(m_im_context, MCactivefield->getstack()->getwindow());
+        gtk_im_context_focus_in(m_im_context);
+        
+        if (MCinlineinput)
+            gtk_im_context_set_use_preedit(m_im_context, TRUE);
+        else
+            gtk_im_context_set_use_preedit(m_im_context, FALSE);
+    }
+    else
+    {
+        gtk_im_context_focus_out(m_im_context);
+    }
+}
+
+void MCScreenDC::configureIME(int32_t x, int32_t y)
+{
+    if (!m_has_gtk)
+        return;
+    
+    GdkRectangle t_cursor;
+    t_cursor.x = x;
+    t_cursor.y = y;
+    t_cursor.width = t_cursor.height = 1;
+    
+    gtk_im_context_set_cursor_location(m_im_context, &t_cursor);
+}
+
+void init_xDnD()
+{
+    // Need to ensure we have a transfer store
+    if (MCtransferstore == NULL)
+        MCtransferstore = new MCGdkTransferStore(((MCScreenDC*)MCscreen)->dpy);
+}
+
+void DnDClientEvent(GdkEvent* p_event)
+{
+    switch (p_event->type)
+    {
+        case GDK_DRAG_ENTER:
+        {
+            //fprintf(stderr, "DND: drag enter\n");
+            // Get the selection atom for this drag event
+            GdkAtom t_selection;
+            t_selection = gdk_drag_get_selection(p_event->dnd.context);
+            
+            // Source window for the D&D operation
+            GdkWindow *t_source;
+            t_source = gdk_drag_context_get_source_window(p_event->dnd.context);
+            
+            // Convert the selection into a pasteboard
+            MCGdkPasteboard *t_pasteboard;
+            t_pasteboard = new MCGdkPasteboard(t_selection, MCtransferstore);
+            t_pasteboard->SetWindows(t_source, p_event->dnd.window);
+            
+            // Get the list of targets supported by the source
+            MCtransferstore->cleartypes();
+            GList *t_targets;
+            t_targets = gdk_drag_context_list_targets(p_event->dnd.context);
+            for (GList *t_elem = t_targets; t_elem != NULL; t_elem = t_elem->next)
+                MCtransferstore->addAtom((GdkAtom)t_elem->data);
+            
+            // Temporarily set the modifier state to the asynchronous state
+            uint16_t t_old_modstate = MCmodifierstate;
+            MCmodifierstate = MCscreen->querymods();
+            
+            // Handle the event
+            MCdispatcher->wmdragenter(p_event->dnd.window, t_pasteboard);
+            
+            // Clean up
+            MCmodifierstate = t_old_modstate;
+            t_pasteboard->Release();
+            
+            break;
+        }
+            
+        case GDK_DRAG_LEAVE:
+        {
+            //fprintf(stderr, "DND: drag leave\n");
+            // The drag is no longer relevant to us
+            MCdispatcher->wmdragleave(p_event->dnd.window);
+            MCtransferstore->cleartypes();
+            break;
+        }
+            
+        case GDK_DRAG_MOTION:
+        {
+            //fprintf(stderr, "DND: drag motion\n");
+            // Translate the position from root to relative coordinates
+            uint32_t wx, wy;    // Window-relative coordinates
+            gint ox, oy;        // Window origin in root coordinates
+            gdk_window_get_origin(p_event->dnd.window, &ox, &oy);
+            wx = p_event->dnd.x_root - ox;
+            wy = p_event->dnd.y_root - oy;
+            
+            // Temporarily adopt the asynchronous modifier state
+            uint16_t t_old_modstate = MCmodifierstate;
+            MCmodifierstate = MCscreen->querymods();
+            
+            // Handle the event
+            MCDragActionSet t_action;
+            t_action = MCdispatcher->wmdragmove(p_event->dnd.window, wx, wy);
+            
+            // Restore modifier state
+            MCmodifierstate = t_old_modstate;
+            
+            // Convert the selected drag action to the corresponding GDK value
+            GdkDragAction t_gdk_action = GdkDragAction(0);
+            if (t_action == DRAG_ACTION_COPY)
+                t_gdk_action = GDK_ACTION_COPY;
+            else if (t_action == DRAG_ACTION_MOVE)
+                t_gdk_action = GDK_ACTION_MOVE;
+            else if (t_action == DRAG_ACTION_LINK)
+                t_gdk_action = GDK_ACTION_LINK;
+            
+            // Reply to the motion event
+            gdk_drag_status(p_event->dnd.context, t_gdk_action, p_event->dnd.time);
+            break;
+        }
+            
+        case GDK_DRAG_STATUS:
+            // Only sent while we are in a D&D loop so shouldn't happen
+            break;
+            
+        case GDK_DROP_START:
+        {
+            //fprintf(stderr, "DND: drop start\n");
+            // Temporarily adopt the asynchronous modifier state
+            uint16_t t_old_modstate = MCmodifierstate;
+            MCmodifierstate = MCscreen->querymods();
+            
+            // Something was dropped on us
+            MCdispatcher->wmdragdrop(p_event->dnd.window);
+            
+            // Restore the modifier state
+            MCmodifierstate = t_old_modstate;
+            
+            // Tell the source that we are now finished with it
+            gdk_drop_finish(p_event->dnd.context, TRUE, p_event->dnd.time);
+            break;
+        }
+            
+        case GDK_DROP_FINISHED:
+            // Only sent while we are in a D&D loop so shouldn't happen
+            break;
+    }
 }

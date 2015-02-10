@@ -23,10 +23,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "card.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "stack.h"
 #include "mcerror.h"
 #include "util.h"
+
+#include "variable.h"
 #include "player.h"
 
 #include "context.h"
@@ -122,7 +124,7 @@ void MCPrinter::Finalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char *MCPrinter::ChoosePaper(bool p_window_modal)
+bool MCPrinter::ChoosePaper(bool p_window_modal, MCStringRef &r_result)
 {
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_PRINT_DIALOGS))
 	{
@@ -132,24 +134,24 @@ const char *MCPrinter::ChoosePaper(bool p_window_modal)
 		switch(DoPageSetup(p_window_modal, t_owner))
 		{
 		case PRINTER_DIALOG_RESULT_CANCEL:
-			return "cancel";
-			break;
+			return MCStringCreateWithCString("cancel", r_result);
 
 		case PRINTER_DIALOG_RESULT_ERROR:
-			return "unable to open dialog";
-			break;
+			return MCStringCreateWithCString("unable to open dialog", r_result);
 
 		case PRINTER_DIALOG_RESULT_OKAY:
-			return NULL;
+			r_result = MCValueRetain(kMCEmptyString);
+			return true;
 		}
+
+		MCAssert(false);
+		return false;
 	}
 	else
-		return "non-system page setup dialogs not supported";
-
-	return NULL;
+		return MCStringCreateWithCString("non-system page setup dialogs not supported", r_result);
 }
 
-const char *MCPrinter::ChoosePrinter(bool p_window_modal)
+bool MCPrinter::ChoosePrinter(bool p_window_modal, MCStringRef &r_result)
 {
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_PRINT_DIALOGS))
 	{
@@ -159,26 +161,26 @@ const char *MCPrinter::ChoosePrinter(bool p_window_modal)
 		switch(DoPrinterSetup(p_window_modal, t_owner))
 		{
 		case PRINTER_DIALOG_RESULT_CANCEL:
-			return "cancel";
-			break;
+			return MCStringCreateWithCString("cancel", r_result);
 
 		case PRINTER_DIALOG_RESULT_ERROR:
-			return "unable to open dialog";
-			break;
+			return MCStringCreateWithCString("unable to open dialog", r_result);
 
 		case PRINTER_DIALOG_RESULT_OKAY:
-			return NULL;
+			r_result = MCValueRetain(kMCEmptyString);
+			return true;
 		}
+
+		MCAssert(false);
+		return false;
 	}
 	else
-		return "non-system printer dialogs not supported";
-
-	return NULL;
+		return MCStringCreateWithCString("non-system page setup dialogs not supported", r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPrinter::SetDeviceName(const char *p_name)
+void MCPrinter::SetDeviceName(MCStringRef p_name)
 {
 	if (!DoReset(p_name))
 		MCresult -> sets("unknown printer");
@@ -189,10 +191,10 @@ const char *MCPrinter::GetDeviceName(void)
 	return DoFetchName();
 }
 
-void MCPrinter::SetDeviceSettings(const MCString& p_settings)
+void MCPrinter::SetDeviceSettings(MCDataRef p_settings)
 {
-	if (p_settings . getlength() == 0)
-		DoReset(NULL);
+	if (MCDataIsEmpty(p_settings))
+		DoReset(kMCEmptyString);
 	else if (!DoResetSettings(p_settings))
 	{
 		MCresult -> sets("unknown printer");
@@ -200,15 +202,15 @@ void MCPrinter::SetDeviceSettings(const MCString& p_settings)
 	}
 }
 
-MCString MCPrinter::CopyDeviceSettings(void)
+bool MCPrinter::CopyDeviceSettings(MCDataRef &r_settings)
 {
 	void *t_buffer;
 	uint4 t_length;
 	DoFetchSettings(t_buffer, t_length);
-	return MCString((char *)t_buffer, t_length);
+	return MCDataCreateWithBytesAndRelease((byte_t *)t_buffer, t_length, r_settings);
 }
 
-void MCPrinter::SetDeviceOutput(MCPrinterOutputType p_type, const char *p_location)
+void MCPrinter::SetDeviceOutput(MCPrinterOutputType p_type, MCStringRef p_location)
 {
 	m_device_output_type = p_type;
 	
@@ -216,22 +218,33 @@ void MCPrinter::SetDeviceOutput(MCPrinterOutputType p_type, const char *p_locati
 	m_device_output_location = NULL;
 	
 	if (p_location != NULL)
-		m_device_output_location = strdup(p_location);
+    {
+        char *t_loc;
+        // SN-2014-12-22: [[ Bug 14278 ]] Now store the string as a UTF-8 string.
+        /* UNCHECKED */ MCStringConvertToUTF8String(p_location, t_loc);
+		m_device_output_location = t_loc;
+    }
 }
 
-void MCPrinter::SetDeviceCommand(const char *p_command)
+void MCPrinter::SetDeviceCommand(MCStringRef p_command)
 {
 	delete m_device_command;
-	if (p_command == NULL || *p_command == '\0')
+	if (MCStringIsEmpty(p_command))
 		m_device_command = NULL;
 	else
-		m_device_command = strdup(p_command);
+    {
+        char *t_command;
+        /* UNCHECKED */ MCStringConvertToCString(p_command, t_command);
+		m_device_command = t_command;
+    }
 }
 
-void MCPrinter::SetDeviceFontTable(const char *p_font_table)
+void MCPrinter::SetDeviceFontTable(MCStringRef p_font_table)
 {
 	delete m_device_font_table;
-	m_device_font_table = strdup(p_font_table);
+    char * t_font_table;
+    /* UNCHECKED */ MCStringConvertToCString(p_font_table, t_font_table);
+	m_device_font_table = t_font_table;
 }
 
 
@@ -308,10 +321,12 @@ void MCPrinter::SetJobCollate(bool p_collate)
 	m_job_collate = p_collate;
 }
 
-void MCPrinter::SetJobName(const char *p_name)
+void MCPrinter::SetJobName(MCStringRef p_name)
 {
 	delete m_job_name;
-	m_job_name = strdup(p_name);
+    char *t_name;
+    /* UNCHECKED */ MCStringConvertToCString(p_name, t_name);
+	m_job_name = t_name;
 }
 
 void MCPrinter::SetJobDuplex(MCPrinterDuplexMode p_mode)
@@ -401,8 +416,16 @@ void MCPrinter::Open(bool p_cancelled)
 		else
 		{
 			if (m_loop_status == STATUS_READY)
-				SetStatusFromResult(DoBeginPrint(m_job_name == NULL ? MCdefaultstackptr -> gettitletext() : m_job_name, m_device));
-		
+			{
+				MCAutoStringRef t_job_name;
+				if (m_job_name == nil)
+					t_job_name = MCdefaultstackptr -> gettitletext();
+				else
+					/* UNCHECKED */ MCStringCreateWithCString(m_job_name, &t_job_name);
+
+				SetStatusFromResult(DoBeginPrint(*t_job_name, m_device));
+			}
+	
 			ResetLayout();
 
 			m_loop_page = 1;
@@ -572,7 +595,7 @@ void MCPrinter::LayoutCard(MCCard *p_card, const MCRectangle *p_rect)
 	Close();
 }
 
-void MCPrinter::MakeAnchor(const char *p_name, int2 x, int2 y)
+void MCPrinter::MakeAnchor(MCStringRef p_name, int16_t x, int16_t y)
 {
 	Open();
 
@@ -581,7 +604,7 @@ void MCPrinter::MakeAnchor(const char *p_name, int2 x, int2 y)
 	Close();
 }
 
-void MCPrinter::MakeLink(const char *p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
+void MCPrinter::MakeLink(MCStringRef p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
 {
 	Open();
 
@@ -590,7 +613,7 @@ void MCPrinter::MakeLink(const char *p_dest, const MCRectangle& p_area, MCPrinte
 	Close();
 }
 
-void MCPrinter::MakeBookmark(const char *p_title, int2 x, int2 y, uint32_t level, bool closed)
+void MCPrinter::MakeBookmark(MCStringRef p_title, int2 x, int2 y, uint32_t level, bool closed)
 {
 	Open();
 
@@ -737,13 +760,17 @@ void MCPrinter::DoPrint(MCCard *p_card, const MCRectangle& p_src, const MCRectan
 	}
 }
 
-void MCPrinter::DoMakeAnchor(const char *p_name, int2 x, int2 y)
+void MCPrinter::DoMakeAnchor(MCStringRef p_name, int2 x, int2 y)
 {
 	if (m_loop_nesting > 0 && m_loop_status == STATUS_READY && (m_job_range_count <= 0 || MCU_disjointrangecontains(m_job_ranges, m_job_range_count, m_loop_page)))
-		SetStatusFromResult(m_device -> Anchor(p_name, x, y));
+    {
+        MCAutoPointer<char> t_name;
+        /* UNCHECKED */ MCStringConvertToCString(p_name, &t_name);
+		SetStatusFromResult(m_device -> Anchor(*t_name, x, y));
+    }
 }
 
-void MCPrinter::DoMakeLink(const char *p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
+void MCPrinter::DoMakeLink(MCStringRef p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
 {
 	if (m_loop_nesting > 0 && m_loop_status == STATUS_READY && (m_job_range_count <= 0 || MCU_disjointrangecontains(m_job_ranges, m_job_range_count, m_loop_page)))
 	{
@@ -752,15 +779,19 @@ void MCPrinter::DoMakeLink(const char *p_dest, const MCRectangle& p_area, MCPrin
 		t_print_area . top = p_area . y;
 		t_print_area . right = p_area . x + p_area . width;
 		t_print_area . bottom = p_area . y + p_area . height;
-		SetStatusFromResult(m_device -> Link(p_dest, t_print_area, p_type));
+        MCAutoPointer<char> t_dest;
+        /* UNCHECKED */ MCStringConvertToCString(p_dest, &t_dest);
+		SetStatusFromResult(m_device -> Link(*t_dest, t_print_area, p_type));
 	}
 }
 
-void MCPrinter::DoMakeBookmark(const char *p_title, int2 x, int2 y, uint32_t level, bool closed)
+void MCPrinter::DoMakeBookmark(MCStringRef p_title, int2 x, int2 y, uint32_t level, bool closed)
 {
 	if (m_loop_nesting > 0 && m_loop_status == STATUS_READY && (m_job_range_count <= 0 || MCU_disjointrangecontains(m_job_ranges, m_job_range_count, m_loop_page)))
 	{
-		SetStatusFromResult(m_device -> Bookmark(p_title, x, y, level, closed));
+        MCAutoPointer<char> t_title;
+        /* UNCHECKED */ MCStringConvertToCString(p_title, &t_title);
+		SetStatusFromResult(m_device -> Bookmark(*t_title, x, y, level, closed));
 	}
 }
 
@@ -849,7 +880,7 @@ void MCPrinter::UpdateLayout(const MCRectangle& p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPrinter::SetStatus(uint32_t p_status, const char *p_error)
+void MCPrinter::SetStatus(uint32_t p_status, MCStringRef p_error)
 {
 	m_loop_status = p_status;
 	
@@ -859,8 +890,12 @@ void MCPrinter::SetStatus(uint32_t p_status, const char *p_error)
 		m_loop_error = NULL;
 	}
 	
-	if (p_error != NULL)
-		m_loop_error = strdup(p_error);
+	if (p_error != nil)
+    {
+        char *t_error;
+        /* UNCHECKED */ MCStringConvertToCString(p_error, t_error);
+		m_loop_error = t_error;
+    }
 }
 
 void MCPrinter::SetStatusFromResult(MCPrinterResult p_result)
@@ -875,7 +910,7 @@ void MCPrinter::SetStatusFromResult(MCPrinterResult p_result)
 		break;
 		
 		case PRINTER_RESULT_ERROR:
-			SetStatus(STATUS_ERROR, "printing failed");
+			SetStatus(STATUS_ERROR, MCSTR("printing failed"));
 		break;
 		
 		case PRINTER_RESULT_CANCEL:
@@ -899,7 +934,7 @@ void MCPrinter::SetResult(void)
 	switch (m_loop_status)
 	{
 	case STATUS_READY:
-		MCresult -> clear(False);
+		MCresult -> clear();
 	break;
 	
 	case STATUS_CANCELLED:

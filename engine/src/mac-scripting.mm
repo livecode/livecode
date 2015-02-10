@@ -16,7 +16,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "uidc.h"
 
@@ -178,7 +177,7 @@ public:
 	
 	bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback);
 	
-	char *Run(const char *p_script);
+	void Run(MCStringRef p_script, MCStringRef &r_result);
 	
 	char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
 	
@@ -204,7 +203,25 @@ sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)Jav
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool p_utf8 = false);
+
+static bool ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string)
+{
+    MCAutoStringRefAsCFString t_cf_string;
+    
+    if (!t_cf_string . Lock(p_string))
+        return false;
+    
+	JSStringRef t_js_string;
+	t_js_string = JSStringCreateWithCFString(*t_cf_string);
+	
+	if (t_js_string == NULL)
+		return false;
+	
+	r_js_string = t_js_string;
+	return true;    
+}
 
 static bool ConvertCStringToJSString(const char *p_cstring, JSStringRef& r_js_string)
 {
@@ -387,7 +404,7 @@ bool MCPlatformScriptEnvironment::Define(const char *p_name, MCPlatformScriptEnv
 	return true;
 }
 
-char *MCPlatformScriptEnvironment::Run(const char *p_script)
+void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_result)
 {
 	bool t_success;
 	t_success = true;
@@ -395,7 +412,7 @@ char *MCPlatformScriptEnvironment::Run(const char *p_script)
 	JSStringRef t_js_script;
 	t_js_script = NULL;
 	if (t_success)
-		t_success = ConvertCStringToJSString(p_script, t_js_script);
+		t_success = ConvertMCStringToJSString(p_script, t_js_script);
 	
 	JSGlobalContextRef t_runtime;
 	t_runtime = NULL;
@@ -470,19 +487,16 @@ char *MCPlatformScriptEnvironment::Run(const char *p_script)
 	if (t_js_script != NULL)
 		JSStringRelease(t_js_script);
 	
-	char *t_result;
 	if (t_success)
 	{
 		m_runtime = t_runtime;
-		t_result = strdup("");
+		r_result = MCValueRetain(kMCEmptyString);
 	}
 	else
 	{
 		JSGlobalContextRelease(t_runtime);
-		t_result = NULL;
+		r_result = NULL;
 	}
-	
-	return t_result;
 }
 
 char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)
@@ -555,7 +569,9 @@ char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arg
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformScriptEnvironmentCreate(const char *language, MCPlatformScriptEnvironmentRef& r_env)
+// SN-2014-07-23: [[ Bug 12907 ]]
+//  Update as well MCSreenDC::createscriptenvironment (and callees)
+void MCPlatformScriptEnvironmentCreate(MCStringRef language, MCPlatformScriptEnvironmentRef& r_env)
 {
 	if (JavaScriptCoreLibrary == NULL)
 	{
@@ -600,9 +616,9 @@ bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const
 	return env -> Define(function, callback);
 }
 
-void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, const char *script, char*& r_result)
+void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, MCStringRef script, MCStringRef& r_result)
 {
-	r_result = env -> Run(script);
+    env -> Run(script, r_result);
 }
 
 void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result)

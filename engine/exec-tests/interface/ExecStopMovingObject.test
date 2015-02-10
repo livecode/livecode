@@ -1,0 +1,17 @@
+setup
+
+create button
+
+set the loc of button 1 to 0,0
+
+move button 1 from the loc of button 1 to 10, 10 in 10 without waiting
+
+wait 2
+
+stop moving button 1
+
+wait 8
+
+test the loc of button 1 is 1,1
+
+teardown

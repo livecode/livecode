@@ -1,0 +1,21 @@
+setup
+
+test 1 <= 10
+test 10 <= 10
+test not (10 <= 1)
+
+test "b" <= "c"
+test "b" <= "b"
+test not ("c" <= "b")
+
+test "   1" <= "   0x100"
+test "   0x100" <= "   0x100"
+test not ("   0x100" <= "   1")
+
+local tLeftArray, tRightArray
+put 100 into tLeftArray[1]
+put 100 into tRightArray[1]
+test tLeftArray <= tRightArray
+test tRightArray <= tLeftArray
+
+teardown

@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 typedef struct _Accelerator
 {
-	uint2 key;
+	KeySym key;
 	uint2 mods;
 	MCButton *button;
 	MCStack *stack;
@@ -33,7 +33,7 @@ Accelerator;
 
 typedef struct _Mnemonic
 {
-	char key;
+	KeySym key;
 	MCButton *button;
 }
 Mnemonic;
@@ -109,13 +109,13 @@ public:
 
 	void destroy();
 	Boolean isempty();
-	void stackprops(MCExecPoint &, Properties p);
+	bool stackprops(MCExecContext& ctxt, Properties p_property, MCListRef& r_list);
 	Boolean doaccelerator(KeySym key);
-	void addaccelerator(MCButton *button, MCStack *stack, uint2 key, uint1 mods);
+	void addaccelerator(MCButton *button, MCStack *stack, KeySym key, uint1 mods);
 	void deleteaccelerator(MCButton *button, MCStack *stack);
-	void changeaccelerator(MCButton *button, uint2 key, uint1 mods);
-	MCButton *findmnemonic(char key);
-	void addmenu(MCButton *button, char key);
+	void changeaccelerator(MCButton *button, KeySym key, uint1 mods);
+	MCButton *findmnemonic(KeySym p_key);
+	void addmenu(MCButton *button, KeySym p_key);
 	void deletemenu(MCButton *button);
 
 	void setcmap();

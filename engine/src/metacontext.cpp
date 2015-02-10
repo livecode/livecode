@@ -230,12 +230,12 @@ void MCMetaContext::clearclip(void)
 
 void MCMetaContext::setorigin(int2 x, int2 y)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 void MCMetaContext::clearorigin(void)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 void MCMetaContext::setquality(uint1 quality)
@@ -425,16 +425,23 @@ void MCMetaContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 	polygon_mark(true, false, points, npoints, p_closed);
 }
 
-void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
+void MCMetaContext::drawsegments(MCLineSegment *segments, uint2 nsegs)
 {
 	for(uint2 t_segment = 0; t_segment < nsegs; ++t_segment)
 		drawline(segments[t_segment] . x1, segments[t_segment] . y1, segments[t_segment] . x2, segments[t_segment] . y2);
 }
 
-void MCMetaContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override)
+void MCMetaContext::drawtext(coord_t x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking p_can_break, MCDrawTextDirection p_direction)
+{
+    MCRange t_range;
+    t_range = MCRangeMake(0, MCStringGetLength(p_string));
+    drawtext_substring(x, y, p_string, t_range, p_font, image, p_can_break, p_direction);
+}
+
+void MCMetaContext::drawtext_substring(coord_t x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, MCDrawTextBreaking p_can_break, MCDrawTextDirection p_direction)
 {
 	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
-	if (length == 0)
+	if (MCStringIsEmpty(p_string) || p_range.length == 0)
 		return;
 	
 	MCMark *t_mark;
@@ -453,11 +460,25 @@ void MCMetaContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCF
 		}
 		else
 			t_mark -> text . background = NULL;
-		t_mark -> text . data = new_array<char>(length);
-		t_mark -> text . length = length;
-		if (t_mark -> text . data != NULL)
-			memcpy(t_mark -> text . data, s, length);
-		t_mark -> text . unicode_override = p_unicode_override;
+        
+        uindex_t t_length = p_range.length;
+        if (MCStringIsNative(p_string))
+        {
+            t_mark -> text . data = new_array<char>(t_length);
+            t_mark -> text . length = t_length;
+            if (t_mark -> text . data != NULL)
+                memcpy(t_mark -> text . data, MCStringGetNativeCharPtr(p_string) + p_range.offset , t_length);
+            t_mark -> text . unicode_override = false;
+        }
+        else
+        {
+            t_mark -> text . data = new_array<unichar_t>(t_length);
+            t_mark -> text . length = t_length;
+            if (t_mark -> text . data != NULL)
+                // SN-2014-06-17 [[ Bug 12595 ]] Printing to PDF does not yield all information
+                memcpy(t_mark -> text . data, MCStringGetCharPtr(p_string) + p_range.offset, t_length * 2);
+            t_mark -> text . unicode_override = true;
+        }
 	}
 }
 
@@ -594,22 +615,26 @@ void MCMetaContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy
 	setclip(t_old_clip);
 }
 
-void MCMetaContext::drawlink(const char *p_link, const MCRectangle& p_region)
+void MCMetaContext::drawlink(MCStringRef p_link, const MCRectangle& p_region)
 {
 	MCMark *t_mark;
 	t_mark = new_mark(MARK_TYPE_LINK, false, false);
 	if (t_mark != NULL)
 	{
 		t_mark -> link . region = p_region;
-		t_mark -> link . text = new_array<char>(strlen(p_link) + 1);
+		t_mark -> link . text = new_array<char>(MCStringGetLength(p_link) + 1);
 		if (t_mark -> link . text != NULL)
-			strcpy(t_mark -> link . text, p_link);
+        {
+            char *t_link;
+            /* UNCHECKED */ MCStringConvertToCString(p_link, t_link);
+			t_mark -> link . text = t_link;
+        }
 	}
 }
 
 void MCMetaContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 
@@ -633,12 +658,12 @@ void MCMetaContext::drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_info)
 
 void MCMetaContext::clear(const MCRectangle *rect)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 MCRegionRef MCMetaContext::computemaskregion(void)
 {
-	assert(false);
+	MCUnreachable();
 	return NULL;
 }
 
@@ -800,10 +825,20 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 			break;
 			
 			case MARK_TYPE_TEXT:
+            {
 				if (p_mark -> text . background != NULL)
 					p_context -> setbackground(p_mark -> text . background -> colour);
-				p_context -> drawtext(p_mark -> text . position . x, p_mark -> text . position . y, (const char *)p_mark -> text . data, p_mark -> text . length, p_mark -> text . font, p_mark -> text . background != NULL, p_mark -> text . unicode_override);
-			break;
+                
+                MCAutoStringRef t_string;
+                if (p_mark -> text . unicode_override)
+                    /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)p_mark -> text . data, p_mark -> text . length, &t_string);
+                else
+                    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)p_mark -> text . data, p_mark -> text . length, &t_string);
+                
+                p_context -> drawtext(p_mark -> text . position . x, p_mark -> text . position . y, *t_string, p_mark -> text . font, p_mark -> text . background != NULL);
+
+                break;
+            }
 			
 			case MARK_TYPE_RECTANGLE:
 				if (p_mark -> stroke != NULL)

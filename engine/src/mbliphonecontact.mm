@@ -16,20 +16,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #include "exec.h"
 #include "mblsyntax.h"
 #include "mblcontact.h"
 
+#include "mbliphone.h"
 #include "mbliphoneapp.h"
 
 #import <UIKit/UIKit.h>
@@ -150,6 +150,7 @@ static bool name_to_key(MCNameRef p_name, CFStringRef &r_key)
 	return false;
 }
 
+/*
 bool MCCFDictionaryToArray(MCExecPoint& ep, CFDictionaryRef p_dict, MCVariableValue *&r_array)
 {
 	bool t_success = true;
@@ -195,6 +196,7 @@ bool MCCFDictionaryToArray(MCExecPoint& ep, CFDictionaryRef p_dict, MCVariableVa
 	MCMemoryDeleteArray(t_dict_values);
 	
 	return t_success;
+
 }
 
 bool MCCFDictionaryFromArray(MCExecPoint& p_ep, MCVariableValue *p_array, CFDictionaryRef& r_dict)
@@ -241,8 +243,86 @@ bool MCCFDictionaryFromArray(MCExecPoint& p_ep, MCVariableValue *p_array, CFDict
 		CFRelease(t_dict);
 	
 	return t_success;
+} */
+
+bool MCCFDictionaryToArray(CFDictionaryRef p_dict, MCArrayRef &r_array)
+{
+	bool t_success = true;
+	
+	CFStringRef *t_dict_keys = nil;
+	CFStringRef *t_dict_values = nil;
+	uindex_t t_dict_size = 0;
+	
+	MCAutoArrayRef t_prop_array;
+	t_success = MCArrayCreateMutable(&t_prop_array);
+	
+	if (t_success)
+	{
+		t_dict_size = CFDictionaryGetCount(p_dict);
+		t_success = MCMemoryNewArray(t_dict_size, t_dict_keys) &&
+		MCMemoryNewArray(t_dict_size, t_dict_values);
+	}
+	
+	if (t_success)
+	{
+		CFDictionaryGetKeysAndValues(p_dict, (const void **)t_dict_keys, (const void**)t_dict_values);
+		for (uindex_t i = 0; t_success && i < t_dict_size; i++)
+		{
+			MCNewAutoNameRef t_key_name;
+			if (key_to_name(t_dict_keys[i], &t_key_name))
+			{
+				MCAutoStringRef t_string;
+				MCStringCreateWithCFString((CFStringRef)t_dict_values[i], &t_string);
+				t_success = MCArrayStoreValue(*t_prop_array, false, *t_key_name, *t_string);
+			}
+		}
+	}
+	
+	if (t_success)
+		r_array = MCValueRetain(*t_prop_array);
+	
+	MCMemoryDeleteArray(t_dict_keys);
+	MCMemoryDeleteArray(t_dict_values);
+	
+	return t_success;
 }
 
+bool MCCFDictionaryFromArray(MCArrayRef p_array, CFDictionaryRef& r_dict)
+{
+	bool t_success = true;
+
+	CFMutableDictionaryRef t_dict = nil;
+
+	if (t_success)
+		t_success = nil != (t_dict = CFDictionaryCreateMutable(kCFAllocatorDefault, MCArrayGetCount(p_array), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+	
+	MCValueRef t_entry;
+	MCNameRef t_key_name;
+	uintptr_t t_index;
+
+	while (t_success && MCArrayIterate(p_array, t_index, t_key_name, t_entry))
+	{
+		CFStringRef t_key;
+		if (name_to_key(t_key_name, t_key))
+		{
+			NSString *t_value = nil;
+			if (t_success)
+				t_success = nil != (t_value = [NSString stringWithMCStringRef: (MCStringRef)t_entry]);
+			
+			if (t_success)
+				CFDictionaryAddValue(t_dict, t_key, t_value);
+		}
+	}
+	
+	if (t_success)
+		r_dict = t_dict;
+	else if (t_dict != nil)
+		CFRelease(t_dict);
+	
+	return t_success;
+}
+
+/*
 bool MCCreatePersonData(MCExecPoint& ep, ABRecordRef p_person, MCVariableValue *&r_contact)
 {
 	MCVariableValue *t_contact = nil;
@@ -317,8 +397,8 @@ bool MCCreatePersonData(MCExecPoint& ep, ABRecordRef p_person, MCVariableValue *
 	return t_success;
 }
 
-bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &r_person)
-{
+bool MCCreatePerson(MCExecPoint &p_ep, MCArrayRef p_contact, ABRecordRef &r_person)
+{ 
 	MCExecPoint ep(p_ep);
 	bool t_success = true;
 	ABRecordRef t_person = nil;
@@ -340,6 +420,7 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 			}
 			else
 			{
+
 				MCVariableValue *t_prop_array = ep.getarray();
 				if (t_prop_array != nil)
 				{
@@ -394,10 +475,156 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 					if (t_success && ABMultiValueGetCount(t_multi_value) > 0)
 						t_success = ABRecordSetValue(t_person, *s_property_map[i].property, t_multi_value, nil);
 				}
-			}
+            }
 		}
 	}
 	
+	if (t_success)
+		r_person = t_person;
+	else if (t_person != nil)
+		CFRelease(t_person);
+	
+	return t_success;
+}*/
+
+bool MCCreatePersonData(ABRecordRef p_person, MCArrayRef& r_contact)
+{
+	bool t_success = true;
+	
+	MCAutoArrayRef t_contact;
+	t_success = MCArrayCreateMutable(&t_contact);
+	
+	for (uindex_t i = 0; t_success && i < ELEMENTS(s_property_map); i++)
+	{
+		CFTypeRef t_prop_value;
+		t_prop_value = ABRecordCopyValue(p_person, *s_property_map[i].property);
+		if (t_prop_value != nil)
+		{
+			if (!s_property_map[i].has_labels)
+			{
+				MCAutoStringRef t_value;
+				MCStringCreateWithCFString((CFStringRef)t_prop_value, &t_value);
+				t_success = MCContactAddProperty(*t_contact, *s_property_map[i].name, *t_value);
+			}
+			else
+			{
+				// if the property has a label, it's a multivalue prop and can have multiple entries of the same type
+				ABMultiValueRef t_values = t_prop_value;
+				ABPropertyType t_proptype = ABMultiValueGetPropertyType(t_values);
+				uindex_t t_value_count = ABMultiValueGetCount(t_values);
+
+				for (uindex_t j = 0; j < t_value_count; j++)
+				{
+					CFStringRef t_label;
+					MCNewAutoNameRef t_label_name;
+					
+					t_label = ABMultiValueCopyLabelAtIndex(t_values, j);
+					
+					if (label_to_name(t_label, &t_label_name))
+					{
+						CFTypeRef t_multi_value;
+						t_multi_value = ABMultiValueCopyValueAtIndex(t_values, j);
+						
+						// Currently we're only dealing with string values
+						if (t_proptype == kABStringPropertyType)
+						{
+							MCAutoStringRef t_value;
+							MCStringCreateWithCFString((CFStringRef)t_multi_value, &t_value);
+							t_success = MCContactAddPropertyWithLabel(*t_contact, *s_property_map[i].name, *t_label_name, *t_value);
+						}
+						else if (t_proptype == kABDictionaryPropertyType)
+						{
+							// construct an array containing the keys/values of the CFDictionaryRef and add it to our contact array
+							MCAutoArrayRef t_prop_array;
+							t_success = MCCFDictionaryToArray((CFDictionaryRef)t_multi_value, &t_prop_array) && 
+								MCContactAddPropertyWithLabel(*t_contact, *s_property_map[i].name, *t_label_name, *t_prop_array);
+						}
+						
+						CFRelease(t_multi_value);
+					}
+				}
+			}
+			
+			CFRelease(t_prop_value);
+		}
+	}
+	
+	if (t_success)
+		r_contact = MCValueRetain(*t_contact);
+
+	return t_success;
+}
+
+bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
+{
+	bool t_success = true;
+	ABRecordRef t_person = nil;
+	t_success = nil != (t_person = ABPersonCreate());
+	
+	for (uindex_t i = 0; t_success && i < ELEMENTS(s_property_map); i++)
+	{
+		MCValueRef t_value;
+		if (MCArrayFetchValue(p_contact, false, *s_property_map[i].name, t_value))
+		{
+			if (!s_property_map[i].has_labels)
+			{
+				if (MCStringGetLength((MCStringRef)t_value) > 0)
+				{
+					t_success = ABRecordSetValue(t_person, *s_property_map[i].property,
+									 [NSString stringWithMCStringRef: (MCStringRef)t_value],
+									 nil);
+				}
+			}
+			else if (MCValueIsArray(t_value))
+			{
+				ABMutableMultiValueRef t_multi_value = nil;
+				
+				CFTypeID t_multi_type = s_property_map[i].has_keys ? kABDictionaryPropertyType : kABStringPropertyType;
+				t_success = nil != (t_multi_value = ABMultiValueCreateMutable(t_multi_type));
+				for (uindex_t j = 0; t_success && j < ELEMENTS(s_label_map); j++)
+				{
+					MCValueRef t_element;
+					if (MCArrayFetchValue((MCArrayRef)t_value, false, *s_label_map[j].name, t_element))
+					{
+						if (MCValueIsArray(t_element))
+						{
+							uindex_t t_index = 1;
+							MCValueRef t_index_value;
+							
+							while ((t_success = MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value)))
+							{
+								if (t_index_value == nil)
+									break;
+
+								if (!s_property_map[i].has_keys)
+								{
+									if (MCStringGetLength((MCStringRef)t_index_value) > 0)
+									{
+										t_success = ABMultiValueAddValueAndLabel(t_multi_value,
+																				 [NSString stringWithMCStringRef: (MCStringRef)t_value],
+																				 s_label_map[j].label,
+																				 nil);
+									}
+								}
+								else if (MCValueIsArray(t_index_value))
+								{
+									CFDictionaryRef t_dict = nil;
+									t_success = MCCFDictionaryFromArray((MCArrayRef)t_index_value, t_dict) &&
+									ABMultiValueAddValueAndLabel(t_multi_value, t_dict, s_label_map[j].label, nil);
+									if (t_dict != nil)
+										CFRelease(t_dict);
+								}
+							}
+						}
+					}
+				}
+				
+				if (t_success && ABMultiValueGetCount(t_multi_value) > 0)
+					t_success = ABRecordSetValue(t_person, *s_property_map[i].property, t_multi_value, nil);
+            }
+        }
+    }
+    
 	if (t_success)
 		r_person = t_person;
 	else if (t_person != nil)
@@ -431,10 +658,9 @@ static void requestAuthorization(ABAddressBookRef &x_address_book)
 #endif
 }
 
-bool MCContactAddContact(MCVariableValue *p_contact, int32_t& r_chosen)
+bool MCContactAddContact(MCArrayRef p_contact, int32_t& r_chosen)
 {
     bool t_success = true;
-	MCExecPoint ep(nil, nil, nil);
 	
     ABAddressBookRef t_address_book = nil;
     
@@ -458,7 +684,7 @@ bool MCContactAddContact(MCVariableValue *p_contact, int32_t& r_chosen)
 	
 	ABRecordRef t_contact = nil;
 	if (t_success)
-		t_success = MCCreatePerson(ep, p_contact, t_contact);
+		t_success = MCCreatePerson(p_contact, t_contact);
 	
 	
     // try to add new record in the address book
@@ -481,7 +707,7 @@ bool MCContactAddContact(MCVariableValue *p_contact, int32_t& r_chosen)
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	
-	return t_success;
+	return t_success; 
 }
 
 bool MCContactDeleteContact(int32_t p_person_id)
@@ -518,7 +744,7 @@ bool MCContactDeleteContact(int32_t p_person_id)
 	return t_success;
 }
 
-bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
+bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 {
 	bool t_success = true;
 	
@@ -552,7 +778,7 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 	NSMutableString *t_chosen = nil;
 	
     if (t_success)
-		t_success = nil != (t_person_name = CFStringCreateWithCString(NULL, p_person_name, kCFStringEncodingMacRoman));
+		t_success = MCStringConvertToCFStringRef(p_person_name, t_person_name);
 
 	if (t_success)
 	{
@@ -564,13 +790,13 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 			// set the label item
 			for (int i = 1; t_success && i < [t_people count]; i++)
 			{
-				/* UNCHECKED */ [t_chosen appendFormat:@",%d", ABRecordGetRecordID((ABRecordRef)[t_people objectAtIndex:i])];
+            [t_chosen appendFormat:@",%d", ABRecordGetRecordID((ABRecordRef)[t_people objectAtIndex:i])];
 			}
 		}
 	}
 
 	if (t_success)
-		t_success = MCCStringClone([t_chosen cStringUsingEncoding:NSMacOSRomanStringEncoding], r_chosen);
+		t_success = MCStringCreateWithCFString((CFStringRef)t_chosen, r_chosen);
 	
     if (t_people != nil)
 		[t_people release];
@@ -579,7 +805,7 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	
-	return t_success;
+	return t_success; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -697,7 +923,7 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 		m_pick_contact.peoplePickerDelegate = self;
 		NSArray *t_displayed_items = [NSArray arrayWithObjects:[NSNumber numberWithInt:kABPersonPhoneProperty],
 									  [NSNumber numberWithInt:kABPersonEmailProperty],
-									  [NSNumber numberWithInt:kABPersonBirthdayProperty], nil];
+									  [NSNumber numberWithInt:kABPersonBirthdayProperty], nil, nil];
 		
 		m_pick_contact.displayedProperties = t_displayed_items;
 		// Show the picker
@@ -1035,7 +1261,7 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 }
 
 -(bool)showUpdateContact: (ABRecordRef) p_contact
-			   withTitle: (const char*)p_title withMessage: (const char*)p_message withAlternateName: (const char*)p_alternate_name
+			   withTitle: (MCStringRef)p_title withMessage: (MCStringRef)p_message withAlternateName: (MCStringRef)p_alternate_name
 			  withResult: (int32_t&) r_chosen
 {
 	m_success = true;
@@ -1050,9 +1276,9 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 		
 		if (m_success)
 		{
-			t_title = [NSString stringWithCString: p_title == nil ? "" : p_title encoding:NSMacOSRomanStringEncoding];
-			t_message = [NSString stringWithCString: p_message == nil ? "" : p_message encoding:NSMacOSRomanStringEncoding];
-			t_alternate_name = [NSString stringWithCString: p_alternate_name == nil ? "" : p_alternate_name encoding:NSMacOSRomanStringEncoding];
+            t_title = [NSString stringWithMCStringRef: p_title == nil ? kMCEmptyString : p_title];
+            t_message = [NSString stringWithMCStringRef: p_message == nil ? kMCEmptyString : p_message];
+			t_alternate_name = [NSString stringWithMCStringRef: p_alternate_name == nil ? kMCEmptyString : p_alternate_name];
 			m_success = (t_title != nil) && (t_message != nil) && (t_alternate_name != nil);
 		}
 		
@@ -1188,14 +1414,13 @@ bool MCSystemCreateContact(int32_t& r_result) // ABNewPersonViewController
     return t_success;
 }
 
-bool MCSystemUpdateContact(MCVariableValue *p_contact, const char *p_title, const char *p_message, const char *p_alternate_name,
+bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name,
 						   int32_t &r_result)
 {
 	bool t_success = true;
-	
-	MCExecPoint ep(nil, nil, nil);
+
 	ABRecordRef t_contact = nil;
-	t_success = MCCreatePerson(ep, p_contact, t_contact);
+	t_success = MCCreatePerson(p_contact, t_contact);
 
 	MCIPhoneUpdateContactDelegate *t_update_contact = nil;
 	if (t_success)
@@ -1209,10 +1434,10 @@ bool MCSystemUpdateContact(MCVariableValue *p_contact, const char *p_title, cons
 	if (t_contact != nil)
 		CFRelease(t_contact);
 	
-	return t_success;
+	return t_success; 
 }
 
-bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCVariableValue *&r_contact_data)
+bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
 {
 	bool t_success = true;
 	
@@ -1240,12 +1465,12 @@ bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCVaria
 		t_success = nil != (t_person = ABAddressBookGetPersonWithRecordID (t_address_book, p_contact_id));
 	
 	if (t_success)
-		t_success = MCCreatePersonData(r_ctxt.GetEP(), t_person, r_contact_data);
+		t_success = MCCreatePersonData(t_person, r_contact_data);
 	
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	
-	return t_success;
+	return t_success; 
 }
 
 bool MCSystemRemoveContact(int32_t p_contact_id)
@@ -1253,12 +1478,12 @@ bool MCSystemRemoveContact(int32_t p_contact_id)
 	return MCContactDeleteContact(p_contact_id);
 }
 
-bool MCSystemAddContact(MCVariableValue *p_contact, int32_t& r_result)
+bool MCSystemAddContact(MCArrayRef p_contact, int32_t& r_result)
 {
 	return MCContactAddContact(p_contact, r_result);
 }
 
-bool MCSystemFindContact(const char* p_contact_name, char *& r_result)
+bool MCSystemFindContact(MCStringRef p_contact_name, MCStringRef& r_result)
 {
 	return MCContactFindContact(p_contact_name, r_result);
 }

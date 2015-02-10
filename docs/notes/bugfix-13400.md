@@ -1,0 +1,1 @@
+# Severe slowdown in copying blocks of bytes / chars

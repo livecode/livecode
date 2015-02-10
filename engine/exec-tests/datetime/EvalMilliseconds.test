@@ -1,0 +1,6 @@
+setup
+test the milliseconds is a number
+put the milliseconds into tVar
+wait 10 millisecs
+test the milliseconds > tVar
+teardown

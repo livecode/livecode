@@ -1180,8 +1180,9 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    
    local tPlist
    put url ("file:" & tTemplateFile) into tPlist
-   replace "${EXECUTABLE_NAME}" with tExeName in tPlist
-   replace "${BUNDLE_IDENTIFIER}" with tBundleId in tPlist
+   // SN-2014-10-27: [[ Bug 13827 ]] Strings in a Plist file should be UTF-8 encoded
+   replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in tPlist
+   replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in tPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOS & "</string>" in tPlist

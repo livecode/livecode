@@ -1,0 +1,17 @@
+setup
+
+create field 1
+
+focus on field 1
+
+-- For some reason focusing doesn't happen until events are processed...
+wait 0 seconds with messages
+
+focus on nothing
+
+-- After unfocusing, the card will be focused until events are processed...
+-- ... at which point nothing will be.
+
+test the focusedObject is the long id of this card
+
+teardown

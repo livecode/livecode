@@ -1,0 +1,8 @@
+setup
+
+create field
+set the text of the last field to "abcd"
+
+test the textheightsum of the last field is the formattedheight of the last field
+
+teardown
