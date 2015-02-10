@@ -78,7 +78,7 @@ void MakeDoubleLiteral(const char *p_token, long *r_literal)
     *r_literal = (long)t_value;
 }
 
-static int char_to_nibble(char p_char, int *r_nibble)
+static int char_to_nibble(char p_char, unsigned int *r_nibble)
 {
     if (isdigit(p_char))
         *r_nibble = p_char - '0';
@@ -122,7 +122,7 @@ void append_utf8_char(char *p_string, int *x_index, int p_char)
     }
 }
 
-int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
+int UnescapeStringLiteral(long p_position, const char *p_string, long *r_unescaped_string)
 {
     // Allocate enough room for the length of the string including a NUL char.
     // This is more than enough to handle any escapes as escaped chars are always
@@ -141,6 +141,10 @@ int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
     {
         if (*t_ptr == '\\')
         {
+            // Record the start of the escape.
+            const char *t_escape;
+            t_escape = t_ptr;
+            
             if (t_ptr + 1 < t_limit)
             {
                 t_ptr += 1;
@@ -163,9 +167,11 @@ int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
                     t_ptr += 1;
                     if (t_ptr < t_limit && *t_ptr == '{')
                     {
-                        int t_char, i;
+                        int t_overflow;
+                        unsigned int t_char;
                         t_char = 0;
-                        for(i = 0; i < 6; i++)
+                        t_overflow = 0;
+                        for(;;)
                         {
                             // Advance the input ptr - if we are at the end here
                             // it is an error.
@@ -177,18 +183,21 @@ int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
                             // a nibble yet, in which case it is an error.
                             if (*t_ptr == '}')
                             {
-                                if (i == 0)
-                                    goto error_exit;
+                                if (t_ptr == t_escape + 3)
+                                    Warning_EmptyUnicodeEscape(p_position + (t_escape - p_string));
                                 break;
                             }
                             
                             // Parse the next nibble, shift and add it.
-                            int t_nibble;
+                            unsigned int t_nibble;
                             if (!char_to_nibble(*t_ptr, &t_nibble))
                                 goto error_exit;
                             
                             t_char = t_char << 4;
                             t_char |= t_nibble;
+                            
+                            if (t_char > 0x10FFFF)
+                                t_overflow = 1;
                         }
                         
                         // If we get here and we are not looking at } then it
@@ -196,7 +205,11 @@ int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
                         if (*t_ptr != '}')
                             goto error_exit;
                         
-                        t_ptr += 1;
+                        if (t_overflow)
+                        {
+                            Warning_UnicodeEscapeTooBig(p_position + (t_escape - p_string));
+                            t_char = 0x10FFFF;
+                        }
                         
                         append_utf8_char(t_value, &t_length, t_char);
                     }

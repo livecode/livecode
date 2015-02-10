@@ -1089,7 +1089,7 @@
     'rule' StringLiteral(-> Value):
         STRING_LITERAL(-> EscapedValue) @(-> Position)
         (|
-            UnescapeStringLiteral(EscapedValue -> Value)
+            UnescapeStringLiteral(Position, EscapedValue -> Value)
         ||
             Error_MalformedEscapedString(Position, EscapedValue)
             where(EscapedValue -> Value)

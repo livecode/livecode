@@ -185,6 +185,8 @@ DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 
 DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses should come after use clauses")
+DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
+DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, character clamped to \\u{10FFFF}");
 
 ////////////////////////////////////////////////////////////////////////////////
 
