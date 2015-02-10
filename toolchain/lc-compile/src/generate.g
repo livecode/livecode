@@ -1567,7 +1567,7 @@
         (|
             IsExpressionSimpleConstant(List)
             EmitConstant(List -> Index)
-            EmitAssignConstant(Result, Index)
+            EmitAssignConstant(Output, Index)
         ||
             GenerateExpressionList(Result, Context, Elements -> ListRegs)
             EmitBeginAssignList(Output)
