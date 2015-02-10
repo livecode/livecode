@@ -143,6 +143,7 @@
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
     throw(Position: POS, Error: EXPRESSION)
+    postfixinto(Position: POS, Command: STATEMENT, Target: EXPRESSION)
     nil
     
 'type' EXPRESSIONLIST

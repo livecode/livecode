@@ -601,7 +601,7 @@
         
     'rule' Statements(-> nil):
         -- empty
-        
+
 'nonterm' Statement(-> STATEMENT)
 
     'rule' Statement(-> variable(Position, Name, Type)):
@@ -681,6 +681,9 @@
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+
+    'rule' Statement(-> postfixinto(Position, Statement, Target)):
+        CustomStatements(-> Statement) "into" @(-> Position) Expression(-> Target)
 
     'rule' Statement(-> Statement):
         CustomStatements(-> Statement)
