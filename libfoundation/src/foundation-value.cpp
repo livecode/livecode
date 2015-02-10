@@ -304,7 +304,7 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 	switch(__MCValueGetTypeCode(self))
 	{
 	case kMCValueTypeCodeNull:
-		return MCStringFormat(r_desc, "<null>");
+		return MCStringCopy (MCSTR("<null>"), r_desc);
 	case kMCValueTypeCodeBoolean:
 		return MCStringFormat(r_desc, "<%s>", p_value == kMCTrue ? "true" : "false");
 	case kMCValueTypeCodeNumber:
