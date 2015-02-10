@@ -311,6 +311,9 @@
 
     'rule' VariableDefinition(-> variable(Position, Access, Name, Type)):
         Access(-> Access) "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
+
+    'rule' VariableDefinition(-> contextvariable(Position, Access, Name, Type, Default)):
+        Access(-> Access) "context" @(-> Position) "variable" Identifier(-> Name) OptionalTypeClause(-> Type) "default" Expression(-> Default)
         
 'nonterm' OptionalTypeClause(-> TYPE)
 

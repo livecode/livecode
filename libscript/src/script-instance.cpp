@@ -218,6 +218,11 @@ bool MCScriptThrowInvalidValueForGlobalVariableError(MCScriptModuleRef p_module,
     return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, "variable",  MCScriptGetNameOfGlobalVariableInModule(p_module, p_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
 }
 
+bool MCScriptThrowInvalidValueForContextVariableError(MCScriptModuleRef p_module, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+{
+    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, "variable",  MCScriptGetNameOfContextVariableInModule(p_module, p_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
+}
+
 bool MCScriptThrowNotABooleanError(MCValueRef p_value)
 {
     return MCErrorCreateAndThrow(kMCScriptNotABooleanValueErrorTypeInfo, "value", p_value, nil);
@@ -522,6 +527,12 @@ bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef self, MCNameRef p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCScriptFrameContext
+{
+    uindex_t count;
+    MCValueRef slots[1];
+};
+
 // This structure is a single frame on the execution stack.
 struct MCScriptFrame
 {
@@ -542,6 +553,9 @@ struct MCScriptFrame
     //   <locals>
     //   <registers>
     MCValueRef *slots;
+    
+    // The context slots for the current handler invocation (if initialized)
+    MCScriptFrameContext *context;
 	
     // The result register in the caller.
     uindex_t result;
@@ -2151,7 +2165,23 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     if (t_success)
                         t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
+                }
+                else if (t_definition -> kind == kMCScriptDefinitionKindContextVariable)
+                {
+                    MCScriptContextVariableDefinition *t_var_definition;
+                    t_var_definition = static_cast<MCScriptContextVariableDefinition *>(t_definition);
                     
+                    // If there is no context table, or the value of the slot at the given
+                    // index is nil then we use the default.
+                    MCValueRef t_value;
+                    if (t_frame -> context == nil ||
+                        t_frame -> context -> count < t_var_definition -> slot_index ||
+                        t_frame -> context -> slots[t_var_definition -> slot_index] == nil)
+                        t_value = kMCFalse; // t_instance -> module -> values[t_var_definition -> default_value];
+                    else
+                        t_value = t_frame -> context -> slots[t_var_definition -> slot_index];
+                    
+                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
                 }
                 else if (t_definition -> kind == kMCScriptDefinitionKindHandler)
                 {
@@ -2231,30 +2261,53 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCScriptDefinition *t_definition;
                 MCScriptResolveDefinitionInFrame(t_frame, t_index, t_instance, t_definition);
                 
-                __MCScriptAssert__(t_definition -> kind == kMCScriptDefinitionKindVariable,
-                                   "definition not a variable in store global");
-                
-                MCScriptVariableDefinition *t_var_definition;
-                t_var_definition = static_cast<MCScriptVariableDefinition *>(t_definition);
-                
-                MCTypeInfoRef t_output_type;
-                t_output_type = t_instance -> module -> types[t_var_definition -> type] -> typeinfo;
-                
                 MCValueRef t_value;
                 t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_dst, t_value);
                 
-                if (t_success &&
-                    !MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_output_type))
-                    t_success = MCScriptThrowInvalidValueForGlobalVariableError(t_frame -> instance -> module, t_index, t_output_type, t_value);
-                
-                if (t_success)
+                if (t_definition -> kind == kMCScriptDefinitionKindVariable)
                 {
-                    if (t_instance -> slots[t_var_definition -> slot_index] != t_value)
-                    {
-                        MCValueRelease(t_instance -> slots[t_var_definition -> slot_index]);
-                        t_instance -> slots[t_var_definition -> slot_index] = MCValueRetain(t_value);
-                    }
+                    MCScriptVariableDefinition *t_var_definition;
+                    t_var_definition = static_cast<MCScriptVariableDefinition *>(t_definition);
+                    
+                    MCTypeInfoRef t_output_type;
+                    t_output_type = t_instance -> module -> types[t_var_definition -> type] -> typeinfo;
+                    
+                    if (t_success &&
+                        !MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_output_type))
+                        t_success = MCScriptThrowInvalidValueForGlobalVariableError(t_frame -> instance -> module, t_index, t_output_type, t_value);
+                    
+                    if (t_success)
+                        MCValueAssign(t_instance -> slots[t_var_definition -> slot_index], t_value);
                 }
+                else if (t_definition -> kind == kMCScriptDefinitionKindContextVariable)
+                {
+                    MCScriptContextVariableDefinition *t_var_definition;
+                    t_var_definition = static_cast<MCScriptContextVariableDefinition *>(t_definition);
+                    
+                    MCTypeInfoRef t_output_type;
+                    t_output_type = t_instance -> module -> types[t_var_definition -> type] -> typeinfo;
+                    
+                    if (t_success &&
+                        !MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_output_type))
+                        t_success = MCScriptThrowInvalidValueForContextVariableError(t_frame -> instance -> module, t_index, t_output_type, t_value);
+                    
+                    if (t_success &&
+                        (t_frame -> context == nil ||
+                         t_frame -> context -> count <= t_var_definition -> slot_index))
+                    {
+                        // Note that MCScriptFrameContext has an implement MCValueRef
+                        // so we don't need to adjust index to be a count.
+                        if (MCMemoryReallocate(t_frame -> context, sizeof(MCScriptFrameContext) + (sizeof(MCValueRef) * t_var_definition -> slot_index), t_frame -> context))
+                            t_frame -> context -> count = t_var_definition -> slot_index + 1;
+                        else
+                            t_success = false;
+                    }
+                    
+                    if (t_success)
+                        MCValueAssign(t_frame -> context -> slots[t_var_definition -> slot_index], t_value);
+                }
+                else
+                    MCUnreachable();
             }
             break;
             case kMCScriptBytecodeOpAssignList:

@@ -391,6 +391,29 @@ void MCScriptAddVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     t_definition -> type = p_type;
 }
 
+void MCScriptAddContextVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_def_index, uindex_t p_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (p_index >= self -> module . definition_count ||
+        self -> module . definitions[p_index] != nil ||
+        !MCMemoryNew((MCScriptContextVariableDefinition*&)self -> module . definitions[p_index]))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    __assign_definition_name(self, p_index, p_name);
+    
+    MCScriptContextVariableDefinition *t_definition;
+    t_definition = static_cast<MCScriptContextVariableDefinition *>(self -> module . definitions[p_index]);
+    
+    t_definition -> kind = kMCScriptDefinitionKindContextVariable;
+    t_definition -> type = p_type;
+    t_definition -> default_value = p_def_index;
+}
+
 void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_signature, MCStringRef p_binding, uindex_t p_index)
 {
     if (self == nil || !self -> valid)

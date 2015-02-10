@@ -22,7 +22,7 @@
 'export'
     MODULE MODULELIST MODULEKIND
     IMPORT
-    DEFINITION SIGNATURE ACCESS
+    DEFINITION SIGNATURE ACCESS SCOPE
     TYPE FIELD FIELDLIST
     PARAMETER MODE PARAMETERLIST
     STATEMENT
@@ -59,13 +59,18 @@
     sequence(Left: IMPORT, Right: IMPORT)
     import(Position: POS, Name: ID)
     nil
-    
+
+'type' SCOPE
+    normal
+    context
+
 'type' DEFINITION
     sequence(Left: DEFINITION, Right: DEFINITION)
     metadata(Position: POS, Key: STRING, Value: STRING)
     type(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
+    contextvariable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE, Default: EXPRESSION)
     handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
     property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
@@ -265,12 +270,13 @@
     module
     type
     constant
-    variable
     handler
     property
     event
+    variable
     parameter
     local
+    context
 
 'type' INTLIST
     intlist(Head: INT, Tail: INTLIST)

@@ -208,6 +208,9 @@
         QueryKindOfSymbolId(Id -> local)
 
     'rule' CheckBindingIsVariableId(Id):
+        QueryKindOfSymbolId(Id -> context)
+
+    'rule' CheckBindingIsVariableId(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToAVariable(Position, Name)
@@ -228,6 +231,9 @@
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
         QueryKindOfSymbolId(Id -> local)
+
+    'rule' CheckBindingIsVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> context)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
         QueryKindOfSymbolId(Id -> handler)
@@ -1497,6 +1503,14 @@
             --Error_VariableMustHaveHighLevelType(Position)
         |)
         
+    'rule' CheckDeclaredTypes(DEFINITION'contextvariable(Position, _, _, Type, _)):
+        -- Variable types must be high-level
+        (|
+            IsHighLevelType(Type)
+        ||
+            --Error_VariableMustHaveHighLevelType(Position)
+        |)
+
     'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(_, _, _, Signature, _)):
         -- Foreign handler signatures can contain any type so no need to
         -- check anything here.

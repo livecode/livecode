@@ -251,6 +251,15 @@ struct MCScriptVariableDefinition: public MCScriptDefinition
 	uindex_t slot_index;
 };
 
+struct MCScriptContextVariableDefinition: public MCScriptDefinition
+{
+    uindex_t type;
+    uindex_t default_value;
+    
+    // (compute) The index of the variable in the context slot table - not pickled
+    uindex_t slot_index;
+};
+
 struct MCScriptCommonHandlerDefinition: public MCScriptDefinition
 {
     uindex_t type;
@@ -374,6 +383,12 @@ struct MCScriptModule: public MCScriptObject
     // (computed) The number of slots needed by an instance - not pickled
     uindex_t slot_count;
     
+    // (computed) The number of slots needed by this modules context - not pickled
+    uindex_t context_slot_count;
+    
+    // (computed) The index of this module's context info in a frame's context vector - not pickled
+    uindex_t context_index;
+    
     // If this is a non-widget module, then it only has one instance - not pickled
     MCScriptInstanceRef shared_instance;
     
@@ -397,6 +412,7 @@ MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef module, MCScript
 MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
 MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
 MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, uindex_t index);
+MCNameRef MCScriptGetNameOfContextVariableInModule(MCScriptModuleRef module, uindex_t index);
 
 ////////////////////////////////////////////////////////////////////////////////
 
