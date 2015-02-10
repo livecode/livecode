@@ -1,0 +1,107 @@
+module tests.builtin.postfix_into
+
+// We need to check that the postfix into clause generates correct code.
+//
+// Any custom statement can be followed by 'into <Target>'.
+//
+// The statement:
+//   <something> into tTarget
+// Should have exactly the same behavior as:
+//   <something>
+//   put the result into tTarget
+//
+// In particular, 'the result' should be usable in <something> without any
+// problem.
+// After the statement 'the result' should be undefined.
+//
+// Thus we check the following:
+//   1) custom statement not returning a value places 'undefined' in target
+//   2) custom statement returning a value places the correct result in target
+//   3) the use of 'the result' in custom statement works as expected
+//   4) the value of 'the result' after the custom statement is undefined
+//
+// We also test each of these things with a module variable, a local variable
+// and complex r-value.
+
+variable sTheResult
+
+public handler Test_PostfixIntoForVoidStatement
+    -- The 'add' command returns nothing.
+    variable tTheResult
+    variable tTheComplexResult
+    put the empty list into tTheComplexResult
+
+    variable tTarget as number
+    put 0 into tTarget
+    add 1 to tTarget into tTheResult
+    test tTheResult is undefined
+    
+    put 0 into tTarget
+    add 1 to tTarget into sTheResult
+    test sTheResult is undefined
+    
+    put 0 into tTarget
+    add 1 to tTarget into element 1 of tTheComplexResult
+    test element 1 of tTheComplexResult is undefined
+end handler
+
+public handler Test_PostfixIntoForNonVoidStatement
+    -- The 'split' command returns a list.
+    variable tTheResult
+    variable tTheComplexResult
+    put the empty list into tTheComplexResult
+
+    put "a,b,c" into tTarget
+    split tTarget by "," into tTheResult
+    test tTheResult is [ "a", "b", "c" ]
+
+    put "a,b,c" into tTarget
+    split tTarget by "," into sTheResult
+    test sTheResult is [ "a", "b", "c" ]
+
+    put "a,b,c" into tTarget
+    split tTarget by "," into element 1 of tTheComplexResult
+    test element 1 of tTheComplexResult is [ "a", "b", "c" ]
+end handler
+
+public handler Test_PostfixIntoWorksWithTheResult
+    variable tTheResult
+    variable tTheComplexResult
+    put the empty list into tTheComplexResult
+    
+    variable tTarget as string
+    get "a,b,c"
+    split the result by "," into tTheResult
+    test tTheResult is [ "a", "b", "c" ]
+
+    get "a,b,c"
+    split the result by "," into sTheResult
+    test sTheResult is [ "a", "b", "c" ]
+
+    get "a,b,c"
+    split the result by "," into element 1 of tTheComplexResult
+    test element 1 of tTheComplexResult is [ "a", "b", "c" ]
+end handler
+
+public handler Test_PostfixIntoLeavesTheResultUndefined
+    variable tTheResult
+    variable tTheComplexResult
+    put the empty list into tTheComplexResult
+    
+    variable tTarget as string
+    get "a,b,c"
+    split the result by "," into tTheResult
+    test the result is undefined
+
+    variable tTarget as string
+    get "a,b,c"
+    split the result by "," into sTheResult
+    test the result is undefined
+    
+    variable tTarget as string
+    get "a,b,c"
+    split the result by "," into element 1 of tTheComplexResult
+    test the result is undefined
+end handler
+
+end module
