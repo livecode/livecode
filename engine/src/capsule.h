@@ -97,6 +97,10 @@ enum MCCapsuleSectionType
 	// Startup script to be executed after all stacks have loaded but before
 	// the main stack is opened.
 	kMCCapsuleSectionTypeStartupScript,
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Library consists of the mappings from universal names
+    //  of resources to their platform-specific paths relative to the executable.
+    kMCCapsuleSectionTypeLibrary,
 };
 
 // Each section begins with a header that defines its type and length. This is

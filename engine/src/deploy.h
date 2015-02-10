@@ -49,7 +49,11 @@ struct MCDeployParameters
 	// The list of redirection mappings
 	char **redirects;
 	uint32_t redirect_count;
-
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] The list of resource mappings.
+    char **library;
+    uint32_t library_count;
+    
 	// On Windows, the icon files to be inserted into the resource directory.
 	char *app_icon;
 	char *doc_icon;

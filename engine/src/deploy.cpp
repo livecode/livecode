@@ -162,6 +162,11 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxiliaryStack, t_aux_stackfiles[i]);
 		}
 	
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.
+    if (t_success)
+        for(uint32_t i = 0; i < p_params . library_count && t_success; i++)
+            t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeLibrary, p_params . library[i], MCCStringLength(p_params . library[i]) + 1);
+    
 	// Now add the externals, if any
 	if (t_success)
 		for(uint32_t i = 0; i < p_params . external_count && t_success; i++)
@@ -501,6 +506,9 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 		t_stat = fetch_filepath(ep2, t_array, "stackfile", t_params . stackfile);
 	if (t_stat == ES_NORMAL)
 		t_stat = fetch_filepath_array(ep2, t_array, "auxiliary_stackfiles", t_params . auxiliary_stackfiles, t_params . auxiliary_stackfile_count);
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch the resource mappings, if any.    
+    if (t_stat == ES_NORMAL)
+        t_stat = fetch_cstring_array(ep2, t_array, "library", t_params . library, t_params . library_count);
 	if (t_stat == ES_NORMAL)
 		t_stat = fetch_cstring_array(ep2, t_array, "externals", t_params . externals, t_params . external_count);
 	if (t_stat == ES_NORMAL)

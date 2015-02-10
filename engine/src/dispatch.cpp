@@ -98,6 +98,12 @@ MCDispatch::MCDispatch()
 	m_externals = nil;
 
     m_transient_stacks = nil;
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add resource mapping array to MCDispatch. This stores
+    //  any universal name / relative path pairs included in a standalone executable for locating included
+    //  resources.
+    m_library_mapping = new MCVariableValue;
+    m_library_mapping -> assign_new_array(TABLE_SIZE);
 }
 
 MCDispatch::~MCDispatch()
@@ -119,6 +125,8 @@ MCDispatch::~MCDispatch()
 	delete enginedir;
 	
 	delete m_externals;
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Delete library mapping
+    delete m_library_mapping;
 }
 
 bool MCDispatch::isdragsource(void)
@@ -2277,3 +2285,41 @@ MCFontlist *MCFontlistGetCurrent(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
+//  in the resource mapping array of MCdispatcher.
+void MCDispatch::addlibrarymapping(const char *p_mapping)
+{
+    const char *t_separator;
+    t_separator = strchr(p_mapping, ':');
+    
+    char *t_name;
+    MCCStringCloneSubstring(p_mapping, t_separator - p_mapping, t_name);
+    
+    t_separator++;
+    char *t_target;
+    MCCStringCloneSubstring(t_separator, strlen(t_separator), t_target);
+    
+    MCExecPoint ep(nil, nil, nil);
+    ep . setstaticcstring(t_target);
+    
+    m_library_mapping -> store_element(ep, t_name);
+    
+    delete t_name;
+    delete t_target;
+}
+
+bool MCDispatch::fetchlibrarymapping(const char *p_name, char*& r_path)
+{
+    MCExecPoint ep(nil, nil, nil);
+    if (!m_library_mapping -> has_element(ep, p_name))
+        return nil;
+    
+    if (m_library_mapping -> fetch_element(ep, p_name) != ES_NORMAL)
+        return false;
+    if (ep . getsvalue() == MCnullmcstring)
+        return false;
+
+    r_path = ep . getsvalue() . clone();
+    return true;
+}
