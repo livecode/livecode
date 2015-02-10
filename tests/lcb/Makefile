@@ -26,6 +26,7 @@ lcb-check: $(LC_RUN) $(LC_COMPILE)
 	mkdir -p $(TEST_DIR)
 	@for lcbfile in $(STDLIB_LCB); do \
 	    lcmfile=$(TEST_DIR)/`echo $$lcbfile | sed -e's:lcb$$:lcm:'` ; \
+	    mkdir -p `dirname $$lcmfile`; \
 	    echo "$(LC_COMPILE) $(LCC_FLAGS) --output $$lcmfile $$lcbfile" \
 	        $(_PRINT_RULE); \
 	    $(LC_COMPILE) $(LCC_FLAGS) --output $$lcmfile $$lcbfile || exit $$? ; \
