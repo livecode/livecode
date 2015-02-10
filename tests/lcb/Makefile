@@ -3,9 +3,9 @@ top_srcdir=../..
 include $(top_srcdir)/rules/environment.linux.makefile
 
 SOLUTION_DIR = $(top_srcdir)
-TEST_DIR = $(SOLUTION_DIR)/_tests/lcb-stdlib
+TEST_DIR = $(SOLUTION_DIR)/_tests/lcb
 
-check: lcb-stdlib-check
+check: lcb-check
 clean:
 	-rm -rf $(TEST_DIR)
 
@@ -21,7 +21,7 @@ LCC_FLAGS = --modulepath $(TEST_DIR) --modulepath $(MODULE_DIR)
 
 TEST_RUNNER_LCM = $(TEST_DIR)/_testrunner.lcm
 
-lcb-stdlib-check-summarize: $(LC_RUN) $(LC_COMPILE)
+lcb-check: $(LC_RUN) $(LC_COMPILE)
 	-rm -f $(STDLIB_LCM) _test_suite.log
 	mkdir -p $(TEST_DIR)
 	@for mlcfile in $(STDLIB_MLC); do \
@@ -39,6 +39,4 @@ lcb-stdlib-check-summarize: $(LC_RUN) $(LC_COMPILE)
 	@$(LC_RUN) --handler SummarizeTests $(TEST_RUNNER_LCM) \
 	    --summary-log _test_suite.log $(STDLIB_LOGS)
 
-lcb-stdlib-check: lcb-stdlib-check-summarize
-
-.PHONY: lcb-stdlib-check lcb-stdlib-check-summarize
+.PHONY: lcb-check lcb-check-summarize
