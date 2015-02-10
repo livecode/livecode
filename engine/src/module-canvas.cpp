@@ -504,8 +504,14 @@ static hash_t __MCCanvasRectangleHash(MCValueRef p_value)
 
 static bool __MCCanvasRectangleDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe rectangle
-	return false;
+	MCGRectangle t_rectangle;
+	MCCanvasRectangleGetMCGRectangle (static_cast<MCCanvasRectangleRef>(p_value), t_rectangle);
+
+	return MCStringFormat (r_desc, "<rectangle (%g, %g) - (%g, %g)>",
+	                       t_rectangle.origin.x,
+	                       t_rectangle.origin.y,
+	                       t_rectangle.origin.x + t_rectangle.size.width,
+	                       t_rectangle.origin.y + t_rectangle.size.height);
 }
 
 bool MCCanvasRectangleCreateWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rectangle)
