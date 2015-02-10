@@ -39,7 +39,6 @@ on process
   output "#include <stdio.h>"
   output "#include <cstring>"
   output "#if defined(_MACOSX) || defined(_MAC_SERVER)"
-  output "#include <mach-o/dyld.h>"
   output "#define SYMBOL_PREFIX " & quote & "_" & quote
   output "#else"
   output "#define SYMBOL_PREFIX"
@@ -58,11 +57,6 @@ on process
   output "static int module_load(const char *p_source, module_t *r_module)"
   output "{"
   output "  module_t t_module;"
-  output "  t_module = NULL;"
-  output "#if defined(_MACOSX) || defined(_MAC_SERVER)"
-  output "  t_module  = (module_t)NSAddImage(p_source, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);"
-  output "#endif"
-  output "  if (t_module == NULL)"
   output " 	t_module = (module_t)MCU_loadmodule(p_source);"
   output "  if (t_module == NULL)"
   output "    return 0;"
@@ -80,21 +74,14 @@ on process
   output
   output "static int module_resolve(module_t p_module, const char *p_name, handler_t *r_handler)"
   output "{"
-  output "  handler_t t_handler = NULL;"
-  output "#if defined(_MACOSX) || defined(_MAC_SERVER)"
-  output "  NSSymbol t_symbol;"
-  output "  t_symbol = NSLookupSymbolInImage((mach_header *)p_module, p_name, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);"
-  output "  if (t_symbol != NULL)"
-  output "    t_handler = (handler_t)NSAddressOfSymbol(t_symbol);"
-  output "#endif"
-  output "  if (t_handler == NULL)"
+  output "  handler_t t_handler;"
   output "    t_handler = MCU_resolvemodulesymbol(p_module, p_name);"
   output "  if (t_handler == NULL)"
   output "    return 0;"
   output "  *r_handler = t_handler;"
   output "  return 1;"
   output "}"
-  output
+  output 
 
   repeat for each line tModule in the keys of sgModuleDetails
     generateModule tModule

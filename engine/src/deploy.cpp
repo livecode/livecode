@@ -122,6 +122,14 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		return false;
 	MCValueAssign(auxiliary_stackfiles, t_temp_array);
 	MCValueRelease(t_temp_array);
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch the resource mappings, if any.
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("library"), false, t_temp_string))
+        return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(library, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
 	
     // The externals listed by the IDE are LF separated
 	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("externals"), false, t_temp_string))
@@ -141,14 +149,6 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		return false;
     MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
     MCValueAssign(redirects, t_temp_array);
-    MCValueRelease(t_temp_string);
-    MCValueRelease(t_temp_array);
-	
-    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch the resource mappings, if any.
-    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("library"), false, t_temp_string))
-        return false;
-    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
-    MCValueAssign(library, t_temp_array);
     MCValueRelease(t_temp_string);
     MCValueRelease(t_temp_array);
     

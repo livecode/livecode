@@ -2423,7 +2423,7 @@ MCFontlist *MCFontlistGetCurrent(void)
 void MCDispatch::addlibrarymapping(MCStringRef p_mapping)
 {
     uindex_t t_separator;
-    if (!MCStringFirstIndexOfChar(p_mapping, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_separator))
+    if (!MCStringFirstIndexOfChar(p_mapping, ':', 0, kMCStringOptionCompareExact, t_separator))
         return;
 
     MCAutoStringRef t_name, t_path;
