@@ -499,7 +499,16 @@ public handler testLogic(inout xResults as list)
     	
     testLog("Logic", "Is", not true is false, xResults)
     testLog("Logic", "Is", not false is true, xResults)
-    
+
+    testLog("Logic", "Format", false formatted as string is "false", xResults)
+
+    format true as string
+    testLog("Logic", "Format", the result is "true", xResults)
+
+    testLog("Logic", "Parse", "true" parsed as boolean, xResults)
+    parse "false" as boolean
+    testLog("Logic", "Parse", not the result, xResults)
+
 end handler
 
 public handler testLogicStructural(inout xResults as list)
