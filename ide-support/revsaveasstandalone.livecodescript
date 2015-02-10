@@ -369,6 +369,56 @@ private function folderNameMakeLegal pName
    return revFolderNameMakeLegal(pName)
 end folderNameMakeLegal
 
+private function revStandalonePlatformDetails pPlatform
+   local tDetailsA
+  switch
+      case pPlatform contains "MacOSX"
+         -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
+         -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
+         if not revEnvironmentIsInstalled() then
+            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
+         else
+            put revEnvironmentRuntimePath() & "/Mac OS X/x86-32/Support" into tDetailsA["externals_folder"]
+         end if
+         put ".bundle" into tDetailsA["loadable_extension"]
+         put ".dylib" into tDetailsA["shared_extension"]
+         put "MacOSX" into  tDetailsA["platform"]
+         put "x86-32" into tDetailsA["architecture"]
+         break
+      case pPlatform = "Windows"
+         -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
+         if not revEnvironmentIsInstalled() then
+            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
+         else
+            put revEnvironmentRuntimePath() &  "/Windows/x86-32/Support" into tDetailsA["externals_folder"]
+         end if
+         put ".dll" into tDetailsA["loadable_extension"]
+         put "Windows" into tDetailsA["platform"]
+         put "x86-32" into tDetailsA["architecture"]
+         break
+      default
+         if pPlatform is "Linux" then
+            put revEnvironmentRuntimePath() &  "/Linux/x86-32/Support" into tDetailsA["externals_folder"]
+            put "x86-32" into tDetailsA["architecture"]
+         else if pPlatform is "Linux x64" then
+            -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
+            put revEnvironmentRuntimePath() & "/Linux/x86-64/Support" into tDetailsA["externals_folder"]
+            put "x86-64" into tDetailsA["architecture"]
+         else -- if pPlatform is "Linux armv6-hf" then
+            -- FG-2014-08-19: [[ RPi ]] Compute the correct path for 64-bit Linux
+            put revEnvironmentRuntimePath() & "/Linux/armv6-hf/Support" into tDetailsA["externals_folder"]
+            put "armv6-hf" into tDetailsA["architecture"]
+         end if
+         -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
+         if not revEnvironmentIsInstalled() then
+            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
+         end if
+         put ".so" into tDetailsA["loadable_extension"]
+         put "Linux" into tDetailsA["platform"]
+   end switch
+   return tDetailsA
+end revStandalonePlatformDetails
+
 #####################################################################
 # Main use-case controller for the Standalone Application Builder
 #####################################################################
@@ -1940,6 +1990,53 @@ end revCopyDatabaseDrivers
 # about adding external libraries to the build process for MacOS.
 #####################################################################
 
+private command revAddExternal pExternalName
+   if sStandaloneSettingsA["externals"] is not empty then put return after sStandaloneSettingsA["externals"]
+   put pExternalName after sStandaloneSettingsA["externals"]
+end revAddExternal
+
+constant kSeparator = ":"
+private command revAddMapping pPlatform, pName, pLocation
+   if sStandaloneSettingsA[pPlatform & ",library"] is not empty then put return after sStandaloneSettingsA[pPlatform & ",library"]
+   put pName & kSeparator & "./" & pLocation after sStandaloneSettingsA[pPlatform & ",library"]
+end revAddMapping
+
+# AL-2015-01-29: [[ Scriptify IDE ]] Factor out external copy function to ensure external is included in deploy params
+private command revCopyModule pPlatform, pModuleName, pSourceFile, pSourceFolder, pStandaloneRoot, pTargetFolder, pIsFolder
+   local tSourcePath, tTargetPath, tTargetModule
+   put pSourceFolder & slash & pSourceFile into tSourcePath
+   if pTargetFolder is not empty then
+      put pTargetFolder & slash & pSourceFile into tTargetModule
+   else
+      put pSourceFile into tTargetModule
+   end if
+   put pStandaloneRoot & slash & tTargetModule into tTargetPath
+   
+   if pIsFolder then
+      if there is no folder tSourcePath then
+         return "not found"
+      end if
+      if there is a folder pStandaloneRoot & slash & pTargetFolder then
+         return empty
+      end if 
+      revSBCopyFolderToDestination tSourcePath, pStandaloneRoot & slash & pTargetFolder, "revStandaloneProgressCallback", the long id of me
+   else
+      if there is no file tSourcePath then
+         return "not found"
+      end if
+      if there is a file tTargetPath then
+         return empty
+      end if
+      revSBCopyFile tSourcePath, tTargetPath, "revStandaloneProgressCallback", the long id of me
+   end if
+   
+   if the result is not empty then
+      return "failed to copy"
+   end if
+   
+   revAddMapping pPlatform, pModuleName, tTargetModule
+end revCopyModule
+
 private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStandalonePath
    local tExternalRes, tColors, tCursorName, tCurrentLocation, tExternalPath, tExternals, tExternalLibrary
    local tCopyFiles, tOrigVisible, tPath, tExternalFile, x, tColor, tPattern, tExternalName
@@ -1959,105 +2056,54 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    -- good time to do the platform specific resource moving
    -- because we need to resave the mainstack anyway
    set the itemDel to "/"
-   put pStandalonePath into tCurrentLocation
-   put "" into item -1 of tCurrentLocation
+   put item 1 to -2 of pStandalonePath into tCurrentLocation
    set the itemDel to ","
+   
+   local tExternalsFolder, tExtension, tSharedExtension, tPlatform, tArch
+   local tDetailsA
+   put revStandalonePlatformDetails(pPlatform) into tDetailsA
+   put tDetailsA["externals_folder"] into tExternalsFolder
+   put tDetailsA["loadable_extension"] into tExtension
+   if tDetailsA["shared_extension"] is not empty then
+      put tDetailsA["shared_extension"] into tSharedExtension
+   else
+      put tExtension into tSharedExtension
+   end if
+   put tDetailsA["platform"] into tPlatform
+   put tDetailsA["architecture"] into tArch
+   
+   
+   # OK-2010-04-26: Bug 8539 - PDF Printer not included
+   if sStandaloneSettingsA["pdfPrinter"] then
+      revCopyModule tPlatform, "revpdfprinter", "revpdfprinter" & tExtension, tExternalsFolder, tCurrentLocation, "", tPlatform is "MacOSX"
+      if the result is not empty then
+         revStandaloneAddWarning tPlatform && tArch & ", Support, revpdfprinter" & tExtension && the result & ": required for PDF printing."
+      else
+         --revAddExternal "revpdfprinter"
+      end if
+   end if
+   
+   -- MM-2014-01-29: [[ OpenSSL ]] We now build our own version of OpenSSL. 
+   if "SSL & Encryption" is among the lines of sStandaloneSettingsA["scriptLibraries"] then
+      revCopyModule tPlatform, "revsecurity", "revsecurity" & tSharedExtension, tExternalsFolder, tCurrentLocation, "", false
+      if the result is not empty then
+         revStandaloneAddWarning tPlatform && tArch & ", Support, revsecurity" & tSharedExtension && the result & ": required for SSL."
+      else
+         --revAddExternal "revsecurity"
+      end if
+   end if
+   
    switch
       case pPlatform contains "MacOSX"
          if sStandaloneSettingsA["cursors"] then put "revMacCursors" & return after tCopyFiles
-         -- AL-2014-01-15: [[ Bug 11589 ]] The default font for various platforms is now handled in the engine.
-         --         if the textFont of stack pStackFilePath = "" then
-         --            set the textFont of stack pStackFilePath to item 1 of the cDefaultFont["MacOSX"] of stack "revSaveAsStandalone"
-         --            set the textSize of stack pStackFilePath to item 2 of the cDefaultFont["MacOSX"] of stack "revSaveAsStandalone"
-         --         end if
-         
-         -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
-         local tArchitecture
-         put "x86-32" into tArchitecture
-         
-         # OK-2010-04-26: Bug 8539 - PDF Printer not included
-         if sStandaloneSettingsA["pdfPrinter"] then
-            
-            -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-            if revEnvironmentIsInstalled() then
-               put revEnvironmentRuntimePath() & "/Mac OS X/" & tArchitecture & "/Support/revpdfprinter.bundle" into tPath
-            else
-               put revEnvironmentBinariesPath() & "/revpdfprinter.bundle" into tPath
-            end if
-            
-            if there is no folder tPath then
-               revStandaloneAddWarning "Mac OS X" && tArchitecture & ", Support, revpdfprinter.bundle not found: required for PDF printing."
-            else
-               revSBCopyFolderToDestination tPath, tCurrentLocation, "revStandaloneProgressCallback", the long id of me
-            end if
-         end if
-         
-         -- MM-2014-01-29: [[ OpenSSL ]] We now build our own version of OpenSSL. 
-         if "SSL & Encryption" is among the lines of sStandaloneSettingsA["scriptLibraries"] then
-            -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-            if revEnvironmentIsInstalled() then
-               put revEnvironmentRuntimePath() & "/Mac OS X/" & tArchitecture & "/Support/revsecurity.dylib" into tPath
-            else
-               put revEnvironmentBinariesPath() & "/revsecurity.dylib" into tPath
-            end if
-            
-            if there is no file tPath then
-               revStandaloneAddWarning "Mac OS X" && tArchitecture & ", Support, revsecurity.dylib not found: required for SSL."
-            else
-               revSBCopyFile tPath, tCurrentLocation & "revsecurity.dylib", "revStandaloneProgressCallback", the long id of me
-            end if
-         end if
-         
          break
       case pPlatform = "Windows"
          if sStandaloneSettingsA["cursors"] then put "revCursors" & return after tCopyFiles
-         -- AL-2014-01-15: [[ Bug 11589 ]] The default font for various platforms is now handled in the engine.
-         --         if the textFont of stack pStackFilePath = "" then
-         --            set the textFont of stack pStackFilePath to item 1 of the cDefaultFont["Windows"] of stack "revSaveAsStandalone"
-         --            set the textSize of stack pStackFilePath to item 2 of the cDefaultFont["Windows"] of stack "revSaveAsStandalone"
-         --         end if
-         
-         if "SSL & Encryption" is among the lines of sStandaloneSettingsA["scriptLibraries"] then
-            -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-            if revEnvironmentIsInstalled() then
-               put revEnvironmentRuntimePath() &  "/Windows/x86-32/Support/revsecurity.dll" into tPath
-            else
-               put revEnvironmentBinariesPath() & "/revsecurity.dll" into tPath
-            end if
-            
-            if there is no file tPath then
-               revStandaloneAddWarning "Windows, Support, revsecurity.dll not found: required for SSL."
-            else
-               revSBCopyFile tPath, tCurrentLocation & "revsecurity.dll", "revStandaloneProgressCallback", the long id of me
-            end if
-         end if
-         
-         if sStandaloneSettingsA["pdfPrinter"] then
-            -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-            -- EJB Bug 11025 PDF Printing External was not being included
-            if revEnvironmentIsInstalled() then
-               put revEnvironmentRuntimePath() &  "/Windows/x86-32/Support/revpdfprinter.dll" into tPath
-            else
-               put revEnvironmentBinariesPath() & "/revpdfprinter.dll" into tPath
-            end if
-            
-            if there is no file tPath then
-               revStandaloneAddWarning "Windows, Support, revpdfprinter.bundle not found: required for PDF printing."
-            else
-               revSBCopyFile tPath, tCurrentLocation & "revpdfprinter.dll", "revStandaloneProgressCallback", the long id of me
-            end if
-         end if
          break
-         
       default
          if sStandaloneSettingsA["cursors"] then 
             put "revLinuxCursors" & return after tCopyFiles
          end if
-         -- AL-2014-01-15: [[ Bug 11589 ]] The default font for various platforms is now handled in the engine.
-         --         if the textFont of stack pStackFilePath = "" then
-         --            set the textFont of stack pStackFilePath to item 1 of the cDefaultFont["Unix"] of stack "revSaveAsStandalone"
-         --            set the textSize of stack pStackFilePath to item 2 of the cDefaultFont["Unix"] of stack "revSaveAsStandalone"
-         --         end if
          if sStandaloneSettingsA["UNIX,fileSelector"] then 
             put "file selector" & return after tCopyFiles
          end if
@@ -2070,55 +2116,10 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          if sStandaloneSettingsA["UNIX,colorChooser"] then
             put "color chooser" & return after tCopyFiles
          end if
-         
-         if "SSL & Encryption" is among the lines of sStandaloneSettingsA["scriptLibraries"] then
-            -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-            if revEnvironmentIsInstalled() then
-               if pPlatform is "Linux" then
-                  put revEnvironmentRuntimePath() &  "/Linux/x86-32/Support/revsecurity.so" into tPath
-               else if pPlatform is "Linux x64" then
-                  -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
-                  put revEnvironmentRuntimePath() & "/Linux/x86-64/Support/revsecurity.so" into tPath
-               else -- if pPlatform is "Linux armv6-hf" then
-                  -- FG-2014-08-19: [[ RPi ]] Compute the correct path for 64-bit Linux
-                  put revEnvironmentRuntimePath() & "/Linux/armv6-hf/Support/revsecurity.so" into tPath
-               end if
-            else
-               put revEnvironmentBinariesPath() & "/revsecurity.so" into tPath
-            end if
-            
-            if there is no file tPath then
-               revStandaloneAddWarning "Linux, Support, revsecurity.so not found: required for SSL."
-            else
-               revSBCopyFile tPath, tCurrentLocation & "revsecurity.so", "revStandaloneProgressCallback", the long id of me
-            end if
-         end if
-         
-         if sStandaloneSettingsA["pdfPrinter"] then
-            -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-            if revEnvironmentIsInstalled() then
-               if pPlatform is "Linux" then
-                  put revEnvironmentRuntimePath() &  "/Linux/x86-32/Support/revpdfprinter.so" into tPath
-               else if pPlatform is "Linux x64" then
-                  -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
-                  put revEnvironmentRuntimePath() &  "/Linux/x86-64/Support/revpdfprinter.so" into tPath
-               else -- if pPlatform is "Linux armv6-hf" then
-                  -- FG-2014-08-19: [[ RPi ]] Compute the correct path for 64-bit Linux
-                  put revEnvironmentRuntimePath() & "/Linux/armv6-hf/Support/revpdfprinter.so" into tPath
-               end if
-            else
-               put revEnvironmentBinariesPath() & "/revpdfprinter.so" into tPath
-            end if
-            
-            if there is no file tPath then
-               revStandaloneAddWarning "Linux, Support, revpdfprinter.so not found: required for PDF printing."
-            else
-               revSBCopyFile tPath, tCurrentLocation & "revpdfprinter.so", "revStandaloneProgressCallback", the long id of me
-            end if
-         end if
          break
    end switch
    delete char -1 of tCopyFiles
+   
    -- copy the resources into the standalone mainstack
    local tWaitCount
    
@@ -2145,184 +2146,92 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    unlock screen; unlock screen
    wait 0 ticks with messages -- allow for progress update
    
-   switch
-      case pPlatform contains "MacOSX"
-         if there is not a folder (tCurrentLocation&"Externals") then 
-            create folder (tCurrentLocation&"Externals")
-         end if
-         -- OSX database stuff for .app
-         
-         repeat for each line tExternalName in revExternalsList()
-            -- check this item is selected for installation
-            if tExternalName is among the lines of tScriptLibraries then
-               -- create a stack to store libraries if one does not exist
-               ensureExternalLibrary pStackFilePath
-               
-               put revExternalPath(tExternalName,"MacOSX", word 2 of pPlatform) into tExternalPath
-               if there is a folder tExternalPath then
-                  set the itemDel to slash
-                  revAddExternal "Externals/" & item -1 of tExternalPath -- & ".bundle" 
-                  set the itemDel to comma
-                  if the platform is "MacOS" and char 1 of the systemVersion is among the items of "9" then --,1" then
-                     --if char 1 of the systemVersion = "9" then
-                     revCopyPackage tExternalPath, tCurrentLocation & "Externals"
-                     --else
-                     --if not revResourceExists(tExternalPath) then
-                     --revStandaloneAddWarning "MacOS, external not found:" && quote & tExternalPath & quote
-                     --end if
-                     --revCopyFile tExternalPath,tCurrentLocation&"Externals"
-                     --end if
-                  else
-                     set the itemDel to "/"
-                     --revCopyFolder__Standalone tExternalPath,tCurrentLocation&"Externals"
-                     if item -1 of tExternalPath is "revdb.bundle" and there is a folder (tCurrentLocation & "Externals/revdb.bundle") then
-                        -- revdb.bundle was copied by the db driver stage. This is not quite how things should be
-                        -- however, in order not to get trouble below, let's just hack around this for now.
-                     else
-                        revSBCopyFolderToDestination tExternalPath, tCurrentLocation & "Externals", "revStandaloneProgressCallback", the long id of me
-                        if the result is not empty then
-                           revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tExternalPath & quote
-                        else if there is no file (tCurrentLocation & "Externals/" & (item -1 of tExternalPath) & "/Contents/PkgInfo") then
-                           if ".bundle" is in item -1 of tExternalPath then
-                              put "BNDL????" into URL ("binfile:" & (tCurrentLocation & "Externals/" & (item -1 of tExternalPath) & "/Contents/PkgInfo"))
-                           end if
-                        end if
-                        
-                        // IM-2014-03-20: [[ revBrowserCEF ]] Ensure CEF support files are copied if requested
-                        // IM-2014-08-14: [[ LibCef2062 ]] Reorganisation of libcef framework files
-                        if tExternalName is "Browser" and "Browser (CEF)" is among the lines of tScriptLibraries then
-                           put (item 1 to -3 of pStandalonePath) & "/Frameworks" into tCEFFramework
-                           put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
-                           
-                           revSBEnsureFolder tCEFFramework
-                           if the result is not empty then
-                              revStandaloneAddWarning "MacOS, external failed to create folder:" && quote & tCEFFramework & quote
-                           end if
-                           revSBCopyFolderToDestination tCefResources & "/Chromium Embedded Framework.framework", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-                           if the result is not empty then
-                              revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/Resources" & quote
-                           end if
-                           revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-                           if the result is not empty then
-                              revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess.app" & quote
-                           end if
-                           revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess EH.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-                           if the result is not empty then
-                              revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess EH.app" & quote
-                           end if
-                           revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess NP.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-                           if the result is not empty then
-                              revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess NP.app" & quote
-                           end if
-                        end if
-                     end if
-                     set the itemDel to ","
-                  end if
-               else if tExternalPath is not empty then
-                  revStandaloneAddWarning "MacOS, external not found:" && quote & tExternalPath & quote
-               end if
-            end if
-         end repeat
-         break
-      case pPlatform = "Windows"
-         if there is not a folder (tCurrentLocation & "Externals") then 
-            create folder (tCurrentLocation & "Externals")
-         end if
-         repeat for each line tExternalName in revExternalsList()
-            
-            -- check this item is selected for installation
-            if item 1 of tExternalName is among the lines of tScriptLibraries then
-               -- create a stack to store libraries if one does not exist
-               ensureExternalLibrary pStackFilePath
-               
-               put revExternalPath(tExternalName,"Windows") into tExternalPath
-               
-               if there is a file tExternalPath then
-                  set the itemDel to slash
-                  revAddExternal "Externals/" & item -1 of tExternalPath -- & ".dll" 
-                  --put URL ("binfile:"&tExternalPath) into URL ("binfile:" & tCurrentLocation & "Externals/" & item -1 of tExternalPath)
-                  revSBCopyFile tExternalPath, tCurrentLocation & "Externals/" & item -1 of tExternalPath, "revStandaloneProgressCallback", the long id of me
-                  set the itemDel to comma
-               else if tExternalPath is not empty then
-                  revStandaloneAddWarning "Windows, external not found" && quote & tExternalPath & quote
-               end if
-               
-               // IM-2014-03-20: [[ revBrowserCEF ]] Ensure CEF support files are copied if requested
-               if tExternalName is "Browser" and "Browser (CEF)" is among the lines of tScriptLibraries then
-                  set the itemdel to slash
-                  put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
-                  set the itemdel to comma
-                  put tCurrentLocation & "Externals/CEF" into tCEFDest
-                  
-                  revSBEnsureFolder tCEFDest
-                  if the result is not empty then
-                     revStandaloneAddWarning "Windows, external failed to create folder:" && quote & tCEFDest & quote
-                  end if
-                  repeat for each line tCEFFile in revListFiles(tCEFResources)
-                     revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCEFDest, "revStandaloneProgressCallback", the long id of me
-                     if the result is not empty then
-                        revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
-                     end if
-                  end repeat
-                  
-                  repeat for each line tCEFFolder in revListFolders(tCEFResources)
-                     revSBCopyFolderToDestination tCefResources & slash & tCEFFolder, tCEFDest, "revStandaloneProgressCallback", the long id of me
-                     if the result is not empty then
-                        revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & tCEFFolder & quote
-                     end if
-                  end repeat
-               end if
-            end if 
-         end repeat
-         break
-         # OK-2007-08-07 : Reinstated linux building
-      case pPlatform contains "Linux"
-         if there is no folder (tCurrentLocation & "Externals") then
-            create folder (tCurrentLocation & "Externals")
-         end if
-         
-         repeat for each line tExternalName in revExternalsList()
-            if item 1 of tExternalName is among the lines of sStandaloneSettingsA["scriptLibraries"] then
-               ensureExternalLibrary pStackFilePath
-               
-               if pPlatform is "Linux" then
-                  put revExternalPath(tExternalName, "Linux", "x86-32") into tExternalPath
-               else if pPlatform is "Linux x86" then
-                  -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
-                  put revExternalPath(tExternalName, "Linux", "x86-64") into tExternalPath
-               else -- if pPlatform is "Linux armv6-hf" then
-                  -- FG-2014-08-19: [[ RPi ]] Compute the correct path for 64-bit Linux
-                  put revExternalPath(tExternalName, "Linux", "armv6-hf") into tExternalPath
-               end if
-               
-               if there is a file tExternalPath then
-                  set the itemDelimiter to slash
-                  revAddExternal "Externals/" & item -1 of tExternalPath
-                  revSBCopyFile tExternalPath, tCurrentLocation & "Externals/" & item -1 of tExternalPath, "revStandaloneProgressCallback", the long id of me
-                  set the itemDelimiter to comma
-               else if tExternalPath is not empty then
-                  revStandaloneWarning "Linux, external not found" & quote & tExternalPath & quote
-               end if
-            end if
-         end repeat
-         break
-      default
-         --UNIX
-         if tExternalName is not "revxml" then
-            if there is not a folder (tCurrentLocation&"Externals") then 
-               create folder (tCurrentLocation&"Externals")
-            end if
-            put "components/global environment/" & tExternalName & "-" & pPlatform into item -1 to -1 of tExternalPath
-            if there is a file tExternalPath then
-               revAddExternal "Externals/" & tExternalName & "-" & pPlatform
-               revSBCopyFile tExternalPath, tCurrentLocation & "Externals/" & tExternalName & "-" & pPlatform, "revStandaloneProgressCallback", the long id of me
-            else
-               revStandaloneAddWarning "UNIX, external file not found:" && quote & tExternalPath & quote
-            end if
-         end if
-         break
-   end switch
+   if there is not a folder (tCurrentLocation & slash & "Externals") then 
+      create folder (tCurrentLocation & slash & "Externals")
+   end if
    
+   set the itemDel to slash
+   repeat for each line tExternalName in revExternalsList()
+      
+      -- check this item is selected for installation
+      if tExternalName is not among the lines of tScriptLibraries then
+         next repeat
+      end if
+      
+      -- get the path to the external
+      put revExternalPath(tExternalName, tPlatform, tArch) into tExternalPath
+      
+      revCopyModule tPlatform, tExternalName, item -1 of tExternalPath, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
+      if the result is not empty then
+         revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tExternalPath & quote
+         next repeat
+      else if tPlatform is "MacOSX" and there is no file (tCurrentLocation & slash & "Externals/" & (item -1 of tExternalPath) & "/Contents/PkgInfo") then
+         if ".bundle" is in item -1 of tExternalPath then
+            put "BNDL????" into URL ("binfile:" & (tCurrentLocation & slash & "Externals/" & (item -1 of tExternalPath) & "/Contents/PkgInfo"))
+         end if
+      end if
+      revAddExternal tExternalName
+   end repeat
+   
+   
+   // IM-2014-03-20: [[ revBrowserCEF ]] Ensure CEF support files are copied if requested
+   // IM-2014-08-14: [[ LibCef2062 ]] Reorganisation of libcef framework files
+   if "Browser (CEF)" is among the lines of tScriptLibraries then
+      put revExternalPath("Browser", tPlatform, tArch) into tExternalPath
+      switch pPlatform
+         case pPlatform contains "MacOSX"
+            put (item 1 to -3 of pStandalonePath) & "/Frameworks" into tCEFFramework
+            put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
+            
+            revSBEnsureFolder tCEFFramework
+            if the result is not empty then
+               revStandaloneAddWarning "MacOS, external failed to create folder:" && quote & tCEFFramework & quote
+            end if
+            revSBCopyFolderToDestination tCefResources & "/Chromium Embedded Framework.framework", tCEFFramework, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/Resources" & quote
+            end if
+            revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess.app" & quote
+            end if
+            revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess EH.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess EH.app" & quote
+            end if
+            revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess NP.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess NP.app" & quote
+            end if
+            break
+         case pPlatform = "Windows"
+            put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
+            put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
+            
+            revSBEnsureFolder tCEFDest
+            if the result is not empty then
+               revStandaloneAddWarning "Windows, external failed to create folder:" && quote & tCEFDest & quote
+            end if
+            repeat for each line tCEFFile in revListFiles(tCEFResources)
+               revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCEFDest, "revStandaloneProgressCallback", the long id of me
+               if the result is not empty then
+                  revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
+               end if
+            end repeat
+            
+            repeat for each line tCEFFolder in revListFolders(tCEFResources)
+               revSBCopyFolderToDestination tCefResources & slash & tCEFFolder, tCEFDest, "revStandaloneProgressCallback", the long id of me
+               if the result is not empty then
+                  revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & tCEFFolder & quote
+               end if
+            end repeat
+            break
+            # We don't support CEF on Linux yet
+         case pPlatform contains "Linux"
+         default
+            break
+      end switch
+   end if
    save stack pStackFilePath
    
    -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
@@ -2338,22 +2247,6 @@ private command log pMessage
    put pMessage & return after msg
 end log
 
-private command revAddExternal pExternal
-   local tExternals
-   -- revStandaloneProgress "Adding external..."
-   put the cExternals of stack "revExternalLibrary" into tExternals
-   # Marcus: there seems no point to do this twice, so lets check if we have already added it,
-   # this can happen with revdb for example (which seems added twice, once in the db driver step, 
-   # once as an external..
-   if pExternal is not among the lines of tExternals then
-      if tExternals is not empty then
-         put cr after tExternals
-      end if
-      put pExternal after tExternals
-      set the cExternals of stack "revExternalLibrary" to tExternals
-   end if
-end revAddExternal
-
 #####################################################################
 # This is the engine attachment part. Ideally this can be re-used
 # by the MetaCard Standalone Builder without much hassle.
@@ -2363,6 +2256,10 @@ end revAddExternal
 #####################################################################
 
 private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath, pStandalonePath
+   -- Make sure things like 'platform' are standard
+   local tPlatformDetailsA
+   put revStandalonePlatformDetails(pPlatform) into tPlatformDetailsA
+   
    -- This array contains the parameters for the deploy command
    local tDeployInfo
    
@@ -2394,21 +2291,19 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       delete the last char of tDeployInfo["auxiliary_stackfiles"]
    end if
    
-   # AL-2015-01-29: [[ Scriptify IDE ]] Make sure externals initialisation is included here in the initialise script
-   if sStandaloneSettingsA["startup_script"] is not empty then put return after sStandaloneSettingsA["startup_script"]
-   put "revInternal__InitialiseExternals" after sStandaloneSettingsA["startup_script"]
-   
    # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
    repeat for each line tLine in sUserScriptLibraries
       put return & "if there is a stack" && tLine && "then library" && tLine after sStandaloneSettingsA["startup_script"]
    end repeat
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add OSX App icons to deploy parameters
-   if sStandaloneSettingsA["OSX,appicon"]  is not empty then
-      put return & "revInternal__SetAppIcon" && sStandaloneSettingsA["OSX,appicon"] after sStandaloneSettingsA["startup_script"]
-   end if
-   if sStandaloneSettingsA["OSX,smallappicon"]  is not empty then
-      put return & "revInternal__SetSmallAppIcon" && sStandaloneSettingsA["OSX,smallappicon"] after sStandaloneSettingsA["startup_script"]
+   if tPlatformDetailsA["platform"] is "MacOSX" then
+      if sStandaloneSettingsA["OSX,appicon"]  is not empty then
+         put return & "revInternal__SetAppIcon" && sStandaloneSettingsA["OSX,appicon"] after sStandaloneSettingsA["startup_script"]
+      end if
+      if sStandaloneSettingsA["OSX,smallappicon"]  is not empty then
+         put return & "revInternal__SetSmallAppIcon" && sStandaloneSettingsA["OSX,smallappicon"] after sStandaloneSettingsA["startup_script"]
+      end if
    end if   
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the startup script to the deploy parameters
@@ -2416,7 +2311,15 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
    end if
    
-   if pPlatform begins with "MacOSX" then
+   # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names and resource mappings to the deploy parameters
+   if sStandaloneSettingsA["externals"] is not empty then
+      put sStandaloneSettingsA["externals"] into tDeployInfo["externals"]
+   end if
+   if sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] is not empty then
+      put sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] into tDeployInfo["library"]
+   end if
+   
+   if tPlatformDetailsA["platform"] is "MacOSX" then
       -- MW-2013-06-13: [[ CloneAndRun ]] If installed do things in the usual way, otherwise pass
       --    through in 'engine' (so it builds using archs present there).
       if revEnvironmentIsInstalled() then
@@ -2434,7 +2337,7 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    end if
    
    -- Set windows-specific info
-   if pPlatform is "Windows" then
+   if tPlatformDetailsA["platform"] is "Windows" then
       -- Make sure we include the app icon if any
       if sStandaloneSettingsA["Windows,iconFile"] is not empty then
          put sStandaloneSettingsA["Windows,iconFile"] into tDeployInfo["appIcon"]
@@ -2785,19 +2688,3 @@ private function revResourceExists pResource
   # pResource is either a file, folder or bundle.
   return (there is a file pResource or there is a folder pResource)
 end revResourceExists
-
-# OK-2008-01-17 : Refactored as was duplicated
-private command ensureExternalLibrary pStackFilePath
-   if "revExternalLibrary" is not among lines of the substacks of stack pStackFilePath then
-      # OK-2009-11-24 : Bug 8450 - Refactoring this block of code caused it to
-      # no longer be run under locked messages, meaning that messages were sent
-      # to the stack being built. To fix this we lock messages here, but note that we
-      # don't unlock mesages afterwards, as doing so causes the code executing in the caller
-      # to no longer run under lock messages...
-      lock messages
-      create invisible stack "revExternalLibrary"
-      set the mainStack of stack "revExternalLibrary" to the short name of stack pStackFilePath
-      set the destroyStack of stack "revExternalLibrary" to true
-      close stack "revExternalLibrary"
-   end if
-end ensureExternalLibrary
