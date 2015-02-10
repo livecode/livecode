@@ -762,7 +762,7 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
             else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeTypeInfo)
                 /* UNCHECKED */ MCStringFormat(&t_string, "<type>");
             else
-                /* UNCHECKED */ MCStringFormat(&t_string, "<unknown>");
+				/* UNCHECKED */ MCValueCopyDescription (t_value, &t_string);
 
 			if (t_range == nil)
 				t_success = MCStringAppend(t_buffer, *t_string);

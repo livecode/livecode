@@ -344,8 +344,9 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
     case kMCValueTypeCodeForeignValue:
         return __MCForeignValueCopyDescription((__MCForeignValue *)p_value, r_desc);
 	default:
-		break;
+		return MCStringCopy (MCSTR("<unknown>"), r_desc);
 	}
+	MCUnreachable();
 	return false;
 }
 
