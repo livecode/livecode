@@ -1413,6 +1413,7 @@ struct MCForeignTypeDescriptor
     bool (*hash)(void *contents, hash_t& r_hash);
     bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
     bool (*doexport)(MCValueRef value, bool release, void *contents);
+	bool (*describe)(void *contents, MCStringRef & r_desc);
 };
 
 MC_DLLEXPORT bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
