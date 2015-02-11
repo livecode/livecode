@@ -280,6 +280,14 @@ public:
 
 		return true;
 	}
+    
+    bool Push(T p_value)
+    {
+        if (!Extend(m_value_count + 1))
+            return false;
+        m_values[m_value_count - 1] = MCValueRetain(p_value);
+        return true;
+    }
 
 	//////////
 

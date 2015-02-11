@@ -1037,8 +1037,15 @@ void MCParagraph::flow(void)
 	// MW-2012-01-25: [[ ParaStyles ]] Compute the normal and first line layout width for
 	//   wrapping purposes.
 	int32_t pwidth, twidth;
-	computelayoutwidths(pwidth, twidth);
+    computelayoutwidths(pwidth, twidth);
 
+    // SN-2015-01-21: [[ Bug 14229 ]] We want to keep the former lines, to be able
+    //  to update the dirtywidth of a newly empty line with the former line length.
+    MCLine *t_old_line, *t_first_line;
+    t_old_line = lines;
+    t_first_line = lines;
+    lines = NULL;
+    
     // Delete all existing lines and segments
     deletelines();
     
@@ -1054,7 +1061,21 @@ void MCParagraph::flow(void)
         
         // Do block fitting on this line and get back a line containing the
         // left-overs that would not fit into the line
-        lptr = lptr->Fit(twidth);
+        
+        // SN-2015-01-21: [[ Bug 14229 ]] We update the dirtywidth of the
+        // the new line with the former line.
+        MCLine* t_leftover;
+        t_leftover = lptr->Fit(twidth);
+        
+        if (t_old_line != NULL)
+        {
+            lptr -> takewidth(t_old_line);
+            t_old_line = t_old_line -> next();
+            if (t_old_line == t_first_line)
+                t_old_line = NULL;
+        }
+        
+        lptr = t_leftover;
         
         // MW-2008-06-12: [[ Bug 6482 ]] Make sure we only take the firstIndent into account
 		//   on the first line of the paragraph.
