@@ -244,7 +244,8 @@ public:
         t_old_expectation = ctxt . GetNumberExpected();
         ctxt . SetNumberExpected(True);
 
-        if ((left -> eval_ctxt(ctxt, t_left), ctxt . HasError())
+        // PM-2015-01-15: [[ Bug 14384 ]] Prevent a crash when putting +1 into variable
+        if ((left != nil && (left -> eval_ctxt(ctxt, t_left), ctxt . HasError()))
                 || !ctxt . ConvertToNumberOrArray(t_left))
         {
             ctxt . LegacyThrow(EvalLeftError);
@@ -252,7 +253,7 @@ public:
             return;
         }
 
-        if ((right -> eval_ctxt(ctxt, t_right), ctxt . HasError())
+        if ((right != nil && (right -> eval_ctxt(ctxt, t_right), ctxt . HasError()))
                 || !ctxt . ConvertToNumberOrArray(t_right))
         {
             ctxt . LegacyThrow(EvalRightError);

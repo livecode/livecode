@@ -2575,8 +2575,8 @@ void MCPost::exec_ctxt(MCExecContext &ctxt)
 	return ep.getit()->set(ep);
 #endif /* MCPost */
 \
-    MCAutoDataRef t_data;
-    if (!ctxt . EvalExprAsDataRef(source, EE_POST_BADSOURCEEXP, &t_data))
+    MCAutoValueRef t_data;
+    if (!ctxt . EvalExprAsValueRef(source, EE_POST_BADSOURCEEXP, &t_data))
         return;
     
     MCAutoStringRef t_url;
