@@ -731,6 +731,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
             return t_data;
 		}
 	}
+    return t_data;
 }
 
 void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef mptr)
