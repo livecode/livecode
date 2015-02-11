@@ -1773,6 +1773,11 @@ public:
             break;
         }
 
+        // SN-2015-02-11: [[ Bug 14587 ]] Do not buffer for stdout / stderr
+        //  see srvposix.cpp, former MCStdioFileHandle::OpenFd
+        if (t_fptr && (p_fd == 1 || p_fd == 2))
+            setbuf(t_fptr, NULL);
+
         if (t_fptr != NULL)
             t_handle = new MCStdioFileHandle(t_fptr);
 
