@@ -707,12 +707,11 @@ static void cgi_store_form_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
 
 static void cgi_fix_path_variables()
 {
-	char *t_path, *t_path_end;
+    char *t_path;
 
 	MCStringRef env;
     env = nil;
-	t_path = nil;
-    t_path_end = nil;
+    t_path = nil;
     
     // SN-2014-07-29: [[ Bug 12865 ]] When a LiveCode CGI script has a .cgi extension and has
     //  the appropriate shebang pointing to the LiveCode server, PATH_TRANSLATED is not set by Apache.
@@ -722,46 +721,56 @@ static void cgi_fix_path_variables()
     else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env))
         t_path = strdup(MCStringGetCString(env));
 
-    MCAutoStringRef t_path_string;
-    /* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
+    // SN-2015-02-11: [[ Bug 14457 ]] We want to split PATH_TRANSLATED
+    //  between what is the real filename (into PATH_TRANSLATED)
+    //  and what was appended to the URI (into PATH_INFO)
+    MCStringRef t_path_string;
+    MCStringRef t_path_info;
              
     if (t_path != nil)
     {
-		t_path_end = t_path + strlen(t_path);
-        
 #ifdef _WINDOWS_SERVER
 		for(uint32_t i = 0; t_path[i] != '\0'; i++)
 			if (t_path[i] == '\\')
 				t_path[i] = '/';
 #endif
-             
-        char t_sep;
-        t_sep = '\0';
+
+        // Initialise path_string and path_info
+        /* UNCHECKED */ MCStringCreateWithCString(t_path, t_path_string);
+        t_path_info = MCValueRetain(kMCEmptyString);
         
-        while (!MCS_exists(*t_path_string, True))
+        while (!MCS_exists(t_path_string, True))
         {
-            char *t_new_end;
-            t_new_end = strrchr(t_path, '/');
-            *t_path_end = t_sep;
-            if (t_new_end == NULL)
-            {
-                t_sep = '\0';
+            uindex_t t_offset;
+            MCAutoStringRef t_new_path;
+            MCAutoStringRef t_new_path_info;
+
+            // SN-2015-02-11: [[ Bug 14457 ]] If we cannot find any slash, we are done.
+            if (!MCStringLastIndexOfChar(t_path_string, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_offset))
                 break;
-            }
-            t_path_end = t_new_end;
-            t_sep = *t_path_end;
-            *t_path_end = '\0';
+
+            if (!MCStringCopySubstring(t_path_string, MCRangeMake(0, t_offset), &t_new_path)
+                    || !MCStringCopySubstring(t_path_string, MCRangeMake(t_offset, UINDEX_MAX), &t_new_path_info))
+                break;
+
+            // SN-2015-02-11: [[ Bug 14457 ]] Update path and path_info
+            MCValueAssign(t_path_string, *t_new_path);
+            MCValueAssign(t_path_info, *t_new_path_info);
         }
-        
-        *t_path_end = t_sep;
+    }
+    else
+    {
+        // SN-2015-02-11: [[ Bug 14457 ]] Initialise the values to empty
+        //  if we failed to get the path
+        t_path_string = MCValueRetain(kMCEmptyString);
+        t_path_info = MCValueRetain(kMCEmptyString);
     }
 
-    MCS_setenv(MCSTR("PATH_TRANSLATED"), *t_path_string);
-             
-	MCAutoStringRef t_path_end_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_path_end, &t_path_end_string);
-	MCS_setenv(MCSTR("PATH_INFO"), *t_path_end_string);
+    MCS_setenv(MCSTR("PATH_TRANSLATED"), t_path_string);
+    MCS_setenv(MCSTR("PATH_INFO"), t_path_info);
 
+    MCValueRelease(t_path_string);
+    MCValueRelease(t_path_info);
 	free(t_path);
 }
 
