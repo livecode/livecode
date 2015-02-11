@@ -551,6 +551,7 @@ end handler
 --Test system tests
 --================================================================
 
+/*
 public handler TestPass()
 		test diagnostic "Normal tests"
 		test 2 > 1
@@ -570,12 +571,10 @@ public handler TestXPass()
 		broken test true because "broken"
 		broken test "Failed 4" when true because "really broken"
 end handler
-/*
 public handler TestFail()
 		test diagnostic "Tests which actually fail"
 		test false
 end handler
-*/
 public handler TestSkip()
 		test diagnostic "Skipped tests"
 		skip test
@@ -583,5 +582,6 @@ public handler TestSkip()
 		skip test because "Not implemented"
 		skip test "Skipped 4" because "Not supported on this platform"
 end handler
+*/
 
 end module
