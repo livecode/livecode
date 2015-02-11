@@ -80,7 +80,7 @@ enum MCCapsuleSectionType
 
 	// Auxillary stack sections contain other mainstacks that should be loaded
 	// alongside the mainstack (but not opened initially).
-	kMCCapsuleSectionTypeAuxillaryStack,
+	kMCCapsuleSectionTypeAuxiliaryStack,
 	
 	// Simulator redirect sections contain mappings from engine relative
 	// paths to absolute paths on the host system.
@@ -140,8 +140,8 @@ struct MCCapsuleStackSection
 	// uint8_t data[]
 };
 
-// The Stack section contains the stackfile data for an auxillary stack.
-struct MCCapsuleAuxillaryStackSection
+// The Stack section contains the stackfile data for an auxiliary stack.
+struct MCCapsuleAuxiliaryStackSection
 {
 	// uint8_t data[]
 };

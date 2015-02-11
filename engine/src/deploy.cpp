@@ -307,7 +307,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCOpenFileModeRead, t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
-				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
+				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxiliaryStack, t_aux_stackfiles[i]);
 		}
 	
 	// Now add the externals, if any
@@ -497,7 +497,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 
 	MCDeployParameters t_params;
     t_has_error = !t_params.InitWithArray(ctxt, *t_array);
-	
+    
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
 	if (!t_has_error && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
@@ -558,7 +558,6 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
     
     if (t_has_error && !t_soft_error)
         ctxt . Throw();
-    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
