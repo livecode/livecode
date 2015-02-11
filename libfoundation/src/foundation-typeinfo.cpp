@@ -27,6 +27,8 @@ MCTypeInfoRef kMCAnyTypeInfo;
 MCTypeInfoRef kMCNullTypeInfo;
 MCTypeInfoRef kMCBooleanTypeInfo;
 MCTypeInfoRef kMCNumberTypeInfo;
+MCTypeInfoRef kMCRealTypeInfo;;
+MCTypeInfoRef kMCIntegerTypeInfo;
 MCTypeInfoRef kMCStringTypeInfo;
 MCTypeInfoRef kMCNameTypeInfo;
 MCTypeInfoRef kMCDataTypeInfo;
@@ -198,6 +200,16 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
         return false;
     }
     
+    // Check the numeric tower.
+    if ((source . type -> flags & 0xFF) == kMCValueTypeCodeNumber)
+    {
+        for(MCTypeInfoRef t_supertype = source . named_type; t_supertype != nil; t_supertype = __MCTypeInfoResolve(t_supertype) -> typecode . base)
+            if (target . named_type == t_supertype)
+                return true;
+        
+        return false;
+    }
+    
     // If the source is of record type, then the target must be the same type or
     // one of the source's super types.
     if (MCTypeInfoIsRecord(source . type))
@@ -270,13 +282,16 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCBuiltinTypeInfoCreate(MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
+bool MCBuiltinTypeInfoCreate(MCValueTypeCode p_code, MCTypeInfoRef p_base, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
     
     self -> flags |= p_code & 0xff;
+    
+    if (p_base != nil)
+        self -> typecode . base = MCValueRetain(p_base);
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -903,6 +918,8 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         MCValueRelease(self -> error . domain);
         MCValueRelease(self -> error . message);
     }
+    else
+        MCValueRelease(self -> typecode . base);
 }
 
 hash_t __MCTypeInfoHash(__MCTypeInfo *self)
@@ -1006,8 +1023,11 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
             if (!MCNameIsEqualTo(self -> record . fields[i] . name, other_self -> record . fields[i] . name) ||
                 self -> record . fields[i] . type != other_self -> record . fields[i] . type)
                 return false;
+        
+        return true;
     }
-    else if (t_code == kMCValueTypeCodeHandler)
+    
+    if (t_code == kMCValueTypeCodeHandler)
     {
         if (self -> handler . field_count != other_self -> handler . field_count)
             return false;
@@ -1018,19 +1038,30 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
             if (self -> handler . fields[i] . type != other_self -> handler . fields[i] . type ||
                 self -> handler . fields[i] . mode != other_self -> handler . fields[i] . mode)
                 return false;
+        
+        return true;
     }
-    else if (t_code == kMCValueTypeCodeError)
+    
+    if (t_code == kMCValueTypeCodeError)
     {
         if (self -> error . domain != other_self -> error . domain)
             return false;
         if (self -> error . message != other_self -> error . message)
             return false;
+        
+        return true;
     }
-    else if (t_code == kMCValueTypeCodeCustom)
+    
+    if (t_code == kMCValueTypeCodeCustom)
     {
         if (self != other_self)
             return false;
+        
+        return true;
     }
+    
+    if (self -> typecode . base != other_self -> typecode . base)
+        return false;
     
     return true;
 }
@@ -1058,10 +1089,10 @@ bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
 	                       *tOptionalPart, *tNamePart);
 }
 
-static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
+static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCTypeInfoRef p_base, MCTypeInfoRef& r_typeinfo)
 {
     MCAutoTypeInfoRef t_raw_typeinfo;
-    if (!MCBuiltinTypeInfoCreate(p_code, &t_raw_typeinfo))
+    if (!MCBuiltinTypeInfoCreate(p_code, p_base, &t_raw_typeinfo))
         return false;
     
     MCAutoTypeInfoRef t_typeinfo;
@@ -1079,17 +1110,19 @@ static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCT
 bool __MCTypeInfoInitialize(void)
 {
     return
-        __create_named_builtin(MCNAME("livecode.lang.undefined"), kMCValueTypeCodeNull, kMCNullTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.boolean"), kMCValueTypeCodeBoolean, kMCBooleanTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.number"), kMCValueTypeCodeNumber, kMCNumberTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.string"), kMCValueTypeCodeString, kMCStringTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.name"), kMCValueTypeCodeName, kMCNameTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.data"), kMCValueTypeCodeData, kMCDataTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.array"), kMCValueTypeCodeArray, kMCArrayTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.stringlist"), kMCValueTypeCodeList, kMCListTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.set"), kMCValueTypeCodeSet, kMCSetTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, kMCProperListTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.any"), kMCTypeInfoTypeIsAny, kMCAnyTypeInfo);
+        __create_named_builtin(MCNAME("livecode.lang.undefined"), kMCValueTypeCodeNull, nil, kMCNullTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.boolean"), kMCValueTypeCodeBoolean, nil, kMCBooleanTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.number"), kMCValueTypeCodeNumber, nil, kMCNumberTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.string"), kMCValueTypeCodeString, nil, kMCStringTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.name"), kMCValueTypeCodeName, nil, kMCNameTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.data"), kMCValueTypeCodeData, nil, kMCDataTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.array"), kMCValueTypeCodeArray, nil, kMCArrayTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.stringlist"), kMCValueTypeCodeList, nil, kMCListTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.set"), kMCValueTypeCodeSet, nil, kMCSetTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, nil, kMCProperListTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.any"), kMCTypeInfoTypeIsAny, nil, kMCAnyTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.real"), kMCValueTypeCodeNumber, kMCNumberTypeInfo, kMCRealTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.integer"), kMCValueTypeCodeNumber, kMCRealTypeInfo, kMCIntegerTypeInfo);
 }
 
 void __MCTypeInfoFinalize(void)

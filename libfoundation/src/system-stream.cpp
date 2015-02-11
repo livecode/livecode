@@ -144,7 +144,7 @@ __MCSStreamThrowIOError (MCStringRef p_message,
 	else
 	{
 		t_description = MCSTR("Unknown error");
-		t_error_code = kMCZero;
+		t_error_code = kMCIntegerZero;
 	}
 
 	if (NULL != p_message)

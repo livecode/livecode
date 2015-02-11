@@ -795,7 +795,7 @@ void EmitBooleanType(long& r_new_index)
 
 void EmitIntegerType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("number", r_new_index))
+    if (!define_builtin_typeinfo("integer", r_new_index))
         return;
     
     MCLog("[Emit] IntegerType(-> %ld)", r_new_index);
@@ -803,8 +803,7 @@ void EmitIntegerType(long& r_new_index)
 
 void EmitRealType(long& r_new_index)
 {
-    // TODO: Real / Integer types.
-    if (!define_builtin_typeinfo("number", r_new_index))
+    if (!define_builtin_typeinfo("real", r_new_index))
         return;
     
     MCLog("[Emit] RealType(-> %ld)", r_new_index);

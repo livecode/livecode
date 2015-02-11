@@ -1012,6 +1012,32 @@
         EmitResolveLabel(RepeatHead)
         GenerateDefinitionGroupForInvokes(IteratorInvokes, iterate, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
+        
+        -- We have to special case the iterand argument so we don't go direct to
+        -- a typed register (i.e. variable) since we might not end up placing
+        -- the value in the variable (i.e. when iteration reaches the end).
+        -- In particular, if the iterator returns false then we ignore the out
+        -- parameters. However, the optimization for direct slot access breaks this,
+        -- so if we have a direct slot as the iterand, we switch it for a register
+        -- and patch up an assign afterwards.
+        where(Arguments -> expressionlist(IterandExpr, _))
+        (|
+            where(IterandExpr -> slot(_, Id))
+            QuerySymbolId(Id -> Info)
+            Info'Index -> IterandVarIndex
+            (|
+                Info'Kind -> parameter
+            ||
+                Info'Kind -> local
+            |)
+            EmitDetachRegisterFromExpression(IterandExpr)
+            EmitCreateRegister(-> IterandReg)
+            EmitAttachRegisterToExpression(IterandReg, IterandExpr)
+        ||
+            where(-1 -> IterandVarIndex)
+            where(-1 -> IterandReg)
+        |)
+
         EmitCreateRegister(-> ContinueReg)
         EmitBeginInvoke(Index, Context, ContinueReg)
         EmitContinueInvoke(IteratorReg)
@@ -1022,6 +1048,13 @@
         EmitJumpIfFalse(ContinueReg, RepeatTail)
         
         GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
+        
+        [|
+            ne(IterandVarIndex, -1)
+            EmitAssign(IterandVarIndex, IterandReg)
+            EmitDestroyRegister(IterandReg)
+        |]
+
         GenerateInvoke_FreeArguments(Arguments)
         
         EmitDestroyRegister(ContinueReg)
@@ -1346,6 +1379,7 @@
         ||
             Info'Kind -> local
         |)
+        EmitGetRegisterAttachedToExpression(Expr -> Reg)
         EmitDetachRegisterFromExpression(Expr)
 
     'rule' GenerateInvoke_FreeArgument(Expr):
