@@ -958,7 +958,7 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
         if (m_rep != nil)
         {
             MCImageMetadata t_metadata;
-            (static_cast<MCCachedImageRep *>(m_rep))->GetMetadata(t_metadata);
+            m_rep->GetMetadata(t_metadata);
             MCImageGetMetadata(ep, t_metadata);
         }
         else

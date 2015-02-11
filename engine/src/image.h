@@ -246,6 +246,9 @@ public:
 
 	static void init();
 	static void shutdown();
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
 
 private:
 	MCImage *m_owner;

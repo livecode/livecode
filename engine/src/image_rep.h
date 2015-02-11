@@ -74,6 +74,12 @@ public:
 
 	MCImageRep *Retain();
 	void Release();
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    virtual bool GetMetadata(MCImageMetadata& r_metadata) = 0;
+    
+protected:
+    MCImageMetadata m_metadata;
 
 private:
 	uindex_t m_reference_count;
@@ -110,9 +116,6 @@ public:
 	static void FlushCache();
 	static void FlushCacheToLimit();
     
-    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
-    virtual bool GetMetadata(MCImageMetadata& r_metadata) = 0;
-	
 protected:
 	MCCachedImageRep *m_next;
 	MCCachedImageRep *m_prev;
@@ -157,9 +160,6 @@ protected:
 	// IM-2013-11-05: [[ RefactorGraphics ]] Add return parameter to indicate whether or not
 	// returned frames are premultiplied
 	virtual bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied) = 0;
-
-    // MERG-2014-09-16: [[ ImageMetadata ]] used to old the metadata from the loaded image
-    MCImageMetadata m_metadata;
 
 private:
 	bool ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied);

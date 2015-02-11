@@ -775,7 +775,7 @@ void MCImage::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 void MCImage::GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value)
 {
     MCImageMetadata t_metadata;
-    (static_cast<MCCachedImageRep *>(m_rep))->GetMetadata(t_metadata);
+    m_rep->GetMetadata(t_metadata);
     
     bool t_stat;
     t_stat = t_metadata.has_density;

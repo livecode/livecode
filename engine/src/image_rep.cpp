@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MCImageRep::MCImageRep()
 {
 	m_reference_count = 0;
+    
+    MCMemoryClear(&m_metadata, sizeof(m_metadata));
 }
 
 MCImageRep::~MCImageRep()
@@ -75,7 +77,6 @@ MCLoadableImageRep::MCLoadableImageRep()
 	
 	m_next = m_prev = nil;
     
-    MCMemoryClear(&m_metadata, sizeof(m_metadata));
 }
 
 MCLoadableImageRep::~MCLoadableImageRep()
