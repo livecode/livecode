@@ -13,7 +13,7 @@ clean:
 
 ################################################################
 
-STDLIB_LCB = $(shell find . -name '*.lcb' | sed -e's:^\./::' | grep -v '^\.')
+STDLIB_LCB = $(shell find . -name '*.lcb' | sed -e's:^\./::' | grep -v '/\.')
 STDLIB_LCM = $(patsubst %.lcb,$(TEST_DIR)/%.lcm,$(STDLIB_LCB))
 STDLIB_LOGS = $(patsubst %.lcm,%.log,$(STDLIB_LCM))
 
