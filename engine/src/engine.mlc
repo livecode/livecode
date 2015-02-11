@@ -44,6 +44,8 @@ public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject
 public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as bool) as undefined binds to "<builtin>"
 public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as string, in pObject as ScriptObject) as any binds to "<builtin>"
 public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as string, in pObject as ScriptObject, in pValue as any) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalControlsOfScriptObject(in pObject as ScriptObject, out rChildren as list) as undefined binds to "<builtin>"
 public foreign handler MCEngineExecDispatchToScriptObject(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject) as any binds to "<builtin>"
 public foreign handler MCEngineExecDispatchToScriptObjectWithArguments(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject, in pArguments as optional list) as any binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as bool) as undefined binds to "<builtin>"
@@ -184,6 +186,65 @@ syntax SetPropertyOfScriptObject is statement
     "set" "property" <Property: Expression> "of" <Object: Expression> "to" <Value: Expression>
 begin
     MCEngineExecSetPropertyOfScriptObject(Property, Object, Value)
+end syntax
+
+/*
+Summary:	Get the parent object of a script object.
+Object:		An expression that evaluates to a <ScriptObject>.
+The result:	The <ScriptObject> that is the owner of <Object>.
+
+Example:
+	public handler MyName() as string
+		get property "short name" of my script object
+		return the result
+	end handler
+
+	public handler OnMouseUp() as undefined
+		// Send a message to the widget's parent so it can handle the click
+		dispatch "widgetClicked" to the owner of my script object with [ MyName() ]
+	end handler
+
+Description:
+	Use to get the script object that contains a script object.
+
+>*Note:* An error is thrown if the script object does not exist.
+*/
+
+syntax OwnerOfScriptObject is prefix operator with precedence 4
+	"the" "owner" "of" <Object: Expression>
+begin
+	MCEngineEvalOwnerOfScriptObject(Object, output)
+end syntax
+
+/*
+Summary:	Get the child objects of a script object.
+Object:		An expression that evaluates to a <ScriptObject>
+The result:	A list of <ScriptObject>s that are contained within <Object>.
+
+Example:
+	public handler GetSiblings(in pObject as ScriptObject) as list
+		// Return the sibling objects of an object
+		return the children of the owner of pObject
+	end handler
+
+Example:
+	// Unset the highlight of all the controls in a group
+	resolve script object "group \qcheckboxes\q of this card"
+	variable tObject
+	repeat for each element tObject in the children of the result
+		set property "hilite" of tObject to false
+	end repeat
+
+Description:
+	Use to get the script objects contained within a script object.
+
+>*Note:* An error is thrown if the script object does not exist.
+*/
+
+syntax ChildrenOfScriptObject is prefix operator with precedence 4
+	"the" "children" "of" <Object: Expression>
+begin
+	MCEngineEvalControlsOfScriptObject(Object, output)
 end syntax
 
 /*
