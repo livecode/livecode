@@ -121,6 +121,11 @@ struct MCObjectVisitor
 	virtual bool OnBlock(MCBlock *p_block);
 	virtual bool OnStyledText(MCStyledText *p_styled_text);
     virtual bool OnWidget(MCWidget *p_widget);
+	
+	// control the behaviour of visit for some object types
+	virtual bool IsRecursive();
+	virtual bool IsHeirarchical();
+	
 };
 
 #define OBJECT_EXTRA_ARRAYPROPS		(1U << 0)
@@ -283,6 +288,8 @@ public:
     virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
+	virtual bool visit_self(MCObjectVisitor *p_visitor);
+	virtual bool visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);

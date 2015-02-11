@@ -236,13 +236,15 @@ const char *MCGroup::gettypestring()
 	return MCgroupstring;
 }
 
-bool MCGroup::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCGroup::visit_self(MCObjectVisitor* p_visitor)
+{
+	return p_visitor -> OnGroup(this);
+}
+
+bool MCGroup::visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnGroup(this);
 
 	if (t_continue && controls != NULL)
 	{
@@ -254,9 +256,6 @@ bool MCGroup::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_vi
 		}
 		while(t_continue && cptr != controls);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnGroup(this);
 
 	return t_continue;
 }

@@ -233,15 +233,22 @@ const char *MCCard::gettypestring()
 
 bool MCCard::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
-	bool t_continue;
-	t_continue = true;
-
 	// If the card doesn't match the part number, we do nothing.
 	if (p_part != 0 && getid() != p_part)
 		return true;
 
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnCard(this);
+	return MCObject::visit(p_style, p_part, p_visitor);
+}
+
+bool MCCard::visit_self(MCObjectVisitor *p_visitor)
+{
+	return p_visitor -> OnCard(this);
+}
+
+bool MCCard::visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	bool t_continue;
+	t_continue = true;
 
 	if (t_continue && objptrs != NULL)
 	{
@@ -254,9 +261,6 @@ bool MCCard::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vis
 		}
 		while(t_continue && t_objptr != objptrs);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnCard(this);
 
 	return t_continue;
 }

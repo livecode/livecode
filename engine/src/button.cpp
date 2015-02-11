@@ -439,7 +439,7 @@ const char *MCButton::gettypestring()
 	return MCbuttonstring;
 }
 
-bool MCButton::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCButton::visit_self(MCObjectVisitor* p_visitor)
 {
 	return p_visitor -> OnButton(this);
 }

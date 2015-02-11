@@ -72,13 +72,15 @@ MCParagraph *MCStyledText::grabparagraphs(MCField *p_field)
 	return t_result;
 }
 
-bool MCStyledText::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCStyledText::visit_self(MCObjectVisitor *p_visitor)
+{
+	return p_visitor->OnStyledText(this);
+}
+
+bool MCStyledText::visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnStyledText(this);
 
 	if (t_continue && m_paragraphs != NULL)
 	{
@@ -91,9 +93,6 @@ bool MCStyledText::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor 
 		}
 		while(t_continue && tpgptr != pgptr);
 	}
-
-	if (p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnStyledText(this);
 
 	return t_continue;
 }
