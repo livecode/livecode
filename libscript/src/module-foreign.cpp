@@ -65,6 +65,8 @@ static bool __cstring_copy(void *from, void *to)
     
     MCMemoryCopy(t_new_string, from, t_length);
     
+    *(char **)to = t_new_string;
+    
     return true;
 }
 

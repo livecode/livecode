@@ -892,10 +892,16 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (t_state -> details)
 	{
         MCAutoStringRef t_details;
+        
+        // SN-2015-01-22: [[ Bug 14412 ]] the detailed files should return
+        //   URL-encoded filenames
+        MCAutoStringRef t_url_encoded;
+        MCU_urlencode(p_entry -> name, false, &t_url_encoded);
+        
 #ifdef _WIN32
 		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
-                                       p_entry -> name,
+                                       *t_url_encoded,
                                        p_entry -> data_size,
                                        p_entry -> creation_time,
                                        p_entry -> modification_time,
@@ -904,7 +910,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 #elif defined(_MACOSX)
 		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%lld,%lld,%u,%u,%u,%u,%d,%d,%03o,%.8s",
-                                       p_entry -> name,
+                                       *t_url_encoded,
                                        p_entry -> data_size,
                                        p_entry -> resource_size,
                                        p_entry -> creation_time,
@@ -918,7 +924,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 #else
 		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%lld,,,%u,%u,,%d,%d,%03o,",
-                                       p_entry -> name,
+                                       *t_url_encoded,
                                        p_entry -> data_size,
                                        p_entry -> modification_time,
                                        p_entry -> access_time,

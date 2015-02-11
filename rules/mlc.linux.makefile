@@ -10,10 +10,6 @@ MLC_LIST ?= $(NAME)-modules.list
 SRC_DIR ?= ./src
 MLC_SRC_DIR = $(SRC_DIR)/_mlc
 
-LC_COMPILE ?= $(shell PATH=$(BUILD_DIR):$(PATH) \
-	              which lc-compile 2>/dev/null || \
-	              echo "lc-compile")
-
 # Remove comments and '!' prefixes to filenames (the flag indicates
 # that they shouldn't be used when bootstrapping, but since we're
 # building normally we can ignore that flag now)

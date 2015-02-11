@@ -369,6 +369,9 @@ MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef self)
 
 void MCScriptReleaseModule(MCScriptModuleRef self)
 {
+	if (nil == self)
+		return;
+
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
     
     MCScriptReleaseObject(self);

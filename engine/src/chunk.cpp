@@ -982,12 +982,15 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
             return;
         }
-        if (background == nil && card == nil && group == nil && object == nil)
-        {
-            r_object . object = t_object . object;
-            r_object . part_id = t_object . part_id;
-            return;
-        }
+        // SN-2015-01-13: [[ Bug 14376 ]] Remove this if statement added during the refactoring process
+        // (commit 15a49a27e387f3e49e5bcce8f8316348578bf810)
+        //  which leads to a part_id of 0 instead of the card part id.
+//        if (background == nil && card == nil && group == nil && object == nil)
+//        {
+//            r_object . object = t_object . object;
+//            r_object . part_id = t_object . part_id;
+//            return;
+//        }
         switch (t_object . object -> gettype())
         {
             case CT_AUDIO_CLIP:

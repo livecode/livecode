@@ -145,6 +145,9 @@ MCScriptInstanceRef MCScriptRetainInstance(MCScriptInstanceRef self)
 
 void MCScriptReleaseInstance(MCScriptInstanceRef self)
 {
+	if (nil == self)
+		return;
+
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
     
     MCScriptReleaseObject(self);
