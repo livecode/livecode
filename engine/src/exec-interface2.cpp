@@ -1468,6 +1468,8 @@ void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t& r_value)
 void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCCursorRef t_cursor;
+    t_cursor = nil;
+    
 	MCInterfaceSetCursor(ctxt, p_value, false, t_cursor);
 	if (t_cursor != nil)
 	{

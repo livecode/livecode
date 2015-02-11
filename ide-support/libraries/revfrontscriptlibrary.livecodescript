@@ -294,11 +294,6 @@ on resumeStack
    put true into gREVScriptEdit
    
    revSetActiveStacks
-   if the mode of stack "revAnimation" is not 0 then
-      lock screen
-      send "preOpenCard" to cd 1 of stack "revAnimation"
-      unlock screen
-   end if
    
    global gREVMessageDispatch
    repeat for each line l in gREVMessageDispatch["revResumeStack"]
