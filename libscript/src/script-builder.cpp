@@ -469,7 +469,6 @@ static void __add_script_type(MCScriptModuleBuilderRef self, MCScriptType *p_typ
         return;
     
     self -> module . types[r_index] = p_type;
-    r_index = r_index;
 }
 
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_index, uindex_t& r_type)
