@@ -1088,8 +1088,27 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                 switch(t_type -> kind)
                 {
                     case kMCScriptTypeKindForeign:
+                    {
                         __writeln(stream, "foreign type %@", t_def_name);
+                    }
+                    break;
+                    case kMCScriptTypeKindHandler:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "handler type %@%@", t_def_name, *t_sig);
+                    }
+                    break;
+                    case kMCScriptTypeKindRecord:
+                        // TODO - Records not yet supported
                         break;
+                    default:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "type %@ is %@", t_def_name, *t_sig);
+                    }
+                    break;
                 }
             }
             break;

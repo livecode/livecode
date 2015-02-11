@@ -180,6 +180,12 @@
     'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
         "foreign" @(-> Position) "type" Identifier(-> Id)
     
+    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, Signature))):
+        "handler" @(-> Position) "type" Identifier(-> Id) Signature(-> Signature)
+        
+    'rule' ImportDefinition(-> type(Position, public, Id, Type)):
+        "type" @(-> Position) Identifier(-> Id) "is" Type(-> Type)
+
     'rule' ImportDefinition(-> constant(Position, public, Id, nil)):
         "constant" @(-> Position) Identifier(-> Id)
 
