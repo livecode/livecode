@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	PARAGRAPH_H
 
 #include "dllst.h"
+#include "field.h"
+#include "exec.h"
 
 #ifndef __MC_FONT__
 #include "font.h"
@@ -67,6 +69,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MW-2012-11-13: [[ ParaListIndex ]] This flag is set if the paragraph has
 //   a list index attribute set.
 #define PA_HAS_LIST_INDEX (1 << 18)
+// FG-2014-05-06: [[ TabAlignments ]] This flag is set if the paragraph has
+//   tab alignments set.
+#define PA_HAS_TAB_ALIGNMENTS (1 << 19)
 
 enum
 {
@@ -93,7 +98,7 @@ enum
 // MW-2012-01-25: [[ ParaStyles ]] A collection of paragraph attributes.
 struct MCParagraphAttrs
 {
-	unsigned flags : 19;
+	unsigned flags : 20;
 	unsigned text_align : 2;
 	unsigned list_style : 4;
 	unsigned list_depth : 4;
@@ -115,7 +120,10 @@ struct MCParagraphAttrs
 	uint16_t list_index;
 	uint32_t background_color;
 	uint32_t border_color;
-	MCNameRef metadata;
+    MCStringRef metadata;
+    
+    uint16_t alignments_count;
+    intenum_t *alignments;
 
 	MCParagraphAttrs(void)
 	{
@@ -123,61 +131,180 @@ struct MCParagraphAttrs
 	}
 };
 
+class MCSegment;
+
+// Don't change this until everything dealing with fields, paragraphs, etc
+// is capable of dealing with 32-bit offsets or things will break!
+#define PARAGRAPH_MAX_LEN	INT32_MAX
+
 class MCParagraph : public MCDLlist
 {
-	friend class MCField;
-
 	MCField *parent;
-	char *text;
-	uint2 buffersize;
-	uint2 textsize;
+	MCStringRef m_text;
 	MCBlock *blocks;
+    MCSegment *segments;
 	MCLine *lines;
-	uint2 focusedindex;
-	uint2 startindex, endindex, originalindex;
+	findex_t focusedindex;
+	findex_t startindex, endindex, originalindex;
+    bool moving_left, moving_forward;        // Need to know direction for BiDi support
 	uint2 opened;
 	uint1 state;
 	// MP-2013-09-02: [[ FasterField ]] If true, it means the paragraph needs layout.
 	bool needs_layout : 1;
 	// MW-2012-01-25: [[ ParaStyles ]] This paragraphs collection of attrs.
 	MCParagraphAttrs *attrs;
+    MCTextDirection base_direction;
 
-	static uint2 cursorwidth;
+    static uint2 cursorwidth;
+    
+    // Dirty hack until we have a proper styled text object...
+    friend class MCSegment;
+    friend class MCLine;
 
 public:
 	MCParagraph();
-	MCParagraph(const MCParagraph &pref);
+	MCParagraph(const MCParagraph &pref); 
 	~MCParagraph();
 
+	//////////
+	
+	// This returns the codepoint at the given *unichar* index (not a codepoint
+	// index). All increments and decrements should use the utility functions
+	// below to ensure surrogate pairs are handled properly.
+	codepoint_t GetCodepointAtIndex(findex_t p_index)
+	{
+		// This assumes that the input string is valid UTF-16 and all surrogate
+		// pairs are matched correctly.
+		unichar_t t_lead, t_tail;
+		t_lead = MCStringGetCharAtIndex(m_text, p_index);
+		if (MCStringIsValidSurrogatePair(m_text, p_index))
+		{
+            t_tail = MCStringGetCharAtIndex(m_text, p_index + 1);
+			return MCStringSurrogatesToCodepoint(t_lead, t_tail);
+		}
+		return t_lead;
+	}
+	
+	// Increments the index pointer to the next character, accounting for
+	// surrogate pairs when it does so.
+	findex_t IncrementIndex(findex_t p_in)
+	{
+		unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in);
+		if (0xD800 <= t_char && t_char < 0xDC00)
+			return p_in + 2;
+		return p_in + 1;
+	}
+	
+	// Decrements the index pointer to the previous character, accounting for
+	// surrogate pairs when it does so.
+	findex_t DecrementIndex(findex_t p_in)
+	{
+		if (p_in == 0)
+            return 0;
+        unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
+		if (0xDC00 <= t_char && t_char < 0xE000)
+			return p_in - 2;
+		return p_in - 1;
+	}
+    
+    // Scans from the given index to the next word break
+    findex_t NextWord(findex_t);
+    
+    // Scans from the given index to the previous word break
+    findex_t PrevWord(findex_t);
+    
+    // Scans from the given index to the next character break
+    findex_t NextChar(findex_t);
+    
+    // Scans from the given index to the previous charcter break
+    findex_t PrevChar(findex_t);
+	
+	// Returns true if the given character is a word break (e.g. space)
+	static bool TextIsWordBreak(codepoint_t);
+	
+	// Returns true if the given character is a line break (e.g. '\n')
+	static bool TextIsLineBreak(codepoint_t);
+	
+	// Returns true if the given character is a sentence break
+	static bool TextIsSentenceBreak(codepoint_t);
+	
+	// Returns true if the given character is a paragraph break
+	static bool TextIsParagraphBreak(codepoint_t);
+	
+	// Returns true if the given character is punctuation
+	static bool TextIsPunctuation(codepoint_t);
+	
+	// Scans the given string for the next paragraph break character and
+	// returns the index of the character following the break
+	static bool TextFindNextParagraph(MCStringRef p_string, findex_t p_after, findex_t &r_next_para);
+	
+	// Creates a new block at the end of this paragraph
+	MCBlock* AppendText(MCStringRef p_text);
+	
+	// Returns true if the paragraph is empty
+	bool IsEmpty()
+	{
+		return gettextlength() == 0;
+	}
+	
+	// Returns the mutable stringref that is used internally by hte paragraph.
+	// Note that this string ref is volatile across any calls that modify the
+	// paragraph in any way and should not be retained.
+	MCStringRef GetInternalStringRef() const
+	{
+		return m_text;
+	}
+	
+	////////// BIDIRECTIONAL SUPPORT
+    
+    MCTextDirection getbasetextdirection() const
+    {
+        if (base_direction == kMCTextDirectionAuto)
+            return parent->getbasetextdirection();
+        return base_direction;
+    }
+    
+    void SetBlockDirectionLevel(findex_t si, findex_t ei, uint8_t level);
+    
+    void resolvetextdirections();
+    
+    uint8_t firststrongisolate(uindex_t p_offset) const;
+    
+    //////////
+	
 	bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this paragraph
 	//   has an attribute extension.
-	IO_stat load(IO_handle stream, const char *version, bool is_ext);
+	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);
 	IO_stat save(IO_handle stream, uint4 p_part);
 	
 	// MW-2012-02-14: [[ FontRefs ]] Now takes the parent fontref so it can compute
 	//   block's fontrefs.
 	void open(MCFontRef parent_font);
 	void close();
-
+	
 	MCField *getparent()
 	{
 		return parent;
 	}
+	
 	void setparent(MCField *newparent);
 
 	// MW-2012-02-14: [[ FontRefs ]] Invoked to recompute the block's fontrefs based
 	//   on a new parent fontref.
 	bool recomputefonts(MCFontRef parent_font);
 
+	// Copies the current contents of the paragraph
+	bool copytextasstringref(MCStringRef& r_string);
+
 	// Iterate backwards starting at p_index and return the first index in the
 	// paragraph before which a word-break can occur.
-	uint2 findwordbreakbefore(MCBlock *p_block, uint2 p_index);
+	findex_t findwordbreakbefore(MCBlock *p_block, findex_t p_index);
 
 	// Iterate forwards starting at p_index and return the first index in the
 	// paragraph after which a word-break can occur.
-	uint2 findwordbreakafter(MCBlock *p_block, uint2 p_index);
+	findex_t findwordbreakafter(MCBlock *p_block, findex_t p_index);
 
 	// Make sure there are no empty blocks in the paragraph:
 	//   - called by MCField::deleteselection
@@ -198,6 +325,12 @@ public:
 	{
 		return lines;
 	}
+    
+    // Return the list of segments in the paragraph, if any.
+	MCSegment *getsegments(void) const
+	{
+		return segments;
+	}
 
 	// Make sure style-runs that are next to each other don't have
 	// the same attributes.
@@ -211,7 +344,7 @@ public:
 	//   MCField::finsert - to check the charset of the target block
 	//   MCField::verifyindex - to check the integrity of an index
 	//   MCField::getlinkdata - to check if the given block is a link
-	MCBlock *indextoblock(uint2 tindex, Boolean forinsert);
+	MCBlock *indextoblock(findex_t tindex, Boolean forinsert, bool for_navigation = false);
 
 	// Join this paragraph with the next paragraph or split the current
 	// paragraph at the focused index.
@@ -221,17 +354,25 @@ public:
 	//   MCField::gettextatts (to fetch partial parts of a paragraph)
 	//   MCField::settextatts (to insert partial parts of a paragraph)
 	//   MCField::insertparagraph
-	//
 	// MW-2014-05-28: [[ Bug 12303 ]] If 'preserve' is true, then the paragraph styles
     //   of 'this' paragraph are never changed (used when setting 'text' of a chunk).
 	void join(bool p_preserve_styles_if_zero_length = false);
-	void split();
+    void split();
+    void split(findex_t p_position);
+
+    // Replace the text from p_start to p_finish
+    // with the paragraphs list provided.
+    // Called by:
+    //   MCField::SetRtfTextOfCharChunk
+    //   MCField::SetHtmlTextOfCharChunk
+    //   MCField::SetStyledTextOfCharChunk
+    void replacetextwithparagraphs(findex_t p_start, findex_t p_finish, MCParagraph *p_pglist);
 
 	// Delete the text from si to ei in the paragraph.
 	// Called by:
 	//   MCField::deletecomposition
 	//   MCField::settextindex
-	void deletestring(uint2 si, uint2 ei);
+	void deletestring(findex_t si, findex_t ei);
 
 	// Delete the current selection in the paragraph.
 	// Called by:
@@ -250,10 +391,9 @@ public:
 	MCParagraph *copyselection();
 
 	// Insert the given string into the paragraph at the focusedindex.
-	// Called by any client that does text insertion.
-
-	void finsertnobreak(const MCString& text, bool is_unicode);
-	Boolean finsertnew(const MCString& text, bool is_unicode);
+    // Called by any client that does text insertion.
+	void finsertnobreak(MCStringRef p_string, MCRange p_range);
+    Boolean finsertnew(MCStringRef p_string);
 
 	// Delete the specified chunk at the focusedindex and return the deleted
 	// string in undopgptr.
@@ -262,7 +402,8 @@ public:
 	// Move the focused index to the place specified by type.
 	// Called by:
 	//   MCField::fmove
-	uint1 fmovefocus(Field_translations type);
+	uint1 fmovefocus(Field_translations type, bool force_logical = false);
+    uint1 fmovefocus_visual(Field_translations type);
 
 	// Initialize the text buffer
 	// Called by:
@@ -277,33 +418,29 @@ public:
 
 	// If there is no text buffer then initialize it and return the length of the
 	// paragraph in bytes.
-	uint2 gettextsize()
+    // SN-2014-04-04 [[ CombiningChars ]] We want to be able to get the numbers of actual characters of a paragraph
+    // not the numbers of codeunits.
+	findex_t gettextlength(bool p_char_indices = false)
 	{
-		if (blocks != NULL)
-			return textsize;
+		if (blocks == NULL)
+			inittext();
 			
-		inittext();
-		return textsize;
+        if (p_char_indices)
+        {
+            MCRange t_cu_range = {0,MCStringGetLength(m_text)};
+            MCRange t_char_range;
+            MCStringUnmapIndices(m_text, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+            return t_char_range . length;
+        }
+        else
+            return MCStringGetLength(m_text);
 	}
 
 	// Same as gettextsize, except adjust by one for the CR character.
-	uint2 gettextsizecr()
+	findex_t gettextlengthcr(bool p_char_indices = false)
 	{
-		if (blocks != NULL)
-			return textsize + 1;
-			
-		inittext();
-		return textsize + 1;
+		return gettextlength(p_char_indices) + 1;
 	}
-
-	// Return the length of the paragraph in codepoints *not* bytes.
-	// Called by:
-	//   MCField::getparagraphmacstyles
-	//   MCField::getparagraphtext
-	//   MCField::indextocharacter
-	//   MCField::charactertoindex
-	//   MCIdeScriptColorize::exec
-	uint2 gettextlength();
 
 	// 'gettext()' returns a direct pointer to the backstore
 	// Called by:
@@ -314,19 +451,21 @@ public:
 	//   MCField::gettext
 	//   MCField::selectedtext
 	//   MCIdeScriptColorize::exec
-	const char *gettext();
+	//const char *gettext_raw();
 
 	// Return the text as HTML formatted string.
 	// Called by:
 	//   MCField::gethtmltext
+#ifdef LEGACY_EXEC
 	void gethtmltext(MCExecPoint &ep);
+#endif
 
 	// Clear everything in the current paragraph and set the text to the
 	// given string.
 	// Called by:
 	//   MCField::settext
 	//   MCHctext::settext
-	void settext(char *tptr, uint2 length, bool p_is_unicode);
+	void settext(MCStringRef p_string);
 
 	// Set the backing store to the given text and length, then adjust
 	// the final block (creating one if necessary) so it finishes at the
@@ -334,7 +473,7 @@ public:
 	// Called by:
 	//   MCField::texttoparagraphs
 	//   MCField::htmltoparagraphs
-	void resettext(char *tptr, uint2 length);
+	void resettext(MCStringRef p_string);
 
 	// Calculate the maximum of the width, ascender and descender of all
 	// lines that make up the paragraph.
@@ -375,7 +514,7 @@ public:
 	//   MCField::typetext
 	//   MCField::selectedmark
 	//   MCField::cloneselection
-	void getselectionindex(uint2 &si, uint2 &ei);
+	void getselectionindex(findex_t &si, findex_t &ei);
 
 	// Set the selected range of the paragraph
 	// Called by:
@@ -386,7 +525,7 @@ public:
 	//   MCField::gettextatts (used to mark for split/join)
 	//   MCField::settextatts (used to mark for split/join)
 	//   MCField::seltext (removes selection, selects range/front/back)
-	void setselectionindex(uint2 si, uint2 ei, Boolean front, Boolean back);
+	void setselectionindex(findex_t si, findex_t ei, Boolean front, Boolean back);
 
 	// Reverses the 'originalindex' position in the paragraph
 	// Called by:
@@ -398,7 +537,7 @@ public:
 	// Called by:
 	//   MCField::getlinkdata
 	//   MCField::gettextatts
-	uint2 getyextent(int4 tindex, uint2 fixedheight);
+	uint2 getyextent(findex_t tindex, uint2 fixedheight);
 
 	// Set the hilite flag of the paragraph (overrides selected range)
 	// Called by:
@@ -424,38 +563,41 @@ public:
 	// Get the link text (if any) in the block containing index si
 	// Called by:
 	//   MCField::gettextatts
-	const char *getlinktext(uint2 si);
+	MCStringRef getlinktext(findex_t si);
 
 	// Get the image source (if any) in the block contaning index si
 	// Called by:
 	//   MCField::gettextatts
-	const char *getimagesource(uint2 si);
+	MCStringRef getimagesource(findex_t si);
 
 	// Get the metadata (if any) in the block containing index si
-	const char *getmetadataatindex(uint2 si);
+	MCStringRef getmetadataatindex(findex_t si);
 
 	// Return true if the link (if any) in the block containing index si
 	// has been visited.
 	// Called by:
 	//   MCField::gettextatts
-	Boolean getvisited(uint2 si);
+	Boolean getvisited(findex_t si);
 
 	// Set the visited status of the blocks between si and ei to v.
 	// Called by:
 	//   MCField::settextatts
-	void setvisited(uint2 si, uint2 ei, Boolean v);
+	void setvisited(findex_t si, findex_t ei, Boolean v);
 	
 	// Returns the state of a given block flag in the specified range.
-	bool getflagstate(uint32_t flag, uint2 si, uint2 ei, bool& r_state);
+	bool getflagstate(uint32_t flag, findex_t si, findex_t ei, bool& r_state);
 
 	// MW-2012-02-08: [[ FlaggedRanges ]] Get the ranges of indices which have the
 	//   flagged status set to true - these are then adjusted by delta.
 	// MW-2012-02-24: [[ FieldChars ]] Pass in the part_id so the paragraph can map
 	//   field indices to char indices.
-	// MW-2013-07-31: [[ Bug 10957 ]] Pass in the start of the paragraph as a byte
+    // MW-2013-07-31: [[ Bug 10957 ]] Pass in the start of the paragraph as a byte
 	//   offset so that the correct char offset can be calculated.
-	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_paragraph_start);
-
+#ifdef LEGACY_EXEC
+	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta);
+#endif
+    void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFieldRanges& r_ranges);
+    
 	// Return true if the paragraph completely fits in theight. Otherwise, return
 	// false and set lastline to the line that would be clipped.
 	// Called by:
@@ -468,26 +610,36 @@ public:
 	// Called by:
 	//   MCField::getprop
     // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
-	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);
+    Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
+    
+    // Clear attrs if they are not needed
+	void cleanattrs(void);
+    
 	// Sets the given paragraph attribute to the value in ep.
+#ifdef LEGACY_EXEC
 	Exec_stat setparagraphattr(Properties which, MCExecPoint& ep);
+#endif
 	// Gets the given paragraph attribute into the given ep.
-	Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
+#ifdef LEGACY_EXEC
+    Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
+#endif
 	// Copies the given attribute from the given paragraph.
 	void copysingleattr(Properties which, MCParagraph *other);
 	// Copies all the attributes from the given paragraph.
 	void copyattrs(const MCParagraph& other);
+#ifdef LEGACY_EXEC
 	// Stores the paragraph attributes into the dst array.
-	void storeattrs(MCVariableValue *dst);
+	void storeattrs(MCArrayRef dst);
+#endif
 	// Fetches the paragraph attributes from the src array.
-	void fetchattrs(MCVariableValue *src);
+    void fetchattrs(MCArrayRef src);
 	// Clears the paragraph attributes.
 	void clearattrs(void);
 	// Unserializes the paragraph attributes from stream.
-	IO_stat loadattrs(IO_handle stream);
+	IO_stat loadattrs(IO_handle stream, uint32_t version);
 	// Serializes the paragraph attributes into stream.
 	IO_stat saveattrs(IO_handle stream);
 	// MW-2012-02-21: [[ FieldExport ]] Fills in the appropriate members of the
@@ -505,7 +657,7 @@ public:
 	// Get the (effective) listStyle.
 	uint32_t getliststyle(void) const;
 	// Set the liststyle property directly.
-	void setliststyle(uint32_t new_list_style);
+    void setliststyle(uint32_t new_list_style);
 
 	// Returns true if the paragraph has listIndex set.
 	bool haslistindex(void) const;
@@ -544,6 +696,7 @@ public:
 
 	// Fetch the (effective) tabs for the paragraph.
 	void gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_fixed) const;
+    void gettabaligns(intenum_t*& r_tabaligns, uint16_t& r_tab_count) const;
 	// Get the (effective) hGrid.
 	bool gethgrid(void) const;
 	// Get the (effective) vGrid.
@@ -554,9 +707,9 @@ public:
 	int32_t gettablewidth(void) const;
 
 	// Returns the metadata for the current paragraph.
-	MCNameRef getmetadata(void) const;
+    MCStringRef getmetadata(void) const;
 	// Set the metadata property for the current paragraph.
-	void setmetadata(const char *metadata);
+    void setmetadata(MCStringRef metadata);
 
 	// Returns true if the top border will be elided due to hGrid
 	bool elidetopborder(void) const;
@@ -592,19 +745,15 @@ public:
 	void adjustrectsfortable(MCRectangle& x_inner_rect, MCRectangle& x_outer_rect);
 
 	// Force the paragraph to re-flow itself depending on its setting of dontWrap.
-	void layout(bool p_force);
-	
-	// MW-2012-01-27: [[ UnicodeChunks ]] Returns the content of the field in a native
-	//   form such that indices match that of the original content. If ASCII-only is
-	//   set, then it preserves only ASCII unicode chars. 'p_data' must point to a
-	//   at least gettextsize() bytes.
-	bool nativizetext(bool p_ascii_only, char *p_data, uint32_t& x_length);
+    // AL-2014-09-22: [[ Bug 11817 ]] If p_check_redraw is true, returns true if the number of lines changes under this new layout
+	bool layout(bool p_force, bool p_check_redraw = false);
+    uindex_t countlines();
 	
 	// Draw the paragraph
 	void draw(MCDC *dc, int2 x, int2 y,
 	          uint2 fa, uint2 fd,
-			  uint2 fstart, uint2 fend,
-	          uint2 compstart,uint2 compend, uint1 compconvstart, uint1 compconvend,
+			  findex_t fstart, findex_t fend,
+	          findex_t compstart, findex_t compend, findex_t compconvstart, findex_t compconvend,
 			  uint2 textwidth, uint2 pgheight, uint2 sx, uint2 swidth,
 	          uint2 pstyle);
 
@@ -629,7 +778,8 @@ public:
 	//   MCField::fcenter
 	//   MCField::fmove
 	//   MCField::getcompositionrect
-	MCRectangle getcursorrect(int4 fi, uint2 fixedheight, bool include_space);
+	MCRectangle getcursorrect(findex_t fi, uint2 fixedheight, bool include_space);
+    MCRectangle getsplitcursorrect(findex_t fi, uint2 fixedheight, bool include_space, bool primary);
 
 	// Compute the (x, y) location of the given index in the paragraph
 	// Called by:
@@ -638,13 +788,13 @@ public:
 	//   MCField::gettextatts
 	//   MCField::returnloc
 	//   MCField::insertparagraph
-	void indextoloc(uint2 tindex, uint2 fixedheight, int2 &x, int2 &y);
+	void indextoloc(findex_t tindex, uint2 fixedheight, coord_t &x, coord_t &y);
 
 	// Compute the left and right hand side of the range of indices (si..ei)
 	// Called by:
 	//   MCField::getlinkdata
 	//   MCField::gettextatts
-	void getxextents(int4 &si, int4 &ei, coord_t &minx, coord_t &maxx);
+	void getxextents(findex_t &si, findex_t &ei, coord_t &minx, coord_t &maxx);
 
 	// Compute the indices of a click at (x, y).
 	// If x is outside the bounds of the line containing y then:
@@ -655,7 +805,7 @@ public:
 	// Return start and end of word at loc (needs more refinement)
 	// Called by:
 	//   MCField::locmark
-	void getclickindex(int2 x, int2 y, uint2 fixedheight, uint2 &si, uint2 &ei, Boolean ww, Boolean chunk);
+	void getclickindex(int2 x, int2 y, uint2 fixedheight, findex_t &si, findex_t &ei, Boolean ww, Boolean chunk);
 
 	// Return the attributes set on the given range. Returns true if there
 	// are any set, otherwise false. In the case of some of the attrs not
@@ -664,9 +814,11 @@ public:
 	// Called by:
 	//   MCField::finsert (for charset purposes)
 	//   MCField::gettextatts
+#ifdef LEGACY_EXEC
 	Boolean getatts(uint2 si, uint2 ei, Properties which, Font_textstyle spec_style, const char *&fname, uint2 &size,
 	                uint2 &style, const MCColor *&color,
 	                const MCColor *&backcolor, int2 &shift, bool& specstyle, uint2 &mixed);
+#endif
 
 	// Set the attributes on the given range.
 	// Called by:
@@ -675,10 +827,12 @@ public:
 	//   MCField::htmltoparagraphs
 	//   MCField::settextatts
 	//   MCHcfield::buildf
-	void setatts(uint2 si, uint2 ei, Properties which, void *value, bool from_html = false);
+#ifdef LEGACY_EXEC
+	void setatts(findex_t si, findex_t ei, Properties which, void *value, bool from_html = false);
+#endif
 
-	void restricttoline(int32_t& si, int32_t& ei);
-	int32_t heightoflinewithindex(int32_t si, uint2 fixedheight);
+	void restricttoline(findex_t& si, findex_t& ei);
+	findex_t heightoflinewithindex(findex_t si, uint2 fixedheight);
 	
 	uint2 getopened()
 	{
@@ -725,12 +879,126 @@ public:
 		return (MCParagraph *)MCDLlist::remove((MCDLlist *&)list);
 	}
 
-	MCParagraph *copystring(uint2 si, uint2 ei);
+	MCParagraph *copystring(findex_t si, findex_t ei);
 
+	// TODO: this should probably return a StringRef or a codepoint...
 	static uint32_t getliststylebullet(uint32_t p_list_style, bool as_unicode);
+	
 	static void formatliststyleindex(uint32_t p_list_style, uint32_t p_index, char r_index_buffer[PG_MAX_INDEX_SIZE], const char*& r_string, uint32_t& r_length);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+
+    MCBlock* extendup(MCBlock *bptr, findex_t &si);
+    MCBlock* extenddown(MCBlock *bptr, findex_t &ei);
+
+    // Set the flag Lines not synched
+    void setDirty() { state |= PS_LINES_NOT_SYNCHED; }
+
+    void layoutchanged() { needs_layout = true; }
+    bool getneedslayout() { return needs_layout; }
+    
+    //////////
+
+    void GetEncoding(MCExecContext &ctxt, intenum_t& r_encoding);
+
+    void GetTextAlign(MCExecContext& ctxt, intenum_t*& r_value);
+    void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_value);
+    void SetTextAlign(MCExecContext& ctxt, intenum_t *p_value);
+
+    void GetListStyle(MCExecContext& ctxt, intenum_t &r_style);
+    void SetListStyle(MCExecContext& ctxt, intenum_t p_style);
+
+    void GetListDepth(MCExecContext& ctxt, uinteger_t*& r_depth);
+    void GetEffectiveListDepth(MCExecContext& ctxt, uinteger_t& r_depth);
+    void SetListDepth(MCExecContext &ctxt, uinteger_t *p_depth);
+
+    void GetListIndent(MCExecContext& ctxt, integer_t *&r_indent);
+    void GetEffectiveListIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetListIndent(MCExecContext& ctxt, integer_t *p_indent);
+
+    void GetListIndex(MCExecContext& ctxt, uinteger_t*& r_list_index);
+    void GetEffectiveListIndex(MCExecContext& ctxt, uinteger_t& r_list_index);
+    void SetListIndex(MCExecContext& ctxt, uinteger_t *p_list_index);
+
+    void GetFirstIndent(MCExecContext& ctxt, integer_t*& r_indent);
+    void GetEffectiveFirstIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetFirstIndent(MCExecContext& ctxt, integer_t *p_indent);
+
+    void GetLeftIndent(MCExecContext& ctxt, integer_t*& r_indent);
+    void GetEffectiveLeftIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetLeftIndent(MCExecContext& ctxt, integer_t *p_indent);
+
+    void GetRightIndent(MCExecContext& ctxt, integer_t*& r_indent);
+    void GetEffectiveRightIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetRightIndent(MCExecContext& ctxt, integer_t *p_indent);
+
+    void GetSpaceAbove(MCExecContext& ctxt, uinteger_t *&r_space);
+    void GetEffectiveSpaceAbove(MCExecContext& ctxt, uinteger_t& r_space);
+    void SetSpaceAbove(MCExecContext& ctxt, uinteger_t *p_space);
+
+    void GetSpaceBelow(MCExecContext& ctxt, uinteger_t*& r_space);
+    void GetEffectiveSpaceBelow(MCExecContext& ctxt, uinteger_t& r_space);
+    void SetSpaceBelow(MCExecContext& ctxt, uinteger_t *p_space);
+
+    void DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, const vector_t<uinteger_t> &p_tabs);
+    void DoGetTabStops(MCExecContext &ctxt, bool p_is_relative, vector_t<uinteger_t> &r_tabs);
+
+    void GetTabWidths(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
+    void GetEffectiveTabWidths(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
+    void SetTabWidths(MCExecContext& ctxt, const vector_t<uinteger_t> &p_tabs);
+
+    void GetTabStops(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
+    void GetEffectiveTabStops(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
+    void SetTabStops(MCExecContext& ctxt, const vector_t<uinteger_t>& p_tabs);
+
+    void GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
+    void GetEffectiveTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
+    void SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments &p_alignments);
+    
+    void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
+
+    void GetBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+    void GetEffectiveBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
+    void SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
+
+    void GetBorderWidth(MCExecContext& ctxt, uinteger_t*& r_width);
+    void GetEffectiveBorderWidth(MCExecContext& ctxt, uinteger_t& r_width);
+    void SetBorderWidth(MCExecContext& ctxt, uinteger_t *p_width);
+
+    void GetPadding(MCExecContext& ctxt, uinteger_t*& r_padding);
+    void GetEffectivePadding(MCExecContext& ctxt, uinteger_t& r_padding);
+    void SetPadding(MCExecContext& ctxt, uinteger_t *p_padding);
+
+    void GetHGrid(MCExecContext& ctxt, bool*& r_has_hgrid);
+    void GetEffectiveHGrid(MCExecContext& ctxt, bool& r_has_hgrid);
+    void SetHGrid(MCExecContext& ctxt, bool *p_has_hgrid);
+
+    void GetVGrid(MCExecContext& ctxt, bool*& r_has_vgrid);
+    void GetEffectiveVGrid(MCExecContext& ctxt, bool& r_has_vgrid);
+    void SetVGrid(MCExecContext& ctxt, bool *p_has_vrid);
+
+    void GetDontWrap(MCExecContext& ctxt, bool*& r_dont_wrap);
+    void GetEffectiveDontWrap(MCExecContext& ctxt, bool& r_dont_wrap);
+    void SetDontWrap(MCExecContext& ctxt, bool *p_dont_wrap);
+
+    void GetInvisible(MCExecContext& ctxt, bool *&r_invisible);
+    void GetEffectiveInvisible(MCExecContext& ctxt, bool &r_invisible);
+    void SetInvisible(MCExecContext& ctxt, bool p_invisible);
+
+    void GetMetadata(MCExecContext& ctxt, MCStringRef &r_metadata);
+    void GetEffectiveMetadata(MCExecContext& ctxt, MCStringRef &r_metadata);
+    void SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata);
+
+
+    //////////////////////////////////////////////////
+    // IDE-related functions
+
+    void SetForeColorOfCharChunk(MCExecContext &ctxt, findex_t si, findex_t ei, const MCInterfaceNamedColor &p_color);
+    void SetTextStyleOfCharChunk(MCExecContext &ctxt, findex_t si, findex_t ei, const MCInterfaceTextStyle &p_text);
+    void SetTextFontOfCharChunk(MCExecContext &ctxt, findex_t si, findex_t ei, MCStringRef p_fontname);
+    void SetTextSizeOfCharChunk(MCExecContext &ctxt, findex_t si, findex_t ei, uinteger_t *p_size);
 
 private:
 	// Flow the paragraph using the given parent font. This is called
@@ -741,7 +1009,7 @@ private:
 	// Flow the paragraph for a single line using the given parent font.
 	void noflow(void);
 
-	// Delete the lines computed for flow:
+	// Delete the lines and segments computed for flow:
 	//   - only called by MCParagraph
 	void deletelines();
 
@@ -751,23 +1019,15 @@ private:
 
 	// Only called internally
 	void fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, int2 sx, uint2 swidth);
-	void drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, uint2 compstart, uint2 compend, uint1 compconvstart, uint1 compconvend);
-	void drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, uint2 fstart, uint2 fend);
+	void drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, findex_t compstart, findex_t compend, findex_t compconvstart, findex_t compconvend);
+	void drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height, findex_t fstart, findex_t fend);
 
-	MCLine *indextoline(uint2 tindex);
+	MCLine *indextoline(findex_t tindex);
 
-	// Searches forward for the end of a link, returning the last index in si
-	// and returning the block containing it.
-	MCBlock *extendup(MCBlock *bptr, uint2 &si);
-	
-	// Searches backward for the start of a link, returning the first index in ei
-	// and returning the block containing it.
-	MCBlock *extenddown(MCBlock *bptr, uint2 &ei);
-
-	coord_t getx(uint2 tindex, MCLine *lptr);
+	coord_t getx(findex_t tindex, MCLine *lptr);
 
 	// Mark all the lines in the given range as dirty
-	void marklines(uint2 si, uint2 ei);
+	void marklines(findex_t si, findex_t ei);
 
 	// Compute the x-offsets for liststyle settings
 	void getliststyleoffsets(int32_t& r_label_offset, int32_t& r_content_offset);

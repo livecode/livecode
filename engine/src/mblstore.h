@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef MBLSTORE_H
 #define MBLSTORE_H
 
+#include "exec.h"
+
 enum MCPurchaseProperty
 {
 	kMCPurchasePropertyProductIdentifier,
@@ -48,48 +50,97 @@ enum MCPurchaseProperty
 	kMCPurchasePropertyUnknown,
 };
 
-enum MCPurchaseState
-{
-	kMCPurchaseStateInitialized,
-	kMCPurchaseStateSendingRequest,
-	kMCPurchaseStatePaymentReceived,
-	kMCPurchaseStateComplete,
-	kMCPurchaseStateRestored,
-	kMCPurchaseStateCancelled,
-    //Amazon
-    kMCPurchaseStateInvalidSKU,
-    kMCPurchaseStateAlreadyEntitled,
-	kMCPurchaseStateRefunded,
-	kMCPurchaseStateError,
-    kMCPurchaseStateUnverified,
-	
-	kMCPurchaseStateUnknown,
-};
-
-typedef struct _mcpurchase_t
-{
-    const char *              prod_id;
-	uint32_t			id;
-	MCPurchaseState		state;
-	uint32_t			ref_count;
-	
-	void *				platform_data;
-	
-	struct _mcpurchase_t *	next;
-} MCPurchase;
-
 typedef bool (*MCPurchaseListCallback)(void *context, MCPurchase *purchase);
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep);
-Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep);
+struct MCPurchasePropertyTable
+{
+	uindex_t size;
+	MCPropertyInfo *table;
+};
 
-bool MCPurchaseLookupProperty(const char *p_property, MCPurchaseProperty &r_property);
+const MCPurchasePropertyTable *getpropertytable(void);
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+//// No longer needed
+//Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity);
+//Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep);
+
+void MCStoreExecGet(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name, MCValueRef& r_value);
+void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name, MCValueRef r_value);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+//// No longer needed
+//Exec_stat MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCExecPoint &ep);
+//
+//// purchase request properties
+//// iOS
+//Exec_stat MCPurchaseGetQuantity(MCPurchase *p_purchase, MCExecPoint &ep);
+//// Android
+//Exec_stat MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCExecPoint &ep);
+//
+//// product properties from app store
+//// iOS
+//Exec_stat MCPurchaseGetLocalizedTitle(MCPurchase *p_purchase, MCExecPoint &ep);
+//Exec_stat MCPurchaseGetLocalizedDescription(MCPurchase *p_purchase, MCExecPoint &ep);
+//Exec_stat MCPurchaseGetLocalizedPrice(MCPurchase *p_purchase, MCExecPoint &ep);
+//
+//// response properties
+//Exec_stat MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, MCExecPoint &ep);
+//// iOS
+//Exec_stat MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCExecPoint &ep);
+//Exec_stat MCPurchaseGetReceipt(MCPurchase *p_purchase, MCExecPoint &ep);
+//Exec_stat MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCExecPoint &ep);
+//Exec_stat MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, MCExecPoint &ep);
+//Exec_stat MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCExecPoint &ep);
+//// Android
+//Exec_stat MCPurchaseGetSignedData(MCPurchase *p_purchase, MCExecPoint &ep);
+//Exec_stat MCPurchaseGetSignature(MCPurchase *p_purchase, MCExecPoint &ep);
+//
+//Exec_stat MCPurchaseGetUnknown(MCPurchase *p_purchase, MCExecPoint &ep);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+//// No longer needed
+//Exec_stat MCPurchaseSetProductIdentifier(MCPurchase *p_purchase, uint32_t p_quantity);
+//
+//// purchase request properties
+//// iOS
+//Exec_stat MCPurchaseSetQuantity(MCPurchase *p_purchase, uint32_t p_quantity);
+//// Android
+//Exec_stat MCPurchaseSetDeveloperPayload(MCPurchase *p_purchase, uint32_t p_quantity);
+//
+//// product properties from app store
+//// iOS
+//Exec_stat MCPurchaseSetLocalizedTitle(MCPurchase *p_purchase, uint32_t p_quantity);
+//Exec_stat MCPurchaseSetLocalizedDescription(MCPurchase *p_purchase, uint32_t p_quantity);
+//Exec_stat MCPurchaseSetLocalizedPrice(MCPurchase *p_purchase, uint32_t p_quantity);
+//
+//// response properties
+//Exec_stat MCPurchaseSetPurchaseDate(MCPurchase *p_purchase, uint32_t p_quantity);
+//// iOS
+//Exec_stat MCPurchaseSetTransactionIdentifier(MCPurchase *p_purchase, uint32_t p_quantity);
+//Exec_stat MCPurchaseSetReceipt(MCPurchase *p_purchase, uint32_t p_quantity);
+//Exec_stat MCPurchaseSetOriginalTransactionIdentifier(MCPurchase *p_purchase, uint32_t p_quantity);
+//Exec_stat MCPurchaseSetOriginalPurchaseDate(MCPurchase *p_purchase, uint32_t p_quantity);
+//Exec_stat MCPurchaseSetOriginalReceipt(MCPurchase *p_purchase, uint32_t p_quantity);
+//// Android
+//Exec_stat MCPurchaseSetSignedData(MCPurchase *p_purchase, uint32_t p_quantity);
+//Exec_stat MCPurchaseSetSignature(MCPurchase *p_purchase, uint32_t p_quantity);
+//
+//Exec_stat MCPurchaseSetUnknown(MCPurchase *p_purchase, uint32_t p_quantity);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+bool MCPurchaseLookupProperty(MCStringRef p_property, Properties &r_property);
+
+bool MCPurchaseList(MCStringRef& r_string);
+bool MCPurchaseFindByProdId(MCStringRef p_prod_id, MCPurchase *&r_purchase);
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
-bool MCPurchaseFindByProdId(const char *p_prod_id, MCPurchase *&r_purchase);
-bool MCPurchaseList(MCPurchaseListCallback p_callback, void *p_context);
 
-bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_purchase);
+bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase);
+void MCPurchaseDelete(MCPurchase *p_purchase);
 
 void MCPurchaseRetain(MCPurchase *p_purchase);
 void MCPurchaseRelease(MCPurchase *p_purchase);
@@ -97,29 +148,27 @@ void MCPurchaseRelease(MCPurchase *p_purchase);
 bool MCPurchaseSendRequest(MCPurchase *p_purchase);
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase);
 
+void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified);
+
 bool MCStoreCanMakePurchase();
 
 bool MCStoreEnablePurchaseUpdates();
 bool MCStoreDisablePurchaseUpdates();
-bool MCStoreProductSetType(const char *p_purchase_id, const char *p_product_type);
-bool MCStoreSetPurchaseProperty(const char *p_purchase_id, const char *p_property_name, const char *p_property_value);
-char* MCStoreGetPurchaseProperty(const char *p_purchase_id, const char *p_property_name);
-char* MCStoreGetPurchaseList();
-bool MCStoreConsumePurchase(const char *p_product_id);
-bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload);
-//bool MCStoreMakePurchase(MCPurchase *p);
-bool MCStoreRequestProductDetails(const char *p_product_id);
-bool MCStoreRequestForProductDetails(const char *p_product_id);
-char* MCStoreReceiveProductDetails(const char *p_product_id);
-//char* MCStoreAndroidRequestProductDetails(const char *p_product_id);
-
 
 bool MCStoreRestorePurchases();
+bool MCStoreMakePurchase(MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload);
+
+bool MCStoreProductSetType(MCStringRef p_product_id, MCStringRef p_type);
+
+bool MCStoreReceiveProductDetails(MCStringRef p_product_id, MCStringRef &r_details);
+bool MCStoreConsumePurchase(MCStringRef p_product_id);
 
 MCPurchase *MCStoreGetPurchases();
 
-bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string);
-bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error);
+bool MCPurchaseStateToString(MCPurchaseState p_state, const char*& r_string);
+bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef &r_error);
+
+bool MCStoreRequestProductDetails(MCStringRef p_product_id);
 
 void MCPurchaseNotifyUpdate(MCPurchase *p_purchase);
 

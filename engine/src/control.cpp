@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "sellst.h"
 #include "stack.h"
@@ -45,11 +45,43 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "graphics_util.h"
 
+#include "exec.h"
+
 MCControl *MCControl::focused;
 int2 MCControl::defaultmargin = 4;
 int2 MCControl::xoffset;
 int2 MCControl::yoffset;
 double MCControl::aspect;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCControl::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_LEFT_MARGIN, Int16, MCControl, LeftMargin)
+	DEFINE_RW_OBJ_PROPERTY(P_RIGHT_MARGIN, Int16, MCControl, RightMargin)
+	DEFINE_RW_OBJ_PROPERTY(P_TOP_MARGIN, Int16, MCControl, TopMargin)
+	DEFINE_RW_OBJ_PROPERTY(P_BOTTOM_MARGIN, Int16, MCControl, BottomMargin)
+    DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_MARGINS, InterfaceMargins, MCControl, Margins)
+	DEFINE_RW_OBJ_PROPERTY(P_TOOL_TIP, String, MCControl, ToolTip)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, BinaryString, MCControl, UnicodeToolTip)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
+	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
+    
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_BITMAP_EFFECT_DROP_SHADOW, MCControl, DropShadow)
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_BITMAP_EFFECT_OUTER_GLOW, MCControl, OuterGlow)
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_BITMAP_EFFECT_INNER_GLOW, MCControl, InnerGlow)
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_BITMAP_EFFECT_COLOR_OVERLAY, MCControl, ColorOverlay)
+    DEFINE_RW_OBJ_RECORD_PROPERTY(P_BITMAP_EFFECT_INNER_SHADOW, MCControl, InnerShadow)
+};
+
+MCObjectPropertyTable MCControl::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCControl::MCControl()
 {
@@ -161,16 +193,16 @@ void MCControl::kunfocus()
 	}
 }
 
-Boolean MCControl::kdown(const char *string, KeySym key)
+Boolean MCControl::kdown(MCStringRef p_string, KeySym key)
 {
-	if (MCObject::kdown(string, key))
+	if (MCObject::kdown(p_string, key))
 		return True;
 	switch (key)
 	{
 	case XK_space:
 	case XK_Return:
 	case XK_KP_Enter:
-		message_with_args(MCM_mouse_up, "1");
+		message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 		return True;
 	default:
 		break;
@@ -184,7 +216,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_GRAB)
 	{
@@ -249,7 +281,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	case T_FIELD:
 	case T_IMAGE:
 	case T_GRAPHIC:
-		if (is && state & CS_SELECTED || state & CS_MFOCUSED)
+		if ((is && state & CS_SELECTED) || state & CS_MFOCUSED)
 			return True;
 		else
 			return False;
@@ -294,7 +326,7 @@ Boolean MCControl::doubledown(uint2 which)
 		case T_IMAGE:
 		case T_GRAPHIC:
 		case T_POINTER:
-			message_with_args(MCM_mouse_double_down, "1");
+			message_with_valueref_args(MCM_mouse_double_down, MCSTR("1"));
 			break;
 		default:
 			return False;
@@ -325,7 +357,7 @@ Boolean MCControl::doubleup(uint2 which)
 			// MW-2010-10-15: [[ Bug 9055 ]] Pass false here to prevent 'mouseUp' being sent.
 			end(false, false);
 		case T_BROWSE:
-			message_with_args(MCM_mouse_double_up, "1");
+			message_with_valueref_args(MCM_mouse_double_up, MCSTR("1"));
 			break;
 		default:
 			return False;
@@ -385,7 +417,8 @@ uint2 MCControl::gettransient() const
 	return 0;
 }
 
-Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive = false)
 {
 	switch (which)
 	{
@@ -451,15 +484,15 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		ep.setstaticcstring(t_value);
 	}
 	break;
-#endif /* MCControl::getprop */ 
+#endif /* MCControl::getprop */
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCControl::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
 	{
@@ -473,12 +506,12 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		return MCBitmapEffectsGetProperties(m_bitmap_effects, which, ep, key);
 #endif /* MCControl::getarrayprop */
 	default:
-		return MCObject::getarrayprop(parid, which, ep, key, effective);
+		return MCObject::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCControl::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	int2 i1, i2, i3, i4;
@@ -618,7 +651,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 		return ES_NORMAL;
 #endif /* MCControl::setprop */
 	default:
-		return MCObject::setprop(parid, which, ep, effective);
+		return MCObject::setprop_legacy(parid, which, ep, effective);
 	}
 
 	if (dirty && opened)
@@ -629,7 +662,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 	return ES_NORMAL;
 }
 
-Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCControl::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	Boolean dirty;
 	dirty = False;
@@ -661,9 +694,9 @@ Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	default:
 		break;
 	}
-
-	return MCObject::setarrayprop(parid, which, ep, key, effective);
+	return MCObject::setarrayprop_legacy(parid, which, ep, key, effective);
 }
+#endif
 
 void MCControl::select()
 {
@@ -727,11 +760,13 @@ Boolean MCControl::del()
 		message(MCM_delete_group);
 		message(MCM_delete_background);
 		break;
+    case CT_WIDGET:
+        message(MCM_delete_widget);
+        break;
 	default:
 		break;
 	}
 	uint2 num = 0;
-	MCRectangle orect = geteffectiverect();
 	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
 	switch (parent->gettype())
 	{
@@ -785,7 +820,7 @@ void MCControl::paste(void)
 	if (MCdefaultstackptr->getmode() != WM_TOP_LEVEL)
 		return;
 
-	parent = MCdefaultstackptr->getchild(CT_THIS, MCnullmcstring, CT_CARD);
+	parent = MCdefaultstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 	MCCard *cptr = (MCCard *)parent;
 	obj_id = 0;
 	//newcontrol->resetfontindex(oldstack);
@@ -885,10 +920,10 @@ MCControl *MCControl::findnum(Chunk_term type, uint2 &num)
 		return NULL;
 }
 
-MCControl *MCControl::findname(Chunk_term type, const MCString &inname)
+MCControl *MCControl::findname(Chunk_term type, MCNameRef p_name)
 {
 	if ((type == gettype() || type == CT_LAYER)
-	        && MCU_matchname(inname, gettype(), getname()))
+	        && MCU_matchname(p_name, gettype(), getname()))
 		return this;
 	else
 		return NULL;
@@ -897,7 +932,7 @@ MCControl *MCControl::findname(Chunk_term type, const MCString &inname)
 MCControl *MCControl::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
 	if ((type == gettype() || type == CT_LAYER)
-	        && (inid == obj_id || alt && inid == altid))
+	    && (inid == obj_id || (alt && inid == altid)))
 		return this;
 	else
 		return NULL;
@@ -1017,7 +1052,8 @@ inline MCRectangle MCGRectangleGetPixelRect(const MCGRectangle &p_rect)
 
 void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 {
-	if (!opened || !(isvisible() || MCshowinvisibles))
+    // SN-2014-11-14: [[ Bug 14028 ]] Use the current control visibility state
+	if (!opened || !(getflag(F_VISIBLE) || MCshowinvisibles))
 		return;
 
 	// MW-2009-06-11: [[ Bitmap Effects ]] A control needs to be (partially)
@@ -1261,6 +1297,7 @@ void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 			dc->fillpolygon(ap, 5);
 			dc->drawlines(ap, 5);
 			if (border)
+			{
 				if (IsMacLF())
 				{
 					size -= 2;
@@ -1275,6 +1312,7 @@ void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 					else
 						draw3d(dc, trect, ETCH_RAISED_SMALL, DEFAULT_BORDER);
 				}
+			}
 		}
 		break;
 	}
@@ -1448,7 +1486,7 @@ uint2 MCControl::sizehandles()
 
 void MCControl::start(Boolean canclone)
 {
-	if (message_with_args(MCM_mouse_down, "1") == ES_NORMAL && !MCexitall)
+	if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL && !MCexitall)
 		return;
 	MCexitall = False;
 	getstack()->kfocusset(NULL);
@@ -1463,17 +1501,25 @@ void MCControl::start(Boolean canclone)
 			MCselected->replace(this);
 	}
 	else
+	{
 		if (MCmodifierstate & MS_SHIFT && sizehandles() == 0)
 		{
 			MCselected->remove(this);
 			return;
 		}
 		else
+		{
 			MCselected->top(this);
+		}
+	}
 	if (MCbuttonstate == 0)
+	{
 		state &= ~(CS_MOVE | CS_SIZE | CS_CREATE);
+	}
 	else
+	{
 		if (canclone)
+		{
 			if (!(state & CS_SIZE))
 			{
 				state |= CS_MOVE;
@@ -1495,6 +1541,8 @@ void MCControl::start(Boolean canclone)
 				MCundos->savestate(this, us);
 				aspect = rect . height / (double)rect . width;
 			}
+		}
+	}
 	
 	// MM-2012-11-06: [[ Property Listener ]]
 	if (state & CS_SIZE)
@@ -1521,10 +1569,12 @@ void MCControl::end(bool p_send_mouse_up, bool p_release)
 	layer_redrawall();
 	
 	if (p_send_mouse_up)
+    {
 		if (p_release)
-            message_with_args(MCM_mouse_release, "1");
+            message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
         else
-            message_with_args(MCM_mouse_up, "1");
+            message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
+    }
 	
 	// MM-2012-11-06: [[ Property Listener ]]
 	if (oldstate & CS_SIZE)
@@ -1637,10 +1687,10 @@ Boolean MCControl::sbfocus(int2 x, int2 y, MCScrollbar *hsb, MCScrollbar *vsb)
 		return True;
 	}
 	else
-		if (!(state & CS_SELECTED)
-		        && (flags & F_HSCROLLBAR && MCU_point_in_rect(hsb->getrect(), x, y) ||
-		            flags & F_VSCROLLBAR && MCU_point_in_rect(vsb->getrect(), x, y))
-		        && (gettype() == CT_GROUP || getstack()->gettool(this) == T_BROWSE))
+		if (!(state & CS_SELECTED) &&
+		    ((flags & F_HSCROLLBAR && MCU_point_in_rect(hsb->getrect(), x, y)) ||
+		     (flags & F_VSCROLLBAR && MCU_point_in_rect(vsb->getrect(), x, y))) &&
+		    (gettype() == CT_GROUP || getstack()->gettool(this) == T_BROWSE))
 		{
 			if(MCcurtheme && MCcurtheme->getthemepropbool(WTHEME_PROP_SUPPORTHOVERING))
 			{
@@ -1762,37 +1812,22 @@ Boolean MCControl::sbdoubleup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb)
 	return False;
 }
 
-Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
+Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
                                int4 tx, int4 ty, uint2 &sbw,
                                MCScrollbar *&hsb, MCScrollbar *&vsb,
                                Boolean &dirty)
 {
-	int4 newscroll;
-	int2 newwidth;
 	dirty = False;
 	Exec_stat stat = ES_NORMAL;
 	switch (which)
 	{
-	case P_HSCROLL:
-	case P_VSCROLL:
-		if (!MCU_stoi4(data, newscroll))
-			return ES_ERROR;
-		if (opened)
-		{
-			if (which == P_HSCROLL)
-				stat = hscroll(newscroll - tx, True);
-			else
-				stat = vscroll(newscroll - ty, True);
-			resetscrollbars(True);
-		}
-		break;
 	case P_HSCROLLBAR:
-		if (!MCU_matchflags(data, flags, F_HSCROLLBAR, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
+		dirty = getflag(F_HSCROLLBAR) != p_enable;
+		if (p_enable)
+			flags |= F_HSCROLLBAR;
+		else
+			flags &= ~F_HSCROLLBAR;
+	
 		if (dirty)
 		{
 			if (flags & F_HSCROLLBAR)
@@ -1831,11 +1866,12 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 		}
 		break;
 	case P_VSCROLLBAR:
-		if (!MCU_matchflags(data, flags, F_VSCROLLBAR, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
+		dirty = getflag(F_VSCROLLBAR) != p_enable;
+		if (p_enable)
+			flags |= F_VSCROLLBAR;
+		else
+			flags &= ~F_VSCROLLBAR;
+		
 		if (dirty)
 		{
 			if (flags & F_VSCROLLBAR)
@@ -1870,19 +1906,7 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			m_layer_attr_changed = true;
 		}
 		break;
-	case P_SCROLLBAR_WIDTH:
-		if (!MCU_stoi2(data, newwidth))
-		{
-			MCeerror->add(EE_FIELD_SCROLLBARWIDTHNAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (sbw != newwidth)
-		{
-			sbw = newwidth;
-			setsbrects();
-			dirty = True;
-		}
-		break;
+			
 	default:
 		break;
 	}
@@ -1919,7 +1943,7 @@ void MCControl::drawfocus(MCDC *dc, const MCRectangle &dirty)
 		!MCcurtheme -> drawfocusborder(dc, dirty, trect))
 	{
 		setforeground(dc, DI_FOCUS, False, True);
-		if (IsMacEmulatedLF() || IsMacLFAM() && !MCaqua)
+		if (IsMacEmulatedLF() || (IsMacLFAM() && !MCaqua))
 			trect = MCU_reduce_rect(trect, 1);
 		drawborder(dc, trect, MCfocuswidth);
 	}
@@ -1973,8 +1997,8 @@ void MCControl::setbitmapeffects(MCBitmapEffectsRef p_effects)
 
 MCObject *MCControl::hittest(int32_t x, int32_t y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
-		|| flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	if (!(flags & F_VISIBLE || MCshowinvisibles) ||
+	    (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	
 	MCRectangle r;

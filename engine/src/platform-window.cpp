@@ -28,7 +28,7 @@
 
 MCPlatformWindow::MCPlatformWindow(void)
 {
-	MCLog("Create window %p", this);
+    //MCLog("Create window %p", this);
 	
 	m_references = 1;
 	
@@ -37,6 +37,7 @@ MCPlatformWindow::MCPlatformWindow(void)
 	
 	MCMemoryClear(&m_changes, sizeof(m_changes));
 	m_style = kMCPlatformWindowStyleDocument;
+    // SN-2014-06-23: Title updated to StringRef
 	m_title = nil;
 	m_opacity = 1.0f;
 	m_content = MCRectangleMake(0, 0, 0, 0);
@@ -66,12 +67,13 @@ MCPlatformWindow::MCPlatformWindow(void)
 
 MCPlatformWindow::~MCPlatformWindow(void)
 {
-	MCLog("Destroy window %p", this);
+    //MCLog("Destroy window %p", this);
 	
 	MCRegionDestroy(m_dirty_region);
 	
 	MCPlatformWindowMaskRelease(m_mask);
-	free(m_title);
+    // SN-2014-06-23: Title updated to StringRef
+	MCValueRelease(m_title);
 	
 	free(m_attachments);
 }
@@ -279,9 +281,9 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			m_changes . style_changed = true;
 			break;
 		case kMCPlatformWindowPropertyTitle:
-			assert(p_type == kMCPlatformPropertyTypeUTF8CString);
-			free(m_title);
-			m_title = strdup(*(const char **)p_value);
+			assert(p_type == kMCPlatformPropertyTypeMCString);
+            // SN-2014-06-23: Title updated to StringRef
+            MCValueAssign(m_title, *(MCStringRef*)p_value);
 			m_changes . title_changed = true;
 			break;
 		case kMCPlatformWindowPropertyOpacity:
@@ -388,8 +390,9 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 	switch(p_property)
 	{
 		case kMCPlatformWindowPropertyTitle:
-			assert(p_type == kMCPlatformPropertyTypeUTF8CString);
-			*(const char **)r_value = strdup(m_title);
+			assert(p_type == kMCPlatformPropertyTypeMCString);
+            // SN-2014-06-23: Title updated to StringRef
+            *(MCStringRef*)r_value = MCValueRetain(m_title);
 			break;
 		case kMCPlatformWindowPropertyStyle:
 			assert(p_type == kMCPlatformPropertyTypeWindowStyle);

@@ -1,0 +1,11 @@
+setup
+
+create field
+set the text of field 1 to "abcd"
+set the script of field 1 to "on testMe" & return & \
+	"	set the cMe of me to me" & return & \
+	"end testMe"
+
+send "testMe" to field 1
+test the cMe of field 1 is the text of field 1
+teardown

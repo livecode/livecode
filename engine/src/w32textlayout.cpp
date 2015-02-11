@@ -61,7 +61,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32prefix.h"
 #include <usp10.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "textlayout.h"
 

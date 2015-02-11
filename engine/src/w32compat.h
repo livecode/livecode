@@ -25,6 +25,8 @@ structures and weak-linked functions required to use those newer features.
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "foundation.h"
+
 typedef enum __MCWin32ProcessDPIAwareness
 {
 	kMCWin32ProcessDPIUnaware,

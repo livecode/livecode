@@ -112,15 +112,19 @@ enum MCIPhoneApplicationStatus
 	bool m_keyboard_activation_pending : 1;
 	// An orientation changed request was received, but not yet acted on.
 	bool m_orientation_changed_pending : 1;
+    
+    bool m_keyboard_is_visible : 1;
+
+    bool m_is_remote_notification :1;
 
     // We store the payload from a pending local notification here until the stack has become active and is ready to receive the message with the data.
     NSString *m_pending_local_notification;
     // We store the payload from a pending push notification here until the stack has become active and is ready to receive the message with the data.
     NSString *m_pending_push_notification;
     // We store the device token for push notification here
-    MCString m_device_token;
+    MCStringRef m_device_token;
     // We store the wakeup token for custom URL schemes here
-    MCString m_launch_url;
+    MCStringRef m_launch_url;
     // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
     // We need to know if there is a pending launch url that was received.
     // We do not want to send a URL message again, should the app become active again.
@@ -140,6 +144,11 @@ enum MCIPhoneApplicationStatus
 
 //////////
 
+// MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (push) notification settings.
+#ifdef __IPHONE_8_0
+- (void)application: (UIApplication *)application didRegisterUserNotificationSettings: (UIUserNotificationSettings *)notificationSettings;
+#endif
+
 //- (void)applicationDidFinishLaunching:(UIApplication *)application;
 - (BOOL)application:(UIApplication *)p_application didFinishLaunchingWithOptions:(NSDictionary *)p_launchOptions;
 - (void)application:(UIApplication *)p_application didReceiveLocalNotification:(UILocalNotification *)p_notification;
@@ -155,6 +164,8 @@ enum MCIPhoneApplicationStatus
 - (void)orientationChanged:(NSNotification *)notification;
 - (void)keyboardWillActivate:(NSNotification *)notification;
 - (void)keyboardWillDeactivate:(NSNotification *)notification;
+- (void)keyboardDidActivate:(NSNotification *)notification;
+- (void)keyboardDidDeactivate:(NSNotification *)notification;
 
 //////////
 
@@ -191,10 +202,12 @@ enum MCIPhoneApplicationStatus
 - (MCIPhoneDisplayView *)fetchDisplayView;
 // Returns the main view controller.
 - (UIViewController *)fetchMainViewController;
+// MM-2014-10-15: [[ Bug 13665 ]] Returns the currently active view controller.
+- (UIViewController *)fetchCurrentViewController;
 // Returns the device token that is used for push notificaiton.
-- (const char *)fetchDeviceToken;
+- (MCStringRef)fetchDeviceToken;
 // Returns the URL from which the device was launched.
-- (const char *)fetchLaunchUrl;
+- (MCStringRef)fetchLaunchUrl;
 
 // Start an autorotation operation
 - (void)beginAutorotation;
@@ -360,6 +373,7 @@ void MCIPhoneHandlePerformRedraw(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 MCIPhoneApplication *MCIPhoneGetApplication(void);
+NSString* MCIPhoneGetDeviceModelName(void);
 
 UIViewController *MCIPhoneGetViewController(void);
 UIView *MCIPhoneGetView(void);
@@ -369,6 +383,7 @@ CGRect MCIPhoneGetViewBounds(void);
 CGRect MCIPhoneGetScreenBounds(void);
 void MCIPhoneActivateKeyboard(void);
 void MCIPhoneDeactivateKeyboard(void);
+bool MCIPhoneIsKeyboardVisible(void);
 void MCIPhoneConfigureContentScale(int32_t scale);
 void MCIPhoneSwitchViewToUIKit(void);
 void MCIPhoneSwitchViewToOpenGL(void);

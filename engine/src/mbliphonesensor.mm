@@ -16,23 +16,29 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #include "exec.h"
 #include "mblsyntax.h"
 #include "mblsensor.h"
+#include "mbliphoneapp.h"
 
 #include <Foundation/NSOperation.h>
 
+#ifdef __IPHONE_8_0
+#include <UIKit/UIAlertController.h>
+#endif
+
 #import <CoreLocation/CoreLocation.h>
 #import <CoreMotion/CoreMotion.h>
+
+#include "mbldc.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,6 +91,7 @@ static void initialize_core_motion(void)
 @interface MCIPhoneLocationDelegate : NSObject <CLLocationManagerDelegate>
 {
 	NSTimer *m_calibration_timer;
+    bool m_ready;
 }
 @end
 
@@ -108,13 +115,42 @@ static int32_t s_location_calibration_timeout = 0;
 	[super dealloc];
 }
 
+- (void)setReady:(BOOL)ready
+{
+    m_ready = ready;
+}
+
+- (BOOL)isReady
+{
+    return m_ready;
+}
+
+#ifdef __IPHONE_8_0
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
+{
+    if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorizedWhenInUse || status == kCLAuthorizationStatusDenied)
+    {
+        [s_location_delegate setReady:True];
+        MCscreen -> pingwait();
+    }
+}
+#endif
+
 // TODO: Determine difference between location and heading error properly
 - (void)locationManager: (CLLocationManager *)manager didFailWithError: (NSError *)error
 {
 	if (s_location_enabled)
-		MCSensorPostErrorMessage(kMCSensorTypeLocation, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	{
+		MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		MCSensorPostErrorMessage(kMCSensorTypeLocation, *t_error);
+	}
 	else if (s_heading_enabled)
-        MCSensorPostErrorMessage(kMCSensorTypeHeading, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	{
+        MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		MCSensorPostErrorMessage(kMCSensorTypeHeading, *t_error);
+	}
 }
 
 - (void)locationManager: (CLLocationManager *)manager didUpdateToLocation: (CLLocation *)newLocation fromLocation: (CLLocation *)oldLocation
@@ -160,6 +196,41 @@ static int32_t s_location_calibration_timeout = 0;
 	[m_calibration_timer release];
 	m_calibration_timer = nil;
 }
+
+static void requestAlwaysAuthorization(void)
+{
+#ifdef __IPHONE_8_0
+    CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
+    
+    if (t_status == kCLAuthorizationStatusNotDetermined)
+    {
+        // PM-2014-10-20: [[ Bug 13590 ]] Read the plist to decide which type of authorization the user has chosen
+        NSDictionary *t_info_dict;
+        t_info_dict = [[NSBundle mainBundle] infoDictionary];
+        
+        NSString *t_location_authorization_always;
+        t_location_authorization_always = [t_info_dict objectForKey: @"NSLocationAlwaysUsageDescription"];
+        
+        NSString *t_location_authorization_when_in_use;
+        t_location_authorization_when_in_use = [t_info_dict objectForKey: @"NSLocationWhenInUseUsageDescription"];
+        
+        if (t_location_authorization_always)
+        {
+            [s_location_manager requestAlwaysAuthorization];
+        }
+        else if (t_location_authorization_when_in_use)
+        {
+            [s_location_manager requestWhenInUseAuthorization];
+        }
+        else
+            return;
+        
+        while (![s_location_delegate isReady])
+            MCscreen -> wait(1.0, False, True);
+    }
+#endif
+}
+
 @end
 
 static void initialize_core_location(void)
@@ -167,9 +238,12 @@ static void initialize_core_location(void)
 	if (s_location_manager != nil)
 		return;
 	
-	s_location_manager = [[CLLocationManager alloc] init];
+    // PM-2014-10-07: [[ Bug 13590 ]] Configuration of the location manager object must always occur on a thread with an active run loop
+    MCIPhoneRunBlockOnMainFiber(^(void) {s_location_manager = [[CLLocationManager alloc] init];});
 	s_location_delegate = [[MCIPhoneLocationDelegate alloc] init];
-	[s_location_manager setDelegate: s_location_delegate];
+    [s_location_delegate setReady: False];
+    
+   	[s_location_manager setDelegate: s_location_delegate];
 	
 	s_location_enabled = false;
 	s_heading_enabled = false;
@@ -226,17 +300,75 @@ double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor)
     return 0.0;
 }
 
+bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status)
+{    
+    MCAutoStringRef t_status_string;
+	
+#ifdef __IPHONE_8_0
+	if (MCmajorosversion >= 800)
+	{
+		CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
+		switch (t_status)
+		{
+			case kCLAuthorizationStatusNotDetermined:
+                t_status_string = MCSTR("notDetermined");
+				break;
+				
+				// This application is not authorized to use location services.  Due
+				// to active restrictions on location services, the user cannot change
+				// this status, and may not have personally denied authorization
+			case kCLAuthorizationStatusRestricted:
+                t_status_string = MCSTR("restricted");
+				break;
+				
+				// User has explicitly denied authorization for this application, or
+				// location services are disabled in Settings.
+			case kCLAuthorizationStatusDenied:
+                t_status_string = MCSTR("denied");
+				break;
+				
+				// User has granted authorization to use their location at any time,
+				// including monitoring for regions, visits, or significant location changes.
+			case kCLAuthorizationStatusAuthorizedAlways:
+                t_status_string = MCSTR("authorizedAlways");
+				break;
+				
+				// User has granted authorization to use their location only when your app
+				// is visible to them (it will be made visible to them if you continue to
+				// receive location updates while in the background).  Authorization to use
+				// launch APIs has not been granted.
+			case kCLAuthorizationStatusAuthorizedWhenInUse:
+                t_status_string = MCSTR("authorizedWhenInUse");
+				break;
+				
+			default:
+                t_status_string = kMCEmptyString;
+				break;
+		}
+	}
+#else
+    t_status_string = kMCEmptyString;
+#endif
+    
+    return MCStringCopy(*t_status_string, r_status);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // LOCATION SENSEOR
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool start_tracking_location(bool p_loosely)
+bool MCSystemStartTrackingLocation(bool p_loosely)
 {
     if ([CLLocationManager locationServicesEnabled] == YES)
     {
         if (!s_location_enabled)
         {
             initialize_core_location();
+            
+            // PM-2014-10-06: [[ Bug 13590 ]] Make sure on iOS 8 we explicitly request permission to use location services
+            if (MCmajorosversion >= 800)
+                requestAlwaysAuthorization();
+            
             [s_location_manager startUpdatingLocation];
             s_location_enabled = true;
         }
@@ -249,7 +381,7 @@ static bool start_tracking_location(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_location()
+bool MCSystemStopTrackingLocation()
 {
     if (s_location_enabled)
     {
@@ -314,7 +446,7 @@ bool MCSystemGetLocationCalibrationTimeout(int32_t& r_timeout)
 // HEADING SENSEOR
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool start_tracking_heading(bool p_loosely)
+bool MCSystemStartTrackingHeading(bool p_loosely)
 {
     if ([CLLocationManager headingAvailable] == YES)
     {
@@ -335,7 +467,7 @@ static bool start_tracking_heading(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_heading()
+bool MCSystemStopTrackingHeading()
 {
     if (s_heading_enabled)
     {
@@ -390,11 +522,15 @@ static void (^acceleration_update)(CMAccelerometerData *, NSError *) = ^(CMAccel
 		if (error == nil)
 			MCSensorPostChangeMessage(kMCSensorTypeAcceleration);
 		else
-			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);		
+		{
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, *t_error);
+		}
 	}
 };
 
-static bool start_tracking_acceleration(bool p_loosely)
+bool MCSystemStartTrackingAcceleration(bool p_loosely)
 {    
     initialize_core_motion();
     if ([s_motion_manager isAccelerometerAvailable] == YES)
@@ -410,7 +546,7 @@ static bool start_tracking_acceleration(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_acceleration()
+bool MCSystemStopTrackingAcceleration()
 {
     if (s_acceleration_enabled)
     {
@@ -452,11 +588,15 @@ static void (^rotation_rate_update)(CMGyroData *, NSError *) = ^(CMGyroData *gyr
 		if (error == nil)
             MCSensorPostChangeMessage(kMCSensorTypeRotationRate);
 		else
-			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+		{
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, *t_error);
+		}
 	}
 };
 
-static bool start_tracking_rotation_rate(bool p_loosely)
+bool MCSystemStartTrackingRotationRate(bool p_loosely)
 {    
     initialize_core_motion();
     if ([s_motion_manager isGyroAvailable] == YES)
@@ -472,7 +612,7 @@ static bool start_tracking_rotation_rate(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_rotation_rate()
+bool MCSystemStopTrackingRotationRate()
 {
     if (s_rotation_rate_enabled)
     {
@@ -504,7 +644,7 @@ bool MCSystemGetRotationRateReading(MCSensorRotationRateReading &r_reading, bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely)
 {
     switch (p_sensor)
@@ -536,5 +676,5 @@ bool MCSystemStopTrackingSensor(MCSensorType p_sensor)
     }
     return false;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////

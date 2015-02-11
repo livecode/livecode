@@ -1,0 +1,20 @@
+setup
+
+select empty
+
+test the selectedobject is empty
+
+create button
+create field
+
+select button 1 and field 1
+
+test the number of lines in (the selectedobject) is 2
+test the long id of button 1 is among the lines of the selectedobject
+test the long id of field 1 is among the lines of the selectedobject
+
+set the selected of field 1 to false
+
+test the selectedobject is the long id of button 1
+
+teardown

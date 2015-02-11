@@ -1,0 +1,1 @@
+# iOS hard crash when using encyption

@@ -1,0 +1,15 @@
+setup
+
+create card
+
+create card
+
+push card 1
+
+create field
+
+pop card into field 1
+
+test (the long id of card 1 is field 1)
+
+teardown

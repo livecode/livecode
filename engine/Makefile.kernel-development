@@ -9,14 +9,21 @@ SOURCES= \
 	deploy_macosx.cpp deploy_capsule.cpp deploy_sign.cpp deploy_file.cpp \
 	deploy_dmg.cpp bsdiff_build.cpp encodederrors.cpp
 
+MLC_LIST = libkernel-modules.list
+
 KERNEL_DEFINES=\
 	MODE_DEVELOPMENT
 
-src/hashedstrings.cpp: src/lextable.cpp
-	../prebuilt/bin/Revolution.lnx "./hash_strings.rev" "./src/lextable.cpp" "./src/hashedstrings.cpp" "../prebuilt/bin/perfect.lnx"
+../util/perfect/perfect.linux-$(ARCH): ../util/perfect/perfect.c
+	$(CC) ../util/perfect/perfect.c -o ../util/perfect/perfect.linux-$(ARCH)
+
+src/hashedstrings.cpp: src/lextable.cpp ../util/perfect/perfect.linux-$(ARCH)
+#	../prebuilt/bin/Revolution.lnx "./hash_strings.rev" "./src/lextable.cpp" "./src/hashedstrings.cpp" "../prebuilt/bin/perfect.lnx"
+	../util/hash_strings.pl ./src/lextable.cpp ./src/hashedstrings.cpp perfect.linux-$(ARCH)
 
 encodederrors.cpp: src/executionerrors.h src/parseerrors.h
-	../prebuilt/bin/Revolution.lnx "./encode_errors.rev"  "./src" "./src/encodederrors.cpp"
+#	../prebuilt/bin/Revolution.lnx "./encode_errors.rev"  "./src" "./src/encodederrors.cpp"
+	../util/encode_errors.pl ./src ./src/encodederrors.cpp
 
 $(CACHE_DIR)/ide.o: src/hashedstrings.cpp
 

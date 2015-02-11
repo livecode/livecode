@@ -1,0 +1,27 @@
+setup
+
+test statround(1.0001) is 1
+test statround(1.5001) is 2
+
+test statround(-1.0001) is -1
+test statround(-1.5001) is -2
+
+test statround(2.5) is 2
+test statround(3.5) is 4
+
+test statround(-2.5) is -2
+test statround(-3.5) is -4
+
+test statround(1.2345, 3) is 1.234
+test statround(1.2355, 3) is 1.236
+
+test statround(1.2345, 2) is 1.23
+test statround(1.2345, 1) is 1.2
+
+test statround(12345, -1) is 12340
+test statround(12355, -1) is 12360
+
+test statround(12345, -2) is 12300
+test statround(12345, -3) is 12000
+
+teardown

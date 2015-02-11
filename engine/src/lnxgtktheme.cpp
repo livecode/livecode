@@ -275,9 +275,6 @@ static int4 getscrollbarmintracksize()
 	minrect.width = troughBorder * 2 + sliderWidth;
 	minrect.height = stepperSize * n_steppers + stepperSpacing * 2 + troughBorder * 2 + slider_length;
 	int stepper_width = minrect.width;
-	int stepper_height = 0;
-	if(n_steppers > 0)
-		stepper_height = MIN(stepperSize, (minrect.height / n_steppers));
 	if(stepper_width < 1)
 		stepper_width = minrect.width;
 	return stepper_width;
@@ -346,12 +343,6 @@ uint2 MCNativeTheme::getthemeid()
 uint2 MCNativeTheme::getthemefamilyid()
 {
 	return LF_WIN95; //gtk inherits from the win95 theme
-}
-
-
-const char  *MCNativeTheme::getname()
-{
-	return MClnfamstring;
 }
 
 void MCNativeTheme::getscrollbarrects(const MCWidgetInfo & winfo,
@@ -665,7 +656,7 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo,
 			gint xthickness,ythickness;
 			GtkThemeWidgetType  moztype;
 			gint flags = 0 ;
-			GtkWidgetState state = getpartandstate(winfo, moztype, flags);
+			getpartandstate(winfo, moztype, flags);
 			if (moz_gtk_get_widget_border(moztype, &xthickness,
 			                              &ythickness) == MOZ_GTK_SUCCESS)
 			{
@@ -1322,7 +1313,7 @@ void MCNativeTheme::drawTab(MCDC *t_dc,
 Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo & winfo,
                                   const MCRectangle & drect)
 {
-	GC gc ;
+	GdkGC *gc ;
 	
 	MCThemeDrawInfo di ;
 
@@ -1331,7 +1322,7 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo & winfo,
 	
 	static MCRectangle gtkpixrect = {0,0,0,0};
 
-	Display *display = MCdpy;
+	GdkDisplay *display = MCdpy;
 
 	GdkRectangle rect;
 	GdkRectangle cliprect;
@@ -1528,17 +1519,25 @@ MCTheme *MCThemeCreateNative(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "lnxdc.h"
-static XImage *calc_alpha_from_bitmaps ( XImage *t_bm_black, XImage * t_bm_white, uint1 rh = 0, uint1 bh = 0, uint1 gh = 0)
+static GdkPixbuf* calc_alpha_from_pixbufs(GdkPixbuf *p_pb_black, GdkPixbuf *p_pb_white)
 {
-	uint1 *t_black_ptr ;
-	uint1 *t_white_ptr ;
-	uint4 t_black_stride ;
-	uint4 t_white_stride ;
+	guchar* t_black_ptr;
+	guchar* t_white_ptr;
+	int t_black_stride;
+	int t_white_stride;
+    int t_black_channels;
+    int t_white_channels;
 	
-	uint4 t_w , t_h ;
+	int t_w, t_h;
 	
-	t_w = t_bm_black -> width ;
-	t_h = t_bm_black -> height ; 
+	t_w = gdk_pixbuf_get_width(p_pb_black);
+    t_h = gdk_pixbuf_get_height(p_pb_black);
+    
+    t_black_stride = gdk_pixbuf_get_rowstride(p_pb_black);
+    t_white_stride = gdk_pixbuf_get_rowstride(p_pb_white);
+    
+    t_black_channels = gdk_pixbuf_get_n_channels(p_pb_black);
+    t_white_channels = gdk_pixbuf_get_n_channels(p_pb_white);
 	
 	/*
 		Formula for calculating the alpha of the source, by 
@@ -1559,38 +1558,28 @@ static XImage *calc_alpha_from_bitmaps ( XImage *t_bm_black, XImage * t_bm_white
 			As Sc=Dc'b all we need to actually do is recalculate the alpha byte for the black image.
 	*/
 	
-	uint1 rb, rw ;
-	uint1 na ;
-	uint1 a ;
-	uint4 x, y ;
-
-	
-	t_black_stride = t_bm_black -> bytes_per_line ;	
-	t_white_stride = t_bm_white -> bytes_per_line ;
-	
-	bool t_bad;
-	t_bad = false;
+	uint8_t rb, rw;
+	uint8_t na;
+	int x, y;
 	
 	for ( y = 0 ; y < t_h; y ++ )
 	{
 		for ( x = 0 ; x < t_w ; x++ )
 		{	
-						
-			t_white_ptr = (uint1*)t_bm_white -> data + ( t_white_stride * y ) + (x*4) ;
-			t_black_ptr = (uint1*)t_bm_black -> data + ( t_black_stride * y ) + (x*4) ;
-			
+			t_white_ptr = gdk_pixbuf_get_pixels(p_pb_white) + (t_white_stride * y) + (t_white_channels * x);
+            t_black_ptr = gdk_pixbuf_get_pixels(p_pb_black) + (t_black_stride * y) + (t_black_channels * x);
+
 			rb = *(t_black_ptr);
 			rw = *(t_white_ptr);
 			
-			na = (( uint1) ( 255 - rw + rb ) );
-			*(t_black_ptr + 3 ) = na;
-			
+			na = uint8_t(255 - rw + rb);
+			*(t_black_ptr + 3) = na;
 		}
 	}
 	
-	((MCScreenDC*)MCscreen)->destroyimage ( (MCBitmap*)t_bm_white ) ;
+	g_object_unref(p_pb_white);
 	
-	return ( t_bm_black ) ;
+	return p_pb_black;
 }
 	
 static void fill_gdk_drawable(GdkDrawable *p_drawable, GdkColormap *p_colormap, int p_red, int p_green, int p_blue, int p_width, int p_height)
@@ -1609,11 +1598,11 @@ static void fill_gdk_drawable(GdkDrawable *p_drawable, GdkColormap *p_colormap, 
 	g_object_unref(t_gc);
 }
 
-static XImage * drawtheme_calc_alpha ( MCThemeDrawInfo &p_info)
+static GdkPixbuf* drawtheme_calc_alpha (MCThemeDrawInfo &p_info)
 {
-	XImage *t_bm_black ;
-	XImage *t_bm_white ;
-		
+	GdkPixbuf *t_pb_black;
+    GdkPixbuf *t_pb_white;
+    
 	GdkPixmap *t_black ;
 	GdkPixmap *t_white ;
 
@@ -1631,20 +1620,16 @@ static XImage * drawtheme_calc_alpha ( MCThemeDrawInfo &p_info)
 	t_screen_depth = ((MCScreenDC*) MCscreen) -> getdepth();
 	
 	// Create two new pixmaps
-	t_black = gdk_pixmap_new( NULL, t_w, t_h, t_screen_depth);
-	t_white = gdk_pixmap_new( NULL, t_w, t_h, t_screen_depth);
+	t_black = gdk_pixmap_new(NULL, t_w, t_h, t_screen_depth);
+	t_white = gdk_pixmap_new(NULL, t_w, t_h, t_screen_depth);
 	
 	// We need to attach a colourmap to the Drawables in GDK
 	best_vis = gdk_visual_get_best_with_depth(t_screen_depth);
-	cm = gdk_colormap_new( best_vis , False ) ;
-	gdk_drawable_set_colormap( t_black, cm);
-	gdk_drawable_set_colormap( t_white, cm);
+	cm = gdk_colormap_new(best_vis, FALSE) ;
+	gdk_drawable_set_colormap(t_black, cm);
+	gdk_drawable_set_colormap(t_white, cm);
 
-	//gdk_flush();
-	
 	// Render solid black into one and white into the other.
-	//black_and_white_masks ( gdk_x11_drawable_get_xid( t_black ) , gdk_x11_drawable_get_xid(t_white));
-	
 	fill_gdk_drawable(t_black, cm, 0, 0, 0, t_w, t_h);
 	fill_gdk_drawable(t_white, cm, 65535, 65535, 65535, t_w, t_h);
 	
@@ -1658,25 +1643,29 @@ static XImage * drawtheme_calc_alpha ( MCThemeDrawInfo &p_info)
 
 	gdk_flush();
 	
-	// Get the byte data for each of these pixmaps
-	t_bm_black = ((MCScreenDC*)MCscreen) -> getimage ( gdk_x11_drawable_get_xid(t_black), 0, 0, t_w, t_h, False ) ;
-	t_bm_white = ((MCScreenDC*)MCscreen) -> getimage ( gdk_x11_drawable_get_xid(t_white), 0, 0, t_w, t_h, False ) ;
-	
+    // Convert the server-side pixmaps into client-side pixbufs. The black
+    // pixbuf will need to have an alpha channel so that we can fill it in.
+    t_pb_black = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, t_w, t_h);
+    t_pb_white = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, t_w, t_h);
+    t_pb_black = gdk_pixbuf_get_from_drawable(t_pb_black, t_black, NULL, 0, 0, 0, 0, t_w, t_h);
+    t_pb_white = gdk_pixbuf_get_from_drawable(t_pb_white, t_white, NULL, 0, 0, 0, 0, t_w, t_h);
+    
 	// Calculate the alpha from these two bitmaps --- the t_bm_black image now has full ARGB
-	calc_alpha_from_bitmaps ( t_bm_black, t_bm_white ) ;
+    // Note that this also frees the t_pb_white pixbuf
+	calc_alpha_from_pixbufs(t_pb_black, t_pb_white);
 	
 	// clean up.
-	g_object_unref( t_black ) ;
-	g_object_unref( t_white ) ;
-	g_object_unref( cm ) ;
+	g_object_unref(t_black);
+	g_object_unref(t_white);
+	g_object_unref(cm);
 		
-	return ( t_bm_black ) ;
+	return t_pb_black;
 }
 
 bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info)
 {
 	MCXImageCacheNode *cache_node = NULL ;
-	MCBitmap * t_argb_image ;
+	GdkPixbuf* t_argb_image ;
 	bool t_cached ;
 	
     MCThreadMutexLock(MCthememutex);
@@ -1692,16 +1681,15 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	else
 	{
 		// Calculate the alpha for the rendered widget, by rendering against white & black.
-		t_argb_image = (MCBitmap*)drawtheme_calc_alpha ( *p_info ) ;
-		t_cached = MCimagecache -> add_to_cache ( t_argb_image, *p_info ) ;
-		
+		t_argb_image = drawtheme_calc_alpha (*p_info) ;
+		t_cached = MCimagecache -> add_to_cache (t_argb_image, *p_info) ;
 	}
 
 	MCGRaster t_raster;
-	t_raster.width = t_argb_image->width;
-	t_raster.height = t_argb_image->height;
-	t_raster.stride = t_argb_image->bytes_per_line;
-	t_raster.pixels = t_argb_image->data;
+	t_raster.width = gdk_pixbuf_get_width(t_argb_image);
+	t_raster.height = gdk_pixbuf_get_height(t_argb_image);
+	t_raster.stride = gdk_pixbuf_get_rowstride(t_argb_image);
+	t_raster.pixels = gdk_pixbuf_get_pixels(t_argb_image);
 	t_raster.format = kMCGRasterFormat_ARGB;
 	
 	MCGRectangle t_dest;
@@ -1715,7 +1703,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	MCGContextDrawPixels(p_context, t_raster, t_dest, kMCGImageFilterMedium);
 	
 	if (!t_cached)
-		((MCScreenDC*)MCscreen)->destroyimage(t_argb_image);
+		g_object_unref(t_argb_image);
 	
     MCThreadMutexUnlock(MCthememutex);
     

@@ -1,0 +1,1 @@
+Number of controls of card returns wrong value if given a card id

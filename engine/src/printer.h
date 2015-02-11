@@ -47,14 +47,16 @@ enum MCPrinterResult
 
 enum MCPrinterLinkType
 {
-	kMCPrinterLinkUnspecified,
-	kMCPrinterLinkAnchor,
-	kMCPrinterLinkURI
+	kMCPrinterLinkUnspecified = 0,
+	kMCPrinterLinkAnchor = 1,
+	kMCPrinterLinkURI = 2,
 };
 
 class MCPrinterDevice
 {
 public:
+	virtual ~MCPrinterDevice(void) {};
+
 	// Return a descriptive string of the last printer error that occured. This
 	// call should return NULL if ERROR has not been returned by any method of
 	// the object.
@@ -159,10 +161,14 @@ enum MCPrinterOutputType
 typedef uint4 MCPrinterFeatureSet;
 enum
 {
-	PRINTER_FEATURE_COLLATE = 1 << 0,
-	PRINTER_FEATURE_COPIES = 1 << 1,
-	PRINTER_FEATURE_COLOR = 1 << 2,
-	PRINTER_FEATURE_DUPLEX = 1 << 3
+	PRINTER_FEATURE_COLLATE_BIT = 0,
+	PRINTER_FEATURE_COLLATE = 1 << PRINTER_FEATURE_COLLATE_BIT,
+	PRINTER_FEATURE_COPIES_BIT = 1,
+	PRINTER_FEATURE_COPIES = 1 << PRINTER_FEATURE_COPIES_BIT,
+	PRINTER_FEATURE_COLOR_BIT = 2,
+	PRINTER_FEATURE_COLOR = 1 << PRINTER_FEATURE_COLOR_BIT,
+	PRINTER_FEATURE_DUPLEX_BIT = 3,
+	PRINTER_FEATURE_DUPLEX = 1 << PRINTER_FEATURE_DUPLEX_BIT
 };
 
 typedef int4 MCPrinterPageRangeCount;
@@ -208,31 +214,31 @@ public:
 	void LayoutCardSequence(MCStack *p_stack, uint32_t p_number_cards, const MCRectangle *p_src_rect);
 	void LayoutCard(MCCard *p_card, const MCRectangle *p_rect);
 
-	void MakeAnchor(const char *name, int2 x, int2 y);
-	void MakeLink(const char *destination, const MCRectangle& area, MCPrinterLinkType type);
-	void MakeBookmark(const char *title, int2 x, int2 y, uint32_t level, bool closed);
+	void MakeAnchor(MCStringRef name, int2 x, int2 y);
+	void MakeLink(MCStringRef destination, const MCRectangle& area, MCPrinterLinkType type);
+	void MakeBookmark(MCStringRef title, int2 x, int2 y, uint32_t level, bool closed);
 
 	void Render(MCCard *p_card, const MCRectangle& p_src, const MCRectangle& p_dst);
 	
-	const char *ChoosePrinter(bool p_window_modal);
-	const char *ChoosePaper(bool p_window_modal);
+	bool ChoosePrinter(bool p_window_modal, MCStringRef &r_result);
+	bool ChoosePaper(bool p_window_modal, MCStringRef &r_result);
 
 	// Device configuration properties
 	//
-	void SetDeviceName(const char *p_name);
+	void SetDeviceName(MCStringRef p_name);
 	const char *GetDeviceName(void);
 
-	void SetDeviceSettings(const MCString& p_settings);
-	MCString CopyDeviceSettings(void);
+	void SetDeviceSettings(MCDataRef p_settings);
+	bool CopyDeviceSettings(MCDataRef &r_settings);
 
-	void SetDeviceOutput(MCPrinterOutputType p_type, const char *p_location);
+	void SetDeviceOutput(MCPrinterOutputType p_type, MCStringRef p_location);
 	MCPrinterOutputType GetDeviceOutputType(void) const;
 	const char *GetDeviceOutputLocation(void) const;
 	
-	void SetDeviceCommand(const char *p_command);
+	void SetDeviceCommand(MCStringRef p_command);
 	const char *GetDeviceCommand(void) const;
 	
-	void SetDeviceFontTable(const char *p_font_table);
+	void SetDeviceFontTable(MCStringRef p_font_table);
 	const char *GetDeviceFontTable(void) const;
 	
 	void SetDeviceFeatures(MCPrinterFeatureSet p_features);
@@ -269,7 +275,7 @@ public:
 	void SetJobCollate(bool p_collate);
 	bool GetJobCollate(void) const;
 	
-	void SetJobName(const char *p_name);
+	void SetJobName(MCStringRef(p_name));
 	const char *GetJobName(void) const;
 	
 	void SetJobDuplex(MCPrinterDuplexMode p_mode);
@@ -317,13 +323,13 @@ protected:
 	// for the default system printer.
 	// If the printer is unknown or there is no default printer return false
 	//
-	virtual bool DoReset(const char *p_name) = 0;
+	virtual bool DoReset(MCStringRef p_name) = 0;
 
 	// Reset the printer properties to those held in the p_settings
 	// string.
 	// If the printer is unknown, return false.
 	//
-	virtual bool DoResetSettings(const MCString& p_settings) = 0;
+	virtual bool DoResetSettings(MCDataRef p_settings) = 0;
 
 	// Return the name of the currently selected printer - this should
 	// be stored from a previous call to DoReset/DoResetSettings.
@@ -358,7 +364,7 @@ protected:
 	// note that a valid device object must be returned regardless of whether
 	// a printer error, or cancellation occured.
 	//
-	virtual MCPrinterResult DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device) = 0;
+	virtual MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device) = 0;
 
 	// End the current print job. This call will be made regardless of the error
 	// or cancellation state of the device object.
@@ -380,7 +386,7 @@ private:
 		STATUS_ERROR
 	};
 
-	void SetStatus(uint32_t p_status, const char *p_error = NULL);
+	void SetStatus(uint32_t p_status, MCStringRef p_error = NULL);
 	void SetStatusFromResult(MCPrinterResult p_result);
 	void SetResult(void);
 
@@ -389,9 +395,9 @@ private:
 	void DoPageBreak(void);
 	void DoLayout(MCCard *p_first_card, uint32_t p_number_of_cards, const MCRectangle& p_src_rect, bool p_marked);
 	void DoPrint(MCCard *p_card, const MCRectangle& p_src, const MCRectangle& p_dst);
-	void DoMakeAnchor(const char *name, int2 x, int2 y);
-	void DoMakeLink(const char *destination, const MCRectangle& area, MCPrinterLinkType type);
-	void DoMakeBookmark(const char *title, int2 x, int2 y, uint32_t level, bool closed);
+	void DoMakeAnchor(MCStringRef name, int2 x, int2 y);
+	void DoMakeLink(MCStringRef destination, const MCRectangle& area, MCPrinterLinkType type);
+	void DoMakeBookmark(MCStringRef title, int2 x, int2 y, uint32_t level, bool closed);
 	
 	void ResetLayout(void);
 	bool CalculateLayout(const MCRectangle& p_src, MCRectangle& p_dst);

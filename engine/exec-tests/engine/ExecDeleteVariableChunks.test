@@ -1,0 +1,11 @@
+setup
+
+local tVar
+
+put "foo,bar,baz" into tVar
+
+delete item 2 to 3 of tVar
+
+test tVar is "foo"
+
+teardown

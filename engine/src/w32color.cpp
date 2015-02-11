@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -24,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32dc.h"
 
+#include "color.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,11 +33,19 @@ struct MCWindowsColorTransform
 	bool is_cmyk;
 };
 
-static void ciexy_to_xyz(double x, double y, CIEXYZ& r_xyz)
+static inline uint32_t float_to_fixed2_30(float p_value)
 {
-	r_xyz . ciexyzX = (uint32_t)((x / y) * (1 << 30));
-	r_xyz . ciexyzY = (uint32_t)(1 * (1 << 30));
-	r_xyz . ciexyzZ = (uint32_t)((1.0 - x - y) * (1 << 30));
+	return (uint32_t)((1 << 30) * p_value);
+}
+
+static inline CIEXYZ CIEXYZMake(MCGFloat x, MCGFloat y, MCGFloat z)
+{
+	CIEXYZ t_cie;
+	t_cie.ciexyzX = float_to_fixed2_30(x);
+	t_cie.ciexyzY = float_to_fixed2_30(y);
+	t_cie.ciexyzZ = float_to_fixed2_30(z);
+
+	return t_cie;
 }
 
 MCColorTransformRef MCScreenDC::createcolortransform(const MCColorSpaceInfo& p_info)
@@ -51,23 +59,43 @@ MCColorTransformRef MCScreenDC::createcolortransform(const MCColorSpaceInfo& p_i
 	t_is_cmyk = false;
 	if (p_info . type == kMCColorSpaceCalibratedRGB)
 	{
-		// TODO - This isn't quite right, disable for now
-#if 0
-		LOGCOLORSPACEA t_colorspace;
-		t_colorspace . lcsSignature = LCS_SIGNATURE;
-		t_colorspace . lcsVersion = 0x400;
-		t_colorspace . lcsSize = sizeof(LOGCOLORSPACEA);
-		t_colorspace . lcsCSType = LCS_CALIBRATED_RGB;
-		t_colorspace . lcsIntent = LCS_GM_GRAPHICS;
-		ciexy_to_xyz(p_info . calibrated . red_x, p_info . calibrated . red_y, t_colorspace . lcsEndpoints.ciexyzRed);
-		ciexy_to_xyz(p_info . calibrated . green_x, p_info . calibrated . green_y, t_colorspace . lcsEndpoints.ciexyzGreen);
-		ciexy_to_xyz(p_info . calibrated . blue_x, p_info . calibrated . blue_y, t_colorspace . lcsEndpoints.ciexyzBlue);
-		t_colorspace . lcsGammaRed = (uint32_t)(p_info . calibrated . gamma * 0x10000);
-		t_colorspace . lcsGammaGreen = (uint32_t)(p_info . calibrated . gamma * 0x10000);
-		t_colorspace . lcsGammaBlue = (uint32_t)(p_info . calibrated . gamma * 0x10000);
-		t_colorspace . lcsFilename[0] = '\0';
-		t_transform = CreateColorTransformA(&t_colorspace, m_srgb_profile, nil, 0);
-#endif
+		// IM-2014-09-26: [[ Bug 13208 ]] Convert RGB xy endpoints to XYZ transform matrix
+		MCColorVector3 t_white;
+		MCColorMatrix3x3 t_matrix;
+
+		t_success = MCColorTransformLinearRGBToXYZ(
+			MCColorVector2Make(p_info.calibrated.white_x, p_info.calibrated.white_y),
+			MCColorVector2Make(p_info.calibrated.red_x, p_info.calibrated.red_y),
+			MCColorVector2Make(p_info.calibrated.green_x, p_info.calibrated.green_y),
+			MCColorVector2Make(p_info.calibrated.blue_x, p_info.calibrated.blue_y),
+			t_white, t_matrix);
+
+		if (t_success)
+		{
+			uint32_t t_gamma;
+			// gamma is specified as 8.8 fixed point shifted by 8 bits
+			t_gamma = (0xFFFF & (uint32_t)((1 << 8) / p_info.calibrated.gamma)) << 8;
+
+			LOGCOLORSPACEA t_colorspace;
+			t_colorspace . lcsSignature = LCS_SIGNATURE;
+			t_colorspace . lcsVersion = 0x400;
+			t_colorspace . lcsSize = sizeof(LOGCOLORSPACEA);
+			t_colorspace . lcsCSType = LCS_CALIBRATED_RGB;
+			t_colorspace . lcsIntent = LCS_GM_GRAPHICS;
+
+			// Read off channel XYZ from the matrix columns
+			t_colorspace.lcsEndpoints.ciexyzRed = CIEXYZMake(t_matrix.m[0][0], t_matrix.m[1][0], t_matrix.m[2][0]);
+			t_colorspace.lcsEndpoints.ciexyzGreen = CIEXYZMake(t_matrix.m[0][1], t_matrix.m[1][1], t_matrix.m[2][1]);
+			t_colorspace.lcsEndpoints.ciexyzBlue = CIEXYZMake(t_matrix.m[0][2], t_matrix.m[1][2], t_matrix.m[2][2]);
+
+			t_colorspace . lcsGammaRed = t_gamma;
+			t_colorspace . lcsGammaGreen = t_gamma;
+			t_colorspace . lcsGammaBlue = t_gamma;
+			t_colorspace . lcsFilename[0] = '\0';
+			t_transform = CreateColorTransformA(&t_colorspace, m_srgb_profile, nil, 0);
+
+			t_success = t_transform != nil;
+		}
 	}
 	else if (p_info . type == kMCColorSpaceStandardRGB)
 	{

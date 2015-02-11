@@ -67,7 +67,7 @@ struct MCTextBlock
 	int4 text_shift;
 
 	MCNameRef text_link;
-	MCNameRef text_metadata;
+    MCStringRef text_metadata;
 
 	bool string_native;
 	const uint2 *string_buffer;
@@ -94,7 +94,7 @@ struct MCTextParagraph
 	uint32_t background_color;
 	uint32_t border_color;
 	
-	MCNameRef metadata;
+    MCStringRef metadata;
 };
 
 // MW-2012-03-14: [[ RtfParaStyles ]] The convert callback now takes a 'paragraph' style record
@@ -103,7 +103,7 @@ typedef bool (*MCTextConvertCallback)(void *p_context, const MCTextParagraph *p_
 
 bool MCTextEncodeToUnicode(MCTextEncoding p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used);
 
-void MCTextRunnify(const uint2 *p_unicode, uint4 p_unicode_length, uint1 *p_native, uint4& r_unicode_used, uint4& r_native_made);
+void MCTextRunnify(const unichar_t *p_unicode, uint4 p_unicode_length, char_t *p_native, uint4& r_unicode_used, uint4& r_native_made);
 
 void MCTextSetDefaultEncoding(uint4 p_encoding);
 uint4 MCTextGetDefaultEncoding(void);

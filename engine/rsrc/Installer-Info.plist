@@ -9,7 +9,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>$(BUILD_LONG_VERSION), Copyright 2000-2013 Runtime Revolution Ltd.</string>
 	<key>CFBundleIconFile</key>
-	<string>Installer.icns</string>
+	<string>installer.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.runrev.livecode.installer</string>
 	<key>CFBundleInfoDictionaryVersion</key>

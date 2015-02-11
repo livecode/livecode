@@ -1,0 +1,9 @@
+setup
+if the platform is "win32" then
+   test the fontlanguage of "Aharoni" is "Hebrew"
+   test the fontlanguage of "System" is "ANSI"
+else
+   -- TODO - test font languages on other platforms
+   test false
+end if
+teardown

@@ -14,7 +14,6 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-
 #include "prefix.h"
 
 #include "globdefs.h"
@@ -22,9 +21,8 @@
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
-#include "core.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "font.h"
 #include "sellst.h"
@@ -32,7 +30,6 @@
 #include "stacklst.h"
 #include "card.h"
 #include "field.h"
-#include "player-platform.h"
 #include "aclip.h"
 #include "mcerror.h"
 #include "param.h"
@@ -45,6 +42,10 @@
 #include "dispatch.h"
 
 #include "graphics_util.h"
+
+#include "player-platform.h"
+
+#include "exec-interface.h"
 
 //////////////////////////////////////////////////////////////////////
 
@@ -101,11 +102,6 @@ static MCColor controllercolors[] = {
     
     
 };
-
-inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
-{
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
-}
 
 inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
 {
@@ -412,6 +408,7 @@ public:
         return True;
     }
     
+    // PM-2014-10-24 [[ Bug 13751 ]] Make sure the correct mup() is called on the volume selector
     Boolean mup(uint2 which, bool release)
     {
         m_grabbed_part = kMCPlayerControllerPartUnknown;
@@ -517,6 +514,7 @@ public:
         m_font = nil;
         
         m_player = nil;
+        m_grabbed_part = -1;
     }
     
     ~MCPlayerRatePopup(void)
@@ -732,6 +730,9 @@ public:
     
     Boolean mup(uint2 which, bool release)
     {
+        // PM-2014-09-30: [[ Bug 13119 ]] Make sure a playRateChanged message is sent when the mouse is up/released, but not when creating the ratepopup
+        if (m_grabbed_part != -1)
+            m_player -> timer(MCM_play_rate_changed,nil);
         m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;
     }
@@ -823,7 +824,7 @@ MCPlayer::MCPlayer()
 	flags |= F_TRAVERSAL_ON;
 	nextplayer = NULL;
 	rect.width = rect.height = 128;
-	filename = NULL;
+	filename = MCValueRetain(kMCEmptyString);
 	istmpfile = False;
 	scale = 1.0;
 	rate = 1.0;
@@ -846,7 +847,7 @@ MCPlayer::MCPlayer()
     selectedareacolor . blue = 43 * 257;
     
 	disposable = istmpfile = False;
-	userCallbackStr = NULL;
+	userCallbackStr = MCValueRetain(kMCEmptyString);
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
     
@@ -867,12 +868,16 @@ MCPlayer::MCPlayer()
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
+    
+    // PM-2104-10-14: [[ Bug 13569 ]] Make sure changes to player in preOpenCard are not visible
+    m_is_attached = false;
+    m_should_attach = false;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
 	nextplayer = NULL;
-	filename = strclone(sref.filename);
+	filename = MCValueRetain(sref.filename);
 	istmpfile = False;
 	scale = 1.0;
 	rate = sref.rate;
@@ -883,7 +888,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     selectedareacolor = sref.selectedareacolor;
 	endtime = sref.endtime;
 	disposable = istmpfile = False;
-	userCallbackStr = strclone(sref.userCallbackStr);
+	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
     
@@ -933,8 +938,8 @@ MCPlayer::~MCPlayer()
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
     
-	delete filename;
-	delete userCallbackStr;
+	MCValueRelease(filename);
+	MCValueRelease(userCallbackStr);
 }
 
 Chunk_term MCPlayer::gettype() const
@@ -954,8 +959,17 @@ MCRectangle MCPlayer::getactiverect(void)
 
 void MCPlayer::open()
 {
-	MCControl::open();
-	prepare(MCnullstring);
+    MCControl::open();
+    prepare(kMCEmptyString);
+    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+    
+    if (m_platform_player != nil && !m_is_attached && m_should_attach)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+        m_should_attach = false;
+    }
 }
 
 void MCPlayer::close()
@@ -970,17 +984,28 @@ void MCPlayer::close()
     
     if (s_volume_popup != nil)
         s_volume_popup -> close();
+    
+    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
+    if (m_platform_player != nil && m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+    }
+    // PM-2014-11-03: [[ Bug 13917 ]] m_platform_player should be recreated when reopening a recently closed stack, to take into account if the value of dontuseqt has changed in the meanwhile
+    if (m_platform_player != nil)
+        m_platform_player = nil;
 }
 
-Boolean MCPlayer::kdown(const char *string, KeySym key)
+Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
 {
     if ((MCmodifierstate & MS_SHIFT) != 0)
-        handle_shift_kdown(string, key);
+        handle_shift_kdown(p_string, key);
     else
-        handle_kdown(string, key);
+        handle_kdown(p_string, key);
 }
 
-Boolean MCPlayer::kup(const char *string, KeySym key)
+Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 {
     return False;
 }
@@ -1020,7 +1045,7 @@ Boolean MCPlayer::mdown(uint2 which)
             switch (getstack()->gettool(this))
 		{
             case T_BROWSE:
-                message_with_args(MCM_mouse_down, "1");
+                message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
                 // PM-2014-07-16: [[ Bug 12817 ]] Create selection when click and drag on the well while shift key is pressed
                 if ((MCmodifierstate & MS_SHIFT) != 0)
                     handle_shift_mdown(which);
@@ -1040,11 +1065,11 @@ Boolean MCPlayer::mdown(uint2 which)
 		}
             break;
 		case Button2:
-            if (message_with_args(MCM_mouse_down, "2") == ES_NORMAL)
+            if (message_with_valueref_args(MCM_mouse_down, MCSTR("2")) == ES_NORMAL)
                 return True;
             break;
 		case Button3:
-            message_with_args(MCM_mouse_down, "3");
+            message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
             break;
 	}
 	return True;
@@ -1069,9 +1094,9 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 		{
             case T_BROWSE:
                 if (!p_release && MCU_point_in_rect(rect, mx, my))
-                    message_with_args(MCM_mouse_up, "1");
+                    message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
                 else
-                    message_with_args(MCM_mouse_release, "1");
+                    message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
                 MCscreen -> cancelmessageobject(this, MCM_internal);
                 handle_mup(which);
                 break;
@@ -1099,8 +1124,9 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 
 Boolean MCPlayer::doubledown(uint2 which)
 {
-    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown 
-    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown
+    // PM-2014-10-22: [[ Bug 13752 ]] If on edit mode, treat a doubledown on the controller as a MCControl::doubledown
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown || (which == Button1 && getstack() -> gettool(this) == T_POINTER))
         return MCControl::doubledown(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
     {
@@ -1115,7 +1141,8 @@ Boolean MCPlayer::doubledown(uint2 which)
 Boolean MCPlayer::doubleup(uint2 which)
 {
     // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubleup on the controller as a single mup
-    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+    // PM-2014-10-22: [[ Bug 13752 ]] If on edit mode, treat a doubledown on the controller as a MCControl::doubledown
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown || (which == Button1 && getstack() -> gettool(this) == T_POINTER))
         return MCControl::doubleup(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
         handle_mup(which);
@@ -1186,7 +1213,8 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
     MCControl::timer(mptr, params);
 }
 
-Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 i = 0;
 	switch (which)
@@ -1364,11 +1392,13 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             break;
 #endif /* MCPlayer::getprop */
         default:
-            return MCControl::getprop(parid, which, ep, effective);
+            return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -1387,11 +1417,29 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 playstop();
                 starttime = MAXUINT4; //clears the selection
                 endtime = MAXUINT4;
+                
                 if (data != MCnullmcstring)
-                    filename = data.clone();
+                {
+                    // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+                    char *t_filename = data.clone();
+                    resolveplayerfilename(t_filename, filename);
+                }
                 prepare(MCnullstring);
+                
+                // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
+                // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+                if (m_platform_player != nil && !m_is_attached && m_should_attach)
+                {
+                    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+                    m_is_attached = true;
+                    m_should_attach = false;
+                }
+               
                 dirty = wholecard = True;
             }
+            // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
+            else if (data == filename && hasinvalidfilename())
+                MCresult->sets("could not create movie reference");
             break;
         case P_DONT_REFRESH:
             if (!MCU_matchflags(data, flags, F_DONT_REFRESH, dirty))
@@ -1702,6 +1750,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	}
 	return ES_NORMAL;
 }
+#endif
 
 // MW-2011-09-23: Make sure we sync the buffer state at this point, rather than
 //   during drawing.
@@ -1732,7 +1781,7 @@ IO_stat MCPlayer::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	return defaultextendedload(p_stream, p_version, p_remaining);
 }
@@ -1746,7 +1795,9 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
+        
+        // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
@@ -1755,19 +1806,23 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_int4((int4)(rate / 10.0 * MAXINT4),
 		                          stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_string(userCallbackStr, stream)) != IO_NORMAL)
+        
+        // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_stringref_new(userCallbackStr, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	return savepropsets(stream);
 }
 
-IO_stat MCPlayer::load(IO_handle stream, const char *version)
+IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
     
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_read_string(filename, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
+        
+        // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		return stat;
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
@@ -1777,9 +1832,11 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
 		return stat;
 	rate = (real8)trate * 10.0 / MAXINT4;
-	if ((stat = IO_read_string(userCallbackStr, stream)) != IO_NORMAL)
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }
 
 // MW-2011-09-23: Ensures the buffering state is consistent with current flags
@@ -1800,10 +1857,11 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 
 // MW-2007-08-14: [[ Bug 1949 ]] On Windows ensure we load and unload QT if not
 //   currently in use.
-void MCPlayer::getversion(MCExecPoint &ep)
+bool MCPlayer::getversion(MCStringRef& r_string)
 {
-    extern void MCQTGetVersion(MCExecPoint& ep);
-    MCQTGetVersion(ep);
+    extern void MCQTGetVersion(MCStringRef &r_version);
+    MCQTGetVersion(r_string);
+    return true;
 }
 
 void MCPlayer::freetmp()
@@ -1811,10 +1869,10 @@ void MCPlayer::freetmp()
 	if (istmpfile)
 	{
 		MCS_unlink(filename);
-		delete filename;
-		filename = NULL;
+		MCValueAssign(filename, kMCEmptyString);
 	}
 }
+
 uint4 MCPlayer::getmovieloadedtime()
 {
     uint4 loadedtime;
@@ -2025,7 +2083,7 @@ void MCPlayer::showcontroller(Boolean show)
 	}
 }
 
-Boolean MCPlayer::prepare(const char *options)
+Boolean MCPlayer::prepare(MCStringRef options)
 {
     // For osversion < 10.8 we have to have QT initialized.
     if (MCmajorosversion < 0x1080)
@@ -2036,27 +2094,39 @@ Boolean MCPlayer::prepare(const char *options)
     }
 
 	Boolean ok = False;
+    m_should_attach = false;
     
-	if (state & CS_PREPARED)
-		return True;
-    
-    // Fixes the issue of invisible player being created by script
-	if (!hasfilename())
+    if (state & CS_PREPARED)
         return True;
-    
-	if (!opened)
+
+   	if (!opened)
 		return False;
     
 	if (m_platform_player == nil)
 		MCPlatformCreatePlayer(m_platform_player);
     
-	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
+	if (MCStringBeginsWithCString(filename, (const char_t*)"https:", kMCStringOptionCompareCaseless)
+            // SN-2014-08-14: [[ Bug 13178 ]] Check if the sentence starts with 'http:' instead of 'https'
+            || MCStringBeginsWithCString(filename, (const char_t*)"http:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"ftp:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"file:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"rtsp:", kMCStringOptionCompareCaseless))
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &filename);
 	else
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
 	
+    if (!hasfilename())
+        return True;
+    
 	MCRectangle t_movie_rect;
 	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
+    
+    // PM-2014-12-17: [[ Bug 14233 ]] If an invalid filename is used then keep the previous dimensions of the player rect instead of displaying only the controller
+    if (t_movie_rect . height == 0 && t_movie_rect . width == 0)
+    {
+        MCresult->sets("could not create movie reference");
+        return False;
+    }
 	
 	MCRectangle trect = resize(t_movie_rect);
 	
@@ -2096,13 +2166,24 @@ Boolean MCPlayer::prepare(const char *options)
 	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-	MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-	
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+        m_should_attach = true;
+    }
+    else
+        m_should_attach = true;
+    	
 	layer_redrawall();
 	
 	setloudness();
 	
 	MCresult -> clear(False);
+    
+    // PM-2014-12-17: [[ Bug 14232 ]] Update the result in case a filename is invalid or the file is corrupted
+    if (hasinvalidfilename())
+        MCresult->sets("could not create movie reference");
 	
 	ok = True;
 	
@@ -2114,10 +2195,46 @@ Boolean MCPlayer::prepare(const char *options)
 	return ok;
 }
 
-Boolean MCPlayer::playstart(const char *options)
+// PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+void MCPlayer::attachplayer()
 {
-	if (!prepare(options))
+    if (m_platform_player == nil)
+        return;
+    
+    // Make sure we attach the player only if it was previously detached by detachplayer().
+    if (!m_is_attached && m_should_attach)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+        m_should_attach = false;
+    }
+}
+
+// PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+void MCPlayer::detachplayer()
+{
+    if (m_platform_player == nil)
+        return;
+    
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+        m_should_attach = true;
+    }
+}
+
+Boolean MCPlayer::playstart(MCStringRef options)
+{
+	if (!prepare(options) || !hasfilename())
 		return False;
+    
+    // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
+    if (m_platform_player != nil && !m_is_attached)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+    }
 	playpause(False);
 	return True;
 }
@@ -2197,13 +2314,15 @@ Boolean MCPlayer::playstop()
     
     m_modify_selection_while_playing = false;
 	
-	if (m_platform_player != nil)
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
+	if (m_platform_player != nil && m_is_attached)
 	{
 		MCPlatformStopPlayer(m_platform_player);
 
 		needmessage = getduration() > getmoviecurtime();
 		
 		MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
 	}
     
     redrawcontroller();
@@ -2240,11 +2359,16 @@ Boolean MCPlayer::playstop()
 }
 
 
-void MCPlayer::setfilename(const char *vcname,
-                           char *fname, Boolean istmp)
+void MCPlayer::setfilename(MCStringRef vcname,
+                           MCStringRef fname, Boolean istmp)
 {
-	setname_cstring(vcname);
-	filename = fname;
+	// AL-2014-05-27: [[ Bug 12517 ]] Incoming strings can be nil
+    MCNewAutoNameRef t_vcname;
+    if (vcname != nil)
+        MCNameCreate(vcname, &t_vcname);
+    else
+        t_vcname = kMCEmptyName;
+	filename = MCValueRetain(fname != nil ? fname : kMCEmptyString);
 	istmpfile = istmp;
 	disposable = True;
 }
@@ -2302,6 +2426,7 @@ void MCPlayer::setloudness()
 			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
 }
 
+#ifdef LEGACY_EXEC
 void MCPlayer::gettracks(MCExecPoint &ep)
 {
 	ep . clear();
@@ -2329,7 +2454,9 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 			}
 		}
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCPlayer::getenabledtracks(MCExecPoint &ep)
 {
 	ep.clear();
@@ -2350,8 +2477,9 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 			}
 		}
 }
+#endif
 
-Boolean MCPlayer::setenabledtracks(const MCString &s)
+Boolean MCPlayer::setenabledtracks(MCStringRef s)
 {
 	if (getstate(CS_PREPARED))
 		if (m_platform_player != nil)
@@ -2364,31 +2492,36 @@ Boolean MCPlayer::setenabledtracks(const MCString &s)
 				t_enabled = false;
 				MCPlatformSetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 			}
-			char *data = s.clone();
-			char *sptr = data;
-			while (*sptr)
-			{
-				char *tptr;
-				if ((tptr = strchr(sptr, '\n')) != NULL)
-					*tptr++ = '\0';
-				else
-					tptr = &sptr[strlen(sptr)];
-				if (strlen(sptr) != 0)
+			
+            uindex_t t_si, t_ei;
+            t_si = t_ei = 0;
+            
+            while (t_ei < MCStringGetLength(s))
+            {
+                MCAutoStringRef t_track;
+                
+                if (!MCStringFirstIndexOfChar(s, '\n', t_si, kMCStringOptionCompareExact, t_ei))
+                    t_ei = MCStringGetLength(s);
+                
+                /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(t_si, t_ei - t_si), &t_track);
+				
+                if (!MCStringIsEmpty(*t_track))
 				{
 					uindex_t t_index;
-					if (!MCPlatformFindPlayerTrackWithId(m_platform_player, strtol(sptr, NULL, 10), t_index))
-					{
-						delete data;
+					MCAutoNumberRef t_id;
+                    
+                    if (!MCNumberParse(*t_track, &t_id) ||
+                        !MCPlatformFindPlayerTrackWithId(m_platform_player, MCNumberFetchAsUnsignedInteger(*t_id), t_index))
 						return False;
-					}
 					
 					bool t_enabled;
 					t_enabled = true;
 					MCPlatformSetPlayerTrackProperty(m_platform_player, t_index, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 				}
-				sptr = tptr;
+				t_ei++;
+				t_si = t_ei;
 			}
-			delete data;
+            
 			MCRectangle t_movie_rect;
 			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
 			MCRectangle trect = resize(t_movie_rect);
@@ -2399,19 +2532,6 @@ Boolean MCPlayer::setenabledtracks(const MCString &s)
     
 	return True;
 }
-
-void MCPlayer::getnodes(MCExecPoint &ep)
-{
-	ep.clear();
-	// COCOA-TODO: MCPlayer::getnodes();
-}
-
-void MCPlayer::gethotspots(MCExecPoint &ep)
-{
-	ep.clear();
-	// COCOA-TODO: MCPlayer::gethotspots();
-}
-
 
 MCRectangle MCPlayer::resize(MCRectangle movieRect)
 {
@@ -2462,18 +2582,241 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 	return trect;
 }
 
+
+void MCPlayer::setcallbacks(MCStringRef p_callbacks)
+{
+    MCValueAssign(userCallbackStr, p_callbacks);
+    SynchronizeUserCallbacks();
+}
+
+void MCPlayer::setmoviecontrollerid(integer_t p_id)
+{    
+}
+
+integer_t MCPlayer::getmoviecontrollerid()
+{
+    // COCOA-TODO
+    return (integer_t)NULL;
+}
+
+integer_t MCPlayer::getmediatypes()
+{
+    if (m_platform_player != nil)
+    {
+        MCPlatformPlayerMediaTypes t_types;
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMediaTypes, kMCPlatformPropertyTypePlayerMediaTypes, &t_types);
+
+        return t_types;
+    }
+    
+    return 0;
+}
+
+uinteger_t MCPlayer::getcurrentnode()
+{
+    uint2 i = 0;
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &i);
+    return i;
+}
+
+bool MCPlayer::changecurrentnode(uinteger_t p_node_id)
+{
+    if (m_platform_player != nil)
+    {
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &p_node_id);
+        return true;
+    }
+    return false;
+}
+
+real8 MCPlayer::getpan()
+{
+    real8 pan = 0.0;
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+    return pan;
+}
+
+bool MCPlayer::changepan(real8 pan)
+{
+    if (m_platform_player != nil)
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+    
+    return isbuffering();
+}
+
+real8 MCPlayer::gettilt()
+{
+    real8 tilt = 0.0;
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+    return tilt;
+}
+
+bool MCPlayer::changetilt(real8 tilt)
+{
+    if (m_platform_player != nil)
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+    return isbuffering();
+}
+
+real8 MCPlayer::getzoom()
+{
+    real8 zoom = 0.0;
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+    return zoom;
+}
+
+bool MCPlayer::changezoom(real8 zoom)
+{
+    if (m_platform_player != nil)
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+    return isbuffering();
+}
+
+void MCPlayer::gettracks(MCStringRef &r_tracks)
+{
+    if (getstate(CS_PREPARED) && m_platform_player != nil)
+	{
+		uindex_t t_track_count;
+		MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+        MCAutoListRef t_tracks_list;
+        /* UNCHECKED */ MCListCreateMutable('\n', &t_tracks_list);
+        
+        for(uindex_t i = 0; i < t_track_count; i++)
+        {
+            MCAutoStringRef t_track;
+            MCAutoStringRef t_name;
+            
+            uint32_t t_id;
+            uint32_t t_offset, t_duration;
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            /* UNCHECKED */ MCStringFormat(&t_track, "%u,%@,%u,%u", t_id, *t_name, t_offset, t_duration);
+            /* UNCHECKED */ MCListAppend(*t_tracks_list, *t_track);
+        }
+        /* UNCHECKED */ MCListCopyAsString(*t_tracks_list, r_tracks);
+    }
+}
+
+uinteger_t MCPlayer::gettrackcount()
+{
+    uint2 i = 0;
+    if (m_platform_player != nil)
+    {
+        uindex_t t_count;
+        MCPlatformCountPlayerTracks(m_platform_player, t_count);
+        i = t_count;
+    }
+    return i;
+}
+
+void MCPlayer::getnodes(MCStringRef &r_nodes)
+{
+	// COCOA-TODO: MCPlayer::getnodes();
+    r_nodes = MCValueRetain(kMCEmptyString);
+}
+
+void MCPlayer::gethotspots(MCStringRef &r_nodes)
+{
+	// COCOA-TODO: MCPlayer::gethotspots();
+    r_nodes = MCValueRetain(kMCEmptyString);
+}
+
+void MCPlayer::getconstraints(MCMultimediaQTVRConstraints &r_constraints)
+{
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRConstraints, kMCPlatformPropertyTypePlayerQTVRConstraints, (MCPlatformPlayerQTVRConstraints*)&(r_constraints));
+}
+
+void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
+{
+    uinteger_t *t_track_ids;
+    uindex_t t_count;
+    
+    t_track_ids = nil;
+    t_count = 0;
+    
+    if (m_platform_player != nil)
+    {
+        uindex_t t_track_count;
+        MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+        t_count = 0;
+        
+        for(uindex_t i = 0; i < t_track_count; i++)
+        {
+            uint32_t t_id;
+            uint32_t t_enabled;
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+            if (t_enabled)
+            {
+                MCMemoryReallocate(t_track_ids, ++t_count * sizeof(uinteger_t), t_track_ids);
+                t_track_ids[t_count - 1] = t_id;
+            }
+        }
+    }
+    
+    r_count = t_count;
+    r_tracks_id = t_track_ids;
+}
+
+void MCPlayer::updatevisibility()
+{
+    if (m_platform_player != nil)
+    {
+        bool t_visible;
+        t_visible = getflag(F_VISIBLE);
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+    }
+}
+
+void MCPlayer::updatetraversal()
+{
+    // Does nothing on platform implementation
+}
+
+void MCPlayer::setforegroundcolor(const MCInterfaceNamedColor& p_color)
+{
+    selectedareacolor = p_color . color;
+}
+
+void MCPlayer::getforegrouncolor(MCInterfaceNamedColor& r_color)
+{
+    r_color . name = nil;
+    r_color . color = selectedareacolor;
+}
+
+void MCPlayer::sethilitecolor(const MCInterfaceNamedColor& p_color)
+{
+    controllermaincolor = p_color . color;
+}
+
+void MCPlayer::gethilitecolor(MCInterfaceNamedColor &r_color)
+{
+    r_color . name = nil;
+    r_color . color = controllermaincolor;
+}
+
+//
+// End of virtual MCPlayerInterface's functions
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlayer::markerchanged(uint32_t p_time)
 {
     // Search for the first marker with the given time, and dispatch the message.
     for(uindex_t i = 0; i < m_callback_count; i++)
         if (p_time == m_callbacks[i] . time)
         {
-            MCExecPoint ep;
-            ep . setnameref_unsafe(m_callbacks[i] . parameter);
+            MCExecContext ctxt(nil, nil, nil);
             
             MCParameter *t_param;
             t_param = new MCParameter;
-            t_param -> set_argument(ep);
+            t_param -> set_argument(ctxt, m_callbacks[i] . parameter);
             MCscreen -> addmessage(this, m_callbacks[i] . message, 0, t_param);
             
             // MW-2014-08-25: [[ Bug 13267 ]] Make sure we terminate the current wait so updates and messages get sent.
@@ -2526,12 +2869,13 @@ void MCPlayer::moviefinished(void)
 {
     // PM-2014-08-06: [[ Bug 13104 ]] Set rate to zero when movie finish
     rate = 0.0;
-    timer(MCM_play_stopped, nil);
+    // PM-2014-12-02: [[ Bug 14141 ]] Delay the playStopped message to prevent IDE hang in case where the player's filename is set in the playStopped message (AVFoundation does not like nested callbacks)
+    MCscreen -> delaymessage(this, MCM_play_stopped);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
 {
-    if (userCallbackStr == nil)
+    if (MCStringIsEmpty(userCallbackStr))
         return;
     
     if (m_platform_player == nil)
@@ -2548,54 +2892,81 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     m_callback_count = 0;
     
     // Now reparse the callback string and build the table.
-    char *cblist = strclone(userCallbackStr);
-	char *str;
-	str = cblist;
-	while (*str)
+    MCAutoStringRef t_callback;
+    t_callback = userCallbackStr;
+    
+    uindex_t t_start_index, t_length;
+    
+    t_length = MCStringGetLength(*t_callback);
+    t_start_index = 0;
+    
+	while (t_start_index < t_length)
 	{
-		char *ptr, *data1, *data2;
-		if ((data1 = strchr(str, ',')) == NULL)
+		uindex_t t_comma_index, t_callback_index, t_end_index;
+		if (!MCStringFirstIndexOfChar(*t_callback, ',', t_start_index, kMCStringOptionCompareExact, t_comma_index))
 		{
             //search ',' as separator
-			delete cblist;
 			return;
 		}
-		*data1 = '\0';
-		data1 ++;
-		if ((data2 = strchr(data1, '\n')) != NULL)// more than one callback
-			*data2++ = '\0';
-		else
-			data2 = data1 + strlen(data1);
+		
+        uindex_t t_callback2_index;
+        // AL-2014-07-31: [[ Bug 12936 ]] Callbacks are one per line
+        if (!MCStringFirstIndexOfChar(*t_callback, '\n', t_comma_index + 1, kMCStringOptionCompareExact, t_end_index))
+            t_end_index = MCStringGetLength(*t_callback);
         
         /* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
-        m_callbacks[m_callback_count - 1] . time = strtol(str, NULL, 10);
+        // Converts the first part to a number.
+        MCAutoNumberRef t_time;
         
-        while (isspace(*data1))//strip off preceding and trailing blanks
-            data1++;
-        ptr = data1;
-        while (*ptr)
+        // SN-2014-07-28: [[ Bug 12984 ]] MCNumberParseOffset expects the string to finish after the number
+        MCAutoStringRef t_callback_substring;
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_callback_substring);
+        
+        // SN-2014-07-28: [[ Bug 12984 ]] Mimic the strtol behaviour in case of a parsing failure
+        if (MCNumberParse(*t_callback_substring, &t_time))
+            m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
+        else
+            m_callbacks[m_callback_count - 1] . time = 0;
+        
+        t_callback_index = t_comma_index + 1;
+        while (isspace(MCStringGetCharAtIndex(*t_callback, t_callback_index))) //strip off preceding and trailing blanks
+            ++t_callback_index;
+        
+        // See whether we can find a parameter for this callback
+        uindex_t t_space_index;
+        t_space_index = t_callback_index;
+        
+        while (t_space_index < t_end_index)
         {
-            if (isspace(*ptr))
+            if (isspace(MCStringGetCharAtIndex(*t_callback, t_space_index)))
             {
-                *ptr++ = '\0';
-                /* UNCHECKED */ MCNameCreateWithCString(ptr, m_callbacks[m_callback_count - 1] . parameter);
+                ++t_space_index;
+                MCAutoStringRef t_param;
+                /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_space_index, t_end_index - t_space_index), &t_param);
+                /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
                 break;
             }
-            ptr++;
+            ++t_space_index;
         }
         
-        /* UNCHECKED */ MCNameCreateWithCString(data1, m_callbacks[m_callback_count - 1] . message);
+        MCAutoStringRef t_message;
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - t_callback_index), &t_message);
+        /* UNCHECKED */ MCNameCreate(*t_message, m_callbacks[m_callback_count - 1] . message);
         
         // If no parameter is specified, use the time.
         if (m_callbacks[m_callback_count - 1] . parameter == nil)
-        /* UNCHECKED */ MCNameCreateWithCString(str, m_callbacks[m_callback_count - 1] . parameter);
+        {
+            MCAutoStringRef t_param;
+            /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_param);
+            /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
+        }
 		
-        str = data2;
+        // Skip to the next callback, if there is one
+        t_start_index = t_end_index + 1;
 	}
-	delete cblist;
     
     if (!hasfilename())
-        return True;
+        return;
     
     // Now set the markers in the player so that we get notified.
     array_t<uint32_t> t_markers;
@@ -2605,8 +2976,6 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     t_markers . count = m_callback_count;
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
     MCMemoryDeleteArray(t_markers . ptr);
-    
-	return True;
 }
 
 Boolean MCPlayer::isbuffering(void)
@@ -2619,7 +2988,6 @@ Boolean MCPlayer::isbuffering(void)
 	
 	return t_buffering;
 }
-
 
 //-----------------------------------------------------------------------------
 //  Redraw Management
@@ -3238,9 +3606,6 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             t_current_time = getmoviecurtime();
             t_duration = getduration();
             
-            if (t_current_time >= t_duration)
-                t_current_time = t_duration;
-            
             MCRectangle t_well_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
             
@@ -3521,8 +3886,10 @@ void MCPlayer::handle_mdown(int p_which)
                 playstart(nil);
             }
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlay));
+
+            break;
         }
-        break;
+            
         case kMCPlayerControllerPartVolume:
         {
             if (!m_show_volume)
@@ -3917,6 +4284,14 @@ void MCPlayer::handle_shift_mdown(int p_which)
         case kMCPlayerControllerPartThumb:
         case kMCPlayerControllerPartWell:
         {
+            // PM-2014-09-30: [[ Bug 13540 ]] shift+clicking on controller well/thumb/play button does something only if showSelection is true
+            if (!getflag(F_SHOW_SELECTION))
+            {
+                handle_mdown(p_which);
+                return;
+            }
+                
+            
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             MCRectangle t_part_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
             
@@ -3988,20 +4363,20 @@ void MCPlayer::handle_shift_mdown(int p_which)
             }
             
             if (hasfilename())
-            {
-                bool t_show_selection;
-                t_show_selection = true;
-                setflag(True, F_SHOW_SELECTION);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-                
                 setselection(true);
-            }
-            
+
             layer_redrawrect(getcontrollerrect());
         }
             break;
             
         case kMCPlayerControllerPartPlay:
+            // PM-2014-09-30: [[ Bug 13540 ]] shift+clicking on controller well/thumb/play button does something only if showSelection is true
+            if (!getflag(F_SHOW_SELECTION))
+            {
+                handle_mdown(p_which);
+                return;
+            }
+            
             shift_play();
             break;
           
@@ -4031,7 +4406,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
 
 }
 
-Boolean MCPlayer::handle_kdown(const char *string, KeySym key)
+Boolean MCPlayer::handle_kdown(MCStringRef p_string, KeySym key)
 {
     if (state & CS_PREPARED)
     {
@@ -4072,14 +4447,14 @@ Boolean MCPlayer::handle_kdown(const char *string, KeySym key)
         layer_redrawrect(getcontrollerrect());
     }
 	if (!(state & CS_NO_MESSAGES))
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
     
 	return False;
 }
 
 // PM-2014-09-05: [[ Bug 13342 ]] Shift and spacebar creates selection
-Boolean MCPlayer::handle_shift_kdown(const char *string, KeySym key)
+Boolean MCPlayer::handle_shift_kdown(MCStringRef p_string, KeySym key)
 {
     if (state & CS_PREPARED)
     {
@@ -4114,11 +4489,6 @@ void MCPlayer::shift_play()
     
     if (hasfilename())
     {
-        bool t_show_selection;
-        t_show_selection = true;
-        setflag(True, F_SHOW_SELECTION);
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-        
         // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
         //   force rate to 1.0.
         if (!getstate(CS_PREPARED) || ispaused())

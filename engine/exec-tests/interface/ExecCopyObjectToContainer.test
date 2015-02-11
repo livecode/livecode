@@ -1,0 +1,9 @@
+setup
+
+create button
+
+copy button 1 to this stack
+
+test there is button 1 on this stack
+
+teardown

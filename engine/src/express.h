@@ -22,6 +22,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MAX_EXP 7
 
+#ifndef __MC_EXEC__
+#include "exec.h"
+#endif
+
 class MCExpression
 {
 protected:
@@ -35,19 +39,39 @@ protected:
 public:
 	MCExpression();
 	virtual ~MCExpression();
-
+	
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
-	// Evaluate the exoression as a value, and place its value into ep.
+#ifdef LEGACY_EXEC
+	// Evaluate the expression as a value, and place its value into ep.
 	virtual Exec_stat eval(MCExecPoint &ep);
+#endif
+	
+	// Evaluate the expression as its natural type basic type (note that
+	// execvalue's cannot be set/enum/custom, they should all be resolved
+	// to the appropriate basic type first!). This form should be used for
+	// descendents of MCExpression which are an umbrella for many syntax forms
+	// and thus have variant return type (such as MCProperty).
 
+	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+	
+	// Compile the syntax into the (new) tree for use by the new evaluator.
+	virtual void compile(MCSyntaxFactoryRef);
+	virtual void compile_out(MCSyntaxFactoryRef);
+	
 	// Evaluate the expression as a container, and place the reference to
 	// the container's value in r_ref.
-	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_ref);
+#ifdef LEGACY_EXEC
+	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 
 	// Return the variable to which this expression refers in the context of
 	// ep, or NULL if it is not just a variable expression.
 	virtual MCVariable *evalvar(MCExecPoint& ep);
+#endif
+
+    // EP-less version of evaluation functions
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    virtual MCVariable *evalvar(MCExecContext& ctxt);
 
 	// Return the var-ref which lies at the root of this expression. 
 	// A return value of NULL means that there is no root variable.
@@ -55,7 +79,22 @@ public:
 	// left and right hand side of an variable mutation command share the
 	// same variable. It is designed to be used at parse-time, not exec-time.
 	virtual MCVarref *getrootvarref(void);
-
+	
+	//////////
+	
+	template <typename T>
+	void eval(MCExecContext& ctxt, T& r_value)
+	{
+		eval_typed(ctxt, MCExecValueTraits<T>::type_enum, &r_value);
+    }
+	
+	// This method evaluates the the MCExpression as the specified type. The
+	// value ptr should be a pointer to the appropriate native value to store
+	// the result.
+	void eval_typed(MCExecContext& ctxt, MCExecValueType return_type, void* return_value);
+	
+	//////////
+	
 	void setrank(Factor_rank newrank)
 	{
 		rank = newrank;
@@ -110,23 +149,26 @@ public:
 	Parse_stat getvariableparams(MCScriptPoint &sp, uint32_t p_min_params, uint32_t p_param_count, ...);
 	Parse_stat getparams(MCScriptPoint &spt, MCParameter **params);
 	void initpoint(MCScriptPoint &);
-	Exec_stat compare(MCExecPoint &, int2 &i, bool p_compare_arrays = false);
-	
+#ifdef LEGACY_EXEC
+	Exec_stat compare(MCExecPoint &, int2 &i, bool p_compare_arrays = false);	
 	static int2 compare_arrays(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoint *p_context);
 	static int2 compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoint *p_context, bool p_compare_arrays);
+#endif
+	static bool compare_array_element(void *context, MCArrayRef array, MCNameRef key, MCValueRef value);
 };
 
 class MCFuncref : public MCExpression
 {
 	MCNameRef name;
-		MCHandler *handler;
+    MCHandler *handler;
 	MCObject *parent;
 	MCParameter *params;
 	bool resolved : 1;
+    bool platform_message : 1;
 public:
 	MCFuncref(MCNameRef);
 	virtual ~MCFuncref();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
+	void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 };
 #endif

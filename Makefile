@@ -1,12 +1,15 @@
 ###############################################################################
 # Engine Targets
 
-.PHONY: libopenssl liburlcache libstubs
-.PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore libgraphics libskia
+.PHONY: libopenssl liburlcache libstubs libfoundation libcore libscript
+.PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libgraphics libskia
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
 .PHONY: kernel-standalone kernel-development kernel-server
 .PHONY: libireviam onrev-server
+
+libcore:
+	$(MAKE) -C ./libcore libcore
 
 libexternal:
 	$(MAKE) -C ./libexternal libexternal
@@ -14,12 +17,15 @@ libexternal:
 libexternalv1:
 	$(MAKE) -C ./libexternalv1 libexternalv1
 
-libz: 
+libffi:
+	$(MAKE) -C ./thirdparty/libffi libffi
+
+libz:
 	$(MAKE) -C ./thirdparty/libz libz
-	
+
 libjpeg:
 	$(MAKE) -C ./thirdparty/libjpeg libjpeg
-	
+
 libpcre:
 	$(MAKE) -C ./thirdparty/libpcre libpcre
 
@@ -35,16 +41,20 @@ libopenssl:
 libskia:
 	$(MAKE) -C ./thirdparty/libskia libskia
 
-libcore:
-	$(MAKE) -C ./libcore libcore
+libfoundation: libffi
+	$(MAKE) -C ./libfoundation libfoundation
+
+libscript:
+	$(MAKE) -C ./libscript libscript
 
 revsecurity:
 	$(MAKE) -C ./thirdparty/libopenssl -f Makefile.revsecurity revsecurity
-	
+
 libgraphics: libskia
 	$(MAKE) -C ./libgraphics libgraphics
 
-kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics
+kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript libgraphics
+
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
 
 kernel-standalone: kernel
@@ -53,19 +63,20 @@ kernel-standalone: kernel
 kernel-development: kernel
 	$(MAKE) -C ./engine -f Makefile.kernel-development libkernel-development
 
-kernel-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics
+kernel-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript libgraphics
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
-development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development revsecurity
+development: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript kernel kernel-development revsecurity
 	$(MAKE) -C ./engine -f Makefile.development engine-community
 
-standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone revsecurity
+standalone: libz libgif libjpeg libpcre libpng libopenssl libfoundation libstdscript kernel revsecurity kernel-standalone revsecurity
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
-installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel revsecurity
+installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript kernel revsecurity
+
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics kernel-server revsecurity
+server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libstdscript libgraphics kernel-server revsecurity
 	$(MAKE) -C ./engine -f Makefile.server server-community
 
 ###############################################################################
@@ -174,17 +185,67 @@ revandroid: libexternalv1
 	$(MAKE) -C ./revmobile revandroid
 
 ###############################################################################
+# MLC Targets
+
+.PHONY: lc-compile lc-bootstrap-compile lc-compile-clean
+.PHONY: libstdscript
+.PHONY: lc-test
+
+########## Standard script library
+libstdscript: lc-compile
+	$(MAKE) -C ./libscript libstdscript
+
+########## Compiler
+lc-compile: libscript libfoundation libffi
+	$(MAKE) -C ./toolchain lc-compile
+
+lc-bootstrap-compile: libscript libfoundation libffi
+	$(MAKE) -C ./toolchain bootstrap
+
+lc-compile-clean:
+	$(MAKE) -C ./toolchain clean
+
+########## Module runner
+
+lc-run: libstdscript libfoundation
+	$(MAKE) -C ./toolchain lc-run
+
+########## Test runner
+lc-test: libstdscript libfoundation
+	$(MAKE) -C ./toolchain lc-test
+
+########## Tests
+lcb-check: lc-compile lc-run
+	$(MAKE) -C ./tests/lcb
+lc-run-check: lc-compile lc-run
+	$(MAKE) -C ./tests/lc-run check
+lc-test-check: lc-compile lc-test
+	$(MAKE) -C ./toolchain lc-test-check
+.PHONY: lcb-check lc-run-check lc-test-check
+
+###############################################################################
 # All Targets
 
-.PHONY: all clean
+.PHONY: all bootstrap thirdparty clean
 .DEFAULT_GOAL := all
 
 all: revzip server-revzip
 all: revxml server-revxml
-all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
+all: revpdfprinter revandroid
+all: lc-run lc-test
+
+bootstrap: lc-bootstrap-compile
+
+thirdparty: libffi libz libjpeg libpcre libpng libgif libopenssl libskia
+thirdparty: libcairopdf libpq libmysql libsqlite libiodbc libxml libxslt
+thirdparty: libzip
+
+check: lc-run-check lc-test-check lcb-check
 
 clean:
-	@rm -r _build/linux _cache/linux
+	-rm -rf _build/linux _cache/linux _tests
+	-rm -rf `find . -type d -name _mlc`
+clean: lc-compile-clean

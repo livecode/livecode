@@ -16,10 +16,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "system.h"
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+#include "mblandroidjava.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +52,7 @@ bool getURLInfo(uint32_t p_id, MCUrlInfo *&r_info)
 	return false;
 }
 
-bool storeURLInfo(const char *p_url, MCSystemUrlCallback p_callback, void *p_context, MCUrlInfo *&r_info)
+bool storeURLInfo(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context, MCUrlInfo *&r_info)
 {
 	bool t_success = true;
 
@@ -60,7 +60,7 @@ bool storeURLInfo(const char *p_url, MCSystemUrlCallback p_callback, void *p_con
 
 	t_success = MCMemoryNew(t_info);
 	if (t_success)
-		t_success = MCCStringClone(p_url, t_info->url);
+		t_success = MCStringConvertToCString(p_url, t_info->url);
 	if (t_success)
 	{
 		t_info->callback = p_callback;
@@ -133,10 +133,10 @@ bool removeURLInfo(MCUrlInfo *p_info)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern char *MChttpheaders;
+extern MCStringRef MChttpheaders;
 extern real8 MCsockettimeout;
 
-bool MCSystemLoadUrl(const char *p_url, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context)
 {
 	bool t_success = true;
 	
@@ -146,13 +146,13 @@ bool MCSystemLoadUrl(const char *p_url, MCSystemUrlCallback p_callback, void *p_
 	if (t_success)
 	{
 		MCAndroidEngineCall("setURLTimeout", "vi", nil, (int32_t)MCsockettimeout);
-		MCAndroidEngineCall("loadURL", "biss", &t_success, t_info->id, p_url, MChttpheaders);
+		MCAndroidEngineCall("loadURL", "bixx", &t_success, t_info->id, p_url, MChttpheaders);
 	}
 
 	return t_success;
 }
 
-bool MCSystemPostUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
 	bool t_success = true;
 
@@ -161,15 +161,14 @@ bool MCSystemPostUrl(const char *p_url, const void *p_data, uint32_t p_length, M
 
 	if (t_success)
 	{
-		MCString t_data((const char*)p_data, p_length);
 		MCAndroidEngineCall("setURLTimeout", "vi", nil, (int32_t)MCsockettimeout);
-		MCAndroidEngineCall("postURL", "bissd", &t_success, t_info->id, p_url, MChttpheaders, &t_data);
+		MCAndroidEngineCall("postURL", "bixxd", &t_success, t_info->id, p_url, MChttpheaders, p_data);
 	}
 
 	return t_success;
 }
 
-bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
     bool t_success = true;
     
@@ -180,9 +179,8 @@ bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MC
     {
         t_info->upload_byte_count = p_length;
         
-        MCString t_data((const char*)p_data, p_length);
         MCAndroidEngineCall("setURLTimeout", "vi", nil, (int32_t)MCsockettimeout);
-        MCAndroidEngineCall("putURL", "bissd", &t_success, t_info->id, p_url, MChttpheaders, &t_data);
+        MCAndroidEngineCall("putURL", "bixxd", &t_success, t_info->id, p_url, MChttpheaders, p_data);
     }
     
     return t_success;
@@ -196,9 +194,9 @@ void MCSystemSetUrlSSLVerification(bool enabled)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemLaunchUrl(const char *p_url)
+bool MCSystemLaunchUrl(MCStringRef p_url)
 {
-	MCAndroidEngineCall("launchUrl", "vs", nil, p_url);
+	MCAndroidEngineCall("launchUrl", "vx", nil, p_url);
 	return true;
 }
 
@@ -259,11 +257,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUrlDidReceiveData(JNIEnv
 		// get bytes from byte[] object
 		jbyte *t_bytes = env->GetByteArrayElements(bytes, nil);
 
-		MCString t_data;
-		t_data . set((const char *)t_bytes, length);
-		t_info->callback(t_info->context, kMCSystemUrlStatusLoading, &t_data);
-
-		env->ReleaseByteArrayElements(bytes, t_bytes, 0);
+        // AL_2014-07-15: [[ Bug 12478 ]] Pass a DataRef to url callbacks
+		MCAutoDataRef t_data;
+		MCJavaByteArrayToDataRef(env, bytes, &t_data);
+		t_info->callback(t_info->context, kMCSystemUrlStatusLoading, *t_data);
 	}
 }
 
@@ -288,12 +285,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUrlError(JNIEnv *env, jo
 
 	if (getURLInfo(id, t_info))
 	{
-		// TODO - once string conversion functions are implemented, switch to using
-		// GetStringChars() (UTF16) then convert to native, rather than GetStringUTFChars() (UTF-8)
-		const char *t_err_str = nil;
-		t_err_str = env->GetStringUTFChars(error_string, nil);
-		t_info->callback(t_info->context, kMCSystemUrlStatusError, t_err_str);
-		env->ReleaseStringUTFChars(error_string, t_err_str);
+        // AL_2014-07-15: [[ Bug 12478 ]] Error is passed to callback as StringRef
+		MCAutoStringRef t_error;
+        MCJavaStringToStringRef(env, error_string, &t_error);
+		t_info->callback(t_info->context, kMCSystemUrlStatusError, *t_error);
 
 		removeURLInfo(t_info);
 	}

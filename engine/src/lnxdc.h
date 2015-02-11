@@ -33,15 +33,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define fixmaskrop(a) (a)
 #define fixmaskcolor(a) (a)
 
+#include <gtk/gtk.h>
+
 
 class MCEventnode : public MCDLlist
 {
 public:
-	XEvent event;
-	MCEventnode(XEvent &e)
+	GdkEvent* event;
+	MCEventnode(GdkEvent* e)
 	{
 		event = e;
 	}
+    ~MCEventnode()
+    {
+        gdk_event_free(event);
+    }
 	MCEventnode *next()
 	{
 		return (MCEventnode *)MCDLlist::next();
@@ -78,7 +84,7 @@ public:
 	}
 };
 
-extern Atom MCstateatom;
+/*extern Atom MCstateatom;
 extern Atom MCprotocolatom;
 extern Atom MCtakefocusatom;
 extern Atom MCdeletewindowatom;
@@ -93,7 +99,7 @@ extern Atom MColresizeatom;
 extern Atom MColheaderatom;
 extern Atom MColcloseatom;
 extern Atom MClayeratom;
-extern Atom MCclipboardatom;
+extern Atom MCclipboardatom;*/
 
 extern Atom MCclientlistatom;
 extern Atom MCstrutpartialatom;
@@ -103,9 +109,7 @@ extern Boolean tripleclick;
 
 class MCScreenDC : public MCUIDC
 {
-
-	GC gc;		// This is the GC in "Native" (i.e. actual screen) depth
-	GC gc1;		// This is the GC in 1-bit depth used for image masks
+	GdkGC* gc;		// This is the GC in "Native" (i.e. actual screen) depth
 	
 	bool m_application_has_focus ; // This allows us to track if the application is at the front.
 	
@@ -119,18 +123,17 @@ class MCScreenDC : public MCUIDC
 	Window Xwin; //
 	Window NULLWindow ;
 	
-	Pixmap graystipple;
 	MCEventnode *pendingevents;
 	
 	Boolean ownselection;
 	MCString selectiontext;
 	Boolean doubleclick;
 
-	Colormap cmap;			// Native colourmap
-	Colormap cmap32 ;		// 32-bit colourmap
+	GdkColormap *cmap;			// Native colourmap
+	GdkColormap *cmap32 ;		// 32-bit colourmap
 
-	XVisualInfo *vis;		// Native visual
-	XVisualInfo *vis32 ;	// 32-bit visual
+	GdkVisual *vis;		// Native visual
+	GdkVisual *vis32 ;	// 32-bit visual
 
 	bool backdrop_active;
 	bool backdrop_hard;
@@ -146,21 +149,26 @@ class MCScreenDC : public MCUIDC
 	bool m_has_native_print_dialogs;
 	bool m_has_native_file_dialogs;
 	
-	MCXTransferStore * m_DND_store ;
-	MCXTransferStore * m_Clipboard_store ;
-	MCXTransferStore * m_Selection_store ;
+	class MCGdkTransferStore * m_DND_store ;
+	class MCGdkTransferStore * m_Clipboard_store ;
+	class MCGdkTransferStore * m_Selection_store ;
+    
+    // Set if GTK is available
+    bool m_has_gtk;
+    
+    // Input context for IME integration
+    GtkIMContext *m_im_context;
 
 public:
-	bool getdisplays_init;
-	bool Xinerama_available; 
 	
 	char * syslocale ;
 	
-	Display *dpy;
+	GdkDisplay *dpy;
 	Boolean has_composite_wm ;
 	Drawable dest; //
 
-	char *displayname;
+	MCNameRef displayname;
+	MCNameRef vendorname;
 	uint4 savedpixel; // Move into per-context
 
 	MCScreenDC();
@@ -171,12 +179,11 @@ public:
 	virtual uint2 getdepth();
 	virtual uint2 getrealdepth(void);
 	
-	virtual void setstatus(const char *status);
-	virtual Boolean setdest(Drawable d, uint2 depth);
+	virtual void setstatus(MCStringRef status);
 	virtual Drawable getdest();
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	virtual void resetcursors();
 	virtual void setcursor(Window w, MCCursorRef c);
 	virtual void grabpointer(Window w);
@@ -191,7 +198,7 @@ public:
 	virtual void raisewindow(Window window);
 	virtual void iconifywindow(Window window);
 	virtual void uniconifywindow(Window window);
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setcmap(MCStack *sptr);
 	virtual void sync(Window w);
 	virtual void flush(Window w);
@@ -206,16 +213,12 @@ public:
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
 	                      int2 dx, int2 dy, uint4 rop);
-	virtual MCBitmap *createimage(uint2 depth, uint2 width, uint2 height,
-	                              Boolean set
-		                              , uint1 value,
-		                              Boolean shm, Boolean forceZ);
+    
+	virtual MCBitmap *createimage(uint2 depth, uint2 width, uint2 height, bool set, uint1 value);
 	virtual void destroyimage(MCBitmap *image);
-	virtual void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
-	                      int2 dx, int2 dy, uint2 w, uint2 h);
-	virtual XImage *getimage(Drawable pm, int2 x, int2 y,
-	                           uint2 w, uint2 h, Boolean shm = False);
-	virtual void flipimage(XImage *image, int2 byte_order, int2 bit_order);
+	virtual void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy, int2 dx, int2 dy, uint2 w, uint2 h);
+	virtual MCBitmap *getimage(Drawable pm, int2 x, int2 y, uint2 w, uint2 h);
+	virtual void flipimage(MCBitmap *image, int2 byte_order, int2 bit_order);
 	
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
@@ -224,19 +227,19 @@ public:
 	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yhot);
 	virtual void freecursor(MCCursorRef c);
 
-	virtual void setfunction(uint4 rop);
-	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4towindow(uint4, Window &w);
-	virtual void getbeep(uint4 property, MCExecPoint &ep);
+    virtual void setfunction(uint4 rop);
+	virtual uintptr_t dtouint(Drawable d);
+    virtual Boolean uinttowindow(uintptr_t, Window &w);
+    virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
+
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 	
-	
-	virtual void createbackdrop(const char *color);
-	virtual void destroybackdrop();
+    //virtual void createbackdrop(MCStringRef color);
+	void destroybackdrop();
 	
 	void createbackdrop_window(void);
 	Window get_backdrop(void) { return backdrop; };
@@ -282,16 +285,13 @@ public:
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
 	virtual void flushevents(uint2 e);
 	virtual Boolean istripleclick();
-	
-	
-	virtual MCTransferType querydragdata(void);
-	virtual MCSharedString *fetchdragdata(void);
-	
-	// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
 
+	// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
+    virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
+    //virtual MCTransferType querydragdata(void);
+    
 	// Clipboard and selection interface
-	virtual bool ownsselection(void); 
+	virtual bool ownsselection(void);
 	virtual bool setselection(MCPasteboard *p_pasteboard);
 	virtual MCPasteboard *getselection(void);
 	
@@ -300,18 +300,13 @@ public:
 	virtual MCPasteboard *getclipboard(void);
 	virtual void flushclipboard(void);
 
-	void initatoms();
 	void setupcolors();
-	uint2 getscreen();
-	Colormap getcmap();
-	Visual *getvisual();
-	uint2 getbitorder();
-	uint2 getbyteorder();
-	uint2 getunit();
+	GdkScreen* getscreen();
+	GdkColormap* getcmap();
+	GdkVisual* getvisual();
 	KeySym translatekeysym(KeySym sym, uint4 keycode);
-	virtual void getkeysdown(MCExecPoint &ep);
-	void create_stipple();
-	void setmods(uint2 state, KeySym sym, uint2 button, Boolean release);
+	virtual bool getkeysdown(MCListRef& r_list);
+	void setmods(guint state, KeySym sym, uint2 button, Boolean release);
 	Boolean handle(Boolean dispatch, Boolean anyevent,
 	               Boolean &abort, Boolean &reset);
 	void waitmessage(Window w, int event_type);
@@ -322,7 +317,7 @@ public:
 	// IM-2014-01-29: [[ HiDPI ]] Apply screen struts to given MCDisplay array
 	bool apply_partial_struts(MCDisplay *p_displays, uint32_t p_display_count);
 		
-	Display *getDisplay() { return dpy; };
+	GdkDisplay *getDisplay() { return dpy; };
 	
 	Window  GetNullWindow (void ) { return NULLWindow ; } ;
 	
@@ -335,23 +330,46 @@ public:
 	
 	
 	// Public acccess functions get get GC's, visuals and cmaps for different depths
-	GC getgc(void) ; 
-	GC getgc1 (void) { return gc1; } ;
-	GC getgcnative (void) { return gc; } ;
-	
-	XVisualInfo *getvisnative ( void ) { return vis ; } ;
-	XVisualInfo *getvis32 ( void ) { return vis32; } ;
-	
-	Colormap getcmapnative ( void ) { return cmap ; } ;
-	Colormap getcmap32 ( void ) { return cmap32 ; } ; 
+	GdkGC* getgc() { return gc; }
+
+	GdkColormap* getcmapnative ( void ) { return cmap ; } ;
+	GdkColormap* getcmap32 ( void ) { return cmap32 ; } ;
 
 	
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 	virtual MCPrinter *createprinter(void);
 	
 #ifdef OLD_GRAPHICS
 	MCBitmap *regiontomask(MCRegionRef r, int32_t w, int32_t h);
 #endif
-
+    
+    // Processes all outstanding GDK events and adds them to the event queue
+    void EnqueueGdkEvents();
+    
+    // Searches the event queue for an event that passes the given filter
+    typedef bool (*event_filter)(GdkEvent*, void *);
+    bool GetFilteredEvent(event_filter, GdkEvent* &r_event, void *);
+    
+    // Utility function - maps an X drawing operation to the GDK equivalent
+    static GdkFunction XOpToGdkOp(int op);
+    
+    // Queues an event as a pending event
+    void EnqueueEvent(GdkEvent *);
+    
+    // IME events
+    void IME_OnCommit(GtkIMContext*, gchar *p_utf8_string);
+    bool IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_count);
+    void IME_OnPreeditChanged(GtkIMContext*);
+    void IME_OnPreeditEnd(GtkIMContext*);
+    void IME_OnPreeditStart(GtkIMContext*);
+    void IME_OnRetrieveSurrounding(GtkIMContext*);
+    
+    virtual void clearIME(Window w);
+    virtual void configureIME(int32_t x, int32_t y);
+	virtual void activateIME(Boolean activate);
+	//virtual void closeIME();
+    
+    virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 };
 #endif

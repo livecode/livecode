@@ -23,16 +23,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "statemnt.h"
 
 class MCScriptPoint;
-class MCExecPoint;
 class MCExpression;
 
 class MCGlobal : public MCStatement
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &)
-	{
-		return ES_NORMAL;
+    virtual void exec_ctxt(MCExecContext &ctxt)
+    {
 	}
 	virtual uint4 linecount()
 	{
@@ -46,9 +44,8 @@ protected:
 	Boolean constant;
 public:
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &)
-	{
-		return ES_NORMAL;
+    virtual void exec_ctxt(MCExecContext &ctxt)
+    {
 	}
 	virtual uint4 linecount()
 	{
@@ -88,7 +85,7 @@ public:
 	}
 	~MCIf();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual uint4 linecount();
 };
 
@@ -106,7 +103,7 @@ public:
 	MCRepeat();
 	~MCRepeat();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -115,7 +112,7 @@ class MCExit : public MCStatement
 	Exec_stat exit;
 public:
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -123,7 +120,7 @@ class MCNext : public MCStatement
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -136,14 +133,14 @@ public:
 		all = False;
 	}
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
 class MCBreak : public MCStatement
 {
 public:
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
 
@@ -167,7 +164,7 @@ public:
 	}
 	~MCSwitch();
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual uint4 linecount();
 };
 
@@ -181,7 +178,7 @@ public:
 	}
 	~MCThrowKeyword();
 	virtual Parse_stat parse(MCScriptPoint &sp);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
 	virtual uint4 linecount();
 };
 
@@ -199,7 +196,10 @@ public:
 	}
 	~MCTry();
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif

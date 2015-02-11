@@ -102,8 +102,8 @@ bool MCSystemCanSendTextMessage(void)
 
 struct compose_text_message_t
 {
-	const char *recipients;
-	const char *body;
+	MCStringRef recipients;
+	MCStringRef body;
 	MCIPhoneSmsComposerDialog *dialog;
 	bool success;
 };
@@ -122,8 +122,8 @@ static void compose_text_message_prewait(void *p_context)
 	
 	ctxt -> dialog = [[MCIPhoneSmsComposerDialog alloc] init];
     [ctxt -> dialog setMessageComposeDelegate: ctxt -> dialog];
-    [ctxt -> dialog setRecipients: [[NSString stringWithCString: ctxt -> recipients encoding: NSMacOSRomanStringEncoding] componentsSeparatedByString:@","]];
-    [ctxt -> dialog setBody: [NSString stringWithCString: ctxt -> body encoding: NSMacOSRomanStringEncoding]];
+    [ctxt -> dialog setRecipients: [[NSString stringWithMCStringRef: ctxt -> recipients] componentsSeparatedByString:@","]];
+    [ctxt -> dialog setBody: [NSString stringWithMCStringRef: ctxt -> body]];
 	[ctxt -> dialog preWait];
 	
 	ctxt -> success = true;
@@ -136,7 +136,7 @@ static void compose_text_message_postwait(void *p_context)
 	[ctxt -> dialog postWait];
 }
 
-bool MCSystemComposeTextMessage(const char *p_recipients, const char *p_body)
+bool MCSystemComposeTextMessage(MCStringRef p_recipients, MCStringRef p_body)
 {
 	compose_text_message_t ctxt;
 	ctxt . recipients = p_recipients;

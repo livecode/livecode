@@ -1,0 +1,11 @@
+setup
+
+create button
+
+create button
+
+delete button 1 and button 2
+
+test there is not a button 1 and there is not a button 2
+
+teardown

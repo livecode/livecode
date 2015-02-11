@@ -17,7 +17,7 @@
 #ifndef __MC_SYSTHREADS__
 #define __MC_SYSTHREADS__
 
-#define kMCThreadPoolSize 4
+#define kMCThreadPoolSize 1
 
 bool MCThreadPoolInitialize();
 void MCThreadPoolFinalize();

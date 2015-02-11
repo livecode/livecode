@@ -286,6 +286,7 @@ private:
 	}
 };
 
+#ifdef LEGACY_EXEC
 class cstring_value
 {
 	char *f_string;
@@ -318,6 +319,7 @@ public:
 		return f_string;
 	}
 };
+//#endif
 
 template<class T1>
 Exec_errors evaluate(MCExecPoint& p_context, MCExpression *p_expr_1, T1& r_value_1, Exec_errors r_result_1)
@@ -421,6 +423,7 @@ Exec_errors evaluate(MCExecPoint& p_context,
 
 	return EE_UNDEFINED;
 }
+#endif
 
 };
 

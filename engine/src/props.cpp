@@ -14,6 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#ifdef OLD_EXEC
 typedef struct _PropList
 {
 	const char *token;
@@ -237,7 +238,7 @@ static PropList buttonprops[] =
 		{"hilitePattern", P_HILITE_PATTERN},
         {"hoverIcon", P_HOVER_ICON},
         {"icon", P_ICON},
-        // AL-2014-07-23: [[ Bug 12894 ]] Add iconGravity to image properties list
+        // AL-2014-07-23: [[ Bug 12894 ]] Add iconGravity to button properties list
         {"iconGravity", P_ICON_GRAVITY},
         {"id", P_ID},
         {"ink", P_INK},
@@ -766,8 +767,8 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
 	default:
 		return ES_NORMAL;
 	}
-	MCVariableValue *v = new MCVariableValue;
-	v->assign_new_array(64);
+	MCAutoArrayRef t_array;
+	/* UNCHECKED */ MCArrayCreateMutable(&t_array);
 	MCerrorlock++;
 	while (tablesize--)
 	{
@@ -817,9 +818,10 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
             }
         }
         
-        v->store_element(ep, t_token);
+		ep.storearrayelement_cstring(*t_array, table[tablesize].token);
 	}
 	MCerrorlock--;
-	ep.setarray(v, True);
+	ep.setvalueref(*t_array);
 	return ES_NORMAL;
 }
+#endif

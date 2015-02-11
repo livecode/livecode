@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "unicode.h"
 #include "textlayout.h"
 
 extern ATSUFontID coretext_font_to_atsufontid(void *p_font);

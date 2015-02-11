@@ -1,0 +1,6 @@
+setup
+
+test md5digest(empty) is binaryEncode("h*", "4dd1c89df8002b409e089089ce8f24e7")
+test md5digest("abcd") is binaryEncode("h*", "2ecf17c47472ee39593f42dce2f733f1")
+
+teardown

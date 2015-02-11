@@ -1,0 +1,9 @@
+setup
+
+set the itemDelimiter to "."
+test the number of items in the version is 3
+test item 1 of the version is an integer
+test item 2 of the version is an integer
+test item 3 of the version is an integer
+
+teardown

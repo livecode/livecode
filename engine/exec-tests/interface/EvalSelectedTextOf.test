@@ -1,0 +1,16 @@
+setup "list field"
+create field
+
+set the text of the last field to "abc" & return & "def" & return & "ghi"
+set the listbehavior of field 1 to true
+set the multiplehilites of field 1 to true
+set the noncontiguoushilites of field 1 to true
+
+set the hilitedlines of field 1 to 1,3
+
+test the selectedText of field 1 is ("abc" & return & "ghi")
+
+set the hilitedLines of field 1 to empty
+test the selectedText of field 1 is empty
+
+teardown

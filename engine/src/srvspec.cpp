@@ -23,7 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "param.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "util.h"
 #include "object.h"
 #include "socket.h"
@@ -51,6 +52,7 @@ uint32_t g_current_background_colour = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 extern void MCS_common_init(void);
 
 extern MCSystemInterface *MCServerCreatePosixSystem(void);
@@ -222,10 +224,13 @@ void MCS_init(void)
 
 	MCS_common_init();
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef const char *(*MCUrlExecuteCallback)(void *state, CURL *curl_handle);
+
+extern char *strndup(const char *, size_t);
 
 static bool url_build_header_list(const char *p_list, curl_slist*& r_headers)
 {
@@ -282,10 +287,10 @@ static bool url_build_header_list(const char *p_list, curl_slist*& r_headers)
 
 static size_t url_write_callback(void *p_buffer, size_t p_size, size_t p_count, void *p_context)
 {
-	MCString t_string((char *)p_buffer, p_size * p_count);
-	MCExecPoint ep;
-	ep . setsvalue(t_string);
-	MCurlresult -> append(ep, True);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_buffer, p_size * p_count, &t_string);
+	MCExecContext ctxt;
+	MCurlresult -> set(ctxt, *t_string, kMCVariableSetAfter);
 	return p_count;
 }
 
@@ -297,20 +302,20 @@ static CURLcode _set_ssl_certificates_callback(CURL *p_curl, void *p_ssl_ctx, vo
 	return CURLE_OK;
 }
 
-static const char *url_execute(const char *p_url, MCUrlExecuteCallback p_callback, void *p_state)
+static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void *p_state, MCStringRef& r_error)
 {
 	const char *t_error;
 	t_error = NULL;
 	
 	bool t_is_http, t_is_https;
-	t_is_http =  strncmp(p_url, "http", 4) == 0;
-	t_is_https = strncmp(p_url, "https", 5) == 0;
+	t_is_http = MCStringBeginsWithCString(p_url, (const char_t*)"http", kMCCompareExact);
+	t_is_https = MCStringBeginsWithCString(p_url, (const char_t*)"https", kMCCompareExact);
 	
 	curl_slist *t_headers;
 	t_headers = NULL;
-	if (t_error == NULL && MChttpheaders != NULL && t_is_http)
+	if (t_error == NULL && !MCStringIsEmpty(MChttpheaders) && t_is_http)
 	{
-		if (!url_build_header_list(MChttpheaders, t_headers))
+		if (!url_build_header_list(MCStringGetCString(MChttpheaders), t_headers))
 			t_error = "couldn't build header list";
 	}
 	
@@ -325,7 +330,7 @@ static const char *url_execute(const char *p_url, MCUrlExecuteCallback p_callbac
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(t_url_handle, CURLOPT_URL, p_url) != CURLE_OK)
+		if (curl_easy_setopt(t_url_handle, CURLOPT_URL, MCStringGetCString(p_url)) != CURLE_OK)
 			t_error = "couldn't set url";
 	}
 	
@@ -414,34 +419,37 @@ static const char *url_execute(const char *p_url, MCUrlExecuteCallback p_callbac
 	if (t_headers != NULL)
 		curl_slist_free_all(t_headers);
 	
-	return t_error;
+	/* UNCHECKED */ MCStringCreateWithCString(t_error, r_error);
+	
 }
 
-void MCS_geturl(MCObject *p_target, const char *p_url)
+void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
-	const char *t_error;
-	t_error = NULL;
+
+	MCAutoStringRef t_error;
 	
-	if (t_error == NULL)
+	if (MCStringIsEmpty(*t_error))
 	{
-		if (strncmp(p_url, "https:", 6) != 0 && strncmp(p_url, "http:", 5) != 0 && strncmp(p_url, "ftp:", 4) != 0)
-			t_error = "unsupported protocol";
+		if (!MCStringBeginsWithCString(p_url, (const char_t*)"https:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"http:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"ftp:", kMCCompareExact))
+			/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 	}
 	
-	if (t_error == NULL)
-		t_error = url_execute(p_url, NULL, NULL);
+	if (MCStringIsEmpty(*t_error))
+	{
+		url_execute(p_url, NULL, NULL, &t_error);
+	}
 	
-	if (t_error != NULL)
+	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(t_error);
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
 static const char *url_execute_post(void *p_state, CURL *p_curl)
 {
-	MCString *state;
-	state = static_cast<MCString *>(p_state);
+	MCDataRef state;
+	state = static_cast<MCDataRef>(p_state);
 	
 	const char *t_error;
 	t_error = NULL;
@@ -454,105 +462,90 @@ static const char *url_execute_post(void *p_state, CURL *p_curl)
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(p_curl, CURLOPT_POSTFIELDS, state -> getstring()) != CURLE_OK)
+		if (curl_easy_setopt(p_curl, CURLOPT_POSTFIELDS, MCDataGetBytePtr(state)) != CURLE_OK)
 			t_error = "couldn't set post data";
 	}
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(p_curl, CURLOPT_POSTFIELDSIZE, state -> getlength()) != CURLE_OK)
+		if (curl_easy_setopt(p_curl, CURLOPT_POSTFIELDSIZE, MCDataGetLength(state)) != CURLE_OK)
 			t_error = "couldn't set post size";
 	}
 	
 	return t_error;
 }
 
-void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url)
+void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
-	const char *t_error;
-	t_error = NULL;
+	MCAutoStringRef t_error;
 
-	if (t_error == NULL)
+	if (MCStringIsEmpty(*t_error))
 	{
-		if (strncmp(p_url, "https:", 6) != 0 && strncmp(p_url, "http:", 5) != 0)
-			t_error = "unsupported protocol";
+		if (!MCStringBeginsWithCString(p_url, (const char_t*)"https:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"http:", kMCCompareExact))
+			/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 	}
 	
-	if (t_error == NULL)
-		t_error = url_execute(p_url, url_execute_post, (void *)&p_data); 
+	if (MCStringIsEmpty(*t_error))
+	{
+		url_execute(p_url, url_execute_post, (void *)p_data, &t_error);
+	}
 
-	if (t_error != NULL)
+	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(t_error);
+        MCresult -> setvalueref(*t_error);
 	}
-}
-
-static size_t url_upload_read_callback(void *ptr, size_t size, size_t nmemb, void *stream)
-{
-	MCString *t_data;
-	t_data = static_cast<MCString *>(stream);
-	
-	size_t t_amount;
-	t_amount = size * nmemb;
-	if (t_amount > t_data -> getlength())
-		t_amount = t_data -> getlength();
-	
-	memcpy(ptr, t_data -> getstring(), t_amount);
-	
-	t_data -> set(t_data -> getstring() + t_amount, t_data -> getlength() - t_amount);
-	
-	return t_amount;
 }
 
 static const char *url_execute_upload(void *p_state, CURL *p_curl)
 {
+  MCDataRef state;
+	state = static_cast<MCDataRef>(p_state);
+	
 	const char *t_error;
 	t_error = NULL;
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(p_curl, CURLOPT_UPLOAD, 1) != CURLE_OK)
-			t_error = "couldn't configure upload";
+
+	if (curl_easy_setopt(p_curl, CURLOPT_CUSTOMREQUEST, "PUT") != CURLE_OK)
+		return "couldn't configure upload";
 	}
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(p_curl, CURLOPT_READFUNCTION, url_upload_read_callback) != CURLE_OK)
-			t_error = "couldn't set read function";
+		if (curl_easy_setopt(p_curl, CURLOPT_POSTFIELDS, MCDataGetBytePtr(state)) != CURLE_OK)
+			t_error = "couldn't set upload data";
 	}
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(p_curl, CURLOPT_READDATA, p_state) != CURLE_OK)
-			t_error = "couldn't set read data";
+		if (curl_easy_setopt(p_curl, CURLOPT_POSTFIELDSIZE, MCDataGetLength(state)) != CURLE_OK)
+			t_error = "couldn't set upload size";
 	}
 	
 	return t_error;
 }
 
-void MCS_putintourl(MCObject *p_target, const MCString& p_data, const char *p_url)
+void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
-	const char *t_error;
-	t_error = NULL;
-	
-	if (t_error == NULL)
+	MCAutoStringRef t_error;
+		
+	if (MCStringIsEmpty(*t_error))
 	{
-		if (strncmp(p_url, "https:", 6) != 0 && strncmp(p_url, "http:", 5) != 0 && strncmp(p_url, "ftp:", 4) != 0)
-			t_error = "unsupported protocol";
+		if (!MCStringBeginsWithCString(p_url, (const char_t*)"https:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"http:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"ftp:", kMCCompareExact))
+			/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 	}
 	
-	if (t_error == NULL)
-	{
-		MCString t_data;
-		t_data = p_data;
-		t_error = url_execute(p_url, url_execute_upload, (void *)&t_data);
+	if (MCStringIsEmpty(*t_error))
+    {
+      url_execute(p_url, url_execute_upload, (void *)p_data, &t_error);
 	}
 	
-	if (t_error != NULL)
+	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(t_error);
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -601,85 +594,68 @@ static const char *url_execute_ftp_delete(void *p_state, CURL *p_curl)
 	return NULL;
 }
 
-void MCS_deleteurl(MCObject *p_target, const char *p_url)
+void MCS_deleteurl(MCObject *p_target, MCStringRef p_url)
 {
-	const char *t_error;
-	t_error = NULL;
-
-	if (strncmp(p_url, "http://", 7) == 0 || strncmp(p_url, "https://", 8) == 0)
-		t_error = url_execute(p_url, url_execute_http_delete, NULL);
-	else if (strncmp(p_url, "ftp://", 6) == 0)
-		t_error = url_execute(p_url, url_execute_ftp_delete, (void *)p_url);
+	MCAutoStringRef t_error;
+	
+	if (MCStringBeginsWithCString(p_url, (const char_t*)"http://", kMCCompareExact) || MCStringBeginsWithCString(p_url, (const char_t*)"https://", kMCCompareExact))
+		url_execute(p_url, url_execute_http_delete, NULL, &t_error);
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"ftp://", kMCCompareExact))
+		url_execute(p_url, url_execute_ftp_delete, (void *) MCStringGetCString(p_url), &t_error);
 	else
-		t_error = "unsupported protocol";
+		/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 
-	if (t_error != NULL)
+	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(t_error);
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
-void MCS_unloadurl(MCObject *p_object, const char *p_url)
+void MCS_unloadurl(MCObject *p_object, MCStringRef p_url)
 {
 }
 
-void MCS_loadurl(MCObject *p_object, const char *p_url, const char *p_message)
+void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCServerPutOutput(const MCString& data);
-extern void MCServerPutUnicodeOutput(const MCString& data);
-extern void MCServerPutBinaryOutput(const MCString& data);
-extern void MCServerPutHeader(const MCString& data, bool add);
-extern void MCServerPutContent(const MCString& data);
-extern void MCServerPutUnicodeContent(const MCString& data);
-extern void MCServerPutMarkup(const MCString& data);
-extern void MCServerPutUnicodeMarkup(const MCString& data);
+extern void MCServerPutOutput(MCStringRef data);
+extern void MCServerPutUnicodeOutput(MCDataRef data);
+extern void MCServerPutBinaryOutput(MCDataRef data);
+extern void MCServerPutHeader(MCStringRef data, bool add);
+extern void MCServerPutContent(MCStringRef data);
+extern void MCServerPutUnicodeContent(MCDataRef data);
+extern void MCServerPutMarkup(MCStringRef data);
+extern void MCServerPutUnicodeMarkup(MCDataRef data);
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data_ref)
 {
-	switch(p_kind)
+    switch(p_kind)
 	{
 	case kMCSPutOutput:
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
 	case kMCSPutAfterMessage:
-		MCServerPutOutput(p_data);
-		break;
-			
-	case kMCSPutBinaryOutput:
-		MCServerPutBinaryOutput(p_data);
-		break;
-
-	case kMCSPutUnicodeOutput:
-		MCServerPutUnicodeOutput(p_data);
+		MCServerPutOutput(p_data_ref);
 		break;
 			
 	case kMCSPutHeader:
-		MCServerPutHeader(p_data, false);
+		MCServerPutHeader(p_data_ref, false);
 		break;
 
 	case kMCSPutNewHeader:
-		MCServerPutHeader(p_data, true);
+		MCServerPutHeader(p_data_ref, true);
 		break;
 
 	case kMCSPutContent:
-		MCServerPutContent(p_data);
-		break;
-			
-	case kMCSPutUnicodeContent:
-		MCServerPutUnicodeContent(p_data);
+		MCServerPutContent(p_data_ref);
 		break;
 
 	case kMCSPutMarkup:
-		MCServerPutMarkup(p_data);
-		break;
-			
-	case kMCSPutUnicodeMarkup:
-		MCServerPutUnicodeMarkup(p_data);
+		MCServerPutMarkup(p_data_ref);
 		break;
 			
 	default:
@@ -689,6 +665,22 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
 	return true;
 }
 
+
+bool MCS_put_binary(MCExecContext& ctxt, MCSPutKind p_kind, MCDataRef p_data)
+{
+	
+	switch(p_kind)
+	{		
+	case kMCSPutBinaryOutput:
+		MCServerPutBinaryOutput(p_data);
+		break;
+
+	default:
+		break;
+	}
+
+	return true;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCS_set_errormode(MCSErrorMode p_mode)
@@ -725,7 +717,7 @@ MCSOutputLineEndings MCS_get_outputlineendings(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemLaunchUrl(const char *p_url)
+bool MCSystemLaunchUrl(MCStringRef p_url)
 {
 	return false;
 }
@@ -748,45 +740,44 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	return 0;
 }
 
-int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	return 0;
 }
 
-int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	return 0;
 }
 
-int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	return 0;
 }
 
-int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
+int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	return 0;
 }
 
-int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boolean sheet)
+bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
-	return 0;
+	return true;
 }
 
 // MERG-2013-08-18: Stubs for colorDialogColors.
-void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+void MCA_setcolordialogcolors(MCColor* p_list, uindex_t p_count)
 {
     
 }
 
-void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
 {
-	p_ep.clear();
 }
 
 

@@ -106,7 +106,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeColor,
 	
 	kMCPlatformPropertyTypeNativeCString,
-	kMCPlatformPropertyTypeUTF8CString,
+	kMCPlatformPropertyTypeMCString,
 	
 	kMCPlatformPropertyTypeWindowStyle,
 	kMCPlatformPropertyTypeWindowMask,
@@ -534,8 +534,8 @@ void MCPlatformScreenSnapshotOfWindowArea(uint32_t window_id, MCRectangle p_area
 
 typedef class MCPlatformLoadedFont *MCPlatformLoadedFontRef;
 
-bool MCPlatformLoadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
-bool MCPlatformUnloadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef loaded_font);
+bool MCPlatformLoadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
+bool MCPlatformUnloadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef loaded_font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -552,6 +552,7 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef transform, MCImag
 typedef class MCPlatformWindowMask *MCPlatformWindowMaskRef;
 
 void MCPlatformWindowMaskCreate(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);
+void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef mask);
 void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef mask);
 
@@ -601,7 +602,7 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu);
 void MCPlatformRetainMenu(MCPlatformMenuRef menu);
 void MCPlatformReleaseMenu(MCPlatformMenuRef menu);
 
-void MCPlatformSetMenuTitle(MCPlatformMenuRef menu, const char *title);
+void MCPlatformSetMenuTitle(MCPlatformMenuRef menu, MCStringRef title);
 
 void MCPlatformCountMenuItems(MCPlatformMenuRef menu, uindex_t& r_count);
 
@@ -947,13 +948,14 @@ enum MCPlatformFileDialogKind
 	kMCPlatformFileDialogKindOpenMultiple,
 };
 
-void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, const char *p_title, const char *p_message, const char *p_initial);
-MCPlatformDialogResult MCPlatformEndFolderDialog(char*& r_selected_folder);
+void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial);
+MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef & r_selected_folder);
 
-void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, const char *p_title, const char *p_prompt,  char * const p_types[], uint4 p_type_count, const char *p_initial);
-MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, char*& r_paths, char*& r_type);
 
-void MCPlatformBeginColorDialog(const char *p_title, const MCColor& p_color);
+void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt,  MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial);
+MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef& r_paths, MCStringRef& r_type);
+
+void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color);
 MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_new_color);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -964,6 +966,7 @@ enum MCPlatformPlayerProperty
 {
 	kMCPlatformPlayerPropertyURL,
 	kMCPlatformPlayerPropertyFilename,
+    kMCPlatformPlayerPropertyInvalidFilename,
 	
 	kMCPlatformPlayerPropertyOffscreen,
 	kMCPlatformPlayerPropertyRect,
@@ -1021,6 +1024,8 @@ enum MCPlatformPlayerHotSpotProperty
 {
 };
 
+// SN-2014-06-25 [[ PlatformPlayer ]]
+// MCPlatformPlayerQTVRConstraints must follow the definition of MCMultimediaQTVRConstraints
 struct MCPlatformPlayerQTVRConstraints
 {
 	double x_min, x_max;
@@ -1072,11 +1077,13 @@ typedef struct MCPlatformScriptEnvironment *MCPlatformScriptEnvironmentRef;
 
 typedef char *(*MCPlatformScriptEnvironmentCallback)(const char * const *arguments, uindex_t argument_count);
 
-void MCPlatformScriptEnvironmentCreate(const char *language, MCPlatformScriptEnvironmentRef& r_env);
+// SN-2014-07-23: [[ Bug 12907 ]]
+//  Update as well MCSreenDC::createscriptenvironment (and callees)
+void MCPlatformScriptEnvironmentCreate(MCStringRef language, MCPlatformScriptEnvironmentRef& r_env);
 void MCPlatformScriptEnvironmentRetain(MCPlatformScriptEnvironmentRef env);
 void MCPlatformScriptEnvironmentRelease(MCPlatformScriptEnvironmentRef env);
 bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const char *function, MCPlatformScriptEnvironmentCallback callback);
-void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, const char *script, char*& r_result);
+void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, MCStringRef script, MCStringRef& r_result);
 void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1178,7 +1185,7 @@ double MCPlatformSoundRecorderGetLoudness(MCPlatformSoundRecorderRef recorder);
 
 // Start sound recording to the given file. If the sound recorder is already recording then
 // the existing recording should be cancelled (stop and delete output file).
-bool MCPlatformSoundRecorderStart(MCPlatformSoundRecorderRef recorder, const char *filename);
+bool MCPlatformSoundRecorderStart(MCPlatformSoundRecorderRef recorder, MCStringRef filename);
 // Stop the sound recording.
 void MCPlatformSoundRecorderStop(MCPlatformSoundRecorderRef recorder);
 
@@ -1206,6 +1213,85 @@ MCPlatformDialogResult MCPlatformSoundRecorderEndConfigurationDialog(MCPlatformS
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum MCPlatformControlType
+{
+    kMCPlatformControlTypeGlobal = 0,   // Global theming (i.e the theme inherited by all controls)
+    kMCPlatformControlTypeButton,       // Buttons not covered more specifically
+    kMCPlatformControlTypeCheckbox,     // On-off tick box
+    kMCPlatformControlTypeRadioButton,  // One-of-many selection button
+    kMCPlatformControlTypeTabButton,    // Selector buttons on a tab control
+    kMCPlatformControlTypeTabPane,      // Pane area of a tab control
+    kMCPlatformControlTypeLabel,        // Non-modifiable text
+    kMCPlatformControlTypeInputField,   // Standard text entry box
+    kMCPlatformControlTypeList,         // Itemised text box
+    kMCPlatformControlTypeMenu,         // Menus not covered more specifically
+    kMCPlatformControlTypeMenuItem,     // Item within a menu
+    kMCPlatformControlTypeOptionMenu,   // Select a single item
+    kMCPlatformControlTypePulldownMenu, // Menu as found in menubars
+    kMCPlatformControlTypeComboBox,     // Input field/option menu combination
+    kMCPlatformControlTypePopupMenu,    // Menu as appears when right-clicking
+    kMCPlatformControlTypeProgressBar,  // Visual indicator of progress
+    kMCPlatformControlTypeScrollBar,    // For scrolling, apparently
+    kMCPlatformControlTypeSlider,       // Selects a value between two extremes
+    kMCPlatformControlTypeSpinArrows,   // Up-down arrows for value adjustment
+    kMCPlatformControlTypeWindow,       // Windows can have theming props too
+    kMCPlatformControlTypeMessageBox    // Pop-up alert dialogue
+};
+
+typedef unsigned int MCPlatformControlState;
+enum
+{
+    kMCPlatformControlStateDisabled         = (1<<0),   // Control is disabled
+    kMCPlatformControlStateOn               = (1<<1),   // Control is "on" (e.g. ticked checkbox)
+    kMCPlatformControlStateMouseOver        = (1<<2),   // Mouse is within the control's bounds
+    kMCPlatformControlStateMouseFocus       = (1<<3),   // Control has mouse focus
+    kMCPlatformControlStatePressed          = (1<<5),   // Mouse is down (and this control has mouse focus)
+    kMCPlatformControlStateDefault          = (1<<6),   // Control is the default action
+    kMCPlatformControlStateReadOnly         = (1<<7),   // Control is not modifiable
+    kMCPlatformControlStateSelected         = (1<<8),   // Control is selected
+    kMCPlatformControlStateWindowActive     = (1<<9),   // Control is in focused window
+    
+    kMCPlatformControlStateCompatibility    = (1<<31),   // Use backwards-compatible theming
+    
+    kMCPlatformControlStateNormal           = kMCPlatformControlStateCompatibility
+};
+
+enum MCPlatformControlPart
+{
+    kMCPlatformControlPartNone              // No sub-part of the control
+};
+
+enum MCPlatformThemeProperty
+{
+    // These properties may vary by control type
+    kMCPlatformThemePropertyTextFont,               // [Font]       Font for text drawing
+    kMCPlatformThemePropertyTextColor,              // [Color]      Text color
+    kMCPlatformThemePropertyTextSize,               // [Integer]    Text point size
+    kMCPlatformThemePropertyBackgroundColor,        // [Color]      Background color
+    kMCPlatformThemePropertyAlpha,                  // [Integer]    Whole-control transparency
+    kMCPlatformThemePropertyShadowColor,            // [Color]      Color for control shadow
+    kMCPlatformThemePropertyBorderColor,            // [Color]      Color for control borders
+    kMCPlatformThemePropertyFocusColor,             // [Color]      Color for keyboard focus indicator
+    kMCPlatformThemePropertyTopEdgeColor,           // [Color]      Color for the top edge of 3D controls
+    kMCPlatformThemePropertyBottomEdgeColor,        // [Color]      Color for the bottom edge of 3D controls
+    kMCPlatformThemePropertyLeftEdgeColor,          // [Color]      Color for the left edge of 3D controls
+    kMCPlatformThemePropertyRightEdgeColor          // [Color]      Color for the right edge of 3D controls
+};
+
+enum MCPlatformThemePropertyType
+{
+    kMCPlatformThemePropertyTypeFont,
+    kMCPlatformThemePropertyTypeColor,
+    kMCPlatformThemePropertyTypeInteger
+};
+
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&);
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&);
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&);
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -16,12 +16,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "mblandroidjava.h"
 
@@ -348,9 +347,40 @@ bool MCJavaStringToNative(JNIEnv *env, jstring p_java_string, char *&r_native)
     return t_success;
 }
 
-bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_byte_array)
+bool MCJavaStringFromStringRef(JNIEnv *env, MCStringRef p_string, jstring &r_java_string)
 {
-    if (p_data == nil || p_data->getlength() == 0)
+    if (p_string == nil)
+    {
+        r_java_string = nil;
+        return true;
+    }
+    
+    bool t_success = true;
+    jstring t_java_string = nil;
+    
+    t_success = nil != (t_java_string = env -> NewString((const jchar*)MCStringGetCharPtr(p_string), MCStringGetLength(p_string)));
+    
+    if (t_success)
+        r_java_string = t_java_string;
+    
+    return t_success;
+
+}
+
+bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef &r_string)
+{
+    unichar_t *t_unicode_string;
+    uindex_t t_length;
+    
+    if (MCJavaStringToUnicode(env, p_java_string, t_unicode_string, t_length))
+        return MCStringCreateWithChars(t_unicode_string, t_length, r_string);
+    
+    return false;
+}
+
+bool MCJavaByteArrayFromDataRef(JNIEnv *env, MCDataRef p_data, jbyteArray &r_byte_array)
+{
+    if (p_data == nil || MCDataGetLength(p_data) == 0)
     {
         r_byte_array = nil;
         return true;
@@ -359,11 +389,11 @@ bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_
     bool t_success = true;
     jbyteArray t_bytes = nil;
     
-    t_success = nil != (t_bytes = env -> NewByteArray(p_data->getlength()));
+    t_success = nil != (t_bytes = env -> NewByteArray(MCDataGetLength(p_data)));
     
     if (t_success)
     {
-        env -> SetByteArrayRegion(t_bytes, 0, p_data->getlength(), (const jbyte*)p_data->getstring());
+        env -> SetByteArrayRegion(t_bytes, 0, MCDataGetLength(p_data), (const jbyte*)MCDataGetBytePtr(p_data));
     }
     
     if (t_success)
@@ -372,12 +402,11 @@ bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_
     return t_success;
 }
 
-bool MCJavaByteArrayToData(JNIEnv *env, jbyteArray p_byte_array, void *&r_data, uint32_t &r_length)
+bool MCJavaByteArrayToDataRef(JNIEnv *env, jbyteArray p_byte_array, MCDataRef& r_data)
 {
     bool t_success = true;
     
     jbyte *t_bytes = nil;
-    void *t_data = nil;
     uint32_t t_length = 0;
     
     if (p_byte_array != nil)
@@ -386,15 +415,8 @@ bool MCJavaByteArrayToData(JNIEnv *env, jbyteArray p_byte_array, void *&r_data, 
     if (t_bytes != nil)
     {
         t_length = env -> GetArrayLength(p_byte_array);
-        t_success = MCMemoryAllocateCopy(t_bytes, t_length, t_data);
-        
+        t_success = MCDataCreateWithBytes((const byte_t *)t_bytes, t_length, r_data);
         env -> ReleaseByteArrayElements(p_byte_array, t_bytes, 0);
-    }
-    
-    if (t_success)
-    {
-        r_data = t_data;
-        r_length = t_length;
     }
     
     return t_success;
@@ -452,6 +474,23 @@ bool MCJavaListAppendObject(JNIEnv *env, jobject p_list, jobject p_object)
 
 ////////
 
+bool MCJavaListAppendStringRef(JNIEnv *env, jobject p_list, MCStringRef p_string)
+{
+    bool t_success = true;
+    jstring t_jstring = nil;
+    
+    t_success = MCJavaStringFromStringRef(env, p_string, t_jstring);
+    
+    if (t_success)
+        t_success = MCJavaListAppendObject(env, p_list, t_jstring);
+    
+    if (t_jstring != nil)
+        env->DeleteLocalRef(t_jstring);
+    
+    return t_success;
+}
+
+/*
 bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_string)
 {
     bool t_success = true;
@@ -467,6 +506,7 @@ bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_strin
     
     return t_success;
 }
+*/
 
 bool MCJavaListAppendInt(JNIEnv *env, jobject p_list, jint p_int)
 {
@@ -516,7 +556,7 @@ bool MCJavaMapPutObjectToObject(JNIEnv *env, jobject p_map, jobject p_key, jobje
     return true;
 }
 
-bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, const char *p_key, jobject p_value)
+bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, MCStringRef p_key, jobject p_value)
 {
 	bool t_success;
 	t_success = true;
@@ -524,7 +564,7 @@ bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, const char *p_key, j
 	jstring t_key;
 	t_key = nil;
 	if (t_success)
-		t_success = MCJavaStringFromNative(env, p_key, t_key);
+		t_success = MCJavaStringFromStringRef(env, p_key, t_key);
 	
 	if (t_success)
 		t_success = MCJavaMapPutObjectToObject(env, p_map, t_key, p_value);
@@ -535,7 +575,7 @@ bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, const char *p_key, j
 	return t_success;
 }
 
-bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, const char *p_key, const char *p_value)
+bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, MCStringRef p_key, MCStringRef p_value)
 {
     bool t_success;
     t_success = true;
@@ -543,7 +583,7 @@ bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, const char *p_key, c
     jstring t_value;
     t_value = nil;
     if (t_success)
-        t_success = MCJavaStringFromNative(env, p_value, t_value);
+        t_success = MCJavaStringFromStringRef(env, p_value, t_value);
     
     if (t_success)
         t_success = MCJavaMapPutStringToObject(env, p_map, p_key, t_value);
@@ -573,7 +613,6 @@ bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, 
 	{
 		jobject t_entry = nil;
 		jobject t_key = nil, t_value = nil;
-		char *t_key_string = nil;
 		
 		t_success = nil != (t_entry = env->CallObjectMethod(t_iterator, s_iterator_next));
 		
@@ -583,16 +622,21 @@ bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, 
 		if (t_success)
 			t_success = nil != (t_value = env->CallObjectMethod(t_entry, s_map_entry_get_value));
 		
-		// convert key string to native char*
+		// convert key string to stringref
+        MCAutoStringRef t_key_string;
 		if (t_success)
-			t_success = MCJavaStringToNative(env, (jstring)t_key, t_key_string);
+			t_success = MCJavaStringToStringRef(env, (jstring)t_key, &t_key_string);
 		
+        // and then to nameref
+        MCNewAutoNameRef t_key_name;
+        if (t_success)
+            t_success = MCNameCreate(*t_key_string, &t_key_name);
+        
 		// call callback
 		if (t_success)
-			t_success = p_callback(env, t_key_string, t_value, p_context);
+			t_success = p_callback(env, *t_key_name, t_value, p_context);
 		
-		if (t_key_string != nil)
-			MCCStringFree(t_key_string);
+
 		if (t_key != nil)
 			env->DeleteLocalRef(t_key);
 		if (t_value != nil)
@@ -608,7 +652,7 @@ bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, 
 	
 	return t_success;
 }
-
+/*
 bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_array, jobject &r_object)
 {
 	if (!init_hashmap_class(p_env))
@@ -637,7 +681,7 @@ bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_arr
 			t_success = ES_NORMAL == t_hashentry->value.fetch(ep);
 			jstring t_jstring = nil;
 			if (t_success)
-				t_success = MCJavaStringFromNative(p_env, &ep.getsvalue(), t_jstring);
+				t_success = MCJavaStringFromNative(p_env, ep.getsvalue().clone(), t_jstring);
 			if (t_success)
 				t_jobj = t_jstring;
 		}
@@ -653,7 +697,51 @@ bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_arr
 	
 	return t_success;
 }
+*/
 
+bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object)
+{
+	if (!init_hashmap_class(p_env))
+		return false;
+	
+	bool t_success = true;
+	
+	uindex_t t_index = 0;
+	jobject t_map = nil;
+	
+	t_success = MCJavaInitMap(p_env, t_map);
+    
+    MCValueRef t_element;
+    MCNameRef t_name;
+    
+	while (t_success && MCArrayIterate(p_array, t_index, t_name, t_element))
+	{
+		jobject t_jobj = nil;
+		if (MCValueIsArray(t_element))
+			t_success = MCJavaMapFromArray(p_env, (MCArrayRef)t_element, t_jobj);
+		else
+		{
+			jstring t_jstring = nil;
+			if (t_success)
+				t_success = MCJavaStringFromStringRef(p_env, (MCStringRef)t_element, t_jstring);
+			if (t_success)
+				t_jobj = t_jstring;
+		}
+		if (t_success)
+			t_success = MCJavaMapPutStringToObject(p_env, t_map, MCNameGetString(t_name), t_jobj);
+
+		if (t_jobj != nil)
+			p_env->DeleteLocalRef(t_jobj);
+	}
+	if (t_success)
+		r_object = t_map;
+	else if (t_map != nil)
+		MCJavaFreeMap(p_env, t_map);
+	
+	return t_success;
+}
+
+/*
 typedef struct
 {
 	MCVariableValue *array;
@@ -719,6 +807,65 @@ bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariabl
 	
 	return t_success;
 }
+*/
+
+typedef struct
+{
+    MCArrayRef array;
+} map_to_array_context_t;
+
+static bool s_map_to_array_callback(JNIEnv *p_env, MCNameRef p_key, jobject p_value, void *p_context)
+{
+	bool t_success = true;
+	
+	map_to_array_context_t *t_context = (map_to_array_context_t*)p_context;
+	
+	if (t_success)
+	{
+		if (p_env->IsInstanceOf(p_value, s_string_class))
+		{
+            MCAutoStringRef t_string;
+			t_success = MCJavaStringToStringRef(p_env, (jstring)p_value, &t_string);
+            if (t_success)
+                t_success = MCArrayStoreValue(t_context -> array, false, p_key, *t_string);
+		}
+		else if (p_env->IsInstanceOf(p_value, s_hash_map_class))
+		{
+            MCAutoArrayRef t_array;
+			map_to_array_context_t t_new_context;
+            t_success = MCArrayCreateMutable(&t_array);
+			t_new_context.array = *t_array;
+            if (t_success)
+                t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
+		}
+		else
+			t_success = false;
+	}
+	
+	return t_success;
+}
+
+bool MCJavaMapToArray(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array)
+{
+	if (!init_string_class(p_env) || !init_hashmap_class(p_env))
+		return false;
+	
+	bool t_success = true;
+	
+	MCAutoArrayRef t_array;
+	t_success = MCArrayCreateMutable(&t_array);
+    
+	map_to_array_context_t t_context;
+	t_context.array = *t_array;
+	
+	if (t_success)
+		t_success = MCJavaIterateMap(p_env, p_map, s_map_to_array_callback, &t_context);
+	
+	if (t_success)
+		r_array = MCValueRetain(*t_array);
+	
+	return t_success;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -734,6 +881,8 @@ static MCJavaType native_sigchar_to_returntype(char p_sigchar)
             return kMCJavaTypeMCString;
         case 'U':
             return kMCJavaTypeMCStringUnicode;
+		case 'x':
+			return kMCJavaTypeMCStringRef;
         case 'd':
             return kMCJavaTypeByteArray;
         case 'i':
@@ -773,6 +922,7 @@ static const char *return_type_to_java_sig(MCJavaType p_type)
         case kMCJavaTypeCString:  // string from char *
         case kMCJavaTypeMCString:  // string from MCString *
         case kMCJavaTypeMCStringUnicode:  // string from utf16 MCString *
+		case kMCJavaTypeMCStringRef: // string from MCStringRef
             return "Ljava/lang/String;";
         case kMCJavaTypeByteArray:  // binary data from MCString * as byte[]
             return "[B";
@@ -909,7 +1059,14 @@ bool MCJavaObjectGetField(JNIEnv *env, jobject p_object, const char *p_fieldname
                 t_success = false;
                 break;
             }
-                
+            
+			case kMCJavaTypeMCStringRef:
+            {
+                /* UNIMPLEMENTED */
+                t_success = false;
+                break;
+            }
+            
             case kMCJavaTypeByteArray:
             {
                 /* UNIMPLEMENTED */
@@ -1024,11 +1181,22 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
                     t_object = true;
                 }
                     break;
+				case kMCJavaTypeMCStringRef:
+				{
+					if (t_success)
+						t_success = MCJavaStringFromStringRef(env, va_arg(p_args, MCStringRef), t_java_string);
+                    if (t_success)
+                        t_value . l = t_java_string;
+                    
+                    t_delete = true;
+                    t_object = true;
+				}
+					break;
                 case kMCJavaTypeByteArray:
                 {
-                    t_mcstring = va_arg(p_args, const MCString *);
+					if (t_success)
+						t_success = MCJavaByteArrayFromDataRef(env, va_arg(p_args, MCDataRef), t_byte_array);
                     
-                    t_success = MCJavaByteArrayFromData(env, t_mcstring, t_byte_array);
                     if (t_success)
                         t_value.l = t_byte_array;
                     

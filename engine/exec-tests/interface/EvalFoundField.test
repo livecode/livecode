@@ -1,0 +1,11 @@
+setup
+create field
+
+set the text of the last field to "abcd"
+find characters "b" in the last field
+test the foundField is "field 1"
+
+find characters "x" in the last field
+test the foundField is empty
+
+teardown

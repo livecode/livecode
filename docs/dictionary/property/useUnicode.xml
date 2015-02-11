@@ -1,47 +1,77 @@
 <doc>
-  <legacy_id>1150</legacy_id>
-  <name>useUnicode</name>
-  <type>property</type>
-  <syntax>
-    <example>set the useUnicode to {true | false}</example>
-  </syntax>
-  <library></library>
-  <objects>
-    <local/>
-  </objects>
-  <synonyms>
-  </synonyms>
-  <classification>
-    <category>Text and Data Processing</category>
-  </classification>
-  <references>
-    <function tag="numToChar">numToChar Function</function>
-    <property tag="allowInlineInput">allowInlineInput Property</property>
-  </references>
-  <history>
-    <introduced version="2.0">Added.</introduced>
-  </history>
-  <platforms>
-    <mac/>
-    <windows/>
-    <linux/>
-    <ios/>
-    <android/>
-  </platforms>
-  <classes>
-    <desktop/>
-    <server/>
-    <web/>
-    <mobile/>
-  </classes>
-  <security>
-  </security>
-  <summary>Specifies whether the <function tag="charToNum">charToNum</function> and <function tag="numToChar">numToChar</function> <glossary tag="function">functions</glossary> assume a <keyword tag="character">character</keyword> is <href tag="../glossary/doubledashbyte_character.xml">double-byte</href>.</summary>
-  <examples>
-    <example>set the useUnicode to true</example>
-    <example>set the useUnicode to (the number of items of myFont is 2)</example>
-  </examples>
-  <description>
-    <p>Use the <b>useUnicode</b> <glossary tag="property">property</glossary> to prepare to convert between <glossary tag="Unicode">Unicode</glossary> <keyword tag="characters">characters</keyword> and their numeric values.</p><p/><p><b>Value:</b></p><p>By default, the <b>useUnicode</b> <glossary tag="property">property</glossary> is false.</p><p/><p><b>Comments:</b></p><p>If the <b>useUnicode</b> <glossary tag="property">property</glossary> is set to true, the <function tag="numToChar">numToChar</function> and <function tag="charToNum">charToNum</function> <glossary tag="function">functions</glossary> use <href tag="../glossary/doubledashbyte_character.xml">double-byte characters</href>. You can <control_st tag="pass">pass</control_st> a number greater than 255 to the <function tag="numToChar">numToChar</function> <control_st tag="function">function</control_st> in order to generate a <href tag="../glossary/doubledashbyte_character.xml">double-byte character</href>, and you can <control_st tag="pass">pass</control_st> a <href tag="../glossary/doubledashbyte_character.xml">double-byte character</href> to the <function tag="charToNum">charToNum</function> <control_st tag="function">function</control_st>.</p><p/><p>If the <b>useUnicode</b> is false, the <function tag="numToChar">numToChar</function> and <function tag="charToNum">charToNum</function> <glossary tag="function">functions</glossary> use <href tag="../glossary/singledashbyte_character.xml">single-byte characters</href>. Passing a <href tag="../glossary/doubledashbyte_character.xml">double-byte character</href> to <function tag="charToNum">charToNum</function> or a number larger than 255 to <function tag="numToChar">numToChar</function> will produce incorrect results if the <b>useUnicode</b> is false.</p><p/><p>Since the <b>useUnicode</b> is a <href tag="../dictionary/local_property.xml">local property</href>, its <function tag="value">value</function> is <command tag="reset">reset</command> to false when the current <glossary tag="handler">handler</glossary> finishes <glossary tag="execute">executing</glossary>. It retains its <function tag="value">value</function> only for the current <glossary tag="handler">handler</glossary>, and setting it in one <glossary tag="handler">handler</glossary> does not affect its <function tag="value">value</function> in other <glossary tag="handler">handlers</glossary> it <glossary tag="call">calls</glossary>.</p>
-  </description>
+	<legacy_id>1150</legacy_id>
+	<name>useUnicode</name>
+	<type>property</type>
+
+	<syntax>
+		<example>set the useUnicode to {true | false}</example>
+		<example></example>
+		<example></example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Specifies whether the charToNum and numToChar functions assume a character is double-byte.</summary>
+
+	<examples>
+<example><p>set the useUnicode to true</p></example>
+<example><p>set the useUnicode to (the number of items of myFont is 2)</p></example>
+<example><p></p></example>
+<example><p></p></example>
+<example><p></p></example>
+	</examples>
+
+	<history>
+		<introduced version="2.0">Added.</introduced>
+		<deprecated version="7.0">7.0</deprecated>
+		<removed version=""></removed>
+		
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+		<local/>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Text and Data Processing</category>
+		<category></category>
+		<category></category>
+	</classification>
+
+	<references>
+		<function tag="numToChar">numToChar function</function>
+		<property tag="allowInlineInput">allowInlineInput property</property>
+	</references>
+
+	<description>
+	<overview>Use the <b>useUnicode</b> property to prepare to convert between Unicode characters and their numeric values.</overview>
+
+		<parameters>
+		</parameters>
+
+	<value>By default, the <b>useUnicode</b> property is false.</value>
+	<comments><p>If the useUnicode property is set to true, the numToChar and charToNum functions use double-byte characters. You can pass a number greater than 255 to the numToChar function in order to generate a double-byte character, and you can pass a double-byte character to the charToNum function.</p><p></p><p>If the useUnicode is false, the numToChar and charToNum functions use single-byte characters. Passing a double-byte character to charToNum or a number larger than 255 to numToChar will produce incorrect results if the useUnicode is false.</p><p></p><p>Since the useUnicode is a local property, its value is reset to false when the current handler finishes executing. It retains its value only for the current handler, and setting it in one handler does not affect its value in other handlers it calls.</p><p></p><p>Deprecated: In LiveCode 7.0 the language was changed to handle unicode transparently. This means that language functionality which previously aided unicode text manipulation is no longer required. This property should not be used in new code, as it only affects the behaviour of numToChar and charToNum, which are themselves deprecated.</p></comments>
+	</description>
 </doc>

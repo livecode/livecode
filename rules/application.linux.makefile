@@ -20,19 +20,21 @@ SHARED_LIBS=$(CUSTOM_SHARED_LIBS)
 STATIC_LIBS=$(CUSTOM_STATIC_LIBS)
 DYNAMIC_LIBS=$(CUSTOM_DYNAMIC_LIBS)
 
-ifeq ($(ARCH),x86_64)
-	DYNAMIC_LIBS+=stdc++
-else
+ifneq ($(ARCH),x86_64)
 	STATIC_LIBS+=stdc++
 endif
 
-LDFLAGS=$(CUSTOM_LDFLAGS) $(addprefix -L,$(GLOBAL_LIBS)) -Xlinker -no-undefined $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
+LDFLAGS_COMMON=$(addprefix -L,$(GLOBAL_LIBS)) $(addprefix -L,$(CUSTOM_INCLUDES)) -export-dynamic
+LDFLAGS_LTO:=$(CUSTOM_LDFLAGS_LTO) $(CUSTOM_LDFLAGS) $(LDFLAGS_COMMON) -Xlinker -no-undefined $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
+LDFLAGS_FINAL:=$(CUSTOM_LDFLAGS_FINAL) $(CUSTOM_LDFLAGS) $(LDFLAGS_COMMON) -no-undefined $(addprefix --exclude-libs ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
 
 TARGET_PATH=$(BUILD_DIR)/$(NAME)
 
-$(TARGET_PATH): $(OBJECTS) $(DEPS)
-	mkdir -p $(dir $(TARGET_PATH))
-	$(CC) -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(CUSTOM_OBJECTS) \
+ifeq ($(LD_IS_CC),1)
+	# If we are using the compiler to link, we need to prefix the linker options
+	LDFLAGS_FINAL:=$(addprefix -Xlinker ,$(LDFLAGS_FINAL))
+
+	LINK_STEP1:=$(CXX) -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS_LTO) $(LDFLAGS_FINAL) $(OBJECTS) $(CUSTOM_OBJECTS) \
 			-Wl,-Bstatic \
 			-Wl,--start-group \
 				$(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) \
@@ -41,12 +43,34 @@ $(TARGET_PATH): $(OBJECTS) $(DEPS)
 			-Wl,-Bdynamic \
 			$(addsuffix .so,$(addprefix $(PRODUCT_DIR)/,$(SHARED_LIBS))) \
 			$(addprefix -l,$(DYNAMIC_LIBS))
+	LINK_STEP2:=
+else
+	LINK_STEP1:=$(CXX) -Wl,-relocatable -nodefaultlibs -fvisibility=hidden -o$(TARGET_PATH).rel $(LDFLAGS_LTO) $(OBJECTS) $(CUSTOM_OBJECTS) \
+			-Wl,-Bstatic \
+			-Wl,--start-group \
+				$(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) \
+				$(addprefix -l,$(STATIC_LIBS)) \
+				-lgcc -lgcc_eh \
+			-Wl,--end-group
+	LINK_STEP2:=$(LD) -o$(TARGET_PATH) $(LDFLAGS_FINAL) $(TARGET_PATH).rel \
+			-Bdynamic \
+			$(addsuffix .so,$(addprefix $(PRODUCT_DIR)/,$(SHARED_LIBS))) \
+			$(addprefix -l,$(DYNAMIC_LIBS)) -lc
+endif
+
+
+$(TARGET_PATH): $(OBJECTS) $(DEPS)
+	mkdir -p $(dir $(TARGET_PATH))
+	$(LINK_STEP1)
+	$(LINK_STEP2)
+
 ifneq ($(MODE),debug)
 	cd $(BUILD_DIR) && \
-		objcopy --only-keep-debug "$(NAME)" "$(NAME).dbg" && \
-		strip --strip-debug --strip-unneeded "$(NAME)" && \
-		objcopy --add-gnu-debuglink="$(NAME).dbg" "$(NAME)"
+		$(OBJCOPY) --only-keep-debug "$(NAME)" "$(NAME).dbg" && \
+		$(STRIP) --strip-debug "$(NAME)" && \
+		$(OBJCOPY) --add-gnu-debuglink="$(NAME).dbg" "$(NAME)"
 endif
 
 .PHONY: $(NAME)
 $(NAME): $(TARGET_PATH)
+

@@ -16,7 +16,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#include "core.h"
 #include "globdefs.h"
 
 #include "platform.h"
@@ -24,14 +23,14 @@
 
 #include "mac-internal.h"
 
-bool coretext_font_load_from_path(const char *p_path, bool p_globally);
-bool coretext_font_unload(const char *p_path, bool p_globally);
+bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally);
+bool coretext_font_unload(MCStringRef p_path, bool p_globally);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // TD-2013-07-01 [[ DynamicFonts ]]
 // MM-2014-06-12: [[ CoreText ]] Updated to use core text routinees.
-bool MCPlatformLoadFont(const char *p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)
+bool MCPlatformLoadFont(MCStringRef p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)
 {
     if (coretext_font_load_from_path(p_utf8_path, p_globally))
     {
@@ -42,7 +41,7 @@ bool MCPlatformLoadFont(const char *p_utf8_path, bool p_globally, MCPlatformLoad
 }
 
 // MM-2014-06-12: [[ CoreText ]] Updated to use core text routinees.
-bool MCPlatformUnloadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef p_loaded_font)
+bool MCPlatformUnloadFont(MCStringRef utf8path, bool globally, MCPlatformLoadedFontRef p_loaded_font)
 {
     return coretext_font_unload(utf8path, globally);
 }

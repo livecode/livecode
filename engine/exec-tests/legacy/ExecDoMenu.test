@@ -1,0 +1,7 @@
+setup
+
+doMenu "New Button"
+
+test there is a button 1
+
+teardown

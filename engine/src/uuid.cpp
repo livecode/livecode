@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -49,9 +48,11 @@ bool MCUuidGenerateRandom(MCUuid& r_uuid)
 {
 	// Fill the UUID with random bytes (returns false if not enough random data
 	// is available).
-	if (!MCU_random_bytes(sizeof(MCUuid), &r_uuid))
+    MCAutoDataRef t_data;
+	if (!MCSRandomData (sizeof(MCUuid), &t_data))
 		return false;
-		
+    MCMemoryCopy(&r_uuid, MCDataGetBytePtr(*t_data), sizeof(MCUuid));
+    
 	// Now 'brand' the UUID with version 4.
 	MCUuidBrand(r_uuid, 4);
 	
@@ -165,11 +166,12 @@ bool MCUuidFromCString(const char *p_string, MCUuid& r_uuid)
 	r_uuid . clock_seq_hi_and_reserved = (t_clock >> 8) & 0xff;
 	
 	// Parse the 'node' part.
-	for(int i = 0; i < sizeof(r_uuid . node); i++)
+	for(size_t i = 0; i < sizeof(r_uuid . node); i++)
 	{
 		char t_hex_byte[3];
 		t_hex_byte[0] = p_string[24 + i * 2];
 		t_hex_byte[1] = p_string[24 + i * 2 + 1];
+		t_hex_byte[2] = 0;
 		r_uuid . node[i] = (uint8_t)strtoul(t_hex_byte, NULL, 16);
 	}
 	
@@ -234,7 +236,7 @@ void MCUuidFromBytes(uint8_t p_bytes[16], MCUuid& r_uuid)
 				p_bytes[9];
 				
 	// Pack the 'node' field.
-	for(int i = 0; i < sizeof(r_uuid . node); i++)
+	for(size_t i = 0; i < sizeof(r_uuid . node); i++)
 		r_uuid . node[i] = p_bytes[10 + i];
 }
 

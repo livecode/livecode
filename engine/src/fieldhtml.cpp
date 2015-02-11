@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "osxprefix-legacy.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -24,14 +24,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "field.h"
 #include "paragraf.h"
-#include "unicode.h"
 #include "text.h"
 #include "osspec.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcstring.h"
-#include "textbuffer.h"
 #include "uidc.h"
 #include "globals.h"
+#include "util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,10 +78,10 @@ struct export_html_tag_t
 			uint32_t bg_color;
 		} font;
 		uint32_t shift;
-		MCNameRef metadata;
+		MCStringRef metadata;
 		struct
 		{
-			MCNameRef target;
+			MCStringRef target;
 			bool is_href;
 		} link;
 	};
@@ -92,7 +91,7 @@ typedef export_html_tag_t export_html_tag_list_t[kExportHtmlTag_Upper];
 
 struct export_html_t
 {
-	text_buffer_t buffer;
+	MCStringRef m_text;
 	
 	bool effective;
 	
@@ -252,38 +251,24 @@ static void export_html_emit_char(char *p_output, uint32_t p_char, export_html_e
 		sprintf(p_output, "&#%d;", p_char);
 }
 
-static void export_html_emit_unicode_text(text_buffer_t& buffer, const uint16_t *p_chars, uint32_t p_char_count, export_html_escape_type_t p_escape)
+static void export_html_emit_unicode_text(MCStringRef p_buffer, MCStringRef p_input, MCRange p_range, export_html_escape_type_t p_escape)
 {
-	for(uint32_t i = 0; i < p_char_count; i++)
+	for(uint32_t i = 0; i < p_range.length; i++)
 	{
 		char t_output[16];
-		export_html_emit_char(t_output, p_chars[i], p_escape);
-		buffer . appendcstring(t_output);
+		export_html_emit_char(t_output, MCStringGetCodepointAtIndex(p_input, p_range.offset+i), p_escape);
+		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "%s", t_output);
 	}
 }
 
-static void export_html_emit_text(text_buffer_t& buffer, const void *p_bytes, uint32_t p_byte_count, bool p_is_unicode, export_html_escape_type_t p_escape)
+static void export_html_emit_text(MCStringRef p_buffer, MCStringRef p_input, MCRange p_range, export_html_escape_type_t p_escape)
 {
-	if (p_is_unicode)
-		export_html_emit_unicode_text(buffer, (const uint16_t *)p_bytes, p_byte_count / 2, p_escape);
-	else
-	{
-		uint16_t *t_chars;
-		uint32_t t_char_count;
-		t_chars = new uint16_t[p_byte_count * 2];
-		t_char_count = p_byte_count;
-		MCS_multibytetounicode((const char *)p_bytes, p_byte_count, (char *)t_chars, t_char_count * 2, t_char_count, LCH_ROMAN);
-		t_char_count /= 2;
-		
-		export_html_emit_unicode_text(buffer, t_chars, t_char_count, p_escape);
-
-		delete t_chars;
-	}
+	export_html_emit_unicode_text(p_buffer, p_input, p_range, p_escape);
 }
 
-static void export_html_emit_cstring(text_buffer_t& buffer, const char *p_cstring, export_html_escape_type_t p_escape)
+static void export_html_emit_cstring(MCStringRef buffer, MCStringRef p_cstring, export_html_escape_type_t p_escape)
 {
-	export_html_emit_text(buffer, p_cstring, strlen(p_cstring), false, p_escape);
+	export_html_emit_text(buffer, p_cstring, MCRangeMake(0, MCStringGetLength(p_cstring)), p_escape);
 }
 
 static bool export_html_tag_equal(const export_html_tag_t& left, const export_html_tag_t& right)
@@ -369,7 +354,7 @@ static const char *export_html_hexcolor(uint32_t p_pixel)
 	static char s_color[8];
 	uint8_t r, g, b, a;
 	MCGPixelUnpackNative(p_pixel, r, g, b, a);
-	sprintf(s_color, "#%02.2X%02.2X%02.2X", r, g, b);
+	sprintf(s_color, "#%2.2X%2.2X%2.2X", r, g, b);
 	
 	return s_color;
 }
@@ -386,19 +371,19 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 	{
 	case kExportHtmlTagSuperscript:
 	case kExportHtmlTagSubscript:
-		ctxt . buffer . appendtextf("<%s shift=\"%d\">", s_export_html_tag_strings[p_tag], p_value . shift);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<%s shift=\"%d\">", s_export_html_tag_strings[p_tag], p_value.shift);
 		break;
 	case kExportHtmlTagFont:
-		ctxt . buffer . appendcstring("<font");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<font");
 		if (p_value . font . name != nil)
-			ctxt . buffer . appendtextf(" face=\"%s\"", MCNameGetCString(p_value . font . name));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " face=\"%@\"", p_value.font.name);
 		if (p_value . font . size != 0)
-			ctxt . buffer . appendtextf(" size=\"%d\"", p_value . font . size);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " size=\"%d\"", p_value.font.size);
 		if (p_value . font . has_color)
-			ctxt . buffer . appendtextf(" color=\"%s\"", export_html_hexcolor(p_value . font . color));
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " color=\"%s\"", export_html_hexcolor(p_value . font . color));
 		if (p_value . font . has_bg_color)
-			ctxt . buffer . appendtextf(" bgcolor=\"%s\"", export_html_hexcolor(p_value . font . bg_color));
-		ctxt . buffer . appendcstring(">");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bgcolor=\"%s\"", export_html_hexcolor(p_value . font . bg_color));
+		/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '>');
 		break;
 	case kExportHtmlTagItalic:
 	case kExportHtmlTagBold:
@@ -408,27 +393,28 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 	case kExportHtmlTagExpanded:
 	case kExportHtmlTagThreeDBox:
 	case kExportHtmlTagBox:
-		ctxt . buffer . appendtextf("<%s>", s_export_html_tag_strings[p_tag]);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<%s>", s_export_html_tag_strings[p_tag]);
 		break;
 	case kExportHtmlTagLink:
 		{
 			// MW-2012-03-16: [[ Bug ]] If the linkText is nil, then just output a <a> tag.
 			if (p_value . link . target != nil)
 			{
-				ctxt . buffer . appendtextf("<a %s=\"", p_value . link . is_href ? "href" : "name");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<a %s=\"", p_value.link.is_href ? "href" : "name");
+
 				// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-				export_html_emit_cstring(ctxt . buffer, MCNameGetCString(p_value . link . target), kExportHtmlEscapeTypeAttribute);
-				ctxt . buffer . appendcstring("\">");
+				export_html_emit_cstring(ctxt.m_text, p_value.link.target, kExportHtmlEscapeTypeAttribute);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\">");
 			}
 			else
-				ctxt . buffer . appendcstring("<a>");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<a>");
 		}
 		break;
 	case kExportHtmlTagSpan:
-		ctxt . buffer . appendcstring("<span metadata=\"");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<span metadata=\"");
 		// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-		export_html_emit_cstring(ctxt . buffer, MCNameGetCString(p_value . metadata), kExportHtmlEscapeTypeAttribute);
-		ctxt . buffer . appendcstring("\">");
+		export_html_emit_cstring(ctxt.m_text, p_value.metadata, kExportHtmlEscapeTypeAttribute);
+		MCStringAppendFormat(ctxt.m_text, "\">");
 		break;
 	default:
 		break;
@@ -444,7 +430,7 @@ static void export_html_remove_tag(export_html_t& ctxt, export_html_tag_type_t p
 	{
 		ctxt . tag_depth -= 1;
 		memset(&ctxt . tags[ctxt . tag_stack[ctxt . tag_depth]], 0, sizeof(export_html_tag_t));
-		ctxt . buffer . appendtextf("</%s>", s_export_html_tag_strings[ctxt . tag_stack[ctxt . tag_depth]]);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</%s>", s_export_html_tag_strings[ctxt.tag_stack[ctxt.tag_depth]]);
 		
 		if (ctxt . tag_stack[ctxt . tag_depth] == p_tag &&
 			(!p_all_above || ctxt . tag_stack[ctxt . tag_depth] > p_tag))
@@ -458,7 +444,7 @@ static void export_html_remove_all_tags(export_html_t& ctxt, bool p_keep_link)
 	{
 		ctxt .  tag_depth -= 1;
 		memset(&ctxt . tags[ctxt . tag_stack[ctxt . tag_depth]], 0, sizeof(export_html_tag_t));
-		ctxt . buffer . appendtextf("</%s>", s_export_html_tag_strings[ctxt . tag_stack[ctxt . tag_depth]]);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</%s>", s_export_html_tag_strings[ctxt.tag_stack[ctxt.tag_depth]]);
 		
 		if (ctxt . tag_stack[ctxt . tag_depth] == kExportHtmlTagLink && p_keep_link)
 			break;
@@ -468,12 +454,12 @@ static void export_html_remove_all_tags(export_html_t& ctxt, bool p_keep_link)
 static void export_html_end_lists(export_html_t& ctxt, uint32_t p_new_style, uint32_t p_new_depth)
 {
 	if (ctxt . list_depth > 0 && !(p_new_depth == ctxt . list_depth && p_new_style == kMCParagraphListStyleSkip))
-		ctxt . buffer . appendcstring("</li>\n");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</li>\n");
 	
 	while(p_new_depth < ctxt . list_depth)
 	{
 		ctxt . list_depth -= 1;
-		ctxt . buffer . appendcstring(ctxt . list_styles[ctxt . list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
+		MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
 	}
 }
 
@@ -485,22 +471,22 @@ static void export_html_begin_lists(export_html_t& ctxt, uint32_t p_new_style, u
 	if (ctxt . list_depth == p_new_depth && p_new_style != kMCParagraphListStyleSkip && ctxt . list_styles[ctxt . list_depth - 1] != p_new_style)
 	{
 		ctxt . list_depth -= 1;
-		ctxt . buffer . appendcstring(ctxt . list_styles[ctxt . list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
 	}
 	
 	while(p_new_depth > ctxt . list_depth)
 	{
 		ctxt . list_styles[ctxt . list_depth] = p_new_style;
-		ctxt . buffer . appendtextf(ctxt . list_styles[ctxt . list_depth] < kMCParagraphListStyleNumeric ? "<ul type=\"%s\">\n" : "<ol type=\"%s\">\n", s_export_html_list_types[p_new_style]);
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "<ul type=\"%s\">\n" : "<ol type=\"%s\">\n", s_export_html_list_types[p_new_style]);
 		ctxt . list_depth += 1;
 	}
 	
 	if (ctxt . list_depth != p_new_depth || p_new_style != kMCParagraphListStyleSkip)
 	{
 		if (p_index == 0)
-			ctxt . buffer . appendcstring("<li>\n");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<li>\n");
 		else
-			ctxt . buffer . appendtextf("<li value=%d>", p_index);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<li value=\"%d\">", p_index);
 	}
 }
 
@@ -527,54 +513,56 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 		{
 			const MCFieldParagraphStyle& t_style = p_event_data . paragraph_style;
 			
-			ctxt . buffer . appendcstring("<p");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<p");
 			if (t_style . has_metadata)
 			{
-				ctxt . buffer . appendcstring(" metadata=\"");
-				export_html_emit_cstring(ctxt . buffer, MCNameGetCString(t_style . metadata), kExportHtmlEscapeTypeAttribute);
-				ctxt . buffer . appendcstring("\"");
+                // SN-2014-11-24: [[ Bug 14064 ]] Remove the additionnal '`'
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " metadata=\"");
+                export_html_emit_cstring(ctxt.m_text, t_style.metadata, kExportHtmlEscapeTypeAttribute);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\"");
 			}
 			if (ctxt . effective || t_style . has_text_align)
-				ctxt . buffer . appendtextf(" align=\"%s\"", MCtextalignstrings[t_style . text_align]);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " align=\"%s\"", MCtextalignstrings[t_style.text_align]);
 			if (!t_style . has_list_indent && (t_style . has_first_indent || ctxt . effective))
-				ctxt . buffer . appendtextf(" firstindent=\"%d\"", t_style . first_indent);
+                // AL-2014-09-09: [[ Bug 13353 ]] firstindent parameter is integer not string
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " firstindent=\"%d\"", t_style.first_indent);
 			else if (t_style . has_list_indent)
-				ctxt . buffer . appendtextf(" listindent=\"%d\"", t_style . list_indent);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " listindent=\"%d\"", t_style.list_indent);
 			if (ctxt . effective || t_style . has_left_indent)
-				ctxt . buffer . appendtextf(" leftindent=\"%d\"", t_style . left_indent);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " leftindent=\"%d\"", t_style.left_indent);
 			if (ctxt . effective || t_style . has_right_indent)
-				ctxt . buffer . appendtextf(" rightindent=\"%d\"", t_style . right_indent);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " rightindent=\"%d\"", t_style.right_indent);
 			if (ctxt . effective || t_style . has_space_above)
-				ctxt . buffer . appendtextf(" spaceabove=\"%d\"", t_style . space_above);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " spaceabove=\"%d\"", t_style.space_above);
 			if (ctxt . effective || t_style . has_space_below)
-				ctxt . buffer . appendtextf(" spacebelow=\"%d\"", t_style . space_below);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " spacebelow=\"%d\"", t_style.space_below);
 			if (ctxt . effective || t_style . has_tabs)
 			{
-				ctxt . buffer . appendcstring(" tabstops=\"");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " tabstops=\"");
 				for(uint32_t i = 0; i < t_style . tab_count; i++)
-					ctxt . buffer . appendtextf(i == 0 ? "%d" : ",%d", t_style . tabs[i]);
-				ctxt . buffer . appendcstring("\"");
+					/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, i == 0 ? "%d" : ",%d", t_style.tabs[i]);
+				/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '"');
 			}
 			if (t_style . has_background_color)
-				ctxt . buffer . appendtextf(" bgcolor=\"%s\"", export_html_hexcolor(t_style . background_color));
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bgcolor=\"%s\"", export_html_hexcolor(t_style . background_color));
 			if (t_style . has_border_width || ctxt . effective)
-				ctxt . buffer . appendtextf(" borderwidth=\"%d\"", t_style . border_width);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " borderwidth=\"%d\"", t_style.border_width);
 			if (t_style . has_border_color || ctxt . effective)
-				ctxt . buffer . appendtextf(" bordercolor=\"%s\"", export_html_hexcolor(t_style . border_color));
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bordercolor=\"%s\"", export_html_hexcolor(t_style . border_color));
 			if (t_style . has_padding || ctxt . effective)
-				ctxt . buffer . appendtextf(" padding=\"%d\"", t_style . padding);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " padding=\"%d\"", t_style.padding);
 			if (t_style . has_hgrid || ctxt . effective)
-				ctxt . buffer . appendcstring(t_style . hgrid ? " hgrid" : " nohgrid");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, t_style.hgrid ? " hgrid" : " nohgrid");
 			if (t_style . has_vgrid || ctxt . effective)
-				ctxt . buffer . appendcstring(t_style . vgrid ? " vgrid" : " novgrid");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, t_style.vgrid ? " vgrid" : " novgrid");
 			if (t_style . has_dont_wrap || ctxt . effective)
-				ctxt . buffer . appendcstring(t_style . dont_wrap ? " nowrap" : " wrap");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, t_style.dont_wrap ? " nowrap" : " wrap");
 			if (t_style . hidden)
-				ctxt . buffer . appendcstring(" hidden");
-			ctxt . buffer . appendcstring(">");
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " hidden");
+			/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '>');
 		}
 		else
-			ctxt . buffer . appendcstring("<p>");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<p>");
 	}
 	else if (p_event_type == kMCFieldExportEventEndParagraph)
 	{
@@ -582,7 +570,7 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 		
 		// MW-2012-09-18: [[ Bug 10216 ]] If we are the last paragraph, but have non-zero listDepth then
 		//   still emit a newline.
-		ctxt . buffer . appendcstring(p_event_data . is_last_paragraph && ctxt . list_depth == 0 ? "</p>" : "</p>\n");
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, p_event_data.is_last_paragraph && ctxt.list_depth == 0 ? "</p>" : "</p>\n");
 		
 		if (p_event_data . is_last_paragraph)
 			export_html_end_lists(ctxt, kMCParagraphListStyleNone, 0);
@@ -604,28 +592,51 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 
 		if (p_event_data . character_style . has_image_source)
 		{
-			ctxt . buffer . appendcstring("<img src=\"");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<img src=\"");
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-			export_html_emit_cstring(ctxt . buffer, MCNameGetCString(p_event_data . character_style . image_source), kExportHtmlEscapeTypeAttribute);
-			ctxt . buffer . appendcstring("\" char=\"");
+			export_html_emit_cstring(ctxt.m_text, p_event_data.character_style.image_source, kExportHtmlEscapeTypeAttribute);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\" char=\"");
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-			export_html_emit_text(ctxt . buffer, p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun, kExportHtmlEscapeTypeAttribute);
-			ctxt . buffer . appendcstring("\">");
+			export_html_emit_text(ctxt.m_text, p_event_data.m_text, p_event_data.m_range, kExportHtmlEscapeTypeAttribute);
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\">");
 		}
 		else
 		{
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in tag context.
-			export_html_emit_text(ctxt . buffer, p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun, kExportHtmlEscapeTypeTag);
+			export_html_emit_text(ctxt.m_text, p_event_data.m_text, p_event_data.m_range, kExportHtmlEscapeTypeTag);
 		}
 	}
 	
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 void MCField::exportashtmltext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
+{
+	MCAutoStringRef t_string;
+
+	if (exportashtmltext(p_paragraphs, p_start_index, p_finish_index, p_effective, &t_string))
+		/* UNCHECKED */ ep . setvalueref(*t_string);
+	else
+		ep . clear();
+}
+
+void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
+{
+	exportashtmltext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective);
+}
+#endif
+
+bool MCField::exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text)
+{
+	return exportashtmltext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective, r_text);
+}
+
+bool MCField::exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text)
 {
 	export_html_t ctxt;
 	memset(&ctxt, 0, sizeof(export_html_t));
+	/* UNCHECKED */ MCStringCreateMutable(0, ctxt.m_text);
 	
 	ctxt . effective = p_effective;
 	ctxt . list_depth = 0;
@@ -639,13 +650,9 @@ void MCField::exportashtmltext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32
 	// Now execute the second pass which generates all the paragraph content.
 	doexport(t_flags, p_paragraphs, p_start_index, p_finish_index, export_html_emit_paragraphs, &ctxt);
 
-	// Return the buffer in the ep.
-	ctxt . buffer . givetoep(ep);
-}
-
-void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
-{
-	exportashtmltext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective);
+	// Return the buffer.
+	/* UNCHECKED */ MCStringEncodeAndRelease(ctxt . m_text, kMCStringEncodingNative, false, r_text);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -953,7 +960,7 @@ struct import_html_t
 	
 	// If true, then we need a new paragraph before appending text.
 	bool need_paragraph;
-	
+	bool is_utf8;
 	bool preformatted;
 	
 	uint32_t list_depth;
@@ -969,29 +976,26 @@ struct import_html_t
 	uint8_t *bytes;
 	uint32_t byte_count;
 	uint32_t byte_capacity;
-	
-	// If true, then the input html must be considered to be encoded in utf-8.
-	bool is_utf8;
 };
 
 static void import_html_copy_style(const MCFieldCharacterStyle& p_src, MCFieldCharacterStyle& r_dst)
 {
 	r_dst = p_src;
 	if (p_src . has_link_text)
-		MCNameClone(p_src . link_text, r_dst . link_text);
+		r_dst . link_text = MCValueRetain(p_src . link_text);
 	if (p_src . has_image_source)
-		MCNameClone(p_src . image_source, r_dst . image_source);
+		r_dst . image_source = MCValueRetain(p_src . image_source);
 	if (p_src . has_metadata)
-		MCNameClone(p_src . metadata, r_dst . metadata);
+		r_dst . metadata = MCValueRetain(p_src . metadata);
 	if (p_src . has_text_font)
 		MCNameClone(p_src . text_font, r_dst . text_font);
 }
 
 static void import_html_free_style(MCFieldCharacterStyle& p_style)
 {
-	MCNameDelete(p_style . link_text);
-	MCNameDelete(p_style . image_source);
-	MCNameDelete(p_style . metadata);
+	MCValueRelease(p_style . link_text);
+	MCValueRelease(p_style . image_source);
+	MCValueRelease(p_style . metadata);
 	MCNameDelete(p_style . text_font);
 }
 
@@ -1142,7 +1146,7 @@ static bool import_html_parse_attr_value(const char *p_start_ptr, const char *p_
 			uint32_t t_codepoint;
 			if (import_html_parse_entity(p_start_ptr, p_end_ptr, t_codepoint))
 			{
-				uint16_t t_utf16_codepoint;
+				unichar_t t_utf16_codepoint;
 				t_utf16_codepoint = t_codepoint;
 				if (!MCUnicodeMapToNative(&t_utf16_codepoint, 1, t_char))
 					t_char = '?';
@@ -1416,13 +1420,13 @@ static void import_html_append_unicode_char(import_html_t& ctxt, uint32_t p_code
 	if (ctxt . list_depth > 0 && !ctxt . list_in_li)
 		return;
 
-	uint16_t t_unicode_char;
-	t_unicode_char = (uint16_t)p_codepoint;
+	unichar_t t_unicode_char;
+	t_unicode_char = (unichar_t)p_codepoint;
 	
 	// See if we can map the char to native.
 	if (p_codepoint < 65536)
 	{
-		uint1 t_native_char;
+		char_t t_native_char;
 		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char))
 		{
 			import_html_append_native_chars(ctxt, (const char *)&t_native_char, 1);
@@ -1442,7 +1446,7 @@ static void import_html_append_unicode_char(import_html_t& ctxt, uint32_t p_code
 	
 	// If the text is currently native (and there is some) or if the styling has changed
 	// then flush.
-	if (!ctxt . is_unicode && ctxt . byte_count > 0 ||
+	if ((!ctxt . is_unicode && ctxt . byte_count > 0) ||
 		!import_html_equal_style(ctxt . last_used_style, ctxt . styles[ctxt . style_index] . style))
 		import_html_flush_chars(ctxt);
 	
@@ -1479,16 +1483,15 @@ static void import_html_append_utf8_chars(import_html_t& ctxt, const char *p_cha
 		// Append the UTF8 chars as unicode (if any).
 		if (t_next_ptr - p_chars > 0)
 		{
-			// Convert UTF8 to UTF16.
-			MCExecPoint ep;
-			ep . setsvalue(MCString(p_chars, t_next_ptr - p_chars));
-			ep . utf8toutf16();
+            // Convert UTF8 to UTF16.
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_chars, t_next_ptr - p_chars, kMCStringEncodingUTF8, false, &t_string);
 			
 			// Append the chars one by one.
-			const uint16_t *t_unicode_chars;
-			uint32_t t_unicode_char_count;
-			t_unicode_chars = (const uint16_t *)ep . getsvalue() . getstring();
-			t_unicode_char_count = ep . getsvalue() . getlength() / 2;
+			const unichar_t *t_unicode_chars;
+			uindex_t t_unicode_char_count;
+			t_unicode_chars = MCStringGetCharPtr(*t_string);
+			t_unicode_char_count = MCStringGetLength(*t_string);
 			for(uindex_t i = 0; i < t_unicode_char_count; i++)
 				import_html_append_unicode_char(ctxt, t_unicode_chars[i]);
 		}
@@ -1607,7 +1610,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 		case kImportHtmlTagAnchor:
 		{
 			bool t_is_link;
-			MCNameRef t_linktext;
+			MCStringRef t_linktext;
 			t_linktext = nil;
 			t_is_link = false;
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
@@ -1615,8 +1618,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 				// MW-2012-03-16: [[ Bug ]] LinkText without link style is encoded with a 'name' attr.
 				if (p_tag . attrs[i] . type == kImportHtmlAttrName || p_tag . attrs[i] . type == kImportHtmlAttrHref)
 				{
-					MCNameDelete(t_linktext);
-					MCNameCreateWithCString(p_tag . attrs[i] . value, t_linktext);
+					MCValueRelease(t_linktext);
+					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_linktext);
 					t_is_link = p_tag . attrs[i] . type == kImportHtmlAttrHref;
 				}
 			}
@@ -1635,13 +1638,13 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 		break;
 		case kImportHtmlTagImage:
 		{
-			MCNameRef t_src;
+			MCStringRef t_src;
 			t_src = nil;
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 				if (p_tag . attrs[i] . type == kImportHtmlAttrSrc)
 				{
-					MCNameDelete(t_src);
-					MCNameCreateWithCString(p_tag . attrs[i] . value, t_src);
+					MCValueRelease(t_src);
+					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_src);
 				}
 			
 			if (t_src != nil)
@@ -1692,7 +1695,9 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 					case kImportHtmlAttrColor:
 						{
 							MCColor t_color;
-							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(p_tag . attrs[i] . value, &t_color, nil))
+							MCAutoStringRef t_value;
+							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
+							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
 							{
 								MCscreen -> alloccolor(t_color);
 								
@@ -1703,8 +1708,10 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 						break;
 					case kImportHtmlAttrBgColor:
 						{
+							MCAutoStringRef t_value;
+							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
 							MCColor t_color;
-							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(p_tag . attrs[i] . value, &t_color, nil))
+							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
 							{
 								MCscreen -> alloccolor(t_color);
 								
@@ -1740,13 +1747,13 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 		// MW-2012-08-31: [[ Bug 10343 ]] Implement support for importing 'span' tags.
 		case kImportHtmlTagSpan:
 		{
-			MCNameRef t_metadata;
+			MCStringRef t_metadata;
 			t_metadata = nil;
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 				if (p_tag . attrs[i] . type == kImportHtmlAttrMetadata)
 				{
-					MCNameDelete(t_metadata);
-					MCNameCreateWithCString(p_tag . attrs[i] . value, t_metadata);
+					MCValueRelease(t_metadata);
+					MCStringCreateWithCString(p_tag . attrs[i] . value, t_metadata);
 				}
 			
 			if (t_metadata != nil)
@@ -1806,14 +1813,16 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 			case kImportHtmlAttrMetadata:
 				if (r_style . has_metadata)
 				{
-					MCNameDelete(r_style . metadata);
+                    MCValueRelease(r_style . metadata);
 					r_style . metadata = nil;
 					r_style . has_metadata = false;
 				}
 
 				if (*t_value != '\0')
 				{
-					/* UNCHECKED */ MCNameCreateWithCString(t_value, r_style . metadata);
+                    MCStringRef t_valueref;
+                    /* UNCHECKED */ MCStringCreateWithCString(t_value, t_valueref);
+                    /* UNCHECKED */ MCValueInterAndRelease(t_valueref, r_style . metadata);
 					r_style . has_metadata = true;
 				}
 				break;
@@ -1853,40 +1862,51 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 				r_style . space_below = atoi(t_value);
 			break;
 			case kImportHtmlAttrTabStops:
+            {
 				if (r_style . has_tabs)
 				{
 					delete r_style . tabs;
 					r_style . tabs = nil;
 					r_style . has_tabs = false;
 				}
-				if (MCField::parsetabstops(P_TAB_STOPS, t_value, r_style . tabs, r_style . tab_count))
+                MCAutoStringRef t_value_str;
+                /* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
+				if (MCField::parsetabstops(P_TAB_STOPS, *t_value_str, r_style . tabs, r_style . tab_count))
+                {
 					r_style . has_tabs = true;
+                }
+            }
 			break;
 			case kImportHtmlAttrBgColor:
-			{
+            {
+				MCAutoStringRef t_value_str;
+				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
-				if (MCscreen -> parsecolor(t_value, &t_color, nil))
+				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
 				{
 					MCscreen -> alloccolor(t_color);
 					r_style . has_background_color = true;
 					r_style . background_color = t_color . pixel;
 				}
-			}
+            }
 			break;
 			case kImportHtmlAttrBorderWidth:
+            
 				r_style . has_border_width = true;
 				r_style . border_width = atoi(t_value);
 			break;
 			case kImportHtmlAttrBorderColor:
-			{
+            {
+				MCAutoStringRef t_value_str;
+				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
-				if (MCscreen -> parsecolor(t_value, &t_color, nil))
+				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
 				{
 					MCscreen -> alloccolor(t_color);
 					r_style . has_border_color = true;
 					r_style . border_color = t_color . pixel;
 				}
-			}
+            }
 			break;
 			case kImportHtmlAttrPadding:
 				r_style . has_padding = true;
@@ -1914,12 +1934,49 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 	}
 }
 
-MCParagraph *MCField::importhtmltext(const MCString& p_data)
+MCParagraph *MCField::importhtmltext(MCValueRef p_text)
 {
-	const char *t_ptr, *t_limit;
-	t_ptr = p_data . getstring();
-	t_limit = t_ptr + p_data . getlength();
-	
+    MCAutoPointer<char> t_data;
+    MCAutoStringRefAsCString t_native_string;
+    const char *t_ptr, *t_limit;
+    bool t_is_unicode_string;
+    t_is_unicode_string = false;
+    
+    
+    MCValueTypeCode t_code = MCValueGetTypeCode(p_text);
+    
+    if (t_code == kMCValueTypeCodeString || t_code == kMCValueTypeCodeName)
+    {
+        if (t_code == kMCValueTypeCodeName)
+            p_text = MCNameGetString((MCNameRef)p_text);
+        
+        if (!MCStringIsNative((MCStringRef)p_text))
+        {
+            t_is_unicode_string = true;
+            uindex_t t_length;
+            /* UNCHECKED */ MCStringConvertToUTF8((MCStringRef)p_text, &t_data, t_length);
+            t_ptr = *t_data;
+            t_limit = t_ptr + t_length;
+            
+        }
+        else
+        {
+            t_native_string . Lock((MCStringRef)p_text);
+            t_ptr = *t_native_string;
+            t_limit = t_ptr + MCStringGetLength((MCStringRef)p_text);
+        }
+    }
+    else if (t_code == kMCValueTypeCodeData)
+    {
+        t_ptr = (const char *)MCDataGetBytePtr((MCDataRef)p_text);
+        t_limit = t_ptr + MCDataGetLength((MCDataRef)p_text);
+    }
+    else
+    {
+        t_ptr = "";
+        t_limit = t_ptr;
+    }
+    
 	import_html_t ctxt;
 	memset(&ctxt, 0, sizeof(import_html_t));
 	ctxt . field = this;
@@ -1930,6 +1987,9 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 	memset(&t_char_style, 0, sizeof(MCFieldCharacterStyle));
 	import_html_push_tag(ctxt, kImportHtmlTagNone, t_char_style);
 	
+    if (t_is_unicode_string)
+        ctxt . is_utf8 = true;
+    
 	// We implicitly start with a start tag (notionally).
 	bool t_saw_start_tag;
 	t_saw_start_tag = true;
@@ -1949,7 +2009,7 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 			
 			if (*t_ptr == '\r' || *t_ptr == '\n')
 				break;
-				
+            
 			t_ptr += 1;
 		}
 		
@@ -1977,243 +2037,243 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 			{
 				switch(t_tag . type)
 				{
-				case kImportHtmlTagUl:
-				case kImportHtmlTagOl:
-					if (!t_tag . is_terminator)
-					{
-						import_html_break(ctxt, true);
-						
-						uint32_t t_style, t_start;
-						t_style = t_tag . type == kImportHtmlTagUl ? kMCParagraphListStyleDisc : kMCParagraphListStyleNumeric;
-						t_start = 0;
-						for(uint32_t i = 0; i < t_tag . attr_count; i++)
-							if (t_tag . attrs[i] . type == kImportHtmlAttrType)
-							{
-								for(uint32_t j = 0; s_export_html_list_types[j] != nil; j++)
-									if (MCCStringEqual(t_tag . attrs[i] . value, s_export_html_list_types[j]))
-									{
-										t_style = j;
-										break;
-									}
-							}
-							else if (t_tag . attrs[i] . type == kImportHtmlAttrStart)
-								t_start = atoi(t_tag . attrs[i] . value);
-						
-						import_html_push_list(ctxt, t_tag . type, t_style, t_start);
-					}
-					else
-						import_html_pop_list(ctxt, t_tag . type);
-					break;
-					
-				// MW-2012-11-19: Add support for UTF-8 htmlText.
-				case kImportHtmlTagMeta:
-					if (!t_tag . is_terminator)
-					{
-						bool t_is_utf8;
-						t_is_utf8 = false;
-						for(uint32_t i = 0; i < t_tag . attr_count; i++)
-							if (t_tag . attrs[i] . type == kImportHtmlAttrContent || t_tag . attrs[i] . type == kImportHtmlAttrCharset)
-								if (MCCStringContains(t_tag . attrs[i] . value, "utf-8"))
-								{
-									t_is_utf8 = true;
-									break;
-								}
-								
-						// If the charset of content attr contained 'utf-8' then switch
-						// to that mode.
-						ctxt . is_utf8 = t_is_utf8;
-					}
-					break;
-				
-				// The <li> tag causes a paragraph break.
-				case kImportHtmlTagLi:
-					import_html_break(ctxt, true);
-					if (!t_tag . is_terminator)
-					{
-						uint32_t t_index;
-						t_index = 0;
-						for(uint32_t i = 0; i < t_tag . attr_count; i++)
-							if (t_tag . attrs[i] . type == kImportHtmlAttrValue)
-								t_index = atoi(t_tag . attrs[i] . value);
-
-						ctxt . list_in_li = true;
-						ctxt . list_index = t_index;
-						ctxt . list_paragraph_count = 0;
-					}
-					else
-						ctxt . list_in_li = false;
-					break;
-				
-				// The <p> and </p> tags end any existing paragraph and
-				// replace the existing block tag.
-				// The <p> tag begins a new paragraph with styling.
-				case kImportHtmlTagP:
-					import_html_break(ctxt, true);
-					if (!t_tag . is_terminator)
-					{
-						// MW-2012-03-16: [[ Bug ]] Ignore the tag unless we have zero
-						//   list depth, or are inside an li tag.
-						if (ctxt . list_depth == 0 || ctxt . list_in_li)
-						{
-							MCFieldParagraphStyle t_style;
-							memset(&t_style, 0, sizeof(MCFieldParagraphStyle));
-							import_html_parse_paragraph_attrs(t_tag, t_style);
-							import_html_begin(ctxt, &t_style);
-							delete t_style . tabs;
-							MCNameDelete(t_style . metadata);
-						}
-					}
-					break;
-					
-				// The <br> and <hr> tags both end any existing paragraph but
-				// without popping the current block level tag off the stack
-				// (if any).
-				case kImportHtmlTagBr:
-				case kImportHtmlTagHr:
-					// MW-2012-03-12: [[ Bug ]] Hr/Br should always generate a paragraph
-					//   and continue with the same styling.
-					if (!t_tag . is_terminator)
-					{
-						// Flush any text in the buffer.
-						import_html_flush_chars(ctxt);
-						
-						// Create a new paragraph.
-						import_html_begin(ctxt, nil);
-						
-						// Get the new paragraph.
-						MCParagraph *t_new_paragraph;
-						t_new_paragraph = ctxt . paragraphs -> prev();
-						
-						// Get the previous paragraph.
-						MCParagraph *t_prev_paragraph;
-						t_prev_paragraph = t_new_paragraph -> prev();
-						
-						// If we aren't the first paragraph, then copy the attrs.
-						if (t_new_paragraph != t_prev_paragraph)
-						{
-							t_new_paragraph -> copyattrs(*t_prev_paragraph);
+                    case kImportHtmlTagUl:
+                    case kImportHtmlTagOl:
+                        if (!t_tag . is_terminator)
+                        {
+                            import_html_break(ctxt, true);
+                            
+                            uint32_t t_style, t_start;
+                            t_style = t_tag . type == kImportHtmlTagUl ? kMCParagraphListStyleDisc : kMCParagraphListStyleNumeric;
+                            t_start = 0;
+                            for(uint32_t i = 0; i < t_tag . attr_count; i++)
+                                if (t_tag . attrs[i] . type == kImportHtmlAttrType)
+                                {
+                                    for(uint32_t j = 0; s_export_html_list_types[j] != nil; j++)
+                                        if (MCCStringEqual(t_tag . attrs[i] . value, s_export_html_list_types[j]))
+                                        {
+                                            t_style = j;
+                                            break;
+                                        }
+                                }
+                                else if (t_tag . attrs[i] . type == kImportHtmlAttrStart)
+                                    t_start = atoi(t_tag . attrs[i] . value);
+                            
+                            import_html_push_list(ctxt, t_tag . type, t_style, t_start);
+                        }
+                        else
+                            import_html_pop_list(ctxt, t_tag . type);
+                        break;
+                        
+                        // MW-2012-11-19: Add support for UTF-8 htmlText.
+                    case kImportHtmlTagMeta:
+                        if (!t_tag . is_terminator && !t_is_unicode_string)
+                        {
+                            bool t_is_utf8;
+                            t_is_utf8 = false;
+                            for(uint32_t i = 0; i < t_tag . attr_count; i++)
+                                if (t_tag . attrs[i] . type == kImportHtmlAttrContent || t_tag . attrs[i] . type == kImportHtmlAttrCharset)
+                                    if (MCCStringContains(t_tag . attrs[i] . value, "utf-8"))
+                                    {
+                                        t_is_utf8 = true;
+                                        break;
+                                    }
+                            
+                            // If the charset of content attr contained 'utf-8' then switch
+                            // to that mode.
+                            ctxt . is_utf8 = t_is_utf8;
+                        }
+                        break;
+                        
+                        // The <li> tag causes a paragraph break.
+                    case kImportHtmlTagLi:
+                        import_html_break(ctxt, true);
+                        if (!t_tag . is_terminator)
+                        {
+                            uint32_t t_index;
+                            t_index = 0;
+                            for(uint32_t i = 0; i < t_tag . attr_count; i++)
+                                if (t_tag . attrs[i] . type == kImportHtmlAttrValue)
+                                    t_index = atoi(t_tag . attrs[i] . value);
+                            
+                            ctxt . list_in_li = true;
+                            ctxt . list_index = t_index;
+                            ctxt . list_paragraph_count = 0;
+                        }
+                        else
+                            ctxt . list_in_li = false;
+                        break;
+                        
+                        // The <p> and </p> tags end any existing paragraph and
+                        // replace the existing block tag.
+                        // The <p> tag begins a new paragraph with styling.
+                    case kImportHtmlTagP:
+                        import_html_break(ctxt, true);
+                        if (!t_tag . is_terminator)
+                        {
+                            // MW-2012-03-16: [[ Bug ]] Ignore the tag unless we have zero
+                            //   list depth, or are inside an li tag.
+                            if (ctxt . list_depth == 0 || ctxt . list_in_li)
+                            {
+                                MCFieldParagraphStyle t_style;
+                                memset(&t_style, 0, sizeof(MCFieldParagraphStyle));
+                                import_html_parse_paragraph_attrs(t_tag, t_style);
+                                import_html_begin(ctxt, &t_style);
+                                delete t_style . tabs;
+                                MCValueRelease(t_style . metadata);
+                            }
+                        }
+                        break;
+                        
+                        // The <br> and <hr> tags both end any existing paragraph but
+                        // without popping the current block level tag off the stack
+                        // (if any).
+                    case kImportHtmlTagBr:
+                    case kImportHtmlTagHr:
+                        // MW-2012-03-12: [[ Bug ]] Hr/Br should always generate a paragraph
+                        //   and continue with the same styling.
+                        if (!t_tag . is_terminator)
+                        {
+                            // Flush any text in the buffer.
+                            import_html_flush_chars(ctxt);
+                            
+                            // Create a new paragraph.
+                            import_html_begin(ctxt, nil);
+                            
+                            // Get the new paragraph.
+                            MCParagraph *t_new_paragraph;
+                            t_new_paragraph = ctxt . paragraphs -> prev();
+                            
+                            // Get the previous paragraph.
+                            MCParagraph *t_prev_paragraph;
+                            t_prev_paragraph = t_new_paragraph -> prev();
+                            
+                            // If we aren't the first paragraph, then copy the attrs.
+                            if (t_new_paragraph != t_prev_paragraph)
+                            {
+                                t_new_paragraph -> copyattrs(*t_prev_paragraph);
+                                
+                                // If the prev paragraph had a listStyle, then set this one
+                                // to skip.
+                                if (t_prev_paragraph -> getliststyle() != kMCParagraphListStyleNone)
+                                    t_new_paragraph -> setliststyle(kMCParagraphListStyleSkip);
+                                
+                                // Make sure the list index of the new paragraph is unset.
+                                t_new_paragraph -> setlistindex(0);
+                            }
+                        }
+                        break;
+                        
+                        // These tags all work identically to <p> tags, except they
+                        // have predefined char styles.
+                    case kImportHtmlTagH1:
+                    case kImportHtmlTagH2:
+                    case kImportHtmlTagH3:
+                    case kImportHtmlTagH4:
+                    case kImportHtmlTagH5:
+                    case kImportHtmlTagH6:
+                    case kImportHtmlTagBlockquote:
+                    case kImportHtmlTagDt:
+                    case kImportHtmlTagDd:
+                        import_html_break(ctxt, true);
+                        if (!t_tag . is_terminator)
+                        {
+                            import_html_begin(ctxt, nil);
+                            
+                            MCFieldCharacterStyle t_char_style;
+                            t_char_style = ctxt . styles[ctxt . style_index] . style;
+                            
+                            uint32_t t_font_size, t_font_style;
+                            t_font_size = 0;
+                            t_font_style = 0;
+                            switch(t_tag . type)
+                            {
+                                case kImportHtmlTagH1:
+                                    t_font_size = 34, t_font_style = FA_BOLD;
+                                    break;
+                                case kImportHtmlTagH2:
+                                    t_font_size = 24, t_font_style = FA_BOLD;
+                                    break;
+                                case kImportHtmlTagH3:
+                                    t_font_size = 18, t_font_style = FA_BOLD;
+                                    break;
+                                case kImportHtmlTagH4:
+                                    t_font_size = 14, t_font_style = FA_BOLD;
+                                    break;
+                                case kImportHtmlTagH5:
+                                    t_font_size = 12, t_font_style = FA_BOLD | FA_ITALIC;
+                                    break;
+                                case kImportHtmlTagH6:
+                                    t_font_size = 10, t_font_style = FA_BOLD;
+                                    break;
+                            }
+                            
+                            if (t_font_style != 0)
+                                t_char_style . has_text_style = true, t_char_style . text_style = t_font_style;
+                            if (t_font_size != 0)
+                                t_char_style . has_text_size = true, t_char_style . text_size = t_font_size;
 							
-							// If the prev paragraph had a listStyle, then set this one
-							// to skip.
-							if (t_prev_paragraph -> getliststyle() != kMCParagraphListStyleNone)
-								t_new_paragraph -> setliststyle(kMCParagraphListStyleSkip);
-
-							// Make sure the list index of the new paragraph is unset.
-							t_new_paragraph -> setlistindex(0);
-						}
-					}
-					break;
-				
-				// These tags all work identically to <p> tags, except they
-				// have predefined char styles.
-				case kImportHtmlTagH1:
-				case kImportHtmlTagH2:
-				case kImportHtmlTagH3:
-				case kImportHtmlTagH4:
-				case kImportHtmlTagH5:
-				case kImportHtmlTagH6:
-				case kImportHtmlTagBlockquote:
-				case kImportHtmlTagDt:
-				case kImportHtmlTagDd:
-					import_html_break(ctxt, true);
-					if (!t_tag . is_terminator)
-					{
-						import_html_begin(ctxt, nil);
-						
-						MCFieldCharacterStyle t_char_style;
-						t_char_style = ctxt . styles[ctxt . style_index] . style;
-						
-						uint32_t t_font_size, t_font_style;
-						t_font_size = 0;
-						t_font_style = 0;
-						switch(t_tag . type)
-						{
-						case kImportHtmlTagH1:
-							t_font_size = 34, t_font_style = FA_BOLD;
-							break;
-						case kImportHtmlTagH2:
-							t_font_size = 24, t_font_style = FA_BOLD;
-							break;
-						case kImportHtmlTagH3:
-							t_font_size = 18, t_font_style = FA_BOLD;
-							break;
-						case kImportHtmlTagH4:
-							t_font_size = 14, t_font_style = FA_BOLD;
-							break;
-						case kImportHtmlTagH5:
-							t_font_size = 12, t_font_style = FA_BOLD | FA_ITALIC;
-							break;
-						case kImportHtmlTagH6:
-							t_font_size = 10, t_font_style = FA_BOLD;
-							break;
-						}
-						
-						if (t_font_style != 0)
-							t_char_style . has_text_style = true, t_char_style . text_style = t_font_style;
-						if (t_font_size != 0)
-							t_char_style . has_text_size = true, t_char_style . text_size = t_font_size;
-							
-						import_html_push_tag(ctxt, t_tag . type, t_char_style);
-					}
-					else
-						import_html_pop_tag(ctxt, t_tag . type, true);
-					break;
-				
-				case kImportHtmlTagPre:
-					if (!t_tag . is_terminator)
-					{
-						ctxt . preformatted = true;
-						import_html_push_tag(ctxt, kImportHtmlTagPre, ctxt . styles[ctxt . style_index] . style);
-					}
-					else
-					{
-						ctxt . preformatted = false;
-						import_html_pop_tag(ctxt, kImportHtmlTagPre, false);
-					}
-					break;
-				
-				case kImportHtmlTagImage:
-					if (!t_tag . is_terminator)
-					{
-						import_html_change_style(ctxt, t_tag);
-						
-						const char *t_char;
-						t_char = " ";
-						for(uint32_t i = 0; i < t_tag . attr_count; i++)
-							if (t_tag . attrs[i] . type == kImportHtmlAttrChar)
-								t_char = t_tag . attrs[i] . value;
-						
-						import_html_append_native_chars(ctxt, t_char, 1);
-						import_html_pop_tag(ctxt, kImportHtmlTagImage, false);
-					}
-					break;
-					
-				case kImportHtmlTagAnchor:
-				case kImportHtmlTagFont:
-				case kImportHtmlTagSub:
-				case kImportHtmlTagSup:
-				case kImportHtmlTagBold:
-				case kImportHtmlTagItalic:
-				case kImportHtmlTagUnderline:
-				case kImportHtmlTagStrike:
-				case kImportHtmlTagCondensed:
-				case kImportHtmlTagExpanded:
-				case kImportHtmlTagBox:
-				case kImportHtmlTagThreeDBox:
-				// MW-2012-08-31: [[ Bug 10343 ]] Implement support for importing 'span' tags.
-				case kImportHtmlTagSpan:
-				// MW-2012-11-19: Add support for strong / em (bold / italic resp.)
-				case kImportHtmlTagStrong:
-				case kImportHtmlTagEm:
-					if (t_tag . is_terminator)
-						import_html_pop_tag(ctxt, t_tag . type, false);
-					else
-						import_html_change_style(ctxt, t_tag);
-					break;
+                            import_html_push_tag(ctxt, t_tag . type, t_char_style);
+                        }
+                        else
+                            import_html_pop_tag(ctxt, t_tag . type, true);
+                        break;
+                        
+                    case kImportHtmlTagPre:
+                        if (!t_tag . is_terminator)
+                        {
+                            ctxt . preformatted = true;
+                            import_html_push_tag(ctxt, kImportHtmlTagPre, ctxt . styles[ctxt . style_index] . style);
+                        }
+                        else
+                        {
+                            ctxt . preformatted = false;
+                            import_html_pop_tag(ctxt, kImportHtmlTagPre, false);
+                        }
+                        break;
+                        
+                    case kImportHtmlTagImage:
+                        if (!t_tag . is_terminator)
+                        {
+                            import_html_change_style(ctxt, t_tag);
+                            
+                            const char *t_char;
+                            t_char = " ";
+                            for(uint32_t i = 0; i < t_tag . attr_count; i++)
+                                if (t_tag . attrs[i] . type == kImportHtmlAttrChar)
+                                    t_char = t_tag . attrs[i] . value;
+                            
+                            import_html_append_native_chars(ctxt, t_char, 1);
+                            import_html_pop_tag(ctxt, kImportHtmlTagImage, false);
+                        }
+                        break;
+                        
+                    case kImportHtmlTagAnchor:
+                    case kImportHtmlTagFont:
+                    case kImportHtmlTagSub:
+                    case kImportHtmlTagSup:
+                    case kImportHtmlTagBold:
+                    case kImportHtmlTagItalic:
+                    case kImportHtmlTagUnderline:
+                    case kImportHtmlTagStrike:
+                    case kImportHtmlTagCondensed:
+                    case kImportHtmlTagExpanded:
+                    case kImportHtmlTagBox:
+                    case kImportHtmlTagThreeDBox:
+                        // MW-2012-08-31: [[ Bug 10343 ]] Implement support for importing 'span' tags.
+                    case kImportHtmlTagSpan:
+                        // MW-2012-11-19: Add support for strong / em (bold / italic resp.)
+                    case kImportHtmlTagStrong:
+                    case kImportHtmlTagEm:
+                        if (t_tag . is_terminator)
+                            import_html_pop_tag(ctxt, t_tag . type, false);
+                        else
+                            import_html_change_style(ctxt, t_tag);
+                        break;
 				}
-
+                
 				t_saw_start_tag = !t_tag . is_terminator;
-			
+                
 				import_html_free_tag(t_tag);
 			}
 		}
@@ -2241,7 +2301,7 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 			// newline and skip it if it is.
 			if (*t_ptr == '\r' && (t_ptr + 1 < t_limit && t_ptr[1] == '\n'))
 				t_ptr += 1;
-
+            
 			if (!ctxt . preformatted)
 			{
 				// MW-2013-06-21: [[ Valgrind ]] Only scan t_ptr if it is within the
@@ -2251,14 +2311,14 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 			}
 			else
 				t_ptr += 1;
-
+            
 			// An end tag follows if its </ or eod.
 			bool t_see_end_tag;
 			if (t_ptr + 1 < t_limit)
 				t_see_end_tag = t_ptr[0] == '<' && t_ptr[1] == '/';
 			else
 				t_see_end_tag = t_ptr >= t_limit;
-				
+            
 			if (!t_saw_start_tag && !t_see_end_tag)
 			{
 				if (ctxt . preformatted)
@@ -2276,15 +2336,15 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 			t_saw_start_tag = false;
 		}
 	}
-
+    
 	import_html_flush_chars(ctxt);
 	import_html_pop_tag(ctxt, kImportHtmlTagNone, false);
 	
 	import_html_free_style(ctxt . last_used_style);
-
+    
 	MCMemoryDeleteArray(ctxt . bytes);
 	MCMemoryDeleteArray(ctxt . styles);
-
+    
 	// MW-2012-03-09: [[ Bug ]] Make sure we always return at least an empty
 	//   paragraph - in particular if the input string was empty.
 	if (ctxt . paragraphs == nil)

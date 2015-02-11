@@ -24,19 +24,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCFontnode : public MCDLlist
 {
-	char *reqname;
-	uint2 reqsize;
-	uint2 reqstyle;
+	MCNameRef reqname;
+	uint32_t reqsize;
+	uint32_t reqstyle;
 	MCFontStruct *font;
 public:
-	MCFontnode(const MCString &, uint2 &size, uint2 style);
+    
+	MCFontnode(MCNameRef fname, uint2 &size, uint2 style);
+    MCFontnode(MCSysFontHandle);
 	~MCFontnode();
-	MCFontStruct *getfont(const MCString &fname, uint2 size, uint2 style);
+    
+	MCFontStruct *getfont(MCNameRef fname, uint2 size, uint2 style);
 	MCFontStruct *getfontstruct()
 	{
 		return font;
 	}
-	char *getname()
+	MCNameRef getname()
 	{
 		return reqname;
 	}
@@ -82,6 +85,10 @@ public:
 		return (MCFontnode *)MCDLlist::remove
 			       ((MCDLlist *&)list);
 	}
+    
+private:
+    
+    void calculatemetrics();
 };
 
 class MCFontlist
@@ -90,11 +97,13 @@ class MCFontlist
 public:
 	MCFontlist();
 	~MCFontlist();
-	MCFontStruct *getfont(const MCString &fname, uint2 &size,
-	                      uint2 style, Boolean printer);
-	void getfontnames(MCExecPoint &ep, char *type);
-	void getfontsizes(const char *fname, MCExecPoint &ep);
-	void getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep);
-	bool getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font);
+
+	MCFontStruct *getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
+	bool getfontnames(MCStringRef p_type, MCListRef& r_names);
+	bool getfontsizes(MCStringRef p_fname, MCListRef& r_sizes);
+	bool getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles);
+	bool getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font);
+
+    MCFontStruct *getfontbyhandle(MCSysFontHandle);
 };
 #endif

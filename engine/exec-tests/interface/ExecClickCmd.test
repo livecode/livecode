@@ -1,0 +1,13 @@
+setup
+
+create button
+
+set the loc of button 1 to "0,0"
+
+set the script of button 1 to "on mouseDown;set the resizeable of this stack to false;end mouseDown"
+
+click button 1 at "0,0"
+
+test (the resizeable of this stack is false)
+
+teardown

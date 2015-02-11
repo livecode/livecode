@@ -20,8 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "core.h"
-
 #include "image.h"
 #include "imagebitmap.h"
 #include "image_rep.h"
@@ -47,10 +45,16 @@ MCResampledImageRep::~MCResampledImageRep()
 
 //////////
 
-bool MCResampledImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
+bool MCResampledImageRep::LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count)
 {
+	uint32_t t_frame_count;
+	
+	if (0 == (t_frame_count = m_source->GetFrameCount()))
+		return false;
+	
 	r_width = m_target_width;
 	r_height = m_target_height;
+	r_frame_count = t_frame_count;
 	
 	return true;
 }
@@ -79,18 +83,22 @@ bool MCResampledImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_
 	
 	for (uindex_t i = 0; t_success && i < t_frame_count; i++)
 	{
-		MCBitmapFrame *t_src_frame = nil;
+		MCImageBitmap *t_src_bitmap;
+		t_src_bitmap = nil;
 		
-		t_success = m_source->LockBitmapFrame(i, t_scale, t_src_frame);
+		t_success = m_source->GetFrameDuration(i, t_frames[i].duration);
+		
+		if (t_success)
+			t_success = m_source->LockBitmap(i, t_scale, t_src_bitmap);
+		
 		if (t_success)
 		{
-			t_frames[i].duration = t_src_frame->duration;
-			
-			t_success = MCImageScaleBitmap(t_src_frame->image, m_target_width, m_target_height, INTERPOLATION_BICUBIC, t_frames[i].image);
+			t_success = MCImageScaleBitmap(t_src_bitmap, m_target_width, m_target_height, INTERPOLATION_BICUBIC, t_frames[i].image);
 			if (t_success)
 				MCImageFlipBitmapInPlace(t_frames[i].image, m_h_flip, m_v_flip);
+			
+			m_source->UnlockBitmap(i, t_src_bitmap);
 		}
-		m_source->UnlockBitmapFrame(i, t_src_frame);
 	}
 	
 	if (t_success)

@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-#include "core.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -23,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -55,7 +54,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 #include "font.h"
 #include "stacksecurity.h"
+#include "scriptpt.h"
+#include "widget-events.h"
 
+#include "exec.h"
+#include "exec-interface.h"
 #include "graphics_util.h"
 
 #define UNLICENSED_TIME 6.0
@@ -73,8 +76,63 @@ MCImage *MCDispatch::imagecache;
 static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The following is not ASCII text,\n# so now would be a good time to q out of more\f\nexec mc $0 \"$@\"\n";
 
 #define NEWHEADERSIZE 8
+#define HEADERPREFIXSIZE 4
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
+static const char *newheader7000 = "REVO7000";
+static const char *newheader8000 = "REVO8000";
+
+#define MAX_STACKFILE_VERSION 8000
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCDispatch::kProperties[] =
+{
+	DEFINE_RO_OBJ_PROPERTY(P_TEXT_FONT, String, MCDispatch, DefaultTextFont)
+    DEFINE_RO_OBJ_PROPERTY(P_TEXT_SIZE, UInt32, MCDispatch, DefaultTextSize)
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCDispatch, DefaultTextAlign)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_TEXT_STYLE, InterfaceTextStyle, MCDispatch, DefaultTextStyle)
+	DEFINE_RO_OBJ_PROPERTY(P_TEXT_HEIGHT, UInt32, MCDispatch, DefaultTextHeight)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_FORE_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_HILITE_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_BORDER_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_BOTTOM_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_SHADOW_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_FOCUS_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_BACK_PIXEL, UInt32, MCDispatch, DefaultBackPixel)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_TOP_PIXEL, UInt32, MCDispatch, DefaultTopPixel)
+    
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_BORDER_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_TOP_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_BOTTOM_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_SHADOW_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_FOCUS_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_BACK_COLOR, InterfaceNamedColor, MCDispatch, DefaultBackColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_HILITE_COLOR, InterfaceNamedColor, MCDispatch, DefaultBackColor)
+
+    DEFINE_RO_OBJ_PROPERTY(P_FORE_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_BACK_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_HILITE_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_BORDER_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_TOP_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_BOTTOM_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_SHADOW_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_FOCUS_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+};
+
+MCObjectPropertyTable MCDispatch::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCDispatch::MCDispatch()
 {
@@ -129,37 +187,38 @@ bool MCDispatch::isdragtarget(void)
 	return m_drag_target;
 }
 
-Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
 #ifdef /* MCDispatch::getprop */ LEGACY_EXEC
 	case P_BACK_PIXEL:
-		ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_TOP_PIXEL:
-		ep.setint(MCscreen->white_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->white_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_HILITE_PIXEL:
 	case P_FORE_PIXEL:
 	case P_BORDER_PIXEL:
 	case P_BOTTOM_PIXEL:
 	case P_SHADOW_PIXEL:
 	case P_FOCUS_PIXEL:
-		ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_BACK_COLOR:
 	case P_HILITE_COLOR:
-		ep.setstaticcstring("white");
-		return ES_NORMAL;
+        //ep.setstaticcstring("white");
+        return ES_NOT_HANDLED;
 	case P_FORE_COLOR:
 	case P_BORDER_COLOR:
 	case P_TOP_COLOR:
 	case P_BOTTOM_COLOR:
 	case P_SHADOW_COLOR:
 	case P_FOCUS_COLOR:
-		ep.setstaticcstring("black");
-		return ES_NORMAL;
+        //ep.setstaticcstring("black");
+        return ES_NOT_HANDLED;
 	case P_FORE_PATTERN:
 	case P_BACK_PATTERN:
 	case P_HILITE_PATTERN:
@@ -174,14 +233,14 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 		ep.setstaticcstring(MCleftstring);
 		return ES_NORMAL;
 	case P_TEXT_FONT:
-		ep.setstaticcstring(DEFAULT_TEXT_FONT);
-		return ES_NORMAL;
+        //ep.setstaticcstring(DEFAULT_TEXT_FONT);
+		return ES_NOT_HANDLED;
 	case P_TEXT_HEIGHT:
-		ep.setint(heightfromsize(DEFAULT_TEXT_SIZE));
-		return ES_NORMAL;
+        //ep.setint(heightfromsize(DEFAULT_TEXT_SIZE));
+		return ES_NOT_HANDLED;
 	case P_TEXT_SIZE:
-		ep.setint(DEFAULT_TEXT_SIZE);
-		return ES_NORMAL;
+        //ep.setint(DEFAULT_TEXT_SIZE);
+		return ES_NOT_HANDLED;
 	case P_TEXT_STYLE:
 		ep.setstaticcstring(MCplainstring);
 		return ES_NORMAL;
@@ -191,13 +250,17 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 		return ES_ERROR;
 	}
 }
+#endif
 
-Exec_stat MCDispatch::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 #ifdef /* MCDispatch::setprop */ LEGACY_EXEC
 	return ES_NORMAL;
 #endif /* MCDispatch::setprop */
+    return ES_NORMAL;
 }
+#endif
 
 // bogus "cut" call actually checks license
 Boolean MCDispatch::cut(Boolean home)
@@ -207,7 +270,7 @@ Boolean MCDispatch::cut(Boolean home)
 	return MCnoui || (flags & F_WAS_LICENSED) != 0;
 }
 
-extern Exec_stat MCHandlePlatformMessage(Handler_type htype, const MCString& mess, MCParameter *params);
+//extern Exec_stat MCHandlePlatformMessage(Handler_type htype, const MCString& mess, MCParameter *params);
 Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *params, MCObject *pass_from)
 {
 	Exec_stat stat = ES_NOT_HANDLED;
@@ -274,29 +337,35 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 			stat = ES_PASS;
 	}
 
-#ifdef TARGET_SUBPLATFORM_IPHONE
-	extern Exec_stat MCIPhoneHandleMessage(MCNameRef message, MCParameter *params);
-	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
-	{
-		stat = MCIPhoneHandleMessage(mess, params);
-		
-		if (stat != ES_NOT_HANDLED && stat != ES_PASS)
-			return stat;
-	}
-#endif
+//#ifdef TARGET_SUBPLATFORM_IPHONE
+//	extern Exec_stat MCIPhoneHandleMessage(MCNameRef message, MCParameter *params);
+//	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
+//	{
+//		stat = MCIPhoneHandleMessage(mess, params);
+//		
+//		if (stat != ES_NOT_HANDLED && stat != ES_PASS)
+//			return stat;
+//	}
+//#endif
+//
+//#ifdef _MOBILE
+//	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
+//	{
+//		stat = MCHandlePlatformMessage(htype, MCNameGetOldString(mess), params);
+//
+//		// MW-2011-08-22: [[ Bug 9686 ]] Make sure we exit as soon as the
+//		//   message is handled.
+//		if (stat != ES_NOT_HANDLED && stat != ES_PASS)
+//			return stat;
+//	}
+//#endif
 
-#ifdef _MOBILE
-	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
-	{
-		stat = MCHandlePlatformMessage(htype, MCNameGetOldString(mess), params);
-
-		// MW-2011-08-22: [[ Bug 9686 ]] Make sure we exit as soon as the
-		//   message is handled.
-		if (stat != ES_NOT_HANDLED && stat != ES_PASS)
-			return stat;
-	}
-#endif
-
+    if ((stat == ES_NOT_HANDLED || stat == ES_PASS))
+    {
+        extern Exec_stat MCEngineHandleLibraryMessage(MCNameRef name, MCParameter *params);
+        stat = MCEngineHandleLibraryMessage(mess, params);
+    }
+    
 	if (MCmessagemessages && stat != ES_PASS)
 		MCtargetptr->sendmessage(htype, mess, False);
 		
@@ -306,21 +375,25 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 	return stat;
 }
 
-void MCDispatch::getmainstacknames(MCExecPoint &ep)
+bool MCDispatch::getmainstacknames(MCListRef& r_list)
 {
-	ep.clear();
-	MCExecPoint ep2(ep);
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	MCStack *tstk = stacks;
-	bool first;
-	first = true;
 	do
 	{
-		tstk->getprop(0, P_SHORT_NAME, ep2, False);
-		ep.concatmcstring(ep2.getsvalue(), EC_RETURN, first);
-		first = false;
+		MCAutoValueRef t_string;
+		if (!tstk->names(P_SHORT_NAME, &t_string))
+			return false;
+		if (!MCListAppend(*t_list, (MCStringRef)*t_string))
+			return false;
 		tstk = (MCStack *)tstk->next();
 	}
 	while (tstk != stacks);
+
+	return MCListCopy(*t_list, r_list);
 }
 
 void MCDispatch::appendstack(MCStack *sptr)
@@ -355,92 +428,114 @@ void MCDispatch::destroystack(MCStack *sptr, Boolean needremove)
 	MClockmessages = oldstate;
 }
 
-Boolean MCDispatch::openstartup(const char *sname,
-                                char **outpath, IO_handle &stream)
+static bool attempt_to_loadfile(IO_handle& r_stream, MCStringRef& r_path, const char *p_path_format, ...)
+{
+	MCAutoStringRef t_trial_path;
+
+	va_list t_args;
+	va_start(t_args, p_path_format);
+	/* UNCHECKED */ MCStringFormatV(&t_trial_path, p_path_format, t_args);
+	va_end(t_args);
+
+	IO_handle t_trial_stream;
+	t_trial_stream = MCS_open(*t_trial_path, kMCOpenFileModeRead, True, False, 0);
+
+	if (t_trial_stream != nil)
+	{
+		r_path = (MCStringRef)MCValueRetain(*t_trial_path);
+		r_stream = t_trial_stream;
+		return true;
+	}
+
+	return false;
+}
+
+Boolean MCDispatch::openstartup(MCStringRef sname, MCStringRef& outpath, IO_handle &stream)
 {
 	if (enginedir == nil)
 		return False;
 
-		uint4 l = MCU_max((uint4)strlen(enginedir), (uint4)strlen(startdir)) + strlen(sname) + 11;
-		char *fullpath = new char[l];
-		sprintf(fullpath, "%s/%s", startdir, sname);
-		if ((stream = MCS_open(fullpath, IO_READ_MODE, True, False, 0)) != NULL)
-		{
-			*outpath = fullpath;
-			return True;
-		}
-		sprintf(fullpath, "%s/%s", enginedir, sname);
-		if ((stream = MCS_open(fullpath, IO_READ_MODE, True, False, 0)) != NULL)
-		{
-			*outpath = fullpath;
-			return True;
-		}
-		delete fullpath;
+	if (attempt_to_loadfile(stream, outpath, "%s/%@", startdir, sname))
+		return True;
+
+	if (attempt_to_loadfile(stream, outpath, "%s/%@", enginedir, sname))
+		return True;
 
 	return False;
 }
 
-Boolean MCDispatch::openenv(const char *sname, const char *env,
-                            char **outpath, IO_handle &stream, uint4 offset)
+Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
+                            MCStringRef& outpath, IO_handle &stream, uint4 offset)
 {
-	if ((env = MCS_getenv(env)) != NULL)
-	{
-		char *pathstring = strclone(env);
-		char *fullpath = new char[strlen(env) + strlen(sname) + 2];
-		char *eptr = pathstring;
-		while (eptr != NULL)
-		{
-			char *path = eptr;
-			eptr = strchr(eptr, ENV_SEPARATOR);
-			if (eptr != NULL)
-				*eptr++ = '\0';
-#ifdef _WIN32
-			sprintf(fullpath, "%s\\%s", path, sname);
-#else
-			sprintf(fullpath, "%s/%s", path, sname);
-#endif
 
-			if ((stream = MCS_open(fullpath, IO_READ_MODE, True, False,
-			                       offset)) != NULL)
-			{
-				delete pathstring;
-				*outpath = fullpath;
-				return True;
-			}
-		}
-		delete pathstring;
-		delete fullpath;
+	MCAutoStringRef t_env;
+	if (!MCS_getenv(env, &t_env))
+		return False;
+
+	bool t_found;
+	t_found = false;
+
+	MCStringRef t_rest_of_env;
+	t_rest_of_env = MCValueRetain(env);
+	while(!t_found && !MCStringIsEmpty(t_rest_of_env))
+	{
+		MCAutoStringRef t_env_path;
+		MCStringRef t_next_rest_of_env;
+		/* UNCHECKED */ MCStringDivideAtChar(t_rest_of_env, ENV_SEPARATOR, kMCStringOptionCompareExact, &t_env_path, t_next_rest_of_env);
+		if (attempt_to_loadfile(stream, outpath, "%@/%@", *t_env_path, sname))
+			t_found = true;
+
+		MCValueRelease(t_rest_of_env);
+		t_rest_of_env = t_next_rest_of_env;
 	}
-	return False;
+
+	MCValueRelease(t_rest_of_env);
+
+	return t_found;
 }
 
-IO_stat readheader(IO_handle& stream, char *version)
+IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 {
 	char tnewheader[NEWHEADERSIZE];
-	uint4 size = NEWHEADERSIZE;
-
-	if (IO_read(tnewheader, sizeof(char), size, stream) == IO_NORMAL)
+	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
 	{
-		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
-		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0)
+        // AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
+		if (strncmp(tnewheader, "REVO", HEADERPREFIXSIZE) == 0)
 		{
-			sprintf(version, "%c.%c.%c.%c", tnewheader[4], tnewheader[5], tnewheader[6], tnewheader[7]);
-			if (tnewheader[7] == '0')
-			{
-				version[5] = '\0';
-				if (tnewheader[6] == '0')
-					version[3] = '\0';
-			}
+            // The header version can now consist of any alphanumeric characters
+            // They map to numbers as follows:
+            // 0-9 -> 0-9
+            // A-Z -> 10-35
+            // a-z -> 36-61
+            uint1 versionnum[4];
+            for (uint1 i = 0; i < 4; i++)
+            {
+                char t_char = tnewheader[i + 4];
+                if ('0' <= t_char && t_char <= '9')
+                    versionnum[i] = (uint1)(t_char - '0');
+                else if ('A' <= t_char && t_char <= 'Z')
+                    versionnum[i] = (uint1)(t_char - 'A' + 10);
+                else if ('a' <= t_char && t_char <= 'z')
+                    versionnum[i] = (uint1)(t_char - 'a' + 36);
+                else
+                    return IO_ERROR;
+            }
+
+            // Future file format versions will always still compare greater than MAX_STACKFILE_VERSION,
+            // so it is ok that r_version does not accurately reflect future version values.
+            // TODO: change this, and comparisons for version >= 7000 / 5500, etc 
+			r_version = versionnum[0] * 1000;
+			r_version += versionnum[1] * 100;
+			r_version += versionnum[2] * 10;
+            r_version += versionnum[3];
 		}
 		else
 		{
 			char theader[HEADERSIZE + 1];
-			uint4 size = HEADERSIZE - NEWHEADERSIZE;
 			theader[HEADERSIZE] = '\0';
 			uint4 offset;
 			strncpy(theader, tnewheader, NEWHEADERSIZE);
-			if (IO_read(theader + NEWHEADERSIZE, sizeof(char), size, stream) == IO_NORMAL
+			if (IO_read(theader + NEWHEADERSIZE, HEADERSIZE - NEWHEADERSIZE, stream) == IO_NORMAL
 		        && MCU_offset(SIGNATURE, theader, offset))
 			{
 				if (theader[offset - 1] != '\n' || theader[offset - 2] == '\r')
@@ -449,13 +544,18 @@ IO_stat readheader(IO_handle& stream, char *version)
 					return IO_ERROR;
 				}
 
-				strncpy(version, &theader[offset + VERSION_OFFSET], 3);
-				version[3] = '\0';
+				r_version = (theader[offset + VERSION_OFFSET] - '0') * 1000;
+				r_version += (theader[offset + VERSION_OFFSET + 2] - '0') * 100;
 			}
 			else
 				return IO_ERROR;
 		}
 	}
+    else
+    {
+        // Could not read header
+        return IO_ERROR;
+    }
 	return IO_NORMAL;
 }
 
@@ -464,13 +564,15 @@ IO_stat readheader(IO_handle& stream, char *version)
 // for embedded stacks/deployed stacks/revlet stacks.
 IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
-	char version[8];
+	uint32_t version;
 	uint1 charset, type;
 	char *newsf;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 	if (readheader(stream, version) != IO_NORMAL
 	        || IO_read_uint1(&charset, stream) != IO_NORMAL
 	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || IO_read_string(newsf, stream) != IO_NORMAL)
+	        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
 		return IO_ERROR;
 
 	// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
@@ -482,22 +584,21 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
+
 	t_stack -> setparent(this);
 	
 	// MM-2013-10-30: [[ Bug 11333 ]] Set the filename of android mainstack to apk/mainstack (previously was just apk).
 	//   This solves relative file path referencing issues.
 #ifdef TARGET_SUBPLATFORM_ANDROID
-    char *t_filename;
-    /* UNCHECKED */ MCMemoryNewArray(MCCStringLength(MCcmd) + 11, t_filename);
-    MCCStringFormat(t_filename, "%s/mainstack", MCcmd);
-	t_stack -> setfilename(t_filename);
+    MCAutoStringRef t_filename;
+    /* UNCHECKED */ MCStringFormat(&t_filename, "%@/mainstack", MCcmd);
+	t_stack -> setfilename(*t_filename);
 #else
-   	t_stack -> setfilename(strclone(MCcmd));
+   	t_stack -> setfilename(MCcmd);
 #endif
-	
-	
+
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
-	        || type != OT_STACK && type != OT_ENCRYPT_STACK
+	    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
 	{
 		delete t_stack;
@@ -534,10 +635,16 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 
 // MW-2012-02-17: [[ LogFonts ]] Load a stack file, ensuring we clear up any
 //   font table afterwards - regardless of errors.
-IO_stat MCDispatch::readfile(const char *openpath, const char *inname, IO_handle &stream, MCStack *&sptr)
+IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
+	// Various places like to call this function with the first two parameters as NULL
+	if (p_openpath == nil)
+		p_openpath = kMCEmptyString;
+	if (p_name == nil)
+		p_name = kMCEmptyString;
+	
 	IO_stat stat;
-	stat = doreadfile(openpath, inname, stream, sptr);
+	stat = doreadfile(p_openpath, p_name, stream, sptr);
 
 	MCLogicalFontTableFinish();
 
@@ -546,28 +653,32 @@ IO_stat MCDispatch::readfile(const char *openpath, const char *inname, IO_handle
 
 // MW-2012-02-17: [[ LogFonts ]] Actually load the stack file (wrapped by readfile
 //   to handle font table cleanup).
-IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_handle &stream, MCStack *&sptr)
+IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
 	Boolean loadhome = False;
-	char version[8];
+	uint32_t version;
 
+    sptr = NULL;
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] First see if it is a binary stack.
 	if (readheader(stream, version) == IO_NORMAL)
 	{
-		if (strcmp(version, MCversionstring) > 0)
+		if (version > MAX_STACKFILE_VERSION)
 		{
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
 		}
-
+        
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
 		//   parentscript resolution is required to false.
 		s_loaded_parent_script_reference = false;
-
+		
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
 		uint1 charset, type;
 		char *newsf;
 		if (IO_read_uint1(&charset, stream) != IO_NORMAL
 		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || IO_read_string(newsf, stream) != IO_NORMAL)
+		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
 		{
 			MCresult->sets("stack is corrupted, check for ~ backup file");
 			return IO_ERROR;
@@ -580,14 +691,17 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			sptr->setparent(this);
 		else
 			sptr->setparent(stacks);
-		sptr->setfilename(strclone(openpath));
+			
+		sptr->setfilename(p_openpath);
 
 		if (MCModeCanLoadHome() && type == OT_HOME)
 		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
+			//   legacy.
 			char *lstring = NULL;
 			char *cstring = NULL;
-			IO_read_string(lstring, stream);
-			IO_read_string(cstring, stream);
+			IO_read_cstring_legacy(lstring, stream, 2);
+			IO_read_cstring_legacy(cstring, stream, 2);
 			delete lstring;
 			delete cstring;
 		}
@@ -595,7 +709,7 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 		MCresult -> clear();
 
 		if (IO_read_uint1(&type, stream) != IO_NORMAL
-		    || type != OT_STACK && type != OT_ENCRYPT_STACK
+		    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
 		    || sptr->load(stream, version, type) != IO_NORMAL)
 		{
 			if (MCresult -> isclear())
@@ -619,7 +733,139 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			sptr = NULL;
 			return IO_ERROR;
 		}
+    }
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] If we failed to load a stack from that step
+    //   then check to see if it is a script file stack.
+    if (sptr == NULL)
+    {
+        // Clear the error return.
+        MCresult -> clear();
+        
+        // Reset to position 0.
+        MCS_seek_set(stream, 0);
+        
+        // Load the file into memory - we need to process a byteorder mark and any
+        // line endings.
+        int64_t t_size;
+        t_size = MCS_fsize(stream);
+        
+        uint8_t *t_script;
+        /* UNCHECKED */ MCMemoryAllocate(t_size, t_script);
 
+        if (IO_read(t_script, t_size, stream) == IO_ERROR)
+        {
+            MCresult -> sets("unable to read file");
+            return IO_ERROR;
+        }
+
+        // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
+        MCFileEncodingType t_file_encoding = MCS_resolve_BOM(stream);
+        MCStringEncoding t_string_encoding;
+        MCAutoStringRef t_raw_script_string, t_LC_script_string;
+
+        uint32_t t_BOM_offset;
+        switch (t_file_encoding)
+        {
+        case kMCFileEncodingUTF8:
+            t_BOM_offset = 3;
+            t_string_encoding = kMCStringEncodingUTF8;
+            break;
+        case kMCFileEncodingUTF16:
+            t_string_encoding = kMCStringEncodingUTF16;
+            t_BOM_offset = 2;
+            break;
+        case kMCFileEncodingUTF16BE:
+            t_string_encoding = kMCStringEncodingUTF16BE;
+            t_BOM_offset = 2;
+            break;
+        case kMCFileEncodingUTF16LE:
+            t_string_encoding = kMCStringEncodingUTF16LE;
+            t_BOM_offset = 2;
+            break;
+        default:
+            // Assume native
+            t_string_encoding = kMCStringEncodingNative;
+            t_BOM_offset = 0;
+            break;
+        }
+
+        /* UNCHECKED */ MCStringCreateWithBytes(t_script + t_BOM_offset, t_size - t_BOM_offset, t_string_encoding, false, &t_raw_script_string);
+        /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_raw_script_string, &t_LC_script_string);
+
+        MCMemoryDeallocate(t_script);
+        
+        // Now attempt to parse the header line:
+        //   'script' <string>
+        MCScriptPoint sp(*t_LC_script_string);
+        
+        // Parse 'script' token.
+        if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) == PS_NORMAL)
+        {
+            // Parse <string> token.
+            Symbol_type t_type;
+            if (sp . next(t_type) == PS_NORMAL &&
+                t_type == ST_LIT)
+            {
+                MCNewAutoNameRef t_script_name;
+                MCNameClone(sp . gettoken_nameref(), &t_script_name);
+                
+                // Parse end of line.
+                Parse_stat t_stat;
+                t_stat = sp . next(t_type);
+                if (t_stat == PS_EOL || t_stat == PS_EOF)
+                {
+                    // MW-2014-10-23: [[ Bug ]] Make sure we trim the correct number of lines.
+                    // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
+                    // Now trim the ep down to the remainder of the script.
+                    // Trim the header.
+                    uint32_t t_lines = sp.getline();
+                    uint32_t t_index = 0;
+
+                    // Jump over the possible lines before the string token
+                    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index, kMCStringOptionCompareExact, t_index) &&
+                           t_lines > 0)
+                        t_lines -= 1;
+                    
+                    // Add one to the index so we include the LF
+                    t_index += 1;
+
+                    // t_line now has the last LineFeed of the token
+                    MCAutoStringRef t_LC_script_body;
+
+                    // We copy the body of the stack script
+                    MCStringCopySubstring(*t_LC_script_string, MCRangeMake(t_index, MCStringGetLength(*t_LC_script_string) - t_index), &t_LC_script_body);
+                    
+                    // Create a stack.
+                    /* UNCHECKED */ MCStackSecurityCreateStack(sptr);
+                    
+                    // Set its parent.
+                    if (stacks == NULL)
+                        sptr->setparent(this);
+                    else
+                        sptr->setparent(stacks);
+                    
+                    // Set its filename.
+                    sptr->setfilename(p_openpath);
+                    
+                    // Set its name.
+                    sptr -> setname(*t_script_name);
+                    
+                    // Make it invisible
+                    sptr -> setflag(False, F_VISIBLE);
+                    
+                    // Set it up as script only.
+                    sptr -> setasscriptonly(*t_LC_script_body);
+                }
+            }
+        }
+        
+    }
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] If we managed to load a stack as either binary
+    //   or script, then do the normal processing.
+    if (sptr != NULL)
+    {
 		if (stacks != NULL)
 		{
 			MCStack *tstk = stacks;
@@ -632,12 +878,13 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 
 					delete sptr;
 					sptr = NULL;
-
-					if (strequal(tstk->getfilename(), openpath))
+					
+					
+					if (MCStringIsEqualTo(tstk -> getfilename(), p_openpath, kMCStringOptionCompareCaseless))
 						sptr = tstk;
 					else
 					{
-						MCdefaultstackptr->getcard()->message_with_args(MCM_reload_stack, MCNameGetOldString(tstk->getname()), openpath);
+						MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, tstk->getname(), p_openpath);
 						tstk = stacks;
 						do
 						{
@@ -673,203 +920,313 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 		// this - so we just ignore the result for now (note that all the 'load'
 		// methods *fail* to check for no-memory errors!).
 		if (s_loaded_parent_script_reference)
-			sptr -> resolveparentscripts();
-		
+            sptr -> resolveparentscripts();
+        
+        return IO_NORMAL;
+    }
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Finally attempt to load the script in legacy
+    //   modes - either as a single script, or as a HyperCard conversion.
+    MCS_seek_set(stream, 0);
+    if (stacks == NULL)
+    {
+        MCnoui = True;
+        MCscreen = new MCUIDC;
+        /* UNCHECKED */ MCStackSecurityCreateStack(stacks);
+        MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
+        stacks->setparent(this);
+        stacks->setname_cstring("revScript");
+        uint4 size = (uint4)MCS_fsize(stream);
+        MCAutoPointer<char> script;
+        script = new char[size + 2];
+        (*script)[size] = '\n';
+        (*script)[size + 1] = '\0';
+        if (IO_read(*script, size, stream) != IO_NORMAL)
+            return IO_ERROR;
+        MCAutoStringRef t_script_str;
+        /* UNCHECKED */ MCStringCreateWithCString(*script, &t_script_str);
+        if (!stacks -> setscript_from_commandline(*t_script_str))
+            return IO_ERROR;
+    }
+    else
+    {
+        // MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
+        if (!MCdispatcher->cut(True) || hc_import(p_name, stream, sptr) != IO_NORMAL)
+        {
+            MCresult->sets("file is not a stack");
+            return IO_ERROR;
+        }
 	}
-	else
-	{
-		MCS_seek_set(stream, 0);
-		if (stacks == NULL)
-		{
-			MCnoui = True;
-			MCscreen = new MCUIDC;
-			/* UNCHECKED */ MCStackSecurityCreateStack(stacks);
-			MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
-			stacks->setparent(this);
-			stacks->setname_cstring("revScript");
-			uint4 size = (uint4)MCS_fsize(stream);
-			char *script = new char[size + 2];
-			script[size] = '\n';
-			script[size + 1] = '\0';
-			if (IO_read(script, sizeof(char), size, stream) != IO_NORMAL
-			        || !stacks->setscript(script))
-			{
-				delete script;
-				return IO_ERROR;
-			}
-		}
-		else
-		{
-			char *tname = strclone(inname);
-			
-			// MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
-			if (!MCdispatcher->cut(True) || hc_import(tname, stream, sptr) != IO_NORMAL)
-			{
-				MCresult->sets("file is not a stack");
-				delete tname;
-				return IO_ERROR;
-			}
-		}
-	}
+    
 	return IO_NORMAL;
 }
 
-IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
+IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 {
 	IO_handle stream;
-	char *openpath = NULL;
-	char *fname = strclone(inname);
-	if ((stream = MCS_open(fname, IO_READ_MODE, True, False, 0)) != NULL)
-		if (fname[0] != PATH_SEPARATOR && fname[1] != ':')
-		{
-			char *curpath = MCS_getcurdir();
-			if (curpath[strlen(curpath) - 1] == '/')
-				curpath[strlen(curpath) - 1] = '\0';
-			openpath = new char[strlen(curpath) + strlen(fname) + 2];
-			sprintf(openpath, "%s/%s", curpath, fname);
-			delete curpath;
-		}
-		else
-			openpath = strclone(fname);
-	else
+	MCAutoStringRef t_open_path;
+
+	bool t_found;
+	t_found = false;
+	if (!t_found)
 	{
-		char *tmparray = new char[strlen(fname) + 1];
-		strcpy(tmparray, fname);
-		char *tname = strrchr(tmparray, PATH_SEPARATOR);
-		if (tname == NULL)
-			tname = tmparray;
-		else
-			tname++;
-		if ((stream = MCS_open(tname, IO_READ_MODE, True, False, 0)) != NULL)
+		if ((stream = MCS_open(p_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
 		{
-			char *curpath = MCS_getcurdir();
-			openpath = new char[strlen(curpath) + strlen(tname) + 2];
-			sprintf(openpath, "%s/%s", curpath, tname);
-			delete curpath;
-		}
-		else
-		{
-			if (!openstartup(tname, &openpath, stream)
-			        && !openenv(tname, "MCPATH", &openpath, stream, 0)
-			        && !openenv(tname, "PATH", &openpath, stream, 0))
+			// This should probably use resolvepath().
+			if (MCStringGetCharAtIndex(p_name, 0) != PATH_SEPARATOR 
+				&& MCStringGetCharAtIndex(p_name, 1) != ':')
 			{
-				char *homename;
-				if ((homename = MCS_getenv("HOME")) != NULL)
-				{
-					openpath = new char[strlen(homename) + strlen(tname) + 13];
-					if (homename[strlen(homename) - 1] == '/')
-						homename[strlen(homename) - 1] = '\0';
-					sprintf(openpath, "%s/%s", homename,  tname);
-					if ((stream = MCS_open(openpath, IO_READ_MODE, True,
-					                       False, 0)) == NULL)
-					{
-						sprintf(openpath, "%s/stacks/%s", homename, tname);
-						if ((stream = MCS_open(openpath, IO_READ_MODE, True,
-						                       False, 0)) == NULL)
-						{
-							sprintf(openpath, "%s/components/%s", homename, tname);
-							if ((stream = MCS_open(openpath, IO_READ_MODE, True,
-							                       False, 0)) == NULL)
-							{
-								delete openpath;
-								openpath = NULL;
-							}
-						}
-					}
-				}
+				MCAutoStringRef t_curpath;
+				
+				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
+				/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
 			}
+			else
+				t_open_path = p_name;
+
+			t_found = true;
 		}
-		delete tmparray;
 	}
+    
+	if (!t_found)
+    {
+        // SN-2014-11-18: [[ Bug 14043 ]] If p_path is was not correct, we then use the leaf, and append it to different locations
+        //  in all the next steps.
+        MCAutoStringRef t_leaf_name;
+		uindex_t t_leaf_index;
+		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
+			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
+		else
+			t_leaf_name = p_name;
+		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
+		{
+			MCAutoStringRef t_curpath;
+			/* UNCHECKED */ MCS_getcurdir(&t_curpath);
+			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
+			t_found = true;
+		}
+
+        if (!t_found)
+        {
+            // SN-2014-11-18: [[ Bug 14043 ]] The whole path was appended, instead of only the leaf.
+            if (openstartup(*t_leaf_name, &t_open_path, stream) ||
+                openenv(*t_leaf_name, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
+                openenv(*t_leaf_name, MCSTR("PATH"), &t_open_path, stream, 0))
+                t_found = true;
+        }
+        
+        if (!t_found)
+        {
+            
+            MCAutoStringRef t_homename;
+            if (MCS_getenv(MCSTR("HOME"), &t_homename) && !MCStringIsEmpty(*t_homename))
+            {
+                MCAutoStringRef t_trimmed_homename;
+                if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
+                /* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
+                else
+                    t_trimmed_homename = *t_homename;
+                
+                // SN-2014-11-18: [[ Bug 14043 ]] The whole path was appended, instead of only the leaf.
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/%@", *t_trimmed_homename, *t_leaf_name);
+                
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/stacks/%@", *t_trimmed_homename, *t_leaf_name);
+                
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/components/%@", *t_trimmed_homename, *t_leaf_name);
+            }
+        }
+    }
+
+
 	if (stream == NULL)
 	{
-		if (openpath != NULL)
-			delete openpath;
-		delete fname;
 		return IO_ERROR;
 	}
-	delete fname;
-	IO_stat stat = readfile(openpath, inname, stream, sptr);
-	delete openpath;
+	IO_stat stat = readfile(*t_open_path, p_name, stream, sptr);
 	MCS_close(stream);
 	return stat;
 }
 
-void MCDispatch::cleanup(IO_handle stream, char *linkname, char *bname)
+void MCDispatch::cleanup(IO_handle stream, MCStringRef linkname, MCStringRef bname)
 {
 	if (stream != NULL)
 		MCS_close(stream);
 	MCS_unlink(linkname);
 	if (bname != NULL)
 		MCS_unbackup(bname, linkname);
-	delete linkname;
-	delete bname;
 }
 
-IO_stat MCDispatch::savestack(MCStack *sptr, const MCString& fname)
+IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
 {
-	IO_stat stat;
-	stat = dosavestack(sptr, fname);
-
-	MCLogicalFontTableFinish();
-
+    IO_stat stat;
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] If the stack is scriptOnly, then save
+    //   it differently.
+    if (sptr -> isscriptonly())
+    {
+        stat = dosavescriptonlystack(sptr, p_fname);
+    }
+    else
+    {
+        // MW-2014-12-17: [[ Widgets ]] Force writing out as 8.0 version stack if it
+        //   contains widgets, and only write out as 8.0 if it contains widgets.
+        uint32_t t_old_stackfileversion;
+        t_old_stackfileversion = MCstackfileversion;
+        if (sptr -> haswidgets() || sptr -> substackhaswidgets())
+            MCstackfileversion = 8000;
+        else if (MCstackfileversion == 8000)
+            MCstackfileversion = 7000;
+        
+        stat = dosavestack(sptr, p_fname);
+        
+        MCLogicalFontTableFinish();
+        
+        MCstackfileversion = t_old_stackfileversion;
+    }
+    
 	return stat;
 }
 
-IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCString &fname)
+// MW-2014-09-30: [[ ScriptOnlyStack ]] Script only stacks get saved as a text file.
+//   Everything but the stack script is lost.
+IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fname)
 {
-	if (MCModeCheckSaveStack(sptr, fname) != IO_NORMAL)
+    if (MCModeCheckSaveStack(sptr, p_fname) != IO_NORMAL)
 		return IO_ERROR;
 	
-	char *linkname;
-	if (fname.getlength() != 0)
-		linkname = fname.clone();
-	else
-		if ((linkname = strclone(sptr->getfilename())) == NULL)
-		{
-			MCresult->sets("stack does not have a filename");
-			return IO_ERROR;
-		}
-	if (linkname == NULL)
+    MCAutoStringRef linkname;
+    if (!MCStringIsEmpty(p_fname))
+        linkname = p_fname;
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
+		linkname = sptr -> getfilename();
+    else
+    {
+        MCresult->sets("stack does not have a filename");
+        return IO_ERROR;
+    }
+
+    if (*linkname == NULL)
 	{
-		MCresult->sets("can't open stack file, bad path");
+		MCresult->sets("can't open stack script file, bad path");
 		return IO_ERROR;
 	}
-	if (MCS_noperm(linkname))
+	if (MCS_noperm(*linkname))
+	{
+		MCresult->sets("can't open stack script file, no permission");
+		return IO_ERROR;
+	}
+    
+    // Compute the body of the script file.
+	MCAutoStringRef t_converted;
+
+	// MW-2014-10-24: [[ Bug 13791 ]] We need to post-process the generated string on some
+	//   platforms for line-ending conversion so temporarily need a stringref - hence we
+	//   put the processing in its own block.
+	{
+		MCAutoStringRef t_script_body;
+
+		// Write out the standard script stack header, and then the script itself
+		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+
+		// Convert line endings - but only if the native line ending isn't CR!
+#ifndef __CR__
+		MCStringConvertLineEndingsToLiveCode(*t_script_body, &t_converted);
+#else
+		t_converted = *t_script_body;
+#endif
+	}
+    
+    // Open the output stream.
+	IO_handle stream;
+    if ((stream = MCS_open(*linkname, kMCOpenFileModeWrite, True, False, 0)) == NULL)
+	{
+		MCresult->sets("can't open stack script file");
+        return IO_ERROR;
+    }
+
+    // Convert the output string to UTF-8
+    MCAutoStringRefAsUTF8String t_utf8_script;
+    t_utf8_script .Lock(*t_converted);
+
+    // Write out the byte-order mark, followed by the script body.
+    if (IO_write("\xEF\xBB\xBF", 1, 3, stream) != IO_NORMAL ||
+        IO_write(*t_utf8_script, 1, t_utf8_script . Size(), stream) != IO_NORMAL)
+    {
+        MCresult -> sets("error writing stack script file");
+        MCS_close(stream);
+        return IO_ERROR;
+    }
+    
+    // Close the stream.
+    MCS_close(stream);
+    
+    // Set the filename.
+    sptr->setfilename(*linkname);
+    
+    return IO_NORMAL;
+}
+
+IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
+{
+	if (MCModeCheckSaveStack(sptr, p_fname) != IO_NORMAL)
+		return IO_ERROR;
+	
+	MCAutoStringRef t_linkname;
+
+	if (!MCStringIsEmpty(p_fname))
+		t_linkname = p_fname;
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
+		t_linkname = sptr -> getfilename();
+	else
+	{
+		MCresult -> sets("stack does not have a filename");
+		return IO_ERROR;
+	}
+	
+	if (MCS_noperm(*t_linkname))
 	{
 		MCresult->sets("can't open stack file, no permission");
-		delete linkname;
 		return IO_ERROR;
 	}
-	char *oldfiletype = MCfiletype;
-	MCfiletype = MCstackfiletype;
-	char *backup = new char[strlen(linkname) + 2];
-	strcpy(backup, linkname);
-	strcat(backup, "~");
-	MCS_unlink(backup);
-	if (MCS_exists(linkname, True) && !MCS_backup(linkname, backup))
+
+	MCStringRef oldfiletype;
+	oldfiletype = (MCStringRef)MCValueRetain(MCfiletype);
+	MCValueAssign(MCfiletype, MCstackfiletype);
+	
+	MCAutoStringRef t_backup;
+	/* UNCHECKED */ MCStringFormat(&t_backup, "%@~", *t_linkname); 
+
+	MCS_unlink(*t_backup);
+	if (MCS_exists(*t_linkname, True) && !MCS_backup(*t_linkname, *t_backup))
 	{
 		MCresult->sets("can't open stack backup file");
-		MCfiletype = oldfiletype;
-		delete linkname;
-		delete backup;
+
+		MCValueAssign(MCfiletype, oldfiletype);
 		return IO_ERROR;
 	}
 	IO_handle stream;
-	if ((stream = MCS_open(linkname, IO_WRITE_MODE, True, False, 0)) == NULL)
+
+	if ((stream = MCS_open(*t_linkname, kMCOpenFileModeWrite, True, False, 0)) == NULL)
 	{
 		MCresult->sets("can't open stack file");
-		cleanup(stream, linkname, backup);
-		MCfiletype = oldfiletype;
+		cleanup(stream, *t_linkname, *t_backup);
+		MCValueAssign(MCfiletype, oldfiletype);
 		return IO_ERROR;
 	}
-	MCfiletype = oldfiletype;
+	MCValueAssign(MCfiletype, oldfiletype);
 	MCString errstring = "Error writing stack (disk full?)";
-	
+    
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-	if (MCstackfileversion >= 5500)
+    if (MCstackfileversion >= 8000)
+		t_header = newheader8000, t_header_size = 8;
+	else if (MCstackfileversion >= 7000)
+		t_header = newheader7000, t_header_size = 8;
+	else if (MCstackfileversion >= 5500)
 		t_header = newheader5500, t_header_size = 8;
 	else if (MCstackfileversion >= 2700)
 		t_header = newheader, t_header_size = 8;
@@ -880,15 +1237,17 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCString &fname)
 	        || IO_write_uint1(CHARSET, stream) != IO_NORMAL)
 	{
 		MCresult->sets(errstring);
-		cleanup(stream, linkname, backup);
+		cleanup(stream, *t_linkname, *t_backup);
 		return IO_ERROR;
 	}
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] Writing out for backwards-compatibility,
+	//   so legacy.
 	if (IO_write_uint1(OT_NOTHOME, stream) != IO_NORMAL
-	        || IO_write_string(NULL, stream) != IO_NORMAL)
+	        || IO_write_cstring_legacy(NULL, stream, 2) != IO_NORMAL)
 	{ // was stackfiles
 		MCresult->sets(errstring);
-		cleanup(stream, linkname, backup);
+		cleanup(stream, *t_linkname, *t_backup);
 		return IO_ERROR;
 	}
 	
@@ -902,11 +1261,11 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCString &fname)
 	{
 		if (MCresult -> isclear())
 			MCresult->sets(errstring);
-		cleanup(stream, linkname, backup);
+		cleanup(stream, *t_linkname, *t_backup);
 		return IO_ERROR;
 	}
 	MCS_close(stream);
-	uint2 oldmask = MCS_umask(0);
+	uint2 oldmask = MCS_getumask();
 	uint2 newmask = ~oldmask & 00777;
 	if (oldmask & 00400)
 		newmask &= ~00100;
@@ -914,23 +1273,22 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCString &fname)
 		newmask &= ~00010;
 	if (oldmask & 00004)
 		newmask &= ~00001;
-	MCS_umask(oldmask);
-	MCS_chmod(linkname, newmask);
-	if (sptr->getfilename() != NULL && !strequal(linkname, sptr->getfilename()))
-		MCS_copyresourcefork(sptr->getfilename(), linkname);
-	else if (sptr -> getfilename() != NULL)
-		MCS_copyresourcefork(backup, linkname);
-	sptr->setfilename(linkname);
-	if (backup != NULL)
-	{
-		MCS_unlink(backup);
-		delete backup;
-	}
+	MCS_setumask(oldmask);
+	
+	MCS_chmod(*t_linkname, newmask);
+	
+	if (!MCStringIsEmpty(sptr -> getfilename()) && !MCStringIsEqualTo(sptr -> getfilename(), *t_linkname, kMCCompareExact))
+		MCS_copyresourcefork(sptr -> getfilename(), *t_linkname);
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
+		MCS_copyresourcefork(*t_backup, *t_linkname);
+
+	sptr->setfilename(*t_linkname);
+	MCS_unlink(*t_backup);
 	return IO_NORMAL;
 }
 
 #ifdef FEATURE_RELAUNCH_SUPPORT
-extern bool relaunch_startup(const char *p_id);
+extern bool relaunch_startup(MCStringRef p_id);
 #endif
 
 void send_relaunch(void)
@@ -938,12 +1296,12 @@ void send_relaunch(void)
 #ifdef FEATURE_RELAUNCH_SUPPORT
 	bool t_do_relaunch;
 	t_do_relaunch = false;
-	const char *t_id;
+	MCAutoStringRef t_id;
 
-	t_do_relaunch = MCModeHandleRelaunch(t_id);
+	t_do_relaunch = MCModeHandleRelaunch(&t_id);
 
 	if (t_do_relaunch)
-		if (relaunch_startup(t_id))
+		if (relaunch_startup(*t_id))
 			exit(0);
 #endif
 }
@@ -989,20 +1347,20 @@ void MCDispatch::wkunfocus(Window w)
 		target->kunfocus();
 }
 
-Boolean MCDispatch::wkdown(Window w, const char *string, KeySym key)
+Boolean MCDispatch::wkdown(Window w, MCStringRef p_string, KeySym key)
 {
 	if (menu != NULL)
-		return menu->kdown(string, key);
+		return menu->kdown(p_string, key);
 
 	MCStack *target = findstackd(w);
-	if (target == NULL || !target->kdown(string, key))
+	if (target == NULL || !target->kdown(p_string, key))
 	{
 		if (MCmodifierstate & MS_MOD1)
 		{
-			MCButton *bptr = MCstacks->findmnemonic(MCS_tolower(string[0]));
+			MCButton *bptr = MCstacks->findmnemonic(key);
 			if (bptr != NULL)
 			{
-				bptr->activate(True, (uint2)key);
+				bptr->activate(True, key);
 				return True;
 			}
 		}
@@ -1013,15 +1371,15 @@ Boolean MCDispatch::wkdown(Window w, const char *string, KeySym key)
 	return False;
 }
 
-void MCDispatch::wkup(Window w, const char *string, KeySym key)
+void MCDispatch::wkup(Window w, MCStringRef p_string, KeySym key)
 {
 	if (menu != NULL)
-		menu->kup(string, key);
+		menu->kup(p_string, key);
 	else
 	{
 		MCStack *target = findstackd(w);
 		if (target != NULL)
-			target->kup(string, key);
+			target->kup(p_string, key);
 	}
 }
 
@@ -1251,9 +1609,6 @@ void MCDispatch::wmdragleave(Window w)
 
 MCDragAction MCDispatch::wmdragdrop(Window w)
 {
-	MCStack *target;
-	target = findstackd(w);
-	
 	// MW-2011-02-08: Make sure we store the drag action that is in effect now
 	//   otherwise it can change as a result of message sends which is bad :o)
 	uint32_t t_drag_action;
@@ -1296,14 +1651,13 @@ void MCDispatch::redraw(Window w, MCRegionRef p_dirty_region)
 	target -> updatewindow(p_dirty_region);
 }
 
-MCFontStruct *MCDispatch::loadfont(const MCString &fname, uint2 &size,
-                                   uint2 style, Boolean printer)
+MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 #if defined(_LINUX_DESKTOP)
 	if (fonts == NULL)
 		fonts = MCFontlistCreateNew();
-	if (fonts == NULL)
-		fonts = MCFontlistCreateOld();
+    //	if (fonts == NULL)
+    //		fonts = MCFontlistCreateOld();
 #elif defined(_LINUX_SERVER)
 	// MM-2013-09-13: [[ RefactorGraphics ]] Server font support.
 	if (fonts == NULL)
@@ -1315,9 +1669,20 @@ MCFontStruct *MCDispatch::loadfont(const MCString &fname, uint2 &size,
 	return fonts->getfont(fname, size, style, printer);
 }
 
-MCStack *MCDispatch::findstackname(const MCString &s)
+MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle)
 {
-	if (s.getlength() == 0)
+#if defined(_MACOSX)
+    if (fonts == nil)
+        fonts = new MCFontlist;
+    return fonts->getfontbyhandle(p_handle);
+#else
+    return NULL;
+#endif
+}
+
+MCStack *MCDispatch::findstackname(MCNameRef p_name)
+{
+	if (p_name == nil || MCNameIsEmpty(p_name))
 		return NULL;
 
 	MCStack *tstk = stacks;
@@ -1326,7 +1691,7 @@ MCStack *MCDispatch::findstackname(const MCString &s)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = (MCStack *)tstk->findsubstackname(s)) != NULL)
+			if ((foundstk = (MCStack *)tstk->findsubstackname(p_name)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1339,40 +1704,40 @@ MCStack *MCDispatch::findstackname(const MCString &s)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = (MCStack *)tstk->findstackfile(s)) != NULL)
+			if ((foundstk = (MCStack *)tstk->findstackfile(p_name)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
 		while (tstk != stacks);
 	}
 
-	char *sname = s.clone();
-	if (loadfile(sname, tstk) != IO_NORMAL)
+	if (loadfile(MCNameGetString(p_name), tstk) != IO_NORMAL)
 	{
-		char *buffer = new char[s.getlength() + 5];
-		MCU_lower(buffer, s);
-		strcpy(&buffer[s.getlength()], ".mc");
-		delete sname;
-		char *sptr = buffer;
-		while (*sptr)
+		MCAutoStringRef t_name;
+		/* UNCHECKED */ MCStringMutableCopy(MCNameGetString(p_name), &t_name);
+		/* UNCHECKED */ MCStringLowercase(*t_name, kMCBasicLocale);
+		
+		// Remove all special characters from the input string
+		// TODO: what about other 'special' chars added by unicode?
+        //  => the unicode chars shouldn't be changed
+		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
+        uindex_t t_offset;
+		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
 		{
-			if (strchr("\r\n\t *?*<>/\\()[]{}|'`\"", *sptr) != NULL)
-				*sptr = '_';
-			sptr++;
+			if (MCStringFirstIndexOfChar(t_replace, MCStringGetCharAtIndex(*t_name, i), 0, kMCStringOptionCompareExact, t_offset))
+				/* UNCHECKED */ MCStringReplace(*t_name, MCRangeMake(i, 1), MCSTR("_"));
 		}
-		if (loadfile(buffer, tstk) != IO_NORMAL)
+		
+		MCAutoStringRef t_name_mc;
+		/* UNCHECKED */ MCStringFormat(&t_name_mc, "%@.mc", *t_name);
+		if (loadfile(*t_name_mc, tstk) != IO_NORMAL)
 		{
-			strcpy(&buffer[s.getlength()], ".rev");
-			if (loadfile(buffer, tstk) != IO_NORMAL)
-			{
-				delete buffer;
+			MCAutoStringRef t_name_rev;
+			/* UNCHECKED */ MCStringFormat(&t_name_rev, "%@.rev", *t_name);
+			if (loadfile(*t_name_rev, tstk) != IO_NORMAL)
 				return NULL;
-			}
 		}
-		delete buffer;
 	}
-	else
-		delete sname;
 
 	return tstk;
 }
@@ -1415,7 +1780,7 @@ bool MCDispatch::foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_ca
 	return t_continue;
 }
 
-MCStack *MCDispatch::findstackwindowid(uint32_t p_win_id)
+MCStack *MCDispatch::findstackwindowid(uintptr_t p_win_id)
 {
 	if (p_win_id == 0)
 		return NULL;
@@ -1464,7 +1829,7 @@ MCStack *MCDispatch::findstackwindowid(uint32_t p_win_id)
 MCStack *MCDispatch::findstackd(Window w)
 {
 	// IM-2014-07-09: [[ Bug 12225 ]] Use window ID to find stack
-	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
+	return findstackwindowid(MCscreen->dtouint((Drawable)w));
 }
 
 MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
@@ -1484,7 +1849,7 @@ MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
+MCObject *MCDispatch::getobjname(Chunk_term type, MCNameRef p_name)
 {
 	if (stacks != NULL)
 	{
@@ -1492,7 +1857,7 @@ MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
 		do
 		{
 			MCObject *optr;
-			if ((optr = tstk->getsubstackobjname(type, s)) != NULL)
+			if ((optr = tstk->getsubstackobjname(type, p_name)) != NULL)
 				return optr;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1501,20 +1866,19 @@ MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
 
 	if (type == CT_IMAGE)
 	{
-		const char *sptr = s.getstring();
-		uint4 l = s.getlength();
-
-		MCAutoNameRef t_image_name;
-		if (MCU_strchr(sptr, l, ':'))
-			/* UNCHECKED */ t_image_name . CreateWithOldString(s);
-
+		MCNewAutoNameRef t_image_name;
+        uindex_t t_colon;
+        t_colon = 0;
+        if (MCStringFirstIndexOfChar(MCNameGetString(p_name), ':', 0, kMCCompareExact, t_colon))
+			/* UNCHECKED */ t_image_name = MCValueRetain(p_name);
+		
 		MCImage *iptr = imagecache;
 		if (iptr != NULL)
 		{
 			do
 			{
 check:
-				if (t_image_name != nil && iptr -> hasname(t_image_name))
+				if (*t_image_name != nil && iptr -> hasname(*t_image_name))
 					return iptr;
 				if (!iptr->getopened())
 				{
@@ -1530,19 +1894,46 @@ check:
 			while (iptr != imagecache);
 		}
 
-		if (MCU_strchr(sptr, l, ':'))
+        uindex_t t_second_colon;
+        if (MCStringFirstIndexOfChar(MCNameGetString(p_name), ':', t_colon, kMCCompareExact, t_second_colon))
 		{
-			MCresult->clear(False);
-			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
-			MCExecPoint *epptr = MCEPptr == NULL ? &ep : MCEPptr;
-			epptr->setsvalue(s);
-			MCU_geturl(*epptr);
-			if (MCresult->isempty())
-			{
+            MCExecContext default_ctxt(MCdefaultstackptr, nil, nil);
+            MCExecContext *ctxt = MCECptr == NULL ? &default_ctxt : MCECptr;
+            default_ctxt . SetTheResultToEmpty();
+
+            MCAutoValueRef t_output;
+            MCU_geturl(*ctxt, MCNameGetString(p_name), &t_output);
+            // SN-2014-05-09 [[ Bug 12409 ]] Fields in LC 7 fail to display binfile url imagesource
+            // isempty is not what we want to use, since it returns false for a cleared result
+			if (MCresult->isclear())
+            {
+                MCAutoDataRef t_data;
+
+                if (MCValueGetTypeCode(*t_output) == kMCValueTypeCodeData)
+                {
+                    t_data = (MCDataRef)*t_output;
+                }
+                else
+                {
+                    MCAutoStringRef t_output_str;
+                    /* UNCHECKED */ ctxt -> ConvertToString(*t_output, &t_output_str);
+                    
+                    if (MCStringIsNative(*t_output_str))
+                    {
+                        const char_t *t_bytes = MCStringGetNativeCharPtr(*t_output_str);
+                        MCDataCreateWithBytes((byte_t*)t_bytes, MCStringGetLength(*t_output_str), &t_data);
+                    }
+                    else
+                    {
+                        const unichar_t *t_bytes = MCStringGetCharPtr(*t_output_str);
+                        MCDataCreateWithBytes((byte_t*)t_bytes, MCStringGetLength(*t_output_str) * 2, &t_data);
+                    }
+                }
+                
 				iptr = new MCImage;
-				iptr->appendto(imagecache);
-				iptr->setprop(0, P_TEXT, *epptr, False);
-				iptr->setname(t_image_name);
+                iptr->appendto(imagecache);
+                iptr->SetText(*ctxt, *t_data);
+				iptr->setname(*t_image_name);
 				return iptr;
 			}
 		}
@@ -1628,35 +2019,60 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCDispatch::loadexternal(const char *p_external)
+bool MCDispatch::loadexternal(MCStringRef p_external)
 {
-	char *t_filename;
+	MCStringRef t_filename;
 #if defined(TARGET_SUBPLATFORM_ANDROID)
-	extern bool revandroid_loadExternalLibrary(const char *p_external, char*& r_filename);
+	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_filename);
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Make sure we only use the leaf name
 	//   of the external when loading.
-	if (strrchr(p_external, '/') != nil)
-		p_external = strrchr(p_external, '/') + 1;
-	if (!revandroid_loadExternalLibrary(p_external, t_filename))
+    uindex_t t_slash_index;
+    uindex_t t_ext_length = MCStringGetLength(p_external);
+    MCStringRef t_external_leaf;
+    
+	if (MCStringLastIndexOfChar(p_external, '/', t_ext_length, kMCStringOptionCompareExact, t_slash_index))
+    {
+		if (!MCStringCopySubstring(p_external, MCRangeMake(t_slash_index + 1, t_ext_length - t_slash_index - 1), t_external_leaf))
+            return false;
+    }
+    else
+        t_external_leaf = MCValueRetain(p_external);
+
+	if (!revandroid_loadExternalLibrary(t_external_leaf, t_filename))
+    {
+        MCValueRelease(t_external_leaf);
 		return false;
+    }
 
 	// Don't try and load any drivers as externals.
-	if (strncmp(p_external, "db", 2) == 0)
+	if (MCStringBeginsWithCString(t_external_leaf, (const char_t *)"db", kMCStringOptionCompareExact))
 	{
-		delete t_filename;
+        MCValueRelease(t_external_leaf);
+		MCValueRelease(t_filename);
 		return true;
 	}
+    
+    MCValueRelease(t_external_leaf);
 #elif !defined(_SERVER)
-	if (p_external[0] == '/')
+	if (MCStringBeginsWithCString(p_external, (const char_t *)"/", kMCStringOptionCompareExact))
 	{
-		if (!MCCStringClone(p_external, t_filename))
-			return false;
+		t_filename = MCValueRetain(p_external);
 	}
-	else if (!MCCStringFormat(t_filename, "%.*s/%s", strrchr(MCcmd, '/') - MCcmd, MCcmd, p_external))
-		return false;
+	else
+	{
+		uindex_t t_separator;
+		MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_separator);
+		if (!MCStringMutableCopySubstring(MCcmd, MCRangeMake(0, t_separator), t_filename))
+			return false;
+		if (!MCStringAppendFormat(t_filename, "/%@", p_external))
+		{
+			MCValueRelease(t_filename);
+			return false;
+		}
+	}
+
 #else
-	if (!MCCStringClone(p_external, t_filename))
-		return false;
+	t_filename = MCValueRetain(p_external);
 #endif
 	
 	if (m_externals == nil)
@@ -1664,7 +2080,7 @@ bool MCDispatch::loadexternal(const char *p_external)
 	
 	bool t_loaded;
 	t_loaded = m_externals -> Load(t_filename);
-	delete t_filename;
+	MCValueRelease(t_filename);
 	
 	if (m_externals -> IsEmpty())
 	{
@@ -1684,7 +2100,6 @@ bool MCDispatch::loadexternal(const char *p_external)
 //
 // We try each of these in turn, attempting appropriate things in each case.
 //
-
 bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 {
 	r_objptr = NULL;
@@ -1718,28 +2133,25 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 	
 	if (MCactiveimage != NULL && MCclipboarddata -> HasImage())
 	{
-		MCSharedString *t_data;
-		t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE);
-		if (t_data != NULL)
-		{
-			MCExecPoint ep(NULL, NULL, NULL);
-			ep . setsvalue(t_data -> Get());
+		MCAutoValueRef t_data;
+		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
+        {
+            MCExecContext ctxt(nil, nil, nil);
 
 			MCImage *t_image;
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			t_image -> setprop(0, P_TEXT, ep, False);
+			t_image -> SetText(ctxt, (MCDataRef)*t_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
 
 			delete t_image;
-
-			t_data -> Release();
+			return true; 
 		}
 
-		return true;
+		return false;
 	}
 	
 	if (MCdefaultstackptr != NULL && (p_explicit || MCdefaultstackptr -> gettool(MCdefaultstackptr) == T_POINTER))
@@ -1749,35 +2161,25 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 
 		if (!MCclipboarddata -> Lock())
 			return false;
-
 		if (MCclipboarddata -> HasObjects())
 		{
-			MCSharedString *t_data;
-			t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS);
-			if (t_data != NULL)
-			{
-				t_objects = MCObject::unpickle(t_data, MCdefaultstackptr);
-				t_data -> Release();
-			}
+			MCAutoValueRef t_data;
+			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS, &t_data))
+				t_objects = MCObject::unpickle((MCDataRef)*t_data, MCdefaultstackptr);
 		}
 		else if (MCclipboarddata -> HasImage())
 		{
-			MCSharedString *t_data;
-			t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE);
-			if (t_data != NULL)
-			{
-				MCExecPoint ep(NULL, NULL, NULL);
-				ep . setsvalue(t_data -> Get());
-
+			MCAutoValueRef t_data;
+			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
+            {
+                MCExecContext ctxt(nil, nil, nil);
+				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				t_objects -> setprop(0, P_TEXT, ep, False);
+				static_cast<MCImage *>(t_objects) -> SetText(ctxt, (MCDataRef)*t_data);
 				t_objects -> close();
-
-				t_data -> Release();
 			}
 		}
-
 		MCclipboarddata -> Unlock();
 
 		//
@@ -1817,7 +2219,10 @@ void MCDispatch::dodrop(bool p_source)
 	{
 		// We are only the source
 		m_drag_end_sent = true;
-		MCdragsource -> message(MCM_drag_end);
+        if (MCdragsource->gettype() == CT_WIDGET)
+            MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
+        else
+            MCdragsource -> message(MCM_drag_end);
 
 		// OK-2008-10-21 : [[Bug 7316]] - Cursor in script editor follows mouse after dragging to non-Revolution target.
 		// I have no idea why this apparently only happens in the script editor, but this seems to fix it and doesn't seem too risky :)
@@ -1845,7 +2250,7 @@ void MCDispatch::dodrop(bool p_source)
 	MCdropfield = NULL;
 	MCdropchar = 0;
 
-	int4 t_start_index, t_end_index;
+	findex_t t_start_index, t_end_index;
 	t_start_index = t_end_index = 0;
 	if (MCdragdest != NULL && MCdragdest -> gettype() == CT_FIELD)
 	{
@@ -1871,7 +2276,7 @@ void MCDispatch::dodrop(bool p_source)
 		MCField *t_field;
 		t_field = static_cast<MCField *>(MCdragsource);
 
-		int4 t_from_start_index, t_from_end_index;
+		findex_t t_from_start_index, t_from_end_index;
 		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False);
 
 		// We are dropping in the target selection - so just send the messages and do nothing
@@ -1928,13 +2333,25 @@ void MCDispatch::dodrop(bool p_source)
 		return;
 	}
 
-	int4 t_src_start, t_src_end;
+	findex_t t_src_start, t_src_end;
 	t_src_start = t_src_end = 0;
 	if (t_auto_source)
 		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
 
 	bool t_auto_drop;
-	t_auto_drop = MCdragdest != NULL && MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;
+    t_auto_drop = MCdragdest != NULL;
+    if (t_auto_drop)
+    {
+        if (MCdragdest->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_dnd_drop(reinterpret_cast<MCWidget*>(MCdragdest));
+            t_auto_drop = false;
+        }
+        else
+        {
+            t_auto_drop = MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;
+        }
+    }
 
 	if (t_auto_dest && t_auto_drop && MCdragdata != NULL && MCdropfield != NULL)
 	{
@@ -1975,7 +2392,15 @@ void MCDispatch::dodrop(bool p_source)
 	if (MCdragsource != NULL)
 	{
 		m_drag_end_sent = true;
-		t_auto_end = MCdragsource -> message(MCM_drag_end) != ES_NORMAL;
+        if (MCdragsource->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
+            t_auto_end = false;
+        }
+        else
+        {
+            t_auto_end = MCdragsource -> message(MCM_drag_end) != ES_NORMAL;
+        }
 	}
 	else
 		t_auto_end = false;
@@ -2002,7 +2427,7 @@ void MCDispatch::clearcursors(void)
 	{
 		if (MCcursor == MCcursors[i])
 			MCcursor = nil;
-		if (MCdefaultcursor = MCcursors[i])
+		if (MCdefaultcursor == MCcursors[i])
 			MCdefaultcursor = nil;
 	}
 
@@ -2052,6 +2477,91 @@ void MCDispatch::flushfonts(void)
 MCFontlist *MCFontlistGetCurrent(void)
 {
 	return MCdispatcher -> getfontlist();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCDispatch::GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color)
+{
+    // SN-2014-12-05: [[ Bug 14154 ]] Added forgotten properties
+    if (which == P_FORE_COLOR
+            || which ==  P_BORDER_COLOR
+            || which == P_TOP_COLOR
+            || which == P_BOTTOM_COLOR
+            || which == P_SHADOW_COLOR
+            || which == P_FOCUS_COLOR)
+        GetDefaultForeColor(ctxt, r_color);
+    else if (which == P_BACK_COLOR
+             || which == P_HILITE_COLOR)
+        GetDefaultBackColor(ctxt, r_color);
+    else
+        r_color . name = MCValueRetain(kMCEmptyString);
+    
+    return true;
+}
+
+void MCDispatch::GetDefaultTextFont(MCExecContext& ctxt, MCStringRef& r_font)
+{
+	if (MCStringCreateWithCString(DEFAULT_TEXT_FONT, r_font))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCDispatch::GetDefaultTextSize(MCExecContext& ctxt, uinteger_t& r_size)
+{
+	r_size = DEFAULT_TEXT_SIZE;
+}
+
+void MCDispatch::GetDefaultTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
+{
+	r_style . style = FA_DEFAULT_STYLE;
+}
+
+void MCDispatch::GetDefaultTextAlign(MCExecContext& ctxt, intenum_t& r_align)
+{
+    r_align = F_ALIGN_LEFT;
+}
+
+void MCDispatch::GetDefaultTextHeight(MCExecContext& ctxt, uinteger_t& r_height)
+{
+    r_height = heightfromsize(DEFAULT_TEXT_SIZE);
+}
+
+void MCDispatch::GetDefaultForePixel(MCExecContext& ctxt, uinteger_t& r_pixel)
+{
+    r_pixel = MCscreen->black_pixel.pixel & 0xFFFFFF;
+}
+
+void MCDispatch::GetDefaultBackPixel(MCExecContext& ctxt, uinteger_t& r_pixel)
+{
+    r_pixel = MCscreen->background_pixel.pixel & 0xFFFFFF;
+}
+
+void MCDispatch::GetDefaultTopPixel(MCExecContext& ctxt, uinteger_t& r_pixel)
+{
+    r_pixel = MCscreen->white_pixel.pixel & 0xFFFFFF;
+}
+
+void MCDispatch::GetDefaultForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+    if (MCStringCreateWithCString("black", r_color . name))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCDispatch::GetDefaultBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+    if (MCStringCreateWithCString("white", r_color . name))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCDispatch::GetDefaultPattern(MCExecContext& ctxt, uinteger_t*& r_pattern)
+{
+    r_pattern = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

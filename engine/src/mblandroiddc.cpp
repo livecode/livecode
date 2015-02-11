@@ -20,23 +20,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
 #include "field.h"
-#include "unicode.h"
 #include "notify.h"
 #include "statemnt.h"
 #include "funcs.h"
 #include "eventqueue.h"
-#include "core.h"
 #include "mode.h"
 #include "osspec.h"
 #include "redraw.h"
 #include "region.h"
+#include "font.h"
 
 #include "mbldc.h"
 
@@ -54,6 +53,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <unistd.h>
 
 #include "stacktile.cpp"
+
+#include "script.h"
+
+extern bool MCModulesInitialize();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -278,14 +281,14 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-const char *MCScreenDC::getdisplayname(void)
+MCNameRef MCScreenDC::getdisplayname(void)
 {
-	return "android";
+	return MCN_android;
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep . setsvalue("android");
+	return MCN_android;
 }
 
 uint2 MCScreenDC::device_getwidth()
@@ -359,7 +362,7 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, 
 	
 	MCRectangle t_viewport, t_workarea;
 
-	char *t_rect_string = nil;
+	MCAutoStringRef t_rect_string;
 	int2 t_left, t_top, t_right, t_bottom;
 
 	// The workarea is the rect of the screen
@@ -367,15 +370,16 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, 
 
 	// IM-2013-11-15: [[ Bug 10485 ]] Use appropriate java method to get (effective) working screenrect
 	if (p_effective)
-		MCAndroidEngineCall("getEffectiveWorkareaAsString", "s", &t_rect_string);
+		MCAndroidEngineCall("getEffectiveWorkareaAsString", "x", &(&t_rect_string));
 	else
-	MCAndroidEngineCall("getWorkareaAsString", "s", &t_rect_string);
-	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
+        MCAndroidEngineCall("getWorkareaAsString", "x", &(&t_rect_string));
+	MCU_stoi2x4(*t_rect_string, t_left, t_top, t_right, t_bottom);
 
 	t_workarea = MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
 
-	MCAndroidEngineCall("getViewportAsString", "s", &t_rect_string);
-	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
+    MCAutoStringRef t_viewport_string;
+	MCAndroidEngineCall("getViewportAsString", "x", &(&t_viewport_string));
+	MCU_stoi2x4(*t_viewport_string, t_left, t_top, t_right, t_bottom);
 
 	t_viewport = MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
 
@@ -431,17 +435,18 @@ void MCScreenDC::beep(void)
 	MCAndroidEngineRemoteCall("doBeep", "vi", nil, 1);
 }
 
-bool MCScreenDC::setbeepsound(const char *p_sound)
+bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 {
 	return false;
 }
 
-const char *MCScreenDC::getbeepsound(void)
+bool MCScreenDC::getbeepsound(MCStringRef& r_beep_sound)
 {
-	return "";
+	r_beep_sound = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCScreenDC::getbeep(uint4 property, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 property, int4& r_value)
 {
 }
 
@@ -451,7 +456,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size)
 {
 	return NULL;
 }
@@ -1137,7 +1142,7 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool X_init(int argc, char *argv[], char *envp[]);
+Bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[]);
 bool X_main_loop_iteration(void);
 int X_close(void);
 void send_startup_message(bool p_do_relaunch = true);
@@ -1148,18 +1153,12 @@ IO_handle android_get_mainstack_stream(void)
 	// I.M.  01/06/2011
 	// open main stack through asset path rather than apk file + offset
 
-	char *t_asset_filename;
-	t_asset_filename = nil;
+	MCAutoStringRef t_asset_filename;
 
-	if (!MCCStringFormat(t_asset_filename, "%s/revandroidmain.rev", MCcmd))
+	if (!MCStringFormat(&t_asset_filename, "%@/revandroidmain.rev", MCcmd))
 		return nil;
-
-	IO_handle t_stream;
-	t_stream = MCS_open(t_asset_filename, IO_READ_MODE, False, False, 0);
-
-	MCCStringFree(t_asset_filename);
-
-	return t_stream;
+    
+    return MCS_open(*t_asset_filename, kMCOpenFileModeRead, False, False, 0);
 }
 
 static void empty_signal_handler(int)
@@ -1174,7 +1173,9 @@ static void *mobile_main(void *arg)
 	// completely unaware that we exist. This is not good, since we will want
 	// to call into Dalvik via the JNI from this thread. So we need to bind
 	// our current thread to the VM.
-
+    
+    //MCInitialize();
+    
 	MCLog("Attaching thread to VM %p", s_java_vm);
 
 	// Attach ourselves to the JVM - if we fail, we just return.
@@ -1201,11 +1202,14 @@ static void *mobile_main(void *arg)
 	sigaction(SIGINT, &t_sig_action, nil);
 
 	// We don't care too much about args and env vars at the moment.
-	char *t_args[1], *t_env[1];
-	MCAndroidEngineCall("getPackagePath", "s", &t_args[0]);
+	// (The only argument is the name and there are no env vars)
+	MCStringRef t_args[1], t_env[1];
+	int argc = 1;
+	int envc = 0;
+	MCAndroidEngineCall("getPackagePath", "x", &t_args[0]);
 	t_env[0] = nil;
 
-	MCLog("args[0] = %s", t_args[0]);
+	MCLog("args[0] = %@", t_args[0]);
 
 	// Make sure MCquit is false before we start running things
 	MCquit = False;
@@ -1216,7 +1220,7 @@ static void *mobile_main(void *arg)
 
 	MCLog("Calling X_init", 0);
 
-	if (!X_init(1, t_args, t_env))
+	if (!X_init(argc, t_args, envc, t_env))
 	{
 		MCLog("X_init failed", 0);
 
@@ -1276,8 +1280,11 @@ static void *mobile_main(void *arg)
 	while (s_engine_running)
 		co_yield_to_android();
 	
-	// Free argument.
-	MCCStringFree(t_args[0]);
+	// Free arguments and environment vars
+	for (int i = 0; i < argc; i++)
+		MCValueRelease(t_args[i]);
+	for (int i = 0; i < envc; i++)
+		MCValueRelease(t_env[i]);
 
 	// We have finished with the engine now, so detach from the thread
 	s_java_vm -> DetachCurrentThread();
@@ -1563,6 +1570,26 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 				t_env -> DeleteLocalRef(t_java_string);
 			}
 			break;
+		case kMCJavaTypeMCStringRef:
+			{
+				jstring t_java_string;
+				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
+				{
+					t_exception_thrown = true;
+					t_success = false;
+				}
+            
+                MCStringRef t_string;
+                if (t_success)
+                    t_success = MCJavaStringToStringRef(t_env, t_java_string, t_string);
+                
+                if (t_success)
+					*((MCStringRef *)context -> return_value) = t_string;
+
+				t_env -> DeleteLocalRef(t_java_string);
+			}
+			break;
 		case kMCJavaTypeByteArray:
 			{
 				jbyteArray t_byte_array;
@@ -1573,13 +1600,11 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 					t_success = false;
 				}
 
-                void *t_data = nil;
-                uint32_t t_length = 0;
-
+                MCDataRef t_data;
 				if (t_success)
-                    t_success = MCJavaByteArrayToData(t_env, t_byte_array, t_data, t_length);
+                    t_success = MCJavaByteArrayToDataRef(t_env, t_byte_array, t_data);
                 if (t_success)
-                    ((MCString*)context -> return_value) -> set((char*)t_data, t_length);
+					*((MCDataRef *)context -> return_value) = t_data;
 
 				t_env -> DeleteLocalRef(t_byte_array);
 			}
@@ -1768,6 +1793,11 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidde
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
+    MCInitialize();
+    MCSInitialize();
+    MCModulesInitialize();
+    MCScriptInitialize();
+    
 	MCLog("doCreate called", 0);
 
 	// Make sure the engine isn't running
@@ -2126,26 +2156,22 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTextCanceled(JNIEnv *env
 	MCAndroidTextCanceled();
 }
 
-void MCAndroidMediaDone(char *s_media_content);
+void MCAndroidMediaDone(MCStringRef s_media_content);
 void MCAndroidMediaCanceled();
 
-static char *s_media_content = nil;
+static MCStringRef s_media_content = nil;
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNIEnv *env, jobject object, jstring p_media_content)
 {
 	MCLog("doMediaDone called - passing arg", 0);
 
     if (s_media_content != nil)
-        MCCStringFree (s_media_content);
+        MCValueRelease(s_media_content);
     s_media_content = nil;
     
     if (p_media_content != nil)
 	{
-		const char *t_utfchars = nil;
-		t_utfchars = env->GetStringUTFChars(p_media_content, nil);
-		if (t_utfchars != nil)
-			MCCStringClone(t_utfchars, s_media_content);
-		env->ReleaseStringUTFChars(p_media_content, t_utfchars);
+		MCJavaStringToStringRef(env, p_media_content, s_media_content);
 	}
 
 	MCAndroidMediaDone(s_media_content);
@@ -2156,16 +2182,14 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaCanceled(JNIEnv *en
 	MCAndroidMediaCanceled();
 }
 
-void MCNotificationPostUrlWakeUp(MCString t_url);
+void MCNotificationPostUrlWakeUp(MCStringRef t_url);
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *env, jobject object, jstring url)
 {
-    char *t_url = nil;
-    if (MCJavaStringToNative(env, url, t_url))
-        MCNotificationPostUrlWakeUp(MCString(t_url));
-
-    MCCStringFree(t_url);
+	MCAutoStringRef t_url_str;
+    if (MCJavaStringToStringRef(env, url, &t_url_str))
+        MCNotificationPostUrlWakeUp(*t_url_str);
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2196,25 +2220,22 @@ bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, const char 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool revandroid_loadExternalLibrary(const char *p_external, char*& r_path)
+bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_path)
 {
-	MCAndroidEngineRemoteCall("loadExternalLibrary", "ss", &r_path, p_external);
+	MCAndroidEngineRemoteCall("loadExternalLibrary", "xx", &r_path, p_external);
 	return r_path != nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidGetBuildInfo(const char *p_key, char *&r_value)
+bool MCAndroidGetBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 {
-	char *t_value;
-	t_value = NULL;
-	MCAndroidEngineCall("getBuildInfo", "ss", &t_value, p_key);
+	MCAndroidEngineCall("getBuildInfo", "xx", &r_value, p_key);
 
-	if (t_value == NULL)
+	if (r_value == nil)
 		return false;
 
-	r_value = t_value;
-	return true;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2238,7 +2259,7 @@ static const char *s_build_keys[] = {
 	"VERSION.INCREMENTAL",
 };
 
-static char **s_build_info = NULL;
+static MCStringRef *s_build_info = NULL;
 
 MCAndroidDeviceConfiguration s_device_configuration = {
 	false,
@@ -2251,7 +2272,7 @@ bool MCAndroidInitBuildInfo()
 		return true;
 
 	bool t_success = true;
-	char **t_build_info = NULL;
+	MCStringRef *t_build_info = NULL;
 
 	uint32_t t_key_count;
 	t_key_count = kMCBuildInfoKeyCount;
@@ -2261,7 +2282,7 @@ bool MCAndroidInitBuildInfo()
 
 	for (uint32_t i = 0; i < t_key_count && t_success; i++)
 	{
-		t_success = MCAndroidGetBuildInfo(s_build_keys[i], t_build_info[i]);
+		t_success = MCAndroidGetBuildInfo(MCSTR(s_build_keys[i]), t_build_info[i]);
 	}
 
 	if (t_success)
@@ -2272,7 +2293,7 @@ bool MCAndroidInitBuildInfo()
 		{
 			for (uint32_t i = 0; i < t_key_count; i++)
 			{
-				MCCStringFree(t_build_info[i]);
+				MCValueRelease(t_build_info[i]);
 			}
 			MCMemoryDeleteArray(t_build_info);
 		}
@@ -2281,36 +2302,40 @@ bool MCAndroidInitBuildInfo()
 	return t_success;
 }
 
+void MCAndroidFinalizeBuildInfo()
+{
+    if (s_build_info != NULL)
+    {
+        uint32_t t_count;
+        t_count = kMCBuildInfoKeyCount;
+        for (uint32_t i = 0; i < t_count; i++)
+        {
+            MCValueRelease(s_build_info[i]);
+        }
+        MCMemoryDeleteArray(s_build_info);
+        // AL-2014-10-08: [[ Bug 13626 ]] Set s_build_info back to NULL when finalizing
+        s_build_info = NULL;
+    }
+}
+
 bool MCAndroidSignatureMatch(const char *p_signature)
 {
-	const char *t_component = p_signature;
-	uint32_t t_component_length = 0;
-	uint32_t t_component_index = 0;
-
-	while (t_component != NULL && t_component_index < kMCBuildInfoKeyCount)
+    MCAutoStringRef t_signature;
+    MCAutoArrayRef t_signature_array;
+    /* UNCHECKED */ MCStringCreateWithCString(p_signature, &t_signature);
+    /* UNCHECKED */ MCStringSplit(*t_signature, MCSTR("|"), nil, kMCCompareExact, &t_signature_array);
+    uindex_t t_count;
+	t_count = MCArrayGetCount(*t_signature_array);
+	for (uindex_t i = 0; i < t_count; i++)
 	{
-		if (!MCCStringFirstIndexOf(t_component, '|', t_component_length))
-			t_component_length = MCCStringLength(t_component);
-
-		if (t_component_length > 0)
-		{
-			MCLog("testing component (%.*s)", t_component_length, t_component);
-			if (MCCStringLength(s_build_info[t_component_index]) != t_component_length ||
-			!MCCStringEqualSubstringCaseless(s_build_info[t_component_index], t_component, t_component_length))
-			{
-				return false;
-			}
-		}
-
-		t_component_index++;
-		t_component += t_component_length;
-		if (t_component[0] == '\0')
-			t_component = NULL;
-		else
-			t_component++;
-	}
-
-	return true;
+		MCValueRef t_val;
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_signature_array, i + 1, t_val);
+        MCStringRef t_val_str = (MCStringRef)t_val;
+        MCLog("testing component (%@)", t_val_str);
+        if (!MCStringIsEqualTo(t_val_str, s_build_info[i], kMCCompareCaseless))
+            return false;
+    }
+    return true;
 }
 
 bool MCAndroidSetOrientationMap(int p_map[4], const char *p_mapping)
@@ -2346,7 +2371,7 @@ bool MCAndroidSetOrientationMap(int p_map[4], const char *p_mapping)
 // identify device / android version by:
 //    MANUFACTURER|MODEL|DEVICE|VERSION.RELEASE|VERSION.INCREMENTAL
 
-extern char *MCcmd;
+extern MCStringRef MCcmd;
 
 bool MCAndroidLoadDeviceConfiguration()
 {
@@ -2355,7 +2380,7 @@ bool MCAndroidLoadDeviceConfiguration()
 
 	MCAndroidDeviceConfiguration *t_configuration = NULL;
 
-	char *t_config_file_path = NULL;
+	MCAutoStringRef t_config_file_path;
 
 	uint32_t t_filesize;
 	t_filesize = 0;
@@ -2370,11 +2395,11 @@ bool MCAndroidLoadDeviceConfiguration()
 		t_success = MCAndroidInitBuildInfo();
 
 	if (t_success)
-		t_success = MCCStringFormat(t_config_file_path, "%s/lc_device_config.txt", MCcmd);
+		t_success = MCStringFormat(&t_config_file_path, "%@/lc_device_config.txt", MCcmd);
 
 	if (t_success)
 	{
-		t_filehandle = MCS_open(t_config_file_path, IO_READ_MODE, false, false, 0);
+        t_filehandle = MCS_open(*t_config_file_path, kMCOpenFileModeRead, false, false, 0);
 		t_success = t_filehandle != NULL;
 	}
 
@@ -2386,18 +2411,8 @@ bool MCAndroidLoadDeviceConfiguration()
 	}
 
 	if (t_success)
-	{
-		IO_stat t_read_stat = IO_NORMAL;
-		uint32_t t_bytes_read = 0;
-		while (t_success && t_bytes_read < t_filesize)
-		{
-			uint32_t t_count;
-			t_count = t_filesize - t_bytes_read;
-			t_read_stat = MCS_read(t_file_buffer + t_bytes_read, 1, t_count, t_filehandle);
-			t_bytes_read += t_count;
-			t_success = (t_read_stat == IO_NORMAL || (t_read_stat == IO_EOF && t_bytes_read == t_filesize));
-		}
-	}
+        if (MCS_readfixed(t_file_buffer, t_filesize, t_filehandle) != IO_NORMAL)
+            t_success = false;
 
 	if (t_success)
 	{
@@ -2437,8 +2452,6 @@ bool MCAndroidLoadDeviceConfiguration()
 	}
 	if (t_filehandle != NULL)
 		MCS_close(t_filehandle);
-	if (t_config_file_path != NULL)
-		MCCStringFree(t_config_file_path);
 	if (t_file_buffer != NULL)
 		MCMemoryDeallocate(t_file_buffer);
 
@@ -2741,35 +2754,31 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomP
 JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValue(JNIEnv *env, jobject object, jstring set, jstring property)
 {
     bool t_success = true;
-    MCExecPoint ep;
 
     jstring t_js = nil;
 
-    char *t_set = nil;
-    char *t_property = nil;
+    MCAutoStringRef t_property, t_set;
 
-    t_success = MCJavaStringToNative(env, set, t_set) && MCJavaStringToNative(env, property, t_property);
+    t_success = MCJavaStringToStringRef(env, set, &t_set) && MCJavaStringToStringRef(env, property, &t_property);
 
-    MCAutoNameRef t_set_name, t_prop_name;
+    MCNewAutoNameRef t_set_name, t_prop_name;
     if (t_success)
     {
-        t_set_name.CreateWithCString(t_set);
-        t_prop_name.CreateWithCString(t_property);
+        MCNameCreate(*t_set, &t_set_name);
+        MCNameCreate(*t_property, &t_prop_name);
     }
 
-    const char *t_value = NULL;
-
-    Exec_stat t_stat = MCdefaultstackptr->getcustomprop(ep, t_set_name, t_prop_name);
-    t_success = t_stat == ES_NORMAL;
-    if (t_success)
+    MCExecValue t_value;
+    MCExecContext ctxt(nil, nil, nil);
+    
+    if (MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
     {
-        t_value = ep.getcstring();
-        MCString t_mcstring(t_value);
-        t_success = MCJavaStringFromNative(env, &t_mcstring, t_js);
-    }
+        MCAutoStringRef t_string_value;
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &(&t_string_value));
 
-    MCCStringFree(t_set);
-    MCCStringFree(t_property);
+        if (!ctxt . HasError())
+            t_success = MCJavaStringFromStringRef(env, *t_string_value, t_js);
+    }
 
     return t_js;
 }
@@ -2804,3 +2813,23 @@ JNIEnv *MCJavaGetThreadEnv()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// No theming for mobile platforms yet
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
+{
+    return MCFontCreate(MCNAME("Arial"), 0, 12, r_font);
+}

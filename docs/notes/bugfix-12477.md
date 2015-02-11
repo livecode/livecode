@@ -1,0 +1,1 @@
+# Native mobile controls created with mobGui do not seem to function under LiveCode 7.0

@@ -1,0 +1,19 @@
+setup
+
+create stack "TestStack"
+
+set the defaultStack to "TestStack"
+
+create button
+
+save stack "TestStack" as "Test.livecode"
+
+delete button 1
+
+revert
+
+put there is a button 1
+
+delete file "Test.livecode"
+
+teardown

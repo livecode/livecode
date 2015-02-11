@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "sellst.h"
 #include "util.h"
 #include "font.h"
@@ -138,15 +138,17 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCcurtheme -> drawmenuheaderbackground(dc, dirty, this))
 		{
 			t_themed_menu = true;
-			dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            //dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            setforeground(dc, DI_PSEUDO_BUTTON_TEXT, False);
 		}
 		else if (menucontrol != MENUCONTROL_NONE && MCcurtheme != NULL &&
 				MCcurtheme -> drawmenuitembackground(dc, dirty, this))
 		{
 			t_themed_menu = true;
 			indicator = False;
-			dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
-			}
+            //dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            setforeground(dc, DI_PSEUDO_BUTTON_TEXT, False);
+        }
 		else
 		{
 		if (flags & F_OPAQUE && (MCcurtheme == NULL || !noback
@@ -342,6 +344,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 
 		if (flags & F_DISABLED)
+        {
 			if (MClook == LF_MOTIF)
 			{
 				setforeground(dc, DI_FORE, False);
@@ -354,15 +357,18 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			}
 			else
 				setforeground(dc, DI_TOP, False);
+        }
 		else
-			if (white && state & CS_KFOCUSED && !(state & CS_SUBMENU) ||
-				isstdbtn && noback && (MCcurtheme == NULL || MCcurtheme->getthemeid() != LF_NATIVEWIN && MCcurtheme->getthemeid() != LF_NATIVEGTK) && state & CS_HILITED && !MCaqua ||
-				MClook != LF_MOTIF && style == F_MENU && flags & F_OPAQUE && state & CS_ARMED && !(flags & F_SHOW_BORDER))
-				setforeground(dc, DI_BACK, False, True);
+        {
+			if ((white && state & CS_KFOCUSED && !(state & CS_SUBMENU)) ||
+				(isstdbtn && noback && (MCcurtheme == NULL || (MCcurtheme->getthemeid() != LF_NATIVEWIN && MCcurtheme->getthemeid() != LF_NATIVEGTK)) && state & CS_HILITED && !MCaqua) ||
+				(MClook != LF_MOTIF && style == F_MENU && flags & F_OPAQUE && state & CS_ARMED && !(flags & F_SHOW_BORDER)))
+				setforeground(dc, DI_PSEUDO_BUTTON_TEXT_SEL, False, True);
 			else
 				setforeground(dc, DI_FORE, (state & CS_HILITED && flags & F_HILITE_FILL
-				                            || state & CS_ARMED && flags & F_ARM_FILL) && flags & F_OPAQUE && (MClook != LF_WIN95 && !MCaqua
+				                            || state & CS_ARMED && flags & F_ARM_FILL) && flags & F_OPAQUE && ((MClook != LF_WIN95 && !MCaqua)
 				                            || style != F_STANDARD), False);
+        }
 		}
 
 		// MW-2009-06-14: We will assume (perhaps unwisely) that is 'opaque' is set
@@ -371,13 +377,13 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		if (getflag(F_OPAQUE))
 			t_was_opaque = dc -> changeopaque(true);
 
-		MCString slabel;
-		bool isunicode;
-		getlabeltext(slabel, isunicode);
+		MCStringRef t_label = getlabeltext();
 		Boolean icondrawed = False;
 		
         // SN-2014-08-12: [[ Bug 13155 ]] Don't try to draw the icons if the button has not got any
-		if (icons != NULL && m_icon_gravity != kMCGravityNone)
+        // SN-2014-12-17: [[ Bug 14249 ]] Do not try to draw the curicon if there is no current
+        //  icon (as it may after loading a stack).
+		if (icons != NULL && icons -> curicon && m_icon_gravity != kMCGravityNone)
 		{
 			// MW-2014-06-19: [[ IconGravity ]] Use iconGravity to place the icon.
 			int t_left, t_top, t_right, t_bottom;
@@ -400,23 +406,38 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			icondrawed = True;
 		}
 		
-		if (flags & F_SHOW_NAME && slabel.getlength() && menucontrol != MENUCONTROL_SEPARATOR)
+		if (flags & F_SHOW_NAME && !MCStringIsEmpty(t_label) && menucontrol != MENUCONTROL_SEPARATOR)
 		{
-			MCString *lines = NULL;
-			uint2 nlines = 0;
-			MCU_break_string(slabel, lines, nlines, isunicode);
+			// Split the string on the newlines
+			MCAutoArrayRef lines;
+			/* UNCHECKED */ MCStringSplit(t_label, MCSTR("\n"), nil, kMCCompareExact, &lines);
+			uindex_t nlines = MCArrayGetCount(*lines);
+			
+            coord_t fascent, fdescent, fleading, fxheight;
+            fascent = MCFontGetAscent(m_font);
+            fdescent = MCFontGetDescent(m_font);
+            fleading = MCFontGetLeading(m_font);
+            fxheight = MCFontGetXHeight(m_font);
 
-			uint2 fheight;
-			fheight = gettextheight();
+			coord_t fheight;
+            fheight = fascent + fdescent + fleading;
 
-			int32_t fascent, fdescent;
-			fascent = MCFontGetAscent(m_font);
-			fdescent = MCFontGetDescent(m_font);
+            coord_t sx, sy, theight;
+            if (nlines == 1)
+            {
+                // Centre things on the middle of the ascent
+                sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+                sy = roundf(centery + (fascent-fdescent)/2);
+                theight = fascent;
+            }
+            else
+            {
+                // Centre things by centring the bounding box of the text
+                sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+                sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
+                theight = nlines * fheight;
+            }
 
-			int2 sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
-			int2 sy = centery - (nlines * fheight >> 1) + fascent + fdescent - 2;
-			uint2 theight = nlines == 1 ? fascent : nlines * fheight;
-            
             // MW-2014-06-19: [[ IconGravity ]] Use old method of calculating icon location if gravity is none.
 			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL && m_icon_gravity == kMCGravityNone)
 			{
@@ -428,9 +449,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					          - (icons->curicon->getrect().width >> 1);
 					break;
 				case F_ALIGN_CENTER:
-					centery -= (theight >> 1) + 1;
-					sy = shadowrect.y + shadowrect.height - bottommargin - theight
-					     + fascent - fdescent - 1;
+                        centery -= (theight / 2) + 1;
+                        sy = shadowrect.y + shadowrect.height - bottommargin - theight
+                            + fascent - fdescent - 1;
 					break;
 				case F_ALIGN_RIGHT:
 					centerx = shadowrect.x + leftmargin
@@ -444,17 +465,29 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				icondrawed = True;
 			}
 
-			uint2 starty = sy;
+			coord_t starty = sy;
 			uint2 i;
-			uint2 twidth = 0;
+			coord_t twidth = 0;
 			
 			dc->save();
 			dc->cliprect(t_content_rect);
 			
+			uindex_t t_totallen = 0;
 			for (i = 0 ; i < nlines ; i++)
 			{
-				// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-				twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
+				// Note: 'lines' is an array of strings
+				MCValueRef lineval = nil;
+				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
+				MCStringRef line = (MCStringRef)(lineval);
+                // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+                twidth = MCFontMeasureTextFloat(m_font, line, getstack() -> getdevicetransform());
+				
+				// Mnemonic position calculation
+				uindex_t t_mnemonic = 0;
+				uindex_t t_linelen = MCStringGetLength(line);
+				if (mnemonic > t_totallen && mnemonic <= t_totallen + t_linelen)
+					t_mnemonic = mnemonic - t_totallen;
+				
 				switch (flags & F_ALIGNMENT)
 				{
 				case F_ALIGN_LEFT:
@@ -477,7 +510,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					break;
 				case F_ALIGN_CENTER:
-					sx = centerx - (twidth >> 1);
+					sx = floorf(centerx - (twidth / 2));
 					if (menumode == WM_OPTION || menumode == WM_COMBO)
 						sx -= optionrect.width;
 					// MH-2007-03-16 [[ Bug 3598 ]] Centering of the label did not work correctly on mac os classic and non vista windows option buttons.
@@ -499,7 +532,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				fontstyle = gettextstyle();
 				if ((flags & F_DISABLED) != 0 && !t_themed_menu && MClook == LF_WIN95)
 				{
-					drawlabel(dc, sx + 1 + loff, sy + 1 + loff, twidth, shadowrect, lines[i], isunicode, fontstyle);
+					drawlabel(dc, sx + 1 + loff, sy + 1 + loff, twidth, shadowrect, line, fontstyle, t_mnemonic);
 					if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE)
 					{
 						shadowrect.x++;
@@ -510,22 +543,38 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					setforeground(dc, DI_BOTTOM, False);
 				}
-				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, lines[i], isunicode, fontstyle);
+#ifdef _MACOSX
+                // FG-2014-10-29: [[ Bugfix 13842 ]] On Yosemite, glowing buttons
+                // should draw with white text.
+                if (IsMacLFAM() && MCmajorosversion >= 0x10A0 && MCaqua
+                    && !(flags & F_DISABLED) && isstdbtn && getstyleint(flags) == F_STANDARD
+                    && ((state & CS_HILITED) || (state & CS_SHOW_DEFAULT))
+                    && rect.height <= 24 && MCappisactive
+                    && !(MCbuttonstate && MCmousestackptr && MCmousestackptr == getstack()
+                        && MCmousestackptr->getcard()->getmfocused() != nil
+                        && MCmousestackptr->getcard()->getmfocused() != this
+                        && MCmousestackptr->getcard()->getmfocused()->gettype() == CT_BUTTON))
+                    setforeground(dc, DI_BACK, False, True);
+                // PM-2014-11-26: [[ Bug 14070 ]] [Removed code] Make sure text color in menuButton inverts when hilited
+        
+#endif
+				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, line, fontstyle, t_mnemonic);
+
 				if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE && !t_themed_menu)
 					drawcascade(dc, shadowrect); // draw arrow in text color
 				if (flags & F_DISABLED && MClook == LF_WIN95 || t_themed_menu)
 					setforeground(dc, DI_TOP, False);
 				sy += fheight;
+				
+				t_totallen += t_linelen;
 			}
 
 			dc->restore();
 
-			delete lines;
 			if (labelwidth != 0 && !isunnamed())
 			{
-				MCString t_name_oldstring;
-				t_name_oldstring = getname_oldstring();
-                dc -> drawtext(rect.x + leftmargin, starty, t_name_oldstring.getstring(), t_name_oldstring.getlength(), m_font, false, false);
+				MCStringRef t_name = MCNameGetString(getname());
+                drawdirectionaltext(dc, rect.x + leftmargin, starty, t_name, m_font);
 			}
 
 			// MW-2012-01-27: [[ Bug 9432 ]] Native GTK handles focus borders itself
@@ -601,25 +650,28 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	}
 }
 
-void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCString &s, bool isunicode, uint2 fstyle)
+void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle, uindex_t p_mnemonic)
 {
 	if (getstyleint(flags) == F_MENU && menumode == WM_OPTION
 	        && MClook != LF_WIN95)
 		sx += 2;
-	if (MCaqua && IsMacLFAM()
+	/*if (MCaqua && IsMacLFAM()
 	        && (getstyleint(flags) == F_STANDARD  || getstyleint(flags) == F_MENU
 	            && menumode == WM_OPTION))
-		sy--;
-    dc -> drawtext(sx, sy, s.getstring(), s.getlength(), m_font, false, isunicode);
-	if (acceltext != NULL)
+		sy--;*/
+
+    drawdirectionaltext(dc, sx, sy, p_label, m_font);
+	
+	if (!MCStringIsEmpty(acceltext))
 	{
-		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-		uint2 awidth = MCFontMeasureText(m_font, acceltext, acceltextsize, isunicode, getstack() -> getdevicetransform());
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        uint2 awidth = MCFontMeasureText(m_font, acceltext, getstack() -> getdevicetransform());
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
-            dc -> drawtext(srect.x + srect.width - rightmargin - awidth, sy, acceltext, acceltextsize, m_font, false, false);
+            drawdirectionaltext(dc, srect.x + srect.width - rightmargin - awidth, sy, acceltext, m_font);
 		else
-            dc -> drawtext(srect.x + srect.width - rightmargin, sy, acceltext, acceltextsize, m_font, false, false);
+            drawdirectionaltext(dc, srect.x + srect.width - rightmargin, sy, acceltext, m_font);
 	}
+
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
@@ -630,17 +682,15 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	}
 	if (!IsMacLF() && mnemonic)
 	{
-		MCString slabel;
-		bool isunicode;
-		getlabeltext(slabel, isunicode);
-		const char *lptr = slabel.getstring();
-		if (mnemonic > (uint1)(s.getstring() - lptr) &&
-		        mnemonic <= (uint1)(s.getstring() + s.getlength() - lptr))
+		if (p_mnemonic > 0)
 		{
-			uint2 moffset = mnemonic - (s.getstring() - lptr) - 1;
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			uint2 mstart = sx + MCFontMeasureText(m_font, s.getstring(), moffset, isunicode, getstack() -> getdevicetransform());
-			uint2 mwidth = MCFontMeasureText(m_font, s.getstring() + moffset, 1, isunicode, getstack() -> getdevicetransform());
+			MCRange t_before = MCRangeMake(0, mnemonic - 1);
+			MCRange t_letter = MCRangeMake(mnemonic - 1, 1);
+
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, p_label, t_before, getstack() -> getdevicetransform());
+            int32_t mwidth = MCFontMeasureTextSubstring(m_font, p_label, t_letter, getstack() -> getdevicetransform());
+
 			sy += mnemonicoffset;
 			dc->drawline(mstart, sy, mstart + mwidth, sy);
 		}
@@ -1257,20 +1307,27 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 	MCWidgetInfo tabwinfo;
 	tabwinfo.type = WTHEME_TYPE_TAB;
 	getwidgetthemeinfo(tabwinfo);
-	for (i = 0 ; i < ntabs ; i++)
+	
+	uindex_t t_ntabs;
+	t_ntabs = MCArrayGetCount(tabs);
+	for (i = 0 ; i < t_ntabs ; i++)
 	{
 		Boolean disabled = False;
-		const char *sptr = tabs[i].getstring();
-		uint2 length = tabs[i].getlength();
-		if (MCU_comparechar(sptr, '(', hasunicode()))
+		MCValueRef t_tabval = nil;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
+		MCStringRef t_tab;
+		t_tab = (MCStringRef)t_tabval;
+		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_tab));
+		if (MCStringGetCharAtIndex(t_tab, 0) == '(')
 		{
 			disabled = True;
-			sptr++;
-			length--;
+			t_range.offset++;
+			t_range.length--;
 		}
 		uint2 textx; //x coord of the begining of the button text
-		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-		uint2 twidth = MCFontMeasureText(m_font, sptr, length, hasunicode(), getstack() -> getdevicetransform());
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        uint2 twidth = MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform());
+
 		if (MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_TABPANE) &&
 		        MCcurtheme->iswidgetsupported(WTHEME_TYPE_TAB))
 		{
@@ -1326,10 +1383,9 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			//
 
 			if (i==0)
-				tabwinfo.attributes |= WTHEME_ATT_FIRSTTAB;
-			
+                tabwinfo.attributes |= WTHEME_ATT_FIRSTTAB;
             // MW-2014-04-25: [[ Bug 6400 ]] A tab can be both first and last :)
-            if (i == (ntabs-1))
+            if (i == (t_ntabs - 1))
 				tabwinfo.attributes |= WTHEME_ATT_LASTTAB;
             
 			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + theight);
@@ -1338,6 +1394,14 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				MCcurtheme->drawwidget(dc, tabwinfo, tabrect);
 			twidth -= taboverlap;
 
+#ifdef _MACOSX
+            // FG-2014-10-24: [[ Bugfix 11912 ]]
+            // On OSX, reverse the text colour for selected tab buttons
+            if (i+1 == menuhistory)
+                reversetext = True;
+            else
+                reversetext = False;
+#endif
 		}
 		else
 			switch (MClook)
@@ -1531,7 +1595,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-                dc -> drawtext(textx, cury + yoffset + 1, sptr, length, m_font, false, hasunicode());
+                dc -> drawtext(textx, cury + yoffset + 1, t_tab, m_font, false, kMCDrawTextNoBreak);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}
@@ -1541,7 +1605,8 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				setforeground(dc, DI_BACK, False, True);
 			else
 				setforeground(dc, DI_FORE, False);
-        dc -> drawtext(textx, cury + yoffset, sptr, length, m_font, false, hasunicode());
+        // AL-2014-09-24: [[ Bug 13528 ]] Don't draw character indicating button is disabled
+        dc -> drawtext_substring(textx, cury + yoffset, t_tab, t_range, m_font, false, kMCDrawTextNoBreak);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
 			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		curx += twidth;
@@ -1676,7 +1741,15 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 				// if the mouse button is down after clicking on a button, don't draw the default button animation
 				MCControl *t_control = MCmousestackptr->getcard()->getmfocused();
 				if (MCbuttonstate && t_control && t_control->gettype() == CT_BUTTON)
-					winfo.state |= WTHEME_STATE_SUPPRESSDEFAULT;
+                {
+                    // FG-2014-11-05: [[ Bugfix 13909 ]]
+                    // Don't suppress the default on OSX Yosemite if it is this
+                    // button being pressed but the mouse is outside the button.
+                    if (!(IsMacLFAM() && MCaqua && MCmajorosversion >= 0x10A0 && t_control == this)
+                          || (rect.x > MCmousex && MCmousex >= rect.x+rect.width
+                              && rect.y > MCmousey && MCmousey >= rect.y+rect.height))
+                        winfo.state |= WTHEME_STATE_SUPPRESSDEFAULT;
+                }
 			}
 			
 #ifdef _MACOSX

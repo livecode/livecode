@@ -1,0 +1,1 @@
+# Launch URL not working on LC7 in Android and iOS emulators

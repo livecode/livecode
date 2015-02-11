@@ -1,0 +1,4 @@
+setup
+# a-acute is 225 in windows-1252 encoding and 135 in MacOS Roman encoding
+test macToIso(numToChar(135)) is numToChar(225)
+teardown

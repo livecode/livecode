@@ -16,8 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -29,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "param.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "object.h"
 #include "stack.h"
 #include "card.h"
@@ -48,14 +46,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#include "exec.h"
+
 class MCNullPrinter: public MCPrinter
 {
 protected:
 	void DoInitialize(void) {}
 	void DoFinalize(void) {}
 
-	bool DoReset(const char *p_name) {return false;}
-	bool DoResetSettings(const MCString& p_settings) {return false;}
+	bool DoReset(MCStringRef p_name) {return false;}
+	bool DoResetSettings(MCDataRef p_settings) {return false;}
 
 	const char *DoFetchName(void) {return "";}
 	void DoFetchSettings(void*& r_buffer, uint4& r_length) {r_buffer = NULL; r_length = 0;}
@@ -65,7 +65,7 @@ protected:
 	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner) {return PRINTER_DIALOG_RESULT_ERROR;}
 	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner) {return PRINTER_DIALOG_RESULT_ERROR;}
 
-	MCPrinterResult DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device) {return PRINTER_RESULT_ERROR;}
+	MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device) {return PRINTER_RESULT_ERROR;}
 	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device) {return PRINTER_RESULT_ERROR;}
 };
 
@@ -184,6 +184,16 @@ static uint4 stdcmap[256] =
         0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF
     };
 
+KeySym MCKeySymToLower(KeySym p_key)
+{
+	if ((p_key & XK_Class_mask) == XK_Class_codepoint)
+		return MCS_tolower(p_key & XK_Codepoint_mask) | XK_Class_codepoint;
+	else if (p_key < 0x80)
+		return MCS_tolower(p_key);
+	else
+		return p_key;
+}
+
 MCMovingList::~MCMovingList()
 {
 	delete pts;
@@ -200,7 +210,7 @@ MCUIDC::MCUIDC()
 	ncolors = 0;
 	colors = NULL;
 	allocs = NULL;
-	colornames = NULL;
+	colornames = nil;
 	lockmods = False;
 
 	m_sound_internal = NULL ;
@@ -217,15 +227,15 @@ MCUIDC::~MCUIDC()
 }
 
 
-bool MCUIDC::setbeepsound ( const char * p_internal) 
+bool MCUIDC::setbeepsound(MCStringRef p_beep_sound) 
 {
-	if ( MCString(p_internal) == "internal" )
+	if (MCStringIsEqualToCString(p_beep_sound, "internal", kMCCompareCaseless))
 	{
 		m_sound_internal = "internal";
 		return true ;
 	}
 	
-	if ( MCString(p_internal) == "system")
+	if (MCStringIsEqualToCString(p_beep_sound, "system", kMCCompareCaseless))
 	{
 		m_sound_internal = "system" ;
 		return true ;
@@ -233,11 +243,11 @@ bool MCUIDC::setbeepsound ( const char * p_internal)
 	return false ;
 }
 
-const char * MCUIDC::getbeepsound(void)
+bool MCUIDC::getbeepsound(MCStringRef& r_beep_sound)
 {
 	if ( m_sound_internal == NULL )
 		m_sound_internal = "system" ;
-	return m_sound_internal;
+	return MCStringCreateWithCString(m_sound_internal, r_beep_sound);
 }
 
 
@@ -246,7 +256,7 @@ bool MCUIDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-void MCUIDC::setstatus(const char *status)
+void MCUIDC::setstatus(MCStringRef status)
 { }
 Boolean MCUIDC::open()
 {
@@ -256,9 +266,9 @@ Boolean MCUIDC::close(Boolean force)
 {
 	return True;
 }
-const char *MCUIDC::getdisplayname()
+MCNameRef MCUIDC::getdisplayname()
 {
-	return "";
+	return kMCEmptyName;
 }
 void MCUIDC::resetcursors()
 { }
@@ -619,7 +629,7 @@ void MCUIDC::iconifywindow(Window window)
 { }
 void MCUIDC::uniconifywindow(Window window)
 { }
-void MCUIDC::setname(Window window, const char *newname)
+void MCUIDC::setname(Window window, MCStringRef newname)
 { }
 void MCUIDC::setcmap(MCStack *sptr)
 { }
@@ -673,28 +683,29 @@ MCCursorRef MCUIDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yho
 void MCUIDC::freecursor(MCCursorRef c)
 { }
 
-uint4 MCUIDC::dtouint4(Drawable d)
+uintptr_t MCUIDC::dtouint(Drawable d)
 {
 	return 1;
 }
 
 
-Boolean MCUIDC::uint4towindow(uint4, Window &w)
+Boolean MCUIDC::uinttowindow(uintptr_t, Window &w)
 {
 	w = (Window)1;
 	return True;
 }
 
-void MCUIDC::getbeep(uint4 property, MCExecPoint &ep)
+void MCUIDC::getbeep(uint4 property, int4& r_value)
 {
-	ep.clear();
+	r_value = 0;
 }
 
 void MCUIDC::setbeep(uint4 property, int4 beep)
 { }
-void MCUIDC::getvendorstring(MCExecPoint &ep)
+
+MCNameRef MCUIDC::getvendorname(void)
 {
-	ep.clear();
+	return kMCEmptyName;
 }
 
 uint2 MCUIDC::getpad()
@@ -708,7 +719,7 @@ Window MCUIDC::getroot()
 }
 
 MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
-                           const char *displayname, MCPoint *size)
+                           MCStringRef displayname, MCPoint *size)
 {
 	return NULL;
 }
@@ -924,23 +935,13 @@ Boolean MCUIDC::istripleclick()
 	return False;
 }
 
-void MCUIDC::getkeysdown(MCExecPoint &ep)
+bool MCUIDC::getkeysdown(MCListRef& r_list)
 {
-	ep.clear();
+	r_list = MCValueRetain(kMCEmptyList);
+	return true;
 }
 
-char *MCUIDC::charsettofontname(uint1 chharset, const char *oldfontname)
-{
-#ifdef TARGET_PLATFORM_LINUX
-	const char *t_charset;
-	t_charset = strchr(oldfontname, ',');
-	if (t_charset != NULL)
-		return strndup(oldfontname, t_charset - oldfontname);
-#endif
-	return strclone(oldfontname);
-}
-
-uint1 MCUIDC::fontnametocharset(const char *oldfontname)
+uint1 MCUIDC::fontnametocharset(MCStringRef p_fontname)
 {
 	return 0;
 }
@@ -952,6 +953,8 @@ void MCUIDC::activateIME(Boolean activate)
 void MCUIDC::clearIME(Window w)
 {}
 void MCUIDC::closeIME()
+{}
+void MCUIDC::configureIME(int32_t x, int32_t y)
 {}
 
 void MCUIDC::updatemenubar(Boolean force)
@@ -976,7 +979,7 @@ void MCUIDC::updatemenubar(Boolean force)
 			i = which;
 		}
 	}
-};
+}
 
 // MW-2014-04-16: [[ Bug 11690 ]] Pending message list is now sorted by time, all
 //   pending message generation functions use 'doaddmessage()' to insert the
@@ -1040,17 +1043,17 @@ int MCUIDC::doshiftmessage(int index, real8 newtime)
     return t_index;
 }
 
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
+void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStringRef p2)
 {
 	MCParameter *params = NULL;
 	if (p1 != NULL)
 	{
 		params = new MCParameter;
-		params->setbuffer(p1, strlen(p1));
+		params->setvalueref_argument(p1);
 		if (p2 != NULL)
 		{
 			params->setnext(new MCParameter);
-			params->getnext()->setbuffer(p2, strlen(p2));
+			params->getnext()->setvalueref_argument(p2);
 		}
 	}
     
@@ -1113,24 +1116,43 @@ void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr)
 			cancelmessageindex(i - 1, True);
 }
 
-void MCUIDC::listmessages(MCExecPoint &ep)
+bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 {
-	MCExecPoint ep1(ep);
-	bool first;
-	first = true;
-	ep.clear();
-	for (uindex_t i = 0 ; i < nmessages ; i++)
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	for (uinteger_t i = 0 ; i < nmessages ; i++)
 	{
 		if (messages[i].id != 0)
 		{
-			ep.concatuint(messages[i].id, EC_RETURN, first);
-			ep.concatreal(messages[i].time, EC_COMMA, false);
-			ep.concatnameref(messages[i].message, EC_COMMA, false);
-			messages[i].object->getprop(0, P_LONG_ID, ep1, false);
-			ep.concatmcstring(ep1.getsvalue(), EC_COMMA, false);
-			first = false;
+			MCAutoListRef t_msg_info;
+			MCAutoValueRef t_id_string;
+			MCAutoStringRef t_time_string;
+
+			if (!MCListCreateMutable(',', &t_msg_info))
+				return false;
+
+			if (!MCListAppendUnsignedInteger(*t_msg_info, messages[i].id))
+				return false;
+
+			if (!ctxt.FormatReal(messages[i].time, &t_time_string)
+				|| !MCListAppend(*t_msg_info, *t_time_string))
+				return false;
+
+			if (!MCListAppend(*t_msg_info, messages[i].message))
+				return false;
+
+			if (!messages[i].object->names(P_LONG_ID, &t_id_string) ||
+				!MCListAppend(*t_msg_info, *t_id_string))
+				return false;
+
+			if (!MCListAppend(*t_list, *t_msg_info))
+				return false;
 		}
 	}
+
+	return MCListCopy(*t_list, r_list);
 }
 
 // MW-2014-05-28: [[ Bug 12463 ]] This is called by 'send in time' to queue a user defined message.
@@ -1202,7 +1224,10 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
     if (stime < eventtime)
         eventtime = stime;
     
-    if (nmessages > 0 && messages[0] . time < eventtime)
+    // SN-2014-12-12: [[ Bug 13360 ]] We don't want to change the eventtime if the message is not forced to be dispatched nor internal
+    if (nmessages > 0
+            && (dispatch || messages[0] . id == 0)
+            && messages[0] . time < eventtime)
         eventtime = messages[0] . time;
     
     return t_handled;
@@ -1292,21 +1317,27 @@ void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 	}
 }
 
-void MCUIDC::listmoves(MCExecPoint &ep)
+bool MCUIDC::listmoves(MCExecContext& ctxt, MCListRef& r_list)
 {
-	ep.clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	if (moving != NULL)
 	{
-		MCExecPoint ep2(ep);
 		MCMovingList *mptr = moving;
 		do
 		{
-			mptr->object->getprop(0, P_LONG_ID, ep2, False);
-			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, mptr == moving);
+			MCAutoValueRef t_string;
+			if (!mptr->object->names(P_LONG_ID, &t_string))
+				return false;
+			if (!MCListAppend(*t_list, *t_string))
+				return false;
 			mptr = mptr->next();
 		}
 		while (mptr != moving);
 	}
+	return MCListCopy(*t_list, r_list);
 }
 
 void MCUIDC::stopmove(MCObject *optr, Boolean finish)
@@ -1439,23 +1470,24 @@ void MCUIDC::siguser()
 	while (MCsiguser1)
 	{
 		MCsiguser1--;
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_signal, "1");
+		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_signal, MCSTR("1"));
 	}
 	while (MCsiguser2)
 	{
 		MCsiguser2--;
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_signal, "2");
+		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_signal, MCSTR("2"));
 	}
 }
 
 #include "rgb.cpp"
 
-Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
+Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
-	uint4 slength = s.getlength();
-	char *startptr = new char[slength + 1];
-	char *sptr = startptr;
-	MCU_lower(sptr, s);
+	uint4 slength = MCStringGetLength(s);
+	MCAutoPointer<char> startptr;
+    startptr = new char[slength + 1];
+	char *sptr = *startptr;
+	MCU_lower(sptr, MCStringGetOldString(s));
 	sptr[slength] = '\0';
 	if (*sptr == '#')
 	{
@@ -1482,10 +1514,7 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 					if (c >= 'a' && c <= 'f')
 						b |= c - ('a' - 10);
 					else
-					{
-						delete startptr;
 						return False;
-					}
 			}
 		}
 		while (*sptr != '\0');
@@ -1509,7 +1538,6 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 			shiftbits -= goodbits;
 		}
 		color->flags = DoRed | DoGreen | DoBlue;
-		delete startptr;
 		return True;
 	}
 	char *tptr = sptr;
@@ -1536,11 +1564,9 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 				color->green = (color_table[mid].green << 8) + color_table[mid].green;
 				color->blue = (color_table[mid].blue << 8) + color_table[mid].blue;
 				color->flags = DoRed | DoGreen | DoBlue;
-				delete startptr;
 				return True;
 			}
 	}
-	delete startptr;
 	return False;
 }
 
@@ -1599,28 +1625,36 @@ void MCUIDC::dropper(Window w, int2 mx, int2 my, MCColor *cptr)
 	}
 }
 
-Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
+/* WRAPPER */
+bool MCUIDC::parsecolor(MCStringRef p_string, MCColor& r_color)
 {
-	if (cname)
+	return True == parsecolor(p_string, r_color, nil);
+}
+
+Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
+{
+	if (cname != nil)
 	{
-		delete *cname;
-		*cname = NULL;
+		MCValueRelease(*cname);
+		*cname = nil;
 	}
 	
 	int2 i1, i2, i3;
-	Boolean done;
-	const char *sptr = s.getstring();
-	uint4 l = s.getlength();
+    Boolean done;
+    MCAutoPointer<char> temp;
+    /* UNCHECKED */ MCStringConvertToCString(s, &temp);
+    const char *sptr = *temp;
+    uint4 l = strlen(sptr);
 	
 	// check for numeric first argument
 	i1 = MCU_strtol(sptr, l, ',', done);
 	if (!done)
 	{
-		// not numeric, check against the colornames
-		if (lookupcolor(s, color))
-		{
+        // not numeric, check against the colornames	
+		if (lookupcolor(s, &color))
+        {
 			if (cname)
-				*cname = s.clone();
+				*cname = MCValueRetain(s);
 			return True;
 		}
 		return False;
@@ -1648,15 +1682,15 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 		if (!done || (l != 0))
 			return False;
 	}
-	color->red = (uint2)(i1 << 8) + i1;
-	color->green = (uint2)(i2 << 8) + i2;
-	color->blue = (uint2)(i3 << 8) + i3;
+	color.red = (uint2)(i1 << 8) + i1;
+	color.green = (uint2)(i2 << 8) + i2;
+	color.blue = (uint2)(i3 << 8) + i3;
 	
 	return True;
 }
 
 
-
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
                             char *cnames[], uint2 ncolors)
 {
@@ -1700,37 +1734,49 @@ Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
 	delete data;
 	return True;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::getcolors(MCExecPoint &ep)
 {
 		ep.setstaticcstring("fixed");
 		return True;
-	}
+}
+#endif
 
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::setcolors(const MCString &values)
 {
 		return False;
-		}
+}
+#endif
 
-void MCUIDC::getcolornames(MCExecPoint &ep)
+bool MCUIDC::getcolornames(MCStringRef& r_string)
 {
-	ep.getbuffer(NAME_LENGTH);
-	ep.clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	uint2 end = ELEMENTS(color_table);
 	uint2 i;
 	for (i = 0 ; i < end ; i++)
-		ep.concatcstring(color_table[i].token, EC_RETURN, i == 0);
+	{
+		if (!MCListAppendCString(*t_list, color_table[i].token))
+			return false;
+	}
+
+	return MCListCopyAsString(*t_list, r_string);
 }
 
 void MCUIDC::seticon(uint4 p_icon)
 {
 }
 
-void MCUIDC::seticonmenu(const char *p_menu)
+void MCUIDC::seticonmenu(MCStringRef p_menu)
 {
 }
 
-void MCUIDC::configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip)
+void MCUIDC::configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip)
 {
 }
 
@@ -1739,9 +1785,10 @@ MCPrinter *MCUIDC::createprinter(void)
 	return new MCNullPrinter;
 }
 
-void MCUIDC::listprinters(MCExecPoint& ep)
+bool MCUIDC::listprinters(MCStringRef& r_printers)
 {
-	ep . clear();
+	r_printers = (MCStringRef)MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 //
@@ -1801,12 +1848,12 @@ bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
 
 
 // TD-2013-07-01: [[ DynamicFonts ]]
-bool MCUIDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+bool MCUIDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
 {
 	return false;
 }
 
-bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+bool MCUIDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle)
 {
 	return false;
 }
@@ -1820,7 +1867,7 @@ MCDragAction MCUIDC::dodragdrop(Window w, MCPasteboard* p_pasteboard, MCDragActi
 
 //
 
-MCScriptEnvironment *MCUIDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCUIDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
 }
@@ -1831,14 +1878,14 @@ void MCUIDC::enactraisewindows(void)
 }
 //
 
-int32_t MCUIDC::popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
+int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
 {
 	return 0;
 }
 
-char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint)
+bool MCUIDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
-	return nil;
+	return false;
 }
 
 //

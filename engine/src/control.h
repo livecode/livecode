@@ -42,6 +42,9 @@ enum MCLayerModeHint
 	kMCLayerModeHintContainer
 };
 
+struct MCInterfaceMargins;
+union MCBitmapEffect;
+
 class MCControl : public MCObject
 {
 protected:
@@ -88,6 +91,8 @@ protected:
 	static MCControl *focused;
 	static double aspect;
 
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCControl();
 	MCControl(const MCControl &cref);
@@ -98,7 +103,7 @@ public:
 	virtual void close();
 	virtual void kfocus();
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean doubledown(uint2 which);
@@ -106,11 +111,16 @@ public:
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual uint2 gettransient() const;
 
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
+#ifdef LEGACY_EXEC
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setarrayprop(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
+	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
+#endif
+
 
 	virtual void select();
 	virtual void deselect();
@@ -126,7 +136,7 @@ public:
 	virtual Boolean kfocusset(MCControl *target);
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 	virtual MCControl *findnum(Chunk_term type, uint2 &num);
-	virtual MCControl *findname(Chunk_term type, const MCString &);
+	virtual MCControl *findname(Chunk_term type, MCNameRef);
 	virtual MCControl *findid(Chunk_term type, uint4 inid, Boolean alt);
 	virtual Boolean count(Chunk_term otype, MCObject *stop, uint2 &num);
 	virtual Boolean maskrect(const MCRectangle &srect);
@@ -175,7 +185,7 @@ public:
 	Boolean sbup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
 	Boolean sbdoubledown(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
 	Boolean sbdoubleup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
-	Exec_stat setsbprop(Properties which, const MCString &data, int4 tx, int4 ty,
+	Exec_stat setsbprop(Properties which, bool p_enable, int4 tx, int4 ty,
 	                    uint2 &sbw, MCScrollbar *&hsb, MCScrollbar *&vsb,
 	                    Boolean &dirty);
 
@@ -313,5 +323,56 @@ public:
 	{
 		return (MCControl *)MCDLlist::remove((MCDLlist *&)list);
 	}
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void Redraw(void);
+	void SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip, bool is_unicode);
+
+	void DoSetHScroll(MCExecContext& ctxt, int4 tx, integer_t scroll);
+	void DoSetVScroll(MCExecContext& ctxt, int4 ty, integer_t scroll);
+	void DoSetHScrollbar(MCExecContext& ctxt, MCScrollbar*& hsb, uint2& sbw);
+	void DoSetVScrollbar(MCExecContext& ctxt, MCScrollbar*& vsb, uint2& sbw);
+	void DoSetScrollbarWidth(MCExecContext& ctxt, uint2& sbw, uinteger_t p_width);
+
+    void EffectRedraw(MCRectangle p_old_rect);
+    
+	////////// PROPERTY ACCESSORS
+
+	void GetLeftMargin(MCExecContext& ctxt, integer_t& r_margin);
+	virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	void GetRightMargin(MCExecContext& ctxt, integer_t& r_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	void GetTopMargin(MCExecContext& ctxt, integer_t& r_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	void GetBottomMargin(MCExecContext& ctxt, integer_t& r_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+	void GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip);
+	void SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip);
+	void GetUnicodeToolTip(MCExecContext& ctxt, MCDataRef& r_tooltip);
+	void SetUnicodeToolTip(MCExecContext& ctxt, MCDataRef p_tooltip);
+	void GetLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
+	void SetLayerMode(MCExecContext& ctxt, intenum_t p_mode);
+	void GetEffectiveLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    void GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins);
+    
+    virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+	virtual void SetShowFocusBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetOpaque(MCExecContext& ctxt, bool setting);
+	virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
+
+    void GetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+    void GetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+    void GetInnerGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetInnerGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+    void GetOuterGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetOuterGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+    void GetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
+    void SetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
+
 };
 #endif

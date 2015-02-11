@@ -20,8 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
@@ -34,7 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 
 #include "osxprinter.h"
-#include "sserialize_osx.h"
+#include "osspec.h"
 
 #include "graphicscontext.h"
 #include "debug.h"
@@ -47,16 +47,38 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static bool serialize_cfdata(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, CFDataRef p_data);
+static bool deserialize_cfdata(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, CFDataRef &r_data);
+
+static bool serialize_cfstring(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, CFStringRef p_string);
+static bool deserialize_cfstring(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, CFStringRef &r_string);
+
+static bool serialize_handle(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, Handle p_data);
+static bool deserialize_handle(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, Handle &r_handle);
+
+static bool serialize_printer_settings(char *&r_stream, uint32_t &r_stream_size, PMPrintSession p_session, PMPrinter p_printer, PMPrintSettings p_settings, PMPageFormat p_format);
+static bool deserialize_printer_settings(const char *p_stream, uint32_t p_stream_size, PMPrintSession &r_session, PMPrinter &r_printer, PMPrintSettings &r_settings, PMPageFormat &r_format);
+
+extern bool serialize_data(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, const void *p_data, uint32_t p_data_size);
+extern bool deserialize_data(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, void *&r_data, uint32_t &r_size);
+extern bool serialize_bytes(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, const void *p_data, uint32_t p_data_size);
+extern bool deserialize_bytes(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, void *p_dest, uint32_t p_size);
+extern bool serialize_uint32(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, uint32_t p_val);
+extern bool deserialize_uint32(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, uint32_t &r_val);
+
+///////////////////////////////////////////////////////////////////////////////
+
 #define PDEBUG(a, b)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
-extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
+extern void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
+extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true);
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false);
 extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
@@ -90,7 +112,7 @@ void MCMacOSXPrinter::DoInitialize(void)
 	m_settings = NULL;
 	m_paper = NULL;
 	
-	Reset(NULL, NULL, NULL);
+	Reset(kMCEmptyString, NULL, NULL);
 }
 
 void MCMacOSXPrinter::DoFinalize(void)
@@ -131,22 +153,22 @@ void MCMacOSXPrinter::DoFinalize(void)
 	m_valid = false;
 }
 
-bool MCMacOSXPrinter::DoReset(const char *p_name)
+bool MCMacOSXPrinter::DoReset(MCStringRef p_name)
 {
 	return Reset(p_name, NULL, NULL);
 }
 
-bool MCMacOSXPrinter::DoResetSettings(const MCString& p_settings)
+bool MCMacOSXPrinter::DoResetSettings(MCDataRef p_settings)
 {
-	if (p_settings . getlength() == 0)
-		return Reset(NULL, NULL, NULL);
+	if (MCDataIsEmpty(p_settings))
+		return Reset(kMCEmptyString, NULL, NULL);
 
 	bool t_success;
 	t_success = true;
 
 	MCDictionary t_dictionary;
 	if (t_success)	
-		t_success = t_dictionary . Unpickle(p_settings . getstring(), p_settings . getlength());
+		t_success = t_dictionary . Unpickle(MCDataGetBytePtr(p_settings), MCDataGetLength(p_settings));
 
 	MCString t_name;
 	if (t_success)
@@ -180,7 +202,7 @@ bool MCMacOSXPrinter::DoResetSettings(const MCString& p_settings)
 	if (t_success)
 	{
 		Handle t_handle;
-		if (PtrToHand(t_page_format_data . getstring(), &t_handle, t_page_format_data . getlength()) == noErr)
+		if (PtrToHand(t_settings_data . getstring(), &t_handle, t_settings_data . getlength()) == noErr)
 		{
 			if (PMUnflattenPageFormat(t_handle, &t_page_format) != noErr)
 				t_success = false;
@@ -190,8 +212,12 @@ bool MCMacOSXPrinter::DoResetSettings(const MCString& p_settings)
 			t_success = false;
 	}
 
+	MCAutoStringRef t_name_string;
 	if (t_success)
-		t_success = Reset(t_name . getstring(), t_settings, t_page_format);
+		t_success = MCStringCreateWithNativeChars((const char_t *)t_name . getstring(), t_name . getlength(), &t_name_string);
+	
+	if (t_success)
+		t_success = Reset(*t_name_string, t_settings, t_page_format);
 	else
 	{
 		PMRelease(t_settings);
@@ -292,7 +318,7 @@ MCPrinterDialogResult MCMacOSXPrinter::DoPageSetup(bool p_window_modal, Window p
 	return DoDialog(p_window_modal, p_owner, false);
 }
 
-MCPrinterResult MCMacOSXPrinter::DoBeginPrint(const char *p_document_name, MCPrinterDevice*& r_device)
+MCPrinterResult MCMacOSXPrinter::DoBeginPrint(MCStringRef p_document_name, MCPrinterDevice*& r_device)
 {
 	if (!m_valid)
 		return PRINTER_RESULT_ERROR;
@@ -321,25 +347,18 @@ MCPrinterResult MCMacOSXPrinter::DoEndPrint(MCPrinterDevice* p_device)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCMacOSXPrinter::Reset(const char *p_name, PMPrintSettings p_settings, PMPageFormat p_page_format)
+bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPageFormat p_page_format)
 {
 	bool t_success;
 	t_success = true;
-
-	if (p_name != NULL && *p_name == '\0')
-		p_name = NULL;
 
 	// Convert the name to a core-foundation string - this is because the
 	// PMPrinter object returns names in this form.
 	//
 	CFStringRef t_name;
 	t_name = NULL;
-	if (t_success && p_name != NULL)
-	{
-		t_name = CFStringCreateWithCString(kCFAllocatorDefault, p_name, kCFStringEncodingMacRoman);
-		if (t_name == NULL)
-			t_success = false;
-	}
+	if (t_success && !MCStringIsEmpty(p_name))
+		t_success = MCStringConvertToCFStringRef(p_name, t_name);
 
 	// Fetch the list of available PMPrinters on the current system.
 	//
@@ -671,7 +690,8 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 			PDEBUG(stderr, "SetProperties: Output location is file\n");
 			CFStringRef t_output_format;
 			t_output_type = PRINTER_OUTPUT_FILE;
-			t_output_location = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_output_location_url, kCFURLPOSIXPathStyle), true);
+            // SN-2014-12-22: [[ Bug 14278 ]] Get a UTF-8-encoded filename
+			t_output_location = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_output_location_url, kCFURLPOSIXPathStyle), true, true);
 		}
 		else if (t_type == kPMDestinationPrinter)
 		{
@@ -686,7 +706,13 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 			t_output_location = NULL;
 		}
 
-		SetDeviceOutput(t_output_type, t_output_location);
+        MCAutoStringRef t_output_location_str;
+        // SN-2014-12-22: [[ Bug 14278 ]] We get the output location as a UTF-8 string.
+        if (t_output_location != NULL)
+            /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_output_location, strlen(t_output_location), kMCStringEncodingUTF8, false, &t_output_location_str);
+        else
+            t_output_location_str = kMCEmptyString;
+		SetDeviceOutput(t_output_type, *t_output_location_str);
 
 		delete t_output_location;
 
@@ -905,7 +931,8 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 		case PRINTER_OUTPUT_FILE:
 		{
 			CFStringRef t_output_file;
-			t_output_file = CFStringCreateWithCString(kCFAllocatorDefault, GetDeviceOutputLocation(), kCFStringEncodingMacRoman);
+            // SN-2014-12-22: [[ Bug 14278 ]] Output location now stored as a UTF-8 string
+			t_output_file = CFStringCreateWithCString(kCFAllocatorDefault, GetDeviceOutputLocation(), kCFStringEncodingUTF8);
 			t_output_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, t_output_file, kCFURLPOSIXPathStyle, false);
 			CFRelease(t_output_file);
 			t_output_type = kPMDestinationFile;
@@ -919,14 +946,13 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 			CFRelease(t_output_url);
 	}
 	
-	const char *t_document_name;
-	t_document_name = GetJobName();
-	if (t_document_name == NULL)
-		t_document_name = MCdefaultstackptr -> gettitletext();
+    MCAutoStringRef t_document_name_str;
+    // SN-2014-11-25: [[ Bug 14006 ]] GetJobName might return NULL, in which case we get an empty string, not an error
+    if (GetJobName() == NULL || !MCStringCreateWithCString(GetJobName(), &t_document_name_str))
+        t_document_name_str = MCdefaultstackptr -> gettitletext();
 	
 	CFStringRef t_cf_document;
-	t_cf_document = CFStringCreateWithCString(kCFAllocatorDefault, t_document_name, kCFStringEncodingMacRoman);
-	if (t_cf_document != NULL)
+	if (MCStringConvertToCFStringRef(*t_document_name_str, t_cf_document))
 	{
 		PMSetJobNameCFString(m_settings, t_cf_document);
 		CFRelease(t_cf_document);
@@ -985,54 +1011,95 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 	
 	ResetSession();
 
-	bool t_use_sheets;
-	t_use_sheets = false;
-	if (p_window_modal && p_owner != NULL)
-		t_use_sheets = true;
-		
-	PDEBUG(stderr, "DoDialog: Showing dialog\n");
-	
-	MCPlatformPrintDialogResult t_result;
-	if (p_is_settings)
-		MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
-	else
-		MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+	Boolean t_accepted;
+	t_accepted = false;
+	OSErr t_err;
 
-	PDEBUG(stderr, "DoDialog: Dialog shown\n");
-	
-	for(;;)
+	if (!MCModeMakeLocalWindows())
 	{
-		t_result = MCPlatformEndPrintDialog();
-		if (t_result != kMCPlatformPrintDialogResultContinue)
-			break;
-		
-		MCscreen -> wait(REFRESH_INTERVAL, True, True);
-	}
-
-	if (t_use_sheets)
-	{
-		// MW-2009-01-22: [[ Bug 3509 ]] Make sure we force an update to the menubar, just in case
-		//   the dialog has messed with our menu item enabled state!
-		MCscreen -> updatemenubar(True);
-	}
-
-	if (t_result == kMCPlatformPrintDialogResultError)
-	{
-		PDEBUG(stderr, "DoDialog: Error occured\n");
-		return PRINTER_DIALOG_RESULT_ERROR;
-	}
-	else if (t_result == kMCPlatformPrintDialogResultSuccess)
-	{
-		PDEBUG(stderr, "DoDialog: SetProperties\n");
-		SetProperties(p_is_settings);
-		PDEBUG(stderr, "DoDialog: Returning OKAY\n");
-		return PRINTER_DIALOG_RESULT_OKAY;
+		bool t_success = true;
+		// serialize printer + print settings + page format, display remotely then deserialize returned data
+		char *t_data = NULL;
+		uint32_t t_data_size = 0;
+		MCAutoDataRef t_reply_data;
+        uint32_t t_result;
+		t_success = serialize_printer_settings(t_data, t_data_size, m_session, m_printer, m_settings, m_page_format);
+		PMPrinter t_printer = NULL;
+		if (t_success)
+		{
+            MCAutoDataRef t_data_str;
+            /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_data, t_data_size, &t_data_str);
+			if (p_is_settings)
+				MCRemotePrintSetupDialog(*t_data_str, &t_reply_data, t_result);
+			else
+				MCRemotePageSetupDialog(*t_data_str, &t_reply_data, t_result);
+			t_success = deserialize_printer_settings((const char *)MCDataGetBytePtr(*t_reply_data), MCDataGetLength(*t_reply_data), m_session, t_printer, m_settings, m_page_format);
+		}
+		if (t_success)
+		{
+			PMSessionSetCurrentPMPrinter(m_session, t_printer);
+			PMRelease(m_printer);
+			m_printer = t_printer;
+		}
+		if (t_success)
+		{
+			t_err = noErr;
+			t_accepted = (Boolean)t_result;
+		}
+		else
+			t_err = errAborted;
 	}
 	else
 	{
-		PDEBUG(stderr, "DoDialog: Returning Cancel\n");
-		return PRINTER_DIALOG_RESULT_CANCEL;
-	}
+        bool t_use_sheets;
+        t_use_sheets = false;
+        if (p_window_modal && p_owner != NULL)
+            t_use_sheets = true;
+		
+        PDEBUG(stderr, "DoDialog: Showing dialog\n");
+        
+        MCPlatformPrintDialogResult t_result;
+        if (p_is_settings)
+            MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+        else
+            MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+        
+        PDEBUG(stderr, "DoDialog: Dialog shown\n");
+        
+        for(;;)
+        {
+            t_result = MCPlatformEndPrintDialog();
+            if (t_result != kMCPlatformPrintDialogResultContinue)
+                break;
+            
+            MCscreen -> wait(REFRESH_INTERVAL, True, True);
+        }
+        
+        if (t_use_sheets)
+        {
+            // MW-2009-01-22: [[ Bug 3509 ]] Make sure we force an update to the menubar, just in case
+            //   the dialog has messed with our menu item enabled state!
+            MCscreen -> updatemenubar(True);
+        }
+        
+        if (t_result == kMCPlatformPrintDialogResultError)
+        {
+            PDEBUG(stderr, "DoDialog: Error occured\n");
+            return PRINTER_DIALOG_RESULT_ERROR;
+        }
+        else if (t_result == kMCPlatformPrintDialogResultSuccess)
+        {
+            PDEBUG(stderr, "DoDialog: SetProperties\n");
+            SetProperties(p_is_settings);
+            PDEBUG(stderr, "DoDialog: Returning OKAY\n");
+            return PRINTER_DIALOG_RESULT_OKAY;
+        }
+        else
+        {
+            PDEBUG(stderr, "DoDialog: Returning Cancel\n");
+            return PRINTER_DIALOG_RESULT_CANCEL;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1639,11 +1706,14 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			MCFontStruct *f;
 			f = MCFontGetFontStruct(p_mark -> text . font);
 			
-			void *s;
-			s = p_mark -> text . data;
-			
-			uint4 len;
-			len = p_mark -> text . length;
+            bool t_is_unicode;
+			t_is_unicode = p_mark -> text . unicode_override;
+            
+            MCAutoStringRef t_text;
+            if (p_mark -> text . unicode_override)
+                /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)p_mark -> text . data, p_mark -> text . length, &t_text);
+            else
+                /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)p_mark -> text . data, p_mark -> text . length, &t_text);
 			
 			if (p_mark -> text . background != NULL)
 			{
@@ -1664,21 +1734,8 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				// MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
 				CGContextFillRect(m_context,
 					CGRectMake(x, y - f -> ascent,
-                               MCFontMeasureText(p_mark -> text . font, (const char *)s, len, false, MCGAffineTransformMakeIdentity()), f -> ascent + f -> descent));
-
+                               MCFontMeasureText(p_mark -> text . font, *t_text, MCGAffineTransformMakeIdentity()), f -> ascent + f -> descent));
 				CGContextRestoreGState(m_context);
-			}
-		
-			bool t_is_unicode;
-			t_is_unicode = p_mark -> text . unicode_override;
-							
-			MCExecPoint text_ep(NULL, NULL, NULL);
-			text_ep . setsvalue(MCString((const char *)s, len));
-			if (!t_is_unicode)
-			{
-				text_ep . nativetoutf16();
-				s = (void *)text_ep . getsvalue() . getstring();
-				len = text_ep . getsvalue() . getlength();
 			}
 			
 			OSStatus t_err;
@@ -1728,7 +1785,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				/*&t_layout_options*/
 			};
 			
-			UniCharCount t_run = len / 2;
+			UniCharCount t_run = MCStringGetLength(*t_text);
 			Rect t_bounds;
 			         
             FMFontStyle t_intrinsic_style;
@@ -1741,17 +1798,19 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			t_err = ATSUSetAttributes(t_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
 			t_err = ATSUCreateTextLayout(&t_layout);
 			t_err = ATSUSetTransientFontMatching(t_layout, true);
-			
+
 			/*t_layout_options = kATSLineFractDisable;*/
 			
 			t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
 			
 			CGContextSaveGState(m_context);
 			CGContextConcatCTM(m_context, CGAffineTransformMake(1, 0, 0, -1, 0, m_page_height));
-			t_err = ATSUSetTextPointerLocation(t_layout, (const UniChar *)s, 0, len / 2, len / 2);
-			t_err = ATSUSetRunStyle(t_layout, t_style, 0, len / 2);
-			t_err = ATSUSetTransientFontMatching(t_layout, true);
-			t_err = ATSUDrawText(t_layout, 0, len / 2, x << 16, (m_page_height - y) << 16);
+	
+            t_err = ATSUSetTextPointerLocation(t_layout, MCStringGetCharPtr(*t_text), 0, t_run, t_run);
+            t_err = ATSUSetRunStyle(t_layout, t_style, 0, t_run);
+            t_err = ATSUSetTransientFontMatching(t_layout, true);
+            t_err = ATSUDrawText(t_layout, 0, t_run, x << 16, (m_page_height - y) << 16);
+
 			CGContextRestoreGState(m_context);
 			
 			t_err = ATSUDisposeTextLayout(t_layout);
@@ -2129,23 +2188,378 @@ MCPrinterResult MCMacOSXPrinterDevice::HandleError(OSErr p_error, const char *p_
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCListSystemPrinters(MCExecPoint& ep)
-{
-	ep . clear();
+typedef OSStatus (*PMPrintSettingsCreateDataRepresentationProcPtr)(PMPrintSettings settings, CFDataRef* r_data, uint32_t format);
+typedef OSStatus (*PMPageFormatCreateDataRepresentationProcPtr)(PMPageFormat settings, CFDataRef* r_data, uint32_t format);
+typedef OSStatus (*PMPrintSettingsCreateWithDataRepresentationProcPtr)(CFDataRef data, PMPrintSettings *settings);
+typedef OSStatus (*PMPageFormatCreateWithDataRepresentationProcPtr)(CFDataRef data, PMPageFormat *settings);
 
+static bool s_has_weaklinked = false;
+static CFBundleRef s_appservices_bundle = nil;
+static PMPrintSettingsCreateDataRepresentationProcPtr PMPrintSettingsCreateDataRepresentationProc = nil;
+static PMPageFormatCreateDataRepresentationProcPtr PMPageFormatCreateDataRepresentationProc = nil;
+static PMPrintSettingsCreateWithDataRepresentationProcPtr PMPrintSettingsCreateWithDataRepresentationProc = nil;
+static PMPageFormatCreateWithDataRepresentationProcPtr PMPageFormatCreateWithDataRepresentationProc = nil;
+
+static void weaklink(void)
+{
+	if (s_has_weaklinked)
+		return;
+	
+	s_has_weaklinked = true;
+	
+	s_appservices_bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
+	if (s_appservices_bundle == nil ||
+		!CFBundleLoadExecutable(s_appservices_bundle))
+		return;
+	
+	PMPrintSettingsCreateDataRepresentationProc = (PMPrintSettingsCreateDataRepresentationProcPtr)CFBundleGetFunctionPointerForName(s_appservices_bundle, CFSTR("PMPrintSettingsCreateDataRepresentation"));
+	PMPageFormatCreateDataRepresentationProc = (PMPageFormatCreateDataRepresentationProcPtr)CFBundleGetFunctionPointerForName(s_appservices_bundle, CFSTR("PMPageFormatCreateDataRepresentation"));
+	PMPrintSettingsCreateWithDataRepresentationProc = (PMPrintSettingsCreateWithDataRepresentationProcPtr)CFBundleGetFunctionPointerForName(s_appservices_bundle, CFSTR("PMPrintSettingsCreateWithDataRepresentation"));
+	PMPageFormatCreateWithDataRepresentationProc = (PMPageFormatCreateWithDataRepresentationProcPtr)CFBundleGetFunctionPointerForName(s_appservices_bundle, CFSTR("PMPageFormatCreateWithDataRepresentation"));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool serialize_cfdata(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, CFDataRef p_data)
+{
+	if (p_data == nil)
+		return serialize_data(r_stream, r_stream_size, r_offset, nil, 0);
+	return serialize_data(r_stream, r_stream_size, r_offset, CFDataGetBytePtr(p_data), CFDataGetLength(p_data));
+}
+
+static bool deserialize_cfdata(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, CFDataRef &r_data)
+{
+	void *t_data = nil;
+	uint32_t t_data_size = 0;
+	CFDataRef t_data_ref = nil;
+	bool t_success = deserialize_data(p_stream, p_stream_size, r_offset, t_data, t_data_size);
+	if (t_success && t_data != nil)
+	{
+		t_data_ref = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (UInt8*)t_data, t_data_size, kCFAllocatorDefault);
+		t_success = (t_data_ref != nil);
+	}
+	if (t_success)
+		r_data = t_data_ref;
+	return t_success;
+}
+
+static bool serialize_cfstring(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, CFStringRef p_string)
+{
+	bool t_success = true;
+	CFDataRef t_data_ref = nil;
+
+	if (p_string == nil)
+		return serialize_cfdata(r_stream, r_stream_size, r_offset, nil);
+	t_data_ref = CFStringCreateExternalRepresentation(kCFAllocatorDefault, p_string, kCFStringEncodingUTF8, 0);
+	t_success = (t_data_ref != nil);
+
+	if (t_success)
+	{
+		t_success = serialize_cfdata(r_stream, r_stream_size, r_offset, t_data_ref);
+		CFRelease(t_data_ref);
+	}
+	return t_success;
+}
+
+static bool deserialize_cfstring(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, CFStringRef &r_string)
+{
+	bool t_success = true;
+	CFStringRef t_string = nil;
+	CFDataRef t_data;
+	
+	t_success = deserialize_cfdata(p_stream, p_stream_size, r_offset, t_data);
+	if (t_success && t_data != nil)
+	{
+		t_string = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, t_data, kCFStringEncodingUTF8);
+		CFRelease(t_data);
+		t_success = (t_string != nil);
+	}
+	
+	if (t_success)
+		r_string = t_string;
+	
+	return t_success;
+}
+
+#ifndef _MACOSX_NOCARBON
+
+static bool serialize_handle(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, Handle p_data)
+{
+	bool t_success = true;
+	HLock(p_data);
+	t_success = serialize_data(r_stream, r_stream_size, r_offset, (char *)*p_data, GetHandleSize(p_data));
+	HUnlock(p_data);
+	return t_success;
+}
+
+static bool deserialize_handle(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, Handle &r_handle)
+{
+	void *t_data = nil;
+	uint32_t t_data_size = 0;
+	Handle t_handle = nil;
+	bool t_success = deserialize_data(p_stream, p_stream_size, r_offset, t_data, t_data_size);
+	if (t_success && t_data != nil)
+	{
+		t_success = (PtrToHand(t_data, &t_handle, t_data_size) == noErr);
+		MCMemoryDeallocate(t_data);
+	}
+	if (t_success)
+		r_handle = t_handle;
+	return t_success;
+}
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool serialize_printer_settings(char *&r_stream, uint32_t &r_stream_size, PMPrintSession p_session, PMPrinter p_printer, PMPrintSettings p_settings, PMPageFormat p_format)
+{
+	bool t_success = true;
+
+	weaklink();
+	
+	CFStringRef t_string;
+	t_string = PMPrinterGetID(p_printer);
+
+	uint32_t t_offset = 0;
+
+	t_success = (t_string != nil);
+	if (t_success)
+		t_success = serialize_cfstring(r_stream, r_stream_size, t_offset, t_string);
+
+	if (PMPrintSettingsCreateDataRepresentationProc != nil)
+	{
+		CFDataRef t_data = nil;
+		if (t_success)
+			t_success = (PMPrintSettingsCreateDataRepresentationProc(p_settings, &t_data, 0) == noErr);
+		if (t_success)
+		{
+			t_success = serialize_cfdata(r_stream, r_stream_size, t_offset, t_data);
+			CFRelease(t_data);
+		}
+		
+		if (t_success)
+			t_success = (PMPageFormatCreateDataRepresentationProc(p_format, &t_data, 0) == noErr);
+		if (t_success)
+		{
+			t_success = serialize_cfdata(r_stream, r_stream_size, t_offset, t_data);
+			CFRelease(t_data);
+		}
+		
+	}
+#ifndef _MACOSX_NOCARBON
+	else
+	{
+		Handle t_handle = nil;
+		if (t_success)
+			t_success = (PMFlattenPrintSettings(p_settings, &t_handle) == noErr);
+		if (t_success)
+		{
+			t_success = serialize_handle(r_stream, r_stream_size, t_offset, t_handle);
+			DisposeHandle(t_handle);
+		}
+		
+		if (t_success)
+			t_success = (PMFlattenPageFormat(p_format, &t_handle) == noErr);
+		if (t_success)
+		{
+			t_success = serialize_handle(r_stream, r_stream_size, t_offset, t_handle);
+			DisposeHandle(t_handle);
+		}
+	}
+#endif
+
+	PMDestinationType t_dest_type;
+	CFURLRef t_dest_url;
+	if (t_success)
+		t_success = (PMSessionGetDestinationType(p_session, p_settings, &t_dest_type) == noErr);
+	if (t_success)
+		t_success = serialize_uint32(r_stream, r_stream_size, t_offset, (uint32_t)t_dest_type);
+	if (t_success)
+		t_success = (PMSessionCopyDestinationLocation(p_session, p_settings, &t_dest_url) == noErr);
+	if (t_success)
+	{
+		if (t_dest_url == NULL)
+			t_success = serialize_cfstring(r_stream, r_stream_size, t_offset, NULL);
+		else
+		{
+			t_success = serialize_cfstring(r_stream, r_stream_size, t_offset, CFURLGetString(t_dest_url));
+			CFRelease(t_dest_url);
+		}
+	}
+	if (t_success)
+		t_success = (PMSessionCopyDestinationFormat(p_session, p_settings, &t_string) == noErr);
+	if (t_success)
+	{
+		t_success = serialize_cfstring(r_stream, r_stream_size, t_offset, t_string);
+		if (t_string != NULL)
+			CFRelease(t_string);
+	}
+	return t_success;
+}
+
+static bool deserialize_printer_settings(const char *p_stream, uint32_t p_stream_size, PMPrintSession &r_session, PMPrinter &r_printer, PMPrintSettings &r_settings, PMPageFormat &r_format)
+{
+	bool t_success = true;
+	
+	weaklink();
+	
+	CFStringRef t_string;
+	PMPrinter t_printer = NULL;
+	PMPrintSettings t_settings = NULL;
+	PMPageFormat t_format = NULL;
+	PMPrintSession t_session = NULL;
+	
+	uint32_t t_offset = 0;
+	
+	t_success = deserialize_cfstring(p_stream, p_stream_size, t_offset, t_string);
+	if (t_success)
+	{
+		t_printer = PMPrinterCreateFromPrinterID(t_string);
+		CFRelease(t_string);
+		t_success = (t_printer != NULL);
+	}
+	
+	if (PMPrintSettingsCreateDataRepresentationProc != nil)
+	{
+		CFDataRef t_data;
+		
+		if (t_success)
+			t_success = deserialize_cfdata(p_stream, p_stream_size, t_offset, t_data);
+		if (t_success)
+		{
+			t_success = (PMPrintSettingsCreateWithDataRepresentationProc(t_data, &t_settings) == noErr);
+			CFRelease(t_data);
+		}
+		
+		if (t_success)
+			t_success = deserialize_cfdata(p_stream, p_stream_size, t_offset, t_data);
+		if (t_success)
+		{
+			t_success = (PMPageFormatCreateWithDataRepresentationProc(t_data, &t_format) == noErr);
+			CFRelease(t_data);
+		}
+	}
+#ifndef _MACOSX_NOCARBON
+	else
+	{
+		Handle t_handle;
+		
+		if (t_success)
+			t_success = deserialize_handle(p_stream, p_stream_size, t_offset, t_handle);
+		if (t_success)
+		{
+			t_success = (PMUnflattenPrintSettings(t_handle, &t_settings) == noErr);
+			DisposeHandle(t_handle);
+		}
+		
+		if (t_success)
+			t_success = deserialize_handle(p_stream, p_stream_size, t_offset, t_handle);
+		if (t_success)
+		{
+			t_success = (PMUnflattenPageFormat(t_handle, &t_format) == noErr);
+			DisposeHandle(t_handle);
+		}
+	}	
+#endif
+	
+	if (t_success && r_settings != NULL)
+	{
+		t_success = (PMCopyPrintSettings(t_settings, r_settings) == noErr);
+		if (t_success)
+		{
+			PMRelease(t_settings);
+			t_settings = r_settings;
+		}
+	}
+	
+	if (t_success && r_format != NULL)
+	{
+		t_success = (PMCopyPageFormat(t_format, r_format) == noErr);
+		if (t_success)
+		{
+			PMRelease(t_format);
+			t_format = r_format;
+		}
+	}
+	
+	if (t_success)
+	{
+		if (r_session == NULL)
+			t_success = (PMCreateSession(&t_session) == noErr);
+		else
+			t_session = r_session;
+	}
+	
+	PMDestinationType t_dest_type;
+	CFStringRef t_dest_format_string = NULL, t_dest_location_string = NULL;
+	CFURLRef t_dest_location_url = NULL;
+	if (t_success)
+	{
+		uint32_t t_val;
+		t_success = deserialize_uint32(p_stream, p_stream_size, t_offset, t_val);
+		t_dest_type = (PMDestinationType)t_val;
+	}
+	if (t_success)
+		t_success = deserialize_cfstring(p_stream, p_stream_size, t_offset, t_dest_location_string);
+	if (t_success && t_dest_location_string != NULL)
+		t_success = (t_dest_location_url = CFURLCreateWithString(kCFAllocatorDefault, t_dest_location_string, NULL)) != NULL;
+	if (t_success)
+		t_success = deserialize_cfstring(p_stream, p_stream_size, t_offset, t_dest_format_string);
+	if (t_success)
+		t_success = (PMSessionSetDestination(t_session, t_settings, t_dest_type, t_dest_format_string, t_dest_location_url) ==  noErr);
+	if (t_dest_location_string != NULL)
+		CFRelease(t_dest_location_string);
+	if (t_dest_location_url != NULL)
+		CFRelease(t_dest_location_url);
+	if (t_dest_format_string != NULL)
+		CFRelease(t_dest_format_string);
+		
+	if (t_success)
+	{
+		r_session = t_session;
+		r_printer = t_printer;
+		r_settings = t_settings;
+		r_format = t_format;
+	}
+	else
+	{
+		if (t_session != NULL && t_session != r_session)
+			PMRelease(t_session);
+		if (t_printer != NULL)
+			PMRelease(t_printer);
+		if (t_settings != NULL && t_settings != r_settings)
+			PMRelease(t_settings);
+		if (t_format != NULL && t_format != r_format)
+			PMRelease(t_format);
+	}
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool MCListSystemPrinters(MCStringRef &r_names)
+{
+    bool t_success;
 	CFArrayRef t_printers;
 	if (PMServerCreatePrinterList(kPMServerLocal, &t_printers) != noErr)
-		return;
+		return false;
+    
+    MCAutoListRef t_names;
+    t_success = MCListCreateMutable('\n', &t_names);
 
-	for(CFIndex i = 0; i < CFArrayGetCount(t_printers); ++i)
+    for(CFIndex i = 0; i < CFArrayGetCount(t_printers) && t_success; ++i)
 	{
-		char *t_name;
-		t_name = osx_cfstring_to_cstring(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), false);
-		ep . concatcstring(t_name, EC_RETURN, i == 0);
-		free(t_name);
+        MCAutoStringRef t_name;
+        t_success = MCStringCreateWithCFString(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), &t_name)
+                        && MCListAppend(*t_names, *t_name);
 	}
 
 	CFRelease(t_printers);
+    
+    if (t_success)
+        t_success = MCListCopyAsString(*t_names, r_names);
+    
+    return t_success;
 }
 
 MCPrinter *MCCreateSystemPrinter(void)

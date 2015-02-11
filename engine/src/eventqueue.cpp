@@ -24,13 +24,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "field.h"
-#include "unicode.h"
-#include "core.h"
 #include "mode.h"
 #include "dispatch.h"
 #include "eventqueue.h"
 #include "debug.h"
 #include "group.h"
+#include "widget-events.h"
 
 #include "resolution.h"
 
@@ -104,7 +103,8 @@ struct MCEvent
 			{
 				struct
 				{
-					char *string;
+                    // SN-2014-06-23: pick updated to StringRef
+					MCStringRef string;
 				} pick;
 			};
 		} menu;
@@ -294,7 +294,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		MCObject *t_target;
 		t_target = t_event -> menu . target -> Get();
 		if (t_target != nil)
-			t_target->message_with_args(MCM_mouse_down, "");
+			t_target->message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 	}
 	break;
 
@@ -303,7 +303,8 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		MCObject *t_target;
 		t_target = t_event -> menu . target -> Get();
 		if (t_target != nil)
-			t_target->message_with_args(MCM_menu_pick, t_event -> menu . pick . string);
+            // SN-2014-06-23: pick updated to StringRef
+			t_target->message_with_valueref_args(MCM_menu_pick, t_event -> menu . pick . string);
 	}
 	break;
 			
@@ -422,7 +423,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			MCeventtime = t_event -> mouse . time;
 			MCmodifierstate = t_event -> mouse . wheel . modifiers;
 			if (t_event -> mouse . wheel . dv != 0)
-				mfocused -> kdown("", t_event -> mouse . wheel . dv < 0 ? XK_WheelUp : XK_WheelDown);
+				mfocused -> kdown(kMCEmptyString, t_event -> mouse . wheel . dv < 0 ? XK_WheelUp : XK_WheelDown);
 			
 			mfocused = MCmousestackptr->getcard()->getmfocused();
 			if (mfocused == NULL)
@@ -431,7 +432,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 				mfocused = MCmousestackptr;
 			
 			if (t_event -> mouse . wheel . dh != 0)
-				mfocused -> kdown("", t_event -> mouse . wheel . dh < 0 ? XK_WheelLeft : XK_WheelRight);
+				mfocused -> kdown(kMCEmptyString, t_event -> mouse . wheel . dh < 0 ? XK_WheelLeft : XK_WheelRight);
 		}
 		break;
 
@@ -476,40 +477,21 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			// character.
 			if (t_event -> key . press . char_code == 0)
 			{
-				t_target -> kdown(MCnullstring, t_event -> key . press . key_code);
-				t_target -> kup(MCnullstring, t_event -> key . press . key_code);
+				t_target -> kdown(kMCEmptyString, t_event -> key . press . key_code);
+				t_target -> kup(kMCEmptyString, t_event -> key . press . key_code);
 				break;
 			}
 
 			// Otherwise 'char_code' is the unicode codepoint, so first map to
 			// UTF-16 (not done properly yet...)
-			uint2 t_unichar;
-			t_unichar = (uint2)t_event -> key . press . char_code;
+			unichar_t t_unichar;
+			t_unichar = (unichar_t)t_event -> key . press . char_code;
 
-			// If we successfully map to native, then we can dispatch as a normal kdown
-			uint1 t_char;
-			if (MCUnicodeMapToNative(&t_unichar, 1, t_char))
-			{
-				char t_buffer[2];
-				t_buffer[0] = t_char;
-				t_buffer[1] = '\0';
-				t_target -> kdown(t_buffer, t_event -> key . press . key_code);
-				t_target -> kup(t_buffer, t_event -> key . press . key_code);
-				break;
-			}
-
-			// Otherwise we dispatch in a unicode way...
-			if (!t_target -> kdown(MCnullstring, t_event -> key . press . key_code))
-				if (MCactivefield != nil)
-				{
-					MCString t_unibuffer;
-					t_unibuffer . set((char *)&t_unichar, 2);
-
-					// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
-					//   unicode mode.
-					MCactivefield -> finsertnew(FT_IMEINSERT, t_unibuffer, LCH_UNICODE, true);
-				}
-			t_target -> kup(MCnullstring, t_event -> key . press . key_code);
+			// Now the string is created with the appropriate unicode-capable function
+			MCAutoStringRef t_buffer;
+            MCStringCreateWithChars(&t_unichar, 1, &t_buffer);
+			t_target -> kdown(*t_buffer, t_event -> key . press . key_code);
+			t_target -> kup(*t_buffer, t_event -> key . press . key_code);
 		}
 		break;
 
@@ -525,12 +507,12 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 
 			MCactivefield -> setcompositioncursoroffset(t_event -> ime . compose . offset * 2);
 
-			MCString t_unichars;
-			t_unichars . set((const char *)t_event -> ime . compose . chars, t_event -> ime . compose . char_count * sizeof(uint16_t));
+			MCAutoStringRef t_unichars;
+			MCStringCreateWithChars((const unichar_t *)t_event->ime.compose.chars, t_event->ime.compose.char_count, &t_unichars);
 			
 			// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
 			//   unicode mode.
-			MCactivefield -> finsertnew(FT_IMEINSERT, t_unichars, LCH_UNICODE, true);
+			MCactivefield -> finsertnew(FT_IMEINSERT, *t_unichars, LCH_UNICODE);
 			if (t_event -> ime . compose . enabled)
 			{
 				MCRectangle r;
@@ -538,7 +520,11 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 				MCModeConfigureIme(MCactivefield -> getstack(), true, r . x, r . y + r . height);
 			}
 		}
-		break;
+        break;
+            
+    case kMCEventTypeCustom:
+        t_event -> custom . event -> Dispatch();
+        break;
 		
 #ifdef _MOBILE
 	case kMCEventTypeTouch:
@@ -548,32 +534,32 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	case kMCEventTypeMotion:
 		{
 			MCNameRef t_message;
-			const char *t_motion;
+			MCStringRef t_motion;
 			switch(t_event -> motion . type)
 			{
 				case kMCEventMotionShakeBegan:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_start;
 					break;
 				case kMCEventMotionShakeEnded:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_end;
 					break;
 				case kMCEventMotionShakeCancelled:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_release;
 					break;
 			}
 			
-			MCdefaultstackptr -> getcurcard() -> message_with_args(t_message, t_motion);
+			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(t_message, t_motion);
 		}
 		break;
 		
 	case kMCEventTypeAcceleration:
 		{
-			char t_value[64 * 4 + 4];
-			sprintf(t_value, "%.6f,%.6f,%.6f,%f", t_event -> acceleration . x, t_event -> acceleration . y, t_event -> acceleration . z, t_event -> acceleration . t);
-			MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_acceleration_changed, t_value);
+			MCAutoStringRef t_value;
+            /* UNCHECKED */ MCStringFormat(&t_value, "%.6f,%.6f,%.6f,%f", t_event -> acceleration . x, t_event -> acceleration . y, t_event -> acceleration . z, t_event -> acceleration . t);
+			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_acceleration_changed, *t_value);
 		}
 		break;
 		
@@ -587,10 +573,6 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		
 	case kMCEventTypeHeading:
 		MCdefaultstackptr -> getcurcard() -> message(t_event -> location . error == nil ? MCM_heading_changed : MCM_heading_error);
-		break;
-		
-	case kMCEventTypeCustom:
-		t_event -> custom . event -> Dispatch();
 		break;
 #endif
 	}
@@ -626,7 +608,8 @@ static void MCEventQueueDestroyEvent(MCEvent *p_event)
 	else if (p_event -> type == kMCEventTypeMenuPick)
 	{
 		p_event -> menu . target -> Release();
-		delete p_event -> menu . pick . string;
+        // SN-2014-06-23: pick updated to StringRef
+		MCValueRelease(p_event -> menu . pick . string);
 	}
 #ifdef _MOBILE
 	else if (p_event -> type == kMCEventTypeCustom)
@@ -741,13 +724,14 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 	// Look for the first mouse down event in the queue
 	MCEvent *t_mouse_down, *t_mouse_move;
 	t_mouse_down = nil;
+    t_mouse_move = nil;
 	for(MCEvent *t_event = s_first_event; t_event != nil; t_event = t_event -> next)
 	{
 		if (t_event -> type == kMCEventTypeMousePosition)
 			t_mouse_move = t_event;
 		if (t_event -> type == kMCEventTypeMousePress &&
 			t_event -> mouse . press . state == kMCMousePressStateDown &&
-			(p_button == 0 || t_event -> mouse . press . button == p_button))
+		    (p_button == 0 || (uint32_t) t_event -> mouse . press . button == p_button))
 		{
 			t_mouse_down = t_event;
 			break;
@@ -762,8 +746,8 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 	t_mouse_up = nil;
 	for(MCEvent *t_event = t_mouse_down -> next; t_event != nil; t_event = t_event -> next)
 		if (t_event -> type == kMCEventTypeMousePress &&
-			!t_event -> mouse . press . state == kMCMousePressStateUp &&
-			(p_button == 0 || t_event -> mouse . press . button == p_button))
+			t_event -> mouse . press . state == kMCMousePressStateUp &&
+		    (p_button == 0 || (uint32_t) t_event -> mouse . press . button == p_button))
 		{
 			t_mouse_up = t_event;
 			break;
@@ -774,9 +758,25 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 	
 	MCmodifierstate = t_mouse_up -> mouse . press . modifiers;
 	MCclickstackptr = MCmousestackptr;
-	MCclicklocx = t_mouse_move -> mouse . position . x;
-	MCclicklocy = t_mouse_move -> mouse . position . y;
-	
+    
+    // If there is a mouse-move event then update the clickloc with that position
+    // otherwise use MCmousex/y.
+    if (t_mouse_move != nil)
+    {
+        // Take into account fullscreenmode.
+        MCPoint t_mouseloc;
+        t_mouseloc = MCPointMake(t_mouse_move->mouse.position.x, t_mouse_move->mouse.position.y);
+        t_mouseloc = MCmousestackptr->windowtostackloc(t_mouseloc);
+        
+        MCclicklocx = t_mouseloc . x;
+        MCclicklocy = t_mouseloc . y;
+	}
+    else
+    {
+        MCclicklocx = MCmousex;
+        MCclicklocy = MCmousey;
+    }
+    
 	// Now remove *all* mouse events from the queue up to and including the
 	// mouse up.
 	MCEvent *t_event;
@@ -1078,15 +1078,47 @@ bool MCEventQueuePostUpdateMenu(MCObjectHandle *p_target)
 	return true;
 }
 
-bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, const char *p_string)
+bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, MCStringRef p_string)
 {
 	MCEvent *t_event;
 	if (!MCEventQueuePost(kMCEventTypeMenuPick, t_event))
 		return false;
 	p_target -> Retain();
 	t_event -> menu . target = p_target;
-	t_event -> menu . pick . string = strdup(p_string);
-	return true;
+    // SN-2014-06-23: pick updated to StringRef
+	return MCStringCopy(p_string, t_event -> menu . pick . string);
+}
+
+bool MCEventQueuePostCustom(MCCustomEvent *p_event)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCEvent *t_event;
+	t_event = nil;
+	if (t_success)
+		t_success = MCEventQueuePost(kMCEventTypeCustom, t_event);
+    
+	if (t_success)
+		t_event -> custom . event = p_event;
+	
+	return t_success;
+}
+
+bool MCEventQueuePostCustomAtFront(MCCustomEvent *p_event)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCEvent *t_event;
+	t_event = nil;
+	if (t_success)
+		t_success = MCEventQueuePostAtFront(kMCEventTypeCustom, t_event);
+	
+	if (t_success)
+		t_event -> custom . event = p_event;
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1159,21 +1191,30 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 
 	if (t_target != nil)
 	{
-		switch(p_phase)
-		{
-			case kMCEventTouchPhaseBegan:
-				t_target -> message_with_args(MCM_touch_start, p_id);
-				break;
-			case kMCEventTouchPhaseMoved:
-				t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
-				break;
-			case kMCEventTouchPhaseEnded:
-				t_target -> message_with_args(MCM_touch_end, p_id);
-				break;
-			case kMCEventTouchPhaseCancelled:
-				t_target -> message_with_args(MCM_touch_release, p_id);
-				break;
-		}
+        // Touches on widgets are handled differently
+        if (t_target->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_touch(reinterpret_cast<MCWidget*>(t_target),
+                                              p_id, p_phase, t_touch_loc.x, t_touch_loc.y);
+        }
+        else
+        {
+            switch(p_phase)
+            {
+                case kMCEventTouchPhaseBegan:
+                    t_target -> message_with_args(MCM_touch_start, p_id);
+                    break;
+                case kMCEventTouchPhaseMoved:
+                    t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
+                    break;
+                case kMCEventTouchPhaseEnded:
+                    t_target -> message_with_args(MCM_touch_end, p_id);
+                    break;
+                case kMCEventTouchPhaseCancelled:
+                    t_target -> message_with_args(MCM_touch_release, p_id);
+                    break;
+            }
+        }
 	}
 }
 
@@ -1349,38 +1390,6 @@ bool MCEventQueuePostHeadingError(void)
 	t_event -> location . error = "";
 	
 	return true;
-}
-
-bool MCEventQueuePostCustom(MCCustomEvent *p_event)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCEvent *t_event;
-	t_event = nil;
-	if (t_success)
-		t_success = MCEventQueuePost(kMCEventTypeCustom, t_event);
-
-	if (t_success)
-		t_event -> custom . event = p_event;
-	
-	return t_success;
-}
-
-bool MCEventQueuePostCustomAtFront(MCCustomEvent *p_event)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCEvent *t_event;
-	t_event = nil;
-	if (t_success)
-		t_success = MCEventQueuePostAtFront(kMCEventTypeCustom, t_event);
-	
-	if (t_success)
-		t_event -> custom . event = p_event;
-	
-	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -109,15 +109,77 @@ struct MCDateTimeZone
 
 struct MCDateTimeLocale
 {
-	const char *weekday_names[7];
-	const char *abbrev_weekday_names[7];
-	const char *month_names[12];
-	const char *abbrev_month_names[12];
-	const char *date_formats[3];
-	const char *time_formats[2];
-	const char *time24_formats[2];
-	const char *time_morning_suffix;
-	const char *time_evening_suffix;
+	MCStringRef weekday_names[7];
+	MCStringRef abbrev_weekday_names[7];
+	MCStringRef month_names[12];
+	MCStringRef abbrev_month_names[12];
+	MCStringRef date_formats[3];
+	MCStringRef time_formats[2];
+	MCStringRef time24_formats[2];
+	MCStringRef time_morning_suffix;
+	MCStringRef time_evening_suffix;
+	
+	MCDateTimeLocale()
+	{
+		for (unsigned i = 0; i < 7; i++)
+			weekday_names[i] = MCValueRetain(kMCEmptyString);
+		for (unsigned i = 0; i < 7; i++)
+			abbrev_weekday_names[i] = MCValueRetain(kMCEmptyString);
+		for (unsigned i = 0; i < 12; i++)
+			month_names[i] = MCValueRetain(kMCEmptyString);
+		for (unsigned i = 0; i < 12; i++)
+			abbrev_month_names[i] = MCValueRetain(kMCEmptyString);
+		for (unsigned i = 0; i < 3; i++)
+			date_formats[i] = MCValueRetain(kMCEmptyString);
+		for (unsigned i = 0; i < 2; i++)
+			time_formats[i] = MCValueRetain(kMCEmptyString);
+		for (unsigned i = 0; i < 2; i++)
+			 time24_formats[i] = MCValueRetain(kMCEmptyString);
+		time_morning_suffix = MCValueRetain(kMCEmptyString);
+		time_evening_suffix = MCValueRetain(kMCEmptyString);
+	}
+	
+	MCDateTimeLocale& operator= (MCDateTimeLocale& other)
+	{
+		for (unsigned i = 0; i < 7; i++)
+			weekday_names[i] = MCValueRetain(other.weekday_names[i]);
+		for (unsigned i = 0; i < 7; i++)
+			abbrev_weekday_names[i] = MCValueRetain(other.abbrev_weekday_names[i]);
+		for (unsigned i = 0; i < 12; i++)
+			month_names[i] = MCValueRetain(other.month_names[i]);
+		for (unsigned i = 0; i < 12; i++)
+			abbrev_month_names[i] = MCValueRetain(other.abbrev_month_names[i]);
+		for (unsigned i = 0; i < 3; i++)
+			date_formats[i] = MCValueRetain(other.date_formats[i]);
+		for (unsigned i = 0; i < 2; i++)
+			time_formats[i] = MCValueRetain(other.time_formats[i]);
+		for (unsigned i = 0; i < 2; i++)
+			time24_formats[i] = MCValueRetain(other.time24_formats[i]);
+		time_morning_suffix = MCValueRetain(other.time_morning_suffix);
+		time_evening_suffix = MCValueRetain(other.time_evening_suffix);
+			
+		return *this;
+	}
+	
+	~MCDateTimeLocale()
+	{
+		for (unsigned i = 0; i < 7; i++)
+			MCValueRelease(weekday_names[i]);
+		for (unsigned i = 0; i < 7; i++)
+			MCValueRelease(abbrev_weekday_names[i]);
+		for (unsigned i = 0; i < 12; i++)
+			MCValueRelease(month_names[i]);
+		for (unsigned i = 0; i < 12; i++)
+			MCValueRelease(abbrev_month_names[i]);
+		for (unsigned i = 0; i < 3; i++)
+			MCValueRelease(date_formats[i]);
+		for (unsigned i = 0; i < 2; i++)
+			MCValueRelease(time_formats[i]);
+		for (unsigned i = 0; i < 2; i++)
+			 MCValueRelease(time24_formats[i]);
+		MCValueRelease(time_morning_suffix);
+		MCValueRelease(time_evening_suffix);
+	}
 };
 
 typedef uint4 MCDateTimeFormat;
@@ -143,15 +205,22 @@ enum
 	DATETIME_FORMAT_LONG_SYSTEM_TIME
 };
 
-extern void MCD_date(Properties length, MCExecPoint &);
-extern void MCD_time(Properties length, MCExecPoint &);
-extern void MCD_monthnames(Properties length, MCExecPoint &ep);
-extern void MCD_weekdaynames(Properties length, MCExecPoint &ep);
-extern void MCD_dateformat(Properties length, MCExecPoint &ep);
-extern Boolean MCD_convert(MCExecPoint &, Convert_form f, Convert_form fs, Convert_form p, Convert_form s);
+extern bool MCDateTimeInitialize();
+extern bool MCDateTimeFinalize();
 
-extern bool MCD_convert_to_datetime(MCExecPoint &ep, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime);
-extern bool MCD_convert_from_datetime(MCExecPoint &ep, Convert_form p_primary_to, Convert_form p_secondary_to, MCDateTime &p_datetime);
+extern void MCD_date(MCExecContext& ctxt, Properties p_format, MCStringRef& r_date);
+extern void MCD_time(MCExecContext& ctxt, Properties p_format, MCStringRef& r_time);
+extern bool MCD_monthnames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list);
+extern bool MCD_weekdaynames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list);
+extern void MCD_dateformat(MCExecContext& ctxt, Properties p_format, MCStringRef& r_dateformat);
+
+extern bool MCD_convert(MCExecContext& ctxt, MCValueRef p_input,
+						Convert_form p_primary_from, Convert_form p_secondary_from,
+						Convert_form p_primary_to, Convert_form p_secondary_to,
+						MCStringRef& r_converted);
+
+extern bool MCD_convert_to_datetime(MCExecContext& ctxt, MCValueRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime);
+extern bool MCD_convert_from_datetime(MCExecContext& ctxt, MCDateTime p_datetime, Convert_form p_primary_from, Convert_form p_secondary_from, MCValueRef &r_output);
 
 extern void MCD_getlocaleformats();
 

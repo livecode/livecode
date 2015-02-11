@@ -38,8 +38,7 @@ class MCGroup : public MCControl
 	int4 scrollx;
 	int4 scrolly;
 	uint2 scrollbarwidth;
-	uint2 labelsize;
-	char *label;
+	MCStringRef label;
 	MCRectangle minrect;
 	uint2 number;
 	Boolean mgrabbed;
@@ -52,6 +51,8 @@ class MCGroup : public MCControl
     bool m_clips_to_rect : 1;
     
 	static uint2 labeloffset;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCGroup();
 	MCGroup(const MCGroup &gref);
@@ -61,6 +62,8 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
 
 	virtual void open();
@@ -69,8 +72,8 @@ public:
 	virtual Boolean kfocusnext(Boolean top);
 	virtual Boolean kfocusprev(Boolean bottom);
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
-	virtual Boolean kup(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
+	virtual Boolean kup(MCStringRef p_string, KeySym key);
 	virtual void mdrag(void);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
@@ -79,8 +82,12 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+
+#ifdef LEGACY_EXEC
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#endif
+    
 	virtual Boolean del();
 	virtual void recompute();
 
@@ -88,8 +95,8 @@ public:
 	virtual bool recomputefonts(MCFontRef parent_font);
 
 	// virtual functions from MCControl
-	IO_stat load(IO_handle stream, const char *version);
-	IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
+	IO_stat load(IO_handle stream, uint32_t version);
+	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 
@@ -100,7 +107,7 @@ public:
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
 
 	virtual MCControl *findnum(Chunk_term type, uint2 &num);
-	virtual MCControl *findname(Chunk_term type, const MCString &);
+	virtual MCControl *findname(Chunk_term type, MCNameRef);
 	virtual MCControl *findid(Chunk_term type, uint4 inid, Boolean alt);
 	virtual Boolean count(Chunk_term otype, MCObject *stop, uint2 &num);
 	virtual Boolean maskrect(const MCRectangle &srect);
@@ -128,7 +135,14 @@ public:
 	MCControl *doclone(Boolean attach, Object_pos p, bool p_copy_ids, bool invisible);
 	void drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawframe);
 	void drawbord(MCDC *dc, const MCRectangle &dirty);
+	MCControl *getchild(Chunk_term etype, MCStringRef p_expression,Chunk_term otype, Chunk_term ptype);
+#ifdef OLD_EXEC
 	MCControl *getchild(Chunk_term etype, const MCString &,Chunk_term otype, Chunk_term ptype);
+#endif
+    MCControl *getchildbyordinal(Chunk_term p_ordinal, Chunk_term o);
+    MCControl *getchildbyid(uinteger_t p_id, Chunk_term o);
+    MCControl *getchildbyname(MCNameRef p_name, Chunk_term o);
+    
 	void makegroup(MCControl *newcontrols, MCObject *newparent);
 	MCControl *getcontrols();
 	void setcontrols(MCControl *newcontrols);
@@ -138,17 +152,19 @@ public:
 	MCControl *getmfocused();
 	void clearfocus(MCControl *cptr);
 	void radio(uint4 parid, MCControl *focused);
-	uint2 gethilited(uint4 parid);
 	MCButton *gethilitedbutton(uint4 parid);
+#ifdef OLD_EXEC
+	uint2 gethilited(uint4 parid);
 	uint4 gethilitedid(uint4 parid);
 	MCNameRef gethilitedname(uint4 parid);
 	void sethilited(uint4 parid, uint2 toset);
 	void sethilitedid(uint4 parid, uint4 toset);
 	void sethilitedname(uint4 parid, MCNameRef bname);
 	void setchildprops(uint4 parid, Properties which, MCExecPoint &ep);
+#endif
 	MCRectangle getgrect();
 	void computecrect();
-	Boolean computeminrect(Boolean scrolling);
+	bool computeminrect(Boolean scrolling);
 	void boundcontrols();
 	
 	Exec_stat opencontrols(bool p_is_preopen);
@@ -162,7 +178,7 @@ public:
 	// MW-2011-08-08: [[ Groups ]] Returns 'true' if the group is a background.
 	bool isbackground(void) const { return getflag(F_GROUP_ONLY) == False; }
 	// MW-2011-08-09: [[ Groups ]] Returns 'true' if the group is on/can be on multiple cards.
-	bool isshared(void) const { return getflag(F_GROUP_SHARED) == True; }
+	bool isshared(void) const { return getflag(F_GROUP_SHARED); }
 
 	// MW-2011-08-09: Ensure that all children of the group have non-zero id.
 	void ensureids(void);
@@ -211,5 +227,90 @@ public:
 		return (MCGroup *)MCDLlist::remove
 			       ((MCDLlist *&)list);
 	}
+	
+	////////// PROPERTY SUPPORT METHODS
+
+	void SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    void GetCardProps(MCExecContext& ctxt, Properties which, uindex_t& r_count, MCStringRef*& r_list);
+    void GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id, MCStringRef& r_props);
+    
+    void UpdateMargins(void);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetCantDelete(MCExecContext& ctxt, bool& r_setting);
+	void SetCantDelete(MCExecContext& ctxt, bool setting);
+	void GetDontSearch(MCExecContext& ctxt, bool& r_setting);
+	void SetDontSearch(MCExecContext& ctxt, bool setting);
+	void GetShowPict(MCExecContext& ctxt, bool& r_setting);
+	void SetShowPict(MCExecContext& ctxt, bool setting);
+	void GetRadioBehavior(MCExecContext& ctxt, uint32_t part, bool& r_setting);
+	void SetRadioBehavior(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetTabGroupBehavior(MCExecContext& ctxt, bool& r_setting);
+	void SetTabGroupBehavior(MCExecContext& ctxt, bool setting);
+	void GetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t& r_button);
+	void SetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t p_button);
+	void GetHilitedButtonId(MCExecContext& ctxt, uint32_t part, integer_t& r_id);
+	void SetHilitedButtonId(MCExecContext& ctxt, uint32_t part, integer_t p_id);
+	void GetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringRef& r_name);
+	void SetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringRef p_name);
+	void GetShowName(MCExecContext& ctxt, bool& r_setting);
+	void SetShowName(MCExecContext& ctxt, bool setting);
+	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label);
+	void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
+	void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
+	void GetVScroll(MCExecContext& ctxt, integer_t& r_scroll);
+	void SetVScroll(MCExecContext& ctxt, integer_t p_scroll);
+	void GetUnboundedHScroll(MCExecContext& ctxt, bool& r_setting);
+	void SetUnboundedHScroll(MCExecContext& ctxt, bool setting);
+	void GetUnboundedVScroll(MCExecContext& ctxt, bool& r_setting);
+	void SetUnboundedVScroll(MCExecContext& ctxt, bool setting);
+	void GetHScrollbar(MCExecContext& ctxt, bool& r_setting);
+	void SetHScrollbar(MCExecContext& ctxt, bool setting);
+	void GetVScrollbar(MCExecContext& ctxt, bool& r_setting);
+	void SetVScrollbar(MCExecContext& ctxt, bool setting);
+	void GetScrollbarWidth(MCExecContext& ctxt, integer_t& r_width);
+	void SetScrollbarWidth(MCExecContext& ctxt, integer_t p_width);
+	void GetFormattedLeft(MCExecContext& ctxt, integer_t& r_left);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
+	void GetFormattedTop(MCExecContext& ctxt, integer_t& r_top);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
+	void GetFormattedRect(MCExecContext& ctxt, MCRectangle& r_rect);
+	void GetBackgroundBehavior(MCExecContext& ctxt, bool& r_setting);
+	void SetBackgroundBehavior(MCExecContext& ctxt, bool setting);
+	void GetSharedBehavior(MCExecContext& ctxt, bool& r_setting);
+	void SetSharedBehavior(MCExecContext& ctxt, bool setting);
+	void GetBoundingRect(MCExecContext& ctxt, MCRectangle*& r_rect);
+	void SetBoundingRect(MCExecContext& ctxt, MCRectangle* p_rect);
+	void GetBackSize(MCExecContext& ctxt, MCPoint& r_size);
+	void SetBackSize(MCExecContext& ctxt, MCPoint p_size);
+	void GetSelectGroupedControls(MCExecContext& ctxt, bool& r_setting);
+	void SetSelectGroupedControls(MCExecContext& ctxt, bool setting);
+    void GetCardNames(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_list);
+    void GetCardIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_list);
+    void GetControlNames(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_names);
+    void GetControlIds(MCExecContext& ctxt, uint32_t part_id, MCStringRef& r_ids);
+    void GetChildControlNames(MCExecContext& ctxt, MCStringRef& r_names);
+    void GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids);
+    void GetLockUpdates(MCExecContext& ctxt, bool& r_locked);
+    void SetLockUpdates(MCExecContext& ctxt, bool p_locked);
+    void SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect);
+    void GetClipsToRect(MCExecContext& ctxt, bool &r_clips_to_rect);
+    
+	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    
+    virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
 };
 #endif

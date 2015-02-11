@@ -20,7 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-
+//#include "execpt.h"
+#include "exec.h"
 #include "stacklst.h"
 #include "undolst.h"
 #include "image.h"
@@ -88,9 +89,6 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 	if (m_rep != nil)
 	{
-		uint32_t t_frame_duration;
-		t_frame_duration = 0;
-		
 		if (m_rep->GetType() == kMCImageRepVector)
 		{
 			MCU_set_rect(drect, dx - sx, dy - sy, rect.width, rect.height);
@@ -169,9 +167,6 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			t_success = t_rep->LockImageFrame(currentframe, t_device_scale, t_frame);
 			if (t_success)
 			{
-				// IM-2014-08-01: [[ Bug 13021 ]] Get frame duration to avoid re-locking later
-				t_frame_duration = t_frame.duration;
-				
 				MCImageDescriptor t_image;
 				MCMemoryClear(&t_image, sizeof(MCImageDescriptor));
 
@@ -236,6 +231,12 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				MCThreadMutexLock(MCanimationmutex);
 				if (!m_animate_posted)
 				{
+					// IM-2014-11-25: [[ ImageRep ]] Use ImageRep method to get frame duration
+					uint32_t t_frame_duration;
+					t_frame_duration = 0;
+					
+					/* UNCHECKED */ m_rep->GetFrameDuration(currentframe, t_frame_duration);
+					
 					m_animate_posted = true;
 					MCscreen->addtimer(this, MCM_internal, t_frame_duration);
 				}
@@ -245,7 +246,8 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			state &= ~CS_DO_START;
 		}
 	}
-    else if (filename != nil)
+    // AL-2014-08-04: [[ Bug 13097 ]] Image filename is never nil; check for emptiness instead
+    else if (!MCStringIsEmpty(filename))
     {
         // AL-2014-01-15: [[ Bug 11570 ]] Draw stippled background when referenced image file not found
         drawnodata(dc, rect, sw, sh, dx, dy, dw, dh);
@@ -388,7 +390,7 @@ void MCImage::canceldraw(void)
 
 void MCImage::startmag(int2 x, int2 y)
 {
-	MCStack *sptr = getstack()->findstackname("Magnify");
+	MCStack *sptr = getstack()->findstackname(MCNAME("Magnify"));
 	if (sptr == NULL)
 		return;
 	if (MCmagimage != NULL)
@@ -396,20 +398,20 @@ void MCImage::startmag(int2 x, int2 y)
 	MCmagimage = this;
 	state |= CS_MAGNIFY;
 
-	char buffer[U2L];
-	sprintf(buffer, "%d", rect.width * MCmagnification);
-	sptr->setsprop(P_MAX_WIDTH, buffer);
+    MCExecContext ctxt(this, nil, nil);
+    
+    sptr->SetMaxWidth(ctxt, rect.width * MCmagnification);
 
-	sprintf(buffer, "%d", rect.width * MCmagnification);
-	sptr->setsprop(P_MAX_HEIGHT, buffer);
+    sptr->SetMaxHeight(ctxt, rect.height * MCmagnification);
 
 	uint2 ssize = MCU_min(32, rect.width);
-	sprintf(buffer, "%d", ssize * MCmagnification);
-	sptr->setsprop(P_WIDTH, buffer);
+	
+    sptr->SetWidth(ctxt, ssize * MCmagnification);
 
 	ssize = MCU_min(32, rect.height);
-	sprintf(buffer, "%d", ssize * MCmagnification);
-	sptr->setsprop(P_HEIGHT, buffer);
+
+    sptr->SetHeight(ctxt, ssize * MCmagnification);
+
 
 	MCRectangle drect = sptr->getrect();
 	magrect.width = drect.width / MCmagnification;
@@ -434,7 +436,7 @@ void MCImage::endmag(Boolean close)
 	MCmagimage = NULL;
 	if (close)
 	{
-		MCStack *sptr = getstack()->findstackname("Magnify");
+		MCStack *sptr = getstack()->findstackname(MCNAME("Magnify"));
 		if (sptr != NULL)
 			sptr->close();
 	}

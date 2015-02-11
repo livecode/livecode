@@ -1,0 +1,14 @@
+setup
+create field
+
+set the text of the last field to "abcd"
+select char 2 to 2 of the last field
+put the selectedloc of the last field into tCharLoc
+
+find characters "b" in the last field
+test the foundLoc is tCharLoc
+
+find characters "x" in the last field
+test the foundLoc is empty
+
+teardown

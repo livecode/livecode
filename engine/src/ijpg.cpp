@@ -27,8 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "globals.h"
 
-#include "core.h"
-
 #include "imageloader.h"
 
 #include <setjmp.h>
@@ -505,7 +503,7 @@ boolean srcmgr_fill_input_buffer(j_decompress_ptr p_jpeg)
 {
 	MCJPEGSrcManager *t_src = (MCJPEGSrcManager*)p_jpeg->src;
 	uindex_t t_bytes_read = JPEG_BUF_SIZE;
-	IO_stat t_stat = MCS_read(t_src->buffer, sizeof(uint8_t), t_bytes_read, t_src->stream);
+	IO_stat t_stat = MCS_readall(t_src->buffer, t_bytes_read, t_src->stream, t_bytes_read); /// ??? readall ???
 	if (t_stat == IO_ERROR)
 		ERREXIT(p_jpeg, JERR_FILE_READ);
 
@@ -578,7 +576,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatJPEG; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -613,7 +611,7 @@ MCJPEGImageLoader::~MCJPEGImageLoader()
 		MCMemoryDeallocate(m_icc);
 }
 
-bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata)
+bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata)
 {
 	bool t_success = true;
 	
@@ -713,7 +711,7 @@ bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32
 			swap(r_width, r_height);
 		
 		r_xhot = r_yhot = 0;
-		r_name = nil;
+		r_name = MCValueRetain(kMCEmptyString);
 		r_frame_count = 1;
 	}
 	

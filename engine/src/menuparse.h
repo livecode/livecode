@@ -21,23 +21,44 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 struct MCMenuItem
 {
 	int4 depth;
-	MCString label;
-	bool is_unicode;
-	bool is_disabled;
-	bool is_radio;
-	bool is_hilited;
+	MCStringRef label;
+	bool is_disabled: 1;
+	bool is_radio: 1;
+	bool is_hilited: 1;
+    // SN-2014-07-29: [[ Bug 12998 ]] has_tag member put back
+    bool has_tag: 1;
 	uint4 accelerator;
-	const char *accelerator_name;
+	MCStringRef accelerator_name;
 	uint1 modifiers;
 	uint4 mnemonic;
-	MCString tag;
-    bool has_tag;
+	MCStringRef tag;
 	uint1 menumode;
 	
-	void assignFrom(MCMenuItem *p_from)
+	MCMenuItem()
 	{
-		memcpy(this, p_from, sizeof(MCMenuItem));
+		depth = 0;
+		label = MCValueRetain(kMCEmptyString);
+		is_disabled = 0;
+		is_radio = 0;
+		is_hilited = 0;
+		accelerator = 0;
+		accelerator_name = MCValueRetain(kMCEmptyString);
+		modifiers = 0;
+		mnemonic = 0;
+		tag = MCValueRetain(kMCEmptyString);
+        // SN-2014-07-29: [[ Bug 12998 ]] has_tag member put back
+        has_tag = false;
+		menumode = 0;
 	}
+	
+	~MCMenuItem()
+	{
+		MCValueRelease(label);
+		MCValueRelease(accelerator_name);
+		MCValueRelease(tag);
+	}
+	
+	void assignFrom(MCMenuItem *p_from);
 };
 
 class IParseMenuCallback
@@ -48,8 +69,8 @@ public:
 	virtual bool End(bool p_has_tags) {return false;}
 };
 
-extern bool MCParseMenuString(MCString &r_string, IParseMenuCallback *p_callback, bool isunicode, uint1 p_menumode);
-extern uint4 MCLookupAcceleratorKeysym(MCString &p_name);
+extern void MCParseMenuString(MCStringRef p_string, IParseMenuCallback *p_callback, uint1 p_menumode);
+extern uint4 MCLookupAcceleratorKeysym(MCStringRef p_name);
 extern const char *MCLookupAcceleratorName(uint4 p_keysym);
 
 #endif

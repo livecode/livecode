@@ -1,0 +1,476 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4D7060D81A80D00600415A88 /* module-foreign.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7060D71A80D00600415A88 /* module-foreign.cpp */; };
+		720166341A420EE8002B53F9 /* module-arithmetic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166161A420EE8002B53F9 /* module-arithmetic.cpp */; };
+		720166351A420EE8002B53F9 /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166171A420EE8002B53F9 /* module-array.cpp */; };
+		720166361A420EE8002B53F9 /* module-binary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166181A420EE8002B53F9 /* module-binary.cpp */; };
+		720166371A420EE8002B53F9 /* module-bitwise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166191A420EE8002B53F9 /* module-bitwise.cpp */; };
+		720166381A420EE8002B53F9 /* module-byte.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201661A1A420EE8002B53F9 /* module-byte.cpp */; };
+		720166391A420EE8002B53F9 /* module-char.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201661B1A420EE8002B53F9 /* module-char.cpp */; };
+		7201663A1A420EE8002B53F9 /* module-encoding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201661C1A420EE8002B53F9 /* module-encoding.cpp */; };
+		7201663B1A420EE8002B53F9 /* module-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201661D1A420EE8002B53F9 /* module-file.cpp */; };
+		7201663C1A420EE8002B53F9 /* module-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201661E1A420EE8002B53F9 /* module-list.cpp */; };
+		7201663D1A420EE8002B53F9 /* module-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201661F1A420EE8002B53F9 /* module-logic.cpp */; };
+		7201663E1A420EE8002B53F9 /* module-map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166201A420EE8002B53F9 /* module-map.cpp */; };
+		7201663F1A420EE8002B53F9 /* module-math_foundation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166211A420EE8002B53F9 /* module-math_foundation.cpp */; };
+		720166401A420EE8002B53F9 /* module-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166221A420EE8002B53F9 /* module-math.cpp */; };
+		720166411A420EE8002B53F9 /* module-sort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166231A420EE8002B53F9 /* module-sort.cpp */; };
+		720166421A420EE8002B53F9 /* module-string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166241A420EE8002B53F9 /* module-string.cpp */; };
+		720166431A420EE8002B53F9 /* module-type_convert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166251A420EE8002B53F9 /* module-type_convert.cpp */; };
+		720166441A420EE8002B53F9 /* module-type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166261A420EE8002B53F9 /* module-type.cpp */; };
+		720166451A420EE8002B53F9 /* module-url.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166271A420EE8002B53F9 /* module-url.cpp */; };
+		720166461A420EE8002B53F9 /* script-builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166281A420EE8002B53F9 /* script-builder.cpp */; };
+		720166471A420EE8002B53F9 /* script-instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166291A420EE8002B53F9 /* script-instance.cpp */; };
+		720166481A420EE8002B53F9 /* script-module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201662A1A420EE8002B53F9 /* script-module.cpp */; };
+		720166491A420EE8002B53F9 /* script-object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201662B1A420EE8002B53F9 /* script-object.cpp */; };
+		7201664A1A420EE8002B53F9 /* script-package.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201662C1A420EE8002B53F9 /* script-package.cpp */; };
+		728636401A6D71E2001D1FBF /* module-date.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7286363B1A6D71E2001D1FBF /* module-date.cpp */; };
+		728636411A6D71E2001D1FBF /* module-stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7286363C1A6D71E2001D1FBF /* module-stream.cpp */; };
+		728636421A6D71E2001D1FBF /* module-system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7286363D1A6D71E2001D1FBF /* module-system.cpp */; };
+		728636781A6D7359001D1FBF /* arithmetic.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166071A420EE8002B53F9 /* arithmetic.mlc */; };
+		728636791A6D7359001D1FBF /* array.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166081A420EE8002B53F9 /* array.mlc */; };
+		7286367A1A6D7359001D1FBF /* binary.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166091A420EE8002B53F9 /* binary.mlc */; };
+		7286367B1A6D7359001D1FBF /* bitwise.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7201660A1A420EE8002B53F9 /* bitwise.mlc */; };
+		7286367C1A6D7359001D1FBF /* byte.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7201660B1A420EE8002B53F9 /* byte.mlc */; };
+		7286367D1A6D7359001D1FBF /* char.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7201660C1A420EE8002B53F9 /* char.mlc */; };
+		7286367F1A6D7359001D1FBF /* file.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7201660E1A420EE8002B53F9 /* file.mlc */; };
+		728636821A6D7359001D1FBF /* list.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166111A420EE8002B53F9 /* list.mlc */; };
+		728636831A6D7359001D1FBF /* logic.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166121A420EE8002B53F9 /* logic.mlc */; };
+		728636851A6D7359001D1FBF /* math-foundation.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166141A420EE8002B53F9 /* math-foundation.mlc */; };
+		728636861A6D7359001D1FBF /* math.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166151A420EE8002B53F9 /* math.mlc */; };
+		728636871A6D7359001D1FBF /* segmentchunk.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7201662E1A420EE8002B53F9 /* segmentchunk.mlc */; };
+		728636881A6D7359001D1FBF /* sort.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7201662F1A420EE8002B53F9 /* sort.mlc */; };
+		728636891A6D7359001D1FBF /* string.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166301A420EE8002B53F9 /* string.mlc */; };
+		7286368A1A6D7359001D1FBF /* type-convert.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166311A420EE8002B53F9 /* type-convert.mlc */; };
+		7286368B1A6D7359001D1FBF /* type.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166321A420EE8002B53F9 /* type.mlc */; };
+		7286368D1A6D7359001D1FBF /* date.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363A1A6D71E2001D1FBF /* date.mlc */; };
+		7286368E1A6D7359001D1FBF /* stream.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363E1A6D71E2001D1FBF /* stream.mlc */; };
+		7286368F1A6D7359001D1FBF /* system.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363F1A6D71E2001D1FBF /* system.mlc */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		728636761A6D72D3001D1FBF /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.mlc";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_NAME).c",
+			);
+			script = "mkdir -p \"${BUILT_PRODUCTS_DIR}/modules\"\n\"${BUILT_PRODUCTS_DIR}/../../../mac/Release/lc-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" --outputc \"${DERIVED_FILE_DIR}/${INPUT_FILE_NAME}.c\" \"${INPUT_FILE_PATH}\"";
+		};
+/* End PBXBuildRule section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		720165EA1A420E23002B53F9 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4D7060D61A80CFFB00415A88 /* foreign.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = foreign.mlc; path = src/foreign.mlc; sourceTree = "<group>"; };
+		4D7060D71A80D00600415A88 /* module-foreign.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-foreign.cpp"; path = "src/module-foreign.cpp"; sourceTree = "<group>"; };
+		720165E41A420DFE002B53F9 /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = "<group>"; };
+		720165E51A420DFE002B53F9 /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = "<group>"; };
+		720165E61A420DFE002B53F9 /* Global Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Global Mobile.xcconfig"; path = "../rules/Global Mobile.xcconfig"; sourceTree = "<group>"; };
+		720165EC1A420E23002B53F9 /* libscript.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libscript.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		720166061A420ED6002B53F9 /* script.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = script.h; path = include/script.h; sourceTree = "<group>"; };
+		720166071A420EE8002B53F9 /* arithmetic.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = arithmetic.mlc; path = src/arithmetic.mlc; sourceTree = "<group>"; };
+		720166081A420EE8002B53F9 /* array.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = array.mlc; path = src/array.mlc; sourceTree = "<group>"; };
+		720166091A420EE8002B53F9 /* binary.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = binary.mlc; path = src/binary.mlc; sourceTree = "<group>"; };
+		7201660A1A420EE8002B53F9 /* bitwise.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = bitwise.mlc; path = src/bitwise.mlc; sourceTree = "<group>"; };
+		7201660B1A420EE8002B53F9 /* byte.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = byte.mlc; path = src/byte.mlc; sourceTree = "<group>"; };
+		7201660C1A420EE8002B53F9 /* char.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = char.mlc; path = src/char.mlc; sourceTree = "<group>"; };
+		7201660E1A420EE8002B53F9 /* file.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = file.mlc; path = src/file.mlc; sourceTree = "<group>"; };
+		720166111A420EE8002B53F9 /* list.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = list.mlc; path = src/list.mlc; sourceTree = "<group>"; };
+		720166121A420EE8002B53F9 /* logic.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = logic.mlc; path = src/logic.mlc; sourceTree = "<group>"; };
+		720166141A420EE8002B53F9 /* math-foundation.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "math-foundation.mlc"; path = "src/math-foundation.mlc"; sourceTree = "<group>"; };
+		720166151A420EE8002B53F9 /* math.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = math.mlc; path = src/math.mlc; sourceTree = "<group>"; };
+		720166161A420EE8002B53F9 /* module-arithmetic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-arithmetic.cpp"; path = "src/module-arithmetic.cpp"; sourceTree = "<group>"; };
+		720166171A420EE8002B53F9 /* module-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-array.cpp"; path = "src/module-array.cpp"; sourceTree = "<group>"; };
+		720166181A420EE8002B53F9 /* module-binary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-binary.cpp"; path = "src/module-binary.cpp"; sourceTree = "<group>"; };
+		720166191A420EE8002B53F9 /* module-bitwise.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-bitwise.cpp"; path = "src/module-bitwise.cpp"; sourceTree = "<group>"; };
+		7201661A1A420EE8002B53F9 /* module-byte.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-byte.cpp"; path = "src/module-byte.cpp"; sourceTree = "<group>"; };
+		7201661B1A420EE8002B53F9 /* module-char.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-char.cpp"; path = "src/module-char.cpp"; sourceTree = "<group>"; };
+		7201661C1A420EE8002B53F9 /* module-encoding.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-encoding.cpp"; path = "src/module-encoding.cpp"; sourceTree = "<group>"; };
+		7201661D1A420EE8002B53F9 /* module-file.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-file.cpp"; path = "src/module-file.cpp"; sourceTree = "<group>"; };
+		7201661E1A420EE8002B53F9 /* module-list.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-list.cpp"; path = "src/module-list.cpp"; sourceTree = "<group>"; };
+		7201661F1A420EE8002B53F9 /* module-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-logic.cpp"; path = "src/module-logic.cpp"; sourceTree = "<group>"; };
+		720166201A420EE8002B53F9 /* module-map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-map.cpp"; path = "src/module-map.cpp"; sourceTree = "<group>"; };
+		720166211A420EE8002B53F9 /* module-math_foundation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-math_foundation.cpp"; path = "src/module-math_foundation.cpp"; sourceTree = "<group>"; };
+		720166221A420EE8002B53F9 /* module-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-math.cpp"; path = "src/module-math.cpp"; sourceTree = "<group>"; };
+		720166231A420EE8002B53F9 /* module-sort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-sort.cpp"; path = "src/module-sort.cpp"; sourceTree = "<group>"; };
+		720166241A420EE8002B53F9 /* module-string.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-string.cpp"; path = "src/module-string.cpp"; sourceTree = "<group>"; };
+		720166251A420EE8002B53F9 /* module-type_convert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-type_convert.cpp"; path = "src/module-type_convert.cpp"; sourceTree = "<group>"; };
+		720166261A420EE8002B53F9 /* module-type.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-type.cpp"; path = "src/module-type.cpp"; sourceTree = "<group>"; };
+		720166271A420EE8002B53F9 /* module-url.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-url.cpp"; path = "src/module-url.cpp"; sourceTree = "<group>"; };
+		720166281A420EE8002B53F9 /* script-builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-builder.cpp"; path = "src/script-builder.cpp"; sourceTree = "<group>"; };
+		720166291A420EE8002B53F9 /* script-instance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-instance.cpp"; path = "src/script-instance.cpp"; sourceTree = "<group>"; };
+		7201662A1A420EE8002B53F9 /* script-module.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-module.cpp"; path = "src/script-module.cpp"; sourceTree = "<group>"; };
+		7201662B1A420EE8002B53F9 /* script-object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-object.cpp"; path = "src/script-object.cpp"; sourceTree = "<group>"; };
+		7201662C1A420EE8002B53F9 /* script-package.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-package.cpp"; path = "src/script-package.cpp"; sourceTree = "<group>"; };
+		7201662D1A420EE8002B53F9 /* script-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "script-private.h"; path = "src/script-private.h"; sourceTree = "<group>"; };
+		7201662E1A420EE8002B53F9 /* segmentchunk.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = segmentchunk.mlc; path = src/segmentchunk.mlc; sourceTree = "<group>"; };
+		7201662F1A420EE8002B53F9 /* sort.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sort.mlc; path = src/sort.mlc; sourceTree = "<group>"; };
+		720166301A420EE8002B53F9 /* string.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = string.mlc; path = src/string.mlc; sourceTree = "<group>"; };
+		720166311A420EE8002B53F9 /* type-convert.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "type-convert.mlc"; path = "src/type-convert.mlc"; sourceTree = "<group>"; };
+		720166321A420EE8002B53F9 /* type.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = type.mlc; path = src/type.mlc; sourceTree = "<group>"; };
+		7286363A1A6D71E2001D1FBF /* date.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = date.mlc; path = src/date.mlc; sourceTree = "<group>"; };
+		7286363B1A6D71E2001D1FBF /* module-date.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-date.cpp"; path = "src/module-date.cpp"; sourceTree = "<group>"; };
+		7286363C1A6D71E2001D1FBF /* module-stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-stream.cpp"; path = "src/module-stream.cpp"; sourceTree = "<group>"; };
+		7286363D1A6D71E2001D1FBF /* module-system.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-system.cpp"; path = "src/module-system.cpp"; sourceTree = "<group>"; };
+		7286363E1A6D71E2001D1FBF /* stream.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = stream.mlc; path = src/stream.mlc; sourceTree = "<group>"; };
+		7286363F1A6D71E2001D1FBF /* system.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = system.mlc; path = src/system.mlc; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		720165E91A420E23002B53F9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7201659E1A420C70002B53F9 = {
+			isa = PBXGroup;
+			children = (
+				720165E71A420DFE002B53F9 /* Configurations */,
+				720165ED1A420E23002B53F9 /* Products */,
+				720166041A420EC5002B53F9 /* Headers */,
+				720166541A420FA6002B53F9 /* Library Sources */,
+				720166051A420ECC002B53F9 /* Sources */,
+			);
+			sourceTree = "<group>";
+		};
+		720165E71A420DFE002B53F9 /* Configurations */ = {
+			isa = PBXGroup;
+			children = (
+				720165E41A420DFE002B53F9 /* Debug Mobile.xcconfig */,
+				720165E51A420DFE002B53F9 /* Release Mobile.xcconfig */,
+				720165E61A420DFE002B53F9 /* Global Mobile.xcconfig */,
+			);
+			name = Configurations;
+			path = ../engine;
+			sourceTree = "<group>";
+		};
+		720165ED1A420E23002B53F9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				720165EC1A420E23002B53F9 /* libscript.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		720166041A420EC5002B53F9 /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				720166061A420ED6002B53F9 /* script.h */,
+			);
+			name = Headers;
+			sourceTree = "<group>";
+		};
+		720166051A420ECC002B53F9 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				720166281A420EE8002B53F9 /* script-builder.cpp */,
+				720166291A420EE8002B53F9 /* script-instance.cpp */,
+				7201662A1A420EE8002B53F9 /* script-module.cpp */,
+				7201662B1A420EE8002B53F9 /* script-object.cpp */,
+				7201662C1A420EE8002B53F9 /* script-package.cpp */,
+				7201662D1A420EE8002B53F9 /* script-private.h */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		720166541A420FA6002B53F9 /* Library Sources */ = {
+			isa = PBXGroup;
+			children = (
+				728636771A6D72F7001D1FBF /* MLC */,
+				7286363B1A6D71E2001D1FBF /* module-date.cpp */,
+				7286363C1A6D71E2001D1FBF /* module-stream.cpp */,
+				7286363D1A6D71E2001D1FBF /* module-system.cpp */,
+				720166161A420EE8002B53F9 /* module-arithmetic.cpp */,
+				720166171A420EE8002B53F9 /* module-array.cpp */,
+				720166181A420EE8002B53F9 /* module-binary.cpp */,
+				720166191A420EE8002B53F9 /* module-bitwise.cpp */,
+				7201661A1A420EE8002B53F9 /* module-byte.cpp */,
+				7201661B1A420EE8002B53F9 /* module-char.cpp */,
+				7201661C1A420EE8002B53F9 /* module-encoding.cpp */,
+				7201661D1A420EE8002B53F9 /* module-file.cpp */,
+				4D7060D71A80D00600415A88 /* module-foreign.cpp */,
+				7201661E1A420EE8002B53F9 /* module-list.cpp */,
+				7201661F1A420EE8002B53F9 /* module-logic.cpp */,
+				720166201A420EE8002B53F9 /* module-map.cpp */,
+				720166211A420EE8002B53F9 /* module-math_foundation.cpp */,
+				720166221A420EE8002B53F9 /* module-math.cpp */,
+				720166231A420EE8002B53F9 /* module-sort.cpp */,
+				720166241A420EE8002B53F9 /* module-string.cpp */,
+				720166251A420EE8002B53F9 /* module-type_convert.cpp */,
+				720166261A420EE8002B53F9 /* module-type.cpp */,
+				720166271A420EE8002B53F9 /* module-url.cpp */,
+			);
+			name = "Library Sources";
+			sourceTree = "<group>";
+		};
+		728636771A6D72F7001D1FBF /* MLC */ = {
+			isa = PBXGroup;
+			children = (
+				4D7060D61A80CFFB00415A88 /* foreign.mlc */,
+				720166071A420EE8002B53F9 /* arithmetic.mlc */,
+				720166081A420EE8002B53F9 /* array.mlc */,
+				720166091A420EE8002B53F9 /* binary.mlc */,
+				7201660A1A420EE8002B53F9 /* bitwise.mlc */,
+				7201660B1A420EE8002B53F9 /* byte.mlc */,
+				7201660C1A420EE8002B53F9 /* char.mlc */,
+				7201660E1A420EE8002B53F9 /* file.mlc */,
+				720166111A420EE8002B53F9 /* list.mlc */,
+				720166121A420EE8002B53F9 /* logic.mlc */,
+				720166141A420EE8002B53F9 /* math-foundation.mlc */,
+				720166151A420EE8002B53F9 /* math.mlc */,
+				7201662E1A420EE8002B53F9 /* segmentchunk.mlc */,
+				7201662F1A420EE8002B53F9 /* sort.mlc */,
+				720166301A420EE8002B53F9 /* string.mlc */,
+				720166311A420EE8002B53F9 /* type-convert.mlc */,
+				720166321A420EE8002B53F9 /* type.mlc */,
+				7286363A1A6D71E2001D1FBF /* date.mlc */,
+				7286363E1A6D71E2001D1FBF /* stream.mlc */,
+				7286363F1A6D71E2001D1FBF /* system.mlc */,
+			);
+			name = MLC;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		720165EB1A420E23002B53F9 /* libscript */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 720165FE1A420E23002B53F9 /* Build configuration list for PBXNativeTarget "libscript" */;
+			buildPhases = (
+				720165E81A420E23002B53F9 /* Sources */,
+				720165E91A420E23002B53F9 /* Frameworks */,
+				720165EA1A420E23002B53F9 /* CopyFiles */,
+			);
+			buildRules = (
+				728636761A6D72D3001D1FBF /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = libscript;
+			productName = libscript;
+			productReference = 720165EC1A420E23002B53F9 /* libscript.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7201659F1A420C70002B53F9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+				TargetAttributes = {
+					720165EB1A420E23002B53F9 = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+				};
+			};
+			buildConfigurationList = 720165A21A420C70002B53F9 /* Build configuration list for PBXProject "libscript-mobile" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 7201659E1A420C70002B53F9;
+			productRefGroup = 720165ED1A420E23002B53F9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				720165EB1A420E23002B53F9 /* libscript */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		720165E81A420E23002B53F9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				728636781A6D7359001D1FBF /* arithmetic.mlc in Sources */,
+				728636791A6D7359001D1FBF /* array.mlc in Sources */,
+				7286367A1A6D7359001D1FBF /* binary.mlc in Sources */,
+				7286367B1A6D7359001D1FBF /* bitwise.mlc in Sources */,
+				7286367C1A6D7359001D1FBF /* byte.mlc in Sources */,
+				7286367D1A6D7359001D1FBF /* char.mlc in Sources */,
+				7286367F1A6D7359001D1FBF /* file.mlc in Sources */,
+				728636821A6D7359001D1FBF /* list.mlc in Sources */,
+				728636831A6D7359001D1FBF /* logic.mlc in Sources */,
+				728636851A6D7359001D1FBF /* math-foundation.mlc in Sources */,
+				728636861A6D7359001D1FBF /* math.mlc in Sources */,
+				728636871A6D7359001D1FBF /* segmentchunk.mlc in Sources */,
+				728636881A6D7359001D1FBF /* sort.mlc in Sources */,
+				728636891A6D7359001D1FBF /* string.mlc in Sources */,
+				7286368A1A6D7359001D1FBF /* type-convert.mlc in Sources */,
+				7286368B1A6D7359001D1FBF /* type.mlc in Sources */,
+				7286368D1A6D7359001D1FBF /* date.mlc in Sources */,
+				7286368E1A6D7359001D1FBF /* stream.mlc in Sources */,
+				7286368F1A6D7359001D1FBF /* system.mlc in Sources */,
+				720166361A420EE8002B53F9 /* module-binary.cpp in Sources */,
+				4D7060D81A80D00600415A88 /* module-foreign.cpp in Sources */,
+				728636411A6D71E2001D1FBF /* module-stream.cpp in Sources */,
+				728636401A6D71E2001D1FBF /* module-date.cpp in Sources */,
+				720166401A420EE8002B53F9 /* module-math.cpp in Sources */,
+				720166391A420EE8002B53F9 /* module-char.cpp in Sources */,
+				7201663F1A420EE8002B53F9 /* module-math_foundation.cpp in Sources */,
+				7201663A1A420EE8002B53F9 /* module-encoding.cpp in Sources */,
+				720166421A420EE8002B53F9 /* module-string.cpp in Sources */,
+				7201663C1A420EE8002B53F9 /* module-list.cpp in Sources */,
+				728636421A6D71E2001D1FBF /* module-system.cpp in Sources */,
+				7201663B1A420EE8002B53F9 /* module-file.cpp in Sources */,
+				720166411A420EE8002B53F9 /* module-sort.cpp in Sources */,
+				7201663E1A420EE8002B53F9 /* module-map.cpp in Sources */,
+				720166441A420EE8002B53F9 /* module-type.cpp in Sources */,
+				720166471A420EE8002B53F9 /* script-instance.cpp in Sources */,
+				720166371A420EE8002B53F9 /* module-bitwise.cpp in Sources */,
+				720166461A420EE8002B53F9 /* script-builder.cpp in Sources */,
+				7201663D1A420EE8002B53F9 /* module-logic.cpp in Sources */,
+				7201664A1A420EE8002B53F9 /* script-package.cpp in Sources */,
+				720166341A420EE8002B53F9 /* module-arithmetic.cpp in Sources */,
+				720166431A420EE8002B53F9 /* module-type_convert.cpp in Sources */,
+				720166351A420EE8002B53F9 /* module-array.cpp in Sources */,
+				720166381A420EE8002B53F9 /* module-byte.cpp in Sources */,
+				720166491A420EE8002B53F9 /* script-object.cpp in Sources */,
+				720166481A420EE8002B53F9 /* script-module.cpp in Sources */,
+				720166451A420EE8002B53F9 /* module-url.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		720165A31A420C70002B53F9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 720165E41A420DFE002B53F9 /* Debug Mobile.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		720165A41A420C70002B53F9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 720165E51A420DFE002B53F9 /* Release Mobile.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		720165FF1A420E23002B53F9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/lcidlc/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/pathops\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libopenssl/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libffi/darwin/include\"",
+					"\"$(SOLUTION_DIR)/libscript/include\"",
+					"$(SOLUTION_DIR)/engine/src",
+				);
+				PRODUCT_NAME = script;
+			};
+			name = Debug;
+		};
+		720166001A420E23002B53F9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/lcidlc/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/pathops\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libopenssl/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libffi/darwin/include\"",
+					"\"$(SOLUTION_DIR)/libscript/include\"",
+					"$(SOLUTION_DIR)/engine/src",
+				);
+				PRODUCT_NAME = script;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		720165A21A420C70002B53F9 /* Build configuration list for PBXProject "libscript-mobile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				720165A31A420C70002B53F9 /* Debug */,
+				720165A41A420C70002B53F9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		720165FE1A420E23002B53F9 /* Build configuration list for PBXNativeTarget "libscript" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				720165FF1A420E23002B53F9 /* Debug */,
+				720166001A420E23002B53F9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7201659F1A420C70002B53F9 /* Project object */;
+}

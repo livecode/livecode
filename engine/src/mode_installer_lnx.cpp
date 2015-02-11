@@ -16,14 +16,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
-#include "filesystem.h"
+#include "foundation-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "osspec.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -33,8 +33,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, const char *path, const char *description);
-typedef bool (*MCSystemListProcessModulesCallback)(void *context, const char *path);
+typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, MCStringRef path, MCStringRef description);
+typedef bool (*MCSystemListProcessModulesCallback)(void *context, MCStringRef path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,8 +66,10 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 				break;
 
 			// Work out if the entry is a process id
-			uint32_t t_pid;
-			if (!MCCStringToCardinal(t_entry -> d_name, t_pid))
+			int32_t t_pid;
+            MCAutoStringRef t_dname;
+            /* UNCHECKED */ MCStringCreateWithCString(t_entry -> d_name, &t_dname);
+			if (!MCU_strtol(*t_dname, t_pid))
 				continue;
 
 			// Work out the full path ("/proc/<int>") and stat so we can
@@ -80,11 +82,9 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 				continue;
 
 			// We have a viable process to report. First fetch its path
-			char t_exe_link[6 + I4L + 4 + 1];
-			char *t_exe_path;
-			t_exe_path = nil;
-			sprintf(t_path, "/proc/%u/exe", t_pid);
-			if (!MCFileSystemPathResolve(t_exe_link, t_exe_path))
+            MCAutoStringRef t_exe_link, t_exe_path;
+            /* UNCHECKED */ MCStringFormat(&t_exe_link, "/proc/%u/exe", t_pid);
+			if (!MCS_resolvepath(*t_exe_link, &t_exe_path))
 			{
 				t_success = false;
 				break;
@@ -113,9 +113,9 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 			else
 				t_status[0] = '\0';
 
-			t_success = p_callback(p_context, t_pid, t_exe_path, t_status);
-
-			MCCStringFree(t_exe_path);
+            MCAutoStringRef t_status_str;
+            /* UNCHECKED */ MCStringCreateWithSysString(t_status, &t_status_str);
+			t_success = p_callback(p_context, t_pid, *t_exe_path, *t_status_str);
 		}
 	}
 
@@ -167,9 +167,10 @@ bool MCSystemListProcessModules(uint32_t p_process_id, MCSystemListProcessModule
 			MCCStringEqual(t_path, t_last_module))
 			continue;
 
-		strcpy(t_last_module, t_path);
+		MCAutoStringRef t_path_str;
+        /* UNCHECKED */ MCStringCreateWithSysString(t_path, &t_path_str);
 
-		t_success = p_callback(p_context, t_path);
+		t_success = p_callback(p_context, *t_path_str);
 	}
 
 	fclose(t_stream);
@@ -180,7 +181,7 @@ bool MCSystemListProcessModules(uint32_t p_process_id, MCSystemListProcessModule
 ////////////////////////////////////////////////////////////////////////////////
 
 // There is no registry on linux, so this is irrelevant.
-bool MCSystemCanDeleteKey(const char *p_key)
+bool MCSystemCanDeleteKey(MCStringRef p_key)
 {
 	return false;
 }
@@ -189,19 +190,24 @@ bool MCSystemCanDeleteKey(const char *p_key)
 // This call simply checks to see if this user has 'write' privilege on the
 // folder containing the file as this is what determines whether a file can
 // be deleted.
-bool MCSystemCanDeleteFile(const char *p_file)
+bool MCSystemCanDeleteFile(MCStringRef p_file)
 {
-	char *t_resolved_file;
-	t_resolved_file = MCS_resolvepath(p_file);
-	
+    MCAutoStringRef t_resolved_file_str;
+    /* UNCHECKED */ MCS_resolvepath(p_file, &t_resolved_file_str);
+    
+    MCAutoStringRefAsSysString t_resolved_file;
+    /* UNCHECKED */ t_resolved_file.Lock(*t_resolved_file_str);
+
 	// Now get the folder.
-	if (strrchr(t_resolved_file, '/') == nil)
+    const char *t_terminator = strrchr(*t_resolved_file, '/');
+	if (t_terminator == nil)
 		return false;
 	
-	strrchr(t_resolved_file, '/')[0] = '\0';
+    // This is evil but the AutoStringRefAsSysString owns the string it holds
+	*((char*) t_terminator) = '\0';
 	
 	struct stat64 t_stat;
-	if (stat64(t_resolved_file, &t_stat) != 0)
+	if (stat64(*t_resolved_file, &t_stat) != 0)
 		return false;
 	
 	// Check for user 'write' bit.
@@ -215,9 +221,7 @@ bool MCSystemCanDeleteFile(const char *p_file)
 	// Check for other
 	if ((t_stat . st_mode & S_IWOTH) != 0)
 		return true;
-	
-	delete t_resolved_file;
-	
+
 	return false;
 }
 
@@ -233,7 +237,7 @@ void MCSystemCancelRequestUserAttention(void)
 }
 
 // MM-2011-03-25: Added prototype.
-void MCSystemBalloonNotification(const char *p_title, const char *p_message)
+void MCSystemBalloonNotification(MCStringRef p_title, MCStringRef p_message)
 {
 }
 

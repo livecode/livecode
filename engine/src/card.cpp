@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -55,15 +55,103 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cpalette.h"
 #include "vclip.h"
 #include "redraw.h"
+#include "widget.h"
 
 #include "globals.h"
 #include "mctheme.h"
 #include "context.h"
 
+#include "exec.h"
+
 MCRectangle MCCard::selrect;
 int2 MCCard::startx;
 int2 MCCard::starty;
 MCObjptr *MCCard::removedcontrol;
+
+#ifdef _MAC_DESKTOP
+extern bool MCosxmenupoppedup;
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCCard::kProperties[] =
+{
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_LAYER, InterfaceLayer, MCCard, Layer)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_NUMBER, InterfaceLayer, MCCard, Layer)
+
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_DELETE, Bool, MCCard, CantDelete)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_SEARCH, Bool, MCCard, DontSearch)
+	DEFINE_RW_OBJ_PROPERTY(P_MARKED, Bool, MCCard, Marked)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_PICT, Bool, MCCard, ShowPict)
+
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_LEFT, Int16, MCCard, FormattedLeft)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_TOP, Int16, MCCard, FormattedTop)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int16, MCCard, FormattedHeight)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int16, MCCard, FormattedWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_RECT, Rectangle, MCCard, FormattedRect)
+
+	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_NAMES, String, MCCard, BackgroundNames)
+	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_IDS, String, MCCard, BackgroundIds)
+	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_NAMES, String, MCCard, SharedGroupNames)
+	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_IDS, String, MCCard, SharedGroupIds)
+	DEFINE_RO_OBJ_PROPERTY(P_GROUP_IDS, String, MCCard, GroupIds)
+	DEFINE_RO_OBJ_PROPERTY(P_GROUP_NAMES, String, MCCard, GroupNames)
+    // MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+    //   immediate and all descendent controls of a card.
+    DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_IDS, String, MCCard, ControlIds)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_NAMES, String, MCCard, ControlNames)
+    DEFINE_RO_OBJ_PROPERTY(P_CHILD_CONTROL_IDS, String, MCCard, ChildControlIds)
+	DEFINE_RO_OBJ_PROPERTY(P_CHILD_CONTROL_NAMES, String, MCCard, ChildControlNames)
+	DEFINE_RO_OBJ_PROPERTY(P_DEFAULT_BUTTON, OptionalString, MCCard, DefaultButton)
+
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_VISIBLE)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_INVISIBLE)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_ENABLED)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_DISABLED)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_TRAVERSAL_ON)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_SHADOW)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_LOCK_LOCATION)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_TOOL_TIP)
+	// MW-2012-03-13: [[ UnicodeToolTip ]] Cards don't have tooltips.
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_UNICODE_TOOL_TIP)
+
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_RECTANGLE, Rectangle, MCObject, Rectangle)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_RECTANGLE, Rectangle, MCObject, Rectangle)
+
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_WIDTH, UInt16, MCObject, Width)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_WIDTH, UInt16, MCObject, Width)
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_HEIGHT, UInt16, MCObject, Height)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HEIGHT, UInt16, MCObject, Height)
+
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_LEFT, Int16, MCObject, Left)
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_RIGHT, Int16, MCObject, Right)
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM, Int16, MCObject, Bottom)
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP, Int16, MCObject, Top)
+
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_LEFT, Point, MCObject, TopLeft)
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_RIGHT, Point, MCObject, TopRight)	
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_LEFT, Point, MCObject, BottomLeft)
+	DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_RIGHT, Point, MCObject, BottomRight)
+
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_LEFT, Int16, MCObject, Left)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_RIGHT, Int16, MCObject, Right)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM, Int16, MCObject, Bottom)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP, Int16, MCObject, Top)
+
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_LEFT, Point, MCObject, TopLeft)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_RIGHT, Point, MCObject, TopRight)	
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_LEFT, Point, MCObject, BottomLeft)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_RIGHT, Point, MCObject, BottomRight)
+};
+
+MCObjectPropertyTable MCCard::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCCard::MCCard()
 {
@@ -375,21 +463,21 @@ void MCCard::kunfocus()
 	}
 }
 
-Boolean MCCard::kdown(const char *string, KeySym key)
+Boolean MCCard::kdown(MCStringRef p_string, KeySym key)
 {
 	MCtooltip->closetip();
 	if (kfocused != NULL && getstack()->gettool(this) == T_BROWSE)
-		return kfocused->getref()->kdown(string, key);
-	if (MCObject::kdown(string, key))
+		return kfocused->getref()->kdown(p_string, key);
+	if (MCObject::kdown(p_string, key))
 		return True;
 	return False;
 }
 
-Boolean MCCard::kup(const char *string, KeySym key)
+Boolean MCCard::kup(MCStringRef p_string, KeySym key)
 {
 	if (kfocused != NULL && getstack()->gettool(this) == T_BROWSE)
-		return kfocused->getref()->kup(string, key);
-	return MCObject::kup(string, key);
+		return kfocused->getref()->kup(p_string, key);
+	return MCObject::kup(p_string, key);
 }
 
 void MCCard::mdrag(void)
@@ -457,7 +545,7 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 					}
 					while (optr != objptrs);
 				}
-				
+
 				MCRedrawUnlockScreen();
 
 				// MW-2011-08-19: [[ Layers ]] Ensure the selection rect is updated.
@@ -496,7 +584,10 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 				else
 					mfocused = tptr;
 
-				if (newfocused && mfocused != NULL && mfocused -> getref() -> gettype() != CT_GROUP)
+                // The widget event manager handles enter/leave itself
+				if (newfocused && mfocused != NULL
+                    && mfocused -> getref() -> gettype() != CT_GROUP
+                    && mfocused -> getref() -> gettype() != CT_WIDGET)
 				{
 					mfocused->getref()->enter();
 					
@@ -534,7 +625,7 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 				tptr = tptr->prev();
 		}
 		while (freed || tptr != objptrs->prev());
-		MCtooltip->settip(NULL);
+		MCtooltip->cleartip();
 		// MW-2007-07-09: [[ Bug 3726 ]] dragMove is not sent to a card during
 		//   a drag-drop operation.
 		if (MCdispatcher -> isdragtarget())
@@ -570,7 +661,7 @@ void MCCard::mfocustake(MCControl *target)
 
 void MCCard::munfocus()
 {
-	MCtooltip->settip(NULL);
+	MCtooltip->cleartip();
 	state &= ~CS_INSIDE;
 	if (mfocused != NULL && !mgrabbed)
 	{
@@ -610,7 +701,7 @@ Boolean MCCard::mdown(uint2 which)
 		if (!mfocused->getref()->mdown(which)
 		        && getstack()->gettool(this) == T_BROWSE)
 		{
-				message_with_args(MCM_mouse_down, "1");
+            message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 		}
 		if (!(MCbuttonstate & (0x1L << (which - 1))))
 		{
@@ -644,7 +735,7 @@ Boolean MCCard::mdown(uint2 which)
 				// click.
 				MCscreen -> closeIME();
 #endif
-				message_with_args(MCM_mouse_down, "1");
+				message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 				if (!(MCbuttonstate & (0x1L << (which - 1))))
 				{
 					Boolean oldstate = MClockmessages;
@@ -655,7 +746,7 @@ Boolean MCCard::mdown(uint2 which)
 				break;
 			case T_POINTER:
 				// MW-2010-10-15: [[ Bug 9055 ]] Make sure the card script gets a chance to cancel selection handling
-				if (message_with_args(MCM_mouse_down, "1") == ES_NORMAL && !MCexitall)
+				if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL && !MCexitall)
 					return True;
 
 				// MW-2010-11-24: [[ Bug 9194 ]] Make sure we reset exitall, otherwise the selectedObjectChanged message
@@ -780,9 +871,9 @@ Boolean MCCard::mup(uint2 which, bool p_release)
 				case T_BROWSE:
 					// MW-2010-10-15: [[ Bug 9055 ]] Mouse message consistency improvement
                     if (p_release)
-                        message_with_args(MCM_mouse_release, "1");
+                        message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
                     else
-                        message_with_args(MCM_mouse_up, "1");
+                        message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 					break;
 				case T_HELP:
 					help();
@@ -795,9 +886,9 @@ Boolean MCCard::mup(uint2 which, bool p_release)
 			case Button3:
                 // MW-2014-07-24: [[ Bug 12882 ]] Make sure we pass through correct button number.
                 if (p_release)
-                    message_with_args(MCM_mouse_release, which);
+                    message_with_valueref_args(MCM_mouse_release, which == Button2 ? MCSTR("2") : MCSTR("3"));
                 else
-                    message_with_args(MCM_mouse_up, which);
+                    message_with_valueref_args(MCM_mouse_up, which == Button2 ? MCSTR("2") : MCSTR("3"));
 				break;
 			}
 			mgrabbed = False;
@@ -816,7 +907,7 @@ Boolean MCCard::doubledown(uint2 which)
 		MCControl *oldfocused = mfocused->getref();
 		if (!mfocused->getref()->doubledown(which)
 		        && getstack()->gettool(this) == T_BROWSE)
-			message_with_args(MCM_mouse_double_down, "1");
+			message_with_valueref_args(MCM_mouse_double_down, MCSTR("1"));
 		if (!(MCbuttonstate & (0x1L << (which - 1))))
 		{
 			Boolean oldstate = MClockmessages;
@@ -836,7 +927,7 @@ Boolean MCCard::doubledown(uint2 which)
 			{
 			case T_BROWSE:
 			case T_POINTER:
-				message_with_args(MCM_mouse_double_down, "1");
+				message_with_valueref_args(MCM_mouse_double_down, MCSTR("1"));
 				break;
 			default:
 				break;
@@ -867,7 +958,7 @@ Boolean MCCard::doubleup(uint2 which)
 			switch (getstack()->gettool(this))
 			{
 			case T_BROWSE:
-				message_with_args(MCM_mouse_double_up, "1");
+				message_with_valueref_args(MCM_mouse_double_up, MCSTR("1"));
 				break;
 			case T_POINTER:
 				getstack()->kfocusset(NULL);
@@ -876,7 +967,7 @@ Boolean MCCard::doubleup(uint2 which)
 				else
 				{
 					MCselected->replace(this);
-					message_with_args(MCM_mouse_double_up, "1");
+					message_with_valueref_args(MCM_mouse_double_up, MCSTR("1"));
 				}
 				break;
 			default:
@@ -903,18 +994,22 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 			if (mfocused == NULL && MCbuttonstate)
 			{
 				if (tool == T_BROWSE)
+				{
 					if (message(MCM_mouse_still_down) == ES_ERROR)
 						senderror();
 					else
 						again = True;
+				}
 			}
 			if (hashandlers & HH_IDLE)
 			{
 				if (tool == T_BROWSE)
+				{
 					if (message(MCM_idle) == ES_ERROR)
 						senderror();
 					else
 						again = True;
+				}
 			}
 			if (again)
 				MCscreen->addtimer(this, MCM_idle, MCidleRate);
@@ -924,7 +1019,8 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 		MCObject::timer(mptr, params);
 }
 
-Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	MCRectangle minrect;
 	uint2 num;
@@ -1065,12 +1161,12 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 		return ES_ERROR;
 #endif /* MCCard::getprop */
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCCard::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
 	uint4 newnumber;
@@ -1188,10 +1284,11 @@ Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolea
 		break;
 #endif /* MCCard::setprop */
 	default:
-		return MCObject::setprop(parid, which, ep, effective);
+		return MCObject::setprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
+#endif
 
 Boolean MCCard::del()
 {
@@ -1392,6 +1489,20 @@ void MCCard::recompute()
 	}
 }
 
+void MCCard::toolchanged(Tool p_new_tool)
+{
+    if (objptrs != NULL)
+    {
+        MCObjptr *optr = objptrs;
+        do
+        {
+            optr->getref()->toolchanged(p_new_tool);
+            optr = optr->next();
+        }
+        while (optr != objptrs);
+    }
+}
+
 void MCCard::kfocusset(MCControl *target)
 {
 	if (objptrs != NULL)
@@ -1510,7 +1621,7 @@ MCCard *MCCard::clone(Boolean attach, Boolean controls)
 	{
 		// This is invoked when creating a new card. In this instance, we ensure
 		// all backgrounds on 'this card' are auto-placed.
-		MCCard *sourceptr = newcptr->getstack()->getchild(CT_THIS, MCnullmcstring, CT_CARD);
+		MCCard *sourceptr = newcptr->getstack()->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 		if (sourceptr != NULL && sourceptr->objptrs != NULL)
 		{
 			MCObjptr *optr = sourceptr->objptrs;
@@ -1706,7 +1817,7 @@ void MCCard::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 
 Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 {
-	if (!opened || !MCrelayergrouped && optr->getparent()->gettype() == CT_GROUP || (optr -> getparent() -> gettype() == CT_CARD && optr -> getparent() != this))
+	if (!opened || (!MCrelayergrouped && optr->getparent()->gettype() == CT_GROUP) || (optr -> getparent() -> gettype() == CT_CARD && optr -> getparent() != this))
 		return ES_ERROR;
 	uint2 oldlayer = 0;
 	if (!MCrelayergrouped)
@@ -1835,6 +1946,8 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 		gptr->clearfocus(optr);
 	}
 
+    optr->layerchanged();
+    
 	if (getstack() == MCmousestackptr
 	        && MCU_point_in_rect(optr->getrect(), MCmousex, MCmousey))
 		mfocus(MCmousex, MCmousey);
@@ -1842,8 +1955,10 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	return ES_NORMAL;
 }
 
-MCCard *MCCard::findname(Chunk_term type, const MCString &inname)
+MCCard *MCCard::findname(Chunk_term type, MCNameRef inname)
 {
+   // MCNewAutoNameRef t_name;
+   // /* UNCHECKED */ MCNameCreateWithOldString(inname, &t_name);
 	if (type == CT_CARD && MCU_matchname(inname, CT_CARD, getname()))
 		return this;
 	else
@@ -1852,7 +1967,7 @@ MCCard *MCCard::findname(Chunk_term type, const MCString &inname)
 
 MCCard *MCCard::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
-	if (type == CT_CARD && (inid == obj_id || alt && inid == altid))
+	if (type == CT_CARD && (inid == obj_id || (alt && inid == altid)))
 		return this;
 	else
 		return NULL;
@@ -1896,9 +2011,9 @@ Boolean MCCard::count(Chunk_term otype, Chunk_term ptype,
 
 			// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
 			if (ptype == CT_UNDEFINED
-			        || otype == CT_GROUP && ttype == CT_GROUP
-			        || ptype != CT_BACKGROUND && ttype != CT_GROUP
-			        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+			    || (otype == CT_GROUP && ttype == CT_GROUP)
+			    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+			    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
 				if (optr->getref()->count(otype, stop, num))
 				{
 					if (!opened)
@@ -1914,6 +2029,246 @@ Boolean MCCard::count(Chunk_term otype, Chunk_term ptype,
 	return False;
 }
 
+MCControl *MCCard::getnumberedchild(integer_t p_number, Chunk_term p_obj_type, Chunk_term p_parent_type)
+{
+	if (p_obj_type <= CT_CARD)
+		return NULL;
+	
+	MCObjptr *t_optr = objptrs;
+	if (t_optr == NULL)
+		return NULL;
+	
+	if (!opened)
+		clean();
+	
+	if (p_obj_type != CT_LAYER && p_obj_type != CT_MENU && p_parent_type == CT_UNDEFINED
+	        && getstack()->hcaddress())
+		p_parent_type = p_obj_type == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+
+	if (p_number < 1)
+		return NULL;
+
+	uint16_t t_num = p_number - 1;
+	do
+	{
+		MCControl *t_foundobj = NULL;
+		Chunk_term t_type = t_optr->getref()->gettype();
+		
+		// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+		if (p_parent_type == CT_UNDEFINED
+		    || (p_obj_type == CT_GROUP && t_type == CT_GROUP)
+		    || (p_parent_type != CT_BACKGROUND && t_type != CT_GROUP)
+		    || ((t_type == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(t_optr->getref())->isbackground()))
+		{
+			if (!t_optr->getref()->getopened())
+				t_optr->getref()->setparent(this);
+			t_foundobj = t_optr->getref()->findnum(p_obj_type, t_num);
+		}
+		if (t_foundobj != NULL)
+		{
+			if (t_foundobj->getparent()->gettype() == CT_STACK)
+				t_foundobj->setparent(this);
+			return t_foundobj;
+		}
+		t_optr = t_optr->next();
+	}
+	while (t_optr != objptrs);
+	return NULL;
+}
+
+MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
+                            Chunk_term otype, Chunk_term ptype)
+{
+	if (otype <= CT_CARD)
+		return NULL;
+	
+	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
+	if (!opened)
+		clean();
+	
+	MCObjptr *optr = objptrs;
+	if (optr == NULL)
+		return NULL;
+	
+	if (otype != CT_LAYER && otype != CT_MENU && ptype == CT_UNDEFINED
+	        && (getstack()->hcaddress()
+	            || (getstack()->hcaddress() && etype == CT_ID)))
+		ptype = otype == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+
+	uint2 num = 0;
+
+	switch (etype)
+	{
+	case CT_FIRST:
+	case CT_SECOND:
+	case CT_THIRD:
+	case CT_FOURTH:
+	case CT_FIFTH:
+	case CT_SIXTH:
+	case CT_SEVENTH:
+	case CT_EIGHTH:
+	case CT_NINTH:
+	case CT_TENTH:
+		num = etype - CT_FIRST;
+		break;
+	case CT_LAST:
+	case CT_MIDDLE:
+	case CT_ANY:
+		count(otype, ptype, NULL, num, True);
+		switch (etype)
+		{
+		case CT_LAST:
+			num--;
+			break;
+		case CT_MIDDLE:
+			num >>= 1;
+			break;
+		case CT_ANY:
+			num = MCU_any(num);
+			break;
+		default:
+			break;
+		}
+		break;
+	case CT_ID:
+		uint4 tofindid;
+		if (MCU_stoui4(p_expression, tofindid))
+		{
+			MCStack *t_stack;
+			t_stack = getstack();
+			
+			// MW-2012-10-10: [[ IdCache ]] First check the id-cache.
+			MCObject *t_object;
+			t_object = t_stack -> findobjectbyid(tofindid);
+			if (t_object != nil)
+			{
+				MCObject *t_parent;
+				t_parent = t_object -> getparent();
+				while(t_parent -> gettype() != CT_CARD && t_parent -> gettype() != CT_STACK)
+					t_parent = t_parent -> getparent();
+				if (t_parent == this)
+				{
+					Chunk_term ttype = optr->getref()->gettype();
+					if (ptype == CT_UNDEFINED
+					    || (otype == CT_GROUP && ttype == CT_GROUP)
+					    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+					    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
+					{
+						if ((otype == CT_LAYER && t_object -> gettype() > CT_CARD) || t_object -> gettype() == otype)
+							return (MCControl *)t_object;
+					}
+				}
+			}
+		
+			do
+			{
+				MCControl *foundobj = NULL;
+				Chunk_term ttype = optr->getref()->gettype();
+
+				// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+				if (ptype == CT_UNDEFINED
+				    || (otype == CT_GROUP && ttype == CT_GROUP)
+				    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+				    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
+				{
+					if (!optr->getref()->getopened())
+						optr->getref()->setparent(this);
+					foundobj = optr->getref()->findid(otype, tofindid, True);
+				}
+				if (foundobj != NULL)
+				{
+					if (foundobj->getparent()->gettype() == CT_STACK)
+						foundobj->setparent(this);
+
+					// MW-2012-10-10: [[ IdCache ]] Put the object in the id cache.
+					t_stack -> cacheobjectbyid(foundobj);
+
+					return foundobj;
+				}
+				optr = optr->next();
+			}
+			while (optr != objptrs);
+
+			// If we are in group editing mode, also search the controls on the
+			// phantom card if the ids match.
+			MCGroup *t_editing;
+			t_editing = getstack() -> getediting();
+
+			// OK-2008-10-27 : [[Bug 7355]] - Infinite loop caused by incorrect
+			// assumption that getcurcard() will always be equal to this.
+			MCObjptr *t_objects;
+			t_objects = getstack() -> getcurcard() -> objptrs;
+
+			if (t_editing != NULL && t_editing -> getcard() -> obj_id == obj_id)
+			{
+				optr = t_objects;
+				do
+				{
+					MCControl *foundobj = NULL;
+					Chunk_term ttype = optr->getref()->gettype();
+
+					// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+					if (ptype == CT_UNDEFINED
+					    || (otype == CT_GROUP && ttype == CT_GROUP)
+					    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+					    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
+						foundobj = optr->getref()->findid(otype, tofindid, True);
+					if (foundobj != NULL)
+					{
+						// MW-2012-10-10: [[ IdCache ]] Cache the object by id.
+						t_stack -> cacheobjectbyid(foundobj);
+						return foundobj;
+					}
+					optr = optr->next();
+				}
+				while (optr != t_objects);
+			}
+		}
+		return NULL;
+	case CT_EXPRESSION:
+		if (MCU_stoui2(p_expression, num))
+		{
+			if (num < 1)
+				return NULL;
+			num--;
+		}
+		else
+		{
+			do
+			{
+				MCControl *foundobj = NULL;
+				Chunk_term ttype = optr->getref()->gettype();					
+				// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+				if (ptype == CT_UNDEFINED
+				    || (otype == CT_GROUP && ttype == CT_GROUP)
+				    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+				    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
+				{
+					if (!optr->getref()->getopened())
+						optr->getref()->setparent(this);
+					MCNewAutoNameRef t_name;
+					/* UNCHECKED */ MCNameCreate(p_expression, &t_name);
+					foundobj = optr->getref()->findname(otype, *t_name);
+				}
+				if (foundobj != NULL)
+				{
+					if (foundobj->getparent()->gettype() == CT_STACK)
+						foundobj->setparent(this);
+					return foundobj;
+				}
+				optr = optr->next();
+			}
+			while (optr != objptrs);
+			return NULL;
+		}
+		break;
+	default:
+		return NULL;
+	}
+
+	return getnumberedchild(num + 1, otype, ptype);
+}
+#ifdef OLD_EXEC
 MCControl *MCCard::getchild(Chunk_term etype, const MCString &expression,
                             Chunk_term otype, Chunk_term ptype)
 {
@@ -2017,7 +2372,7 @@ MCControl *MCCard::getchild(Chunk_term etype, const MCString &expression,
 				{
 					if (foundobj->getparent()->gettype() == CT_STACK)
 						foundobj->setparent(this);
-
+						
 					// MW-2012-10-10: [[ IdCache ]] Put the object in the id cache.
 					t_stack -> cacheobjectbyid(foundobj);
 
@@ -2075,12 +2430,13 @@ MCControl *MCCard::getchild(Chunk_term etype, const MCString &expression,
 			do
 			{
 				MCControl *foundobj = NULL;
-				Chunk_term ttype = optr->getref()->gettype();					
+				Chunk_term ttype = optr->getref()->gettype();
+
 				// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
 				if (ptype == CT_UNDEFINED
-					|| otype == CT_GROUP && ttype == CT_GROUP
-					|| ptype != CT_BACKGROUND && ttype != CT_GROUP
-					|| (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+				        || otype == CT_GROUP && ttype == CT_GROUP
+				        || ptype != CT_BACKGROUND && ttype != CT_GROUP
+				        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
 				{
 					if (!optr->getref()->getopened())
 						optr->getref()->setparent(this);
@@ -2101,31 +2457,224 @@ MCControl *MCCard::getchild(Chunk_term etype, const MCString &expression,
 	default:
 		return NULL;
 	}
-	do
+
+	return getnumberedchild(num + 1, otype, ptype);
+}
+#endif
+
+MCControl *MCCard::getchildbyordinal(Chunk_term p_ordinal_type, Chunk_term p_object_type, Chunk_term p_parent_type)
+{
+	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
+	if (!opened)
+		clean();
+	
+	MCObjptr *optr = objptrs;
+	if (optr == nil)
+		return nil;
+	
+	if (p_object_type != CT_LAYER && p_object_type != CT_MENU && p_object_type == CT_UNDEFINED && getstack()->hcaddress())
+		p_parent_type = p_object_type == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+    
+	uint2 num = 0;
+    
+	switch (p_ordinal_type)
 	{
-		MCControl *foundobj = NULL;
-		Chunk_term ttype = optr->getref()->gettype();
+        case CT_FIRST:
+        case CT_SECOND:
+        case CT_THIRD:
+        case CT_FOURTH:
+        case CT_FIFTH:
+        case CT_SIXTH:
+        case CT_SEVENTH:
+        case CT_EIGHTH:
+        case CT_NINTH:
+        case CT_TENTH:
+            num = p_ordinal_type - CT_FIRST;
+            break;
+        case CT_LAST:
+        case CT_MIDDLE:
+        case CT_ANY:
+            count(p_object_type, p_parent_type, NULL, num, True);
+            switch (p_ordinal_type)
+		{
+            case CT_LAST:
+                num--;
+                break;
+            case CT_MIDDLE:
+                num >>= 1;
+                break;
+            case CT_ANY:
+                num = MCU_any(num);
+                break;
+            default:
+                break;
+		}
+            break;
+        default:
+            return nil;
+    }
+    return getnumberedchild(num + 1, p_object_type, p_parent_type);
+}
+
+MCControl *MCCard::getchildbyid(uinteger_t p_id, Chunk_term p_object_type, Chunk_term p_parent_type)
+{
+	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
+	if (!opened)
+		clean();
+	
+	MCObjptr *optr = objptrs;
+	if (optr == nil)
+		return nil;
+	
+	if (p_object_type != CT_LAYER && p_object_type != CT_MENU && p_parent_type == CT_UNDEFINED
+        && getstack()->hcaddress())
+		p_parent_type = p_object_type == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+    
+    MCStack *t_stack;
+    t_stack = getstack();
+    
+    // MW-2012-10-10: [[ IdCache ]] First check the id-cache.
+    MCObject *t_object;
+    t_object = t_stack -> findobjectbyid(p_id);
+    if (t_object != nil)
+    {
+        MCObject *t_parent;
+        t_parent = t_object -> getparent();
+        while(t_parent -> gettype() != CT_CARD && t_parent -> gettype() != CT_STACK)
+            t_parent = t_parent -> getparent();
+        if (t_parent == this)
+        {
+            Chunk_term ttype = optr->getref()->gettype();
+            if (p_parent_type == CT_UNDEFINED
+                || (p_object_type == CT_GROUP && ttype == CT_GROUP)
+                || (p_parent_type != CT_BACKGROUND && ttype != CT_GROUP)
+                || (ttype == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+            {
+                if ((p_object_type == CT_LAYER && t_object -> gettype() > CT_CARD) || t_object -> gettype() == p_object_type)
+                    return (MCControl *)t_object;
+            }
+        }
+    }
 		
-		// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
-		if (ptype == CT_UNDEFINED
-		        || otype == CT_GROUP && ttype == CT_GROUP
-		        || ptype != CT_BACKGROUND && ttype != CT_GROUP
-		        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
-		{
-			if (!optr->getref()->getopened())
-				optr->getref()->setparent(this);
-			foundobj = optr->getref()->findnum(otype, num);
-		}
-		if (foundobj != NULL)
-		{
-			if (foundobj->getparent()->gettype() == CT_STACK)
-				foundobj->setparent(this);
-			return foundobj;
-		}
-		optr = optr->next();
-	}
-	while (optr != objptrs);
-	return NULL;
+    do
+    {
+        MCControl *foundobj = NULL;
+        Chunk_term ttype = optr->getref()->gettype();
+        
+        // MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+        if (p_parent_type == CT_UNDEFINED
+            || (p_object_type == CT_GROUP && ttype == CT_GROUP)
+            || (p_parent_type != CT_BACKGROUND && ttype != CT_GROUP)
+            || (ttype == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+        {
+            if (!optr->getref()->getopened())
+                optr->getref()->setparent(this);
+            foundobj = optr->getref()->findid(p_object_type, p_id, True);
+        }
+        if (foundobj != NULL)
+        {
+            if (foundobj->getparent()->gettype() == CT_STACK)
+                foundobj->setparent(this);
+            
+            // MW-2012-10-10: [[ IdCache ]] Put the object in the id cache.
+            t_stack -> cacheobjectbyid(foundobj);
+            
+            return foundobj;
+        }
+        optr = optr->next();
+    }
+    while (optr != objptrs);
+    
+    // If we are in group editing mode, also search the controls on the
+    // phantom card if the ids match.
+    MCGroup *t_editing;
+    t_editing = getstack() -> getediting();
+    
+    // OK-2008-10-27 : [[Bug 7355]] - Infinite loop caused by incorrect
+    // assumption that getcurcard() will always be equal to this.
+    MCObjptr *t_objects;
+    t_objects = getstack() -> getcurcard() -> objptrs;
+    
+    if (t_editing != NULL && t_editing -> getcard() -> obj_id == obj_id)
+    {
+        optr = t_objects;
+        do
+        {
+            MCControl *foundobj = NULL;
+            Chunk_term ttype = optr->getref()->gettype();
+            
+            // MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+            if (p_parent_type == CT_UNDEFINED
+                || (p_object_type == CT_GROUP && ttype == CT_GROUP)
+                || (p_parent_type != CT_BACKGROUND && ttype != CT_GROUP)
+                || (ttype == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+                foundobj = optr->getref()->findid(p_object_type, p_id, True);
+            if (foundobj != NULL)
+            {
+                // MW-2012-10-10: [[ IdCache ]] Cache the object by id.
+                t_stack -> cacheobjectbyid(foundobj);
+                return foundobj;
+            }
+            optr = optr->next();
+        }
+        while (optr != t_objects);
+    }
+
+    return NULL;
+}
+
+MCControl *MCCard::getchildbyname(MCNameRef p_name, Chunk_term p_object_type, Chunk_term p_parent_type)
+{
+    if (p_object_type <= CT_CARD)
+        return nil;
+    
+	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
+	if (!opened)
+		clean();
+	
+	MCObjptr *optr = objptrs;
+	if (optr == nil)
+		return nil;
+	
+	if (p_object_type != CT_LAYER && p_object_type != CT_MENU && p_parent_type == CT_UNDEFINED
+        && getstack()->hcaddress())
+		p_parent_type = p_object_type == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        return getnumberedchild(t_num + 1, p_object_type, p_parent_type);
+    }
+    
+    do
+    {
+        MCControl *foundobj = nil;
+        Chunk_term ttype = optr->getref()->gettype();
+        
+        // MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+        if (p_parent_type == CT_UNDEFINED
+            || (p_object_type == CT_GROUP && ttype == CT_GROUP)
+            || (p_parent_type != CT_BACKGROUND && ttype != CT_GROUP)
+            || (ttype == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+        {
+            if (!optr->getref()->getopened())
+                optr->getref()->setparent(this);
+            foundobj = optr->getref()->findname(p_object_type, p_name);
+        }
+        if (foundobj != nil)
+        {
+            if (foundobj->getparent()->gettype() == CT_STACK)
+                foundobj->setparent(this);
+            return foundobj;
+        }
+        optr = optr->next();
+    }
+    while (optr != objptrs);
+    return nil;
 }
 
 Boolean MCCard::getchildid(uint4 inid)
@@ -2346,7 +2895,7 @@ Boolean MCCard::checkid(uint4 controlid)
 	return False;
 }
 
-Boolean MCCard::find(MCExecPoint &ep, Find_mode mode, const MCString &tofind,
+Boolean MCCard::find(MCExecContext &ctxt, Find_mode mode, MCStringRef tofind,
                      Boolean firstcard, Boolean firstword)
 {
 	if (flags & F_C_DONT_SEARCH)
@@ -2381,7 +2930,7 @@ Boolean MCCard::find(MCExecPoint &ep, Find_mode mode, const MCString &tofind,
 					gptr = gptr->getparent();
 				}
 				firstcard = False;
-				if (fptr != NULL && fptr->find(ep, obj_id, mode, tofind, firstword))
+				if (fptr != NULL && fptr->find(ctxt, obj_id, mode, tofind, firstword))
 					return True;
 				else
 					break;
@@ -2501,26 +3050,23 @@ MCControl *MCCard::getmfocused()
 	return cptr;
 }
 
-void MCCard::selectedbutton(uint2 n, Boolean bg, MCExecPoint &ep)
+bool MCCard::selectedbutton(integer_t p_family, bool p_background, MCStringRef& r_string)
 {
-	Chunk_term ptype = bg ? CT_BACKGROUND : CT_CARD;
-	uint2 i = 1;
-	ep.clear();
-	while (True)
+	Chunk_term ptype = p_background ? CT_BACKGROUND : CT_CARD;
+	integer_t i = 1;
+	MCButton *bptr;
+	while (nil != (bptr = (MCButton *)getnumberedchild(i, CT_BUTTON, ptype)))
 	{
-		char expression[U2L];
-		sprintf(expression, "%d", i++);
-		MCButton *bptr = (MCButton *)getchild(CT_EXPRESSION, expression, CT_BUTTON, ptype);
-		if (bptr == NULL)
-			break;
-		if (bptr->getfamily() == n && bptr->gethilite(obj_id))
+		if (bptr->getfamily() == p_family && bptr->gethilite(obj_id))
 		{
 			uint2 bnum = 0;
-			getcard()->count(CT_BUTTON, bg ? CT_BACKGROUND : CT_CARD, bptr, bnum, True);
-			ep.setstringf(bg ? "bkgnd button %d" : "card button %d", bnum);
-			break;
+			getcard()->count(CT_BUTTON, ptype, bptr, bnum, True);
+			return MCStringFormat(r_string, p_background ? "bkgnd button %d" : "card button %d", bnum);
 		}
+		i++;
 	}
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 void MCCard::freedefbutton(MCButton *btn)
@@ -2543,10 +3089,12 @@ MCRectangle MCCard::computecrect()
 		do
 		{
 			if (optr->getref()->isvisible())
+			{
 				if (minrect.width == 0)
 					minrect = optr->getref()->getrect();
 				else
 					minrect = MCU_union_rect(optr->getref()->getrect(), minrect);
+			}
 			optr = optr->next();
 		}
 		while (optr != objptrs);
@@ -2788,7 +3336,7 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 //  SAVING AND LOADING
 //
 
-IO_stat MCCard::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCCard::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -2798,7 +3346,7 @@ IO_stat MCCard::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCCard::load(IO_handle stream, const char *version)
+IO_stat MCCard::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -2808,7 +3356,7 @@ IO_stat MCCard::load(IO_handle stream, const char *version)
 //---- 2.7+:
 //  . F_OPAQUE is now valid - default true
 //  . ink is now valid - default GXcopy
-	if (strncmp(version, "2.7", 3) < 0)
+	if (version < 2700)
 	{
 		flags |= F_OPAQUE;
 		ink = GXcopy;
@@ -2816,7 +3364,7 @@ IO_stat MCCard::load(IO_handle stream, const char *version)
 //---- 2.7+
 
 	rect.y = 0; // in case saved on mac with editMenus false
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 	while (True)
 	{
@@ -2843,9 +3391,9 @@ IO_stat MCCard::load(IO_handle stream, const char *version)
 	return IO_NORMAL;
 }
 
-IO_stat MCCard::loadobjects(IO_handle stream, const char *version)
+IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 {
-	IO_stat stat;
+	IO_stat stat = IO_NORMAL;
 	
 	if (objptrs != NULL)
 	{
@@ -2884,6 +3432,9 @@ IO_stat MCCard::loadobjects(IO_handle stream, const char *version)
 			case OT_MCEPS:
 				t_control = new MCEPS;
 			break;
+            case OT_WIDGET:
+                t_control = new MCWidget;
+                break;
 			case OT_MAGNIFY:
 				t_control = new MCMagnify;
 			break;
@@ -3192,4 +3743,14 @@ bool MCCard::recomputefonts(MCFontRef p_parent_font)
 	// Return whether anything changed (the card's font has no effect other than
 	// to be provided to children).
 	return t_changed;
+}
+
+MCPlatformControlType MCCard::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCCard::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
 }

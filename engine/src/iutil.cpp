@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "image.h"
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcio.h"
 
 #include "globals.h"
@@ -36,7 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "packed.h"
 
-#include "core.h"
 #include "iquantization.h"
 
 void MCImage::init()
@@ -303,26 +302,23 @@ void MCImage::cutimage()
 void MCImage::copyimage()
 {
 	bool t_success = true;
-
+	
 	MCImageBitmap *t_bitmap = nil;
-	MCSharedString *t_data = nil;
+	MCAutoDataRef t_image_data;
 	
 	if (isediting())
 	{
 		MCImageBitmap *t_bitmap = nil;
 		t_success = static_cast<MCMutableImageRep*>(m_rep)->copy_selection(t_bitmap);
 		if (t_success)
-			t_success = MCImageCreateClipboardData(t_bitmap, t_data);
+			t_success = MCImageCreateClipboardData(t_bitmap, &t_image_data);
 		MCImageFreeBitmap(t_bitmap);
 	}
 	else
-		t_data = getclipboardtext();
-
-	if (t_data != NULL)
-	{
-		MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, t_data);
-		t_data -> Release();
-	}
+		/* UNCHECKED */ getclipboardtext(&t_image_data);
+	
+	if (*t_image_data != NULL)
+		MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_image_data);
 }
 
 void MCImage::delimage()
@@ -400,7 +396,7 @@ void MCImage::compute_gravity(MCRectangle &trect, int2 &xorigin, int2 &yorigin)
 		trect.height = MCU_min(t_height, rect.height);
 	}
 
-	MCLog("compute gravity: rect(%d,%d,%d,%d) x(%d) y(%d)", trect.x, trect.y, trect.width, trect.height, xorigin, yorigin);
+    //MCLog("compute gravity: rect(%d,%d,%d,%d) x(%d) y(%d)", trect.x, trect.y, trect.width, trect.height, xorigin, yorigin);
 }
 
 void MCImage::compute_offset(MCRectangle &p_rect, int16_t &r_xoffset, int16_t &r_yoffset)
@@ -1233,35 +1229,30 @@ void MCImageFreeCompressedBitmap(MCImageCompressedBitmap *p_compressed)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data)
+bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data)
 {
 	bool t_success = true;
-
+	
 	MCImageBitmap *t_bitmap = nil;
 	IO_handle t_stream = nil;
-	MCSharedString *t_data = nil;
-
+	
 	char *t_bytes = nil;
 	uindex_t t_byte_count = 0;
-
+	
 	t_success = nil != (t_stream = MCS_fakeopenwrite());
-
+	
 	if (t_success)
 		t_success = MCImageEncodePNG(p_bitmap, nil, t_stream, t_byte_count);
-
-	if (t_stream != nil && IO_NORMAL != MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count))
+	
+	if (t_stream != nil && IO_NORMAL != MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count)))
 		t_success = false;
-
+	
 	if (t_success)
-	{
-		t_success = nil != (t_data = MCSharedString::CreateNoCopy(t_bytes, t_byte_count));
-	}
-
-	if (t_success)
-		r_data = t_data;
-	else
+		t_success = MCDataCreateWithBytesAndRelease((char_t*)t_bytes, t_byte_count, r_data);
+	
+	if (!t_success)
 		MCMemoryDeallocate(t_bytes);
-
+	
 	return t_success;
 }
 

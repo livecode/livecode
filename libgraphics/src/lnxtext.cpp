@@ -34,11 +34,14 @@ extern "C" int initialise_weak_link_pangoft2();
 extern "C" int initialise_weak_link_glib();
 extern "C" int initialise_weak_link_gobject();
 
+extern void MCCStringFree(char *p_string);
+extern bool MCCStringFromUnicodeSubstring(const unichar_t *p_chars, uint32_t p_char_count, char*& r_string);
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to make text rendering thread safe, by using pthread TLS to ensure we have seperate panog objects for each thread.
 //  This should probably be moved to a central thread library at some point, which will also help with clean up (we only clean up the main thread at the moment).
-static pthread_key_t /* PangoFontMap * */ s_font_map_key = NULL;
-static pthread_key_t /* PangoContext * */ s_pango_key = NULL;
-static pthread_key_t /* PangoLayout * */ s_layout_key = NULL;
+static pthread_key_t /* PangoFontMap * */ s_font_map_key = 0;
+static pthread_key_t /* PangoContext * */ s_pango_key = 0;
+static pthread_key_t /* PangoLayout * */ s_layout_key = 0;
 
 static bool lnx_pango_objects_intialize()
 {
@@ -112,22 +115,31 @@ static bool lnx_pango_initialize(void)
 static void lnx_pango_finalize(void)
 {
     PangoLayout *t_layout;
-    t_layout = (PangoLayout *)pthread_getspecific(s_layout_key);
-    pthread_setspecific(s_layout_key, NULL);
-	if (t_layout != NULL)
-		g_object_unref(t_layout);
+    if (s_layout_key != 0)
+    {
+        t_layout = (PangoLayout *)pthread_getspecific(s_layout_key);
+        pthread_setspecific(s_layout_key, NULL);
+        if (t_layout != NULL)
+            g_object_unref(t_layout);
+    }
     
     PangoContext *t_pango;
-    t_pango = (PangoContext *)pthread_getspecific(s_pango_key);
-    pthread_setspecific(s_pango_key, NULL);
-	if (t_pango != NULL)
-		g_object_unref(t_pango);
+    if (s_pango_key != 0)
+    {
+        t_pango = (PangoContext *)pthread_getspecific(s_pango_key);
+        pthread_setspecific(s_pango_key, NULL);
+        if (t_pango != NULL)
+            g_object_unref(t_pango);
+    }
     
     PangoFontMap *t_font_map;
-    t_font_map = (PangoFontMap *)pthread_getspecific(s_font_map_key);
-    pthread_setspecific(s_font_map_key, NULL);
-	if (t_font_map != NULL)
-		g_object_unref(t_font_map);
+    if (s_font_map_key != 0)
+    {
+        t_font_map = (PangoFontMap *)pthread_getspecific(s_font_map_key);
+        pthread_setspecific(s_font_map_key, NULL);
+        if (t_font_map != NULL)
+            g_object_unref(t_font_map);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,9 +155,11 @@ void MCGPlatformFinalize(void)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
-	// MW-2013-12-19: [[ Bug 11559 ]] Do nothing if no text support.
+	// TODO: RTL
+    
+    // MW-2013-12-19: [[ Bug 11559 ]] Do nothing if no text support.
 	if (!s_has_text_support)
 		return;
 	

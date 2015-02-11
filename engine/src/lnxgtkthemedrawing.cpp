@@ -127,26 +127,6 @@ moz_gtk_container_paint(GdkDrawable * drawable, GdkRectangle * rect,
 
 
 
-
-bool moz_gtk_handle_event(const XEvent &ev)
-{
-	bool ret = true;
-	
-	GdkEvent *gev = gdk_event_get();
-	if (gev && gev->type == GDK_SETTING)
-	{
-		gtk_main_do_event(gev);
-	}
-	else
-	{
-		ret = false;
-	}
-
-	return ret;
-}
-
-
-
 gint moz_gtk_enable_style_props(style_prop_t styleGetProp)
 {
 	style_prop_func = styleGetProp;
@@ -1219,14 +1199,11 @@ moz_gtk_listbox_paint(GdkDrawable * drawable, GdkRectangle * rect,
 void spinbutton_get_rects(GtkArrowType type, GdkRectangle *rect,
                           GdkRectangle &buttonrect, GdkRectangle &arrowrect)
 {
-	GdkRectangle *ret;
 	gint arrow_size;
 	int x, y, width, height;
 	int h, w;
 
 	ensure_spinbutton_widget();
-
-	ret = new GdkRectangle;
 
 	arrow_size = rect->width - (2 * XTHICKNESS(gSpinbuttonWidget->style));
 
@@ -1315,16 +1292,6 @@ moz_gtk_scale_track_paint(GtkThemeWidgetType type,
                           gint flags)
 {
 	ensure_scale_widget();
-	GtkWidget *widget;
-
-	if(type == MOZ_GTK_SCALE_TRACK_VERTICAL)
-	{
-		widget = gVScaleWidget;
-	}
-	else
-	{
-		widget = gHScaleWidget;
-	}
 
 	GtkStyle *style;
 	GtkScale *scale;

@@ -20,7 +20,6 @@ extern const uint1 MCmactranslations[256];
 extern const char *MCtoolnames[];
 
 extern const uint4 MCbuildnumber;
-extern const char *MCversionstring;
 extern const char *MCcopystring;
 extern const char *MCstandardstring;
 extern const char *MCdialogstring;
@@ -60,8 +59,6 @@ extern const char *MCgroupstring;
 extern const char *MClinkstring;
 extern const char *MCtruestring;
 extern const char *MCfalsestring;
-extern const char *MCdownstring;
-extern const char *MCupstring;
 extern const char *MCshiftstring;
 extern const char *MCcommandstring;
 extern const char *MCcontrolstring;
@@ -101,23 +98,19 @@ extern const char *MCimagestring;
 extern const char *MCfieldstring;
 extern const char *MCcolorstring;
 extern const char *MCmagnifierstring;
+extern const char *MCwidgetstring;
 
 extern const char *MCnotfoundstring;
-extern const char *MCplatformstring;
 extern const char *MClnfamstring;
 extern const char *MClnfmacstring;
 extern const char *MClnfmotifstring;
 extern const char *MClnfwinstring;
 extern const char *MCuntitledstring;
 extern const char *MCapplicationstring;
-extern const char *MCanswernamestring;
 extern const char *MCasknamestring;
-extern const char *MCfsnamestring;
-extern const char *MCcsnamestring;
 extern const char *MChelpnamestring;
 extern const char *MChomenamestring;
 extern const char *MChcstatnamestring;
-extern const char *MCmessagenamestring;
 extern const char *MCdonestring;
 extern const char *MCnullstring;
 extern const char *MCintersectstring;
@@ -133,7 +126,157 @@ extern MCNameRef MCN_msg;
 extern MCNameRef MCN_each;
 extern MCNameRef MCN_it;
 
+extern MCNameRef MCN_cancel;
+
 extern MCNameRef MCN_default_text_font;
+extern MCNameRef MCN_platform_string;
+extern MCNameRef MCN_version_string;
+
+extern MCNameRef MCN_style;
+extern MCNameRef MCN_metadata;
+extern MCNameRef MCN_runs;
+
+extern MCNameRef MCN_down;
+extern MCNameRef MCN_up;
+
+extern MCNameRef MCN_empty;
+extern MCNameRef MCN_files;
+extern MCNameRef MCN_image;
+extern MCNameRef MCN_objects;
+extern MCNameRef MCN_private;
+extern MCNameRef MCN_text;
+//extern MCNameRef MCN_unicode;
+extern MCNameRef MCN_styles;
+extern MCNameRef MCN_rtf;
+extern MCNameRef MCN_html;
+
+extern MCNameRef MCN_browser;
+extern MCNameRef MCN_command_line;
+extern MCNameRef MCN_development;
+extern MCNameRef MCN_helper_application;
+extern MCNameRef MCN_installer;
+extern MCNameRef MCN_mobile;
+extern MCNameRef MCN_player;
+extern MCNameRef MCN_server;
+extern MCNameRef MCN_standalone_application;
+
+extern MCNameRef MCN_all;
+extern MCNameRef MCN_auto_key;
+extern MCNameRef MCN_disk;
+extern MCNameRef MCN_activate;
+extern MCNameRef MCN_high_level;
+extern MCNameRef MCN_system;
+
+extern MCNameRef MCN_ansi;
+extern MCNameRef MCN_arabic;
+extern MCNameRef MCN_bulgarian;
+extern MCNameRef MCN_chinese;
+extern MCNameRef MCN_english;
+extern MCNameRef MCN_greek;
+extern MCNameRef MCN_hebrew;
+extern MCNameRef MCN_japanese;
+extern MCNameRef MCN_korean;
+extern MCNameRef MCN_lithuanian;
+extern MCNameRef MCN_polish;
+extern MCNameRef MCN_roman;
+extern MCNameRef MCN_russian;
+extern MCNameRef MCN_simple_chinese;
+extern MCNameRef MCN_thai;
+extern MCNameRef MCN_turkish;
+extern MCNameRef MCN_ukrainian;
+extern MCNameRef MCN_unicode;
+extern MCNameRef MCN_utf8;
+extern MCNameRef MCN_vietnamese;
+extern MCNameRef MCN_w_char;
+extern MCNameRef MCN_asterisk_char;
+
+extern MCNameRef MCN_plain;
+extern MCNameRef MCN_bold;
+extern MCNameRef MCN_italic;
+extern MCNameRef MCN_bold_italic;
+
+extern MCNameRef MCN_unknown;
+extern MCNameRef MCN_x86;
+extern MCNameRef MCN_x86_64;
+extern MCNameRef MCN_motorola_powerpc;
+extern MCNameRef MCN_i386;
+extern MCNameRef MCN_arm;
+// SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
+extern MCNameRef MCN_arm64;
+
+extern MCNameRef MCN_local_mac;
+extern MCNameRef MCN_local_win32;
+extern MCNameRef MCN_android;
+extern MCNameRef MCN_iphone;
+extern MCNameRef MCN_wince;
+
+extern MCNameRef MCN_mac_os;
+extern MCNameRef MCN_win32;
+
+extern MCNameRef MCN_done;
+
+extern MCNameRef MCN_staticgray;
+extern MCNameRef MCN_grayscale;
+extern MCNameRef MCN_staticcolor;
+extern MCNameRef MCN_pseudocolor;
+extern MCNameRef MCN_truecolor;
+extern MCNameRef MCN_directcolor;
+
+extern MCNameRef MCN_bounds;
+extern MCNameRef MCN_pixels;
+extern MCNameRef MCN_opaque_pixels;
+
+extern MCNameRef MCN_desktop;
+extern MCNameRef MCN_documents;
+extern MCNameRef MCN_engine;
+extern MCNameRef MCN_fonts;
+extern MCNameRef MCN_home;
+extern MCNameRef MCN_start;
+//extern MCNameRef MCN_system;
+extern MCNameRef MCN_temporary;
+extern MCNameRef MCN_support;
+
+extern MCNameRef MCN_apple;
+extern MCNameRef MCN_control;
+extern MCNameRef MCN_extension;
+extern MCNameRef MCN_preferences;
+
+extern MCNameRef MCN_unhandled;
+extern MCNameRef MCN_handled;
+extern MCNameRef MCN_passed;
+
+extern MCNameRef MCN_page_setup_dialog;
+extern MCNameRef MCN_pagesetup;
+extern MCNameRef MCN_print_dialog;
+extern MCNameRef MCN_printer;
+extern MCNameRef MCN_color_chooser;
+extern MCNameRef MCN_color;
+extern MCNameRef MCN_file_selector;
+extern MCNameRef MCN_file;
+//extern MCNameRef MCN_files;
+extern MCNameRef MCN_folder;
+extern MCNameRef MCN_folders;
+extern MCNameRef MCN_answer_dialog;
+extern MCNameRef MCN_ask_dialog;
+
+//extern MCNameRef MCN_plain;
+extern MCNameRef MCN_clear;
+//extern MCNameRef MCN_color;
+extern MCNameRef MCN_effect;
+extern MCNameRef MCN_error;
+//extern MCNameRef MCN_file;
+//extern MCNameRef MCN_folder;
+extern MCNameRef MCN_information;
+extern MCNameRef MCN_password;
+//extern MCNameRef MCN_printer;
+extern MCNameRef MCN_program;
+extern MCNameRef MCN_question;
+extern MCNameRef MCN_record;
+extern MCNameRef MCN_titled;
+extern MCNameRef MCN_warning;
+
+extern MCNameRef MCN_messagename;
+extern MCNameRef MCN_hcstat;
 
 extern MCNameRef MCM_apple_event;
 extern MCNameRef MCM_arrow_key;
@@ -164,6 +307,7 @@ extern MCNameRef MCM_delete_image;
 extern MCNameRef MCM_delete_scrollbar;
 extern MCNameRef MCM_delete_player;
 extern MCNameRef MCM_delete_stack;
+extern MCNameRef MCM_delete_widget;
 
 extern MCNameRef MCM_delete_key;
 extern MCNameRef MCM_delete_url;
@@ -258,6 +402,7 @@ extern MCNameRef MCM_open_stack;
 extern MCNameRef MCM_option_key_down;
 extern MCNameRef MCM_paste_key;
 extern MCNameRef MCM_play_paused;
+extern MCNameRef MCM_play_rate_changed;
 extern MCNameRef MCM_play_started;
 extern MCNameRef MCM_play_stopped;
 extern MCNameRef MCM_post_url;
@@ -303,6 +448,7 @@ extern MCNameRef MCM_scrollbar_page_inc;
 extern MCNameRef MCM_selected_object_changed;
 extern MCNameRef MCM_selection_changed;
 extern MCNameRef MCM_signal;
+extern MCNameRef MCM_shell;
 extern MCNameRef MCM_shut_down;
 extern MCNameRef MCM_shut_down_request;
 extern MCNameRef MCM_socket_error;

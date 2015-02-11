@@ -28,7 +28,7 @@ static ATSUTextLayout s_layout = NULL;
 static CGColorSpaceRef s_colour_space = NULL;
 static CGColorRef s_colour = NULL;
 
-static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFont &p_font)
+static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFont &p_font, bool p_skip_bidi)
 {
     OSStatus t_err;
 	t_err = noErr;
@@ -105,19 +105,22 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 		&t_font_is_italic,
 		&t_imposed_width,
 	};
+    uindex_t t_char_count;
+    t_char_count = p_length / 2;
+    
 	if (t_err == noErr)
 		t_err = ATSUSetAttributes(s_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
 	if (t_err == noErr)
-		t_err = ATSUSetTextPointerLocation(s_layout, (const UniChar *) p_text, 0, p_length / 2, p_length / 2);
+		t_err = ATSUSetTextPointerLocation(s_layout, (const UniChar *) p_text, kATSUFromTextBeginning, kATSUToTextEnd, t_char_count);
 	if (t_err == noErr)
-		t_err = ATSUSetRunStyle(s_layout, s_style, 0, p_length / 2);
+		t_err = ATSUSetRunStyle(s_layout, s_style, kATSUFromTextBeginning, kATSUToTextEnd);
 	if (t_err == noErr)
 		t_err = ATSUSetTransientFontMatching(s_layout, true);
 	
 	return t_err == noErr;
 }
 
-static bool osx_measure_text_substring_width(uindex_t p_length, MCGFloat &r_width)
+static bool osx_measure_text_substring_width(uindex_t p_length, MCGFloat &r_width, bool p_skip_bidi)
 {
 	if (s_layout == NULL || s_style == NULL)
 		return false;
@@ -128,8 +131,13 @@ static bool osx_measure_text_substring_width(uindex_t p_length, MCGFloat &r_widt
 	MCGFloat t_width;	
 	if (t_err == noErr)
 	{
-		ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
-		t_err = ATSUGetUnjustifiedBounds(s_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
+		uindex_t t_offset = 0;
+        uindex_t t_length = p_length / 2;
+        if (p_skip_bidi)
+            t_offset += 1, t_length -= 2;
+        
+        ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
+		t_err = ATSUGetUnjustifiedBounds(s_layout, t_offset, t_length, &t_before, &t_after, &t_ascent, &t_descent);
 		
 		t_width = t_after / 65536.0f;		
 	}
@@ -142,7 +150,7 @@ static bool osx_measure_text_substring_width(uindex_t p_length, MCGFloat &r_widt
 
 // MM-2013-10-23: [[ RefactorGraphics ]] Move over to using (a fudged) ATSUMeasureTextImage when calculating the bounds.
 //   Using the ATSUGetUnjustifiedBounds for the width and the fonts ascent/descent for the height was causing clipping issues for certain fonts.
-static bool osx_measure_text_substring_bounds(uindex_t p_length, MCGIntRectangle &r_bounds)
+static bool osx_measure_text_substring_bounds(uindex_t p_length, MCGIntRectangle &r_bounds, bool p_skip_bidi)
 {
 	if (s_layout == NULL || s_style == NULL)
 		return false;
@@ -150,9 +158,14 @@ static bool osx_measure_text_substring_bounds(uindex_t p_length, MCGIntRectangle
     OSStatus t_err;
 	t_err = noErr;
     
+    uindex_t t_offset = 0;
+    uindex_t t_length = p_length / 2;
+    if (p_skip_bidi)
+        t_offset += 1, t_length -= 2;
+    
 	Rect t_bounds;
 	if (t_err == noErr)
-		t_err = ATSUMeasureTextImage(s_layout, 0, p_length / 2, 0, 0, &t_bounds);
+		t_err = ATSUMeasureTextImage(s_layout, t_offset, t_length, 0, 0, &t_bounds);
 	
     if (t_err == noErr)
 	{
@@ -165,32 +178,42 @@ static bool osx_measure_text_substring_bounds(uindex_t p_length, MCGIntRectangle
     return t_err == noErr;
 }
 
-static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, CGContextRef p_cgcontext, MCGPoint p_location)
+static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, CGContextRef p_cgcontext, MCGPoint p_location, bool p_rtl, bool p_skip_bidi)
 {
 	if (s_layout == NULL || s_style == NULL)
 		return false;
 	
     OSStatus t_err;
 	t_err = noErr;
+    
+    Boolean t_is_rtl = p_rtl;
 	
 	ATSUAttributeTag t_layout_tags[] =
 	{
-		kATSUCGContextTag,
+        kATSULineDirectionTag,
+        kATSUCGContextTag,
 	};
 	ByteCount t_layout_sizes[] =
 	{
-		sizeof(CGContextRef),
+		sizeof(Boolean),
+        sizeof(CGContextRef),
 	};
 	ATSUAttributeValuePtr t_layout_attrs[] =
 	{
-		&p_cgcontext,
+		&t_is_rtl,
+        &p_cgcontext,
 	};
 
 	if (t_err == noErr)
 		t_err = ATSUSetLayoutControls(s_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
 	
+    uindex_t t_offset = 0;
+    uindex_t t_length = p_length / 2;
+    if (p_skip_bidi)
+        t_offset += 1, t_length -= 2;
+    
     if (t_err == noErr)
-        t_err = ATSUDrawText(s_layout, 0, p_length / 2, ((int32_t)p_location . x) << 16, ((int32_t)p_location . y) << 16);
+        t_err = ATSUDrawText(s_layout, t_offset, t_length, ((int32_t)p_location . x) << 16, ((int32_t)p_location . y) << 16);
     
     return t_err == noErr;
 }
@@ -321,20 +344,25 @@ void MCGPlatformFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
-	if (!MCGContextIsValid(self))
+    if (!MCGContextIsValid(self))
 		return;	
 	
 	bool t_success;
 	t_success = true;
-	
+    
+    // If drawing text with BiDi control characters, don't draw the characters
+    bool t_skip_bidi = false;
+    if (p_text[0] == 0x202D || p_text[0] == 0x202E)
+        t_skip_bidi = true;
+    
     if (t_success)
-        t_success = osx_prepare_text(p_text, p_length, p_font);
+        t_success = osx_prepare_text(p_text, p_length, p_font, t_skip_bidi);
     
 	MCGIntRectangle t_text_bounds;
 	if (t_success)
-		t_success = osx_measure_text_substring_bounds(p_length, t_text_bounds);
+		t_success = osx_measure_text_substring_bounds(p_length, t_text_bounds, t_skip_bidi);
 	
 	MCGIntRectangle t_clipped_bounds;
 	MCGAffineTransform t_transform;
@@ -377,10 +405,10 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
     
 	if (t_success)
 	{
-		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
+        CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
 		CGContextSetFillColorWithColor(t_cgcontext, s_colour);
-		t_success = osx_draw_text_substring_to_cgcontext_at_location(p_length, t_cgcontext, MCGPointMake(0.0, 0.0));
+		t_success = osx_draw_text_substring_to_cgcontext_at_location(p_length, t_cgcontext, MCGPointMake(0.0, 0.0), p_rtl, t_skip_bidi);
 	}
 	
 	if (t_success)
@@ -416,13 +444,17 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	bool t_success;
 	t_success = true;
 	
+    bool t_skip_bidi = false;
+    if (p_text[0] == 0x202D || p_text[0] == 0x202E)
+        t_skip_bidi = true;
+    
     if (t_success)
-        t_success = osx_prepare_text(p_text, p_length, p_font);
+        t_success = osx_prepare_text(p_text, p_length, p_font, t_skip_bidi);
 	
     MCGFloat t_width;
     t_width = 0;
     if (t_success)
-        t_success = osx_measure_text_substring_width(p_length, t_width);
+        t_success = osx_measure_text_substring_width(p_length, t_width, t_skip_bidi);
 	
     return (MCGFloat) t_width;
 }

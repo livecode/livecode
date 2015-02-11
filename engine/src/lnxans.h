@@ -17,13 +17,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef _XANSWER_H
 #define _XANSWER_H
 
-extern int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options);
-extern int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options); //const char *prompt, char *fn, MCExecPoint& ep, Boolean sheet);
+extern int MCA_file(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options);
+extern int MCA_ask_file(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options); //const char *prompt, char *fn, MCExecPoint& ep, Boolean sheet);
 
-extern int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options);
-extern int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options);
+extern int MCA_file_with_types(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options);
+extern int MCA_ask_file_with_types(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options);
 
-extern int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options);
+extern int MCA_folder(MCExecContext& ctxt, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options);
 
 extern MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings) ;
 extern MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings ) ;

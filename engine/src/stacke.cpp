@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 #include "globals.h"
 #include "context.h"
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "graphicscontext.h"
 
@@ -233,10 +233,12 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	t_device_rect = MCRectangleGetScaledBounds(t_effect_area, t_scale);
 	t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
 	
+#ifdef _MAC_DESKTOP
 	// IM-2013-08-29: [[ RefactorGraphics ]] get device height for CoreImage effects
 	// IM-2013-09-30: [[ FullscreenMode ]] Use view rect to get device height
 	uint32_t t_device_height;
 	t_device_height = floor(view_getrect().height * t_scale);
+#endif /* _MAC_DESKTOP */
 	
 	// Make a region of the effect area
 	// IM-2013-08-29: [[ ResIndependence ]] scale effect region to device coords
@@ -359,10 +361,12 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		if (t_effects -> sound != NULL)
 		{
 			MCAudioClip *acptr;
-			if ((acptr = (MCAudioClip *)getobjname(CT_AUDIO_CLIP, t_effects->sound)) == NULL)
+            MCNewAutoNameRef t_sound;
+            /* UNCHECKED */ MCNameCreate(t_effects->sound, &t_sound);
+			if ((acptr = (MCAudioClip *)getobjname(CT_AUDIO_CLIP, *t_sound)) == NULL)
 			{
 				IO_handle stream;
-				if ((stream = MCS_open(t_effects->sound, IO_READ_MODE, True, False, 0)) != NULL)
+				if ((stream = MCS_open(t_effects->sound, kMCOpenFileModeRead, True, False, 0)) != NULL)
 				{
 					acptr = new MCAudioClip;
 					acptr->setdisposable();
@@ -396,15 +400,17 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		// Initialize CoreImage of QTEffects if needed.
 		if (t_effects -> type != VE_PLAIN)
 		{
+            MCAutoPointer<char> t_name;
+            /* UNCHECKED */ MCStringConvertToCString(t_effects -> name, &t_name);
 #ifdef _MAC_DESKTOP
 			// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for CI effects
-			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(t_effects -> name, t_initial_image, t_final_image, t_device_rect, t_device_height, t_effects -> arguments))
+			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(*t_name, t_initial_image, t_final_image, t_device_rect, t_device_height, t_effects -> arguments))
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
 #ifdef FEATURE_QUICKTIME_EFFECTS
 				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
-				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
+				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, *t_name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
 					t_effects -> type = VE_QTEFFECT;
 #else
 				;
@@ -839,7 +845,7 @@ Boolean stretcheffect_step(const MCRectangle &drect, MCStackSurface *p_target, M
 {
 	uint2 height = drect.height * delta / duration;
 	
-	uint32_t t_top, t_bottom;
+	uint32_t t_top;
 	
 	switch (dir)
 	{
@@ -855,7 +861,6 @@ Boolean stretcheffect_step(const MCRectangle &drect, MCStackSurface *p_target, M
 			t_top = drect.height - height;
 			break;
 	}
-	t_bottom = t_top + height;
 	
 	MCGRectangle t_start_src, t_start_dst;
 	MCGRectangle t_end_src, t_end_dst;

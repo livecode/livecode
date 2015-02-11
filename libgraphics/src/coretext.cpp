@@ -39,7 +39,7 @@ void MCGPlatformInitialize(void)
     s_text_colour = NULL;
     s_measure_context = NULL;
     s_measure_data = NULL;
-    const float t_colour_components[] = {1.0, 1.0};
+    const CGFloat t_colour_components[] = {1.0, 1.0};
 #ifdef TARGET_SUBPLATFORM_IPHONE
     // iOS doesn't support device-independent or generic color spaces
     s_colour_space = CGColorSpaceCreateDeviceGray();
@@ -128,7 +128,7 @@ static CTLineRef unitext_to_cfline(const unichar_t *p_text, uindex_t p_length, c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
 	if (!MCGContextIsValid(self))
 		return;	
@@ -144,7 +144,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_success = t_line != NULL;
 	}
 	
-	MCGIntRectangle t_clipped_bounds, t_text_bounds;
+	MCGIntRectangle t_clipped_bounds;
 	MCGAffineTransform t_transform;
 	MCGPoint t_device_location;
 	if (t_success)
@@ -173,32 +173,46 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         {
             CGRect t_image_bounds;
             t_image_bounds = CTLineGetImageBounds(t_line, s_measure_context);
-            t_width = MCMax(t_width, t_image_bounds . size . width) + t_font_bounds . size . width;
+            t_width = MCMax(t_width, (MCGFloat)t_image_bounds . size . width) + t_font_bounds . size . width;
         }
         
         // MW-2014-06-25: [[ Bug 12690 ]] I suspect ascent/descent will always be less than font
         //   bounds calcs, but let's just err on the side of caution.
 		MCGRectangle t_float_text_bounds;
 		t_float_text_bounds . origin . x = 0;
-        t_float_text_bounds . origin . y = MCMin(-t_font_bounds_top, -t_ascent);
+        t_float_text_bounds . origin . y = MCMin((MCGFloat)-t_font_bounds_top, -t_ascent);
 		t_float_text_bounds . size . width = t_width;
-        t_float_text_bounds . size . height = MCMax(t_font_bounds_top - t_font_bounds_bottom, t_ascent + t_descent);
+        t_float_text_bounds . size . height = MCMax((MCGFloat)(t_font_bounds_top - t_font_bounds_bottom), t_ascent + t_descent);
 		
 		t_transform = MCGContextGetDeviceTransform(self);
-		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);		
-		t_transform . tx = modff(t_device_location . x, &t_device_location . x);
-		t_transform . ty = modff(t_device_location . y, &t_device_location . y);
 		
 		MCGRectangle t_device_clip;
 		t_device_clip = MCGContextGetDeviceClipBounds(self);
-		t_device_clip . origin . x -= t_device_location . x;
-		t_device_clip . origin . y -= t_device_location . y;
+		
+		if (MCGAffineTransformIsRectangular(t_transform))
+		{
+			// IM-2015-01-22: [[ LibGraphics ]] Only apply this adjustment for trivial transforms
+			t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);
+			t_transform . tx = modff(t_device_location . x, &t_device_location . x);
+			t_transform . ty = modff(t_device_location . y, &t_device_location . y);
+			
+			t_device_clip . origin . x -= t_device_location . x;
+			t_device_clip . origin . y -= t_device_location . y;
+			
+			p_location = MCGPointMake(0, 0);
+		}
+		else
+		{
+			// IM-2015-01-22: [[ LibGraphics ]] For non-trivial transforms, don't try to align to integer pixels.
+			t_device_location = MCGPointMake(0, 0);
+			// Draw text at p_location
+			t_float_text_bounds = MCGRectangleTranslate(t_float_text_bounds, p_location.x, p_location.y);
+		}
 		
 		MCGRectangle t_float_clipped_bounds;
 		t_float_text_bounds = MCGRectangleApplyAffineTransform(t_float_text_bounds, t_transform);		
 		t_float_clipped_bounds = MCGRectangleIntersection(t_float_text_bounds, t_device_clip);
 		
-		t_text_bounds = MCGRectangleIntegerBounds(t_float_text_bounds);
 		t_clipped_bounds = MCGRectangleIntegerBounds(t_float_clipped_bounds);
 		
 		if (t_clipped_bounds . width == 0 || t_clipped_bounds . height == 0)
@@ -224,10 +238,30 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
     
 	if (t_success)
 	{
-		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
+		// IM-2015-01-22: [[ LibGraphics ]] Need to account for bottom-left based coord system.
+		//   First, flip the whole context so the origin is in the top-left and y increases downwards,
+		//   then adjust the origin to the area covered by the temporary bitmap,
+		//   then we apply any user->context-space transform,
+		//   and finally flip along the text baseline so we don't get upside-down text.
+		
+		// Invert y-axis of context (bottom-left to top-left)
+		CGContextTranslateCTM(t_cgcontext, 0, t_clipped_bounds.height);
+		CGContextScaleCTM(t_cgcontext, 1.0, -1.0);
+		
+		// Adjust context origin to clip bounds origin.
+		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, -t_clipped_bounds . y);
+		
+		// Apply context transform.
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
 
+		// Mirror at the text baseline in the y-direction
+		CGContextTranslateCTM(t_cgcontext, 0, p_location.y);
+		CGContextScaleCTM(t_cgcontext, 1.0, -1.0);
+		CGContextTranslateCTM(t_cgcontext, 0, -p_location.y);
+		
+		CGContextSetTextPosition(t_cgcontext, p_location.x, p_location.y);
 		CTLineDraw(t_line, t_cgcontext);
+		
 		CGContextFlush(t_cgcontext);
 		
 		SkPaint t_paint;

@@ -1,0 +1,54 @@
+calc
+
+   A simple desk calculator.
+
+   Illustrates the specification of a context-free grammar
+   and the use of 'nonterm' and 'token' predicates.
+   Grammar symbols are augmented by attributes that express
+   the semantic value of the corresponding source phrase.
+
+polish
+
+   A program that reads an expression in infix notation
+   and emit the corresponding expression in "reverse polish notation"
+   (where the operands are followed by the operator).
+
+   Illustrates the specification of concrete syntax and
+   term type definitions that are used to define the abstract syntax.
+   The mapping from concrete syntax to abstract syntax is given by
+   attributes attached to the nonterminals.
+   An "unparsing scheme" is specified by an 'action' predicate.
+   Here rules are selected by pattern matching.
+
+virtual
+
+   A compiler for a simple but nontrivial programming language
+   with code generation for a virtual machine.
+
+   A more elaborate example of a parser (structuring the source
+   program and constructing the abstract syntax representation)
+   and an unparser (that processes the abstract syntax represenation
+   and computes the target code).  While processing the abstract syntax,
+   semantic constraints are checked.
+
+micro
+
+   A compiler with a backend for the MC86K microprocessor.
+
+   Illustrates the use of 'choice' predicates and
+   optimal rule selection.
+
+flat
+
+   A language with constant definitions and write statements.
+
+   Illustrates the use of the "GetMeaning"/"HasMeaning" predicates
+   form the library module "idents".
+
+nested
+
+   A language with constant definitions, write statements,
+   and nested scopes.
+
+   Illustrates how nested scopes can be described on top of
+   the "DefMeaning"/"HasMeaning" predicates.

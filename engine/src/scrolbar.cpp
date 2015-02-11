@@ -21,9 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
-#include "core.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "font.h"
 #include "sellst.h"
@@ -37,8 +36,35 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "mctheme.h"
 
+#include "exec.h"
+
 real8 MCScrollbar::markpos;
 uint2 MCScrollbar::mode = SM_CLEARED;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCScrollbar::kProperties[] =
+{
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_STYLE, InterfaceScrollbarStyle, MCScrollbar, Style)
+	DEFINE_RW_OBJ_PROPERTY(P_THUMB_SIZE, Double, MCScrollbar, ThumbSize)
+	DEFINE_RW_OBJ_PROPERTY(P_THUMB_POS, Double, MCScrollbar, ThumbPos)
+	DEFINE_RW_OBJ_PROPERTY(P_LINE_INC, Double, MCScrollbar, LineInc)
+	DEFINE_RW_OBJ_PROPERTY(P_PAGE_INC, Double, MCScrollbar, PageInc)
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_ORIENTATION, InterfaceScrollbarOrientation, MCScrollbar, Orientation)
+	DEFINE_RW_OBJ_PROPERTY(P_NUMBER_FORMAT, String, MCScrollbar, NumberFormat)
+	DEFINE_RW_OBJ_PROPERTY(P_START_VALUE, String, MCScrollbar, StartValue)
+	DEFINE_RW_OBJ_PROPERTY(P_END_VALUE, String, MCScrollbar, EndValue)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_VALUE, Bool, MCScrollbar, ShowValue)
+};
+
+MCObjectPropertyTable MCScrollbar::kPropertyTable =
+{
+	&MCControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCScrollbar::MCScrollbar()
 {
@@ -48,8 +74,9 @@ MCScrollbar::MCScrollbar()
 	thumbsize = 8192.0;
 	pageinc = thumbsize;
 	lineinc = 512.0;
-	startstring = NULL;
-	endstring = NULL;
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Initialize the members to kMCEmptyString.
+	startstring = MCValueRetain(kMCEmptyString);
+	endstring = MCValueRetain(kMCEmptyString);
 	startvalue = 0.0;
 	endvalue = 65535.0;
 	nffw = 0;
@@ -59,7 +86,7 @@ MCScrollbar::MCScrollbar()
 	hover_part = WTHEME_PART_UNDEFINED;
 
 	linked_control = NULL;
-
+	
 	m_embedded = false;
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the progress bar animate message is only posted from a single thread.
@@ -72,8 +99,9 @@ MCScrollbar::MCScrollbar(const MCScrollbar &sref) : MCControl(sref)
 	thumbsize = sref.thumbsize;
 	pageinc = sref.pageinc;
 	lineinc = sref.lineinc;
-	startstring = strclone(sref.startstring);
-	endstring = strclone(sref.endstring);
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Initialize the members to the other scrollbars values
+	startstring = MCValueRetain(sref . startstring);
+	endstring = MCValueRetain(sref . endstring);
 	startvalue = sref.startvalue;
 	endvalue = sref.endvalue;
 	nffw = sref.nffw;
@@ -94,8 +122,9 @@ MCScrollbar::~MCScrollbar()
 {
 	if (linked_control != NULL)
 		linked_control -> unlink(this);
-	delete startstring;
-	delete endstring;
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Release the string members.
+	MCValueRelease(startstring);
+	MCValueRelease(endstring);
 }
 
 Chunk_term MCScrollbar::gettype() const
@@ -132,10 +161,10 @@ void MCScrollbar::open()
 	compute_barsize();
 }
 
-Boolean MCScrollbar::kdown(const char *string, KeySym key)
+Boolean MCScrollbar::kdown(MCStringRef p_string, KeySym key)
 {
 	if (!(state & CS_NO_MESSAGES))
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
 	Boolean done = False;
 	switch (key)
@@ -170,7 +199,7 @@ Boolean MCScrollbar::kdown(const char *string, KeySym key)
 		break;
 	}
 	if (done)
-		message_with_args(MCM_mouse_up, "1");
+		message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 	return done;
 }
 
@@ -304,7 +333,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 		switch (tool)
 		{
 		case T_BROWSE:
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			if (flags & F_PROGRESS) //progress bar does not respond to mouse down event
 				return False;
 			if (MCcurtheme && MCcurtheme->iswidgetsupported(winfo.type))
@@ -437,7 +466,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 		}
 		break;
 	case Button2:
-		if (message_with_args(MCM_mouse_down, "2") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_mouse_down, MCSTR("2")) == ES_NORMAL)
 			return True;
 		state |= CS_SCROLL;
 		{
@@ -465,7 +494,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 		}
 		break;
 	case Button3:
-		message_with_args(MCM_mouse_down, "3");
+		message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
 		break;
 	}
 	return True;
@@ -514,9 +543,9 @@ Boolean MCScrollbar::mup(uint2 which, bool p_release)
 					redrawarrow(oldmode);
 			}
 			if (!p_release && MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "1");
+				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			else
-				message_with_args(MCM_mouse_release, "1");
+				message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 			break;
 		case T_SCROLLBAR:
 		case T_POINTER:
@@ -664,7 +693,8 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 		MCControl::timer(mptr, params);
 }
 
-Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCScrollbar::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -720,12 +750,14 @@ Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, B
 		break;
 #endif /* MCScrollbar::getprop */
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
+#endif
 
-Exec_stat MCScrollbar::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCScrollbar::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	real8 newvalue;
@@ -863,7 +895,7 @@ Exec_stat MCScrollbar::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 		break;
 #endif /* MCScrollbar::setprop */
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	flags |= F_SAVE_ATTS;
 	if (dirty && opened)
@@ -874,6 +906,7 @@ Exec_stat MCScrollbar::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 	}
 	return ES_NORMAL;
 }
+#endif
 
 MCControl *MCScrollbar::clone(Boolean attach, Object_pos p, bool invisible)
 {
@@ -892,15 +925,15 @@ void MCScrollbar::compute_barsize()
 		{
 			uint2 twidth = rect.width;
 			barsize = MCU_max(nffw, 1);
-			if (startstring != NULL && (uint2)strlen(startstring) > barsize)
-				barsize = strlen(startstring);
-			if (endstring == NULL)
+			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Use MCString primitives.
+			if (MCStringGetLength(startstring) > barsize)
+				barsize = MCStringGetLength(startstring);
+			if (MCStringIsEmpty(endstring))
 				barsize = MCU_max(barsize, 5);
 			else
-				if ((uint2)strlen(endstring) > barsize)
-					barsize = strlen(endstring);
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			barsize *= MCFontMeasureText(m_font, "0", 1, false, getstack() -> getdevicetransform());
+                barsize = MCU_max((uindex_t)barsize, MCStringGetLength(endstring));
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            barsize *= MCFontMeasureText(m_font, MCSTR("0"), getstack() -> getdevicetransform());
 			barsize = twidth - (barsize + barsize * (twidth - barsize) / twidth);
 		}
 		else
@@ -1131,19 +1164,17 @@ void MCScrollbar::update(real8 newpos, MCNameRef mess)
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			redrawall();
 		}
-		char *data = NULL;
-		uint4 length = 0;
-		length = MCU_r8tos(data, length, thumbpos, nffw, nftrailing, nfforce);
-		switch (message_with_args(mess, data))
+		MCAutoStringRef t_data;
+		MCU_r8tos(thumbpos, nffw, nftrailing, nfforce, &t_data);
+		switch (message_with_valueref_args(mess, *t_data))
 		{
 		case ES_NOT_HANDLED:
 		case ES_PASS:
 			if (!MCNameIsEqualTo(mess, MCM_scrollbar_drag, kMCCompareCaseless))
-				message_with_args(MCM_scrollbar_drag, data);
+				message_with_valueref_args(MCM_scrollbar_drag, *t_data);
 		default:
 			break;
 		}
-		delete data;
 
 		if (linked_control != NULL)
 			linked_control -> readscrollbars();
@@ -1201,16 +1232,9 @@ void MCScrollbar::reset()
 	flags &= ~F_HAS_VALUES;
 	startvalue = 0.0;
 	endvalue = 65535.0;
-	if (startstring != NULL)
-	{
-		delete startstring;
-		startstring = NULL;
-	}
-	if (endstring != NULL)
-	{
-		delete endstring;
-		endstring = NULL;
-	}
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Reset the string values to the empty string.
+	MCValueAssign(startstring, kMCEmptyString);
+	MCValueAssign(endstring, kMCEmptyString);
 }
 
 void MCScrollbar::redrawarrow(uint2 oldmode)
@@ -1261,7 +1285,7 @@ IO_stat MCScrollbar::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCScrollbar::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCScrollbar::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -1293,9 +1317,12 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if (flags & F_HAS_VALUES)
 		{
-			if ((stat = IO_write_string(startstring, stream)) != IO_NORMAL)
+            // MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_write_stringref_new(startstring, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 				return stat;
-			if ((stat = IO_write_string(endstring, stream)) != IO_NORMAL)
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+            if ((stat = IO_write_stringref_new(endstring, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_write_uint2(nffw, stream)) != IO_NORMAL)
 				return stat;
@@ -1308,7 +1335,7 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCScrollbar::load(IO_handle stream, const char *version)
+IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -1331,14 +1358,20 @@ IO_stat MCScrollbar::load(IO_handle stream, const char *version)
 		pageinc = (real8)i2;
 		if (flags & F_HAS_VALUES)
 		{
-			if ((stat = IO_read_string(startstring, stream)) != IO_NORMAL)
+			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_read_stringref_new(startstring, stream, version >= 7000)) != IO_NORMAL)
 				return stat;
-			if (startstring != NULL)
-				startvalue = strtod(startstring, NULL);
-			if ((stat = IO_read_string(endstring, stream)) != IO_NORMAL)
+			if (!MCStringToDouble(startstring, startvalue))
+				startvalue = 0.0;
+			
+			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_read_stringref_new(endstring, stream, version >= 7000)) != IO_NORMAL)
 				return stat;
-			if (endstring != NULL)
-				endvalue = strtod(endstring, NULL);
+			if (!MCStringToDouble(endstring, endvalue))
+				endvalue = 0.0;
+			
 			real8 range = (endvalue - startvalue) / 65535.0;
 			thumbpos = thumbpos * range + startvalue;
 			thumbsize *= range;
@@ -1352,12 +1385,12 @@ IO_stat MCScrollbar::load(IO_handle stream, const char *version)
 				return stat;
 		}
 	}
-	if (strncmp(version, "2.0", 3) <= 0)
+	if (version <= 2000)
 	{
 		if (flags & F_TRAVERSAL_ON)
 			rect = MCU_reduce_rect(rect, MCfocuswidth);
 		if (flags & F_SHOW_VALUE && getstyleint(flags) == F_HORIZONTAL)
 			rect = MCU_reduce_rect(rect, 4);
-	}
-	return loadpropsets(stream);
+    }
+	return loadpropsets(stream, version);
 }

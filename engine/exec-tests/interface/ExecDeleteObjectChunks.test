@@ -1,0 +1,11 @@
+setup
+
+create field
+
+put "fooosfsdgsdglj" into field 1
+
+delete char 4 to -1 of field 1
+
+test field 1 is "foo"
+
+teardown

@@ -21,68 +21,72 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "font.h"
 #include "util.h"
 #include "globals.h"
-#include "unicode.h"
 
 #include "mblflst.h"
 
 #if defined(TARGET_SUBPLATFORM_IPHONE)
-extern void *iphone_font_create(const char *name, uint32_t size, bool bold, bool italic);
+extern void *iphone_font_create(MCStringRef name, uint32_t size, bool bold, bool italic);
 extern void iphone_font_destroy(void *font);
-extern void iphone_font_get_metrics(void *font, float& a, float& d);
+extern void iphone_font_get_metrics(void *font, float& a, float& d, float& leading, float& xheight);
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-extern void *android_font_create(const char *name, uint32_t size, bool bold, bool italic);
+extern void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool italic);
 extern void android_font_destroy(void *font);
-extern void android_font_get_metrics(void *font, float& a, float& d);
+extern void android_font_get_metrics(void *font, float& a, float& d, float& leading, float& xheight);
 #endif
 
-MCFontnode::MCFontnode(const MCString& p_name, uint2& p_size, uint2 p_style)
+MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 {
-	reqname = p_name.clone();
-	reqsize = p_size;
-	reqstyle = p_style;
-
+	reqname = fname;
+	reqsize = size;
+	reqstyle = style;
+    
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	font = new MCFontStruct;
-	font -> size = p_size;
+	font -> size = size;
 	
-	char *t_comma;
-	t_comma = strchr(reqname, ',');
-	if (t_comma != nil)
-		*t_comma = '\0';
-	
-	font -> fid = (MCSysFontHandle)iphone_font_create(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+	uindex_t t_comma;
+	MCAutoStringRef reqname_str;
+	reqname_str = MCNameGetString(*reqname);
+	Boolean t_success;
+	t_success = MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma);
 
-	font -> ascent = p_size - 1;
-	font -> descent = p_size * 2 / 14 + 1;
+    MCAutoStringRef t_before_comma;
+    /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+
+    font -> fid = (MCSysFontHandle)iphone_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+
+	font -> ascent = size - 1;
+	font -> descent = size * 2 / 14 + 1;
 	
-	float ascent, descent;
-	iphone_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > p_size)
+	iphone_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
+	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > size)
 		font -> ascent++;
-	
+    
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 	font = new MCFontStruct;
-	font -> size = p_size;
+	font -> size = size;
 	
-	char *t_comma;
-	t_comma = strchr(reqname, ',');
-	if (t_comma != nil)
-		*t_comma = '\0';
+	uindex_t t_comma;
+	MCAutoStringRef reqname_str;
+	reqname_str = MCNameGetString(*reqname);
+	Boolean t_success;
+	t_success = MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma);
 
-	font -> fid = (MCSysFontHandle)android_font_create(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+    MCAutoStringRef t_before_comma;
+    /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    font -> fid = (MCSysFontHandle)android_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	
-	font -> ascent = p_size - 1;
-	font -> descent = p_size * 2 / 14 + 1;
+	font -> ascent = size - 1;
+	font -> descent = size * 2 / 14 + 1;
 	
-	float ascent, descent;
-	android_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > p_size)
+	android_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
+	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > size)
 		font -> ascent++;
-
+	
 #endif
 }
 
@@ -93,17 +97,16 @@ MCFontnode::~MCFontnode(void)
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 	android_font_destroy(font->fid);
 #endif
-	delete reqname;
 	delete font;
 }
 
-MCFontStruct *MCFontnode::getfont(const MCString& p_name, uint2 p_size, uint2 p_style)
+MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size, uint2 style)
 {
-	if (p_name != reqname)
+	if (!MCNameIsEqualTo(fname, *reqname))
 		return NULL;
-	if (p_size == 0)
+	if (size == 0)
 		return font;
-	if (p_style != reqstyle || p_size != reqsize)
+	if (style != reqstyle || size != reqsize)
 		return NULL;
 	return font;
 }
@@ -123,7 +126,7 @@ MCFontlist::~MCFontlist()
 	}
 }
 
-MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer)
+MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 	MCFontnode *tmp = fonts;
 	if (tmp != NULL)
@@ -140,30 +143,32 @@ MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size, uint2 styl
 	return tmp->getfont(fname, size, style);
 }
 
-extern void MCSystemListFontFamilies(MCExecPoint& ep);
-void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
+extern bool MCSystemListFontFamilies(MCListRef& r_names);
+bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 {
-	MCSystemListFontFamilies(ep);
+	return MCSystemListFontFamilies(r_names);
 }
 
-void MCFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
+bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 {
 	// MW-2013-03-14: [[ Bug 10744 ]] All fonts are scalable on mobile - so return 0.
-	ep . setuint(0);
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list) || !MCListAppendInteger(*t_list, 0))
+		return false;
+
+	return MCListCopy(*t_list, r_sizes);
 }
 
-extern void MCSystemListFontsForFamily(MCExecPoint& ep, const char *fname, uint2 fsize);
-void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
+extern bool MCSystemListFontsForFamily(MCStringRef p_family, uint32_t p_size, MCListRef& r_styles);
+bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
-	MCSystemListFontsForFamily(ep, fname, fsize);
+	return MCSystemListFontsForFamily(p_fname, fsize, r_styles);
 }
 
-// MW-2012-09-19: [[ Bug 10248 ]] Previously unimplemented, this method is required
-//   for PDF printing (and normal printing!)
-bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
+bool MCFontlist::getfontstructinfo(MCNameRef&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
 {
 	MCFontnode *t_font = fonts;
-	while (t_font != NULL)
+	do
 	{
 		if (t_font->getfontstruct() == p_font)
 		{
@@ -174,5 +179,6 @@ bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_
 		}
 		t_font = t_font->next();
 	}
+    while (t_font != fonts);
 	return false;
 }

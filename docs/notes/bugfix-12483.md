@@ -1,0 +1,1 @@
+# Graphic effects not working in 7.0 DP4 

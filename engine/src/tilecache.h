@@ -78,6 +78,7 @@ enum MCTileCacheCompositorType
 	kMCTileCacheCompositorNone,
 	kMCTileCacheCompositorSoftware,
 	kMCTileCacheCompositorCoreGraphics,
+	kMCTileCacheCompositorOpenGL,
 	kMCTileCacheCompositorStaticOpenGL,
 	kMCTileCacheCompositorDynamicOpenGL
 };
@@ -131,7 +132,7 @@ void MCTileCacheSetCacheLimit(MCTileCacheRef self, uint32_t new_cachelimit);
 uint32_t MCTileCacheGetCacheLimit(MCTileCacheRef self);
 
 // Set the tile size of the tilecache.
-void MCTileCacheSetTileSize(MCTileCacheRef self, int32_t new_tilesize);
+void MCTileCacheSetTileSize(MCTileCacheRef self, uint32_t new_tilesize);
 // Fetch the tile size of the tilecache
 int32_t MCTileCacheGetTileSize(MCTileCacheRef self);
 

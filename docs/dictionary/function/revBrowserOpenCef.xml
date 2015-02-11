@@ -56,20 +56,15 @@ into tFile</p><p>  put revBrowserOpenCef(the windowId of this stack,
 		<command tag="revBrowserNavigate">revBrowserNavigate command</command>
 		<command tag="revBrowserStop">revBrowserStop command</command>
 		<command tag="revBrowserPrint">revBrowserPrint command</command>
-		<command tag="revBrowserMakeTextBigger">revBrowserMakeTextBigger
-command</command>
+		<command tag="revBrowserMakeTextBigger">revBrowserMakeTextBigger command</command>
 		<command tag="revBrowserSet">revBrowserSet command</command>
 		<command tag="revBrowserClose">revBrowserClose command</command>
-		<command tag="revBrowserAddJavaScriptHandler">revBrowserAddJavaScriptHandler
-command</command>
-		<command tag="revBrowserRemoveJavaScriptHandler">revBrowserRemoveJavaScriptHandler
-command</command>
+		<command tag="revBrowserAddJavaScriptHandler">revBrowserAddJavaScriptHandler command</command>
+		<command tag="revBrowserRemoveJavaScriptHandler">revBrowserRemoveJavaScriptHandler command</command>
 		<message tag="browserOver">browserOver message</message>
 		<message tag="browserNewInstance">browserNewInstance message</message>
-		<message tag="browserDownloadRequest">browserDownloadRequest
-message</message>
-		<message tag="browserNavigateCompleteFrame">browserNavigateCompleteFrame
-message</message>
+		<message tag="browserDownloadRequest">browserDownloadRequest message</message>
+		<message tag="browserNavigateCompleteFrame">browserNavigateCompleteFrame message</message>
 		<message tag="browserNewUrlWindow">browserNewUrlWindow message</message>
 	</references>
 

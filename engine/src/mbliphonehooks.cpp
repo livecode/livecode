@@ -16,8 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -25,11 +23,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <fcntl.h>
 #include <unistd.h>
 
-#if defined(__i386__)
+// MM-2014-10-07: [[ Bug 13583 ]] Due to complications with getting the trampolines to work, we now use symlinks when using the iOS 8 sim.
+#if defined(__i386__) && !defined (__IPHONE_8_0)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern char *MCcmd;
+extern MCStringRef MCcmd;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +54,15 @@ void add_simulator_redirect(const char *p_redirect_def)
 		return;
 	
 	if (s_redirect_base == nil)
-		MCCStringCloneSubstring(MCcmd, strrchr(MCcmd, '/') - MCcmd, s_redirect_base);
+    {
+        MCAutoStringRef t_substring;
+        uindex_t t_index;
+        t_index = MCStringGetLength(MCcmd);
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', t_index, kMCCompareExact, t_index);
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_index), &t_substring);
+        /* UNCHECKED */ MCStringConvertToCString(*t_substring, s_redirect_base);
+    }
+
 	
 	MCCStringCloneSubstring(p_redirect_def, t_dst_offset - p_redirect_def, s_redirects[s_redirect_count - 1] . src);
 	
@@ -514,6 +521,15 @@ struct trampoline_info_t
 	uint8_t *prefix;
 };
 
+// MM-2014-09-26: [[ iOS 8 Support ]] Added prefix for jmpl instruction, used by open, stat and lstat.
+#ifdef __IPHONE_8_0
+static uint8_t s_jmpl_prefix[] =
+{
+    6,
+    0xff,
+};
+#endif
+
 #ifdef __IPHONE_6_0
 
 // 0x37b080b <opendir>:     0x55            push   %ebp
@@ -629,11 +645,26 @@ static uint8_t s_mov_4000c_prefix[] =
 	0xb8, 0x0c, 0x00, 0x08, 0x00
 };
 
-// MM-2013-09-23: [[ iOS7 Support ]] Tweaked fopen for iOS7.
 static trampoline_info_t s_trampolines[] =
 {
-#if defined(__IPHONE_7_0)
+#if defined (__IPHONE_8_0)
+    // MM-2014-09-26: [[ iOS 8 Support ]] Updated trampolines for iOS 8.
+    { (void *)open, (void *)open_wrapper, (void **)&open_trampoline, s_jmpl_prefix },
+    { (void *)fopen, (void *)fopen_wrapper, (void **)&fopen_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    
+    { (void *)stat, (void *)stat_wrapper, (void **)&stat_trampoline, s_jmpl_prefix },
+    { (void *)lstat, (void *)lstat_wrapper, (void **)&lstat_trampoline, s_jmpl_prefix },
+    
+    { (void *)opendir, (void *)opendir_wrapper, (void **)&opendir_trampoline, s_push_mov_sub_8_prefix },
+    { (void *)readdir, (void *)readdir_wrapper, (void **)&readdir_trampoline, s_push_mov_push_push_prefix },
+    { (void *)readdir_r, (void *)readdir_r_wrapper, (void **)&readdir_r_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    { (void *)closedir, (void *)closedir_wrapper, (void **)&closedir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    { (void *)rewinddir, (void *)rewinddir_wrapper, (void **)&rewinddir_trampoline, s_push_mov_push_sub_14_prefix },
+    { (void *)seekdir, (void *)seekdir_wrapper, (void **)&seekdir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+    { (void *)telldir, (void *)telldir_wrapper, (void **)&telldir_trampoline, s_push_mov_push_ebx_push_edi_prefix },
+#elif defined(__IPHONE_7_0)
 	{ (void *)open, (void *)open_wrapper, (void **)&open_trampoline, s_push_mov_sub_18_prefix },
+    // MM-2013-09-23: [[ iOS7 Support ]] Tweaked fopen for iOS7.
 	{ (void *)fopen, (void *)fopen_wrapper, (void **)&fopen_trampoline, s_push_mov_push_ebx_push_edi_prefix },
 	
 	{ (void *)stat, (void *)stat_wrapper, (void **)&stat_trampoline, s_push_mov_sub_18_prefix },
@@ -741,27 +772,33 @@ void setup_simulator_hooks(void)
     // MW-2011-10-07: On Lion, you cannot execute pages which have not been
     //   explicitly marked as EXEC, so allocate a 4K page, and then protect
     //   it appropriately.
-	uint8_t *t_trampolines;
+    uint8_t *t_trampolines;
     posix_memalign((void **)&t_trampolines, 4096, 4096);
     mprotect(t_trampolines, 4096, PROT_READ | PROT_WRITE | PROT_EXEC);
-	
-	for(uint32_t i = 0; i < sizeof(s_trampolines) / sizeof(trampoline_info_t); i++)
-	{
-		uint8_t *t_target;
-		t_target = (uint8_t *)s_trampolines[i] . target;
-		
+
+    for(uint32_t i = 0; i < sizeof(s_trampolines) / sizeof(trampoline_info_t); i++)
+    {
+        *(s_trampolines[i] . trampoline) = t_trampolines;
+        
+        uint8_t *t_target;
+        t_target = (uint8_t *)s_trampolines[i] . target;
+        
+        // MM-2014-09-26: [[ iOS 8 Support ]] If the first byte of the prefix is 255 then we want to copy the given number of bytes from the target address.
+        //  Allows us to support the jmpl instruction which has a dynamic jump address.
+        if (s_trampolines[i] . prefix[1] == 0xff)
+            memcpy(t_trampolines, t_target, s_trampolines[i] . prefix[0]);
+        else
+            memcpy(t_trampolines, s_trampolines[i] . prefix + 1, s_trampolines[i] . prefix[0]);
+        t_trampolines += s_trampolines[i] . prefix[0];
+        
         mprotect((void *)((uintptr_t)t_target & ~4095), 4096, PROT_READ | PROT_WRITE | PROT_EXEC);
-		push_bytes(t_target, 1, 0xE9);
-		push_ints(t_target, 1, (uint8_t *)(s_trampolines[i] . wrapper) - (t_target + 4));
-		mprotect((void *)((uintptr_t)t_target & ~4095), 4096, PROT_READ | PROT_EXEC);
-	
-		*(s_trampolines[i] . trampoline) = t_trampolines;
-		
-		memcpy(t_trampolines, s_trampolines[i] . prefix + 1, s_trampolines[i] . prefix[0]);
-		t_trampolines += s_trampolines[i] . prefix[0];
-		push_bytes(t_trampolines, 1, 0xe9);
-		push_ints(t_trampolines, 1, ((uint8_t *)(s_trampolines[i] . target) + s_trampolines[i] . prefix[0]) - (t_trampolines + 4));
-	}
+        push_bytes(t_target, 1, 0xE9);
+        push_ints(t_target, 1, (uint8_t *)(s_trampolines[i] . wrapper) - (t_target + 4));
+        mprotect((void *)((uintptr_t)t_target & ~4095), 4096, PROT_READ | PROT_EXEC);
+        
+        push_bytes(t_trampolines, 1, 0xe9);
+        push_ints(t_trampolines, 1, ((uint8_t *)(s_trampolines[i] . target) + s_trampolines[i] . prefix[0]) - (t_trampolines + 4));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

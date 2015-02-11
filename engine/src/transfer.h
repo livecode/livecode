@@ -74,176 +74,6 @@ class MCField;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Class:
-//    MCSharedString
-//
-//  Type:
-//    Platform independent utility class
-//
-//  Description:
-//    The MCSharedString class provides a simple object for handling references
-//    to immutable binary data that might be copied many times.
-//
-//    It is used throughout the transfer mechanisms in order to prevent large
-//    memory blocks being repeatedly copied.
-//
-//    Like all reference counted objects, care must be taken with ownership of
-//    an object:
-//      - If a method returns an MCSharedString with 'Get' semantics this means
-//        that the caller should Retain the object before storing it. If the
-//        caller has no need to Retain the object then it must not Release it.
-//      - If a method returns an MCSharedString with 'Copy' semantics this means
-//        that the caller must Release the object when it has finished with it.
-//
-//    Note that the lifetime of objects passed around with 'Get' semantics will
-//    always be explicitly stated.
-//
-//    Note that an MCSharedString should never be created with 'new'. Instead
-//    use one of the static Create methods provided inside the class scope.
-//
-//  Known Issues:
-//    <none>
-//
-class MCSharedString
-{
-public:
-	// Increase references to the object.
-	void Retain(void);
-
-	// Decrease references to the object, deleting it when it reaches zero.
-	void Release(void);
-
-	// Return an MCString pointing to the shared string's buffer.
-	MCString Get(void) const;
-
-	// Return a pointer to the shared string's buffer
-	const void *GetBuffer(void) const;
-
-	// Return the length of the shared string's buffer
-	uint4 GetLength(void) const;
-
-
-	// Create a shared string by copying <p_string>
-	static MCSharedString *Create(const MCString& p_string);
-
-	// Create a shared string by copying (p_data, p_length)
-	static MCSharedString *Create(const void *p_data, uint4 p_length);
-
-	// Create a shared string using <p_string> without copying. This implies
-	// that ownership of the memory pointed to by <p_string> is taken
-	// by the new object. (i.e. The caller should not free the memory).
-	static MCSharedString *CreateNoCopy(const MCString& p_string);
-
-	// Create a shared string using <p_data, p_length> without copying. This
-	// implies that ownership of <p_data> passes to the new shared string and
-	// so it should not be freed by the caller.
-	static MCSharedString *CreateNoCopy(void *p_data, uint4 p_length);
-
-private:
-	// The private default constructor - making this private inhibits direct
-	// calls to new MCSharedString.
-	MCSharedString(void);
-
-	// The private default destructor - making this private inhibits direct
-	// deletion. This enforces the fact shared-strings should operate using
-	// Retain/Release for lifetime management.
-	~MCSharedString(void);
-
-	// The number of references currently held to this object
-	uint4 m_references;
-
-	// The data owned by the object
-	char *m_data;
-
-	// The length of the data owned by the object
-	uint4 m_length;
-};
-
-inline MCSharedString::MCSharedString(void)
-{
-	m_references = 0;
-	m_data = NULL;
-	m_length = 0;
-}
-
-inline MCSharedString::~MCSharedString(void)
-{
-	delete m_data;
-}
-
-inline void MCSharedString::Retain(void)
-{
-	m_references += 1;
-}
-
-inline void MCSharedString::Release(void)
-{
-	if (--m_references == 0)
-		delete this;
-}
-
-inline MCString MCSharedString::Get(void) const
-{
-	return MCString(m_data, m_length);
-}
-
-inline const void *MCSharedString::GetBuffer(void) const
-{
-	return m_data;
-}
-
-inline uint4 MCSharedString::GetLength(void) const
-{
-	return m_length;
-}
-
-inline MCSharedString *MCSharedString::Create(const MCString& p_string)
-{
-	MCSharedString *t_string;
-	t_string = new MCSharedString;
-	if (t_string != NULL)
-	{
-		void *t_new_data;
-		t_new_data = memdup(p_string . getstring(), p_string . getlength());
-		if (t_new_data == NULL)
-		{
-			delete t_string;
-			return false;
-		}
-
-		t_string -> m_data = (char *)t_new_data;
-		t_string -> m_length = p_string . getlength();
-		t_string -> Retain();
-	}
-
-	return t_string;
-}
-
-inline MCSharedString *MCSharedString::Create(const void *p_buffer, uint4 p_length)
-{
-	return Create(MCString((char *)p_buffer, p_length));
-}
-
-inline MCSharedString *MCSharedString::CreateNoCopy(const MCString& p_string)
-{
-	MCSharedString *t_string;
-	t_string = new MCSharedString;
-	if (t_string != NULL)
-	{
-		t_string -> m_data = (char *)p_string . getstring();
-		t_string -> m_length = p_string . getlength();
-		t_string -> Retain();
-	}
-	return t_string;
-}
-
-inline MCSharedString *MCSharedString::CreateNoCopy(void *p_buffer, uint4 p_length)
-{
-	return CreateNoCopy(MCString((char *)p_buffer, p_length));
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//
 //  Enumeration:
 //    MCTransferType
 //
@@ -353,7 +183,7 @@ public:
 	//
 	// If the pasteboard could not be queried, false should be returned.
 	//
-	virtual bool Query(MCTransferType*& r_types, unsigned int& r_type_count) = 0;
+	virtual bool Query(MCTransferType*& r_types, size_t& r_type_count) = 0;
 
 	// Fetch the given transfer type from the pasteboard. It is an error
 	// for this method to be called with a transfer type that was not
@@ -365,12 +195,15 @@ public:
 	// The data returned by this method is copied. The callee is responsible
 	// for releasing the reference.
 	//
-	virtual bool Fetch(MCTransferType p_type, MCSharedString*& r_data) = 0;
+	virtual bool Fetch(MCTransferType p_type, MCDataRef& r_data) = 0;
 
 	// Future extension methods for accessing system formats directly.
 	//
 	// virtual bool QuerySystem(const char**& r_system_types, unsigned int& r_system_type_count) = 0;
 	// virtual bool FetchSystem(const char *p_system_type, MCSharedString*& r_data) = 0;
+
+protected:
+	virtual ~MCPasteboard(void) {};
 };
 
 
@@ -406,19 +239,19 @@ public:
 
 	// Query the object for its list of types (see MCPasteboard for
 	// precise semantics).
-	bool Query(MCTransferType*& r_types, unsigned int& r_type_count);
+	bool Query(MCTransferType*& r_types, size_t& r_type_count);
 
 	// Fetch the data of the given data type from the object (see
 	// MCPasteboard for precise semantics).
-	bool Fetch(MCTransferType p_type, MCSharedString*& r_data);
+	bool Fetch(MCTransferType p_type, MCDataRef& r_data);
 
 	// Store the given data-type in the object. If a type of the given
 	// class already exists, it is overridden.
-	bool Store(MCTransferType p_type, MCSharedString* p_data);
+    bool Store(MCTransferType p_type, MCValueRef p_data);
 
 private:
 	// Destroy the object.
-	~MCLocalPasteboard(void);
+	virtual ~MCLocalPasteboard(void);
 
 	// Search for the given type on the pasteboard and return the index.
 	// If the type is not found, false is returned.
@@ -429,7 +262,7 @@ private:
 	//
 	// Here r_normal_string has copy semantics, and p_string is unchanged.
 	//
-	bool Normalize(MCTransferType p_type, MCSharedString *p_string, MCTransferType& r_normal_type, MCSharedString*& r_normal_data);
+    bool Normalize(MCTransferType p_type, MCValueRef p_string, MCTransferType& r_normal_type, MCDataRef &r_normal_data);
 
 	// The number of references to this object.
 	uint4 m_references;
@@ -441,7 +274,7 @@ private:
 	MCTransferType *m_types;
 
 	// The array of data buffers.
-	MCSharedString **m_datas;
+	MCDataRef *m_datas;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -505,7 +338,7 @@ public:
 	// Return a list of (non-derived) types present on the clipboard
 	// note this call must be made inside an explicit Lock/Unlock pair
 	// due to the lifetime of the returned arrays.
-	bool Query(MCTransferType*& r_types, uint4& r_type_count);
+	bool Query(MCTransferType*& r_types, size_t& r_type_count);
 
 	// Return true if fetching the given type would succeed. If
 	// <p_with_conversion> is true, it also checks to see if <p_type>
@@ -515,8 +348,8 @@ public:
 	// Return data of the given type, converting as necessary.
 	// The returned string has copy semantics, i.e. the caller must
 	// release it when done with it.
-	MCSharedString *Fetch(MCTransferType p_type);
-
+    bool Fetch(MCTransferType p_type, MCValueRef &r_data);
+	
 	// Unlock the object.
 	void Unlock(void);
 
@@ -533,14 +366,14 @@ public:
 
 	// Store the given data in the object. This call does an implicit
 	// Open/Close if one hasn't previously been performed.
-	bool Store(MCTransferType p_type, MCSharedString *p_string);
+    bool Store(MCTransferType p_type, MCValueRef p_data);
 
 	// Close the object applying any updates. If applying the
 	// updates failed, false is returned.
 	bool Close(void);
 
 	// Convert the given string to a transfer type.
-	static MCTransferType StringToType(const MCString& p_string);
+	static MCTransferType StringToType(MCStringRef p_string);
 
 	// Conver the given type to a constant string.
 	static const char *TypeToString(MCTransferType p_type);
@@ -735,26 +568,20 @@ enum
 typedef uint4 MCDragAction;
 typedef uint4 MCDragActionSet;
 
-typedef MCSharedString* (*MCTransferConverter)(MCSharedString *p_string);
+typedef bool (*MCTransferConverter)(MCDataRef p_input, MCDataRef r_output);
 
-MCSharedString *MCConvertTextToUnicode(MCSharedString *p_string);
-MCSharedString *MCConvertUnicodeToText(MCSharedString *p_string);
-
-MCSharedString *MCConvertStyledTextToText(MCSharedString *p_string);
-MCSharedString *MCConvertStyledTextToUnicode(MCSharedString *p_string);
-MCSharedString *MCConvertStyledTextToRTF(MCSharedString *p_string);
-MCSharedString *MCConvertStyledTextToHTML(MCSharedString *p_string);
-
-MCSharedString *MCConvertTextToStyledText(MCSharedString *p_string);
-MCSharedString *MCConvertUnicodeToStyledText(MCSharedString *p_string);
-MCSharedString *MCConvertUnicodeToStyledText(const MCString& p_string);
-MCSharedString *MCConvertRTFToStyledText(MCSharedString *p_string);
-MCSharedString *MCConvertRTFToStyledText(const MCString& p_string);
-MCSharedString *MCConvertHTMLToStyledText(MCSharedString *p_string);
+bool MCConvertStyledTextToText(MCDataRef p_input, MCDataRef& r_output);
+bool MCConvertStyledTextToUnicode(MCDataRef p_input, MCDataRef& r_output);
+bool MCConvertStyledTextToRTF(MCDataRef p_input, MCDataRef& r_output);
+bool MCConvertStyledTextToHTML(MCDataRef p_input, MCDataRef& r_output);
+bool MCConvertTextToStyledText(MCDataRef p_input, MCDataRef& r_output);
+bool MCConvertUnicodeToStyledText(MCDataRef p_input, MCDataRef& r_output);
+bool MCConvertRTFToStyledText(MCDataRef p_input, MCDataRef& r_output);
+bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output);
 
 // MW-2014-03-12: [[ ClipboardStyledText ]] Converters to and from styledText arrays.
-MCVariableValue *MCConvertStyledTextToStyledTextArray(MCSharedString *p_string);
-MCSharedString *MCConvertStyledTextArrayToStyledText(MCVariableValue *p_value);
+bool MCConvertStyledTextToStyledTextArray(MCDataRef p_string, MCArrayRef &r_array);
+bool MCConvertStyledTextArrayToStyledText(MCArrayRef p_array, MCDataRef &r_output);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -774,22 +601,19 @@ struct MCImageData
 	uint4 *pixels;
 };
 
-MCImageFormat MCImageDataIdentify(MCSharedString *p_string);
+MCImageFormat MCImageDataIdentify(MCDataRef p_string);
+void MCImageDataCompress(MCImageData *p_data, MCImageFormat p_as_format, MCDataRef &r_output);
+
 MCImageFormat MCImageDataIdentify(const MCString& p_string);
 MCImageFormat MCImageDataIdentify(IO_handle p_stream);
 
 MCImageData *MCImageDataDecompress(const MCString& p_string);
-MCSharedString *MCImageDataCompress(MCImageData *p_data, MCImageFormat p_as_format);
 
 MCImage *MCImageDataToObject(MCImageData *p_data);
 MCImageData *MCImageDataFromObject(MCImage *p_object);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCFormatImageIsPNG(MCSharedString *p_string);
-bool MCFormatImageIsGIF(MCSharedString *p_string);
-bool MCFormatImageIsJPEG(MCSharedString *p_string);
-
-bool MCFormatStyledTextIsUnicode(MCSharedString *p_string);
+bool MCFormatStyledTextIsUnicode(MCDataRef p_string);
 
 #endif

@@ -1,0 +1,1 @@
+# Stack location reported incorrectly if mouse released while dragging window

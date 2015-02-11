@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "Interface.h"
 #include "InterfacePrivate.h"
+#include "NativeType.h"
+#include "CString.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,8 +40,24 @@ enum InterfaceError
 	kInterfaceErrorParamAlreadyDefined,
 	kInterfaceErrorInvalidParameterType,
 	kInterfaceErrorOptionalParamImpliesIn,
-	kInterfaceErrorNoOptionalBoolean,
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Error for when a non-pointer type is
+	//   optional with no default value.
+    kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue,
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Error for when a default value is 
+	//   specified for a type that doesn't support defaulting.
+	kInterfaceErrorDefaultValueNotSupportedForType,
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Wrong constant type for default value.
+	kInterfaceErrorDefaultWrongType,
 	kInterfaceErrorUnknownType,
+	kInterfaceErrorJavaImpliesInParam,
+	kInterfaceErrorMethodsCannotHaveVariants,
+	kInterfaceErrorMethodsMustBeJava,
+	kInterfaceErrorMethodsAreAlwaysTail,
+	kInterfaceErrorUnknownHandlerMapping,
+	kInterfaceErrorUnknownPlatform,
+	kInterfaceErrorObjCNotSupported,
+	kInterfaceErrorJavaNotSupported,
+	kInterfaceErrorJavaImpliesNonIndirectReturn,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +67,10 @@ static const char *s_interface_native_types[] =
 	"boolean",
 	"c-string",
 	"c-data",
+	"utf8-c-string",
+	"utf8-c-data",
+    "utf16-c-string",
+    "utf16-c-data",
 	"integer",
 	"real",
 	
@@ -116,11 +138,34 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 	case kInterfaceErrorOptionalParamImpliesIn:
 		fprintf(stderr, "Optional parameters must be of 'in' type\n");
 		break;
-	case kInterfaceErrorNoOptionalBoolean:
-		fprintf(stderr, "Optional boolean parameters not yet supported\n");
+    case kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue:
+        fprintf(stderr, "Default values must be specified for non-pointer type optional parameters\n");
+        break;
+	case kInterfaceErrorDefaultValueNotSupportedForType:
+		fprintf(stderr, "Default value not supported for the given type\n");
+		break;
+    case kInterfaceErrorDefaultWrongType:
+		fprintf(stderr, "Default specified is the wrong type\n");
 		break;
 	case kInterfaceErrorUnknownType:
 		fprintf(stderr, "Unknown type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;
+	case kInterfaceErrorJavaImpliesInParam:
+		fprintf(stderr, "Java mapped methods can only have 'in' parameters\n");
+	case kInterfaceErrorUnknownHandlerMapping:
+		fprintf(stderr, "Unknown handler mapping type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;
+	case kInterfaceErrorUnknownPlatform:
+		fprintf(stderr, "Unknown platform '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;	
+	case kInterfaceErrorObjCNotSupported:
+		fprintf(stderr, "Objective-C mapping not supported on platform '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;
+	case kInterfaceErrorJavaNotSupported:
+		fprintf(stderr, "Java mapping not supported on platform '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;
+	case kInterfaceErrorJavaImpliesNonIndirectReturn:
+		fprintf(stderr, "Java mapped methods cannot have indirect return value\n");
 		break;
 	}
 
@@ -201,6 +246,10 @@ bool InterfaceBegin(InterfaceRef self, Position p_where, NameRef p_name)
 	self -> where = p_where;
 	self -> qualified_name = ValueRetain(p_name);
 	
+	// MW-2013-07-29: [[ ExternalsApiV5 ]] Default mappings are to use C on all platforms.
+	for(Platform i = kPlatformMac; i < __kPlatformCount__; i++)
+		self -> use_mappings[i] = kHandlerMappingC;
+	
 	return true;
 }
 
@@ -223,6 +272,47 @@ bool InterfaceDefineUse(InterfaceRef self, Position p_where, NameRef p_use)
 		self -> use_objc_objects = true;
 	else
 		return InterfaceReport(self, p_where, kInterfaceErrorUnknownUse, p_use);
+	
+	return true;
+}
+
+bool InterfaceDefineUseOnPlatform(InterfaceRef self, Position p_where, NameRef p_use, NameRef p_platform)
+{
+	MCLog("%s - use %s on %s", PositionDescribe(p_where), StringGetCStringPtr(NameGetString(p_use)), StringGetCStringPtr(NameGetString(p_platform)));
+	
+	HandlerMapping t_mapping;
+	if (NameEqualToCString(p_use, "none"))
+		t_mapping = kHandlerMappingNone;
+	else if (NameEqualToCString(p_use, "c"))
+		t_mapping = kHandlerMappingC;
+	else if (NameEqualToCString(p_use, "objc"))
+		t_mapping = kHandlerMappingObjC;
+	else if (NameEqualToCString(p_use, "java"))
+		t_mapping = kHandlerMappingJava;
+	else
+		return InterfaceReport(self, p_where, kInterfaceErrorUnknownHandlerMapping, p_use);
+	
+	Platform t_platform;
+	if (NameEqualToCString(p_platform, "mac"))
+		t_platform = kPlatformMac;
+	else if (NameEqualToCString(p_platform, "windows"))
+		t_platform = kPlatformWindows;
+	else if (NameEqualToCString(p_platform, "linux"))
+		t_platform = kPlatformLinux;
+	else if (NameEqualToCString(p_platform, "ios"))
+		t_platform = kPlatformIOS;
+	else if (NameEqualToCString(p_platform, "android"))
+		t_platform = kPlatformAndroid;
+	else
+		return InterfaceReport(self, p_where, kInterfaceErrorUnknownPlatform, p_platform);
+	
+	if (t_mapping == kHandlerMappingObjC && !(t_platform == kPlatformMac || t_platform == kPlatformIOS))
+		return InterfaceReport(self, p_where, kInterfaceErrorObjCNotSupported, p_platform);
+	
+	if (t_mapping == kHandlerMappingJava && !(t_platform == kPlatformAndroid))
+		return InterfaceReport(self, p_where, kInterfaceErrorJavaNotSupported, p_platform);
+	
+	self -> use_mappings[t_platform] = t_mapping;
 	
 	return true;
 }
@@ -305,9 +395,9 @@ bool InterfaceDefineEnumElement(InterfaceRef self, Position p_where, StringRef p
 	return true;
 }
 
-bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_type, NameRef p_name)
+bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_type, HandlerAttributes p_attr, NameRef p_name)
 {
-	MCLog("%s - %s handler %s", PositionDescribe(p_where), p_type == kHandlerTypeCommand || p_type == kHandlerTypeTailCommand ? "command" : "function", StringGetCStringPtr(NameGetString(p_name)));
+	MCLog("%s - %s handler %s", PositionDescribe(p_where), p_type == kHandlerTypeCommand ? "command" : "function", StringGetCStringPtr(NameGetString(p_name)));
 	
 	Handler *t_handler;
 	t_handler = nil;
@@ -317,10 +407,28 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 			t_handler = &self -> handlers[i];
 			break;
 		}
-		
+	
+	// RULE: Methods cannot have variants.
+	if (t_handler != nil &&
+			p_type == kHandlerTypeMethod)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsCannotHaveVariants, p_name);
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] 'java' and 'tail' separated out - make sure
+	//   all variants have the same kind.
 	// RULE: Variants of handlers must all have the same type.
-	if (t_handler != nil && t_handler -> type != p_type)
+	if (t_handler != nil &&
+			t_handler -> type != p_type &&
+			/*t_handler -> is_java == ((p_attr & kHandlerAttributeIsJava) != 0) &&*/
+			t_handler -> is_tail == ((p_attr & kHandlerAttributeIsTail) != 0))
 		InterfaceReport(self, p_where, kInterfaceErrorCannotMixHandlerTypes, p_name);
+	
+	// RULE: Methods must specify 'java'.
+	/*if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsJava) == 0)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsMustBeJava, p_name);*/
+	
+	// RULE: Methods must not specify 'tail' since that is their purpose.
+	if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsTail) != 0)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsAreAlwaysTail, p_name);
 		
 	if (t_handler == nil)
 	{
@@ -329,13 +437,21 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 			
 		t_handler = &self -> handlers[self -> handler_count - 1];
 		t_handler -> type = p_type;
+		
+		// MW-2013-06-14: [[ ExternalsApiV5 ]] Set the attributes appropriate in the
+		//   handler.
+		/*t_handler -> is_java = (p_attr & kHandlerAttributeIsJava) != 0;*/
+		t_handler -> is_tail = (p_attr & kHandlerAttributeIsTail) != 0;
+
 		t_handler -> name = ValueRetain(p_name);
 	}
 	
 	if (!MCMemoryResizeArray(t_handler -> variant_count + 1, t_handler -> variants, t_handler -> variant_count))
 		return false;
-		
+	
 	t_handler -> variants[t_handler -> variant_count - 1] . where = p_where;
+	
+	memcpy(t_handler -> variants[t_handler -> variant_count - 1] . mappings, self -> use_mappings, sizeof(self -> use_mappings));
 	
 	self -> current_handler = t_handler;
 	
@@ -384,11 +500,11 @@ bool InterfaceEndHandler(InterfaceRef self)
 	return true;
 }
 
-bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default)
+bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, bool p_optional, ValueRef p_default)
 {	
 	static const char *s_param_types[] = {"in", "out", "inout", "ref"};
 	MCLog("%s - %s%s parameter %s as %s", PositionDescribe(p_where),
-			p_default != nil ? "optional " : "",
+			p_optional ? "optional " : "",
 			s_param_types[p_param_type],
 			StringGetCStringPtr(NameGetString(p_name)), 
 			StringGetCStringPtr(NameGetString(p_type)));
@@ -402,11 +518,58 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	// RULE: 'ref' not currently supported
 	if (p_param_type == kParameterTypeRef)
 		InterfaceReport(self, p_where, kInterfaceErrorInvalidParameterType, nil);
+    
+    NativeType t_native_type;
+    t_native_type = NativeTypeFromName(p_type);
+    
+    // RULE: only pointer types may not have a default value
+    if (p_optional && p_default == nil &&
+        (t_native_type == kNativeTypeBoolean ||
+         t_native_type == kNativeTypeInteger ||
+         t_native_type == kNativeTypeReal ||
+         t_native_type == kNativeTypeCData))
+        InterfaceReport(self, p_where, kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue, nil);
+    
+	// RULE: default values not supported for c-data, objc-data, objc-dictionary, objc-array types
+	if (p_optional && p_default != nil &&
+		(t_native_type == kNativeTypeCData ||
+         t_native_type == kNativeTypeObjcData ||
+         t_native_type == kNativeTypeObjcArray ||
+         t_native_type == kNativeTypeObjcDictionary))
+        InterfaceReport(self, p_where, kInterfaceErrorDefaultValueNotSupportedForType, nil);
 	
-	// RULE: optional 'boolean' not currently supported
-	if (NameEqualToCString(p_type, "boolean") && p_default != nil)
-		InterfaceReport(self, p_where, kInterfaceErrorNoOptionalBoolean, nil);
-	
+    // MERG-2013-06-14: [[ ExternalsApiV5 ]] Check that the type of the constant is
+	//   correct for the type of the parameter.
+    // RULE: wrong default type
+    if (p_default != nil)
+    {
+        bool t_correct_type = false;
+        switch (t_native_type) {
+            case kNativeTypeBoolean:
+                t_correct_type = ValueIsBoolean(p_default);
+                break;
+            case kNativeTypeInteger:
+                t_correct_type = ValueIsInteger(p_default);
+                break;
+            case kNativeTypeReal:
+                t_correct_type = ValueIsReal(p_default) || ValueIsInteger(p_default);
+                break;
+            case kNativeTypeObjcString:
+            case kNativeTypeCString:
+            case kNativeTypeUTF8CString:
+            case kNativeTypeUTF16CString:
+            case kNativeTypeEnum:
+                t_correct_type = ValueIsString(p_default);
+                break;
+            default:
+                t_correct_type = false;
+                break;
+        }
+        
+        if (!t_correct_type)
+            InterfaceReport(self, p_where, kInterfaceErrorDefaultWrongType, nil);
+    }
+    
 	// RULE: optional parameters can only be 'in'
 	if (p_default != nil && p_param_type != kParameterTypeIn)
 		InterfaceReport(self, p_where, kInterfaceErrorOptionalParamImpliesIn, nil);
@@ -420,10 +583,20 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		}
 		
 	// RULE: No non-optional parameters after an optional one
-	if (p_default == nil &&
+	if (!p_optional &&
 		t_variant -> parameter_count > 0 &&
-		t_variant -> parameters[t_variant -> parameter_count - 1] . default_value != nil)
+		t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional)
 		InterfaceReport(self, p_where, kInterfaceErrorParamAfterOptionalParam, nil);
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] New rule to check java methods have compatible
+	//   signature.
+	// RULE: If java handler, then only in parameters are allowed.
+	/*if (self -> current_handler -> is_java)
+		if (p_param_type != kParameterTypeIn)
+			InterfaceReport(self, p_where, kInterfaceErrorJavaImpliesInParam, nil);*/
+	if (t_variant -> mappings[kPlatformAndroid] == kHandlerMappingJava &&
+		p_param_type != kParameterTypeIn)
+			InterfaceReport(self, p_where, kInterfaceErrorJavaImpliesInParam, nil);
 	
 	if (!MCMemoryResizeArray(t_variant -> parameter_count + 1, t_variant -> parameters, t_variant -> parameter_count))
 		return false;
@@ -433,8 +606,9 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	t_variant -> parameters[t_variant -> parameter_count - 1] . name = ValueRetain(p_name);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . type = ValueRetain(p_type);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . default_value = ValueRetain(p_default);
+	t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional = p_optional;
 	
-	if (p_default == nil)
+	if (!p_optional)
 		t_variant -> minimum_parameter_count += 1;
 	
 	return true;
@@ -448,6 +622,13 @@ bool InterfaceDefineHandlerReturn(InterfaceRef self, Position p_where, NameRef p
 			
 	HandlerVariant *t_variant;
 	t_variant = &self -> current_handler -> variants[self -> current_handler -> variant_count - 1];
+
+	// MW-2013-07-27: [[ ExternalsApiV5 ]] New rule to check we don't use indirect on
+	//   java mapped methods.
+	// RULE: If java handler, then only non-indirect return values are allowed.
+	if (t_variant -> mappings[kPlatformAndroid] == kHandlerMappingJava &&
+		p_indirect)
+		InterfaceReport(self, p_where, kInterfaceErrorJavaImpliesNonIndirectReturn, nil);
 
 	InterfaceCheckType(self, p_where, p_type);
 	

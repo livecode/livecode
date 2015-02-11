@@ -1,0 +1,21 @@
+setup
+
+create field
+
+put "foo" into field 1
+
+type "ac" with controlKey
+
+delete it
+  
+create field
+
+select char 1 of field 1
+
+type "v" with controlKey
+
+test (field 1 is "foo")
+
+teardown
+
+-- no key options working properly

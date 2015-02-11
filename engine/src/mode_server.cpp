@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -60,12 +60,55 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  Globals specific to SERVER mode
 //
 
+// AL-2014-11-07: [[ Bug 13919 ]] Set the script limits to 0 for server community
+//  as script only stacks are subjected to license parameter checks
+
 MCLicenseParameters MClicenseparameters =
 {
 	NULL, NULL, NULL, kMCLicenseClassNone, 0,
-	10, 10, 50, 10,
+	0, 0, 0, 0,
 	0,
 	NULL,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Property tables specific to SERVER mode
+//
+
+MCPropertyInfo MCObject::kModeProperties[] =
+{
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
+};
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCStack::kModeProperties[] =
+{
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCProperty::kModeProperties[] =
+{
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+	0,
+	nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,15 +134,24 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for SERVER mode.
 //
 
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
 
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &cprop, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
+#endif
+
+#ifdef _WINDOWS_SERVER
+MCSysWindowHandle MCStack::getrealwindow(void)
+{
+	return nil;
+}
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -116,11 +168,6 @@ void MCStack::mode_takewindow(MCStack *other)
 
 void MCStack::mode_takefocus(void)
 {
-}
-
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
 }
 
 bool MCStack::mode_needstoopen(void)
@@ -157,12 +204,13 @@ void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
 
+#ifdef LEGACY_EXEC
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::mode_get/setprop for SERVER mode.
 //
 
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
@@ -181,6 +229,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -189,7 +238,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 
 // In standalone mode, the standalone stack built into the engine cannot
 // be saved.
-IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
+IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 {
 	if (sptr == MCdispatcher -> getstacks())
 	{
@@ -202,9 +251,9 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
 
 // In standalone mode, the environment depends on various command-line/runtime
 // globals.
-const char *MCModeGetEnvironment(void)
+MCNameRef MCModeGetEnvironment(void)
 {
-	return "server";
+	return MCN_server;
 }
 
 uint32_t MCModeGetEnvironmentType(void)
@@ -232,13 +281,13 @@ bool MCModeShouldLoadStacksOnStartup(void)
 }
 
 // In standalone mode, we try to work out what went wrong...
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
-	r_caption = "Initialization Error";
-	if (MCresult -> getvalue() . is_string())
-		r_text = MCresult -> getvalue() . get_string() . clone();
+	r_caption = MCSTR("Initialization Error");
+	if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		r_text = MCValueRetain((MCStringRef)MCresult -> getvalueref());
 	else
-		r_text = "unknown reason";
+		r_text = MCSTR("unknown reason");
 }
 
 // In standalone mode, we can only set an object's script if has non-zero id.
@@ -254,13 +303,13 @@ bool MCModeShouldCheckCantStandalone(void)
 }
 
 // The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
+bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt)
 {
 	return false;
 }
 
 // The standalone mode causes a relaunch message.
-bool MCModeHandleRelaunch(const char *& r_id)
+bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
 	return false;
 }
@@ -305,7 +354,7 @@ Window MCModeGetParentWindow(void)
 	return NULL;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }
@@ -314,7 +363,7 @@ void MCModeQueueEvents(void)
 {
 }
 
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script)
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script)
 {
 	MCeerror -> add(EE_ENVDO_NOTSUPPORTED, 0, 0);
 	return ES_ERROR;
@@ -333,7 +382,7 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 {
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 
@@ -369,24 +418,38 @@ bool MCModeGetPixelScalingEnabled(void)
 //  Implementation of remote dialog methods
 //
 
-void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files)
+void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value)
 {
 }
 
-void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue)
+void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue, bool& r_chosen, MCColor& r_chosen_color)
 {
 }
 
-void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial)
+void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value)
 {
 }
 
-void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
-void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of Linux-specific mode hooks for SERVER mode.
+//
+
+#ifdef _LINUX_SERVER
+void MCModePreSelectHook(int& maxfd, fd_set& rfds, fd_set& wfds, fd_set& efds)
+{
+}
+
+void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
+{
+}
+
+#endif

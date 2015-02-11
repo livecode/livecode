@@ -16,13 +16,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "stacklst.h"
@@ -57,6 +56,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "external.h"
 
+#include "exec.h"
+
 #ifdef _MOBILE
 #include "mbldc.h"
 #endif
@@ -67,6 +68,143 @@ static int4 s_last_stack_time = 0;
 static int4 s_last_stack_index = 0;
 
 uint2 MCStack::ibeam;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCStack::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_FULLSCREEN, Bool, MCStack, Fullscreen)
+	DEFINE_RO_OBJ_PROPERTY(P_NUMBER, UInt16, MCStack, Number)
+	DEFINE_RO_OBJ_PROPERTY(P_LAYER, Int16, MCStack, Layer)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FILE_NAME, OptionalString, MCStack, FileName)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FILE_NAME, OptionalString, MCStack, FileName)
+	DEFINE_RW_OBJ_PROPERTY(P_SAVE_COMPRESSED, Bool, MCStack, SaveCompressed)
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_ABORT, Bool, MCStack, CantAbort)
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_DELETE, Bool, MCStack, CantDelete)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_STYLE, InterfaceStackStyle, MCStack, Style)
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_MODIFY, Bool, MCStack, CantModify)
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_PEEK, Bool, MCStack, CantPeek)
+	DEFINE_RW_OBJ_PROPERTY(P_DESTROY_STACK, Bool, MCStack, DestroyStack)
+	DEFINE_RW_OBJ_PROPERTY(P_DESTROY_WINDOW, Bool, MCStack, DestroyWindow)
+    DEFINE_RW_OBJ_PROPERTY(P_DYNAMIC_PATHS, Bool, MCStack, DynamicPaths)
+	DEFINE_RW_OBJ_PROPERTY(P_ALWAYS_BUFFER, Bool, MCStack, AlwaysBuffer)
+	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCStack, Label)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, BinaryString, MCStack, UnicodeLabel)
+
+	DEFINE_RW_OBJ_PROPERTY(P_CLOSE_BOX, Bool, MCStack, CloseBox)
+	DEFINE_RW_OBJ_PROPERTY(P_ZOOM_BOX, Bool, MCStack, ZoomBox)
+	DEFINE_RW_OBJ_PROPERTY(P_DRAGGABLE, Bool, MCStack, Draggable)
+	DEFINE_RW_OBJ_PROPERTY(P_COLLAPSE_BOX, Bool, MCStack, CollapseBox)
+	DEFINE_RW_OBJ_PROPERTY(P_LIVE_RESIZING, Bool, MCStack, LiveResizing)
+	DEFINE_RW_OBJ_PROPERTY(P_SYSTEM_WINDOW, Bool, MCStack, SystemWindow)
+	DEFINE_RW_OBJ_PROPERTY(P_METAL, Bool, MCStack, Metal)
+	DEFINE_RW_OBJ_PROPERTY(P_SHADOW, Bool, MCStack, Shadow)
+	DEFINE_RW_OBJ_PROPERTY(P_RESIZABLE, Bool, MCStack, Resizable)
+
+    // AL-2014-05-26: [[ Bug 12510 ]] Stack decoration synonyms not implemented in 7.0
+    DEFINE_RW_OBJ_PROPERTY(P_MAXIMIZE_BOX, Bool, MCStack, ZoomBox)
+	DEFINE_RW_OBJ_PROPERTY(P_MINIMIZE_BOX, Bool, MCStack, CollapseBox)
+    
+	DEFINE_RW_OBJ_PROPERTY(P_MIN_WIDTH, UInt16, MCStack, MinWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_MAX_WIDTH, UInt16, MCStack, MaxWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_MIN_HEIGHT, UInt16, MCStack, MinHeight)
+	DEFINE_RW_OBJ_PROPERTY(P_MAX_HEIGHT, UInt16, MCStack, MaxHeight)
+
+	DEFINE_RO_OBJ_PROPERTY(P_RECENT_NAMES, String, MCStack, RecentNames)
+	DEFINE_RO_OBJ_PROPERTY(P_RECENT_CARDS, String, MCStack, RecentCards)
+
+	DEFINE_RW_OBJ_PROPERTY(P_ICONIC, Bool, MCStack, Iconic)
+	DEFINE_RW_OBJ_PROPERTY(P_START_UP_ICONIC, Bool, MCStack, StartUpIconic)
+	DEFINE_RW_OBJ_PROPERTY(P_ICON, UInt16, MCStack, Icon)
+
+	DEFINE_RO_OBJ_PROPERTY(P_OWNER, OptionalString, MCStack, Owner)
+	DEFINE_RW_OBJ_PROPERTY(P_MAIN_STACK, String, MCStack, MainStack)
+	DEFINE_RW_OBJ_PROPERTY(P_SUBSTACKS, OptionalString, MCStack, Substacks)
+
+	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_NAMES, String, MCStack, BackgroundNames)
+	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_IDS, String, MCStack, BackgroundIds)
+	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_NAMES, String, MCStack, SharedGroupNames)
+	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_IDS, String, MCStack, SharedGroupIds)
+	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfUInt, MCStack, CardIds)
+	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_NAMES, LinesOfString, MCStack, CardNames)
+
+	DEFINE_RW_OBJ_PROPERTY(P_EDIT_BACKGROUND, Bool, MCStack, EditBackground)
+	DEFINE_RW_OBJ_PROPERTY(P_EXTERNALS, String, MCStack, Externals)
+	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_COMMANDS, OptionalString, MCStack, ExternalCommands)
+	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_FUNCTIONS, OptionalString, MCStack, ExternalFunctions)
+	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_PACKAGES, OptionalString, MCStack, ExternalPackages)
+
+	DEFINE_RO_OBJ_PROPERTY(P_MODE, Int16, MCStack, Mode)
+	DEFINE_RW_OBJ_PROPERTY(P_WM_PLACE, Bool, MCStack, WmPlace)
+	DEFINE_RO_OBJ_PROPERTY(P_WINDOW_ID, UInt16, MCStack, WindowId)
+	DEFINE_RO_OBJ_PROPERTY(P_PIXMAP_ID, UInt16, MCStack, PixmapId)
+	DEFINE_RW_OBJ_PROPERTY(P_HC_ADDRESSING, Bool, MCStack, HcAddressing)
+	DEFINE_RO_OBJ_PROPERTY(P_HC_STACK, Bool, MCStack, HcStack)
+	DEFINE_RO_OBJ_PROPERTY(P_SIZE, UInt16, MCStack, Size)
+	DEFINE_RO_OBJ_PROPERTY(P_FREE_SIZE, UInt16, MCStack, FreeSize)
+	DEFINE_RW_OBJ_PROPERTY(P_LOCK_SCREEN, Bool, MCStack, LockScreen)
+
+	DEFINE_RW_OBJ_PROPERTY(P_STACK_FILES, String, MCStack, StackFiles)
+	DEFINE_RW_OBJ_PROPERTY(P_MENU_BAR, String, MCStack, MenuBar)
+	DEFINE_RW_OBJ_PROPERTY(P_EDIT_MENUS, Bool, MCStack, EditMenus)
+	DEFINE_RO_OBJ_PROPERTY(P_VSCROLL, Int32, MCStack, VScroll)
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_CHARSET, InterfaceCharset, MCStack, Charset)
+	DEFINE_RW_OBJ_PROPERTY(P_FORMAT_FOR_PRINTING, Bool, MCStack, FormatForPrinting)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_COLOR, InterfaceNamedColor, MCStack, LinkColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_COLOR, InterfaceNamedColor, MCStack, LinkColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_HILITE_COLOR, InterfaceNamedColor, MCStack, LinkHiliteColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_HILITE_COLOR, InterfaceNamedColor, MCStack, LinkHiliteColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, InterfaceNamedColor, MCStack, LinkVisitedColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, InterfaceNamedColor, MCStack, LinkVisitedColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, OptionalBool, MCStack, UnderlineLinks)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, Bool, MCStack, UnderlineLinks)
+
+	DEFINE_RW_OBJ_PROPERTY(P_WINDOW_SHAPE, UInt32, MCStack, WindowShape)
+	DEFINE_RO_OBJ_PROPERTY(P_SCREEN, Int16, MCStack, Screen)
+	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_CARD, OptionalString, MCStack, CurrentCard)
+	DEFINE_RW_OBJ_PROPERTY(P_MODIFIED_MARK, Bool, MCStack, ModifiedMark)
+	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATED_RENDERING, Bool, MCStack, AcceleratedRendering)
+
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_COMPOSITOR_TYPE, InterfaceCompositorType, MCStack, CompositorType)
+	DEFINE_RW_OBJ_PROPERTY(P_COMPOSITOR_CACHE_LIMIT, OptionalUInt32, MCStack, CompositorCacheLimit)
+    DEFINE_RW_OBJ_PROPERTY(P_COMPOSITOR_TILE_SIZE, OptionalUInt32, MCStack, CompositorTileSize)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
+    
+    DEFINE_RW_OBJ_PROPERTY(P_IGNORE_MOUSE_EVENTS, Bool, MCStack, IgnoreMouseEvents)
+    
+    DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_DECORATIONS, InterfaceDecoration, MCStack, Decorations)
+
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_SHOW_BORDER)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_BORDER_WIDTH)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_ENABLED)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_DISABLED)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_3D)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_LOCK_LOCATION)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_TOOL_TIP)
+	// MW-2012-03-13: [[ UnicodeToolTip ]] Stacks don't have tooltips.
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_UNICODE_TOOL_TIP)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_LAYER)
+    
+   	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_FULLSCREENMODE, InterfaceStackFullscreenMode, MCStack, FullscreenMode)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_KEY, Bool, MCStack, Key)
+    DEFINE_RO_OBJ_PROPERTY(P_PASSWORD, BinaryString, MCStack, Password)
+    
+    // IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
+    DEFINE_RW_OBJ_PROPERTY(P_SCALE_FACTOR, Double, MCStack, ScaleFactor)
+};
+
+MCObjectPropertyTable MCStack::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCStack::MCStack()
 {
@@ -90,13 +228,13 @@ MCStack::MCStack()
 	rect.x = rect.y = 0;
 	rect.width = MCminsize << 5;
 	rect.height = MCminsize << 5;
-	title = NULL;
-	titlestring = NULL;
+	title = MCValueRetain(kMCEmptyString);
+	titlestring = MCValueRetain(kMCEmptyString);
 	minwidth = MCminstackwidth;
 	minheight = MCminstackheight;
 	maxwidth = MAXUINT2;
 	maxheight = MAXUINT2;
-	externalfiles = NULL;
+	externalfiles = MCValueRetain(kMCEmptyString);
 	idlefunc = NULL;
 	windowshapeid = 0;
 
@@ -117,7 +255,7 @@ MCStack::MCStack()
 	nstackfiles = 0;
 	stackfiles = NULL;
 	linkatts = NULL;
-	filename = NULL;
+	filename = MCValueRetain(kMCEmptyString);
 	/* UNCHECKED */ MCNameClone(kMCEmptyName, _menubar);
 	menuy = menuheight = 0;
 	menuwindow = False;
@@ -136,7 +274,7 @@ MCStack::MCStack()
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] Start off with defer updates false.
 	m_defer_updates = false;
-	
+
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
     
@@ -146,8 +284,14 @@ MCStack::MCStack()
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks are not script-only by default.
+    m_is_script_only = false;
+    
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+
+	m_view_need_redraw = false;
+	m_view_need_resize = false;
 
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
@@ -194,13 +338,13 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	vclips = NULL;
 	backgroundid = 0;
 	iconid = 0;
-	title = strclone(sref.title);
-	titlestring = NULL;
+	title = MCValueRetain(sref.title);
+	titlestring = MCValueRetain(kMCEmptyString);
 	minwidth = sref.minwidth;
 	minheight = sref.minheight;
 	maxwidth = sref.maxwidth;
 	maxheight = sref.maxheight;
-	externalfiles = strclone(sref.externalfiles);
+	externalfiles = MCValueRetain(sref.externalfiles);
 	idlefunc = NULL;
 	windowshapeid = sref.windowshapeid;
 
@@ -299,8 +443,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		stackfiles = new MCStackfile[ts];
 		while (ts--)
 		{
-			stackfiles[ts].stackname = strclone(sref.stackfiles[ts].stackname);
-			stackfiles[ts].filename = strclone(sref.stackfiles[ts].filename);
+			stackfiles[ts].stackname = MCValueRetain(sref.stackfiles[ts].stackname);
+			stackfiles[ts].filename = MCValueRetain(sref.stackfiles[ts].filename);
 		}
 	}
 	else
@@ -309,13 +453,14 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	{
 		linkatts = new Linkatts;
 		memcpy(linkatts, sref.linkatts, sizeof(Linkatts));
-		linkatts->colorname = strclone(sref.linkatts->colorname);
-		linkatts->hilitecolorname = strclone(sref.linkatts->hilitecolorname);
-		linkatts->visitedcolorname = strclone(sref.linkatts->visitedcolorname);
+        
+		linkatts->colorname = linkatts->colorname == nil ? nil : (MCStringRef)MCValueRetain(sref.linkatts->colorname);
+		linkatts->hilitecolorname = linkatts->hilitecolorname == nil ? nil : (MCStringRef)MCValueRetain(sref.linkatts->hilitecolorname);
+		linkatts->visitedcolorname = linkatts->hilitecolorname == nil ? nil : (MCStringRef)MCValueRetain(sref.linkatts->visitedcolorname);
 	}
 	else
 		linkatts = NULL;
-	filename = NULL;
+	filename = MCValueRetain(kMCEmptyString);
 	/* UNCHECKED */ MCNameClone(sref._menubar, _menubar);
 	menuy = menuheight = 0;
 
@@ -341,8 +486,14 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks copy the source script-onlyness.
+    m_is_script_only = sref.m_is_script_only;
+    
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+
+	m_view_need_redraw = sref.m_view_need_redraw;
+	m_view_need_resize = sref.m_view_need_resize;
 
 	view_copy(sref);
 }
@@ -378,8 +529,8 @@ MCStack::~MCStack()
 		setparentstack(nil);
 
 	delete mnemonics;
-	delete title;
-	delete titlestring;
+	MCValueRelease(title);
+	MCValueRelease(titlestring);
 
 	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
 	{
@@ -413,7 +564,7 @@ MCStack::~MCStack()
 		               (cards);
 		delete cptr;
 	}
-	delete externalfiles;
+	MCValueRelease(externalfiles);
 
 	uint2 i = 0;
 	while (i < MCnusing)
@@ -437,19 +588,19 @@ MCStack::~MCStack()
 	{
 		while (nstackfiles--)
 		{
-			delete stackfiles[nstackfiles].stackname;
-			delete stackfiles[nstackfiles].filename;
+			MCValueRelease(stackfiles[nstackfiles].stackname);
+			MCValueRelease(stackfiles[nstackfiles].filename);
 		}
 		delete stackfiles;
 	}
 	if (linkatts != NULL)
 	{
-		delete linkatts->colorname;
-		delete linkatts->hilitecolorname;
-		delete linkatts->visitedcolorname;
+		MCValueRelease(linkatts->colorname);
+		MCValueRelease(linkatts->hilitecolorname);
+		MCValueRelease(linkatts->visitedcolorname);
 		delete linkatts;
 	}
-	delete filename;
+	MCValueRelease(filename);
 
 	MCNameDelete(_menubar);
 
@@ -610,8 +761,7 @@ void MCStack::close()
 			MCscreen->destroywindow(window);
 			window = NULL;
 			cursor = None;
-			delete titlestring;
-			titlestring = NULL;
+			MCValueAssign(titlestring, kMCEmptyString);
 			state &= ~CS_BEEN_MOVED;
 		}
 	}
@@ -713,11 +863,11 @@ void MCStack::kunfocus()
 	curcard->kunfocus();
 }
 
-Boolean MCStack::kdown(const char *string, KeySym key)
+Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 {
 	if (!opened || state & CS_IGNORE_CLOSE)
 		return False;
-	if (curcard->kdown(string, key))
+	if (curcard->kdown(p_string, key))
 		return True;
 	MCObject *optr;
 	switch (key)
@@ -786,17 +936,17 @@ Boolean MCStack::kdown(const char *string, KeySym key)
 		if (mode >= WM_PULLDOWN || !MCnavigationarrows)
 			return False;
 		if (MCmodifierstate & MS_CONTROL)
-			setcard(getstack()->getchild(CT_FIRST, MCnullmcstring, CT_CARD), True, False);
+			setcard(getstack()->getchild(CT_FIRST, kMCEmptyString, CT_CARD), True, False);
 		else
-			setcard(getstack()->getchild(CT_PREV, MCnullmcstring, CT_CARD), True, False);
+			setcard(getstack()->getchild(CT_PREV, kMCEmptyString, CT_CARD), True, False);
 		return True;
 	case XK_Right:
 		if (mode >= WM_PULLDOWN || !MCnavigationarrows)
 			return False;
 		if (MCmodifierstate & MS_CONTROL)
-			setcard(getstack()->getchild(CT_LAST, MCnullmcstring, CT_CARD), True, False);
+			setcard(getstack()->getchild(CT_LAST, kMCEmptyString, CT_CARD), True, False);
 		else
-			setcard(getstack()->getchild(CT_NEXT, MCnullmcstring, CT_CARD), True, False);
+			setcard(getstack()->getchild(CT_NEXT, kMCEmptyString, CT_CARD), True, False);
 		return True;
 	case XK_Up:
 		if (mode >= WM_PULLDOWN || !MCnavigationarrows)
@@ -860,13 +1010,18 @@ Boolean MCStack::kdown(const char *string, KeySym key)
 			return MCundos->undo();
 		}
 	uint2 i;
+	
+	// Does this keypress correspond to a mnemonic letter?
+	// The comparison should be case-insensitive for letters
+	KeySym t_key;
+	t_key = MCKeySymToLower(key);
 	for (i = 0 ; i < nmnemonics ; i++)
 	{
-		if (mnemonics[i].key == MCS_tolower(string[0])
+		if (mnemonics[i].key == t_key
 		        && mnemonics[i].button->isvisible()
 		        && !mnemonics[i].button->isdisabled())
 		{
-			mnemonics[i].button->activate(True, string[0]);
+			mnemonics[i].button->activate(True, key);
 			return True;
 		}
 	}
@@ -874,12 +1029,12 @@ Boolean MCStack::kdown(const char *string, KeySym key)
 	return False;
 }
 
-Boolean MCStack::kup(const char *string, KeySym key)
+Boolean MCStack::kup(MCStringRef p_string, KeySym key)
 {
 	if (!opened || state & CS_IGNORE_CLOSE)
 		return False;
-	Boolean done = curcard->kup(string, key);
-	
+	Boolean done = curcard->kup(p_string, key);
+    
 	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
 	//   if this is an engine menu.
 	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
@@ -1108,7 +1263,8 @@ void MCStack::setrect(const MCRectangle &nrect)
 		resize(oldrect . width, oldrect . height);
 }
 
-Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 j = 0;
 	uint2 k = 0;
@@ -1144,9 +1300,9 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 					ep.clear();
 			}
 			else if (isunnamed())
-					ep.clear();
-				else
-					return names(P_LONG_NAME, ep, parid);
+				ep.clear();
+			else
+				return names(P_LONG_NAME, ep, parid);
 		}
 		else
 			ep.setstringf("stack \"%s\"", filename);
@@ -1318,7 +1474,6 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		break;
 	case P_RECENT_NAMES:
 		MCrecent->getnames(this, ep);
-
 		break;
 	case P_RECENT_CARDS:
 		MCrecent->getlongids(this, ep);
@@ -1456,7 +1611,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		ep.setboolean(getflag(F_WM_PLACE));
 		break;
 	case P_WINDOW_ID:
-		ep.setint(MCscreen->dtouint4((Drawable)window));
+		ep.setint(MCscreen->dtouint((Drawable)window));
 		break;
 	case P_PIXMAP_ID:
 		ep.setint(0);
@@ -1531,7 +1686,6 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				MCU_get_color(ep, la->visitedcolorname, la->visitedcolor);
 				break;
 			case P_UNDERLINE_LINKS:
-
 				ep.setboolean(la->underline);
 				break;
 			default:
@@ -1617,9 +1771,9 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	default:
 	{
 		Exec_stat t_stat;
-		t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+		t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
-			return MCObject::getprop(parid, which, ep, effective);
+			return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 
 		return t_stat;
 	}
@@ -1627,9 +1781,10 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	}
 	return ES_NORMAL;
 }
+#endif
 
-
-Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty;
 	Boolean bval;
@@ -2198,8 +2353,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 					{
 						stop_externals();
 						MCscreen->destroywindow(window);
-						delete titlestring;
-						titlestring = NULL;
+						MCValueAssign(titlestring, kMCEmptyString);
 					}
 				}
 		}
@@ -2506,22 +2660,9 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				// MW-2004-04-27: [[Deep Masks]] If a window already has a mask, replace it now to avoid flicker
 				if (m_window_shape != NULL)
 				{
-					MCImage *t_image;
-					// MW-2009-02-02: [[ Improved image search ]] Search for the appropriate image object using the standard method.
-					t_image = resolveimageid(windowshapeid);
-					if (t_image != NULL)
-					{
-						MCWindowShape *t_new_mask;
-						setextendedstate(True, ECS_MASK_CHANGED);
-						t_image -> setflag(True, F_I_ALWAYS_BUFFER);
-						t_image -> open();
-						t_new_mask = t_image -> makewindowshape();
-						t_image -> close();
-                        // MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
-						if (t_new_mask != NULL)
-                            updatewindowshape(t_new_mask);
-                        break;
-					}
+					// IM-2014-10-22: [[ Bug 13746 ]] use common loadwindowshape() method
+					loadwindowshape();
+					break;
 				}
 #endif
 			}
@@ -2664,6 +2805,42 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
+            
+    case P_FORE_PIXEL:
+    case P_BACK_PIXEL:
+    case P_HILITE_PIXEL:
+    case P_BORDER_PIXEL:
+    case P_TOP_PIXEL:
+    case P_BOTTOM_PIXEL:
+    case P_SHADOW_PIXEL:
+    case P_FOCUS_PIXEL:
+    case P_FORE_COLOR:
+    case P_BACK_COLOR:
+    case P_HILITE_COLOR:
+    case P_BORDER_COLOR:
+    case P_TOP_COLOR:
+    case P_BOTTOM_COLOR:
+    case P_SHADOW_COLOR:
+    case P_FOCUS_COLOR:
+    case P_COLORS:
+    case P_FORE_PATTERN:
+    case P_BACK_PATTERN:
+    case P_HILITE_PATTERN:
+    case P_BORDER_PATTERN:
+    case P_TOP_PATTERN:
+    case P_BOTTOM_PATTERN:
+    case P_SHADOW_PATTERN:
+    case P_FOCUS_PATTERN:
+    case P_TEXT_FONT:
+    case P_TEXT_SIZE:
+    case P_TEXT_STYLE:
+    case P_TEXT_HEIGHT:
+        if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+            return ES_ERROR;
+        // MW-2011-08-18: [[ Redraw ]] This could be restricted to just children
+        //   of this stack - but for now do the whole screen.
+        MCRedrawDirtyScreen();
+        return ES_NORMAL;
     
     // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Set the ignoreMouseEvents property
     case P_IGNORE_MOUSE_EVENTS:
@@ -2682,15 +2859,17 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	default:
 	{
 		Exec_stat t_stat;
-		t_stat = mode_setprop(parid, which, ep, MCnullmcstring, MCnullmcstring, effective);
+		t_stat = mode_setprop(parid, which, ep, kMCEmptyString, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
-			return MCObject::setprop(parid, which, ep, effective);
+			return MCObject::setprop_legacy(parid, which, ep, effective);
 
 		return t_stat;
 	}
 	}
 	return ES_NORMAL;
 }
+#endif
+
 
 Boolean MCStack::del()
 {
@@ -2746,28 +2925,35 @@ Boolean MCStack::del()
 
 void MCStack::paste(void)
 {
-	char *t_new_name;
-	if (MCdispatcher -> findstackname(getname_oldstring()) != NULL)
+	if (MCdispatcher -> findstackname(getname()) != NULL)
 	{
 		unsigned int t_index;
 		t_index = 1;
 
-		const char *t_old_name;
-		t_old_name = !isunnamed() ? getname_cstring() : "Unnamed";
+		MCStringRef t_old_name;
+		t_old_name = !isunnamed() ? MCNameGetString(getname()) : MCSTR("Unnamed");
 
+		MCNameRef t_name;
+		t_name = MCValueRetain(kMCEmptyName);
+		
 		for(;;)
 		{
-			t_new_name = new char[strlen(t_old_name) + 8 + 16];
+			MCAutoStringRef t_new_name;
 			if (t_index == 1)
-				sprintf(t_new_name, "Copy of %s", t_old_name);
+				/* UNCHECKED */ MCStringFormat(&t_new_name, "Copy of %@", t_old_name);
 			else
-				sprintf(t_new_name, "Copy (%d) of %s", t_index, t_old_name);
-			if (MCdispatcher -> findstackname(t_new_name) == NULL)
+				/* UNCHECKED */ MCStringFormat(&t_new_name, "Copy (%d) of %@", t_index, t_old_name);
+			
+			MCValueRelease(t_name);
+			/* UNCHECKED */ MCNameCreate(*t_new_name, t_name);
+			
+			if (MCdispatcher -> findstackname(t_name) == NULL)
 				break;
 			t_index += 1;
-			delete t_new_name;
 		}
-		setname_cstring(t_new_name);
+		
+		setname(t_name);
+		MCValueRelease(t_name);
 	}
 
 	// MW-2007-12-11: [[ Bug 5441 ]] When we paste a stack, it should be parented to the home
@@ -2792,7 +2978,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 #ifdef _MACOSX
 		        && !(state & CS_DELETE_STACK))
 #else
-				&& externalfiles != NULL && !(state & CS_DELETE_STACK))
+				&& !MCStringIsEmpty(externalfiles) && !(state & CS_DELETE_STACK))
 #endif
 		{
 			// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
@@ -2864,33 +3050,31 @@ void MCStack::recompute()
 		curcard->recompute();
 }
 
+void MCStack::toolchanged(Tool p_new_tool)
+{
+    if (curcard != NULL)
+        curcard->toolchanged(p_new_tool);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCStack::loadexternals(void)
 {
-	if (externalfiles == NULL || m_externals != NULL || !MCSecureModeCanAccessExternal())
+	if (MCStringIsEmpty(externalfiles) || m_externals != NULL || !MCSecureModeCanAccessExternal())
 		return;
 
 	m_externals = new MCExternalHandlerList;
 
-	char *ename = strclone(externalfiles);
-	char *sptr = ename;
-	while (*sptr)
+	MCAutoArrayRef t_array;
+	/* UNCHECKED */ MCStringSplit(externalfiles, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_array);
+	uindex_t t_count;
+	t_count = MCArrayGetCount(*t_array);
+	for (uindex_t i = 0; i < t_count; i++)
 	{
-		char *tptr;
-		if ((tptr = strchr(sptr, '\n')) != NULL)
-			*tptr++ = '\0';
-		else
-			tptr = &sptr[strlen(sptr)];
-
-		if (strlen(sptr) != 0)
-		{
-			uint4 offset = 0;
-			m_externals -> Load(sptr);
-			sptr = tptr;
-		}
+		MCValueRef t_val;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i + 1, t_val);
+		m_externals->Load((MCStringRef)t_val);
 	}
-	delete ename;
 
 	// If the handler list is empty, then delete the object - thus preventing
 	// its use in MCStack::handle.
@@ -2910,64 +3094,63 @@ void MCStack::unloadexternals(void)
 	m_externals = NULL;
 }
 
-bool MCStack::resolve_relative_path(const char *p_path, char *&r_resolved)
+bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 {
-	if (MCCStringIsEmpty(p_path))
+    if (MCStringIsEmpty(p_path))
 		return false;
-	
-	const char *t_stack_filename;
+
+	MCStringRef t_stack_filename;
 	t_stack_filename = getfilename();
-	if (t_stack_filename == nil)
+	if (MCStringIsEmpty(t_stack_filename))
 	{
 		MCStack *t_parent_stack;
 		t_parent_stack = static_cast<MCStack *>(getparent());
-		if (t_parent_stack != nil)
+		if (t_parent_stack != NULL)
 			t_stack_filename = t_parent_stack -> getfilename();
 	}
-	
-	if (t_stack_filename == nil)
-		return false;
-	
-	const char *t_last_separator;
-	t_last_separator = strrchr(t_stack_filename, '/');
-	
-	if (t_last_separator == nil)
-		return false;
 
-	// If the relative path begins with "./" or ".\", we must remove this, otherwise
-	// certain system calls will get confused by the path.
-	const char *t_leaf;
-	if (p_path[0] == '.' && (p_path[1] == '/' || p_path[1] == '\\'))
-		t_leaf = p_path + 2;
-	else
-		t_leaf = p_path;
-	
-	return MCCStringFormat(r_resolved, "%.*s%s", t_last_separator - t_stack_filename + 1, t_stack_filename, t_leaf);
+	if (!MCStringIsEmpty(t_stack_filename))
+	{
+		uindex_t t_slash;
+        if (MCStringLastIndexOfChar(t_stack_filename, '/', UINDEX_MAX, kMCCompareExact, t_slash))
+        {
+            MCAutoStringRef t_new_filename;
+            MCStringCreateMutable(0, &t_new_filename);
+            /* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, t_stack_filename, MCRangeMake(0, t_slash + 1));
+                
+            // If the relative path begins with "./" or ".\", we must remove this, otherwise
+			// certain system calls will get confused by the path.
+			if (MCStringBeginsWith(p_path, MCSTR("./"), kMCCompareExact) || MCStringBeginsWith(p_path, MCSTR(".\\"), kMCCompareExact))
+				/* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, p_path, MCRangeMake(2, MCStringGetLength(p_path) - 2));
+			else
+				/* UNCHECKED */ MCStringAppend(*t_new_filename, p_path);
+            
+			r_resolved = MCValueRetain(*t_new_filename);
+			return true;
+		}
+	}
+    
+    return false;
 }
 
 // OK-2009-01-09: [[Bug 1161]]
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
-char *MCStack::resolve_filename(const char *filename)
+bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
 {
-	char *t_mode_filename;
-	t_mode_filename = mode_resolve_filename(filename);
-	if (t_mode_filename != NULL)
-		return t_mode_filename;
-
-	char *t_filename;
-	t_filename = nil;
-	
-	if (resolve_relative_path(filename, t_filename))
-	{
-		if (MCS_exists(t_filename, True))
-			return t_filename;
-		else
-			MCCStringFree(t_filename);
-	}
-	
-	return strdup(filename);
+    MCAutoStringRef t_filename;
+    if (resolve_relative_path(filename, &t_filename))
+    {
+        if (MCS_exists(*t_filename, True))
+        {
+            r_resolved = MCValueRetain(*t_filename);
+            return true;
+        }
+    }
+    
+	r_resolved = MCValueRetain(filename);
+	return true;
 }
 
 MCRectangle MCStack::recttoroot(const MCRectangle& p_rect)
@@ -3078,6 +3261,23 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 	return true;
 }
 
+bool MCStack::changeextendedstate(bool setting, uint32_t mask)
+{
+	if (setting && !(f_extended_state & mask))
+	{
+		f_extended_state |= mask;
+		return true;
+	}
+	
+	if (!setting && (f_extended_state & mask))
+	{
+		f_extended_state &= ~mask;
+		return true;
+	}
+
+	return false;
+}
+
 void MCStack::purgefonts()
 {
 	recomputefonts(parent -> getfontref());
@@ -3147,4 +3347,40 @@ bool MCStack::haswindow(void)
 	return window != NULL;
 }
 
+void MCStack::openwindow(Boolean p_override)
+{
+	if (MCModeMakeLocalWindows() && window != NULL)
+	{
+		// IM-2014-09-23: [[ Bug 13349 ]] Sync geometry to window before opening.
+		view_update_geometry();
+		platform_openwindow(p_override);
+	}
+}
+
 //////////
+
+// MW-2014-09-30: [[ ScriptOnlyStack ]] Sets the stack as script only with the given script.
+void MCStack::setasscriptonly(MCStringRef p_script)
+{
+    MCExecContext ctxt(nil,nil,nil);
+    /* UNCHECKED */ SetScript(ctxt, p_script);
+    
+    m_is_script_only = true;
+    
+    // Make sure we have at least one card.
+    if (cards == NULL)
+    {
+        curcard = cards = MCtemplatecard->clone(False, False);
+        cards->setparent(this);
+    }
+}
+
+MCPlatformControlType MCStack::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCStack::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}

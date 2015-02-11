@@ -27,6 +27,28 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-09-29: [[ Bug 13451 ]] return the sRGB colorspace (as a CGColorSpaceRef).
+bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace)
+{
+	CGColorSpaceRef t_colorspace;
+	
+#if defined(TARGET_PLATFORM_MACOS_X)
+	// on OSX request sRGB by name.
+	t_colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+#elif defined(TARGET_SUBPLATFORM_IPHONE)
+	// on iOS this isn't supported so we use the deviceRGB colorspace (which is sRGB anyway).
+	t_colorspace = CGColorSpaceCreateDeviceRGB();
+#endif
+	
+	if (t_colorspace == nil)
+		return false;
+	
+	r_colorspace = t_colorspace;
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __CGDataProviderDeallocate(void *info, const void *data, size_t size)
 {
 	MCMemoryDeallocate(const_cast<void*>(data));
@@ -175,7 +197,7 @@ bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, 
 	/* OVERHAUL - REVISIT: for a grayscale image this should be CGColorSpaceCreateDeviceGray() */
 	CGColorSpaceRef t_colorspace = nil;
 	if (t_success)
-		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
+		t_success = MCImageGetCGColorSpace(t_colorspace);
 	
 	if (t_success)
 		t_success = MCGImageToCGImage(p_src, p_src_rect, t_colorspace, p_copy, p_invert, r_image);
@@ -204,7 +226,7 @@ bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert,
 	
 	CGColorSpaceRef t_colorspace = nil;
 	if (t_success)
-		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
+		t_success = MCImageGetCGColorSpace(t_colorspace);
 	
 	if (t_success)
 		t_success = MCImageBitmapToCGImage(p_bitmap, t_colorspace, p_copy, p_invert, r_image);

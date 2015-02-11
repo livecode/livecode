@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #include "exec.h"
@@ -101,12 +100,12 @@ UIViewController *MCIPhoneGetViewController(void);
 
 -(void)createEvent: (MCCalendar) p_event_data withResult: (EKEvent*&) r_event
 {
-    MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
     CFErrorRef t_an_error = NULL;
 	bool t_did_add = true;
 
     // Set the calendar
-    if (p_event_data.mccalendar.getlength() > 0 && t_an_error == NULL && t_did_add == true)
+    if (MCStringGetLength(p_event_data.mccalendar) > 0 && t_an_error == NULL && t_did_add == true)
     {
         if (m_event_store == nil)
             m_event_store = [[EKEventStore alloc] init];
@@ -119,7 +118,7 @@ UIViewController *MCIPhoneGetViewController(void);
             // set the label item
             for (int t_i = 0; t_i < [t_calendars count]; t_i++)
             {
-                if (MCCStringEqualCaseless([[[t_calendars objectAtIndex:t_i] title] UTF8String], p_event_data.mccalendar.getstring()))
+                if (MCStringIsEqualToCString(p_event_data.mccalendar, [[[t_calendars objectAtIndex:t_i] title] UTF8String], kMCCompareCaseless))
                 {
                     [r_event setCalendar:[t_calendars objectAtIndex:t_i]];
                     t_i = [t_calendars count];
@@ -131,24 +130,30 @@ UIViewController *MCIPhoneGetViewController(void);
     if (p_event_data.mcalldayset == true)
         r_event.allDay = p_event_data.mcallday;
     
-    if (p_event_data.mctitle.getlength() > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.title = [NSString stringWithCString: p_event_data.mctitle.getstring() encoding:NSMacOSRomanStringEncoding];
+    if (MCStringGetLength(p_event_data.mctitle) > 0 && t_an_error == NULL && t_did_add == true)
+        r_event.title = [NSString stringWithMCStringRef: p_event_data.mctitle];
 
-    if (p_event_data.mcnote.getlength() > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.notes = [NSString stringWithCString: p_event_data.mcnote.getstring() encoding:NSMacOSRomanStringEncoding];
+    if (MCStringGetLength(p_event_data.mcnote) > 0 && t_an_error == NULL && t_did_add == true)
+        r_event.notes = [NSString stringWithMCStringRef: p_event_data.mcnote];
 
-    if (p_event_data.mclocation.getlength() > 0 && t_an_error == NULL && t_did_add == true)
-        r_event.location = [NSString stringWithCString: p_event_data.mclocation.getstring() encoding:NSMacOSRomanStringEncoding];
+    if (MCStringGetLength(p_event_data.mclocation) > 0 && t_an_error == NULL && t_did_add == true)
+        r_event.location = [NSString stringWithMCStringRef: p_event_data.mclocation];
     
     // Set up the dates
-    if (p_event_data.mcstartdateset == true && MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_event_data.mcstartdate))
+	MCAutoValueRef t_start;
+    if (p_event_data.mcstartdateset == true && MCD_convert_from_datetime(ctxt, p_event_data.mcstartdate, CF_SECONDS, CF_SECONDS, &t_start))
     {
-        r_event.startDate = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+        integer_t t_secs;
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_start, t_secs);
+		r_event.startDate = [NSDate dateWithTimeIntervalSince1970:t_secs];
     }
 
-    if (p_event_data.mcenddateset == true && MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_event_data.mcenddate))
+	MCAutoValueRef t_end;
+    if (p_event_data.mcenddateset == true && MCD_convert_from_datetime(ctxt, p_event_data.mcenddate, CF_SECONDS, CF_SECONDS, &t_end))
     {
-        r_event.endDate = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+        integer_t t_secs;
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_end, t_secs);
+		r_event.endDate = [NSDate dateWithTimeIntervalSince1970:t_secs];
     }
 
     // Set up the alerts
@@ -178,7 +183,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 -(MCCalendar)createEventData: (EKEvent*) p_event
 {
-    MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
     MCCalendar t_event_data;
     MCString t_temp_string;
     
@@ -187,25 +192,31 @@ UIViewController *MCIPhoneGetViewController(void);
     t_event_data.mcallday = p_event.allDay;
     
     t_temp_string = [((NSString*) p_event.notes) UTF8String];
-    t_event_data.mcnote = t_temp_string.clone();
-
+//    t_event_data.mcnote = t_temp_string.clone();
+    MCValueRelease(t_event_data.mcnote);
+    MCStringCreateWithCString(t_temp_string.getstring(), t_event_data.mcnote);
+    
     t_temp_string = [((NSString*) p_event.location) UTF8String];
-    t_event_data.mclocation = t_temp_string.clone();
+//    t_event_data.mclocation = t_temp_string.clone();
+    MCValueRelease(t_event_data.mclocation);
+    MCStringCreateWithCString(t_temp_string.getstring(), t_event_data.mclocation);
     
     t_temp_string = [((NSString*) p_event.title) UTF8String];
-    t_event_data.mctitle = t_temp_string.clone();
+//    t_event_data.mctitle = t_temp_string.clone();
+    MCValueRelease(t_event_data.mctitle);
+    MCStringCreateWithCString(t_temp_string.getstring(), t_event_data.mctitle);
 
     int32_t t_date_in_seconds;
     
-    // Convert the seconds to date time        
-    t_date_in_seconds = [p_event.startDate timeIntervalSince1970];
-    ep.setnvalue(t_date_in_seconds);
-    MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, t_event_data.mcstartdate);
+    // Convert the seconds to date time
+	MCAutoNumberRef t_start;
+	MCNumberCreateWithInteger([p_event.startDate timeIntervalSince1970], &t_start);
+    MCD_convert_to_datetime(ctxt, *t_start, CF_SECONDS, CF_SECONDS,t_event_data.mcstartdate);
     
-    // Convert the seconds to date time        
-    t_date_in_seconds = [p_event.endDate timeIntervalSince1970];
-    ep.setnvalue(t_date_in_seconds);
-    MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, t_event_data.mcenddate);
+    // Convert the seconds to date time
+	MCAutoNumberRef t_end;
+    MCNumberCreateWithInteger([p_event.endDate timeIntervalSince1970], &t_end);
+    MCD_convert_to_datetime(ctxt, *t_end, CF_SECONDS, CF_SECONDS, t_event_data.mcenddate);
 
     // Get the alerts
     if (p_event.alarms != nil)
@@ -221,7 +232,9 @@ UIViewController *MCIPhoneGetViewController(void);
     if (p_event.calendar != nil)
     {
         t_temp_string = [((NSString*) p_event.calendar.title) UTF8String];
-        t_event_data.mccalendar = t_temp_string;
+//        t_event_data.mccalendar = t_temp_string;
+        MCValueRelease(t_event_data.mccalendar);
+        MCStringCreateWithCString(t_temp_string.getstring(), t_event_data.mccalendar);
     }
     return t_event_data;
 }
@@ -368,9 +381,9 @@ UIViewController *MCIPhoneGetViewController(void);
     if (m_event_store == nil)
         m_event_store = [[EKEventStore alloc] init];
     EKEvent *t_event;
-    if (p_new_event_data.mceventid.getlength () > 0)
+    if (MCStringGetLength(p_new_event_data.mceventid) > 0)
     {
-        t_event = [m_event_store eventWithIdentifier:[NSString stringWithCString: p_new_event_data.mceventid.getstring() encoding:NSMacOSRomanStringEncoding]];
+        t_event = [m_event_store eventWithIdentifier:[NSString stringWithMCStringRef: p_new_event_data.mceventid]];
         const char *t_temp_string = [((NSString*) t_event.calendar.title) UTF8String];
     }
     else
@@ -518,39 +531,39 @@ UIViewController *MCIPhoneGetViewController(void);
 
 @end
 
-bool MCSystemShowEvent(const char* p_event_id, char*& r_result)
+bool MCSystemShowEvent(MCStringRef p_event_id, MCStringRef& r_result)
 {
-    bool t_result = true;
+    bool t_result = false;
     NSString* t_ns_result = nil;
-    NSString* t_ns_event = [[NSString alloc] initWithUTF8String:p_event_id];
+    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCIPhonePickEventDelegate *t_show_event;
     t_show_event = [[MCIPhonePickEventDelegate alloc] init];
 	[t_show_event showViewEvent:t_ns_event withResult: t_ns_result];
     if (t_ns_result != nil)
-		MCCStringClone ([t_ns_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_result);
+		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
     [t_ns_result release];
     [t_show_event release];
     return t_result;
 }
 
-bool MCSystemCreateEvent(char*& r_result)
+bool MCSystemCreateEvent(MCStringRef& r_result)
 {
-    bool t_result = true;
+    bool t_result = false;
     NSString* t_ns_result = nil;
     MCIPhonePickEventDelegate *t_create_event;
     t_create_event = [[MCIPhonePickEventDelegate alloc] init];
 	[t_create_event showCreateEvent: t_ns_result];
     if (t_ns_result.length > 0)
-		MCCStringClone ([t_ns_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_result);
+		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
     [t_ns_result release];
     return t_result;
 }
 
-bool MCSystemUpdateEvent(const char* p_event_id, char*& r_result)
+bool MCSystemUpdateEvent(MCStringRef p_event_id, MCStringRef& r_result)
 {
-    bool t_result = true;
+    bool t_result = false;
     NSString* t_ns_result = nil; 
-    NSString* t_ns_event = [[NSString alloc] initWithUTF8String:p_event_id];
+    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCIPhonePickEventDelegate *t_update_event;
     t_update_event = [[MCIPhonePickEventDelegate alloc] init];
 
@@ -559,7 +572,7 @@ bool MCSystemUpdateEvent(const char* p_event_id, char*& r_result)
         // Allow the user to update the event data
         [t_update_event showUpdateEvent: t_ns_event withResult:t_ns_result];
         if (t_ns_result != nil)
-            MCCStringClone ([t_ns_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_result);
+            t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
     }
     
     [t_ns_result release];
@@ -567,10 +580,10 @@ bool MCSystemUpdateEvent(const char* p_event_id, char*& r_result)
     return t_result;
 }
 
-bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_event_id, MCVariableValue *&r_event_data)
+bool MCSystemGetEventData(MCExecContext &r_ctxt, MCStringRef p_event_id, MCArrayRef &r_event_data)
 {
-    bool t_result;
-    NSString* t_ns_event = [[NSString alloc] initWithUTF8String:p_event_id];
+    bool t_result = false;
+    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCCalendar t_event_result;
     MCIPhonePickEventDelegate *t_get_event;
     t_get_event = [[MCIPhonePickEventDelegate alloc] init];
@@ -582,61 +595,67 @@ bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_event_id, MCVaria
     return t_result;
 }
 
-bool MCSystemRemoveEvent(const char* p_event_id, bool p_reocurring, char*& r_event_id_deleted)
+bool MCSystemRemoveEvent(MCStringRef p_event_id, bool p_reocurring, MCStringRef& r_event_id_deleted)
 {
-    bool t_result = true;
+    bool t_result = false;
     NSString* t_ns_result = NULL;
-    NSString* t_ns_event = [[NSString alloc] initWithUTF8String:p_event_id];
+    NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCIPhonePickEventDelegate *t_delete_event;
     t_delete_event = [[MCIPhonePickEventDelegate alloc] init];
     [t_delete_event deleteEvent: t_ns_event withInstances:p_reocurring withResult: t_ns_result];
     if (t_ns_result != NULL)
-		MCCStringClone ([t_ns_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_event_id_deleted);
+		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_event_id_deleted);
     [t_ns_result release];
     [t_ns_event release];
     return t_result;
 }
 
-bool MCSystemAddEvent(MCCalendar p_new_calendar_data, char*& r_result)
+bool MCSystemAddEvent(MCCalendar p_new_calendar_data, MCStringRef& r_result)
 {
-    bool t_result = true;
+    bool t_result = false;
     NSString* t_ns_result = NULL;
     MCIPhonePickEventDelegate *t_add_event;
     t_add_event = [[MCIPhonePickEventDelegate alloc] init];
 	[t_add_event addEvent: p_new_calendar_data withResult: t_ns_result];
 	if (t_ns_result != NULL)
-		MCCStringClone ([t_ns_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_result);
+		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
     [t_ns_result release];
     return t_result;
 }
 
-bool MCSystemGetCalendarsEvent(char*& r_result)
+bool MCSystemGetCalendarsEvent(MCStringRef& r_result)
 {
-    bool t_result = true;
+    bool t_result = false;
     NSString* t_ns_result = NULL;
     MCIPhonePickEventDelegate *t_get_calendars_event;
     t_get_calendars_event = [[MCIPhonePickEventDelegate alloc] init];
 	[t_get_calendars_event getCalendarsEvent: t_ns_result];
 	if (t_ns_result != NULL)
-		MCCStringClone ([t_ns_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_result);
+		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
     [t_ns_result release];
     return t_result;
 }
 
-bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, char*& r_result)
+bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringRef& r_result)
 {
-    MCExecPoint ep(nil, nil, nil);
-    bool t_result = true;  
+	MCExecContext ctxt(nil, nil, nil);
+    bool t_result = false;
 	NSString *t_ns_result = NULL;
     NSDate *t_start_date = NULL;
     NSDate *t_end_date = NULL;
-    if (MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_start_date))
+    
+    MCAutoValueRef t_start, t_end;
+	if (MCD_convert_from_datetime(ctxt, p_start_date, CF_SECONDS, CF_SECONDS, &t_start))
     {
-        t_start_date = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+        integer_t t_start_secs;
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_start, t_start_secs);
+		t_start_date = [NSDate dateWithTimeIntervalSince1970:t_start_secs];
     }
-    if (MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_end_date))
+    if (MCD_convert_from_datetime(ctxt, p_end_date, CF_SECONDS, CF_SECONDS, &t_end))
     {
-        t_end_date = [NSDate dateWithTimeIntervalSince1970:ep.getnvalue()];
+        integer_t t_end_secs;
+		/* UNCHECKED */ ctxt.ConvertToInteger(*t_end, t_end_secs);
+		t_end_date = [NSDate dateWithTimeIntervalSince1970:t_end_secs];
     }
     if (t_start_date != NULL && t_end_date != NULL)
     {
@@ -644,11 +663,9 @@ bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, char*& r_
         t_find_event = [[MCIPhonePickEventDelegate alloc] init];
     	[t_find_event findEvent:t_start_date andEnd: t_end_date withResult: t_ns_result];
 	    if (t_ns_result != NULL)
-		      MCCStringClone([t_ns_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_result);
+            t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
     }
-    else 
-        t_result = false;
+    
     [t_ns_result release];
     return t_result;
-    
 }

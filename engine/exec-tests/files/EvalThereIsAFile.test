@@ -1,0 +1,16 @@
+setup
+
+set the defaultFolder to specialFolderPath("temporary")
+
+put "evalThereIsAFileTest.txt" into ttestfile
+put "some text" into url ("binfile:" & ttestfile)
+
+test there is a file tTestFile
+test not (there is not a file tTestFile)
+
+delete file ttestfile
+
+test not (there is a file tTestFile)
+test there is not a file tTestFile
+
+teardown

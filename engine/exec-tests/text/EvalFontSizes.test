@@ -1,0 +1,13 @@
+setup
+if the platform is "win32" then
+   put the fontsizes of "Terminal" into tSizes
+   sort lines of tSizes ascending numeric
+   replace return with comma in tSizes
+   test tSizes is "4,6,10,13,14"
+   
+   test the fontsizes of "Arial" is 0
+else
+   -- TODO - test font sizes on other platforms
+   test false
+end if
+teardown

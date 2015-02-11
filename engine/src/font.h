@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_FONT__
 
 #include "graphics.h"
+#include "parsedef.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,23 +44,35 @@ bool MCFontInitialize(void);
 void MCFontFinalize(void);
 
 bool MCFontCreate(MCNameRef name, MCFontStyle style, int32_t size, MCFontRef& r_font);
+bool MCFontCreateWithFontStruct(MCNameRef name, MCFontStyle style, int32_t size, MCFontStruct*, MCFontRef& r_font);
+bool MCFontCreateWithHandle(MCSysFontHandle, MCFontRef& r_font);
 MCFontRef MCFontRetain(MCFontRef font);
 void MCFontRelease(MCFontRef font);
 
+MCNameRef MCFontGetName(MCFontRef font);
+MCFontStyle MCFontGetStyle(MCFontRef font);
+int32_t MCFontGetSize(MCFontRef font);
+
 bool MCFontHasPrinterMetrics(MCFontRef font);
 
-int32_t MCFontGetAscent(MCFontRef font);
-int32_t MCFontGetDescent(MCFontRef font);
+coord_t MCFontGetAscent(MCFontRef font);
+coord_t MCFontGetDescent(MCFontRef font);
+coord_t MCFontGetLeading(MCFontRef font);
+coord_t MCFontGetXHeight(MCFontRef font);
 
-typedef void (*MCFontBreakTextCallback)(MCFontRef font, const char *start, uindex_t length, bool is_unicode, void *ctxt);
-void MCFontBreakText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCFontBreakTextCallback callback, void *callback_data);
+typedef void (*MCFontBreakTextCallback)(MCFontRef font, MCStringRef p_text, MCRange p_range, void *ctxt);
+void MCFontBreakText(MCFontRef font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback callback, void *callback_data, bool p_rtl);
+
 // MW-2013-12-19: [[ Bug 11606 ]] This returns the unrounded width of the text as a float - its used by
 //   the field to calculate accumulated width of text in blocks.
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
-MCGFloat MCFontMeasureTextFloat(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, const MCGAffineTransform &p_transform);
-int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, const MCGAffineTransform &p_transform);
-void MCFontDrawText(MCGContextRef ctxt, coord_t x, int32_t y, const char *p_chars, uint32_t p_char_count, MCFontRef p_font, bool is_unicode);
+MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
+MCGFloat MCFontMeasureTextFloat(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
+int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
+int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
 
+void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break);
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl, bool p_can_break);
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);
 
@@ -79,10 +92,10 @@ void MCLogicalFontTableFinalize(void);
 void MCLogicalFontTableBuild(MCObject *root, uint32_t part);
 
 // Read the logical font table from a stream. It replaces any existing font table.
-IO_stat MCLogicalFontTableLoad(IO_handle stream);
+IO_stat MCLogicalFontTableLoad(IO_handle stream, uint32_t version);
 
 // Save the logical font table out to a stream.
-IO_stat MCLogicalFontTableSave(IO_handle stream);
+IO_stat MCLogicalFontTableSave(IO_handle stream, uint32_t version);
 
 // Finish with the logical font table.
 void MCLogicalFontTableFinish(void);
@@ -103,13 +116,13 @@ typedef struct MCLoadedFont *MCLoadedFontRef;
 // loaded for all applications, otherwise just for the current one. If the
 // font is already loaded and the globally flag has changed an attempt is first
 // made to unload it before loading it again.
-Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally);
+bool MCFontLoad(MCStringRef p_path, bool p_globally);
 
 // Attempt to unload the given file as a font.
-Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path);
+bool MCFontUnload(MCStringRef p_path);
 
 // List all currently loaded font files (loaded via MCFontLoad).
-Exec_stat MCFontListLoaded(MCExecPoint& ep);
+bool MCFontListLoaded(uindex_t& r_count, MCStringRef*& r_list);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,21 +168,21 @@ enum Font_textstyle {
 
 extern uint2 MCF_getweightint(uint2 style);
 extern const char *MCF_getweightstring(uint2 style);
-extern Boolean MCF_setweightstring(uint2 &style, const MCString &data);
+extern Boolean MCF_setweightstring(uint2 &style, MCStringRef data);
 extern uint2 MCF_getexpandint(uint2 style);
 extern const char *MCF_getexpandstring(uint2 style);
-extern Boolean MCF_setexpandstring(uint2 &style, const MCString &data);
+extern Boolean MCF_setexpandstring(uint2 &style, MCStringRef data);
 extern const char *MCF_getslantshortstring(uint2 style);
 extern const char *MCF_getslantlongstring(uint2 style);
-extern Boolean MCF_setslantlongstring(uint2 &style, const MCString &data);
-extern Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
-	                                   uint4 &flags, char *&fname,
+extern Boolean MCF_setslantlongstring(uint2 &style, MCStringRef data);
+extern Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
+	                                   uint4 &flags, MCStringRef &fname,
 	                                   uint2 &height, uint2 &size, uint2 &style);
-extern Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep,
-	                                     uint4 flags, const char *name,
-	                                     uint2 height, uint2 size, uint2 style);
+extern Exec_stat MCF_unparsetextatts(Properties which,
+                                     uint4 flags, MCStringRef name,
+	                                     uint2 height, uint2 size, uint2 style, MCValueRef &r_result);
 
-extern Exec_stat MCF_parsetextstyle(const MCString &data, Font_textstyle &style);
+extern Exec_stat MCF_parsetextstyle(MCStringRef data, Font_textstyle &style);
 extern const char *MCF_unparsetextstyle(Font_textstyle style);
 extern void MCF_changetextstyle(uint2& x_style_set, Font_textstyle p_style, bool p_new_state);
 extern bool MCF_istextstyleset(uint2 styleset, Font_textstyle style);

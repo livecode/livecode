@@ -21,7 +21,7 @@
 		<introduced version="1.0">Added.</introduced>
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
-		
+		<changed version="7.0">Updated for Unicode compatibility</changed>
 		<experimental version=""></experimental>
 		<nonexperimental version=""></nonexperimental>
 	</history>
@@ -57,6 +57,12 @@
 		<keyword tag="word">word Keyword</keyword>
 		<keyword tag="characters">characters Keyword</keyword>
 		<keyword tag="line">line Keyword</keyword>
+		<keyword tag="byte">byte Keyword</keyword>
+		<keyword tag="bytes">bytes Keyword</keyword>
+		<keyword tag="codepoint">codepoint Keyword</keyword>
+		<keyword tag="codepoints">codepoints Keyword</keyword>
+		<keyword tag="codeunit">codeunit Keyword</keyword>
+		<keyword tag="codeunits">codeunits Keyword</keyword>
 	</references>
 
 	<description>
@@ -66,8 +72,6 @@
 		</parameters>
 
 	<value></value>
-	<comments>
-		<p>A character is a single letter, digit, punctuation mark, or control character. Spaces, tabs, and returns are all characters.</p>
-	</comments>
+	<comments>A character refers to what would naturally be thought of as a single graphical character, even if it is composed of multiple sub-units, as in some accented text or Korean ideographs. <p></p><p>The hierarchy of the new and altered chunk types is as follows:</p><p></p><p>byte w of codeunit x of codepoint y of char z of word ...</p><p></p><p><note> In versions prior to 7.0 the byte chunk was identical in functionality to the character chunk. In 7.0 and later a character is not an 8-bit unit and it is therefore not appropriate to use this type of chunk expression on binary data, to refer to 8-bit units in binary data use the <keyword tag="byte">byte</keyword> keyword.</note></comments>
 	</description>
 </doc>

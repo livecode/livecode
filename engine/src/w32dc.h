@@ -192,7 +192,7 @@ public:
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
 	// in w32dcs.cc
-	virtual void setstatus(const char *status);
+	virtual void setstatus(MCStringRef status);
 
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
@@ -203,7 +203,7 @@ public:
 	virtual void grabpointer(Window w);
 	virtual void ungrabpointer();
 	
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	virtual uint2 getwidthmm();
 	virtual uint2 getheightmm();
 	virtual uint2 getmaxpoints();
@@ -234,7 +234,7 @@ public:
 	virtual void iconifywindow(Window window);
 	virtual void uniconifywindow(Window window);
 	
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setcmap(MCStack *sptr);
 	virtual void sync(Window w);
 	virtual void beep();
@@ -245,7 +245,7 @@ public:
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
-	                      int2 dx, int2 dy, uint4 rop);
+                          int2 dx, int2 dy, uint4 rop);
 																	
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
@@ -254,30 +254,31 @@ public:
 	virtual MCCursorRef createcursor(MCImageBitmap *image, int2 xhot, int2 yhot);
 	virtual void freecursor(MCCursorRef c);
 
-	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4towindow(uint4, Window &w);
-	virtual void getbeep(uint4 property, MCExecPoint &ep);
+    virtual uintptr_t dtouint(Drawable d);
+    virtual Boolean uinttowindow(uintptr_t, Window &w);
+    virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	virtual Window getroot();
+
 	//virtual bool selectrect(MCRectangle &r_rect);
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 
 	virtual HRGN BitmapToRegion(MCImageBitmap *p_bitmap);
 
 	virtual void expose();
 	virtual Boolean abortkey();
 	virtual uint2 querymods();
-	virtual void getkeysdown(MCExecPoint &ep);
+	virtual bool getkeysdown(MCListRef& r_list);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
 	virtual void flushevents(uint2 e);
 	virtual Boolean istripleclick();
-	virtual char *charsettofontname(uint1 chharset, const char *oldfontname);
-	virtual uint1 fontnametocharset(const char *oldfontname);
+//	virtual char *charsettofontname(uint1 chharset, const char *oldfontname);
+	virtual uint1 fontnametocharset(MCStringRef p_fontname);
 	virtual void clearIME(Window w);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
@@ -292,13 +293,13 @@ public:
 	virtual void assignbackdrop(enum Window_mode p_mode, Window p_window);
 
 	virtual void seticon(uint4 p_icon);
-	virtual void seticonmenu(const char *p_menu);
-	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	virtual void seticonmenu(MCStringRef p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 
 	virtual void enactraisewindows(void);
 	
 	virtual MCPrinter *createprinter(void);
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 
 	//
 
@@ -315,8 +316,8 @@ public:
 	virtual MCPasteboard *getclipboard(void);
     
     // TD-2013-07-01: [[ DynamicFonts ]]
-    virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
-    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
+    virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 
 	//
 
@@ -325,7 +326,7 @@ public:
 
 	//
 
-	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 

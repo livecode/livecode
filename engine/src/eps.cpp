@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -125,7 +125,7 @@ Boolean MCEPS::mdown(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			break;
 		case T_POINTER:
 			start(True);
@@ -156,9 +156,9 @@ Boolean MCEPS::mup(uint2 which, bool p_release)
 		{
 		case T_BROWSE:
 			if (!p_release && MCU_point_in_rect(rect, mx, my))
-				message_with_args(MCM_mouse_up, "1");
+                message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
             else
-                message_with_args(MCM_mouse_release, "1");
+                message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 			break;
 		case T_POINTER:
 			end(true, p_release);
@@ -192,7 +192,8 @@ void MCEPS::setrect(const MCRectangle &nrect)
 		rect = nrect;
 }
 
-Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCEPS::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -246,14 +247,16 @@ Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean
 	case P_PAGE_COUNT:
 		ep.setint(MCU_max(pagecount, 1));
 		break;
-#endif /* MCEPS::getprop */ 
+#endif /* MCEPS::getprop */
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
+#endif
 
-Exec_stat MCEPS::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	real8 n;
@@ -419,7 +422,7 @@ Exec_stat MCEPS::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean eff
 		break;
 #endif /* MCEPS::setprop */
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -428,13 +431,14 @@ Exec_stat MCEPS::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean eff
 	}
 	return ES_NORMAL;
 }
+#endif
 
 IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -451,7 +455,8 @@ IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	if ((stat = IO_write(postscript, sizeof(char), size, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_string(prolog, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] EPS is always ASCII so legacy.
+	if ((stat = IO_write_cstring_legacy(prolog, stream, 2)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_int4(MCU_r8toi4(xscale), stream)) != IO_NORMAL)
 		return stat;
@@ -509,7 +514,7 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 		dc->setbackground(dc->getwhite());
 		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->setdashes(0, dashlist, 2);
-		MCSegment segs[2];
+		MCLineSegment segs[2];
 		segs[0].x1 = segs[1].x1 = trect.x;
 		segs[0].x2 = segs[1].x2 = trect.x + trect.width;
 		segs[0].y1 = segs[1].y2 = trect.y;
@@ -564,7 +569,7 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 		drawselected(dc);
 }
 
-IO_stat MCEPS::load(IO_handle stream, const char *version)
+IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -575,10 +580,11 @@ IO_stat MCEPS::load(IO_handle stream, const char *version)
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
 		return stat;
 	postscript = new char[size + 1];
-	if ((stat = IO_read(postscript, sizeof(char), size, stream)) != IO_NORMAL)
+	if ((stat = IO_read(postscript, size, stream)) != IO_NORMAL)
 		return stat;
 	postscript[size] = '\0';
-	if ((stat = IO_read_string(prolog, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] EPS is always ASCII so legacy.
+	if ((stat = IO_read_cstring_legacy(prolog, stream, 2)) != IO_NORMAL)
 		return stat;
 	int4 i;
 	if ((stat = IO_read_int4(&i, stream)) != IO_NORMAL)
@@ -609,7 +615,7 @@ IO_stat MCEPS::load(IO_handle stream, const char *version)
 		if ((stat = image->load(stream, version)) != IO_NORMAL)
 			return stat;
 	}
-	if (strncmp(version, "1.3", 3) > 0)
+	if (version > 1300)
 	{
 		if ((stat = IO_read_uint2(&curpage, stream)) != IO_NORMAL)
 			return stat;
@@ -623,7 +629,7 @@ IO_stat MCEPS::load(IO_handle stream, const char *version)
 					return stat;
 		}
 	}
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }
 
 void MCEPS::setextents()
@@ -726,20 +732,25 @@ void MCEPS::resetscale()
 	}
 }
 
-Boolean MCEPS::import(char *fname, IO_handle stream)
+Boolean MCEPS::import(MCStringRef fname, IO_handle stream)
 {
 	size = (uint4)MCS_fsize(stream);
 	delete postscript;
 	postscript = new char[size + 1];
-	if (IO_read(postscript, sizeof(char), size, stream) != IO_NORMAL)
+	if (IO_read(postscript, size, stream) != IO_NORMAL)
 		return False;
 	postscript[size] = '\0';
-	const char *tname = strrchr(fname, PATH_SEPARATOR);
-	if (tname != NULL)
-		tname += 1;
-	else
-		tname = fname;
-	setname_cstring(tname);
+	uindex_t t_sep;
+    MCStringRef t_fname;
+    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+    else
+        t_fname = MCValueRetain(fname);
+    
+    MCNewAutoNameRef t_name;
+    if (!MCNameCreateAndRelease(t_fname, &t_name))
+        return False;
+    setname(*t_name);
 	setextents();
 	rect.width = (uint2)(ex * xscale / xf);
 	rect.height = (uint2)(ey * yscale / yf);

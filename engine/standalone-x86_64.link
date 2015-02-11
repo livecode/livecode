@@ -1,7 +1,4 @@
-/* This is the standard linker script (ld --verbose) from version 2.22 of x64
-   ld. It has been modified with a rule to place the '.project' section
-   after the .bss section to allow easy insertion of the standalone data. */
-
+/* Script for -z combreloc: combine and sort reloc sections */
 OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64",
 	      "elf64-x86-64")
 OUTPUT_ARCH(i386:x86-64)
@@ -180,11 +177,10 @@ SECTIONS
     . = ALIGN(. != 0 ? 64 / 8 : 1);
   }
   . = ALIGN(64 / 8);
-  .project         :
+  .project :
   {
-   *(.project)
+    *(.project)
   }
-  . = ALIGN(64 / 8);
   _end = .; PROVIDE (end = .);
   . = DATA_SEGMENT_END (.);
   /* Stabs debugging sections.  */
@@ -226,3 +222,5 @@ SECTIONS
   .gnu.attributes 0 : { KEEP (*(.gnu.attributes)) }
   /DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }
 }
+
+

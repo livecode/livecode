@@ -1,0 +1,17 @@
+setup
+
+test "red" is a color
+test not ("red" is not a color)
+
+test 123 is a color
+test 0,0,0 is a color
+
+test "abc" is not a color
+test 1.5 is not a color
+
+test 0,0 is not a color
+test 0,0,0,0 is not a color
+test 0,"abc",0 is not a color
+test "red","green","blue" is not a color
+
+teardown

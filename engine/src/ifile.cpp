@@ -26,29 +26,37 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "stack.h"
 #include "sellst.h"
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "globals.h"
 #include "osspec.h"
 #include "context.h"
 
-#include "core.h"
+#include "filepath.h"
+
+#include "module-resources.h"
 
 //////////////////////////////////////////////////////////////////////
 
 // MW-2014-07-17: [[ ImageMetadata ]] Convert array to the metadata struct.
-bool MCImageParseMetadata(MCExecPoint& ep, MCVariableValue& p_array, MCImageMetadata& r_metadata)
+bool MCImageParseMetadata(MCExecContext& ctxt, MCArrayRef p_array, MCImageMetadata& r_metadata)
 {
-    if (p_array . fetch_element(ep, "density") == ES_NORMAL &&
-        ep . ton() == ES_NORMAL)
+    MCValueRef t_value;
+    real64_t t_density;
+    
+    if (MCArrayFetchValue(p_array, false, MCNAME("density"), t_value)
+            && ctxt . ConvertToReal(t_value, t_density))
     {
         r_metadata . has_density = true;
-        r_metadata . density = ep . getnvalue();
+        r_metadata . density = t_density;
     }
+    else
+        r_metadata . has_density = false;
     
     return true;
 }
 
+#ifdef LEGACY_EXEC
 // MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
 bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata)
 {
@@ -65,6 +73,7 @@ bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata)
     
     return true;
 }
+#endif
 
 //////////////////////////////////////////////////////////////////////
 
@@ -106,8 +115,9 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 				 t_success = MCImageEncodePNG(p_bitmap, nil, t_stream, t_size);
 			 }
 		}
+
 		if (t_stream != nil)
-			MCS_fakeclosewrite(t_stream, t_buffer, t_size);
+			t_success = MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_buffer), reinterpret_cast<size_t&>(t_size)) == IO_NORMAL;
 
 		if (t_success)
 			t_success = MCImageCreateCompressedBitmap(t_compression, r_compressed);
@@ -190,7 +200,8 @@ void MCImage::prepareimage()
 
 void MCImage::openimage()
 {
-	if (!m_image_opened && m_rep != nil)
+	uindex_t t_width, t_height;
+	if (!m_image_opened && m_rep != nil && m_rep->GetGeometry(t_width, t_height))
 	{
 		// MW-2013-06-21: [[ Valgrind ]] Initialize width/height to defaults in
 		//   case GetGeometry fails.
@@ -403,34 +414,26 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPathIsAbsolute(const char *p_path)
-{
-	if (p_path == nil || p_path[0] == '\0')
-		return false;
-	
-	return p_path[0] == '/' || p_path[0] == ':';
-}
-
-bool MCPathIsRemoteURL(const char *p_path)
-{
-	return MCCStringBeginsWith(p_path, "http://") ||
-	MCCStringBeginsWith(p_path, "https://") ||
-	MCCStringBeginsWith(p_path, "ftp://");
-}
-
-bool MCImageGetFileRepForStackContext(const char *p_filename, MCStack *p_stack, MCImageRep *&r_rep)
+bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
 	MCImageRep *t_rep;
 	t_rep = nil;
 	
+    MCAutoStringRef t_prefixless;
 	// skip over any file: / binfile: url prefix
-	if (MCCStringBeginsWith(p_filename, "file:"))
-		p_filename += 5;
-	else if (MCCStringBeginsWith(p_filename, "binfile:"))
-		p_filename += 8;
-	
+	if (MCStringBeginsWith(p_filename, MCSTR("file:"), kMCStringOptionCompareCaseless))
+    {
+		MCStringCopySubstring(p_filename, MCRangeMake(5, UINDEX_MAX), &t_prefixless);
+        p_filename = *t_prefixless;
+    }
+	else if (MCStringBeginsWith(p_filename, MCSTR("binfile:"), kMCStringOptionCompareCaseless))
+    {
+		MCStringCopySubstring(p_filename, MCRangeMake(8, UINDEX_MAX), &t_prefixless);
+        p_filename = *t_prefixless;
+    }
+
 	if (MCPathIsRemoteURL(p_filename))
 		t_success = MCImageRepGetReferenced(p_filename, t_rep);
 	else
@@ -441,25 +444,18 @@ bool MCImageGetFileRepForStackContext(const char *p_filename, MCStack *p_stack, 
 		else
 		{
 			// else try to resolve from stack file location
-			char *t_path;
-			t_path = nil;
-			
-			t_success = p_stack->resolve_relative_path(p_filename, t_path);
+			MCAutoStringRef t_path;
+			t_success = p_stack->resolve_relative_path(p_filename, &t_path);
 			if (t_success)
-				t_success = MCImageRepGetDensityMapped(t_path, t_rep);
-			
-			MCCStringFree(t_path);
-			t_path = nil;
+				t_success = MCImageRepGetDensityMapped(*t_path, t_rep);
 			
 			// else try to resolve from current folder
 			if (t_success && t_rep == nil)
 			{
-				t_success = nil != (t_path = MCS_resolvepath(p_filename));
+                MCAutoStringRef t_resolved;
+				t_success = MCS_resolvepath(p_filename, &t_resolved);
 				if (t_success)
-					t_success = MCImageRepGetDensityMapped(t_path, t_rep);
-				
-				MCCStringFree(t_path);
-				t_path = nil;
+					t_success = MCImageRepGetDensityMapped(*t_resolved, t_rep);
 			}
 		}
         // AL-2014-01-17: [[ Bug 11684 ]] If image file isn't found, return false
@@ -471,6 +467,15 @@ bool MCImageGetFileRepForStackContext(const char *p_filename, MCStack *p_stack, 
 		r_rep = t_rep;
 	
 	return t_success;
+}
+
+bool MCImageGetFileRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep)
+{
+	MCAutoStringRef t_path;
+	if (!MCResourceResolvePath(p_resource_file, &t_path))
+		return false;
+	
+	return MCImageRepGetDensityMapped(*t_path, r_rep);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

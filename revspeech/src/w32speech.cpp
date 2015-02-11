@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 INarrator *InstantiateNarrator(NarratorProvider p_provider)
 {
+#ifdef OLD_SAPI
 	if (p_provider == kNarratorProviderDefault)
 	{
 		INarrator *t_narrator;
@@ -43,7 +44,8 @@ INarrator *InstantiateNarrator(NarratorProvider p_provider)
 	}
 	else if (p_provider == kNarratorProviderSAPI4)
 		return new WindowsSAPI4Narrator();
-	
+#endif
+
 	return new WindowsSAPI5Narrator();
 }
 

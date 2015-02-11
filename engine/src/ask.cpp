@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "scriptpt.h"
 #include "util.h"
 #include "date.h"
@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "dispatch.h"
 #include "securemode.h"
+#include "exec.h"
 
 #include "osspec.h"
 
@@ -44,11 +45,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "meta.h"
 #include "ask.h"
 
-extern const char *MCdialogtypes[];
+#include "syntax.h"
+
+
 
 MCAsk::~MCAsk(void)
 {
-	delete it;
 	delete title;
 
 	switch(mode)
@@ -83,13 +85,14 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 	const LT *t_literal;
 
 	initpoint(sp);
-	getit(sp, it);
 
 	if (sp . next(t_type) == PS_NORMAL)
+	{
 		if (sp . lookup(SP_ASK, t_literal) == PS_NORMAL)
 			mode = (Ask_type)t_literal -> which;
 		else
 			sp . backup();
+	}
 
 	// MW-2008-07-23: [[ Bug 6821 ]] ask files "foo" crashes.
 	//   This is because the mode check is not strict enough. If the given ask
@@ -123,10 +126,12 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 			t_error = PE_ANSWER_BADTITLE;
 	
 	if (t_error == PE_UNDEFINED && sp . skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
+	{
 		if (sp . skip_token(SP_ASK, TT_UNDEFINED, AT_SHEET) == PS_NORMAL)
 			sheet = True;
 		else
 			t_error = PE_ANSWER_BADRESPONSE;
+	}
 			
 	if (t_error != PE_UNDEFINED)
 	{
@@ -224,40 +229,83 @@ Parse_errors MCAsk::parse_file(MCScriptPoint& sp)
 	return t_error;
 }
 
-Exec_stat MCAsk::exec(class MCExecPoint& ep)
+void MCAsk::exec_ctxt(class MCExecContext& ctxt)
 {
-	Exec_errors t_error = EE_UNDEFINED;
-	Meta::cstring_value t_title;
+    
+    MCAutoStringRef t_title;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(title, EE_ANSWER_BADTITLE, &t_title))
+        return;
 
-	MCresult -> clear(False);
-
-	t_error = Meta::evaluate(ep, title, t_title, EE_ANSWER_BADTITLE);
-	if (!t_error)
-		switch(mode)
-		{
-		case AT_PASSWORD:
-		case AT_CLEAR:
-			t_error = exec_password(ep, t_title);
-		break;
-
-		case AT_FILE:
-			t_error = exec_file(ep, t_title);
-		break;
-
-		default:
-			t_error = exec_question(ep, t_title);
-		break;
-		}
-
-	if (!t_error)
-		it -> set(ep);
-	else
-		MCeerror -> add(t_error, line, pos);
-
-	return t_error ? ES_ERROR : ES_NORMAL;
+	switch(mode)
+	{
+        case AT_PASSWORD:
+        case AT_CLEAR:
+        {
+            MCAutoStringRef t_prompt, t_answer;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(password . prompt, EE_ASK_BADREPLY, &t_prompt))
+                return;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(password . answer, EE_ASK_BADREPLY, &t_answer))
+                return;
+            MCDialogExecAskPassword(ctxt, mode == AT_CLEAR, *t_prompt, *t_answer, password . hint, *t_title, sheet == True);
+        }
+            break;
+            
+        case AT_FILE:
+        {
+            MCAutoStringRef t_prompt, t_initial, t_filter;
+            MCAutoStringRefArray t_types;
+            
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.prompt, EE_ANSWER_BADQUESTION, &t_prompt))
+                return;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
+                return;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.filter, EE_ANSWER_BADQUESTION, &t_filter))
+                return;
+            
+            MCAutoStringRef t_initial_resolved;
+            if (*t_initial != nil)
+            {
+                // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+                if (!MCS_resolvepath(*t_initial, &t_initial_resolved))
+                {
+                    ctxt . LegacyThrow(EE_NO_MEMORY);
+                    return;
+                }
+            }
+            
+            if (file . type_count > 0)
+            {
+                /* UNCHECKED */ t_types.Extend(file.type_count);
+                for (uindex_t i = 0; i < file.type_count; i++)
+                {
+                    if (!ctxt . EvalOptionalExprAsNullableStringRef(file.types[i], EE_ANSWER_BADQUESTION, t_types[i]))
+                        return;
+                }
+            }
+            
+            if (t_types.Count() > 0)
+                MCDialogExecAskFileWithTypes(ctxt, *t_prompt, *t_initial_resolved, *t_types, t_types . Count(), *t_title, sheet == True);
+            else if (*t_filter != nil)
+                MCDialogExecAskFileWithFilter(ctxt, *t_prompt, *t_initial_resolved, *t_filter, *t_title, sheet == True);
+            else
+                MCDialogExecAskFile(ctxt, *t_prompt, *t_initial_resolved, *t_title, sheet == True);
+        }
+            break;
+            
+        default:
+        {
+            MCAutoStringRef t_prompt, t_answer;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(question . prompt, EE_ASK_BADREPLY, &t_prompt))
+                return;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(question . answer, EE_ASK_BADREPLY, &t_answer))
+                return;
+            MCDialogExecAskQuestion(ctxt, mode, *t_prompt, *t_answer, question . hint, *t_title, sheet == True);
+        }
+            break;
+	}
 }
 
-#ifdef /* MCAsk::exec_question */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -294,19 +342,19 @@ Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAsk::exec_question */
+#endif
 
-#ifdef /* MCAsk::exec_password */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
-
+	
 	Meta::cstring_value t_prompt, t_answer;
 	
 	MCresult -> clear(False);
 	
 	t_error = Meta::evaluate(ep, password . prompt, t_prompt, EE_ASK_BADREPLY, password . answer, t_answer, EE_ASK_BADREPLY);
-
+	
 #ifndef _MOBILE
 	if (!t_error)
 	{
@@ -333,22 +381,22 @@ Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 	
 	return t_error;
 }
-#endif /* MCAsk::exec_password */
+#endif
 
-#ifdef /* MCAsk::exec_file */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
-
+	
 	Meta::cstring_value t_prompt, t_initial, t_filter;
 	Meta::cstring_value *t_types = NULL;
 	char **t_type_strings = NULL;
 	uint4 t_type_count = 0;
-
+	
 	t_error = Meta::evaluate(ep,
-								file . prompt, t_prompt, EE_ANSWER_BADQUESTION,
-								file . initial, t_initial, EE_ANSWER_BADRESPONSE,
-								file . filter, t_filter, EE_ANSWER_BADRESPONSE);
+							 file . prompt, t_prompt, EE_ANSWER_BADQUESTION,
+							 file . initial, t_initial, EE_ANSWER_BADRESPONSE,
+							 file . filter, t_filter, EE_ANSWER_BADRESPONSE);
 	
 	if (!t_error && file . type_count > 0)
 	{
@@ -364,7 +412,7 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 				}
 		}
 	}
-
+	
 	if (!t_error && !MCSecureModeCanAccessDisk())
 		t_error = EE_DISK_NOPERM;
 
@@ -386,7 +434,7 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 			unsigned int t_options = 0;
 			if (sheet)
 				t_options |= MCA_OPTION_SHEET;
-
+			
 			if (t_types != NULL)
 				MCA_ask_file_with_types(ep, p_title, t_prompt, t_type_strings, t_type_count, t_initial_resolved, t_options);
 			else
@@ -406,17 +454,14 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 			MCresult -> sets(MCcancelstring);
 	}
 
-	if (t_initial_resolved != nil)
-		MCCStringFree(t_initial_resolved);
-
 	delete[] t_types;
 	delete t_type_strings;
-
+	
 	return t_error;
 }
-#endif /* MCAsk::exec_file */
+#endif
 
-#ifdef /* MCAsk::exec_custom */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCString& p_stack, const char *p_type, unsigned int p_count, ...)
 {
 	ep . setstringf("ask %s", p_type);
@@ -458,4 +503,101 @@ Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCStrin
 
 	return EE_UNDEFINED;
 }
-#endif /* MCAsk::exec_custom */
+#endif
+
+void MCAsk::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	switch(mode)
+	{
+	case AT_PASSWORD:
+	case AT_CLEAR:
+		MCSyntaxFactoryEvalConstantBool(ctxt, mode == AT_CLEAR);
+
+		if (password . prompt != nil)
+			password . prompt -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (password . answer != nil)
+			password . answer -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, password . hint);
+
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskPasswordMethodInfo);
+		break;
+
+	case AT_FILE:
+		if (file . prompt != nil)
+			file . prompt -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (file . initial != nil)
+			file . initial -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (file . filter != nil)
+			file . filter -> compile(ctxt);
+		else if (file . type_count > 0)
+		{
+			for (uindex_t i = 0; i < file . type_count; i++)
+				file . types[i] -> compile(ctxt);
+
+			MCSyntaxFactoryEvalList(ctxt, file . type_count);
+		}
+
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+
+		if (file . type_count > 0)
+			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskFileWithTypesMethodInfo);
+		else if (file . filter != nil)
+			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskFileWithFilterMethodInfo);
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskFileMethodInfo);
+		break;
+
+	default:
+		MCSyntaxFactoryEvalConstantBool(ctxt, mode == AT_CLEAR);
+
+		if (question . prompt != nil)
+			question . prompt -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (question . answer != nil)
+			question . answer -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, question . hint);
+
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskQuestionMethodInfo);
+		break;
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
+}	

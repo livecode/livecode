@@ -15,21 +15,19 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "mblsyntax.h"
 
 #import <UIKit/UIKit.h>
 #include "mbliphoneapp.h"
-
+#include "variable.h"
 ////////////////////////////////////////////////////////////////////////////////
 
 UIView *MCIPhoneGetView(void);
@@ -57,6 +55,9 @@ UIViewController *MCIPhoneGetViewController(void);
 	UITableView *tableView;
 	UIActionSheet *actionSheet;
 	UIPopoverController* popoverController;
+    UIView *m_action_sheet_view;
+    UIControl *m_blocking_view;
+    bool m_should_show_keyboard;
 }
 
 - (id)init;
@@ -84,6 +85,9 @@ UIViewController *MCIPhoneGetViewController(void);
 	column_widths = nil;
 	pickerView = nil;
 	tableView = nil;
+    m_action_sheet_view = nil;
+    m_blocking_view = nil;
+    m_should_show_keyboard = false;
 	return self;
 }
 
@@ -334,7 +338,8 @@ return 1;
 			else
 				tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, t_horizontal, t_vertical) style:(UITableViewStylePlain)];
 			tableView.delegate = self;
-			tableView.dataSource = self;
+            tableView.dataSource = (id<UITableViewDataSource>)self;
+
 			// allow the user to select items
 			tableView.allowsSelection = YES;
 			
@@ -348,7 +353,10 @@ return 1;
 					m_selected_index_path = [[NSIndexPath alloc] initWithIndex:0];
 				}
 				m_selected_index_path = [NSIndexPath indexPathForRow:[[m_selected_index objectAtIndex:0] intValue] inSection:0];
-				[tableView scrollToRowAtIndexPath: m_selected_index_path atScrollPosition: UITableViewScrollPositionMiddle animated:NO];				
+        
+                // PM-2014-12-11: [[ Bug 12899 ]] Scroll only if there is a record
+                if ([tableView numberOfRowsInSection:0] > 0)
+                    [tableView scrollToRowAtIndexPath: m_selected_index_path atScrollPosition: UITableViewScrollPositionMiddle animated:NO];				
 				m_bar_visible = true;
 			}
 		}
@@ -395,7 +403,11 @@ return 1;
 				[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target: self action: @selector(dismissPickWheel:)]];
 			[t_toolbar setItems: t_toolbar_items animated: NO];
 		}
+        
+        
 		// create the action sheet that can contain the "Cancel" and "Done" buttons and date pick wheel
+        
+        
 		actionSheet = [[UIActionSheet alloc] initWithTitle:nil //[pickerArray objectAtIndex:0]
 												  delegate:self
 										 cancelButtonTitle:nil //@"Done"
@@ -415,7 +427,9 @@ return 1;
 			[actionSheet addSubview: t_toolbar];
 			[t_toolbar release];
 		}	
-		// set up the bounding box of the popover 
+        
+
+		// set up the bounding box of the popover
 		// the height depends on whether or not we are displaying buttons
 		if (m_use_table_view)
 		{
@@ -430,17 +444,23 @@ return 1;
 				self.contentSizeForViewInPopover = CGSizeMake(t_horizontal, 261);
 			else
 				self.contentSizeForViewInPopover = CGSizeMake(t_horizontal, 216);
-		}	
+		}
+        
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
+        
+        // need to make self as delegate otherwise overridden delegates are not called
+        popoverController.delegate = self;
+        
+        [popoverController setPopoverContentSize:self.contentSizeForViewInPopover];
 		[popoverController presentPopoverFromRect:MCUserRectToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
-						 permittedArrowDirections:UIPopoverArrowDirectionAny
-										 animated:YES];						
+                         permittedArrowDirections:UIPopoverArrowDirectionAny
+										 animated:YES];
+        
 		
-		// need to make self as delegate otherwise overridden delegates are not called
-		popoverController.delegate = self;
-		[popoverController setContentViewController:self];	
+        // The following line creates problem on iOS 8 - Remove it
+		//[popoverController setContentViewController:self];
 	}
 	else
 	{
@@ -464,6 +484,11 @@ return 1;
 			m_bar_visible = true;
 		}
 		
+        // PM-2014-10-22: [[ Bug 13750 ]] Make sure the view under the pickerView is not visible (iphone 4 only)
+        NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
+        if ([t_device_model_name isEqualToString:@"iPhone 4"] || [t_device_model_name isEqualToString:@"iPhone 4(Rev A)"] || [t_device_model_name isEqualToString:@"iPhone 4(CDMA)"])
+            pickerView.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.90];
+        
 		// set the label item
 		for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 			[pickerView selectRow:[[m_selected_index objectAtIndex:t_i] integerValue] inComponent:t_i animated:NO];
@@ -485,29 +510,99 @@ return 1;
 		[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target: self action: @selector(dismissPickWheel:)]];
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
-		
-		// create the action sheet that contains the "Done" button and pick wheel
-		actionSheet = [[UIActionSheet alloc] initWithTitle:nil
-												  delegate:self
-										 cancelButtonTitle:nil
-									destructiveButtonTitle:nil
-										 otherButtonTitles:nil];
-		// set the style of the acionsheet
-		[actionSheet setActionSheetStyle:UIActionSheetStyleBlackTranslucent];
-		// add the subviews to the action sheet
-		[actionSheet addSubview: t_toolbar];
-		[actionSheet addSubview: pickerView];
-		[t_toolbar release];
-		
-		// initialize the pick wheel, this also calls viewDidLoad and populates pickerArray
-		[actionSheet showInView: MCIPhoneGetView()];
-		// set up the bounding box of the action sheet
-        // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
-		if (!t_is_landscape)
-			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
-		else
-			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
-	}
+        
+        if (MCmajorosversion < 800)
+        {
+            // create the action sheet that contains the "Done" button and pick wheel
+            actionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                      delegate:self
+                                             cancelButtonTitle:nil
+                                        destructiveButtonTitle:nil
+                                             otherButtonTitles:nil];
+            // set the style of the acionsheet
+            [actionSheet setActionSheetStyle:UIActionSheetStyleBlackTranslucent];
+            // add the subviews to the action sheet
+            [actionSheet addSubview: t_toolbar];
+            [actionSheet addSubview: pickerView];
+            [t_toolbar release];
+            
+            // initialize the pick wheel, this also calls viewDidLoad and populates pickerArray
+            [actionSheet showInView: MCIPhoneGetView()];
+            // set up the bounding box of the action sheet
+            // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
+            if (!t_is_landscape)
+                [actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
+            else
+                [actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
+            
+        }
+        
+        
+        else
+        {
+            // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+            
+            CGRect t_rect;
+            uint2 t_offset;
+            t_offset = 28;
+            
+            if (!t_is_landscape)
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
+            else
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
+            
+            m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
+            
+            [m_action_sheet_view addSubview: t_toolbar];
+            [m_action_sheet_view addSubview: pickerView];
+            m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+            [t_toolbar release];
+            
+            [MCIPhoneGetView() addSubview:m_action_sheet_view];
+            
+           // This is offscreen
+            if (!t_is_landscape)
+                m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height , t_rect . size . width, t_rect. size . height);
+            else
+                m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . width , t_rect . size . width, t_rect. size . height);
+            
+            // Add animation to simulate old behaviour (slide from bottom)
+            [UIView animateWithDuration:0.2 animations:^{m_action_sheet_view.frame = t_rect;}];
+            
+            
+            // Add m_blocking_view to block any touch events in MCIPhoneGetView()
+            CGRect t_blocking_rect;
+            
+            if (!t_is_landscape)
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
+            else
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
+            
+            m_blocking_view = [[UIControl alloc] initWithFrame:t_blocking_rect];
+            
+            // Add effects and animation to simulate old behaviour
+            m_blocking_view.backgroundColor = [UIColor blackColor];
+            m_blocking_view.alpha = 0.4;
+            m_blocking_view.userInteractionEnabled = YES;
+            
+#ifdef __IPHONE_8_0
+            CATransition *applicationLoadViewIn =[CATransition animation];
+            [applicationLoadViewIn setDuration:0.7];
+            [applicationLoadViewIn setType:kCATransitionReveal];
+            [applicationLoadViewIn setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn]];
+            [[m_blocking_view layer]addAnimation:applicationLoadViewIn forKey:kCATransitionFromTop];
+#endif
+            // PM-2014-10-15: [[ Bug 13677 ]] If the keyboard is activated, hide it and show the picker. We should reactivate the keyboard once the picker hides
+            if (MCIPhoneIsKeyboardVisible())
+            {
+                MCIPhoneDeactivateKeyboard();
+                m_should_show_keyboard = true;
+            }
+            [MCIPhoneGetView() addSubview:m_blocking_view];
+        }
+        
+        
+    }
 }
 
 - (NSString *)finishPicking
@@ -567,8 +662,46 @@ return 1;
 		for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 			[m_selected_index replaceObjectAtIndex:t_i withObject: [NSNumber numberWithInt:-1]];
 	}
-	[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
-	[popoverController dismissPopoverAnimated:YES];
+    
+    if (iSiPad)
+    {
+        [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+        [popoverController dismissPopoverAnimated:YES];
+    }
+    else
+    {
+        // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+        if (MCmajorosversion >= 800)
+        {
+            [pickerView removeFromSuperview];
+        
+            [UIView animateWithDuration:0.5
+                             animations:^{
+                                 m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height);//move it out of screen
+                             } completion:^(BOOL finished) {
+                                 [m_action_sheet_view removeFromSuperview];
+                             }];
+            
+
+            [m_action_sheet_view release];
+            
+            [m_blocking_view removeFromSuperview];
+            [m_blocking_view release];
+            
+            m_running = false;
+            MCscreen -> pingwait();
+            
+            // PM-2014-10-15: [[ Bug 13677 ]] Make sure we re-activate the keyboard if it was previously deactivated because of the picker
+            if (m_should_show_keyboard)
+            {
+                // show the keyboard as in iOS 7
+                [UIView animateWithDuration:0.9 animations:^{ MCIPhoneActivateKeyboard(); } completion:nil];
+                m_should_show_keyboard = false;
+            }
+        }
+        else
+            [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    }
 }
 
 - (void)cancelPickWheel: (NSObject *)sender
@@ -577,8 +710,47 @@ return 1;
 	m_selection_made = false;
 	for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 		[m_selected_index replaceObjectAtIndex:t_i withObject:[NSNumber numberWithInt:-1]];
-	[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
-	[popoverController dismissPopoverAnimated:YES];
+    
+    if (iSiPad)
+    {
+        [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+        [popoverController dismissPopoverAnimated:YES];
+    }
+    
+    else
+    {
+        // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+        if (MCmajorosversion >= 800)
+        {
+            [pickerView removeFromSuperview];
+            
+            [UIView animateWithDuration:0.5
+                             animations:^{
+                                 m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height);//move it out of screen
+                             } completion:^(BOOL finished) {
+                                 [m_action_sheet_view removeFromSuperview];
+                             }];
+            
+            
+            [m_action_sheet_view release];
+            
+            [m_blocking_view removeFromSuperview];
+            [m_blocking_view release];
+            
+            m_running = false;
+            MCscreen -> pingwait();
+            
+            // PM-2014-10-15: [[ Bug 13677 ]] Make sure we re-activate the keyboard if it was previously deactivated because of the picker
+            if (m_should_show_keyboard)
+            {
+                // show the keyboard as in iOS 7
+                [UIView animateWithDuration:0.9 animations:^{ MCIPhoneActivateKeyboard(); } completion:nil];
+                m_should_show_keyboard = false;
+            }
+        }
+        else
+            [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    }
 }
 
 // MW-2010-12-20: [[ Bug 9254 ]] Stop running the action sheet here, after the animation
@@ -606,7 +778,9 @@ return 1;
 	if (iSiPad)
 	{
 		// HC-2011-09-28 [[ Picker Buttons ]] We are now using an actionSheet on the iPad.
-		self.view = actionSheet;
+        self.view = actionSheet;
+		//self.view = actionSheet.view;
+        
 	}
 	else
 		self.view = pickerView;
@@ -646,8 +820,10 @@ static void do_pickn_prewait(void *p_context)
 	// call the picker with the label and options list
 	ctxt -> picker = [[MCIPhonePickWheelDelegate alloc] init];
 	[ctxt -> picker setUseCheckmark: ctxt -> use_checkmark];
+
 	// HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons and picker
 	[ctxt -> picker startPicking: ctxt -> option_list_array andInitial: ctxt -> initial_index_array  andCancel: ctxt -> use_cancel andDone: ctxt -> use_done andPicker: ctxt -> use_picker andButtonRect: ctxt -> button_rect];
+
 }
 
 static void do_pickn_postwait(void *p_context)
@@ -665,8 +841,6 @@ static void do_pickn_postwait(void *p_context)
 // HC-2011-09-30 [[ Bug 9773 ]] Changed using char*& argument to NSString*& for return value
 bool MCSystemPickN(NSArray *p_option_list_array, bool p_use_checkmark, bool p_use_cancel, bool p_use_done, bool p_use_picker, NSArray *p_initial_index_array, NSString*& r_return_index, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
-	
 	// ensure that the options list array and initial index array are populated and have the same number of elements
 	if (p_option_list_array == nil || p_initial_index_array == nil || ([p_option_list_array count] != [p_initial_index_array count]))
 		return false;
@@ -687,16 +861,16 @@ bool MCSystemPickN(NSArray *p_option_list_array, bool p_use_checkmark, bool p_us
 	MCIPhoneRunOnMainFiber(do_pickn_postwait, &ctxt);
 	
 	r_return_index = [ctxt . return_index autorelease];
-	
+    
 	return true;
 }
 
-bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
+bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
 {
 	bool t_success;
 	t_success = true;
 	
-	NSString *t_options;
+	CFStringRef t_options;
 	NSArray *t_option_list_array;
 	
 	NSArray *t_initial_index_array;
@@ -706,15 +880,12 @@ bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark
 	NSString *t_return_index = nil;
 	
 	// provide the correct encoding for the options list
-	t_options = [NSString stringWithCString: p_options encoding: p_is_unicode ? NSUTF8StringEncoding : NSMacOSRomanStringEncoding];
-	// for some reason could not convert to the unicode string
-	if (t_options == nil)
-	{
-		r_chosen_index = p_initial_index;
-		return true;
-	}
+	/* UNCHECKED */ MCStringConvertToCFStringRef(p_options, t_options);
+	
 	// convert the \n delimited item string into a pick wheel array
-	t_option_list_array = [NSArray arrayWithObject: [t_options componentsSeparatedByString:@"\n"]];
+	t_option_list_array = [NSArray arrayWithObject: [(NSString *)t_options componentsSeparatedByString:@"\n"]];
+	CFRelease(t_options);
+
 	// convert the initial index for each component into an array entry
 	t_initial_index_array = [NSArray arrayWithObject: [NSNumber numberWithInt: p_initial_index]];
 	// get the maximum number of digits needed for the entry column that was just added
@@ -724,9 +895,10 @@ bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark
 	if (t_success)
 		t_success = MCSystemPickN(t_option_list_array, p_use_checkmark, false, false, false, t_initial_index_array, t_return_index, p_button_rect);
 	
-	// HC-30-2011-30 [[ Bug 9773 ]] Changed using char* to NSString* 
+	MCAutoStringRef t_result;
+	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_return_index, &t_result);
 	if (t_success)
-		MCresult -> sets ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+		MCresult -> setvalueref (*t_result);
 	r_chosen_index = atoi ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);
 	
 	return ES_NORMAL;
@@ -743,6 +915,7 @@ static void pick_option_prewait(void *p_context)
 	[ctxt -> picker setUseCheckmark: !ctxt->use_hilited];
 	// HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons and picker
 	[ctxt -> picker startPicking: ctxt->option_list_array andInitial: ctxt->initial_index_array andCancel: ctxt->use_cancel andDone: ctxt->use_done andPicker: ctxt->use_picker andButtonRect: ctxt->button_rect];
+
 }
 
 static void pick_option_postwait(void *p_context)
@@ -758,6 +931,100 @@ static void pick_option_postwait(void *p_context)
 	[ctxt-> picker release];
 }
 
+bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, uindex_t *&r_result, uindex_t &r_result_count, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
+{
+    bool t_success;
+	t_success = true;
+	
+	NSString *t_options;
+	NSArray *t_option_list_array;
+	NSArray *t_initial_index_array;
+    NSArray *t_temp_picker_array;
+  	
+	int t_max_result_memory = 0;
+	// HC-30-2011-30 [[ Bug 9773 ]] Changed using char*& argument to NSString*& for return value
+	NSString *t_return_index = nil;
+	
+    if (t_success)
+	{
+		t_option_list_array = [[NSArray alloc] init];
+		t_initial_index_array = [[NSArray alloc] init];
+		[t_option_list_array retain];
+		[t_initial_index_array retain];
+	}
+    
+    // convert the input data from a c-style array of MCPickLists to an NSArray
+    for (int i = 0; i < p_pick_list_count; i++)
+    {
+        t_temp_picker_array = [[NSArray alloc] init];
+        [t_temp_picker_array retain];
+        for (int j = 0; j < p_pick_lists[i] . option_count; j++)
+        {
+            t_options = [NSString stringWithMCStringRef: p_pick_lists[i] . options[j]];
+            t_temp_picker_array = [t_temp_picker_array arrayByAddingObject: t_options];
+        }
+        t_option_list_array = [t_option_list_array arrayByAddingObject: t_temp_picker_array];
+    }
+    
+    // convert the input indexes data from const_cstring_array_t to an NSArray
+    for (int i = 0; i < p_pick_list_count; i++)
+    {
+        t_initial_index_array = [t_initial_index_array arrayByAddingObject: [NSNumber numberWithInt: p_pick_lists[i] . initial]];
+    }
+    
+	// get the maximum number of digits needed for the entry column that was just added
+	t_max_result_memory+=5;
+	
+	picker_t ctxt;
+	ctxt . option_list_array = t_option_list_array;
+	ctxt . use_hilited = p_use_hilited;
+	ctxt . use_cancel = p_use_cancel;
+	ctxt . use_done = p_use_done;
+	ctxt . use_picker = p_use_picker;
+	ctxt . initial_index_array = t_initial_index_array;
+	ctxt . button_rect = p_button_rect;
+	ctxt . cancelled = false;
+	
+	// call the picker with the label and options list
+	MCIPhoneRunOnMainFiber(pick_option_prewait, &ctxt);
+	
+	while([ctxt . picker isRunning])
+		MCscreen -> wait(1.0, False, True);
+	
+	MCIPhoneRunOnMainFiber(pick_option_postwait, &ctxt);
+    
+	r_canceled = ctxt . cancelled;
+	
+    // Create the result information here
+    if (ctxt . return_index == nil)
+    {
+        r_result = nil;
+        r_result_count = 0;
+    }
+    else
+    {
+        MCAutoArray<uindex_t> t_indices;
+		char *t_ptr;
+		MCCStringClone ([ctxt . return_index cStringUsingEncoding:NSMacOSRomanStringEncoding], t_ptr);
+		
+		const char *t_token;
+		t_token = strtok (t_ptr, ",");
+        
+        while (t_ptr != nil)
+        {
+            t_indices . Push(atoi (t_ptr));
+            t_ptr = strtok (nil, ",");
+                
+        }
+        t_indices . Take(r_result, r_result_count);
+    }
+
+	[ctxt . return_index release];
+	
+    return t_success;
+    
+}
+/*
 bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_t *p_indexes, uint32_t p_expression_cnt, const_int32_array_t *&r_result, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -858,7 +1125,7 @@ bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_
 	[ctxt . return_index release];
 	
     return t_success;
-}
+} */
 
 ////////////////////////////////////////////////////////////////////////////////
 

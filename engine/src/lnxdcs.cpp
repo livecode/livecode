@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "stack.h"
 #include "util.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "stacklst.h"
 
 #include "sellst.h"
@@ -41,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "lnximagecache.h"
 
+#include "license.h"
+#include "revbuild.h"
+
 #include <langinfo.h>
 #include <fcntl.h>
 #include <sys/shm.h>
@@ -48,8 +51,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-utils.h>
 
+namespace x11
+{
 #include <X11/extensions/Xv.h>
 #include <X11/extensions/Xvlib.h>
+}
+
+#include <gdk/gdkkeysyms.h>
 
 #undef STARTMSGS
 
@@ -60,15 +68,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap);
-bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap);
+bool MCImageBitmapCreateWithGdkPixbuf(GdkPixbuf *p_image, MCImageBitmap *&r_bitmap);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Display *MCdpy;
+GdkDisplay *MCdpy;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" int initialise_weak_link_X11(void);
 extern "C" int initialise_weak_link_gobject(void);
 extern "C" int initialise_weak_link_gdk(void);
 extern "C" int initialise_weak_link_gtk(void);
@@ -80,6 +88,8 @@ extern "C" int initialise_weak_link_glib ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libxv ( void ) ;
+extern "C" int initialise_weak_link_gdk_pixbuf(void);
+extern "C" int initialise_weak_link_cairo(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -130,20 +140,9 @@ static uint4 cmap_scale[17] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::setstatus(const char *status)
+void MCScreenDC::setstatus(MCStringRef status)
 {
 }
-
-Boolean MCScreenDC::setdest(Drawable d, uint2 depth)
-{
-	dest = d;
-	if (depth == 0)
-		destdepth = getdepth();
-	else
-		destdepth = depth;
-	return True;
-}
-
 
 //XDND
 void init_xDnD(void);
@@ -153,24 +152,126 @@ Drawable MCScreenDC::getdest()
 	return dest;
 }
 
+extern "C"
+{
+void gtk_main_do_event(GdkEvent*);
+}
+
+void gdk_event_fn(GdkEvent *p_event, gpointer dc)
+{
+    // Let GTK know about the event (needed so it can drive its Save As
+    // dialogues and the like)
+    gtk_main_do_event(p_event);
+    
+    //fprintf(stderr, "gdk_event_fn\n");
+    ((MCScreenDC*)dc)->EnqueueEvent(gdk_event_copy(p_event));
+}
+
+void gdk_event_fn_lost(void*)
+{
+    ;
+}
+
+// Functions for re-directing GTK IM context signals
+static void on_commit(GtkIMContext *p_context, gchar *p_str, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnCommit(p_context, p_str);
+}
+static gboolean on_delete_surrounding(GtkIMContext *p_context, gint p_offset, gint p_count, gpointer p_data)
+{
+    return ((MCScreenDC*)p_data)->IME_OnDeleteSurrounding(p_context, p_offset, p_count);
+}
+static void on_preedit_changed(GtkIMContext *p_context, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnPreeditChanged(p_context);
+}
+static void on_preedit_end(GtkIMContext *p_context, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnPreeditEnd(p_context);
+}
+static void on_preedit_start(GtkIMContext *p_context, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnPreeditStart(p_context);
+}
+static void on_retrieve_surrounding(GtkIMContext *p_context, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnRetrieveSurrounding(p_context);
+}
+
 Boolean MCScreenDC::open()
 {
-	// Check to see if we are in a UTF8 locale
+	// We require GDK in order to do any windowing at all
+    bool t_has_gdk;
+    t_has_gdk = initialise_weak_link_X11() != 0
+        && initialise_weak_link_gobject() != 0
+        && initialise_weak_link_gdk() != 0
+        && initialise_weak_link_gdk_pixbuf() != 0
+        && initialise_weak_link_cairo() != 0;
+    
+    if (!t_has_gdk)
+    {
+        // TODO: implement
+        exit(1);
+    }
+    
+    gdk_init(0, NULL);
+    //gdk_threads_init();
+    
+    // Check to see if we are in a UTF8 locale
 	// TS : Changed 2008-01-08 as a more relaible way of testing for UTF-8
 	MCutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0)	;
 	
 	MCimagecache = new MCXImageCache ;
 	
-	if ((dpy = XOpenDisplay(MCdisplayname)) == NULL)
+    if (MCdisplayname == NULL)
+        MCdisplayname = gdk_get_display();
+    
+	if ((dpy = gdk_display_open(MCdisplayname)) == NULL)
 	{
-		fprintf(stderr, "%s: Can't open display %s\n",
-		        MCcmd, XDisplayName(MCdisplayname));
+        MCAutoStringRefAsSysString t_cmd;
+        t_cmd.Lock(MCcmd);
+        fprintf(stderr, "%s: Can't open display %s\n",
+                *t_cmd, MCdisplayname);
 		return False;
 	}
-	fcntl(ConnectionNumber(dpy), F_SETFD, 1);
-	displayname = XDisplayName(MCdisplayname);
+
+    // Build the class name
+    MCAutoStringRef t_class_name;
+    MCAutoStringRefAsUTF8String t_class_name_utf8;
+    bool t_community;
+    t_community = MClicenseparameters.license_class == kMCLicenseClassCommunity;
+    
+    /* UNCHECKED */ MCStringCreateMutable(0, &t_class_name);
+    /* UNCHECKED */ MCStringAppendFormat(*t_class_name, "%s%s_%s", MCapplicationstring, t_community ? "community" : "", MC_BUILD_ENGINE_SHORT_VERSION);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '.', '_', kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '-', '_', kMCStringOptionCompareExact);
+    /* UNCHECKED */ t_class_name_utf8.Lock(*t_class_name);
+    
+    // Used to load the icon and other desktop properties
+    gdk_set_program_class(*t_class_name_utf8);
+    
+    // The GLib event loop calls this function to respond to GDK events.
+    // Unfortunately, when GTK gets initied, it will try to steal this from us.
+    gdk_event_handler_set(&gdk_event_fn, gpointer(this), &gdk_event_fn_lost);
+    
+    x11::Display* XDisplay;
+    XDisplay = x11::gdk_x11_display_get_xdisplay(dpy);
+    
+    GdkScreen *t_screen;
+    t_screen = gdk_display_get_default_screen(dpy);
+    
+    MCAutoStringRef t_displayname;
+    /* UNCHECKED */ MCStringCreateWithSysString(gdk_display_get_name(dpy), &t_displayname);
+    /* UNCHECKED */ MCNameCreate(*t_displayname, displayname);
+	{
+        MCAutoStringRef t_vendor_string, t_vendor;
+        /* UNCHECKED */ MCStringCreateWithSysString(x11::XServerVendor(XDisplay), &t_vendor);
+        /* UNCHECKED */ MCStringFormat(&t_vendor_string, "%@ %d", *t_vendor, x11::XVendorRelease(XDisplay));
+		MCNameCreate(*t_vendor_string, vendorname);
+	}
 	
 #ifdef SYNCMODE
+    // TODO: equivalent in GDK?
 	XSynchronize(dpy, True);
 	XSync ( dpy, False ) ;
 #ifdef STARTMSGS
@@ -180,126 +281,152 @@ Boolean MCScreenDC::open()
 		
 	//XDND - Need to set up the xDnD protocol so that we have access to the XdndAware atom.
 	init_xDnD();
-
-		
-		
-	XVisualInfo vis_template;
-	int nitems;
-	if (MCvisualid != 0)
-	{
-		vis_template.visualid = MCvisualid;
-		vis_template.screen = DefaultScreen(dpy);
-		vis = XGetVisualInfo(dpy, VisualIDMask | VisualScreenMask,
-		                     &vis_template, &nitems);
-		if (nitems != 1)
-		{
-			fprintf(stderr, "%s: Bad visual id %x\n", MCcmd, MCvisualid);
-			MCvisualid = 0;
-		}
-		else
-		{
-			int2 i;
-			switch (vis->c_class)
-			{
-			case StaticGray:
-			case StaticColor:
-				cmap = XCreateColormap(dpy, getroot(), vis->visual, AllocNone);
-				setupcolors();
-				break;
-			case TrueColor:
-				cmap = XCreateColormap(dpy, getroot(), vis->visual, AllocNone);
-
-				MCU_getshift(vis->red_mask, redshift, redbits);
-				MCU_getshift(vis->green_mask, greenshift, greenbits);
-				MCU_getshift(vis->blue_mask, blueshift, bluebits);
-				break;
-			case DirectColor:
-				{
-					XColor defs[256];
-					cmap = XCreateColormap(dpy, getroot(), vis->visual, AllocAll);
-					MCU_getshift(vis->red_mask, redshift, redbits);
-					MCU_getshift(vis->green_mask, greenshift, greenbits);
-					MCU_getshift(vis->blue_mask, blueshift, bluebits);
-					uint4 r_scale = cmap_scale[redbits];
-
-					uint4 g_scale = cmap_scale[greenbits];
+    
+    if (MCvisualid)
+    {
+        // An explicit visual ID was specified on the command line. Get it.
+        vis = x11::gdk_x11_screen_lookup_visual(t_screen, MCvisualid);
+        
+        if (vis == NULL)
+        {
+            MCAutoStringRefAsSysString t_cmd;
+            t_cmd.Lock(MCcmd);
+            fprintf(stderr, "%s: Bad visual id %x\n", *t_cmd, MCvisualid);
+            MCvisualid = 0;
+        }
+        else
+        {
+            // What type of visual are we dealing with?
+            switch (gdk_visual_get_visual_type(vis))
+            {
+                case GDK_VISUAL_STATIC_GRAY:
+                case GDK_VISUAL_STATIC_COLOR:
+                {
+                    cmap = gdk_colormap_new(vis, FALSE);
+                    setupcolors();
+                    break;
+                }
+                    
+                case GDK_VISUAL_TRUE_COLOR:
+                {
+                    cmap = gdk_colormap_new(vis, FALSE);
+                    
+                    gint t_redshift, t_greenshift, t_blueshift;
+                    gint t_redbits, t_greenbits, t_bluebits;
+                    gdk_visual_get_red_pixel_details(vis, NULL, &t_redshift, &t_redbits);
+                    gdk_visual_get_green_pixel_details(vis, NULL, &t_greenshift, &t_greenbits);
+                    gdk_visual_get_blue_pixel_details(vis, NULL, &t_blueshift, &t_bluebits);
+                    redshift = t_redshift;
+                    greenshift = t_greenshift;
+                    blueshift = t_blueshift;
+                    redbits = t_redbits;
+                    greenbits = t_greenbits;
+                    bluebits = t_bluebits;
+                    
+                    break;
+                }
+                    
+                case GDK_VISUAL_DIRECT_COLOR:
+                {
+                    GdkColor defs[256];
+                    cmap = gdk_colormap_new(vis, TRUE);
+                    guint32 t_redmask, t_greenmask, t_bluemask;
+                    gint t_redshift, t_greenshift, t_blueshift;
+                    gint t_redbits, t_greenbits, t_bluebits;
+                    gdk_visual_get_red_pixel_details(vis, &t_redmask, &t_redshift, &t_redbits);
+                    gdk_visual_get_green_pixel_details(vis, &t_greenmask, &t_greenshift, &t_greenbits);
+                    gdk_visual_get_blue_pixel_details(vis, &t_bluemask, &t_blueshift, &t_bluebits);
+                    redshift = t_redshift;
+                    greenshift = t_greenshift;
+                    blueshift = t_blueshift;
+                    redbits = t_redbits;
+                    greenbits = t_greenbits;
+                    bluebits = t_bluebits;
+                    
+                    uint4 r_scale = cmap_scale[redbits];
+                    uint4 g_scale = cmap_scale[greenbits];
 					uint4 b_scale = cmap_scale[bluebits];
 					uint4 rmsk = (1 << redbits) - 1;
 					uint4 gmsk = (1 << greenbits) - 1;
 					uint4 bmsk = (1 << bluebits) - 1;
-					for( i = 0 ; i < vis->colormap_size ; i++)
+					for(int i = 0 ; i < gdk_visual_get_colormap_size(vis) ; i++)
 					{
-						defs[i].pixel = i << redshift & vis->red_mask
-						                | i << greenshift & vis->green_mask
-						                | i << blueshift & vis->blue_mask;
+						defs[i].pixel = (i << redshift & t_redmask)
+							| (i << greenshift & t_greenmask)
+							| (i << blueshift & t_bluemask);
 						defs[i].red   = (i & rmsk) * r_scale;
 						defs[i].green = (i & gmsk) * g_scale;
 						defs[i].blue  = (i & bmsk) * b_scale;
-
-						defs[i].flags = DoRed | DoGreen | DoBlue;
 					}
-					XStoreColors(dpy, cmap, (XColor *)defs, vis->colormap_size);
-				}
-				break;
-			case GrayScale:
-				cmap = XCreateColormap(dpy, getroot(), vis->visual, AllocAll);
-				setupcolors();
-				for (i = 0 ; i < ncolors ; i++)
-					colors[i].red = colors[i].green = colors[i].blue
-					                                  = i * MAXUINT2 / ncolors;
-				XStoreColors(dpy, cmap, (XColor *)colors, ncolors);
-				break;
-			case PseudoColor:
-				cmap = XCreateColormap(dpy, getroot(), vis->visual, AllocNone);
-				setupcolors();
-				MCuseprivatecmap = True;
-				break;
-			}
-		}
-	}
+                    gdk_colors_store(cmap, defs, gdk_visual_get_colormap_size(vis));
+                }
+                    
+                case GDK_VISUAL_GRAYSCALE:
+                {
+                    // Create a grayscale colormap with a linear ramp
+                    cmap = gdk_colormap_new(vis, TRUE);
+                    setupcolors();
+                    GdkColor *t_colors;
+                    /* UNCHECKED */ MCMemoryNewArray(ncolors, t_colors);
+                    for (int i = 0 ; i < ncolors ; i++)
+                    {
+                        colors[i].red = colors[i].green = colors[i].blue = i * MAXUINT2 / ncolors;
+                        t_colors[i].red = t_colors[i].green = t_colors[i].blue = i * MAXUINT2 / ncolors;
+                        t_colors[i].pixel = i;
+                    }
+                    gdk_colors_store(cmap, t_colors, ncolors);
+                    MCMemoryDelete(t_colors);
+                    break;
+                }
+                    
+                case GDK_VISUAL_PSEUDO_COLOR:
+                {
+                    // Each stack uses its own colormap
+                    cmap = gdk_colormap_new(vis, FALSE);
+                    setupcolors();
+                    MCuseprivatecmap = true;
+                    break;
+                }
+            }
+        }
+    }
+
 	if (MCvisualid == 0)
 	{
-		vis_template.screen = DefaultScreen(dpy);
-		
-		has_composite_wm = is_composite_wm( 0 ) ;
-
-		
-		
-		if ( has_composite_wm ) 
-		{
-#ifdef STARTMSGS			
-			fprintf(stderr, "Composite window manager detected. Trying to use 32 bit windowing.\n");
+        // If the screen is composited, we can expect alpha values to work
+        if (gdk_screen_is_composited(t_screen))
+        {
+            // Get an RGBA visual to use
+#ifdef STARTMSGS
+			fprintf(stderr, "Composite window manager detected. Trying to use RGBA visual.\n");
 #endif
-			vis_template.depth = 32;
-			vis = XGetVisualInfo(dpy, VisualScreenMask | VisualDepthMask,
-			                     &vis_template, &nitems);
-			
-			
-			cmap = XCreateColormap (dpy, getroot(), vis->visual, AllocNone);
-		}
-		else
+            vis = gdk_screen_get_rgba_visual(t_screen);
+            cmap = gdk_screen_get_rgba_colormap(t_screen);
+        }
+        else
+        {
+            // Get the default visual and colormap
+            vis = gdk_screen_get_system_visual(t_screen);
+            cmap = gdk_screen_get_system_colormap(t_screen);
+        }
+        
+        // Create a 32-bit visual for internal use
+        //vis32 = gdk_visual_get_best_with_depth(32);
+        //cmap32 = gdk_colormap_new(vis32, FALSE);
+        
+		if (gdk_visual_get_visual_type(vis) == GDK_VISUAL_TRUE_COLOR)
 		{
-			vis_template.visualid = DefaultVisual(dpy, DefaultScreen(dpy))->visualid;
-			vis = XGetVisualInfo(dpy, VisualScreenMask | VisualIDMask,
-			                     &vis_template, &nitems);
-			cmap = DefaultColormap(dpy, getscreen());
-		}
-		
-	
-		// Create our 32bit visual and colormap for internal use
-		vis_template.depth = getdepth();
-		
-		vis_template.visualid = 0 ; 
-		vis32 = XGetVisualInfo(dpy, VisualDepthMask, &vis_template, &nitems);
-		cmap32 = XCreateColormap (dpy, getroot(), vis->visual, AllocNone);
-
-
-		
-		if (vis->c_class == TrueColor)
-		{
-			MCU_getshift(vis->red_mask, redshift, redbits);
-			MCU_getshift(vis->green_mask, greenshift, greenbits);
-			MCU_getshift(vis->blue_mask, blueshift, bluebits);
+            gint t_redshift, t_greenshift, t_blueshift;
+            gint t_redbits, t_greenbits, t_bluebits;
+            gdk_visual_get_red_pixel_details(vis, NULL, &t_redshift, &t_redbits);
+            gdk_visual_get_green_pixel_details(vis, NULL, &t_greenshift, &t_greenbits);
+            gdk_visual_get_blue_pixel_details(vis, NULL, &t_blueshift, &t_bluebits);
+            redshift = t_redshift;
+            greenshift = t_greenshift;
+            blueshift = t_blueshift;
+            redbits = t_redbits;
+            greenbits = t_greenbits;
+            bluebits = t_bluebits;
 		}
 		else
 		{
@@ -307,40 +434,30 @@ Boolean MCScreenDC::open()
 		}
 	}
 	
+    // Temporarily create a window so we can get a GC for vis
+    GdkWindowAttr gdkwa;
+    gdkwa.event_mask = GDK_ALL_EVENTS_MASK & ~GDK_POINTER_MOTION_HINT_MASK;
+    gdkwa.x = gdkwa.y = gdkwa.width = gdkwa.height = 8;
+    gdkwa.visual = vis;
+    gdkwa.colormap = cmap;
+    gdkwa.wclass = GDK_INPUT_OUTPUT;
+    gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
+    
+    GdkWindow *w = gdk_window_new(gdk_screen_get_root_window(t_screen),
+                                  &gdkwa,
+                                  GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
+    gc = gdk_gc_new(w);
+    gdk_window_destroy(w);
+    
+    // Create the NULL window
+    NULLWindow = gdk_window_new(gdk_screen_get_root_window(t_screen),
+                                &gdkwa,
+                                GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
 
-
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = CWBorderPixel | CWColormap;
-	xswa.border_pixel = 0;
-	xswa.colormap = cmap; 
-	
-	
-
-	// Creation of the "Native" depth GC
-	Window w = XCreateWindow(dpy, RootWindow(dpy, vis->screen), 8, 8, 8, 8,
-	                         0, MCscreen->getrealdepth(), InputOutput, vis->visual,
-	                         xswamask, &xswa);
-	
-	gc = XCreateGC(dpy, w, 0, NULL);
-	XDestroyWindow(dpy, w);
-
-	NULLWindow = XCreateWindow(dpy, RootWindow(dpy, vis->screen), 8, 8, 8, 8,
-	                         0, MCscreen->getrealdepth(), InputOutput, vis->visual,
-	                         xswamask, &xswa);
-	XSelectInput(dpy, NULLWindow,  ButtonPressMask | ButtonReleaseMask
-	             | EnterWindowMask | LeaveWindowMask | PointerMotionMask
-	             | KeyPressMask | KeyReleaseMask | ExposureMask
-	             | FocusChangeMask | StructureNotifyMask | PropertyChangeMask);
-	
-	
-	
-	
-	
-	
-	XSetGraphicsExposures(dpy, gc, False);
-	XSetBackground(dpy, gc, 0);
-
-	initatoms();
+    GdkColor t_color;
+    t_color.pixel = 0;
+    gdk_gc_set_exposures(gc, FALSE);
+    gdk_gc_set_background(gc, &t_color);
 
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
 	black_pixel.pixel = 0xff000000;
@@ -349,20 +466,23 @@ Boolean MCScreenDC::open()
 
 	MCdpy = dpy;
 
-	Pixmap cdata = XCreatePixmap(dpy, getroot(), 16, 16, 1);
-	Pixmap cmask = XCreatePixmap(dpy, getroot(), 16, 16, 1);
-	XSetForeground(dpy, gc1, 0);
-	XFillRectangle(dpy, cdata, gc1, 0, 0, 16, 16);
-
-	XFillRectangle(dpy, cmask, gc1, 0, 0, 16, 16);
-	XSetForeground(dpy, gc1, 1);
-	MCColor c;
-	c.red = c.green = c.blue = 0x0;
-	for(uint32_t i = 0; i < PI_NCURSORS; i++)
-		MCcursors[i] = nil;
-	XFreePixmap(dpy, cdata);
-	XFreePixmap(dpy, cmask);
-
+    /*GdkPixmap *cdata = gdk_pixmap_new(getroot(), 16, 16, 1);
+    GdkPixmap *cmask = gdk_pixmap_new(getroot(), 16, 16, 1);
+    gdk_gc_set_foreground(gc1, &t_color);
+    gdk_draw_rectangle(cdata, gc1, TRUE, 0, 0, 16, 16);
+    gdk_draw_rectangle(cmask, gc1, TRUE, 0, 0, 16, 16);
+    t_color.pixel = 1;
+    gdk_gc_set_foreground(gc1, &t_color);*/
+    
+    MCColor c;
+    c.red = c.green = c.blue = 0x0;
+    
+    for (uint32_t i = 0; i < PI_NCURSORS; i++)
+        MCcursors[i] = nil;
+    
+    //g_object_unref(cdata);
+    //g_object_unref(cmask);
+    
 	MConecolor.red = MConecolor.green = MConecolor.blue = 0xFFFF;
 	MConecolor.pixel = 1;
 	MCselectioncolor = MCpencolor = black_pixel;
@@ -391,10 +511,7 @@ Boolean MCScreenDC::open()
 	MCwbr.width = getwidth();
 	MCwbr.height = getheight();
 	
-	m_has_native_theme =
-		initialise_weak_link_gobject() != 0 &&
-		initialise_weak_link_gdk() != 0 &&
-		initialise_weak_link_gtk() != 0;
+	m_has_native_theme = m_has_gtk = initialise_weak_link_gtk() != 0;
 	
 	if (m_has_native_theme)
 	{
@@ -403,7 +520,21 @@ Boolean MCScreenDC::open()
 		m_has_native_print_dialogs = initialise_weak_link_gtk_print_dialog() != 0;
 	}
 
-	MCXVideo = false ;
+    // If we have GTK, we can make use of the GTK IME support
+    if (m_has_gtk)
+    {
+        m_im_context = gtk_im_multicontext_new();
+        
+        // Set up the signals for the IM context
+        g_signal_connect(m_im_context, "commit", G_CALLBACK(&on_commit), this);
+        g_signal_connect(m_im_context, "delete-surrounding", G_CALLBACK(&on_delete_surrounding), this);
+        g_signal_connect(m_im_context, "preedit-changed", G_CALLBACK(&on_preedit_changed), this);
+        g_signal_connect(m_im_context, "preedit-end", G_CALLBACK(&on_preedit_end), this);
+        g_signal_connect(m_im_context, "preedit-start", G_CALLBACK(&on_preedit_start), this);
+        g_signal_connect(m_im_context, "retrieve-surrounding", G_CALLBACK(&on_retrieve_surrounding), this);
+    }
+    
+	/*MCXVideo = false ;
 	if ( initialise_weak_link_libxv () != 0 ) 
 	{
 		XvAdaptorInfo	*ai;
@@ -412,8 +543,8 @@ Boolean MCScreenDC::open()
 		ret = XvQueryAdaptors(dpy, DefaultRootWindow(dpy), &p_num_adaptors, &ai);
 		
 		MCXVideo = (( ret == Success ) && ( p_num_adaptors >  0 )) ;
-		
 	}
+    */
 		
 	if ( initialise_weak_link_gnome_vfs() != 0 )
 	{
@@ -423,9 +554,14 @@ Boolean MCScreenDC::open()
 	}
 	
 	// Create the various Transfer data stores....
-	m_DND_store = new MCXTransferStore ( dpy ) ;
-	m_Clipboard_store = new MCXTransferStore ( dpy ) ;
-	m_Selection_store = new MCXTransferStore ( dpy ) ;
+	m_DND_store = new MCGdkTransferStore(dpy);
+	m_Clipboard_store = new MCGdkTransferStore(dpy);
+	m_Selection_store = new MCGdkTransferStore(dpy);
+    
+    // There are also some atoms that we need to set up
+    MCworkareaatom = gdk_atom_intern_static_string("_NET_WORKAREA");
+    MCclientlistatom = gdk_atom_intern_static_string("_NET_CLIENT_LIST");
+    MCstrutpartialatom = gdk_atom_intern_static_string("_NET_WM_STRUT_PARTIAL");
 
 	return True; 
 }
@@ -438,7 +574,7 @@ extern void gtk_file_tidy_up ( void );
 // Returns an XAtom with the given name ;
 Atom  MCScreenDC::make_atom ( char * p_atom_name ) 
 {
-	return ( XInternAtom ( dpy, p_atom_name, false ) );
+	return gdk_atom_intern(p_atom_name, FALSE);
 }
 
 //XDND
@@ -449,19 +585,16 @@ Boolean MCScreenDC::close(Boolean force)
 	// TODO - We may need to do clipboard persistance here
 	
 	destroybackdrop();
-	XFlush(dpy);
-	
-	XFreeGC ( dpy, gc ) ;
-	XFreeGC ( dpy, gc1 ) ;
-	
-	// I.M. 12/01/09
-	// We need to free all X server resources before closing
-    XFreePixmap(dpy, graystipple);
+    gdk_window_destroy(NULLWindow);
+    
+    gdk_display_flush(dpy);
+    g_object_unref(gc);
+
 	//XDND
 	shutdown_xdnd();
-
 	
-	XCloseDisplay(dpy);
+    gdk_display_close(dpy);
+	
 	delete (char *)selectiontext.getstring();
 	opened = False;
 	
@@ -473,7 +606,7 @@ Boolean MCScreenDC::close(Boolean force)
 	return True;
 }
 
-const char *MCScreenDC::getdisplayname()
+MCNameRef MCScreenDC::getdisplayname()
 {
 	return displayname;
 }
@@ -496,15 +629,14 @@ uint2 MCScreenDC::getdepth(void)
 
 void MCScreenDC::grabpointer(Window w)
 {
-
-	XGrabPointer(dpy, w, False,
-	             PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
-	             GrabModeAsync, GrabModeAsync, None, None, MCeventtime);
+    gdk_pointer_grab(w, False,
+                     GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
+                     NULL, NULL, MCeventtime);
 }
 
 void MCScreenDC::ungrabpointer()
 {
-	XUngrabPointer(dpy, MCeventtime);
+	gdk_display_pointer_ungrab(dpy, MCeventtime);
 }
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
@@ -515,7 +647,7 @@ uint16_t MCScreenDC::platform_getwidth(void)
 
 uint16_t MCScreenDC::device_getwidth(void)
 {
-	return DisplayWidth(dpy, getscreen());
+	return gdk_screen_get_width(getscreen());
 }
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
@@ -526,35 +658,58 @@ uint16_t MCScreenDC::platform_getheight(void)
 
 uint16_t MCScreenDC::device_getheight(void)
 {
-	return DisplayHeight(dpy, getscreen());
+	return gdk_screen_get_height(getscreen());
 }
 
 uint2 MCScreenDC::getwidthmm()
 {
-	return WidthMMOfScreen(ScreenOfDisplay(dpy, getscreen()));
+	return gdk_screen_get_width_mm(getscreen());
 }
 
 uint2 MCScreenDC::getheightmm()
 {
-	return HeightMMOfScreen(ScreenOfDisplay(dpy, getscreen()));
+	return gdk_screen_get_height_mm(getscreen());
 }
 
 // MW-2005-09-24: We shouldn't be accessing the display structure like this
 //   so use the XMaxRequestSize() call instead
 uint2 MCScreenDC::getmaxpoints()
 {
-	return MCU_min(XMaxRequestSize(dpy) - REQUEST_SIZE, MAX_POINTS);
+	return MCU_min(x11::XMaxRequestSize(x11::gdk_x11_display_get_xdisplay(dpy)) - REQUEST_SIZE, MAX_POINTS);
 }
 
 uint2 MCScreenDC::getvclass()
 {
-	return vis->c_class;
+	switch (gdk_visual_get_visual_type(vis))
+    {
+        case GDK_VISUAL_STATIC_GRAY:
+            return StaticGray;
+            
+        case GDK_VISUAL_GRAYSCALE:
+            return GrayScale;
+            
+        case GDK_VISUAL_STATIC_COLOR:
+            return StaticColor;
+            
+        case GDK_VISUAL_PSEUDO_COLOR:
+            return PseudoColor;
+            
+        case GDK_VISUAL_TRUE_COLOR:
+            return TrueColor;
+            
+        case GDK_VISUAL_DIRECT_COLOR:
+            return DirectColor;
+            
+        default:
+            MCAssert(false);
+            return 0;
+    }
 }
 
 void MCScreenDC::openwindow(Window window, Boolean override)
 {
 	MCStack *target = MCdispatcher->findstackd(window);
-	XMapRaised(dpy, window);
+    gdk_window_show(window);
 	MCstacks -> enableformodal(window, False);
 }
 
@@ -562,78 +717,68 @@ void MCScreenDC::closewindow(Window window)
 {
 	MCStack *target = MCdispatcher->findstackd(window);
 	MCstacks -> enableformodal(window, True);
-	XWithdrawWindow(dpy, window, getscreen());
+    gdk_window_hide(window);
 }
 
 void MCScreenDC::destroywindow(Window &window)
 {
-	XDestroyWindow(dpy, window);
+	gdk_window_destroy(window);
 	window = DNULL;
 }
 
 void MCScreenDC::raisewindow(Window window)
 {
-	XRaiseWindow(dpy, window);
+	gdk_window_raise(window);
 }
 
 void MCScreenDC::iconifywindow(Window window)
-
 {
-	XIconifyWindow(dpy, window, getscreen());
+	gdk_window_iconify(window);
 }
 
 void MCScreenDC::uniconifywindow(Window window)
 {
-	XMapRaised(dpy, window);
+	gdk_window_deiconify(window);
 }
 
-void MCScreenDC::setname(Window window, const char *newname)
+void MCScreenDC::setname(Window window, MCStringRef newname)
 {
-	MCExecPoint ep(NULL, NULL, NULL) ;
-	ep.setsvalue ( newname );
-	ep.utf8tonative() ;
-	XStoreName(dpy, window, ep.getcstring());
-	XSetIconName(dpy, window, ep.getcstring());
-
-	XChangeProperty(dpy, window, XInternAtom(dpy, "_NET_WM_NAME", false), XInternAtom(dpy, "UTF8_STRING", false), 8, PropModeReplace, (unsigned char *)newname, strlen(newname));
-
+	MCAutoStringRefAsUTF8String t_newname_utf8;
+	/* UNCHECKED */ t_newname_utf8 . Lock(newname);
+	
+	gdk_window_set_title(window, *t_newname_utf8);
 }
 
 void MCScreenDC::setcmap(MCStack *sptr)
 {
-	XSetWindowColormap(dpy, sptr->getw(), getcmap());
+	//gdk_drawable_set_colormap(sptr->getw(), getcmap());
 }
 
 void MCScreenDC::sync(Window w)
 {
-	XSync(dpy, False);
+	gdk_display_sync(dpy);
 }
 
 void MCScreenDC::flush(Window w)
 {
-	XFlush(dpy);
+	gdk_display_flush(dpy);
 }
 
 void MCScreenDC::beep()
 {
-	bool t_use_internal = false ; 
-	if ( m_sound_internal != NULL)
-		if ( strcmp(m_sound_internal, "internal") == 0 )
-			t_use_internal = true ;
-	XBell(dpy, 0);
+	gdk_beep();
 }
 
 void MCScreenDC::setinputfocus(Window window)
 {
-	XSetInputFocus(dpy, window, RevertToParent, MCeventtime);
+	gdk_window_focus(window, MCeventtime);
 }
 
 void MCScreenDC::freepixmap(Pixmap &pixmap)
 {
 	if (pixmap != DNULL)
 	{
-		XFreePixmap(dpy, pixmap);
-
+		g_object_unref(pixmap);
 		pixmap = DNULL;
 	}
 }
@@ -643,19 +788,13 @@ Pixmap MCScreenDC::createpixmap(uint2 width, uint2 height,
 {
 	if (depth == 0 || depth == 32)
 	{
-		if (vis -> depth == 24)
+		if (gdk_visual_get_depth(vis) == 24)
 			depth = 24;
 		else
 			depth = 32;
 	}
 	
-	Pixmap pm = XCreatePixmap(dpy, getroot(), width, height, depth);
-	Window root;
-	int x, y;
-	unsigned int w, h, b, d;
-	if (!XGetGeometry(dpy, pm, &root, &x, &y, &w, &h, &b, &d))
-		pm = DNULL;
-
+    GdkPixmap *pm = gdk_pixmap_new(getroot(), width, height, depth);
 	assert ( pm != DNULL ) ;
 	
 	return pm;
@@ -670,11 +809,12 @@ bool MCScreenDC::platform_getwindowgeometry(Window w, MCRectangle &r_rect)
 bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {
 	Window root, child;
-	int x, y;
-	unsigned int width, bwidth, height, depth;
-	if (!XGetGeometry(dpy, w, &root, &x, &y, &width, &height, &bwidth, &depth))
-		return false;
-	XTranslateCoordinates(dpy, w, root, 0, 0, &x, &y, &child);
+	gint x, y;
+	gint width, height;
+    
+    gdk_window_get_geometry(w, NULL, NULL, &width, &height, NULL);
+    gdk_window_get_origin(w, &x, &y);
+    
 	MCU_set_rect(drect, x, y, width, height);
 	return true;
 }
@@ -682,25 +822,76 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 
 Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
 {
-	Window root;
-	int x, y;
-	unsigned int width, bwidth, height, depth;
-	
-	Status t_status;
-	t_status = XGetGeometry(dpy, p, &root, &x, &y, &width, &height, &bwidth, &depth);
-	
-	assert(t_status != 0);
-	
-	w = width;
-	h = height;
-	d = depth;
-	
+    gint width, height;
+    gdk_pixmap_get_size(p, &width, &height);
+    
+    w = width;
+    h = height;
+    d = gdk_drawable_get_depth(p);
+    
 	return True;
 }
 
 void MCScreenDC::setgraphicsexposures(Boolean on, MCStack *sptr)
 {
-	XSetGraphicsExposures(dpy, gc, on);
+	gdk_gc_set_exposures(gc, TRUE);
+}
+
+GdkFunction MCScreenDC::XOpToGdkOp(int op)
+{
+    switch (op)
+    {
+        case GXcopy:
+            return GDK_COPY;
+            
+        case GXinvert:
+            return GDK_INVERT;
+            
+        case GXxor:
+            return GDK_XOR;
+            
+        case GXclear:
+            return GDK_CLEAR;
+            
+        case GXand:
+            return GDK_AND;
+            
+        case GXandReverse:
+            return GDK_AND_REVERSE;
+            
+        case GXandInverted:
+            return GDK_AND_INVERT;
+            
+        case GXnoop:
+            return GDK_NOOP;
+            
+        case GXor:
+            return GDK_OR;
+            
+        case GXequiv:
+            return GDK_EQUIV;
+            
+        case GXorReverse:
+            return GDK_OR_REVERSE;
+            
+        case GXcopyInverted:
+            return GDK_COPY_INVERT;
+            
+        case GXorInverted:
+            return GDK_OR_INVERT;
+            
+        case GXnand:
+            return GDK_NAND;
+            
+        case GXnor:
+            return GDK_NOR;
+            
+        case GXset:
+            return GDK_SET;
+    }
+    
+    MCAssert(false);
+    return GDK_COPY;
 }
 
 void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth,
@@ -710,77 +901,41 @@ void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth,
 	if (s == nil || d == nil)
 		return;
 	
-	GC t_gc ; 
-	t_gc = XCreateGC( dpy, d, 0, NULL ) ;
-	
-	assert ( rop <= GXset) ;
-	if (s == DNULL || d == DNULL)
-		return;
-	if (rop != GXcopy)
-		XSetFunction(dpy, t_gc, rop);
-	XCopyArea(dpy, s, d, t_gc, sx, sy, sw, sh, dx, dy);
-	if (rop != GXcopy)
-		XSetFunction(dpy, t_gc, GXcopy);
-	
-	XFreeGC ( dpy, t_gc ) ;
+    GdkGC *t_gc;
+    t_gc = gdk_gc_new(d);
+    
+    assert(rop <= GXset);
+    
+    if (rop != GXcopy)
+        gdk_gc_set_function(t_gc, XOpToGdkOp(rop));
+    
+    gdk_draw_drawable(d, t_gc, s, sx, sy, dx, dy, sw, sh);
+    
+    if (rop != GXcopy)
+        gdk_gc_set_function(t_gc, GDK_COPY);
+
+    g_object_unref(t_gc);
 }
 
-MCBitmap *MCScreenDC::createimage(uint2 depth, uint2 width, uint2 height,
-                                  Boolean set
-	                                  , uint1 value,
-	                                  Boolean shm, Boolean forceZ)
+MCBitmap *MCScreenDC::createimage(uint16_t depth, uint16_t width, uint16_t height, bool set, uint8_t value)
 {
-	uint4 bytes = 0;
-	MCBitmap *image = NULL;
-	
-	
-	if (depth == 0 || depth == 32)
-	{
-		if (vis -> depth == 24)
-			depth = 24;
-		else
-			depth = 32;
-	}
-
-	if (image == NULL)
-	{
-		if (forceZ || depth > XYCUTOFF)
-			image = (MCBitmap *)XCreateImage(dpy, getvisual(), depth, ZPixmap, 0,
-			                     NULL, width, height, getpad(), 0);
-		else
-			image = (MCBitmap *)XCreateImage(dpy, getvisual(), depth, XYPixmap, 0,
-			                     NULL, width, height, getpad(), 0);
-		
-		assert(image != NULL);
-
-		bytes = image->bytes_per_line * image->height;
-		if (image->bits_per_pixel == 1)
-			bytes *= image->depth;
-		image->data = (char *)new uint1[bytes];
-		image->obdata = NULL;
-	}
-	if (set && image != NULL )
-		memset(image->data, value, bytes);
-
-	assert(image != NULL);
-	
-	image->byte_order = MCswapbytes && depth > 1 ? LSBFirst : MSBFirst;
-	image->bitmap_bit_order = MSBFirst;
-	image->red_mask = image->green_mask = image->blue_mask
-	    	                                  = depth == 1 || depth == getdepth() ? 0x00 : 0xFF;
-
-	return image;
+    // NOTE:
+    //  The specified depth is completely ignored and a 32-bit RGBA image is
+    //  always created. GdkPixbuf doesn't work well with 1-bit images.
+    
+    // Create a new bitmap
+    GdkPixbuf *t_image;
+    t_image = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, width, height);
+    
+    if (set && t_image != nil)
+        memset(gdk_pixbuf_get_pixels(t_image), value, gdk_pixbuf_get_byte_length(t_image));
+    
+    return (MCBitmap*)t_image;
 }
 
 void MCScreenDC::destroyimage(MCBitmap *image)
 {
-	if (image->data != NULL)
-	{
-		delete image->data;
-		image->data = NULL;
-	}
-	XDestroyImage((XImage *)image);
-	image = NULL ;
+    g_object_unref(image);
 }
 
 void MCScreenDC::putimage(Drawable d, MCBitmap *source, int2 sx, int2 sy,
@@ -789,66 +944,28 @@ void MCScreenDC::putimage(Drawable d, MCBitmap *source, int2 sx, int2 sy,
 	if (d == nil)
 		return;
 
-	GC t_gc;
-
-	t_gc = XCreateGC(dpy, d, 0, NULL ) ;
-	XPutImage(dpy, d, t_gc , (XImage *)source, sx, sy, dx, dy, w, h);
-	XFreeGC(dpy, t_gc);
+    // If we use gdk_draw_pixbuf, the pixbuf gets blended with the existing
+    // contents of the window - something that we definitely do not want. We
+    // need to use Cairo directly to do the drawing to the window surface.
+    cairo_t *t_cr = gdk_cairo_create(d);
+    cairo_set_operator(t_cr, CAIRO_OPERATOR_SOURCE);
+    cairo_rectangle(t_cr, dx, dy, w, h);
+    cairo_clip(t_cr);
+    gdk_cairo_set_source_pixbuf(t_cr, source, dx-sx, dy-sy);
+    cairo_paint(t_cr);
+    cairo_destroy(t_cr);
 }
 
-XImage *MCScreenDC::getimage(Drawable d, int2 x, int2 y,
-                               uint2 w, uint2 h, Boolean shm)
+MCBitmap *MCScreenDC::getimage(Drawable d, int2 x, int2 y, uint2 w, uint2 h)
 {
-	if (d == DNULL)
-		d = getroot();
-	XImage *b = XGetImage(dpy, d, x, y, w, h, AllPlanes, ZPixmap);
-
-	assert ( b != NULL ) ;
-	
-	flipimage(b, MSBFirst, MSBFirst);
-	
-	return b;
-
+	GdkPixbuf *t_image;
+    t_image = gdk_pixbuf_get_from_drawable(NULL, d, NULL, x, y, 0, 0, w, h);
+    return (MCBitmap*)t_image;
 }
 
-void MCScreenDC::flipimage(XImage *image, int2 byte_order, int2 bit_order)
+void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
 {
-	if (image == NULL)
-		return;
-	if (image->depth == 1 && image->bitmap_bit_order != bit_order)
-	{
-		uint4 bytes = image->bytes_per_line * image->height;
-		if (image->bits_per_pixel != image->depth)
-			bytes *= image->depth / image->bits_per_pixel;
-		uint1 *dptr = (uint1 *)image->data;
-		while (bytes--)
-		{
-			*dptr = flip_table[*dptr];
-			dptr++;
-		}
-		image->bitmap_bit_order = bit_order;
-	}
-	else
-		if (image->byte_order == MCswapbytes)
-		{
-			Boolean oldswap = MCswapbytes;
-			MCswapbytes = True;
-			uint4 pixels = image->width * image->height;
-			if (image->depth >= 24)
-			{
-				uint4 *sptr = (uint4 *)image->data;
-				while (pixels--)
-					swap_uint4(sptr++);
-			}
-			else
-				if (image->depth > 8)
-				{
-					uint2 *sptr = (uint2 *)image->data;
-					while (pixels--)
-						swap_uint2(sptr++);
-				}
-			MCswapbytes = oldswap;
-		}
+    // Not needed
 }
 
 #ifdef OLD_GRAPHICS
@@ -879,34 +996,37 @@ MCBitmap *MCScreenDC::regiontomask(MCRegionRef r, int32_t w, int32_t h)
 void MCScreenDC::setfunction(uint4 rop)
 {
 	if (rop < 0x10)
-		XSetFunction(dpy, getgc(), rop);
+        gdk_gc_set_function(getgc(), XOpToGdkOp(rop));
 }
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
-	return d;
+	// Return the XID
+    return d != DNULL ? x11::gdk_x11_drawable_get_xid(d) : 0;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t id, Window &w)
 {
-	w = id;
+    // Look up the XID in GDK's window table
+    w = x11::gdk_x11_window_lookup_for_display(dpy, id);
 	return True;
 }
 
-void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 which, int4& r_value)
 {
-	XKeyboardState values;
-	XGetKeyboardControl(dpy, &values);
+    // There doesn't seem to be a way to do this with GDK...
+    x11::XKeyboardState values;
+    x11::XGetKeyboardControl(x11::gdk_x11_display_get_xdisplay(dpy), &values);
 	switch (which)
 	{
 	case P_BEEP_LOUDNESS:
-		ep.setint(values.bell_percent);
+		r_value = values.bell_percent;
 		break;
 	case P_BEEP_PITCH:
-		ep.setint(values.bell_pitch);
+		r_value = values.bell_pitch;
 		break;
 	case P_BEEP_DURATION:
-		ep.setint(values.bell_duration);
+		r_value = values.bell_duration;
 		break;
 	}
 }
@@ -914,224 +1034,325 @@ void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
 
 void MCScreenDC::setbeep(uint4 which, int4 beep)
 {
-	XKeyboardControl control;
+	// There doesn't seem to be a way to do this with GDK...
+    x11::XKeyboardControl control;
 	switch (which)
 	{
 	case P_BEEP_LOUDNESS:
 		beep = MCU_min(beep, 100);
 		control.bell_percent = beep;
-		XChangeKeyboardControl(dpy, KBBellPercent, &control);
+        x11::XChangeKeyboardControl(x11::gdk_x11_display_get_xdisplay(dpy), KBBellPercent, &control);
 		break;
 	case P_BEEP_PITCH:
 		control.bell_pitch = beep;
-		XChangeKeyboardControl(dpy, KBBellPitch, &control);
+		x11::XChangeKeyboardControl(x11::gdk_x11_display_get_xdisplay(dpy), KBBellPitch, &control);
 		break;
 	case P_BEEP_DURATION:
 		control.bell_duration = beep;
-		XChangeKeyboardControl(dpy, KBBellDuration, &control);
+		x11::XChangeKeyboardControl(x11::gdk_x11_display_get_xdisplay(dpy), KBBellDuration, &control);
 
 		break;
 	}
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep.setstringf("%s %d", ServerVendor(dpy), VendorRelease(dpy));
+	return vendorname;
 }
 
 uint2 MCScreenDC::getpad()
 {
-	return BitmapPad(dpy);
+	// No longer seems to be necessary
+    return 32;
 }
 
 Window MCScreenDC::getroot()
 {
-	return RootWindow(dpy, getscreen());
+	return gdk_screen_get_root_window(gdk_display_get_default_screen(dpy));
 }
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size)
 {
-	Display *olddpy = dpy;
-	Colormap oldcmap = cmap;
-	Window root = getroot();
-	uint2 screen = getscreen();
-	if (displayname != NULL)
-	{
-		if ((dpy = XOpenDisplay(displayname)) == NULL)
-		{
-			dpy = olddpy;
-			return NULL;
-		}
-		root = DefaultRootWindow(dpy);
-		screen = DefaultScreen(dpy);
-		cmap = DefaultColormap(dpy, screen);
-	}
-	XSync(dpy, False);
-	if (window == 0 && r.x == -32768)
-	{
-		Cursor c = XCreateFontCursor(dpy, XC_plus);
-		if (XGrabPointer(dpy, root, False,
-		                 PointerMotionMask | ButtonPressMask | ButtonReleaseMask,
-		                 GrabModeAsync, GrabModeAsync, None,
-		                 c, CurrentTime) != GrabSuccess)
-			return NULL;
-		Boolean done = False;
-		Boolean drawing = False;
-
-		MCRectangle trect;
-		GC gc = XCreateGC(dpy, root, 0, NULL);
-		XSetFunction(dpy, gc, GXxor);
-		XSetForeground(dpy, gc, AllPlanes);
-		XSetSubwindowMode(dpy, gc, IncludeInferiors);
-		int2 startx = 0;
-		int2 starty = 0;
-		while (!done)
-		{
-			XEvent event;
-			XNextEvent(dpy, &event);
-
-			XKeyEvent *kpevent = (XKeyEvent *)&event;
-			XMotionEvent *mevent = (XMotionEvent *)&event;
-			XButtonEvent *bpevent = (XButtonEvent *)&event;
-			XButtonEvent *brevent = (XButtonEvent *)&event;
-			switch (event.type)
-			{
-			case Expose:
-			case GraphicsExpose:
-				XPutBackEvent(dpy, &event);
-				MCscreen->expose();
-				break;
-			case KeyPress:
-				MCeventtime = kpevent->time;
-				if (XLookupKeysym(kpevent, ShiftMapIndex) == XK_Escape)
-				{
-					if (drawing)
-					{
-						XDrawRectangle(dpy, root, gc, trect.x, trect.y,
-						               trect.width - 1, trect.height - 1);
-						XUngrabServer(dpy);
-					}
-					done = True;
-				}
-				break;
-			case MotionNotify:
-				while (XCheckTypedWindowEvent(dpy, mevent->window,
-				                              MotionNotify, &event))
-
-					;
-				MCeventtime = mevent->time;
-				if (drawing)
-				{
-					XDrawRectangle(dpy, root, gc, trect.x, trect.y,
-					               trect.width - 1, trect.height - 1);
-					trect = MCU_compute_rect(startx, starty, mevent->x, mevent->y);
-					XDrawRectangle(dpy, root, gc, trect.x, trect.y,
-
-					               trect.width - 1, trect.height - 1);
-				}
-				break;
-			case ButtonPress:
-				XGrabServer(dpy);
-				MCeventtime = bpevent->time;
-				startx = bpevent->x;
-				starty = bpevent->y;
-				trect = MCU_compute_rect(startx, starty, startx, starty);
-				XDrawRectangle(dpy, root, gc, trect.x, trect.y,
-				               trect.width - 1, trect.height - 1);
-				drawing = True;
-				break;
-			case ButtonRelease:
-				MCeventtime = brevent->time;
-				setmods(brevent->state, 0, brevent->button, True);
-				XDrawRectangle(dpy, root, gc, trect.x, trect.y,
-				               trect.width - 1, trect.height - 1);
-				r = MCU_compute_rect(startx, starty, brevent->x, brevent->y);
-				if (r.width < 4 && r.height < 4)
-					r.width = r.height = 0;
-				XUngrabServer(dpy);
-				done = True;
-
-				break;
-			default:
-				break;
-			}
-		}
-		XUngrabPointer(dpy, CurrentTime);
-		XFreeCursor(dpy, c);
-		XFreeGC(dpy, gc);
-		XFlush(dpy);
-	}
-	if (r.x == -32768)
-		r.x = r.y = 0;
-	if (window != 0 || r.width == 0 || r.height == 0)
-	{
-		int rx, ry, wx, wy;
-		unsigned int kb;
-		Window troot;
-		Window child = root;
-		if (window == 0)
-		{
-			XGrabServer(dpy);
-			XQueryPointer(dpy, root, &troot, &child, &rx, &ry, &wx, &wy, &kb);
+	GdkDisplay* t_display;
+    GdkScreen* t_screen;
+    GdkWindow* t_root;
+    
+    // Are we connecting to a different display?
+    if (displayname != nil)
+    {
+        // Create a new connection and get the corresponding screen and root
+        MCAutoStringRefAsSysString t_displayname;
+        t_displayname.Lock(displayname);
+        
+        if ((t_display = gdk_display_open(*t_displayname)) == NULL)
+        {
+            // Could not open the requested display
+            return NULL;
+        }
+        
+        t_screen = gdk_display_get_default_screen(t_display);
+        t_root = gdk_screen_get_root_window(t_screen);
+    }
+    else
+    {
+        // Use the current connection
+        t_display = dpy;
+        t_screen = gdk_display_get_default_screen(t_display);
+        t_root = gdk_screen_get_root_window(t_screen);
+    }
+    
+    // Ensure that we are up-to-date with the window server
+    gdk_display_sync(t_display);
+    
+    // Are we going to display a selection rectangle?
+    if (window == 0 && r.x == -32768)
+    {
+        // Switch to a box drawing cursor and take control of the pointer
+        GdkCursor *t_cursor = gdk_cursor_new(GDK_PLUS);
+        if (gdk_pointer_grab(t_root, False,
+                             GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
+                             NULL, t_cursor, GDK_CURRENT_TIME) != GDK_GRAB_SUCCESS)
+        {
+            // Could not grab the pointer
+            return NULL;
+        }
+        
+        // Prepare for drawing the selection rectangle
+        MCRectangle t_rect;
+        GdkColor t_color;
+        t_color.pixel = ~0;
+        GdkGC *t_gc = gdk_gc_new(t_root);
+        gdk_gc_set_function(t_gc, GDK_XOR);
+        gdk_gc_set_foreground(t_gc, &t_color);
+        gdk_gc_set_subwindow(t_gc, GDK_INCLUDE_INFERIORS);
+        int16_t t_start_x = 0;
+        int16_t t_start_y = 0;
+        bool t_drawing = false;
+        bool t_done = false;
+        
+        // Minature event loop for handling mouse and key events while selecting
+        while (!t_done)
+        {
+            gdk_display_sync(t_display);
+            
+            // Place all events onto the pending event queue
+            EnqueueGdkEvents();
+            
+            bool t_queue = false;
+            GdkEvent *t_event = NULL;
+            if (pendingevents != NULL)
+            {
+                // Get the next event from the queue
+                t_event = gdk_event_copy(pendingevents->event);
+                MCEventnode *tptr = (MCEventnode *)pendingevents->remove(pendingevents);
+                delete tptr;
+            }
+            
+            // If there are no events, actively wait for one
+            if (t_event == NULL)
+            {
+                g_main_context_iteration(NULL, TRUE);
+                continue;
+            }
+            
+            // Various type casts of the event structure
+            GdkEventKey *t_event_key = (GdkEventKey*)t_event;
+            GdkEventMotion *t_event_motion = (GdkEventMotion*)t_event;
+            GdkEventButton *t_event_button = (GdkEventButton*)t_event;
+            
+            // What is the event?
+            switch (t_event->type)
+            {
+                case GDK_EXPOSE:
+                    // Put the event back on the queue and do an expose
+                    gdk_event_put(t_event);
+                    MCscreen->expose();
+                    break;
+                    
+                case GDK_KEY_PRESS:
+                    MCeventtime = gdk_event_get_time(t_event);
+                    if (t_event_key->keyval == GDK_KEY_Escape)
+                    {
+                        if (t_drawing)
+                        {
+                            // Draw the selection rectangle and release the server
+                            gdk_draw_rectangle(t_root, t_gc, FALSE, t_rect.x, t_rect.y, t_rect.width - 1, t_rect.height - 1);
+                            x11::gdk_x11_ungrab_server();
+                        }
+                        
+                        // End the selection
+                        t_done = true;
+                    }
+                    break;
+                    
+                case GDK_MOTION_NOTIFY:
+                    MCeventtime = gdk_event_get_time(t_event);
+                    if (t_drawing)
+                    {
+                        // Update the selection rectangle
+                        gdk_draw_rectangle(t_root, t_gc, FALSE, t_rect.x, t_rect.y, t_rect.width - 1, t_rect.height - 1);
+                        t_rect = MCU_compute_rect(t_start_x, t_start_y, t_event_motion->x, t_event_motion->y);
+                        gdk_draw_rectangle(t_root, t_gc, FALSE, t_rect.x, t_rect.y, t_rect.width - 1, t_rect.height - 1);
+                    }
+                    break;
+                    
+                case GDK_BUTTON_PRESS:
+                    x11::gdk_x11_grab_server();
+                    MCeventtime = gdk_event_get_time(t_event);
+                    t_start_x = t_event_button->x;
+                    t_start_y = t_event_button->y;
+                    t_rect = MCU_compute_rect(t_start_x, t_start_y, t_start_x, t_start_y);
+                    gdk_draw_rectangle(t_root, t_gc, FALSE, t_rect.x, t_rect.y, t_rect.width - 1, t_rect.height - 1);
+                    t_drawing = true;
+                    break;
+                    
+                case GDK_BUTTON_RELEASE:
+                    MCeventtime = gdk_event_get_time(t_event);
+                    setmods(t_event_button->state, 0, t_event_button->button, True);
+                    gdk_draw_rectangle(t_root, t_gc, FALSE, t_rect.x, t_rect.y, t_rect.width - 1, t_rect.height - 1);
+                    r = MCU_compute_rect(t_start_x, t_start_y, t_event_button->x, t_event_button->y);
+                    if (r.width < 4 && r.height < 4)
+                        r.width = r.height = 0;
+                    x11::gdk_x11_ungrab_server();
+                    t_done = true;
+                    break;
+                    
+                case GDK_GRAB_BROKEN:
+                    t_done = true;
+                    break;
+            }
+            
+            // The event needs to be released
+            gdk_event_free(t_event);
+        }
+        
+        // Release the grabs and other resources that were acquired
+        gdk_pointer_ungrab(GDK_CURRENT_TIME);
+        gdk_cursor_unref(t_cursor);
+        g_object_unref(t_gc);
+        gdk_display_flush(t_display);
+    }
+    if (r.x == -32768)
+    {
+        r.x = r.y = 0;
+    }
+    if (window != 0 || r.width == 0 || r.height == 0)
+    {
+        int rx, ry, wx, wy;
+        unsigned int kb;
+        GdkWindow *t_child;
+        if (window == 0)
+        {
+            // This is done using Xlib calls because there are no suitable
+            // equivalents in GDK (it can only return windows beloning to this
+            // application when mapping coordinates to a window).
+            x11::Display* dpy;
+            dpy = x11::gdk_x11_display_get_xdisplay(t_display);
+            x11::Window root;
+            root = x11::gdk_x11_drawable_get_xid(t_root);
+            
+            // Grab the server to prevent pointer movement during this operation
+            x11::XGrabServer(dpy);
+            
+            // Get the window under the pointer
+            x11::Window troot, child;
+            x11::XQueryPointer(dpy, root, &troot, &child, &rx, &ry, &wx, &wy, &kb);
+            
+            // Warp the pointer to the coordinates specified by the user and get
+            // the child window at that point
 			int2 oldx = rx;
 			int2 oldy = ry;
-			XWarpPointer(dpy, None, getroot(), 0, 0, 0, 0, r.x, r.y);
-			XQueryPointer(dpy, root, &troot, &child, &rx, &ry, &wx, &wy, &kb);
-			if (child == None)
+            x11::XWarpPointer(dpy, None, x11::gdk_x11_drawable_get_xid(getroot()), 0, 0, 0, 0, r.x, r.y);
+            x11::XQueryPointer(dpy, root, &troot, &child, &rx, &ry, &wx, &wy, &kb);
+			
+            // If no child window, use the screen's root window instead
+            if (child == None)
 				child = troot;
+            
+            // If the control key is not held down, do the query again
+            //
+            // ??? Why is this here? I can see it being necessary in the case
+            // that root and troot are not on the same screen but why does it
+            // depend on whether the control key is held down...?
 			if (!(MCmodifierstate & MS_CONTROL))
 			{
-				Window oldchild = child;
-				XQueryPointer(dpy, child, &troot, &child, &rx, &ry, &wx, &wy, &kb);
+                x11::Window oldchild = child;
+                x11::XQueryPointer(dpy, child, &troot, &child, &rx, &ry, &wx, &wy, &kb);
 				if (child == None)
 					child = oldchild;
 			}
-			XWarpPointer(dpy, None, getroot(), 0, 0, 0, 0, oldx, oldy);
-			XUngrabServer(dpy);
-		}
-		else
-			child = window;
-		int x, y;
-		unsigned int w, h, bw, depth;
-		if (!XGetGeometry(dpy, child, &troot, &x, &y, &w, &h, &bw, &depth))
-			return NULL;
-		XWindowAttributes atts;
-		if (XGetWindowAttributes(dpy, child, &atts) && atts.map_installed)
-			cmap = atts.colormap;
-		XTranslateCoordinates(dpy, child, root, 0, 0, &x, &y, &child);
-		if (r.width == 0 || r.height == 0)
-		{
-			MCU_set_rect(r, x, y, w, h);
-			r = MCU_clip_rect(r, 0, 0, DisplayWidth(dpy, screen),
-			                  DisplayHeight(dpy, screen));
-		}
-		else
-		{
-			r.x += x;
-			r.y += y;
-		}
-	}
-	r = MCU_clip_rect(r, 0, 0, device_getwidth(), device_getheight());
-	if (r.width == 0 || r.height == 0)
-		return NULL;
-	XImage *t_image = XGetImage(dpy, root, r.x, r.y, r.width, r.height, AllPlanes, ZPixmap);
-	if (t_image == NULL)
-		return NULL;
-	t_image->red_mask = t_image->green_mask = t_image->blue_mask = 0;
-	flipimage(t_image, MSBFirst, MSBFirst);
-	if (dpy != olddpy)
-	{
-		XCloseDisplay(dpy);
-		dpy = olddpy;
-	}
-	cmap = oldcmap;
-
-	MCImageBitmap *t_bitmap = nil;
-	/* UNCHECKED */ MCImageBitmapCreateWithXImage(t_image, t_bitmap);
-	XDestroyImage(t_image);
-	
+            
+            // Convert the X11 window to a GDK window
+            t_child = x11::gdk_x11_window_foreign_new_for_display(t_display, child);
+            
+            // Restore the pointer location and ungrab the server
+            x11::XWarpPointer(dpy, None, x11::gdk_x11_drawable_get_xid(getroot()), 0, 0, 0, 0, oldx, oldy);
+            x11::XUngrabServer(dpy);
+        }
+        else
+        {
+            // Convert the X11 window to a GDK window
+            t_child = x11::gdk_x11_window_foreign_new_for_display(t_display, window);
+        }
+        
+        // Get the position and dimensions of the window
+        gint x, y;
+        unsigned int w, h;
+        w = gdk_window_get_width(t_child);
+        h = gdk_window_get_height(t_child);
+        gdk_window_get_origin(t_child, &x, &y);
+        
+        // Are we wanting the whole window or just a specified rectangle?
+        if (r.width == 0 || r.height == 0)
+        {
+            // Whole window
+            MCU_set_rect(r, x, y, w, h);
+            r = MCU_clip_rect(r, 0, 0, gdk_screen_get_width(t_screen), gdk_screen_get_height(t_screen));
+        }
+        else
+        {
+            // Rectangle within window
+            r.x += x;
+            r.y += y;
+        }
+        
+        // Release the reference to the child window that we created
+        g_object_unref(t_child);
+    }
+    
+    // Clip to the device boundaries
+    r = MCU_clip_rect(r, 0, 0, device_getwidth(), device_getheight());
+    
+    // Nothing more to do if the rectangle is degenerate
+    if (r.width == 0 || r.height == 0)
+        return NULL;
+    
+    // Get the snapshot from the root window.
+    // FG-2014-08-05: [[ Bugfix 13032 ]]
+    // We need to pre-create the pixbuf to ensure we get one with alpha.
+    GdkPixbuf *t_image;
+    t_image = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, r.width, r.height);
+    t_image = gdk_pixbuf_get_from_drawable(t_image, t_root, NULL, r.x, r.y, 0, 0, r.width, r.height);
+    
+    // Abort if the pixbuf could not be captured
+    if (t_image == NULL)
+        return NULL;
+    
+    // Close the connection to the display
+    if (displayname != nil)
+    {
+        gdk_display_close(t_display);
+    }
+    
+    // Turn the GDK pixbuf into an engine bitmap
+    MCImageBitmap *t_bitmap = nil;
+    /* UNCHECKED */ MCImageBitmapCreateWithGdkPixbuf(t_image, t_bitmap);
+    g_object_unref(t_image);
+    
+    // Do any scaling that is required to satisfy the specified size
 	if (size != nil && 
-		(size -> x != t_bitmap -> width || size -> y != t_bitmap -> height))
+	    ((uint32_t) size -> x != t_bitmap -> width ||
+	     (uint32_t) size -> y != t_bitmap -> height))
 	{
 		MCImageBitmap *t_new_bitmap;
 		MCImageScaleBitmap(t_bitmap, size -> x, size -> y, INTERPOLATION_BILINEAR, t_new_bitmap);
@@ -1156,49 +1377,34 @@ void MCScreenDC::hidebackdrop(bool p_hide)
 
 	if ( p_hide )
 	{
-		XUnmapWindow(MCdpy, backdrop);
-		MCstacks -> refresh() ;
+		disablebackdrop(false);
 	}
 	else
 	{
-		
-		Atom t_type, t_control ;
-		t_type = 	XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", false);
-		t_control = XInternAtom(dpy, "_NET_WM_STATE", false);
-				
-		XChangeProperty(dpy, backdrop, t_control, XA_ATOM, 32, PropModeReplace, (unsigned char*)&t_type, 1);
-		
-		
-		XMapWindow(dpy, backdrop);
-		MCstacks -> refresh();
-
+		enablebackdrop(false);
 	}
 }
 
 
 void MCScreenDC::createbackdrop_window(void)
 {
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = CWBorderPixel | CWColormap;
-	xswa.border_pixel = 0;
-	xswa.colormap = cmap ;
-
-	backdrop = XCreateWindow(dpy, getroot(), 0, 0,
-	                         100,100,0,getrealdepth(), //getwidth(), getheight(), 0, getrealdepth(), // 
-	                         InputOutput,getvisual(), xswamask, &xswa);
-	
-	XSelectInput(dpy, backdrop,  ButtonPressMask | ButtonReleaseMask | FocusChangeMask
-	             | EnterWindowMask | LeaveWindowMask | PointerMotionMask);
-	
+	GdkWindowAttr gdkwa;
+    gdkwa.event_mask = GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_FOCUS_CHANGE_MASK
+        | GDK_POINTER_MOTION_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_EXPOSURE_MASK;
+    gdkwa.x = gdkwa.y = 0;
+    gdkwa.width = gdkwa.height = 100;
+    gdkwa.wclass = GDK_INPUT_OUTPUT;
+    gdkwa.visual = getvisual();
+    gdkwa.colormap = getcmap();
+    gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
+    
+    backdrop = gdk_window_new(getroot(), &gdkwa, GDK_WA_VISUAL);
+    gdk_display_sync(MCdpy);
 }
-
-	
-
 
 
 void MCScreenDC::enablebackdrop(bool p_hard)
 {
-
 	bool t_error;
 	t_error = false;
 	
@@ -1213,19 +1419,17 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	else
 		backdrop_active = True;
 	
-	t_error = ( backdrop == DNULL) ;
+	t_error = (backdrop == DNULL) ;
 	
 	if (!t_error)	
 	{
-		Atom t_type, t_control ;
-		t_type = 	XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", false);
-		t_control = XInternAtom(dpy, "_NET_WM_STATE", false);
-				
-		XChangeProperty(dpy, backdrop, t_control, XA_ATOM, 32, PropModeReplace, (unsigned char*)&t_type, 1);
-		
-		XMapWindow(dpy, backdrop);
-			
-		MCstacks -> refresh();
+        MCstacks -> refresh();
+        gdk_window_set_functions(backdrop, GdkWMFunction(0));
+        gdk_window_set_decorations(backdrop, GdkWMDecoration(0));
+        gdk_window_set_skip_taskbar_hint(backdrop, TRUE);
+        gdk_window_set_skip_pager_hint(backdrop, TRUE);
+        gdk_window_fullscreen(backdrop);
+        gdk_window_show_unraised(backdrop);
 	}
 	else
 	{
@@ -1250,19 +1454,19 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 
 	if (!backdrop_active && !backdrop_hard)
 	{
-		if ( backdrop != DNULL)
-			XUnmapWindow(dpy, backdrop);
+		if (backdrop != DNULL)
+			gdk_window_hide(backdrop);
 		MCstacks -> refresh();
 	}
 	
 }
 
-
-
+bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap);
 void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
 	// IM-2014-04-15: [[ Bug 11603 ]] Convert pattern to Pixmap for use with XSetWindowAttributes structure
 	freepixmap(m_backdrop_pixmap);
+    m_backdrop_pixmap = NULL;
 	
 	if (p_pattern != nil)
 		/* UNCHECKED */ MCPatternToX11Pixmap(p_pattern, m_backdrop_pixmap);
@@ -1270,110 +1474,95 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
 	
-	char *cname = NULL;
-	if (m_backdrop_pixmap == nil &&
-	        parsecolor(MCbackdropcolor, &backdropcolor, &cname))
-	{
-		delete cname;
+    if (m_backdrop_pixmap == nil)
+    {
+        backdropcolor = p_colour;
 		alloccolor(backdropcolor);
-	}
+    }
 	else
 		backdropcolor.pixel = 0;
 	
-
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = CWBorderPixel | CWColormap;
-	xswa.border_pixel = 0;
-	xswa.colormap = cmap ;
-
+    if (backdrop == DNULL)
+        return;
+    
 	if (m_backdrop_pixmap != DNULL)
 	{
-		xswamask |= CWBackPixmap;
-		xswa.background_pixmap = m_backdrop_pixmap;
+		gdk_window_set_back_pixmap(backdrop, m_backdrop_pixmap, FALSE);
 	}
 	else
 	{
-		xswamask |= CWBackPixel;
-		xswa.background_pixel = backdropcolor.pixel;
+		GdkColor t_colour;
+        t_colour.red = p_colour.red;
+        t_colour.green = p_colour.green;
+        t_colour.blue = p_colour.blue;
+        gdk_rgb_find_color(gdk_drawable_get_colormap(backdrop), &t_colour);
+        gdk_window_set_background(backdrop, &t_colour);
 	}
+    
+    gdk_window_clear(backdrop);
 
-	if (backdrop != DNULL)
-	{
-		XChangeWindowAttributes(dpy, backdrop, xswamask, &xswa);
-		XClearWindow(dpy, backdrop);
-	}
-	
 	MCstacks -> refresh();
 }
 
 
 void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 {
-	if ( p_mode <= WM_PALETTE && backdrop != DNULL )
-		XSetTransientForHint(dpy, p_window, backdrop);
+	if (p_mode <= WM_PALETTE && backdrop != DNULL)
+    {
+        if (backdrop_active||backdrop_hard)
+            gdk_window_set_transient_for(p_window, backdrop);
+        else
+            gdk_property_delete(p_window, gdk_atom_intern_static_string("WM_TRANSIENT_FOR"));
+    }
 }
 
 
-
-
-
-void MCScreenDC::createbackdrop(const char *color)
+/*void MCScreenDC::createbackdrop(MCStringRef color)
+void MCScreenDC::createbackdrop(MCStringRef color)
 {
-	char *cname = NULL;
 	if (m_backdrop_pixmap == DNULL &&
-	        parsecolor(color, &backdropcolor, &cname))
-	{
-		delete cname;
-		alloccolor(backdropcolor);
-	}
+            parsecolor(color, backdropcolor))
+        alloccolor(backdropcolor);
 	else
 		backdropcolor.pixel = 0;
 	
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = 0;
+    GdkWindowAttr t_wa;
+    t_wa.x = t_wa.y = 0;
+    t_wa.width = device_getwidth();
+    t_wa.height = device_getheight();
+    t_wa.wclass = GDK_INPUT_OUTPUT;
+    t_wa.visual = vis;
+    t_wa.window_type = GDK_WINDOW_TOPLEVEL;
+    t_wa.override_redirect = TRUE;
+    t_wa.event_mask = GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK|GDK_ENTER_NOTIFY_MASK
+        |GDK_LEAVE_NOTIFY_MASK|GDK_POINTER_MOTION_MASK|GDK_EXPOSURE_MASK;
+    
+    backdrop = gdk_window_new(NULL, &t_wa, GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
+    
 	if (m_backdrop_pixmap != DNULL)
 	{
-		xswamask |= CWBackPixmap;
-		xswa.background_pixmap = m_backdrop_pixmap;
+		gdk_window_set_back_pixmap(backdrop, m_backdrop_pixmap, FALSE);
 	}
 	else
 	{
-		xswamask |= CWBackPixel;
-		xswa.background_pixel = backdropcolor.pixel;
+		GdkColor t_colour;
+        t_colour.red = backdropcolor.red;
+        t_colour.green = backdropcolor.green;
+        t_colour.blue = backdropcolor.blue;
+        gdk_rgb_find_color(gdk_drawable_get_colormap(backdrop), &t_colour);
+        gdk_window_set_background(backdrop, &t_colour);
 	}
-	
-	
-	if (backdrop != DNULL)
-	{
-		XChangeWindowAttributes(dpy, backdrop, xswamask, &xswa);
-		XClearWindow(dpy, backdrop);
-		return;
-	}
-	
-	
-	xswamask |= CWBorderPixel | CWColormap | CWOverrideRedirect ;
-	xswa.border_pixel = 0;
-	xswa.colormap = cmap;
-	xswa.override_redirect = True;
-	//DH
-	backdrop = XCreateWindow(dpy, RootWindow(dpy, vis->screen), 0, 0,
-	                         device_getwidth(), device_getheight(), 0, vis->depth,
-	                         InputOutput, vis->visual, xswamask, &xswa);
-	
-	XSelectInput(dpy, backdrop,  ButtonPressMask | ButtonReleaseMask
-	             | EnterWindowMask | LeaveWindowMask | PointerMotionMask);
-	
-	
-	XMapWindow(dpy, backdrop);
-}
+    
+    gdk_window_show_unraised(backdrop);
+}*/
 
 
 void MCScreenDC::destroybackdrop()
 {
 	if (backdrop != DNULL)
 	{
-		XUnmapWindow(dpy, backdrop);
-		XDestroyWindow(dpy, backdrop);
+		gdk_window_hide(backdrop);
+        gdk_window_destroy(backdrop);
 		backdrop = DNULL;
 		backdropcolor.pixel = 0;
 	}
@@ -1382,23 +1571,7 @@ void MCScreenDC::destroybackdrop()
 }
 
 
-
-
-
-
 Bool MCScreenDC::is_composite_wm ( int screen_id ) 
 {
-	Atom t_atom ;
-	char buf[100] ;
-	memset(buf, 0, (sizeof(char))*100);	
-	sprintf(buf,"_NET_WM_CM_S%d", screen_id ) ;
-	t_atom = XInternAtom ( dpy, buf, False ) ;
-	return ( XGetSelectionOwner ( dpy, t_atom ) != None ) ;
+    return gdk_display_supports_composite(dpy);
 }
-
-
-
-
-
-
-

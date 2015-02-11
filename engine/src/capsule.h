@@ -17,10 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_CAPSULE__
 #define __MC_CAPSULE__
 
-#ifndef __MC_CORE__
-#include "core.h"
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // A capsule is sequence of sections, each independent and capable of being
@@ -82,10 +78,6 @@ enum MCCapsuleSectionType
 	// environment on startup;.
 	kMCCapsuleSectionTypeExternal,
 
-	// A module section contains a file that is required by the engine to launch
-	// (e.g. encryption DLLs on Windows).
-	kMCCapsuleSectionTypeModule,
-
 	// Auxillary stack sections contain other mainstacks that should be loaded
 	// alongside the mainstack (but not opened initially).
 	kMCCapsuleSectionTypeAuxillaryStack,
@@ -97,6 +89,9 @@ enum MCCapsuleSectionType
 	// Startup script to be executed after all stacks have loaded but before
 	// the main stack is opened.
 	kMCCapsuleSectionTypeStartupScript,
+    
+	// Module to be loaded on startup.
+	kMCCapsuleSectionTypeModule,
 };
 
 // Each section begins with a header that defines its type and length. This is
@@ -204,7 +199,7 @@ bool MCCapsuleFillNoCopy(MCCapsuleRef self, const void *data, uint32_t data_leng
 // will open the file at this point, but not read any data until required. It
 // will close the file as soon as it is finished with it. It will start reading
 // data at the given offset and for the given number of bytes.
-bool MCCapsuleFillFromFile(MCCapsuleRef self, const char *path, uint32_t offset, bool finished);
+bool MCCapsuleFillFromFile(MCCapsuleRef self, MCStringRef path, uint32_t offset, bool finished);
 
 // The process method attempts to parse as many sections as it can, invoking the
 // callback for each one. Note that a section cannot be processed until the capsule
@@ -231,6 +226,7 @@ void MCDeployCapsuleDestroy(MCDeployCapsuleRef self);
 // This method appends a new section of the given type containing the
 // specified data.
 bool MCDeployCapsuleDefine(MCDeployCapsuleRef self, MCCapsuleSectionType type, const void *data, uint32_t data_size);
+bool MCDeployCapsuleDefineString(MCDeployCapsuleRef self, MCCapsuleSectionType type, MCStringRef p_string);
 
 // This method appends a new section of the given type contining the data
 // held in the given file - the caller is responsible for managing the lifetime

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -30,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
 
-MCWindowShape *MCImage::makewindowshape(void)
+MCWindowShape *MCImage::makewindowshape(const MCGIntegerSize &p_size)
 {
 	bool t_success;
 	t_success = true;
@@ -39,15 +38,17 @@ MCWindowShape *MCImage::makewindowshape(void)
 	if (!MCMemoryNew(t_mask))
 		return nil;
 	
-	// Get the width / height.
-	t_mask -> width = rect . width;
-	t_mask -> height = rect . height;
-
 	MCImageBitmap *t_bitmap = nil;
 	bool t_has_mask = false, t_has_alpha = false;
-	t_success = lockbitmap(t_bitmap, true);
+	
+	t_success = lockbitmap(true, true, &p_size, t_bitmap);
+
 	if (t_success)
 	{
+		// Get the width / height.
+		t_mask -> width = t_bitmap -> width;
+		t_mask -> height = t_bitmap -> height;
+		
 		t_has_mask = MCImageBitmapHasTransparency(t_bitmap, t_has_alpha);
 		if (t_has_alpha)
 		{
@@ -401,7 +402,7 @@ bool MCImageBitmapToMetafile(MCImageBitmap *p_bitmap, MCWinSysMetafileHandle &r_
 	return t_success;
 }
 
-bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragimage)
+bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCDataRef &r_dragimage)
 {
 	uint32_t t_header_size;
 	if (MCmajorosversion <= 0x0500)
@@ -416,8 +417,11 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragim
 	t_data_size = t_header_size + t_image_size;
 
 	char *t_data = nil;
-	if (!MCMemoryAllocate(t_data_size, t_data))
+	MCAutoByteArray t_buffer;
+	if (!t_buffer.New(t_data_size))
 		return false;
+
+	t_data = (char*)t_buffer.Bytes();
 
 	// Location of the bits in the DIB data we are producing
 	char *t_out_bits;
@@ -488,26 +492,17 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragim
 		t_header -> bV4CSType = LCS_WINDOWS_COLOR_SPACE;
 	}
 
-	r_dragimage = MCSharedString::CreateNoCopy(MCString(t_data, t_data_size));
-
-	if (r_dragimage != nil)
-		return true;
-
-	MCMemoryDeallocate(t_data);
-	return false;
+	return t_buffer.CreateDataAndRelease(r_dragimage);
 }
 
-MCSharedString *MCImage::converttodragimage(void)
+void MCImage::converttodragimage(MCDataRef& r_output)
 {
 	MCImageBitmap *t_bitmap = nil;
+    
 	if (!lockbitmap(t_bitmap, true))
-		return NULL;
+		return;
 
-	MCSharedString *t_result = nil;
-
-	/* UNCHECKED */ MCImageBitmapToDragImage(t_bitmap, t_result);
+	/* UNCHECKED */ MCImageBitmapToDragImage(t_bitmap, r_output);
 
 	unlockbitmap(t_bitmap);
-
-	return t_result;
 }

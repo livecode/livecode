@@ -1,0 +1,10 @@
+setup
+
+local tVal = 1
+
+repeat with i = 0 to 10
+	test exp2(i) is tVal
+	multiply tVal by 2
+end repeat
+
+teardown

@@ -21,25 +21,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
 #include "field.h" 
-#include "unicode.h"
 #include "notify.h"
 #include "statemnt.h"
 #include "funcs.h"
 #include "eventqueue.h"
 #include "image.h"
-#include "core.h"
 #include "osspec.h"
 #include "fiber.h"
 #include "redraw.h"
 #include "param.h"
 #include "mbldc.h"
+
+#include "font.h"
 
 #include <objc/runtime.h>
 #import <Foundation/Foundation.h>
@@ -57,7 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern Bool X_init(int argc, char *argv[], char *envp[]);
+extern Bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[]);
 extern void X_main_loop(void);
 extern bool X_main_loop_iteration(void);
 extern int X_close(void);
@@ -67,6 +67,7 @@ extern void setup_simulator_hooks(void);
 @class com_runrev_livecode_MCIPhoneBreakWaitHelper;
 
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +78,7 @@ uint4 g_current_background_colour = 0;
 
 // These are used by the MCScreenDC 'beep' methods.
 static SystemSoundID s_system_sound = 0;
-static char *s_system_sound_name = nil;
+static MCStringRef s_system_sound_name = nil;
 
 // These control the mapping of LiveCode pixel values to iOS pixels.
 static MCGFloat s_iphone_device_scale = 1;
@@ -192,19 +193,19 @@ static void sel_callback_arg(void *p_context)
 
 static void MCFiberCallSelector(MCFiberRef p_fiber, id object, SEL selector)
 {
-	sel_ctxt_t t_ctxt;
-	t_ctxt . object = object;
-	t_ctxt . selector = selector;
-	MCFiberCall(p_fiber, sel_callback, &t_ctxt);
+	sel_ctxt_t ctxt;
+	ctxt . object = object;
+	ctxt . selector = selector;
+	MCFiberCall(p_fiber, sel_callback, &ctxt);
 }
 
 static void MCFiberCallSelectorWithObject(MCFiberRef p_fiber, id object, SEL selector, id arg)
 {
-	sel_ctxt_t t_ctxt;
-	t_ctxt . object = object;
-	t_ctxt . selector = selector;
-	t_ctxt . argument = arg;
-	MCFiberCall(p_fiber, sel_callback_arg, &t_ctxt);
+	sel_ctxt_t ctxt;
+	ctxt . object = object;
+	ctxt . selector = selector;
+	ctxt . argument = arg;
+	MCFiberCall(p_fiber, sel_callback_arg, &ctxt);
 }
 
 void MCIPhoneCallOnMainFiber(void (*handler)(void *), void *context)
@@ -231,14 +232,14 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-const char *MCScreenDC::getdisplayname(void)
+MCNameRef MCScreenDC::getdisplayname(void)
 {
-	return "iphone";
+	return MCN_iphone;
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep . setsvalue("iphone");
+	return MCN_iphone;
 }
 
 uint2 MCScreenDC::device_getwidth()
@@ -359,7 +360,7 @@ void MCScreenDC::beep(void)
 
 struct MCScreenDCDoSetBeepSoundEnv
 {
-	const char *sound;
+	MCStringRef sound;
 	bool result;
 };
 
@@ -369,12 +370,12 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	MCScreenDCDoSetBeepSoundEnv *env;
 	env = (MCScreenDCDoSetBeepSoundEnv *)p_env;
 	
-	if (env -> sound == nil || *(env -> sound) == 0)
+	if (env -> sound == nil || MCStringIsEmpty(env -> sound))
 	{
 		if (s_system_sound_name != nil)
 		{
 			AudioServicesDisposeSystemSoundID(s_system_sound);
-			delete s_system_sound_name;
+			MCValueRelease(s_system_sound_name);
 		}
 		s_system_sound = 0;
 		s_system_sound_name = nil;
@@ -384,11 +385,11 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	
 	SystemSoundID t_new_sound;
 	
-	char *t_sound_path;
-	t_sound_path = MCS_resolvepath(env -> sound);
+	MCAutoStringRef t_sound_path;
+	MCS_resolvepath(env -> sound, &t_sound_path);
 	
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: t_sound_path encoding: NSMacOSRomanStringEncoding]];
+	t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_sound_path]];
 	
 	OSStatus t_status;
 	t_status = AudioServicesCreateSystemSoundID((CFURLRef)t_url, &t_new_sound);
@@ -397,21 +398,21 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		if (s_system_sound_name != nil)
 		{
 			AudioServicesDisposeSystemSoundID(s_system_sound);
-			delete s_system_sound_name;
+			MCValueRelease(s_system_sound_name);
 		}
 		s_system_sound = t_new_sound;
-		s_system_sound_name = t_sound_path;
+		s_system_sound_name = MCValueRetain(*t_sound_path);
 	}
 	else
-		delete t_sound_path;
+		MCValueRelease(*t_sound_path);
 	
 	env -> result = t_status == noErr;
 }
 
-bool MCScreenDC::setbeepsound(const char *p_sound)
+bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 {
 	MCScreenDCDoSetBeepSoundEnv t_env;
-	t_env . sound = p_sound;
+	t_env . sound = p_beep_sound;
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSetBeepSound, &t_env);
@@ -419,12 +420,16 @@ bool MCScreenDC::setbeepsound(const char *p_sound)
 	return t_env . result;
 }
 
-const char *MCScreenDC::getbeepsound(void)
+bool MCScreenDC::getbeepsound(MCStringRef& r_beep_sound)
 {
-	return s_system_sound_name != nil ? s_system_sound_name : "";
+	if (s_system_sound_name != nil)
+		r_beep_sound = MCValueRetain(s_system_sound_name);
+	else
+		r_beep_sound = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCScreenDC::getbeep(uint4 property, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 property, int4& r_value)
 {
 }
 
@@ -439,7 +444,7 @@ struct MCScreenDCDoSnapshotEnv
 	MCRectangle r;
 	MCPoint size;
 	uint4 window;
-	const char *displayname;
+	MCStringRef displayname;
 	MCImageBitmap *result;
 };
 
@@ -452,10 +457,8 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	
 	MCRectangle r;
 	uint4 window;
-	const char *displayname;
-	
+	r = env -> r;
 	window = env -> window;
-	displayname = env -> displayname;
 	
 	/////
 	
@@ -481,10 +484,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		uint8_t *t_pixel_buffer = nil;
 		
 		if (t_success)
-		{
-			t_colorspace = CGColorSpaceCreateDeviceRGB();
-			t_success = t_colorspace != nil;
-		}
+			t_success = MCImageGetCGColorSpace(t_colorspace);
 		
 		if (t_success)
 			t_success = MCImageBitmapCreate(t_bitmap_width, t_bitmap_height, t_bitmap);
@@ -504,6 +504,9 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
 			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
 			
+			// IM-2014-10-24: [[ Bug 13350 ]] Scale to the target bitmap size before further transformation.
+			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
+
             // MW-2014-04-22: [[ Bug 12008 ]] Translate before scale.
 			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
             
@@ -512,44 +515,47 @@ static void MCScreenDCDoSnapshot(void *p_env)
             float t_scale;
             t_scale = ((MCScreenDC *)MCscreen) -> logicaltoscreenscale();
 			CGContextScaleCTM(t_img_context, 1.0 / t_scale, 1.0 / t_scale);
-            
-			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
-			
 			
 			bool t_is_rotated;
-			CGSize t_offset;
-			CGFloat t_angle;
-			switch(MCIPhoneGetOrientation())
+			t_is_rotated = UIInterfaceOrientationIsLandscape(MCIPhoneGetOrientation());
+			
+			if (MCmajorosversion >= 800)
 			{
-				case UIInterfaceOrientationPortrait:
-					t_angle = 0.0;
-					t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
-					t_is_rotated = false;
-					break;
-				case UIInterfaceOrientationPortraitUpsideDown:
-					t_angle = M_PI;
-					t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
-					t_is_rotated = false;
-					break;
-				case UIInterfaceOrientationLandscapeLeft:
-					// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
-					t_angle = M_PI / 2.0;
-					t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
-					t_is_rotated = true;
-					break;
-				case UIInterfaceOrientationLandscapeRight:
-					// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
-					t_angle = -M_PI / 2.0;
-					t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
-					t_is_rotated = true;
-					break;
+				// PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
+				// IM-2014-11-05: [[ Bug 13949 ]] Avoid rotating entirely as faulty offset was being applied to snapshots in landscape orientation.
+			}
+			else
+			{
+				CGSize t_offset;
+				CGFloat t_angle;
+				
+				switch(MCIPhoneGetOrientation())
+				{
+					case UIInterfaceOrientationPortrait:
+						t_angle = 0.0;
+						t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
+						break;
+					case UIInterfaceOrientationPortraitUpsideDown:
+						t_angle = M_PI;
+						t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
+						break;
+					case UIInterfaceOrientationLandscapeLeft:
+						// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
+						t_angle = M_PI / 2;
+						t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
+						break;
+					case UIInterfaceOrientationLandscapeRight:
+						// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
+						t_angle = -M_PI / 2;
+						t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
+						break;
+				}
+				
+				CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
+				CGContextRotateCTM(t_img_context, t_angle);
+				CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
 			}
 			
-			CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
-			CGContextRotateCTM(t_img_context, t_angle);
-			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
-            
-            
 #ifndef USE_UNDOCUMENTED_METHODS
 			NSArray *t_windows;
 			t_windows = [[[UIApplication sharedApplication] windows] retain];
@@ -616,16 +622,16 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			}
 		}
 	}
-	
+		
 	env -> result = t_bitmap;
 }
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size)
 {
 	MCScreenDCDoSnapshotEnv env;
 	env . r = r;
 	env . window = window;
-	env . displayname = displayname;
+	env . displayname = displayname == nil ? nil : MCValueRetain(displayname);
     
     // MW-2014-02-20: [[ Bug 11811 ]] Pass through the specified size, or the size of the rect.
 	env . size = size != nil ? *size : MCPointMake(r . width, r . height);
@@ -633,6 +639,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
 
+    if (env . displayname != nil)
+        MCValueRelease(env . displayname);
 	return env . result;
 }
 
@@ -740,9 +748,9 @@ void MCScreenDC::activateIME(Boolean activate)
 {
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		if (activate)
+	if (activate)
 			MCIPhoneActivateKeyboard();
-		else
+	else
 			MCIPhoneDeactivateKeyboard();
 	});
 }
@@ -807,13 +815,13 @@ Window MCScreenDC::get_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic);
-extern void coretext_font_destroy(void *p_font);
-extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
+extern bool coretext_font_destroy(void *p_font);
+extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight);
 
 struct do_iphone_font_create_env
 {
-	const char *name;
+	MCStringRef name;
 	uint32_t size;
 	bool bold;
 	bool italic;
@@ -835,21 +843,22 @@ static void do_iphone_font_destroy(void *p_font)
     coretext_font_destroy(p_font);
 }
 
-void *iphone_font_create(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic)
+void *iphone_font_create(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic)
 {
 	do_iphone_font_create_env env;
-	env . name = p_name;
+	env . name = MCValueRetain(p_name);
 	env . size = p_size;
 	env . bold = p_bold;
 	env . italic = p_italic;
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, do_iphone_font_create, &env);
+    MCValueRelease(env . name);
 	return env . result;
 }
 
-void iphone_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
+void iphone_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight)
 {
-    coretext_font_get_metrics(p_font, r_ascent, r_descent);
+    coretext_font_get_metrics(p_font, r_ascent, r_descent, r_leading, r_xheight);
 }
 
 void iphone_font_destroy(void *p_font)
@@ -1161,7 +1170,7 @@ void MCIPhoneRunBlockOnMainFiber(void (^block)(void))
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for didBecomeActive.
 static void MCIPhoneDoDidBecomeActive(void *)
-{
+{ 
 	extern char **environ;
 	char **env;
 	env = environ;
@@ -1173,30 +1182,37 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
-	char *args[1];
-	args[0] = (char *)[[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0] cString];
+	// Convert the arguments into stringrefs
+	MCStringRef args[1];
+	MCStringCreateWithCFString((CFStringRef)[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0], args[0]);
 	
-	// Setup the value of the major OS version global.
-	NSString *t_sys_version;
-	t_sys_version = [[UIDevice currentDevice] systemVersion];
-	MCmajorosversion = ([t_sys_version characterAtIndex: 0] - '0') * 100;
-	MCmajorosversion += ([t_sys_version characterAtIndex: 2] - '0') * 10;
-	if ([t_sys_version length] == 5)
-		MCmajorosversion += [t_sys_version characterAtIndex: 4] - '0';
+	// Convert the environment variables into stringrefs
+	uindex_t envc = 0;
+	MCAutoArray<MCStringRef> t_envp;
+	while (env[envc] != 0)
+	{
+		t_envp.Extend(envc + 1);
+		MCStringCreateWithBytes((const byte_t*)env[envc], strlen(env[envc]), kMCStringEncodingUTF8, false, t_envp[envc]);
+		envc++;
+	}
+	t_envp.Extend(envc + 1);
+	t_envp[envc] = nil;
 	
 	// Initialize the engine.
 	Bool t_init_success;
-	t_init_success = X_init(1, args, env);
+	t_init_success = X_init(1, args, envc, t_envp.Ptr());
 	
 	[t_pool release];
 	
 	if (!t_init_success)
 	{
-		MCExecPoint ep(nil, nil, nil);
-		MCresult -> fetch(ep);
-		NSLog(@"Startup error: %s\n", ep . getcstring());
-		abort();
-		return;
+		
+		if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		{
+			NSLog(@"Startup error: %s\n", MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
+			abort();
+			return;
+		}
 	}
 
 	// MW-2012-08-31: [[ Bug 10340 ]] Now we've finished initializing, get the app to
@@ -1485,6 +1501,8 @@ struct MCKeyboardActivatedEvent: public MCCustomEvent
 	void Dispatch(void)
 	{
 		s_current_keyboard_height = m_height;
+        // MM-2014-10-08: [[ Bug 12464 ]] Clear the display info cache on keyboard activation/deactivation ensuring the effective screenrect returns the correct data.
+        MCscreen -> cleardisplayinfocache();
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_activated);
 	}
 	
@@ -1502,6 +1520,8 @@ struct MCKeyboardDeactivatedEvent: public MCCustomEvent
 	void Dispatch(void)
 	{
 		s_current_keyboard_height = 0.0;
+        // MM-2014-10-08: [[ Bug 12464 ]] Clear the display info cache on keyboard activation/deactivation ensuring the effective screenrect returns the correct data.
+        MCscreen -> cleardisplayinfocache();
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_deactivated);
 	}
 };
@@ -1555,7 +1575,7 @@ static void MCIPhoneDoBreakWait(void *)
 		t_modes = [[NSArray alloc] initWithObjects: NSRunLoopCommonModes, nil];
 		[s_break_wait_helper performSelector: @selector(breakWait) withObject: nil afterDelay: 0 inModes: t_modes];
 		[t_modes release];
-	}
+    }
 }
 
 static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
@@ -1580,21 +1600,21 @@ static void MCIPhoneDoScheduleWait(void *p_ctxt)
 	t_sleep = *(double *)p_ctxt;
 	[s_break_wait_helper performSelector: @selector(breakWait) withObject: nil afterDelay: t_sleep inModes: [NSArray arrayWithObject: NSRunLoopCommonModes]];
 }
-
+	
 static void MCIPhoneDoCancelWait(void *p_ctxt)
-{
+	{
 	[NSObject cancelPreviousPerformRequestsWithTarget: s_break_wait_helper selector: @selector(breakWait) object: nil];
-}
+	}
 
 static bool MCIPhoneWait(double p_sleep)
-{
-	if (s_break_wait_pending)
 	{
+	if (s_break_wait_pending)
+		{
 		MCFiberCall(s_main_fiber, MCIPhoneDoCancelWait, nil);
 		s_break_wait_pending = false;
 		return true;
-	}
-	
+		}
+    
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
 	
@@ -1606,17 +1626,17 @@ static bool MCIPhoneWait(double p_sleep)
 	
 	// Now switch back to the main fiber.
 	MCFiberMakeCurrent(s_main_fiber);
-	
+
 	// Unmark ourselves as waiting.
 	s_wait_depth -= 1;
-	
+
 	bool t_broken;
 	t_broken = s_break_wait_pending;
 	s_break_wait_pending = false;
-	
-	return t_broken;
-}
 
+	return t_broken;
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCResPlatformInitPixelScaling(void)
@@ -1653,3 +1673,24 @@ MCGFloat MCScreenDC::logicaltoscreenscale(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// No theming for mobile platforms yet
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
+{
+    return MCFontCreate(MCNAME("Helvetica"), 0, 13, r_font);
+}

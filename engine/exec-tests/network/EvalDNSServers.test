@@ -1,0 +1,14 @@
+setup
+
+test the dnsservers is not empty
+
+set the itemdelimiter to "."
+repeat for each line tServer in the dnsservers
+	test the number of items in tServer is 4
+	repeat for each item tComponent in tServer
+		test tComponent is an integer
+		test tComponent >= 0 and tComponent <= 255
+	end repeat
+end repeat
+
+teardown

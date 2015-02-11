@@ -38,6 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;"
 				PreprocessorDefinitions="MODE_STANDALONE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -98,6 +99,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;"
 				PreprocessorDefinitions="MODE_STANDALONE"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"

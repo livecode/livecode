@@ -37,8 +37,8 @@ public:
 	Parse_stat parse_target(MCScriptPoint& p_script, MCChunk*& r_target);
 	Parse_stat parse_target_range(MCScriptPoint& p_script, Chunk_term& r_type, MCExpression*& r_start, MCExpression*& r_end, MCChunk*& r_target);
 
-	Exec_stat eval_target(MCExecPoint& p_exec, MCChunk *p_target, MCField*& r_field);
-	Exec_stat eval_target_range(MCExecPoint& p_exec, MCExpression *p_start, MCExpression *p_end, MCChunk *p_target, int4& r_start, int4& r_end, MCField*& r_target);
+    bool eval_target(MCExecContext &ctxt, MCChunk *p_target, MCField*& r_field);
+    bool eval_target_range(MCExecContext &ctxt, MCExpression *p_start, MCExpression *p_end, MCChunk *p_target, int4& r_start, int4& r_end, MCField*& r_target);
 };
 
 class MCIdeScriptFlush : public MCIdeScriptAction
@@ -48,7 +48,7 @@ public:
 	virtual ~MCIdeScriptFlush(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCChunk *f_target;
@@ -61,7 +61,7 @@ public:
 	virtual ~MCIdeScriptColourize(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	Chunk_term f_type;
@@ -77,7 +77,7 @@ public:
 	virtual ~MCIdeScriptReplace(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 	
 private:
 	Chunk_term f_type;
@@ -94,7 +94,7 @@ public:
 	virtual ~MCIdeScriptConfigure(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	enum
@@ -116,7 +116,7 @@ public:
 	virtual ~MCIdeScriptDescribe(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	enum
@@ -141,15 +141,13 @@ public:
 	virtual ~MCIdeScriptStrip(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	Chunk_term f_type;
 	MCExpression *f_start;
 	MCExpression *f_end;
 	MCChunk *f_target;
-
-	MCVarref *f_output;
 };
 
 // This command tokenizes the string contents of a container eliminating
@@ -163,7 +161,7 @@ public:
 	virtual ~MCIdeScriptTokenize(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCChunk *m_script;
@@ -177,12 +175,11 @@ public:
 	virtual ~MCIdeScriptClassify(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCExpression *m_script;
 	MCChunk *m_target;
-	MCVarref *m_output;
 };
 
 enum MCIdeFilterControlsProperty
@@ -215,14 +212,13 @@ public:
 	virtual ~MCIdeFilterControls(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 
 private:
 	MCIdeFilterControlsProperty m_property;
 	MCIdeFilterControlsOperator m_operator;
 	MCExpression *m_pattern;
 	MCChunk *m_stack;
-	MCVarref *m_it;
 };
 
 class MCIdeDeploy: public MCStatement
@@ -232,11 +228,13 @@ public:
 	virtual ~MCIdeDeploy(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	enum
 	{
+        PLATFORM_NONE,
+        
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX,
@@ -263,11 +261,12 @@ public:
 	virtual ~MCIdeSign(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	enum
 	{
+        PLATFORM_NONE,
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX
@@ -284,11 +283,12 @@ public:
 	virtual ~MCIdeDiet(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	enum
 	{
+        PLATFORM_NONE,
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX
@@ -305,7 +305,7 @@ public:
 	virtual ~MCIdeDmgDump(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	MCExpression *m_filename;
@@ -318,7 +318,7 @@ public:
 	virtual ~MCIdeDmgBuild(void);
 
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 
 private:
 	MCExpression *m_items;
@@ -332,13 +332,56 @@ public:
 	virtual ~MCIdeExtract(void);
 	
 	virtual Parse_stat parse(MCScriptPoint& p_script);
-	virtual Exec_stat exec(MCExecPoint& p_exec);
+	virtual void exec_ctxt(MCExecContext& p_ctxt);
 	
 private:
 	MCExpression *m_filename;
 	MCExpression *m_segment_name;
 	MCExpression *m_section_name;
-	MCVarref *m_it;
 };
+
+//////////
+
+class MCIdeSyntaxTokenize: public MCStatement
+{
+public:
+	MCIdeSyntaxTokenize(void);
+	virtual ~MCIdeSyntaxTokenize(void);
+
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+
+private:
+	MCChunk *m_script;
+};
+
+class MCIdeSyntaxRecognize: public MCStatement
+{
+public:
+	MCIdeSyntaxRecognize(void);
+	virtual ~MCIdeSyntaxRecognize(void);
+
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+
+private:
+	MCExpression *m_script;
+	MCExpression *m_language;
+};
+
+class MCIdeSyntaxCompile: public MCStatement
+{
+public:
+	MCIdeSyntaxCompile(void);
+	virtual ~MCIdeSyntaxCompile(void);
+	
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+	
+private:
+	MCChunk *m_target;
+};
+
+//////////
 
 #endif

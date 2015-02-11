@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -42,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 typedef void (*surface_combiner_t)(void *p_dst, int32_t p_dst_stride, const void *p_src, uint4 p_src_stride, uint4 p_width, uint4 p_height, uint1 p_opacity);
 extern surface_combiner_t s_surface_combiners_nda[];
@@ -271,7 +271,7 @@ bool MCTileCacheCoreGraphicsCompositorConfigure(MCTileCacheRef p_tilecache, MCTi
 		return false;
 	
 	t_context -> tilecache = p_tilecache;
-	t_context -> colorspace = CGColorSpaceCreateDeviceRGB();
+	/* UNCHECKED */ MCImageGetCGColorSpace(t_context -> colorspace);
 	
 	r_compositor . context = t_context;
 	r_compositor . cleanup = MCTileCacheCoreGraphicsCompositor_Cleanup;

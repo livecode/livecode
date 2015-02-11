@@ -13,10 +13,10 @@
 			buildPhases = (
 			);
 			dependencies = (
+				7249F9F7196571C300D4D0DC /* PBXTargetDependency */,
 				E8DAE479171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE47B171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE47D171428B100B96A87 /* PBXTargetDependency */,
-				E8DAE47F171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE481171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE483171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE485171428B100B96A87 /* PBXTargetDependency */,
@@ -248,6 +248,34 @@
 			remoteGlobalIDString = 4D6758FD0A79F9A400FA96D2;
 			remoteInfo = revvideograbber;
 		};
+		7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DB846B3192B53E800771914;
+			remoteInfo = "Server-Community";
+		};
+		7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DB846B4192B53E800771914;
+			remoteInfo = "Server-Community";
+		};
+		B284B0951A8AD1F00047D1CC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7699BD601A1CD51A00636397;
+			remoteInfo = "Test-Community";
+		};
+		B284B0971A8AD1F00047D1CC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7699BE791A1CD51E00636397;
+			remoteInfo = "kernel-test";
+		};
 		E8D3735D18CDDA40005C1182 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8DAE3F41714275B00B96A87 /* revbrowser.xcodeproj */;
@@ -282,13 +310,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 4DEE29F60FDE41BE0009423C;
 			remoteInfo = kernel;
-		};
-		E8DAE3F21714271D00B96A87 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4DFD483E13BA2843008DB91F;
-			remoteInfo = server;
 		};
 		E8DAE3F91714275C00B96A87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -380,13 +401,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4D2A57991198634300135143;
 			remoteInfo = installer;
-		};
-		E8DAE47E171428B100B96A87 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 4DFD483D13BA2843008DB91F;
-			remoteInfo = server;
 		};
 		E8DAE480171428B100B96A87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -525,8 +539,10 @@
 				4D87F8D3171D96F2003DBF85 /* libsecurity-community.a */,
 				E8DAE3EB1714271D00B96A87 /* LiveCode-Community.app */,
 				E8DAE3ED1714271D00B96A87 /* Standalone-Community.app */,
-				E8DAE3F31714271D00B96A87 /* Server-Community */,
 				E8DAE3EF1714271D00B96A87 /* Installer.app */,
+				7249FA00196571C400D4D0DC /* Server-Community */,
+				B284B0961A8AD1F00047D1CC /* Test-Community.app */,
+				B284B0981A8AD1F00047D1CC /* libkernel-test.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -792,6 +808,27 @@
 			remoteRef = 4DCACF3A197927FA0065D0A2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		7249FA00196571C400D4D0DC /* Server-Community */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Server-Community";
+			remoteRef = 7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		B284B0961A8AD1F00047D1CC /* Test-Community.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "Test-Community.app";
+			remoteRef = B284B0951A8AD1F00047D1CC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		B284B0981A8AD1F00047D1CC /* libkernel-test.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-test.a";
+			remoteRef = B284B0971A8AD1F00047D1CC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		E8D3735E18CDDA40005C1182 /* revbrowser-cefprocess.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
@@ -825,13 +862,6 @@
 			fileType = archive.ar;
 			path = libkernel.a;
 			remoteRef = E8DAE3F01714271D00B96A87 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E8DAE3F31714271D00B96A87 /* Server-Community */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = "Server-Community";
-			remoteRef = E8DAE3F21714271D00B96A87 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		E8DAE3FA1714275C00B96A87 /* revbrowser.bundle */ = {
@@ -972,6 +1002,11 @@
 			name = revvideograbber;
 			targetProxy = 4DF1BF8E197932DD00E4AC49 /* PBXContainerItemProxy */;
 		};
+		7249F9F7196571C300D4D0DC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Server-Community";
+			targetProxy = 7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */;
+		};
 		E8DAE479171428B100B96A87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = LiveCode;
@@ -986,11 +1021,6 @@
 			isa = PBXTargetDependency;
 			name = installer;
 			targetProxy = E8DAE47C171428B100B96A87 /* PBXContainerItemProxy */;
-		};
-		E8DAE47F171428B100B96A87 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = server;
-			targetProxy = E8DAE47E171428B100B96A87 /* PBXContainerItemProxy */;
 		};
 		E8DAE481171428B100B96A87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

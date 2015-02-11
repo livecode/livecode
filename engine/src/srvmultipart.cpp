@@ -17,12 +17,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "sysdefs.h"
-#include "core.h"
 #include "filedefs.h"
 #include "mcio.h"
 #include "osspec.h"
 #include "parsedef.h"
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "system.h"
 #include "srvmultipart.h"
@@ -38,8 +37,7 @@ class MCBoundaryReader
 {
 public:
 	IO_handle m_stream;
-	const char *m_boundary;
-	uint32_t m_boundary_length;
+	MCStringRef m_boundary;
 	int32_t *m_table;
 	
 	uint32_t m_match_index;
@@ -48,12 +46,12 @@ public:
 	char m_match_char;
 	bool m_have_char;
 	
-	MCBoundaryReader(IO_handle p_stream, const char *p_boundary, uint32_t p_boundary_length)
+	MCBoundaryReader(IO_handle p_stream, MCStringRef p_boundary)
 	{
 		m_stream = p_stream;
 		m_table = NULL;
 		
-		setBoundary(p_boundary, p_boundary_length);
+		setBoundary(p_boundary);
 		
 		m_have_char = false;
 	}
@@ -63,10 +61,9 @@ public:
 		MCMemoryDeleteArray(m_table);
 	}
 	
-	void setBoundary(const char *p_boundary, uint32_t p_boundary_length)
+	void setBoundary(MCStringRef p_boundary)
 	{
-		m_boundary = p_boundary;
-		m_boundary_length = p_boundary_length;
+		MCValueAssign(m_boundary, p_boundary);
 		
 		m_match_index = 0;
 		m_match_frontier = 0;
@@ -79,7 +76,7 @@ public:
 		create_table();
 	}
 	
-	IO_stat read(char *p_buffer, uint32_t p_buffer_size, uint32_t &r_bytes_read, uint32_t &r_bytes_consumed, bool &r_boundary_reached)
+	IO_stat read(char *r_buffer, uint32_t p_buffer_size, uint32_t &r_bytes_read, uint32_t &r_bytes_consumed, bool &r_boundary_reached)
 	{
 		IO_stat t_status = IO_NORMAL;
 		
@@ -91,19 +88,18 @@ public:
 		{
 			if (!m_have_char)
 			{
-				uint32_t t_count = 1;
-				t_status = MCS_read(&m_match_char, 1, t_count, m_stream);
+				t_status = MCS_readfixed(&m_match_char, 1, m_stream);
 				if (t_status != IO_NORMAL)
 					break;
 				
 				r_bytes_consumed++;
 				m_have_char = true;
 			}
-			if (m_boundary[m_match_index] == m_match_char)
+			if (MCStringGetNativeCharAtIndex(m_boundary, m_match_index) == m_match_char)
 			{
 				m_match_index++;
 				m_have_char = false;
-				if (m_match_index == m_boundary_length)
+				if (m_match_index == MCStringGetLength(m_boundary))
 				{
 					m_match_index = 0;
 					r_boundary_reached = true;
@@ -113,7 +109,7 @@ public:
 			{
 				if (m_match_index == 0)
 				{
-					p_buffer[r_bytes_read++] = m_match_char;
+					r_buffer[r_bytes_read++] = m_match_char;
 					m_have_char = false;
 				}
 				else
@@ -124,7 +120,8 @@ public:
 					if (m_match_frontier != t_diff)
 					{
 						uint32_t t_out = MCMin(t_diff - m_match_frontier, p_buffer_size - r_bytes_read);
-						MCMemoryCopy(p_buffer + r_bytes_read, m_boundary + m_match_frontier, t_out);
+                        
+						MCMemoryCopy(r_buffer + r_bytes_read, MCStringGetCString(m_boundary) + m_match_frontier, t_out);
 						m_match_frontier += t_out;
 						r_bytes_read += t_out;
 					}
@@ -146,16 +143,16 @@ private:
 	// based on KMP algorithm (see http://en.wikipedia.org/wiki/Knuth–Morris–Pratt_algorithm)
 	void create_table()
 	{
-		MCMemoryNewArray(m_boundary_length, m_table);
+		MCMemoryNewArray(MCStringGetLength(m_boundary), m_table);
 		m_table[0] = -1;
-		if (m_boundary_length > 1)
+		if (MCStringGetLength(m_boundary) > 1)
 			m_table[1] = 0;
 		
 		uint32_t t_candidate = 0;
 		uint32_t pos = 2;
-		while (pos < m_boundary_length)
+		while (pos < MCStringGetLength(m_boundary))
 		{
-			if (m_boundary[pos - 1] == m_boundary[t_candidate])
+			if (MCStringGetNativeCharAtIndex(m_boundary, pos - 1) == MCStringGetNativeCharAtIndex(m_boundary, t_candidate))
 				m_table[pos++] = ++t_candidate;
 			else if (t_candidate > 0)
 				t_candidate = m_table[t_candidate];
@@ -346,7 +343,7 @@ bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **
 	
 	r_names = NULL;
 	r_values = NULL;
-	r_param_count = NULL;
+	r_param_count = 0;
 	
 	while (t_success && t_next_param != NULL)
 	{
@@ -459,7 +456,7 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 	bool t_success = true;
 	
 	MCBoundaryReader *t_reader;
-	t_reader = new MCBoundaryReader(p_stream, "\r\n", 2);
+	t_reader = new MCBoundaryReader(p_stream, MCSTR("\r\n"));
 	
 	r_bytes_read = 0;
 	
@@ -517,11 +514,11 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 	return t_success;
 }
 
-bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary, uint32_t &r_total_bytes_read,
+bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary, uint32_t &r_total_bytes_read,
 									  MCMultiPartHeaderCallback p_header_callback, MCMultiPartBodyCallback p_body_callback, void *p_context)
 {
 	bool t_success = true;
-	char *t_boundary = NULL;
+	MCStringRef t_boundary;
 	uint32_t t_boundary_length;
 	uint32_t t_bytes_read = 0;
 	uint32_t t_bytes_consumed = 0;
@@ -535,10 +532,10 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 	
 	MCBoundaryReader *t_reader = NULL;
 
-	t_boundary_length = MCCStringLength(p_boundary);
+	t_boundary_length = MCStringGetLength(p_boundary);
 	// typical boundary == CRLF & "--" & p_boundary
 	if (t_success)
-		t_success = MCCStringFormat(t_boundary, "\r\n--%s", p_boundary);
+		t_success = MCStringFormat(t_boundary, "\r\n--%@", p_boundary);
 	
 	if (t_success)
 		t_success = MCMemoryAllocate(t_buffer_size, t_buffer);
@@ -547,7 +544,9 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 	// after a CRLF
 	if (t_success)
 	{
-		t_reader = new MCBoundaryReader(p_stream, t_boundary + 2, t_boundary_length + 2);
+        MCAutoStringRef t_boundary_head, t_boundary_tail;
+        /* UNCHECKED */ MCStringDivideAtIndex(t_boundary, 2, &t_boundary_head, &t_boundary_tail);
+		t_reader = new MCBoundaryReader(p_stream, *t_boundary_tail);
 		t_success = t_reader != NULL;
 	}
 	
@@ -580,7 +579,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 	
 	if (t_success)
 	{
-		t_reader->setBoundary(t_boundary, t_boundary_length + 4);
+		t_reader->setBoundary(t_boundary);
 		bool t_message_ended = false;
 		while (t_success && (!t_message_ended))
 		{
@@ -595,7 +594,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 				// check for spaces at end of boundary line.
 				while (t_success && t_crlf[0] == ' ')
 				{
-					t_success = IO_NORMAL == MCS_read(&t_char, 1, t_count, p_stream);
+					t_success = IO_NORMAL == MCS_readall(&t_char, t_count, p_stream, t_count); // ?? readall ??
 					t_crlf[0] = t_crlf[1];
 					t_crlf[1] = t_char;
 					r_total_bytes_read += t_count;
@@ -636,8 +635,8 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 		MCMemoryDeallocate(t_buffer);
 	if (t_reader != NULL)
 		delete t_reader;
-	if (t_boundary != NULL)
-		MCMemoryDeallocate(t_boundary);
+	if (t_boundary != nil)
+		MCValueRelease(t_boundary);
 
 	return t_success;
 }
@@ -787,13 +786,12 @@ typedef struct _mcmultiparttempfilelist
 
 static MCMultiPartTempFileList *s_temp_files = NULL;
 
-bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_handle, const char *&r_temp_name)
+bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_handle, MCStringRef &r_temp_name)
 {
 	bool t_success = true;
 	bool t_blocked = true;
 	
 	IO_handle t_file_handle = NULL;
-	char *t_temp_name = NULL;
 	
 	MCMultiPartTempFileList *t_list_item = NULL;
 	
@@ -803,7 +801,7 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 	if (t_success)
 	{
 		while (t_blocked)
-			t_success = create_temp_file_with_lock(p_temp_folder, t_list_item->file, t_list_item->lock, t_list_item->file_name, t_list_item->lock_name, t_blocked);
+			t_success = create_temp_file_with_lock(MCStringGetCString(p_temp_folder), t_list_item->file, t_list_item->lock, t_list_item->file_name, t_list_item->lock_name, t_blocked);
 	}
 	if (t_success)
 	{
@@ -811,12 +809,11 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 		s_temp_files = t_list_item;
 		
 		r_file_handle = t_list_item->file;
-		r_temp_name = t_list_item->file_name;
+        /* UNCHECKED */ MCStringCreateWithCString(t_list_item->file_name, r_temp_name);
 	}
 	else
 	{
 		MCS_close(t_file_handle);
-		MCCStringFree(t_temp_name);
 	}
 	
 	return t_success;
@@ -901,7 +898,7 @@ void MCMultiPartCleanTempFolder(const char *p_temp_folder)
 ////////////////////////////////////////////////////////////////////////////////
 
 #define TEMP_PREFIX "livecode_"
-bool MCS_create_temporary_file(const char *p_path, const char *p_prefix, IO_handle &r_file, char *&r_name);
+bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name);
 
 typedef struct _mcmultiparttempfilelist
 {
@@ -912,13 +909,13 @@ typedef struct _mcmultiparttempfilelist
 
 static MCMultiPartTempFileList *s_temp_files = NULL;
 
-bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_handle, const char *&r_temp_name)
+bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_handle, MCStringRef &r_temp_name)
 {
 	bool t_success = true;
 	bool t_blocked = true;
+	MCAutoStringRef t_temp_name_string;
 	
 	IO_handle t_file_handle = NULL;
-	char *t_temp_name = NULL;
 	
 	MCMultiPartTempFileList *t_list_item = NULL;
 	
@@ -926,21 +923,22 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 		t_success = MCMemoryNew(t_list_item);
 	
 	if (t_success)
-		t_success = MCS_create_temporary_file(p_temp_folder, TEMP_PREFIX, t_file_handle, t_temp_name);
+	{
+		t_success = MCS_create_temporary_file(p_temp_folder, MCSTR(TEMP_PREFIX), t_file_handle, &t_temp_name_string);
+	}
 
 	if (t_success)
 	{
-		t_list_item->file_name = t_temp_name;
+		t_list_item->file_name = strdup(MCStringGetCString(*t_temp_name_string));
 		t_list_item->next = s_temp_files;
 		s_temp_files = t_list_item;
 		
 		r_file_handle = t_file_handle;
-		r_temp_name = t_temp_name;
+		r_temp_name = MCValueRetain(*t_temp_name_string);
 	}
 	else
 	{
 		MCS_close(t_file_handle);
-		MCCStringFree(t_temp_name);
 	}
 	
 	return t_success;
@@ -948,12 +946,15 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 
 void MCMultiPartRemoveTempFiles()
 {
-	MCMultiPartTempFileList *t_item;
 	while (s_temp_files != NULL)
 	{
-		MCS_unlink(s_temp_files->file_name);
+		MCAutoStringRef file_name_string;
+		/* UNCHECKED */ MCStringCreateWithCString(s_temp_files->file_name, &file_name_string);
+
+		MCS_unlink(*file_name_string);
 		MCCStringFree(s_temp_files->file_name);
 
+		MCMultiPartTempFileList *t_item;
 		t_item = s_temp_files;
 		s_temp_files = s_temp_files->next;
 		MCMemoryDelete(t_item);
@@ -962,21 +963,22 @@ void MCMultiPartRemoveTempFiles()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char *MCMultiPartGetErrorMessage(MCMultiPartFileStatus p_status)
+bool MCMultiPartGetErrorMessage(MCMultiPartFileStatus p_status, MCStringRef &r_message)
 {
 	switch (p_status)
 	{
-		case kMCFileStatusOK:
-			return "";
-		case kMCFileStatusStopped:
-			return "upload stopped";
-		case kMCFileStatusFailed:
-			return "upload failed";
-		case kMCFileStatusNoUploadFolder:
-			return "no upload folder";
-		case kMCFileStatusIOError:
-			return "i/o error";
+    case kMCFileStatusOK:
+        r_message = MCValueRetain(kMCEmptyString);
+        return true;
+    case kMCFileStatusStopped:
+        return MCStringCreateWithCString("upload stopped", r_message);
+    case kMCFileStatusFailed:
+        return MCStringCreateWithCString("upload failed", r_message);
+    case kMCFileStatusNoUploadFolder:
+        return MCStringCreateWithCString("no upload folder", r_message);
+    case kMCFileStatusIOError:
+        return MCStringCreateWithCString("i/o error", r_message);
 	}
 	
-	return NULL;
+    return false;
 }

@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -32,12 +31,49 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "exec.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
 #include "mbliphone.h"
 #include "mbliphonecontrol.h"
+#include "mbliphoneapp.h"
+
+#include "graphics_util.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCiOSControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(P_RECTANGLE, Rectangle, MCiOSControl, Rect)
+    DEFINE_RW_CTRL_PROPERTY(P_VISIBLE, Bool, MCiOSControl, Visible)
+    DEFINE_RW_CTRL_PROPERTY(P_OPAQUE, Bool, MCiOSControl, Opaque)
+    DEFINE_RW_CTRL_PROPERTY(P_ALPHA, UInt16, MCiOSControl, Alpha)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_BACKGROUND_COLOR, NativeControlColor, MCiOSControl, BackgroundColor)
+    // SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]] Add property for ignoring voice over sensitivity
+    DEFINE_RW_CTRL_PROPERTY(P_IGNORE_VOICE_OVER_SENSITIVITY, Bool, MCiOSControl, IgnoreVoiceOverSensitivity)
+};
+
+MCObjectPropertyTable MCiOSControl::kPropertyTable =
+{
+	&MCNativeControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCiOSControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCiOSControl::kActionTable =
+{
+    &MCNativeControl::kActionTable,
+    0,
+    nil,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -81,9 +117,11 @@ UIView *MCiOSControl::GetView(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 #define MCColorComponentToFloat(c) ((c) / 65535.0)
 #define MCFloatToColorComponent(f) ((f) * 65535)
 
+#ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 {
 	float t_red, t_green, t_blue, t_alpha;
@@ -107,7 +145,23 @@ Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 	
 	return ES_NORMAL;
 }
+#endif
 
+bool MCiOSControl::ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color)
+{
+	float t_red, t_green, t_blue, t_alpha;
+    
+    t_red = MCColorComponentToFloat(p_color . r);
+    t_green = MCColorComponentToFloat(p_color . g);
+    t_blue = MCColorComponentToFloat(p_color . b);
+    t_alpha = MCColorComponentToFloat(p_color . a);
+	
+	r_color = [UIColor colorWithRed:t_red green:t_green blue:t_blue alpha:t_alpha];
+	
+	return true;
+}
+
+#ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 {
 	CGColorRef t_bgcolor;
@@ -132,7 +186,27 @@ Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 	
 	return ES_NORMAL;
 }
+#endif
 
+bool MCiOSControl::FormatColor(const UIColor* p_color, MCNativeControlColor& r_color)
+{
+	CGColorRef t_bgcolor;
+	t_bgcolor = [p_color CGColor];
+	const CGFloat *t_components;
+    
+	if (t_bgcolor != nil && CGColorSpaceGetModel(CGColorGetColorSpace(t_bgcolor)) == kCGColorSpaceModelRGB)
+	{
+		t_components = CGColorGetComponents(t_bgcolor);
+		r_color . r = MCFloatToColorComponent(t_components[0]);
+		r_color . g = MCFloatToColorComponent(t_components[1]);
+		r_color . b = MCFloatToColorComponent(t_components[2]);
+		r_color . a = MCFloatToColorComponent(t_components[3]);
+	}
+	
+	return true;
+}
+
+#ifdef LEGACY_EXEC
 bool MCiOSControl::ParseString(MCExecPoint& ep, NSString*& r_string)
 {
 	r_string = [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
@@ -159,11 +233,23 @@ bool MCiOSControl::ParseUnicodeString(MCExecPoint& ep, NSString*& r_string)
 
 bool MCiOSControl::FormatUnicodeString(MCExecPoint& ep, NSString *p_string)
 {
+    MCAutoArray<unichar_t> t_buffer;
+    if (t_buffer . New([p_string length] * 2))
+    {
+        [p_string getCharacters: t_buffer . PtrRef() range: NSMakeRange(0, [p_string length])];
+        MCAutoStringRef t_formatted_string;
+        if (MCStringCreateWithChars(t_buffer . Ptr(), [p_string length] * 2, &t_formatted_string)
+            && ep . setvalueref(*t_formatted_string))
+            return true;
+    }
+    return false;
+/*
 	unichar *t_buffer;
 	t_buffer = (unichar*)ep.getbuffer([p_string length] * 2);
 	[p_string getCharacters: t_buffer range: NSMakeRange(0, [p_string length])];
 	ep.setlength([p_string length] * 2);
 	return true;
+ */
 }
 
 bool MCiOSControl::ParseRange(MCExecPoint &ep, NSRange &r_range)
@@ -180,9 +266,143 @@ bool MCiOSControl::FormatRange(MCExecPoint &ep, NSRange r_range)
 {
     return MCNativeControl::FormatRange(ep, r_range.location + 1, r_range.length);
 }
+#endif
+
+#define MCColorComponentToFloat(c) ((c) / 65535.0)
+#define MCFloatToColorComponent(f) ((f) * 65535)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCiOSControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
+{
+	// IM-2014-10-21: [[ Bug 13450 ]] Merge previous bugfix into refactor branch.
+	// MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
+	MCGRectangle t_rect;
+	t_rect = MCNativeControlUserRectToDeviceRect(MCRectangleToMCGRectangle(p_rect));
+	
+    
+    if (m_view != nil)
+        [m_view setFrame: CGRectMake(t_rect.origin.x, t_rect.origin.y, t_rect.size.width, t_rect.size.height)];
+}
+
+void MCiOSControl::SetVisible(MCExecContext& ctxt, bool p_visible)
+{
+    if (m_view != nil)
+        [m_view setHidden: !p_visible];
+}
+
+void MCiOSControl::SetOpaque(MCExecContext& ctxt, bool p_opaque)
+{
+    if (m_view != nil)
+        [m_view setOpaque: p_opaque];
+}
+
+void MCiOSControl::SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha)
+{
+    if (m_view != nil)
+        [m_view setAlpha: (float)p_alpha / 255.0];
+}
+
+void MCiOSControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color)
+{
+    UIColor *t_color;
+    if (ParseColor(p_color, t_color) == ES_NORMAL)
+        if (m_view != nil)
+            [m_view setBackgroundColor: t_color];
+}
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+// PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over.
+// Note that in order to make a UIWebView accessible, we have to mark its parent view as 'not-accessible'
+void MCiOSControl::SetIgnoreVoiceOverSensitivity(MCExecContext& ctxt, bool p_ignore_vos)
+{
+    if (m_view != nil)
+    {
+        if (p_ignore_vos)
+        {
+            [m_view.superview setAccessibilityTraits:UIAccessibilityTraitNone];
+            m_view.superview.isAccessibilityElement = NO;
+            MCignorevoiceoversensitivity = True;
+        }
+        else
+        {
+            m_view.superview.isAccessibilityElement = YES;
+#ifdef __IPHONE_5_0
+            [m_view.superview setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+#endif
+            MCignorevoiceoversensitivity = False;
+        }
+
+    }
+}
+
+void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
+{
+    if (m_view != nil)
+    {
+        // MM-2013-11-26: [[ Bug 11485 ]] The user expects the rect of the control to be returned in user space, so convert the views rect from device space.
+        CGRect t_dev_rect;
+        t_dev_rect = [m_view frame];
+        
+        MCGRectangle t_user_rect;
+        t_user_rect = MCNativeControlUserRectFromDeviceRect(MCGRectangleMake(t_dev_rect . origin . x, t_dev_rect . origin . y, t_dev_rect . size. width, t_dev_rect . size . height));
+        
+        r_rect . x = (int32_t) roundf(t_user_rect.origin.x);
+        r_rect . y = (int32_t) roundf(t_user_rect.origin.y);
+        r_rect . width = (int32_t) (roundf(t_user_rect.origin.x) + roundf(t_user_rect.size.width));
+        r_rect . height = (int32_t) (roundf(t_user_rect.origin.y) + roundf(t_user_rect.size.height));
+    }
+}
+
+void MCiOSControl::GetVisible(MCExecContext& ctxt, bool& r_visible)
+{
+    if (m_view != nil)
+        r_visible = ![m_view isHidden] == True;
+    else
+        r_visible = false;
+}
+
+void MCiOSControl::GetOpaque(MCExecContext& ctxt, bool& r_opaque)
+{
+    if (m_view != nil)
+        r_opaque = [m_view isOpaque] == True;
+    else
+        r_opaque = false;
+}
+
+void MCiOSControl::GetAlpha(MCExecContext& ctxt, uinteger_t& r_alpha)
+{
+    if (m_view != nil)
+        r_alpha = 255 * [m_view alpha];
+    else
+        r_alpha = 0;
+}
+
+void MCiOSControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color)
+{
+    if (m_view != nil)
+    {
+        if (FormatColor([m_view backgroundColor], r_color))
+            return;
+    }
+    else
+        return;
+    
+    ctxt . Throw();
+}
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+// PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over
+void MCiOSControl::GetIgnoreVoiceOverSensitivity(MCExecContext &ctxt, bool &r_ignore_vos)
+{
+    if (m_view != nil)
+        r_ignore_vos = MCignorevoiceoversensitivity;
+    else
+        r_ignore_vos = false;
+}
+
+#ifdef /* MCiOSControl::Set */ LEGACY_EXEC
 Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
 	switch(p_property)
@@ -263,14 +483,42 @@ Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 					[m_view setBackgroundColor: t_color];
 		}
 		return ES_NORMAL;
-		
+        
+		// PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over.
+        // Note that in order to make a UIWebView accessible, we have to mark its parent view as 'not-accessible'
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+        {
+            if (m_view != nil)
+            {
+                if (ep . getsvalue() == MCtruemcstring)
+                {
+                    [m_view.superview setAccessibilityTraits:UIAccessibilityTraitNone];
+                    m_view.superview.isAccessibilityElement = NO;
+                    MCignorevoiceoversensitivity = True;
+                }
+                else
+                {
+                    m_view.superview.isAccessibilityElement = YES;
+#ifdef __IPHONE_5_0
+                    [m_view.superview setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+#endif
+                    MCignorevoiceoversensitivity = False;
+                }
+                
+            }
+
+        }
+        return ES_NORMAL;
+            
 		default:
 			break;
 	}
 	
 	return ES_NOT_HANDLED;
 }
+#endif /* MCiOSControl::Set */
 
+#ifdef /* MCiOSControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
 	switch (p_property)
@@ -319,6 +567,11 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 			if (m_view != nil)
 				FormatColor(ep, [m_view backgroundColor]);
 			return ES_NORMAL;
+          
+        // PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+            ep.setsvalue(MCU_btos(m_view != nil ? MCignorevoiceoversensitivity == True : NO));
+            return ES_NORMAL;
             
         default:
             break;
@@ -326,11 +579,7 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 	}
 	return ES_ERROR;
 }
-
-Exec_stat MCiOSControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-	return ES_ERROR;
-}
+#endif /* MCiOSControl::Get */
 
 ////////////////////////////////////////////////////////////////////////////////
 

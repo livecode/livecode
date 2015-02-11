@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "undolst.h"
 #include "sellst.h"
@@ -36,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "context.h"
+#include "exec.h"
 
 #include "globals.h"
 
@@ -67,10 +67,52 @@ uint2 MCImage::cmasks[MAX_CMASK + 1] = {0x00, 0x01, 0x03, 0x07,
 bool MCImage::s_have_control_colors;
 uint16_t MCImage::s_control_color_count;
 MCColor *MCImage::s_control_colors;
-char **MCImage::s_control_color_names;
+MCStringRef *MCImage::s_control_color_names;
 uint16_t MCImage::s_control_pixmap_count;
 MCPatternInfo *MCImage::s_control_pixmapids;
 uint16_t MCImage::s_control_color_flags;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCImage::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_XHOT, Int16, MCImage, XHot)
+	DEFINE_RW_OBJ_PROPERTY(P_YHOT, Int16, MCImage, YHot)
+	DEFINE_RW_OBJ_PROPERTY(P_HOT_SPOT, Point, MCImage, HotSpot)
+	DEFINE_RW_OBJ_PROPERTY(P_FILE_NAME, OptionalString, MCImage, FileName)
+	DEFINE_RW_OBJ_PROPERTY(P_ALWAYS_BUFFER, Bool, MCImage, AlwaysBuffer)
+	DEFINE_RW_OBJ_PROPERTY(P_IMAGE_PIXMAP_ID, OptionalUInt16, MCImage, ImagePixmapId)
+	DEFINE_RW_OBJ_PROPERTY(P_MASK_PIXMAP_ID, OptionalUInt16, MCImage, MaskPixmapId)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_DITHER, Bool, MCImage, DontDither)
+	DEFINE_RW_OBJ_PROPERTY(P_MAGNIFY, Bool, MCImage, Magnify)
+	DEFINE_RO_OBJ_PROPERTY(P_SIZE, UInt16, MCImage, Size)
+	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_FRAME, UInt16, MCImage, CurrentFrame)
+	DEFINE_RO_OBJ_PROPERTY(P_FRAME_COUNT, Int16, MCImage, FrameCount)
+	DEFINE_RW_OBJ_PROPERTY(P_PALINDROME_FRAMES, Bool, MCImage, PalindromeFrames)
+	DEFINE_RW_OBJ_PROPERTY(P_CONSTANT_MASK, Bool, MCImage, ConstantMask)
+	DEFINE_RW_OBJ_PROPERTY(P_REPEAT_COUNT, Int16, MCImage, RepeatCount)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int16, MCImage, FormattedHeight)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int16, MCImage, FormattedWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_TEXT, BinaryString, MCImage, Text)
+	DEFINE_RW_OBJ_PROPERTY(P_IMAGE_DATA, BinaryString, MCImage, ImageData)
+	DEFINE_RW_OBJ_PROPERTY(P_MASK_DATA, BinaryString, MCImage, MaskData)
+	DEFINE_RW_OBJ_PROPERTY(P_ALPHA_DATA, BinaryString, MCImage, AlphaData)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_RESIZE_QUALITY, InterfaceImageResizeQuality, MCImage, ResizeQuality)
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_PAINT_COMPRESSION, InterfaceImagePaintCompression, MCImage, PaintCompression)
+	DEFINE_RW_OBJ_PROPERTY(P_ANGLE, Int16, MCImage, Angle)
+    DEFINE_RW_OBJ_PROPERTY(P_CENTER_RECTANGLE, OptionalRectangle, MCImage, CenterRectangle)
+    DEFINE_RO_OBJ_RECORD_PROPERTY(P_METADATA, MCImage, Metadata)
+
+};
+
+MCObjectPropertyTable MCImage::kPropertyTable =
+{
+	&MCControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCImage::MCImage()
 {
@@ -87,13 +129,12 @@ MCImage::MCImage()
 	m_flip_y = false;
 
 	m_locked_rep = nil;
-	m_locked_bitmap_frame = nil;
 	m_locked_image = nil;
 	m_locked_bitmap = nil;
 
 	m_needs = nil;
 
-	filename = nil;
+	filename = MCValueRetain(kMCEmptyString);
 
 	xhot = yhot = 1;
 	currentframe = 0;
@@ -119,12 +160,9 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_flip_y = false;
 	
 	m_locked_rep = nil;
-	m_locked_bitmap_frame = nil;
 	m_locked_image = nil;
 	m_locked_bitmap = nil;
 	m_needs = nil;
-
-	filename = nil;
 
 	if (iref.isediting())
 	{
@@ -146,8 +184,8 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 			m_rep = iref . m_rep->Retain();
 	}
 
-	if (iref.flags & F_HAS_FILENAME)
-		/* UNCHECKED */ MCCStringClone(iref.filename, filename);
+	
+	filename = MCValueRetain(iref.filename);
 
 	angle = iref.angle;
 	currentframe = 0;
@@ -180,8 +218,7 @@ MCImage::~MCImage()
 		m_resampled_rep = nil;
 	}
 	
-	if (filename != nil)
-		MCCStringFree(filename);
+	MCValueRelease(filename);
 }
 
 Chunk_term MCImage::gettype() const
@@ -273,7 +310,7 @@ Boolean MCImage::mfocus(int2 x, int2 y)
 	case T_SELECT:
 	case T_SPRAY:
 	case T_TEXT:
-		if (flags & F_HAS_FILENAME || !MCU_point_in_rect(rect, x, y))
+		if (!iseditable() || !MCU_point_in_rect(rect, x, y))
 			return False;
 		message_with_args(MCM_mouse_move, x, y);
 		break;
@@ -389,7 +426,7 @@ Boolean MCImage::mdown(uint2 which)
 			}
 		break;
 	case Button2:
-		message_with_args(MCM_mouse_down, "2");
+		message_with_valueref_args(MCM_mouse_down, MCSTR("2"));
 		break;
 	}
 	return True;
@@ -510,12 +547,10 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 				advanceframe();
 				if (irepeatcount)
 				{
-					MCGImageFrame t_frame;
-					if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-					{
-						MCscreen->addtimer(this, MCM_internal, t_frame.duration);
-						m_rep->UnlockImageFrame(currentframe, t_frame);
-					}
+					// IM-2014-11-25: [[ ImageRep ]] Use ImageRep method to get frame duration
+					uint32_t t_frame_duration;
+					if (m_rep->GetFrameDuration(currentframe, t_frame_duration))
+						MCscreen->addtimer(this, MCM_internal, t_frame_duration);
 				}
 			}
 	}
@@ -583,7 +618,7 @@ void MCImage::setrect(const MCRectangle &nrect)
 		// will reset the rect otherwise it will stay as set, in which case we can avoid
 		// the call to apply_transform() and any costly image loading that might cause
 		if (angle != 0)
-			apply_transform();
+		apply_transform();
 		if ((rect.width != orect.width || rect.height != orect.height) && m_rep != nil)
 		{
 			layer_rectchanged(orect, true);
@@ -622,7 +657,8 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 	MCImageBitmapCheckTransparency(p_bitmap);
 }
 
-Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	uint2 i;
 	uint4 size = 0;
@@ -922,7 +958,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
         if (m_rep != nil)
         {
             MCImageMetadata t_metadata;
-            (static_cast<MCLoadableImageRep *>(m_rep))->GetMetadata(t_metadata);
+            (static_cast<MCCachedImageRep *>(m_rep))->GetMetadata(t_metadata);
             MCImageGetMetadata(ep, t_metadata);
         }
         else
@@ -930,12 +966,14 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
         break;
 #endif /* MCImage::getprop */
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
+#endif
 
-Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
 	uint2 i;
@@ -1255,7 +1293,8 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				t_success = copybitmap(false, t_copy);
+                // PM-2014-11-05: [[ Bug 13938 ]] Make sure new alphaData does not add to previous one
+				t_success = lockbitmap(t_copy, false);
 			}
 			else
 			{
@@ -1352,7 +1391,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
         break;
 #endif /* MCImage::setprop */
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -1361,6 +1400,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	}
 	return ES_NORMAL;
 }
+#endif
 
 void MCImage::select()
 {
@@ -1641,10 +1681,22 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	if (s_have_control_colors)
 	{
 		t_flags |= IMAGE_EXTRA_CONTROLCOLORS;
+        // increase t_length to accommodate s_control_color_count and s_control_color_flags
 		t_length += sizeof(uint16_t) + sizeof(uint16_t);
-		t_length += s_control_color_count * 3 * sizeof(uint16_t);
+        // increase t_length to accommodate the color
+        t_length += s_control_color_count * 3 * sizeof(uint16_t);
+        
 		for (uint16_t i = 0; i < s_control_color_count; i++)
-			t_length += MCCStringLength(s_control_color_names[i]) + 1;
+			if (s_control_color_names[i] != nil)
+            {
+                // FG-2014-10-17: [[ Bugfix 13706 ]]
+                // Calculate the correct size for 7.0+ style strings
+                // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
+                t_length += p_stream . MeasureStringRefNew(s_control_color_names[i], MCstackfileversion >= 7000);
+            }
+			else
+                // AL-2014-11-07: [[ Bug 13851 ]] Measure empty string if the color name is nil
+                t_length += p_stream . MeasureStringRefNew(kMCEmptyString, MCstackfileversion >= 7000);
 	
 		t_length += sizeof(uint16_t);
 		t_length += s_control_pixmap_count * sizeof(uint4);
@@ -1667,8 +1719,9 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			t_stat = p_stream . WriteColor(s_control_colors[i]);
+		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-			t_stat = p_stream . WriteCString(s_control_color_names[i]);
+			t_stat = p_stream . WriteStringRefNew(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString, MCstackfileversion >= 7000);
 		
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteU16(s_control_pixmap_count);
@@ -1695,11 +1748,11 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
-
+    
 	if (p_remaining >= 1)
 	{
 		t_stat = p_stream . ReadU8(resizequality);
@@ -1712,7 +1765,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 	{
 		uint4 t_flags, t_length, t_header_length;
 		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
-
+        
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . Mark();
 		
@@ -1724,20 +1777,25 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 			t_stat = p_stream . ReadU16(s_control_color_count);
 			t_stat = p_stream . ReadU16(s_control_color_flags);
 
-			if (t_stat == IO_NORMAL &&
-				!MCMemoryNewArray(s_control_color_count, s_control_colors))
-				t_stat = IO_ERROR;
-			
-			if (t_stat == IO_NORMAL &&
-				!MCMemoryNewArray(s_control_color_count, s_control_color_names))
-				t_stat = IO_ERROR;
+            if (t_stat == IO_NORMAL)
+			{
+				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_colors);
+				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_color_names);
+			}
 
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 				t_stat = p_stream . ReadColor(s_control_colors[i]);
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-				t_stat = p_stream . ReadCString(s_control_color_names[i]);
-			
-			if (t_stat == IO_NORMAL)
+			{
+				// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+				t_stat = p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= 7000);
+				if (t_stat == IO_NORMAL && MCStringIsEmpty(s_control_color_names[i]))
+				{
+					MCValueRelease(s_control_color_names[i]);
+					s_control_color_names[i] = nil;
+				}
+			}
+            if (t_stat == IO_NORMAL)
 				t_stat = p_stream . ReadU16(s_control_pixmap_count);
 			
 			if (t_stat == IO_NORMAL && 
@@ -1886,10 +1944,11 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (stat != IO_NORMAL)
 		return stat;
 
-
+	
 	if (flags & F_HAS_FILENAME)
-	{
-		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
+    {
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -1970,7 +2029,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCImage::load(IO_handle stream, const char *version)
+IO_stat MCImage::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -1992,7 +2051,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 		return stat;
 
 //---- Conversion from pre-2.7 behaviour to new behaviour
-	if (ink & 0x80 && strncmp(version, "2.7", 3) < 0)
+	if ((ink & 0x80) != 0 && version < 2700)
 	{
 		blendlevel = 100 - (ink & 0x7F);
 		ink = GXblendSrcOver;
@@ -2000,12 +2059,12 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	
 	if (flags & F_HAS_FILENAME)
 	{
-		char *t_filename = nil;
-		if ((stat = IO_read_string(t_filename, stream)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		MCAutoStringRef t_filename;
+		if ((stat = IO_read_stringref_new(&t_filename, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 
-		/* UNCHECKED */ setfilename(t_filename);
-		MCCStringFree(t_filename);
+		/* UNCHECKED */ setfilename(*t_filename);
 	}
 	else
 		if (ncolors || flags & F_COMPRESSION || flags & F_TRUE_COLOR)
@@ -2024,10 +2083,9 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 				if ((stat = IO_read_uint4(&t_compressed->size, stream)) != IO_NORMAL)
 					return stat;
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
-				if (IO_read(t_compressed->data, sizeof(uint1),
-				            t_compressed->size, stream) != IO_NORMAL)
+				if (IO_read(t_compressed->data, t_compressed->size, stream) != IO_NORMAL)
 					return IO_ERROR;
-				if (strncmp(version, "1.4", 3) == 0)
+				if (version == 1400)
 				{
 					if ((ncolors == 16 || ncolors == 256) && noblack())
 						flags |= F_NEED_FIXING;
@@ -2056,7 +2114,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 					if (t_compressed->plane_sizes[i] != 0)
 					{
 						if (!MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]) ||
-							IO_read(t_compressed->planes[i], sizeof(uint1), t_compressed->plane_sizes[i], stream) != IO_NORMAL)
+							IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream) != IO_NORMAL)
 						{
 							MCImageFreeCompressedBitmap(t_compressed);
 							return IO_ERROR;
@@ -2079,7 +2137,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 			if (t_compressed->mask_size != 0)
 			{
 				if (!MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask) ||
-					IO_read(t_compressed->mask, sizeof(uint1), t_compressed->mask_size, stream) != IO_NORMAL)
+					IO_read(t_compressed->mask, t_compressed->mask_size, stream) != IO_NORMAL)
 				{
 					MCImageFreeCompressedBitmap(t_compressed);
 					return IO_ERROR;
@@ -2115,7 +2173,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	//   (an RLE compressed rep will already have extracted the info it needs).
 	MCMemoryDeleteArray(colors);
 	for (uint32_t i = 0; i < ncolors; i++)
-		MCCStringFree(colornames[i]);
+		MCValueRelease(colornames[i]);
 	MCMemoryDeleteArray(colornames);
 	MCMemoryDeleteArray(patterns);
 	ncolors = 0;
@@ -2148,7 +2206,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 		s_have_control_colors = false;
 	}
 
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }
 
 // MW-2012-03-28: [[ Bug 10130 ]] This is a no-op as the image object has no
@@ -2160,19 +2218,18 @@ bool MCImage::recomputefonts(MCFontRef p_parent_font)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCSharedString *MCImage::getclipboardtext(void)
+bool MCImage::getclipboardtext(MCDataRef& r_data)
 {
-	MCSharedString *t_data = nil;
+	bool t_success = true;
+	
 	recompress();
 	if (getcompression() == F_RLE)
 	{
-		bool t_success = true;
-
 		MCImageBitmap *t_bitmap = nil;
-
 		t_success = lockbitmap(t_bitmap, false);
+
 		if (t_success)
-			t_success = MCImageCreateClipboardData(t_bitmap, t_data);
+			t_success = MCImageCreateClipboardData(t_bitmap, r_data);
 		unlockbitmap(t_bitmap);
 	}
 	else if (m_rep != nil)
@@ -2184,11 +2241,16 @@ MCSharedString *MCImage::getclipboardtext(void)
 			static_cast<MCResidentImageRep*>(m_rep)->GetData(t_bytes, t_size);
 		else if (t_type == kMCImageRepVector)
 			static_cast<MCVectorImageRep*>(m_rep)->GetData(t_bytes, t_size);
-
-		t_data = MCSharedString::Create(t_bytes, t_size);
+		else
+			t_success = false;
+		
+		if (t_success)
+			t_success = MCDataCreateWithBytes((const char_t *)t_bytes, t_size, r_data);
 	}
-
-	return t_data;
+	else
+		t_success = false;
+	
+	return t_success;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2326,12 +2388,12 @@ void MCImage::finishediting()
 	bool t_success = true;
 
 	MCImageRep *t_rep = m_rep;
-	MCBitmapFrame *t_frame = nil;
+	MCImageBitmap *t_bitmap = nil;
 
-	t_success = t_rep->LockBitmapFrame(0, 1.0, t_frame);
+	t_success = t_rep->LockBitmap(0, 1.0, t_bitmap);
 	if (t_success)
-		t_success = setbitmap(t_frame->image, 1.0);
-	t_rep->UnlockBitmapFrame(0, t_frame);
+		t_success = setbitmap(t_bitmap, 1.0);
+	t_rep->UnlockBitmap(0, t_bitmap);
 
 	/* UNCHECKED */ MCAssert(t_success);
 }
@@ -2367,31 +2429,27 @@ void MCImage::setrep(MCImageRep *p_rep)
 	notifyneeds(false);
 }
 
-bool MCImage::setfilename(const char *p_filename)
+bool MCImage::setfilename(MCStringRef p_filename)
 {
 	bool t_success = true;
 
-	if (p_filename == nil)
+	if (MCStringIsEmpty(p_filename))
 	{
 		setrep(nil);
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags &= ~F_HAS_FILENAME;
 		
-		MCCStringFree(filename);
-		filename = nil;
+		MCValueAssign(filename, p_filename);
 		
 		return true;
 	}
-	
-	char *t_filename = nil;
+    
 	MCImageRep *t_rep = nil;
-	
-	t_success = MCCStringClone(p_filename, t_filename);
-	
+
 	if (t_success)
 	{
 		t_success = MCImageGetFileRepForStackContext(p_filename, getstack(), t_rep);
-		
+
 		// MM-2013-11-27: [[ Bug 11522 ]] If we can't get the image rep, make sure we still store the filename.
 		if (t_success)
 		{
@@ -2402,8 +2460,7 @@ bool MCImage::setfilename(const char *p_filename)
 			flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 			flags |= F_HAS_FILENAME;
 			
-			MCCStringFree(filename);
-			filename = t_filename;
+            MCValueAssign(filename, p_filename);
 		}
 		else
 		{
@@ -2411,8 +2468,7 @@ bool MCImage::setfilename(const char *p_filename)
 			flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 			flags |= F_HAS_FILENAME;
 			
-			MCCStringFree(filename);
-			filename = t_filename;
+            MCValueAssign(filename, p_filename);
 		}		
 	}
 
@@ -2430,6 +2486,9 @@ bool MCImage::setdata(void *p_data, uindex_t p_size)
 
 	if (t_success)
 	{
+		// MW-2013-09-05: [[ UnicodifyImage ]] Clear the filename property.
+		MCValueAssign(filename, kMCEmptyString);
+		
 		setrep(t_rep);
 		t_rep->Release();
 	}
@@ -2510,6 +2569,9 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 			if (p_compressed->color_count == 0)
 				flags |= F_TRUE_COLOR;
 		}
+		
+		// MW-2013-09-05: [[ UnicodifyImage ]] Clear the filename property.
+		MCValueAssign(filename, kMCEmptyString);
 	}
 
 	return t_success;
@@ -2648,16 +2710,15 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, const MC
 			// so we have to release and lock the unpremultiplied bitmap frame.
 			t_rep->UnlockImageFrame(currentframe, t_frame);
 			
-			MCBitmapFrame *t_bitmap_frame;
-			t_bitmap_frame = nil;
+			MCImageBitmap *t_bitmap;
+			t_bitmap = nil;
 			
-			t_success = t_rep->LockBitmapFrame(currentframe, t_transform_scale, t_bitmap_frame);
+			t_success = t_rep->LockBitmap(currentframe, t_transform_scale, t_bitmap);
 			
 			if (t_success)
 			{
-				m_locked_bitmap = t_bitmap_frame->image;
+				m_locked_bitmap = t_bitmap;
 				m_locked_rep = t_rep;
-				m_locked_bitmap_frame = t_bitmap_frame;
 			}
 		}
 		else if (t_copy_pixels && p_premultiplied)
@@ -2738,9 +2799,8 @@ void MCImage::unlockbitmap(MCImageBitmap *p_bitmap)
 {
 	if (m_locked_rep != nil)
 	{
-		m_locked_rep->UnlockBitmapFrame(currentframe, m_locked_bitmap_frame);
+		m_locked_rep->UnlockBitmap(currentframe, m_locked_bitmap);
 		m_locked_rep = nil;
-		m_locked_bitmap_frame = nil;
 		m_locked_bitmap = nil;
 	}
 	else if (m_locked_image != nil)
@@ -2770,17 +2830,65 @@ uint32_t MCImage::getcompression()
 	return t_compression;
 }
 
+#ifdef LEGACY_EXEC
 MCString MCImage::getrawdata()
 {
 	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
 		return MCString(nil, 0);
+
+	void *t_data;
+	uindex_t t_size;
+    static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
+
+    return MCString((char*)t_data, t_size);
+}
+
+// PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+MCString MCImage::getimagefilename(void)
+{
+    if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
+		return MCString(nil, 0);
+    
+    const char *t_filename;
+    t_filename = static_cast<MCReferencedImageRep*>(m_rep)->GetSearchKey();
+    
+    return MCString(t_filename);
+
+    
+}
+#endif 
+
+void MCImage::getrawdata(MCDataRef& r_data)
+{
+ 	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
+    {
+        r_data = MCValueRetain(kMCEmptyData);
+    }
 	
 	void *t_data;
 	uindex_t t_size;
 	static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
 	
-	return MCString((char*)t_data, t_size);
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_data, t_size, r_data);
 }
+// PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+void MCImage::getimagefilename(MCStringRef &r_filename)
+{
+    MCStringRef t_filename;
+    if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
+        r_filename = MCValueRetain(kMCEmptyString);
+    
+    t_filename = static_cast<MCReferencedImageRep*>(m_rep)->GetSearchKey();
+    
+    MCStringCopy(t_filename, r_filename);
+    
+}
+
+bool MCImage::isReferencedImage()
+{
+    return m_rep->GetType() == kMCImageRepReferenced;
+}
+
 
 bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 {

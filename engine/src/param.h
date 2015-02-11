@@ -28,22 +28,20 @@ class MCParameter
 public:
 	MCParameter(void)
 	{
-		exp = NULL;
-		next = NULL;
-		var = NULL;
-	}
-
-	MCParameter(const MCString& s)
-	{
-		exp = NULL;
-		next = NULL;
-		var = NULL;
-		value . assign_constant_string(s);
+		exp = nil;
+		next = nil;
+		var = nil;
+        container = nil;
+		value . type = kMCExecValueTypeNone;
+        value . valueref_value = nil;
 	}
 
 	~MCParameter(void)
 	{
 		delete exp;
+        // AL-2014-09-17: [[ Bug 13465 ]] Delete container when parameter is deleted
+        delete container;
+		MCExecTypeRelease(value);
 	}
 
 	void setnext(MCParameter *n)
@@ -56,64 +54,69 @@ public:
 		return next;
 	}
 
-	void sets_argument(const MCString& s)
+#ifdef LEGACY_EXEC
+	void sets_argument(const MCString& string)
 	{
-		value . assign_constant_string(s);
+		/* UNCHECKED */ setoldstring_argument(string);
+	}
+
+	void copysvalue_argument(const MCString& string)
+	{
+		/* UNCHECKED */ setoldstring_argument(string);
 	}
 	
-	void copysvalue_argument(const MCString& s)
-	{
-		value . assign_string(s);
-	}
+	bool setoldstring_argument(const MCString& string);
+#endif
 
-	void setnameref_argument(MCNameRef n)
-	{
-		value . assign_string(MCNameGetOldString(n));
-	}
-
-	void setnameref_unsafe_argument(MCNameRef n)
-	{
-		value . assign_constant_string(MCNameGetOldString(n));
-	}
-
-	void setn_argument(real8 n)
-	{
-		value . assign_real(n);
-	}
-
-	void clear_argument(void)
-	{
-		value . clear();
-	}
-
-	void setbuffer(char *buffer, uint4 length)
-	{
-		value . assign_buffer(buffer, length);
-	}
-
-	// MW-2009-06-26: Returns a mutable reference to the parameters
-	//   value object.
-	MCVariableValue& getvalue(void)
-	{
-		return value;
-	}
+	void setvalueref_argument(MCValueRef name);
+	void give_exec_argument(MCExecValue name);
+	void setn_argument(real8 n);
+    void setrect_argument(MCRectangle rect);
+	void clear_argument(void);
+	
+	// MW-2014-01-22: [[ CompatV1 ]] Used by the V1 interface to get the arg value.
+	MCValueRef getvalueref_argument(void);
 
 	// Evaluate the value *stored* in the parameter - i.e. Used by
-	// the callee in a function/command invocation.
-	Exec_stat eval_argument(MCExecPoint& ep);
-	MCVariable *eval_argument_var(void);
+    // the callee in a function/command invocation.
+#ifdef LEGACY_EXEC
+    Exec_stat eval_argument(MCExecPoint& ep);
+#endif
+    MCVariable *eval_argument_var(void);
+    MCContainer *eval_argument_container(void);
+    
+    bool eval_argument(MCExecContext& ctxt, MCValueRef &r_value);
+    bool eval_argument_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
 
 	// Set the value of the parameter to be used by the callee.
+    void set_argument(MCExecContext &ctxt, MCValueRef p_value);
+    void set_exec_argument(MCExecContext& ctxt, MCExecValue p_value);
+#ifdef LEGACY_EXEC
 	void set_argument(MCExecPoint& ep);
+#endif
 	void set_argument_var(MCVariable* var);
+    void set_argument_container(MCContainer* container);
 
 	// Evaluate the value of the given parameter in the context of
 	// <ep>.
+#ifdef LEGACY_EXEC
 	Exec_stat eval(MCExecPoint& ep);
-	Exec_stat evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_var_value);
+
+	Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	MCVariable *evalvar(MCExecPoint& ep);
+#endif
+
+    bool eval(MCExecContext& ctxt, MCValueRef &r_value);
+    bool eval_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
+    bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    MCVariable *evalvar(MCExecContext& ctxt);
 
 	Parse_stat parse(MCScriptPoint &);
+
+	void compile(MCSyntaxFactoryRef);
+	void compile_in(MCSyntaxFactoryRef);
+	void compile_out(MCSyntaxFactoryRef);
+	void compile_inout(MCSyntaxFactoryRef);
 
 private:
 	// Parameter as syntax (i.e. location of the expression
@@ -127,7 +130,8 @@ private:
 	// Parameter as value (i.e. value of the argument when
 	// passed to a function/command).
 	MCVariable *var;
-	MCVariableValue value;
+    MCContainer *container;
+	MCExecValue value;
 };
 
 #endif

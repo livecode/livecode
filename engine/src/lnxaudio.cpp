@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "param.h"
 #include "handler.h"
 #include "util.h"
@@ -107,6 +107,7 @@ int X11Audio::play(int1 * p_sample, uint4 p_samplesize, uint p_rate)
 		
 		return t_bytes_written ;
 	}
+	return 0;
 }
 
 

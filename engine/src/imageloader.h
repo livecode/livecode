@@ -50,7 +50,7 @@ public:
 	// Returns the image hotspot
 	bool GetHotSpot(uint32_t &r_x, uint32_t &r_y);
 	// Returns the image name or nil if not specified
-	bool GetName(const char *&r_name);
+	bool GetName(MCStringRef &r_name);
 	// Returns the number of frames in the image
 	virtual bool GetFrameCount(uint32_t &r_frame_count);
     // Returns the metadata for the image
@@ -58,8 +58,6 @@ public:
 	// Returns the decoded image bitmap frames
 	bool GetFrames(MCBitmapFrame *&r_frames, uint32_t &r_frame_count);
 	
-	// Returns the image name, transferring ownership to the caller
-	bool TakeName(char *&r_name);
 	// Returns the image bitmap frames, transferring ownership to the caller
 	bool TakeFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
@@ -74,7 +72,7 @@ public:
 
 protected:
 	// Implemented by subclasses to perform the image header loading
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata) = 0;
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata) = 0;
 	// Implemented by subclasses to perform the image bitmap frame loading
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count) = 0;
 	
@@ -102,7 +100,7 @@ private:
     
     MCImageMetadata m_metadata;
 	
-	char *m_name;
+	MCStringRef m_name;
 };
 
 #endif // __MC_IMAGE_LOADER_H__

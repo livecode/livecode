@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -39,29 +38,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "font.h"
 #include "stacksecurity.h"
+#include "system.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static uint2 nvars;
 
-static void create_var(char *v)
+static void create_var(MCStringRef p_var)
 {
-	char vname[U2L + 1];
-	sprintf(vname, "$%d", nvars);
-	nvars++;
+	MCAutoStringRef t_vname;
+	/* UNCHECKED */ MCStringFormat(&t_vname, "$%d", nvars++);
 	
 	MCVariable *tvar;
-	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
-	tvar->copysvalue(v);
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(*t_vname, &t_name);
+	/* UNCHECKED */ MCVariable::ensureglobal(*t_name, tvar);
+	tvar->setvalueref(p_var);
 
-	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-	MCstacknames[MCnstacks++] = v;
+	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+	MCstacknames[MCnstacks++] = MCValueRetain(p_var);
 }
 
 static void create_var(uint4 p_v)
 {
 	MCVariable *tvar;
-	/* UNCHECKED */ MCVariable::ensureglobal_cstring("$#", tvar);
+	/* UNCHECKED */ MCVariable::ensureglobal(MCNAME("$#"), tvar);
 	tvar->setnvalue(p_v);
 }
 
@@ -73,17 +74,16 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, char *argv[], char *envp[]);
+bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
+extern void X_clear_globals(void);
 extern void MCU_initialize_names();
 
 static char apppath[PATH_MAX];
 
-bool X_init(int argc, char *argv[], char *envp[])
+bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	int i;
 	MCstackbottom = (char *)&i;
-	
-	MCStackSecurityInit();
 	
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
@@ -94,6 +94,10 @@ bool X_init(int argc, char *argv[], char *envp[])
 #endif
 
 	////
+	
+	X_clear_globals();
+	
+	////
 
 #ifndef _WINDOWS_DESKTOP
 	MCS_init();
@@ -101,7 +105,6 @@ bool X_init(int argc, char *argv[], char *envp[])
 	
 	////
 	
-	MCNameInitialize();
 	MCU_initialize_names();
 
 	////
@@ -136,142 +139,135 @@ bool X_init(int argc, char *argv[], char *envp[])
 	delete MCeerror;
 	delete MCresult;
 #endif
-
-	////
 	
-	MCcmd = argv[0];
+    // ST-2014-12-18: [[ Bug 14259 ]] Update to get the executable file from the system
+    // since ResolvePath must behave differently on Linux
+	MCsystem -> GetExecutablePath(MCcmd);
 
-#if defined(_MAC_DESKTOP)
-	{
-		char *t_new_cmd;
-		uint4 t_length;
-		t_length = strlen(MCcmd);
-		t_new_cmd = new char[t_length + 1];
-		MCS_utf8tonative(MCcmd, t_length, t_new_cmd, t_length);
-		t_new_cmd[t_length] = 0;
-		MCcmd = t_new_cmd;
-	}
-#endif
+    // Create the basic locale and the system locale
+    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
+        return false;
+    kMCSystemLocale = MCS_getsystemlocale();
+    if (kMCSystemLocale == nil)
+        return false;
 		
-#if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
-	if (MCcmd[0] != '/')
-	{//not c:/mc/xxx, not /mc/xxx
-		char *tpath = MCS_getcurdir();
-		if (tpath && strlen(MCcmd) + strlen(tpath) < PATH_MAX)
-		{
-			strcpy(apppath,tpath);
-			strcat(apppath, "/");
-			char *tempmccmd = MCcmd;
-			if (*tempmccmd == '.' && tempmccmd[1] != '.')
-				tempmccmd++;
-			if (*tempmccmd == '/')
-				tempmccmd++;
-			strcat(apppath,  tempmccmd);
-			if (MCcmd != argv[0])
-				delete[] MCcmd;
-			MCcmd = apppath;
-			delete tpath;
-		}
-	}
-#endif
+	MCSCommandLineSetName (argv[0]);
 
 	if (MCModeIsExecutableFirstArgument())
 		create_var(argv[0]);
 
+	/* This list will be used to set the argument list returned by
+	 * MCSCommandLineGetArguments(). */
+	MCAutoProperListRef t_arguments;
+	/* UNCHECKED */ MCProperListCreateMutable (&t_arguments);
+
+    MCAutoStringRefAsUTF8String t_mccmd_utf8;
+    /* UNCHECKED */ t_mccmd_utf8 . Lock(MCcmd);
+    
 	for (int i = 1; i < argc; i++)
 	{
-		if (strnequal(argv[i], "-d", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-display", 8) && strlen(argv[i]) == 8)
+		if (MCStringIsEqualToCString(argv[i], "-d", kMCCompareExact)
+		   || MCStringIsEqualToCString(argv[i], "-display", kMCCompareExact))
 		{
-			if (++i >= argc || *argv[i] == '-')
+			if (++i >= argc || MCStringGetCharAtIndex(argv[i], 0) == '-')
 			{
-				fprintf(stderr, "%s: bad display name\n", MCcmd);
+				fprintf(stderr, "%s: bad display name\n", *t_mccmd_utf8);
 				return False;
 			}
-			MCdisplayname = argv[i];
+            /* UNCHECKED */ MCStringConvertToCString(argv[i], MCdisplayname);
 			continue;
 		}
-		if (strnequal(argv[i], "-f", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-files", 6) && strlen(argv[i]) == 6)
+		
+		if (MCStringIsEqualToCString(argv[i], "-f", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-files", kMCCompareExact))
+
 		{
 			MCnofiles = True;
 			MCsecuremode = MC_SECUREMODE_ALL;
 			continue;
 		}
-		if (strnequal(argv[i], "-g", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-geometry", 9) && strlen(argv[i]) == 9)
+		
+		if (MCStringIsEqualToCString(argv[i], "-g", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-geometry", kMCCompareExact))
 		{
 			char *geometry = NULL;
 			if (++i >= argc)
 			{
-				fprintf(stderr, "%s: bad geometry\n", MCcmd);
+				fprintf(stderr, "%s: bad geometry\n", *t_mccmd_utf8);
 				return False;
 			}
-			geometry = argv[i];
+            /* UNCHECKED */ MCStringConvertToCString(argv[i], geometry);
 			continue;
 		}
-		if (strnequal(argv[i], "-m", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-mmap", 5) && strlen(argv[i]) == 5)
+		
+		if (MCStringIsEqualToCString(argv[i], "-m", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-mmap", kMCCompareExact))
 		{
 			MCmmap = False;
 			continue;
 		}
-		if (strnequal(argv[i], "-n", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-nopixmaps", 10) && strlen(argv[i]) == 10)
+		
+		if (MCStringIsEqualToCString(argv[i], "-n", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-nopixmaps", kMCCompareExact))
 		{
 			MCnopixmaps = True;
 			continue;
 		}
-		if (strnequal(argv[i], "-x", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-xftoff", 7) && strlen(argv[i]) == 7)
+			
+		if (MCStringIsEqualToCString(argv[i], "-x", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-xftoff", kMCCompareExact))
 		{
 			MCuseXft = False;
 			continue;
 		}
 		
 #ifdef _MAC_DESKTOP
-		if (strnequal(argv[i], "-psn", 4))
+		if (MCStringIsEqualToCString(argv[i], "-psn", kMCCompareExact))
 		{
 			// psn passed, skip it
 			continue;
 		}
 #endif
 
-		if (strnequal(argv[i], "-s", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-sharedoff", 10) && strlen(argv[i]) == 10)
+		if (MCStringIsEqualToCString(argv[i], "-s", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-sharedoff", kMCCompareExact))
 		{
 			MCshmoff = True;
 			continue;
 		}
-		if (strnequal(argv[i], "+s", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "+sharedon", 9) && strlen(argv[i]) == 9)
+		
+		if (MCStringIsEqualToCString(argv[i], "+s", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "+sharedon", kMCCompareExact))
 		{
 			MCshmon = True;
 			continue;
 		}
 
-		if (strnequal(argv[i], "-u", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-ui", 3) && strlen(argv[i]) == 3)
-		{
+		if (MCStringIsEqualToCString(argv[i], "-u", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-ui", kMCCompareExact))		{
 			MCnoui = True;
 			continue;
 		}
-		if (strnequal(argv[i], "-v", 2) && strlen(argv[i]) == 2
-		        || strnequal(argv[i], "-visualed", 9) && strlen(argv[i]) == 9)
+		
+		if (MCStringIsEqualToCString(argv[i], "-v", kMCCompareExact)
+			|| MCStringIsEqualToCString(argv[i], "-visualid", kMCCompareExact))
 		{
 			uint4 visualid = 0;
-			if (++i >= argc || *argv[i] == '-' || !MCU_stoui4(argv[i], visualid))
+			if (++i >= argc || MCStringGetCharAtIndex(argv[i], 0) == '-' || !MCU_stoui4(argv[i], visualid))
 			{
-				fprintf(stderr, "%s: bad visual id\n", MCcmd);
+				fprintf(stderr, "%s: bad visual id\n", *t_mccmd_utf8);
 				return False;
 			}
 			MCvisualid = visualid;
 			continue;
 		}
-		if (strnequal(argv[i], "-h", 2) && strlen(argv[i]) == 2
-		        && MCglobals == NULL)
+		
+		if (MCStringIsEqualToCString(argv[i], "-h", kMCCompareExact)
+			&& MCglobals == NULL)
 		{
-			fprintf(stderr, "Revolution %s Copyright 2003-2008 Runtime Revolution Ltd\n\
+            MCAutoPointer<char> t_MCN_version;
+            /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
+			fprintf(stderr, "LiveCode %s Copyright 2003-2014 Runtime Revolution Ltd\n\
 			        Usage: %s [-d[isplay] displayname] \n\
 			        [-f[iles] (disable access to files and processes)\n\
 			        [-g[eometry] ={+-}<xoffset>{+-}<yoffset>]\n\
@@ -284,13 +280,16 @@ bool X_init(int argc, char *argv[], char *envp[])
 			        [-u[i]] (don't create graphical user interface)\n\
 			        [-v[isualid] n] (use visual id n as listed from xdpyinfo)\n\
 			        [-w[indowid] n] (watch window id n for commands)\n\
-			        [stackname(s) | argument(s)]\n", MCversionstring, MCcmd);
+			        [stackname(s) | argument(s)]\n",  *t_MCN_version, *t_mccmd_utf8);
+
 			return False;
 		}
-		if (argv[i] != NULL && strlen(argv[i]) > 0)
-			create_var(argv[i]);
+		
+		create_var(argv[i]);
+		/* UNCHECKED */ MCProperListPushElementOntoBack (*t_arguments, argv[i]);
 	}
 	create_var(nvars);
+	/* UNCHECKED */ MCSCommandLineSetArguments (*t_arguments);
 
 	if (!X_open(argc, argv, envp))
 		return false;
@@ -302,7 +301,9 @@ bool X_init(int argc, char *argv[], char *envp[])
 			MCStack *sptr;
 			if (MCdispatcher->loadfile(MCstacknames[i], sptr) == IO_NORMAL)
 				sptr->open();
+            MCValueRelease(MCstacknames[i]);
 		}
+        MCnstacks = 0;
 		delete MCstacknames;
 		MCstacknames = NULL;
 		MCeerror->clear();
@@ -338,7 +339,7 @@ void X_main_loop_iteration()
 	}
 	if (!MCtodestroy->isempty() || MCtodelete != NULL)
 	{
-		MCtooltip->settip(NULL);
+		MCtooltip->cleartip();
 		while (MCtodelete != NULL)
 		{
 			MCObject *optr = MCtodelete->remove(MCtodelete);

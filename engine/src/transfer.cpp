@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -54,10 +54,9 @@ MCLocalPasteboard::MCLocalPasteboard(void)
 MCLocalPasteboard::~MCLocalPasteboard(void)
 {
 	delete m_types;
-
 	for(uint4 i = 0; i < m_count; ++i)
 		if (m_datas[i] != NULL)
-			m_datas[i] -> Release();
+			MCValueRelease(m_datas[i]);
 
 	delete m_datas;
 }
@@ -86,62 +85,69 @@ bool MCLocalPasteboard::Find(MCTransferType p_type, uint4& r_index)
 	return false;
 }
 
-bool MCLocalPasteboard::Normalize(MCTransferType p_type, MCSharedString *p_data, MCTransferType& r_normal_type, MCSharedString*& r_normal_data)
-{
-	MCTransferType t_normal_type;
-	MCSharedString *t_normal_data;
 
+bool MCLocalPasteboard::Normalize(MCTransferType p_type, MCValueRef p_data, MCTransferType& r_normal_type, MCDataRef &r_normal_data)
+{
 	if (p_type == TRANSFER_TYPE_RTF_TEXT)
 	{
-		t_normal_type = TRANSFER_TYPE_STYLED_TEXT;
-		t_normal_data = MCConvertRTFToStyledText(p_data);
+		r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
+        return MCConvertRTFToStyledText((MCDataRef)p_data, r_normal_data);
 	}
 	else if (p_type == TRANSFER_TYPE_HTML_TEXT)
 	{
-		t_normal_type = TRANSFER_TYPE_STYLED_TEXT;
-		t_normal_data = MCConvertHTMLToStyledText(p_data);
+		r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
+        return MCConvertHTMLToStyledText((MCDataRef)p_data, r_normal_data);
 	}
-	else
+    // If unicode text is asked, we are provided a StringRef and not a DataRef
+    // In case we are anyway provided a StringRef, we should store it as a unicode string - breaks some pasting otherwise
+    // AL-2014-05-27: [[ Bug 12514 ]] If the transfer type is 'private', it should remain so
+	// SN-2014-10-07: [[ Bug 13695 ]] 'set the clipboarddata to "some text"' gives a NameRef, not a StringRef
+    else if (p_type == TRANSFER_TYPE_UNICODE_TEXT ||
+             (p_type == TRANSFER_TYPE_TEXT && 
+				(MCValueGetTypeCode(p_data) == kMCValueTypeCodeString ||
+				 MCValueGetTypeCode(p_data) == kMCValueTypeCodeName)))
+    {
+        r_normal_type = TRANSFER_TYPE_UNICODE_TEXT;
+		MCStringRef t_string;
+		if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeName)
+			t_string = MCNameGetString((MCNameRef)p_data);
+		else
+			t_string = (MCStringRef)p_data;
+
+        return MCStringEncode(t_string, kMCStringEncodingUTF16, false, r_normal_data);
+    }
+    else
 	{
-		t_normal_type = p_type;
-		t_normal_data = p_data;
-		t_normal_data -> Retain();
+		r_normal_type = p_type;
+        r_normal_data = MCValueRetain((MCDataRef)p_data);
+		return true;
 	}
-
-	if (t_normal_data == NULL)
-		return false;
-
-	r_normal_type = t_normal_type;
-	r_normal_data = t_normal_data;
-
-	return true;
 }
 
-bool MCLocalPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_count)
+bool MCLocalPasteboard::Query(MCTransferType*& r_types, size_t& r_type_count)
 {
 	r_types = m_types;
 	r_type_count = m_count;
 	return true;
 }
 
-bool MCLocalPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
+bool MCLocalPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 {
 	uint4 t_index;
 	if (!Find(p_type, t_index))
 		return false;
 
-	r_data = m_datas[t_index];
-	r_data -> Retain();
+	r_data = MCValueRetain(m_datas[t_index]);
 
 	return true;
 }
 
-bool MCLocalPasteboard::Store(MCTransferType p_type, MCSharedString *p_data)
+bool MCLocalPasteboard::Store(MCTransferType p_type, MCValueRef p_data)
 {
 	MCTransferType t_normal_type;
-	MCSharedString *t_normal_data;
+    MCAutoDataRef t_normal_data;
 
-	if (!Normalize(p_type, p_data, t_normal_type, t_normal_data))
+	if (!Normalize(p_type, p_data, t_normal_type, &t_normal_data))
 		return false;
 
 	// Here the reference count of p_data hasn't changed (it is still owned by
@@ -157,10 +163,9 @@ bool MCLocalPasteboard::Store(MCTransferType p_type, MCSharedString *p_data)
 		if (t_new_types == NULL)
 			return false;
 
-		// FG-2013-09-20 [[ Bugfix 11191 ]]
-		// Wrong type used in sizeof calculation (was MCTransferType)
-		MCSharedString **t_new_datas;
-		t_new_datas = (MCSharedString **)realloc(m_datas, sizeof(MCSharedString*) * (m_count + 1));
+		MCDataRef *t_new_datas;
+		t_new_datas = (MCDataRef *)realloc(m_datas, sizeof(MCDataRef) * (m_count + 1));
+
 		if (t_new_datas == NULL)
 		{
 			m_types = t_new_types;
@@ -169,7 +174,7 @@ bool MCLocalPasteboard::Store(MCTransferType p_type, MCSharedString *p_data)
 
 		m_types = t_new_types;
 		m_datas = t_new_datas;
-		m_datas[m_count] = NULL;
+		m_datas[m_count] = nil;
 		
 		t_index = m_count;
 
@@ -178,10 +183,10 @@ bool MCLocalPasteboard::Store(MCTransferType p_type, MCSharedString *p_data)
 	
 	m_types[t_index] = t_normal_type;
 
-	if (m_datas[t_index] != NULL)
-		m_datas[t_index] -> Release();
+	if (m_datas[t_index] != nil)
+		MCValueRelease(m_datas[t_index]);
 
-	m_datas[t_index] = t_normal_data;
+	m_datas[t_index] = MCValueRetain(*t_normal_data);
 
 	return true;
 }
@@ -267,43 +272,39 @@ MCParagraph *MCTransferData::FetchParagraphs(MCField *p_field)
 	t_paragraphs = NULL;
 
 	if (!Lock())
-		return false;
+		return NULL;
 
 	if (Contains(TRANSFER_TYPE_STYLED_TEXT, false))
 	{
-		MCSharedString *t_data;
-		t_data = Fetch(TRANSFER_TYPE_STYLED_TEXT);
-		if (t_data != NULL)
+		MCAutoValueRef t_data;
+		Fetch(TRANSFER_TYPE_STYLED_TEXT, &t_data);
+		if (*t_data != nil)
 		{
 			MCObject *t_object;
-			t_object = MCObject::unpickle(t_data, MCactivefield -> getstack());
+			t_object = MCObject::unpickle((MCDataRef)*t_data, MCactivefield -> getstack());
 			if (t_object != NULL)
 			{
+				// TODO: Do a proper type check
 				t_paragraphs = ((MCStyledText *)t_object) -> grabparagraphs(MCactivefield);
 				delete t_object;
 			}
-			t_data -> Release();
 		}
 	}
 	else if (Contains(TRANSFER_TYPE_UNICODE_TEXT, false))
 	{
-		MCSharedString *t_data;
-		t_data = Fetch(TRANSFER_TYPE_UNICODE_TEXT);
-		if (t_data != NULL)
-		{
-			t_paragraphs = p_field -> texttoparagraphs(t_data -> Get(), true);
-			t_data -> Release();
-		}
+		MCAutoValueRef t_data;
+		if (Fetch(TRANSFER_TYPE_UNICODE_TEXT, &t_data))
+			t_paragraphs = p_field -> texttoparagraphs(MCDataGetOldString((MCDataRef)*t_data), true);
 	}
 	else if (Contains(TRANSFER_TYPE_TEXT, true))
 	{
-		MCSharedString *t_data;
-		t_data = Fetch(TRANSFER_TYPE_TEXT);
-		if (t_data != NULL)
-		{
-			t_paragraphs = p_field -> texttoparagraphs(t_data -> Get(), false);
-			t_data -> Release();
-		}
+		MCAutoValueRef t_string;
+		if (Fetch(TRANSFER_TYPE_TEXT, &t_string))
+        {
+            MCAutoDataRef t_data;
+            /* UNCHECKED */ MCStringEncode((MCStringRef)*t_string, kMCStringEncodingUTF16, false, &t_data);
+			t_paragraphs = p_field -> texttoparagraphs(MCDataGetOldString(*t_data), true);
+        }
 	}
 
 	Unlock();
@@ -345,7 +346,7 @@ void MCTransferData::Unlock(void)
 	}
 }
 
-bool MCTransferData::Query(MCTransferType*& r_types, uint4& r_type_count)
+bool MCTransferData::Query(MCTransferType*& r_types, size_t& r_type_count)
 {
 	if (m_lock_count == 0)
 		return false;
@@ -359,7 +360,7 @@ bool MCTransferData::Contains(MCTransferType p_type, bool p_with_conversion)
 		return false;
 
 	MCTransferType *t_types;
-	uint4 t_type_count;
+	size_t t_type_count;
 	if (!m_pasteboard -> Query(t_types, t_type_count))
 	{
 		Unlock();
@@ -382,13 +383,13 @@ bool MCTransferData::Contains(MCTransferType p_type, bool p_with_conversion)
 	return t_contains;
 }
 
-MCSharedString *MCTransferData::Fetch(MCTransferType p_type)
+bool MCTransferData::Fetch(MCTransferType p_type, MCValueRef &r_data)
 {
 	if (!Lock())
 		return false;
 
 	MCTransferType *t_types;
-	uint4 t_type_count;
+	size_t t_type_count;
 	if (!m_pasteboard -> Query(t_types, t_type_count))
 	{
 		Unlock();
@@ -404,108 +405,117 @@ MCSharedString *MCTransferData::Fetch(MCTransferType p_type)
 			break;
 		}
 
-	MCSharedString *t_current_data;
-	t_current_data = NULL;
-	if (t_current_type != TRANSFER_TYPE_NULL)
-		if (!m_pasteboard -> Fetch(t_current_type, t_current_data))
-			t_current_data = NULL;
+	MCAutoDataRef t_current_data;
+	
+	if (t_current_type == TRANSFER_TYPE_NULL || !m_pasteboard -> Fetch(t_current_type, &t_current_data))
+	{
+		Unlock();
+		return false;
+	}
 
 	Unlock();
-	
-	if (t_current_type == TRANSFER_TYPE_NULL || t_current_data == NULL)
-		return NULL;
-
-	if (p_type == t_current_type)
-		return t_current_data;
+    
+    // SN-2014-11-13: [[ Bug 13993 ]] The clipboard for files now contains a UTF-16 string
+	if (p_type == t_current_type && p_type != TRANSFER_TYPE_FILES)
+    {
+        r_data = MCValueRetain(*t_current_data);
+        return true;
+    }
+    
+    // SN-2014-11-13: [[ Bug 13993 ]] The files may return unicode chars; the data should be UTF-16
+    if (p_type == TRANSFER_TYPE_FILES)
+    {
+        return MCStringDecode(*t_current_data, kMCStringEncodingUTF16, false, (MCStringRef&)r_data);
+    }
+    
+    // AL-2014-06-26: [[ Bug 12540 ]] If text is requested, return a (not necessarily native) string
+    if (p_type == TRANSFER_TYPE_TEXT && t_current_type == TRANSFER_TYPE_UNICODE_TEXT)
+	{
+		return MCStringDecode(*t_current_data, kMCStringEncodingUTF16, false, (MCStringRef&)r_data);
+	}
 
 	if (p_type == TRANSFER_TYPE_TEXT && t_current_type == TRANSFER_TYPE_FILES)
-		return t_current_data;
-
-	if (p_type == TRANSFER_TYPE_TEXT && t_current_type == TRANSFER_TYPE_UNICODE_TEXT)
 	{
-		MCSharedString *t_target_data;
-		t_target_data = MCConvertUnicodeToText(t_current_data);
-		t_current_data -> Release();
-		return t_target_data;
+		r_data = MCValueRetain(*t_current_data);
+		return true;
 	}
-
+	
 	if (p_type == TRANSFER_TYPE_UNICODE_TEXT && (t_current_type == TRANSFER_TYPE_TEXT || t_current_type == TRANSFER_TYPE_FILES))
 	{
-		MCSharedString *t_target_data;
-		t_target_data = MCConvertTextToUnicode(t_current_data);
-		t_current_data -> Release();
-		return t_target_data;
+		MCAutoStringRef t_text;
+		if (!MCStringDecode(*t_current_data, kMCStringEncodingNative, false, &t_text) ||
+			!MCStringEncode(*t_text, kMCStringEncodingUTF16, false, (MCDataRef &)r_data))
+			return false;
+		return true;
 	}
+
+
+	bool t_success;
+	t_success = true;
 
 	if (p_type >= TRANSFER_TYPE_TEXT__FIRST && p_type <= TRANSFER_TYPE_TEXT__LAST)
 	{
-		MCSharedString *t_styled_text;
+		MCAutoDataRef t_styled_text;
 		switch(t_current_type)
 		{
 			case TRANSFER_TYPE_FILES:
 			case TRANSFER_TYPE_TEXT:
-				t_styled_text = MCConvertTextToStyledText(t_current_data);
+				t_success = MCConvertTextToStyledText(*t_current_data, &t_styled_text);
 			break;
 
 			case TRANSFER_TYPE_STYLED_TEXT:
-				t_styled_text = t_current_data;
-				t_styled_text -> Retain();
+				t_styled_text = *t_current_data;
 			break;
 
 			case TRANSFER_TYPE_UNICODE_TEXT:
-				t_styled_text = MCConvertUnicodeToStyledText(t_current_data);
+				t_success = MCConvertUnicodeToStyledText(*t_current_data, &t_styled_text);
 			break;
 
 			case TRANSFER_TYPE_RTF_TEXT:
-				t_styled_text = MCConvertRTFToStyledText(t_current_data);
+				t_success = MCConvertRTFToStyledText(*t_current_data, &t_styled_text);
 			break;
 
 			case TRANSFER_TYPE_HTML_TEXT:
-				t_styled_text = MCConvertHTMLToStyledText(t_current_data);
+				 t_success = MCConvertHTMLToStyledText(*t_current_data, &t_styled_text);
 			break;
 
 			default:
-				t_styled_text = NULL;
 			break;
 		}
 
-		t_current_data -> Release();
-
-		if (t_styled_text == NULL)
-			return NULL;
-
-		MCSharedString *t_output_data;
-		switch(p_type)
+		if (t_success)
 		{
-		case TRANSFER_TYPE_TEXT:
-			t_output_data = MCConvertStyledTextToText(t_styled_text);
-		break;
+			switch(p_type)
+			{
+			case TRANSFER_TYPE_TEXT:
+            {
+                // AL-2014-06-26: [[ Bug 12540 ]] If text is requested, return a (not necessarily native) string
+                MCAutoDataRef t_data;
+				t_success = (MCConvertStyledTextToUnicode(*t_styled_text, &t_data) &&
+                             MCStringDecode(*t_data, kMCStringEncodingUTF16, false, (MCStringRef &)r_data));
+            }
+			break;
 
-		case TRANSFER_TYPE_UNICODE_TEXT:
-			t_output_data = MCConvertStyledTextToUnicode(t_styled_text);
-		break;
+			case TRANSFER_TYPE_UNICODE_TEXT:
+				t_success = MCConvertStyledTextToUnicode(*t_styled_text, (MCDataRef &)r_data);
+			break;
 
-		case TRANSFER_TYPE_RTF_TEXT:
-			t_output_data = MCConvertStyledTextToRTF(t_styled_text);
-		break;
+			case TRANSFER_TYPE_RTF_TEXT:
+				t_success = MCConvertStyledTextToRTF(*t_styled_text, (MCDataRef &)r_data);
+			break;
 
-		case TRANSFER_TYPE_HTML_TEXT:
-			t_output_data = MCConvertStyledTextToHTML(t_styled_text);
-		break;
+			case TRANSFER_TYPE_HTML_TEXT:
+				t_success = MCConvertStyledTextToHTML(*t_styled_text, (MCDataRef &)r_data);
+			break;
 
-		case TRANSFER_TYPE_STYLED_TEXT:
-			t_output_data = t_styled_text;
-			t_output_data -> Retain();
-		break;
+			case TRANSFER_TYPE_STYLED_TEXT:
+				r_data = MCValueRetain(*t_styled_text);
+			break;
+			}
 		}
-
-		t_styled_text -> Release();
-		return t_output_data;
+		return t_success;
 	}
-	else
-		t_current_data -> Release();
-
-	return NULL;
+	return false;
 }
 
 //
@@ -517,7 +527,7 @@ void MCTransferData::Open(void)
 		m_open_pasteboard = new MCLocalPasteboard;
 }
 
-bool MCTransferData::Store(MCTransferType p_type, MCSharedString* p_data)
+bool MCTransferData::Store(MCTransferType p_type, MCValueRef p_data)
 {
 	Open();
 
@@ -555,36 +565,36 @@ bool MCTransferData::Close(void)
 
 //
 
-MCTransferType MCTransferData::StringToType(const MCString& p_string)
+MCTransferType MCTransferData::StringToType(MCStringRef p_string)
 {
-	if (p_string == "text")
+	if (MCStringIsEqualToCString(p_string, "text", kMCCompareCaseless))
 		return TRANSFER_TYPE_TEXT;
 
-	if (p_string == "unicode")
+	if (MCStringIsEqualToCString(p_string, "unicode", kMCCompareCaseless))
 		return TRANSFER_TYPE_UNICODE_TEXT;
-
-	if (p_string == "styledText")
-		return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
-	
-	if (p_string == "styles")
+    
+	if (MCStringIsEqualToCString(p_string, "styledText", kMCCompareCaseless))
+        return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
+        
+	if (MCStringIsEqualToCString(p_string, "styles", kMCCompareCaseless))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-	if (p_string == "rtf")
+	if (MCStringIsEqualToCString(p_string, "rtf", kMCCompareCaseless))
 		return TRANSFER_TYPE_RTF_TEXT;
 
-	if (p_string == "html")
+	if (MCStringIsEqualToCString(p_string, "html", kMCCompareCaseless))
 		return TRANSFER_TYPE_HTML_TEXT;
 
-	if (p_string == "files")
+	if (MCStringIsEqualToCString(p_string, "files", kMCCompareCaseless))
 		return TRANSFER_TYPE_FILES;
 
-	if (p_string == "private")
+	if (MCStringIsEqualToCString(p_string, "private", kMCCompareCaseless))
 		return TRANSFER_TYPE_PRIVATE;
 
-	if (p_string == "image")
+	if (MCStringIsEqualToCString(p_string, "image", kMCCompareCaseless))
 		return TRANSFER_TYPE_IMAGE;
 
-	if (p_string == "objects")
+	if (MCStringIsEqualToCString(p_string, "objects", kMCCompareCaseless))
 		return TRANSFER_TYPE_OBJECTS;
 
 	return TRANSFER_TYPE_NULL;
@@ -600,6 +610,8 @@ const char *MCTransferData::TypeToString(MCTransferType p_type)
 		return "unicode";
 	case TRANSFER_TYPE_STYLED_TEXT:
 		return "styles";
+    case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
+        return "styledText";
 	case TRANSFER_TYPE_RTF_TEXT:
 		return "rtf";
 	case TRANSFER_TYPE_HTML_TEXT:
@@ -782,219 +794,202 @@ bool MCDragData::Set(MCPasteboard *p_pasteboard)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCFormatImageIsJPEG(MCSharedString *p_in)
-{
-    return MCImageDataIsJPEG(p_in -> Get());
-}
-
-bool MCFormatImageIsPNG(MCSharedString *p_in)
-{
-    return MCImageDataIsPNG(p_in -> Get());
-}
-
-bool MCFormatImageIsGIF(MCSharedString *p_in)
-{
-    return MCImageDataIsGIF(p_in -> Get());
-}
-
-bool MCFormatStyledTextIsUnicode(MCSharedString *p_in)
+bool MCFormatStyledTextIsUnicode(MCDataRef p_input)
 {
 	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCSharedString *MCConvertTextToStyledText(MCSharedString *p_in)
+bool MCConvertTextToStyledText(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = MCtemplatefield -> texttoparagraphs(p_in -> Get(), false);
+	t_paragraphs = MCtemplatefield -> texttoparagraphs(MCDataGetOldString(p_input), false);
+
 	MCStyledText t_styled_text;
 	t_styled_text . setparagraphs(t_paragraphs);
-	return MCObject::pickle(&t_styled_text, 0);
+
+	/* UNCHECKED */MCObject::pickle(&t_styled_text, 0, r_output);
+
+	return true;
 }
 
-MCSharedString *MCConvertUnicodeToStyledText(MCSharedString *p_in)
-{
-	return MCConvertUnicodeToStyledText(p_in -> Get());
-}
-
-MCSharedString *MCConvertUnicodeToStyledText(const MCString& p_in)
+bool MCConvertUnicodeToStyledText(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = MCtemplatefield -> texttoparagraphs(p_in, true);
+	t_paragraphs = MCtemplatefield -> texttoparagraphs(MCDataGetOldString(p_input), true);
+
 	MCStyledText t_styled_text;
 	t_styled_text . setparagraphs(t_paragraphs);
-	return MCObject::pickle(&t_styled_text, 0);
+
+	/* UNCHECKED */ MCObject::pickle(&t_styled_text, 0, r_output);
+
+	return true;
 }
 
-MCSharedString *MCConvertHTMLToStyledText(MCSharedString *p_in)
+bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
 	// MW-2012-03-08: [[ FieldImport ]] Use the new htmlText importer.
-	t_paragraphs = MCtemplatefield -> importhtmltext(p_in -> Get());
+	t_paragraphs = MCtemplatefield -> importhtmltext(p_input);
+
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCtemplatefield -> getparent());
 	t_styled_text . setparagraphs(t_paragraphs);
-	return MCObject::pickle(&t_styled_text, 0);
+
+	/* UNCHECKED */ MCObject::pickle(&t_styled_text, 0, r_output);
+
+	return true;
 }
 
-MCSharedString *MCConvertRTFToStyledText(MCSharedString *p_in)
-{
-	return MCConvertRTFToStyledText(p_in -> Get());
-}
-
-MCSharedString *MCConvertRTFToStyledText(const MCString& p_in)
+bool MCConvertRTFToStyledText(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = MCtemplatefield -> rtftoparagraphs(p_in);
+    MCAutoStringRef t_input;
+    /* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingNative, false, &t_input);
+	t_paragraphs = MCtemplatefield -> rtftoparagraphs(*t_input);
+
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCdefaultstackptr);
 	t_styled_text . setparagraphs(t_paragraphs);
-	return MCObject::pickle(&t_styled_text, 0);
+
+	/* UNCHECKED */ MCObject::pickle(&t_styled_text, 0, r_output);
+
+	return true;
 }
 
-MCSharedString *MCConvertStyledTextToText(MCSharedString *p_in)
+bool MCConvertStyledTextToText(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCObject *t_object;
-	t_object = MCObject::unpickle(p_in, MCtemplatefield -> getstack());
-	if (t_object != NULL)
-	{
-		MCParagraph *t_paragraphs;
-		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
+	t_object = MCObject::unpickle(p_input, MCtemplatefield -> getstack());
+	if (t_object == nil)
+		return false;
 
-		MCExecPoint ep(NULL, NULL, NULL);
+	MCParagraph *t_paragraphs;
+	t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 
-		// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
-		if (t_paragraphs != NULL)
-			MCtemplatefield -> exportasplaintext(ep, t_paragraphs, 0, INT32_MAX, false);
+	bool t_success;
+	t_success = t_paragraphs != nil;
+	
+	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
+	MCAutoStringRef t_text;
+	if (t_success)
+		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_text);
+	
+	if (t_success)
+		t_success = MCStringEncode(*t_text, kMCStringEncodingNative, false, r_output);
 
-		delete t_object;
+	delete t_object;
 
-		return MCSharedString::Create(ep . getsvalue());
-	}
-	return NULL;
+	return t_success;
 }
 
-MCSharedString *MCConvertStyledTextToUnicode(MCSharedString *p_in)
+
+bool MCConvertStyledTextToUnicode(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCObject *t_object;
-	t_object = MCObject::unpickle(p_in, MCtemplatefield -> getstack());
-	if (t_object != NULL)
-	{
-		MCParagraph *t_paragraphs;
-		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
+	t_object = MCObject::unpickle(p_input, MCtemplatefield -> getstack());
+	if (t_object == nil)
+		return false;
 
-		MCExecPoint ep(NULL, NULL, NULL);
+	MCParagraph *t_paragraphs;
+	t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 
-		// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
-		if (t_paragraphs != NULL)
-			MCtemplatefield -> exportasplaintext(ep, t_paragraphs, 0, INT32_MAX, true);
+	bool t_success;
+	t_success = t_paragraphs != nil;
+	
+	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
+	MCAutoStringRef t_text;
+	if (t_success)
+		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_text);
+	
+	if (t_success)
+		t_success = MCStringEncode(*t_text, kMCStringEncodingUTF16, false, r_output);
+	
+	delete t_object;
 
-		delete t_object;
-
-		return MCSharedString::Create(ep . getsvalue());
-	}
-	return NULL;
+	return t_success;
 }
 
-MCSharedString *MCConvertStyledTextToHTML(MCSharedString *p_in)
+bool MCConvertStyledTextToHTML(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCObject *t_object;
-	t_object = MCObject::unpickle(p_in, MCtemplatefield -> getstack());
-	if (t_object != NULL)
-	{
-		MCParagraph *t_paragraphs;
-		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
+	t_object = MCObject::unpickle(p_input, MCtemplatefield -> getstack());
+	if (t_object == nil)
+		return false;
 
-		MCExecPoint ep(NULL, NULL, NULL);
-		
-		// OK-2009-03-13: [[Bug 7742]] - Not reproduced but we think this is the cause of the crash.
-		// MW-2012-03-05: [[ FieldExport ]] Use the new html text export method.
-		if (t_paragraphs != NULL)
-			MCtemplatefield -> exportashtmltext(ep, t_paragraphs, 0, INT32_MAX, false);
+	MCParagraph *t_paragraphs;
+	t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 
-		delete t_object;
+	bool t_success;
+	t_success = t_paragraphs != nil;
 
-		return MCSharedString::Create(ep . getsvalue());
-	}
-	return NULL;
+	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
+	if (t_success)
+		t_success = MCtemplatefield -> exportashtmltext(t_paragraphs, 0, INT32_MAX, false, r_output);
+	
+	delete t_object;
+	
+	return t_success;
 }
 
-MCSharedString *MCConvertStyledTextToRTF(MCSharedString *p_in)
+bool MCConvertStyledTextToRTF(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCObject *t_object;
-	t_object = MCObject::unpickle(p_in, MCtemplatefield -> getstack());
-	if (t_object != NULL)
-	{
-		MCParagraph *t_paragraphs;
-		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
+	t_object = MCObject::unpickle(p_input, MCtemplatefield -> getstack());
+	if (t_object == nil)
+		return false;
 
-		MCExecPoint ep(NULL, NULL, NULL);
-		// OK-2009-03-13: [[Bug 7742]] - Not reproduced but we think this is the cause of the crash.
-		// MW-2012-02-29: [[ FieldExport ]] Use the new field export rtf method.
-		if (t_paragraphs != NULL)
-			MCtemplatefield -> exportasrtftext(ep, t_paragraphs, 0, INT32_MAX);
+	MCParagraph *t_paragraphs;
+	t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 
-		delete t_object;
+	bool t_success;
+	t_success = t_paragraphs != nil;
 
-		return MCSharedString::Create(ep . getsvalue());
-	}
-	return NULL;
+	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
+	MCAutoStringRef t_text;
+	if (t_success)
+		t_success = MCtemplatefield -> exportasrtftext(t_paragraphs, 0, INT32_MAX, &t_text);
+	
+	if (t_success)
+		t_success = MCStringEncode(*t_text, kMCStringEncodingNative, false, r_output);
+    
+	delete t_object;
+	
+	return t_success;
 }
 
 // MW-2014-03-12: [[ ClipboardStyledText ]] Convert data stored as a 'styles' pickle to a styledText array.
-MCVariableValue *MCConvertStyledTextToStyledTextArray(MCSharedString *p_string)
+bool MCConvertStyledTextToStyledTextArray(MCDataRef p_string, MCArrayRef &r_array)
 {
 	MCObject *t_object;
 	t_object = MCObject::unpickle(p_string, MCtemplatefield -> getstack());
 	if (t_object != NULL)
 	{
 		MCParagraph *t_paragraphs;
+        MCAutoArrayRef t_array;
 		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 		
-		MCExecPoint ep(NULL, NULL, NULL);
 		if (t_paragraphs != NULL)
-			MCtemplatefield -> exportasstyledtext(ep, t_paragraphs, 0, INT32_MAX, false, false);
+			MCtemplatefield -> exportasstyledtext(t_paragraphs, 0, INT32_MAX, false, false, &t_array);
 		
 		delete t_object;
-		
-		ep . grabarray();
-		
-		MCVariableValue *t_array;
-		Boolean t_delete_array;
-		ep . takearray(t_array, t_delete_array);
-		
-		return t_array;
+        return true;
 	}
-	return NULL;
+    
+	return false;
 }
 
 // MW-2014-03-12: [[ ClipboardStyledText ]] Convert a styledText array to a 'styles' pickle.
-MCSharedString *MCConvertStyledTextArrayToStyledText(MCVariableValue *p_array)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setarray(p_array, False);
-	
+bool MCConvertStyledTextArrayToStyledText(MCArrayRef p_array, MCDataRef &r_output)
+{	
 	MCParagraph *t_paragraphs;
-	t_paragraphs = MCtemplatefield -> styledtexttoparagraphs(ep);
+	t_paragraphs = MCtemplatefield -> styledtexttoparagraphs(p_array);
+    
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCdefaultstackptr);
 	t_styled_text . setparagraphs(t_paragraphs);
-	return MCObject::pickle(&t_styled_text, 0);
-}
-
-MCSharedString *MCConvertTextToUnicode(MCSharedString *p_string)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_string -> Get());
-	ep . nativetoutf16();
-	return MCSharedString::Create(ep . getsvalue());
-}
-
-MCSharedString *MCConvertUnicodeToText(MCSharedString *p_string)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_string -> Get());
-	ep . utf16tonative();
-	return MCSharedString::Create(ep . getsvalue());
+	/* UNCHECKED */ MCObject::pickle(&t_styled_text, 0, r_output);
+    
+    return true;
 }

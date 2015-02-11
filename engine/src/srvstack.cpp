@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -141,7 +141,7 @@ void MCStack::stop_externals()
 	unloadexternals();
 }
 
-void MCStack::openwindow(Boolean override)
+void MCStack::platform_openwindow(Boolean override)
 {
 	MCscreen -> openwindow(window, override);
 }

@@ -16,14 +16,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "stack.h"
 #include "aclip.h"
 #include "vclip.h"
@@ -53,17 +53,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "redraw.h"
 #include "font.h"
+#include "variable.h"
+#include "widget.h"
 
 #include "globals.h"
 #include "mctheme.h"
 #include "license.h"
 #include "stacksecurity.h"
+#include "exec.h"
 
+#include "exec.h"
 #include "graphics_util.h"
 
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
-IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
+IO_stat MCStack::load_substacks(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -100,7 +104,7 @@ IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
 	return IO_NORMAL;
 }
 
-IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -132,7 +136,7 @@ IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 	return t_stat;
 }
 
-IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
+IO_stat MCStack::load(IO_handle stream, uint32_t version, uint1 type)
 {
 	IO_stat stat;
 	
@@ -157,13 +161,13 @@ IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 	return stat;
 }
 
-IO_stat MCStack::load_stack(IO_handle stream, const char *version)
+IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	
 //---- 2.7+:
 //  . F_OPAQUE now valid - default true
-	if (strncmp(version, "2.7", 3) < 0)
+	if (version < 2700)
 	{
 		flags |= F_OPAQUE;
 	}
@@ -173,34 +177,28 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		state |= CS_TRANSLATED;
 	if ((stat = IO_read_uint4(&iconid, stream)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "1.0", 3) > 0)
+	if (version > 1000)
 	{
 		if (flags & F_TITLE)
 		{
-			// MW-2012-03-04: [[ StackFile5500 ]] If the version is 5.5 or above, then the
-			//   stack title will be UTF-8 already.
-			if (strncmp(version, "5.5", 3) >= 0)
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if (version >= 7000)
 			{
-				// MW-2013-07-01: [[ Bug 11006 ]] Make sure we don't do charset conversion on
-				//   the title string as it is in UTF8.
-				if ((stat = IO_read_string_no_translate(title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref_new(title, stream, true)) != IO_NORMAL)
+					return stat;
+			}
+			else if (version >= 5500)
+			{
+				// MW-2012-03-04: [[ StackFile5500 ]] If the version is 5.5 or above, then the
+				//   stack title will be UTF-8 already.
+				if ((stat = IO_read_stringref_legacy_utf8(title, stream)) != IO_NORMAL)
 					return stat;
 			}
 			else
 			{
-				// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-				//   stored as a UTF-8 string.
-				char *t_native_title;
-
-				if ((stat = IO_read_string(t_native_title, stream)) != IO_NORMAL)
+				// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv < 5500, then legacy string
+				if ((stat = IO_read_stringref_legacy(title, stream, false)) != IO_NORMAL)
 					return stat;
-
-				MCExecPoint ep;
-				ep . setsvalue(t_native_title);
-				ep . nativetoutf8();
-				title = ep . getsvalue() . clone();
-
-				delete t_native_title;
 			}
 		}
 		if (flags & F_DECORATIONS)
@@ -214,7 +212,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 	}
 	else
 		flags &= ~(F_TITLE | F_DECORATIONS);
-	if (strncmp(version, "2.3", 3) < 0)
+	if (version < 2300)
 		flags &= ~(F_SHOW_BORDER | F_3D | F_OPAQUE | F_FORMAT_FOR_PRINTING);
 	if (flags & F_RESIZABLE)
 	{
@@ -229,11 +227,14 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		if (maxwidth == 1280 && maxheight == 1024)
 			maxwidth = maxheight = MAXUINT2;
 	}
-	if ((stat = IO_read_string(externalfiles, stream)) != IO_NORMAL)
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_read_stringref_new(externalfiles, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "1.3", 3) > 0)
+	
+	if (version > 1300)
 	{
-		if ((stat = MCLogicalFontTableLoad(stream)) != IO_NORMAL)
+		if ((stat = MCLogicalFontTableLoad(stream, version)) != IO_NORMAL)
 			return stat;
 
 		// MW-2012-02-17: [[ LogFonts ]] Now we have a fonttable, we can resolve the
@@ -246,41 +247,72 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			loadfontattrs(s_last_font_index);
 		}
 	}
-
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_STACK_FILES)
 	{
-		char *sf;
-		if ((stat = IO_read_string(sf, stream)) != IO_NORMAL)
+		MCAutoStringRef sf;
+		if ((stat = IO_read_stringref_new(&sf, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
-		setstackfiles(sf);
-		delete sf;
+		setstackfiles(*sf);
+		
 	}
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_MENU_BAR)
 	{
 		MCNameRef t_menubar;
-		if ((stat = IO_read_nameref(t_menubar, stream)) != IO_NORMAL)
+		if ((stat = IO_read_nameref_new(t_menubar, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		MCNameDelete(_menubar);
 		_menubar = t_menubar;
 	}
+	
 	if (flags & F_LINK_ATTS)
 	{
 		linkatts = new Linkatts;
 		memset(linkatts, 0, sizeof(Linkatts));
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_read_string(linkatts->colorname, stream)) != IO_NORMAL)
+		        || (stat = IO_read_stringref_new(linkatts->colorname, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_string(linkatts->hilitecolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_read_stringref_new(linkatts->hilitecolorname, stream, version >= 7000))!=IO_NORMAL)
 			return stat;
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_string(linkatts->visitedcolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_read_stringref_new(linkatts->visitedcolorname, stream, version >= 7000))!=IO_NORMAL)
 			return stat;
+		
 		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
+        
+        // for interface colors, empty name means unset whereas nil name means
+        // defer to rgb values. Therefore set values to nil if they are empty.
+        if (MCStringIsEmpty(linkatts -> colorname))
+        {
+            MCValueRelease(linkatts -> colorname);
+            linkatts -> colorname = nil;
+        }
+        
+        if (MCStringIsEmpty(linkatts -> hilitecolorname))
+        {
+            MCValueRelease(linkatts -> hilitecolorname);
+            linkatts -> hilitecolorname = nil;
+        }
+        
+        if (MCStringIsEmpty(linkatts -> visitedcolorname))
+        {
+            MCValueRelease(linkatts -> visitedcolorname);
+            linkatts -> visitedcolorname = nil;
+        }
 	}
 
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 
 	mode_load();
@@ -410,6 +442,18 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 				neweps->appendto(controls);
 			}
 			break;
+        case OT_WIDGET:
+            {
+                MCWidget *newwidget = new MCWidget;
+                newwidget->setparent(this);
+                if ((stat = newwidget->load(stream, version)) != IO_NORMAL)
+                {
+                    delete newwidget;
+                    return stat;
+                }
+                newwidget->appendto(controls);
+            }
+            break;
 		case OT_MAGNIFY:
 			{
 				MCMagnify *newmag = new MCMagnify;
@@ -511,6 +555,11 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		flags |= F_LINK_ATTS;
 	else
 		flags &= ~F_LINK_ATTS;
+	
+	if (!MCStringIsEmpty(title))
+		flags |= F_TITLE;
+	else
+		flags &= ~F_TITLE;
 
 	// MW-2013-03-28: Make sure we never save a stack with F_CANT_STANDALONE set.
 	flags &= ~F_CANT_STANDALONE;
@@ -545,9 +594,11 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (stat != IO_NORMAL)
 		return stat;
 	
-	if ((stat = IO_write_string(NULL, stream)) != IO_NORMAL)
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] These are for backwards compatibility
+	//   so legacy.
+	if ((stat = IO_write_cstring_legacy(NULL, stream, 2)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_string(NULL, stream)) != IO_NORMAL)
+	if ((stat = IO_write_cstring_legacy(NULL, stream, 2)) != IO_NORMAL)
 		return stat;
 
 //---- 2.7+:
@@ -570,30 +621,23 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	if (flags & F_TITLE)
 	{
-		// MW-2012-03-04: [[ StackFile5500 ]] If the stackfile version is 5.5, then
-		//   write out UTF-8 directly.
-		if (MCstackfileversion >= 5500)
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if (MCstackfileversion >= 7000)
 		{
-			if ((stat = IO_write_string(title, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_new(title, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+		else if (MCstackfileversion >= 5500)
+		{
+			// MW-2012-03-04: [[ StackFile5500 ]] If the stackfile version is 5.5, then
+			//   write out UTF-8 directly.
+			if ((stat = IO_write_stringref_legacy_utf8(title, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
-		{
-			// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-			//   stored as a UTF-8 string.
-			MCExecPoint ep;
-			char *t_native_title;
-			ep . setsvalue(title);
-			ep . utf8tonative();
-			t_native_title = ep . getsvalue() . clone();
-
-			if ((stat = IO_write_string(t_native_title, stream)) != IO_NORMAL)
-			{
-				delete t_native_title;
+        {
+            if ((stat = IO_write_stringref_legacy(title, stream, false)) != IO_NORMAL)
 				return stat;
-			}
-
-			delete t_native_title;
 		}
 	}
 	if (flags & F_DECORATIONS)
@@ -614,37 +658,50 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = IO_write_uint2(maxheight, stream)) != IO_NORMAL)
 			return stat;
-	}
-	if ((stat = IO_write_string(externalfiles, stream)) != IO_NORMAL)
+    }
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+    if ((stat = IO_write_stringref_new(externalfiles, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.
-	if ((stat = MCLogicalFontTableSave(stream)) != IO_NORMAL)
+	if ((stat = MCLogicalFontTableSave(stream, MCstackfileversion)) != IO_NORMAL)
 		return stat;
-
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_STACK_FILES)
 	{
-		MCExecPoint ep;
-		getstackfiles(ep);
-		char *sf = ep.getsvalue().clone();
-		if ((stat = IO_write_string(sf, stream)) != IO_NORMAL)
+		MCAutoStringRef t_sf;
+		if (!getstackfiles(&t_sf))
+			return IO_ERROR;
+		if ((stat = IO_write_stringref_new(*t_sf, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
-		delete sf;
 	}
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_MENU_BAR)
-		if ((stat = IO_write_nameref(_menubar, stream)) != IO_NORMAL)
+		if ((stat = IO_write_nameref_new(_menubar, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
+	
 	if (flags & F_LINK_ATTS)
 	{
-		if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_write_string(linkatts->colorname, stream)) != IO_NORMAL)
+        // linkatts color names may be nil.
+        
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
+            || (stat = IO_write_stringref_new(linkatts->colorname != nil ? linkatts->colorname : kMCEmptyString, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_string(linkatts->hilitecolorname, stream))!=IO_NORMAL)
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
+                || (stat=IO_write_stringref_new(linkatts->hilitecolorname != nil ? linkatts->hilitecolorname : kMCEmptyString, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_string(linkatts->visitedcolorname, stream))!=IO_NORMAL)
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
+                || (stat=IO_write_stringref_new(linkatts->visitedcolorname != nil ? linkatts->visitedcolorname : kMCEmptyString, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
 			return stat;
+		
 		if ((stat = IO_write_uint1(linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
 	}
@@ -709,11 +766,11 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-Exec_stat MCStack::resubstack(char *data)
+// I don't think this gets called from anywhere...
+Exec_stat MCStack::resubstack(MCStringRef p_data)
 {
 	Boolean iserror = False;
-	char *errorptr = NULL;
-	char *eptr = data;
+	MCAutoStringRef t_error;
 	
 	// MW-2012-09-07: [[ Bug 10372 ]] Record the old stack of substackedness so we
 	//   can work out later whether we need to extraopen/close.
@@ -722,20 +779,28 @@ Exec_stat MCStack::resubstack(char *data)
 	
 	MCStack *oldsubs = substacks;
 	substacks = NULL;
-	while ((eptr = strtok(eptr, "\n")) != NULL)
+	
+	MCAutoArrayRef t_array;
+	/* UNCHECKED */ MCStringSplit(p_data, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_array);
+	uindex_t t_count;
+	t_count = MCArrayGetCount(*t_array);
+	for (uindex_t i = 0; i < t_count; i++)
 	{
+		MCValueRef t_val;
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i + 1, t_val);
+		
 		// If tsub is one of the existing substacks of the stack, it is set to
 		// non-null, as it needs to be removed.
 		MCStack *tsub = oldsubs;
 		if (tsub != NULL)
 		{
-			// Lookup 'eptr' as a name, if it doesn't exist it can't exist as a substack
-			// name.
-			MCNameRef t_eptr_name;
-			t_eptr_name = MCNameLookupWithCString(eptr, kMCCompareCaseless);
-
-			if (t_eptr_name != nil)
-				while(tsub -> hasname(t_eptr_name))
+			// If t_val doesn't exist as a name, it can't exist as a substack name.
+			// t_val is always a stringref (fetched from an MCSplitString array)
+			MCNameRef t_name;
+			t_name = MCNameLookup((MCStringRef)t_val);
+		
+			if (t_name != nil)
+				while (tsub -> hasname(t_name))
 				{
 					tsub = (MCStack *)tsub->nptr;
 					if (tsub == oldsubs)
@@ -745,26 +810,28 @@ Exec_stat MCStack::resubstack(char *data)
 					}
 				}
 		}
-
+		
 		// OK-2008-04-10 : Added parameters to mainstackChanged message
 		Boolean t_was_mainstack;
 		if (tsub == NULL)
 		{
-			MCStack *toclone = MCdispatcher -> findstackname(eptr);
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate((MCStringRef)t_val, &t_name);
+			MCStack *toclone = MCdispatcher -> findstackname(*t_name);
 			t_was_mainstack = MCdispatcher -> ismainstack(toclone);	
-
+			
 			if (toclone != NULL)
-				/* UNCHECKED */ MCStackSecurityCopyStack(toclone, tsub);
+			/* UNCHECKED */ MCStackSecurityCopyStack(toclone, tsub);
 		}
 		else
 		{
 			// If we are here then it means tsub was found in the current list of
 			// substacks of this stack.
 			t_was_mainstack = False;
-
+			
 			tsub -> remove(oldsubs);
 		}
-
+		
 		if (tsub != NULL)
 		{
 			MCObject *t_old_mainstack;
@@ -772,18 +839,18 @@ Exec_stat MCStack::resubstack(char *data)
 				t_old_mainstack = tsub;
 			else
 				t_old_mainstack = tsub -> getparent();
-
+			
 			tsub->appendto(substacks);
 			tsub->parent = this;
-			tsub->message_with_args(MCM_main_stack_changed, t_old_mainstack -> getname(), getname());
+			tsub->message_with_valueref_args(MCM_main_stack_changed, t_old_mainstack -> getname(), getname());
 		}
 		else
 		{
 			iserror = True;
-			errorptr = eptr;
+			t_error = ((MCStringRef)t_val);
 		}
-		eptr = NULL;
 	}
+	
 	while (oldsubs != NULL)
 	{
 		MCStack *dsub = (MCStack *)oldsubs->remove(oldsubs);
@@ -803,7 +870,7 @@ Exec_stat MCStack::resubstack(char *data)
 
 	if (iserror)
 	{
-		MCeerror->add(EE_STACK_BADSUBSTACK, 0, 0, errorptr);
+		MCeerror->add(EE_STACK_BADSUBSTACK, 0, 0, *t_error);
 		return ES_ERROR;
 	}
 
@@ -871,7 +938,7 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 		t_object = findobjectbyid(inid);
 		if (t_object != nil && (type == CT_LAYER && t_object -> gettype() > CT_CARD || t_object -> gettype() == type))
 			return (MCControl *)t_object;
-		
+
 		MCControl *tobj = controls;
 		do
 		{
@@ -896,7 +963,7 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 				cacheobjectbyid(foundobj);
 				return foundobj;
 			}
-			
+
 			tobj = (MCControl *)tobj->next();
 		}
 		while (tobj != controls);
@@ -920,14 +987,14 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 	return NULL;
 }
 
-MCControl *MCStack::getcontrolname(Chunk_term type, const MCString &s)
+MCControl *MCStack::getcontrolname(Chunk_term type, MCNameRef p_name)
 {
 	if (controls == NULL)
 		return NULL;
 	MCControl *tobj = controls;
 	do
 	{
-		MCControl *foundobj = tobj->findname(type, s);
+		MCControl *foundobj = tobj->findname(type, p_name);
 		if (foundobj != NULL)
 			return foundobj;
 		tobj = (MCControl *)tobj->next();
@@ -956,7 +1023,7 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
 {
 	MCObject *objs;
 	if (type == CT_AUDIO_CLIP)
@@ -964,16 +1031,35 @@ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
 	else
 		objs = vclips;
 	if (objs == NULL)
-		return NULL;
+		return false;
 	MCObject *tobj = objs;
+
+    // AL-2014-05-27: [[ Bug 12530 ]] Expression for audio or video clip can be numerical
+    uint2 t_num;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        --t_num;
+        while (t_num--)
+        {
+            tobj = tobj->next();
+            if (tobj == objs)
+                return false;
+        }
+        r_object = tobj;
+        return true;
+    }
+    
 	do
 	{
-		if (MCU_matchname(s, type, tobj->getname()))
-			return tobj;
+		if (MCU_matchname(p_name, type, tobj->getname()))
+        {
+			r_object = tobj;
+            return true;
+        }
 		tobj = (MCControl *)tobj->next();
 	}
 	while (tobj != objs);
-	return NULL;
+	return false;
 }
 
 Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
@@ -1007,7 +1093,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 	// MW-2011-09-14: [[ Redraw ]] We lock the screen between before closeCard and until
 	//   after preOpenCard.
 	MCRedrawLockScreen();
-
+    
 	MCCard *oldcard = curcard;
 	Boolean oldlock = MClockmessages;
 	if (card != oldcard)
@@ -1052,9 +1138,11 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		//   again - in particular, players will keep playing.
 		curcard->open();
 		
+        
 		// MW-2011-11-23: [[ Bug ]] Close the old card here to ensure no players
 		//   linger longer than they should.
 		oldcard -> close();
+        
 
 		// MW-2011-09-12: [[ MacScroll ]] Use 'getnextscroll()' to see if anything needs
 		//   changing on that score.
@@ -1067,12 +1155,36 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		updatecardsize();
 
 		// MW-2008-10-31: [[ ParentScripts ]] Send preOpenControl appropriately
-		if (curcard -> openbackgrounds(true, oldcard) == ES_ERROR
-		        || curcard != card || !opened
-		        || curcard->message(MCM_preopen_card) == ES_ERROR
-		        || curcard != card || !opened
-				|| curcard -> opencontrols(true) == ES_ERROR
-				|| curcard != card || !opened)
+        bool t_error;
+        t_error = false;
+        
+        if (!t_error)
+            t_error = curcard -> openbackgrounds(true, oldcard) == ES_ERROR || curcard != card || !opened;
+
+        if (!t_error)
+        {
+#ifdef FEATURE_PLATFORM_PLAYER
+            // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
+            for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+                if (t_player -> getstack() == curcard -> getstack())
+                    t_player -> detachplayer();
+#endif
+                
+            t_error = curcard->message(MCM_preopen_card) == ES_ERROR || curcard != card || !opened;
+        }
+        
+        if (!t_error)
+        {
+            t_error = curcard -> opencontrols(true) == ES_ERROR || curcard != card || !opened;
+#ifdef FEATURE_PLATFORM_PLAYER
+            // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
+             for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+                 if (t_player -> getstack() == curcard -> getstack())
+                    t_player -> attachplayer();
+#endif
+        }
+        
+        if (t_error)
 		{
 			// MW-2011-08-18: [[ Redraw ]] Use global screen lock
 			MCRedrawUnlockScreen();
@@ -1086,6 +1198,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 				return ES_ERROR;
 			}
 		}
+        
 		MClockmessages = True;
 
 		if (mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED)
@@ -1119,7 +1232,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		if (card != oldcard)
 		{
 			MClockmessages = oldlock;
-
+ 
 			// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 			if (curcard -> openbackgrounds(false, oldcard) == ES_ERROR
 			        || curcard != card
@@ -1133,7 +1246,8 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 				else
 					return ES_ERROR;
 			}
-			if (wasfocused)
+ 
+            if (wasfocused)
 				curcard->kfocus();
 			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
 				curcard->message(MCM_mouse_enter);
@@ -1160,27 +1274,28 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 			else
 				return ES_ERROR;
 		}
-		
+   		
 		if (wasfocused)
 			kfocus();
 		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
 			curcard->message(MCM_mouse_enter);
 	}
+    
 	return ES_NORMAL;
 }
 
 
-MCStack *MCStack::findstackfile(const MCString &s)
+MCStack *MCStack::findstackfile(MCNameRef p_name)
 {
-	char *fname;
-	if ((fname = getstackfile(s)) != NULL)
+	MCAutoStringRef t_fname;
+	getstackfile(MCNameGetString(p_name), &t_fname);
+	if (!MCStringIsEmpty(*t_fname))
 	{
 		MCU_watchcursor(getstack(), False);
 		MCStack *tstk;
-		if (MCdispatcher->loadfile(fname, tstk) == IO_NORMAL)
+		if (MCdispatcher->loadfile(*t_fname, tstk) == IO_NORMAL)
 		{
-			delete fname;
-			MCStack *stackptr = tstk->findsubstackname(s);
+			MCStack *stackptr = tstk->findsubstackname(p_name);
 			
 			// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 			//   return back to the caller.
@@ -1191,7 +1306,6 @@ MCStack *MCStack::findstackfile(const MCString &s)
 			
 			return stackptr;
 		}
-		delete fname;
 		
 		// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 		//   return back to the caller.
@@ -1200,28 +1314,35 @@ MCStack *MCStack::findstackfile(const MCString &s)
 	return NULL;
 }
 
-MCStack *MCStack::findstackname(const MCString &s)
+MCStack *MCStack::findstackname(MCNameRef p_name)
 {
 	MCStack *foundstk;
-	if ((foundstk = findsubstackname(s)) != NULL)
+	if ((foundstk = findsubstackname(p_name)) != NULL)
 		return foundstk;
 	else
-		return MCdispatcher->findstackname(s);
+		return MCdispatcher->findstackname(p_name);
 }
 
-MCStack *MCStack::findsubstackname(const MCString &s)
+MCStack *MCStack::findstackname_string(MCStringRef p_string)
 {
-	if (findname(CT_STACK, s) != NULL)
-		return this;
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreate(p_string, &t_name);
+	return findstackname(*t_name);
+}
 
+MCStack *MCStack::findsubstackname(MCNameRef p_name)
+{
+	if (findname(CT_STACK, p_name) != nil)
+		return this;
+    
 	MCStack *sptr = this;
 	uint2 num = 0;
-	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(s, num))
+	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(MCNameGetString(p_name), num))
 		sptr = parent->getstack();
 	if (sptr->substacks != NULL)
 	{
 		MCStack *tptr = sptr->substacks;
-		if (MCU_stoui2(s, num))
+		if (MCU_stoui2(MCNameGetString(p_name), num))
 		{
 			while (--num)
 			{
@@ -1234,11 +1355,11 @@ MCStack *MCStack::findsubstackname(const MCString &s)
 		else
 			do
 			{
-				if (tptr->findname(CT_STACK, s) != NULL)
+				if (tptr->findname(CT_STACK, p_name) != NULL)
 					return tptr;
 				tptr = (MCStack *)tptr->next();
 			}
-			while (tptr != sptr->substacks);
+        while (tptr != sptr->substacks);
 	}
 	return NULL;
 }
@@ -1278,18 +1399,18 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 	return NULL;
 }
 
-MCStack *MCStack::findstackwindowid(uint32_t p_win_id)
+MCStack *MCStack::findstackwindowid(uintptr_t p_win_id)
 {
 	if (p_win_id == 0)
 		return NULL;
-	if (MCscreen->dtouint4((Drawable)window) == p_win_id)
+	if (MCscreen->dtouint((Drawable)window) == p_win_id)
 		return this;
 	if (substacks != NULL)
 	{
 		MCStack *tptr = substacks;
 		do
 		{
-			if (MCscreen->dtouint4((Drawable)tptr->window) == p_win_id)
+			if (MCscreen->dtouint((Drawable)tptr->window) == p_win_id)
 				return tptr;
 			tptr = (MCStack *)tptr->next();
 		}
@@ -1443,16 +1564,18 @@ MCObject *MCStack::getobjid(Chunk_term type, uint4 inid)
 		return MCdispatcher->getobjid(type, inid);
 }
 
-MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
+MCObject *MCStack::getsubstackobjname(Chunk_term type, MCNameRef p_name)
 {
 	MCStack *sptr = this;
 	MCObject *optr = NULL;
 	if (!MCdispatcher->ismainstack(this))
 		sptr = parent->getstack();
 	if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-		optr = sptr->getAVname(type, s);
+	{
+		/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+	}
 	else
-		optr = sptr->getcontrolname(type, s);
+		optr = sptr->getcontrolname(type, p_name);
 	if (optr != NULL)
 		return optr;
 	if (sptr->substacks != NULL)
@@ -1461,9 +1584,11 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
 		do
 		{
 			if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-				optr = tptr->getAVname(type, s);
+			{
+				/* UNCHECKED */ sptr->getAVname(type, p_name, optr);
+			}
 			else
-				optr = tptr->getcontrolname(type, s);
+				optr = tptr->getcontrolname(type, p_name);
 			if (optr != NULL)
 				return optr;
 			tptr = (MCStack *)tptr->next();
@@ -1473,28 +1598,31 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
 	return NULL;
 }
 
-MCObject *MCStack::getobjname(Chunk_term type, const MCString &s)
+
+MCObject *MCStack::getobjname(Chunk_term type, MCNameRef p_name)
 {
 	MCObject *optr = NULL;
 	uint4 iid;
-	if (MCU_stoui4(s, iid))
+	if (MCU_stoui4(MCNameGetString(p_name), iid))
 	{
 		optr = getobjid(type, iid);
 		if (optr != NULL)
 			return optr;
 	}
 	if (type == CT_AUDIO_CLIP || type == CT_VIDEO_CLIP)
-		optr = getAVname(type, s);
+	{
+		/* UNCHECKED */ getAVname(type, p_name, optr);
+	}
 	else
 	{
-		optr = getcontrolname(type, s);
+		optr = getcontrolname(type, p_name);
 	}
 	if (optr != NULL)
 		return optr;
-	if ((optr = getsubstackobjname(type, s)) != NULL)
+	if ((optr = getsubstackobjname(type, p_name)) != NULL)
 		return optr;
 	else
-		return MCdispatcher->getobjname(type, s);
+		return MCdispatcher->getobjname(type, p_name);
 }
 
 
@@ -1510,39 +1638,56 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 	controls = nc;
 	curcard = cards = MCtemplatecard->clone(False, False);
 	curcard->allowmessages(False);
-	curcard->setsprop(P_SHOW_BORDER, MCtruemcstring);
-	setsprop(P_COLORS, MCnullmcstring);
+	curcard->setsprop(P_SHOW_BORDER, MCSTR(MCtruestring));
+	setsprop(P_COLORS, kMCEmptyString);
 	if (nc->gettype() == CT_FIELD && IsMacLFAM() && MCaqua)
 	{
-		curcard->setsprop(P_BORDER_WIDTH, "0");
+		curcard->setsprop(P_BORDER_WIDTH, MCSTR("0"));
 		uint2 i;
 		MCObject *tparent = getparent();
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
-			setsprop(P_BACK_COLOR,  "255,255,255");
+			setsprop(P_BACK_COLOR,  MCSTR("255,255,255"));
 	}
 	else
 		if (nc->gettype() == CT_FIELD && MClook != LF_MOTIF
 		        || IsMacLF() || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 		{
-			curcard->setsprop(P_BORDER_WIDTH, "1");
+			curcard->setsprop(P_BORDER_WIDTH, MCSTR("1"));
 			if (IsMacLF() || nc->gettype() == CT_FIELD || MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
-				curcard->setsprop(P_3D, MCfalsemcstring);
+				curcard->setsprop(P_3D, MCSTR(MCfalsestring));
 		}
-	char colorbuf[16];
+	
 	MCWidgetInfo wmenu;
 	wmenu.type = WTHEME_TYPE_MENU;
 	if ( nc->gettype() != CT_FIELD && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN))
 	{
 		uint2 i;
 		MCObject *tparent = getparent();
+
 		if  (!tparent->getcindex(DI_BACK, i) && !tparent->getpindex(DI_BACK,i))
-			setsprop(P_BACK_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_BACK,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_BACK, &colorbuf);
+			setsprop(P_BACK_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex(DI_BORDER, i) && !tparent->getpindex(DI_BORDER,i))
-			setsprop(P_BORDER_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_BORDER,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_BORDER, &colorbuf);
+			setsprop(P_BORDER_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex(DI_FORE, i) && !tparent->getpindex(DI_FORE,i))
-			setsprop(P_FORE_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_TEXT,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_TEXT, &colorbuf);
+			setsprop(P_FORE_COLOR, *colorbuf);
+        }
 		if  (!tparent->getcindex( DI_HILITE, i) && !tparent->getpindex( DI_HILITE,i))
-			setsprop(P_HILITE_COLOR,  MCcurtheme->getthemecolor(wmenu,WCOLOR_HILIGHT,colorbuf));
+        {
+            MCAutoStringRef colorbuf;
+            MCcurtheme->getthemecolor(wmenu, WCOLOR_HILIGHT, &colorbuf);
+			setsprop(P_HILITE_COLOR, *colorbuf);
+        }
 	}
 
 
@@ -1561,10 +1706,7 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 
 void MCStack::menuset(uint2 button, uint2 defy)
 {
-	char position[U2L];
-	sprintf(position, "%d", button);
-	MCButton *bptr = (MCButton *)curcard->getchild(CT_EXPRESSION, position,
-	                 CT_BUTTON, CT_UNDEFINED);
+	MCButton *bptr = (MCButton *)curcard->getnumberedchild(button, CT_BUTTON, CT_UNDEFINED);
 	if (bptr == NULL)
 	{
 		lasty = defy;
@@ -1574,40 +1716,51 @@ void MCStack::menuset(uint2 button, uint2 defy)
 	lasty = trect.y + (trect.height >> 1);
 }
 
-void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
+void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 {
+	// The original behaviour of this function interprets an empty string and
+	// the null string as different things: the empty string means that the
+	// function succeeded but there is no text while the null string indicates
+	// that no menu handled the key event.
+	r_string = nil;
 	// IM-2014-08-06: [[ Bug 13059 ]] menumup() can be called on pop-up menu stacks
 	// configured through menuname so remove check for m_is_menu
 	{
-		MCControl *focused = curcard->getmfocused();
-		s.set(NULL, 0);
-		if (focused == NULL)
-			focused = curcard->getkfocused();
-		MCButton *bptr = (MCButton *)focused;
-		if (focused != NULL && (focused->gettype() == CT_FIELD
-								|| focused->gettype() == CT_BUTTON
-								&& bptr->getmenumode() != WM_CASCADE))
-		{
-			bool t_has_tags = bptr->getmenuhastags();
-
-			MCExecPoint ep(this, NULL, NULL);
-			focused->getprop(0, P_LABEL, ep, True);
-			const char *t_label = ep.getsvalue().getstring();
-			uint4 t_label_len = ep.getsvalue().getlength();
-			const char *t_name = focused->getname_cstring();
-			if (t_name != NULL)
-			{
-				uint4 t_name_len = strlen(t_name);
-				//if name is set and differs from label, then use name as menu pick
-				if (t_has_tags && memcmp(t_label, t_name, MCU_max(t_label_len, t_name_len)) != 0)
-					ep.setsvalue(t_name);
-			}
-			s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
-				
-			if (focused->gettype() == CT_FIELD)
-			{
-				MCField *f = (MCField *)focused;
-				selline = f->hilitedline();
+        MCControl *focused = curcard->getmfocused();
+        if (focused == NULL)
+            focused = curcard->getkfocused();
+        MCButton *bptr = (MCButton *)focused;
+        if (focused != NULL && (focused->gettype() == CT_FIELD
+                                || focused->gettype() == CT_BUTTON
+                                && bptr->getmenumode() != WM_CASCADE))
+        {
+            bool t_has_tags = bptr->getmenuhastags();
+            
+            MCExecContext ctxt(this, nil, nil);
+            MCAutoStringRef t_label;
+            MCStringRef t_name = nil;
+            if (focused -> gettype() == CT_FIELD)
+			/* UNCHECKED */ static_cast<MCField *>(focused) -> selectedtext(&t_label);
+            else
+                focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
+            t_name = MCNameGetString(focused->getname());
+            if (!MCStringIsEmpty(t_name) && t_has_tags)
+                r_string = MCValueRetain(t_name);
+            else
+                r_string = MCValueRetain(*t_label);
+            
+            /*		{
+             // If the name exists, use it in preference to the label
+             if (t_has_tags && !MCStringIsEqualTo(*t_label, t_name, kMCStringOptionCompareExact))
+             r_string = MCValueRetain(t_name);
+             else
+             r_string = MCValueRetain(*t_label);
+             }*/
+            
+            if (focused->gettype() == CT_FIELD)
+            {
+                MCField *f = (MCField *)focused;
+                selline = f->hilitedline();
 			}
 			else
 				curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
@@ -1616,43 +1769,42 @@ void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 	curcard->mup(which, false);
 }
 
-void MCStack::menukdown(const char *string, KeySym key,
-                        MCString &s, uint2 &selline)
+
+void MCStack::menukdown(MCStringRef p_string, KeySym key, MCStringRef &r_string, uint2 &selline)
 {
+	r_string = nil;
 	// MW-2014-03-12: [[ Bug 11914 ]] Only do internal menu actions if this is an
 	//   engine menu.
 	if (m_is_menu)
 	{
-		MCControl *kfocused = curcard->getkfocused();
-		s.set(NULL,0);
-		if (kfocused != NULL)
-		{
-			MCString tlabel;
-			
-			// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
-			// with combo boxes on OS X this will be a field.
-			if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
-			{
-				const char *t_name = kfocused->getname_cstring();
-				uint4 t_namelen = strlen(t_name);
-				s.set(strclone(t_name, t_namelen), t_namelen);
-			}
-			else
-			{
-				MCExecPoint ep(this, NULL, NULL);
-				kfocused->getprop(0, P_LABEL, ep, True);
-				s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
+        MCControl *kfocused = curcard->getkfocused();
+        if (kfocused != NULL)
+        {
+            // OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting,
+            // with combo boxes on OS X this will be a field.
+            if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
+            {
+                r_string = MCValueRetain(MCNameGetString(kfocused->getname()));
+            }
+            else
+            {
+                MCAutoStringRef t_string;
+                MCExecContext ctxt(this, nil, nil);
+                kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
+                r_string = MCValueRetain(*t_string);
+                
 			}
 			curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
-		}
-		curcard->kdown(string, key);
-		curcard->kunfocus();
-	}
+        }
+        
+        curcard->kdown(p_string, key);
+        curcard->kunfocus();
+    }
 	else
-		curcard -> kdown(string, key);
+		curcard -> kdown(p_string, key);
 }
 
-void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
+void MCStack::findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled)
 {
 	if (controls != NULL)
 	{
@@ -1662,39 +1814,31 @@ void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
 		{
 			if (bptr->getaccelkey() == key && bptr->getaccelmods() == MCmodifierstate)
 			{
-				MCString tlabel;
-				bool isunicode;
 				if (t_menuhastags)
-					tlabel = bptr -> getname_oldstring(), isunicode = false;
-				else
-					bptr->getlabeltext(tlabel, isunicode);
-				tpick.set(tlabel.clone(),tlabel.getlength());
+					r_pick = MCValueRetain(MCNameGetString(bptr->getname()));
+				else 
+					r_pick = MCValueRetain(bptr->getlabeltext());
 				r_disabled = bptr->isdisabled() == True;
 				return;
 			}
 			if (bptr->getmenumode() == WM_CASCADE && bptr->getmenu() != NULL)
 			{
-				MCString taccel;
-				bptr->getmenu()->findaccel(key,taccel, r_disabled);
-				if (taccel.getlength())
+				MCStringRef t_accel = nil;
+				bptr->getmenu()->findaccel(key, t_accel, r_disabled);
+				if (!MCStringIsEmpty(t_accel))
 				{
-					MCString tlabel;
-					bool isunicode;
+					MCAutoStringRef t_label;
+					/* UNCHECKED */ MCStringCreateMutable(0, &t_label);
 					if (t_menuhastags)
-						tlabel = bptr -> getname_oldstring(), isunicode = false;
+						/* UNCHECKED */ MCStringAppend(*t_label, MCNameGetString(bptr->getname()));
 					else
-						bptr->getlabeltext(tlabel, isunicode);
-					uint4 rptrlength = taccel.getlength() + tlabel.getlength() + MCU_charsize(isunicode);
-					char *rptr = new char[rptrlength];
-					tpick.set(rptr,rptrlength);
-					if (tlabel.getlength())
-						memcpy(rptr,tlabel.getstring(),tlabel.getlength());
-					rptr+=tlabel.getlength();
+						/* UNCHECKED */ MCStringAppend(*t_label, bptr->getlabeltext());
+					
+					/* UNCHECKED */ MCStringAppendFormat(*t_label, "|%@", t_accel);
 
-					MCU_copychar('|',rptr,isunicode);
-					rptr+=MCU_charsize(isunicode);
-					memcpy(rptr,taccel.getstring(),taccel.getlength());
-					delete (char *)taccel.getstring();
+                    // SN-2014-09-11: [[ Bug 13405 ]] The string we just built should be returned.
+                    // Changed to a stringCopy, to avoid returning a mutable string.
+					MCStringCopy(*t_label, r_pick);
 					return;
 				}
 			}
@@ -1703,7 +1847,7 @@ void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)
 		}
 		while (bptr != controls);
 	}
-	tpick.set(NULL,0);
+	r_pick = MCValueRetain(kMCEmptyString);
 }
 
 void MCStack::raise()
@@ -1749,73 +1893,52 @@ void MCStack::flip(uint2 count)
 	}
 }
 
-Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
+bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
                         MCExpression *by, Boolean marked)
 {
 	if (by == NULL)
-		return ES_ERROR;
+		return false;
 	if (editing != NULL)
 		stopedit();
+
 	MCStack *olddefault = MCdefaultstackptr;
 	MCdefaultstackptr = this;
 	MCCard *cptr = curcard;
-	MCSortnode *items = NULL;
+	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	MCerrorlock++;
+    
+    extern void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by);
+    extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
+    
 	do
 	{
-		MCU_realloc((char **)&items, nitems, nitems + 1, sizeof(MCSortnode));
+		items.Extend(nitems + 1);
 		items[nitems].data = (void *)curcard;
-		switch (form)
-		{
-		case ST_DATETIME:
-			if (marked && !curcard->getmark()
-			        || by->eval(ep) != ES_NORMAL
-			        || !MCD_convert(ep, CF_UNDEFINED, CF_UNDEFINED,
-			                        CF_SECONDS, CF_UNDEFINED)
-			        || !MCU_stor8(ep.getsvalue(), items[nitems].nvalue))
-				items[nitems].nvalue = -MAXREAL8;
-			break;
-		case ST_NUMERIC:
-			if ((!marked || curcard->getmark())
-			        && by->eval(ep) == ES_NORMAL && ep.ton() == ES_NORMAL)
-				items[nitems].nvalue = ep.getnvalue();
-
-			else
-				items[nitems].nvalue = -MAXREAL8;
-			break;
-		case ST_INTERNATIONAL:
-		case ST_TEXT:
-			if ((!marked || curcard->getmark()) && by->eval(ep) == ES_NORMAL)
-			{
-				if (ep.getcasesensitive())
-					items[nitems].svalue = ep.getsvalue().clone();
-				else
-				{
-					items[nitems].svalue = new char[ep.getsvalue().getlength() + 1];
-					MCU_lower(items[nitems].svalue, ep.getsvalue());
-					items[nitems].svalue[ep.getsvalue().getlength()] = '\0';
-				}
-			}
-			else
-				items[nitems].svalue = MCU_empty();
-			break;
-		default:
-			break;
-		}
-		nitems++;
+        
+        if (!marked || curcard->getmark())
+            MCStringsSortAddItem(ctxt, items . Ptr(), nitems, form, nil, by);
+        else
+        {
+            if (form == ST_DATETIME || form == ST_NUMERIC)
+                /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
+            else if (form == ST_BINARY)
+                items[nitems] . dvalue = MCValueRetain(kMCEmptyData);
+            else
+                items[nitems] . svalue = MCValueRetain(kMCEmptyString);
+            // AL-2014-05-20: [[ Bug 12457 ]] Increment items when 'default' item is added
+            nitems++;
+        }
 		curcard = (MCCard *)curcard->next();
 	}
 	while (curcard != cptr);
 	MCerrorlock--;
 	if (nitems > 1)
-		MCU_sort(items, nitems, dir, form);
+		MCStringsSort(items . Ptr(), nitems, dir, form, ctxt . GetStringComparisonType());
 	MCCard *newcards = NULL;
 	uint4 i;
 	for (i = 0 ; i < nitems ; i++)
 	{
-		if (form == ST_INTERNATIONAL || form == ST_TEXT)
-			delete items[i].svalue;
 		const MCCard *tcptr = (const MCCard *)items[i].data;
 		cptr = (MCCard *)tcptr;
 		cptr->remove(cards);
@@ -1824,56 +1947,73 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 	cards = newcards;
 	setcard(cards, True, False);
 	dirtywindowname();
-	delete items;
 	MCdefaultstackptr = olddefault;
-	return ES_NORMAL;
+    
+    // SN-2014-03-21: [[ Bug 11953 ]] sort card of stack crashes
+    // This function must discard a bad target expression error, since a -MAXREAL8/empty string  is provided in that case
+    ctxt . IgnoreLastError();
+	return true;
 }
 
-void MCStack::breakstring(const MCString &source, MCString **dest,
-                          uint2 &nstrings, Find_mode fmode)
+void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uindex_t &nstrings, Find_mode fmode)
 {
-	MCString *tdest = NULL;
-	nstrings = 0;
+    MCAutoArray<MCStringRef> t_strings;
+    nstrings = 0;
 	switch (fmode)
 	{
 	case FM_NORMAL:
 	case FM_CHARACTERS:
 	case FM_WORD:
-		{
-			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters
-			const char *sptr = source.getstring();
-			uint4 l = source.getlength();
-			MCU_skip_spaces(sptr, l);
-			const char *startptr = sptr;
-			while(l != 0)
+        {
+			// MW-2007-07-05: [[ Bug 110 ]] - Break string only breaks at spaces, rather than space charaters 
+			uint4 l;
+            l = 0;
+            uint4 remaining_chars;
+            remaining_chars = MCStringGetLength(source);
+			MCU_skip_spaces(source, l);
+            remaining_chars -= l;
+            uindex_t t_word_start;
+            t_word_start = l;
+            
+			while(remaining_chars > 0)
 			{
-				while(l != 0 && !isspace(*sptr))
-					sptr += 1, l -= 1;
-
-				MCU_realloc((char **)&tdest, nstrings, nstrings + 1, sizeof(MCString));
-				tdest[nstrings].set(startptr, sptr - startptr);
-				nstrings++;
-				MCU_skip_spaces(sptr, l);
-				startptr = sptr;
+				while(remaining_chars > 0 && !MCUnicodeIsWhitespace(MCStringGetCharAtIndex(source, l)))
+                {
+					l++;
+                    remaining_chars--;
+                }
+                
+                MCStringRef t_word;
+                uindex_t t_word_length;
+                t_word_length = l - t_word_start;
+                nstrings++;
+                /* UNCHECKED */ MCStringCopySubstring(source, MCRangeMake(t_word_start, t_word_length), t_word);
+				t_strings . Push(t_word);
+        
+                uindex_t t_space_start, t_spaces_length;
+                t_space_start = l;
+				MCU_skip_spaces(source, l);
+                t_word_start = l;
+                t_spaces_length = t_word_start - t_space_start;
+                remaining_chars -= t_spaces_length;
 			}
 		}
 		break;
 	case FM_STRING:
 	case FM_WHOLE:
 	default:
+        nstrings = 0;
 		break;
-	}
-	if (nstrings == 0)
-	{
-		tdest = new MCString;
-		tdest[0] = source;
-		nstrings = 1;
-	}
-	*dest = tdest;
+    }
+
+    if (nstrings == 0)
+        t_strings . Push(MCValueRetain(source));
+
+    t_strings . Take(dest, nstrings);
 }
 
-Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
-                         const MCString *strings, uint2 nstrings,
+Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
+                         MCStringRef *strings, uint2 nstrings,
                          MCChunk *field, Boolean firstcard)
 {
 	Boolean firstword = True;
@@ -1883,14 +2023,13 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 		MCObject *optr;
 		uint4 parid;
 		MCerrorlock++;
-		MCExecPoint ep1(ep);
-		if (field->getobj(ep1, optr, parid, True) == ES_NORMAL)
+		if (field->getobj(ctxt, optr, parid, True))
 		{
 			if (optr->gettype() == CT_FIELD)
 			{
 				MCField *searchfield = (MCField *)optr;
 				while (i < nstrings)
-					if (!searchfield->find(ep, curcard->getid(), fmode,
+					if (!searchfield->find(ctxt, curcard->getid(), fmode,
 					                       strings[i], firstword))
 					{
 						MCerrorlock--;
@@ -1911,7 +2050,7 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	else
 	{
 		while (i < nstrings)
-			if (!curcard->find(ep, fmode, strings[i], firstcard, firstword))
+			if (!curcard->find(ctxt, fmode, strings[i], firstcard, firstword))
 				return False;
 			else
 			{
@@ -1922,20 +2061,23 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 	}
 }
 
-void MCStack::find(MCExecPoint &ep, Find_mode fmode,
-                   const MCString &tofind, MCChunk *field)
+void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
+                   MCStringRef tofind, MCChunk *field)
 {
-	MCString *strings = NULL;
-	uint2 nstrings;
-	breakstring(tofind, &strings, nstrings, fmode);
+	MCStringRef *strings = NULL;
+	uindex_t nstrings;
+	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	Boolean firstcard = MCfoundfield != NULL;
 	MCField *oldfound = MCfoundfield;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, firstcard))
+		if (findone(ctxt, fmode, strings, nstrings, field, firstcard))
 		{
-			delete strings;
+			for (uindex_t i = 0; i < nstrings; i++)
+                MCValueRelease(strings[i]);
+            delete strings;
+            
 			MCField *newfound = MCfoundfield;
 			if (curcard != ocard)
 			{
@@ -1964,22 +2106,24 @@ void MCStack::find(MCExecPoint &ep, Find_mode fmode,
 	curcard = ocard;
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
+    for (int i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	MCresult->sets(MCnotfoundstring);
 }
 
-void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
-                       const MCString &tofind, MCChunk *field, Boolean mark)
+void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
+                       MCStringRef tofind, MCChunk *field, Boolean mark)
 {
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();
-	MCString *strings = NULL;
-	uint2 nstrings;
-	breakstring(tofind, &strings, nstrings, fmode);
+	MCStringRef *strings = NULL;
+	uindex_t nstrings;
+	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	do
 	{
-		if (findone(ep, fmode, strings, nstrings, field, False))
+		if (findone(ctxt, fmode, strings, nstrings, field, False))
 		{
 			MCfoundfield->clearfound();
 			curcard->setmark(mark);
@@ -1987,11 +2131,14 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 		curcard = (MCCard *)curcard->next();
 	}
 	while (curcard != ocard);
+    for (uint4 i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();
 }
 
+#ifdef LEGACY_EXEC
 void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
 {
 	if (where == NULL)
@@ -2015,6 +2162,40 @@ void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
 			{
 				if (ep.getsvalue() == MCtruemcstring)
 					curcard->setmark(mark);
+			}
+			curcard = (MCCard *)curcard->next();
+		}
+		while (curcard != cards);
+		curcard = oldcard;
+		MCerrorlock--;
+	}
+}
+#endif
+
+void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
+{
+	if (p_where == nil)
+	{
+		MCCard *cptr = cards;
+		do
+		{
+			cptr->setmark(p_mark);
+			cptr = (MCCard *)cptr->next();
+		}
+		while (cptr != cards);
+	}
+	else
+	{
+		MCCard *oldcard = curcard;
+		curcard = cards;
+		MCerrorlock++;
+		do
+		{
+            MCAutoBooleanRef t_condition;
+            if (ctxt . EvalExprAsBooleanRef(p_where, EE_MARK_BADSTRING, &t_condition))
+			{
+                if (*t_condition == kMCTrue)
+					curcard->setmark(p_mark);
 			}
 			curcard = (MCCard *)curcard->next();
 		}

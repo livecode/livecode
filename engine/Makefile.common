@@ -12,11 +12,12 @@ CUSTOM_INCLUDES=\
 	./src \
  	$(MODE_INCLUDES)
 
-CUSTOM_DEPS= libkernel.a libcore.a libpng.a libpcre.a libjpeg.a libopenssl.a libgraphics.a libskia.a $(MODE_DEPS) 
+CUSTOM_DEPS= libkernel.a libfoundation.a libstdscript.a libpng.a libpcre.a libjpeg.a libopenssl.a libgraphics.a libskia.a libffi.a $(MODE_DEPS) 
 
-CUSTOM_LIBS=$(MODE_LIBS) kernel core z gif png pcre jpeg graphics skia openssl
-CUSTOM_STATIC_LIBS=$(MODE_STATIC_LIBS)
-CUSTOM_DYNAMIC_LIBS=dl X11 m Xext pthread $(MODE_DYNAMIC_LIBS)
+CUSTOM_LIBS=$(MODE_LIBS) kernel foundation stdscript ffi z gif png pcre jpeg graphics skia openssl
+# Removed: icuio icule iculx 
+CUSTOM_STATIC_LIBS=icudata icuuc icui18n $(MODE_STATIC_LIBS)
+CUSTOM_DYNAMIC_LIBS=dl m pthread $(MODE_DYNAMIC_LIBS)
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -Wno-parentheses \
@@ -24,7 +25,8 @@ CUSTOM_CCFLAGS=\
 	-fmessage-length=0 \
 	$(MODE_CCFLAGS)
 
-CUSTOM_LDFLAGS=-static-libgcc \
-	$(MODE_LDFLAGS) -Wl,-rpath,\$$ORIGIN
+CUSTOM_LDFLAGS=$(MODE_LDFLAGS)
+CUSTOM_LDFLAGS_LTO=$(MODE_LDFLAGS_LTO) -static-libgcc -Wl,-rpath,\$$ORIGIN
+CUSTOM_LDFLAGS_FINAL=$(MODE_LDFLAGS_FINAL) -rpath \$$ORIGIN
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/../rules/application.linux.makefile

@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 #define PATH_MAX 260
-#elif !defined(_ANDROID_MOBILE)
+#elif !defined(PATH_MAX)
 #define PATH_MAX 1024
 #endif
 
@@ -47,20 +47,42 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ENV_SEPARATOR ':'
 #endif
 
+enum MCOpenFileMode
+{
+    kMCOpenFileModeRead,
+    kMCOpenFileModeWrite,
+    kMCOpenFileModeUpdate,
+    kMCOpenFileModeAppend,
+    kMCOpenFileModeCreate,
+};
+
+enum MCFileEncodingType
+{
+    kMCFileEncodingText,
+    kMCFileEncodingNative,
+    kMCFileEncodingUTF8,
+    kMCFileEncodingUTF16,
+    kMCFileEncodingUTF16LE,
+    kMCFileEncodingUTF16BE,
+    kMCFileEncodingUTF32,
+    kMCFileEncodingUTF32LE,
+    kMCFileEncodingUTF32BE,
+    kMCFileEncodingBinary
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void IO_set_stream(IO_handle stream, char *newptr);
-extern Boolean IO_findstream(Streamnode *nodes, uint2 nitems, const char *name, uint2 &i);
-extern Boolean IO_findfile(const char *name, uint2 &i);
-extern Boolean IO_closefile(const char *name);
-extern Boolean IO_findprocess(const char *name, uint2 &i);
+extern bool IO_findfile(MCNameRef p_name, uindex_t& r_index);
+extern Boolean IO_closefile(MCNameRef name);
+extern bool IO_findprocess(MCNameRef p_name, uindex_t& r_index);
 extern void IO_cleanprocesses();
-extern Boolean IO_findsocket(const char *name, uint2 &i);
+extern bool IO_findsocket(MCNameRef p_name, uindex_t& r_index);
 extern real8 IO_cleansockets(real8 ctime);
 extern void IO_freeobject(MCObject *o);
-extern IO_stat IO_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+extern IO_stat IO_read(void *ptr, uint4 byte_size, IO_handle stream);
 extern IO_stat IO_write(const void *ptr, uint4 s, uint4 n, IO_handle stream);
-extern IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep);
+extern IO_stat IO_read_to_eof(IO_handle stream, MCDataRef& r_data);
 extern IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream);
 
 extern IO_stat IO_read_real8(real8 *dest, IO_handle stream);
@@ -88,7 +110,39 @@ extern IO_stat IO_write_uint2or4(uint4 dest, IO_handle stream);
 
 extern void IO_iso_to_mac(char *sptr, uint4 len);
 extern void IO_mac_to_iso(char *sptr, uint4 len);
+extern MCStringEncoding MCS_file_to_string_encoding(MCFileEncodingType p_encoding);
 
+extern IO_stat IO_read_mccolor(MCColor& r_color, IO_handle stream);
+extern IO_stat IO_write_mccolor(const MCColor& color, IO_handle stream);
+
+// These methods read/write a legacy string (as native).
+extern IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, IO_handle p_stream, uint8_t p_size, bool p_includes_null, bool p_translate);
+extern IO_stat IO_write_string_legacy_full(const MCString &string, IO_handle stream, uint1 size, bool p_write_null);
+extern IO_stat IO_read_cstring_legacy(char*& r_string, IO_handle stream, uint1 size);
+extern IO_stat IO_write_cstring_legacy(const char* string, IO_handle stream, uint1 size);
+
+// These methods are used by 5.5 -> 7.0 props which saved their value out in UTF-8.
+extern IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
+extern IO_stat IO_write_stringref_legacy_utf8(MCStringRef p_string, IO_handle stream, uint1 size = 2);
+
+// These methods read/write string values in the pre-7.0 format way.
+extern IO_stat IO_read_nameref_legacy(MCNameRef& r_name, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_read_stringref_legacy(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_write_nameref_legacy(MCNameRef name, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_write_stringref_legacy(MCStringRef string, IO_handle stream, bool as_unicode, uint1 size = 2);
+
+// These methods read/write string values in either the pre-7.0 format way (native)
+// or the new way depending on the 'support_unicode' option.
+extern IO_stat IO_read_nameref_new(MCNameRef& r_name, IO_handle stream, bool support_unicode, uint1 size = 2);
+extern IO_stat IO_read_stringref_new(MCStringRef& r_name, IO_handle stream, bool support_unicode, uint1 size = 2);
+extern IO_stat IO_write_nameref_new(MCNameRef name, IO_handle stream, bool support_unicode, uint1 size = 2);
+extern IO_stat IO_write_stringref_new(MCStringRef name, IO_handle stream, bool support_unicode, uint1 size = 2);
+
+// These methods read/write a valueref - they are only supported in 7.0+ formats.
+extern IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle stream);
+extern IO_stat IO_write_valueref_new(MCValueRef value, IO_handle stream);
+
+#if 0
 extern IO_stat IO_read_string(char *&r_string, uint32_t &r_length, IO_handle p_stream, uint8_t p_size, bool p_includes_null, bool p_translate);
 extern IO_stat IO_read_string(char *&string, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_read_string(char *&string, uint4 &outlen, IO_handle stream, bool isunicode, uint1 size = 2);
@@ -97,15 +151,21 @@ extern IO_stat IO_write_string(const MCString &string, IO_handle stream, uint1 s
 extern IO_stat IO_write_string(const char *string, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream, Boolean isunicode, uint1 size = 2);
 
-extern IO_stat IO_read_mccolor(MCColor& r_color, IO_handle stream);
-extern IO_stat IO_write_mccolor(const MCColor& color, IO_handle stream);
-
 extern IO_stat IO_read_nameref(MCNameRef& r_name, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_write_nameref(MCNameRef name, IO_handle stream, uint1 size = 2);
 
-// MW-2009-06-30: This method reads the given number of bytes and fails
-//   if that is not possible.
-extern IO_stat IO_read_bytes(void *ptr, uint4 size, IO_handle stream);
+// MW-2012-05-02: [[ Values ]] New methods for reading/writing value types.
+extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
+extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, uint1 size = 2);
+
+// String IO requesting explicit Unicode or native encoding
+extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, bool as_unicode, uint1 size = 2);
+
+// String IO for UTF-8 formatted strings
+extern IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
+extern IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size = 2);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,19 +178,23 @@ struct MCFakeOpenCallbacks
 };
 extern IO_handle MCS_fakeopencustom(struct MCFakeOpenCallbacks *callbacks, void *state);
 
-extern IO_handle MCS_fakeopen(const MCString &data);
+extern IO_handle MCS_fakeopen(const void *p_data, uindex_t p_size);
 extern IO_handle MCS_fakeopenwrite(void);
-extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
+///* LEGACY */ extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
+extern IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length);
 
-extern bool MCS_isfake(IO_handle stream);
-extern uint4 MCS_faketell(IO_handle stream);
-extern void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size);
+extern IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode);
+/* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
+extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean driver, uint4 offset);
+extern void MCS_close(IO_handle &stream);
+extern MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream);
 
-extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
-extern IO_stat MCS_close(IO_handle &stream);
-
-extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+///* LEGACY */ extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream);
+extern IO_stat MCS_readall(void *p_ptr, uint32_t p_max_bytes, IO_handle p_stream, uint32_t& r_bytes_read);
 extern IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream);
+extern IO_stat MCS_writeat(const void *buffer, uint32_t size, uint32_t pos, IO_handle stream);
+
 
 // MW-2008-08-15: Put the given character back at the head of the stream.
 extern IO_stat MCS_putback(char p_char, IO_handle stream);

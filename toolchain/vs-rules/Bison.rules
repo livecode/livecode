@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioToolFile
+	Name="Bison"
+	Version="8.00"
+	>
+	<Rules>
+		<CustomBuildRule
+			Name="Bison"
+			DisplayName="Bison"
+			CommandLine="bison [inputs] [OutName]"
+			Outputs="$(InputName).tab.c"
+			FileExtensions="*.y"
+			ExecutionDescription="Running bison for &quot;$(InputName)&quot;..."
+			>
+			<Properties>
+				<StringProperty
+					Name="OutName"
+					DisplayName="Output file"
+					Description="Output file"
+					Switch="-o [value]"
+				/>
+			</Properties>
+		</CustomBuildRule>
+	</Rules>
+</VisualStudioToolFile>

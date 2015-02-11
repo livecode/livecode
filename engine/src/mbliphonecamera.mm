@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -33,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIImagePickerController.h>
 
 #include "mblsyntax.h"
-
 #include "mbliphoneapp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,15 +140,32 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 	if (m_source_type == UIImagePickerControllerSourceTypeCamera &&
 		[UIImagePickerController isCameraDeviceAvailable: m_device_type])
 		[self setCameraDevice: m_device_type]; 
-	
-	[ self setDelegate: self ];
-	
+
+    [ self setDelegate: (id<UINavigationControllerDelegate, UIImagePickerControllerDelegate>)self ];
+
 	// 19/10/2010 IM - fix crash in iOS4.0
 	// UIPopoverController only available on iPad but NSClassFromString returns non-nil in iOS4 phone/pod
     // AL-2013-10-04 [[ Bug 11255 ]] Uninitialised variable can cause crash in iPhonePickPhoto
-	id t_popover = nil;
-	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
-		t_popover = NSClassFromString(@"UIPopoverController");
+    id t_popover = nil;
+    uint32_t t_orientations;
+    t_orientations = [[MCIPhoneApplication sharedApplication] allowedOrientations];
+    bool t_allowed_landscape = false;
+    bool t_allowed_portrait_upside_down = false;
+    
+    if ((t_orientations & (1 << UIInterfaceOrientationLandscapeLeft)) != 0 || (t_orientations & (1 << UIInterfaceOrientationLandscapeRight)) != 0)
+        t_allowed_landscape = true;
+    
+    if ((t_orientations & (1 << UIInterfaceOrientationPortraitUpsideDown)) != 0)
+        t_allowed_portrait_upside_down = true;
+    
+    // PM-2014-10-13: [[ Bug 13236 ]] If we are on iPad and the supported orientations contain any of LandscapeLeft, LandscapeRight, PortraitUpsideDown,
+    // then the photo-picker is displayed using the standard iOS fullscreen overlay view (as it is the case with iphone).
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad && !t_allowed_landscape && !t_allowed_portrait_upside_down && m_source_type == UIImagePickerControllerSourceTypeCamera)
+        t_popover = NSClassFromString(@"UIPopoverController");
+    
+    // PM-2014-10-17: [[ Bug 13708 ]] If we are on iPad and the source is other than camera, use a popover to display the photo-picker.
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad && m_source_type != UIImagePickerControllerSourceTypeCamera)
+        t_popover = NSClassFromString(@"UIPopoverController");
 	
 	if (t_popover != nil)
 	{
@@ -168,7 +183,8 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 			t_rect = [[t_main_controller view] frame];
 		
 		m_popover_controller = [[t_popover alloc] initWithContentViewController: self];
-		[m_popover_controller setDelegate: self];
+        [m_popover_controller setDelegate: (id<UIPopoverControllerDelegate>)self];
+
 		[m_popover_controller presentPopoverFromRect: t_rect inView: [t_main_controller view] permittedArrowDirections: UIPopoverArrowDirectionAny animated: YES];
 	}
 	else
@@ -246,6 +262,7 @@ static void map_photo_source_to_source_and_device(MCPhotoSourceType p_source, UI
 			r_source_type = UIImagePickerControllerSourceTypeCamera;
 			r_device_type = UIImagePickerControllerCameraDeviceFront;
 			break;
+        case kMCPhotoSourceTypeCamera:
 		case kMCPhotoSourceTypeRearCamera:
 			r_source_type = UIImagePickerControllerSourceTypeCamera;
 			r_device_type = UIImagePickerControllerCameraDeviceRear;
@@ -272,7 +289,7 @@ bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source)
 	return true;
 }
 
-bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size)
+bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size, MCStringRef& r_result)
 {
 	UIImagePickerControllerSourceType t_source_type;
 	UIImagePickerControllerCameraDevice t_device_type;
@@ -290,6 +307,7 @@ bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32
 	{
 		r_image_data = nil;
 		r_image_data_size = 0;
+        MCStringCreateWithCString("cancel", r_result);
 	}
 	
 	[t_ns_image_data release];
@@ -297,7 +315,7 @@ bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32
 	return true;
 }
 
-MCCameraFeaturesType MCSystemGetCameraFeatures(MCCameraSourceType p_source)
+MCCameraFeaturesType MCSystemGetSpecificCameraFeatures(MCCameraSourceType p_source)
 {
 	UIImagePickerControllerCameraDevice t_device_type;
 	if (p_source == kMCCameraSourceTypeRear)
@@ -322,6 +340,21 @@ MCCameraFeaturesType MCSystemGetCameraFeatures(MCCameraSourceType p_source)
 		}
 	
 	return t_features;
+}
+
+MCCamerasFeaturesType MCSystemGetAllCameraFeatures()
+{
+    MCCameraFeaturesType t_front_features;
+    MCCameraFeaturesType t_rear_features;
+    
+    t_front_features = MCSystemGetSpecificCameraFeatures(kMCCameraSourceTypeFront);
+    t_rear_features = MCSystemGetSpecificCameraFeatures(kMCCameraSourceTypeRear);
+    
+    MCCamerasFeaturesType t_features;
+    t_features = 0;
+    
+    t_features |= t_front_features;
+    t_features |= (t_rear_features << kMCCameraFeatureRearShift);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

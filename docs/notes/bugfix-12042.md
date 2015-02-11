@@ -1,0 +1,1 @@
+# New chunk types (paragraph, trueWord, sentence) don't work with field property setting/getting

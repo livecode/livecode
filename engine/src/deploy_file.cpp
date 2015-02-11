@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 
 #include "capsule.h"
+
+#include "mcio.h"
 
 #ifdef _WINDOWS_DESKTOP
 #include <io.h>
@@ -116,53 +118,37 @@ void MCDeployByteSwapRecord(bool p_to_network, const char *f, void *p, uint32_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCDeployFileOpen(const char *p_path, const char *p_mode, MCDeployFileRef& r_file)
+bool MCDeployFileOpen(MCStringRef p_path, intenum_t p_mode, MCDeployFileRef& r_file)
 {
 	bool t_success;
 	t_success = true;
 	
-	if (t_success)
-		if (p_path == nil)
-			t_success = false;
+	if (MCStringIsEmpty(p_path))
+		return false;
+    
+    IO_handle t_handle ;
+    if (p_mode == kMCOpenFileModeCreate)
+        t_handle = MCS_deploy_open(p_path, p_mode);
+    else
+        t_handle = MCS_open(p_path, p_mode, false, false, 0);
 	
-	// MW-2009-11-08: [[ Bug 8416 ]] Deploy not working when files in locations with
-	//   accents in the path - this is due to (on OS X) not converting to UTF8.
-	char *t_path;
-	t_path = nil;
-#if defined(_MACOSX)
-	if (t_success)
-		t_success = MCCStringFromNative(p_path, t_path);
-#else
-	if (t_success)
-		t_success = MCCStringClone(p_path, t_path);
-#endif
-	
-	FILE *t_file;
-	t_file = nil;
-	if (t_success)
-	{
-		t_file = fopen(t_path, p_mode);
-		if (t_file == nil)
-			t_success = false;
-	}
+	t_success = (t_handle != nil);
 	
 	if (t_success)
-		r_file = t_file;
-	
-	MCCStringFree(t_path);
+		r_file = t_handle;
 	
 	return t_success;
 }
 
 void MCDeployFileClose(MCDeployFileRef p_file)
 {
-	if (p_file != NULL)
-		fclose(p_file);
+	if (p_file != nil)
+		MCS_close(p_file);
 }
 
 bool MCDeployFileRead(MCDeployFileRef p_file, void *p_buffer, uint32_t p_buffer_size)
 {
-	if (fread(p_buffer, p_buffer_size, 1, p_file) != 1)
+	if (MCS_readfixed(p_buffer, p_buffer_size, p_file) != IO_NORMAL)
 		return false;
 	
 	return true;
@@ -170,20 +156,20 @@ bool MCDeployFileRead(MCDeployFileRef p_file, void *p_buffer, uint32_t p_buffer_
 
 bool MCDeployFileReadAt(MCDeployFileRef p_file, void *p_buffer, uint32_t p_buffer_size, uint32_t p_at)
 {
-	if (fseek(p_file, p_at, SEEK_SET) != 0)
+	if (MCS_seek_set(p_file, p_at) != IO_NORMAL)
 		return MCDeployThrow(kMCDeployErrorBadRead);
 	
 	// MW-2012-10-12: [[ Bug ]] If buffer size is 0 then don't attempt to read,
 	//   (as there is nothing to read!).
-	if (p_buffer_size != 0 && fread(p_buffer, p_buffer_size, 1, p_file) != 1)
+	if (p_buffer_size != 0 && MCS_readfixed(p_buffer, p_buffer_size, p_file) != IO_NORMAL)
 		return MCDeployThrow(kMCDeployErrorBadRead);
 	
 	return true;
 }
 
-bool MCDeployFileSeek(MCDeployFileRef p_file, long p_offset, int p_origin)
+bool MCDeployFileSeekSet(MCDeployFileRef p_file, long p_offset)
 {
-	if (fseek(p_file, p_offset, p_origin) != 0)
+	if (MCS_seek_set(p_file, p_offset) != IO_NORMAL)
 		return false;
 	
 	return true;
@@ -191,20 +177,20 @@ bool MCDeployFileSeek(MCDeployFileRef p_file, long p_offset, int p_origin)
 
 bool MCDeployFileCopy(MCDeployFileRef p_dst, uint32_t p_at, MCDeployFileRef p_src, uint32_t p_from, uint32_t p_amount)
 {
-	if (fseek(p_src, p_from, SEEK_SET) != 0)
+	if (MCS_seek_set(p_src, p_from) != IO_NORMAL)
 		return MCDeployThrow(kMCDeployErrorBadRead);
-	
-	if (fseek(p_dst, p_at, SEEK_SET) != 0)
+    
+    if (MCS_seek_set(p_dst, p_at) != IO_NORMAL)
 		return MCDeployThrow(kMCDeployErrorBadWrite);
-	
+    
 	while(p_amount > 0)
 	{
 		char t_buffer[4096];
 		uint32_t t_size;
 		t_size = MCU_min(4096U, p_amount);
-		if (fread(t_buffer, t_size, 1, p_src) != 1)
+		if (MCS_readfixed(t_buffer, t_size, p_src) != IO_NORMAL)
 			return MCDeployThrow(kMCDeployErrorBadRead);
-		if (fwrite(t_buffer, t_size, 1, p_dst) != 1)
+		if (MCS_write(t_buffer, t_size, 1, p_dst) != IO_NORMAL)
 			return MCDeployThrow(kMCDeployErrorBadWrite);
 		p_amount -= t_size;
 	}
@@ -214,40 +200,18 @@ bool MCDeployFileCopy(MCDeployFileRef p_dst, uint32_t p_at, MCDeployFileRef p_sr
 
 bool MCDeployFileWriteAt(MCDeployFileRef p_dst, const void *p_buffer, uint32_t p_size, uint32_t p_at)
 {
-	if (fseek(p_dst, p_at, SEEK_SET) != 0)
+	if (MCS_seek_set(p_dst, p_at) != IO_NORMAL)
 		return MCDeployThrow(kMCDeployErrorBadWrite);
 	
-	if (fwrite(p_buffer, p_size, 1, p_dst) != 1)
+	if (MCS_write(p_buffer, p_size, 1, p_dst) != IO_NORMAL)
 		return MCDeployThrow(kMCDeployErrorBadWrite);
-	
-	return true;
-}
-
-bool MCDeployFileTruncate(MCDeployFileRef p_file, uint32_t p_size)
-{
-#ifdef _WINDOWS
-	if (_chsize(_fileno(p_file), p_size) != 0)
-		return false;
-#else
-	if (ftruncate(fileno(p_file), p_size) != 0)
-		return false;
-#endif
+    
 	return true;
 }
 
 bool MCDeployFileMeasure(MCDeployFileRef p_file, uint32_t& r_size)
 {
-	long t_pos;
-	t_pos = ftell(p_file);
-	
-	if (fseek(p_file, 0, SEEK_END) != 0)
-		return false;
-	
-	r_size = ftell(p_file);
-	
-	if (fseek(p_file, t_pos, SEEK_SET) != 0)
-		return false;
-	
+	r_size = MCS_fsize(p_file);
 	return true;
 }
 
@@ -289,6 +253,8 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 			return "could not open spill file";
 		case kMCDeployErrorNoPayload:
 			return "could not open payload file";
+        case kMCDeployErrorNoModule:
+            return "could not open module file";
 		case kMCDeployErrorBadFile:
 		case kMCDeployErrorBadRead:
 		case kMCDeployErrorBadWrite:

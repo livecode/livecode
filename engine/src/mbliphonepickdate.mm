@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #include "date.h"
@@ -52,6 +51,9 @@ UIViewController *MCIPhoneGetViewController(void);
 	UIActionSheet *actionSheet;
 	UIPopoverController* popoverController;
 	UIDatePicker *datePicker;
+    UIView *m_action_sheet_view;
+    UIControl *m_blocking_view;
+    bool m_should_show_keyboard;
 }
 
 @end
@@ -69,6 +71,9 @@ UIViewController *MCIPhoneGetViewController(void);
 	m_selected_date = 0;
 	actionSheet = nil;
 	popoverController = nil;
+    m_action_sheet_view = nil;
+    m_blocking_view = nil;
+    m_should_show_keyboard = false;
 	return self;
 }
 
@@ -205,12 +210,16 @@ UIViewController *MCIPhoneGetViewController(void);
 			self.contentSizeForViewInPopover = CGSizeMake(320,216);
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
+        
+        // need to make self as delegate otherwise overridden delegates are not called
+        popoverController.delegate = self;
+        
+        [popoverController setPopoverContentSize:self.contentSizeForViewInPopover];
+
 		[popoverController presentPopoverFromRect:MCUserRectToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
-										 animated:YES];
-		// need to make self as delegate otherwise overridden delegates are not called
-		popoverController.delegate = self;
+                                         animated:YES];
 	}
 	else
 	{
@@ -230,6 +239,11 @@ UIViewController *MCIPhoneGetViewController(void);
 		[datePicker setLocale:t_locale];
 		[datePicker setCalendar:[t_locale objectForKey:NSLocaleCalendar]];
 		[datePicker setTimeZone:[NSTimeZone localTimeZone]];
+        
+        // PM-2014-10-22: [[ Bug 13750 ]] Make sure the view under the pickerView is not visible (iphone 4 only)
+        NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
+        if ([t_device_model_name isEqualToString:@"iPhone 4"] || [t_device_model_name isEqualToString:@"iPhone 4(Rev A)"] || [t_device_model_name isEqualToString:@"iPhone 4(CDMA)"])
+            datePicker.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.90];
 		
 		// set up the style and parameters for the date picker
 		if (p_style == nil || MCCStringEqual([p_style cStringUsingEncoding:NSMacOSRomanStringEncoding], "dateTime"))
@@ -276,30 +290,93 @@ UIViewController *MCIPhoneGetViewController(void);
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
 		
-		// create the action sheet that contains the "Done" button and date pick wheel
-		actionSheet = [[UIActionSheet alloc] initWithTitle:nil
-												  delegate:self
-										 cancelButtonTitle:nil
-									destructiveButtonTitle:nil
-										 otherButtonTitles:nil];
-		
-		// set the style of the acionsheet
-		[actionSheet setActionSheetStyle:UIActionSheetStyleBlackTranslucent];
-		
-		// add the subviews to the action sheet
-		[actionSheet addSubview: t_toolbar];
-		[actionSheet addSubview: datePicker];
-		[t_toolbar release];
-	
-		// initialize the date pick wheel
-		[actionSheet showInView: MCIPhoneGetView()];
-		
-		// set up the bounding box of the action sheet
-        // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
-		if (!t_is_landscape)
-			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
-		else
-			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
+        if (MCmajorosversion < 800)
+        {
+            // create the action sheet that contains the "Done" button and date pick wheel
+            actionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                      delegate:self
+                                             cancelButtonTitle:nil
+                                        destructiveButtonTitle:nil
+                                             otherButtonTitles:nil];
+            
+            // set the style of the acionsheet
+            [actionSheet setActionSheetStyle:UIActionSheetStyleBlackTranslucent];
+            
+            // add the subviews to the action sheet
+            [actionSheet addSubview: t_toolbar];
+            [actionSheet addSubview: datePicker];
+            [t_toolbar release];
+            
+            // initialize the date pick wheel
+            [actionSheet showInView: MCIPhoneGetView()];
+            
+            // set up the bounding box of the action sheet
+            // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
+            if (!t_is_landscape)
+                [actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
+            else
+                [actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
+        }
+        
+        else
+        {
+            // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working correctly
+            
+            CGRect t_rect;
+            uint2 t_offset;
+            t_offset = 28;
+            
+            if (!t_is_landscape)
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
+            else
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
+            
+            m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
+            
+            [m_action_sheet_view addSubview: t_toolbar];
+            [m_action_sheet_view addSubview: datePicker];
+            m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+            [t_toolbar release];
+            
+            [MCIPhoneGetView() addSubview:m_action_sheet_view];
+            
+            // This is offscreen
+            m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height , t_rect . size . width, t_rect. size . height);
+            
+            // Add animation to simulate old behaviour (slide from bottom)
+            [UIView animateWithDuration:0.2 animations:^{m_action_sheet_view.frame = t_rect;}];
+            
+            
+            // Add m_blocking_view to block any touch events in MCIPhoneGetView()
+            CGRect t_blocking_rect;
+            
+            if (!t_is_landscape)
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
+            else
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
+            
+            m_blocking_view = [[UIControl alloc] initWithFrame:t_blocking_rect];
+            
+            // Add effects and animation to simulate old behaviour
+            m_blocking_view.backgroundColor = [UIColor blackColor];
+            m_blocking_view.alpha = 0.4;
+            m_blocking_view.userInteractionEnabled = YES;
+            
+#ifdef __IPHONE_8_0
+            CATransition *applicationLoadViewIn =[CATransition animation];
+            [applicationLoadViewIn setDuration:0.7];
+            [applicationLoadViewIn setType:kCATransitionReveal];
+            [applicationLoadViewIn setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn]];
+            [[m_blocking_view layer]addAnimation:applicationLoadViewIn forKey:kCATransitionFromTop];
+#endif
+            // PM-2014-10-15: [[ Bug 13677 ]] If the keyboard is activated, hide it and show the picker. We should reactivate the keyboard once the picker hides
+            if (MCIPhoneIsKeyboardVisible())
+            {
+                MCIPhoneDeactivateKeyboard();
+                m_should_show_keyboard = true;
+            }
+            [MCIPhoneGetView() addSubview:m_blocking_view];
+        }
 	}
 }
 
@@ -334,16 +411,93 @@ UIViewController *MCIPhoneGetViewController(void);
 	// dismiss the action sheet programmatically
 	m_selection_made = true;
 	m_selected_date = [[datePicker date] timeIntervalSince1970];
-	[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
-	[popoverController dismissPopoverAnimated:YES];
+    
+    if (iSiPad)
+    {
+        [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+        [popoverController dismissPopoverAnimated:YES];
+    }
+    else
+    {
+        // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+        if (MCmajorosversion >= 800)
+        {
+            [datePicker removeFromSuperview];
+            
+            [UIView animateWithDuration:0.5
+                             animations:^{
+                                 m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height);//move it out of screen
+                             } completion:^(BOOL finished) {
+                                 [m_action_sheet_view removeFromSuperview];
+                             }];
+            
+            
+            [m_action_sheet_view release];
+            
+            [m_blocking_view removeFromSuperview];
+            [m_blocking_view release];
+            
+            m_running = false;
+            MCscreen -> pingwait();
+            
+            // PM-2014-10-15: [[ Bug 13677 ]] Make sure we re-activate the keyboard if it was previously deactivated because of the picker
+            if (m_should_show_keyboard)
+            {
+                // show the keyboard as in iOS 7
+                [UIView animateWithDuration:0.9 animations:^{ MCIPhoneActivateKeyboard(); } completion:nil];
+                m_should_show_keyboard = false;
+            }
+        }
+        else
+            [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    }
 }
 
 - (void)cancelDatePickWheel: (NSObject *)sender
 {
 	m_selection_made = false;
 	m_selected_date = 0;
-	[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
-	[popoverController dismissPopoverAnimated:YES];
+    
+    if (iSiPad)
+    {
+        [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+        [popoverController dismissPopoverAnimated:YES];
+    }
+    
+    else
+    {
+        // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+        if (MCmajorosversion >= 800)
+        {
+            [datePicker removeFromSuperview];
+            
+            [UIView animateWithDuration:0.5
+                             animations:^{
+                                 m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height);//move it out of screen
+                             } completion:^(BOOL finished) {
+                                 [m_action_sheet_view removeFromSuperview];
+                             }];
+            
+            
+            [m_action_sheet_view release];
+            
+            [m_blocking_view removeFromSuperview];
+            [m_blocking_view release];
+            
+            m_running = false;
+            MCscreen -> pingwait();
+            
+            // PM-2014-10-15: [[ Bug 13677 ]] Make sure we re-activate the keyboard if it was previously deactivated because of the picker
+            if (m_should_show_keyboard)
+            {
+                // show the keyboard as in iOS 7
+                [UIView animateWithDuration:0.9 animations:^{ MCIPhoneActivateKeyboard(); } completion:nil];
+                m_should_show_keyboard = false;
+            }
+        }
+        else
+            [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    }
 }
 
 - (void)actionSheet: (UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
@@ -424,7 +578,7 @@ static void pickdate_postwait(void *p_context)
 
 bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
     
     // Get the display style
     NSString *t_style;
@@ -436,9 +590,12 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         r_current = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_current))
+        MCAutoValueRef t_date;
+		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_date))
             return false;
-        r_current = ep.getnvalue();
+		
+		if (!ctxt.ConvertToInteger(*t_date, r_current))
+			return false;
     }
 
     // Convert the min datatime to seconds
@@ -447,9 +604,12 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         t_min = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_min))
+        MCAutoValueRef t_min_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
             return false;
-        t_min = ep.getnvalue();
+		
+		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
+			return false;
     }
     
     // Convert the max datatime to seconds
@@ -458,37 +618,43 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         t_max = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_max))
+		MCAutoValueRef t_max_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
             return false;
-        t_max = ep.getnvalue();
+        
+		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
+			return false;
     } 
 
-	datepicker_t ctxt;
-	ctxt . style = t_style;
-	ctxt . current = r_current;
-	ctxt . min = t_min;
-	ctxt . max = t_max;
-	ctxt . step = 0;
-	ctxt . use_cancel = p_use_cancel;
-	ctxt . use_done = p_use_done;
-	ctxt . button_rect = p_button_rect;
+	datepicker_t date_ctxt;
+	date_ctxt . style = t_style;
+	date_ctxt . current = r_current;
+	date_ctxt . min = t_min;
+	date_ctxt . max = t_max;
+	date_ctxt . step = 0;
+	date_ctxt . use_cancel = p_use_cancel;
+	date_ctxt . use_done = p_use_done;
+	date_ctxt . button_rect = p_button_rect;
 	
 	// call the date picker with the label and options list
-	MCIPhoneRunOnMainFiber(pickdate_prewait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_prewait, &date_ctxt);
 	
 	// block until actionSheet releases the date pick wheel
-	while([ctxt . picker running])
+	while([date_ctxt . picker running])
 		MCscreen -> wait(60.0, False, True);
 	
-	MCIPhoneRunOnMainFiber(pickdate_postwait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_postwait, &date_ctxt);
 	
     // MM-2012-10-24: [[ Bug 10494 ]] Make sure we check to see if the picker has been cancelled.
-    r_canceled = ctxt . cancelled;
+    r_canceled = date_ctxt . cancelled;
     if (!r_canceled)
     {
         // Convert the seconds to date time
-        ep.setnvalue(ctxt . current);
-        if (!MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, *r_result))
+		MCAutoNumberRef t_secs;
+		if (!MCNumberCreateWithInteger(date_ctxt.current, &t_secs))
+			return false;
+        
+        if (!MCD_convert_to_datetime(ctxt, *t_secs, CF_SECONDS, CF_SECONDS, *r_result))
             return false;
     }
     return true;
@@ -496,7 +662,7 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
 
 bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
 
     NSString *t_style;
     t_style = [NSString stringWithCString: "time" encoding: NSMacOSRomanStringEncoding];
@@ -507,9 +673,12 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         r_current = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_current))
+        MCAutoValueRef t_current;
+		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_current))
             return false;
-        r_current = ep.getnvalue();
+        
+		if (!ctxt.ConvertToInteger(*t_current, r_current))
+			return false;
     }
     
     // Convert the min datatime to seconds
@@ -518,9 +687,12 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         t_min = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_min))
-            return false;
-        t_min = ep.getnvalue();
+        MCAutoValueRef t_min_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
+			return false;
+		
+		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
+			return false;
     }
     
     // Convert the max datatime to seconds
@@ -529,45 +701,51 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         t_max = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_max))
-            return false;
-        t_max = ep.getnvalue();
+        MCAutoValueRef t_max_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
+			return false;
+		
+		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
+			return false;
     } 
     
-	datepicker_t ctxt;
-	ctxt . style = t_style;
-	ctxt . current = r_current;
-	ctxt . min = t_min;
-	ctxt . max = t_max;
-	ctxt . step = p_step;
-	ctxt . use_cancel = p_use_cancel;
-	ctxt . use_done = p_use_done;
-	ctxt . button_rect = p_button_rect;
+	datepicker_t date_ctxt;
+	date_ctxt . style = t_style;
+	date_ctxt . current = r_current;
+	date_ctxt . min = t_min;
+	date_ctxt . max = t_max;
+	date_ctxt . step = p_step;
+	date_ctxt . use_cancel = p_use_cancel;
+	date_ctxt . use_done = p_use_done;
+	date_ctxt . button_rect = p_button_rect;
 	
 	// call the date picker with the label and options list
-	MCIPhoneRunOnMainFiber(pickdate_prewait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_prewait, &date_ctxt);
 	
 	// block until actionSheet releases the date pick wheel
-	while([ctxt . picker running])
+	while([date_ctxt . picker running])
 		MCscreen -> wait(60.0, False, True);
 	
-	MCIPhoneRunOnMainFiber(pickdate_postwait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_postwait, &date_ctxt);
 	
     // MM-2012-10-24: [[ Bug 10494 ]] Make sure we check to see if the picker has been cancelled.
-    r_canceled = ctxt . cancelled;    
+    r_canceled = date_ctxt . cancelled;    
     if (!r_canceled)
     {
         // Convert the seconds to date time
-        ep.setnvalue(ctxt . current);
-        if (!MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, *r_result))
-            return false;
+		MCAutoNumberRef t_number;
+		if (!MCNumberCreateWithInteger(date_ctxt.current, &t_number))
+			return false;
+		
+		if (!MCD_convert_to_datetime(ctxt, *t_number, CF_SECONDS, CF_SECONDS, *r_result))
+			return false;
     }
 	return true;
 }
 
 bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
 
     NSString *t_style;
     t_style = [NSString stringWithCString: "dateTime" encoding: NSMacOSRomanStringEncoding];
@@ -578,9 +756,12 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
         r_current = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_current))
+        MCAutoValueRef t_current;
+		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_current))
             return false;
-        r_current = ep.getnvalue();
+        
+		if (!ctxt.ConvertToInteger(*t_current, r_current))
+			return false;
     }
     
     // Convert the min datatime to seconds
@@ -589,9 +770,12 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
         t_min = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_min))
-            return false;
-        t_min = ep.getnvalue();
+        MCAutoValueRef t_min_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
+			return false;
+		
+		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
+			return false;
     }
     
     // Convert the max datatime to seconds
@@ -600,38 +784,44 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
         t_max = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_max))
-            return false;
-        t_max = ep.getnvalue();
+        MCAutoValueRef t_max_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
+			return false;
+		
+		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
+			return false;
     } 
     
-	datepicker_t ctxt;
-	ctxt . style = t_style;
-	ctxt . current = r_current;
-	ctxt . min = t_min;
-	ctxt . max = t_max;
-	ctxt . step = p_step;
-	ctxt . use_cancel = p_use_cancel;
-	ctxt . use_done = p_use_done;
-	ctxt . button_rect = p_button_rect;
+	datepicker_t date_ctxt;
+	date_ctxt . style = t_style;
+	date_ctxt . current = r_current;
+	date_ctxt . min = t_min;
+	date_ctxt . max = t_max;
+	date_ctxt . step = p_step;
+	date_ctxt . use_cancel = p_use_cancel;
+	date_ctxt . use_done = p_use_done;
+	date_ctxt . button_rect = p_button_rect;
 	
 	// call the date picker with the label and options list
-	MCIPhoneRunOnMainFiber(pickdate_prewait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_prewait, &date_ctxt);
 	
 	// block until actionSheet releases the date pick wheel
-	while([ctxt . picker running])
+	while([date_ctxt . picker running])
 		MCscreen -> wait(60.0, False, True);
 	
-	MCIPhoneRunOnMainFiber(pickdate_postwait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_postwait, &date_ctxt);
 	
     // MM-2012-10-24: [[ Bug 10494 ]] Make sure we check to see if the picker has been cancelled.
-    r_canceled = ctxt . cancelled;
+    r_canceled = date_ctxt . cancelled;
     if (!r_canceled)
     {
         // Convert the seconds to date time
-        ep.setnvalue(ctxt . current);
-        if (!MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, *r_result))
-            return false;
+		MCAutoNumberRef t_number;
+		if (!MCNumberCreateWithInteger(date_ctxt.current, &t_number))
+			return false;
+		
+		if (!MCD_convert_to_datetime(ctxt, *t_number, CF_SECONDS, CF_SECONDS, *r_result))
+			return false;
     }
 	return true;
 }

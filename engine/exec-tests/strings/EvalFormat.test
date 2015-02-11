@@ -1,0 +1,31 @@
+setup
+
+test-error format("%u")
+test-error format("%u %u", 100)
+test-error format("%*u", 100)
+test-error format("%.*u", 100)
+test-error format("%*.*u", 10, 100)
+test-error format("%*u %u", 10, 100, 50)
+
+test-error format("%p", 100)
+
+test format("a%d", 100) is "a100"
+test format("a%5d", 100) is "a  100"
+test format("a%05d", 100) is "a00100"
+test format("a%.5d", 100) is "a00100"
+
+test format("a%f", 1.23456789) is "a1.234568"
+test format("a%.8f", 1.23456789) is "a1.23456789"
+test format("a%.1f", 1.23456789) is "a1.2"
+test format("a%5.1f", 1.23456789) is "a  1.2"
+test format("a%05.1f", 1.23456789) is "a001.2"
+
+test format("a %s a", "abcd") is "a abcd a"
+test format("a %8s a", "abcd") is "a     abcd a"
+test format("a %08s a", "abcd") is "a 0000abcd a"
+test format("a %.2s a", "abcd") is "a ab a"
+test format("a %05.2s a", "abcd") is "a 000ab a"
+
+test format("a %0*.*s a", 5, 2, "abcd") is "a 000ab a"
+
+teardown

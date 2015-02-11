@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 // Attempt to connect to the server-side debugger for the given site and url
-extern bool MCServerDebugConnect(const char *p_site, const char *p_url);
+extern bool MCServerDebugConnect(MCStringRef p_site, MCStringRef p_url);
 
 // Disconnect from the server-side debugger (this does nothing if we were
 // never connected).
@@ -38,16 +38,12 @@ extern void MCServerDebugDisconnect(void);
 extern void MCServerDebugInterrupt(void);
 
 // Notify the server-side debugger of various script-events.
-extern void MCServerDebugTrace(MCExecPoint& ep, uint2 line, uint2 pos);
-extern void MCServerDebugBreak(MCExecPoint& ep, uint2 line, uint2 pos);
-extern void MCServerDebugError(MCExecPoint& ep, uint2 line, uint2 pos, uint2 id);
+extern void MCServerDebugTrace(MCExecContext &ctxt, uint2 line, uint2 pos);
+extern void MCServerDebugBreak(MCExecContext &ctxt, uint2 line, uint2 pos);
+extern void MCServerDebugError(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id);
 
 // Notify the server-side debugger that the given variable has changed.
-extern void MCServerDebugVariableChanged(MCExecPoint& ep, MCNameRef name);
-
-// Notify the server-side debugger that the given variable *value* has
-// changed.
-extern void MCServerDebugVariableValueChanged(MCVariableValue *p_value);
+extern void MCServerDebugVariableChanged(MCExecContext &ctxt, MCNameRef name);
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -59,16 +55,16 @@ extern void MCServerDebugVariableValueChanged(MCVariableValue *p_value);
 
 // Perform one of the following actions:
 //   stop, pause, step over, step into, step out
-extern void MCServerDebugAction(const char *p_action);
+extern void MCServerDebugAction(MCStringRef p_action);
 
 // Manipulate the given breakpoint (either add or remove).
-extern void MCServerDebugBreakpoint(const char *p_action, const char *p_file, uint32_t p_row, uint32_t p_column);
+extern void MCServerDebugBreakpoint(MCStringRef p_action, MCStringRef p_file, uint32_t p_row, uint32_t p_column);
 
 // Get one of a handful of current state variables
 const char *MCServerDebugGet(const char *property);
 
 // Set one of a handful of current state variables
-void MCServerDebugPut(const char *property, const char *value);
+void MCServerDebugPut(MCStringRef p_property, MCStringRef value);
 
 // Configure the variable viewing window
 void MCServerDebugConfigureView(uint32_t scroll, uint32_t height);

@@ -1,0 +1,19 @@
+setup
+
+local taskList
+
+put shell("tasklist /V") into taskList
+
+if taskList contains "notepad.exe" then
+	get shell("taskkill /IM notepad.exe")
+end if
+
+launch "notepad.exe"
+
+put shell("tasklist /V") into taskList
+
+test taskList contains "notepad.exe"
+
+get shell("taskkill /IM notepad.exe")
+
+teardown

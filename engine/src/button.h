@@ -33,11 +33,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define standardbtn() ((IsMacEmulatedLF() || MCcurtheme!=NULL) && flags & F_3D \
 		  && !(flags & F_AUTO_ARM) && flags & F_SHOW_BORDER \
-	          && (IsMacEmulatedLF() && getstyleint(flags) == F_STANDARD|| \
-						MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_PUSHBUTTON) && \
-						getstyleint(flags) == F_STANDARD || MCcurtheme \
-		      && MCcurtheme->iswidgetsupported(WTHEME_TYPE_BEVELBUTTON) && getstyleint(flags) == F_RECTANGLE) \
-		  && !(flags & F_SHADOW) && flags & F_OPAQUE)
+		  && ((IsMacEmulatedLF() && getstyleint(flags) == F_STANDARD) || \
+			  (MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_PUSHBUTTON) && \
+			   getstyleint(flags) == F_STANDARD) || \
+			  (MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_BEVELBUTTON) && \
+			   getstyleint(flags) == F_RECTANGLE)) \
+		   && !(flags & F_SHADOW) && flags & F_OPAQUE)
 
 #define MENU_FLAGS (F_RECTANGLE | F_VISIBLE | F_SHOW_NAME \
 		    | F_ALIGN_LEFT | F_3D | F_TRAVERSAL_ON \
@@ -88,6 +89,8 @@ typedef struct
 }
 iconlist;
 
+struct MCInterfaceButtonIcon;
+
 #define MENUCONTROL_NONE 0
 #define MENUCONTROL_ITEM 1
 #define MENUCONTROL_SEPARATOR 2
@@ -99,19 +102,14 @@ class MCButton : public MCControl
 	friend class MCHcbutton;
 	MCCdata *bdata;
 	iconlist *icons;
-	char *label;
-	uint2 labelsize;
-	uint2 menusize;
-	char *menuname;
-	char *menustring;
+	MCStringRef label;
+	MCNameRef menuname;
+	MCStringRef menustring;
 	MCField *entry;
 	MCStack *menu;
+	MCStringRef acceltext;
+	MCArrayRef tabs;
 	MCPlatformMenuRef m_system_menu;
-	char *acceltext;
-	uint2 acceltextsize;
-	char *seltext;
-	MCString *tabs;
-	uint2 ntabs;
 	uint2 menuhistory;
 	uint2 menulines;
 	uint2 accelkey;
@@ -123,7 +121,10 @@ class MCButton : public MCControl
 	uint1 accelmods;
 	uint1 mnemonic;
 	uint1 menucontrol;
-    MCGravity m_icon_gravity : 4;
+	// SN-2015-01-06: [[ Bug 14306 ]] The type of an enum is implementation-defined,
+	// and forcing the size to 4 boils down to a 4-bit int, not a 4-byte int on Windows.
+	// A 5-bit signed int is enough though to handle the 12 values of the MCGravity enum.
+	MCGravity m_icon_gravity : 5;
 	bool menuhasitemtags : 1;
 
 	Boolean ishovering;
@@ -139,6 +140,9 @@ class MCButton : public MCControl
 	static MCImage *macrbtrack;
 	static MCImage *macrbhilite;
 	static MCImage *macrbhilitetrack;
+
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     bool m_animate_posted : 1;
@@ -155,6 +159,8 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
 
 	virtual void open();
@@ -163,8 +169,8 @@ public:
 	virtual Boolean kfocusnext(Boolean top);
 	virtual Boolean kfocusprev(Boolean bottom);
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
-	virtual Boolean kup(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
+	virtual Boolean kup(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean mdown(uint2 which);
@@ -177,8 +183,12 @@ public:
 
 	virtual uint2 gettransient() const;
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+
+#ifdef LEGACY_EXEC
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
+    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#endif
+
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	
 	// MW-2011-09-20: [[ Collision ]] Compute shape of button - will use mask of icon if possible.
@@ -188,12 +198,12 @@ public:
 	// virtual functions from MCControl
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
-	virtual IO_stat load(IO_handle stream, const char *version);
-	virtual IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
+	virtual IO_stat load(IO_handle stream, uint32_t version);
+	virtual IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 	virtual MCControl *findnum(Chunk_term type, uint2 &num);
-	virtual MCControl *findname(Chunk_term type, const MCString &);
+    virtual MCControl *findname(Chunk_term type, MCNameRef p_name);
 	virtual Boolean count(Chunk_term type, MCObject *stop, uint2 &num);
 	virtual Boolean maskrect(const MCRectangle &srect);
 	virtual void installaccels(MCStack *stack);
@@ -205,7 +215,7 @@ public:
 	virtual void getwidgetthemeinfo(MCWidgetInfo &widgetinfo);
 	
 	// MCButton functions
-	void activate(Boolean notify, uint2 key);
+	void activate(Boolean notify, KeySym p_key);
 	void clearmnemonic();
 	void setupmnemonic();
 	MCCdata *getbptr(uint4 cardid);
@@ -234,13 +244,11 @@ public:
 		return entry;
 	}
 	
-	// MW-2012-02-16: [[ IntrinsicUnicode ]] 'unicode' parameter is true if 's' is
-	//   UTF-16.
-	void getlabeltext(MCString &s, bool& r_unicode);
+	MCStringRef getlabeltext();
 
-	void getmenustring(MCString &s)
+	MCStringRef getmenustring()
 	{
-		s.set(menustring, menusize);
+		return menustring;
 	}
 	uint1 getmenumode()
 	{
@@ -281,13 +289,13 @@ public:
 	
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
-	void docascade(MCString &pick);
-	void getmenuptrs(const char *&sptr, const char *&eptr);
+	MCRange getmenurange();
+	void docascade(MCStringRef t_pick);
 	void setupmenu();
-	void selectedchunk(MCExecPoint &);
-	void selectedline(MCExecPoint &);
-	void selectedtext(MCExecPoint &);
-	Boolean resetlabel();
+	bool selectedchunk(MCStringRef& r_string);
+	bool selectedline(MCStringRef& r_string);
+	bool selectedtext(MCStringRef& r_string);
+	bool resetlabel();
 	void reseticon();
 	void radio();
 	void setmenuhistory(int2 newline);
@@ -298,7 +306,7 @@ public:
 	bool tabselectonmouseup();
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
-	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 t, const MCRectangle &srect, const MCString &lptr, bool isunicode, uint2 fstyle);
+	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 t, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle, uindex_t p_mnemonic);
 	void drawcheck(MCDC *dc, MCRectangle &srect, Boolean white);
 	void drawradio(MCDC *dc, MCRectangle &srect, Boolean white);
 	void drawoption(MCDC *dc, MCRectangle &srect, MCRectangle& r_content_rect);
@@ -315,7 +323,7 @@ public:
 	Bool macfindmenu(bool p_just_for_accel);
 	void macopenmenu(void);
 	void macfreemenu(void);
-	static void getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu);
+    static void getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}
@@ -353,6 +361,114 @@ public:
 		return (MCButton *)MCDLlist::remove((MCDLlist *&)list);
 	}
 
+	////////// PROPERTY SUPPORT METHODS
+
+	void GetIcon(MCExecContext& ctxt, Properties which, uinteger_t& r_icon);
+	void SetIcon(MCExecContext& ctxt, Properties which, uinteger_t p_icon);
+    void DoGetIcon(MCExecContext& ctxt, Current_icon which, MCInterfaceButtonIcon& r_icon);
+    void DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterfaceButtonIcon& p_icon);
+    void SetChunkProp(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, Properties which, bool setting);
+    
+	void UpdateIconAndMenus(void);
+
+	////////// PROPERTY ACCESSORS
+
+	virtual void SetName(MCExecContext& ctxt, MCStringRef p_name);
+	void GetStyle(MCExecContext& ctxt, intenum_t& r_style);
+	void SetStyle(MCExecContext& ctxt, intenum_t p_style);
+	void GetAutoArm(MCExecContext& ctxt, bool& r_setting);
+	void SetAutoArm(MCExecContext& ctxt, bool setting);
+	void GetAutoHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetAutoHilite(MCExecContext& ctxt, bool setting);
+	void GetArmBorder(MCExecContext& ctxt, bool& r_setting);
+	void SetArmBorder(MCExecContext& ctxt, bool setting);
+	void GetArmFill(MCExecContext& ctxt, bool& r_setting);
+	void SetArmFill(MCExecContext& ctxt, bool setting);
+	void GetHiliteBorder(MCExecContext& ctxt, bool& r_setting);
+	void SetHiliteBorder(MCExecContext& ctxt, bool setting);
+	void GetHiliteFill(MCExecContext& ctxt, bool& r_setting);
+	void SetHiliteFill(MCExecContext& ctxt, bool setting);
+	void GetShowHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetShowHilite(MCExecContext& ctxt, bool setting);
+	void GetArm(MCExecContext& ctxt, bool& r_setting);
+	void SetArm(MCExecContext& ctxt, bool setting);
+	void GetSharedHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetSharedHilite(MCExecContext& ctxt, bool setting);
+	void GetShowIcon(MCExecContext& ctxt, bool& r_setting);
+	void SetShowIcon(MCExecContext& ctxt, bool setting);
+	void GetShowName(MCExecContext& ctxt, bool& r_setting);
+	void SetShowName(MCExecContext& ctxt, bool setting);
+	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label);
+	void GetEffectiveLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void GetLabelWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void SetLabelWidth(MCExecContext& ctxt, uinteger_t p_width);
+	void GetFamily(MCExecContext& ctxt, uinteger_t& r_family);
+	void SetFamily(MCExecContext& ctxt, uinteger_t p_family);
+	void GetVisited(MCExecContext& ctxt, bool& r_setting);
+	void SetVisited(MCExecContext& ctxt, bool setting);
+	void GetMenuHistory(MCExecContext& ctxt, uinteger_t& r_history);
+	void SetMenuHistory(MCExecContext& ctxt, uinteger_t p_history);
+	void GetMenuLines(MCExecContext& ctxt, uinteger_t*& r_lines);
+	void SetMenuLines(MCExecContext& ctxt, uinteger_t* p_lines);
+	void GetMenuButton(MCExecContext& ctxt, uinteger_t& r_button);
+	void SetMenuButton(MCExecContext& ctxt, uinteger_t p_button);
+	void GetMenuMode(MCExecContext& ctxt, intenum_t& r_mode);
+	void SetMenuMode(MCExecContext& ctxt, intenum_t p_mode);
+	void GetMenuName(MCExecContext& ctxt, MCNameRef& r_name);
+	void SetMenuName(MCExecContext& ctxt, MCNameRef p_name);
+	virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+	void GetAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetAcceleratorText(MCExecContext& ctxt, MCStringRef p_text);
+	void GetUnicodeAcceleratorText(MCExecContext& ctxt, MCDataRef& r_text);
+	void GetAcceleratorKey(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetAcceleratorKey(MCExecContext& ctxt, MCStringRef p_text);
+	void GetAcceleratorModifiers(MCExecContext& ctxt, intset_t& r_mods);
+	void SetAcceleratorModifiers(MCExecContext& ctxt, intset_t p_mods);
+	void GetMnemonic(MCExecContext& ctxt, uinteger_t& r_mnemonic);
+	void SetMnemonic(MCExecContext& ctxt, uinteger_t p_mnemonic);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
+	void GetDefault(MCExecContext& ctxt, bool& r_setting);
+	void SetDefault(MCExecContext& ctxt, bool setting);
+	virtual void SetTextFont(MCExecContext& ctxt, MCStringRef p_font);
+	virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* p_height);
+	virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* p_size);
+	virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetText(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetText(MCExecContext& ctxt, MCStringRef p_text);
+	void GetUnicodeText(MCExecContext& ctxt, MCDataRef& r_text);
+	void SetUnicodeText(MCExecContext& ctxt, MCDataRef p_text);
+	virtual void SetCantSelect(MCExecContext& ctxt, bool setting);
+    void SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetArmedIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetDisabledIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetDisabledIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    // SN-2014-06-25 [[ IconGravity ]]
+    void GetIconGravity(MCExecContext &ctxt, intenum_t &r_gravity);
+    void SetIconGravity(MCExecContext &ctxt, intenum_t p_gravity);
+    void SetHiliteIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetHiliteIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetVisitedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetVisitedIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    void GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceTriState& r_hilite);
+    void SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceTriState& p_hilite);
+    
+    void SetDisabledOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting);
+    void SetEnabledOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting);
+    void SetHiliteOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting);
+    void SetUnhiliteOfCharChunk(MCExecContext& ctxt, uint32_t p_part, int32_t p_start, int32_t p_finish, bool setting);
+    
 private:
 	int4 formattedtabwidth(void);
 
@@ -362,5 +478,12 @@ private:
 	void trytochangetonative(void);
 
 	friend class ButtonMenuCallback;
+    
+protected:
+    
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
 };
 #endif

@@ -57,8 +57,10 @@ public:
 	Boolean close(Boolean force);
 
 	bool hasfeature(MCPlatformFeature feature);
-	const char *getdisplayname(void);
-	void getvendorstring(MCExecPoint &ep);
+	MCNameRef getdisplayname(void);
+	MCNameRef getvendorname(void);
+	uint2 getwidth();
+	uint2 getheight();
 	uint2 getwidthmm();
 	uint2 getheightmm();
 	uint2 getmaxpoints();
@@ -108,7 +110,7 @@ public:
 	void raisewindow(Window window);
 	void iconifywindow(Window window);
 	void uniconifywindow(Window window);
-	void setname(Window window, const char *newname);
+	void setname(Window window, MCStringRef newname);
 	void sync(Window w);
 	void setinputfocus(Window window);
 
@@ -120,16 +122,16 @@ public:
 	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y);
 	void freecursor(MCCursorRef c);
 
-	uint4 dtouint4(Drawable d);
-	Boolean uint4towindow(uint4, Window &w);
+	uintptr_t dtouint(Drawable d);
+	Boolean uinttowindow(uintptr_t, Window &w);
 
 	void beep();
-	bool setbeepsound(const char *sound);
-	const char *getbeepsound(void);
-	void getbeep(uint4 property, MCExecPoint &ep);
+	bool setbeepsound(MCStringRef p_beep_sound);
+	bool getbeepsound(MCStringRef& r_beep_sound);
+	void getbeep(uint4 property, int4& r_value);
 	void setbeep(uint4 property, int4 beep);
 
-	MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
+	MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
@@ -159,10 +161,10 @@ public:
 	void flushevents(uint2 e);
 	void updatemenubar(Boolean force);
 	Boolean istripleclick();
-	void getkeysdown(MCExecPoint &ep);
+	bool getkeysdown(MCListRef& r_list);
 	
-	uint1 fontnametocharset(const char *oldfontname);
-	char *charsettofontname(uint1 charset, const char *oldfontname);
+	uint1 fontnametocharset(MCStringRef p_fontname);
+//	char *charsettofontname(uint1 charset, const char *oldfontname);
 	
 	void clearIME(Window w);
 	void openIME();
@@ -174,7 +176,9 @@ public:
 	//
 
 	MCPrinter *createprinter(void);
+#ifdef LEGACY_EXEC
 	void listprinters(MCExecPoint& ep);
+#endif
 
 	//
 
@@ -193,12 +197,12 @@ public:
 
 	//
 
-	MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 	
-	int32_t popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message);
-	char *popupaskdialog(uint32_t p_type, const char *p_title, const char *p_prompt, const char *p_initial, bool p_hint);
+	int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+	bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	////////// COMMON IMPLEMENTATION METHODS
 	

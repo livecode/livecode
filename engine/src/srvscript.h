@@ -33,18 +33,21 @@ public:
 	MCServerScript(void);
 	virtual ~MCServerScript(void);
 	
-	void ListFiles(MCExecPoint& ep);
+	void ListFiles(MCStringRef &r_string);
 	
 	uint32_t GetIncludeDepth(void);
-	bool Include(MCExecPoint& context, const char *p_filename, bool p_require);
+	bool Include(MCExecContext& context, MCStringRef p_filename, bool p_require);
 
-	uint4 GetFileIndexForContext(MCExecPoint& ep);
+	uint4 GetFileIndexForContext(MCExecContext &ctxt);
 	
-	const char *GetFileForContext(MCExecPoint& ep);
+    bool GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file);
 	
 	// Lookup the file index for the given filename. If <p_add> is true then
 	// add new entry and return its index.
-	uint4 FindFileIndex(const char *p_filename, bool p_add);
+	uint4 FindFileIndex(MCStringRef p_filename, bool p_add);
+    
+    // SN-2014-09-05: [[ Bug 13378 ]] Added forgotten function GetIt
+    MCVarref* GetIt();
 	
 private:
 	// A File record stores information about an included file.
@@ -55,7 +58,7 @@ private:
 		File *next;
 		
 		// The absolute filename of the file it refers to.
-		char *filename;
+        MCStringRef filename;
 		
 		// The buffer containing the file's contents. This should be treated
 		// as read-only as it could be mmapped. We need to keep this around
@@ -73,7 +76,7 @@ private:
 	
 	// Locate the given file in the list of files, adding it if not present and
 	// 'add' is true.
-	File *FindFile(const char *p_filename, bool p_add);
+	File *FindFile(MCStringRef p_filename, bool p_add);
 
 	// Return the next statement in the script point, processing any definitions
 	// that occur before it.
@@ -89,7 +92,10 @@ private:
 	uint32_t m_include_depth;
 
 	// The execpoint in which global code is executed.
-	MCExecPoint *m_ep;
+	MCExecContext *m_ctxt;
+	
+	// MW-2013-11-08: [[ RefactorIt ]] The 'it' var at global scope.
+	MCVarref *m_it;
 };
 
 #endif

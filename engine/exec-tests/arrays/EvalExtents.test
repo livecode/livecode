@@ -1,0 +1,31 @@
+setup
+
+local tVar, tExtents
+test the extents of tVar is empty
+
+put 1 into tVar[0,1,2,3,"string"]
+test the extents of tVar is empty
+
+put empty into tVar
+put 1 into tVar[0,0]
+put 1 into tVar[0]
+test the extents of tVar is empty
+
+put empty into tVar
+put 1 into tVar[0,1,2,3]
+put the extents of tVar into tExtents
+test the number of lines in tExtents is 4
+repeat with i = 0 to 3
+	test (i,i) is among the lines of tExtents
+end repeat
+
+put empty into tVar
+put 1 into tVar[0,1,2,3]
+put 2 into tVar[10,11,12,13]
+put the extents of tVar into tExtents
+test the number of lines in tExtents is 4
+repeat with i = 0 to 3
+	test (i,i+10) is among the lines of tExtents
+end repeat
+
+teardown

@@ -1,0 +1,784 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include <foundation.h>
+#include <foundation-auto.h>
+
+#include "foundation-private.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCStreamImpl
+{
+	const MCStreamCallbacks *callbacks;
+};
+
+MC_DLLEXPORT MCTypeInfoRef kMCStreamTypeInfo;
+
+static inline __MCStreamImpl &__MCStreamGet(MCStreamRef p_stream)
+{
+	return *(__MCStreamImpl*)MCValueGetExtraBytesPtr(p_stream);
+}
+
+static inline const MCStreamCallbacks *__MCStreamCallbacks(MCStreamRef self)
+{
+	return __MCStreamGet(self).callbacks;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCMemoryInputStream
+{
+	const void *buffer;
+	size_t length;
+	size_t pointer;
+	size_t mark;
+};
+
+static void __MCMemoryInputStreamDestroy(MCStreamRef p_stream)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+}
+
+static bool __MCMemoryInputStreamIsFinished(MCStreamRef p_stream, bool& r_finished)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	r_finished = self -> pointer == self -> length;
+	return true;
+}
+
+static bool __MCMemoryInputStreamGetAvailableForRead(MCStreamRef p_stream, size_t& r_amount)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	r_amount = self -> length - self -> pointer;
+	return true;
+}
+
+static bool __MCMemoryInputStreamRead(MCStreamRef p_stream, void *p_buffer, size_t p_amount)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	if (p_amount > self -> length - self -> pointer)
+		return false;
+	MCMemoryCopy(p_buffer, (byte_t *)self -> buffer + self -> pointer, p_amount);
+	self -> pointer += p_amount;
+	return true;
+}
+
+static bool __MCMemoryInputStreamSkip(MCStreamRef p_stream, size_t p_amount)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	if (p_amount > self -> length - self -> pointer)
+		return false;
+	self -> pointer += p_amount;
+	return true;
+}
+
+static bool __MCMemoryInputStreamMark(MCStreamRef p_stream, size_t p_limit)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	self -> mark = self -> pointer;
+	return true;
+}
+
+static bool __MCMemoryInputStreamReset(MCStreamRef p_stream)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	self -> pointer = self -> mark;
+	return true;
+}
+
+static bool __MCMemoryInputStreamTell(MCStreamRef p_stream, filepos_t& r_position)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	r_position = self -> pointer;
+	return true;
+}
+
+static bool __MCMemoryInputStreamSeek(MCStreamRef p_stream, filepos_t p_position)
+{
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	if (p_position < 0 || p_position > self -> length)
+		return false;
+	self -> pointer = (size_t)p_position;
+	return true;
+}
+
+static MCStreamCallbacks kMCMemoryInputStreamCallbacks =
+{
+	__MCMemoryInputStreamDestroy,
+	__MCMemoryInputStreamIsFinished,
+	__MCMemoryInputStreamGetAvailableForRead,
+	__MCMemoryInputStreamRead,
+	nil,
+	nil,
+	__MCMemoryInputStreamSkip,
+	__MCMemoryInputStreamMark,
+	__MCMemoryInputStreamReset,
+	__MCMemoryInputStreamTell,
+	__MCMemoryInputStreamSeek,
+};
+
+bool MCMemoryInputStreamCreate(const void *p_block, size_t p_size, MCStreamRef& r_stream)
+{
+	MCStreamRef t_stream;
+	if (!MCStreamCreate(&kMCMemoryInputStreamCallbacks, sizeof(__MCMemoryInputStream), t_stream))
+		return false;
+
+	__MCMemoryInputStream *self;
+	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(t_stream);
+	self -> buffer = p_block;
+	self -> length = p_size;
+	self -> mark = 0;
+	self -> pointer = 0;
+
+	r_stream = t_stream;
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCMemoryOutputStream
+{
+    void *buffer;
+	size_t length;
+	size_t capacity;
+};
+
+static void __MCMemoryOutputStreamDestroy(MCStreamRef p_stream)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+    
+    free(self -> buffer);
+}
+
+static bool __MCMemoryOutputStreamIsFinished(MCStreamRef p_stream, bool& r_finished)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+    r_finished = false;
+	return true;
+}
+
+static bool __MCMemoryOutputStreamGetAvailableForWrite(MCStreamRef p_stream, size_t& r_amount)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	r_amount = SIZE_MAX;
+	return true;
+}
+
+static bool __MCMemoryOutputStreamWrite(MCStreamRef p_stream, const void *p_buffer, size_t p_amount)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	if (p_amount > self -> capacity - self -> length)
+    {
+        size_t t_new_capacity;
+        t_new_capacity = (self -> length + p_amount + 65536) & ~65535;
+        
+        void *t_new_buffer;
+        t_new_buffer = realloc(self -> buffer, t_new_capacity);
+        if (t_new_buffer == nil)
+            return false;
+        
+        self -> buffer = t_new_buffer;
+        self -> capacity = t_new_capacity;
+    }
+	MCMemoryCopy((byte_t *)self -> buffer + self -> length, p_buffer, p_amount);
+	self -> length += p_amount;
+	return true;
+}
+
+static MCStreamCallbacks kMCMemoryOutputStreamCallbacks =
+{
+	__MCMemoryOutputStreamDestroy,
+	__MCMemoryOutputStreamIsFinished,
+	nil,
+	nil,
+	__MCMemoryOutputStreamGetAvailableForWrite,
+	__MCMemoryOutputStreamWrite,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+};
+
+bool MCMemoryOutputStreamCreate(MCStreamRef& r_stream)
+{
+	MCStreamRef t_stream;
+	if (!MCStreamCreate(&kMCMemoryOutputStreamCallbacks, sizeof(__MCMemoryOutputStream), t_stream))
+		return false;
+    
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(t_stream);
+	self -> buffer = nil;
+	self -> length = 0;
+	self -> capacity = 0;
+    
+	r_stream = t_stream;
+    
+	return true;
+}
+
+bool MCMemoryOutputStreamFinish(MCStreamRef p_stream, void*& r_buffer, size_t& r_size)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+    
+    r_buffer = realloc(self -> buffer, self -> length);
+    r_size = self -> length;
+    
+    self -> buffer = nil;
+    self -> length = 0;
+    self -> capacity = 0;
+    
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void __MCStreamDestroy(MCValueRef p_value)
+{
+	__MCStreamCallbacks((MCStreamRef)p_value)->destroy((MCStreamRef)p_value);
+}
+
+static bool __MCStreamCopy(MCValueRef p_value, bool p_release, MCValueRef& r_value)
+{
+	if (!p_release)
+		MCValueRetain(p_value);
+	r_value = p_value;
+	return true;
+}
+
+static bool __MCStreamEqual(MCValueRef p_value, MCValueRef p_other_value)
+{
+	return p_value == p_other_value;
+}
+
+static hash_t __MCStreamHash(MCValueRef p_value)
+{
+	return (hash_t) MCHashPointer (p_value);
+}
+
+static bool __MCStreamDescribe(MCValueRef p_value, MCStringRef& r_desc)
+{
+	return false;
+}
+
+static MCValueCustomCallbacks kMCStreamCustomValueCallbacks =
+{
+	true,
+	__MCStreamDestroy,
+	__MCStreamCopy,
+	__MCStreamEqual,
+	__MCStreamHash,
+	__MCStreamDescribe,
+};
+
+bool MCStreamCreate(const MCStreamCallbacks *p_callbacks, size_t p_extra_bytes, MCStreamRef& r_stream)
+{
+	MCStreamRef self;
+	if (!MCValueCreateCustom(kMCStreamTypeInfo, sizeof(__MCStreamImpl) + p_extra_bytes, self))
+		return false;
+
+	__MCStreamGet(self).callbacks = p_callbacks;
+
+	r_stream = self;
+	
+	return true;
+}
+
+const MCStreamCallbacks *MCStreamGetCallbacks(MCStreamRef self)
+{
+	return __MCStreamCallbacks(self);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStreamIsReadable(MCStreamRef self)
+{
+	return __MCStreamCallbacks(self) -> read != nil;
+}
+
+bool MCStreamIsWritable(MCStreamRef self)
+{
+	return __MCStreamCallbacks(self) -> write != nil;
+}
+
+bool MCStreamIsMarkable(MCStreamRef self)
+{
+	return __MCStreamCallbacks(self) -> mark != nil;
+}
+
+bool MCStreamIsSeekable(MCStreamRef self)
+{
+	return __MCStreamCallbacks(self) -> seek != nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStreamGetAvailableForRead(MCStreamRef self, size_t& r_available)
+{
+	if (__MCStreamCallbacks(self) -> get_available_for_read == nil)
+		return false;
+	return __MCStreamCallbacks(self) -> get_available_for_read(self, r_available);
+}
+
+bool MCStreamRead(MCStreamRef self, void *p_buffer, size_t p_amount)
+{
+	if (__MCStreamCallbacks(self) -> read == nil)
+		return false;
+	return __MCStreamCallbacks(self) -> read(self, p_buffer, p_amount);
+}
+
+bool MCStreamGetAvailableForWrite(MCStreamRef self, size_t& r_available)
+{
+	if (__MCStreamCallbacks(self) -> get_available_for_write == nil)
+		return false;
+	return __MCStreamCallbacks(self) -> get_available_for_write(self, r_available);
+}
+
+bool MCStreamWrite(MCStreamRef self, const void *p_buffer, size_t p_amount)
+{
+	if (__MCStreamCallbacks(self) -> write == nil)
+		return false;
+	return __MCStreamCallbacks(self) -> write(self, p_buffer, p_amount);
+}
+
+bool MCStreamSkip(MCStreamRef self, size_t p_amount)
+{
+	if (__MCStreamCallbacks(self) -> skip != nil)
+		return __MCStreamCallbacks(self) -> skip(self, p_amount);
+	if (__MCStreamCallbacks(self) -> seek != nil)
+	{
+		filepos_t t_pos;
+		if (!__MCStreamCallbacks(self) -> tell(self, t_pos))
+			return false;
+		return __MCStreamCallbacks(self) -> seek(self, t_pos + p_amount);
+	}
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStreamMark(MCStreamRef self, size_t p_read_limit)
+{
+	if (__MCStreamCallbacks(self) -> mark == nil)
+		return false;
+	return __MCStreamCallbacks(self) -> mark(self, p_read_limit);
+}
+
+bool MCStreamReset(MCStreamRef self)
+{
+	if (__MCStreamCallbacks(self) -> reset == nil)
+		return false;
+	return __MCStreamCallbacks(self) -> reset(self);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStreamTell(MCStreamRef self, filepos_t& r_position)
+{
+	if (__MCStreamCallbacks(self) -> tell == nil)
+		return false;
+	return __MCStreamCallbacks(self) -> tell(self, r_position);
+}
+
+bool MCStreamSeek(MCStreamRef self, filepos_t p_position)
+{
+	if (__MCStreamCallbacks(self) -> seek == nil)
+		return false;
+	return __MCStreamCallbacks(self) -> seek(self, p_position);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStreamReadUInt8(MCStreamRef self, uint8_t& r_value)
+{
+	return MCStreamRead(self, &r_value, sizeof(uint8_t));
+}
+
+bool MCStreamReadUInt16(MCStreamRef self, uint16_t& r_value)
+{
+	if (MCStreamRead(self, &r_value, sizeof(uint16_t)))
+	{
+		r_value = MCSwapInt16NetworkToHost(r_value);
+		return true;
+	}
+	return false;
+}
+
+bool MCStreamReadUInt32(MCStreamRef self, uint32_t& r_value)
+{
+	if (MCStreamRead(self, &r_value, sizeof(uint32_t)))
+	{
+		r_value = MCSwapInt32NetworkToHost(r_value);
+		return true;
+	}
+	return false;
+}
+
+bool MCStreamReadUInt64(MCStreamRef self, uint64_t& r_value)
+{
+	if (MCStreamRead(self, &r_value, sizeof(uint64_t)))
+	{
+		r_value = MCSwapInt64NetworkToHost(r_value);
+		return true;
+	}
+	return false;
+}
+
+bool MCStreamReadInt8(MCStreamRef self, int8_t& r_value)
+{
+	return MCStreamRead(self, &r_value, sizeof(int8_t));
+}
+
+bool MCStreamReadInt16(MCStreamRef self, int16_t& r_value)
+{
+	if (MCStreamRead(self, &r_value, sizeof(int16_t)))
+	{
+		r_value = (int16_t)MCSwapInt16NetworkToHost((uint16_t)r_value);
+		return true;
+	}
+	return false;
+}
+
+bool MCStreamReadInt32(MCStreamRef self, int32_t& r_value)
+{
+	if (MCStreamRead(self, &r_value, sizeof(int32_t)))
+	{
+		r_value = (int32_t)MCSwapInt32NetworkToHost((uint32_t)r_value);
+		return true;
+	}
+	return false;
+}
+
+bool MCStreamReadInt64(MCStreamRef self, int64_t& r_value)
+{
+	if (MCStreamRead(self, &r_value, sizeof(int64_t)))
+	{
+		r_value = (int64_t)MCSwapInt64NetworkToHost((uint64_t)r_value);
+		return true;
+	}
+	return false;
+}
+
+bool MCStreamReadCompactUInt32(MCStreamRef stream, uint32_t& r_value);
+bool MCStreamReadCompactUInt64(MCStreamRef stream, uint64_t& r_value);
+bool MCStreamReadCompactSInt32(MCStreamRef stream, uint32_t& r_value);
+bool MCStreamReadCompactSInt64(MCStreamRef stream, uint64_t& r_value);
+
+bool MCStreamReadFloat(MCStreamRef stream, float& r_value);
+
+bool MCStreamReadDouble(MCStreamRef stream, double& r_value)
+{
+	uint64_t t_bits;
+	if (!MCStreamReadUInt64(stream, t_bits))
+		return false;
+
+	MCMemoryCopy(&r_value, &t_bits, sizeof(uint64_t));
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStreamWriteUInt8(MCStreamRef self, uint8_t p_value)
+{
+	return MCStreamWrite(self, &p_value, sizeof(uint8_t));
+}
+
+bool MCStreamWriteUInt16(MCStreamRef self, uint16_t p_value)
+{
+    uint16_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint16_t));
+}
+
+bool MCStreamWriteUInt32(MCStreamRef self, uint32_t p_value)
+{
+    uint32_t t_swapped_value;
+    t_swapped_value = MCSwapInt32NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint32_t));
+}
+
+bool MCStreamWriteUInt64(MCStreamRef self, uint64_t p_value)
+{
+    uint64_t t_swapped_value;
+    t_swapped_value = MCSwapInt64NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint64_t));
+}
+
+bool MCStreamWriteInt8(MCStreamRef self, int8_t p_value)
+{
+	return MCStreamWrite(self, &p_value, sizeof(int8_t));
+}
+
+bool MCStreamWriteInt16(MCStreamRef self, int16_t p_value)
+{
+    uint16_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint16_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint16_t));
+}
+
+bool MCStreamWriteInt32(MCStreamRef self, int32_t p_value)
+{
+    uint32_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint32_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint32_t));
+}
+
+bool MCStreamWriteInt64(MCStreamRef self, int64_t p_value)
+{
+    uint64_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint64_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint64_t));
+}
+
+bool MCStreamReadCompactUInt32(MCStreamRef stream, uint32_t& r_value);
+bool MCStreamReadCompactUInt64(MCStreamRef stream, uint64_t& r_value);
+bool MCStreamReadCompactSInt32(MCStreamRef stream, uint32_t& r_value);
+bool MCStreamReadCompactSInt64(MCStreamRef stream, uint64_t& r_value);
+
+bool MCStreamWriteFloat(MCStreamRef stream, float p_value);
+
+bool MCStreamWriteDouble(MCStreamRef stream, double p_value)
+{
+	uint64_t t_bits;
+    MCMemoryCopy(&t_bits, &p_value, sizeof(uint64_t));
+	return MCStreamWriteUInt64(stream, t_bits);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStreamReadBoolean(MCStreamRef stream, MCBooleanRef& r_boolean)
+{
+	uint8_t t_value;
+	if (!MCStreamReadUInt8(stream, t_value))
+		return false;
+
+	if (t_value != 0)
+		r_boolean = MCValueRetain(kMCTrue);
+	else
+		r_boolean = MCValueRetain(kMCFalse);
+
+	return true;
+}
+
+bool MCStreamReadNumber(MCStreamRef stream, MCNumberRef& r_number)
+{
+	uint8_t t_tag;
+	if (!MCStreamReadUInt8(stream, t_tag))
+		return false;
+
+	if (t_tag == 0)
+	{
+		int32_t t_value;
+		if (!MCStreamReadInt32(stream, t_value))
+			return false;
+		return MCNumberCreateWithInteger(t_value, r_number);
+	}
+
+	double t_value;
+	if (!MCStreamReadDouble(stream, t_value))
+		return false;
+	return MCNumberCreateWithReal(t_value, r_number);
+}
+
+bool MCStreamReadName(MCStreamRef stream, MCNameRef& r_name)
+{
+	MCStringRef t_string;
+	if (!MCStreamReadString(stream, t_string))
+		return false;
+
+	return MCNameCreateAndRelease(t_string, r_name);
+}
+
+bool MCStreamReadString(MCStreamRef stream, MCStringRef& r_string)
+{
+	uint32_t t_length;
+	if (!MCStreamReadUInt32(stream, t_length))
+		return false;
+
+	if (t_length == 0)
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+
+	MCAutoNativeCharArray t_chars;
+	if (!t_chars . New(t_length))
+		return false;
+
+	if (!MCStreamRead(stream, t_chars . Chars(), t_chars . CharCount()))
+		return false;
+
+	return t_chars . CreateStringAndRelease(r_string);
+}
+
+bool MCStreamReadArray(MCStreamRef stream, MCArrayRef& r_array)
+{
+	uint32_t t_count;
+	if (!MCStreamReadUInt32(stream, t_count))
+		return false;
+
+	if (t_count == 0)
+	{
+		r_array = MCValueRetain(kMCEmptyArray);
+		return true;
+	}
+
+	MCArrayRef t_array;
+	if (!MCArrayCreateMutable(t_array))
+		return false;
+
+	while(t_count > 0)
+	{
+		MCNewAutoNameRef t_name;
+		if (!MCStreamReadName(stream, &t_name))
+			break;
+
+		MCAutoValueRef t_value;
+		if (!MCStreamReadValue(stream, &t_value))
+			break;
+
+		if (!MCArrayStoreValue(t_array, true, *t_name, *t_value))
+			break;
+
+		t_count -= 1;
+	}
+
+	if (t_count != 0)
+	{
+		MCValueRelease(t_array);
+		return false;
+	}
+
+	return MCArrayCopyAndRelease(t_array, r_array);
+}
+
+bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set)
+{
+	uint32_t t_length;
+	if (!MCStreamReadUInt32(stream, t_length))
+		return false;
+
+	if (t_length == 0)
+	{
+		r_set = MCValueRetain(kMCEmptySet);
+		return true;
+	}
+
+	uindex_t *t_limbs;
+	if (!MCMemoryNewArray(t_length, t_limbs))
+		return false;
+
+	if (!MCStreamRead(stream, t_limbs, sizeof(uint32_t) * t_length) ||
+		!MCSetCreateWithLimbsAndRelease(t_limbs, t_length, r_set))
+	{
+		MCMemoryDeleteArray(t_limbs);
+		return false;
+	}
+
+	return true;
+}
+
+bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value)
+{
+	uint8_t t_tag;
+	if (!MCStreamReadUInt8(stream, t_tag))
+		return false;
+
+	switch(t_tag)
+	{
+	case 0:
+		r_value = MCValueRetain(kMCNull);
+		return true;
+	case 1:
+		r_value = MCValueRetain(kMCTrue);
+		return true;
+	case 2:
+		r_value = MCValueRetain(kMCFalse);
+		return true;
+	case 3:
+	{
+		int32_t t_int;
+		if (!MCStreamReadInt32(stream, t_int))
+			break;
+		MCNumberRef t_value;
+		if (MCNumberCreateWithInteger(t_int, t_value))
+			return r_value = t_value, true;
+		break;
+	}
+	case 4:
+	{
+		MCStringRef t_value;
+		if (MCStreamReadString(stream, t_value))
+			return r_value = t_value, true;
+		break;
+	}
+	case 5:
+	{
+		MCNameRef t_value;
+		if (MCStreamReadName(stream, t_value))
+			return r_value = t_value, true;
+		break;
+	}
+	case 6:
+	{
+		MCSetRef t_value;
+		if (MCStreamReadSet(stream, t_value))
+			return r_value = t_value, true;
+		break;
+	}
+	}
+
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool __MCStreamInitialize(void)
+{
+    if (!MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
+        return false;
+    
+    MCAutoTypeInfoRef t_unnamed;
+    /* UNCHECKED */ MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, &t_unnamed);
+    /* UNCHECKED */ MCNamedTypeInfoCreate(MCNAME("livecode.lang.Stream"), kMCStreamTypeInfo);
+    /* UNCHECKED */ MCNamedTypeInfoBind(kMCStreamTypeInfo, *t_unnamed);
+    
+    return true;
+}
+
+void __MCStreamFinalize(void)
+{
+    MCValueRelease(kMCStreamTypeInfo);
+}
+
+////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,182 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+  This library consists of the general operations on types provided by the standard library of LiveCode Builder.
+*/
+
+module com.livecode.type
+
+use com.livecode.foreign
+
+public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsABoolean(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsANumber(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAString(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAData(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAnArray(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAList(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+
+/*
+Summary:    Determines whether <Target> is empty or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> evaluates to the empty value of that type, and false otherwise.
+
+*/
+
+syntax IsEmpty is postfix operator with precedence 7
+    <Target: Expression> "is" "empty"
+begin
+    MCTypeEvalIsEmpty(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is empty or not.
+
+Target:     Any expression
+output:     Returns false if the given expression <Target> evaluates to the empty value of that type, and true otherwise.
+
+*/
+
+syntax IsNotEmpty is postfix operator with precedence 7
+	<Target: Expression> "is not" "empty"
+begin
+	MCTypeEvalIsNotEmpty(Target, output)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Target> is defined or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is defined, and false if not.
+
+*/
+
+syntax IsDefined is postfix operator with precedence 7
+	<Target: Expression> "is" "defined"
+begin
+	MCTypeEvalIsDefined(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is defined or not.
+
+Target:     Any expression
+output:     Returns false if the given expression <Target> is defined, and true if not.
+
+*/
+
+syntax IsNotDefined is postfix operator with precedence 7
+	<Target: Expression> "is not" "defined"
+begin
+	MCTypeEvalIsNotDefined(Target, output)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Target> is a boolean or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a boolean, and false if not.
+
+*/
+
+syntax IsABoolean is postfix operator with precedence 7
+	<Target: Expression> "is" "a" "boolean"
+begin
+	MCTypeEvalIsABoolean(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a number or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a number, and false if not.
+
+*/
+
+syntax IsANumber is postfix operator with precedence 7
+	<Target: Expression> "is" "a" "number"
+begin
+	MCTypeEvalIsANumber(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a string or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a string, and false if not.
+
+*/
+
+syntax IsAString is postfix operator with precedence 7
+	<Target: Expression> "is" "a" "string"
+begin
+	MCTypeEvalIsAString(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is data or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is data, and false if not.
+
+*/
+
+syntax IsAData is postfix operator with precedence 7
+	<Target: Expression> "is" "a" "data"
+begin
+	MCTypeEvalIsAData(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is an array or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is an array, and false if not.
+
+*/
+
+syntax IsAnArray is postfix operator with precedence 7
+	<Target: Expression> "is" "an" "array"
+begin
+	MCTypeEvalIsAnArray(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a list or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a list, and false if not.
+
+*/
+
+syntax IsAList is postfix operator with precedence 7
+	<Target: Expression> "is" "a" "list"
+begin
+	MCTypeEvalIsAList(Target, output)
+end syntax
+
+--
+
+end module

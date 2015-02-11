@@ -27,14 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define SAVE_ENCRYPTED 0x80000000
 #define SAVE_LARGE     0x40000000
 
-enum IO_stat {
-    IO_NORMAL,
-    IO_NONE,
-    IO_ERROR,
-    IO_EOF,
-    IO_TIMEOUT
-};
-
 enum Open_mode {
     OM_APPEND,
     OM_NEITHER,
@@ -44,6 +36,20 @@ enum Open_mode {
     OM_UPDATE,
     OM_TEXT,
     OM_BINARY
+};
+
+enum Encoding_type
+{
+    EN_BOM_BASED,
+    EN_NATIVE,
+    EN_UTF8,
+    EN_UTF16,
+    EN_UTF16LE,
+    EN_UTF16BE,
+    EN_UTF32,
+    EN_UTF32LE,
+    EN_UTF32BE,
+    EN_BINARY
 };
 
 enum Object_type {
@@ -77,6 +83,8 @@ enum Object_type {
 	OT_PARAGRAPH_EXT,
 	// MW-2012-03-04: [[ StackFile5500 ]] The extended block tag.
 	OT_BLOCK_EXT,
+    // MW-2014-12-16: [[ Widgets ]] The widget object tag.
+    OT_WIDGET,
 };
 
 #define IO_WRITTEN    (1UL << 0)
@@ -93,123 +101,122 @@ enum Object_type {
 
 struct MCSystemFileHandle;
 
-class IO_header
-{
-public:
-#if defined(_WINDOWS_DESKTOP)
-	MCWinSysHandle fhandle;
-	char *buffer;
-	// MW-2013-05-02: [[ x64 ]] This is used to store a pointer in 'fake' mode so
-	//   upgrade to size_t.
-	size_t len;
-	char *ioptr;
-	MCWinSysHandle mhandle; //memory map file handle
-	int putback;
-	// MW-2012-09-10: [[ Bug 10230 ]] If true, it means this IO handle is a pipe.
-	bool is_pipe;
-	IO_header(MCWinSysHandle fp, char *b, uint4 l, uint2 f)
-	{
-		fhandle = fp;
-		ioptr = buffer = b;
-		len = l;
-		mhandle = NULL;
-		flags = f;
-		putback = -1;
-		is_pipe = false;
-	}
-	int getfd()
-	{
-		return -1;
-	}
-#elif defined(_MAC_DESKTOP)
-	FILE *fptr;
-	short serialIn;  //serial port Input reference number
-	short serialOut; //serial port output reference number
-	MCMacSysHandle hserialInputBuff; //handle to serial input buffer
-	char *buffer;   //buffer for read data
-	// MW-2013-05-02: [[ x64 ]] 'len' is used to store a pointer in 'fake' mode so
-	//   upgrade to size_t.
-	size_t len;      //file length
-	char *ioptr;    //the starting point of a read
-	
-	// MW-2013-05-02: [[ x64 ]] 'l' is passed a pointer in 'fake' mode so upgrade
-	//   to size_t.
-	IO_header(FILE *f, short in, short out, MCMacSysHandle serialbuf, char *b, size_t l, uint2 iflags)
-	{
-		fptr = f;
-		serialIn = in;
-		serialOut = out;
-		hserialInputBuff = serialbuf;
-		ioptr = buffer = b;
-		len = l;
-		flags = iflags;
-	}
-	int getfd()
-	{
-		return -1;
-	}
-#elif defined(_LINUX_DESKTOP)
-	FILE *fptr;
-	char *buffer;
-	// MW-2013-05-02: [[ x64 ]] 'len' is used to store a pointer in 'fake' mode so
-	//   upgrade to size_t.
-	size_t len;
-	char *ioptr;
-	int fd;
-	
-	// MW-2013-05-02: [[ x64 ]] 'l' is passed a pointer in 'fake' mode so upgrade
-	//   to size_t.
-	IO_header(FILE *f, char *b, size_t l, int ifd, uint2 iflags)
-	{
-		fptr = f;
-		ioptr = buffer = b;
-		len = l;
-		fd = ifd;
-		flags = iflags;
-	}
-	int getfd()
-	{
-		return fd;
-	}
-#elif defined(_MOBILE) || defined(_SERVER)
-	MCSystemFileHandle *handle;
-	// MW-2013-05-02: [[ x64 ]] 'len' is used to store a pointer in 'fake' mode so
-	//   upgrade to size_t.
-	size_t len;
-	char *buffer;
-	
-	IO_header(MCSystemFileHandle *p_handle, uint2 iflags)
-	{
-		handle = p_handle;
-		flags = iflags;
-	}
-	int getfd(void)
-	{
-		return -1;
-	}
-#else
-#error IO_header not defined for this platform/mode
-#endif
-	uint2 flags;
-};
+//class IO_header
+//{
+//public:
+//#if defined(_WINDOWS_DESKTOP)
+//	MCWinSysHandle fhandle;
+//	char *buffer;
+//	uint4 len;
+//	char *ioptr;
+//	MCWinSysHandle mhandle; //memory map file handle
+//	int putback;
+//	// MW-2012-09-10: [[ Bug 10230 ]] If true, it means this IO handle is a pipe.
+//	bool is_pipe;
+//	IO_header(MCWinSysHandle fp, char *b, uint4 l, uint2 f)
+//	{
+//		fhandle = fp;
+//		ioptr = buffer = b;
+//		len = l;
+//		mhandle = NULL;
+//		flags = f;
+//		putback = -1;
+//		is_pipe = false;
+//	}
+//	int getfd()
+//	{
+//		return -1;
+//	}
+//#if 0
+//#elif defined(_MAC_DESKTOP)
+//	FILE *fptr;
+//	short serialIn;  //serial port Input reference number
+//	short serialOut; //serial port output reference number
+//	MCMacSysHandle hserialInputBuff; //handle to serial input buffer
+//	char *buffer;   //buffer for read data
+//	uint4 len;      //file length
+//	char *ioptr;    //the starting point of a read
+//	IO_header(FILE *f, short in, short out, MCMacSysHandle serialbuf, char *b, uint4 l, uint2 iflags)
+//	{
+//		fptr = f;
+//		serialIn = in;
+//		serialOut = out;
+//		hserialInputBuff = serialbuf;
+//		ioptr = buffer = b;
+//		len = l;
+//		flags = iflags;
+//	}
+//	int getfd()
+//	{
+//		return -1;
+//	}
+//#endif
+//#elif defined(_MAC_DESKTOP)
+//    MCSystemFileHandle *handle;
+//	char *buffer;   //buffer for read data
+//	uint4 len;      //file length
+//	IO_header(MCSystemFileHandle *p_handle, uint2 iflags)
+//	{
+//        handle = p_handle;
+//		flags = iflags;
+//	}
+//	int getfd()
+//	{
+//		return -1;
+//	}
+//#elif defined(_LINUX_DESKTOP)
+//	FILE *fptr;
+//	char *buffer;
+//	uint4 len;
+//	char *ioptr;
+//	int fd;
+//	IO_header(FILE *f, char *b, uint4 l, int ifd, uint2 iflags)
+//	{
+//		fptr = f;
+//		ioptr = buffer = b;
+//		len = l;
+//		fd = ifd;
+//		flags = iflags;
+//	}
+//	int getfd()
+//	{
+//		return fd;
+//	}
+//#elif defined(_MOBILE) || defined(_SERVER)
+//	MCSystemFileHandle *handle;
+//	uint32_t len;
+//	char *buffer;
+//	IO_header(MCSystemFileHandle *p_handle, uint2 iflags)
+//	{
+//		handle = p_handle;
+//		flags = iflags;
+//	}
+//	int getfd(void)
+//	{
+//		return -1;
+//	}
+//#else
+//#error IO_header not defined for this platform/mode
+//#endif
+//	uint2 flags;
+//};
 
-typedef IO_header * IO_handle;
-
+typedef MCSystemFileHandle * IO_handle;
 typedef struct _Streamnode
 {
-	char *name;
+	MCNameRef name;
 	Open_mode mode;
+    Encoding_type encoding;
 	IO_handle ihandle;
 	IO_handle ohandle;
 	int4 pid;
-#if defined(_WINDOWS_DESKTOP)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	MCWinSysHandle phandle;  //process handle
 	MCWinSysHandle thandle;  //process handle
-#elif defined(_MAC_DESKTOP)
+#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
 	MCMacProcessSerialNumber sn;
 #endif
-	int4 retcode;
-	Boolean textmode;
+    int4 retcode;
 }
 Streamnode;
 

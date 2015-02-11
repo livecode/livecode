@@ -23,108 +23,224 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "object.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "objectstream.h"
 #include "variable.h"
 
+#include "objectpropsets.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCObjectPropertySet
+extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_delimiter, MCStringRef*& r_array, uindex_t& r_count);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set)
 {
-public:
-	MCObjectPropertySet(void)
+	MCObjectPropertySet *t_new_set;
+	if (createwithname(m_name, t_new_set))
 	{
-		m_next = nil;
-		m_name = nil;
-	}
-
-	~MCObjectPropertySet(void)
-	{
-		MCNameDelete(m_name);
-	}
-
-	bool hasname(MCNameRef p_name)
-	{
-		return MCNameIsEqualTo(m_name, p_name, kMCCompareCaseless);
-	}
-
-	MCNameRef getname(void)
-	{
-		return m_name;
-	}
-
-	MCVariableValue *getvalue(void)
-	{
-		return &m_value;
-	}
-
-	MCObjectPropertySet *getnext(void)
-	{
-		return m_next;
-	}
-
-	void setnext(MCObjectPropertySet *p_next)
-	{
-		m_next = p_next;
-	}
-
-	/* CAN FAIL */ bool clone(MCObjectPropertySet*& r_set)
-	{
-		MCObjectPropertySet *t_new_set;
-		if (createwithname(m_name, t_new_set))
+		MCValueRelease(t_new_set -> m_props);
+		if (MCArrayMutableCopy(m_props, t_new_set -> m_props))
 		{
-			t_new_set -> m_value . assign(m_value);
 			r_set = t_new_set;
 			return true;
 		}
 
+		delete t_new_set;
+	}
+
+	return false;
+}
+
+bool MCObjectPropertySet::createwithname_nocopy(MCNameRef p_name, MCObjectPropertySet*& r_set)
+{
+	MCObjectPropertySet *t_new_set;
+	t_new_set = new MCObjectPropertySet;
+	if (t_new_set == nil)
+		return false;
+
+	t_new_set -> m_name = p_name;
+
+	r_set = t_new_set;
+
+	return true;
+}
+
+bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*& r_set)
+{
+	MCNameRef t_new_name;
+	if (!MCNameClone(p_name, t_new_name))
+		return false;
+
+	MCObjectPropertySet *t_new_set;
+	if (!createwithname_nocopy(t_new_name, t_new_set))
+	{
+		MCNameDelete(t_new_name);
 		return false;
 	}
 
-	void changename_nocopy(MCNameRef p_name)
-	{
-		MCNameDelete(m_name);
-		m_name = p_name;
-	}
+	r_set = t_new_set;
 
-	/* CAN FAIL */ static bool createwithname_nocopy(MCNameRef p_name, MCObjectPropertySet*& r_set)
-	{
-		MCObjectPropertySet *t_new_set;
-		t_new_set = new MCObjectPropertySet;
-		if (t_new_set == nil)
-			return false;
+	return true;
+}
 
-		t_new_set -> m_name = p_name;
+//////////
 
-		r_set = t_new_set;
+#ifdef LEGACY_EXEC
+bool MCObjectPropertySet::list(MCExecPoint& ep)
+{
+	return ep . listarraykeys(m_props, '\n');
+}
+#endif
 
+bool MCObjectPropertySet::list(MCStringRef& r_keys)
+{
+    if (MCArrayListKeys(m_props, '\n', r_keys))
 		return true;
-	}
+    
+	return false;
+}
 
-	/* CAN FAIL */ static bool createwithname(MCNameRef p_name, MCObjectPropertySet*& r_set)
-	{
-		MCNameRef t_new_name;
-		if (!MCNameClone(p_name, t_new_name))
-			return false;
+bool MCObjectPropertySet::clear(void)
+{
+	MCValueRelease(m_props);
+	return MCArrayCreateMutable(m_props);
+}
 
-		MCObjectPropertySet *t_new_set;
-		if (!createwithname_nocopy(t_new_name, t_new_set))
-		{
-			MCNameDelete(t_new_name);
-			return false;
-		}
+#ifdef LEGACY_EXEC
+bool MCObjectPropertySet::fetch(MCExecPoint& ep)
+{
+	return ep . setvalueref(m_props);
+}
+#endif
 
-		r_set = t_new_set;
+bool MCObjectPropertySet::fetch(MCArrayRef& r_array)
+{
+    return MCArrayCopy(m_props, r_array);
+}
 
-		return true;
-	}
+#ifdef LEGACY_EXEC
+bool MCObjectPropertySet::store(MCExecPoint& ep)
+{
+	MCArrayRef t_new_props;
+	if (!ep . copyasarrayref(t_new_props))
+		return false;
+	MCValueRelease(m_props);
+	m_props = t_new_props;
+	return true;
+}
+#endif
 
-private:
-	MCObjectPropertySet *m_next;
-	MCNameRef m_name;
-	MCVariableValue m_value;
+bool MCObjectPropertySet::store(MCArrayRef p_array)
+{
+	MCValueRelease(m_props);
+    return MCArrayMutableCopy(p_array, m_props);
+}
 
-};
+#ifdef LEGACY_EXEC
+bool MCObjectPropertySet::fetchelement(MCExecPoint& ep, MCNameRef p_name)
+{
+	return ep . fetcharrayelement(m_props, p_name);
+}
+#endif
+
+#ifdef LEGACY_EXEC
+bool MCObjectPropertySet::storeelement(MCExecPoint& ep, MCNameRef p_name)
+{
+	return ep . storearrayelement(m_props, p_name);
+}
+#endif
+
+bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value)
+{
+	return MCArrayFetchValue(m_props, ctxt . GetCaseSensitive(), p_name, r_value);
+}
+
+bool MCObjectPropertySet::storeelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef p_value)
+{
+	return MCArrayStoreValue(m_props, ctxt . GetCaseSensitive(), p_name, p_value);
+}
+
+bool MCObjectPropertySet::restrict(MCStringRef p_string)
+{
+    bool t_success;
+    t_success = true;
+    MCAutoStringRefArray t_split;
+    if (!MCStringsSplit(p_string, '\n', t_split . PtrRef(), t_split . CountRef()))
+        return false;
+    
+    MCAutoArrayRef t_new_props;
+    MCArrayCreateMutable(&t_new_props);
+    uinteger_t t_size;
+    t_size = t_split . Count();
+    for (uindex_t i = 0; i < t_size && t_success; i++)
+    {
+        MCNewAutoNameRef t_key_name;
+        if (t_success)
+            t_success = MCNameCreate(t_split[i], &t_key_name);
+        MCValueRef t_value;
+        if (!MCArrayFetchValue(m_props, false, *t_key_name, t_value))
+            t_value = kMCEmptyString;
+        if (t_success)
+            t_success = MCArrayStoreValue(*t_new_props, false, *t_key_name, t_value);
+    }
+    MCValueAssign(m_props, *t_new_props);
+    return t_success;
+}
+
+//////////
+
+IO_stat MCObjectPropertySet::loadprops_new(IO_handle p_stream)
+{
+    MCArrayRef t_new_props;
+
+    if (IO_read_valueref_new((MCValueRef&)t_new_props, p_stream) != IO_NORMAL)
+		return IO_ERROR;
+    if (!MCArrayMutableCopyAndRelease(t_new_props, t_new_props))
+		return IO_ERROR;
+
+    MCValueAssign(m_props, t_new_props);
+    MCValueRelease(t_new_props);
+	return IO_NORMAL;
+}
+
+IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream)
+{
+	return IO_write_valueref_new(m_props, p_stream);
+}
+
+//////////
+
+uint32_t MCObjectPropertySet::measure_legacy(bool p_nested_only)
+{
+	return MCArrayMeasureForStreamLegacy(m_props, p_nested_only);
+}
+
+bool MCObjectPropertySet::isnested_legacy(void) const
+{
+	return MCArrayIsNestedLegacy(m_props);
+}
+
+IO_stat MCObjectPropertySet::loadprops_legacy(IO_handle p_stream)
+{
+	return MCArrayLoadFromHandleLegacy(m_props, p_stream);
+}
+
+IO_stat MCObjectPropertySet::loadarrayprops_legacy(MCObjectInputStream& p_stream)
+{
+	return MCArrayLoadFromStreamLegacy(m_props, p_stream);
+}
+
+IO_stat MCObjectPropertySet::saveprops_legacy(IO_handle p_stream)
+{
+	return MCArraySaveToHandleLegacy(m_props, p_stream);
+}
+
+IO_stat MCObjectPropertySet::savearrayprops_legacy(MCObjectOutputStream& p_stream)
+{
+	return MCArraySaveToStreamLegacy(m_props, true, p_stream);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,24 +249,24 @@ MCNameRef MCObject::getdefaultpropsetname(void)
 	return props != nil ? props -> getname() : kMCEmptyName;
 }
 
-bool MCObject::findpropset(MCNameRef p_name, bool p_empty_is_default, MCVariableValue*& r_value)
+bool MCObject::findpropset(MCNameRef p_name, bool p_empty_is_default, MCObjectPropertySet*& r_set)
 {
 	MCObjectPropertySet *t_set;
 	t_set = props;
-	if (!p_empty_is_default || !MCNameIsEqualTo(p_name, kMCEmptyName, kMCCompareCaseless))
+	if (!p_empty_is_default || !MCNameIsEmpty(p_name))
 		while(t_set != nil && !t_set -> hasname(p_name))
 			t_set = t_set -> getnext();
 
 	if (t_set != nil)
 	{
-		r_value = t_set -> getvalue();
+		r_set = t_set;
 		return true;
 	}
 
 	return false;
 }
 
-bool MCObject::ensurepropset(MCNameRef p_name, bool p_empty_is_default, MCVariableValue*& r_value)
+bool MCObject::ensurepropset(MCNameRef p_name, bool p_empty_is_default, MCObjectPropertySet*& r_set)
 {
 	if (props == nil)
 		if (!MCObjectPropertySet::createwithname(kMCEmptyName, props))
@@ -158,7 +274,7 @@ bool MCObject::ensurepropset(MCNameRef p_name, bool p_empty_is_default, MCVariab
 
 	MCObjectPropertySet *t_set;
 	t_set = props;
-	if (!p_empty_is_default || !MCNameIsEqualTo(p_name, kMCEmptyName, kMCCompareCaseless))
+	if (!p_empty_is_default || !MCNameIsEmpty(p_name))
 		while(t_set != nil && !t_set -> hasname(p_name))
 			t_set = t_set -> getnext();
 
@@ -171,11 +287,12 @@ bool MCObject::ensurepropset(MCNameRef p_name, bool p_empty_is_default, MCVariab
 		props -> setnext(t_set);
 	}
 
-	r_value = t_set -> getvalue();
+	r_set = t_set;
 
 	return true;
 }
 
+#ifdef OLD_EXEC
 bool MCObject::setpropset(MCNameRef p_name)
 {
 	if (props == nil)
@@ -287,6 +404,7 @@ bool MCObject::changepropsets(MCExecPoint& ep)
 
 	return true;
 }
+#endif
 
 bool MCObject::clonepropsets(MCObjectPropertySet*& r_new_props) const
 {
@@ -325,20 +443,86 @@ void MCObject::deletepropsets(void)
 	}
 }
 
-bool MCObject::hasarraypropsets(void)
+IO_stat MCObject::savepropsets(IO_handle stream)
+{
+	if (MCstackfileversion < 7000)
+		return savepropsets_legacy(stream);
+	
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] Emit all the propsets in
+	//   OT_CUSTOM - name - array
+	// format.
+	IO_stat stat;
+	MCObjectPropertySet *p = props;
+	while (p != NULL)
+	{
+		if ((stat = IO_write_uint1(OT_CUSTOM, stream)) != IO_NORMAL)
+			return stat;
+		if ((stat = IO_write_nameref_new(p->getname(), stream, true)) != IO_NORMAL)
+			return stat;
+		if ((stat = p->saveprops_new(stream)) != IO_NORMAL)
+			return stat;
+		p = p->getnext();
+	}
+	return IO_NORMAL;
+}
+
+IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
+{
+	if (version < 7000)
+		return loadpropsets_legacy(stream);
+	
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] Read all the propsets in
+	//   OT_CUSTOM - name - array
+	// format.
+	MCObjectPropertySet *p = props;
+	IO_stat stat;
+	while (True)
+	{
+		uint1 type;
+		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
+			return stat;
+		if (type == OT_CUSTOM)
+		{
+			MCNameRef pname;
+			if ((stat = IO_read_nameref_new(pname, stream, true)) != IO_NORMAL)
+				return stat;
+			
+			MCObjectPropertySet *v;
+			/* UNCHECKED */ MCObjectPropertySet::createwithname_nocopy(pname, v);
+			if (p != nil)
+			{
+				p->setnext(v);
+				p = p->getnext();
+			}
+			else
+				props = p = v;
+
+			if ((stat = p->loadprops_new(stream)) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			MCS_seek_cur(stream, -1);
+			break;
+		}
+	}
+	return IO_NORMAL;
+}
+
+bool MCObject::hasarraypropsets_legacy(void)
 {
 	MCObjectPropertySet *t_prop;
 	t_prop = props;
 	while(t_prop != NULL)
 	{
-		if (t_prop -> getvalue() -> is_array() && t_prop -> getvalue() -> get_array() -> isnested())
+		if (t_prop -> isnested_legacy())
 			return true;
 		t_prop = t_prop -> getnext();
 	}
 	return false;
 }
 
-uint32_t MCObject::measurearraypropsets(void)
+uint32_t MCObject::measurearraypropsets_legacy(void)
 {
 	uint32_t t_prop_size;
 	t_prop_size = 0;
@@ -349,13 +533,10 @@ uint32_t MCObject::measurearraypropsets(void)
 	{
 		// Although we only want nested arrays, measure returns 0 in size for these
 		// if we pass true for p_nested_array.
-		if (t_prop -> getvalue() -> is_array())
-		{
-			uint32_t t_size;
-			t_size = t_prop -> getvalue() -> get_array() -> measure(true);
-			if (t_size != 0)
-				t_prop_size += t_size + 4;
-		}
+		uint32_t t_size;
+		t_size = t_prop -> measure_legacy(true);
+		if (t_size != 0)
+			t_prop_size += t_size + 4;
 
 		t_prop = t_prop -> getnext();
 	}
@@ -363,17 +544,17 @@ uint32_t MCObject::measurearraypropsets(void)
 	return t_prop_size;
 }
 
-IO_stat MCObject::loadunnamedpropset(IO_handle stream)
+IO_stat MCObject::loadunnamedpropset_legacy(IO_handle stream)
 {
 	IO_stat stat;
 	if (props == NULL)
 		/* UNCHECKED */ MCObjectPropertySet::createwithname(kMCEmptyName, props);
-	if ((stat = props->getvalue()->loadkeys(stream, props -> getvalue() -> is_array())) != IO_NORMAL)
+	if ((stat = props->loadprops_legacy(stream)) != IO_NORMAL)
 		return stat;
 	return stat;
 }
 
-IO_stat MCObject::loadpropsets(IO_handle stream)
+IO_stat MCObject::loadpropsets_legacy(IO_handle stream)
 {
 	MCObjectPropertySet *p = props;
 	IO_stat stat;
@@ -386,7 +567,7 @@ IO_stat MCObject::loadpropsets(IO_handle stream)
 		if (type == OT_CUSTOM)
 		{
 			MCNameRef pname;
-			if ((stat = IO_read_nameref(pname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_nameref_new(pname, stream, false)) != IO_NORMAL)
 				return stat;
 
 			// If there is already a next pset, then it means its had array values loaded.
@@ -404,7 +585,7 @@ IO_stat MCObject::loadpropsets(IO_handle stream)
 				p = p->getnext();
 			}
 
-			if ((stat = p->getvalue()->loadkeys(stream, p -> getvalue() -> is_array())) != IO_NORMAL)
+			if ((stat = p->loadprops_legacy(stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
@@ -416,7 +597,7 @@ IO_stat MCObject::loadpropsets(IO_handle stream)
 	return IO_NORMAL;
 }
 
-IO_stat MCObject::loadarraypropsets(MCObjectInputStream& p_stream)
+IO_stat MCObject::loadarraypropsets_legacy(MCObjectInputStream& p_stream)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -458,22 +639,22 @@ IO_stat MCObject::loadarraypropsets(MCObjectInputStream& p_stream)
 			}
 
 			// We now have our prop to load into - so we do so :o)
-			t_stat = t_prop -> getvalue() -> loadarray(p_stream, t_prop -> getvalue() -> is_array());
+			t_stat = t_prop -> loadarrayprops_legacy(p_stream);
 		}
 	}
 
 	return t_stat;
 }
 
-IO_stat MCObject::saveunnamedpropset(IO_handle stream)
+IO_stat MCObject::saveunnamedpropset_legacy(IO_handle stream)
 {
 	MCObjectPropertySet *p = props;
 	while (!p->hasname(kMCEmptyName))
 		p = p->getnext();
-	return p->getvalue()->savekeys(stream);
+	return p->saveprops_legacy(stream);
 }
 
-IO_stat MCObject::savepropsets(IO_handle stream)
+IO_stat MCObject::savepropsets_legacy(IO_handle stream)
 {
 	IO_stat stat;
 	MCObjectPropertySet *p = props;
@@ -483,9 +664,9 @@ IO_stat MCObject::savepropsets(IO_handle stream)
 		{
 			if ((stat = IO_write_uint1(OT_CUSTOM, stream)) != IO_NORMAL)
 				return stat;
-			if ((stat = IO_write_nameref(p->getname(), stream)) != IO_NORMAL)
+			if ((stat = IO_write_nameref_new(p->getname(), stream, false)) != IO_NORMAL)
 				return stat;
-			if ((stat = p->getvalue()->savekeys(stream)) != IO_NORMAL)
+			if ((stat = p->saveprops_legacy(stream)) != IO_NORMAL)
 				return stat;
 		}
 		p = p->getnext();
@@ -493,7 +674,7 @@ IO_stat MCObject::savepropsets(IO_handle stream)
 	return IO_NORMAL;
 }
 
-IO_stat MCObject::savearraypropsets(MCObjectOutputStream& p_stream)
+IO_stat MCObject::savearraypropsets_legacy(MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -509,11 +690,11 @@ IO_stat MCObject::savearraypropsets(MCObjectOutputStream& p_stream)
 	for(t_prop = props; t_prop != NULL; t_prop = t_prop -> getnext())
 		if (t_prop -> hasname(kMCEmptyName))
 		{
-			if (t_prop -> getvalue() -> is_array() && t_prop -> getvalue() -> get_array() -> isnested())
+			if (t_prop -> isnested_legacy())
 			{
 				t_stat = p_stream . WriteU32(t_prop_index);
 				if (t_stat == IO_NORMAL)
-					t_stat = t_prop -> getvalue() -> get_array() -> save(p_stream, true);
+					t_stat = t_prop -> savearrayprops_legacy(p_stream);
 			}
 			break;
 		}
@@ -525,11 +706,11 @@ IO_stat MCObject::savearraypropsets(MCObjectOutputStream& p_stream)
 		if (!t_prop -> hasname(kMCEmptyName) != 0)
 		{
 			t_prop_index += 1;
-			if (t_prop -> getvalue() -> is_array() && t_prop -> getvalue() -> get_array() -> isnested())
+			if (t_prop -> isnested_legacy())
 			{
 				t_stat = p_stream . WriteU32(t_prop_index);
 				if (t_stat == IO_NORMAL)
-					t_stat = t_prop -> getvalue() -> get_array() -> save(p_stream, true);
+					t_stat = t_prop -> savearrayprops_legacy(p_stream);
 			}
 		}
 		

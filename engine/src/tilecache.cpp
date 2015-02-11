@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -456,7 +455,7 @@ uint32_t MCTileCacheGetCacheLimit(MCTileCacheRef self)
 	return self -> cache_limit;
 }
 
-void MCTileCacheSetTileSize(MCTileCacheRef self, int32_t p_new_tile_size)
+void MCTileCacheSetTileSize(MCTileCacheRef self, uint32_t p_new_tile_size)
 {
 	// If the new tile size is different from the old, we need to flush.
 	if (self -> tile_size != p_new_tile_size)
@@ -1385,10 +1384,12 @@ void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t p_id, const MCRectang
 
 	// Compute the bounds of the touched cells.
 	int32_t t_left, t_top, t_right, t_bottom;
-	t_left = MCMax(t_sprite -> left, MCTileCacheTileFloor(self, t_tile_rect . x));
-	t_top = MCMax(t_sprite -> top, MCTileCacheTileFloor(self, t_tile_rect . y));
-	t_right = MCMin(t_sprite -> right, MCTileCacheTileCeiling(self, t_tile_rect . x + t_tile_rect . width));
-	t_bottom = MCMin(t_sprite -> bottom, MCTileCacheTileCeiling(self, t_tile_rect . y + t_tile_rect . height));
+    // AL-2014-10-28 : [[ Bug 13833 ]] Ensure we use the correct version of MCMax.
+    //  Using the uint8_t version causes incorrect values for bounds.
+	t_left = MCMax((int32_t)t_sprite -> left, MCTileCacheTileFloor(self, t_tile_rect . x));
+	t_top = MCMax((int32_t)t_sprite -> top, MCTileCacheTileFloor(self, t_tile_rect . y));
+	t_right = MCMin((int32_t)t_sprite -> right, MCTileCacheTileCeiling(self, t_tile_rect . x + t_tile_rect . width));
+	t_bottom = MCMin((int32_t)t_sprite -> bottom, MCTileCacheTileCeiling(self, t_tile_rect . y + t_tile_rect . height));
 	
 	// Now iterate over the tiles, dirtying those that are in the region.
 	for(int32_t y = t_top; y < t_bottom; y++)
@@ -1486,8 +1487,8 @@ void MCTileCacheEndFrame(MCTileCacheRef self)
 
 	// Some statistics
 #ifdef _DEBUG
-	MCLog("Frame - %d sprite tiles, %d scenery tiles, %d active tiles, %d instructions, %d bytes",
-				self -> sprite_render_list . length, self -> scenery_render_list . length, self -> active_tile_count, self -> display_list_frontier, self -> cache_size);
+    //MCLog("Frame - %d sprite tiles, %d scenery tiles, %d active tiles, %d instructions, %d bytes",
+    //			self -> sprite_render_list . length, self -> scenery_render_list . length, self -> active_tile_count, self -> display_list_frontier, self -> cache_size);
 #endif
 }
 
@@ -1812,7 +1813,7 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 			// we are not clipping accurately yet, we must always erase).
 			if (*t_activity < 2)
 			{
-				for(int32_t y = 0; y < self -> tile_size; y++)
+				for(uint32_t y = 0; y < self -> tile_size; y++)
 					memset((uint8_t*)t_bitmap -> data + t_bitmap -> stride * (y + (t_tile -> y - t_required_tiles . top) * self -> tile_size) + (t_tile -> x - t_required_tiles . left) * self -> tile_size * sizeof(uint32_t), 0, self -> tile_size * sizeof(uint32_t));
 			}
 

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "debug.h"
 #include "mcerror.h"
@@ -39,7 +39,7 @@ extern void IreviamDebuggerDisconnect(void);
 extern bool IreviamDebuggerUpdate(uint32_t p_until);
 extern bool IreviamDebuggerRun(const char *p_reason, const char *p_file, uint32_t line, uint32_t pos);
 
-extern void MCVariableViewEnter(MCExecPoint* ep);
+extern void MCVariableViewEnter(MCExecContext &ctxt);
 extern void MCVariableViewLeave(void);
 
 ////////
@@ -64,7 +64,7 @@ static uint32_t s_current_context = 0;
 
 extern MCSErrorMode g_server_error_mode;
 extern MCServerScript *MCserverscript;
-extern char *MCservercgidocumentroot;
+extern MCStringRef MCservercgidocumentroot;
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -116,15 +116,18 @@ static uint4 BreakpointsSearch(uint4 p_file, uint4 p_row)
 //  UTILITIES
 //
 
-static const char *GetFileForContext(MCExecPoint& ep)
+static bool GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file)
 {
-	const char *t_file;
-	t_file = MCserverscript -> GetFileForContext(ep);
+    MCAutoStringRef t_file;
+    if (MCserverscript -> GetFileForContext(ctxt, &t_file))
+    {
+        if (!MCStringBeginsWith(*t_file, MCservercgidocumentroot, kMCStringOptionCompareExact))
+            return MCStringCopy(*t_file, r_file);
 	
-	if (strncmp(t_file, MCservercgidocumentroot, strlen(MCservercgidocumentroot)) != 0)
-		return t_file;
-	
-	return t_file + strlen(MCservercgidocumentroot);
+        return MCStringCopySubstring(*t_file, MCRangeMake(MCStringGetLength(MCservercgidocumentroot), UINDEX_MAX), r_file);
+    }
+
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -132,10 +135,10 @@ static const char *GetFileForContext(MCExecPoint& ep)
 //  INTERFACE TO ENGINE
 //
 
-bool MCServerDebugConnect(const char *p_site, const char *p_url)
+bool MCServerDebugConnect(MCStringRef p_site, MCStringRef p_url)
 {
 #ifdef _IREVIAM
-	s_debugging = IreviamDebuggerConnect(p_site, p_url);
+	s_debugging = IreviamDebuggerConnect(MCStringGetCString(p_site), MCStringGetCString(p_url));
 	if (s_debugging)
 	{
 		MCservererrormode = kMCSErrorModeDebugger;
@@ -167,7 +170,7 @@ void MCServerDebugInterrupt(void)
 #endif
 }
 
-void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
+void MCServerDebugTrace(MCExecContext &ctxt, uint2 p_row, uint2 p_col)
 {
 #ifdef _IREVIAM
 	if (!s_debugging)
@@ -219,8 +222,8 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 			// We are pausing, so run the debugger
 			MCS_flush(IO_stdout);
 			
-			MCVariableViewEnter(&ep);
-			s_debugging = IreviamDebuggerRun("pause", GetFileForContext(ep), p_row, p_col);
+			MCVariableViewEnter(ctxt);
+			s_debugging = IreviamDebuggerRun("pause", GetFileForContext(ctxt), p_row, p_col);
 			MCVariableViewLeave();
 			break;
 			
@@ -229,8 +232,8 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 			s_action = kMCDebugActionNone;
 			MCS_flush(IO_stdout);
 			
-			MCVariableViewEnter(&ep);
-			s_debugging = IreviamDebuggerRun("step", GetFileForContext(ep), p_row, p_col);
+			MCVariableViewEnter(ctxt);
+			s_debugging = IreviamDebuggerRun("step", GetFileForContext(ctxt), p_row, p_col);
 			MCVariableViewLeave();
 			break;
 			
@@ -241,8 +244,8 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 				s_action = kMCDebugActionNone;
 				MCS_flush(IO_stdout);
 
-				MCVariableViewEnter(&ep);
-				s_debugging = IreviamDebuggerRun("step", GetFileForContext(ep), p_row, p_col);
+				MCVariableViewEnter(ctxt);
+				s_debugging = IreviamDebuggerRun("step", GetFileForContext(ctxt), p_row, p_col);
 				MCVariableViewLeave();
 			}
 			break;
@@ -254,8 +257,8 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 				s_action = kMCDebugActionNone;
 				MCS_flush(IO_stdout);
 				
-				MCVariableViewEnter(&ep);
-				s_debugging = IreviamDebuggerRun("step", GetFileForContext(ep), p_row, p_col);
+				MCVariableViewEnter(ctxt);
+				s_debugging = IreviamDebuggerRun("step", GetFileForContext(ctxt), p_row, p_col);
 				MCVariableViewLeave();
 			}
 			break;
@@ -266,7 +269,7 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 			MCS_flush(IO_stdout);
 			
 			MCVariableViewEnter(&ep);
-			s_debugging = IreviamDebuggerRun("break", GetFileForContext(ep), p_row, p_col);
+			s_debugging = IreviamDebuggerRun("break", GetFileForContext(ctxt), p_row, p_col);
 			MCVariableViewLeave();
 			break;
 	}
@@ -283,7 +286,7 @@ void MCServerDebugTrace(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 #endif
 }
 
-void MCServerDebugBreak(MCExecPoint& ep, uint2 p_row, uint2 p_col)
+void MCServerDebugBreak(MCExecContext &ctxt, uint2 p_row, uint2 p_col)
 {
 #ifdef _IREVIAM
 	if (!s_debugging)
@@ -291,7 +294,7 @@ void MCServerDebugBreak(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 	
 	// Check that we are in something we can debug
 	const char *t_file;
-	t_file = GetFileForContext(ep);
+	t_file = GetFileForContext(ctxt);
 	if (t_file == NULL)
 		return;
 
@@ -301,7 +304,7 @@ void MCServerDebugBreak(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 	// Run the debugger with due to a 'break'
 	MCS_flush(IO_stdout);
 	
-	MCVariableViewEnter(&ep);
+	MCVariableViewEnter(ctxt);
 	s_debugging = IreviamDebuggerRun("break", t_file, p_row, p_col);
 	MCVariableViewLeave();
 
@@ -316,7 +319,7 @@ void MCServerDebugBreak(MCExecPoint& ep, uint2 p_row, uint2 p_col)
 #endif
 }
 
-void MCServerDebugError(MCExecPoint& ep, uint2 p_row, uint2 p_col, uint2 p_id)
+void MCServerDebugError(MCExecContext& ctxt, uint2 p_row, uint2 p_col, uint2 p_id)
 {
 #ifdef _IREVIAM
 	if (!s_debugging)
@@ -324,14 +327,14 @@ void MCServerDebugError(MCExecPoint& ep, uint2 p_row, uint2 p_col, uint2 p_id)
 	
 	// Check that we are in something we can debug
 	const char *t_file;
-	t_file = GetFileForContext(ep);
+	t_file = GetFileForContext(ctxt);
 	if (t_file == NULL)
 		return;
 	
 	// Run the debugger due to an error
 	MCS_flush(IO_stdout);
 	
-	MCVariableViewEnter(&ep);
+	MCVariableViewEnter(ctxt);
 	s_debugging = IreviamDebuggerRun("error", t_file, p_row, p_col);
 	MCVariableViewLeave();
 	
@@ -342,7 +345,7 @@ void MCServerDebugError(MCExecPoint& ep, uint2 p_row, uint2 p_col, uint2 p_id)
 #endif
 }
 
-void MCServerDebugVariableChanged(MCExecPoint& ep, MCNameRef p_name)
+void MCServerDebugVariableChanged(MCExecContext& ctxt, MCNameRef p_name)
 {
 }
 
@@ -353,45 +356,45 @@ void MCServerDebugVariableChanged(MCExecPoint& ep, MCNameRef p_name)
 
 typedef bool (*MCServerDebugListVariablesCallback)(void *p_context, uint32_t p_index, uint32_t p_depth, bool p_array, bool p_expanded, const char *p_name, const char *p_value);
 
-void MCServerDebugAction(const char *p_action)
+void MCServerDebugAction(MCStringRef p_action)
 {
-	if (strequal(p_action, "stop"))
+	if (MCStringIsEqualToCString(p_action, "stop", kMCCompareExact))
 		s_action = kMCDebugActionStop;
-	else if (strequal(p_action, "pause"))
+	else if (MCStringIsEqualToCString(p_action, "pause", kMCCompareExact))
 		s_action = kMCDebugActionPause;
-	else if (strequal(p_action, "step over"))
+	else if (MCStringIsEqualToCString(p_action, "step over", kMCCompareExact))
 	{
 		s_action = kMCDebugActionStepOver;
 		s_current_context = MCnexecutioncontexts;
 	}
-	else if (strequal(p_action, "step into"))
+	else if (MCStringIsEqualToCString(p_action, "step into", kMCCompareExact))
 	{
 		s_action = kMCDebugActionStepInto;
 		s_current_context = MCnexecutioncontexts;
 	}
-	else if (strequal(p_action, "step out"))
+	else if (MCStringIsEqualToCString(p_action, "step out", kMCCompareExact))
 	{
 		s_action = kMCDebugActionStepOut;
 		s_current_context = MCnexecutioncontexts;
 	}
 }
 
-void MCServerDebugBreakpoint(const char *p_action, const char *p_file, uint32_t p_row, uint32_t p_column)
+void MCServerDebugBreakpoint(MCStringRef p_action, MCStringRef p_file, uint32_t p_row, uint32_t p_column)
 {
 	bool t_add;
-	t_add = strcmp(p_action, "add") == 0;
+	t_add = MCStringIsEqualToCString(p_action, "add", kMCCompareExact);
 	
 	// Construct the absolute file path.
-	char *t_filename;
-	t_filename = new char[strlen(p_file) + strlen(MCservercgidocumentroot) + 2];
-	strcpy(t_filename, MCservercgidocumentroot);
-	if (p_file[0] != '/')
-		strcat(t_filename, "/");
-	strcat(t_filename, p_file);
-	
+	MCAutoStringRef t_filename;
+    
+	if (MCStringGetNativeCharAtIndex(p_file, 0) != '/')
+        /* UNCHECKED */ MCStringFormat(&t_filename, "%@/%@", MCservercgidocumentroot, p_file);
+    else
+        /* UNCHECKED */ t_filename = p_file;
+		
 	// Lookup the file's index - creating an entry if we are 'adding' a breakpoint.
 	uint4 t_file;
-	t_file = MCserverscript -> FindFileIndex(t_filename, t_add);
+	t_file = MCserverscript -> FindFileIndex(*t_filename, t_add);
 	
 	// If we didn't find an entry there can't be a breakpoint on it so exit.
 	if (t_file == 0)
@@ -432,21 +435,22 @@ void MCServerDebugBreakpoint(const char *p_action, const char *p_file, uint32_t 
 	
 }
 
-const char *MCServerDebugGet(const char *p_property)
+void MCServerDebugGet(MCStringRef p_property, MCStringRef& r_result)
 {
-	const char *t_result;
-	t_result = NULL;
+    MCStringRef t_error;
 	
-	if (strcmp(p_property, "execution error") == 0)
-		t_result = MCeerror -> getsvalue() . getstring();
-	else if (strcmp(p_property, "parse error") == 0)
-		t_result = MCperror -> getsvalue() . getstring();
-	else if (strcmp(p_property, "files") == 0)
-		t_result = "";
-	
-	return t_result;
+	if (MCStringIsEqualToCString(p_property, "execution error", kMCCompareExact))
+        /* UNCHECKED */ MCeerror -> copyasstringref(t_error);
+	else if (MCStringIsEqualToCString(p_property, "parse error", kMCCompareExact))
+        MCperror -> copyasstringref(t_error);
+	else if (MCStringIsEqualToCString(p_property, "files", kMCCompareExact))
+        t_error = MCValueRetain(kMCEmptyString);
+	else
+		t_error = MCValueRetain(kMCEmptyString);
+
+    r_result = t_error;
 }
 
-void MCServerDebugPut(const char *p_property, const char *p_value)
+void MCServerDebugPut(MCStringRef p_property, MCStringRef p_value)
 {
 }

@@ -1,0 +1,17 @@
+setup
+	create button
+	test value("the long id of me", button 1) is the long id of button 1
+	
+	test-error value("1 + 2", "not an object reference")
+teardown
+
+setup "function call"
+
+	create button
+	set the script of the last button to "function valueTest pValue" & cr & \
+		"	return pValue * 2" & cr & \
+		"end valueTest"
+	
+	test value("valueTest(1234)", button 1) is 2468
+
+teardown

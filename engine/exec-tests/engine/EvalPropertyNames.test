@@ -1,0 +1,4 @@
+setup
+test the propertyNames is not empty
+test "name" is among the lines of the propertyNames
+teardown

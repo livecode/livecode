@@ -11,6 +11,9 @@ GLOBAL_PACKAGES=\
 
 GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
+	$(SOLUTION_DIR)/libfoundation/include \
+	$(SOLUTION_DIR)/libscript/include \
+	$(SOLUTION_DIR)/lcidlc/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
 	$(SOLUTION_DIR)/libgraphics/include \
@@ -34,13 +37,17 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libskia/include/images \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/pathops \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/ports \
-	$(SOLUTION_DIR)/thirdparty/libskia/include/utils
+	$(SOLUTION_DIR)/thirdparty/libskia/include/utils \
+	$(SOLUTION_DIR)/thirdparty/libfreetype/include \
+	$(SOLUTION_DIR)/prebuilt/include \
+	$(SOLUTION_DIR)/thirdparty/libffi/linux/i686-pc-linux-gnu
 	
 GLOBAL_LIBS=\
-	$(PREBUILT_LIB_DIR)
+	$(PREBUILT_LIB_DIR) \
+	$(SOLUTION_DIR)/prebuilt/lib/linux-$(ARCH)
 
 ifeq ($(MODE),debug)
-	DEFINES+=_DEBUG
+	DEFINES+=_DEBUG HAVE_VALGRIND
 else
 	DEFINES+=_RELEASE NDEBUG
 endif
@@ -49,12 +56,14 @@ DEFINES += __LITTLE_ENDIAN__
 
 PACKAGE_INCLUDES=$(shell pkg-config --silence-errors --cflags-only-I $(GLOBAL_PACKAGES))
 
-FALLBACK_INCLUDES=-I$(SOLUTION_DIR)/thirdparty/headers/linux/include -I$(SOLUTION_DIR)/thirdparty/headers/linux/include/cairo
+# MDW-2014-11-20 [[ fix_valgrind_path]]
+# avoids the libcairo compilation error
+FALLBACK_INCLUDES=-I$(SOLUTION_DIR)/thirdparty/headers/linux/include -I$(SOLUTION_DIR)/thirdparty/headers/linux/include/cairo -I$(SOLUTION_DIR)/thirdparty/headers/linux/include/valgrind
 
 INCLUDES=$(CUSTOM_INCLUDES) $(TYPE_INCLUDES) $(GLOBAL_INCLUDES)
 
 ifeq ($(MODE),release)
-	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O2 -fvisibility=hidden -g
+	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O3 -fvisibility=hidden -g
 else
 	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
 endif
@@ -70,7 +79,7 @@ VPATH=./src $(SOURCE_DIRS) $(CACHE_DIR) $(BUILD_DIR)
 
 $(CACHE_DIR)/%.o: %.cpp
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.cpp
+	$(CXX) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.cpp
 
 $(CACHE_DIR)/%.o: %.c
 	mkdir -p $(CACHE_DIR)/$(dir $*)
@@ -80,6 +89,11 @@ $(CACHE_DIR)/%.o: %.s
 	mkdir -p $(CACHE_DIR)/$(dir $*)
 	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
 
+$(CACHE_DIR)/%.o: %.S
+	mkdir -p $(CACHE_DIR)/$(dir $*)
+	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.S
+
 clean:
-	rm $(OBJECTS)
-	rm $(TARGET_PATH)
+	-rm -f $(OBJECTS)
+	-rm -f $(TARGET_PATH)
+

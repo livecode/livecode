@@ -416,22 +416,22 @@ static const struct {
   { 0x07f7, 0x03c7 }, /*                   Greek_chi χ GREEK SMALL LETTER CHI */
   { 0x07f8, 0x03c8 }, /*                   Greek_psi ψ GREEK SMALL LETTER PSI */
   { 0x07f9, 0x03c9 }, /*                 Greek_omega ω GREEK SMALL LETTER OMEGA */
-/*  0x08a1                               leftradical ? ??? */
+  { 0x08a1, 0x23B7 }, /*                 leftradical ? ??? */
 /*  0x08a2                            topleftradical ? ??? */
 /*  0x08a3                            horizconnector ? ??? */
   { 0x08a4, 0x2320 }, /*                 topintegral ⌠ TOP HALF INTEGRAL */
   { 0x08a5, 0x2321 }, /*                 botintegral ⌡ BOTTOM HALF INTEGRAL */
   { 0x08a6, 0x2502 }, /*               vertconnector │ BOX DRAWINGS LIGHT VERTICAL */
-/*  0x08a7                          topleftsqbracket ? ??? */
-/*  0x08a8                          botleftsqbracket ? ??? */
-/*  0x08a9                         toprightsqbracket ? ??? */
-/*  0x08aa                         botrightsqbracket ? ??? */
-/*  0x08ab                             topleftparens ? ??? */
-/*  0x08ac                             botleftparens ? ??? */
-/*  0x08ad                            toprightparens ? ??? */
-/*  0x08ae                            botrightparens ? ??? */
-/*  0x08af                      leftmiddlecurlybrace ? ??? */
-/*  0x08b0                     rightmiddlecurlybrace ? ??? */
+  { 0x08a7, 0x23A1 }, /*            topleftsqbracket ? ??? */
+  { 0x08a8, 0x23A3 }, /*            botleftsqbracket ? ??? */
+  { 0x08a9, 0x23A4 }, /*           toprightsqbracket ? ??? */
+  { 0x08aa, 0x23A6 }, /*           botrightsqbracket ? ??? */
+  { 0x08ab, 0x239B }, /*               topleftparens ? ??? */
+  { 0x08ac, 0x239D }, /*               botleftparens ? ??? */
+  { 0x08ad, 0x239E }, /*              toprightparens ? ??? */
+  { 0x08ae, 0x23A0 }, /*              botrightparens ? ??? */
+  { 0x08af, 0x23A8 }, /*        leftmiddlecurlybrace ? ??? */
+  { 0x08b0, 0x23AC }, /*       rightmiddlecurlybrace ? ??? */
 /*  0x08b1                          topleftsummation ? ??? */
 /*  0x08b2                          botleftsummation ? ??? */
 /*  0x08b3                 topvertsummationconnector ? ??? */
@@ -448,7 +448,7 @@ static const struct {
   { 0x08c2, 0x221e }, /*                    infinity ∞ INFINITY */
   { 0x08c5, 0x2207 }, /*                       nabla ∇ NABLA */
   { 0x08c8, 0x2245 }, /*                 approximate ≅ APPROXIMATELY EQUAL TO */
-/*  0x08c9                              similarequal ? ??? */
+  { 0x08c9, 0x2243 }, /*                similarequal ? ??? */
   { 0x08cd, 0x21d4 }, /*                    ifonlyif ⇔ LEFT RIGHT DOUBLE ARROW */
   { 0x08ce, 0x21d2 }, /*                     implies ⇒ RIGHTWARDS DOUBLE ARROW */
   { 0x08cf, 0x2261 }, /*                   identical ≡ IDENTICAL TO */
