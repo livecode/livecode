@@ -15,7 +15,7 @@ on revNewTool
          insert script of me into back
          go (the topStack) -- keyboard focus for shortcuts to the running stack
       end if
-    else the tool is "pointer tool" then
+    else if the tool is "pointer tool" then
     	remove script of me from back
     	insert script of me into front
     end if

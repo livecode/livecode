@@ -342,10 +342,12 @@ on revSetActiveStacks
          end if
          break
    end switch
-   if the mode of stack "revdbquerysetup" is not 0 \
-         and not the editBg of stack "revdbquerysetup" \
-         and not gREVShutdown
-   then send "revRefresh" to this cd of stack "revdbquerysetup"
+   if there is a stack "revdbquerysetup" then
+	   if the mode of stack "revdbquerysetup" is not 0 \
+    	     and not the editBg of stack "revdbquerysetup" \
+        	 and not gREVShutdown
+	   then send "revRefresh" to this cd of stack "revdbquerysetup"
+   end if
    send "revUpdatePaletteStack" to stack "revBackScriptLibrary" in 100 milliseconds
    
    -- Update the simulate button as appropriate
@@ -450,14 +452,16 @@ on preOpenCard
    end if
    
    local tReturn
-   if the mode of stack "revAnimation" is not 0 then
-      put the defaultStack into tReturn
-      lock screen
-      set the defaultStack to "revAnimation"
-      put true into lNoRecurse
-      send "preOpenCard" to cd 1 of stack "revAnimation"
-      unlock screen
-      set the defaultStack to tReturn
+   if there is a stack "revAnimation" then
+   	if the mode of stack "revAnimation" is not 0 then
+      	put the defaultStack into tReturn
+      	lock screen
+      	set the defaultStack to "revAnimation"
+      	put true into lNoRecurse
+      	send "preOpenCard" to cd 1 of stack "revAnimation"
+   		unlock screen
+		set the defaultStack to tReturn
+  	 end if
    end if
    
    local tTarget

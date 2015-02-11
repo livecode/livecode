@@ -4685,16 +4685,17 @@ command revIDEHandleNewStack pTarget
    revUpdateRecentFiles the short name of gREVTargetStack
    
    revSetActiveStacks
-   if the mode of stack "revAnimation" is not 0 then
-      local tReturn
-      put the defaultStack into tReturn
-      lock screen
-      set the defaultStack to "revAnimation"
-      send "preOpenCard" to cd 1 of stack "revAnimation"
-      unlock screen
-      set the defaultStack to tReturn
+   if there is a stack "revAnimation" then
+	   if the mode of stack "revAnimation" is not 0 then
+    	  local tReturn
+	      put the defaultStack into tReturn
+    	  lock screen
+	      set the defaultStack to "revAnimation"
+    	  send "preOpenCard" to cd 1 of stack "revAnimation"
+	      unlock screen
+    	  set the defaultStack to tReturn
+	   end if
    end if
-   
    local tStack
    if the mode of stack "revApplicationOverview" is not 0 then
       put revTargetStack(the long id of stack tStackName) into tStack
