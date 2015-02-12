@@ -489,7 +489,7 @@ struct __MCNumberOperationAdd
         if (!__checked_unsigned_subtract(y, (uinteger_t)-x, &z))
             return false;
         
-        if (z > INT32_MAX)
+        if (z > INTEGER_MAX)
             return false;
         
         r_value = (integer_t)z;
@@ -510,7 +510,7 @@ struct __MCNumberOperationAdd
         if (!__checked_unsigned_subtract(x, (uinteger_t)-y, &z))
             return false;
         
-        if (z > INT32_MAX)
+        if (z > INTEGER_MAX)
             return false;
         
         r_value = (integer_t)z;
@@ -553,7 +553,7 @@ struct __MCNumberOperationSubtract
         if (!__checked_unsigned_subtract(y, x, &z))
             return false;
         
-        if (z > -INT32_MIN)
+        if (z > -INTEGER_MIN)
             return false;
         
         r_value = -z;
@@ -573,7 +573,7 @@ struct __MCNumberOperationSubtract
         if (!__checked_unsigned_subtract(x, (uinteger_t)y, &z))
             return false;
         
-        if (z > INT32_MAX)
+        if (z > INTEGER_MAX)
             return false;
         
         r_value = (integer_t)z;
@@ -719,7 +719,7 @@ struct __MCNumberOperationDiv
         {
             uinteger_t t_value;
             t_value = x / -y;
-            if (t_value > -INT32_MIN)
+            if (t_value > -INTEGER_MIN)
                 return false;
             
             r_value = -t_value;
@@ -1015,10 +1015,10 @@ template<typename T> inline bool __MCNumberOverflowingIntegerBinaryOperation(dou
     double t_value;
     t_value = T::double_by_double(x, y);
     
-    if (t_value < INT32_MIN || t_value > UINT32_MAX)
+    if (t_value < INTEGER_MIN || t_value > UINTEGER_MAX)
         return MCNumberCreateWithReal(t_value, r_z);
     
-    if (t_value > INT32_MAX)
+    if (t_value > INTEGER_MAX)
         return MCNumberCreateWithUnsignedInteger((uint32_t)llrint(t_value), r_z);
     
     return MCNumberCreateWithInteger(lrint(t_value), r_z);
@@ -1120,12 +1120,12 @@ bool MCNumberNegate(MCNumberRef x, MCNumberRef& r_y)
     switch((x -> flags & kMCNumberFlagRepMask))
     {
         case kMCNumberFlagSignedIntegerRep:
-            if (x -> integer == INT32_MIN)
-                return MCNumberCreateWithUnsignedInteger(-INT32_MIN, r_y);
+            if (x -> integer == INTEGER_MIN)
+                return MCNumberCreateWithUnsignedInteger(-INTEGER_MIN, r_y);
             return MCNumberCreateWithInteger(-x -> integer, r_y);
             
         case kMCNumberFlagUnsignedIntegerRep:
-            if (x -> unsigned_integer > (-INT32_MIN))
+            if (x -> unsigned_integer > (-INTEGER_MIN))
                 return MCNumberCreateWithReal(-(double)x -> unsigned_integer, r_y);
             return MCNumberCreateWithInteger(-x -> unsigned_integer, r_y);
             
@@ -1234,10 +1234,10 @@ template<typename T> inline bool __MCNumberOverflowingIntegralBinaryOperation(in
     t_value = T::bigint_by_bigint(x, y);
     
     // If we can't fit in an unsigned or signed int then
-    if (t_value < INT32_MIN || t_value > UINT32_MAX)
+    if (t_value < INTEGER_MIN || t_value > UINTEGER_MAX)
         return MCErrorThrowGeneric(MCSTR("numeric overflow"));
     
-    if (t_value > INT32_MAX)
+    if (t_value > INTEGER_MAX)
         return MCNumberCreateWithUnsignedInteger((uinteger_t)t_value, r_z);
     
     return MCNumberCreateWithInteger((integer_t)t_value, r_z);
@@ -1312,12 +1312,12 @@ bool MCNumberIntegralNegate(MCNumberRef x, MCNumberRef& r_y)
     switch((x -> flags & kMCNumberFlagRepMask))
     {
         case kMCNumberFlagSignedIntegerRep:
-            if (x -> integer == INT32_MIN)
-                return MCNumberCreateWithUnsignedInteger(-INT32_MIN, r_y);
+            if (x -> integer == INTEGER_MIN)
+                return MCNumberCreateWithUnsignedInteger(-INTEGER_MIN, r_y);
             return MCNumberCreateWithInteger(-x -> integer, r_y);
             
         case kMCNumberFlagUnsignedIntegerRep:
-            if (x -> unsigned_integer > (-INT32_MIN))
+            if (x -> unsigned_integer > (-INTEGER_MIN))
                 return MCErrorThrowGeneric(MCSTR("numeric overflow"));
             return MCNumberCreateWithInteger(-x -> unsigned_integer, r_y);
             
