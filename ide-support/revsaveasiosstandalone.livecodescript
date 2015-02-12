@@ -340,8 +340,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          -- MW-2013-06-25: [[ PIE ]] Make sure we make the minversion 4.3 so we can make
          --   ARMv7+ PIE builds.
          -- Make the minimum run version of the engine 4.3
-         -- SN-2015-02-05: [[ Bug 14422 ]] Now make the minimum version 5.1.1
-         put "-miphoneos-version-min=5.1.1" & return after tLinkCommand
+         -- SN-2015-02-05: [[ Bug 14422 ]] The linker minimum iphoneOS version
+         --   should be relevant with the desired minimum version.
+         put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tVersion
+         put "-miphoneos-version-min=" & tVersion["armv7"] & return after tLinkCommand
          
          -- MW-2013-06-26: [[ CloneAndRun ]] Only dead strip if an installed env.
          if revEnvironmentIsInstalled() then

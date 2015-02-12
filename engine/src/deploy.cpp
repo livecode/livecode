@@ -127,6 +127,12 @@ static Exec_stat MCDeployPushMinOSVersion(MCDeployParameters& p_params, MCDeploy
     t_major = t_minor = t_inc = 0;
     sscanf(p_vers_string, "%d.%d.%d", &t_major, &t_minor, &t_inc);
     
+    
+    // SN-2015-02-12L: [[ Bug 14422 ]] We do not push anything if the minimum
+    //  version less than 7.0
+    if (t_major < 7)
+        return ES_NORMAL;
+    
     if (!MCMemoryResizeArray(p_params . min_os_version_count + 1, p_params . min_os_versions, p_params . min_os_version_count))
         return ES_ERROR;
     
