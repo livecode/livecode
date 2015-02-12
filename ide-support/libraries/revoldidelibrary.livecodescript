@@ -1,4 +1,4 @@
-﻿script "revidelibrary"
+﻿script "revoldidelibrary"
 
 on revLoadLibrary
    insert the script of me into back
