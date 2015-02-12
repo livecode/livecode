@@ -433,7 +433,7 @@ static inline bool __checked_unsigned_multiply(uint32_t x, uint32_t y, uint32_t 
 {
     uint64_t w;
     w = (uint64_t)x * (uint64_t)y;
-    if ((w > INT64_MAX) || (w < INT64_MIN))
+    if (w > UINT32_MAX)
         return false;
     
     *z = (uint32_t)w;
