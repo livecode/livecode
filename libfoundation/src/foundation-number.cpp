@@ -280,8 +280,23 @@ bool MCNumberFormat(MCNumberRef p_number, MCStringRef& r_string)
 
 bool MCNumberTryToParse(MCStringRef p_string, MCNumberRef& r_number)
 {
+    // If the string is not native, then it cannot be a number since
+    // numbers are composed of ASCII characters.
+    if (!MCStringIsNative(p_string))
+        goto error_exit;
+    
+    // As we know the string is native, this will never return nil.
+    // (The returned string is always guaranteed to be a C-string -
+    // at the moment at least!)
     const char_t *t_chars;
     t_chars = MCStringGetNativeCharPtr(p_string);
+    
+    // The C stdlib number parsing functions will skip whitespace at
+    // the start. Whitespace is not considered to be a valid prefix to
+    // a number in this case, so we check for it and exit if it is
+    // there.
+    if (isspace(t_chars[0]))
+        goto error_exit;
     
     char *t_end;
     integer_t t_integer;
@@ -302,6 +317,7 @@ bool MCNumberTryToParse(MCStringRef p_string, MCNumberRef& r_number)
     if (*t_end == '\0')
         return MCNumberCreateWithReal(t_real, r_number);
     
+error_exit:
     // If we get here then the string isn't in a format we recognise so return
     // (the C version of) 'undefined'.
     r_number = nil;
