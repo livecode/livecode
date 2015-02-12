@@ -735,10 +735,17 @@ static void cgi_fix_path_variables()
 				t_path[i] = '/';
 #endif
 
+        // SN-2015-02-12: [[ Bug 14457 ]] We use a mutable string for
+        //  the path info, as we will need to prepend each segment we
+        //  cut off of the TRANSLATED_PATH.
         // Initialise path_string and path_info
+        MCAutoStringRef t_mutable_path_info;
         /* UNCHECKED */ MCStringCreateWithCString(t_path, t_path_string);
-        t_path_info = MCValueRetain(kMCEmptyString);
+        MCStringCreateMutable(0, &t_mutable_path_info);
         
+        // SN-2015-02-12: [[ Bug 14457 ]] As long as the path does not lead
+        //  to an existing file, we cut it at the last path separator.
+        //
         while (!MCS_exists(t_path_string, True))
         {
             uindex_t t_offset;
@@ -749,14 +756,19 @@ static void cgi_fix_path_variables()
             if (!MCStringLastIndexOfChar(t_path_string, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_offset))
                 break;
 
+            // We take split from the last separator (which must be
+            // included in the tail).
             if (!MCStringCopySubstring(t_path_string, MCRangeMake(0, t_offset), &t_new_path)
                     || !MCStringCopySubstring(t_path_string, MCRangeMake(t_offset, UINDEX_MAX), &t_new_path_info))
                 break;
 
             // SN-2015-02-11: [[ Bug 14457 ]] Update path and path_info
             MCValueAssign(t_path_string, *t_new_path);
-            MCValueAssign(t_path_info, *t_new_path_info);
+           /* UNCHECKED */ MCStringPrepend(*t_mutable_path_info, *t_new_path_info);
         }
+
+        // SN-2015-02-12: [[ Bug 14457 ]] We get the constructed path info
+        /* UNCHECKED */ MCStringCopy(*t_mutable_path_info, t_path_info);
     }
     else
     {
