@@ -36,6 +36,7 @@ MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
+MCTypeInfoRef kMCScriptCannotCallContextHandlerErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -268,6 +269,7 @@ bool MCScriptInitialize(void)
         MCScriptCreateNamedErrorType(MCNAME("livecode.lang.CannotSetReadOnlyPropertyError"), MCSTR("Cannot set read-only property %{module}.%{property}"), kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo);
         MCScriptCreateNamedErrorType(MCNAME("livecode.lang.PropertyValueTypeError"), MCSTR("Value is not of correct type for setting property - expected type %{type} for setting property %{module}.%{property}"), kMCScriptInvalidPropertyValueErrorTypeInfo);
         MCScriptCreateNamedErrorType(MCNAME("livecode.lang.NotAHandlerValueError"), MCSTR("Value is not a handler"), kMCScriptNotAHandlerValueErrorTypeInfo);
+        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.CannotCallContextHandlerError"), MCSTR("Cannot call context handler"), kMCScriptCannotCallContextHandlerErrorTypeInfo);
     }
 
     return true;
