@@ -4238,15 +4238,12 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
         
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
-        
-        if (islinechunk() && t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
-        
-        // SN-2015-02-10: [[ Bug 14467 ]] Even if the chunk is not an explicit line, it should be
-        //  possible to get the property of the line containing this chunk (same as bug 14053)
-        if (t_info == nil && !islinechunk())
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeLine);
 
+        // SN-2015-02-10: [[ Bug 14467 ]] If we did not get the line property,
+        //  we want to get the char property instead (the opposite being true)
+        //  Same as bug 14053
+        if (t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeChar : kMCPropertyInfoChunkTypeLine);
         
         if (t_info == nil || t_info -> getter == nil)
         {
@@ -4305,12 +4302,11 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
         
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
-        if (islinechunk() && t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
-        
-        // SN-2014-11-24: [[ Bug 14053 ]] Even if the chunk is not an explicit line, the property of the line containing this chunk should be set
-        if (t_info == nil && !islinechunk())
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeLine);
+
+        // SN-2015-02-12: [[ Bug 14053 ]]  Even if the chunk is not an explicit line,
+        //  the property of the line containing this chunk should be set
+        if (t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeChar : kMCPropertyInfoChunkTypeLine);
         
         if (t_info == nil || t_info -> setter == nil)
         {
