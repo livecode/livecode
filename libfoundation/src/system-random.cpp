@@ -61,8 +61,11 @@ MCSRandomReal (void)
 	/* Ensure that if we can't obtain a valid random number, the
 	 * return value is obviously useless.  __MCSRandomBytes() should
 	 * have thrown an error. */
-	if (!__MCSRandomBytes (&t_random_bytes, sizeof (t_random_bytes)))
-		return NAN;
+	do {
+		if (!__MCSRandomBytes (&t_random_bytes, sizeof (t_random_bytes)))
+			return NAN;
+	}
+	while (!isfinite (t_random_bytes));
 
 	/* Convert the value to a value in the range [0, 1).  frexp(3)
 	 * always returns a value with absolute value in the range [0.5,
