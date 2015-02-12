@@ -245,16 +245,6 @@ public class AmazonBillingProvider implements BillingProvider
             requestIds = new HashMap<String, String>();
         }
         
-        public void alert(String message)
-        {
-            AlertDialog.Builder bld = new AlertDialog.Builder(getActivity());
-            bld.setMessage(message);
-            bld.setNeutralButton("OK", null);
-            Log.d(TAG, "Showing alert dialog: " + message);
-            bld.create().show();
-        }
-        
-        
         /**
          * Invoked once the observer is registered with the Puchasing Manager If the boolean is false, the application is
          * receiving responses from the SDK Tester. If the boolean is true, the application is live in production.
@@ -353,7 +343,7 @@ public class AmazonBillingProvider implements BillingProvider
             Log.v(TAG, "PurchaseUpdatesRequestStatus:" + response.getPurchaseUpdatesRequestStatus());
             Log.v(TAG, "RequestID:" + response.getRequestId());
             
-            // PM-2015-02-05: [[ Bug 14402 ]] Display a msg in case there are no previous purchases to restore
+            // PM-2015-02-05: [[ Bug 14402 ]] Handle case when calling mobileStoreRestorePurchases but there are no previous purchases to restore
             boolean t_did_restore;
             t_did_restore = false;
             
@@ -427,7 +417,9 @@ public class AmazonBillingProvider implements BillingProvider
             
             if(!t_did_restore)
             {
-                alert("You have no previous purchases to restore");
+                // PM-2015-02-12: [[ Bug 14402 ]] When there are no previous purchases to restore, send a purchaseStateUpdate msg with state=restored and productID=""
+                Log.v(TAG,"You have no previous purchases to restore");
+                mPurchaseObserver.onPurchaseStateChanged("",5);
             }
         }
         

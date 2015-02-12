@@ -496,7 +496,7 @@ public class GoogleBillingProvider implements BillingProvider
 
             Log.d(TAG, "Initial inventory query finished; enabling main UI.");
 
-			// PM-2015-02-05: [[ Bug 14402 ]] Display a msg in case there are no previous purchases to restore
+			// PM-2015-02-05: [[ Bug 14402 ]] Handle case when calling mobileStoreRestorePurchases but there are no previous purchases to restore
 			boolean t_did_restore;
 			t_did_restore = false;
 
@@ -513,7 +513,9 @@ public class GoogleBillingProvider implements BillingProvider
 
 			if(!t_did_restore)
 			{
-				alert("You have no previous purchases to restore");
+				// PM-2015-02-12: [[ Bug 14402 ]] When there are no previous purchases to restore, send a purchaseStateUpdate msg with state=restored and productID=""
+				Log.d(TAG,"You have no previous purchases to restore");
+				mPurchaseObserver.onPurchaseStateChanged("",5);
 			}
         }
     };

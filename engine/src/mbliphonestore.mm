@@ -458,16 +458,16 @@ void update_purchase_state(MCPurchase *p_purchase)
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
 {
-    // PM-2015-02-04: [[ Bug 14402 ]] Display an alert msg in case there is nothing to restore
+    // PM-2015-02-12: [[ Bug 14402 ]] When there are no previous purchases to restore, send a purchaseStateUpdate msg with state=restored and productID=""
     if (!s_did_restore)
     {
-        UIAlertView *t_alert = [[UIAlertView alloc] initWithTitle:@""
-                                                        message:@"You have no previous purchases to restore"
-                                                       delegate:nil
-                                              cancelButtonTitle:@"OK"
-                                              otherButtonTitles:nil];
-        [t_alert show];
-        [t_alert release];
+        MCPurchase *t_empty_purchase = new MCPurchase[1]();
+        t_empty_purchase -> prod_id = "";
+        t_empty_purchase -> id = 0;
+        t_empty_purchase -> ref_count = 0;
+        t_empty_purchase -> state = kMCPurchaseStateRestored;
+        
+        MCPurchaseNotifyUpdate(t_empty_purchase);
     }
 }
 
