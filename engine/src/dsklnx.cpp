@@ -242,8 +242,16 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
             t_poll_fd . events = POLLIN;
             t_poll_fd . revents = 0;
 
+            // SN-2015-02-12: [[ Bug 14441 ]] poll might as well get signal interrupted
+            //  and we don't want to miss the reading for that only reason.
             int t_result;
-            t_result = poll(&t_poll_fd, 1, -1);
+            do
+            {
+                t_result = poll(&t_poll_fd, 1, -1);
+            }
+            while (t_result != 1 ||
+                   (errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK));
+
             if (t_result != 1)
                 break;
 #else
