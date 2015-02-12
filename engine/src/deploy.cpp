@@ -590,6 +590,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
     // it encodes the version against the 'Unknown' architecture which is interpreted
     // by the deploy command to mean all architectures. Otherwise, the keys in the
     // array are assumed to be architecture names and each is pushed on the array.
+    // If the 'min_os_version' is empty, then no change is brought to the binaries.
     // If multiple entries are present, then the 'unknown' mapping is used for any
     // architecture not explicitly specified. The current architecture strings that are
     // known are:
@@ -626,7 +627,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
                         t_stat = MCDeployPushMinOSVersion(t_params, t_arch, ep3 . getcstring());
                 }
             }
-            else
+            else if (!ep2.isempty())
                 t_stat = MCDeployPushMinOSVersion(t_params, kMCDeployArchitecture_Unknown, ep2 . getcstring());
         }
     }
