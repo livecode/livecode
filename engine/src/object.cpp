@@ -4987,24 +4987,24 @@ bool MCObject::visit_self(MCObjectVisitor *p_visitor)
 	return p_visitor -> OnObject(this);
 }
 
-bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCObject::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
 	
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
+	if (MCObjectVisitorIsDepthLast(p_options))
 		t_continue = visit_self(p_visitor);
 	
-	if (t_continue && p_visitor->IsRecursive())
-		t_continue = visit_children(p_style, p_part, p_visitor);
+	if (t_continue && MCObjectVisitorIsRecursive(p_options))
+		t_continue = visit_children(p_options, p_part, p_visitor);
 	
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
+	if (t_continue && MCObjectVisitorIsDepthFirst(p_options))
 		t_continue = visit_self(p_visitor);
 	
 	return t_continue;
 }
 
-bool MCObject::visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCObject::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	return true;
 }
@@ -5093,20 +5093,6 @@ bool MCObjectVisitor::OnParagraph(MCParagraph *p_paragraph)
 bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 {
 	return true;
-}
-
-//////////
-
-bool MCObjectVisitor::IsRecursive()
-{
-	// standard object visitor is recursive
-	return true;
-}
-
-bool MCObjectVisitor::IsHeirarchical()
-{
-	// Standard object visitor uses the default stack visit behaviour
-	return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -241,7 +241,7 @@ bool MCGroup::visit_self(MCObjectVisitor* p_visitor)
 	return p_visitor -> OnGroup(this);
 }
 
-bool MCGroup::visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCGroup::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
@@ -251,7 +251,7 @@ bool MCGroup::visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisi
 		MCControl *cptr = controls;
 		do
 		{
-			t_continue = cptr -> visit(p_style, p_part, p_visitor);
+			t_continue = cptr -> visit(p_options, p_part, p_visitor);
 			cptr = cptr->next();
 		}
 		while(t_continue && cptr != controls);

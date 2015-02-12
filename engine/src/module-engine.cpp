@@ -286,6 +286,11 @@ extern "C" MC_DLLEXPORT void MCEngineEvalOwnerOfScriptObject(MCScriptObjectRef p
 
 struct MCScriptObjectChildControlsVisitor : public MCObjectVisitor
 {
+	MCScriptObjectChildControlsVisitor(MCProperListRef p_list)
+	{
+		m_list = p_list;
+	}
+	
 	virtual bool OnObject(MCObject *p_object)
 	{
 		MCAutoValueRefBase<MCScriptObjectRef> t_object_ref;
@@ -299,20 +304,7 @@ struct MCScriptObjectChildControlsVisitor : public MCObjectVisitor
 		return true;
 	}
 	
-	virtual bool IsRecursive()
-	{
-		// We only want immediate children of the object
-		return false;
-	}
-	
-	virtual bool IsHeirarchical()
-	{
-		// stack children should be visited (cards, substacks, orphan shared groups, audioclips, videoclips) rather than all controls on stack
-		return true;
-	}
-	
 	MCProperListRef m_list;
-	MCObject *m_object;
 };
 
 extern "C" MC_DLLEXPORT void MCEngineEvalChildrenOfScriptObject(MCScriptObjectRef p_object, MCProperListRef &r_controls)
@@ -326,11 +318,8 @@ extern "C" MC_DLLEXPORT void MCEngineEvalChildrenOfScriptObject(MCScriptObjectRe
 	if (!MCProperListCreateMutable(&t_list))
 		return;
 	
-	MCScriptObjectChildControlsVisitor t_visitor;
-	t_visitor.m_list = *t_list;
-	t_visitor.m_object = t_object;
-	
-	if (!t_object->visit_children(VISIT_STYLE_DEPTH_FIRST, t_part_id, &t_visitor))
+	MCScriptObjectChildControlsVisitor t_visitor(*t_list);
+	if (!t_object->visit_children(kMCObjectVisitorHeirarchical, t_part_id, &t_visitor))
 		return;
 	
 	MCProperListCopy(*t_list, r_controls);

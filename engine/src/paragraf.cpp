@@ -444,12 +444,12 @@ uint8_t MCParagraph::firststrongisolate(uindex_t p_offset) const
     return t_level;
 }
 
-bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCParagraph::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
 
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
+	if (MCObjectVisitorIsDepthLast(p_options))
 		t_continue = p_visitor -> OnParagraph(this);
 	
 	if (t_continue && blocks != NULL)
@@ -457,13 +457,13 @@ bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* 
 		MCBlock *bptr = blocks;
 		do
 		{
-			t_continue = bptr -> visit(p_style, p_part, p_visitor);
+			t_continue = bptr -> visit(p_options, p_part, p_visitor);
 			bptr = bptr->next();
 		}
 		while(t_continue && bptr != blocks);
 	}
 
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
+	if (t_continue && MCObjectVisitorIsDepthFirst(p_options))
 		t_continue = p_visitor -> OnParagraph(this);
 
 	return t_continue;

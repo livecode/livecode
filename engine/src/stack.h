@@ -291,7 +291,7 @@ public:
     virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
 	virtual bool visit_self(MCObjectVisitor *p_visitor);
-	virtual bool visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
+	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor);
 	
 	virtual void open();
 	virtual void close();

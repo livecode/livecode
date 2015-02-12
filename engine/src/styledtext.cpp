@@ -77,7 +77,7 @@ bool MCStyledText::visit_self(MCObjectVisitor *p_visitor)
 	return p_visitor->OnStyledText(this);
 }
 
-bool MCStyledText::visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCStyledText::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
@@ -88,7 +88,7 @@ bool MCStyledText::visit_children(MCVisitStyle p_style, uint32_t p_part, MCObjec
 		MCParagraph *tpgptr = pgptr;
 		do
 		{
-			t_continue = tpgptr -> visit(p_style, p_part, p_visitor);
+			t_continue = tpgptr -> visit(p_options, p_part, p_visitor);
 			tpgptr = tpgptr->next();
 		}
 		while(t_continue && tpgptr != pgptr);
