@@ -45,7 +45,7 @@ public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as Scrip
 public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as string, in pObject as ScriptObject) as any binds to "<builtin>"
 public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as string, in pObject as ScriptObject, in pValue as any) as undefined binds to "<builtin>"
 public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalControlsOfScriptObject(in pObject as ScriptObject, out rChildren as list) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as list) as undefined binds to "<builtin>"
 public foreign handler MCEngineExecDispatchToScriptObject(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject) as any binds to "<builtin>"
 public foreign handler MCEngineExecDispatchToScriptObjectWithArguments(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject, in pArguments as optional list) as any binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as bool) as undefined binds to "<builtin>"
@@ -244,7 +244,7 @@ Description:
 syntax ChildrenOfScriptObject is prefix operator with precedence 4
 	"the" "children" "of" <Object: Expression>
 begin
-	MCEngineEvalControlsOfScriptObject(Object, output)
+	MCEngineEvalChildrenOfScriptObject(Object, output)
 end syntax
 
 /*

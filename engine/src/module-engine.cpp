@@ -315,7 +315,7 @@ struct MCScriptObjectChildControlsVisitor : public MCObjectVisitor
 	MCObject *m_object;
 };
 
-extern "C" MC_DLLEXPORT void MCEngineEvalControlsOfScriptObject(MCScriptObjectRef p_object, MCProperListRef &r_controls)
+extern "C" MC_DLLEXPORT void MCEngineEvalChildrenOfScriptObject(MCScriptObjectRef p_object, MCProperListRef &r_controls)
 {
 	MCObject *t_object;
 	uint32_t t_part_id;
