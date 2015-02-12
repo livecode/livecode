@@ -782,7 +782,7 @@ bool __MCProperListCopyDescription(__MCProperList *self, MCStringRef& r_string)
 	if (!MCListCreateMutable (MCSTR(", "), &t_contents_list))
 		return false;
 
-	uintptr_t t_iter;
+	uintptr_t t_iter = 0;
 	MCValueRef t_value;
 	while (MCProperListIterate (self, t_iter, t_value))
 	{
