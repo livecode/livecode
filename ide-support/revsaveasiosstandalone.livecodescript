@@ -473,8 +473,11 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    -- Output file to create
    put pAppBundle & slash & tName into tDeploy["output"]
    
-   put revGetMinimumOSByArch(tSettings["ios,minimum os"]) into tDeploy["min_os_version"]
-   
+   -- SN-2015-02-12: [[ Bug 14422 ]] Only set a minimum version to the binaries
+   --  if the minimum version >= 7.0
+   if tSettings["ios,minimum version"] >= 7.0 then
+      put revGetMinimumOSByArch(tSettings["ios,minimum os"]) into tDeploy["min_os_version"]
+   end if
    -- Splash to use (if non-commercial)
    if line 3 of the revLicenseInfo is among the words of "Educational Personal" then
       -- MM-2011-09-28: Descend through possible spash settings until a splash is found.

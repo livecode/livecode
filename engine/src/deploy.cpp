@@ -127,12 +127,6 @@ static Exec_stat MCDeployPushMinOSVersion(MCDeployParameters& p_params, MCDeploy
     t_major = t_minor = t_inc = 0;
     sscanf(p_vers_string, "%d.%d.%d", &t_major, &t_minor, &t_inc);
     
-    
-    // SN-2015-02-12L: [[ Bug 14422 ]] We do not push anything if the minimum
-    //  version less than 7.0
-    if (t_major < 7)
-        return ES_NORMAL;
-    
     if (!MCMemoryResizeArray(p_params . min_os_version_count + 1, p_params . min_os_versions, p_params . min_os_version_count))
         return ES_ERROR;
     
@@ -596,6 +590,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
     // it encodes the version against the 'Unknown' architecture which is interpreted
     // by the deploy command to mean all architectures. Otherwise, the keys in the
     // array are assumed to be architecture names and each is pushed on the array.
+    // If the 'min_os_version' is empty, then no change is brought to the binaries.
     // If multiple entries are present, then the 'unknown' mapping is used for any
     // architecture not explicitly specified. The current architecture strings that are
     // known are:
@@ -632,7 +627,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
                         t_stat = MCDeployPushMinOSVersion(t_params, t_arch, ep3 . getcstring());
                 }
             }
-            else
+            else if (!ep2.isempty())
                 t_stat = MCDeployPushMinOSVersion(t_params, kMCDeployArchitecture_Unknown, ep2 . getcstring());
         }
     }
