@@ -2383,6 +2383,25 @@ public:
 
         close(toparent[0]);
         CheckProcesses();
+
+        // SN-2015-02-09: [[ Bug 14441 ]] We want to avoid the waiting time
+        //  that MCScreen->wait can bring, and which was avoided in
+        //  MCPosixSystem::Shell
+#ifdef _SERVER
+        pid_t t_wait_result;
+        int t_wait_stat;
+        t_wait_result = waitpid(MCprocesses[index].pid, &t_wait_stat, WNOHANG);
+        if (t_wait_result == 0)
+        {
+            Kill(MCprocesses[index].pid, SIGKILL);
+            waitpid(MCprocesses[index].pid, &t_wait_stat, 0);
+        }
+        else
+            t_wait_stat = 0;
+
+        MCprocesses[index].retcode = WEXITSTATUS(t_wait_stat);
+#else
+
         if (MCprocesses[index].pid != 0)
         {
             uint2 count = SHELL_COUNT;
@@ -2403,6 +2422,7 @@ public:
                 Kill(MCprocesses[index].pid, SIGKILL);
             }
         }
+#endif
 
         r_retcode = MCprocesses[index].retcode;
         return true;
