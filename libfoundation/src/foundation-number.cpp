@@ -441,6 +441,14 @@ static inline bool __checked_unsigned_multiply(uint32_t x, uint32_t y, uint32_t 
     return true;
 }
 
+
+// Returns the unsigned value which is the negation of the signed value x.
+// Note that x is known to be negative
+static inline uinteger_t __negate_negative_signed(integer_t x)
+{
+    return (uinteger_t)-x;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // The MCNumber operation implementation is optimized for working with the same
@@ -523,7 +531,7 @@ struct __MCNumberOperationAdd
         // if y <= 0 then
         //   x + y === x + -(-y) === x - (-y)
         uinteger_t z;
-        if (!__checked_unsigned_subtract(x, (uinteger_t)-y, &z))
+        if (!__checked_unsigned_subtract(x, __negate_negative_signed(y), &z))
             return false;
         
         if (z > INTEGER_MAX)
@@ -734,7 +742,7 @@ struct __MCNumberOperationDiv
         if (y < 0)
         {
             uinteger_t t_value;
-            t_value = x / -y;
+            t_value = x / __negate_negative_signed(y);
             if (t_value > -INTEGER_MIN)
                 return false;
             
@@ -826,7 +834,7 @@ struct __MCNumberOperationMod
         // If y is negative, then we do an unsigned operation.
         if (y < 0)
         {
-            r_value = (integer_t)(-(x % (uinteger_t)(-y)));
+            r_value = (integer_t)(-(x % __negate_negative_signed(y)));
             return true;
         }
         
