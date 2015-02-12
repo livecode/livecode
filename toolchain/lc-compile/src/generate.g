@@ -189,8 +189,10 @@
     'rule' GenerateManifestDefinitions(constant(_, public, Name, _)):
     
     'rule' GenerateManifestDefinitions(variable(_, public, Name, _)):
-    
-    'rule' GenerateManifestDefinitions(handler(_, public, Name, Signature, _, _)):
+
+    'rule' GenerateManifestDefinitions(contextvariable(_, public, Name, _, _)):
+
+    'rule' GenerateManifestDefinitions(handler(_, public, Name, _, Signature, _, _)):
         GenerateManifestHandlerDefinition(Name, Signature)
 
     'rule' GenerateManifestDefinitions(foreignhandler(_, public, Name, Signature, _)):
@@ -482,7 +484,10 @@
     'rule' GenerateDefinitionIndexes(variable(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
     
-    'rule' GenerateDefinitionIndexes(handler(_, _, Name, _, _, _)):
+    'rule' GenerateDefinitionIndexes(contextvariable(_, _, Name, _, _)):
+        GenerateDefinitionIndex(Name)
+    
+    'rule' GenerateDefinitionIndexes(handler(_, _, Name, _, _, _, _)):
         GenerateDefinitionIndex(Name)
 
     'rule' GenerateDefinitionIndexes(foreignhandler(_, _, Name, _, _)):
@@ -562,7 +567,10 @@
     'rule' GenerateExportedDefinitions(variable(_, public, Id, _)):
         GenerateExportedDefinition(Id)
 
-    'rule' GenerateExportedDefinitions(handler(_, public, Id, _, _, _)):
+    'rule' GenerateExportedDefinitions(contextvariable(_, public, Id, _, _)):
+        GenerateExportedDefinition(Id)
+
+    'rule' GenerateExportedDefinitions(handler(_, public, Id, _, _, _, _)):
         GenerateExportedDefinition(Id)
 
     'rule' GenerateExportedDefinitions(foreignhandler(_, public, Id, _, _)):
@@ -624,13 +632,28 @@
         Info'Index -> DefIndex
         EmitVariableDefinition(DefIndex, Position, Name, TypeIndex)
 
-    'rule' GenerateDefinitions(handler(Position, _, Id, Signature:signature(Parameters, _), _, Body)):
+    'rule' GenerateDefinitions(contextvariable(Position, _, Id, Type, Default)):
+        GenerateType(Type -> TypeIndex)
+        EmitConstant(Default -> ConstIndex)
+
+        QuerySymbolId(Id -> Info)
+        Id'Name -> Name
+        Info'Index -> DefIndex
+        EmitContextVariableDefinition(DefIndex, Position, Name, TypeIndex, ConstIndex)
+
+    'rule' GenerateDefinitions(handler(Position, _, Id, Scope, Signature:signature(Parameters, _), _, Body)):
         GenerateType(handler(Position, Signature) -> TypeIndex)
         
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
         Info'Index -> DefIndex
-        EmitBeginHandlerDefinition(DefIndex, Position, Name, TypeIndex)
+        (|
+            where(Scope -> normal)
+            EmitBeginHandlerDefinition(DefIndex, Position, Name, TypeIndex)
+        ||
+            where(Scope -> context)
+            EmitBeginContextHandlerDefinition(DefIndex, Position, Name, TypeIndex)
+        |)
         GenerateParameters(Parameters)
         CreateParameterRegisters(Parameters)
         CreateVariableRegisters(Body)
