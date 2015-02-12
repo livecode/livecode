@@ -297,10 +297,10 @@ handler GetTestStatus(in pOutput as string) as string
 
 	if tFail then
 		return "FAIL"
-	else if tXFail then
-		return "XFAIL"
 	else if tXPass then
 		return "XPASS"
+	else if tXFail then
+		return "XFAIL"
 	else if tPass then
 		return "PASS"
 	else if tSkipped then
