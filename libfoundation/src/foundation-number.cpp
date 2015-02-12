@@ -88,10 +88,13 @@ bool MCNumberIsFetchableAsInteger(MCNumberRef self)
             // Unsigned integer rep is only used for values outside the range
             // of integer rep.
             return false;
+        case kMCNUmberFlagDoubleRep:
+            return false;
         default:
+            MCUnreachable();
             break;
     }
-
+    
     return false;
 }
 
@@ -103,7 +106,10 @@ bool MCNumberIsFetchableAsUnsignedInteger(MCNumberRef self)
             return self -> integer >= 0;
         case kMCNumberFlagUnsignedIntegerRep:
             return true;
+        case kMCNUmberFlagDoubleRep:
+            return false;
         default:
+            MCUnreachable();
             break;
     }
     
@@ -118,11 +124,14 @@ integer_t MCNumberFetchAsInteger(MCNumberRef self)
             return self -> integer;
         case kMCNumberFlagUnsignedIntegerRep:
             return self -> unsigned_integer < INT32_MAX ? (integer_t)self -> unsigned_integer : INT32_MAX;
+        case kMCNumberFlagDoubleRep:
+            return self -> real < 0.0 ? (integer_t)(self -> real - 0.5) : (integer_t)(self -> real + 0.5);
         default:
+            MCUnreachable();
             break;
     }
     
-	return self -> real < 0.0 ? (integer_t)(self -> real - 0.5) : (integer_t)(self -> real + 0.5);
+    return 0;
 }
 
 uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef self)
@@ -133,11 +142,14 @@ uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef self)
             return self -> integer >= 0 ? (uinteger_t)self -> integer : 0;
         case kMCNumberFlagUnsignedIntegerRep:
             return self -> unsigned_integer;
+        case kMCNUmberFlagDoubleRep:
+            return self -> real < 0.0 ? 0.0 : (uinteger_t)(self -> real + 0.5);
         default:
+            MCUnreachable();
             break;
     }
     
-	return self -> real < 0.0 ? 0.0 : (uinteger_t)(self -> real + 0.5);
+    return 0;
 }
 
 real64_t MCNumberFetchAsReal(MCNumberRef self)
@@ -148,11 +160,14 @@ real64_t MCNumberFetchAsReal(MCNumberRef self)
             return self -> integer;
         case kMCNumberFlagUnsignedIntegerRep:
             return self -> unsigned_integer;
+        case kMCNumberFlagDoubleRep:
+            return self -> real;
         default:
+            MCUnreachable();
             break;
     }
     
-    return self -> real;
+    return 0;
 }
 
 bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number)
@@ -255,10 +270,11 @@ bool MCNumberFormat(MCNumberRef p_number, MCStringRef& r_string)
             return MCStringFormat(r_string, "%u", p_number -> unsigned_integer);
         case kMCNumberFlagDoubleRep:
             return MCStringFormat(r_string, "%lf", p_number -> real);
+        default:
+            MCUnreachable();
+            break;
     }
-    
-    MCUnreachable();
-    
+
     return false;
 }
 
@@ -310,11 +326,14 @@ hash_t __MCNumberHash(__MCNumber *self)
             return MCHashInteger(self -> integer);
         case kMCNumberFlagUnsignedIntegerRep:
             return MCHashInteger((integer_t)self -> unsigned_integer);
+        case kMCNumberFlagDoubleRep:
+            return MCHashDouble(self -> real);
         default:
+            MCUnreachable();
             break;
     }
     
-	return MCHashDouble(self -> real);
+    return 0;
 }
 
 bool __MCNumberIsEqualTo(__MCNumber *self, __MCNumber *p_other_self)
@@ -328,11 +347,14 @@ bool __MCNumberIsEqualTo(__MCNumber *self, __MCNumber *p_other_self)
             return self -> integer == p_other_self -> integer;
         case kMCNumberFlagUnsignedIntegerRep:
             return self -> unsigned_integer == p_other_self -> unsigned_integer;
+        case kMCNUmberFlagDoubleRep:
+            return self -> real == p_other_self -> real;
         default:
+            MCUnreachable();
             break;
     }
     
-	return self -> real == p_other_self -> real;
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1053,6 +1075,9 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
             return __MCNumberDoubleBinaryOperation<T>(x -> real, y -> unsigned_integer, r_z);
         case kMCNumberBinaryTypeDoubleByDouble:
             return __MCNumberDoubleBinaryOperation<T>(x -> real, y -> real, r_z);
+        default:
+            MCUnreachable();
+            break;
     }
     
     return false;
@@ -1080,10 +1105,11 @@ template<typename T> inline bool __MCNumberComparisonOperation(MCNumberRef x, MC
             return T::double_by_double(x -> real, y -> unsigned_integer);
         case kMCNumberBinaryTypeDoubleByDouble:
             return T::double_by_double(x -> real, y -> real);
+        default:
+            MCUnreachable();
+            break;
     }
-    
-    MCUnreachable();
-    
+
     return false;
 }
 
@@ -1103,11 +1129,15 @@ bool MCNumberNegate(MCNumberRef x, MCNumberRef& r_y)
                 return MCNumberCreateWithReal(-(double)x -> unsigned_integer, r_y);
             return MCNumberCreateWithInteger(-x -> unsigned_integer, r_y);
             
+        case kMCNumberFlagDoubleRep:
+            return MCNumberCreateWithReal(-x -> real, r_y);
+            
         default:
+            MCUnreachable();
             break;
     }
     
-    return MCNumberCreateWithReal(-x -> real, r_y);
+    return false;
 }
 
 bool MCNumberAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
@@ -1148,6 +1178,9 @@ bool MCNumberDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> real, y -> unsigned_integer, r_z);
         case kMCNumberBinaryTypeDoubleByDouble:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> real, y -> real, r_z);
+        default:
+            MCUnreachable();
+            break;
     }
     
     return false;
@@ -1246,9 +1279,10 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
             return MCNumberCreateWithUnsignedInteger(t_unsigned_value, r_z);
         }
         break;
+        default:
+            MCUnreachable();
+            break;
     }
-    
-    MCUnreachable();
     
     return false;
 }
@@ -1265,9 +1299,10 @@ template<typename T> inline bool __MCNumberIntegralComparisonOperation(MCNumberR
             return T::unsigned_by_signed(x -> unsigned_integer, y -> integer);
         case kMCNumberBinaryTypeUnsignedIntegerByUnsignedInteger:
             return T::unsigned_by_unsigned(x -> unsigned_integer, y -> unsigned_integer);
+        default:
+            MCUnreachable();
+            break;
     }
-    
-    MCUnreachable();
     
     return false;
 }
@@ -1287,10 +1322,9 @@ bool MCNumberIntegralNegate(MCNumberRef x, MCNumberRef& r_y)
             return MCNumberCreateWithInteger(-x -> unsigned_integer, r_y);
             
         default:
+            MCUnreachable();
             break;
     }
-    
-    MCUnreachable();
     
     return false;
 }
