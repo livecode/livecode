@@ -265,12 +265,13 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
     // it encodes the version against the 'Unknown' architecture which is interpreted
     // by the deploy command to mean all architectures. Otherwise, the keys in the
     // array are assumed to be architecture names and each is pushed on the array.
+    // If the 'min_os_version' is empty, then no change is brought to the binaries.
     // If multiple entries are present, then the 'unknown' mapping is used for any
     // architecture not explicitly specified. The current architecture strings that are
     // known are:
     //   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
     // The empty string is taken to be 'unknown'.
-    if (!ctxt . CopyElementAsArray(p_array, MCNAME("min_os_version"), false, t_temp_array))
+    if (!ctxt . CopyOptElementAsArray(p_array, MCNAME("min_os_version"), false, t_temp_array))
         return false;
 
     // SN-2015-02-04: [[ Merge-6.7.2 ]] If the array is empty, try to convert to a string.
@@ -290,10 +291,12 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
     else
     {
         MCValueRelease(t_temp_array);
-        if (!ctxt . CopyElementAsString(p_array, MCNAME("min_os_version"), false, t_temp_string))
+        if (!ctxt . CopyOptElementAsString(p_array, MCNAME("min_os_version"), false, t_temp_string))
             return false;
-
-        MCDeployPushMinOSVersion(this, kMCDeployArchitecture_Unknown, t_temp_string);
+        
+        if (!MCStringIsEmpty(t_temp_string))
+            MCDeployPushMinOSVersion(this, kMCDeployArchitecture_Unknown, t_temp_string);
+        
         MCValueRelease(t_temp_string);
     }
 	
