@@ -53,7 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define HOME_FOLDER "/opt/livecode/" MC_BUILD_ENGINE_SHORT_VERSION
 #else
 #define HOME_ENV_VAR "LIVECODE_SERVER_HOME"
-#define HOME_FOLDER "/opt/runrev/livecode-server"
+#define HOME_FOLDER "/opt/livecode/server"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
