@@ -155,7 +155,8 @@ extern "C" MC_DLLEXPORT MCNumberRef MCArithmeticExecParseStringAsNumber(MCString
     MCNumberRef t_number;
     if (!MCNumberTryToParse(p_operand, t_number))
         return nil;
-    if (!MCNumberIsFinite(t_number))
+    if (t_number == nil ||
+        !MCNumberIsFinite(t_number))
         return nil;
     return t_number;
 }

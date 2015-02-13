@@ -9,11 +9,6 @@ use com.livecode.date
 public handler Test()
     variable tResults as list
     put the empty list into tResults
-    	testFile(tResults)
-
-    variable tDelimiter as string
-    put newline into tDelimiter
-	
 
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
@@ -654,9 +649,9 @@ end handler
 
 public handler testArithmetic(inout xResults as list)
 
-	variable tInt as number
-	variable tReal as number
-	variable tNumber
+	variable tInt as integer
+	variable tReal as real
+	variable tNumber as number
 	
 	put 10 into tInt
 	put 10 into tReal
@@ -686,11 +681,9 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "MultiplyReal", tReal is 20, xResults)
 	testLog("Arithmetic", "MultiplyNum", tNumber is 20, xResults)	
 
-	divide tInt by 40
 	divide tReal by 40
 	divide tNumber by 40
-	
-	testLog("Arithmetic", "DivideInt", tInt is 0.5, xResults)
+
 	testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
 	testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)
 	
@@ -700,8 +693,8 @@ public handler testArithmetic(inout xResults as list)
 	put 10 into tLeft
 	put 2 into tRight
 	
-	variable tLeftReal as number
-	variable tRightReal as number
+	variable tLeftReal as real
+	variable tRightReal as real
 	
 	put 10 into tLeftReal
 	put 2 into tRightReal
@@ -728,8 +721,8 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "ModInt", tLeft mod (tRight + tOne) is 1, xResults)
 	testLog("Arithmetic", "ModNum", 4^((7-1)/2) mod 7 is 1, xResults)
 	
-	testLog("Arithmetic", "Wrap", 5 wrap 3 is 2, xResults)
-	testLog("Arithmetic", "Wrap", -3 wrap 3 is -3, xResults)
+	// testLog("Arithmetic", "Wrap", 5 wrap 3 is 2, xResults)
+	// testLog("Arithmetic", "Wrap", -3 wrap 3 is -3, xResults)
 	
 	testLog("Arithmetic", "GreaterThanInt", tLeft > tRight, xResults)
 	testLog("Arithmetic", "GreaterThanInt", not tLeft > tLeft, xResults)
