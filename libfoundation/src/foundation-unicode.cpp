@@ -454,6 +454,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
                 ((const unichar_t**)x_result_array)[t_offset] = t_prop;
                 if (t_advance == 2)
                     ((const unichar_t**)x_result_array)[t_offset + 1] = t_prop;
+				break;
             }
         
             default:
