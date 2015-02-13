@@ -229,10 +229,10 @@ bool MCFiltersCompress(MCDataRef p_source, MCDataRef& r_result)
 	uint32_t osize = zstrm.total_out + GZIP_HEADER_SIZE;
 	uint32_t check = crc32(0L, Z_NULL, 0);
 	check = crc32(check, (unsigned char *)t_src_ptr, t_src_len);
-    MCSwapInt32HostToBig(check);
+	check = MCSwapInt32HostToBig(check);
 	memcpy(t_buffer.Bytes() + osize, &check, 4);
 	check = t_src_len;
-    MCSwapInt32HostToBig(check);
+	check = MCSwapInt32HostToBig(check);
 	memcpy(t_buffer.Bytes() + osize + 4, &check, 4);
     
 	t_buffer.Shrink(osize + 8);
