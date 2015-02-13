@@ -736,6 +736,7 @@ static struct { NSString* const* name; SEL selector; } s_player_notifications[] 
 
 - (void)dealloc
 {
+    [self end];
 	[[NSNotificationCenter defaultCenter] removeObserver: self];
 	[super dealloc];
 }
