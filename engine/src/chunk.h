@@ -169,6 +169,9 @@ public:
 	Exec_stat setprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
 #endif
 
+    // SN-2015-02-13: [[ Bug 14467 ]] Refactor the way object properties are looked up
+    MCPropertyInfo *lookup_obj_prop(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop);
+    
     bool getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value);
     bool setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value);
     
