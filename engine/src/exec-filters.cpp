@@ -120,7 +120,7 @@ static const char *url_table[256] =
 
 bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result)
 {
-    char *s;
+    char *t_chars;
     uint4 l;
     int4 size;
 
@@ -128,18 +128,20 @@ bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
     // but rather to encode it in UTF-8 and write the bytes (a '%' will be added).
     if (p_use_utf8)
     {
-        if (!MCStringConvertToUTF8(p_source, s, l))
+        if (!MCStringConvertToUTF8(p_source, t_chars, l))
             return false;
 
         size = l + 1;
     }
     else
     {
-        if (!MCStringConvertToNative(p_source, (char_t*&)s, l))
+        if (!MCStringConvertToNative(p_source, (char_t*&)t_chars, l))
             return false;
-        size = strlen(s);
+        size = strlen(t_chars);
     }
 
+    // AL-2015-02-13: [[ Bug 14602 ]] Copy initial t_chars ptr so we can free it properly after it is modified.
+    char *t_chars_start = t_chars;
     size = l + 1;
     size += size / 4;
 
@@ -168,7 +170,7 @@ bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
                 dptr = buffer . Chars() + offset;
                 size = newsize;
             }
-            const char_t *sptr = (const char_t *)url_table[(uint1)*s++];
+            const char_t *sptr = (const char_t *)url_table[(uint1)*t_chars++];
             do
             {
                 *dptr++ = *sptr++;
@@ -178,7 +180,7 @@ bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
         buffer . Shrink(dptr - buffer . Chars());
     }
 
-    MCMemoryDeleteArray(s);
+    MCMemoryDeleteArray(t_chars_start);
     if (!t_success)
         return false;
     
