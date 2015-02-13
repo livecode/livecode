@@ -1482,9 +1482,9 @@ on newTool
       send "revNewTool" to this cd of stack l
    end repeat
    
-	if "revShortCutsLibrary" is in revInternal__ListLoadedLibraries() then	
-   		send "revNewTool" to stack "revShortCutsLibrary"
-   	end if
+   if "revShortCutsLibrary" is in revInternal__ListLoadedLibraries() then	
+      send "revNewTool" to stack "revShortCutsLibrary"
+   end if
    
    if the tool is "browse tool" then
       set the defaultStack to the topStack
@@ -1493,11 +1493,11 @@ on newTool
             and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
          send "revRefreshControls true, true" to stack "revApplicationOverview"
       end if
-	end if
+   end if
    
    if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
-	   send "revNewTool" to stack "revReshapeLibrary"
-	end if	
+      send "revNewTool" to stack "revReshapeLibrary"
+   end if	
    
    if word 1 of the tool is not in "pointerbrowseselectpencilbucketrectanglelineroundedovalbrusheraserspraypolygoncurveregulardropper" then
       revNewObjectName
@@ -1506,46 +1506,7 @@ on newTool
    else if (the selObj) is not empty and the id of the selObj is 0 then
       do "set the selected of" && (line 1 of the selObj) && "to false"
    end if
-   if the tool is "pointer tool" or the tool is "browse tool" then
-      send "selectedObjectChanged" to me
-      lock messages
-      repeat with i = 1 to the number of btns in group "graphics" of stack "revTools"
-         set the hilite of btn i of group "graphics" of stack "revTools" to false
-      end repeat
-      repeat with i = 1 to the number of btns in group "paint" of stack "revTools"
-         set the hilite of btn i of group "paint" of stack "revTools" to false
-      end repeat
-      set the loc of btn "Graphic Hilite" of stack "revTools" to -100,-100
-      
-      local tPendingMessages
-      put the pendingMessages into tPendingMessages
-      
-      local tMessageIdentifier
-      put "mouseUp",the long id of btn "pointer" of cd 1 of stack "revTools" into tMessageIdentifier
-      
-      local tMessageLine
-      put lineOffset(tMessageIdentifier,tPendingMessages) into tMessageLine
-      if tMessageLine is not 0 then cancel (item 1 of line tMessageLine of tPendingMessages)
-      if the tool is "pointer tool" and the mode of stack "revTools" is not 0 then
-         unhilite btn "Mac switcher" of stack "revTools"
-         set the icon of btn "Mac switcher" of stack "revTools" to 203072
-         set the hilitedButton of group "win switcher" of stack "revTools" to 2
-         set the hilitedButton of group "linux switcher" of stack "revTools" to 2
-      else if the mode of stack "revTools" is not 0 and the tool is "browse tool" then
-         hilite btn "Mac switcher" of stack "revTools"
-         set the icon of btn "mac switcher" of stack "revTools" to 203072
-         set the hilitedButton of group "win switcher" of stack "revTools" to 1
-         set the hilitedButton of group "linux switcher" of stack "revTools" to 1
-      end if
-      unlock messages
-   else if the mode of stack "revTools" is not 0 then
-      -- some other tool
-      set the hilitedButton of group "win switcher" of stack "revTools" to 0
-      set the hilitedButton of group "linux switcher" of stack "revTools" to 0
-      set the icon of btn "mac switcher" of stack "revTools" to 203178
-      unhilite btn "mac switcher" of stack "revTools"
-      unlock messages
-   end if
+   
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newTool
 end newTool
 
@@ -3172,7 +3133,7 @@ on revSEDelayShowPalettes
       end if
    end repeat
    if tRestore then 
-      select text of fld "Message Field" of stack "Message Box" -- works better than "focus"
+      --select text of fld "Message Field" of stack "Message Box" -- works better than "focus"
    end if
    put empty into lHiddenPalettes
    unlock screen
