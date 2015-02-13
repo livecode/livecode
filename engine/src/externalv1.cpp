@@ -2189,8 +2189,8 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         *(CFNumberRef*)p_value = CFNumberCreate(NULL, kCFNumberFloat64Type, &t_real);
         
         // SN-2014-11-24: [[ Bug 14057 ]] NS types are allocated in an autrelease pool
-//        if ((p_options & 0xff) == kMCExternalValueOptionAsNSNumber)
-//            [*(NSNumber**)p_value autorelease];
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSNumber)
+            [*(NSNumber**)p_value autorelease];
         
         break;
     }
@@ -2206,8 +2206,8 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return kMCExternalErrorOutOfMemory;
         
         // SN-2014-11-24: [[ Bug 14057 ]] NS types are allocated in an autrelease pool
-//        if ((p_options & 0xff) == kMCExternalValueOptionAsNSString)
-//            [*(NSString**)p_value autorelease];
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSString)
+            [*(NSString**)p_value autorelease];
         break;
     }
     case kMCExternalValueOptionAsNSData:
@@ -2226,8 +2226,8 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         *(CFDataRef*)p_value = CFDataCreateWithBytesNoCopy(NULL, (UInt8*)t_chars, t_char_count, NULL);
         
         // SN-2014-11-24: [[ Bug 14057 ]] NS types are allocated in an autrelease pool
-//        if ((p_options & 0xff) == kMCExternalValueOptionAsNSData)
-//            [*(NSData**)p_value autorelease];
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSData)
+            [*(NSData**)p_value autorelease];
         break;
     }
     case kMCExternalValueOptionAsNSArray:
@@ -2252,8 +2252,8 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         *(NSArray**)p_value = t_value;
         
         // SN-2014-11-24: [[ Bug 14057 ]] NS types are allocated in an autrelease pool
-//        if ((p_options & 0xff) == kMCExternalValueOptionAsNSArray)
-//            [*(NSArray**)p_value autorelease];
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSArray)
+            [*(NSArray**)p_value autorelease];
         return t_error;
     }
     case kMCExternalValueOptionAsNSDictionary:
@@ -2279,8 +2279,8 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         *(NSDictionary**)p_value = t_value;
         
         // SN-2014-11-24: [[ Bug 14057 ]] NS types are allocated in an autrelease pool
-//        if ((p_options & 0xff) == kMCExternalValueOptionAsNSDictionary)
-//            [*(NSDictionary**)p_value autorelease];
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSDictionary)
+            [*(NSDictionary**)p_value autorelease];
         
         return t_error;
     }
