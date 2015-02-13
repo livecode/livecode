@@ -307,7 +307,9 @@ bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index
         return MCProperListInsertElements(self, p_value -> list, p_value -> length, p_index);
     
     MCAutoProperListRef t_list;
-    MCProperListCopy(p_value, &t_list);
+	if (!MCProperListCopy(p_value, &t_list))
+		return false;
+
     return MCProperListInsertList(self, *t_list, p_index);
 }
 
