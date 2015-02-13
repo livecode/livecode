@@ -1733,6 +1733,11 @@ MC_DLLEXPORT extern MCNumberRef kMCIntegerMinusOne;
 MC_DLLEXPORT extern MCNumberRef kMCRealZero;
 MC_DLLEXPORT extern MCNumberRef kMCRealOne;
 MC_DLLEXPORT extern MCNumberRef kMCRealMinusOne;
+    
+// Error types
+    
+MC_DLLEXPORT extern MCTypeInfoRef kMCNumberDivisionByZeroErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNumberOverflowErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 //

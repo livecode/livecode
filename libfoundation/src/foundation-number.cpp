@@ -50,6 +50,16 @@ static inline bool __MCNumberIsDoubleRep(MCNumberRef self)
     return __MCNumberGetRepType(self) == __kMCNumberRepDouble;
 }
 
+static bool __MCNumberThrowOverflowError(void)
+{
+    return MCErrorCreateAndThrow(kMCNumberOverflowErrorTypeInfo, nil);
+}
+
+static bool __MCNumberThrowDivisionByZeroError(void)
+{
+    return MCErrorCreateAndThrow(kMCNumberDivisionByZeroErrorTypeInfo, nil);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
@@ -1294,7 +1304,7 @@ template<typename T> inline bool __MCNumberOverflowingIntegralBinaryOperation(in
     
     // If we can't fit in an unsigned or signed int then
     if (t_value < INTEGER_MIN || t_value > UINTEGER_MAX)
-        return MCErrorThrowGeneric(MCSTR("numeric overflow"));
+        return __MCNumberThrowOverflowError();
     
     if (t_value > INTEGER_MAX)
         return MCNumberCreateWithUnsignedInteger((uinteger_t)t_value, r_z);
@@ -1377,7 +1387,7 @@ bool MCNumberIntegralNegate(MCNumberRef x, MCNumberRef& r_y)
             
         case __kMCNumberRepUnsignedInteger:
             if (x -> unsigned_integer > (-INTEGER_MIN))
-                return MCErrorThrowGeneric(MCSTR("numeric overflow"));
+                return __MCNumberThrowOverflowError();
             return MCNumberCreateWithInteger(-x -> unsigned_integer, r_y);
             
         default:
@@ -1407,7 +1417,7 @@ bool MCNumberIntegralDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
     // The representation of 0 for signed and unsigned ints is identical.
     if (y -> integer == 0)
-        return MCErrorThrowGeneric(MCSTR("divide by zero"));
+        return __MCNumberThrowDivisionByZeroError();
     
     return __MCNumberIntegralBinaryOperation<__MCNumberOperationDiv>(x, y, r_z);
 }
@@ -1416,7 +1426,7 @@ bool MCNumberIntegralMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
     // The representation of 0 for signed and unsigned ints is identical.
     if (y -> integer == 0)
-        return MCErrorThrowGeneric(MCSTR("divide by zero"));
+        return __MCNumberThrowDivisionByZeroError();
     
     return __MCNumberIntegralBinaryOperation<__MCNumberOperationMod>(x, y, r_z);
 }
@@ -1461,6 +1471,9 @@ MCNumberRef kMCRealZero;
 MCNumberRef kMCRealOne;
 MCNumberRef kMCRealMinusOne;
 
+MCTypeInfoRef kMCNumberDivisionByZeroErrorTypeInfo;
+MCTypeInfoRef kMCNumberOverflowErrorTypeInfo;
+
 bool __MCNumberInitialize(void)
 {
     if (!MCNumberCreateWithInteger(0, kMCIntegerZero))
@@ -1481,6 +1494,12 @@ bool __MCNumberInitialize(void)
     if (!MCNumberCreateWithReal(-1.0, kMCRealMinusOne))
         return false;
 		
+    if (!MCErrorTypeInfoCreate(MCNAME("arithmetic"), MCSTR("division by zero"), kMCNumberDivisionByZeroErrorTypeInfo))
+        return false;
+    
+    if (!MCErrorTypeInfoCreate(MCNAME("arithmetic"), MCSTR("numeric overflow"), kMCNumberOverflowErrorTypeInfo))
+        return false;
+    
     return true;
 }
 
