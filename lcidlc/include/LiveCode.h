@@ -370,6 +370,19 @@ enum
 	
 	// The 'value' parameter is a pointer to a char variable (native encoding)
 	kLCValueOptionAsCChar = 22,
+    
+    // SN-2015-02-13: [[ ExternalsApiV6 ]] Added CF-type arguments, which
+    //  are NOT autoreleased when used as input
+    // The 'value' parameter is a pointer to an CFNumberRef variable.
+    kLCValueOptionAsCFNumber = 23,
+    // The 'value' parameter is a pointer to an CFStringRef variable.
+    kLCValueOptionAsCFString = 24,
+    // The 'value' parameter is a pointer to an CFDataRef variable.
+    kLCValueOptionAsCFData = 25,
+    // The 'value' parameter is a pointer to an CFArrayRef variable.
+    kLCValueOptionAsCFArray = 26,
+    // The 'value' parameter is a pointer to an CFDictionaryRef variable.
+    kLCValueOptionAsCFDictionary = 27,
 	
 	// Treat array keys as case-insensitive.
 	kLCValueOptionCaseSensitiveFalse = 0 << 30,
