@@ -1612,7 +1612,7 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 //     result will be real
 //   end if
 //
-// There are also more specialized (integer) variants which will not promote and
+// There are also more specialized (integral) variants which will not promote and
 // will throw overflow errors instead.
 //
 // There is no general 'compare' method for numbers - instead there are distinct
@@ -1620,6 +1620,13 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 // the subtle semantics of non-finite numbers which are possible to represent
 // with doubles without having to check for them before performing an operation
 // (i.e. so the hopefully hardware-based implementation can do it for us).
+//
+// All the (non-integral) MCNumber operations will silently allow doubles which
+// are not finite and normal - the results of each operation in this case being
+// defined by the IEEE standard. It is up to the caller to check the validity
+// of the numbers which result and take any appropriate action. In particular,
+// the non-integral division operations will *not* throw an exception as the
+// result will come out as an infinity (and so is 'representable' in some way).
     
 MC_DLLEXPORT bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
@@ -1629,6 +1636,11 @@ MC_DLLEXPORT bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberIsInteger(MCNumberRef number);
 // This method returns true if the number is stored as a floating-point value.
 MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
+    
+// This method returns true if the number is a 'valid' number. Validity here means
+// that computing with the number will give numeric results. In particular, integers
+// are always valid and reals are valid if they are not infinity and not NaN.
+MC_DLLEXPORT bool MCNumberIsValid(MCNumberRef number);
 
 // This method returns true if the number can be fetched as an integer_t. (i.e.
 // it is internally an integer, or a unsigned integer in the range 0...INT_MAX).
