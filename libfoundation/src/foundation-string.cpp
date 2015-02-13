@@ -1570,6 +1570,7 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
         if (t_offset >= MCStringGetLength(self))
         {
             r_out_range = MCRangeMake(t_offset, 0);
+			MCLocaleBreakIteratorRelease (t_iter);
             return true;
         }
     }
