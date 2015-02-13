@@ -603,12 +603,13 @@ void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadSt
         MPMovieLoadState t_state;
         t_state = [m_controller loadState];
         
+        // PM-2015-02-13: [[ Bug 14604 ]] Used (1 << kMCNativeControlLoadState*) to align with the definition of MCExecFormatSet()
         if (t_state & MPMovieLoadStatePlayable)
-            t_load_state |= kMCNativeControlLoadStatePlayable;
+            t_load_state |= 1 << kMCNativeControlLoadStatePlayable;
         if (t_state & MPMovieLoadStatePlaythroughOK)
-            t_load_state |= kMCNativeControlLoadStatePlaythroughOK;
+            t_load_state |= 1 << kMCNativeControlLoadStatePlaythroughOK;
         if (t_state & MPMovieLoadStateStalled)
-            t_load_state |= kMCNativeControlLoadStateStalled;
+            t_load_state |= 1 << kMCNativeControlLoadStateStalled;
     }
     r_state = (MCNativeControlLoadState)t_load_state;
 }
