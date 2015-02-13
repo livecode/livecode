@@ -4248,7 +4248,9 @@ bool MCChunk::applyPropertyOperation(MCExecContext &ctxt, Properties which, MCNa
         if (t_info == nil)
             t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeChar : kMCPropertyInfoChunkTypeLine);
         
-        if (t_info == nil || t_info -> getter == nil)
+        if (t_info == nil
+                || (p_is_get_operation && t_info -> getter == nil)
+                || (!p_is_get_operation && t_info -> setter == nil))
         {
             if (p_is_get_operation)
                 MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
