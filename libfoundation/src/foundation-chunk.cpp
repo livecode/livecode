@@ -22,22 +22,56 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 uinteger_t MCChunkCountByteChunkCallback(void *context)
 {
-    return MCDataGetLength(*(MCDataRef *)context);
+    MCChunkCountInRangeState *t_state = static_cast<MCChunkCountInRangeState *>(context);
+    
+    uinteger_t t_length;
+    t_length = MCDataGetLength((MCDataRef)t_state -> value);
+    
+    if (t_state -> range == nil)
+        return t_length;
+
+    MCRange t_range;
+    t_range = *t_state -> range;
+    
+    return t_range . offset + t_range . length > t_length ? t_length - t_range . offset : t_range . length;
 }
 
 uinteger_t MCChunkCountCodeunitChunkCallback(void *context)
 {
-    return MCStringGetLength(*(MCStringRef *)context);
+    MCChunkCountInRangeState *t_state = static_cast<MCChunkCountInRangeState *>(context);
+    
+    uinteger_t t_length;
+    t_length = MCStringGetLength((MCStringRef)t_state -> value);
+    
+    if (t_state -> range == nil)
+        return t_length;
+    
+    MCRange t_range;
+    t_range = *t_state -> range;
+    
+    return t_range . offset + t_range . length > t_length ? t_length - t_range . offset : t_range . length;
 }
 
 uinteger_t MCChunkCountElementChunkCallback(void *context)
 {
-    return MCProperListGetLength(*(MCProperListRef *)context);
+    MCChunkCountInRangeState *t_state = static_cast<MCChunkCountInRangeState *>(context);
+    
+    uinteger_t t_length;
+    t_length = MCProperListGetLength((MCProperListRef)t_state -> value);
+    
+    if (t_state -> range == nil)
+        return t_length;
+    
+    MCRange t_range;
+    t_range = *t_state -> range;
+    
+    return t_range . offset + t_range . length > t_length ? t_length - t_range . offset : t_range . length;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
+// AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a given range, to prevent substring copying in text chunk resolution.
+void MCChunkGetExtentsByRangeInRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     int32_t t_chunk_count;
     
@@ -72,7 +106,7 @@ void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountC
     r_first = p_first;
 }
 
-void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsByExpressionInRange(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     r_chunk_count = 1;
     
@@ -96,34 +130,56 @@ void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_cal
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCChunkGetExtentsOfByteChunkByRange(MCDataRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsOfByteChunkByRangeInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByRange(p_first, p_last, MCChunkCountByteChunkCallback, &p_data, r_first, r_chunk_count);
+    MCChunkCountInRangeState t_state;
+    t_state . value = p_data;
+    t_state . range = p_range;
+    MCChunkGetExtentsByRangeInRange(p_first, p_last, MCChunkCountByteChunkCallback, &t_state, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfByteChunkByExpression(MCDataRef p_data, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsOfByteChunkByExpressionInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByExpression(p_first, MCChunkCountByteChunkCallback, &p_data, r_first, r_chunk_count);
+    MCChunkCountInRangeState t_state;
+    t_state . value = p_data;
+    t_state . range = p_range;
+    MCChunkGetExtentsByExpressionInRange(p_first, MCChunkCountByteChunkCallback, &t_state, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfCodeunitChunkByRange(MCStringRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsOfCodeunitChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByRange(p_first, p_last, MCChunkCountCodeunitChunkCallback, &p_string, r_first, r_chunk_count);
+    MCChunkCountInRangeState t_state;
+    t_state . value = p_string;
+    t_state . range = p_range;
+    
+    MCChunkGetExtentsByRangeInRange(p_first, p_last, MCChunkCountCodeunitChunkCallback, &t_state, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfCodeunitChunkByExpression(MCStringRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByExpression(p_first, MCChunkCountCodeunitChunkCallback, &p_string, r_first, r_chunk_count);
+    MCChunkCountInRangeState t_state;
+    t_state . value = p_string;
+    t_state . range = p_range;
+    
+    MCChunkGetExtentsByExpressionInRange(p_first, MCChunkCountCodeunitChunkCallback, &t_state, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfElementChunkByRange(MCProperListRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsOfElementChunkByRangeInRange(MCProperListRef p_list, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByRange(p_first, p_last, MCChunkCountElementChunkCallback, &p_string, r_first, r_chunk_count);
+    MCChunkCountInRangeState t_state;
+    t_state . value = p_list;
+    t_state . range = p_range;
+    
+    MCChunkGetExtentsByRangeInRange(p_first, p_last, MCChunkCountElementChunkCallback, &t_state, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfElementChunkByExpression(MCProperListRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsOfElementChunkByExpressionInRange(MCProperListRef p_list, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByExpression(p_first, MCChunkCountElementChunkCallback, &p_string, r_first, r_chunk_count);
+    MCChunkCountInRangeState t_state;
+    t_state . value = p_list;
+    t_state . range = p_range;
+    
+    MCChunkGetExtentsByExpressionInRange(p_first, MCChunkCountElementChunkCallback, &t_state, r_first, r_chunk_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

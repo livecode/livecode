@@ -102,7 +102,7 @@ extern "C" MC_DLLEXPORT void MCListEvalContainsElements(MCProperListRef p_target
 extern "C" MC_DLLEXPORT void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByExpression(p_target, p_index, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByExpressionInRange(p_target, nil, p_index, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(p_target))
     {
@@ -116,7 +116,7 @@ extern "C" MC_DLLEXPORT void MCListFetchElementOf(index_t p_index, MCProperListR
 extern "C" MC_DLLEXPORT void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
     {
@@ -144,7 +144,7 @@ extern "C" MC_DLLEXPORT void MCListStoreElementOf(MCValueRef p_value, index_t p_
 extern "C" MC_DLLEXPORT void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByRangeInRange(p_target, nil, p_start, p_finish, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(p_target))
     {
@@ -158,7 +158,7 @@ extern "C" MC_DLLEXPORT void MCListFetchElementRangeOf(index_t p_start, index_t 
 extern "C" MC_DLLEXPORT void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByRangeInRange(x_target, nil, p_start, p_finish, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
     {
@@ -198,7 +198,7 @@ extern "C" MC_DLLEXPORT void MCListStoreIndexOf(MCValueRef p_value, MCProperList
 extern "C" MC_DLLEXPORT void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
     {
@@ -227,7 +227,7 @@ extern "C" MC_DLLEXPORT void MCListStoreAfterElementOf(MCValueRef p_value, index
 extern "C" MC_DLLEXPORT void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, t_start, t_count);
 
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
     {
@@ -280,7 +280,7 @@ extern "C" MC_DLLEXPORT void MCListStoreLastElementOf(MCValueRef p_value, MCProp
 extern "C" MC_DLLEXPORT void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByRangeInRange(x_target, nil, p_start, p_finish, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
     {
@@ -310,7 +310,7 @@ extern "C" MC_DLLEXPORT void MCListSpliceIntoElementOf(MCProperListRef p_list, i
 extern "C" MC_DLLEXPORT void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
     {
@@ -334,7 +334,7 @@ extern "C" MC_DLLEXPORT void MCListSpliceBeforeElementOf(MCProperListRef p_list,
 extern "C" MC_DLLEXPORT void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
     {

@@ -86,7 +86,7 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytes(MCDataRef p_needle, MCDataR
 extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MCDataRef p_target, uindex_t p_after, bool p_is_last, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfByteChunkByExpression(p_target, p_after, t_start, t_count);
+    MCChunkGetExtentsOfByteChunkByExpressionInRange(p_target, nil, p_after, t_start, t_count);
     
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, p_is_last, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
@@ -94,7 +94,7 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MC
 extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesBefore(MCDataRef p_needle, MCDataRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfByteChunkByExpression(p_target, p_before, t_start, t_count);
+    MCChunkGetExtentsOfByteChunkByExpressionInRange(p_target, nil, p_before, t_start, t_count);
     
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, !p_is_first, MCRangeMake(0, t_start), r_output);
 }
@@ -102,7 +102,7 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesBefore(MCDataRef p_needle, M
 extern "C" MC_DLLEXPORT void MCByteFetchByteRangeOf(index_t p_start, index_t p_finish, MCDataRef p_target, MCDataRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfByteChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfByteChunkByRangeInRange(p_target, nil, p_start, p_finish, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCDataGetLength(p_target))
     {
@@ -117,7 +117,7 @@ extern "C" MC_DLLEXPORT void MCByteFetchByteRangeOf(index_t p_start, index_t p_f
 extern "C" MC_DLLEXPORT void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p_start, index_t p_finish, MCDataRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfByteChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfByteChunkByRangeInRange(x_target, nil, p_start, p_finish, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCDataGetLength(x_target))
     {

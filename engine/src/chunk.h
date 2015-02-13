@@ -250,6 +250,8 @@ class MCTextChunkIterator
     
     public:
     MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text, MCRange p_restriction);
     ~MCTextChunkIterator();
     
     MCRange getrange()
