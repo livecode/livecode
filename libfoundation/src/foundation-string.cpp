@@ -1668,6 +1668,7 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
         if (t_right_break >= MCStringGetLength(self))
         {
             r_out_range = MCRangeMake(t_right_break, 0);
+			MCLocaleBreakIteratorRelease (t_iter);
             return true;
         }
     }
