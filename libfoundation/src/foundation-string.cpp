@@ -1065,7 +1065,8 @@ uindex_t MCStringGetLength(MCStringRef self)
 const unichar_t *MCStringGetCharPtr(MCStringRef self)
 {
     if (__MCStringIsIndirect(self))
-        __MCStringResolveIndirect(self);
+		if (!__MCStringResolveIndirect(self))
+			return nil;
     
     __MCStringUnnativize(self);
 	return self -> chars;
