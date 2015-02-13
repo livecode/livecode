@@ -19,6 +19,12 @@
 
 #include <float.h>
 
+// We use 'checked' forms of all the (non-integral) number operations at the moment.
+// This includes not allowing non-finite numbers out of Parse.
+//
+// When we have an improved (zero-cost!) implementation of context variables
+// how to handle 'invalid' numbers will be controlled by such.
+
 #define MC_ARITHMETIC_BINARY_OP(OpName, TargettedName, ResultName) \
     extern "C" MC_DLLEXPORT void MCArithmeticExec##TargettedName(MCNumberRef p_source, MCNumberRef& x_target) \
     { \
@@ -61,17 +67,17 @@
         r_output = MCNumberIntegral##OpName(p_left, p_right); \
     }
 
-MC_ARITHMETIC_BINARY_OP(Add, AddNumberToNumber, NumberPlusNumber)
+MC_ARITHMETIC_BINARY_OP(FiniteAdd, AddNumberToNumber, NumberPlusNumber)
 MC_ARITHMETIC_BINARY_OP(IntegralAdd, AddIntegerToInteger, IntegerPlusInteger)
-MC_ARITHMETIC_BINARY_OP(Subtract, SubtractNumberFromNumber, NumberMinusNumber)
+MC_ARITHMETIC_BINARY_OP(FiniteSubtract, SubtractNumberFromNumber, NumberMinusNumber)
 MC_ARITHMETIC_BINARY_OP(IntegralSubtract, SubtractIntegerFromInteger, IntegerMinusInteger)
-MC_ARITHMETIC_BINARY_OP_R(Multiply, MultiplyNumberByNumber, NumberTimesNumber)
+MC_ARITHMETIC_BINARY_OP_R(FiniteMultiply, MultiplyNumberByNumber, NumberTimesNumber)
 MC_ARITHMETIC_BINARY_OP_R(IntegralMultiply, MultiplyIntegerByInteger, IntegerTimesInteger)
-MC_ARITHMETIC_BINARY_OP_R(Divide, DivideNumberByNumber, NumberOverNumber)
+MC_ARITHMETIC_BINARY_OP_R(FiniteDivide, DivideNumberByNumber, NumberOverNumber)
 
-MC_ARITHMETIC_EXPR_BINARY_OP(Div, NumberDivNumber)
+MC_ARITHMETIC_EXPR_BINARY_OP(FiniteDiv, NumberDivNumber)
 MC_ARITHMETIC_EXPR_BINARY_OP(IntegralDiv, IntegerDivInteger)
-MC_ARITHMETIC_EXPR_BINARY_OP(Mod, NumberModNumber)
+MC_ARITHMETIC_EXPR_BINARY_OP(FiniteMod, NumberModNumber)
 MC_ARITHMETIC_EXPR_BINARY_OP(IntegralMod, IntegerModInteger)
 //MC_ARITHMETIC_EXPR_BINARY_OP(Wrap, NumberWrapNumber)
 //MC_ARITHMETIC_EXPR_BINARY_OP(IntegralWrap, IntegerWrapInteger)
@@ -148,6 +154,8 @@ extern "C" MC_DLLEXPORT MCNumberRef MCArithmeticExecParseStringAsNumber(MCString
 {
     MCNumberRef t_number;
     if (!MCNumberTryToParse(p_operand, t_number))
+        return nil;
+    if (!MCNumberIsFinite(t_number))
         return nil;
     return t_number;
 }

@@ -117,7 +117,7 @@ bool MCNumberIsReal(MCNumberRef self)
     return __MCNumberIsDoubleRep(self);
 }
 
-bool MCNumberIsValid(MCNumberRef self)
+bool MCNumberIsFinite(MCNumberRef self)
 {
     if (!__MCNumberIsDoubleRep(self))
         return true;
@@ -1293,6 +1293,117 @@ bool MCNumberIsGreaterThan(MCNumberRef x, MCNumberRef y)
 bool MCNumberIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y)
 {
     return __MCNumberComparisonOperation<__MCNumberOperationIsGreaterThanOrEqualTo>(x, y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCNumberFiniteNegate(MCNumberRef x, MCNumberRef& r_y)
+{
+    MCNumberRef y;
+    if (!MCNumberNegate(x, y))
+        return false;
+    
+    if (!MCNumberIsFinite(y))
+        return __MCNumberThrowOverflowError();
+
+    r_y = y;
+    
+    return true;
+}
+
+bool MCNumberFiniteAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberAdd(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+        return __MCNumberThrowOverflowError();
+    
+    r_z = z;
+    
+    return true;
+    
+}
+
+bool MCNumberFiniteSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberSubtract(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+        return __MCNumberThrowOverflowError();
+    
+    r_z = z;
+    
+    return true;
+}
+
+bool MCNumberFiniteMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberMultiply(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+        return __MCNumberThrowOverflowError();
+    
+    r_z = z;
+    
+    return true;
+}
+
+bool MCNumberFiniteDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberDivide(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+    {
+        if (y -> real != 0.0)
+            return __MCNumberThrowOverflowError();
+        
+        return __MCNumberThrowDivisionByZeroError();
+    }
+    
+    r_z = z;
+    
+    return true;
+}
+
+bool MCNumberFiniteDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberDiv(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+    {
+        if (y -> real != 0.0)
+            return __MCNumberThrowOverflowError();
+        
+        return __MCNumberThrowDivisionByZeroError();
+    }
+    
+    r_z = z;
+    
+    return true;
+}
+
+bool MCNumberFiniteMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberMod(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+        return __MCNumberThrowOverflowError();
+
+    r_z = z;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

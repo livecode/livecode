@@ -1637,10 +1637,9 @@ MC_DLLEXPORT bool MCNumberIsInteger(MCNumberRef number);
 // This method returns true if the number is stored as a floating-point value.
 MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
     
-// This method returns true if the number is a 'valid' number. Validity here means
-// that computing with the number will give numeric results. In particular, integers
-// are always valid and reals are valid if they are not infinity and not NaN.
-MC_DLLEXPORT bool MCNumberIsValid(MCNumberRef number);
+// This method returns true if the number is a 'finite' number. Integers are always
+// finite, reals are finite if they are not infinity nor NaN.
+MC_DLLEXPORT bool MCNumberIsFinite(MCNumberRef number);
 
 // This method returns true if the number can be fetched as an integer_t. (i.e.
 // it is internally an integer, or a unsigned integer in the range 0...INT_MAX).
@@ -1666,6 +1665,10 @@ MC_DLLEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
 //
 // These methods will perform an integer operation if possible, otherwise both
 // arguments will be promoted to double and the operation performed there.
+//
+// Double operations are 'unchecked' in the sense that they will silently allow
+// invalid numbers (as defined by MCNumberIsValid) to flow through them and be
+// produced as results.
     
 MC_DLLEXPORT bool MCNumberNegate(MCNumberRef x, MCNumberRef& r_y);
 
@@ -1683,6 +1686,20 @@ MC_DLLEXPORT bool MCNumberIsLessThan(MCNumberRef x, MCNumberRef y);
 MC_DLLEXPORT bool MCNumberIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y);
 MC_DLLEXPORT bool MCNumberIsGreaterThan(MCNumberRef x, MCNumberRef y);
 MC_DLLEXPORT bool MCNumberIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+
+// These methods are 'finite' in the sense that they check the result IsFinite.
+// If it is not, then they will throw the appropriate error (overflow or divide
+// by zero).
+    
+MC_DLLEXPORT bool MCNumberFiniteNegate(MCNumberRef x, MCNumberRef& r_y);
+
+MC_DLLEXPORT bool MCNumberFiniteAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteWrap(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
 
 // Integral methods.
 //
