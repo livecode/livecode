@@ -2236,7 +2236,8 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
 	
 	if (t_mask->references > 1)
 	{
-		t_mask->references++;
+        // PM-2015-02-13: [[ Bug 14588 ]] Decrease ref count
+		t_mask->references--;
 		return;
 	}
 	
