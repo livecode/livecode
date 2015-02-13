@@ -1803,10 +1803,12 @@ public:
         if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
-        configureSerialPort((short)fileno(t_fptr));
-
         if (t_fptr != NULL)
+        {
+            configureSerialPort((short)fileno(t_fptr));
+
             t_handle = new MCStdioFileHandle(t_fptr);
+        }
 
         return t_handle;
     }
