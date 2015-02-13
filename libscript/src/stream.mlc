@@ -10,6 +10,7 @@ public foreign type Stream binds to "kMCStreamTypeInfo"
 --
 
 public foreign handler MCStreamExecGetStandardOutput(out Stdout as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecGetStandardError(out Stderr as Stream) as undefined binds to "<builtin>"
 
 /*
 Summary:	Default output stream.
@@ -28,6 +29,25 @@ syntax DefaultOutputStream is expression
 	"the" "output" "stream"
 begin
 	MCStreamExecGetStandardOutput(output)
+end syntax
+
+/*
+Summary:	Default error stream.
+Returns:	The default error stream.
+
+Description:
+The default error stream for diagnostic information.
+
+In command-line programs, this is usually used to display error
+messages.  In server programs, data output through this stream may be
+stored in the system log, depending on the server configuration.
+
+Tags: IO
+*/
+syntax DefaultErrorStream is expression
+	"the" "error" "stream"
+begin
+	MCStreamExecGetStandardError(output)
 end syntax
 
 --

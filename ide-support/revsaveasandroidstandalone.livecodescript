@@ -98,6 +98,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    put tSettings["android,statusBarIcon"] into tStatusBarIcon
    if tStatusBarIcon is empty then
       // put default sb icon path into tStatusBarIcon
+      // SN-2015-01-22: [[ Bug 13213 ]] If mapFilePath returns empty, an error will be triggered
+      // line 629.
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "notify_icon.png") into tStatusBarIcon
    end if
    
@@ -246,6 +248,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       local tManifest
       put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+      if the result is not empty then
+         throw "Cannot find the template Manifest"
+      end if
       replace "${LABEL}" with tSettings["android,label"] in tManifest
       replace "${NAME}" with ".mblandroid" in tManifest
       replace "${IDENTIFIER}" with tSettings["android,identifier"] in tManifest
@@ -556,6 +562,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       local tDeploy
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
+      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+      if there is no file tDeploy["engine"] then
+         throw "Could not find standalone engine"
+      end if
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
       
@@ -668,6 +678,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       -- MM-2014-01-29: [[ OpenSSL ]] Include the revsecurity library.
       if tSettings["android,include revsecurity"] then
          put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "revsecurity")) into url ("binfile:" & tArmLibsBuildFolder & slash & "librevsecurity.so")
+         
+         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+         if the result is not empty then
+            throw "Could not find revsecurity library"
+         end if
       end if
       
       -- Copy across the externals into the libs folder
@@ -678,6 +693,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
             next repeat
          end if
          put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tEntry)) into url ("binfile:" & tArmLibsBuildFolder & slash & "lib" & tEntry & ".so")
+         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+         if the result is not empty then
+            throw "Could not find " & tEntry && "library"
+         end if
       end repeat
       
       -- Work out whether to produce an unsigned apk
@@ -1093,6 +1112,25 @@ end pathToJarSigner
 --   files in the build folder.
 function mapFilePath pPath
    if revEnvironmentIsInstalled() then
+      // SN-2015-01-19: [[ Bug 13213 ]] Linux filepaths are case-sensitive.
+      //   so we try to caselessly match the targetted file, with the actual files.
+      set the itemDelimiter to slash
+      
+      // Get the list of files in the targetted directory
+      put the defaultFolder into tOldFolder
+      set the defaultFolder to item 1 to -2 of pPath
+      put the files into tFiles
+      set the defaultFolder to tOldFolder
+      
+      put lineOffset(last item of pPath, tFiles) into tLineOffset
+      
+      // We return empty if we can't find the specified file
+      // That will allow us to throw an error in such a case.
+      if tLineOffset is 0 then
+         return empty
+      else
+         put line tLineOffset of tFiles into item -1 of pPath
+      end if
       return pPath
    end if
    

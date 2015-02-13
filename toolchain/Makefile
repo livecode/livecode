@@ -320,14 +320,14 @@ $(COMPILE_stagedir)/stamp-gentle: $(COMPILE_gentle_inputs)
 	for gfile in $(subst $(COMPILE_srcdir),.,$(COMPILE_gentle_inputs)); do \
 	    gbase=`basename $$gfile` && \
 	    if [ ! -f $(COMPILE_stagesubdir)/$$gbase ]; then \
-	        echo "cp $$gfile $(COMPILE_stagesubdir)"; \
+	        echo "cp $$gfile $(COMPILE_stagesubdir)" $(_PRINT_RULE); \
 	        cp $$gfile $(COMPILE_stagesubdir) || exit $$? ; \
 	    fi; \
 	done
 	@cd $(COMPILE_stagedir) && \
 	for gfile in $(COMPILE_gentle_inputs); do \
 	    gbase=`basename $$gfile` && \
-	    echo "$(GENTLE) $$gbase"; \
+	    echo "$(GENTLE) $$gbase" $(_PRINT_RULE); \
 	    $(GENTLE) $$gbase || exit $$?; \
 	done
 	touch $@
@@ -423,10 +423,10 @@ ifeq ($(STAGE),4)
 	fi
 	-for f in $(COMPILE_bootstrap_check_exes); do rm $$f-strip; done
 	@if ! cmp $< $@; then \
-	    echo "cp $< $@"; \
+	    echo "cp $< $@" $(_PRINT_RULE); \
 	    cp $< $@; \
 	else \
-	    echo "touch $@"; \
+	    echo "touch $@" $(_PRINT_RULE); \
 	    touch $@; \
 	fi
 endif
@@ -452,7 +452,9 @@ lc-compile-clean:
 SCRIPT_mlcdir = $(top_srcdir)/libscript/src
 SCRIPT_mlc_list = $(top_srcdir)/libscript/libstdscript-modules.list
 
-SCRIPT_mlc = $(shell cat $(SCRIPT_mlc_list) | grep -v '^\#')
+# Filter out all filenames with names prefixed with ! (because they
+# should be omitted from bootstrapping), as well as comments.
+SCRIPT_mlc = $(shell cat $(SCRIPT_mlc_list) | grep -v '^[!\#]')
 
 ########## engine MLC
 
@@ -474,7 +476,7 @@ ALL_mlc = \
 $(COMPILE_stagedir)/stamp-lci: $(ALL_mlc) $(SCRIPT_mlc_list)
 	$(MKDIR_P) $(MODULE_DIR) $(dir $@)
 	@for mlcfile in $(ALL_mlc); do \
-	    echo $(LC_COMPILE) --modulepath $(MODULE_DIR) $$mlcfile ; \
+	    echo "$(LC_COMPILE) --modulepath $(MODULE_DIR) $$mlcfile" $(_PRINT_RULE); \
 	    $(LC_COMPILE) --modulepath $(MODULE_DIR) $$mlcfile || exit $$?; \
 	done
 	touch $@
@@ -621,7 +623,7 @@ $(MODULE_DIR)/%.lcm: %.mlc $(LC_COMPILE)
 
 lc-test-check: $(CHECK_lcm) $(LC_TEST)
 	for test_lcm in $(CHECK_lcm); do \
-	    echo "$(LC_TEST) $$test_lcm"; \
+	    echo "$(LC_TEST) $$test_lcm" $(_PRINT_RULE); \
 	    $(LC_TEST) $$test_lcm || exit $$? ; \
 	done
 

@@ -31,7 +31,8 @@ extern "C" MC_DLLEXPORT void MCLogicEvalIsNotEqualTo(bool p_left, bool p_right, 
     r_result = (p_left != p_right);
 }
 
-extern "C" MC_DLLEXPORT MCStringRef MCLogicExecFormatBooleanAsString(bool p_operand)
+// AL-2015-02-10: [[ Bug 14538 ]] Native function named incorrectly
+extern "C" MC_DLLEXPORT MCStringRef MCLogicExecFormatBoolAsString(bool p_operand)
 {
     return MCValueRetain(p_operand ? kMCTrueString : kMCFalseString);
 }
@@ -46,9 +47,10 @@ extern "C" MC_DLLEXPORT MCValueRef MCLogicExecParseStringAsBool(MCStringRef p_op
         return MCValueRetain(kMCNull);
 }
 
-extern "C" MC_DLLEXPORT void MCLogicEvalBooleanFormattedAsString(bool p_operand, MCStringRef& r_output)
+// AL-2015-02-10: [[ Bug 14538 ]] Native function named incorrectly
+extern "C" MC_DLLEXPORT void MCLogicEvalBoolFormattedAsString(bool p_operand, MCStringRef& r_output)
 {
-    r_output = MCLogicExecFormatBooleanAsString(p_operand);
+    r_output = MCLogicExecFormatBoolAsString(p_operand);
 }
 
 extern "C" MC_DLLEXPORT void MCLogicEvalStringParsedAsBool(MCStringRef p_operand, MCValueRef& r_output)

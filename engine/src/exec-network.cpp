@@ -439,11 +439,13 @@ void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url)
+void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCValueRef p_data, MCStringRef p_url)
 // SJT-2014-09-11: [[ URLMessages ]] Send "postURL" messages on all platforms.
 {
 	if (MCU_couldbeurl(MCStringGetOldString(p_url)))
 	{
+		MCAutoDataRef t_data;
+
 		// Send "postURL" message.
 		MCParameter p1;
 		p1 . setvalueref_argument(p_data);
@@ -458,7 +460,8 @@ void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p
 		case ES_PASS:
 			// Either there was no message handler, or the handler passed the message,
 			// so process the URL in the engine.
-			MCS_posttourl(ctxt . GetObject(), p_data, p_url);
+			/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
+			MCS_posttourl(ctxt . GetObject(), *t_data, p_url);
 			// don't break!
 
 		default:
@@ -648,20 +651,27 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 		// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 		ctxt . SetTheResultToEmpty();
 
-        MCAutoDataRef t_data;
+        MCDataRef t_data;
 		if (p_sentinel != nil)
         {
             MCAutoPointer<char> t_sentinel;
             /* UNCHECKED */ MCStringConvertToCString(p_sentinel, &t_sentinel);
-            MCS_read_socket(MCsockets[t_index], ctxt, p_count, *t_sentinel, p_message, &t_data);
+            t_data = MCS_read_socket(MCsockets[t_index], ctxt, p_count, *t_sentinel, p_message);
         }
 		else
-			MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message, &t_data);
+			t_data = MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message);
 
 		if (p_message == NULL)
 		{
-			ctxt . SetItToValue(*t_data);
+            // PM-2015-01-20: [[ Bug 14409 ]] Prevent a crash if MCS_read_socket fails
+            if (t_data == nil)
+                ctxt . SetItToValue(kMCEmptyData);
+            else
+                ctxt . SetItToValue(t_data);
 		}
+        
+        MCValueRelease(t_data);
+        
 	}
 	else
 		ctxt . SetTheResultToStaticCString("socket is not open");

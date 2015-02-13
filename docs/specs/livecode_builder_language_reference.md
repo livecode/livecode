@@ -30,9 +30,7 @@ Strings use backslash ('\') as an escape - the following are understood:
  - **\r**: CR (ASCII 13)
  - **\t**: TAB (ASCII 9)
  - **\q**: quote '"'
- - **\xXX**: character with unicode codepoint hex value 0xXX
- - **\uXXXX**: character with unicode codepoint hex value 0xXXXX
- - **\UXXXXXX**: character with unicode codepoint hex valu 0xXXXXXX
+ - **\u{X...X}: character with unicode codepoint U+X...X - any number of nibbles may be specified, but any values greater than 0x10FFFF will be replaced by U+FFFD.
  - **\\**: backslash '\'
 
 > **Note:** The presence of '.' in identifiers are used as a namespace scope delimiter.

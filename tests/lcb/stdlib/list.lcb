@@ -1,0 +1,228 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.list.tests
+
+use com.livecode.list
+
+public handler TestEmpty()
+	variable t
+	put the empty list into t
+	test "empty (empty)" when t is empty
+	test "empty (empty list)" when t is the empty list
+	test "empty (empty literal)" when t is []
+	test "empty (no elements)" when the number of elements in t is 0
+end handler
+
+public handler TestLiteral()
+	variable t
+	put [[], "x", 1, true] into t
+	test "literal" when the number of elements in t is 4
+end handler
+
+public handler TestIs()
+	test "is" when [[], "x", 1, true] is [[], "x", 1, true]
+	test "is not" when [[], "x", 1, true] is not [[1], "x", 1, true]
+end handler
+
+public handler TestHead()
+	variable t
+	put ["x", 1, true] into t
+
+	test "head" when the head of t is "x"
+	test "first" when the first element of t is "x"
+end handler
+
+public handler TestTail()
+	variable t
+	put ["x", 1, true] into t
+	test "tail" when the tail of t
+	test "last" when the last element of t
+end handler
+
+public handler TestPush()
+	variable t
+	put ["x", 1, true] into t
+
+	push "y" onto t
+	test "push" when the tail of t is "y"
+
+	push "z" onto front of t
+	test "push front" when the head of t is "z"
+
+	push "w" onto back of t
+	test "push back" when the tail of t is "w"
+
+	test "push (result)" when t is ["z", "x", 1, true, "y", "w"]
+end handler
+
+public handler TestPop()
+	variable tList
+	variable tPopped
+
+	put ["x", 1, 2, true] into tList
+
+	pop tList into tPopped
+	test "pop" when tPopped
+
+	pop front of tList into tPopped
+	test "pop front" when tPopped is "x"
+
+	pop back of tList into tPopped
+	test "pop back" when tPopped is 2
+
+	test "pop (result)" when tList is [1]
+end handler
+
+public handler TestCount()
+	test "count" when the number of elements in [1, 2, ["a", "b"]] is 3
+end handler
+
+public handler TestContainsELement()
+	variable t
+	put ["x", 1, true] into t
+	test "element is in" when "x" is in t
+	test "element is not in" when not [] is in t
+end handler
+
+public handler TestContainsList()
+	variable t
+	put ["x", 1, true, []] into t
+	test "contains" when t contains ["x", 1]
+
+	test "contains (missing)" when not t contains [1, "x"]
+
+	-- Crash
+	skip test "contains (missing composite)" because "bug 14596"
+	--test "contains (missing composite)" when ["x", 1, true, []] contains [[], "x", 1]
+end handler
+
+public handler TestBeginsWith()
+	variable t
+	put ["x", 1, true, []] into t
+	test "begins with" when t begins with ["x", 1]
+	test "begins with (missing)" when not t begins with [1, true]
+end handler
+
+public handler TestEndsWith()
+	variable t
+	put ["x", 1, true, []] into t
+	test "ends with" when t ends with [true, []]
+	test "ends with (missing)" when not t ends with [1, true]
+end handler
+
+public handler TestSubscript()
+	variable t
+	put ["x", 1, true, []] into t
+	test "subscript (syntax)" when element 2 of t is 1
+	test "subscript (operator)" when t[4] is []
+end handler
+
+public handler TestRange()
+	variable t
+	put ["x", 1, true, []] into t
+	test "range" when element 2 to 3 of t is [1, true]
+	test "range (same)" when element 2 to 2 of t is [1]
+end handler
+
+public handler TestDelete()
+	variable t
+	variable tTemplate
+	put ["x", 1, true, []] into tTemplate
+
+	put tTemplate into t
+	delete element 3 of t
+	test "delete (single)" when t is ["x", 1, []]
+
+	put tTemplate into t
+	delete the first element of t
+	test "delete (first)" when t is [1, true, []]
+
+	put tTemplate into t
+	delete the last element of t
+	test "delete (last)" when t is ["x", 1, true]
+
+	put tTemplate into t
+	delete element 2 to 3 of t
+	test "delete (range)" when t is ["x", []]
+end handler
+
+public handler TestSplice()
+	variable t
+	variable tTemplate
+	put [1, 1, 1, 1] into tTemplate
+
+	put tTemplate into t
+	splice [2, 2] into element 2 to 3 of t
+	test "splice" when t is [1, 2, 2, 1]
+
+	put tTemplate into t
+	splice [2, 2] into element 2 to 2 of t
+	test "splice (same)" when t is [1, 2, 2, 1, 1]
+
+	put tTemplate into t
+	splice [2, 2] into element 2 of t
+	test "splice (single)" when t is [1, 2, 2, 1, 1]
+
+	put tTemplate into t
+	splice the empty list into element 1 to 4 of t
+	test "splice (empty)" when t is empty
+end handler
+
+public handler TestSpliceBefore()
+	variable t
+	variable tTemplate
+	put [1, 1, 1, 1] into tTemplate
+
+	put tTemplate into t
+	splice [2, 2] before element 2 of t
+	test "splice before" when t is [1, 2, 2, 1, 1, 1]
+
+	put tTemplate into t
+	splice the empty list before element 2 of t
+	test "splice before (empty)" when t is tTemplate
+end handler
+
+public handler TestSpliceAfter()
+	variable t
+	variable tTemplate
+	put [1, 1, 1, 1] into tTemplate
+
+	put tTemplate into t
+	splice [2, 2] after element 2 of t
+	test "splice after" when t is [1, 1, 2, 2, 1, 1]
+
+	put tTemplate into t
+	splice the empty list after element 2 of t
+	test "splice after (empty)" when t is tTemplate
+end handler
+
+public handler TestRepeatElement()
+	variable tIter
+	variable tCount
+
+	put 0 into tCount
+
+	repeat for each element tIter in [1, 1, 1, 1]
+		test "repeat element (iter)" when tIter is 1
+		add 1 to tCount
+	end repeat
+
+	test "repeat element (count)" when tCount is 4
+end handler
+
+end module

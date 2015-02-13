@@ -1982,9 +1982,9 @@ public:
     virtual bool GetExecutablePath(MCStringRef &r_executable)
     {
         char t_executable[PATH_MAX];
-        uint32_t t_size;
+		ssize_t t_size;
         t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
-        if (t_size == PATH_MAX)
+		if (t_size >= PATH_MAX || t_size < 0)
             return false;
         
         t_executable[t_size] = 0;

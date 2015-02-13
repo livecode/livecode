@@ -1,0 +1,42 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.bitwise.tests
+
+use com.livecode.bitwise
+
+public handler TestAnd()
+	test "and" when 1 bitwise and 3 is 1
+	test "and (-ve)" when 1 bitwise and -1 is 1
+	test "and (disjoint)" when 1 bitwise and 2 is 0
+end handler
+
+public handler TestOr()
+	test "or" when 1 bitwise or 3 is 3
+	test "and (-ve)" when 1 bitwise or -1 is -1
+	test "and (disjoint)" when 1 bitwise or 2 is 3
+end handler
+
+public handler TestNot()
+	test "not" when bitwise not -5 is 4
+end handler
+
+public handler TestShift()
+	test "shift" when 7 shifted by 2 bitwise is 28
+end handler
+
+end module

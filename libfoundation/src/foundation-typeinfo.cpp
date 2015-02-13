@@ -1037,7 +1037,25 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
 
 bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
 {
-    return false;
+	MCAutoStringRef tOptionalPart;
+	if (MCTypeInfoIsOptional (self))
+		tOptionalPart = MCSTR("optional ");
+	else
+		tOptionalPart = kMCEmptyString;
+
+	MCAutoStringRef tNamePart;
+	if (MCTypeInfoIsNamed (self))
+	{
+		tNamePart = MCNameGetString (MCNamedTypeInfoGetName (self));
+	}
+	else
+	{
+		if (!MCStringFormat (&tNamePart, "unnamed[%p]", self))
+			return false;
+	}
+
+	return MCStringFormat (r_description, "<type: %@%@>",
+	                       *tOptionalPart, *tNamePart);
 }
 
 static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)

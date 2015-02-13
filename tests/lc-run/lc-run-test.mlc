@@ -1,0 +1,7 @@
+module com.livecode.lc_run_test
+
+public handler main()
+	-- nothing
+end handler
+
+end module
