@@ -55,28 +55,31 @@ extern "C" MC_DLLEXPORT void MCListExecPushSingleElementOnto(MCValueRef p_value,
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT void MCListExecPopElementInto(bool p_is_front, MCProperListRef& x_source, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT MCValueRef MCListExecPopElement(bool p_is_front, MCProperListRef& x_source)
 {
     MCAutoProperListRef t_mutable_list;
+    MCAutoValueRef t_result;
     if (!MCProperListMutableCopy(x_source, &t_mutable_list))
-        return;
+        return NULL;
     
     if (p_is_front)
     {
-        if (!MCProperListPopFront(*t_mutable_list, r_output))
-            return;
+	    if (!MCProperListPopFront(*t_mutable_list, &t_result))
+            return NULL;
     }
     else
     {
-        if (!MCProperListPopBack(*t_mutable_list, r_output))
-            return;
+        if (!MCProperListPopBack(*t_mutable_list, &t_result))
+            return NULL;
     }
     
     MCAutoProperListRef t_immutable;
     if (!MCProperListCopy(*t_mutable_list, &t_immutable))
-        return;
+        return NULL;
     
     MCValueAssign(x_source, *t_immutable);
+
+    return t_result.Take();
 }
 
 extern "C" MC_DLLEXPORT void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)

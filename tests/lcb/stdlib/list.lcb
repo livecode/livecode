@@ -86,6 +86,9 @@ public handler TestPop()
 	test "pop back" when tPopped is 2
 
 	test "pop (result)" when tList is [1]
+
+	pop tList
+	test "pop (no output)" when tList is empty
 end handler
 
 public handler TestCount()
