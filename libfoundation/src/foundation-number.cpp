@@ -499,27 +499,27 @@ static inline uinteger_t __negate_negative_signed(integer_t x)
 // The MCNumber operation implementation is optimized for working with the same
 // data type. Other codepaths will be slower.
 
-enum __MCNumberBinaryType
+enum __MCNumberBinaryOpType
 {
-    __kMCNumberBinaryTypeSignedIntegerBySignedInteger = (kMCNumberFlagSignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagSignedIntegerRep,
-    __kMCNumberBinaryTypeSignedIntegerByUnsignedInteger = (kMCNumberFlagSignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagUnsignedIntegerRep,
-    __kMCNumberBinaryTypeSignedIntegerByDouble = (kMCNumberFlagSignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagDoubleRep,
-    __kMCNumberBinaryTypeUnsignedIntegerBySignedInteger = (kMCNumberFlagUnsignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagSignedIntegerRep,
-    __kMCNumberBinaryTypeUnsignedIntegerByUnsignedInteger = (kMCNumberFlagUnsignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagUnsignedIntegerRep,
-    __kMCNumberBinaryTypeUnsignedIntegerByDouble = (kMCNumberFlagUnsignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagDoubleRep,
-    __kMCNumberBinaryTypeDoubleBySignedInteger = (kMCNumberFlagDoubleRep << kMCNumberFlagRepBitCount) | kMCNumberFlagSignedIntegerRep,
-    __kMCNumberBinaryTypeDoubleByUnsignedInteger = (kMCNumberFlagDoubleRep << kMCNumberFlagRepBitCount) | kMCNumberFlagUnsignedIntegerRep,
-    __kMCNumberBinaryTypeDoubleByDouble = (kMCNumberFlagDoubleRep << kMCNumberFlagRepBitCount) | kMCNumberFlagDoubleRep,
+    __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger = (kMCNumberFlagSignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagSignedIntegerRep,
+    __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger = (kMCNumberFlagSignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagUnsignedIntegerRep,
+    __kMCNumberBinaryOpTypeSignedIntegerByDouble = (kMCNumberFlagSignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagDoubleRep,
+    __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger = (kMCNumberFlagUnsignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagSignedIntegerRep,
+    __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger = (kMCNumberFlagUnsignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagUnsignedIntegerRep,
+    __kMCNumberBinaryOpTypeUnsignedIntegerByDouble = (kMCNumberFlagUnsignedIntegerRep << kMCNumberFlagRepBitCount) | kMCNumberFlagDoubleRep,
+    __kMCNumberBinaryOpTypeDoubleBySignedInteger = (kMCNumberFlagDoubleRep << kMCNumberFlagRepBitCount) | kMCNumberFlagSignedIntegerRep,
+    __kMCNumberBinaryOpTypeDoubleByUnsignedInteger = (kMCNumberFlagDoubleRep << kMCNumberFlagRepBitCount) | kMCNumberFlagUnsignedIntegerRep,
+    __kMCNumberBinaryOpTypeDoubleByDouble = (kMCNumberFlagDoubleRep << kMCNumberFlagRepBitCount) | kMCNumberFlagDoubleRep,
 };
 
-static inline __MCNumberBinaryType __MCNumberComputeBinaryType(MCNumberRef x, MCNumberRef y)
+static inline __MCNumberBinaryOpType __MCNumberComputeBinaryType(MCNumberRef x, MCNumberRef y)
 {
-    return (__MCNumberBinaryType)(((x -> flags & kMCNumberFlagRepMask) << kMCNumberFlagRepBitCount) | (y -> flags & kMCNumberFlagRepMask));
+    return (__MCNumberBinaryOpType)(((x -> flags & kMCNumberFlagRepMask) << kMCNumberFlagRepBitCount) | (y -> flags & kMCNumberFlagRepMask));
 }
 
 //////////
 
-// This type must be big enough to be able to hold the result of any arithmeticå
+// This type must be big enough to be able to hold the result of any arithmetic
 // binary operation performed on a combination of integer_t and uinteger_t.
 typedef int64_t bigint_t;
 
@@ -1102,7 +1102,7 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
 {
     switch(__MCNumberComputeBinaryType(x, y))
     {
-        case __kMCNumberBinaryTypeSignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
         {
             integer_t t_signed_value;
             if (!T::signed_by_signed(x -> integer, y -> integer,t_signed_value))
@@ -1110,7 +1110,7 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
-        case __kMCNumberBinaryTypeSignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
         {
             integer_t t_signed_value;
             if (!T::signed_by_unsigned(x -> integer, y -> unsigned_integer, t_signed_value))
@@ -1118,9 +1118,9 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
-        case __kMCNumberBinaryTypeSignedIntegerByDouble:
+        case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
             return __MCNumberDoubleBinaryOperation<T>(x -> integer, y -> real, r_z);
-        case __kMCNumberBinaryTypeUnsignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
         {
             integer_t t_signed_value;
             if (!T::unsigned_by_signed(x -> unsigned_integer, y -> integer, t_signed_value))
@@ -1128,7 +1128,7 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
-        case __kMCNumberBinaryTypeUnsignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
         {
             uinteger_t t_unsigned_value;
             if (!T::unsigned_by_unsigned(x -> unsigned_integer, y -> unsigned_integer, t_unsigned_value))
@@ -1136,13 +1136,13 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
             return MCNumberCreateWithUnsignedInteger(t_unsigned_value, r_z);
         }
         break;
-        case __kMCNumberBinaryTypeUnsignedIntegerByDouble:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
             return __MCNumberDoubleBinaryOperation<T>(x -> unsigned_integer, y -> real, r_z);
-        case __kMCNumberBinaryTypeDoubleBySignedInteger:
+        case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
             return __MCNumberDoubleBinaryOperation<T>(x -> real, y -> integer, r_z);
-        case __kMCNumberBinaryTypeDoubleByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
             return __MCNumberDoubleBinaryOperation<T>(x -> real, y -> unsigned_integer, r_z);
-        case __kMCNumberBinaryTypeDoubleByDouble:
+        case __kMCNumberBinaryOpTypeDoubleByDouble:
             return __MCNumberDoubleBinaryOperation<T>(x -> real, y -> real, r_z);
         default:
             MCUnreachable();
@@ -1156,23 +1156,23 @@ template<typename T> inline bool __MCNumberComparisonOperation(MCNumberRef x, MC
 {
     switch(__MCNumberComputeBinaryType(x, y))
     {
-        case __kMCNumberBinaryTypeSignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
             return T::signed_by_signed(x -> integer, y -> integer);
-        case __kMCNumberBinaryTypeSignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
             return T::signed_by_unsigned(x -> integer, y -> unsigned_integer);
-        case __kMCNumberBinaryTypeSignedIntegerByDouble:
+        case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
             return T::double_by_double(x -> integer, y -> real);
-        case __kMCNumberBinaryTypeUnsignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
             return T::unsigned_by_signed(x -> unsigned_integer, y -> integer);
-        case __kMCNumberBinaryTypeUnsignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
             return T::unsigned_by_unsigned(x -> unsigned_integer, y -> unsigned_integer);
-        case __kMCNumberBinaryTypeUnsignedIntegerByDouble:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
             return T::double_by_double(x -> unsigned_integer, y -> real);
-        case __kMCNumberBinaryTypeDoubleBySignedInteger:
+        case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
             return T::double_by_double(x -> real, y -> integer);
-        case __kMCNumberBinaryTypeDoubleByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
             return T::double_by_double(x -> real, y -> unsigned_integer);
-        case __kMCNumberBinaryTypeDoubleByDouble:
+        case __kMCNumberBinaryOpTypeDoubleByDouble:
             return T::double_by_double(x -> real, y -> real);
         default:
             MCUnreachable();
@@ -1229,23 +1229,23 @@ bool MCNumberDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
     // We special case '/' as it always produces a real result.
     switch(__MCNumberComputeBinaryType(x, y))
     {
-        case __kMCNumberBinaryTypeSignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> integer, y -> integer, r_z);
-        case __kMCNumberBinaryTypeSignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> integer, y -> unsigned_integer, r_z);
-        case __kMCNumberBinaryTypeSignedIntegerByDouble:
+        case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> integer, y -> real, r_z);
-        case __kMCNumberBinaryTypeUnsignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> unsigned_integer, y -> integer, r_z);
-        case __kMCNumberBinaryTypeUnsignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> unsigned_integer, y -> unsigned_integer, r_z);
-        case __kMCNumberBinaryTypeUnsignedIntegerByDouble:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> unsigned_integer, y -> real, r_z);
-        case __kMCNumberBinaryTypeDoubleBySignedInteger:
+        case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> real, y -> integer, r_z);
-        case __kMCNumberBinaryTypeDoubleByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> real, y -> unsigned_integer, r_z);
-        case __kMCNumberBinaryTypeDoubleByDouble:
+        case __kMCNumberBinaryOpTypeDoubleByDouble:
             return __MCNumberDoubleBinaryOperation<__MCNumberOperationDivide>(x -> real, y -> real, r_z);
         default:
             MCUnreachable();
@@ -1427,7 +1427,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
 {
     switch(__MCNumberComputeBinaryType(x, y))
     {
-        case __kMCNumberBinaryTypeSignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
         {
             integer_t t_signed_value;
             if (!T::signed_by_signed(x -> integer, y -> integer,t_signed_value))
@@ -1435,7 +1435,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
-        case __kMCNumberBinaryTypeSignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
         {
             integer_t t_signed_value;
             if (!T::signed_by_unsigned(x -> integer, y -> unsigned_integer, t_signed_value))
@@ -1443,7 +1443,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
-        case __kMCNumberBinaryTypeUnsignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
         {
             integer_t t_signed_value;
             if (!T::unsigned_by_signed(x -> unsigned_integer, y -> integer, t_signed_value))
@@ -1451,7 +1451,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
-        case __kMCNumberBinaryTypeUnsignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
         {
             uinteger_t t_unsigned_value;
             if (!T::unsigned_by_unsigned(x -> unsigned_integer, y -> unsigned_integer, t_unsigned_value))
@@ -1471,13 +1471,13 @@ template<typename T> inline bool __MCNumberIntegralComparisonOperation(MCNumberR
 {
     switch(__MCNumberComputeBinaryType(x, y))
     {
-        case __kMCNumberBinaryTypeSignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
             return T::signed_by_signed(x -> integer, y -> integer);
-        case __kMCNumberBinaryTypeSignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
             return T::signed_by_unsigned(x -> integer, y -> unsigned_integer);
-        case __kMCNumberBinaryTypeUnsignedIntegerBySignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
             return T::unsigned_by_signed(x -> unsigned_integer, y -> integer);
-        case __kMCNumberBinaryTypeUnsignedIntegerByUnsignedInteger:
+        case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
             return T::unsigned_by_unsigned(x -> unsigned_integer, y -> unsigned_integer);
         default:
             MCUnreachable();
