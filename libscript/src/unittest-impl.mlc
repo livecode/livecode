@@ -85,7 +85,7 @@ public handler MCUnitOutput(in pMessage as string)
 	-- calling into libfoundation
 	MCStringEncode(pMessage, 4 /* UTF-8 */, false, tEncoded)
 
-	write tEncoded to stream the output stream
+	write tEncoded to the output stream
 end handler
 
 end module
