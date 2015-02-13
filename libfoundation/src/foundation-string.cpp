@@ -2650,6 +2650,9 @@ bool MCStringLastIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, MC
             t_limit = p_range . offset + p_range . length;
             while (t_limit--)
             {
+				if (t_limit < p_range.offset)
+					break;
+
                 // Compute the length of the shared prefix *before* offset - this means
                 // we adjust offset down by one before comparing.
                 uindex_t t_prefix_length;
