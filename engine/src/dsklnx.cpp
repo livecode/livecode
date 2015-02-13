@@ -197,8 +197,7 @@ static void configureSerialPort(int sRefNum)
     {
         *each = '\0';
         each++;
-        if (str != NULL)
-            parseSerialControlStr(str, &theTermios);
+        parseSerialControlStr(str, &theTermios);
         str = each;
     }
 
