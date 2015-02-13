@@ -1077,7 +1077,8 @@ const char_t *MCStringGetNativeCharPtr(MCStringRef self)
     {
         // AL-2014-07-25: [[ Bug 12672 ]] Ensure possibly indirect string is resolved before returning char ptr
         if (__MCStringIsIndirect(self))
-            __MCStringResolveIndirect(self);
+			if (!__MCStringResolveIndirect(self))
+				return nil;
         
         return self -> native_chars;
     }
