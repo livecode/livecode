@@ -2346,6 +2346,17 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 	{
         is_extension = true;
 		
+        if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
+        {
+            MCperror->add(PE_LOAD_NOFROM, sp);
+            return PS_ERROR;
+        }
+        if (sp.skip_token(SP_OPEN, TT_UNDEFINED) != PS_NORMAL)
+        {
+            MCperror->add(PE_LOAD_NOFILE, sp);
+            return PS_ERROR;
+        }
+        
 		if (sp.parseexp(False, True, &url) != PS_NORMAL)
 		{
 			MCperror->add(PE_LOAD_BADEXTENSION, sp);
