@@ -491,7 +491,7 @@ static inline bool __checked_unsigned_multiply(uint32_t x, uint32_t y, uint32_t 
 // Note that x is known to be strictly negative.
 static inline uinteger_t __negate_negative_signed(integer_t x)
 {
-    return (uinteger_t)-x;
+    return (uinteger_t)(-((int64_t)x));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -622,7 +622,7 @@ struct __MCNumberOperationSubtract
         if (!__checked_unsigned_subtract(y, x, &z))
             return false;
         
-        if (z > -INTEGER_MIN)
+        if (z > __negate_negative_signed(INTEGER_MIN))
             return false;
         
         r_value = -z;
@@ -788,7 +788,7 @@ struct __MCNumberOperationDiv
         {
             uinteger_t t_value;
             t_value = x / __negate_negative_signed(y);
-            if (t_value > -INTEGER_MIN)
+            if (t_value > __negate_negative_signed(INTEGER_MIN))
                 return false;
             
             r_value = -t_value;
@@ -1190,11 +1190,11 @@ bool MCNumberNegate(MCNumberRef x, MCNumberRef& r_y)
     {
         case __kMCNumberRepSignedInteger:
             if (x -> integer == INTEGER_MIN)
-                return MCNumberCreateWithUnsignedInteger(-INTEGER_MIN, r_y);
+                return MCNumberCreateWithUnsignedInteger(__negate_negative_signed(INTEGER_MIN), r_y);
             return MCNumberCreateWithInteger(-x -> integer, r_y);
             
         case __kMCNumberRepUnsignedInteger:
-            if (x -> unsigned_integer > (-INTEGER_MIN))
+            if (x -> unsigned_integer > __negate_negative_signed(INTEGER_MIN))
                 return MCNumberCreateWithReal(-(double)x -> unsigned_integer, r_y);
             return MCNumberCreateWithInteger(-x -> unsigned_integer, r_y);
             
@@ -1493,11 +1493,11 @@ bool MCNumberIntegralNegate(MCNumberRef x, MCNumberRef& r_y)
     {
         case __kMCNumberRepSignedInteger:
             if (x -> integer == INTEGER_MIN)
-                return MCNumberCreateWithUnsignedInteger(-INTEGER_MIN, r_y);
+                return MCNumberCreateWithUnsignedInteger(__negate_negative_signed(INTEGER_MIN), r_y);
             return MCNumberCreateWithInteger(-x -> integer, r_y);
             
         case __kMCNumberRepUnsignedInteger:
-            if (x -> unsigned_integer > (-INTEGER_MIN))
+            if (x -> unsigned_integer > __negate_negative_signed(INTEGER_MIN))
                 return __MCNumberThrowOverflowError();
             return MCNumberCreateWithInteger(-x -> unsigned_integer, r_y);
             
