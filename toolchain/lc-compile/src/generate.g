@@ -1016,6 +1016,7 @@
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(StepRegister)
         EmitEndInvoke()
+
         EmitJump(RepeatHead)
         EmitResolveLabel(RepeatTail)
         EmitDestroyRegister(CounterRegister)

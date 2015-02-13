@@ -216,7 +216,7 @@ bool MCScriptInitialize(void)
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptBeginHandlerTypeInModule(t_builder, t_double_type_def);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_number_type_def);
         MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_number_type_def);
         MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("step"), t_number_type_def);
         MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
@@ -232,7 +232,7 @@ bool MCScriptInitialize(void)
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptBeginHandlerTypeInModule(t_builder, t_double_type_def);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_number_type_def);
         MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_number_type_def);
         MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("step"), t_number_type_def);
         MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
