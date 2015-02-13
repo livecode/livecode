@@ -391,6 +391,29 @@ void MCScriptAddVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     t_definition -> type = p_type;
 }
 
+void MCScriptAddContextVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_def_index, uindex_t p_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (p_index >= self -> module . definition_count ||
+        self -> module . definitions[p_index] != nil ||
+        !MCMemoryNew((MCScriptContextVariableDefinition*&)self -> module . definitions[p_index]))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    __assign_definition_name(self, p_index, p_name);
+    
+    MCScriptContextVariableDefinition *t_definition;
+    t_definition = static_cast<MCScriptContextVariableDefinition *>(self -> module . definitions[p_index]);
+    
+    t_definition -> kind = kMCScriptDefinitionKindContextVariable;
+    t_definition -> type = p_type;
+    t_definition -> default_value = p_def_index;
+}
+
 void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_signature, MCStringRef p_binding, uindex_t p_index)
 {
     if (self == nil || !self -> valid)
@@ -469,7 +492,6 @@ static void __add_script_type(MCScriptModuleBuilderRef self, MCScriptType *p_typ
         return;
     
     self -> module . types[r_index] = p_type;
-    r_index = r_index;
 }
 
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_index, uindex_t& r_type)
@@ -1122,7 +1144,7 @@ static void __emit_position(MCScriptModuleBuilderRef self, uindex_t p_address, u
     self -> module . positions[t_pindex] . line = p_line;
 }
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCScriptHandlerScope p_scope, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
 {
     if (self == nil || !self -> valid)
         return;
@@ -1143,6 +1165,7 @@ void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_nam
     t_definition -> kind = kMCScriptDefinitionKindHandler;
     t_definition -> type = p_type;
     t_definition -> start_address = self -> module . bytecode_count;
+    t_definition -> scope = p_scope;
     
     self -> current_handler = p_index;
     self -> current_param_count = 0;

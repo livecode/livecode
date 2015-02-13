@@ -530,9 +530,13 @@ typedef int64_t compare_t;
 
 #endif
 
+#if !defined(__HAVE_STDINT_H__)
 typedef uintptr_t size_t;
+
+#	define SIZE_MAX UINTPTR_MAX
+#endif /* !__HAVE_STDINT_H__ */
+
 #define SIZE_MIN UINTPTR_MIN
-#define SIZE_MAX UINTPTR_MAX
 
 typedef int64_t filepos_t;
 

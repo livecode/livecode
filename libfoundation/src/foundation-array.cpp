@@ -664,7 +664,7 @@ bool __MCArrayCopyDescription(__MCArray *self, MCStringRef& r_string)
 	if (!MCListCreateMutable (MCSTR(", "), &t_contents_list))
 		return false;
 
-	uintptr_t t_iter;
+	uintptr_t t_iter = 0;
 	MCNameRef t_key;
 	MCValueRef t_value;
 	while (MCArrayIterate (self, t_iter, t_key, t_value))

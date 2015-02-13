@@ -113,7 +113,10 @@
     'rule' DeclareImportedDefinitions(variable(Position, _, Name, _)):
         DeclareId(Name)
     
-    'rule' DeclareImportedDefinitions(handler(Position, _, Name, _, _, _)):
+    'rule' DeclareImportedDefinitions(contextvariable(Position, _, Name, _, _)):
+        DeclareId(Name)
+
+    'rule' DeclareImportedDefinitions(handler(Position, _, Name, _, _, _, _)):
         DeclareId(Name)
     
     'rule' DeclareImportedDefinitions(foreignhandler(Position, _, Name, _, _)):
@@ -172,7 +175,10 @@
     'rule' Declare(variable(Position, _, Name, _)):
         DeclareId(Name)
     
-    'rule' Declare(handler(Position, _, Name, _, _, _)):
+    'rule' Declare(contextvariable(Position, _, Name, _, _)):
+        DeclareId(Name)
+    
+    'rule' Declare(handler(Position, _, Name, _, _, _, _)):
         DeclareId(Name)
     
     'rule' Declare(foreignhandler(Position, _, Name, _, _)):
@@ -241,8 +247,11 @@
     
     'rule' Define(ModuleId, variable(Position, Access, Name, Type)):
         DefineSymbolId(Name, ModuleId, Access, variable, Type)
+
+    'rule' Define(ModuleId, contextvariable(Position, Access, Name, Type, _)):
+        DefineSymbolId(Name, ModuleId, Access, context, Type)
     
-    'rule' Define(ModuleId, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _)):
+    'rule' Define(ModuleId, handler(Position, Access, Name, _, Signature:signature(Parameters, _), _, _)):
         DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
         DefineParameters(Name, Parameters)
     
@@ -313,7 +322,7 @@
 
     ----------
 
-    'rule' Apply(DEFINITION'handler(_, _, Id, signature(Parameters, Type), _, Body)):
+    'rule' Apply(DEFINITION'handler(_, _, Id, _, signature(Parameters, Type), _, Body)):
         -- The type of the handler is resolved in the current scope
         Apply(Type)
         
@@ -697,7 +706,10 @@
     'rule' DumpBindings(DEFINITION'variable(_, _, Name, Type)):
         DumpId("variable", Name)
         DumpBindings(Type)
-    'rule' DumpBindings(DEFINITION'handler(_, _, Name, Signature, Definitions, Body)):
+    'rule' DumpBindings(DEFINITION'contextvariable(_, _, Name, Type, _)):
+        DumpId("variable", Name)
+        DumpBindings(Type)
+    'rule' DumpBindings(DEFINITION'handler(_, _, Name, _, Signature, Definitions, Body)):
         DumpId("handler", Name)
         DumpBindings(Signature)
         DumpBindings(Definitions)
