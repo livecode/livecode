@@ -1,4 +1,4 @@
-script "revidedocumentationlibrary"
+﻿script "revidedocumentationlibrary"
 
 on revLoadLibrary
 	insert the script of me into back
@@ -144,7 +144,7 @@ function revDocsGenerateDocsFilesFromBuiltIn
    filter tInstalled with "*.lci"
    set the itemdelimiter to "."
    repeat with x = 1 to the number of lines in tInstalled
-      put item -2 of line x of tInstalled & ".mlc" into line x of tInstalled 
+      put item -2 of line x of tInstalled & ".lcb" into line x of tInstalled 
    end repeat
    
    local tPaths
@@ -158,7 +158,7 @@ function revDocsGenerateDocsFilesFromBuiltIn
       set the defaultfolder to tElement
       local tDocsA
       put the files into tFiles
-      filter tFiles with "*.mlc"
+      filter tFiles with "*.lcb"
       repeat for each line tFile in tFiles
          if replaceText(tFile, "-", "") is not among the lines of tInstalled then next repeat
          get revDocsGenerateDocsFileFromModular(url ("file:" & tFile))
@@ -242,13 +242,13 @@ private function revDocsGetGuideData
          local tExtensionGuide
          if there is a file (tFolder & "guide.js") then
             put url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "guide.js") into tExtensionGuide
-         else if there is a file (tFolder & "guide.md") then
+         else if there is a file (tFolder & slash & "guide.md") then
             local tGuide
-            put url ("binfile:" & tGuideFile) into tGuide
+            put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
             put textDecode(tGuide, "utf-8") into tGuide
             
             put "{" & CR after tExtensionGuide
-            put tab & quote & "guide" & quote & ":" && quote & pExtensionName & quote & comma & CR after tExtensionGuide
+            put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
             put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
             put "}" after tExtensionGuide
             
@@ -352,7 +352,7 @@ pLibraryName (string): The name of the library
 pAuthor(string): The author of the library
 pRootDir(string): The root directory to search for files
 pType (enum): The type of docs to parse
-- "modular": This will take any inline docs in .mlc files as well as all standard .lcdoc files in the directory
+- "modular": This will take any inline docs in .lcb files as well as all standard .lcdoc files in the directory
 - "script": This will take any inline docs in .livecode files as well as all standard .lcdoc files in the directory
 - "dictionary": This will take the standard .lcdoc files in the directory and parse as dicitonary entries
 
@@ -516,7 +516,7 @@ function revDocsGenerateDocsFilesFromModularDirectory pDir
    
    local tFiles
    put the files into tFiles
-   filter tFiles with "*.mlc"
+   filter tFiles with "*.lcb"
    
    local tDocsA, tCount
    
@@ -533,11 +533,11 @@ function revDocsGenerateDocsFilesFromModularDirectory pDir
 end revDocsGenerateDocsFilesFromModularDirectory
 
 /*
-Summary: Extracts the inline docs from a .mlc file
+Summary: Extracts the inline docs from a .lcb file
 
-pFile: The path to the .mlc file to extract docs from
+pFile: The path to the .lcb file to extract docs from
 
-Returns (string): A string consisting of all the docs for the syntax and handlers present in the .mlc file
+Returns (string): A string consisting of all the docs for the syntax and handlers present in the .lcb file
 
 Description:
 <revDocsGenerateDocsFileFromModularFile> is used when packaging a widget to create its API documentation.
@@ -738,11 +738,11 @@ on revDocsPreviewScriptInDocsViewer pScript
    revDocsLaunchPreview tJSON
 end revDocsPreviewScriptInDocsViewer
 
-on revDocsPreviewMLCFileInDocsViewer pFile
+on revDocsPreviewLCBFileInDocsViewer pFile
    local tDocs
    put revDocsGenerateDocsFileFromModularFile(pFile) into tDocs
    revDocsPreviewInDocsViewer "My Module", tDocs
-end revDocsPreviewMLCFileInDocsViewer
+end revDocsPreviewLCBFileInDocsViewer
 
 on revDocsPreviewLcdocFileInDocsViewer pFile
    local tFileContents
@@ -762,8 +762,8 @@ end logError
 
 private function extensionsFromType pType
    switch pType
-      case "modular"
-         return ".*\.(mlc|lcdoc)"
+      case "module"
+         return ".*\.(lcb|lcdoc)"
       case "script"
          return ".*\.(livecode|lcdoc)"
       case "dictionary"
@@ -820,6 +820,11 @@ function revDocsFormatInlineComments pDataA
    local tEntryA, tElementA, tElement
    
    local tHasReferences
+   
+   local tParamsFound
+   put false into tParamsFound
+   
+   local tDocData
    repeat with x = 0 to the number of elements in tEntriesA - 1
       put false into tHasReferences
       put tEntriesA[x] into tEntryA
@@ -1111,7 +1116,7 @@ Summary: Iterates through the keys of <pBlocksA> parsing the "comments" element
 
 Parameters:
 pBlocksA (array): An array representing all the docs data for each handler / syntax element
-{ key (string): the handler name, dictionary entry or mlc syntax name
+{ key (string): the handler name, dictionary entry or lcb syntax name
 value (array): The array of details for this element
 { key: "comments"
 value (string) : the comment block associated with this element }
@@ -1325,8 +1330,8 @@ function revDocsGroupElements pElementsA
          case "Name"
             exit repeat
          default
-            put tElementsA[tStartNum]["content"] into tEntriesA[tElementCount]["elements"][tEntryElementCount]["content"]
-            put it into tEntriesA[tElementCount]["elements"][tEntryElementCount]["name"]
+            put tElementsA[tStartNum]["content"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
+            put it into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
             add 1 to tStartNum
             add 1 to tEntryElementCount
             break
@@ -1403,7 +1408,7 @@ function revDocsParseDocText pText
    local tSeenTags
    put false into tSeenTags
    
-   local tAssociationDefault
+   local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
    put tParsedA["name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
@@ -1567,7 +1572,7 @@ function revDocsParseDocsFromID pObjId
 end revDocsParseDocsFromID
 
 /*
-Removes the unnecessary (from the point of view of docs) parts of a mlc syntax declaration
+Removes the unnecessary (from the point of view of docs) parts of a lcb syntax declaration
 */
 private function formatSyntaxLine pLine, pPhrases
    // Currently have to use &lt; and &gt; for < and >
@@ -1603,8 +1608,6 @@ private function formatSyntaxLine pLine, pPhrases
    
    # Remove quotation marks
    replace quote with empty in pLine
-   
-   put tPhrases into rPhrases
    return pLine
 end formatSyntaxLine
 
@@ -2243,10 +2246,9 @@ function __revDocsFormatCustomArrayAsJSON pKey, pArray
    if pArray[pKey] is empty then
       return empty
    end if
-   
    switch pKey
       case "syntax"
-         return tab & tab & tab & escape("syntax") & ":" & __revDocsFormatSyntaxArrayAsJSON(pArray["syntax"]) & comma & CR into tOutput
+         return tab & tab & tab & escape("syntax") & ":" & __revDocsFormatSyntaxArrayAsJSON(pArray["syntax"]) & comma & CR
       case "display syntax"
          return tab & tab & tab & escape("display syntax") & ":" & __revDocsFormatDisplaySyntaxArrayAsJSON(pArray["display syntax"]) & comma & CR
       case "params"
