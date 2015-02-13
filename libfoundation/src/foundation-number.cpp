@@ -494,6 +494,16 @@ static inline uinteger_t __negate_negative_signed(integer_t x)
     return (uinteger_t)(-((int64_t)x));
 }
 
+static inline double __flooring_real_div(double x, double y)
+{
+    return floor(x / y);
+}
+
+static inline double __flooring_real_mod(double x, double y)
+{
+    return x - floor(x / y) * y;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // The MCNumber operation implementation is optimized for working with the same
@@ -733,7 +743,7 @@ struct __MCNumberOperationDiv
 {
     static inline double double_by_double(double x, double y)
     {
-        return floor(x / y);
+        return __flooring_real_div(x, y);
     }
     
     static inline bigint_t bigint_by_bigint(bigint_t x, bigint_t y)
@@ -817,7 +827,7 @@ struct __MCNumberOperationMod
     {
         // fmod nor remainder can be used here as they use the 'integer nearest
         // the exact value of x/y' and not floor(x/y).
-        return x - floor(x / y) * y;
+        return __flooring_real_mod(x, y);
     }
     
     static inline bigint_t bigint_by_bigint(bigint_t x, bigint_t y)
@@ -1079,7 +1089,7 @@ struct __MCNumberOperationIsGreaterThanOrEqualTo
 
 //////////
 
-template<typename T> inline bool __MCNumberOverflowingIntegerBinaryOperation(double x, double y, MCNumberRef& r_z)
+template<typename T> inline bool __MCNumberOverflowingBinaryOperation(double x, double y, MCNumberRef& r_z)
 {
     double t_value;
     t_value = T::double_by_double(x, y);
@@ -1106,7 +1116,7 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
         {
             integer_t t_signed_value;
             if (!T::signed_by_signed(x -> integer, y -> integer,t_signed_value))
-                return __MCNumberOverflowingIntegerBinaryOperation<T>(x -> integer, y -> integer, r_z);
+                return __MCNumberOverflowingBinaryOperation<T>(x -> integer, y -> integer, r_z);
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
@@ -1114,7 +1124,7 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
         {
             integer_t t_signed_value;
             if (!T::signed_by_unsigned(x -> integer, y -> unsigned_integer, t_signed_value))
-                return __MCNumberOverflowingIntegerBinaryOperation<T>(x -> integer, y -> unsigned_integer, r_z);
+                return __MCNumberOverflowingBinaryOperation<T>(x -> integer, y -> unsigned_integer, r_z);
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
@@ -1124,7 +1134,7 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
         {
             integer_t t_signed_value;
             if (!T::unsigned_by_signed(x -> unsigned_integer, y -> integer, t_signed_value))
-                return __MCNumberOverflowingIntegerBinaryOperation<T>(x -> unsigned_integer, y -> integer, r_z);
+                return __MCNumberOverflowingBinaryOperation<T>(x -> unsigned_integer, y -> integer, r_z);
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
@@ -1132,7 +1142,7 @@ template<typename T> inline bool __MCNumberBinaryOperation(MCNumberRef x, MCNumb
         {
             uinteger_t t_unsigned_value;
             if (!T::unsigned_by_unsigned(x -> unsigned_integer, y -> unsigned_integer, t_unsigned_value))
-                return __MCNumberOverflowingIntegerBinaryOperation<T>(x -> unsigned_integer, y -> unsigned_integer, r_z);
+                return __MCNumberOverflowingBinaryOperation<T>(x -> unsigned_integer, y -> unsigned_integer, r_z);
             return MCNumberCreateWithUnsignedInteger(t_unsigned_value, r_z);
         }
         break;
@@ -1408,7 +1418,185 @@ bool MCNumberFiniteMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename T> inline bool __MCNumberOverflowingIntegralBinaryOperation(int64_t x, int64_t y, MCNumberRef& r_z)
+bool MCNumberRealNegate(MCNumberRef x, MCNumberRef& r_y)
+{
+    return MCNumberCreateWithReal(-x -> real, r_y);
+}
+
+bool MCNumberRealAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    return MCNumberCreateWithReal(x -> real + y -> real, r_z);
+}
+
+bool MCNumberRealSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    return MCNumberCreateWithReal(x -> real - y -> real, r_z);
+}
+
+bool MCNumberRealMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    return MCNumberCreateWithReal(x -> real * y -> real, r_z);
+}
+
+bool MCNumberRealDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    return MCNumberCreateWithReal(x -> real / y -> real, r_z);
+}
+
+bool MCNumberRealDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    return MCNumberCreateWithReal(__flooring_real_div(x -> real, y -> real), r_z);
+}
+
+bool MCNumberRealMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    return MCNumberCreateWithReal(__flooring_real_mod(x -> real, y -> real), r_z);
+}
+
+bool MCNumberRealIsEqualTo(MCNumberRef x, MCNumberRef y)
+{
+    return x -> real == y -> real;
+}
+
+bool MCNumberRealIsNotEqualTo(MCNumberRef x, MCNumberRef y)
+{
+    return x -> real != y -> real;
+}
+
+bool MCNumberRealIsLessThan(MCNumberRef x, MCNumberRef y)
+{
+    return x -> real < y -> real;
+}
+
+bool MCNumberRealIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y)
+{
+    return x -> real <= y -> real;
+}
+
+bool MCNumberRealIsGreaterThan(MCNumberRef x, MCNumberRef y)
+{
+    return x -> real > y -> real;
+}
+
+bool MCNumberRealIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y)
+{
+    return x -> real >= y -> real;
+}
+
+//////////
+
+bool MCNumberFiniteRealNegate(MCNumberRef x, MCNumberRef& r_y)
+{
+    MCNumberRef y;
+    if (!MCNumberRealNegate(x, y))
+        return false;
+    
+    if (!MCNumberIsFinite(y))
+        return __MCNumberThrowOverflowError();
+    
+    r_y = y;
+    
+    return true;
+}
+
+bool MCNumberFiniteRealAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberRealAdd(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+        return __MCNumberThrowOverflowError();
+    
+    r_z = z;
+    
+    return true;
+    
+}
+
+bool MCNumberFiniteRealSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberRealSubtract(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+        return __MCNumberThrowOverflowError();
+    
+    r_z = z;
+    
+    return true;
+}
+
+bool MCNumberFiniteRealMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberRealMultiply(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+        return __MCNumberThrowOverflowError();
+    
+    r_z = z;
+    
+    return true;
+}
+
+bool MCNumberFiniteRealDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberRealDivide(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+    {
+        if (y -> real != 0.0)
+            return __MCNumberThrowOverflowError();
+        
+        return __MCNumberThrowDivisionByZeroError();
+    }
+    
+    r_z = z;
+    
+    return true;
+}
+
+bool MCNumberFiniteRealDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberRealDiv(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+    {
+        if (y -> real != 0.0)
+            return __MCNumberThrowOverflowError();
+        
+        return __MCNumberThrowDivisionByZeroError();
+    }
+    
+    r_z = z;
+    
+    return true;
+}
+
+bool MCNumberFiniteRealMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+{
+    MCNumberRef z;
+    if (!MCNumberRealMod(x, y, z))
+        return false;
+    
+    if (!MCNumberIsFinite(z))
+        return __MCNumberThrowOverflowError();
+    
+    r_z = z;
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename T> inline bool __MCNumberOverflowingIntegerBinaryOperation(int64_t x, int64_t y, MCNumberRef& r_z)
 {
     int64_t t_value;
     t_value = T::bigint_by_bigint(x, y);
@@ -1423,7 +1611,7 @@ template<typename T> inline bool __MCNumberOverflowingIntegralBinaryOperation(in
     return MCNumberCreateWithInteger((integer_t)t_value, r_z);
 }
 
-template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+template<typename T> inline bool __MCNumberIntegerBinaryOperation(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
     switch(__MCNumberComputeBinaryType(x, y))
     {
@@ -1431,7 +1619,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
         {
             integer_t t_signed_value;
             if (!T::signed_by_signed(x -> integer, y -> integer,t_signed_value))
-                return __MCNumberOverflowingIntegralBinaryOperation<T>(x -> integer, y -> integer, r_z);
+                return __MCNumberOverflowingIntegerBinaryOperation<T>(x -> integer, y -> integer, r_z);
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
@@ -1439,7 +1627,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
         {
             integer_t t_signed_value;
             if (!T::signed_by_unsigned(x -> integer, y -> unsigned_integer, t_signed_value))
-                return __MCNumberOverflowingIntegralBinaryOperation<T>(x -> integer, y -> unsigned_integer, r_z);
+                return __MCNumberOverflowingIntegerBinaryOperation<T>(x -> integer, y -> unsigned_integer, r_z);
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
@@ -1447,7 +1635,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
         {
             integer_t t_signed_value;
             if (!T::unsigned_by_signed(x -> unsigned_integer, y -> integer, t_signed_value))
-                return __MCNumberOverflowingIntegralBinaryOperation<T>(x -> unsigned_integer, y -> integer, r_z);
+                return __MCNumberOverflowingIntegerBinaryOperation<T>(x -> unsigned_integer, y -> integer, r_z);
             return MCNumberCreateWithInteger(t_signed_value, r_z);
         }
         break;
@@ -1455,7 +1643,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
         {
             uinteger_t t_unsigned_value;
             if (!T::unsigned_by_unsigned(x -> unsigned_integer, y -> unsigned_integer, t_unsigned_value))
-                return __MCNumberOverflowingIntegralBinaryOperation<T>(x -> unsigned_integer, y -> unsigned_integer, r_z);
+                return __MCNumberOverflowingIntegerBinaryOperation<T>(x -> unsigned_integer, y -> unsigned_integer, r_z);
             return MCNumberCreateWithUnsignedInteger(t_unsigned_value, r_z);
         }
         break;
@@ -1467,7 +1655,7 @@ template<typename T> inline bool __MCNumberIntegralBinaryOperation(MCNumberRef x
     return false;
 }
 
-template<typename T> inline bool __MCNumberIntegralComparisonOperation(MCNumberRef x, MCNumberRef y)
+template<typename T> inline bool __MCNumberIntegerComparisonOperation(MCNumberRef x, MCNumberRef y)
 {
     switch(__MCNumberComputeBinaryType(x, y))
     {
@@ -1487,7 +1675,7 @@ template<typename T> inline bool __MCNumberIntegralComparisonOperation(MCNumberR
     return false;
 }
 
-bool MCNumberIntegralNegate(MCNumberRef x, MCNumberRef& r_y)
+bool MCNumberIntegerNegate(MCNumberRef x, MCNumberRef& r_y)
 {
     switch(__MCNumberGetRepType(x))
     {
@@ -1509,67 +1697,67 @@ bool MCNumberIntegralNegate(MCNumberRef x, MCNumberRef& r_y)
     return false;
 }
 
-bool MCNumberIntegralAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+bool MCNumberIntegerAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
-    return __MCNumberIntegralBinaryOperation<__MCNumberOperationAdd>(x, y, r_z);
+    return __MCNumberIntegerBinaryOperation<__MCNumberOperationAdd>(x, y, r_z);
 }
 
-bool MCNumberIntegralSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+bool MCNumberIntegerSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
-    return __MCNumberIntegralBinaryOperation<__MCNumberOperationSubtract>(x, y, r_z);
+    return __MCNumberIntegerBinaryOperation<__MCNumberOperationSubtract>(x, y, r_z);
 }
 
-bool MCNumberIntegralMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+bool MCNumberIntegerMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
-    return __MCNumberIntegralBinaryOperation<__MCNumberOperationMultiply>(x, y, r_z);
+    return __MCNumberIntegerBinaryOperation<__MCNumberOperationMultiply>(x, y, r_z);
 }
 
-bool MCNumberIntegralDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+bool MCNumberIntegerDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
     // The representation of 0 for signed and unsigned ints is identical.
     if (y -> integer == 0)
         return __MCNumberThrowDivisionByZeroError();
     
-    return __MCNumberIntegralBinaryOperation<__MCNumberOperationDiv>(x, y, r_z);
+    return __MCNumberIntegerBinaryOperation<__MCNumberOperationDiv>(x, y, r_z);
 }
 
-bool MCNumberIntegralMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
+bool MCNumberIntegerMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
     // The representation of 0 for signed and unsigned ints is identical.
     if (y -> integer == 0)
         return __MCNumberThrowDivisionByZeroError();
     
-    return __MCNumberIntegralBinaryOperation<__MCNumberOperationMod>(x, y, r_z);
+    return __MCNumberIntegerBinaryOperation<__MCNumberOperationMod>(x, y, r_z);
 }
 
-bool MCNumberIntegralIsEqualTo(MCNumberRef x, MCNumberRef y)
+bool MCNumberIntegerIsEqualTo(MCNumberRef x, MCNumberRef y)
 {
-    return __MCNumberIntegralComparisonOperation<__MCNumberOperationIsEqualTo>(x, y);
+    return __MCNumberIntegerComparisonOperation<__MCNumberOperationIsEqualTo>(x, y);
 }
 
-bool MCNumberIntegralIsNotEqualTo(MCNumberRef x, MCNumberRef y)
+bool MCNumberIntegerIsNotEqualTo(MCNumberRef x, MCNumberRef y)
 {
-    return __MCNumberIntegralComparisonOperation<__MCNumberOperationIsNotEqualTo>(x, y);
+    return __MCNumberIntegerComparisonOperation<__MCNumberOperationIsNotEqualTo>(x, y);
 }
 
-bool MCNumberIntegralIsLessThan(MCNumberRef x, MCNumberRef y)
+bool MCNumberIntegerIsLessThan(MCNumberRef x, MCNumberRef y)
 {
-    return __MCNumberIntegralComparisonOperation<__MCNumberOperationIsLessThan>(x, y);
+    return __MCNumberIntegerComparisonOperation<__MCNumberOperationIsLessThan>(x, y);
 }
 
-bool MCNumberIntegralIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y)
+bool MCNumberIntegerIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y)
 {
-    return __MCNumberIntegralComparisonOperation<__MCNumberOperationIsLessThanOrEqualTo>(x, y);
+    return __MCNumberIntegerComparisonOperation<__MCNumberOperationIsLessThanOrEqualTo>(x, y);
 }
 
-bool MCNumberIntegralIsGreaterThan(MCNumberRef x, MCNumberRef y)
+bool MCNumberIntegerIsGreaterThan(MCNumberRef x, MCNumberRef y)
 {
-    return __MCNumberIntegralComparisonOperation<__MCNumberOperationIsGreaterThan>(x, y);
+    return __MCNumberIntegerComparisonOperation<__MCNumberOperationIsGreaterThan>(x, y);
 }
 
-bool MCNumberIntegralIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y)
+bool MCNumberIntegerIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y)
 {
-    return __MCNumberIntegralComparisonOperation<__MCNumberOperationIsGreaterThanOrEqualTo>(x, y);
+    return __MCNumberIntegerComparisonOperation<__MCNumberOperationIsGreaterThanOrEqualTo>(x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

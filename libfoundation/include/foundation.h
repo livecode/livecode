@@ -1682,7 +1682,6 @@ MC_DLLEXPORT bool MCNumberMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_
 MC_DLLEXPORT bool MCNumberDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
 MC_DLLEXPORT bool MCNumberDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
 MC_DLLEXPORT bool MCNumberMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
-MC_DLLEXPORT bool MCNumberWrap(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
 
 MC_DLLEXPORT bool MCNumberIsEqualTo(MCNumberRef x, MCNumberRef y);
 MC_DLLEXPORT bool MCNumberIsNotEqualTo(MCNumberRef x, MCNumberRef y);
@@ -1703,7 +1702,41 @@ MC_DLLEXPORT bool MCNumberFiniteMultiply(MCNumberRef x, MCNumberRef y, MCNumberR
 MC_DLLEXPORT bool MCNumberFiniteDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
 MC_DLLEXPORT bool MCNumberFiniteDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
 MC_DLLEXPORT bool MCNumberFiniteMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
-MC_DLLEXPORT bool MCNumberFiniteWrap(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+
+// Real methods
+//
+// These methods require numberrefs for which IsReal() returns true (it is an
+// unchecked programmatic error to not conform to this).
+//
+// If the result of an operation cannot fit into an integer, then an appropriate
+// error will be raised.
+    
+MC_DLLEXPORT bool MCNumberRealNegate(MCNumberRef x, MCNumberRef& r_y);
+
+MC_DLLEXPORT bool MCNumberRealAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+
+MC_DLLEXPORT bool MCNumberRealIsEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsNotEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsLessThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsGreaterThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+    
+// These methods are 'finite' in the sense that they check the result IsFinite.
+// If it is not, then they will throw the appropriate error (overflow or divide
+// by zero).
+    
+MC_DLLEXPORT bool MCNumberFiniteRealAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
 
 // Integral methods.
 //
@@ -1713,22 +1746,21 @@ MC_DLLEXPORT bool MCNumberFiniteWrap(MCNumberRef x, MCNumberRef y, MCNumberRef& 
 // If the result of an operation cannot fit into an integer, then an appropriate
 // error will be raised.
     
-MC_DLLEXPORT bool MCNumberIntegralNegate(MCNumberRef x, MCNumberRef& r_y);
+MC_DLLEXPORT bool MCNumberIntegerNegate(MCNumberRef x, MCNumberRef& r_y);
 
-MC_DLLEXPORT bool MCNumberIntegralAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
-MC_DLLEXPORT bool MCNumberIntegralSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
-MC_DLLEXPORT bool MCNumberIntegralMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
-MC_DLLEXPORT bool MCNumberIntegralDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
-MC_DLLEXPORT bool MCNumberIntegralDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
-MC_DLLEXPORT bool MCNumberIntegralMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
-MC_DLLEXPORT bool MCNumberIntegralWrap(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
 
-MC_DLLEXPORT bool MCNumberIntegralIsEqualTo(MCNumberRef x, MCNumberRef y);
-MC_DLLEXPORT bool MCNumberIntegralIsNotEqualTo(MCNumberRef x, MCNumberRef y);
-MC_DLLEXPORT bool MCNumberIntegralIsLessThan(MCNumberRef x, MCNumberRef y);
-MC_DLLEXPORT bool MCNumberIntegralIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y);
-MC_DLLEXPORT bool MCNumberIntegralIsGreaterThan(MCNumberRef x, MCNumberRef y);
-MC_DLLEXPORT bool MCNumberIntegralIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsNotEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsLessThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsGreaterThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y);
 
 // Format the given number as a string. If the number is represented as an integer
 // it will have no fractional part. If the number is represented as a real then
@@ -1738,6 +1770,23 @@ MC_DLLEXPORT bool MCNumberFormat(MCNumberRef p_number, MCStringRef& r_string);
 // Attempt to parse the string as a number. If parsing is not possible (due
 // to it being a malformed numeric string), then r_number will be nil (i.e undefined).
 MC_DLLEXPORT bool MCNumberTryToParse(MCStringRef p_string, MCNumberRef& r_number);
+    
+// Attempt to parse the string as an integer. If parsing is not possible (due
+// to it being a malformed numeric string), then r_number will be nil (i.e undefined).
+MC_DLLEXPORT bool MCNumberTryToParseInteger(MCStringRef p_string, MCNumberRef& r_number);
+    
+// Attempt to parse the string as a real. If parsing is not possible (due
+// to it being a malformed numeric string), then r_number will be nil (i.e undefined).
+MC_DLLEXPORT bool MCNumberTryToParseReal(MCStringRef p_string, MCNumberRef& r_number);
+
+// Type conversion
+
+// This method converts the given number to a real (double rep).
+MC_DLLEXPORT bool MCNumberAsReal(MCNumberRef p_number, MCNumberRef& r_real);
+    
+// This method takes the floor of the given number and returns that as an integer.
+// If the value is too big then an overflow error is thrown.
+MC_DLLEXPORT bool MCNumberAsInteger(MCNumberRef p_number, MCNumberRef& r_integer);
     
 // Parsing methods.
 

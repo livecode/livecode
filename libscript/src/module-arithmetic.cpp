@@ -62,25 +62,33 @@
     { \
         r_output = MCNumber##OpName(p_left, p_right); \
     } \
+    extern "C" MC_DLLEXPORT void MCArithmeticEvalReal##OpName##Real(MCNumberRef p_left, MCNumberRef p_right, bool& r_output) \
+    { \
+        r_output = MCNumberReal##OpName(p_left, p_right); \
+    } \
     extern "C" MC_DLLEXPORT void MCArithmeticEvalInteger##OpName##Integer(MCNumberRef p_left, MCNumberRef p_right, bool& r_output) \
     { \
-        r_output = MCNumberIntegral##OpName(p_left, p_right); \
+        r_output = MCNumberInteger##OpName(p_left, p_right); \
     }
 
 MC_ARITHMETIC_BINARY_OP(FiniteAdd, AddNumberToNumber, NumberPlusNumber)
-MC_ARITHMETIC_BINARY_OP(IntegralAdd, AddIntegerToInteger, IntegerPlusInteger)
+MC_ARITHMETIC_BINARY_OP(FiniteRealAdd, AddRealToReal, RealPlusReal)
+MC_ARITHMETIC_BINARY_OP(IntegerAdd, AddIntegerToInteger, IntegerPlusInteger)
 MC_ARITHMETIC_BINARY_OP(FiniteSubtract, SubtractNumberFromNumber, NumberMinusNumber)
-MC_ARITHMETIC_BINARY_OP(IntegralSubtract, SubtractIntegerFromInteger, IntegerMinusInteger)
+MC_ARITHMETIC_BINARY_OP(FiniteRealSubtract, SubtractRealFromReal, RealMinusReal)
+MC_ARITHMETIC_BINARY_OP(IntegerSubtract, SubtractIntegerFromInteger, IntegerMinusInteger)
 MC_ARITHMETIC_BINARY_OP_R(FiniteMultiply, MultiplyNumberByNumber, NumberTimesNumber)
-MC_ARITHMETIC_BINARY_OP_R(IntegralMultiply, MultiplyIntegerByInteger, IntegerTimesInteger)
+MC_ARITHMETIC_BINARY_OP_R(FiniteRealMultiply, MultiplyRealByReal, RealTimesReal)
+MC_ARITHMETIC_BINARY_OP_R(IntegerMultiply, MultiplyIntegerByInteger, IntegerTimesInteger)
 MC_ARITHMETIC_BINARY_OP_R(FiniteDivide, DivideNumberByNumber, NumberOverNumber)
+MC_ARITHMETIC_BINARY_OP_R(FiniteRealDivide, DivideRealByReal, RealOverReal)
 
 MC_ARITHMETIC_EXPR_BINARY_OP(FiniteDiv, NumberDivNumber)
-MC_ARITHMETIC_EXPR_BINARY_OP(IntegralDiv, IntegerDivInteger)
+MC_ARITHMETIC_EXPR_BINARY_OP(FiniteRealDiv, RealDivReal)
+MC_ARITHMETIC_EXPR_BINARY_OP(IntegerDiv, IntegerDivInteger)
 MC_ARITHMETIC_EXPR_BINARY_OP(FiniteMod, NumberModNumber)
-MC_ARITHMETIC_EXPR_BINARY_OP(IntegralMod, IntegerModInteger)
-//MC_ARITHMETIC_EXPR_BINARY_OP(Wrap, NumberWrapNumber)
-//MC_ARITHMETIC_EXPR_BINARY_OP(IntegralWrap, IntegerWrapInteger)
+MC_ARITHMETIC_EXPR_BINARY_OP(FiniteRealMod, RealModReal)
+MC_ARITHMETIC_EXPR_BINARY_OP(IntegerMod, IntegerModInteger)
 
 MC_ARITHMETIC_COMPARE_OP(IsEqualTo)
 MC_ARITHMETIC_COMPARE_OP(IsNotEqualTo)
@@ -90,6 +98,11 @@ MC_ARITHMETIC_COMPARE_OP(IsLessThan)
 MC_ARITHMETIC_COMPARE_OP(IsLessThanOrEqualTo)
 
 extern "C" MC_DLLEXPORT void MCArithmeticEvalPlusNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    r_output = MCValueRetain(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCArithmeticEvalPlusReal(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     r_output = MCValueRetain(p_operand);
 }
@@ -104,39 +117,14 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusNumber(MCNumberRef p_operand, 
     MCNumberNegate(p_operand, r_output);
 }
 
+extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusReal(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    MCNumberRealNegate(p_operand, r_output);
+}
+
 extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusInteger(MCNumberRef p_operand, MCNumberRef& r_output)
 {
-    MCNumberIntegralNegate(p_operand, r_output);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
-{
-    r_output = p_left == p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalEqualToReal(double p_left, double p_right, bool& r_output)
-{
-    r_output = p_left == p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
-{
-    r_output = MCNumberFetchAsReal(p_left) == MCNumberFetchAsReal(p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
-{
-    r_output = p_left != p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToReal(double p_left, double p_right, bool& r_output)
-{
-    r_output = p_left != p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
-{
-    r_output = MCNumberFetchAsReal(p_left) != MCNumberFetchAsReal(p_right);
+    MCNumberIntegerNegate(p_operand, r_output);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -982,6 +982,12 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
         // All custom typeinfos are unique regardless of callbacks passed. So just hash the pointer.
         t_hash = MCHashPointer(self);
     }
+    else
+    {
+        // We ensure builtin (typecode) typeinfos are only created once thus they are
+        // unique based on their own pointer.
+        t_hash = MCHashPointer(self);
+    }
 
     return t_hash;
 }
@@ -1060,7 +1066,9 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
         return true;
     }
     
-    if (self -> typecode . base != other_self -> typecode . base)
+    // We ensure builtin (typecode) typeinfos are only created once thus they are
+    // unique based on their own pointer.
+    if (self != other_self)
         return false;
     
     return true;
@@ -1122,7 +1130,7 @@ bool __MCTypeInfoInitialize(void)
         __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, nil, kMCProperListTypeInfo) &&
         __create_named_builtin(MCNAME("livecode.lang.any"), kMCTypeInfoTypeIsAny, nil, kMCAnyTypeInfo) &&
         __create_named_builtin(MCNAME("livecode.lang.real"), kMCValueTypeCodeNumber, kMCNumberTypeInfo, kMCRealTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.integer"), kMCValueTypeCodeNumber, kMCRealTypeInfo, kMCIntegerTypeInfo);
+        __create_named_builtin(MCNAME("livecode.lang.integer"), kMCValueTypeCodeNumber, kMCNumberTypeInfo, kMCIntegerTypeInfo);
 }
 
 void __MCTypeInfoFinalize(void)

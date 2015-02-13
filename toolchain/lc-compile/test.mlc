@@ -654,11 +654,11 @@ public handler testArithmetic(inout xResults as list)
 	variable tNumber as number
 	
 	put 10 into tInt
-	put 10 into tReal
+	put 10.0 into tReal
 	put 10 into tNumber
 	
 	add 2 to tInt
-	add 2 to tReal
+	add 2.0 to tReal
 	add 2 to tNumber
 	
 	testLog("Arithmetic", "AddToInt", tInt is 12, xResults)
@@ -696,8 +696,8 @@ public handler testArithmetic(inout xResults as list)
 	variable tLeftReal as real
 	variable tRightReal as real
 	
-	put 10 into tLeftReal
-	put 2 into tRightReal
+	put 10.0 into tLeftReal
+	put 2.0 into tRightReal
 	
 	testLog("Arithmetic", "PlusInt", tLeft + tRight is 12, xResults)
 	testLog("Arithmetic", "PlusReal", tLeftReal + tRightReal is 12, xResults)
