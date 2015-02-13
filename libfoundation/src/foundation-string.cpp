@@ -1511,6 +1511,7 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     if (!t_found)
     {
         r_out_range = MCRangeMake(MCStringGetLength(self), 0);
+		MCLocaleBreakIteratorRelease (t_iter);
         return true;
     }
     
