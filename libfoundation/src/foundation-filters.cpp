@@ -261,7 +261,7 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result)
 	{ /* skip the extra field */
 		uint16_t len;
 		memcpy(&len, &sptr[startindex], 2);
-        MCSwapInt16HostToBig(len);
+		len = MCSwapInt16BigToHost(len);
 		startindex += len;
 	}
 	if (sptr[3] & GZIP_ORIG_NAME) /* skip the original file name */
@@ -274,7 +274,7 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result)
 		startindex += 2;
 	uint32_t size;
 	memcpy(&size, &sptr[t_src_len - 4], 4);
-    MCSwapInt32HostToBig(size);
+	size = MCSwapInt32BigToHost(size);
 	if (size == 0)
 	{
 		r_result = MCValueRetain(kMCEmptyData);
