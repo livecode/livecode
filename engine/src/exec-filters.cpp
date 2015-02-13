@@ -140,8 +140,8 @@ bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
         size = strlen(t_chars);
     }
 
-    // AL-2015-02-13: [[ Bug 14602 ]] Copy initial t_chars ptr so we can free it properly after it is modified.
-    char *t_chars_start = t_chars;
+    // AL-2015-02-13: [[ Bug 14602 ]] Use copy of t_chars ptr for iteration so it can be freed properly.
+    const char *t_chars_iter = t_chars;
     size = l + 1;
     size += size / 4;
 
@@ -170,7 +170,7 @@ bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
                 dptr = buffer . Chars() + offset;
                 size = newsize;
             }
-            const char_t *sptr = (const char_t *)url_table[(uint1)*t_chars++];
+            const char_t *sptr = (const char_t *)url_table[(uint1)*t_chars_iter++];
             do
             {
                 *dptr++ = *sptr++;
@@ -180,7 +180,7 @@ bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_re
         buffer . Shrink(dptr - buffer . Chars());
     }
 
-    MCMemoryDeleteArray(t_chars_start);
+    MCMemoryDeleteArray(t_chars);
     if (!t_success)
         return false;
     
