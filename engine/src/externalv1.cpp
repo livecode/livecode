@@ -124,6 +124,13 @@ enum
     // SN-2015-01-19: [[ Bug 14057 ]] Added forgotten C-char value type
     kMCExternalValueOptionAsCChar = 22,
     
+    // SN-2015-02-13:[[ Bug 14057 ]] Added CF-types (non-releasing)
+    kMCExternalValueOptionAsCFNumber = 23,
+    kMCExternalValueOptionAsCFString = 24,
+    kMCExternalValueOptionAsCFData = 25,
+    kMCExternalValueOptionAsCFArray = 26,
+    kMCExternalValueOptionAsCFDictionary = 27,
+    
 	kMCExternalValueOptionCaseSensitiveMask = 3 << 30,
 	kMCExternalValueOptionDefaultCaseSensitive = 0 << 30,
 	kMCExternalValueOptionCaseSensitive = 1 << 30,
@@ -2178,6 +2185,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     }
 #ifdef __HAS_CORE_FOUNDATION__
     case kMCExternalValueOptionAsNSNumber:
+    case kMCExternalValueOptionAsCFNumber:
     {
         CFNumberRef t_number;
         real64_t t_real;
@@ -2195,6 +2203,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         break;
     }
     case kMCExternalValueOptionAsNSString:
+    case kMCExternalValueOptionAsCFString:
     {
         MCAutoStringRef t_stringref;
         
@@ -2211,6 +2220,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         break;
     }
     case kMCExternalValueOptionAsNSData:
+    case kMCExternalValueOptionAsCFData:
     {
         MCAutoStringRef t_stringref;
         char *t_chars;
@@ -2231,6 +2241,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         break;
     }
     case kMCExternalValueOptionAsNSArray:
+    case kMCExternalValueOptionAsCFArray:
     {
         MCExternalError t_error;
         NSArray* t_value;
@@ -2257,6 +2268,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         return t_error;
     }
     case kMCExternalValueOptionAsNSDictionary:
+    case kMCExternalValueOptionAsCFDictionary:
     {
         MCExternalError t_error;
         NSDictionary* t_value;

@@ -140,6 +140,16 @@ enum
     kMCOptionAsObjcArray = 20,
     kMCOptionAsObjcDictionary = 21,
     
+    // SN-2015-02-13: [[ Bug 14057 ]] Added forgotten C-char type
+    kMCOptionAsCChar = 22,
+    
+    // SN-2015-02-13:[[ Bug 14057 ]] Added CF-types (non-releasing)
+    kMCOptionAsCFNumber = 23,
+    kMCOptionAsCFString = 24,
+    kMCOptionAsCFData = 25,
+    kMCOptionAsCFArray = 26,
+    kMCOptionAsCFDictionary = 27,
+    
 	kMCOptionNumberFormatDefault = 0 << 26,
 	kMCOptionNumberFormatDecimal = 1 << 26,
 	kMCOptionNumberFormatScientific = 2 << 26,
