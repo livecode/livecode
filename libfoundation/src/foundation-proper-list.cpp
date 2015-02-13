@@ -270,7 +270,9 @@ bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
         return MCProperListPushElementsOntoBack(self, p_value -> list, p_value -> length);
     
     MCAutoProperListRef t_list;
-    MCProperListCopy(p_value, &t_list);
+	if (!MCProperListCopy(p_value, &t_list))
+		return false;
+
     return MCProperListAppendList(self, *t_list);
 }
 
