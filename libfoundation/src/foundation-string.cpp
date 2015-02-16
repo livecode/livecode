@@ -1416,31 +1416,29 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
     MCAssert(p_locale != nil);
     
     // Create the appropriate break iterator
-    MCBreakIteratorRef t_iter;
-    if (!MCLocaleBreakIteratorCreate(p_locale, p_type, t_iter))
+    MCAutoCustomPointer<__MCBreakIterator,MCLocaleBreakIteratorRelease> t_iter;
+    if (!MCLocaleBreakIteratorCreate(p_locale, p_type, &t_iter))
         return false;
     
     // Set the iterator's text
-    if (!MCLocaleBreakIteratorSetText(t_iter, self))
+    if (!MCLocaleBreakIteratorSetText(*t_iter, self))
     {
-        MCLocaleBreakIteratorRelease(t_iter);
         return false;
     }
     
     // Advance to the beginning of the specified range
     uindex_t t_start;
-    t_start = MCLocaleBreakIteratorNext(t_iter, p_in_range.offset);
+    t_start = MCLocaleBreakIteratorNext(*t_iter, p_in_range.offset);
     
     if (t_start == kMCLocaleBreakIteratorDone)
     {
         r_out_range = MCRangeMake(MCStringGetLength(self), 0);
-		MCLocaleBreakIteratorRelease (t_iter);
         return true;
     }
     
     // Advance to the end of the specified range
     uindex_t t_end;
-    t_end = MCLocaleBreakIteratorNext(t_iter, p_in_range.length);
+    t_end = MCLocaleBreakIteratorNext(*t_iter, p_in_range.length);
     if (t_end == kMCLocaleBreakIteratorDone)
         t_end = MCStringGetLength(self);
     
@@ -1448,7 +1446,6 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
     t_units = MCRangeMake(t_start, t_end - t_start);
     
     // All done
-    MCLocaleBreakIteratorRelease(t_iter);
     r_out_range = t_units;
     return true;
 }
