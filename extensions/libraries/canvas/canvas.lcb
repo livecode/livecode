@@ -21,6 +21,7 @@ library com.livecode.libraries.example.canvas
 
 metadata version is "1.0.0"
 metadata author is "LiveCode"
+metadata title is "Canvas Library"
 
 -- We need syntax from both canvas and engine built-in modules.
 use com.livecode.canvas
