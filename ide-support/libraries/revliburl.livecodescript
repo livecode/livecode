@@ -66,8 +66,35 @@ local laUrlByFile ##used by libUrlUploadFile to track which files go to which ur
 ------------------------------------------------
 on libraryStack
    if the target is not me then pass libraryStack
+   
+   // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when stack becomes in use
+   initialiseCustomProps
 end libraryStack
 ------------------------------------------------
+on initialiseCustomProps
+   # initialise ftp codes prop set
+   local tFtpCodes
+   put "ABOR:225,226|Connect:220|CWD:250|DELE:250|LIST:125,150|MKD:257|MODE:200|NLST:125,150|PASS:230,202|PASV:227|PORT:200|PWD:257|QUIT:221|RETR:125,150|RMD:250|SIZE:213|STOR:125,150|transferComplete:226|TYPE:200|USER:230,331" into tFtpCodes
+   split tFtpCodes by "|" and ":"
+   set the customProperties["cFtpGoodCodes"] of me to tFtpCodes
+   
+   # initialise default header
+   set the cDefaultHeader of me to "METHOD --- HTTP/1.1" & return & "Host:" & return & "User-Agent: "
+   
+   # initialise version
+   set the cVersion of me to "1.2.0"
+   
+   # initalise PAC support javascript
+   local tPacSupport
+   put "function isPlainHostName(e){return e.indexOf('.')==-1?true:false}function dnsDomainIs(e,t){var n=e.toLowerCase();var r=t.toLowerCase();var i=n.substring(n.length-r.length,n.length);if(i==r)return true;return false}function localHostOrDomainIs(e,t){var n=e.toLowerCase();var r=t.toLowerCase();return n==r||isPlainHostName(n)&!isPlainHostName(r)?true:false}function isResolvable(e){var t=dnsResolve(e);return typeof t=='string'&&t.length?true:false}function isInNet(e,t,n){var r=dnsResolve(e);if(r){var i=t.split('.');var s=n.split('.');var o=r.split('.');if(i.length==s.length&&s.length==o.length){for(var u=0;u<i.length;u++){if((i[u]&s[u])!=(s[u]&o[u]))return false}return true}}return false}function dnsResolve(e){var t;t=__dnsResolve(e);var n;n=t.split('.');if(n.length==4)return t;return null}function myIpAddress(){var e;e=__myIpAddress();var t;t=e.split('.');if(t.length==4)return e;return null}function dnsDomainLevels(e){var t=e.split('.');return t.length-1}function shExpMatch(e,t){if(typeof e!='string'||typeof t!='string')return false;if(t=='*')return true;if(e==''&&t=='')return true;e=e.toLowerCase();t=t.toLowerCase();var n=e.length;var r=t.split('*');var i=0;for(var s=0;s<r.length;s++){if(r[s]=='')continue;if(i>n)return false;i=e.indexOf(r[s]);if(i==-1)return false;i+=r[s].length;e=e.substring(i,n);n=e.length}s--;if(r[s]==''||e=='')return true;return false}function weekdayRange(e,t,n){var r=new Date;var i='SUNMONTUEWEDTHUFRISAT';e=e.toUpperCase();if(t==undefined)t=e;else t=t.toUpperCase();var s=i.indexOf(e);var o=i.indexOf(t);if(o==-1&&t=='GMT'){n=t;o=s}if(s==-1||o==-1)return false;s=s/3;o=o/3;if(n=='GMT')r=r.getUTCDay();else r=r.getDay();if(s<=o&&r>=s&&r<=o)return true;if(o<s&&(r<=o||r>=s))return true;return false}function dateRange(){var e=new Date;var t=arguments.length;var n=arguments[t-1];if(typeof n!='string')n=false;else{n=n.toUpperCase();if(n!='GMT')n=false;else{n=true;t--}}if(!t||t>6)return false;var r=0;var i=0;var s=0;var o=0;var u=0;var a=0;for(var f=0;f<t;f++){var l=arguments[f];if(typeof l=='number'){if(l>31){if(!u)u=l;else if(!a)a=l;else return false}else if(!l)return false;else if(!r)r=l;else if(!i)i=l;else return false}else if(typeof l=='string'){var c='JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC';l=l.toUpperCase();l=c.indexOf(l);if(l==-1)return false;l/=3;l+=1;if(!s)s=l;else if(!o)o=l;else return false}else return false}if(!u)u=n?e.getUTCFullYear():e.getFullYear();if(!a)a=u;if(!s)s=(n?e.getUTCMonth():e.getMonth())+1;if(!o)o=s;if(!r)r=n?e.getUTCDate():e.getDate();if(!i)i=r;var h;var p;if(n){h=Date.UTC(u,s-1,r,0,0,0,0);p=Date.UTC(a,o-1,i,23,59,59,999)}else{h=Date(u,s-1,r,0,0,0,0).valueOf();p=Date(a,o-1,i,23,59,59,999).valueOf()}e=e.valueOf();return h<=e&&e<=p}function timeRange(){var e=0;var t=new Date;var n=new Date;var r=new Date;var i=arguments.length;var s=arguments[i-1];if(typeof s!='string')s=false;else{s=s.toUpperCase();if(s!='GMT')s=false;else{s=true;i--}}if(!i||i>6||i%2&&i!=1)return false;t.setMinutes(0);t.setSeconds(0);t.setMilliseconds(0);r.setMinutes(59);r.setSeconds(59);r.setMilliseconds(999);for(e=0;e<i/2;e++){var o=arguments[e];if(s){switch(e){case 0:t.setUTCHours(o);r.setUTCHours(o);break;case 1:t.setUTCMinutes(o);r.setUTCMinutes(o);break;case 2:t.setUTCSeconds(o);r.setUTCSeconds(o);break}}else{switch(e){case 0:t.setHours(o);r.setHours(o);break;case 1:t.setMinutes(o);r.setMinutes(o);break;case 2:t.setSeconds(o);r.setSeconds(o);break}}}if(i!=1){r.setMinutes(0);r.setSeconds(0);r.setMilliseconds(0);for(e=0;e<i/2;e++){var o=arguments[i/2+e];if(s){switch(e){case 0:r.setUTCHours(o);break;case 1:r.setUTCMinutes(o);break;case 2:r.setUTCSeconds(o);break}}else{switch(e){case 0:r.setHours(o);break;case 1:r.setMinutes(o);break;case 2:r.setSeconds(o);break}}}}n=n.valueOf();t=t.valueOf();r=r.valueOf();if(r<t)r+=864e5;return t<=n&&n<=r}function __FindProxyForURL(e,t){return FindProxyForURL(e,t)}" into tPacSupport
+   set the cPACSupport of me to tPacSupport
+   
+   # initialise top level domains
+   local tTopLevelDomains
+   put "biz,com,info,name,net,org,pro,aero,asia,cat,coop,edu,gov,int,jobs,mil,mobi,museum,tel,travel,arpa,nato,example,invalid,localhost,test,bitnet,csnet,local,root,uucp,onion,exit,berlin,lat,nyc,bzh,cym,gal,sco,geo,mail,kids,post,shop,web,xxx,ac,ad,ae,af,ag,ai,al,am,an,ao,aq,ar,as,at,au,aq,ax,az,ac,ad,ae,af,ag,ai,al,am,an,ao,aq,ar,as,at,au,aw,ax,az,ba,bb,bd,be,bf,bg,bh,bi,bj,bm,bn,bo,br,bs,bt,bw,by,bz,ca,cc,cd,cf,cg,ch,ci,ck,cl,cm,cn,co,cr,cu,cv,cx,cy,cz,de,dj,dk,dm,do,dz,ec,ee,eg,er,es,et,eu,fi,fj,fk,fm,fo,fr,ga,gd,ge,gf,gg,gh,gi,gl,gm,gn,gp,gq,gr,gs,gt,gu,gw,gy,hk,hm,hn,hr,ht,hu,id,ie,il,im,in,io,iq,ir,is,it,je,jm,jo,jp,ke,kg,kh,ki,km,kn,kp,kr,kw,ky,kz,la,lb,lc,li,lk,lr,ls,lt,lu,lv,ly,ma,mc,md,me,mg,mh,mk,ml,mm,mn,mo,mp,mq,mr,ms,mt,mu,mv,mw,mx,my,mz,na,nc,ne,nf,ng,ni,nl,no,np,nr,nu,nz,om,pa,pe,pf,pg,ph,pk,pl,pn,pr,ps,pt,pw,py,qa,re,ro,rs,ru,rw,sa,sb,sc,sd,se,sg,sh,si,sk,sl,sm,sn,sr,st,su,sv,sy,sz,tc,td,tf,tg,th,tj,tk,tl,tm,tn,to,tr,tt,tv,tw,tz,ua,ug,uk,us,uy,uz,va,vc,ve,vg,vi,vn,vu,wf,ws,ye,za,zm,zw,um,bl,eh,mf,bv,gb,pm,sj,so,yt,tp,yu,cs,zr" into tTopLevelDomains
+   replace comma with return in tTopLevelDomains
+   set the cTopLevelDomains of me to tTopLevelDomains
+end initialiseCustomProps
 
 ## for debugging ##
 function md5 pString
