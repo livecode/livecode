@@ -448,6 +448,13 @@ bool MCProperListFirstIndexOfList(MCProperListRef self, MCProperListRef p_needle
     while (!t_match && MCProperListFirstIndexOfElement(self, p_needle -> list[0], t_offset, t_new_offset))
     {
         t_match = true;
+
+		if (p_needle->length > self->length - t_new_offset)
+		{
+			t_match = false;
+			break;
+		}
+
         for (uindex_t i = 1; i < p_needle -> length; i++)
         {
             if (!MCValueIsEqualTo(p_needle -> list[i], self -> list[t_new_offset + i]))
