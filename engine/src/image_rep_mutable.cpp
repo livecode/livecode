@@ -1449,7 +1449,7 @@ MCRectangle MCMutableImageRep::drawoval()
 	if (MCarcangle != 0 && MCarcangle % 360 == 0)
 		MCGPathAddArc(t_path, t_center, t_radii, 0.0, 360 - (MCstartangle + MCarcangle), 360 - MCstartangle);
 	else
-		MCGPathAddSegment(t_path, t_center, t_radii, 0.0, 360 - (MCstartangle + MCarcangle), 360 - MCstartangle);
+		MCGPathAddSector(t_path, t_center, t_radii, 0.0, 360 - (MCstartangle + MCarcangle), 360 - MCstartangle);
 	
 	draw_path(t_path);
 

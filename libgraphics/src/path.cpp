@@ -275,6 +275,110 @@ bool MCGPathMutableCopySubpaths(MCGPathRef self, uint32_t p_first, uint32_t p_la
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline MCGSize MCGSizeScale(const MCGSize &p_size, MCGFloat p_scale)
+{
+	return MCGSizeMake(p_size.width * p_scale, p_size.height * p_scale);
+}
+
+static inline MCGPoint MCGPointRotate(const MCGPoint &p_point, MCGFloat p_angle)
+{
+	MCGFloat t_sin, t_cos;
+	t_sin = sinf(p_angle);
+	t_cos = cosf(p_angle);
+	
+	return MCGPointMake(p_point.x * t_cos - p_point.y * t_sin, p_point.y * t_cos + p_point.x * t_sin);
+}
+
+static inline MCGFloat MCGDegreesToRadians(MCGFloat p_degrees)
+{
+	return p_degrees * M_PI / 180;
+}
+
+enum MCGPathArcBeginStyle
+{
+	kMCGPathArcContinue,
+	kMCGPathArcBeginWithMove,
+	kMCGPathArcBeginWithLine,
+};
+
+// Approximate arc with angle <= 90 using Bezier curve
+static void _MCGPathAcuteArcTo(MCGPathRef self, MCGPathArcBeginStyle p_begin, const MCGPoint &p_center, const MCGSize p_radii, MCGFloat p_start_angle, MCGFloat p_sweep, MCGFloat p_x_angle)
+{
+#define RIGHT_ANGLE_SCALE 0.551784
+	MCGSize t_k;
+	
+	if (p_sweep == M_PI_2)
+		t_k = MCGSizeScale(p_radii, RIGHT_ANGLE_SCALE);
+	else if (p_sweep == -M_PI_2)
+		t_k = MCGSizeScale(p_radii, -RIGHT_ANGLE_SCALE);
+	else
+	{
+		MCGFloat t_h;
+		t_h = tanf(p_sweep / 4);
+		t_k = MCGSizeScale(p_radii, 4 * t_h / 3);
+	}
+	
+	MCGFloat t_cos_a, t_sin_a, t_cos_b, t_sin_b;
+	
+	t_cos_a = cosf(p_start_angle);
+	t_sin_a = sinf(p_start_angle);
+	t_cos_b = cosf(p_start_angle + p_sweep);
+	t_sin_b = sinf(p_start_angle + p_sweep);
+	
+	if (p_begin != kMCGPathArcContinue)
+	{
+		// move to start point of arc
+		MCGPoint t_p0;
+		t_p0 = MCGPointMake(p_radii.width * t_cos_a, p_radii.height * t_sin_a);
+		t_p0 = MCGPointTranslate(MCGPointRotate(t_p0, p_x_angle), p_center.x, p_center.y);
+		
+		if (p_begin == kMCGPathArcBeginWithMove)
+			MCGPathMoveTo(self, t_p0);
+		else if (p_begin == kMCGPathArcBeginWithLine)
+			MCGPathLineTo(self, t_p0);
+	}
+	
+	MCGPoint t_p1, t_p2, t_p3;
+	t_p1 = MCGPointMake(p_radii.width * t_cos_a - t_k.width * t_sin_a, p_radii.height * t_sin_a + t_k.height * t_cos_a);
+	t_p2 = MCGPointMake(p_radii.width * t_cos_b + t_k.width * t_sin_b, p_radii.height * t_sin_b - t_k.height * t_cos_b);
+	t_p3 = MCGPointMake(p_radii.width * t_cos_b, p_radii.height * t_sin_b);
+	
+	t_p1 = MCGPointTranslate(MCGPointRotate(t_p1, p_x_angle), p_center.x, p_center.y);
+	t_p2 = MCGPointTranslate(MCGPointRotate(t_p2, p_x_angle), p_center.x, p_center.y);
+	t_p3 = MCGPointTranslate(MCGPointRotate(t_p3, p_x_angle), p_center.x, p_center.y);
+	
+	MCGPathCubicTo(self, t_p1, t_p2, t_p3);
+}
+
+static void _MCGPathArcTo(MCGPathRef self, MCGPathArcBeginStyle p_begin, const MCGPoint &p_center, MCGSize &p_radii, MCGFloat p_start_angle, MCGFloat p_sweep, MCGFloat p_x_angle)
+{
+	p_start_angle = fmodf(p_start_angle, 2 * M_PI);
+	
+	MCGFloat t_delta;
+	if (p_sweep > 0)
+		while (p_sweep > 0)
+		{
+			t_delta = MCMin( M_PI_2 - fmodf(p_start_angle, M_PI_2), p_sweep);
+			p_sweep -= t_delta;
+			
+			_MCGPathAcuteArcTo(self, p_begin, p_center, p_radii, p_start_angle, t_delta, p_x_angle);
+			p_begin = kMCGPathArcContinue;
+			p_start_angle += t_delta;
+		}
+	else
+		while (p_sweep < 0)
+		{
+			t_delta = MCMin( M_PI_2 - fmodf(2 * M_PI - p_start_angle, M_PI_2), -p_sweep);
+			p_sweep += t_delta;
+			
+			_MCGPathAcuteArcTo(self, p_begin, p_center, p_radii, p_start_angle, -t_delta, p_x_angle);
+			p_begin = kMCGPathArcContinue;
+			p_start_angle -= t_delta;
+		}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCGPathAddRectangle(MCGPathRef self, MCGRectangle p_bounds)
 {	
 	if (!MCGPathIsValid(self))
@@ -330,12 +434,20 @@ void MCGPathAddEllipse(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGF
 	
 	if (t_success)
 	{
-		SkRect t_bounds;
-		t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
-									MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
-		self -> path -> addOval(t_bounds);
-		
-		// TODO: Handle rotation
+		if (p_rotation != 0)
+		{
+			// Use Bezier curve approximation
+			_MCGPathArcTo(self, kMCGPathArcBeginWithMove, p_center, p_radii, 0, 2 * M_PI, MCGDegreesToRadians(p_rotation));
+			
+		}
+		else
+		{
+			// Use Skia implementation
+			SkRect t_bounds;
+			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
+										MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
+			self -> path -> addOval(t_bounds);
+		}
 	}
 	
 	self -> is_valid = t_success;
@@ -354,18 +466,25 @@ void MCGPathAddArc(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGFloat
 	
 	if (t_success)
 	{
-		SkRect t_bounds;
-		t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
-									MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
-		self -> path -> addArc(t_bounds, MCGFloatToSkScalar(p_start_angle), MCGFloatToSkScalar(p_finish_angle - p_start_angle));
-		
-		// TODO: Handle rotation
+		if (p_rotation != 0)
+		{
+			// Use Bezier curve approximation
+			_MCGPathArcTo(self, kMCGPathArcBeginWithMove, p_center, p_radii, MCGDegreesToRadians(p_start_angle), MCGDegreesToRadians(p_finish_angle - p_start_angle), MCGDegreesToRadians(p_rotation));
+		}
+		else
+		{
+			// Use Skia implementation
+			SkRect t_bounds;
+			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
+										MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
+			self -> path -> addArc(t_bounds, MCGFloatToSkScalar(p_start_angle), MCGFloatToSkScalar(p_finish_angle - p_start_angle));
+		}
 	}
 	
 	self -> is_valid = t_success;
 }
 
-void MCGPathAddSector(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGFloat p_rotation, MCGFloat p_start_angle, MCGFloat p_finish_angle)
+void MCGPathAddSegment(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGFloat p_rotation, MCGFloat p_start_angle, MCGFloat p_finish_angle)
 {
 	if (!MCGPathIsValid(self))
 		return;
@@ -378,20 +497,28 @@ void MCGPathAddSector(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGFl
 	
 	if (t_success)
 	{		
-		SkRect t_bounds;
-		t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
-									MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
-		
-		self -> path -> arcTo(t_bounds, MCGFloatToSkScalar(p_start_angle), MCGFloatToSkScalar(p_finish_angle - p_start_angle), false);		
-		self -> path -> close();
-		
-		// TODO: Handle rotation
+		if (p_rotation != 0)
+		{
+			// Use Bezier curve approximation
+			_MCGPathArcTo(self, kMCGPathArcBeginWithMove, p_center, p_radii, MCGDegreesToRadians(p_start_angle), MCGDegreesToRadians(p_finish_angle - p_start_angle), MCGDegreesToRadians(p_rotation));
+			self -> path -> close();
+		}
+		else
+		{
+			// Use Skia implementation
+			SkRect t_bounds;
+			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
+										MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
+			
+			self -> path -> arcTo(t_bounds, MCGFloatToSkScalar(p_start_angle), MCGFloatToSkScalar(p_finish_angle - p_start_angle), false);		
+			self -> path -> close();
+		}
 	}
 	
 	self -> is_valid = t_success;
 }
 
-void MCGPathAddSegment(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGFloat p_rotation, MCGFloat p_start_angle, MCGFloat p_finish_angle)
+void MCGPathAddSector(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGFloat p_rotation, MCGFloat p_start_angle, MCGFloat p_finish_angle)
 {
 	if (!MCGPathIsValid(self))
 		return;
@@ -404,15 +531,24 @@ void MCGPathAddSegment(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGF
 	
 	if (t_success)
 	{
-		SkRect t_bounds;
-		t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
-									MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
-		
-		self -> path -> moveTo(MCGCoordToSkCoord(p_center . x), MCGCoordToSkCoord(p_center . y));		
-		self -> path -> arcTo(t_bounds, MCGFloatToSkScalar(p_start_angle), MCGFloatToSkScalar(p_finish_angle - p_start_angle), false);		
-		self -> path -> close();
-		
-		// TODO: Handle rotation
+		if (p_rotation != 0)
+		{
+			// Use Bezier curve approximation
+			self -> path -> moveTo(MCGCoordToSkCoord(p_center . x), MCGCoordToSkCoord(p_center . y));
+			_MCGPathArcTo(self, kMCGPathArcBeginWithLine, p_center, p_radii, MCGDegreesToRadians(p_start_angle), MCGDegreesToRadians(p_finish_angle - p_start_angle), MCGDegreesToRadians(p_rotation));
+			self -> path -> close();
+		}
+		else
+		{
+			// Use Skia implementation
+			SkRect t_bounds;
+			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
+										MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
+			
+			self -> path -> moveTo(MCGCoordToSkCoord(p_center . x), MCGCoordToSkCoord(p_center . y));		
+			self -> path -> arcTo(t_bounds, MCGFloatToSkScalar(p_start_angle), MCGFloatToSkScalar(p_finish_angle - p_start_angle), false);		
+			self -> path -> close();
+		}
 	}
 	
 	self -> is_valid = t_success;	
@@ -576,6 +712,117 @@ void MCGPathCubicTo(MCGPathRef self, MCGPoint p_first_control_point, MCGPoint p_
 	self -> is_valid = t_success;	
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCGFloat _sqr(MCGFloat p_val)
+{
+	return p_val * p_val;
+}
+
+static inline MCGFloat MCGVectorMagnitude(const MCGPoint &v)
+{
+	return sqrtf(_sqr(v.x) + _sqr(v.y));
+}
+
+static inline MCGFloat MCGVectorDotProduct(const MCGPoint &u, const MCGPoint &v)
+{
+	return u.x * v.x + u.y * v.y;
+}
+
+static inline MCGFloat MCGAngleBetweenVectors(const MCGPoint &u, const MCGPoint &v)
+{
+	compare_t t_s;
+	t_s = MCSgn(u.x * v.y - u.y * v.x);
+	if (t_s == 0)
+		t_s = 1;
+	
+	return t_s * acosf(MCClamp(MCGVectorDotProduct(u, v) / (MCGVectorMagnitude(u) * MCGVectorMagnitude(v)), -1, 1));
+}
+
+//////////
+
+static inline MCGPoint MCGPointGetMidPoint(const MCGPoint &p_a, const MCGPoint &p_b)
+{
+	return MCGPointMake((p_a.x + p_b.x) / 2, (p_a.y + p_b.y) / 2);
+}
+
+static void _MCGPathEllipticArc(MCGPathRef self, const MCGSize &p_radii, MCGFloat p_angle, bool p_large_arc, bool p_sweep, const MCGPoint &p_end_point)
+{
+	if (p_radii.width == 0 || p_radii.height == 0)
+	{
+		MCGPathLineTo(self, p_end_point);
+		return;
+	}
+	
+	MCGPoint t_last;
+	if (!MCGPathGetLastPoint(self, t_last))
+		t_last = MCGPointMake(0, 0);
+	
+	if (MCGPointIsEqual(t_last, p_end_point))
+		return;
+	
+	p_angle = fmodf(p_angle + 2 * M_PI, 2 * M_PI);
+	
+	MCGPoint t_p;
+	t_p = MCGPointRotate(MCGPointMake((t_last.x - p_end_point.x) / 2, (t_last.y - p_end_point.y) / 2), -p_angle);
+	
+	MCGSize t_radii;
+	t_radii = MCGSizeMake(MCAbs(p_radii.width), MCAbs(p_radii.height));
+	
+	MCGFloat t_a;
+	t_a = (_sqr(t_p.x) / _sqr(t_radii.width)) + (_sqr(t_p.y) / _sqr(t_radii.height));
+	
+	MCGPoint t_c;
+	
+	// Adjust if radii are too small
+	if (t_a > 1)
+	{
+		t_radii = MCGSizeScale(t_radii, sqrtf(t_a));
+		
+		t_c = MCGPointMake(0, 0);
+	}
+	else
+	{
+		MCGFloat t_scale;
+		MCGFloat t_rx2, t_ry2, t_x2, t_y2;
+		t_rx2 = _sqr(t_radii.width);
+		t_ry2 = _sqr(t_radii.height);
+		t_x2 = _sqr(t_p.x);
+		t_y2 = _sqr(t_p.y);
+		
+		t_scale = sqrtf((t_rx2 * t_ry2 - t_rx2 * t_y2 - t_ry2 * t_x2) / (t_rx2 * t_y2 + t_ry2 * t_x2));
+		if (p_large_arc == p_sweep)
+			t_scale *= -1;
+		
+		t_c = MCGPointMake(t_scale * t_radii.width * t_p.y / t_radii.height, t_scale * -t_radii.height * t_p.x / t_radii.width);
+	}
+	
+	MCGPoint t_mid;
+	t_mid = MCGPointGetMidPoint(t_last, p_end_point);
+	
+	MCGPoint t_center;
+	t_center = MCGPointTranslate(MCGPointRotate(t_c, p_angle), t_mid.x, t_mid.y);
+	
+	MCGPoint t_v0, t_v1, t_v2;
+	t_v0 = MCGPointMake(1, 0);
+	t_v1 = MCGPointMake((t_p.x - t_c.x) / t_radii.width, (t_p.y - t_c.y) / t_radii.height);
+	t_v2 = MCGPointMake((-t_p.x - t_c.x) / t_radii.width, (-t_p.y - t_c.y) / t_radii.height);
+	
+	MCGFloat t_start_angle, t_sweep;
+	t_start_angle = MCGAngleBetweenVectors(t_v0, t_v1);
+	t_sweep = MCGAngleBetweenVectors(t_v1, t_v2);
+	t_sweep = fmodf(t_sweep, 2 * M_PI);
+	
+	if (!p_sweep && t_sweep > 0)
+		t_sweep -= 2 * M_PI;
+	else if (p_sweep && t_sweep < 0)
+		t_sweep += 2 * M_PI;
+	
+	_MCGPathArcTo(self, kMCGPathArcContinue, t_center, t_radii, t_start_angle, t_sweep, p_angle);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCGPathArcTo(MCGPathRef self, MCGSize p_radii, MCGFloat p_rotation, bool p_large_arc, bool p_sweep, MCGPoint p_end_point)
 {	
 	if (!MCGPathIsValid(self))
@@ -588,9 +835,7 @@ void MCGPathArcTo(MCGPathRef self, MCGSize p_radii, MCGFloat p_rotation, bool p_
 		t_success = self -> is_mutable;
 	
 	if (t_success)
-	{
-		// TODO: Implement
-	}
+		_MCGPathEllipticArc(self, p_radii, p_rotation * M_PI / 180, p_large_arc, p_sweep, p_end_point);
 	
 	self -> is_valid = t_success;	
 }
@@ -647,6 +892,16 @@ bool MCGPathGetBoundingBox(MCGPathRef self, MCGRectangle &r_bounds)
 	
 	r_bounds = MCGRectangleFromSkRect(self->path->getBounds());
 	
+	return true;
+}
+
+bool MCGPathGetLastPoint(MCGPathRef self, MCGPoint &r_last)
+{
+	SkPoint t_point;
+	if (!self->path->getLastPt(&t_point))
+		return false;
+	
+	r_last = MCGPointFromSkPoint(t_point);
 	return true;
 }
 
