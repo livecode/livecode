@@ -3689,6 +3689,15 @@ void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p
 	/* UNCHECKED */ t_autobuffer.CreateDataAndRelease(r_data);
 }
 
+void MCInterfaceExportBitmapAndRelease(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCImageMetadata* p_metadata, MCDataRef &r_data)
+{
+    if (p_bitmap != nil)
+    {
+        MCInterfaceExportBitmap(ctxt, p_bitmap, p_format, p_palette, p_dither, p_metadata, r_data);
+        MCImageFreeBitmap(p_bitmap);
+    }
+}
+
 void MCInterfaceExportBitmapToFile(MCExecContext& ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
 	if (!ctxt . EnsureDiskAccessIsAllowed())
@@ -3745,6 +3754,15 @@ void MCInterfaceExportBitmapToFile(MCExecContext& ctxt, MCImageBitmap *p_bitmap,
 		MCS_unlink(p_filename);
 }
 
+void MCInterfaceExportBitmapToFileAndRelease(MCExecContext& ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
+{
+    if (p_bitmap != nil)
+    {
+        MCInterfaceExportBitmapToFile(ctxt, p_bitmap, p_format, p_palette, p_dither, p_metadata, p_filename, p_mask_filename);
+        MCImageFreeBitmap(p_bitmap);
+    }
+}
+
 MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_display, MCRectangle *p_region, uint4 p_window, MCPoint *p_size)
 {
 	MCRectangle t_rect;
@@ -3781,7 +3799,7 @@ void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_r
 {
 	MCImageBitmap *t_bitmap;
 	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0, p_size);
-	MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, r_data);
+	MCInterfaceExportBitmapAndRelease(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, r_data);
 }
 
 void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
@@ -3790,7 +3808,7 @@ void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangl
 	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0, p_size);
 	// IM-2014-10-24: [[ Bug 13784 ]] Don't export unless we get a valid bitmap
 	if (t_bitmap != nil)
-		MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
+		MCInterfaceExportBitmapToFileAndRelease(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
 }
 
 void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data)
@@ -3802,7 +3820,7 @@ void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_sta
 	{
 		MCImageBitmap *t_bitmap;
 		t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, p_display, p_region, t_window, p_size);
-		MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, r_data);
+		MCInterfaceExportBitmapAndRelease(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, r_data);
 	}
 }
 
@@ -3817,7 +3835,7 @@ void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef
 		t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, p_display, p_region, t_window, p_size);
 		// IM-2014-10-24: [[ Bug 13784 ]] Don't export unless we get a valid bitmap
 		if (t_bitmap != nil)
-			MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
+			MCInterfaceExportBitmapToFileAndRelease(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
 	}
 }
 
@@ -3845,7 +3863,7 @@ void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
 	MCImageBitmap *t_bitmap;
 	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
     
-	MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, r_data);
+	MCInterfaceExportBitmapAndRelease(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, r_data);
 }
 void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
@@ -3854,7 +3872,7 @@ void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *
     
     // AL-2014-03-20: [[ Bug 11948 ]] t_bitmap nil here causes a crash.
     if (t_bitmap != nil)
-        MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
+        MCInterfaceExportBitmapToFileAndRelease(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
 }
 
 MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
@@ -4102,7 +4120,8 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		else
 		{
 			uint4 win;
-			if (MCU_stoui4(p_window, win) && MCscreen->uint4towindow(win, w))
+            // SN-2015-01-07: [[ iOS-64bit ]] Update to uinttowindow
+            if (MCU_stoui4(p_window, win) && MCscreen->uinttowindow(win, w))
 				oldstack = MCdispatcher->findstackd(w);
 			else
 				oldstack = ctxt . GetObject()->getstack()->findstackname_string(p_window);

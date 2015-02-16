@@ -24,7 +24,7 @@ ifneq ($(ARCH),x86_64)
 	STATIC_LIBS+=stdc++
 endif
 
-LDFLAGS_COMMON=$(addprefix -L,$(GLOBAL_LIBS)) $(addprefix -L,$(CUSTOM_INCLUDES))
+LDFLAGS_COMMON=$(addprefix -L,$(GLOBAL_LIBS)) $(addprefix -L,$(CUSTOM_INCLUDES)) -export-dynamic
 LDFLAGS_LTO:=$(CUSTOM_LDFLAGS_LTO) $(CUSTOM_LDFLAGS) $(LDFLAGS_COMMON) -Xlinker -no-undefined $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
 LDFLAGS_FINAL:=$(CUSTOM_LDFLAGS_FINAL) $(CUSTOM_LDFLAGS) $(LDFLAGS_COMMON) -no-undefined $(addprefix --exclude-libs ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
 
@@ -67,7 +67,7 @@ $(TARGET_PATH): $(OBJECTS) $(DEPS)
 ifneq ($(MODE),debug)
 	cd $(BUILD_DIR) && \
 		$(OBJCOPY) --only-keep-debug "$(NAME)" "$(NAME).dbg" && \
-		$(STRIP) --strip-debug --strip-unneeded "$(NAME)" && \
+		$(STRIP) --strip-debug "$(NAME)" && \
 		$(OBJCOPY) --add-gnu-debuglink="$(NAME).dbg" "$(NAME)"
 endif
 

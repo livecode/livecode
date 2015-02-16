@@ -764,7 +764,11 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
     PSwrite("%!PS-Adobe-3.0\n");
 	sprintf(buffer, "%%%%Creator: Revolution %s\n", *t_MCN_version); PSwrite(buffer);
 	PSwrite("%%DocumentData: Clean8Bit\n");
-    sprintf(buffer, "%%%%Title: %s\n", MCStringGetNativeCharPtr(p_document) ) ; PSwrite(buffer ) ;
+
+    // SN-2014-12-22: [[ Bug 14278 ]] Export the name as UTF-8 string, as it was done pre-7.0
+    MCAutoStringRefAsUTF8String t_doc;
+    /* UNCHECKED */ t_doc . Lock(p_document);
+    sprintf(buffer, "%%%%Title: %s\n", *t_doc ) ; PSwrite(buffer ) ;
 	PSwrite("%%MCOrientation Portrait\n");
 	PSwrite("%%EndComments\n");
 	

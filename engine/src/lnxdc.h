@@ -227,10 +227,10 @@ public:
 	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yhot);
 	virtual void freecursor(MCCursorRef c);
 
-	virtual void setfunction(uint4 rop);
-	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4towindow(uint4, Window &w);
-	virtual void getbeep(uint4 property, int4& r_value);
+    virtual void setfunction(uint4 rop);
+	virtual uintptr_t dtouint(Drawable d);
+    virtual Boolean uinttowindow(uintptr_t, Window &w);
+    virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
 	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
@@ -368,5 +368,8 @@ public:
     virtual void configureIME(int32_t x, int32_t y);
 	virtual void activateIME(Boolean activate);
 	//virtual void closeIME();
+    
+    virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 };
 #endif

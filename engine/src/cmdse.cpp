@@ -267,7 +267,7 @@ void MCBreakPoint::compile(MCSyntaxFactoryRef ctxt)
 
 MCCancel::~MCCancel()
 {
-	delete id;
+	delete m_id;
 }
 
 Parse_stat MCCancel::parse(MCScriptPoint &sp)
@@ -275,9 +275,9 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 	initpoint(sp);
 	if (sp . skip_token(SP_RESET, TT_UNDEFINED, RT_PRINTING) == PS_NORMAL)
 	{
-		id = NULL;
+		m_id = NULL;
 	}
-	else if (sp.parseexp(False, True, &id) != PS_NORMAL)
+	else if (sp.parseexp(False, True, &m_id) != PS_NORMAL)
 	{
 		MCperror->add(PE_CANCEL_BADEXP, sp);
 		return PS_ERROR;
@@ -310,13 +310,13 @@ void MCCancel::exec_ctxt(MCExecContext& ctxt)
 	return ES_NORMAL;
 #endif /* MCCancel */
 
-    if (id == NULL)
+    if (m_id == NULL)
 		MCPrintingExecCancelPrinting(ctxt);
 	
 	else
 	{
         integer_t t_id;
-        if (!ctxt . EvalExprAsInt(id, EE_CANCEL_IDNAN, t_id))
+        if (!ctxt . EvalExprAsInt(m_id, EE_CANCEL_IDNAN, t_id))
             return;
         MCEngineExecCancelMessage(ctxt, t_id);
     }
@@ -326,11 +326,11 @@ void MCCancel::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
-	if (id == nil)
+	if (m_id == nil)
 		MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecCancelPrintingMethodInfo);
 	else
 	{
-		id -> compile(ctxt);
+		m_id -> compile(ctxt);
 		
 		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecCancelMessageMethodInfo);
 	}

@@ -38,7 +38,8 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libskia/include/pathops \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/ports \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/utils \
-	$(SOLUTION_DIR)/prebuilt/include
+	$(SOLUTION_DIR)/prebuilt/include \
+	$(SOLUTION_DIR)/thirdparty/libffi/linux/i686-pc-linux-gnu
 	
 GLOBAL_LIBS=\
 	$(PREBUILT_LIB_DIR) \
@@ -86,6 +87,10 @@ $(CACHE_DIR)/%.o: %.c
 $(CACHE_DIR)/%.o: %.s
 	mkdir -p $(CACHE_DIR)/$(dir $*)
 	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
+
+$(CACHE_DIR)/%.o: %.S
+	mkdir -p $(CACHE_DIR)/$(dir $*)
+	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.S
 
 clean:
 	-rm -f $(OBJECTS)

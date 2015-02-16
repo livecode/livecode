@@ -122,6 +122,23 @@ public:
 		m_value_count = 0;
 	}
 
+	/* Take the contents of the array as an immutable MCProperList.
+	 * The contents of the array will no longer be accessible. */
+	bool TakeAsProperList (MCProperListRef& r_list)
+	{
+		MCProperListRef t_list;
+		if (!MCProperListCreateAndRelease ((MCValueRef *) m_values,
+		                                   m_value_count,
+		                                   t_list))
+			return false;
+
+		m_values = nil;
+		m_value_count = 0;
+
+		r_list = t_list;
+		return true;
+	}
+
 	//////////
 
     T* Ptr()
@@ -351,7 +368,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef __LINUX__
+#if defined(__LINUX__)
 class MCAutoStringRefAsSysString
 {
 public:
@@ -385,7 +402,10 @@ public:
 private:
     const char *m_sysstring;
 };
-
+#elif defined(__WINDOWS__)
+#  define MCAutoStringRefAsSysString MCAutoStringRefAsWS
+#else
+#  define MCAutoStringRefAsSysString MCAutoStringRefAsUTF8String
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

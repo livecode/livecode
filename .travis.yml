@@ -1,0 +1,41 @@
+# Very basic Travis CI (http://travis-ci.org) control file that allows
+# some basic Linux-based continuous integration testing (for free).
+
+language: c++
+
+# Environment variables
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "R/JfoBMrkhCGWhfWM1m3gPHuLtMBlp2SIK1R9BaPbRsbGBUJmAg9V0g0YXSaw8SVxoyuiL/jsLtHPfDeub9oTxrYydew+6/4KaoQdG7EGXQJfBhH2f0ag/hTKJfXnmZX9jMMnTxPf5Axjq+w4E6sKkU2+d1oAJRhrqzYNwDhVlc="
+
+# Before setting up the source tree, install necessary development
+# headers
+before_install:
+- sudo apt-get install -y libx11-dev libxext-dev libxrender-dev libxft-dev libxinerama-dev libxv-dev libxcursor-dev libfreetype6-dev libgtk2.0-dev libpopt-dev libesd0-dev liblcms-dev
+
+# Set up the source tree by fetching Linux-specific prebuilt objects
+install: (cd prebuilt && ./fetch-libraries.sh linux)
+
+# Bootstrap the LCB compiler, build the default target set and run a
+# the default test suite.
+script: >
+  if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
+      make -s bootstrap && make -s all && make -s check;
+  fi
+
+# Configuration for Coverity Scan integration
+#
+# In order to trigger a scan with Coverity, push to the
+# 'coverity_scan' branch.
+#
+addons:
+  coverity_scan:
+    project:
+      name: "runrev/livecode"
+      description: "Build submitted via Travis CI"
+    notification_email: peter@livecode.com
+    build_command_prepend: "make -s thirdparty"
+    build_command: "make -s bootstrap all"
+    branch_pattern: coverity_scan

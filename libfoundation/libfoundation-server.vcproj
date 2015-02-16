@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)prebuilt\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)thirdparty\libffi\win32&quot;;&quot;$(SolutionDir)prebuilt\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -97,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)prebuilt\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)thirdparty\libffi\win32&quot;;&quot;$(SolutionDir)prebuilt\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
@@ -148,7 +148,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-chunk.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-core.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-custom.cpp"
 				>
 			</File>
 			<File
@@ -164,11 +172,39 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-file-private.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-file-w32.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-file.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-filters.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-foreign.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-handler.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-list.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\foundation-locale.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-math.cpp"
 				>
 			</File>
 			<File
@@ -184,11 +220,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-pickle.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-private.h"
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-proper-list.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-random.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-record.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-set.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-stream-stdio.cpp"
 				>
 			</File>
 			<File
@@ -201,6 +257,18 @@
 			</File>
 			<File
 				RelativePath=".\src\foundation-text.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-typeconvert.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-typeinfo.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-unicode-private.h"
 				>
 			</File>
 			<File

@@ -184,7 +184,6 @@ extern "C" MC_DLLEXPORT void MCListStoreIndexOf(MCValueRef p_value, MCProperList
 extern "C" MC_DLLEXPORT void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
-    t_start += t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCProperListGetLength(x_target))
@@ -192,6 +191,8 @@ extern "C" MC_DLLEXPORT void MCListStoreAfterElementOf(MCValueRef p_value, index
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
     }
+    
+    t_start += t_count;
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))

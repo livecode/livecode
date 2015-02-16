@@ -131,7 +131,6 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{82AB9A7D-6D59-4AA1-A6C0-9799E293C1F5}"
-			RelativePathToProject=".\toolchain\lc-compile\src\lc-compile.vcproj"
 		/>
 	</References>
 	<Files>
@@ -162,6 +161,10 @@
 			</File>
 			<File
 				RelativePath=".\src\module-char.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-date.cpp"
 				>
 			</File>
 			<File
@@ -197,7 +200,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\module-stream.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-string.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-system.cpp"
 				>
 			</File>
 			<File
@@ -240,6 +251,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\date.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\file.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\item.mlc"
 					>
 				</File>
@@ -256,6 +275,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\math-foundation.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\math.mlc"
 					>
 				</File>
@@ -268,7 +291,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\stream.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\string.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\system.mlc"
 					>
 				</File>
 				<File
@@ -308,6 +339,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\generated\date.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\file.c"
+					>
+				</File>
+				<File
 					RelativePath=".\generated\item.c"
 					>
 				</File>
@@ -324,6 +363,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\generated\math-foundation.c"
+					>
+				</File>
+				<File
 					RelativePath=".\generated\math.c"
 					>
 				</File>
@@ -336,7 +379,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\generated\stream.c"
+					>
+				</File>
+				<File
 					RelativePath=".\generated\string.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\system.c"
 					>
 				</File>
 				<File

@@ -89,8 +89,7 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
         case kMCValueTypeCodeRecord:
             return ((__MCRecord *)p_value) -> typeinfo;
         case kMCValueTypeCodeHandler:
-            MCAssert(false); // TODO
-            return nil;
+            return ((__MCHandler *)p_value) -> typeinfo;
         case kMCValueTypeCodeError:
             return ((__MCError *)p_value) -> typeinfo;
         case kMCValueTypeCodeForeignValue:
@@ -200,6 +199,8 @@ hash_t MCValueHash(MCValueRef p_value)
         return __MCProperListHash((__MCProperList *)self);
     case kMCValueTypeCodeRecord:
         return __MCRecordHash((__MCRecord*) self);
+    case kMCValueTypeCodeHandler:
+        return __MCHandlerHash((__MCHandler*) self);    
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoHash((__MCTypeInfo*) self);
     case kMCValueTypeCodeError:
@@ -277,6 +278,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
         return __MCProperListIsEqualTo((__MCProperList*)self, (__MCProperList*)other_self);
     case kMCValueTypeCodeRecord:
         return __MCRecordIsEqualTo((__MCRecord*)self, (__MCRecord*)other_self);
+    case kMCValueTypeCodeHandler:
+        return __MCHandlerIsEqualTo((__MCHandler*)self, (__MCHandler*)other_self);    
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoIsEqualTo((__MCTypeInfo *)self, (__MCTypeInfo *)other_self);
     case kMCValueTypeCodeError:
@@ -332,6 +335,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
         return __MCProperListCopyDescription((__MCProperList*)p_value, r_desc);
     case kMCValueTypeCodeRecord:
         return __MCRecordCopyDescription((__MCRecord*)p_value, r_desc);
+    case kMCValueTypeCodeHandler:
+        return __MCHandlerCopyDescription((__MCHandler*)p_value, r_desc);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoCopyDescription((__MCTypeInfo*)p_value, r_desc);
     case kMCValueTypeCodeError:
@@ -545,6 +550,9 @@ void __MCValueDestroy(__MCValue *self)
     case kMCValueTypeCodeRecord:
         __MCRecordDestroy((__MCRecord *)self);
         break;
+    case kMCValueTypeCodeHandler:
+        __MCHandlerDestroy((__MCHandler *)self);
+        break;
     case kMCValueTypeCodeTypeInfo:
         __MCTypeInfoDestroy((__MCTypeInfo *)self);
         break;
@@ -617,9 +625,10 @@ struct __MCUniqueValueBucket
     58163756537UL, 94110934997UL, 152274691561UL, 246385626107UL,
     398660317687UL, 645045943807UL, 1043706260983UL, 1688752204787UL,
     2732458465769UL, 4421210670577UL, 7153669136377UL,
-    11574879807461UL, 18728548943849UL, 30303428750843UL
+    11574879807461UL, 18728548943849UL, 30303428750843UL,
 #endif
 #endif
+    UINDEX_MAX /* Custodian */
 };
 
 const uindex_t __kMCValueHashTableCapacities[] = {
@@ -635,9 +644,10 @@ const uindex_t __kMCValueHashTableCapacities[] = {
     35947178453UL, 58163756541UL, 94110935011UL, 152274691274UL,
     246385626296UL, 398660317578UL, 645045943559UL, 1043706261135UL,
     1688752204693UL, 2732458465840UL, 4421210670552UL,
-    7153669136706UL, 11574879807265UL, 18728548943682UL
+    7153669136706UL, 11574879807265UL, 18728548943682UL,
 #endif
 #endif
+    UINDEX_MAX /* Custodian */
 };
 
 static uindex_t s_unique_value_count = 0;
@@ -821,9 +831,9 @@ static bool __MCValueRehashUniqueValues(index_t p_new_item_count)
 		// Work out the smallest possible capacity greater than the requested capacity.
 		uindex_t t_new_capacity_req;
 		t_new_capacity_req = s_unique_value_count + p_new_item_count;
-		for(t_new_capacity_idx = 0; t_new_capacity_idx < 64; t_new_capacity_idx++)
-			if (t_new_capacity_req <= __kMCValueHashTableCapacities[t_new_capacity_idx])
-				break;
+		for(t_new_capacity_idx = 0;
+		    t_new_capacity_req > __kMCValueHashTableCapacities[t_new_capacity_idx];
+		    ++t_new_capacity_idx);
 	}
 
 	// Fetch the old capacity and table.

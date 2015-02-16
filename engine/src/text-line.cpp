@@ -18,6 +18,8 @@
 
 #include "text-line.h"
 
+#include <foundation-math.h>
+
 #include "text-block.h"
 #include "text-breakblock.h"
 #include "text-breakingengine.h"

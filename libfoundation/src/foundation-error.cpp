@@ -120,13 +120,17 @@ static bool MCErrorFormatMessage(MCStringRef p_format, MCArrayRef p_info, MCStri
     return true;
 }
 
-bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_error)
+bool
+MCErrorCreateWithMessage (MCTypeInfoRef p_typeinfo,
+                          MCStringRef p_message,
+                          MCArrayRef p_info,
+                          MCErrorRef & r_error)
 {
     __MCError *self;
     if (!__MCValueCreate(kMCValueTypeCodeError, self))
         return false;
     
-    if (!MCErrorFormatMessage(MCErrorTypeInfoGetMessage(p_typeinfo), p_info, self -> message))
+    if (!MCErrorFormatMessage(p_message, p_info, self -> message))
     {
         MCValueRelease(self);
         return false;
@@ -143,6 +147,14 @@ bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_er
     r_error = self;
     
     return true;
+}
+
+bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_error)
+{
+	return MCErrorCreateWithMessage (p_typeinfo,
+	                                 MCErrorTypeInfoGetMessage (p_typeinfo),
+	                                 p_info,
+	                                 r_error);
 }
 
 bool MCErrorUnwind(MCErrorRef p_error, MCValueRef p_target, uindex_t p_row, uindex_t p_column)
@@ -227,23 +239,24 @@ bool MCErrorIsPending(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCErrorCreateAndThrow(MCTypeInfoRef p_error_type, ...)
+static bool
+MCErrorCreateAndThrowWithMessageV (MCTypeInfoRef p_error_type,
+                                   MCStringRef p_message,
+                                   va_list p_args)
 {
     MCAutoArrayRef t_info;
     if (!MCArrayCreateMutable(&t_info))
         return false;
     
-    va_list t_args;
-    va_start(t_args, p_error_type);
     for(;;)
     {
         const char *t_key;
-        t_key = va_arg(t_args, const char *);
+        t_key = va_arg(p_args, const char *);
         if (t_key == nil)
             break;
         
         MCValueRef t_value;
-        t_value = va_arg(t_args, MCValueRef);
+        t_value = va_arg(p_args, MCValueRef);
         
         // If a value is nil, then it means don't include it.
         if (t_value == nil)
@@ -256,13 +269,44 @@ bool MCErrorCreateAndThrow(MCTypeInfoRef p_error_type, ...)
         if (!MCArrayStoreValue(*t_info, true, *t_name, t_value))
             return false;
     }
-    va_end(t_args);
     
     MCAutoErrorRef t_error;
     if (!MCErrorCreate(p_error_type, *t_info, &t_error))
         return false;
     
     return MCErrorThrow(*t_error);
+}
+
+bool
+MCErrorCreateAndThrowWithMessage (MCTypeInfoRef p_error_type,
+                                  MCStringRef p_message,
+                                  ...)
+{
+	va_list t_args;
+	va_start (t_args, p_message);
+
+	bool t_result;
+	t_result = MCErrorCreateAndThrowWithMessageV (p_error_type,
+	                                              p_message,
+	                                              t_args);
+
+	va_end (t_args);
+	return t_result;
+}
+
+bool
+MCErrorCreateAndThrow (MCTypeInfoRef p_error_type, ...)
+{
+	va_list t_args;
+	va_start (t_args, p_error_type);
+
+	bool t_result;
+	t_result = MCErrorCreateAndThrowWithMessageV (p_error_type,
+	                                              MCErrorTypeInfoGetMessage (p_error_type),
+	                                              t_args);
+
+	va_end (t_args);
+	return t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

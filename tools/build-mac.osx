@@ -1,0 +1,4 @@
+BASEDIR=$(dirname $0)
+cd $BASEDIR/..
+
+sdks/Xcode_5_1/usr/bin/xcodebuild -project stage.xcodeproj -configuration Release

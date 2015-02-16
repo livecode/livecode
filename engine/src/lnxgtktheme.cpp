@@ -275,9 +275,6 @@ static int4 getscrollbarmintracksize()
 	minrect.width = troughBorder * 2 + sliderWidth;
 	minrect.height = stepperSize * n_steppers + stepperSpacing * 2 + troughBorder * 2 + slider_length;
 	int stepper_width = minrect.width;
-	int stepper_height = 0;
-	if(n_steppers > 0)
-		stepper_height = MIN(stepperSize, (minrect.height / n_steppers));
 	if(stepper_width < 1)
 		stepper_width = minrect.width;
 	return stepper_width;
@@ -659,7 +656,7 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo,
 			gint xthickness,ythickness;
 			GtkThemeWidgetType  moztype;
 			gint flags = 0 ;
-			GtkWidgetState state = getpartandstate(winfo, moztype, flags);
+			getpartandstate(winfo, moztype, flags);
 			if (moz_gtk_get_widget_border(moztype, &xthickness,
 			                              &ythickness) == MOZ_GTK_SUCCESS)
 			{
@@ -1564,9 +1561,6 @@ static GdkPixbuf* calc_alpha_from_pixbufs(GdkPixbuf *p_pb_black, GdkPixbuf *p_pb
 	uint8_t rb, rw;
 	uint8_t na;
 	int x, y;
-	
-	bool t_bad;
-	t_bad = false;
 	
 	for ( y = 0 ; y < t_h; y ++ )
 	{

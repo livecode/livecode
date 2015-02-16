@@ -372,7 +372,7 @@ IO_stat MCDispatch::startup(void)
         // temporary fix until ranged formats for stringrefs is working
         MCAutoStringRef t_dir;
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_dir);
-        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
+        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.rev", *t_dir);
 
         t_stream = MCS_open(*t_path, kMCOpenFileModeRead, False, False, 0);
 #endif

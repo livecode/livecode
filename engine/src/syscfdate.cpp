@@ -109,7 +109,8 @@ MCLocaleRef MCS_getsystemlocale()
 static MCDateTimeLocale *s_locale_info = NULL;
 static CFTimeZoneRef s_locale_timezone = NULL;
 
-char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true)
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false)
 {
 	bool t_success;
 	t_success = true;
@@ -123,9 +124,16 @@ char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true)
 	{
 		CFIndex t_string_length;
 		t_string_length = CFStringGetLength(p_string);
+        
+        // SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+        CFStringEncoding t_encoding;
+        if (p_utf8_string)
+            t_encoding = kCFStringEncodingUTF8;
+        else
+            t_encoding = kCFStringEncodingMacRoman;
 		
 		CFIndex t_buffer_size;
-		t_buffer_size = CFStringGetMaximumSizeForEncoding(t_string_length, kCFStringEncodingMacRoman) + 1;
+		t_buffer_size = CFStringGetMaximumSizeForEncoding(t_string_length, t_encoding) + 1;
 		t_cstring = (char *)malloc(t_buffer_size);
 		
 		if (t_cstring != NULL)
@@ -133,7 +141,7 @@ char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true)
 			// MW-2012-03-15: [[ Bug 9935 ]] Use CFStringGetBytes() so that '?' is substituted for any non-
 			//   mappable chars.
 			CFIndex t_used;
-			CFStringGetBytes(p_string, CFRangeMake(0, CFStringGetLength(p_string)), kCFStringEncodingMacRoman, '?', False, (UInt8*)t_cstring, t_buffer_size, &t_used);
+			CFStringGetBytes(p_string, CFRangeMake(0, CFStringGetLength(p_string)), t_encoding, '?', False, (UInt8*)t_cstring, t_buffer_size, &t_used);
 			t_cstring[t_used] = '\0';
 		}
 		else

@@ -189,7 +189,12 @@ void MCNativeLayerIOS::doRelayer()
 {
     // Find which native layer this should be inserted below
     MCWidget* t_before;
+    MCNativeLayerIOS *t_before_layer = nil;
     t_before = findNextLayerAbove(m_widget);
+    if (t_before != nil)
+    {
+        t_before_layer = reinterpret_cast<MCNativeLayerIOS*>(t_before->getNativeLayer());
+    }
     
     UIView *t_view;
     t_view = getMainView();
@@ -199,11 +204,9 @@ void MCNativeLayerIOS::doRelayer()
     {
         MCIPhoneRunBlockOnMainFiber(^{
             [m_view removeFromSuperview];
-            if (t_before != nil)
+            if (t_before_layer != nil)
             {
                 // There is another native layer above this one
-                MCNativeLayerIOS *t_before_layer;
-                t_before_layer = reinterpret_cast<MCNativeLayerIOS*>(t_before->getNativeLayer());
                 [t_view insertSubview:m_view belowSubview:t_before_layer->m_view];
             }
             else

@@ -1502,6 +1502,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 extern "C"
 {
 extern struct LibInfo __libinfo;
-__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revzip = &__libinfo;
+__attribute((section("__DATA,__libs"))) __attribute__((visibility("default"))) volatile struct LibInfo *__libinfoptr_revzip = &__libinfo;
 }
 #endif

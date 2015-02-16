@@ -562,7 +562,7 @@ bool MCCStringClone(const char *p_string, char *& r_new_string)
 		return true;
 	}
 
-	if (!MCMemoryAllocate(p_string == nil ? 1 : strlen(p_string) + 1, r_new_string))
+	if (!MCMemoryAllocate(strlen(p_string) + 1, r_new_string))
 		return false;
 	strcpy(r_new_string, p_string);
 	return true;
@@ -632,11 +632,14 @@ bool MCCStringToUnicode(const char *p_string, unichar_t*& r_unicode_string)
 
 bool MCCStringFromUnicode(const unichar_t *p_unicode_string, char*& r_string)
 {
+	if (NULL == p_unicode_string)
+		return false;
+
 	uint32_t t_wstring_length;
 	t_wstring_length = 0;
-	if (p_unicode_string != nil)
-		while(p_unicode_string[t_wstring_length] != 0)
-			t_wstring_length++;
+
+	while(p_unicode_string[t_wstring_length] != 0)
+		t_wstring_length++;
 	
 	return MCCStringFromUnicodeSubstring(p_unicode_string, t_wstring_length, r_string);
 }

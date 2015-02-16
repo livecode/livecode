@@ -16,6 +16,7 @@
 
 #include <foundation.h>
 #include "foundation-math.h"
+#include <foundation-system.h>
 
 #include <float.h>
 
@@ -150,6 +151,75 @@ extern "C" MC_DLLEXPORT void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumber
     MCNumberCreateWithReal(t_result, r_output);
 }
 
+extern "C" MC_DLLEXPORT void MCMathEvalAsinReal(double p_operand, double& r_output)
+{
+    r_output = asin(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    double t_operand;
+    t_operand = MCNumberFetchAsReal(p_operand);
+    
+    double t_result;
+    MCMathEvalAsinReal(t_operand, t_result);
+    
+    // if (!ctxt . HasError())
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAcosReal(double p_operand, double& r_output)
+{
+    r_output = acos(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAcosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    double t_operand;
+    t_operand = MCNumberFetchAsReal(p_operand);
+    
+    double t_result;
+    MCMathEvalAcosReal(t_operand, t_result);
+    
+    // if (!ctxt . HasError())
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAtanReal(double p_operand, double& r_output)
+{
+    r_output = atan(p_operand);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAtanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    double t_operand;
+    t_operand = MCNumberFetchAsReal(p_operand);
+    
+    double t_result;
+    MCMathEvalAtanReal(t_operand, t_result);
+    
+    // if (!ctxt . HasError())
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAtan2Real(double p_first, double p_second, double& r_output)
+{
+    r_output = atan2(p_first, p_second);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalAtan2Number(MCNumberRef p_first, MCNumberRef p_second, MCNumberRef& r_output)
+{
+    double t_first, t_second;
+    t_first = MCNumberFetchAsReal(p_first);
+    t_second = MCNumberFetchAsReal(p_second);
+    
+    double t_result;
+    MCMathEvalAtan2Real(t_first, t_second, t_result);
+    
+    // if (!ctxt . HasError())
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
 extern "C" MC_DLLEXPORT void MCMathEvalAbsInteger(integer_t p_operand, integer_t& r_output)
 {
     r_output = MCAbs(p_operand);
@@ -221,6 +291,41 @@ extern "C" MC_DLLEXPORT void MCMathEvalMinNumber(MCNumberRef p_left, MCNumberRef
     MCNumberCreateWithReal(t_result, r_output);
 }
 
+static void MCMathEvalMinMaxList(MCProperListRef p_list, bool p_is_min, MCNumberRef& r_output)
+{
+    if (MCProperListIsEmpty(p_list))
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("list must be non-empty"), nil);
+    
+    if (!MCProperListIsListOfType(p_list, kMCValueTypeCodeNumber))
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("list must be numeric"), nil);
+
+    double t_minmax, t_cur_real;
+    t_cur_real = MCNumberFetchAsReal((MCNumberRef)MCProperListFetchElementAtIndex(p_list, 0));
+    t_minmax = t_cur_real;
+    
+    bool t_replace;
+    for (uindex_t i = 1; i < MCProperListGetLength(p_list); i++)
+    {
+        t_cur_real = MCNumberFetchAsReal((MCNumberRef)MCProperListFetchElementAtIndex(p_list, i));
+        t_replace = p_is_min ? t_cur_real < t_minmax : t_cur_real > t_minmax;
+
+        if (t_replace)
+            t_minmax = t_cur_real;
+    }
+    
+    MCNumberCreateWithReal(t_minmax, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalMinList(MCProperListRef p_list, MCNumberRef& r_output)
+{
+    MCMathEvalMinMaxList(p_list, true, r_output);
+}
+
+extern "C" MC_DLLEXPORT void MCMathEvalMaxList(MCProperListRef p_list, MCNumberRef& r_output)
+{
+    MCMathEvalMinMaxList(p_list, false, r_output);
+}
+
 extern "C" MC_DLLEXPORT void MCMathEvalMaxInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = MCMax(p_left, p_right);
@@ -244,7 +349,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalMaxNumber(MCNumberRef p_left, MCNumberRef
 
 extern "C" MC_DLLEXPORT void MCMathEvalRandomReal(double& r_output)
 {
-    r_output = MCMathRandom();
+    r_output = MCSRandomReal();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

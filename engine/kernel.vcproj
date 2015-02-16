@@ -6238,28 +6238,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\sysw32random.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="w32prefix.h"
-						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="w32prefix.h"
-						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\src\sysw32region.cpp"
 				>
 				<FileConfiguration
