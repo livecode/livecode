@@ -67,7 +67,11 @@ static jmethodID s_array_list_append = nil;
 bool init_arraylist_class(JNIEnv *env)
 {
     if (s_array_list_class == nil)
-        s_array_list_class = env->FindClass("java/util/ArrayList");
+    {
+        // PM-2014-02-16: Bug [[ 14489 ]] Use global ref for s_array_list_class to ensure it will be valid next time we use it
+        jclass t_array_list_class = env->FindClass("java/util/ArrayList");
+        s_array_list_class = (jclass)env->NewGlobalRef(t_array_list_class);
+    }
     if (s_array_list_class == nil)
 		return false;
 
@@ -82,6 +86,16 @@ bool init_arraylist_class(JNIEnv *env)
 		return false;
 
 	return true;
+}
+
+// PM-2015-02-16: [[ Bug 14489 ]] Delete global ref
+void free_arraylist_class(JNIEnv *env)
+{
+    if (s_array_list_class != nil)
+    {
+        env->DeleteGlobalRef(s_array_list_class);
+        s_array_list_class = nil;
+    }
 }
 
 static jclass s_hash_map_class = nil;
@@ -439,6 +453,7 @@ bool MCJavaInitList(JNIEnv *env, jobject &r_list)
 bool MCJavaFreeList(JNIEnv *env, jobject p_list)
 {
     env->DeleteLocalRef(p_list);
+    free_arraylist_class(env);
     return true;
 }
 
