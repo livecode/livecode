@@ -340,19 +340,17 @@ static const char *url_table[256] =
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result)
 {
-	MCAutoArray<char> t_utf8_string;
+	MCAutoStringRefAsUTF8String t_utf8_string;
 	const char *s;
 	uindex_t l;
 	uindex_t size;
     
     // SN-2014-11-13: [[ Bug 14015 ]] We don't want to nativise the string,
     // but rather to encode it in UTF-8 and write the bytes (a '%' will be added).
-	if (!MCStringConvertToUTF8(p_source,
-	                           t_utf8_string.PtrRef(),
-	                           t_utf8_string.SizeRef()))
+	if (!t_utf8_string.Lock (p_source))
         return false;
     
-	s = t_utf8_string.Ptr();
+	s = *t_utf8_string;
 	l = t_utf8_string.Size();
 	size = l + 1;
 	size += size / 4;
