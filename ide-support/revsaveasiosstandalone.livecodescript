@@ -499,6 +499,11 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       end if
    end if
    
+   -- SN-2015-02-16: [[ iOS Font Mapping ]] Set the font mapping list
+   if tSettings["ios,font mapping file"] is not empty then
+      put tSettings["ios,font mapping file"] into tDeploy["fontmappings"]
+   end if
+   
    try
       _internal deploy ios tDeploy
       if the result is not empty then

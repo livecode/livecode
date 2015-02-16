@@ -49,6 +49,10 @@ struct MCDeployParameters
 	// The list of redirection mappings
 	char **redirects;
 	uint32_t redirect_count;
+    
+    // The list of font mappings
+    char **fontmappings;
+    uint32_t fontmapping_count;
 
 	// On Windows, the icon files to be inserted into the resource directory.
 	char *app_icon;

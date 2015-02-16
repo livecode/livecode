@@ -97,6 +97,11 @@ enum MCCapsuleSectionType
 	// Startup script to be executed after all stacks have loaded but before
 	// the main stack is opened.
 	kMCCapsuleSectionTypeStartupScript,
+    
+    // Font mapping sections contain a mapping from a font name to another font
+    // name (usually PostScript name). Whenever a font name is looked up it is
+    // indirected through the font map first (and only once - not iteratively).
+    kMCCapsuleSectionTypeFontmap,
 };
 
 // Each section begins with a header that defines its type and length. This is
