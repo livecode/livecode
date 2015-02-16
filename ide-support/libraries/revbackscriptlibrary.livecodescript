@@ -1808,8 +1808,11 @@ on updateForSelectedObjectChanged
    
    --non property palette IDE stacks
    repeat for each line l in gREVStacksList
-      if "revPropertyPalette" is not in l and not the cREVShaded of stack l
-      then send "revUpdatePalette" to this cd of stack l
+      if "revPropertyPalette" is not in l and not the cREVShaded of stack l then 
+         if exists(this cd of stack l) then
+            send "revUpdatePalette" to this cd of stack l
+         end if
+      end if
    end repeat
    
    --plugins

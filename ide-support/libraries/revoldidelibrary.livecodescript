@@ -295,7 +295,7 @@ command revIDEShowMessageBox
          lock screen
          go card 1 of stack "Message box"
          set the title of stack "Message box" to "Message Box (Single Line)"
-         set the hilitedButtonName of group "button tabs" of stack "message box" to "Single Line"
+         --set the hilitedButtonName of group "button tabs" of stack "message box" to "Single Line"
          # DW-2013-03-26
          # fixing message box not hiliting first line in 6.0rc3 due to objects being referenced by number rather than a unique name
          --focus on field 1 of stack "message box"
