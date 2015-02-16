@@ -514,7 +514,6 @@ public class GoogleBillingProvider implements BillingProvider
 			if(!t_did_restore)
 			{
 				// PM-2015-02-12: [[ Bug 14402 ]] When there are no previous purchases to restore, send a purchaseStateUpdate msg with state=restored and productID=""
-				Log.d(TAG,"You have no previous purchases to restore");
 				mPurchaseObserver.onPurchaseStateChanged("",5);
 			}
         }
