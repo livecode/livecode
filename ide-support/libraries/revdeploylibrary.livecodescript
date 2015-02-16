@@ -1,4 +1,13 @@
 script "revDeployLibrary"
+
+on revLoadLibrary
+   insert the script of me into back
+end revLoadLibrary
+
+on revUnloadLibrary
+   remove the script of me from back
+end revUnloadLibrary
+
 ////////////////////////////////////////////////////////////////////////////////
 
 -- A stack can be configured to be deployable to any number of different platforms.

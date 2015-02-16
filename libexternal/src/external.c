@@ -45,6 +45,11 @@ enum
 	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
 	OPERATION_STACK_TO_WINDOW_RECT,
 	OPERATION_WINDOW_TO_STACK_RECT,
+    
+    // AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
+    OPERATION_LOAD_MODULE,
+    OPERATION_UNLOAD_MODULE,
+    OPERATION_RESOLVE_SYMBOL_IN_MODULE,
 };
 
 enum
@@ -403,6 +408,54 @@ void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
+void LoadModule(const char *p_module, void **r_handle, int *r_success)
+{
+    if (s_external_interface_version < 2)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_LOAD_MODULE])(p_module, (const char *)r_handle, NULL, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+void UnloadModule(void *p_handle, int *r_success)
+{
+    if (s_external_interface_version < 2)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_UNLOAD_MODULE])(p_handle, NULL, NULL, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolved, int *r_success)
+{
+    if (s_external_interface_version < 2)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_RESOLVE_SYMBOL_IN_MODULE])(p_handle, p_symbol, (const char *)r_resolved, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
