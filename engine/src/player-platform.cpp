@@ -1418,6 +1418,9 @@ static bool MCPathIsRemoteURL(const char *p_path)
 // PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
 bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
 {
+    if (p_filename == nil)
+        return false;
+        
     if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
     {
         r_filename = strdup(p_filename);
@@ -1448,8 +1451,8 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
         case P_FILE_NAME:
         {
             // Edge case: Suppose filenameA is a valid relative path to defaultFolderA, but invalid relative path to defaultFolderB
-            // 1. Set defaultFolder to defaultFolderB. Set the filename to filenameA. Video will become empty, since the absolute path is invalid.
-            // 2. Change the defaultFolder to defaultFolderB. Set the filename again to filenameA. Now the absolute path is valid
+            // 1. Set defaultFolder to defaultFolderB. Set the filename to filenameA. Video will become empty, since the relative path is invalid.
+            // 2. Change the defaultFolder to defaultFolderA. Set the filename again to filenameA. Now the relative path is valid
             char *t_resolved_filename;
             resolveplayerfilename(filename, t_resolved_filename);
             
@@ -2139,7 +2142,11 @@ Boolean MCPlayer::prepare(const char *options)
     
     // PM-2015-01-26: [[ Bug 14435 ]] Use a temp var to resolve the filename, to avoid prepending the defaultFolder or the stack folder to the filename property
     char *t_filename;
-    resolveplayerfilename(filename, t_filename);
+    bool t_success = false;
+    t_success = resolveplayerfilename(filename, t_filename);
+    
+    if (!t_success)
+        t_filename = nil;
     
 	if (strnequal(t_filename, "https:", 6) || strnequal(t_filename, "http:", 5) || strnequal(t_filename, "ftp:", 4) || strnequal(t_filename, "file:", 5) || strnequal(t_filename, "rtsp:", 5))
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &t_filename);
