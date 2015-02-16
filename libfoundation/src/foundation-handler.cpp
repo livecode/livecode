@@ -20,14 +20,61 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *MCHandlerGetDefinition(MCHandlerRef self)
+bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callbacks, void *p_context, MCHandlerRef& r_handler)
 {
-    return nil;
+    // The context data for an MCHandler is stored after the common elements. The
+    // start of this is a field 'context' in the struct so we must adjust for its
+    // length.
+    __MCHandler *self;
+    if (!__MCValueCreate(kMCValueTypeCodeHandler, (sizeof(__MCHandler) - sizeof(self -> context)) + p_callbacks -> size, (__MCValue*&)self))
+        return false;
+    
+    MCMemoryCopy(MCHandlerGetContext(self), p_context, p_callbacks -> size);
+    
+    self -> typeinfo = MCValueRetain(p_typeinfo);
+    self -> callbacks = p_callbacks;
+    
+    r_handler = self;
+    
+    return true;
 }
 
-void *MCHandlerGetInstance(MCHandlerRef self)
+bool MCHandlerInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
-    return nil;
+    return self -> callbacks -> invoke(MCHandlerGetContext(self), p_arguments, p_argument_count, r_value);
+}
+
+void *MCHandlerGetContext(MCHandlerRef self)
+{
+    return (void *)self -> context;
+}
+
+const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef self)
+{
+    return self -> callbacks;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void __MCHandlerDestroy(__MCHandler *self)
+{
+    if (self -> callbacks -> release != nil)
+        self -> callbacks -> release(MCHandlerGetContext(self));
+}
+
+hash_t __MCHandlerHash(__MCHandler *self)
+{
+    return MCHashPointer(self);
+}
+
+bool __MCHandlerIsEqualTo(__MCHandler *self, __MCHandler *other_self)
+{
+    return self == other_self;
+}
+
+bool __MCHandlerCopyDescription(__MCHandler *self, MCStringRef& r_desc)
+{
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -92,6 +92,8 @@ struct MCAndroidSystem: public MCSystemInterface
 	
 	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context);
     
+    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
+    virtual bool GetExecutablePath(MCStringRef& r_path);
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native);
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path);
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path);

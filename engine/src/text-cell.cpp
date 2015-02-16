@@ -18,6 +18,8 @@
 
 #include "text-cell.h"
 
+#include <foundation-math.h>
+
 #include <float.h>
 #include "graphics.h"
 

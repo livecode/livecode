@@ -49,11 +49,11 @@ void bootstrap_main(int argc, char *argv[])
     
     for(i = 0; i < argc; i++)
     {
-        if (strcmp(argv[i], "-template") == 0 && i + 1 < argc)
+        if (strcmp(argv[i], "--template") == 0 && i + 1 < argc)
            SetTemplateFile(argv[++i]);
-        else if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
+        else if (strcmp(argv[i], "--output") == 0 && i + 1 < argc)
             SetOutputFile(argv[++i]);
-        else if (strcmp(argv[i], "-modulepath") == 0 && i + 1 < argc)
+        else if (strcmp(argv[i], "--modulepath") == 0 && i + 1 < argc)
             AddImportedModuleDir(argv[++i]);
         else
             AddFile(argv[i]);
@@ -107,21 +107,22 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: lc-compile {-modulepath PATH} -output OUTFILE [-manifest MANIFEST] [--] MLCFILE\n"
-"       lc-compile {-modulepath PATH} -outputc OUTFILE [-manifest MANIFEST] [--] MLCFILE\n"
+"Usage: lc-compile {--modulepath PATH} --output OUTFILE [--manifest MANIFEST] [--] MLCFILE\n"
+"       lc-compile {--modulepath PATH} --outputc OUTFILE [--manifest MANIFEST] [--] MLCFILE\n"
 "\n"
 "Compile a Modular LiveCode source file.\n"
 "\n"
 "Options:\n"
-"  -modulepath PATH    Path to directory containing module interface files.\n"
-"                      More than one modulepath may be specified, they are searched"
-"                      in order."
-"                      The first modulepath is used to output the interface file."
-"  -output  OUTFILE    Filename for bytecode output.\n"
-"  -outputc OUTFILE    Filename for C source code output.\n"
-"  -manifest MANIFEST  Filename for generated manifest.\n"
-"  -h, -help           Print this message.\n"
-"  --                  Treat all remaining arguments as filenames.\n"
+"  --modulepath PATH    Path to directory containing module interface files.\n"
+"  --output  OUTFILE    Filename for bytecode output.\n"
+"  --outputc OUTFILE    Filename for C source code output.\n"
+"  --manifest MANIFEST  Filename for generated manifest.\n"
+"  -h, --help           Print this message.\n"
+"  --                   Treat all remaining arguments as filenames.\n"
+"\n"
+"More than one `--modulepath' option may be specified. They are searched in\n"
+"the order specified.  The first modulepath is used to output the interface\n"
+"file."
 "\n"
 "Report bugs to <http://quality.runrev.com/>\n"
             );
@@ -142,28 +143,28 @@ static void full_main(int argc, char *argv[])
         const char *optarg = (argi + 1 < argc) ? argv[argi+1] : NULL;
         if (!end_of_args)
         {
-            if (0 == strcmp(opt, "-modulepath") && optarg)
+            if (0 == strcmp(opt, "--modulepath") && optarg)
             {
                 AddImportedModuleDir(argv[++argi]);
                 continue;
             }
-            if (0 == strcmp(opt, "-output") && optarg)
+            if (0 == strcmp(opt, "--output") && optarg)
             {
                 SetOutputFile(argv[++argi]);
                 continue;
             }
-            if (0 == strcmp(opt, "-outputc") && optarg)
+            if (0 == strcmp(opt, "--outputc") && optarg)
             {
                 SetOutputFile(argv[++argi]);
                 OutputFileAsC = 1;
                 continue;
             }
-            if (0 == strcmp(opt, "-manifest") && optarg)
+            if (0 == strcmp(opt, "--manifest") && optarg)
             {
                 SetManifestOutputFile(argv[++argi]);
                 continue;
             }
-            if (0 == strcmp(opt, "-h") || 0 == strcmp(opt, "-help"))
+            if (0 == strcmp(opt, "-h") || 0 == strcmp(opt, "--help"))
             {
                 usage(0);
                 continue;
@@ -230,7 +231,7 @@ int main(int argc, char *argv[])
     argv += 1;
     
     // Check for debug mode.
-    if (argc > 1 && strcmp(argv[0], "-debug") == 0)
+    if (argc > 1 && strcmp(argv[0], "--debug") == 0)
     {
         argc -= 1;
         argv += 1;
@@ -247,7 +248,7 @@ int main(int argc, char *argv[])
     InitializeScopes();
     
     // Check for bootstrap mode.
-    if (argc > 1 && strcmp(argv[0], "-bootstrap") == 0)
+    if (argc > 1 && strcmp(argv[0], "--bootstrap") == 0)
         bootstrap_main(argc - 1, argv + 1);
     else
         full_main(argc, argv);

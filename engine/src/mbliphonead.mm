@@ -40,7 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblad.h"
 
-#ifdef FEATURE_INNERACTIVE
+#if defined(FEATURE_INNERACTIVE) && !defined(__64_BIT__)
 
 #include "InneractiveAd.h"
 

@@ -58,7 +58,11 @@ function buildOpenSSL {
 				fi
 				;;
 			ios)
-				SPEC="iphoneos-cross"
+				if [ "${ARCH}" == "x86_64" ] ; then
+					SPEC="darwin64-x86_64-cc"
+				else
+					SPEC="iphoneos-cross"
+				fi
 				;;
 		esac
 	

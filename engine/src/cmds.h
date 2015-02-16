@@ -962,11 +962,11 @@ public:
 
 class MCCancel : public MCStatement
 {
-	MCExpression *id;
+	MCExpression *m_id;
 public:
 	MCCancel()
 	{
-		id = NULL;
+		m_id = NULL;
 	}
 	virtual ~MCCancel();
 	virtual Parse_stat parse(MCScriptPoint &);

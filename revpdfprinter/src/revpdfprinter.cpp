@@ -240,11 +240,8 @@ bool MCPDFPrintingDevice::BeginDocument(const MCCustomPrinterDocument& p_documen
 {
 	bool t_success = true;
 
-#ifdef _MACOSX
-	t_success = MCCStringFromNative(p_document . filename, m_filename);
-#else
-	t_success = MCCStringClone(p_document.filename, m_filename);
-#endif
+    // SN-2014-12-22: [[ Bug 14278 ]] p_document.filename is now a UTF-8 string.
+	t_success = get_filename(p_document.filename, m_filename);
 
 	if (t_success)
 	{
@@ -1416,7 +1413,7 @@ struct LibInfo __libinfo =
 	__libexports
 };
 
-__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revpdfprinter = &__libinfo;
+__attribute((section("__DATA,__libs"))) __attribute__((visibility("default"))) volatile struct LibInfo *__libinfoptr_revpdfprinter = &__libinfo;
 }
 #endif
 

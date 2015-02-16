@@ -168,7 +168,7 @@ bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_st
 bool MCFontlist::getfontstructinfo(MCNameRef&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
 {
 	MCFontnode *t_font = fonts;
-	while (t_font != NULL)
+	do
 	{
 		if (t_font->getfontstruct() == p_font)
 		{
@@ -179,5 +179,6 @@ bool MCFontlist::getfontstructinfo(MCNameRef&r_name, uint2 &r_size, uint2 &r_sty
 		}
 		t_font = t_font->next();
 	}
+    while (t_font != fonts);
 	return false;
 }

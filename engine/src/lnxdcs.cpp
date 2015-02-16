@@ -351,9 +351,9 @@ Boolean MCScreenDC::open()
 					uint4 bmsk = (1 << bluebits) - 1;
 					for(int i = 0 ; i < gdk_visual_get_colormap_size(vis) ; i++)
 					{
-						defs[i].pixel = i << redshift & t_redmask
-                        | i << greenshift & t_greenmask
-                        | i << blueshift & t_bluemask;
+						defs[i].pixel = (i << redshift & t_redmask)
+							| (i << greenshift & t_greenmask)
+							| (i << blueshift & t_bluemask);
 						defs[i].red   = (i & rmsk) * r_scale;
 						defs[i].green = (i & gmsk) * g_scale;
 						defs[i].blue  = (i & bmsk) * b_scale;
@@ -766,10 +766,6 @@ void MCScreenDC::flush(Window w)
 
 void MCScreenDC::beep()
 {
-	bool t_use_internal = false ; 
-	if ( m_sound_internal != NULL)
-		if ( strcmp(m_sound_internal, "internal") == 0 )
-			t_use_internal = true ;
 	gdk_beep();
 }
 
@@ -1003,13 +999,13 @@ void MCScreenDC::setfunction(uint4 rop)
         gdk_gc_set_function(getgc(), XOpToGdkOp(rop));
 }
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
 	// Return the XID
     return d != DNULL ? x11::gdk_x11_drawable_get_xid(d) : 0;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t id, Window &w)
 {
     // Look up the XID in GDK's window table
     w = x11::gdk_x11_window_lookup_for_display(dpy, id);
@@ -1355,7 +1351,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
     
     // Do any scaling that is required to satisfy the specified size
 	if (size != nil && 
-		(size -> x != t_bitmap -> width || size -> y != t_bitmap -> height))
+	    ((uint32_t) size -> x != t_bitmap -> width ||
+	     (uint32_t) size -> y != t_bitmap -> height))
 	{
 		MCImageBitmap *t_new_bitmap;
 		MCImageScaleBitmap(t_bitmap, size -> x, size -> y, INTERPOLATION_BILINEAR, t_new_bitmap);

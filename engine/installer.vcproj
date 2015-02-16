@@ -199,6 +199,10 @@
 			ReferencedProjectIdentifier="{09751ABE-310B-4324-BACE-F7FFDA2299DE}"
 			RelativePathToProject=".\thirdparty\libgif\libgif.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{56CD2637-6005-4DD6-9ADF-F85C7774BB88}"
+			RelativePathToProject=".\libscript\stdscript.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter

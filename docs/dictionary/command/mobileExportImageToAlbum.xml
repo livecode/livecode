@@ -51,7 +51,7 @@
 	</references>
 
 	<description>
-	<overview>Use the <b>mobileExportImageToAlbum</b> to save an image to the user&apos;s photo album of gallery. If used on an iOS device that has a camera, the image is saved to the Camera Roll, otherwise it is saved to the Saved Photos album. On Android, images are saved to the default Pictures folder.</overview>
+	<overview>Use the <b>mobileExportImageToAlbum</b> to save an image to the user&apos;s photo album of gallery. If used on an iOS device that has a camera, the image is saved to the Camera Roll, otherwise it is saved to the Saved Photos album. On Android, images are saved to the default Pictures folder (the Write External Storage permission must be enabled to allow the application to write in the public folder).</overview>
 
 		<parameters>
   <parameter>

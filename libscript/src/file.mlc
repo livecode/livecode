@@ -1,4 +1,4 @@
-/*  
+/*
 This module specifies the syntax definitions and bindings for file i/o operations in modular LiveCode.
 */
 
@@ -6,51 +6,103 @@ module com.livecode.file
 
 --
 
-opaque type Stream
-    measure is MCFileStreamType_Measure
-    finalize is MCFileStreamType_Finalize
-    copy is MCFileStreamType_Copy
-end type
+public foreign handler MCFileExecGetContents(in File as string, out Contents as data) as undefined binds to "<builtin>"
+public foreign handler MCFileExecSetContents(in Contents as data, in File as string) as undefined binds to "<builtin>"
 
---
+/*
+Summary:	The data stored in a file.
 
-foreign handler ExecOpenFileForRead(in File as string) as Stream binds to "<builtin>"
-foreign handler ExecOpenFileForWrite(in File as string) as Stream binds to "<builtin>"
-foreign handler ExecOpenFileForUpdate(in File as string) as Stream binds to "<builtin>"
-foreign handler ExecOpenNewFile(in File as string) as Stream binds to "<builtin>"
+File:		An expression that evaluates to a filename.
 
-foreign handler ExecReadFromStream(in Amount as uint, in Source as Stream) as string binds to "<builtin>"
+Description:
+The raw data stored in a file.
 
-foreign handler MCFileStreamType_Measure() as uint binds to "<undefined>"
-foreign handler MCFileStreamType_Finalize(in Target as Stream) as undefined binds to "<undefined>"
-foreign handler MCFileStreamType_Copy(in Source as Stream, out Destination as Stream) as undefined binds to "<undefined>"
+>*Note:* Setting the contents of a file will replace the file with a
+>newly-created file with the new contents.
 
---
-
-syntax OpenFileForRead is statement
-    "open" "read" "only" "stream" "for" "file" <File: Expression>
+Tags: IO, Filesystem
+*/
+syntax FileContents is prefix operator with precedence 2
+	"the" "contents" "of" "file" <File: Expression>
 begin
-    ExecOpenFileForRead(File)
-end syntax
-
-syntax OpenFileForRead is statement
-    "open" "write" "only" "stream" "for" "file" <File: Expression>
-begin
-    ExecOpenFileForWrite(File)
-end syntax
-
-syntax OpenFileForRead is statement
-    "open" "read" "write" "stream" "for" "file" <File: Expression>
-begin
-    ExecOpenFileForUpdate(File)
+	MCFileExecGetContents(File, output)
+	MCFileExecSetContents(input, File)
 end syntax
 
 --
 
-syntax ReadFromStream is statement
-    "read" <Amount: Expression> "from" "stream" <Source: Expression>
+public foreign handler MCFileExecDeleteFile(in File as string) as undefined binds to "<builtin>"
+
+/*
+Summary:	Delete a file from the filesystem.
+
+File:		An expression that evaluates to a filename.
+
+Description:
+Deletes the specified file.
+
+Tags: IO, Filesystem
+*/
+syntax DeleteFile is statement
+	"delete" "file" <File: Expression>
 begin
-    ExecReadFromStream(Amount, Source)
+	MCFileExecDeleteFile(File)
 end syntax
+
+--
+
+public foreign handler MCFileExecCreateDirectory(in Directory as string) as undefined binds to "<builtin>"
+public foreign handler MCFileExecDeleteDirectory(in Directory as string) as undefined binds to "<builtin>"
+public foreign handler MCFileExecGetDirectoryEntries(in Directory as string, out Entrise as list) as undefined binds to "<builtin>"
+
+/*
+Summary:	Create a named directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Creates a new, empty directory.
+
+Tags: IO, Filesystem
+*/
+syntax CreateDirectory is statement
+	"create" "directory" <Directory: Expression>
+begin
+	MCFileExecCreateDirectory(Directory)
+end syntax
+
+/*
+Summary:	Delete a directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Deletes a directory.  The directory must be empty.
+
+Tags: IO, Filesystem
+*/
+syntax DeleteDirectory is statement
+	"delete" "directory" <Directory: Expression>
+begin
+	MCFileExecDeleteDirectory(Directory)
+end syntax
+
+/*
+Summary:	List the contents of a directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Creates a new, empty directory.
+
+Tags: IO, Filesystem
+*/
+syntax GetDirectoryEntries is prefix operator with precedence 5
+	"the" "entries" "of" "directory" <Directory: Expression>
+begin
+	MCFileExecGetDirectoryEntries(Directory, output)
+end syntax
+
+--
 
 end module

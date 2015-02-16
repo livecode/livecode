@@ -825,7 +825,7 @@ public:
 	void effectrect(const MCRectangle &drect, Boolean &abort);
 	
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
-	MCStack *findstackwindowid(uint32_t p_win_id);
+	MCStack *findstackwindowid(uintptr_t p_win_id);
 	MCStack *findstackd(Window w);
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method

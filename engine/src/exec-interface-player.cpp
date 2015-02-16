@@ -250,6 +250,35 @@ void MCPlayer::Redraw(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]] Update to MCStringRef
+static bool MCPathIsAbsolute(MCStringRef p_path)
+{
+    if (MCStringIsEmpty(p_path))
+        return false;
+
+    return MCStringGetCharAtIndex(p_path, 0) == '/'
+            || MCStringGetCharAtIndex(p_path, 0) == ':';
+}
+
+static bool MCPathIsRemoteURL(MCStringRef p_path)
+{
+    return MCStringBeginsWithCString(p_path, (char_t*)"http://", kMCStringOptionCompareCaseless) ||
+            MCStringBeginsWithCString(p_path, (char_t*)"https://", kMCStringOptionCompareCaseless) ||
+            MCStringBeginsWithCString(p_path, (char_t*)"ftp://", kMCStringOptionCompareCaseless);
+}
+
+// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename)
+{
+    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    {
+        r_filename = MCValueRetain(p_filename);
+        return true;
+    }
+
+   return getstack()->resolve_relative_path(p_filename, r_filename);
+}
+
 void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 {
 	if (filename == nil)
@@ -269,7 +298,10 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 		starttime = MAXUINT4; //clears the selection
 		endtime = MAXUINT4;
 		if (p_name != nil)
-			filename = MCValueRetain(p_name);
+        {
+            // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+            resolveplayerfilename(p_name, filename);
+        }
 		prepare(kMCEmptyString);
 #ifdef FEATURE_PLATFORM_PLAYER
         // PM-2014-10-24: [[ Bug 13776 ]] Make sure we attach the player after prepare()
@@ -283,7 +315,13 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 #endif
 
 		Redraw();
-	}
+    }
+#ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
+    else if (MCStringIsEqualTo(p_name, filename, kMCStringOptionCompareCaseless) && hasinvalidfilename())
+        ctxt . SetTheResultToCString("could not create movie reference");
+#endif
+
 }
 
 void MCPlayer::GetDontRefresh(MCExecContext& ctxt, bool& r_setting)

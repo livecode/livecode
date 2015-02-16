@@ -182,11 +182,6 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
 void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
 void MCS_geturl(MCObject *p_target, MCStringRef p_url);
 
-// MW-2013-05-21: [[ RandomBytes ]] Attempt to generate a sequence of random
-//   bytes into the provided buffer. The function returns 'false' if there isnt
-//   enough entropy available to generate them.
-bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer);
-
 extern uint2 MCS_getplayloudness();
 extern void MCS_setplayloudness(uint2 p_loudness);
 
