@@ -717,8 +717,11 @@ on mouseUp pWhich
 end mouseUp
 
 on mouseDoubleUp pButtonNo, pTarget
-  if revCheckEdit(pTarget) then send "revBuildPropertyPalette" to stack "revTemplatePalette"
-  else if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass mouseDoubleUp
+  if revCheckEdit(pTarget) then
+  	revIDEOpenPalette("inspector")
+  else if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then 
+  	pass mouseDoubleUp
+  end if
 end mouseDoubleUp
 
 on openField

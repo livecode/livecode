@@ -377,7 +377,7 @@ end __extensionInstallFinalise
 # Check if the widget to be uninstalled is in use
 on __extensionUninstallCheckInUse pExtensionID
    # Update progress
-   if pExtensionID is not a number then __extensionError("Could not remove extension '" & pExtensionID & "' because it is not a valid index") 
+   if pExtensionID is not a number then return __extensionError("Could not remove extension '" & pExtensionID & "' because it is not a valid index") 
    
    __extensionSendProgressUpdate pExtensionID, "Ckecking if extension is in use", 20
    
@@ -487,6 +487,8 @@ end __extensionProperties
 
 function __extensionError pExtensionID, pErrorMessage
    __extensionSendProgressUpdate pExtensionID, "Error:" && pErrorMessage, 100
+   --put "Error:" && pErrorMessage, 100
+   --revIDEUninstallExtension pExtensionID
 end __extensionError
 
 # Send notication that widget has been added/removed
@@ -651,7 +653,7 @@ end __extensionManifestValue
 
 function __extensionManifestValueFromFile pExtensionID, pProperty
    # Get the path to the manifest file
-   local tExtensionInstallPath, tManifestPath
+   local tExtensionInstallPath, tManifestFilepath
    put __extensionPropertyGet(pExtensionID, "install_path") into tExtensionInstallPath
    put tExtensionInstallPath & slash & "manifest.xml" into tManifestFilepath
    
@@ -670,7 +672,7 @@ function __extensionManifestValueFromFile pExtensionID, pProperty
 end __extensionManifestValueFromFile
 
 private function __extensionFolders
-   return revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions") into tExtensionFolders
+   return revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions")
 end __extensionFolders
 
 # Returns a value from the manifest
