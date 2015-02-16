@@ -38,11 +38,21 @@ extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseNot(integer_t p_operand, intege
 
 extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseShift(integer_t p_operand, bool p_is_right, integer_t p_shift, integer_t& r_output)
 {
-    if (p_shift < 0 != p_is_right)
-        // truncate towards 0
-        r_output = (integer_t)(p_operand >> abs(p_shift));
-    else
-        r_output = p_operand << p_shift;
+	/* Ensure that the shift amount is always positive */
+	if (p_shift < 0)
+	{
+		/* Overflow check (why would anyone do this?) */
+		if (INTEGER_MIN == p_shift)
+			++p_shift;
+
+		p_shift = -p_shift;
+		p_is_right = !p_is_right;
+	}
+
+	if (p_is_right)
+		r_output = p_operand >> p_shift;
+	else
+		r_output = p_operand << p_shift;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

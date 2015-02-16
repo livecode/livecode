@@ -270,7 +270,9 @@ bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
         return MCProperListPushElementsOntoBack(self, p_value -> list, p_value -> length);
     
     MCAutoProperListRef t_list;
-    MCProperListCopy(p_value, &t_list);
+	if (!MCProperListCopy(p_value, &t_list))
+		return false;
+
     return MCProperListAppendList(self, *t_list);
 }
 
@@ -305,7 +307,9 @@ bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index
         return MCProperListInsertElements(self, p_value -> list, p_value -> length, p_index);
     
     MCAutoProperListRef t_list;
-    MCProperListCopy(p_value, &t_list);
+	if (!MCProperListCopy(p_value, &t_list))
+		return false;
+
     return MCProperListInsertList(self, *t_list, p_index);
 }
 
@@ -319,7 +323,10 @@ bool MCProperListRemoveElements(MCProperListRef self, uindex_t p_start, uindex_t
     
     MCAutoArray<MCValueRef> t_values;
     for (uindex_t i = p_start; i < p_start + p_count; i++)
-        t_values . Push(self -> list[i]);
+	{
+		if (!t_values . Push(self -> list[i]))
+			return false;
+	}
     
     if (!__MCProperListShrinkAt(self, p_start, p_count))
         return false;

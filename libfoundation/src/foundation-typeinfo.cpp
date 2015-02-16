@@ -958,7 +958,7 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     else if (t_code == kMCValueTypeCodeError)
     {
         t_hash = MCHashBytesStream(t_hash, &self -> error . domain, sizeof(self -> error . domain));
-        t_hash = MCHashBytesStream(t_hash, self -> error . message, sizeof(self -> error . message));
+        t_hash = MCHashBytesStream(t_hash, &self -> error . message, sizeof(self -> error . message));
     }
     else if (t_code == kMCValueTypeCodeCustom)
     {

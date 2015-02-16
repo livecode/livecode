@@ -1065,7 +1065,8 @@ uindex_t MCStringGetLength(MCStringRef self)
 const unichar_t *MCStringGetCharPtr(MCStringRef self)
 {
     if (__MCStringIsIndirect(self))
-        __MCStringResolveIndirect(self);
+		if (!__MCStringResolveIndirect(self))
+			return nil;
     
     __MCStringUnnativize(self);
 	return self -> chars;
@@ -1077,7 +1078,8 @@ const char_t *MCStringGetNativeCharPtr(MCStringRef self)
     {
         // AL-2014-07-25: [[ Bug 12672 ]] Ensure possibly indirect string is resolved before returning char ptr
         if (__MCStringIsIndirect(self))
-            __MCStringResolveIndirect(self);
+			if (!__MCStringResolveIndirect(self))
+				return nil;
         
         return self -> native_chars;
     }
@@ -1414,20 +1416,19 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
     MCAssert(p_locale != nil);
     
     // Create the appropriate break iterator
-    MCBreakIteratorRef t_iter;
-    if (!MCLocaleBreakIteratorCreate(p_locale, p_type, t_iter))
+    MCAutoCustomPointer<__MCBreakIterator,MCLocaleBreakIteratorRelease> t_iter;
+    if (!MCLocaleBreakIteratorCreate(p_locale, p_type, &t_iter))
         return false;
     
     // Set the iterator's text
-    if (!MCLocaleBreakIteratorSetText(t_iter, self))
+    if (!MCLocaleBreakIteratorSetText(*t_iter, self))
     {
-        MCLocaleBreakIteratorRelease(t_iter);
         return false;
     }
     
     // Advance to the beginning of the specified range
     uindex_t t_start;
-    t_start = MCLocaleBreakIteratorNext(t_iter, p_in_range.offset);
+    t_start = MCLocaleBreakIteratorNext(*t_iter, p_in_range.offset);
     
     if (t_start == kMCLocaleBreakIteratorDone)
     {
@@ -1437,7 +1438,7 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
     
     // Advance to the end of the specified range
     uindex_t t_end;
-    t_end = MCLocaleBreakIteratorNext(t_iter, p_in_range.length);
+    t_end = MCLocaleBreakIteratorNext(*t_iter, p_in_range.length);
     if (t_end == kMCLocaleBreakIteratorDone)
         t_end = MCStringGetLength(self);
     
@@ -1445,7 +1446,6 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
     t_units = MCRangeMake(t_start, t_end - t_start);
     
     // All done
-    MCLocaleBreakIteratorRelease(t_iter);
     r_out_range = t_units;
     return true;
 }
@@ -1509,6 +1509,7 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     if (!t_found)
     {
         r_out_range = MCRangeMake(MCStringGetLength(self), 0);
+		MCLocaleBreakIteratorRelease (t_iter);
         return true;
     }
     
@@ -1544,14 +1545,13 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
         return false;
     
     // Create a break iterator of the appropriate type
-    MCBreakIteratorRef t_iter;
-    if (!MCLocaleBreakIteratorCreate(p_locale, p_type, t_iter))
+    MCAutoCustomPointer<__MCBreakIterator, MCLocaleBreakIteratorRelease> t_iter;
+    if (!MCLocaleBreakIteratorCreate(p_locale, p_type, &t_iter))
         return false;
     
     // Set the iterator's text
-    if (!MCLocaleBreakIteratorSetText(t_iter, self))
+    if (!MCLocaleBreakIteratorSetText(*t_iter, self))
     {
-        MCLocaleBreakIteratorRelease(t_iter);
         return false;
     }
     
@@ -1561,7 +1561,7 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
     t_offset = 0;
     while (t_offset < p_in_range.offset)
     {
-        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_offset++))
+        if (MCLocaleBreakIteratorIsBoundary(*t_iter, t_offset++))
             t_start++;
         
         if (t_offset >= MCStringGetLength(self))
@@ -1576,7 +1576,7 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
     t_end = 0;
     while (t_offset < p_in_range.offset + p_in_range.length)
     {
-        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_offset++))
+        if (MCLocaleBreakIteratorIsBoundary(*t_iter, t_offset++))
             t_end++;
         
         if (t_offset >= MCStringGetLength(self))
@@ -1587,7 +1587,6 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
     t_units = MCRangeMake(t_start, t_end);
     
     // All done
-    MCLocaleBreakIteratorRelease(t_iter);
     r_out_range = t_units;
     return true;
 }
@@ -1666,6 +1665,7 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
         if (t_right_break >= MCStringGetLength(self))
         {
             r_out_range = MCRangeMake(t_right_break, 0);
+			MCLocaleBreakIteratorRelease (t_iter);
             return true;
         }
     }
