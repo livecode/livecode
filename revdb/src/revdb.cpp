@@ -135,6 +135,39 @@ const char *dbtypestrings[] = {
 
 };
 
+static void *DBcallback_loadmodule(const char *p_path)
+{
+    int t_success;
+    void *t_handle;
+    LoadModule(p_path, &t_handle, &t_success);
+    if (t_success == EXTERNAL_FAILURE)
+        return NULL;
+    return t_handle;
+}
+
+static void DBcallback_unloadmodule(void *p_handle)
+{
+    int t_success;
+    UnloadModule(p_handle, &t_success);
+}
+
+static void *DBcallback_resolvesymbol(void *p_handle, const char *p_symbol)
+{
+    int t_success;
+    void *t_address;
+    ResolveSymbolInModule(p_handle, p_symbol, &t_address, &t_success);
+    if (t_success == EXTERNAL_FAILURE)
+        return NULL;
+    return t_address;
+}
+
+static DBcallbacks dbcallbacks = {
+    DBcallbacks_version,
+    DBcallback_loadmodule,
+    DBcallback_unloadmodule,
+    DBcallback_resolvesymbol,
+};
+
 DATABASERECList databaselist;
 DBList connectionlist;
 
@@ -252,17 +285,21 @@ DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
 #endif
     
     void *id_counterref_ptr, *new_connectionref_ptr, *release_connectionref_ptr;
+    void *set_callbacksref_ptr;
     id_counterref_ptr = NULL;
     new_connectionref_ptr = NULL;
     release_connectionref_ptr = NULL;
+    set_callbacksref_ptr = NULL;
     
     ResolveSymbolInModule(t_handle, "setidcounterref", &id_counterref_ptr, &t_retvalue);
     ResolveSymbolInModule(t_handle, "newdbconnectionref", &new_connectionref_ptr, &t_retvalue);
     ResolveSymbolInModule(t_handle, "releasedbconnectionref", &release_connectionref_ptr, &t_retvalue);
+    ResolveSymbolInModule(t_handle, "setcallbacksref", &set_callbacksref_ptr, &t_retvalue);
     
     t_result -> idcounterptr = (idcounterrefptr)id_counterref_ptr;
     t_result -> newconnectionptr = (new_connectionrefptr)new_connectionref_ptr;
     t_result -> releaseconnectionptr = (release_connectionrefptr)release_connectionref_ptr;
+    t_result -> setcallbacksptr = (set_callbacksrefptr)set_callbacksref_ptr;
     return t_result;
 }
 
@@ -368,6 +405,8 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
 		strcpy(t_database_rec -> dbname, p_type);
 		if (t_database_rec -> idcounterptr)
 			(*t_database_rec -> idcounterptr)(&idcounter);
+        if (t_database_rec -> setcallbacksptr)
+            (*t_database_rec -> setcallbacksptr)(&dbcallbacks);
 	}
 	
 	return t_database_rec;
