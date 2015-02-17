@@ -32,6 +32,7 @@ struct DATABASEREC
 	idcounterrefptr idcounterptr;
 	new_connectionrefptr  newconnectionptr;
 	release_connectionrefptr releaseconnectionptr;
+    set_callbacksrefptr setcallbacksptr;
 #ifndef _MAC_SERVER
 	CFBundleRef driverref;
 #else
