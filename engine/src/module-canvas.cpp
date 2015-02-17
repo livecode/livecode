@@ -455,6 +455,8 @@ MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
+MCTypeInfoRef kMCSVGPathParseErrorTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Constant refs
@@ -3163,10 +3165,9 @@ void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanv
 	{
 		MCCanvasPathSVGParseContext t_context;
 		t_context.path = t_path;
+		t_context.first_point = t_context.last_point = MCGPointMake(0, 0);
 		t_success = MCSVGParse(p_instructions, MCCanvasPathSVGParseCallback, &t_context);
 	}
-//	if (t_success)
-//		t_success = MCCanvasPathParseInstructions(p_instructions, MCCanvasPathMakeWithInstructionsCallback, t_path);
 	
 	if (t_success)
 		MCCanvasPathMakeWithMCGPath(t_path, r_path);
@@ -5644,6 +5645,8 @@ void MCCanvasErrorsInitialize()
 	kMCCanvasGradientTypeErrorTypeInfo = nil;
 	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.GradientTypeError"), MCSTR("Unrecognised gradient type."), kMCCanvasGradientTypeErrorTypeInfo);
 	
+	kMCSVGPathParseErrorTypeInfo = nil;
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.SVGPathParseError"), MCSTR("Unable to parse path data: \"%{reason}\" at position %{position}"), kMCSVGPathParseErrorTypeInfo);
 }
 
 void MCCanvasErrorsFinalize()
@@ -5666,6 +5669,8 @@ void MCCanvasErrorsFinalize()
 	MCValueRelease(kMCCanvasGradientStopRangeErrorTypeInfo);
 	MCValueRelease(kMCCanvasGradientStopOrderErrorTypeInfo);
 	MCValueRelease(kMCCanvasGradientTypeErrorTypeInfo);
+
+	MCValueRelease(kMCSVGPathParseErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5911,6 +5916,18 @@ bool MCCanvasCapStyleFromString(MCStringRef p_string, MCGCapStyle &r_style)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCSVGThrowPathParseError(uint32_t p_char_position, MCStringRef p_error)
+{
+	MCAutoNumberRef t_number;
+	if (!MCNumberCreateWithUnsignedInteger(p_char_position + 1, &t_number))
+		return false;
+	
+	return MCErrorCreateAndThrow(kMCSVGPathParseErrorTypeInfo,
+								 "position", *t_number,
+								 "reason", p_error,
+								 nil);
+}
+
 struct MCSVGPathCommandMap
 {
 	char letter;
@@ -6068,15 +6085,15 @@ bool MCSVGParseParams(MCStringRef p_string, uindex_t &x_index, MCSVGPathCommand 
 			break;
 			
 		default:
-			/* UNKNOWN COMMAND */
-			return false;
+			MCUnreachable();
+			break;
 	}
 	
 	for (uint32_t i = 0; i < t_param_count; i++)
 	{
 		MCAutoNumberRef t_number;
 		if (!MCSVGParseNumber(p_string, t_index, &t_number))
-			return false;
+			return MCSVGThrowPathParseError(t_index, MCSTR("Expected number value"));
 		
 		MCSVGConsumeWSPCommaWSP(p_string, t_index);
 		
@@ -6111,11 +6128,9 @@ bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_con
 		if (t_have_command)
 			MCSVGSkipWhitespace(p_string, t_index);
 		
-		if (t_first_command && !(t_have_command && t_command == kMCSVGPathMoveTo))
-		{
-			// TODO - throw error - svg path must begin with moveto command
-			return false;
-		}
+		if (t_first_command && !(t_have_command && (t_command == kMCSVGPathMoveTo || t_command == kMCSVGPathRelativeMoveTo)))
+			return MCSVGThrowPathParseError(t_index, MCSTR("Path must begin with moveto command"));
+
 		t_first_command = false;
 		
 		// switch to lineto after moveto
