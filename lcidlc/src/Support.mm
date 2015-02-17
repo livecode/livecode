@@ -540,8 +540,9 @@ static LCError LCValueArrayFromObjcArray(MCVariableRef var, NSArray *src)
         //   - needs a dynamically allocated t_key,
         //   - needs to pass the pointer to this key to variable_lookup_key
         //   - sprintf format should be "%u", not "%ud"
-        char *t_key = nil;
-        t_key = new char[12];
+        char t_key[12];
+        char *t_key_ptr;
+        t_key_ptr = t_key;
         
         if (t_key == nil)
             t_error = kLCErrorOutOfMemory;
@@ -551,9 +552,7 @@ static LCError LCValueArrayFromObjcArray(MCVariableRef var, NSArray *src)
 		
 		MCVariableRef t_value;
 		if (t_error == kLCErrorNone)
-			t_error = (LCError)s_interface -> variable_lookup_key(var, kMCOptionAsCString, (void*)&t_key, true, &t_value);
-		
-        delete[] t_key;
+			t_error = (LCError)s_interface -> variable_lookup_key(var, kMCOptionAsCString, (void*)&t_key_ptr, true, &t_value);
         
 		if (t_error == kLCErrorNone)
 			t_error = LCValueArrayValueFromObjcValue(t_value, [src objectAtIndex: t_index]);
