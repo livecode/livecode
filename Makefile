@@ -185,6 +185,23 @@ revandroid: libexternalv1
 	$(MAKE) -C ./revmobile revandroid
 
 ###############################################################################
+# revBrowser Targets
+
+.PHONY: revbrowser libcef libcefwrapper revbrowser-cefprocess
+
+libcef:
+	$(MAKE) -C ./thirdparty/libcef libcef
+
+libcefwrapper:
+	$(MAKE) -C ./thirdparty/libcef libcefwrapper
+
+revbrowser-cefprocess: libcef libcefwrapper
+	$(MAKE) -C ./revbrowser revbrowser-cefprocess
+	
+revbrowser: libcore libexternal libcef libcefwrapper libexternalv1 revbrowser-cefprocess
+	$(MAKE) -C ./revbrowser revbrowser
+
+###############################################################################
 # MLC Targets
 
 .PHONY: lc-compile lc-bootstrap-compile lc-compile-clean
@@ -226,6 +243,7 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
+all: revbrowser
 all: lc-test
 
 bootstrap: lc-bootstrap-compile
