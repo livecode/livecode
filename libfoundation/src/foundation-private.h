@@ -556,6 +556,9 @@ void __MCStreamFinalize(void);
 
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */
+MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value);
+bool __MCCustomCopyDescription (MCValueRef self, MCStringRef & r_desc);
+
 void __MCCustomDefaultDestroy(MCValueRef);
 bool __MCCustomDefaultCopy(MCValueRef, bool, MCValueRef &);
 bool __MCCustomDefaultEqual(MCValueRef, MCValueRef);

@@ -74,7 +74,13 @@ bool __MCHandlerIsEqualTo(__MCHandler *self, __MCHandler *other_self)
 
 bool __MCHandlerCopyDescription(__MCHandler *self, MCStringRef& r_desc)
 {
-    return false;
+	if (NULL != self->callbacks->describe)
+		return self->callbacks->describe(MCHandlerGetContext (self), r_desc);
+
+	/* Default implementation. */
+	/* FIXME Should include information about arguments and return
+	 * values, extracted from the handler's typeinfo. */
+	return MCStringCopy(MCSTR("<handler>"), r_desc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

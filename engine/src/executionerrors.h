@@ -2638,6 +2638,12 @@ enum Exec_errors
 	// MDW-2014-09-28: [[ feature_floor ]]
 	// {EE-0851} ceil: bad parameter
 	EE_CEIL_BADSOURCE,
+	
+	// {EE-0852} load: error in extension expression
+	EE_LOAD_BADEXTENSION,
+	
+	// {EE-0853} load: error in resource path expression
+	EE_LOAD_BADRESOURCEPATH,
 };
 
 extern const char *MCexecutionerrors;

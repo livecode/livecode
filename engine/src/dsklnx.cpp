@@ -197,8 +197,7 @@ static void configureSerialPort(int sRefNum)
     {
         *each = '\0';
         each++;
-        if (str != NULL)
-            parseSerialControlStr(str, &theTermios);
+        parseSerialControlStr(str, &theTermios);
         str = each;
     }
 
@@ -1804,10 +1803,12 @@ public:
         if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
-        configureSerialPort((short)fileno(t_fptr));
-
         if (t_fptr != NULL)
+        {
+            configureSerialPort((short)fileno(t_fptr));
+
             t_handle = new MCStdioFileHandle(t_fptr);
+        }
 
         return t_handle;
     }
@@ -1982,9 +1983,9 @@ public:
     virtual bool GetExecutablePath(MCStringRef &r_executable)
     {
         char t_executable[PATH_MAX];
-        uint32_t t_size;
+		ssize_t t_size;
         t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
-        if (t_size == PATH_MAX)
+		if (t_size >= PATH_MAX || t_size < 0)
             return false;
         
         t_executable[t_size] = 0;

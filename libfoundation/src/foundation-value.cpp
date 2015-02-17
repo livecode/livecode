@@ -29,7 +29,7 @@ static void __MCValueUninter(__MCValue *value);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value)
+MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value)
 {
     __MCCustomValue *t_value;
     t_value = (__MCCustomValue*)p_value;
@@ -304,9 +304,9 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 	switch(__MCValueGetTypeCode(self))
 	{
 	case kMCValueTypeCodeNull:
-		return MCStringFormat(r_desc, "<null>");
+		return MCStringCopy (MCSTR("<null>"), r_desc);
 	case kMCValueTypeCodeBoolean:
-		return MCStringFormat(r_desc, "<%s>", p_value == kMCTrue ? "true" : "false");
+		return MCStringCopy (MCSTR(p_value == kMCTrue ? "true" : "false"), r_desc);
 	case kMCValueTypeCodeNumber:
 		return __MCNumberCopyDescription((__MCNumber *)p_value, r_desc);
 	case kMCValueTypeCodeString:
@@ -322,15 +322,7 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
     case kMCValueTypeCodeData:
         return __MCDataCopyDescription((__MCData*)p_value, r_desc);
 	case kMCValueTypeCodeCustom:
-		{
-			MCTypeInfoRef t_typeinfo;
-			bool (*t_describe_func)(MCValueRef, MCStringRef &);
-			t_typeinfo = __MCCustomValueResolveTypeInfo(self);
-			t_describe_func = t_typeinfo -> custom . callbacks . describe;
-			return ((t_describe_func != NULL) ?
-			        t_describe_func (p_value, r_desc) :
-			        __MCCustomDefaultDescribe (p_value, r_desc));
-		}
+		return __MCCustomCopyDescription((__MCCustomValue *) p_value, r_desc);
     case kMCValueTypeCodeProperList:
         return __MCProperListCopyDescription((__MCProperList*)p_value, r_desc);
     case kMCValueTypeCodeRecord:
@@ -344,8 +336,9 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
     case kMCValueTypeCodeForeignValue:
         return __MCForeignValueCopyDescription((__MCForeignValue *)p_value, r_desc);
 	default:
-		break;
+		return MCStringCopy (MCSTR("<unknown>"), r_desc);
 	}
+	MCUnreachable();
 	return false;
 }
 

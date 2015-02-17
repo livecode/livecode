@@ -1,3 +1,7 @@
+\\(\n|\r|\r\n) {
+    AdvanceCurrentPosition(1);
+    AdvanceCurrentPositionToNextRow();
+}
 [\n\r]+ {
     int i;
     GetCurrentPosition(&yylval.attr[0]);

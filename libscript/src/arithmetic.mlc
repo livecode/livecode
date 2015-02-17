@@ -20,6 +20,8 @@ This library consists of the basic arithmetic operations of standard library of 
 
 module com.livecode.arithmetic
 
+use com.livecode.foreign
+
 --
 
 public foreign handler MCArithmeticExecAddIntegerToInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"

@@ -9,26 +9,16 @@
 /* Begin PBXBuildFile section */
 		4D21B5AA19DDAA0C00B64BEF /* script-private.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D21B5A919DDAA0C00B64BEF /* script-private.h */; };
 		4D21B5FF19E3DFCB00B64BEF /* script-module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B5FE19E3DFCB00B64BEF /* script-module.cpp */; };
-		4D21B60119E3DFED00B64BEF /* script-package.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60019E3DFED00B64BEF /* script-package.cpp */; };
 		4D21B60319E3DFF800B64BEF /* script-instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60219E3DFF800B64BEF /* script-instance.cpp */; };
 		4D322F2219DD95A4008476D3 /* script-object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D322F2119DD95A4008476D3 /* script-object.cpp */; };
+		4D4067D11A84DCD200A5B6BC /* unittest.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C793E7761A83789000D5E682 /* unittest.mlc */; };
+		4D4067D21A84DCD200A5B6BC /* unittest-impl.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C793E7751A83789000D5E682 /* unittest-impl.mlc */; };
 		4D44E3641A139F460073FFA2 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D322F1619DD945E008476D3 /* libscript.a */; };
 		4D44E3651A139F480073FFA2 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E35F1A139D8F0073FFA2 /* libfoundation.a */; };
 		4D44E3671A139F590073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3661A139F590073FFA2 /* CoreFoundation.framework */; };
-		4D79B6801A273BA000DD750C /* module-arithmetic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6591A273BA000DD750C /* module-arithmetic.cpp */; };
-		4D79B6811A273BA000DD750C /* module-binary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65A1A273BA000DD750C /* module-binary.cpp */; };
-		4D79B6821A273BA000DD750C /* module-bitwise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65B1A273BA000DD750C /* module-bitwise.cpp */; };
-		4D79B6831A273BA000DD750C /* module-byte.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65C1A273BA000DD750C /* module-byte.cpp */; };
-		4D79B6841A273BA000DD750C /* module-char.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65D1A273BA000DD750C /* module-char.cpp */; };
-		4D79B6851A273BA000DD750C /* module-encoding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65E1A273BA000DD750C /* module-encoding.cpp */; };
-		4D79B6871A273BA000DD750C /* module-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6601A273BA000DD750C /* module-list.cpp */; };
-		4D79B6881A273BA000DD750C /* module-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6611A273BA000DD750C /* module-logic.cpp */; };
-		4D79B68A1A273BA000DD750C /* module-math_foundation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6631A273BA000DD750C /* module-math_foundation.cpp */; };
-		4D79B68B1A273BA000DD750C /* module-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6641A273BA000DD750C /* module-math.cpp */; };
-		4D79B68C1A273BA000DD750C /* module-sort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6651A273BA000DD750C /* module-sort.cpp */; };
-		4D79B68D1A273BA000DD750C /* module-string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6661A273BA000DD750C /* module-string.cpp */; };
-		4D79B68E1A273BA000DD750C /* module-type_convert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6671A273BA000DD750C /* module-type_convert.cpp */; };
-		4D79B68F1A273BA000DD750C /* module-type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6681A273BA000DD750C /* module-type.cpp */; };
+		4D4EAFDD1A7A671D0067E90B /* foreign.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4DCBCD6D1A7A5D4000D30864 /* foreign.mlc */; };
+		4D4EAFDE1A7A672C0067E90B /* script-package.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60019E3DFED00B64BEF /* script-package.cpp */; };
+		4D4EAFE01A7A67B30067E90B /* module-foreign.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4EAFDF1A7A67B30067E90B /* module-foreign.cpp */; };
 		4D79B6911A273BBB00DD750C /* module-arithmetic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6591A273BA000DD750C /* module-arithmetic.cpp */; };
 		4D79B6921A273BBB00DD750C /* module-binary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65A1A273BA000DD750C /* module-binary.cpp */; };
 		4D79B6931A273BBB00DD750C /* module-bitwise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65B1A273BA000DD750C /* module-bitwise.cpp */; };
@@ -59,15 +49,12 @@
 		4DDA20451A136FF4001B0CA2 /* script-builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA20441A136FF4001B0CA2 /* script-builder.cpp */; };
 		5DDE27B91A37909500D5ABD2 /* math-foundation.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6781A273BA000DD750C /* math-foundation.mlc */; };
 		766113441A2F298E0042DE7F /* list.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6751A273BA000DD750C /* list.mlc */; };
-		766113891A31FB640042DE7F /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766113881A31FB640042DE7F /* module-array.cpp */; };
 		7661138A1A31FB690042DE7F /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766113881A31FB640042DE7F /* module-array.cpp */; };
 		7661138D1A31FE1B0042DE7F /* array.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7661138C1A31FDFD0042DE7F /* array.mlc */; };
-		76FEC2311A5D3F0900188FD4 /* module-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FEC2301A5D3F0900188FD4 /* module-file.cpp */; };
 		76FEC2341A5D3F1600188FD4 /* module-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FEC2301A5D3F0900188FD4 /* module-file.cpp */; };
 		76FEC2361A5D43E000188FD4 /* file.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 76FEC22F1A5D3F0900188FD4 /* file.mlc */; };
 		C73CD3531A6D01690021F87A /* module-date.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C73CD34F1A6D01690021F87A /* module-date.cpp */; };
 		C73CD3551A6D01690021F87A /* module-system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C73CD3501A6D01690021F87A /* module-system.cpp */; };
-		C741ECC81A6932E60096D171 /* module-stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C741ECC61A6932E60096D171 /* module-stream.cpp */; };
 		C741ECC91A6932E60096D171 /* module-stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C741ECC61A6932E60096D171 /* module-stream.cpp */; };
 		C741ECD11A6933CF0096D171 /* stream.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C741ECC71A6932E60096D171 /* stream.mlc */; };
 		C7A74E1A1A6D08290031099F /* date.mlc in Sources */ = {isa = PBXBuildFile; fileRef = C73CD34E1A6D01690021F87A /* date.mlc */; };
@@ -89,6 +76,13 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
+		4D4067D61A84DCD200A5B6BC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D79B6B11A273C4E00DD750C /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C72BED781A838B0D009B3CEB;
+			remoteInfo = "lc-run";
+		};
 		4D44E35E1A139D8F0073FFA2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */;
@@ -172,6 +166,7 @@
 		4D44E3591A139D510073FFA2 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = "<group>"; };
 		4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../libfoundation/libfoundation.xcodeproj; sourceTree = "<group>"; };
 		4D44E3661A139F590073FFA2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		4D4EAFDF1A7A67B30067E90B /* module-foreign.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-foreign.cpp"; path = "src/module-foreign.cpp"; sourceTree = "<group>"; };
 		4D79B6541A273B6900DD750C /* libstdscript.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libstdscript.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D79B6591A273BA000DD750C /* module-arithmetic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-arithmetic.cpp"; path = "src/module-arithmetic.cpp"; sourceTree = "<group>"; };
 		4D79B65A1A273BA000DD750C /* module-binary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-binary.cpp"; path = "src/module-binary.cpp"; sourceTree = "<group>"; };
@@ -205,9 +200,9 @@
 		4D79B67D1A273BA000DD750C /* type-convert.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "type-convert.mlc"; path = "src/type-convert.mlc"; sourceTree = "<group>"; };
 		4D79B67E1A273BA000DD750C /* type.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = type.mlc; path = src/type.mlc; sourceTree = "<group>"; };
 		4D79B6B11A273C4E00DD750C /* lc-compile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "lc-compile.xcodeproj"; path = "../toolchain/lc-compile/lc-compile.xcodeproj"; sourceTree = "<group>"; };
+		4DCBCD6D1A7A5D4000D30864 /* foreign.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = foreign.mlc; path = src/foreign.mlc; sourceTree = "<group>"; };
 		4DDA20441A136FF4001B0CA2 /* script-builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-builder.cpp"; path = "src/script-builder.cpp"; sourceTree = "<group>"; };
 		4DDA20661A139BA1001B0CA2 /* libscript-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "libscript-test"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7210DCA31A37102F00C23D23 /* module-helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-helper.cpp"; path = "src/module-helper.cpp"; sourceTree = "<group>"; };
 		766113881A31FB640042DE7F /* module-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-array.cpp"; path = "src/module-array.cpp"; sourceTree = "<group>"; };
 		7661138C1A31FDFD0042DE7F /* array.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = array.mlc; path = src/array.mlc; sourceTree = "<group>"; };
 		76FEC22F1A5D3F0900188FD4 /* file.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = file.mlc; path = src/file.mlc; sourceTree = "<group>"; };
@@ -334,7 +329,6 @@
 				4D79B65D1A273BA000DD750C /* module-char.cpp */,
 				C73CD34F1A6D01690021F87A /* module-date.cpp */,
 				4D79B65E1A273BA000DD750C /* module-encoding.cpp */,
-				7210DCA31A37102F00C23D23 /* module-helper.cpp */,
 				4D79B6601A273BA000DD750C /* module-list.cpp */,
 				4D79B6611A273BA000DD750C /* module-logic.cpp */,
 				4D79B6631A273BA000DD750C /* module-math_foundation.cpp */,
@@ -345,8 +339,9 @@
 				C73CD3501A6D01690021F87A /* module-system.cpp */,
 				4D79B6671A273BA000DD750C /* module-type_convert.cpp */,
 				4D79B6681A273BA000DD750C /* module-type.cpp */,
-				76FEC22F1A5D3F0900188FD4 /* file.mlc */,
 				76FEC2301A5D3F0900188FD4 /* module-file.cpp */,
+				4D4EAFDF1A7A67B30067E90B /* module-foreign.cpp */,
+				76FEC22F1A5D3F0900188FD4 /* file.mlc */,
 				4D79B66A1A273BA000DD750C /* arithmetic.mlc */,
 				7661138C1A31FDFD0042DE7F /* array.mlc */,
 				4D79B66B1A273BA000DD750C /* binary.mlc */,
@@ -368,6 +363,7 @@
 				C73CD3511A6D01690021F87A /* system.mlc */,
 				4D79B67D1A273BA000DD750C /* type-convert.mlc */,
 				4D79B67E1A273BA000DD750C /* type.mlc */,
+				4DCBCD6D1A7A5D4000D30864 /* foreign.mlc */,
 				C793E7761A83789000D5E682 /* unittest.mlc */,
 				C793E7751A83789000D5E682 /* unittest-impl.mlc */,
 			);
@@ -380,6 +376,7 @@
 				4D79B6BB1A273C4E00DD750C /* lc-compile */,
 				4D79B6BD1A273C4E00DD750C /* lc-bootstrap-compile */,
 				4D79B6BF1A273C4E00DD750C /* lc-test */,
+				4D4067D71A84DCD200A5B6BC /* lc-run */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -500,6 +497,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		4D4067D71A84DCD200A5B6BC /* lc-run */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-run";
+			remoteRef = 4D4067D61A84DCD200A5B6BC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		4D44E35F1A139D8F0073FFA2 /* libfoundation.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -535,28 +539,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D79B68B1A273BA000DD750C /* module-math.cpp in Sources */,
-				4D79B68C1A273BA000DD750C /* module-sort.cpp in Sources */,
+				4D4EAFDE1A7A672C0067E90B /* script-package.cpp in Sources */,
 				4D322F2219DD95A4008476D3 /* script-object.cpp in Sources */,
-				76FEC2311A5D3F0900188FD4 /* module-file.cpp in Sources */,
-				4D79B6801A273BA000DD750C /* module-arithmetic.cpp in Sources */,
-				4D79B6881A273BA000DD750C /* module-logic.cpp in Sources */,
-				4D79B68E1A273BA000DD750C /* module-type_convert.cpp in Sources */,
-				C741ECC81A6932E60096D171 /* module-stream.cpp in Sources */,
-				4D79B6871A273BA000DD750C /* module-list.cpp in Sources */,
 				4D21B5FF19E3DFCB00B64BEF /* script-module.cpp in Sources */,
 				4D21B60319E3DFF800B64BEF /* script-instance.cpp in Sources */,
 				4DDA20451A136FF4001B0CA2 /* script-builder.cpp in Sources */,
-				4D79B6821A273BA000DD750C /* module-bitwise.cpp in Sources */,
-				4D79B6831A273BA000DD750C /* module-byte.cpp in Sources */,
-				4D79B6851A273BA000DD750C /* module-encoding.cpp in Sources */,
-				4D21B60119E3DFED00B64BEF /* script-package.cpp in Sources */,
-				4D79B68F1A273BA000DD750C /* module-type.cpp in Sources */,
-				766113891A31FB640042DE7F /* module-array.cpp in Sources */,
-				4D79B6811A273BA000DD750C /* module-binary.cpp in Sources */,
-				4D79B6841A273BA000DD750C /* module-char.cpp in Sources */,
-				4D79B68A1A273BA000DD750C /* module-math_foundation.cpp in Sources */,
-				4D79B68D1A273BA000DD750C /* module-string.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -564,6 +551,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D4067D11A84DCD200A5B6BC /* unittest.mlc in Sources */,
+				4D4067D21A84DCD200A5B6BC /* unittest-impl.mlc in Sources */,
+				4D4EAFDD1A7A671D0067E90B /* foreign.mlc in Sources */,
 				C741ECD11A6933CF0096D171 /* stream.mlc in Sources */,
 				76FEC2361A5D43E000188FD4 /* file.mlc in Sources */,
 				5DDE27B91A37909500D5ABD2 /* math-foundation.mlc in Sources */,
@@ -580,6 +570,7 @@
 				4D79B6DB1A27405600DD750C /* logic.mlc in Sources */,
 				4D79B6DE1A27405600DD750C /* math.mlc in Sources */,
 				4D79B6DF1A27405600DD750C /* segmentchunk.mlc in Sources */,
+				4D4EAFE01A7A67B30067E90B /* module-foreign.cpp in Sources */,
 				4D79B6E01A27405600DD750C /* sort.mlc in Sources */,
 				4D79B6E11A27405600DD750C /* string.mlc in Sources */,
 				C7A74E1B1A6D083D0031099F /* system.mlc in Sources */,

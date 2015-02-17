@@ -292,6 +292,7 @@ extern "C" MC_DLLEXPORT void MCCanvasTransformMultiply(MCCanvasTransformRef pTra
 
 // Constructors
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &x_image);
+extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource_path, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithData(MCDataRef p_data, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPixels(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPixelsWithSizeAsList(MCProperListRef p_size, MCDataRef p_pixels, MCCanvasImageRef &x_image);

@@ -922,8 +922,9 @@
 				"$(SRCROOT)/../../engine/src/engine.mlc",
 				"$(SRCROOT)/../../libscript/src/stream.mlc",
 				"$(SRCROOT)/../../libscript/src/system.mlc",
+				"$(SRCROOT)/../../libscript/src/foreign.mlc",
 				"$(SRCROOT)/../../libscript/libstdscript-modules.list",
-				"$(SRCROOT)/../../libscritp/src/unittest.mlc",
+				"$(SRCROOT)/../../libscript/src/unittest.mlc",
 			);
 			name = Bootstrap;
 			outputPaths = (
@@ -931,7 +932,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "LIBSCRIPT_SRCDIR=\"${SRCROOT}/../../libscript/src\"\nLIBSCRIPT_LIST=\"${SRCROOT}/../../libscript/libstdscript-modules.list\"\nENGINE_SRCDIR=\"${SRCROOT}/../../engine/src\"\nENGINE_LIST=\"${SRCROOT}/../../engine/libkernel-modules.list\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\nLC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\"\nGRAMMAR_TEMPLATE=\"${SRCROOT}/src/grammar.g\"\nGRAMMAR_OUTPUT=\"${SRCROOT}/src/grammar_full.g\"\n\ncd src\necho \"${MODULE_DIR}\"\nmkdir -p \"_G_\"\n\n# Function for creating a list of MLC files for bootstrapping\nbootstrap_list () {\n    listfile=\"$1\"\n    srcdir=\"$2\"\n    for f in $(grep -v '^[\\#!]' < ${listfile}); do\n        echo \"${srcdir}/${f}\"\n    done\n}\n\nbootstrap_mlc () {\n    bootstrap_list ${LIBSCRIPT_LIST} ${LIBSCRIPT_SRCDIR}\n    bootstrap_list ${ENGINE_LIST} ${ENGINE_SRCDIR}\n}\n\n# Generate LCI files for all of the input MLC files\necho '### Generating interface files...'\nmkdir -p ${MODULE_DIR}\nfor f in $(bootstrap_mlc); do\n    ${LC_COMPILE} --modulepath ${MODULE_DIR} ${f} || exit $?\ndone\n\necho '### Generating grammar...'\n# Bootstrap all of the MLC files into a grammar file\n${LC_COMPILE} --bootstrap --modulepath ${MODULE_DIR} --template ${GRAMMAR_TEMPLATE} --output ${GRAMMAR_OUTPUT} $(bootstrap_mlc) || exit $?\n";
+			shellScript = "LIBSCRIPT_SRCDIR=\"${SRCROOT}/../../libscript/src\"\nLIBSCRIPT_LIST=\"${SRCROOT}/../../libscript/libstdscript-modules.list\"\nENGINE_SRCDIR=\"${SRCROOT}/../../engine/src\"\nENGINE_LIST=\"${SRCROOT}/../../engine/libkernel-modules.list\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\nLC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\"\nGRAMMAR_TEMPLATE=\"${SRCROOT}/src/grammar.g\"\nGRAMMAR_OUTPUT=\"${SRCROOT}/src/grammar_full.g\"\n\ncd src\nmkdir -p \"_G_\"\n\n# Function for creating a list of MLC files for bootstrapping\nbootstrap_list () {\n    listfile=\"$1\"\n    srcdir=\"$2\"\n    # Skip any line that starts with \"!\" or \"#\", prepend the source\n    # directory to each line and escape any spaces in the resulting\n    # filename with \"\\\"\n    grep -v '^[\\#!]' < \"${listfile}\" | sed -e\"s:^:${srcdir}/:\" | sed -e's: :\\\\ :g'\n}\n\nbootstrap_mlc () {\n    bootstrap_list \"${LIBSCRIPT_LIST}\" \"${LIBSCRIPT_SRCDIR}\"\n    bootstrap_list \"${ENGINE_LIST}\" \"${ENGINE_SRCDIR}\"\n}\n\n# Generate LCI files for all of the input MLC files\necho '### Generating interface files...'\nmkdir -p \"${MODULE_DIR}\"\nbootstrap_mlc | xargs -t -n1 \"${LC_COMPILE}\" \\\n        --modulepath \"${MODULE_DIR}\" \\\n    || exit $?\n\necho '### Generating grammar...'\n# Bootstrap all of the MLC files into a grammar file\nbootstrap_mlc | \\\n    xargs -t \"${LC_COMPILE}\" --bootstrap --modulepath \"${MODULE_DIR}\" \\\n        --template \"${GRAMMAR_TEMPLATE}\" --output \"${GRAMMAR_OUTPUT}\" \\\n    || exit $?\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1455,6 +1456,7 @@
 				C72BED7D1A838B0D009B3CEB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

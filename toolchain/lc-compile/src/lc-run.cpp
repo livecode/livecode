@@ -25,6 +25,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	include <windows.h>
 #endif
 
+extern bool MCModulesInitialize(void);
+extern void MCModulesFinalize(void);
+
 /* Possible exit statuses used by lc-run */
 enum {
 	kMCRunExitStatusSuccess = 0,
@@ -41,7 +44,7 @@ struct MCRunConfiguration
 };
 
 static void MCRunUsage (int p_exit_status) ATTRIBUTE_NORETURN;
-static void MCRunStartupError (void) ATTRIBUTE_NORETURN;
+static void MCRunStartupError (MCStringRef p_stage) ATTRIBUTE_NORETURN;
 static void MCRunHandlerError (void) ATTRIBUTE_NORETURN;
 static void MCRunBadOptionError (MCStringRef p_arg) ATTRIBUTE_NORETURN;
 static void MCRunBadOptionArgError (MCStringRef p_option, MCStringRef p_optarg) ATTRIBUTE_NORETURN;
@@ -77,7 +80,7 @@ MCRunUsage (int p_exit_status)
 /* Print an error message if an error occurs while starting the
  * LiveCode runtime */
 static void
-MCRunStartupError (void)
+MCRunStartupError (MCStringRef p_stage)
 {
 	MCAutoStringRef t_message, t_reason;
 	MCErrorRef t_error;
@@ -87,7 +90,8 @@ MCRunStartupError (void)
 	else
 		/* UNCHECKED */ MCStringCopy (MCSTR("Unknown error"), &t_reason);
 
-	/* UNCHECKED */ MCStringFormat (&t_message, "ERROR: %@\n", *t_reason);
+	/* UNCHECKED */ MCStringFormat (&t_message, "ERROR[%@]: %@\n",
+	                                p_stage, *t_reason);
 
 	MCRunPrintMessage (stderr, *t_message);
 	exit (kMCRunExitStatusStartup);
@@ -383,6 +387,7 @@ main (int argc,
 	MCInitialize();
 	MCSInitialize();
 	MCScriptInitialize();
+	MCModulesInitialize();
 
 	/* Defaults */
 	MCRunConfiguration t_config;
@@ -392,7 +397,7 @@ main (int argc,
 
 	/* ---------- Process command-line arguments */
 	if (!MCRunParseCommandLine (argc, argv, t_config))
-		MCRunStartupError();
+		MCRunStartupError(MCSTR("Command Line"));
 
 	/* ---------- Start VM */
 	MCAutoScriptModuleRef t_module;
@@ -400,7 +405,7 @@ main (int argc,
 	MCAutoValueRef t_ignored_retval;
 
 	if (!MCRunLoadModule (t_config.m_filename, &t_module))
-		MCRunStartupError();
+		MCRunStartupError(MCSTR("Load Module"));
 
 	if (t_config.m_list_handlers)
 	{
@@ -410,7 +415,7 @@ main (int argc,
 	else
 	{
 		if (!MCScriptCreateInstanceOfModule (*t_module, &t_instance))
-			MCRunStartupError();
+			MCRunStartupError(MCSTR("Create Instance"));
 
 		if (!MCScriptCallHandlerOfInstance(*t_instance,
 		                                   t_config.m_handler,
@@ -419,6 +424,7 @@ main (int argc,
 			MCRunHandlerError();
 	}
 
+	MCModulesFinalize();
 	MCScriptFinalize();
 	MCSFinalize();
 	MCFinalize();

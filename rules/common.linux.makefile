@@ -38,6 +38,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libskia/include/pathops \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/ports \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/utils \
+	$(SOLUTION_DIR)/thirdparty/libfreetype/include \
 	$(SOLUTION_DIR)/prebuilt/include \
 	$(SOLUTION_DIR)/thirdparty/libffi/linux/i686-pc-linux-gnu
 	

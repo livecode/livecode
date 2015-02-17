@@ -354,7 +354,7 @@ bool __MCErrorIsEqualTo(__MCError *self, __MCError *other_error)
 
 bool __MCErrorCopyDescription(__MCError *self, MCStringRef& r_string)
 {
-    return false;
+	return MCStringCopy (MCErrorGetMessage (self), r_string);
 }
 
 bool __MCErrorInitialize(void)

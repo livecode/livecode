@@ -1902,6 +1902,8 @@ enum Sugar_constants {
 	SG_HOST,
     
     SG_EXTENSION,
+	SG_RESOURCE,
+	SG_PATH,
 };
 
 enum Statements {

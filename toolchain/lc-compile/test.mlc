@@ -1,3 +1,20 @@
+/*
+Copyright (C) 2014-2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 module Test
 
 use com.livecode.math
@@ -115,7 +132,8 @@ public handler testSummary(in pResults as list)
     push tFailureCount converted to base 10 && "TESTS FAILED (" & tSuccessCount converted to base 10 && "PASSED)" onto tSummaryItems
 
     variable tSummaryString as string
-    combine tSummaryItems with newline into tSummaryString
+    combine tSummaryItems with newline
+    put the result into tSummaryString
 
     return tSummaryString
 end handler
@@ -314,11 +332,13 @@ public handler testTypeConvert(inout xResults as list)
 	put "a,b,c,d,e" into tString
 	
 	variable tList as list
-	split tString by "," into tList
+	split tString by ","
+    put the result into tList
 	
 	testLog("TypeConvert", "Split", tList is ["a","b", "c", "d", "e"], xResults)
 	
-	combine tList with "," into tString
+	combine tList with ","
+    put the result into tString
 	
 	testLog("TypeConvert", "Combine", tString is "a,b,c,d,e", xResults)
 	
@@ -398,7 +418,8 @@ public handler testArray(inout xResults as list)
 	testLog("Array", "KeysOfCount", the number of elements in tKeys is 3, xResults)
 
 	variable tKeysString as string
-	combine tKeys with "," into tKeysString
+	combine tKeys with ","
+    put the result into tKeysString
 	
 	testLog("Array", "KeysOf1", tKeysString contains "key1", xResults)
 	testLog("Array", "KeysOf2", tKeysString contains "key2", xResults)
@@ -453,7 +474,13 @@ public handler testArray(inout xResults as list)
 	delete tTest["key"]
 	
 	testLog("Array", "DeleteElement", the number of elements in tTest is 0, xResults)
-
+	
+	variable tArrayWithUndefined as array
+	put the empty array into tArrayWithUndefined
+	put undefined into tArrayWithUndefined["a"]
+	variable tUndefined
+ 	put tArrayWithUndefined["a"] into tUndefined
+	testLog("Array", "UndefinedElement", tUndefined is not defined, xResults)
 end handler
 
 public handler testBitwise(inout xResults as list)
@@ -489,7 +516,16 @@ public handler testLogic(inout xResults as list)
     	
     testLog("Logic", "Is", not true is false, xResults)
     testLog("Logic", "Is", not false is true, xResults)
-    
+
+    testLog("Logic", "Format", false formatted as string is "false", xResults)
+
+    format true as string
+    testLog("Logic", "Format", the result is "true", xResults)
+
+    testLog("Logic", "Parse", "true" parsed as boolean, xResults)
+    parse "false" as boolean
+    testLog("Logic", "Parse", not the result, xResults)
+
 end handler
 
 public handler testLogicStructural(inout xResults as list)
@@ -853,6 +889,13 @@ public handler testList(inout xResults as list)
 	delete the first element of tTest
 	testLog("List", "DeleteFirstElement", tTest[1] is 2, xResults)	
 
+	variable tListWithUndefined as list
+	put the empty list into tListWithUndefined
+	push undefined onto tListWithUndefined
+	variable tUndefined
+ 	put the head of tListWithUndefined into tUndefined
+	testLog("List", "UndefinedElement", tUndefined is not defined, xResults)
+	
 end handler
 
 public handler testSort(inout xResults as list)

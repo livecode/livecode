@@ -378,23 +378,12 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 
 int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
 {
-    // AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
     int status;
 	int flags = 0;
     
-    if (MCStringIsNative(string))
-    {
-        uindex_t t_length;
-        unichar_t *t_string_chars;
-        t_string_chars = nil;
-        
-        MCMemoryAllocate(MCStringGetLength(string) * sizeof(unichar_t), t_string_chars);
-        t_length = MCStringGetChars(string, p_range, t_string_chars);
-        status = regexec(&prog->rexp, t_string_chars, t_length, NSUBEXP, prog->matchinfo, flags);
-        MCMemoryDeallocate(t_string_chars);
-    }
-    else
-        status = regexec(&prog->rexp, MCStringGetCharPtr(string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
+    // AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
+    // AL-2015-02-05: [[ Bug 14504 ]] Now that 'CanBeNative' flag is preserved, we can just use MCStringGetCharPtr here.
+    status = regexec(&prog->rexp, MCStringGetCharPtr(string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
 
 	if (status != REG_OKAY)
 	{
