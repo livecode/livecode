@@ -1096,6 +1096,12 @@ extern "C" {
 
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t i);
+MC_DLLEXPORT hash_t MCHashUnsignedInteger(uinteger_t i);
+
+MC_DLLEXPORT hash_t MCHashInt32(int32_t i);
+MC_DLLEXPORT hash_t MCHashUInt32(uint32_t i);
+MC_DLLEXPORT hash_t MCHashInt64(int64_t i);
+MC_DLLEXPORT hash_t MCHashUInt64(uint64_t i);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.
@@ -1631,9 +1637,25 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 // of the numbers which result and take any appropriate action. In particular,
 // the non-integral division operations will *not* throw an exception as the
 // result will come out as an infinity (and so is 'representable' in some way).
+
+// The internal representation of integers and unsigned integers depend on the
+// following definitions.
     
-MC_DLLEXPORT bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
-MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
+typedef int32_t MCNumberSignedInteger;
+typedef uint32_t MCNumberUnsignedInteger;
+    
+#define kMCNumberSignedIntegerMin INT32_MIN
+#define kMCNumberSignedIntegerMax INT32_MAX
+#define kMCNumberUnsignedIntegerMax UINT32_MAX
+    
+#define kMCNumberSignedIntegerFormat "%d"
+#define kMCNumberUnsignedIntegerFormat "%u"
+    
+// These methods create an MCNumber with the given value. Integers will remain as
+// integers, reals as reals.
+//
+MC_DLLEXPORT bool MCNumberCreateWithInteger(MCNumberSignedInteger value, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(MCNumberUnsignedInteger value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
 
 // This method returns true if the number is stored as either a signed or unsigned integer.
@@ -1655,11 +1677,11 @@ MC_DLLEXPORT bool MCNumberIsFetchableAsUnsignedInteger(MCNumberRef number);
     
 // This method will do its best to fetch the contents as an integer_t - out of range
 // values will clamp.
-MC_DLLEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
+MC_DLLEXPORT MCNumberSignedInteger MCNumberFetchAsInteger(MCNumberRef number);
     
 // This method will do its best to fetch the contents as a uinteger_t - out of range
 // values will clamp.
-MC_DLLEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
+MC_DLLEXPORT MCNumberUnsignedInteger MCNumberFetchAsUnsignedInteger(MCNumberRef number);
     
 // This method will do its best to fetch the contents as a double - at the moment
 // this is always possible without losing information.

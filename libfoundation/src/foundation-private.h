@@ -139,8 +139,8 @@ struct __MCNumber: public __MCValue
 {
 	union
 	{
-		integer_t integer;
-        uinteger_t unsigned_integer;
+		MCNumberSignedInteger integer;
+        MCNumberUnsignedInteger unsigned_integer;
 		real64_t real;
 	};
 };
