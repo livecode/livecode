@@ -83,6 +83,12 @@ bool MCEngineThrowScriptError(void)
     return false;
 }
 
+bool MCEngineThrowScripObjectDoesNotExistError(void)
+{
+	MCErrorCreateAndThrow(kMCEngineScriptObjectDoesNotExistErrorTypeInfo, nil);
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_object_id)
@@ -171,9 +177,7 @@ static inline bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, 
 	if (t_script_object_imp -> handle == nil ||
 		!t_script_object_imp -> handle -> Exists())
 	{
-		// TODO: Throw script object doesn't exist error.
-		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
-		return false;
+		return MCEngineThrowScripObjectDoesNotExistError();
 	}
 	
 	r_object = t_script_object_imp->handle->Get();
@@ -585,6 +589,10 @@ extern "C" MC_DLLEXPORT void MCEngineExecLogWithValues(MCStringRef p_message, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void __create_named_custom_typeinfo(MCTypeInfoRef p_base, const MCValueCustomCallbacks *p_callbacks, MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
 {
     MCAutoTypeInfoRef t_unnamed;
@@ -593,8 +601,28 @@ static void __create_named_custom_typeinfo(MCTypeInfoRef p_base, const MCValueCu
     /* UNCHECKED */ MCNamedTypeInfoBind(r_typeinfo, *t_unnamed);
 }
 
+static bool __create_named_error_typeinfo(MCNameRef p_domain, MCNameRef p_name, MCStringRef p_message, MCTypeInfoRef &r_typeinfo)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCErrorTypeInfoCreate(p_domain, p_message, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_typeinfo = MCValueRetain(*t_named_type);
+	
+	return true;
+}
+
 bool MCEngineModuleInitialize(void)
 {
+	/* UNCHECKED */ __create_named_error_typeinfo(MCNAME("engine"), MCNAME("com.livecode.engine.ScriptObjectDoesNotExistError"), MCSTR("object does not exist"), kMCEngineScriptObjectDoesNotExistErrorTypeInfo);
+	
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCScriptObjectCustomValueCallbacks, MCNAME("com.livecode.engine.ScriptObject"), kMCEngineScriptObjectTypeInfo);
     
     /* UNCHECKED */ MCStringCreateMutable(0, s_log_buffer);
@@ -606,6 +634,7 @@ void MCEngineModuleFinalize(void)
 {
     MCValueRelease(s_log_buffer);
     MCValueRelease(kMCEngineScriptObjectTypeInfo);
+	MCValueRelease(kMCEngineScriptObjectDoesNotExistErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
