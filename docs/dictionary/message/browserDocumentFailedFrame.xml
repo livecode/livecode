@@ -1,0 +1,40 @@
+<doc>
+  <legacy_id></legacy_id>
+  <name>browserDocumentFailedFrame</name>
+  <type>message</type>
+  <syntax>
+    <example>browserDocumentFailedFrame <i>instanceId, url, errorMessage</i></example>
+  </syntax>
+  <library>Browser Library</library>
+  <objects>
+    <card/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+  </classification>
+  <references>
+    <message tag="browserDownloadRequest">browserDownloadRequest Message</message>
+    <function tag="revBrowserOpenCef">revBrowserOpenCef Function</function>
+  </references>
+  <history>
+    <introduced version="6.7.3">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+  </platforms>
+  <classes>
+    <desktop/>
+  </classes>
+  <security>
+    <network/>
+  </security>
+  <summary>Sent when a browser object has encountered an error when loading a url in a frame</summary>
+  <examples>
+    <example>on browserDocumentFailedFrame pInstanceId, pUrl, pErrorMessage</p><p>  answer "Failed to load frame URL" && quote & pUrl & quote & return & "Error message: " && pErrorMessage</p><p>end browserDocumentFailedFrame</example>
+  </examples>
+  <description>
+    <p>The <b>browserDocumentFailedFrame</b> message is sent to the current card of a stack containing a browser object when the browser object has encountered an error while loading a url and all its dependent resources in a frame.</p><p/><p>If the target is the main frame of the browser then the <message tag="browserDocumentFailed">browserDocumentFailed message</message> message is sent instead.</p><p/><p><b>Parameters:</b></p><p>The <i>url</i> is the url that has failed to load in a frame</p><p>The <i>instanceId</i> is the integer identifer of the browser object</p><p>The <i>errorMessage</i> is a message explaining why the url failed to load in the frame</p><p/><p><b>Note:</b> For general information on using the browser library, see the notes in the <function tag="revBrowserOpen">revBrowserOpen function</function> reference.</p>
+  </description>
+</doc>
