@@ -62,6 +62,33 @@ static bool __MCNumberThrowDivisionByZeroError(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool __MCNumberCreate(MCNumberRef& r_number)
+{
+    if (!__MCValueCreate(kMCValueTypeCodeNumber, r_number))
+        return false;
+    
+    return true;
+}
+
+static inline void __MCNumberAssignDouble(__MCNumber& self, double p_value)
+{
+    self . flags |= kMCNumberFlagDoubleRep;
+    self . real = p_value;
+}
+
+static inline void __MCNumberAssignSigned(__MCNumber& self, MCNumberSignedInteger p_value)
+{
+    // We don't set the flags here because this method is used immediately after
+    // __MCNumberCreate so we are already signed rep.
+    self . real = p_value;
+}
+
+static inline void __MCNumberAssignUnsigned(__MCNumber& self, MCNumberUnsignedInteger p_value)
+{
+    self . flags |= kMCNumberFlagUnsignedIntegerRep;
+    self . real = p_value;
+}
+
 bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
 {
 	__MCNumber *self;
@@ -1375,25 +1402,32 @@ bool MCNumberNegate(MCNumberRef x, MCNumberRef& r_y)
 
 ////
 
-static inline bool double_add(double x, double y, MCNumberRef& r_z)
+static inline bool double_add(double x, double y, __MCNumber& r_z)
 {
-    return MCNumberCreateWithReal(x + y, r_z);
+    __MCNumberAssignDouble(r_z, x + y);
+    return true;
 }
 
-static inline bool unsigned_add(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, MCNumberRef& r_z)
+static inline bool unsigned_add(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, __MCNumber& r_z)
 {
     MCNumberUnsignedInteger uz;
     if (LIKELY(__checked_unsigned_add(x, y, &uz)))
-        return MCNumberCreateWithUnsignedInteger(uz, r_z);
+    {
+        __MCNumberAssignUnsigned(r_z, uz);
+        return true;
+    }
     
     return false;
 }
 
-static inline bool signed_add(MCNumberSignedInteger x, MCNumberSignedInteger y, MCNumberRef& r_z)
+static inline bool signed_add(MCNumberSignedInteger x, MCNumberSignedInteger y, __MCNumber& r_z)
 {
     MCNumberSignedInteger sz;
     if (LIKELY(__checked_signed_add(x, y, &sz)))
-        return MCNumberCreateWithInteger(sz, r_z);
+    {
+        __MCNumberAssignUnsigned(r_z, sz);
+        return true;
+    }
     
     // If adding two signed numbers together fails, then the only case which
     // can succeed is if they are both non-negative.
@@ -1405,26 +1439,33 @@ static inline bool signed_add(MCNumberSignedInteger x, MCNumberSignedInteger y, 
 
 ////
 
-static inline bool double_subtract(double x, double y, MCNumberRef& r_z)
+static inline bool double_subtract(double x, double y, __MCNumber& r_z)
 {
-    return MCNumberCreateWithReal(x - y, r_z);
+    __MCNumberAssignDouble(r_z, x - y);
+    return true;
 }
 
-static inline bool unsigned_subtract(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, MCNumberRef& r_z)
+static inline bool unsigned_subtract(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, __MCNumber& r_z)
 {
     MCNumberUnsignedInteger uz;
     if (LIKELY(__checked_unsigned_subtract(x, y, &uz)))
-        return MCNumberCreateWithUnsignedInteger(uz, r_z);
+    {
+        __MCNumberAssignUnsigned(r_z, uz);
+        return true;
+    }
     
     // If the above failed, then x < y.
     uz = y - x;
     if (LIKELY(uz <= __negate_negative_signed(kMCNumberSignedIntegerMin)))
-        return MCNumberCreateWithInteger(-uz, r_z);
+    {
+        __MCNumberAssignSigned(r_z, -uz);
+        return true;
+    }
     
     return false;
 }
 
-static inline bool signed_subtract(MCNumberSignedInteger x, MCNumberSignedInteger y, MCNumberRef& r_z)
+static inline bool signed_subtract(MCNumberSignedInteger x, MCNumberSignedInteger y, __MCNumber& r_z)
 {
     // If x is >= 0 and y is >= 0 then there can be no overflow
     // If x is >= 0 and y is < 0 then there could be overflow but it will be representable
@@ -1432,7 +1473,10 @@ static inline bool signed_subtract(MCNumberSignedInteger x, MCNumberSignedIntege
     // If x is < 0 and y is < 0 then if there is overflow it is representable
     MCNumberSignedInteger sz;
     if (LIKELY(__checked_signed_subtract(x, y, &sz)))
-        return MCNumberCreateWithInteger(sz, r_z);
+    {
+        __MCNumberAssignSigned(r_z, sz);
+        return true;
+    }
     
     // If x >= 0 then y < 0.
     if (LIKELY(x >= 0))
@@ -1447,25 +1491,32 @@ static inline bool signed_subtract(MCNumberSignedInteger x, MCNumberSignedIntege
 
 ////
 
-static inline bool double_multiply(double x, double y, MCNumberRef& r_z)
+static inline bool double_multiply(double x, double y, __MCNumber& r_z)
 {
-    return MCNumberCreateWithReal(x * y, r_z);
+    __MCNumberAssignDouble(r_z, x * y);
+    return true;
 }
 
-static inline bool unsigned_multiply(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, MCNumberRef& r_z)
+static inline bool unsigned_multiply(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, __MCNumber& r_z)
 {
     MCNumberUnsignedInteger uz;
     if (LIKELY(__checked_unsigned_multiply(x, y, &uz)))
-        return MCNumberCreateWithUnsignedInteger(uz, r_z);
+    {
+        __MCNumberAssignUnsigned(r_z, uz);
+        return true;
+    }
 
     return false;
 }
 
-static inline bool signed_multiply(MCNumberSignedInteger x, MCNumberSignedInteger y, MCNumberRef& r_z)
+static inline bool signed_multiply(MCNumberSignedInteger x, MCNumberSignedInteger y, __MCNumber& r_z)
 {
     MCNumberSignedInteger sz;
     if (LIKELY(__checked_signed_multiply(x, y, &sz)))
-        return MCNumberCreateWithInteger(sz, r_z);
+    {
+        __MCNumberAssignSigned(r_z, sz);
+        return true;
+    }
     
     if (LIKELY(x >= 0 && y >= 0))
         return unsigned_multiply(x, y, r_z);
@@ -1478,45 +1529,64 @@ static inline bool signed_multiply(MCNumberSignedInteger x, MCNumberSignedIntege
 
 ////
 
-static inline bool double_div(double x, double y, MCNumberRef& r_z)
+static inline bool double_divide(double x, double y, __MCNumber& r_z)
 {
-    return MCNumberCreateWithReal(__flooring_real_div(x, y), r_z);
+    __MCNumberAssignDouble(r_z, x / y);
+    return true;
 }
 
-static inline bool unsigned_div(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, MCNumberRef& r_z)
+////
+
+static inline bool double_div(double x, double y, __MCNumber& r_z)
+{
+    __MCNumberAssignDouble(r_z, __flooring_real_div(x, y));
+    return true;
+}
+
+static inline bool unsigned_div(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, __MCNumber& r_z)
 {
     if (y == 0)
         return false;
     
-    return MCNumberCreateWithUnsignedInteger(x / y, r_z);
+    __MCNumberAssignUnsigned(r_z, x / y);
+    
+    return true;
 }
 
-static inline bool signed_div(MCNumberSignedInteger x, MCNumberSignedInteger y, MCNumberRef& r_z)
+static inline bool signed_div(MCNumberSignedInteger x, MCNumberSignedInteger y, __MCNumber& r_z)
 {
     if (y == 0)
         return false;
     
     if (y == -1 && x == kMCNumberSignedIntegerMin)
-        return MCNumberCreateWithUnsignedInteger(__negate_negative_signed(kMCNumberSignedIntegerMin), r_z);
+    {
+        __MCNumberAssignUnsigned(r_z, __negate_negative_signed(kMCNumberSignedIntegerMin));
+        return true;
+    }
     
-    return MCNumberCreateWithInteger(x / y, r_z);
+    __MCNumberAssignSigned(r_z, x / y);
+    
+    return true;
 }
 
 ////
 
-static inline bool double_mod(double x, double y, MCNumberRef& r_z)
+static inline bool double_mod(double x, double y, __MCNumber& r_z)
 {
-    return MCNumberCreateWithReal(__flooring_real_mod(x, y), r_z);
+    __MCNumberAssignDouble(r_z, __flooring_real_mod(x, y));
+    return true;
 }
 
-static inline bool unsigned_mod(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, MCNumberRef& r_z)
+static inline bool unsigned_mod(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, __MCNumber& r_z)
 {
-    return MCNumberCreateWithUnsignedInteger(x % y, r_z);
+    __MCNumberAssignUnsigned(r_z, x % y);
+    return true;
 }
 
-static inline bool signed_mod(MCNumberSignedInteger x, MCNumberSignedInteger y, MCNumberRef& r_z)
+static inline bool signed_mod(MCNumberSignedInteger x, MCNumberSignedInteger y, __MCNumber& r_z)
 {
-    return MCNumberCreateWithInteger(__flooring_integral_mod(x, y), r_z);
+    __MCNumberAssignSigned(r_z, __flooring_integral_mod(x, y));
+    return true;
 }
 
 
@@ -1524,62 +1594,66 @@ static inline bool signed_mod(MCNumberSignedInteger x, MCNumberSignedInteger y, 
 
 bool MCNumberAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
+    // Create a raw number this will be initialize to 0 signed int.
+    if (!__MCNumberCreate(r_z))
+        return false;
+    
     switch(__MCNumberComputeBinaryType(x, y))
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
-            if (LIKELY(signed_add(x -> integer, y -> integer, r_z)))
+            if (LIKELY(signed_add(x -> integer, y -> integer, *r_z)))
                 return true;
 
-            return double_add(x -> integer, y -> integer, r_z);
+            return double_add(x -> integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
             if (LIKELY(x -> integer >= 0))
             {
-                if (LIKELY(unsigned_add(x -> integer, y -> unsigned_integer, r_z)))
+                if (LIKELY(unsigned_add(x -> integer, y -> unsigned_integer, *r_z)))
                     return true;
             }
             else
             {
-                if (LIKELY(unsigned_subtract(y -> integer, __negate_negative_signed(x -> integer), r_z)))
+                if (LIKELY(unsigned_subtract(y -> integer, __negate_negative_signed(x -> integer), *r_z)))
                     return true;
             }
             
-            return double_add(x -> integer, y -> unsigned_integer, r_z);
+            return double_add(x -> integer, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
             if (LIKELY(y -> integer >= 0))
             {
-                if (LIKELY(unsigned_add(x -> unsigned_integer, y -> integer, r_z)))
+                if (LIKELY(unsigned_add(x -> unsigned_integer, y -> integer, *r_z)))
                     return true;
             }
             else
             {
-                if (LIKELY(unsigned_subtract(x -> unsigned_integer, __negate_negative_signed(x -> integer), r_z)))
+                if (LIKELY(unsigned_subtract(x -> unsigned_integer, __negate_negative_signed(x -> integer), *r_z)))
                     return true;
             }
             
-            return double_add(x -> unsigned_integer, y -> integer, r_z);
+            return double_add(x -> unsigned_integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
-            if (LIKELY(unsigned_add(x -> unsigned_integer, y -> unsigned_integer, r_z)))
+            if (LIKELY(unsigned_add(x -> unsigned_integer, y -> unsigned_integer, *r_z)))
                 return true;
             
-            return double_add(x -> unsigned_integer, y -> integer, r_z);
+            return double_add(x -> unsigned_integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
-            return double_add(x -> integer, y -> real, r_z);
+            return double_add(x -> integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
-            return double_add(x -> unsigned_integer, y -> real, r_z);
+            return double_add(x -> unsigned_integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
-            return double_add(x -> real, y -> integer, r_z);
+            return double_add(x -> real, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
-            return double_add(x -> real, y -> unsigned_integer, r_z);
+            return double_add(x -> real, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByDouble:
-            return double_add(x -> real, y -> real, r_z);
+            return double_add(x -> real, y -> real, *r_z);
             
         default:
             MCUnreachable();
@@ -1591,57 +1665,61 @@ bool MCNumberAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 
 bool MCNumberSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
+    // Create a raw number this will be initialize to 0 signed int.
+    if (!__MCNumberCreate(r_z))
+        return false;
+    
     switch(__MCNumberComputeBinaryType(x, y))
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
-            if (LIKELY(signed_subtract(x -> integer, y -> integer, r_z)))
+            if (LIKELY(signed_subtract(x -> integer, y -> integer, *r_z)))
                 return true;
 
-            return double_subtract(x -> integer, y -> integer, r_z);
+            return double_subtract(x -> integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
             if (LIKELY(x -> integer >= 0))
             {
-                if (LIKELY(unsigned_subtract(x -> integer, y -> unsigned_integer, r_z)))
+                if (LIKELY(unsigned_subtract(x -> integer, y -> unsigned_integer, *r_z)))
                     return true;
             }
             
-            return double_subtract(x -> integer, y -> unsigned_integer, r_z);
+            return double_subtract(x -> integer, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
             if (LIKELY(y -> integer >= 0))
             {
-                if (LIKELY(unsigned_subtract(x -> unsigned_integer, y -> integer, r_z)))
+                if (LIKELY(unsigned_subtract(x -> unsigned_integer, y -> integer, *r_z)))
                     return true;
             }
             else
             {
-                if (LIKELY(unsigned_add(x -> unsigned_integer, __negate_negative_signed(y -> integer), r_z)))
+                if (LIKELY(unsigned_add(x -> unsigned_integer, __negate_negative_signed(y -> integer), *r_z)))
                     return true;
             }
             
-            return double_subtract(x -> unsigned_integer, y -> integer, r_z);
+            return double_subtract(x -> unsigned_integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
-            if (LIKELY(unsigned_subtract(x -> unsigned_integer, y -> unsigned_integer, r_z)))
+            if (LIKELY(unsigned_subtract(x -> unsigned_integer, y -> unsigned_integer, *r_z)))
                 return true;
             
-            return double_subtract(x -> unsigned_integer, y -> integer, r_z);
+            return double_subtract(x -> unsigned_integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
-            return double_subtract(x -> integer, y -> real, r_z);
+            return double_subtract(x -> integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
-            return double_subtract(x -> unsigned_integer, y -> real, r_z);
+            return double_subtract(x -> unsigned_integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
-            return double_subtract(x -> real, y -> integer, r_z);
+            return double_subtract(x -> real, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
-            return double_subtract(x -> real, y -> unsigned_integer, r_z);
+            return double_subtract(x -> real, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByDouble:
-            return double_subtract(x -> real, y -> real, r_z);
+            return double_subtract(x -> real, y -> real, *r_z);
             
         default:
             MCUnreachable();
@@ -1653,63 +1731,67 @@ bool MCNumberSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 
 bool MCNumberMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
+    // Create a raw number this will be initialize to 0 signed int.
+    if (!__MCNumberCreate(r_z))
+        return false;
+    
     switch(__MCNumberComputeBinaryType(x, y))
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
-            if (LIKELY(signed_multiply(x -> integer, y -> integer, r_z)))
+            if (LIKELY(signed_multiply(x -> integer, y -> integer, *r_z)))
                 return true;
             
             if (x -> integer >= 0 && y -> integer >= 0)
             {
-                if (LIKELY(unsigned_multiply(x -> integer, y -> integer, r_z)))
+                if (LIKELY(unsigned_multiply(x -> integer, y -> integer, *r_z)))
                     return true;
             }
             else if (x -> integer < 0 && y -> integer < 0)
             {
-                if (LIKELY(unsigned_multiply(__negate_negative_signed(x -> integer), __negate_negative_signed(y -> integer), r_z)))
+                if (LIKELY(unsigned_multiply(__negate_negative_signed(x -> integer), __negate_negative_signed(y -> integer), *r_z)))
                     return true;
             }
                 
-            return double_multiply(x -> integer, y -> integer, r_z);
+            return double_multiply(x -> integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
             if (LIKELY(x -> integer >= 0))
             {
-                if (LIKELY(unsigned_multiply(x -> integer, y -> unsigned_integer, r_z)))
+                if (LIKELY(unsigned_multiply(x -> integer, y -> unsigned_integer, *r_z)))
                     return true;
             }
             
-            return double_multiply(x -> integer, y -> unsigned_integer, r_z);
+            return double_multiply(x -> integer, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
             if (LIKELY(y -> integer >= 0))
             {
-                if (LIKELY(unsigned_multiply(x -> unsigned_integer, y -> integer, r_z)))
+                if (LIKELY(unsigned_multiply(x -> unsigned_integer, y -> integer, *r_z)))
                     return true;
             }
                 
-            return double_multiply(x -> integer, y -> unsigned_integer, r_z);
+            return double_multiply(x -> integer, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
-            if (LIKELY(unsigned_multiply(x -> unsigned_integer, y -> unsigned_integer, r_z)))
+            if (LIKELY(unsigned_multiply(x -> unsigned_integer, y -> unsigned_integer, *r_z)))
                 return true;
             
-            return double_multiply(x -> unsigned_integer, y -> integer, r_z);
+            return double_multiply(x -> unsigned_integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
-            return double_multiply(x -> integer, y -> real, r_z);
+            return double_multiply(x -> integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
-            return double_multiply(x -> unsigned_integer, y -> real, r_z);
+            return double_multiply(x -> unsigned_integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
-            return double_multiply(x -> real, y -> integer, r_z);
+            return double_multiply(x -> real, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
-            return double_multiply(x -> real, y -> unsigned_integer, r_z);
+            return double_multiply(x -> real, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByDouble:
-            return double_multiply(x -> real, y -> real, r_z);
+            return double_multiply(x -> real, y -> real, *r_z);
             
         default:
             MCUnreachable();
@@ -1721,27 +1803,31 @@ bool MCNumberMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 
 bool MCNumberDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
+    // Create a raw number this will be initialize to 0 signed int.
+    if (!__MCNumberCreate(r_z))
+        return false;
+    
     // We special case '/' as it always produces a real result.
     switch(__MCNumberComputeBinaryType(x, y))
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
-            return double_divide(x -> integer, y -> integer, r_z);
+            return double_divide(x -> integer, y -> integer, *r_z);
         case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
-            return double_divide(x -> integer, y -> unsigned_integer, r_z);
+            return double_divide(x -> integer, y -> unsigned_integer, *r_z);
         case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
-            return double_divide(x -> integer, y -> real, r_z);
+            return double_divide(x -> integer, y -> real, *r_z);
         case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
-            return double_divide(x -> unsigned_integer, y -> integer, r_z);
+            return double_divide(x -> unsigned_integer, y -> integer, *r_z);
         case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
-            return double_divide(x -> unsigned_integer, y -> unsigned_integer, r_z);
+            return double_divide(x -> unsigned_integer, y -> unsigned_integer, *r_z);
         case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
-            return double_divide(x -> unsigned_integer, y -> real, r_z);
+            return double_divide(x -> unsigned_integer, y -> real, *r_z);
         case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
-            return double_divide(x -> real, y -> integer, r_z);
+            return double_divide(x -> real, y -> integer, *r_z);
         case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
-            return double_divide(x -> real, y -> unsigned_integer, r_z);
+            return double_divide(x -> real, y -> unsigned_integer, *r_z);
         case __kMCNumberBinaryOpTypeDoubleByDouble:
-            return double_divide(x -> real, y -> real, r_z);
+            return double_divide(x -> real, y -> real, *r_z);
         default:
             MCUnreachable();
             break;
@@ -1752,14 +1838,18 @@ bool MCNumberDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 
 bool MCNumberDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
+    // Create a raw number this will be initialize to 0 signed int.
+    if (!__MCNumberCreate(r_z))
+        return false;
+    
     switch(__MCNumberComputeBinaryType(x, y))
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
-            if (LIKELY(signed_div(x -> integer, y -> integer, r_z)))
+            if (LIKELY(signed_div(x -> integer, y -> integer, *r_z)))
                 return true;
             
             // We only get here is y -> integer == 0.
-            return double_div(x -> integer, y -> integer, r_z);
+            return double_div(x -> integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
             // Unsigneds > signeds so result is always zero.
@@ -1767,31 +1857,31 @@ bool MCNumberDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
             return true;
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
-            if (LIKELY(unsigned_div_signed(x -> unsigned_integer, y -> integer, r_z)))
+            if (LIKELY(unsigned_div_signed(x -> unsigned_integer, y -> integer, *r_z)))
                     return true;
             
-            return double_div(x -> integer, y -> unsigned_integer, r_z);
+            return double_div(x -> integer, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
-            if (LIKELY(unsigned_div(x -> unsigned_integer, y -> unsigned_integer, r_z)))
+            if (LIKELY(unsigned_div(x -> unsigned_integer, y -> unsigned_integer, *r_z)))
                 return true;
             
-            return double_div(x -> unsigned_integer, y -> integer, r_z);
+            return double_div(x -> unsigned_integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
-            return double_div(x -> integer, y -> real, r_z);
+            return double_div(x -> integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
-            return double_div(x -> unsigned_integer, y -> real, r_z);
+            return double_div(x -> unsigned_integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
-            return double_div(x -> real, y -> integer, r_z);
+            return double_div(x -> real, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
-            return double_div(x -> real, y -> unsigned_integer, r_z);
+            return double_div(x -> real, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByDouble:
-            return double_div(x -> real, y -> real, r_z);
+            return double_div(x -> real, y -> real, *r_z);
             
         default:
             MCUnreachable();
@@ -1803,46 +1893,50 @@ bool MCNumberDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 
 bool MCNumberMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
+    // Create a raw number this will be initialize to 0 signed int.
+    if (!__MCNumberCreate(r_z))
+        return false;
+    
     switch(__MCNumberComputeBinaryType(x, y))
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
-            if (LIKELY(signed_mod(x -> integer, y -> integer, r_z)))
+            if (LIKELY(signed_mod(x -> integer, y -> integer, *r_z)))
                 return true;
             
             // We only get here is y -> integer == 0.
-            return double_div(x -> integer, y -> integer, r_z);
+            return double_div(x -> integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
-            // Unsigneds > signeds so result is always zero.
+            // Unsigneds > signeds so result is always x.
             r_z = MCValueRetain(kMCIntegerZero);
             return true;
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
-            if (LIKELY(unsigned_div_signed(x -> unsigned_integer, y -> integer, r_z)))
+            if (LIKELY(unsigned_div_signed(x -> unsigned_integer, y -> integer, *r_z)))
                 return true;
             
-            return double_div(x -> integer, y -> unsigned_integer, r_z);
+            return double_div(x -> integer, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByUnsignedInteger:
-            if (LIKELY(unsigned_div(x -> unsigned_integer, y -> unsigned_integer, r_z)))
+            if (LIKELY(unsigned_div(x -> unsigned_integer, y -> unsigned_integer, *r_z)))
                 return true;
             
-            return double_div(x -> unsigned_integer, y -> integer, r_z);
+            return double_div(x -> unsigned_integer, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeSignedIntegerByDouble:
-            return double_div(x -> integer, y -> real, r_z);
+            return double_div(x -> integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerByDouble:
-            return double_div(x -> unsigned_integer, y -> real, r_z);
+            return double_div(x -> unsigned_integer, y -> real, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleBySignedInteger:
-            return double_div(x -> real, y -> integer, r_z);
+            return double_div(x -> real, y -> integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByUnsignedInteger:
-            return double_div(x -> real, y -> unsigned_integer, r_z);
+            return double_div(x -> real, y -> unsigned_integer, *r_z);
             
         case __kMCNumberBinaryOpTypeDoubleByDouble:
-            return double_div(x -> real, y -> real, r_z);
+            return double_div(x -> real, y -> real, *r_z);
             
         default:
             MCUnreachable();
