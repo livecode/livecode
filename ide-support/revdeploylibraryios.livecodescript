@@ -1,4 +1,4 @@
-﻿script "revDeployLibraryIOS"
+script "revDeployLibraryIOS"
 ////////////////////////////////////////////////////////////////////////////////
 
 local sDeploySimulators
@@ -44,11 +44,15 @@ end deployIsAvailable
 function deployListTargets
    local tTargets
    
+   -- SN-2015-02-17: [[ iOS Simulators Change ]] We only accept the simulators
+   --  from the following list (which are the ones we provide engines for)
+   put "6.1,7.1,8.1" into tSimulatorsAvailable
+
    repeat for each key tKey in sDeploySimulators
-      if tKey >= "4.2" then
+      if tKey is among the items of tSimulatorsAvailable then
          put "iPad Simulator" && tKey & return after tTargets
       end if
-      if tKey >= "4.0" then
+      if tKey is among the items of tSimulatorsAvailable then
          put "iPhone Simulator" && tKey & return after tTargets
       end if
    end repeat
