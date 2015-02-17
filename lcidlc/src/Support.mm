@@ -480,7 +480,7 @@ static LCError LCValueArrayToObjcArray(MCVariableRef src, NSArray*& r_dst)
 	uint32_t t_count;
 	t_count = 0;
 	if (t_error == kLCErrorNone)
-		t_count = s_interface -> variable_count_keys(src, &t_count);
+		t_error = (LCError)s_interface -> variable_count_keys(src, &t_count);
 	
 	id *t_objects;
 	t_objects = nil;
@@ -535,15 +535,26 @@ static LCError LCValueArrayFromObjcArray(MCVariableRef var, NSArray *src)
 	t_error = kLCErrorNone;
 	
 	for(unsigned int t_index = 0; t_index < [src count] && t_error == kLCErrorNone; t_index++)
-	{
-		char t_key[12];
+    {
+        // SN-2015-02-17: [[ ExternalsApiV6 ]] Fix issues on index string creation:
+        //   - needs a dynamically allocated t_key,
+        //   - needs to pass the pointer to this key to variable_lookup_key
+        //   - sprintf format should be "%u", not "%ud"
+        char *t_key = nil;
+        t_key = new char[12];
+        
+        if (t_key == nil)
+            t_error = kLCErrorOutOfMemory;
+        
 		if (t_error == kLCErrorNone)
-			sprintf(t_key, "%ud", t_index + 1);
+			sprintf(t_key, "%u", t_index + 1);
 		
 		MCVariableRef t_value;
 		if (t_error == kLCErrorNone)
-			t_error = (LCError)s_interface -> variable_lookup_key(var, kMCOptionAsCString, t_key, true, &t_value);
+			t_error = (LCError)s_interface -> variable_lookup_key(var, kMCOptionAsCString, (void*)&t_key, true, &t_value);
 		
+        delete[] t_key;
+        
 		if (t_error == kLCErrorNone)
 			t_error = LCValueArrayValueFromObjcValue(t_value, [src objectAtIndex: t_index]);
 	}
@@ -559,7 +570,7 @@ static LCError LCValueArrayToObjcDictionary(MCVariableRef src, NSDictionary*& r_
 	uint32_t t_count;
 	t_count = 0;
 	if (t_error == kLCErrorNone)
-		t_count = s_interface -> variable_count_keys(src, &t_count);
+        t_error = (LCError)s_interface -> variable_count_keys(src, &t_count);
 	
 	id *t_keys, *t_values;
 	t_keys = t_values = nil;
