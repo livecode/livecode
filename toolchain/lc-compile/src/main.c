@@ -107,22 +107,22 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: lc-compile {--modulepath PATH} --output OUTFILE [--manifest MANIFEST] [--] MLCFILE\n"
-"       lc-compile {--modulepath PATH} --outputc OUTFILE [--manifest MANIFEST] [--] MLCFILE\n"
+"Usage: lc-compile [OPTION ...] -o OUTFILE [--] LCBFILE\n"
+"       lc-compile [OPTION ...] --outputc OUTFILE [--] LCBFILE\n"
 "\n"
-"Compile a Modular LiveCode source file.\n"
+"Compile a LiveCode Builder source file.\n"
 "\n"
 "Options:\n"
-"  --modulepath PATH    Path to directory containing module interface files.\n"
-"  --output  OUTFILE    Filename for bytecode output.\n"
-"  --outputc OUTFILE    Filename for C source code output.\n"
-"  --manifest MANIFEST  Filename for generated manifest.\n"
-"  -h, --help           Print this message.\n"
-"  --                   Treat all remaining arguments as filenames.\n"
+"  -I, --modulepath PATH    Search PATH for module interface files.\n"
+"  -o, --output OUTFILE     Filename for bytecode output.\n"
+"      --outputc OUTFILE    Filename for C source code output.\n"
+"      --manifest MANIFEST  Filename for generated manifest.\n"
+"  -h, --help               Print this message.\n"
+"  --                       Treat all remaining arguments as filenames.\n"
 "\n"
-"More than one `--modulepath' option may be specified. They are searched in\n"
-"the order specified.  The first modulepath is used to output the interface\n"
-"file."
+"More than one `--modulepath' option may be specified.  The PATHs are\n"
+"searched in the order they appear.  An interface file may be generated in\n"
+"the first PATH specified.\n"
 "\n"
 "Report bugs to <http://quality.runrev.com/>\n"
             );
@@ -143,12 +143,14 @@ static void full_main(int argc, char *argv[])
         const char *optarg = (argi + 1 < argc) ? argv[argi+1] : NULL;
         if (!end_of_args)
         {
-            if (0 == strcmp(opt, "--modulepath") && optarg)
+	        if ((0 == strcmp(opt, "--modulepath") || 0 == strcmp(opt, "-I")) &&
+	            optarg)
             {
                 AddImportedModuleDir(argv[++argi]);
                 continue;
             }
-            if (0 == strcmp(opt, "--output") && optarg)
+            if ((0 == strcmp(opt, "--output") || 0 == strcmp(opt, "-o")) &&
+                optarg)
             {
                 SetOutputFile(argv[++argi]);
                 continue;
