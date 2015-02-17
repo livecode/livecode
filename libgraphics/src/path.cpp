@@ -694,17 +694,13 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 				break;
 				
 			case SkPath::kLine_Verb:
+				// Don't call callback for implicit lineto from close command
 				if (t_iter.isCloseLine())
-				{
-					t_command = kMCGPathCommandCloseSubpath;
-					t_point_count = 0;
-				}
-				else
-				{
-					t_command = kMCGPathCommandLineTo;
-					t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
-					t_point_count = 1;
-				}
+					continue;
+				
+				t_command = kMCGPathCommandLineTo;
+				t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
+				t_point_count = 1;
 				break;
 				
 			case SkPath::kQuad_Verb:
@@ -720,6 +716,11 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 				t_points[1] = MCGPointFromSkPoint(t_sk_points[1]);
 				t_points[2] = MCGPointFromSkPoint(t_sk_points[2]);
 				t_point_count = 3;
+				break;
+				
+			case SkPath::kClose_Verb:
+				t_command = kMCGPathCommandCloseSubpath;
+				t_point_count = 0;
 				break;
 				
 			default:

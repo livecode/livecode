@@ -2965,6 +2965,7 @@ void MCCanvasPathMakeEmpty(MCCanvasPathRef &r_path)
 struct MCCanvasPathSVGParseContext
 {
 	MCGPathRef path;
+	MCGPoint first_point;
 	MCGPoint last_point;
 	MCGPoint last_control;
 	MCSVGPathCommand last_command;
@@ -2982,14 +2983,17 @@ bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, f
 		{
 			MCGPoint t_point;
 			t_point = MCGPointMake(p_params[0], p_params[1]);
+			if (p_command == kMCSVGPathRelativeMoveTo)
+				t_point = MCGPointRelativeToAbsolute(t_context->last_point, t_point);
 			MCGPathMoveTo(t_context->path, t_point);
-			t_context->last_point = t_point;
+			t_context->last_point = t_context->first_point = t_point;
 			break;
 		}
 			
 		case kMCSVGPathClose:
 		case kMCSVGPathRelativeClose:
 			MCGPathCloseSubpath(t_context->path);
+			t_context->last_point = t_context->first_point;
 			break;
 			
 		case kMCSVGPathLineTo:
@@ -3131,8 +3135,8 @@ bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, f
 		}
 			
 		default:
-			MCAssert(false);
-			
+			MCUnreachable();
+			break;
 	}
 	
 	t_context->last_command = p_command;
