@@ -2939,34 +2939,34 @@ MCSysModuleHandle MCU_loadmodule(const char *p_module)
     if (t_handle != nil)
         return t_handle;
     // MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
-    if (t_handle == NULL)
+    uint32_t t_buffer_size;
+    t_buffer_size = 0;
+    _NSGetExecutablePath(NULL, &t_buffer_size);
+    char *t_module_path;
+    t_module_path = (char *) malloc(t_buffer_size + strlen(p_module) + 1);
+    if (t_module_path != NULL)
     {
-        uint32_t t_buffer_size;
-        t_buffer_size = 0;
-        _NSGetExecutablePath(NULL, &t_buffer_size);
-        char *t_module_path;
-        t_module_path = (char *) malloc(t_buffer_size + strlen(p_module) + 1);
-        if (t_module_path != NULL)
+        if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
         {
-            if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
+            char *t_last_slash;
+            t_last_slash = t_module_path + t_buffer_size;
+            for (uint32_t i = 0; i < t_buffer_size; i++)
             {
-                char *t_last_slash;
-                t_last_slash = t_module_path + t_buffer_size;
-                for (uint32_t i = 0; i < t_buffer_size; i++)
+                if (*t_last_slash == '/')
                 {
-                    if (*t_last_slash == '/')
-                    {
-                        *(t_last_slash + 1) = '\0';
-                        break;
-                    }
-                    t_last_slash--;
+                    *(t_last_slash + 1) = '\0';
+                    break;
                 }
-                strcat(t_module_path, p_module);
-                t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+                t_last_slash--;
             }
-            free(t_module_path);
-        }    
-    }    
+            strcat(t_module_path, p_module);
+            t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+        }
+        free(t_module_path);
+        // AL-2015-02-17: [[ SB Inclusions ]] Return the handle if found here.
+        if (t_handle != nil)
+            return t_handle;
+    }
 #endif
 
     char *t_path;

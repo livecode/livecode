@@ -3457,7 +3457,8 @@ function revDatabaseDriverBuildList
    
    local tList
    put empty into tList
-   repeat for each item tExternal in "MySQL dbmysql,ODBC odbc,PostgreSQL postgresql,SqLite sqlite,Oracle oracle"
+   // AL-2015-02-17: [[ SB Inclusions ]] Ensure mysql module name is standard (was dbmysql)
+   repeat for each item tExternal in "MySQL mysql,ODBC odbc,PostgreSQL postgresql,SqLite sqlite,Oracle oracle"
       get lineOffset(word 1 of tExternal, the externals of stack "Home")
       if it is not 0 then
          set the itemDelimiter to slash
