@@ -34,6 +34,7 @@ SCRIPT_SRC_FILES = \
 	src/module-char.cpp \
 	src/module-date.cpp \
 	src/module-encoding.cpp \
+	src/module-foreign.cpp \
 	src/module-file.cpp \
 	src/module-list.cpp \
 	src/module-logic.cpp \
@@ -54,6 +55,7 @@ SCRIPT_SRC_FILES = \
 	$(DERIVED_SRC)/char.mlc.c \
 	$(DERIVED_SRC)/date.mlc.c \
 	$(DERIVED_SRC)/file.mlc.c \
+	$(DERIVED_SRC)/foreign.mlc.c \
 	$(DERIVED_SRC)/item.mlc.c \
 	$(DERIVED_SRC)/line.mlc.c \
 	$(DERIVED_SRC)/list.mlc.c \

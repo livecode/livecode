@@ -145,7 +145,17 @@ bool __MCForeignValueIsEqualTo(__MCForeignValue *self, __MCForeignValue *other_s
 
 bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_description)
 {
-    return false;
+	MCTypeInfoRef t_resolved_typeinfo;
+	t_resolved_typeinfo = __MCTypeInfoResolve(self->typeinfo);
+
+	bool (*t_describe_func)(void *, MCStringRef &);
+	t_describe_func = t_resolved_typeinfo->foreign.descriptor.describe;
+
+	if (NULL != t_describe_func)
+		return t_describe_func (MCForeignValueGetContentsPtr (self),
+		                        r_description);
+	else
+		return MCStringFormat(r_description, "<foreign: %p>", self);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -312,6 +322,53 @@ static bool __double_export(MCValueRef value, bool release, void *contents)
     return true;
 }
 
+static bool
+__bool_describe (void *contents,
+                 MCStringRef & r_string)
+{
+	return MCStringCopy (MCSTR(*((bool *) contents) ? "<foreign true>" : "<foreign false>"), r_string);
+}
+
+static bool
+__int_describe (void *contents,
+                MCStringRef & r_string)
+{
+	return MCStringFormat (r_string, "<foreign integer %i>",
+	                       *((integer_t *) contents));
+}
+
+static bool
+__uint_describe (void *contents,
+                 MCStringRef & r_string)
+{
+	return MCStringFormat (r_string, "<foreign unsigned integer %u>",
+	                       *((uinteger_t *) contents));
+}
+
+static bool
+__float_describe (void *contents,
+                  MCStringRef & r_string)
+{
+	return MCStringFormat (r_string, "<foreign float %g>",
+	                       (double) *((float *) contents));
+}
+
+static bool
+__double_describe (void *contents,
+                   MCStringRef & r_string)
+{
+	return MCStringFormat (r_string, "<foreign double %g>",
+	                       *((double *) contents));
+}
+
+static bool
+__pointer_describe (void *contents,
+                    MCStringRef & r_string)
+{
+	return MCStringFormat (r_string, "<foreign pointer %p>",
+	                       *((void **) contents));
+}
+
 static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc, MCTypeInfoRef& r_typeinfo)
 {
     MCAutoStringRef t_name_string;
@@ -355,6 +412,7 @@ bool __MCForeignValueInitialize(void)
     d . hash = __bool_hash;
     d . doimport = __bool_import;
     d . doexport = __bool_export;
+    d . describe = __bool_describe;
     if (!__build_typeinfo("__builtin__.bool", &d, kMCBoolTypeInfo))
         return false;
     
@@ -373,6 +431,7 @@ bool __MCForeignValueInitialize(void)
     d . hash = __int_hash;
     d . doimport = __int_import;
     d . doexport = __int_export;
+    d . describe = __int_describe;
     if (!__build_typeinfo("__builtin__.int", &d, kMCIntTypeInfo))
         return false;
     
@@ -391,6 +450,7 @@ bool __MCForeignValueInitialize(void)
     d . hash = __int_hash;
     d . doimport = __uint_import;
     d . doexport = __uint_export;
+    d . describe = __uint_describe;
     if (!__build_typeinfo("__builtin__.uint", &d, kMCUIntTypeInfo))
         return false;
     
@@ -409,6 +469,7 @@ bool __MCForeignValueInitialize(void)
     d . hash = __float_hash;
     d . doimport = __float_import;
     d . doexport = __float_export;
+    d . describe = __float_describe;
     if (!__build_typeinfo("__builtin__.float", &d, kMCFloatTypeInfo))
         return false;
     
@@ -427,6 +488,7 @@ bool __MCForeignValueInitialize(void)
     d . hash = __double_hash;
     d . doimport = __double_import;
     d . doexport = __double_export;
+    d . describe = __double_describe;
     if (!__build_typeinfo("__builtin__.double", &d, kMCDoubleTypeInfo))
         return false;
     
@@ -445,6 +507,7 @@ bool __MCForeignValueInitialize(void)
     d . hash = __pointer_hash;
     d . doimport = nil;
     d . doexport = nil;
+    d . describe = __pointer_describe;
     if (!__build_typeinfo("__builtin__.pointer", &d, kMCPointerTypeInfo))
         return false;
     

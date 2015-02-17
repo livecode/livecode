@@ -41,6 +41,7 @@
     MakeNameLiteral
     GetStringOfNameLiteral
     IsNameEqualToString
+    IsStringEqualToString
 
     InitializeScopes
     FinalizeScopes
@@ -90,6 +91,7 @@
     RepeatSyntaxGrammar
     PushEmptySyntaxGrammar
     PushKeywordSyntaxGrammar
+    PushUnreservedKeywordSyntaxGrammar
     PushMarkedDescentSyntaxGrammar
     PushDescentSyntaxGrammar
     PushMarkedTrueSyntaxGrammar
@@ -127,9 +129,12 @@
     EmitImportedHandler
     EmitImportedSyntax
     EmitTypeDefinition
+    EmitConstantDefinition
     EmitVariableDefinition
+    EmitContextVariableDefinition
     EmitBeginHandlerDefinition
     EmitEndHandlerDefinition
+    EmitBeginContextHandlerDefinition
     EmitForeignHandlerDefinition
     EmitPropertyDefinition
     EmitEventDefinition
@@ -197,19 +202,21 @@
     EmitContinueInvoke
     EmitEndInvoke
     EmitAssign
-    EmitAssignUndefined
-    EmitAssignTrue
-    EmitAssignFalse
-    EmitAssignInteger
-    EmitAssignReal
-    EmitAssignString
+    EmitAssignConstant
+    EmitUndefinedConstant
+    EmitTrueConstant
+    EmitFalseConstant
+    EmitIntegerConstant
+    EmitRealConstant
+    EmitStringConstant
+    EmitBeginListConstant
+    EmitContinueListConstant
+    EmitEndListConstant
     EmitBeginAssignList
     EmitContinueAssignList
     EmitEndAssignList
-    EmitFetchLocal
-    EmitStoreLocal
-    EmitFetchGlobal
-    EmitStoreGlobal
+    EmitFetch
+    EmitStore
     EmitReturn
     EmitReturnNothing
     EmitAttachRegisterToExpression
@@ -254,6 +261,7 @@
     Error_NotBoundToAVariable
     Error_NotBoundToAConstantSyntaxValue
     Error_NotBoundToAVariableOrHandler
+    Error_NotBoundToAConstantOrVariableOrHandler
     Error_TooManyArgumentsPassedToHandler
     Error_TooFewArgumentsPassedToHandler
     Error_HandlersBoundToSyntaxMustNotReturnAValue
@@ -280,7 +288,10 @@
     Error_ParameterMustHaveHighLevelType
     Error_VariableMustHaveHighLevelType
     Error_CannotAssignToHandlerId
+    Error_CannotAssignToConstantId
+    Error_ConstantsMustBeSimple
     Error_NonHandlerTypeVariablesCannotBeCalled
+    Warning_MetadataClausesShouldComeAfterUseClauses
 
 
 --------------------------------------------------------------------------------
@@ -313,11 +324,12 @@
 'action' MakeIntegerLiteral(Token: STRING -> Literal: INT)
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
-'condition' UnescapeStringLiteral(String: STRING -> UnescapedString: STRING)
+'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
 
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
+'condition' IsStringEqualToString(STRING, STRING)
 
 --------------------------------------------------------------------------------
 
@@ -383,6 +395,7 @@
 'action' RepeatSyntaxGrammar()
 'action' PushEmptySyntaxGrammar()
 'action' PushKeywordSyntaxGrammar(Token: STRING)
+'action' PushUnreservedKeywordSyntaxGrammar(Token: STRING)
 'action' PushMarkedDescentSyntaxGrammar(Index: INT, Rule: NAME, LMode: INT, RMode: INT)
 'action' PushDescentSyntaxGrammar(Rule: NAME)
 'action' PushMarkedTrueSyntaxGrammar(Index: INT)
@@ -438,8 +451,11 @@
 'action' EmitDefinitionIndex(-> Index: INT)
 
 'action' EmitTypeDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
+'action' EmitConstantDefinition(Index: INT, Position: POS, Name: NAME, ConstIndex: INT)
 'action' EmitVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
+'action' EmitContextVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, DefaultIndex: INT)
 'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
+'action' EmitBeginContextHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitEndHandlerDefinition()
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
 'action' EmitPropertyDefinition(Index: INT, Position: POS, Name: NAME, GetIndex: INT, SetIndex: INT)
@@ -515,20 +531,22 @@
 'action' EmitBeginInvoke(Index: INT, ContextRegister: INT, ResultRegister: INT)
 'action' EmitContinueInvoke(Register: INT)
 'action' EmitEndInvoke()
-'action' EmitAssignUndefined(Register: INT)
-'action' EmitAssignTrue(Register: INT)
-'action' EmitAssignFalse(Register: INT)
-'action' EmitAssignInteger(Register: INT, Value: INT)
-'action' EmitAssignReal(Register: INT, Value: DOUBLE)
-'action' EmitAssignString(Register: INT, Value: STRING)
+'action' EmitAssign(Dst: INT, Src: INT)
+'action' EmitAssignConstant(Register: INT, ConstIndex: INT)
+'action' EmitUndefinedConstant(-> ConstIndex: INT)
+'action' EmitTrueConstant(-> ConstIndex: INT)
+'action' EmitFalseConstant(-> ConstIndex: INT)
+'action' EmitIntegerConstant(Value: INT -> ConstIndex: INT)
+'action' EmitRealConstant(Value: DOUBLE -> ConstIndex: INT)
+'action' EmitStringConstant(Value: STRING -> ConstIndex: INT)
+'action' EmitBeginListConstant()
+'action' EmitContinueListConstant(ConstIndex: INT)
+'action' EmitEndListConstant(-> ConstIndex: INT)
 'action' EmitBeginAssignList(Register: INT)
 'action' EmitContinueAssignList(Register: INT)
 'action' EmitEndAssignList()
-'action' EmitAssign(Dst: INT, Src: INT)
-'action' EmitFetchLocal(Register: INT, Var: INT)
-'action' EmitStoreLocal(Register: INT, Var: INT)
-'action' EmitFetchGlobal(Register: INT, Var: INT)
-'action' EmitStoreGlobal(Register: INT, Var: INT)
+'action' EmitFetch(Register: INT, Var: INT, Level: INT)
+'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
 'action' EmitPosition(Position: POS)
@@ -581,6 +599,7 @@
 'action' Error_NotBoundToAHandler(Position: POS, Name: NAME)
 'action' Error_NotBoundToAVariable(Position: POS, Name: NAME)
 'action' Error_NotBoundToAVariableOrHandler(Position: POS, Name: NAME)
+'action' Error_NotBoundToAConstantOrVariableOrHandler(Position: POS, Name: NAME)
 
 'action' Error_NonAssignableExpressionUsedForOutContext(Position: POS)
 'action' Error_NonEvaluatableExpressionUsedForInContext(Position: POS)
@@ -612,6 +631,11 @@
 'action' Error_VariableMustHaveHighLevelType(Position: POS)
 
 'action' Error_CannotAssignToHandlerId(Position: POS, Identifier: NAME)
+'action' Error_CannotAssignToConstantId(Position: POS, Identifier: NAME)
 'action' Error_NonHandlerTypeVariablesCannotBeCalled(Position: POS)
+
+'action' Error_ConstantsMustBeSimple(Position: POS)
+
+'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 
 --------------------------------------------------------------------------------

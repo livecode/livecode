@@ -2122,7 +2122,8 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
     
     // PM-2014-12-17: [[ Bug 14233 ]] If an invalid filename is used then keep the previous dimensions of the player rect instead of displaying only the controller
-    if (t_movie_rect . height == 0 && t_movie_rect . width == 0)
+    // PM-2014-12-17: [[ Bug 14232 ]] Update the result in case a filename is invalid or the file is corrupted
+    if (hasinvalidfilename())
     {
         MCresult->sets("could not create movie reference");
         return False;
@@ -2180,10 +2181,6 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	setloudness();
 	
 	MCresult -> clear(False);
-    
-    // PM-2014-12-17: [[ Bug 14232 ]] Update the result in case a filename is invalid or the file is corrupted
-    if (hasinvalidfilename())
-        MCresult->sets("could not create movie reference");
 	
 	ok = True;
 	

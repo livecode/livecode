@@ -427,6 +427,11 @@ bool MCCanvasJoinStyleFromString(MCStringRef p_string, MCGJoinStyle &r_style);
 bool MCCanvasCapStyleToString(MCGCapStyle p_style, MCStringRef &r_string);
 bool MCCanvasCapStyleFromString(MCStringRef p_string, MCGCapStyle &r_style);
 
+MCCanvasFloat MCCanvasColorGetRed(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetGreen(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetBlue(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetAlpha(MCCanvasColorRef color);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCNameRef s_blend_mode_map[kMCGBlendModeCount];
@@ -504,8 +509,14 @@ static hash_t __MCCanvasRectangleHash(MCValueRef p_value)
 
 static bool __MCCanvasRectangleDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe rectangle
-	return false;
+	MCGRectangle t_rectangle;
+	MCCanvasRectangleGetMCGRectangle (static_cast<MCCanvasRectangleRef>(p_value), t_rectangle);
+
+	return MCStringFormat (r_desc, "<rectangle (%g, %g) - (%g, %g)>",
+	                       t_rectangle.origin.x,
+	                       t_rectangle.origin.y,
+	                       t_rectangle.origin.x + t_rectangle.size.width,
+	                       t_rectangle.origin.y + t_rectangle.size.height);
 }
 
 bool MCCanvasRectangleCreateWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rectangle)
@@ -717,8 +728,10 @@ static hash_t __MCCanvasPointHash(MCValueRef p_value)
 
 static bool __MCCanvasPointDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe point
-	return false;
+	MCGPoint t_point;
+	MCCanvasPointGetMCGPoint (static_cast<MCCanvasPointRef>(p_value), t_point);
+
+	return MCStringFormat (r_desc, "(%g, %g)", t_point.x, t_point.y);
 }
 
 bool MCCanvasPointCreateWithMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &r_point)
@@ -872,8 +885,19 @@ static hash_t __MCCanvasColorHash(MCValueRef p_value)
 
 static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+	MCCanvasColorRef t_color = static_cast<MCCanvasColorRef>(p_value);
+
+	if (1 <= MCCanvasColorGetAlpha (t_color)) /* Opaque case */
+		return MCStringFormat (r_desc, "<color: %g, %g, %g>",
+		                       MCCanvasColorGetRed (t_color),
+		                       MCCanvasColorGetGreen (t_color),
+		                       MCCanvasColorGetBlue (t_color));
+	else
+		return MCStringFormat (r_desc, "<color: %g, %g, %g, %g>",
+		                       MCCanvasColorGetRed (t_color),
+		                       MCCanvasColorGetGreen (t_color),
+		                       MCCanvasColorGetBlue (t_color),
+		                       MCCanvasColorGetAlpha (t_color));
 }
 
 //////////
@@ -1639,8 +1663,14 @@ static hash_t __MCCanvasImageHash(MCValueRef p_value)
 
 static bool __MCCanvasImageDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+	MCCanvasImageRef t_image = static_cast<MCCanvasImageRef>(p_value);
+
+	uint32_t t_width, t_height;
+	if (!MCImageRepGetGeometry(MCCanvasImageGetImageRep (t_image),
+	                           t_width, t_height))
+		return MCStringCopy (MCSTR("<image>"), r_desc);
+
+	return MCStringFormat(r_desc, "<image %ux%u>", t_width, t_height);
 }
 
 bool MCCanvasImageCreateWithImageRep(MCImageRep *p_image, MCCanvasImageRef &r_image)
@@ -1688,6 +1718,21 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	t_image_rep = nil;
 	
 	if (!MCImageGetFileRepForStackContext(p_path, MCwidgetobject->getstack(), t_image_rep))
+	{
+		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
+		return;
+	}
+	
+	MCCanvasImageMake(t_image_rep, r_image);
+	MCImageRepRelease(t_image_rep);
+}
+
+void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef &r_image)
+{
+	MCImageRep *t_image_rep;
+	t_image_rep = nil;
+	
+	if (!MCImageGetFileRepForResource(p_resource, t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
 		return;
@@ -5557,7 +5602,7 @@ bool MCCanvasCreateNamedErrorType(MCNameRef p_name, MCStringRef p_message, MCTyp
 
 bool MCCanvasThrowError(MCTypeInfoRef p_error_type)
 {
-	MCAutoValueRefBase<MCErrorRef> t_error;
+	MCAutoErrorRef t_error;
 	if (!MCErrorCreate(p_error_type, nil, &t_error))
 		return false;
 	
@@ -5671,7 +5716,7 @@ void MCCanvasStringsInitialize()
 	MCMemoryClear(s_effect_type_map, sizeof(s_effect_type_map));
 	MCMemoryClear(s_effect_property_map, sizeof(s_effect_property_map));
 	MCMemoryClear(s_gradient_type_map, sizeof(s_gradient_type_map));
-	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_gradient_type_map));
+	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_canvas_fillrule_map));
 	MCMemoryClear(s_image_filter_map, sizeof(s_image_filter_map));
 	MCMemoryClear(s_join_style_map, sizeof(s_join_style_map));
 	MCMemoryClear(s_cap_style_map, sizeof(s_cap_style_map));

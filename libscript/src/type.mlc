@@ -20,6 +20,8 @@
 
 module com.livecode.type
 
+use com.livecode.foreign
+
 public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"

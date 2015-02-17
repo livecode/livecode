@@ -33,6 +33,9 @@ void Error_CouldNotOpenInputFile(const char *path);
 void Error_MalformedToken(long position, const char *token);
 void Error_MalformedSyntax(long position);
     
+void Warning_EmptyUnicodeEscape(long position);
+void Warning_UnicodeEscapeTooBig(long position);
+    
 #ifdef __cplusplus
 }
 #endif

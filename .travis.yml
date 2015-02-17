@@ -36,6 +36,6 @@ addons:
       name: "runrev/livecode"
       description: "Build submitted via Travis CI"
     notification_email: peter@livecode.com
-    # build_command_prepend: "true"
+    build_command_prepend: "make -s thirdparty"
     build_command: "make -s bootstrap all"
     branch_pattern: coverity_scan

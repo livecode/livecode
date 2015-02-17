@@ -39,7 +39,7 @@ extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, M
 extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRangeInRange(p_target, nil, p_start, p_finish, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCStringGetLength(p_target))
     {
@@ -54,7 +54,7 @@ extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_f
 extern "C" MC_DLLEXPORT void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRangeInRange(x_target, nil, p_start, p_finish, t_start, t_count);
     
     if (t_count == 0 || t_start + t_count > MCStringGetLength(x_target))
     {
@@ -116,7 +116,7 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfChars(bool p_is_last, MCStringRef
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_after, p_after, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRangeInRange(p_target, nil, p_after, p_after, t_start, t_count);
     
     MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
@@ -124,7 +124,7 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStri
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, uindex_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_before, p_before, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRangeInRange(p_target, nil, p_before, p_before, t_start, t_count);
     
     MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, t_start), r_output);
 }

@@ -152,7 +152,7 @@ __MCSCommandLineCaptureNameAndArguments (uindex_t p_arg_count,
 	}
 	else
 	{
-		t_name = MCValueRetain (kMCEmptyString);
+		t_name = kMCEmptyString;
 	}
 
 	if (!MCSCommandLineSetName (*t_name))
@@ -181,7 +181,7 @@ __MCSCommandLineCaptureNameAndArguments (uindex_t p_arg_count,
 	}
 	else
 	{
-		t_arg_list = MCValueRetain (kMCEmptyProperList);
+		t_arg_list = kMCEmptyProperList;
 	}
 
 	if (!MCSCommandLineSetArguments (*t_arg_list))

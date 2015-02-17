@@ -54,6 +54,12 @@
 		4DEB640B19E6822E009DF2EA /* syntax-gen.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB640919E6822E009DF2EA /* syntax-gen.c */; };
 		4DEB642819E81D95009DF2EA /* operator.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB642719E81D95009DF2EA /* operator.c */; };
 		4DEB642919E81D95009DF2EA /* operator.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB642719E81D95009DF2EA /* operator.c */; };
+		C72BED811A838B5A009B3CEB /* lc-run.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C72BED801A838B5A009B3CEB /* lc-run.cpp */; };
+		C72BED821A838B65009B3CEB /* module-helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B9101A3767E000DD750C /* module-helper.cpp */; };
+		C72BED831A838BA4009B3CEB /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B64B1A27381400DD750C /* CoreFoundation.framework */; };
+		C72BED841A838BBA009B3CEB /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D0391201A27369800CB9E06 /* libscript.a */; };
+		C72BED851A838BC9009B3CEB /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03910D1A27366200CB9E06 /* libfoundation.a */; };
+		C72BED861A838BCF009B3CEB /* libstdscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B6E81A27407900DD750C /* libstdscript.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -197,6 +203,20 @@
 			remoteGlobalIDString = 4D21B65619E43BE100B64BEF;
 			remoteInfo = "lc-bootstrap-compile";
 		};
+		C72BED871A838BD7009B3CEB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D6F070119CC36B700DDC6E0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D6F070A19CC36DD00DDC6E0;
+			remoteInfo = "lc-compile";
+		};
+		C72BED891A838C07009B3CEB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D0391191A27369800CB9E06 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D79B6531A273B6900DD750C;
+			remoteInfo = stdscript;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -219,6 +239,15 @@
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 		4D6F070919CC36DD00DDC6E0 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		C72BED761A838B0D009B3CEB /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -304,6 +333,8 @@
 		4DEB640919E6822E009DF2EA /* syntax-gen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "syntax-gen.c"; path = "src/syntax-gen.c"; sourceTree = SOURCE_ROOT; };
 		4DEB640E19E69E50009DF2EA /* COMMENTS.b */ = {isa = PBXFileReference; lastKnownFileType = text; name = COMMENTS.b; path = src/COMMENTS.b; sourceTree = SOURCE_ROOT; };
 		4DEB642719E81D95009DF2EA /* operator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = operator.c; path = src/operator.c; sourceTree = SOURCE_ROOT; };
+		C72BED781A838B0D009B3CEB /* lc-run */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "lc-run"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C72BED801A838B5A009B3CEB /* lc-run.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "lc-run.cpp"; path = "src/lc-run.cpp"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -337,6 +368,17 @@
 				4D0391281A2736D300CB9E06 /* libscript.a in Frameworks */,
 				4D0391131A27367E00CB9E06 /* libfoundation.a in Frameworks */,
 				4D0391141A27367E00CB9E06 /* libgrts.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C72BED751A838B0D009B3CEB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C72BED831A838BA4009B3CEB /* CoreFoundation.framework in Frameworks */,
+				C72BED841A838BBA009B3CEB /* libscript.a in Frameworks */,
+				C72BED851A838BC9009B3CEB /* libfoundation.a in Frameworks */,
+				C72BED861A838BCF009B3CEB /* libstdscript.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,6 +453,7 @@
 				4D6F070B19CC36DD00DDC6E0 /* lc-compile */,
 				4D21B66B19E43BE100B64BEF /* lc-bootstrap-compile */,
 				4D44E4E01A24D6610073FFA2 /* lc-test */,
+				C72BED781A838B0D009B3CEB /* lc-run */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -454,6 +497,7 @@
 				4DEB642719E81D95009DF2EA /* operator.c */,
 				4D44E3AA1A1632160073FFA2 /* emit.cpp */,
 				4D44E4E91A24D6910073FFA2 /* test.cpp */,
+				C72BED801A838B5A009B3CEB /* lc-run.cpp */,
 			);
 			name = Sources;
 			path = "lc-compile";
@@ -589,6 +633,25 @@
 			productReference = 4D6F070B19CC36DD00DDC6E0 /* lc-compile */;
 			productType = "com.apple.product-type.tool";
 		};
+		C72BED771A838B0D009B3CEB /* lc-run */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C72BED7F1A838B0D009B3CEB /* Build configuration list for PBXNativeTarget "lc-run" */;
+			buildPhases = (
+				C72BED741A838B0D009B3CEB /* Sources */,
+				C72BED751A838B0D009B3CEB /* Frameworks */,
+				C72BED761A838B0D009B3CEB /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C72BED8A1A838C07009B3CEB /* PBXTargetDependency */,
+				C72BED881A838BD7009B3CEB /* PBXTargetDependency */,
+			);
+			name = "lc-run";
+			productName = "lc-run";
+			productReference = C72BED781A838B0D009B3CEB /* lc-run */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -596,6 +659,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0510;
+				TargetAttributes = {
+					C72BED771A838B0D009B3CEB = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+				};
 			};
 			buildConfigurationList = 4D6F070419CC36B700DDC6E0 /* Build configuration list for PBXProject "lc-compile" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -626,6 +694,7 @@
 				4D6F070A19CC36DD00DDC6E0 /* lc-compile */,
 				4D21B65619E43BE100B64BEF /* lc-bootstrap-compile */,
 				4D44E4DF1A24D6610073FFA2 /* lc-test */,
+				C72BED771A838B0D009B3CEB /* lc-run */,
 			);
 		};
 /* End PBXProject section */
@@ -853,6 +922,9 @@
 				"$(SRCROOT)/../../engine/src/engine.mlc",
 				"$(SRCROOT)/../../libscript/src/stream.mlc",
 				"$(SRCROOT)/../../libscript/src/system.mlc",
+				"$(SRCROOT)/../../libscript/src/foreign.mlc",
+				"$(SRCROOT)/../../libscript/libstdscript-modules.list",
+				"$(SRCROOT)/../../libscript/src/unittest.mlc",
 			);
 			name = Bootstrap;
 			outputPaths = (
@@ -860,7 +932,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\necho \"${BUILT_PRODUCTS_DIR}/modules\"\nmkdir -p \"_G_\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/modules\"\nLIBSCRIPT_SRCDIR=\"${SRCROOT}/../../libscript/src\"\nENGINE_SRCDIR=\"${SRCROOT}/../../engine/src\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" \"${ENGINE_SRCDIR}/canvas.mlc\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" \"${ENGINE_SRCDIR}/src/engine.mlc\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" \"${ENGINE_SRCDIR}/src/widget.mlc\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" --bootstrap  --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" --template \"${SRCROOT}/src/grammar.g\" --output \"${SRCROOT}/src/grammar_full.g\" \"${LIBSCRIPT_SRCDIR}/string.mlc\" \"${LIBSCRIPT_SRCDIR}/binary.mlc\" \"${LIBSCRIPT_SRCDIR}/arithmetic.mlc\" \"${LIBSCRIPT_SRCDIR}/bitwise.mlc\" \"${LIBSCRIPT_SRCDIR}/byte.mlc\" \"${LIBSCRIPT_SRCDIR}/char.mlc\" \"${LIBSCRIPT_SRCDIR}/list.mlc\" \"${LIBSCRIPT_SRCDIR}/type-convert.mlc\" \"${LIBSCRIPT_SRCDIR}/logic.mlc\" \"${LIBSCRIPT_SRCDIR}/sort.mlc\" \"${LIBSCRIPT_SRCDIR}/array.mlc\" \"${LIBSCRIPT_SRCDIR}/math.mlc\" \"${LIBSCRIPT_SRCDIR}/math-foundation.mlc\" \"${LIBSCRIPT_SRCDIR}/type.mlc\" \"${LIBSCRIPT_SRCDIR}/file.mlc\" \"${LIBSCRIPT_SRCDIR}/stream.mlc\" \"${LIBSCRIPT_SRCDIR}/system.mlc\" \"${LIBSCRIPT_SRCDIR}/date.mlc\" \"${ENGINE_SRCDIR}/canvas.mlc\" \"${ENGINE_SRCDIR}/engine.mlc\" \"${ENGINE_SRCDIR}/widget.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "LIBSCRIPT_SRCDIR=\"${SRCROOT}/../../libscript/src\"\nLIBSCRIPT_LIST=\"${SRCROOT}/../../libscript/libstdscript-modules.list\"\nENGINE_SRCDIR=\"${SRCROOT}/../../engine/src\"\nENGINE_LIST=\"${SRCROOT}/../../engine/libkernel-modules.list\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\nLC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\"\nGRAMMAR_TEMPLATE=\"${SRCROOT}/src/grammar.g\"\nGRAMMAR_OUTPUT=\"${SRCROOT}/src/grammar_full.g\"\n\ncd src\nmkdir -p \"_G_\"\n\n# Function for creating a list of MLC files for bootstrapping\nbootstrap_list () {\n    listfile=\"$1\"\n    srcdir=\"$2\"\n    # Skip any line that starts with \"!\" or \"#\", prepend the source\n    # directory to each line and escape any spaces in the resulting\n    # filename with \"\\\"\n    grep -v '^[\\#!]' < \"${listfile}\" | sed -e\"s:^:${srcdir}/:\" | sed -e's: :\\\\ :g'\n}\n\nbootstrap_mlc () {\n    bootstrap_list \"${LIBSCRIPT_LIST}\" \"${LIBSCRIPT_SRCDIR}\"\n    bootstrap_list \"${ENGINE_LIST}\" \"${ENGINE_SRCDIR}\"\n}\n\n# Generate LCI files for all of the input MLC files\necho '### Generating interface files...'\nmkdir -p \"${MODULE_DIR}\"\nbootstrap_mlc | xargs -t -n1 \"${LC_COMPILE}\" \\\n        --modulepath \"${MODULE_DIR}\" \\\n    || exit $?\n\necho '### Generating grammar...'\n# Bootstrap all of the MLC files into a grammar file\nbootstrap_mlc | \\\n    xargs -t \"${LC_COMPILE}\" --bootstrap --modulepath \"${MODULE_DIR}\" \\\n        --template \"${GRAMMAR_TEMPLATE}\" --output \"${GRAMMAR_OUTPUT}\" \\\n    || exit $?\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -919,6 +991,15 @@
 				4DEB640A19E6822E009DF2EA /* syntax-gen.c in Sources */,
 				4D78D28E19E9446F00DDEF0B /* syntax.c in Sources */,
 				4D78D28F19E9446F00DDEF0B /* check.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C72BED741A838B0D009B3CEB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C72BED811A838B5A009B3CEB /* lc-run.cpp in Sources */,
+				C72BED821A838B65009B3CEB /* module-helper.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -989,6 +1070,16 @@
 			isa = PBXTargetDependency;
 			target = 4D21B65619E43BE100B64BEF /* lc-bootstrap-compile */;
 			targetProxy = 4DA53A1C19E43CC60089FBDC /* PBXContainerItemProxy */;
+		};
+		C72BED881A838BD7009B3CEB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4D6F070A19CC36DD00DDC6E0 /* lc-compile */;
+			targetProxy = C72BED871A838BD7009B3CEB /* PBXContainerItemProxy */;
+		};
+		C72BED8A1A838C07009B3CEB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = stdscript;
+			targetProxy = C72BED891A838C07009B3CEB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1243,6 +1334,82 @@
 			};
 			name = Release;
 		};
+		C72BED7C1A838B0D009B3CEB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		C72BED7D1A838B0D009B3CEB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1278,6 +1445,15 @@
 			buildConfigurations = (
 				4D6F071319CC36DD00DDC6E0 /* Debug */,
 				4D6F071419CC36DD00DDC6E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C72BED7F1A838B0D009B3CEB /* Build configuration list for PBXNativeTarget "lc-run" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C72BED7C1A838B0D009B3CEB /* Debug */,
+				C72BED7D1A838B0D009B3CEB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
