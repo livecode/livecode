@@ -48,3 +48,60 @@ const char *MCCefPlatformGetResourcesDirPath(void)
 {
 	return nil;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
+#include <stdlib.h>
+#include <stdio.h>
+#include <cstring>
+#include <mach-o/dyld.h>
+
+void *MCU_loadmodule(const char *p_source)
+{
+    const struct mach_header *t_module;
+    t_module = NSAddImage(p_source, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+    if (t_module == NULL)
+    {
+        uint32_t t_buffer_size;
+        t_buffer_size = 0;
+        _NSGetExecutablePath(NULL, &t_buffer_size);
+        char *t_module_path;
+        t_module_path = (char *) malloc(t_buffer_size + strlen(p_source) + 1);
+        if (t_module_path != NULL)
+        {
+            if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
+            {
+                char *t_last_slash;
+                t_last_slash = t_module_path + t_buffer_size;
+                for (uint32_t i = 0; i < t_buffer_size; i++)
+                {
+                    if (*t_last_slash == '/')
+                    {
+                        *(t_last_slash + 1) = '\0';
+                        break;
+                    }
+                    t_last_slash--;
+                }
+                strcat(t_module_path, p_source);
+                t_module = NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+            }
+            free(t_module_path);
+        }
+    }
+}
+
+void MCU_unloadmodule(void *p_module)
+{
+    
+}
+
+void *MCU_resolvemodulesymbol(void *p_module, const char *p_name)
+{
+    NSSymbol t_symbol;
+    t_symbol = NSLookupSymbolInImage((mach_header *)p_module, p_name, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    if (t_symbol != NULL)
+        return NSAddressOfSymbol(t_symbol);
+    
+    return NULL;
+}
