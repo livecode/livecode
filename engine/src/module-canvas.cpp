@@ -397,6 +397,8 @@ MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
+MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Constant refs
@@ -1365,85 +1367,51 @@ void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTrans
 	MCCanvasTransformMake(MCGAffineTransformInvert(*MCCanvasTransformGet(p_transform)), r_transform);
 }
 
-// T = Tscale * Trotate * Tskew * Ttranslate
+// T = Ttranslate * Trotate * Tskew * Tscale
 
 MCGAffineTransform MCCanvasTransformCompose(const MCGPoint &p_scale, MCCanvasFloat p_rotation, const MCGPoint &p_skew, const MCGPoint &p_translation)
 {
 	MCGAffineTransform t_transform;
 	t_transform = MCGAffineTransformMakeScale(p_scale.x, p_scale.y);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeRotation(MCCanvasRadiansToDegrees(p_rotation)), t_transform);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeSkew(p_skew.x, p_skew.y), t_transform);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeTranslation(p_translation.x, p_translation.y), t_transform);
+	t_transform = MCGAffineTransformPreSkew(t_transform, p_skew.x, p_skew.y);
+	t_transform = MCGAffineTransformPreRotate(t_transform, MCCanvasAngleFromRadians(p_rotation));
+	t_transform = MCGAffineTransformPreTranslate(t_transform, p_translation.x, p_translation.y);
 	
 	return t_transform;
 }
 
-/*
- * Ttranslate:
- * / 1 0 tx \
- * | 0 1 ty |
- * \ 0 0  1 /
- *
- * Tscale * Trotate * Tskew:
- * / a  c \   / 1  Skew \   / Cos(r) -Sin(r) \   / ScaleX       0 \   / -ScaleX * Skew * Sin(r) + ScaleX * Cos(r)   ScaleY * Skew * Cos(r) + ScaleY * Sin(r) \
- * \ b  d / = \ 0     1 / * \ Sin(r)  Cos(r) / * \      0  ScaleY / = \ -ScaleX * Sin(r)                            ScaleY * Cos(r)                          /
- */
 bool MCCanvasTransformDecompose(const MCGAffineTransform &p_transform, MCGPoint &r_scale, MCCanvasFloat &r_rotation, MCGPoint &r_skew, MCGPoint &r_translation)
 {
-	MCGFloat t_r, t_skew;
-	MCGPoint t_scale, t_trans;
+	MCGAffineTransform t_transform;
+	t_transform = p_transform;
 	
-	t_trans = MCGPointMake(p_transform.tx, p_transform.ty);
+	MCGPoint t_scale, t_skew, t_translation;
+	MCCanvasFloat t_rotation;
+
+	// Remove translation component.
+	t_translation = MCGPointMake(t_transform.tx, t_transform.ty);
+	t_transform.tx = t_transform.ty = 0;
 	
-	// if b == 0, take r to be 0 radians
-		if (p_transform.b == 0)
-	{
-		t_r = 0;
-		// a == ScaleX, d == ScaleY
-		t_scale = MCGPointMake(p_transform.a, p_transform.d);
-		// c = ScaleY * Skew => Skew = c / ScaleY => Skew = c / d
-		if (p_transform.d == 0)
-			return false;
-		t_skew = p_transform.c / p_transform.d;
-	}
-	// if d == 0, take r to be -pi / 2 radians
-	else if (p_transform.d == 0)
-	{
-		t_r = M_PI / 2;
-		// b == -ScaleX, c == ScaleY
-		t_scale = MCGPointMake(-p_transform.b, p_transform.c);
-		// a == -ScaleX * Skew => Skew == a / -ScaleX => Skew = a / b
-		if (p_transform.b == 0)
-			return false;
-		t_skew = p_transform.a / p_transform.b;
-	}
-	else
-	{
-		// Skew^2 + (a/b - c/d) * Skew + (1 + a/b * c/d) = 0
-		MCGFloat t_a_div_b, t_c_div_d;
-		t_a_div_b = p_transform.a / p_transform.b;
-		t_c_div_d = p_transform.c / p_transform.d;
-		
-		MCGFloat t_x1, t_x2;
-		if (!MCSolveQuadraticEqn(1, t_a_div_b - t_c_div_d, 1 + t_a_div_b * t_c_div_d, t_x1, t_x2))
-			return false;
-		
-		// choose skew with smallest absolute value
-		if (MCAbs(t_x1) < MCAbs(t_x2))
-			t_skew = t_x1;
-		else
-			t_skew = t_x2;
-		
-		// Tan(r) = c/d - Skew
-		t_r = atan(t_c_div_d - t_skew);
-		
-		t_scale = MCGPointMake(-p_transform.b / sinf(t_r), p_transform.d / cosf(t_r));
-	}
+	// Calculate rotation of transformed unit vector
+	MCGPoint t_point;
+	t_point = MCGPointApplyAffineTransform(MCGPointMake(1, 0), t_transform);
+	
+	t_rotation = atan2f(t_point.y, t_point.x);
+	
+	// remove rotation component from transform by applying rotation in the opposite direction
+	t_transform = MCGAffineTransformPreRotate(t_transform, MCCanvasAngleFromRadians(-t_rotation));
+	
+	if (t_transform.a == 0 || t_transform.d == 0)
+		return false;
+	
+	// scale and skew can now be obtained directly from the transform
+	t_scale = MCGPointMake(t_transform.a, t_transform.d);
+	t_skew = MCGPointMake(t_transform.c / t_transform.d, t_transform.b / t_transform.a);
 	
 	r_scale = t_scale;
-	r_rotation = -t_r; // calculations assume y increases upwards producing a rotation in the wrong direction, so take the negative.
-	r_skew = MCGPointMake(t_skew, 0);
-	r_translation = t_trans;
+	r_rotation = t_rotation;
+	r_skew = t_skew;
+	r_translation = t_translation;
 	
 	return true;
 }
@@ -1574,7 +1542,7 @@ void MCCanvasTransformSetTranslationAsList(MCProperListRef p_translation, MCCanv
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, const MCGAffineTransform &p_transform)
 {
-	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(p_transform, *MCCanvasTransformGet(x_transform)), x_transform);
+	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(*MCCanvasTransformGet(x_transform), p_transform), x_transform);
 }
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, MCCanvasTransformRef p_transform)
@@ -1627,6 +1595,14 @@ void MCCanvasTransformSkew(MCCanvasTransformRef &x_transform, MCProperListRef p_
 		return;
 	
 	MCCanvasTransformSkew(x_transform, t_skew.x, t_skew.y);
+}
+
+void MCCanvasTransformMultiply(MCCanvasTransformRef p_left, MCCanvasTransformRef p_right, MCCanvasTransformRef &r_transform)
+{
+	MCGAffineTransform t_transform;
+	t_transform = MCGAffineTransformConcat(*MCCanvasTransformGet(p_left), *MCCanvasTransformGet(p_right));
+	
+	MCCanvasTransformMake(t_transform, r_transform);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2573,7 +2549,7 @@ void MCCanvasGradientTransformToPoints(const MCGAffineTransform &p_transform, MC
 	r_via = MCGPointApplyAffineTransform(MCGPointMake(0, 1), p_transform);
 }
 
-bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
+void MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
 {
 	MCGAffineTransform t_transform;
 	t_transform . a = p_to . x - p_from . x;
@@ -2584,8 +2560,6 @@ bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint 
 	t_transform . ty = p_from . y;
 	
 	r_transform = t_transform;
-	
-	return true;
 }
 
 void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCGAffineTransform &r_transform)
@@ -2614,10 +2588,7 @@ void MCCanvasGradientGetPoints(MCCanvasGradientRef p_gradient, MCGPoint &r_from,
 void MCCanvasGradientSetPoints(MCCanvasGradientRef &x_gradient, const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via)
 {
 	MCGAffineTransform t_transform;
-	if (!MCCanvasGradientTransformFromPoints(p_from, p_to, p_via, t_transform))
-	{
-		// TODO - throw error
-	}
+	MCCanvasGradientTransformFromPoints(p_from, p_to, p_via, t_transform);
 	MCCanvasGradientSetTransform(x_gradient, t_transform);
 }
 
@@ -3129,7 +3100,7 @@ bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *r_points)
 		}
 		else
 		{
-			// TODO - throw point type error
+			MCCanvasThrowError(kMCCanvasPathPointListFormatErrorTypeInfo);
 			t_success = false;
 		}
 	}
@@ -5665,6 +5636,9 @@ void MCCanvasErrorsInitialize()
 	kMCCanvasGradientTypeErrorTypeInfo = nil;
 	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.GradientTypeError"), MCSTR("Unrecognised gradient type."), kMCCanvasGradientTypeErrorTypeInfo);
 	
+	kMCCanvasPathPointListFormatErrorTypeInfo = nil;
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.PathPointListFormatError"), MCSTR("Invalid value in list of points."), kMCCanvasPathPointListFormatErrorTypeInfo);
+	
 }
 
 void MCCanvasErrorsFinalize()
@@ -5898,7 +5872,7 @@ bool MCCanvasEffectTypeToString(MCCanvasEffectType p_type, MCStringRef &r_string
 
 bool MCCanvasEffectTypeFromString(MCStringRef p_string, MCCanvasEffectType &r_type)
 {
-	return _mcenumfromstring<MCCanvasEffectType, kMCGFillRuleCount>(s_effect_type_map, p_string, r_type);
+	return _mcenumfromstring<MCCanvasEffectType, _MCCanvasEffectTypeCount>(s_effect_type_map, p_string, r_type);
 }
 
 bool MCCanvasFillRuleToString(MCGFillRule p_fill_rule, MCStringRef &r_string)

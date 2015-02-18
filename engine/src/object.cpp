@@ -2949,7 +2949,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	
 	MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-r.x, -r.y);
 	if (p_size != nil)
-		t_transform = MCGAffineTransformScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
+		t_transform = MCGAffineTransformPreScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
 
 	MCGContextConcatCTM(t_gcontext, t_transform);
 	

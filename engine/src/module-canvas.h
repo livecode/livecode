@@ -156,6 +156,7 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
 
 }
 
@@ -283,6 +284,7 @@ extern "C" MC_DLLEXPORT void MCCanvasTransformTranslate(MCCanvasTransformRef &x_
 extern "C" MC_DLLEXPORT void MCCanvasTransformTranslateWithList(MCCanvasTransformRef &x_transform, MCProperListRef p_list);
 extern "C" MC_DLLEXPORT void MCCanvasTransformSkew(MCCanvasTransformRef &x_transform, MCCanvasFloat p_x_skew, MCCanvasFloat p_y_skew);
 extern "C" MC_DLLEXPORT void MCCanvasTransformSkewWithList(MCCanvasTransformRef &x_transform, MCProperListRef p_list);
+extern "C" MC_DLLEXPORT void MCCanvasTransformMultiply(MCCanvasTransformRef pTransformA, MCCanvasTransformRef pTransformB, MCCanvasTransformRef &rTransform);
 
 //////////
 
