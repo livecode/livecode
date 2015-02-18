@@ -57,8 +57,12 @@ class MCDispatch : public MCObject
     
 	static MCImage *imagecache;
 
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add resource mapping array to MCDispatch object.
+    MCArrayRef m_library_mapping;
+
     static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+
 public:
 	MCDispatch();
 	// virtual functions from MCObject
@@ -229,6 +233,12 @@ public:
 	{
 		return stacks;
 	}
+
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
+    //  in the resource mapping array of MCdispatcher.
+    void addlibrarymapping(MCStringRef p_mapping);
+    bool fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path);
+
 
 	////////// PROPERTY ACCESSORS
 

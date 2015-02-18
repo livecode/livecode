@@ -43,9 +43,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 
 #include "globals.h"
+
+#include "dispatch.h"
+
 #include "exec.h"
 #include "system.h"
 
+#if defined(_MACOSX) || defined(_MAC_SERVER)
+#include <mach-o/dyld.h>
+#endif
 
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
@@ -3178,6 +3184,109 @@ bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
 {
 	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
 	return MCS_random_bytes(p_bytecount, r_bytes);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading where
+//  p_module can be a universal module name, where a mapping from module names to
+// relative paths has been provided.
+MCSysModuleHandle MCU_loadmodule(MCStringRef p_module)
+{
+    MCSysModuleHandle t_handle;
+    t_handle = nil;
+#if defined(_MACOSX) || defined(_MAC_SERVER)
+    MCAutoStringRefAsUTF8String t_module;
+    t_module . Lock(p_module);
+    t_handle = (MCSysModuleHandle)NSAddImage(*t_module, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+    if (t_handle != nil)
+        return t_handle;
+    
+    // MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
+    uint32_t t_buffer_size;
+    t_buffer_size = 0;
+    _NSGetExecutablePath(NULL, &t_buffer_size);
+    char *t_module_path;
+    t_module_path = (char *) malloc(t_buffer_size + strlen(*t_module) + 1);
+    if (t_module_path != NULL)
+    {
+        if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
+        {
+            char *t_last_slash;
+            t_last_slash = t_module_path + t_buffer_size;
+            for (uint32_t i = 0; i < t_buffer_size; i++)
+            {
+                if (*t_last_slash == '/')
+                {
+                    *(t_last_slash + 1) = '\0';
+                    break;
+                }
+                t_last_slash--;
+            }
+            strcat(t_module_path, *t_module);
+            t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+        }
+        free(t_module_path);
+        // AL-2015-02-17: [[ SB Inclusions ]] Return the handle if found here.
+        if (t_handle != nil)
+            return t_handle;
+    }
+#endif
+
+    MCAutoStringRef t_path;
+    if (!MCdispatcher || !MCdispatcher -> fetchlibrarymapping(p_module, &t_path))
+        t_path = p_module;
+
+    t_handle = MCS_loadmodule(*t_path);
+    
+    if (t_handle != nil)
+        return t_handle;
+    
+    MCAutoStringRef t_filename;
+    if (MCStringBeginsWithCString(*t_path, (const char_t *)"/", kMCStringOptionCompareExact))
+    {
+        t_filename = *t_path;
+    }
+    else
+    {
+        uindex_t t_separator;
+        MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_separator);
+        if (!MCStringMutableCopySubstring(MCcmd, MCRangeMake(0, t_separator), &t_filename))
+            return false;
+        if (!MCStringAppendFormat(*t_filename, "/%@", *t_path))
+            return false;
+    }
+
+    t_handle = MCS_loadmodule(*t_filename);
+    return t_handle;
+}
+
+void MCU_unloadmodule(MCSysModuleHandle p_module)
+{
+    MCS_unloadmodule(p_module);
+}
+
+void *MCU_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
+{
+#if defined(_MACOSX) || defined(_MAC_SERVER)
+    MCAutoStringRefAsUTF8String t_symbol_string;
+    t_symbol_string . Lock(p_symbol);
+    NSSymbol t_symbol;
+    t_symbol = NSLookupSymbolInImage((mach_header *)p_module, *t_symbol_string, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    if (t_symbol != NULL)
+        return NSAddressOfSymbol(t_symbol);
+#endif
+    return MCS_resolvemodulesymbol(p_module, p_symbol);
+}
+
+MCSysModuleHandle MCU_loadmodule(const char *p_module)
+{
+    return MCU_loadmodule(MCSTR(p_module));
+}
+
+void *MCU_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
+{
+    return MCU_resolvemodulesymbol(p_module, MCSTR(p_symbol));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

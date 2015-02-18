@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "external.h"
+#include "util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -272,7 +273,8 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 	t_module = nil;
 	if (t_success)
 	{
-		t_module = MCS_loadmodule(p_filename);
+        // AL-2015-02-10: [[ SB Inclusions ]] Load external using new module loading utility
+		t_module = MCU_loadmodule(p_filename);
 		if (t_module == NULL)
 			t_success = false;
 	}

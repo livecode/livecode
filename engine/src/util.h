@@ -240,6 +240,14 @@ extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey,
 //   or platform support (if not).
 extern bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes);
 
+// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading
+extern MCSysModuleHandle MCU_loadmodule(MCStringRef p_module);
+extern "C" void MCU_unloadmodule(MCSysModuleHandle p_module);
+extern void *MCU_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
+
+extern "C" MCSysModuleHandle MCU_loadmodule(const char *);
+extern "C" void *MCU_resolvemodulesymbol(MCSysModuleHandle, const char *);
+
 // 
 
 struct MCInterval

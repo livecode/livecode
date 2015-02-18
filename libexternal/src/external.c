@@ -69,6 +69,11 @@ enum
 	/* V2 */ OPERATION_GET_ARRAY_UTF8_BINARY,
 	/* V2 */ OPERATION_SET_ARRAY_UTF8_TEXT,
 	/* V2 */ OPERATION_SET_ARRAY_UTF8_BINARY,
+
+    // AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
+    /* V3 */ OPERATION_LOAD_MODULE,
+    /* V3 */ OPERATION_UNLOAD_MODULE,
+    /* V3 */ OPERATION_RESOLVE_SYMBOL_IN_MODULE,
 };
 
 enum
@@ -798,6 +803,54 @@ Bool SecurityCanAccessLibraryUTF8(const char *p_library)
 	if (s_security_handlers != NULL)
 		return s_security_handlers[SECURITY_CHECK_LIBRARY_UTF8](p_library);
 	return True;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
+void LoadModule(const char *p_module, void **r_handle, int *r_success)
+{
+    if (s_external_interface_version < 3)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_LOAD_MODULE])(p_module, (const char *)r_handle, NULL, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+void UnloadModule(void *p_handle, int *r_success)
+{
+    if (s_external_interface_version < 3)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_UNLOAD_MODULE])(p_handle, NULL, NULL, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolved, int *r_success)
+{
+    if (s_external_interface_version < 3)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_RESOLVE_SYMBOL_IN_MODULE])(p_handle, p_symbol, (const char *)r_resolved, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -152,6 +152,11 @@ MCDispatch::MCDispatch()
 	m_externals = nil;
 
     m_transient_stacks = nil;
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add resource mapping array to MCDispatch. This stores
+    //  any universal name / relative path pairs included in a standalone executable for locating included
+    //  resources.
+    MCArrayCreateMutable(m_library_mapping);
 }
 
 MCDispatch::~MCDispatch()
@@ -173,6 +178,8 @@ MCDispatch::~MCDispatch()
 	delete enginedir;
 	
 	delete m_externals;
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Delete library mapping
+    MCValueRelease(m_library_mapping);
 }
 
 bool MCDispatch::isdragsource(void)
@@ -2023,28 +2030,9 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 		MCValueRelease(t_filename);
 		return true;
 	}
-    
-    MCValueRelease(t_external_leaf);
-#elif !defined(_SERVER)
-	if (MCStringBeginsWithCString(p_external, (const char_t *)"/", kMCStringOptionCompareExact))
-	{
-		t_filename = MCValueRetain(p_external);
-	}
-	else
-	{
-		uindex_t t_separator;
-		MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_separator);
-		if (!MCStringMutableCopySubstring(MCcmd, MCRangeMake(0, t_separator), t_filename))
-			return false;
-		if (!MCStringAppendFormat(t_filename, "/%@", p_external))
-		{
-			MCValueRelease(t_filename);
-			return false;
-		}
-	}
-
 #else
-	t_filename = MCValueRetain(p_external);
+    // AL-2015-02-10: [[ SB Inclusions ]] New module loading utility deals with path resolution
+    t_filename = p_external;
 #endif
 	
 	if (m_externals == nil)
@@ -2429,6 +2417,36 @@ MCFontlist *MCFontlistGetCurrent(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
+//  in the resource mapping array of MCdispatcher.
+void MCDispatch::addlibrarymapping(MCStringRef p_mapping)
+{
+    uindex_t t_separator;
+    if (!MCStringFirstIndexOfChar(p_mapping, ':', 0, kMCStringOptionCompareExact, t_separator))
+        return;
+
+    MCAutoStringRef t_name, t_path;
+    /* UNCHECKED */ MCStringCopySubstring(p_mapping, MCRangeMake(0, t_separator), &t_name);
+    /* UNCHECKED */ MCStringCopySubstring(p_mapping, MCRangeMake(t_separator + 1, UINDEX_MAX), &t_path);
+    
+    MCNewAutoNameRef t_key;
+    MCNameCreate(*t_name, &t_key);
+    MCArrayStoreValue(m_library_mapping, false, *t_key, *t_path);
+}
+
+bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
+{
+    MCNewAutoNameRef t_key;
+    /* UNCHECKED */ MCNameCreate(p_name, &t_key);
+    
+    MCValueRef t_value;
+    if (!MCArrayFetchValue(m_library_mapping, false, *t_key, t_value))
+        return false;
+    
+    r_path = (MCStringRef)MCValueRetain(t_value);
+    return true;
+}
 
 bool MCDispatch::GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color)
 {
