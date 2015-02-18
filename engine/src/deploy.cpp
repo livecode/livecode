@@ -705,6 +705,8 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	MCCStringArrayFree(t_params . externals, t_params . external_count);
 	delete t_params . startup_script;
 	MCCStringArrayFree(t_params . redirects, t_params . redirect_count);
+    // AL-2015-02-18: [[ SB Inclusions ]] Clean up resource mapping.
+    MCCStringArrayFree(t_params . library, t_params . library_count);
 	delete t_params . app_icon;
 	delete t_params . doc_icon;
 	delete t_params . manifest;
