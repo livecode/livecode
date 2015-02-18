@@ -52,7 +52,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       throw "not supported on this platform"
    end if
    
-   start using stack "revSBLibrary" of stack "revStandaloneSettings"
+   start using stack "revSBLibrary"
    revStandaloneResetWarnings
    
    local tSettings
@@ -446,7 +446,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    
    -- If the datagrid is used, then include the library as an aux stack
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      put the effective filename of stack "revDataGridLibrary" into tDeploy["auxillary_stackfiles"]
+      put the effective filename of stack "revDataGridLibrary" into tDeploy["auxiliary_stackfiles"]
    end if
    
    -- Externals to reference
