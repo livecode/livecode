@@ -3227,10 +3227,10 @@ MCSysModuleHandle MCU_loadmodule(MCStringRef p_module)
             t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
         }
         free(t_module_path);
+        // AL-2015-02-17: [[ SB Inclusions ]] Return the handle if found here.
+        if (t_handle != nil)
+            return t_handle;
     }
-    
-    if (t_handle != nil)
-        return t_handle;
 #endif
 
     MCAutoStringRef t_path;

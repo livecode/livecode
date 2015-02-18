@@ -118,16 +118,18 @@ static bool MCDeployMapArchitectureString(MCStringRef p_string, MCDeployArchitec
     return false;
 }
 
+
 static bool MCDeployPushMinOSVersion(MCDeployParameters& p_params, MCDeployArchitecture p_arch, MCStringRef p_vers_string)
 {
     MCAutoStringRefAsCString t_version_string;
     t_version_string . Lock(p_vers_string);
-    
+
     // Use sscanf to parse out the version string. We don't check the return value of
     // sscanf as we don't care - any malformed / missing components will come out as
     // 0.
     int t_major, t_minor, t_inc;
     t_major = t_minor = t_inc = 0;
+
     sscanf(*t_version_string, "%d.%d.%d", &t_major, &t_minor, &t_inc);
     
     if (!MCMemoryResizeArray(p_params . min_os_version_count + 1, p_params . min_os_versions, p_params . min_os_version_count))
