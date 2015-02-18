@@ -21,6 +21,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCDeployArchitecture
+{
+    kMCDeployArchitecture_Unknown,
+    kMCDeployArchitecture_I386,
+    kMCDeployArchitecture_X86_64,
+    kMCDeployArchitecture_ARMV6,
+    kMCDeployArchitecture_ARMV7,
+    kMCDeployArchitecture_ARMV7S,
+    kMCDeployArchitecture_ARM64,
+    kMCDeployArchitecture_PPC,
+    kMCDeployArchitecture_PPC64,
+};
+
+struct MCDeployMinOSVersion
+{
+    // The architecture this version applies to.
+    MCDeployArchitecture architecture;
+    // The version word encoded as nibbles XXXX.YY.ZZ for X.Y.Z.
+    uint32_t version;
+};
+
 struct MCDeployParameters
 {
 	// The path to the engine binaries to use. On Windows and Linux this should
@@ -34,6 +55,11 @@ struct MCDeployParameters
 	// fields.
 	MCArrayRef version_info;
 
+    // When building for Mac/iOS, you can specify a min os version per arch
+    // slice.
+    MCDeployMinOSVersion *min_os_versions;
+    uindex_t min_os_version_count;
+    
 	// The root stackfile to be included in the standalone.
 	MCStringRef stackfile;
 	

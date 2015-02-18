@@ -90,6 +90,60 @@ extern Boolean InitSSLCrypt(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char *kMCDeployArchitectureStrings[] =
+{
+    "",
+    "i386",
+    "x86-64",
+    "armv6",
+    "armv7",
+    "armv7s",
+    "arm64",
+    "ppc",
+    "ppc64",
+    nil,
+};
+
+static bool MCDeployMapArchitectureString(MCStringRef p_string, MCDeployArchitecture& r_architecture)
+{
+    for(uindex_t i = 0; kMCDeployArchitectureStrings[i] != nil; i++)
+    {
+        if (MCStringIsEqualToCString(p_string, kMCDeployArchitectureStrings[i], kMCStringOptionCompareCaseless))
+        {
+            r_architecture = (MCDeployArchitecture)i;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+static bool MCDeployPushMinOSVersion(MCDeployParameters& p_params, MCDeployArchitecture p_arch, MCStringRef p_vers_string)
+{
+    MCAutoStringRefAsCString t_version_string;
+    t_version_string . Lock(p_vers_string);
+    
+    // Use sscanf to parse out the version string. We don't check the return value of
+    // sscanf as we don't care - any malformed / missing components will come out as
+    // 0.
+    int t_major, t_minor, t_inc;
+    t_major = t_minor = t_inc = 0;
+    sscanf(*t_version_string, "%d.%d.%d", &t_major, &t_minor, &t_inc);
+    
+    if (!MCMemoryResizeArray(p_params . min_os_version_count + 1, p_params . min_os_versions, p_params . min_os_version_count))
+        return false;
+    
+    uint32_t t_version;
+    t_version = (t_major & 0xFFFF) << 16;
+    t_version |= (t_minor & 0xFF) << 8;
+    t_version |= (t_inc & 0xFF) << 0;
+    
+    p_params . min_os_versions[p_params . min_os_version_count - 1] . architecture = p_arch;
+    p_params . min_os_versions[p_params . min_os_version_count - 1] . version = t_version;
+    
+    return true;
+}
+
 bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 {
 	MCStringRef t_temp_string;
@@ -187,6 +241,48 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(version_info, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
+    // The 'min_os_version' is either a string or an array. If it is a string then
+    // it encodes the version against the 'Unknown' architecture which is interpreted
+    // by the deploy command to mean all architectures. Otherwise, the keys in the
+    // array are assumed to be architecture names and each is pushed on the array.
+    // If the 'min_os_version' is empty, then no change is brought to the binaries.
+    // If multiple entries are present, then the 'unknown' mapping is used for any
+    // architecture not explicitly specified. The current architecture strings that are
+    // known are:
+    //   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
+    // The empty string is taken to be 'unknown'.
+    MCValueRef t_min_os_version;
+    MCArrayFetchValue(p_array, false, MCNAME("min_os_version"), t_min_os_version);
+    
+    if (MCValueIsArray(t_min_os_version))
+    {
+        MCNameRef t_name;
+        MCValueRef t_value;
+        uintptr_t t_iterator;
+        t_iterator = 0;
+        while (MCArrayIterate((MCArrayRef)p_array, t_iterator, t_name, t_value))
+        {
+            MCDeployArchitecture t_arch;
+            if (!MCDeployMapArchitectureString(MCNameGetString(t_name), t_arch))
+                continue;
+         
+            MCAutoStringRef t_arch_string;
+            if (!ctxt . ConvertToString(t_value, &t_arch_string))
+                continue;
+            
+           if (!MCDeployPushMinOSVersion(*this, t_arch, *t_arch_string))
+               return false;
+        }
+    }
+    else if (!MCValueIsEmpty(t_min_os_version))
+    {
+        MCAutoStringRef t_string;
+        if (!ctxt . ConvertToString(t_min_os_version, &t_string))
+            return false;
+        if (!MCDeployPushMinOSVersion(*this, kMCDeployArchitecture_Unknown, *t_string))
+            return false;
+    }
+    
 	return true;
 }
 
@@ -465,7 +561,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 
 	MCDeployParameters t_params;
     t_has_error = !t_params.InitWithArray(ctxt, *t_array);
-	
+
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
 	if (!t_has_error && (m_platform == PLATFORM_IOS || m_platform == PLATFORM_IOS_EMBEDDED))
@@ -523,7 +619,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		else
             ctxt . SetTheResultToEmpty();
 	}
-    
+
     if (t_has_error && !t_soft_error)
         ctxt . Throw();
 }
