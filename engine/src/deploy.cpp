@@ -89,6 +89,60 @@ extern Boolean InitSSLCrypt(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char *kMCDeployArchitectureStrings[] =
+{
+    "",
+    "i386",
+    "x86-64",
+    "armv6",
+    "armv7",
+    "armv7s",
+    "arm64",
+    "ppc",
+    "ppc64",
+    nil,
+};
+
+static bool MCDeployMapArchitectureString(const MCString& p_string, MCDeployArchitecture& r_architecture)
+{
+    for(uindex_t i = 0; kMCDeployArchitectureStrings[i] != nil; i++)
+    {
+        // As 'p_string' is an MCString the '==' operator does a caseless comparison.
+        if (p_string == kMCDeployArchitectureStrings[i])
+        {
+            r_architecture = (MCDeployArchitecture)i;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+static Exec_stat MCDeployPushMinOSVersion(MCDeployParameters& p_params, MCDeployArchitecture p_arch, const char *p_vers_string)
+{
+    // Use sscanf to parse out the version string. We don't check the return value of
+    // sscanf as we don't care - any malformed / missing components will come out as
+    // 0.
+    int t_major, t_minor, t_inc;
+    t_major = t_minor = t_inc = 0;
+    sscanf(p_vers_string, "%d.%d.%d", &t_major, &t_minor, &t_inc);
+    
+    if (!MCMemoryResizeArray(p_params . min_os_version_count + 1, p_params . min_os_versions, p_params . min_os_version_count))
+        return ES_ERROR;
+    
+    uint32_t t_version;
+    t_version = (t_major & 0xFFFF) << 16;
+    t_version |= (t_minor & 0xFF) << 8;
+    t_version |= (t_inc & 0xFF) << 0;
+    
+    p_params . min_os_versions[p_params . min_os_version_count - 1] . architecture = p_arch;
+    p_params . min_os_versions[p_params . min_os_version_count - 1] . version = t_version;
+    
+    return ES_NORMAL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool MCDeployWriteDefinePrologueSection(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
 {
 	MCCapsulePrologueSection t_prologue;
@@ -148,20 +202,25 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	if (t_success)
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
 
-	// Now we add the auxillary stackfiles, if any
+	// Now we add the auxiliary stackfiles, if any
 	MCDeployFileRef *t_aux_stackfiles;
 	t_aux_stackfiles = nil;
 	if (t_success)
-		t_success = MCMemoryNewArray(p_params . auxillary_stackfile_count, t_aux_stackfiles);
+		t_success = MCMemoryNewArray(p_params . auxiliary_stackfile_count, t_aux_stackfiles);
 	if (t_success)
-		for(uint32_t i = 0; i < p_params . auxillary_stackfile_count && t_success; i++)
+		for(uint32_t i = 0; i < p_params . auxiliary_stackfile_count && t_success; i++)
 		{
-			if (t_success && !MCDeployFileOpen(p_params . auxillary_stackfiles[i], "rb", t_aux_stackfiles[i]))
+			if (t_success && !MCDeployFileOpen(p_params . auxiliary_stackfiles[i], "rb", t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
-				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
+				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxiliaryStack, t_aux_stackfiles[i]);
 		}
 	
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.
+    if (t_success)
+        for(uint32_t i = 0; i < p_params . library_count && t_success; i++)
+            t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeLibrary, p_params . library[i], MCCStringLength(p_params . library[i]) + 1);
+    
 	// Now add the externals, if any
 	if (t_success)
 		for(uint32_t i = 0; i < p_params . external_count && t_success; i++)
@@ -184,7 +243,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployCapsuleGenerate(t_capsule, p_output, t_spill, x_offset);
 
 	MCDeployCapsuleDestroy(t_capsule);
-	for(uint32_t i = 0; i < p_params . auxillary_stackfile_count; i++)
+	for(uint32_t i = 0; i < p_params . auxiliary_stackfile_count; i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
 	MCMemoryDeleteArray(t_aux_stackfiles);
 	MCDeployFileClose(t_spill);
@@ -500,7 +559,10 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 		t_stat = fetch_filepath(ep2, t_array, "stackfile", t_params . stackfile);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath_array(ep2, t_array, "auxillary_stackfiles", t_params . auxillary_stackfiles, t_params . auxillary_stackfile_count);
+		t_stat = fetch_filepath_array(ep2, t_array, "auxiliary_stackfiles", t_params . auxiliary_stackfiles, t_params . auxiliary_stackfile_count);
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch the resource mappings, if any.    
+    if (t_stat == ES_NORMAL)
+        t_stat = fetch_cstring_array(ep2, t_array, "library", t_params . library, t_params . library_count);
 	if (t_stat == ES_NORMAL)
 		t_stat = fetch_cstring_array(ep2, t_array, "externals", t_params . externals, t_params . external_count);
 	if (t_stat == ES_NORMAL)
@@ -531,6 +593,52 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 		if (t_stat == ES_NORMAL && ep2 . getarray() != NULL)
 			t_params . version_info = new MCVariableValue(*ep2 . getarray());
 	}
+    
+    // The 'min_os_version' is either a string or an array. If it is a string then
+    // it encodes the version against the 'Unknown' architecture which is interpreted
+    // by the deploy command to mean all architectures. Otherwise, the keys in the
+    // array are assumed to be architecture names and each is pushed on the array.
+    // If the 'min_os_version' is empty, then no change is brought to the binaries.
+    // If multiple entries are present, then the 'unknown' mapping is used for any
+    // architecture not explicitly specified. The current architecture strings that are
+    // known are:
+    //   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
+    // The empty string is taken to be 'unknown'.
+    if (t_stat == ES_NORMAL)
+    {
+        t_stat = t_array -> fetch_element(ep2, "min_os_version");
+        if (t_stat == ES_NORMAL)
+        {
+            if (ep2 . getformat() == VF_ARRAY)
+            {
+                MCExecPoint ep3(ep2);
+                MCHashentry *t_entry;
+                uindex_t t_index;
+                t_entry = nil;
+                t_index = 0;
+                for(;;)
+                {
+                    if (t_stat == ES_ERROR)
+                        break;
+                    
+                    t_entry = ep2 . getarray() -> get_array() -> getnextelement(t_index, t_entry, False, ep);
+                    if (t_entry == nil)
+                        break;
+                    
+                    MCDeployArchitecture t_arch;
+                    if (!MCDeployMapArchitectureString(t_entry -> string, t_arch))
+                        continue;
+                    
+                    t_stat = t_entry -> value . fetch(ep3);
+                    
+                    if (t_stat == ES_NORMAL)
+                        t_stat = MCDeployPushMinOSVersion(t_params, t_arch, ep3 . getcstring());
+                }
+            }
+            else if (!ep2.isempty())
+                t_stat = MCDeployPushMinOSVersion(t_params, kMCDeployArchitecture_Unknown, ep2 . getcstring());
+        }
+    }
 	
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
@@ -593,7 +701,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	delete t_params . output;
 	delete t_params . spill;
 	delete t_params . stackfile;
-	MCCStringArrayFree(t_params . auxillary_stackfiles, t_params . auxillary_stackfile_count);
+	MCCStringArrayFree(t_params . auxiliary_stackfiles, t_params . auxiliary_stackfile_count);
 	MCCStringArrayFree(t_params . externals, t_params . external_count);
 	delete t_params . startup_script;
 	MCCStringArrayFree(t_params . redirects, t_params . redirect_count);
@@ -605,6 +713,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	delete t_params . engine_ppc;
 	delete t_params . engine_x86;
 	delete t_params . version_info;
+    MCMemoryDeleteArray(t_params . min_os_versions);
 
 	if (t_stat == ES_ERROR && t_soft_error)
 		return ES_NORMAL;
