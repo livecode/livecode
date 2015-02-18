@@ -3,7 +3,7 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 ## SYNOPSIS
 
-**lc-compile** [_OPTION_ ...] --output _OUTFILE_ [--] _LCBFILE_
+**lc-compile** [_OPTION_ ...] -o _OUTFILE_ [--] _LCBFILE_
 
 **lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_
 
@@ -18,12 +18,12 @@ specified.
 
 ## OPTIONS
 
-* --modulepath _PATH_:
+* -I, --modulepath _PATH_:
   Search for interface (`.lci`) files in _PATH_, which should be a directory.
   The first `--modulepath` option specified determines the directory in which
   an interface file may be created for _LCBFILE_.
 
-* --output _OUTFILE_:
+* -o, --output _OUTFILE_:
   Generate LiveCode bytecode in _OUTFILE_, which should be the path to a `.lcm`
   file.  If _OUTFILE_ already exists, it will be overwritten.
 
