@@ -253,38 +253,41 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
     // known are:
     //   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
     // The empty string is taken to be 'unknown'.
-    MCValueRef t_min_os_version;
-    MCArrayFetchValue(p_array, false, MCNAME("min_os_version"), t_min_os_version);
+    min_os_version_count = 0;
     
-    if (MCValueIsArray(t_min_os_version))
+    MCValueRef t_min_os_version;
+    t_min_os_version = nil;
+    if (MCArrayFetchValue(p_array, false, MCNAME("min_os_version"), t_min_os_version))
     {
-        MCNameRef t_name;
-        MCValueRef t_value;
-        uintptr_t t_iterator;
-        t_iterator = 0;
-        while (MCArrayIterate((MCArrayRef)p_array, t_iterator, t_name, t_value))
+        if (MCValueIsArray(t_min_os_version))
         {
-            MCDeployArchitecture t_arch;
-            if (!MCDeployMapArchitectureString(MCNameGetString(t_name), t_arch))
-                continue;
-         
-            MCAutoStringRef t_arch_string;
-            if (!ctxt . ConvertToString(t_value, &t_arch_string))
-                continue;
-            
-           if (!MCDeployPushMinOSVersion(*this, t_arch, *t_arch_string))
-               return false;
+            MCNameRef t_name;
+            MCValueRef t_value;
+            uintptr_t t_iterator;
+            t_iterator = 0;
+            while (MCArrayIterate((MCArrayRef)p_array, t_iterator, t_name, t_value))
+            {
+                MCDeployArchitecture t_arch;
+                if (!MCDeployMapArchitectureString(MCNameGetString(t_name), t_arch))
+                    continue;
+                
+                MCAutoStringRef t_arch_string;
+                if (!ctxt . ConvertToString(t_value, &t_arch_string))
+                    continue;
+                
+                if (!MCDeployPushMinOSVersion(*this, t_arch, *t_arch_string))
+                    return false;
+            }
+        }
+        else if (!MCValueIsEmpty(t_min_os_version))
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . ConvertToString(t_min_os_version, &t_string))
+                return false;
+            if (!MCDeployPushMinOSVersion(*this, kMCDeployArchitecture_Unknown, *t_string))
+                return false;
         }
     }
-    else if (!MCValueIsEmpty(t_min_os_version))
-    {
-        MCAutoStringRef t_string;
-        if (!ctxt . ConvertToString(t_min_os_version, &t_string))
-            return false;
-        if (!MCDeployPushMinOSVersion(*this, kMCDeployArchitecture_Unknown, *t_string))
-            return false;
-    }
-    
 	return true;
 }
 
