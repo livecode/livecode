@@ -316,7 +316,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     NSDictionary *t_dict;
     t_dict = [[NSBundle mainBundle] infoDictionary];
     NSNumber *t_status_bar_solid;
-    t_status_bar_solid = [t_dict objectForKey:@"UIStatusBarSolid"];
+    t_status_bar_solid = [t_dict objectForKey:@"com_livecode_StatusBarSolid"];
     
     m_status_bar_solid = [t_status_bar_solid boolValue];
 	
