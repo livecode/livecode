@@ -32,12 +32,14 @@ fi
 # SN-2015-02019: [[ Bug 14625 ]] We build and link each arch separately, and lipo them
 #  togother once it's done.
 
-LCEXT_FILES=""
+LCEXT_FILE_LIST=""
+DYLIB_FILE_LIST=""
 
 # Link architecture-specifically the libraries
 for ARCH in $(echo $ARCHS | tr " " "\n")
 do
     LCEXT_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext_${ARCH}"
+    DYLIB_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib_${ARCH}"
 
     # arm64 is only from iOS 7.0.0
     if [ ${ARCH} = "arm64" ]; then
@@ -46,13 +48,30 @@ do
 		MIN_VERSION="5.1"
     fi
 
-    $BIN_DIR/g++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS
+	# We still want to produce revsecurity.dylib
+	if [ -n "$DYLIB_REQUIRED" ]; then
+		$BIN_DIR/g++ -dynamiclib -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${DYLIB_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS
+	fi
+    
+    OUTPUT=$($BIN_DIR/g++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS)
 
-    LCEXT_FILES+=" ${LCEXT_FILE}"
+	if [ -n "$OUTPUT" ]; then
+		echo "Linking ""${LCEXT_FILE}""failed:"
+		echo $OUT
+		exit -1
+	fi
+
+    LCEXT_FILE_LIST+=" ${LCEXT_FILE}"
+    DYLIB_FILE_LIST+=" ${DYLIB_FILE}"
 done
 
 # Lipo the generated libs
-lipo -create ${LCEXT_FILES} -output "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext"
+lipo -create ${LCEXT_FILE_LIST} -output "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext"
 
 # Cleanup the lcext_$ARCH files generated
-rm ${LCEXT_FILES}
+rm ${LCEXT_FILE_LIST}
+
+if [ -n "$DYLIB_REQUIRED" ]; then
+	lipo -create ${DYLIB_FILE_LIST} -output "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib"
+	rm ${DYLIB_FILE_LIST}
+fi
