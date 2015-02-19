@@ -1125,8 +1125,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end if
    
    ----------
-   
-   local tStatusBarHidden, tStatusBarStyle, tIPadStatusBarHidden
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle
+   local tStatusBarHidden, tStatusBarStyle, tIPadStatusBarHidden, tStatusBarSolid
    put pSettings["ios,status bar hidden"] into tStatusBarHidden
    put pSettings["ios,status bar style"] into tStatusBarStyle
    put pSettings["ios,ipad status bar hidden"] into tIPadStatusBarHidden
@@ -1173,6 +1173,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end if
    if tStatusBarStyle is empty then
       put "Default" into tStatusBarStyle
+   end if
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle, 
+   -- which is opaque and automatically shifts down the app view by 20 pixels
+   if tStatusBarStyle is "solid" then
+      put "Opaque" into tStatusBarStyle
+      put true into tStatusBarSolid
    end if
    
    ----------
@@ -1242,6 +1248,13 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    replace "${STATUS_BAR_STYLE}" with "<string>UIStatusBarStyle" & tStatusBarStyle & "</string>" in tPlist
    replace "${STATUS_BAR_HIDDEN}" with "<" & tStatusBarHidden & "/>" in tPlist
    replace "${IPAD_STATUS_BAR_HIDDEN}" with "<" & tIPadStatusBarHidden & "/>" in tPlist
+   
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle
+   if tStatusBarSolid is empty then
+      put false into tStatusBarSolid
+   end if
+   replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in tPlist
+   
    
    -- MM-2013-10-08: [[ Bug 11257 ]] Make sure we include the new iOS 7 icons in the plist.
    get empty
