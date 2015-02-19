@@ -268,7 +268,6 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
 all: revbrowser
-all: lc-test
 all: server-all
 all: lc-run lc-test
 
