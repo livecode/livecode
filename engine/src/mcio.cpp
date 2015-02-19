@@ -935,7 +935,7 @@ IO_stat IO_write_valueref_new(MCValueRef p_value, IO_handle p_stream)
 			}
 		}	
 		break;
-        case kMCValueTypeCodeList:
+        case kMCValueTypeCodeProperList:
         {
             if (MCProperListIsEmpty((MCProperListRef)p_value))
                 t_stat = IO_write_uint1(IO_VALUEREF_LIST_EMPTY, p_stream);

@@ -270,7 +270,9 @@ bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
         return MCProperListPushElementsOntoBack(self, p_value -> list, p_value -> length);
     
     MCAutoProperListRef t_list;
-    MCProperListCopy(p_value, &t_list);
+	if (!MCProperListCopy(p_value, &t_list))
+		return false;
+
     return MCProperListAppendList(self, *t_list);
 }
 
@@ -305,7 +307,9 @@ bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index
         return MCProperListInsertElements(self, p_value -> list, p_value -> length, p_index);
     
     MCAutoProperListRef t_list;
-    MCProperListCopy(p_value, &t_list);
+	if (!MCProperListCopy(p_value, &t_list))
+		return false;
+
     return MCProperListInsertList(self, *t_list, p_index);
 }
 
@@ -319,7 +323,10 @@ bool MCProperListRemoveElements(MCProperListRef self, uindex_t p_start, uindex_t
     
     MCAutoArray<MCValueRef> t_values;
     for (uindex_t i = p_start; i < p_start + p_count; i++)
-        t_values . Push(self -> list[i]);
+	{
+		if (!t_values . Push(self -> list[i]))
+			return false;
+	}
     
     if (!__MCProperListShrinkAt(self, p_start, p_count))
         return false;
@@ -448,6 +455,13 @@ bool MCProperListFirstIndexOfList(MCProperListRef self, MCProperListRef p_needle
     while (!t_match && MCProperListFirstIndexOfElement(self, p_needle -> list[0], t_offset, t_new_offset))
     {
         t_match = true;
+
+		if (p_needle->length > self->length - t_new_offset)
+		{
+			t_match = false;
+			break;
+		}
+
         for (uindex_t i = 1; i < p_needle -> length; i++)
         {
             if (!MCValueIsEqualTo(p_needle -> list[i], self -> list[t_new_offset + i]))
@@ -774,7 +788,27 @@ bool __MCProperListIsEqualTo(__MCProperList *self, __MCProperList *other_self)
 
 bool __MCProperListCopyDescription(__MCProperList *self, MCStringRef& r_string)
 {
-	return false;
+	/* Shortcut for empty lists */
+	if (MCProperListIsEmpty (self))
+		return MCStringCopy (MCSTR("[]"), r_string);
+
+	MCAutoListRef t_contents_list;
+	if (!MCListCreateMutable (MCSTR(", "), &t_contents_list))
+		return false;
+
+	uintptr_t t_iter = 0;
+	MCValueRef t_value;
+	while (MCProperListIterate (self, t_iter, t_value))
+	{
+		if (!MCListAppend (*t_contents_list, t_value))
+			return false;
+	}
+
+	MCAutoStringRef t_contents_string;
+	if (!MCListCopyAsString (*t_contents_list, &t_contents_string))
+		return false;
+
+	return MCStringFormat(r_string, "[%@]", *t_contents_string);
 }
 
 bool __MCProperListImmutableCopy(__MCProperList *self, bool p_release, __MCProperList*& r_immutable_self)

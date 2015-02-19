@@ -41,6 +41,7 @@ extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptCannotCallContextHandlerErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -209,10 +210,11 @@ struct MCScriptImportedDefinition
     uindex_t module;
     MCScriptDefinitionKind kind;
     MCNameRef name;
-    //MCTypeInfoRef type;
     
+    // The module the definition resides in.
+    MCScriptModuleRef resolved_module;
     // The resolved definition - not pickled
-    MCScriptDefinition *definition;
+    MCScriptDefinition *resolved_definition;
 };
 
 struct MCScriptPosition
@@ -239,7 +241,7 @@ struct MCScriptTypeDefinition: public MCScriptDefinition
 
 struct MCScriptConstantDefinition: public MCScriptDefinition
 {
-	MCValueRef value;
+	uindex_t value;
 };
 
 struct MCScriptVariableDefinition: public MCScriptDefinition
@@ -250,6 +252,15 @@ struct MCScriptVariableDefinition: public MCScriptDefinition
 	uindex_t slot_index;
 };
 
+struct MCScriptContextVariableDefinition: public MCScriptDefinition
+{
+    uindex_t type;
+    uindex_t default_value;
+    
+    // (computed) The index of the variable in the context slot table - not pickled
+    uindex_t slot_index;
+};
+
 struct MCScriptCommonHandlerDefinition: public MCScriptDefinition
 {
     uindex_t type;
@@ -257,22 +268,19 @@ struct MCScriptCommonHandlerDefinition: public MCScriptDefinition
 
 struct MCScriptHandlerDefinition: public MCScriptCommonHandlerDefinition
 {
-    uindex_t *locals;
-    uindex_t local_count;
+    uindex_t *local_types;
+    uindex_t local_type_count;
+    
+    MCNameRef *local_names;
+    uindex_t local_name_count;
     
 	uindex_t start_address;
 	uindex_t finish_address;
     
-    // The names of the locals - this information can be stripped.
-    MCNameRef *local_names;
-    uindex_t local_name_count;
+    MCScriptHandlerScope scope;
     
-    // The number of slots required in a frame in order to execute this handler.
-    // This is the sum of parameter count, local count and temporary count - not pickled
+    // The number of slots required in a frame in order to execute this handler - computed.
     uindex_t slot_count;
-    
-    // The start of the registers.
-    uindex_t register_offset;
 };
 
 struct MCScriptDefinitionGroupDefinition: public MCScriptDefinition
@@ -378,6 +386,12 @@ struct MCScriptModule: public MCScriptObject
     // (computed) The number of slots needed by an instance - not pickled
     uindex_t slot_count;
     
+    // (computed) The number of slots needed by this modules context - not pickled
+    uindex_t context_slot_count;
+    
+    // (computed) The index of this module's context info in a frame's context vector - not pickled
+    uindex_t context_index;
+    
     // If this is a non-widget module, then it only has one instance - not pickled
     MCScriptInstanceRef shared_instance;
     
@@ -401,6 +415,7 @@ MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef module, MCScript
 MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
 MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
 MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, uindex_t index);
+MCNameRef MCScriptGetNameOfContextVariableInModule(MCScriptModuleRef module, uindex_t index);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -474,8 +489,9 @@ enum MCScriptBytecodeOp
 	kMCScriptBytecodeOpAssign,
     
 	// Return control to caller with value:
-	//   return <reg>
-    // Return from a call.
+	//   return [<reg>]
+    // Return from a call. If <reg> is not specified, then the return value is taken
+    // to be undefined.
     //
     // It is an error if <reg> does not contain a value conforming to the return
     // type of the executing handler.
@@ -483,8 +499,9 @@ enum MCScriptBytecodeOp
 	kMCScriptBytecodeOpReturn,
     
 	// Direct handler invocation:
-	//   invoke <index>, <result>, <arg_1>, ..., <arg_n>
+	//   invoke <index>, [<result>], <arg_1>, ..., <arg_n>
 	// Handler with index <index> is invoked with the given registers as arguments.
+    // If the
     //
     // It is a runtime error if the number of arguments is different from the
     // signature of <index>.
@@ -505,39 +522,26 @@ enum MCScriptBytecodeOp
     //
 	kMCScriptBytecodeOpInvokeIndirect,
     
-	// Local fetch:
-	//   fetch-local <dst>, <local-index>
-	// Assigns the current value of <glob-index> to register <dst>.
+	// Fetch:
+	//   fetch <dst>, <index>, [<level>]
+	// Evaluates definition index <index> in level <level> and assigns the result to
+    // register <dst>. If <level> is not present then it is taken to be 0.
     //
-    // It is a runtime error if the type of the variable is non-optional and it
-    // has an undefined value.
+    // The <level> indicates where the definition should be looked up with 0 being
+    // the enclosing scope, 1 the next scope and so on.
     //
-	kMCScriptBytecodeOpFetchLocal,
-	// Local store:
-	//   store-local <src>, <local-index>
-	// Assigns the current value of register <src> to <glob-index>.
     //
-    // It is a runtime error if the type of the value in <src> does not conform
-    // to the type of the target local variable.
-    //
-	kMCScriptBytecodeOpStoreLocal,
+	kMCScriptBytecodeOpFetch,
     
-	// Global fetch:
-	//   fetch-global <dst>, <glob-index>
-	// Assigns the current value of <glob-index> to register <dst>.
+	// Store:
+	//   store <src>, <index>, [<level>]
+	// Stores the value currently held in <src> into definition index <index> at level
+    // <level>. If <level> is not present then it is taken to be 0.
     //
-    // It is a runtime error if the type of the variable is non-optional and it
-    // has an undefined value.
+    // The <level> indicates where the definition should be looked up with 0 being
+    // the enclosing scope, 1 the next scope and so on.
     //
-	kMCScriptBytecodeOpFetchGlobal,
-	// Global store:
-	//   store-global: <src>, <glob-index>
-	// Assigns the current value of register <src> to <glob-index>.
-    //
-    // It is a runtime error if the type of the value in <src> does not conform
-    // to the type of the target global variable.
-    //
-	kMCScriptBytecodeOpStoreGlobal,
+	kMCScriptBytecodeOpStore,
     
     // List creation assignment.
     //   assign-list <dst>, <arg_1>, ..., <arg_n>

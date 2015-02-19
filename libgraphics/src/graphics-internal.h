@@ -466,24 +466,16 @@ public:
 	virtual bool asCoeff(Coeff* src, Coeff* dst) const;
 	virtual bool asMode(Mode* mode) const;
 	
-    virtual Factory getFactory() const { return CreateProc; }
-    virtual void flatten(SkFlattenableWriteBuffer&);
-	
-protected:
-    MCGLegacyBlendMode(SkFlattenableReadBuffer& rb);
+    virtual Factory getFactory() const SK_OVERRIDE { return nil; }
+	virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE {}
 	
 private:
 	uint32_t m_function;
-	
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)
-	{
-		return SkNEW_ARGS(MCGLegacyBlendMode, (buffer));
-	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCGradientCombiner MCGradientCombiner_t;
+typedef struct MCGradientAffineCombiner MCGradientCombiner_t;
 
 class MCGLegacyGradientShader : public SkShader
 {
@@ -491,29 +483,22 @@ public:
 	MCGLegacyGradientShader(MCGGradientRef gradient_ref, MCGRectangle clip);
 	~MCGLegacyGradientShader();
 	
-    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&);
-    virtual uint32_t getFlags();
-    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
-    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
-    virtual bool asABitmap(SkBitmap*, SkMatrix*, TileMode*);
+    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&) SK_OVERRIDE;
+    virtual uint32_t getFlags() SK_OVERRIDE;
+    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) SK_OVERRIDE;
+    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count) SK_OVERRIDE;
+	virtual SkShader::BitmapType asABitmap(SkBitmap*, SkMatrix*, TileMode[2]) const SK_OVERRIDE;
 	
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)
-	{ 
-        return SkNEW_ARGS(MCGLegacyGradientShader, (buffer));
-    }	
+	virtual void flatten(SkFlattenableWriteBuffer& ) const SK_OVERRIDE {} ;
+    virtual Factory getFactory() const SK_OVERRIDE { return nil; }
 	
-protected:
-    MCGLegacyGradientShader(SkFlattenableReadBuffer& );
-    virtual void flatten(SkFlattenableWriteBuffer& );
-    virtual Factory getFactory() const { return CreateProc; }
-	
+private:
 	MCGGradientRef			m_gradient_ref;
 	int32_t					m_y;
 	uint8_t					*m_mask;
 	MCGRectangle			m_clip;
 	MCGradientCombiner_t	*m_gradient_combiner;
 	
-private:    
     typedef SkShader INHERITED;
 };
 

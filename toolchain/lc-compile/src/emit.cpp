@@ -40,8 +40,11 @@ extern "C" void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_t
 extern "C" void EmitExportedDefinition(long index);
 extern "C" void EmitDefinitionIndex(long& r_index);
 extern "C" void EmitTypeDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitConstantDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_const_index);
 extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitContextVariableDefinition(long index, PositionRef position, NameRef name, long type_index, long default_index);
 extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitBeginContextHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitEndHandlerDefinition(void);
 extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
 extern "C" void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index);
@@ -119,19 +122,21 @@ extern "C" void EmitBeginIndirectInvoke(long handlerreg, long contextreg, long r
 extern "C" void EmitContinueInvoke(long reg);
 extern "C" void EmitEndInvoke(void);
 extern "C" void EmitAssign(long dst, long src);
-extern "C" void EmitAssignUndefined(long reg);
-extern "C" void EmitAssignTrue(long reg);
-extern "C" void EmitAssignFalse(long reg);
-extern "C" void EmitAssignInteger(long reg, long value);
-extern "C" void EmitAssignReal(long reg, long value);
-extern "C" void EmitAssignString(long reg, long value);
+extern "C" void EmitAssignConstant(long dst, long constidx);
+extern "C" void EmitUndefinedConstant(long *idx);
+extern "C" void EmitTrueConstant(long *idx);
+extern "C" void EmitFalseConstant(long *idx);
+extern "C" void EmitIntegerConstant(long value, long *idx);
+extern "C" void EmitRealConstant(long value, long *idx);
+extern "C" void EmitStringConstant(long value, long *idx);
+extern "C" void EmitBeginListConstant(void);
+extern "C" void EmitContinueListConstant(long idx);
+extern "C" void EmitEndListConstant(long *idx);
 extern "C" void EmitBeginAssignList(long reg);
 extern "C" void EmitContinueAssignList(long reg);
 extern "C" void EmitEndAssignList(void);
-extern "C" void EmitFetchLocal(long reg, long var);
-extern "C" void EmitStoreLocal(long reg, long var);
-extern "C" void EmitFetchGlobal(long reg, long var);
-extern "C" void EmitStoreGlobal(long reg, long var);
+extern "C" void EmitFetch(long reg, long var, long level);
+extern "C" void EmitStore(long reg, long var, long level);
 extern "C" void EmitReturn(long reg);
 extern "C" void EmitReturnNothing(void);
 extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
@@ -171,6 +176,17 @@ static MCStringRef to_mcstringref(long p_string)
     MCStringRef t_uniq_string;
     MCValueInter(*t_string, t_uniq_string);
     return t_uniq_string;
+}
+
+static NameRef nameref_from_mcstringref(MCStringRef p_string)
+{
+    MCAutoPointer<char> t_utf8_string;
+    MCStringConvertToUTF8String(p_string, &t_utf8_string);
+    
+    NameRef t_name;
+    MakeNameLiteral(*t_utf8_string, &t_name);
+    
+    return t_name;
 }
 
 //////////
@@ -341,7 +357,7 @@ void EmitModuleDependency(NameRef p_name, long& r_index)
     MCScriptAddDependencyToModule(s_builder, to_mcnameref(p_name), t_index);
     r_index = t_index + 1;
     
-    MCLog("[Emit] ModuleDependency(%@ -> 0)", to_mcnameref(p_name), t_index + 1);
+    MCLog("[Emit] ModuleDependency(%@ -> %d)", to_mcnameref(p_name), t_index + 1);
 }
 
 void EmitImportedType(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
@@ -412,11 +428,25 @@ void EmitTypeDefinition(long p_index, PositionRef p_position, NameRef p_name, lo
     MCLog("[Emit] TypeDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
 
+void EmitConstantDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_const_index)
+{
+    MCScriptAddConstantToModule(s_builder, to_mcnameref(p_name), p_const_index, p_index);
+    
+    MCLog("[Emit] ConstantDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_const_index);
+}
+
 void EmitVariableDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
     MCScriptAddVariableToModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
     
     MCLog("[Emit] VariableDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
+}
+
+void EmitContextVariableDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_default_index)
+{
+    MCScriptAddContextVariableToModule(s_builder, to_mcnameref(p_name), p_type_index, p_default_index, p_index);
+    
+    MCLog("[Emit] ContextVariableDefinition(%ld, %@, %ld, %ld)", p_index, to_mcnameref(p_name), p_type_index, p_default_index);
 }
 
 void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_binding)
@@ -427,7 +457,34 @@ void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef 
     else
         t_binding_str = to_mcstringref(p_binding);
     
-    MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, *t_binding_str, p_index);
+    if (!MCStringBeginsWithCString(*t_binding_str, (const char_t *)"lcb:", kMCStringOptionCompareExact))
+        MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, *t_binding_str, p_index);
+    else
+    {
+        // The string should be of the form:
+        //   lcb:<module>.<handler>
+        
+        MCAutoStringRef t_module_dot_handler;
+        MCStringCopySubstring(*t_binding_str, MCRangeMake(4, UINDEX_MAX), &t_module_dot_handler);
+        
+        MCAutoStringRef t_module, t_handler;
+        uindex_t t_offset;
+        if (MCStringLastIndexOfChar(*t_module_dot_handler, '.', UINDEX_MAX, kMCStringOptionCompareExact, t_offset))
+            MCStringDivideAtIndex(*t_module_dot_handler, t_offset, &t_module, &t_handler);
+        else
+            t_handler = *t_module_dot_handler;
+
+        long t_module_dep;
+        if (*t_module == nil)
+            EmitModuleDependency(s_module_name, t_module_dep);
+        else
+            EmitModuleDependency(nameref_from_mcstringref(*t_module), t_module_dep);
+        
+        MCNewAutoNameRef t_hand_name;
+        MCNameCreate(*t_handler, &t_hand_name);
+        
+        MCScriptAddImportToModuleWithIndex(s_builder, t_module_dep - 1, *t_hand_name, kMCScriptDefinitionKindHandler, p_type_index, p_index);
+    }
     
     MCLog("[Emit] ForeignHandlerDefinition(%ld, %@, %ld, %@)", p_index, to_mcnameref(p_name), p_type_index, to_mcstringref(p_binding));
 }
@@ -448,9 +505,16 @@ void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, l
 
 void EmitBeginHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
-    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
+    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeNormal, to_mcnameref(p_name), p_type_index, p_index);
     
     MCLog("[Emit] BeginHandlerDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
+}
+
+void EmitBeginContextHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+{
+    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeContext, to_mcnameref(p_name), p_type_index, p_index);
+    
+    MCLog("[Emit] BeginContextHandlerDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
 
 void EmitEndHandlerDefinition(void)
@@ -1032,46 +1096,64 @@ void EmitEndInvoke(void)
 
 //////////
 
-void EmitAssignUndefined(long reg)
+void EmitUndefinedConstant(long *idx)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCNull);
-    MCLog("[Emit] AssignUndefined(%ld)", reg);
+    MCScriptAddValueToModule(s_builder, kMCNull, (uindex_t&)*idx);
+    MCLog("[Emit] UndefinedConstant(-> %ld)", *idx);
 }
 
-void EmitAssignTrue(long reg)
+void EmitTrueConstant(long *idx)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCTrue);
-    MCLog("[Emit] AssignUndefined(%ld)", reg);
+    MCScriptAddValueToModule(s_builder, kMCTrue, (uindex_t&)*idx);
+    MCLog("[Emit] TrueConstant(-> %ld)", *idx);
 }
 
-void EmitAssignFalse(long reg)
+void EmitFalseConstant(long *idx)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCFalse);
-    MCLog("[Emit] AssignUndefined(%ld)", reg);
+    MCScriptAddValueToModule(s_builder, kMCFalse, (uindex_t&)*idx);
+    MCLog("[Emit] FalseConstant(%ld)", *idx);
 }
 
-void EmitAssignInteger(long reg, long value)
+void EmitIntegerConstant(long value, long *idx)
 {
     MCAutoNumberRef t_number;
     MCNumberCreateWithInteger(value, &t_number);
-    MCScriptEmitAssignConstantInModule(s_builder, reg, *t_number);
-    MCLog("[Emit] AssignInteger(%ld, %ld)", reg, value);
+    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
+    MCLog("[Emit] IntegerConstant(%ld -> %ld)", value, *idx);
 }
 
-void EmitAssignReal(long reg, long value)
+void EmitRealConstant(long value, long *idx)
 {
     MCAutoNumberRef t_number;
     MCNumberCreateWithReal(*(double *)value, &t_number);
-    MCScriptEmitAssignConstantInModule(s_builder, reg, *t_number);
-    MCLog("[Emit] AssignReal(%ld, %lf)", reg, *(double *)value);
+    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
+    MCLog("[Emit] RealConstant(%lf -> %ld)", *(double *)value, *idx);
 }
 
-void EmitAssignString(long reg, long value)
+void EmitStringConstant(long value, long *idx)
 {
     MCAutoStringRef t_string;
     MCStringCreateWithBytes((const byte_t *)value, strlen((const char *)value), kMCStringEncodingUTF8, false, &t_string);
-    MCScriptEmitAssignConstantInModule(s_builder, reg, *t_string);
-    MCLog("[Emit] AssignString(%ld, \"%s\")", reg, (const char *)value);
+    MCScriptAddValueToModule(s_builder, *t_string, (uindex_t&)*idx);
+    MCLog("[Emit] StringConstant(\"%s\" -> %ld)", (const char *)value, *idx);
+}
+
+void EmitBeginListConstant(void)
+{
+    MCScriptBeginListValueInModule(s_builder);
+    MCLog("[Emit] BeginListConstant()", 0);
+}
+
+void EmitContinueListConstant(long idx)
+{
+    MCScriptContinueListValueInModule(s_builder, idx);
+    MCLog("[Emit] ContinueListConstant(%ld)", idx);
+}
+
+void EmitEndListConstant(long *idx)
+{
+    MCScriptEndListValueInModule(s_builder, (uindex_t&)*idx);
+    MCLog("[Emit] EndListConstant(-> %ld)", *idx);
 }
 
 void EmitBeginAssignList(long reg)
@@ -1098,30 +1180,24 @@ void EmitAssign(long dst, long src)
     MCLog("[Emit] Assign(%ld, %ld)", dst, src);
 }
 
+void EmitAssignConstant(long dst, long idx)
+{
+    MCScriptEmitAssignConstantInModule(s_builder, dst, idx);
+    MCLog("[Emit] AssignConstant(%ld, %ld)", dst, idx);
+}
+
 /////////
 
-void EmitFetchLocal(long reg, long var)
+void EmitFetch(long reg, long var, long level)
 {
-    MCScriptEmitFetchLocalInModule(s_builder, reg, var);
-    MCLog("[Emit] FetchLocal(%ld, %ld)", reg, var);
+    MCScriptEmitFetchInModule(s_builder, reg, var, level);
+    MCLog("[Emit] Fetch(%ld, %ld, %ld)", reg, var, level);
 }
 
-void EmitStoreLocal(long reg, long var)
+void EmitStore(long reg, long var, long level)
 {
-    MCScriptEmitStoreLocalInModule(s_builder, reg, var);
-    MCLog("[Emit] StoreLocal(%ld, %ld)", reg, var);
-}
-
-void EmitFetchGlobal(long reg, long var)
-{
-    MCScriptEmitFetchGlobalInModule(s_builder, reg, var);
-    MCLog("[Emit] FetchGlobal(%ld, %ld)", reg, var);
-}
-
-void EmitStoreGlobal(long reg, long var)
-{
-    MCScriptEmitStoreGlobalInModule(s_builder, reg, var);
-    MCLog("[Emit] StoreGlobal(%ld, %ld)", reg, var);
+    MCScriptEmitStoreInModule(s_builder, reg, var, level);
+    MCLog("[Emit] Store(%ld, %ld, %ld)", reg, var, level);
 }
 
 void EmitReturn(long reg)
@@ -1132,11 +1208,8 @@ void EmitReturn(long reg)
 
 void EmitReturnNothing(void)
 {
-    long t_reg;
-    EmitCreateRegister(t_reg);
-    EmitAssignUndefined(t_reg);
-    EmitReturn(t_reg);
-    EmitDestroyRegister(t_reg);
+    MCScriptEmitReturnUndefinedInModule(s_builder);
+    MCLog("[Emit] ReturnUndefined()", 0);
 }
 
 ////////

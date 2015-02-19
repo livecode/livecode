@@ -757,13 +757,25 @@ struct MCPosixSystem: public MCSystemInterface
 	
 	bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 	{
-		struct hostent *he;
-		he = gethostbyname(MCStringGetCString(p_hostname));
-		if (he == NULL)
-			return false;
-		
+		/* Use inet_aton(3) to check whether p_hostname is already an
+		 * IP address.  If not, use gethostbyname(3) to look it up. */
+		struct in_addr t_addr;
+		struct in_addr *t_addr_lst[] = { &t_addr, NULL };
 		struct in_addr **ptr;
-		ptr = (struct in_addr **)he -> h_addr_list;
+		struct hostent *he;
+
+		if (inet_aton (MCStringGetCString(p_hostname), &t_addr))
+		{
+			ptr = t_inaddr_lst;
+		}
+		else
+		{
+			he = gethostbyname(MCStringGetCString(p_hostname));
+			if (he == NULL)
+				return false;
+
+			ptr = (struct in_addr **)he -> h_addr_list;
+		}
 		
 		for(uint32_t i = 0; ptr[i] != NULL; i++)
 		{

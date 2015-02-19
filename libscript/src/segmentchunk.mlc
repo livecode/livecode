@@ -16,6 +16,8 @@
 
 module com.livecode.segmentchunk
 
+use com.livecode.foreign
+
 public foreign handler FetchSegmentOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
 public foreign handler StoreSegmentOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 public foreign handler FetchSegmentRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"

@@ -335,7 +335,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					curref = new MCCRef;
 					if (oterm == CT_UNDEFINED)
 					{
-						if (nterm >= CT_FIELD || nterm == CT_URL)
+						if (nterm >= CT_FIRST_TEXT_CHUNK || nterm == CT_URL)
 						{
 							sp.backup();
 							nterm = CT_CARD;

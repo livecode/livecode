@@ -78,7 +78,7 @@ void MakeDoubleLiteral(const char *p_token, long *r_literal)
     *r_literal = (long)t_value;
 }
 
-static int char_to_nibble(char p_char, int *r_nibble)
+static int char_to_nibble(char p_char, unsigned int *r_nibble)
 {
     if (isdigit(p_char))
         *r_nibble = p_char - '0';
@@ -122,7 +122,7 @@ void append_utf8_char(char *p_string, int *x_index, int p_char)
     }
 }
 
-int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
+int UnescapeStringLiteral(long p_position, const char *p_string, long *r_unescaped_string)
 {
     // Allocate enough room for the length of the string including a NUL char.
     // This is more than enough to handle any escapes as escaped chars are always
@@ -141,6 +141,10 @@ int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
     {
         if (*t_ptr == '\\')
         {
+            // Record the start of the escape.
+            const char *t_escape;
+            t_escape = t_ptr;
+            
             if (t_ptr + 1 < t_limit)
             {
                 t_ptr += 1;
@@ -155,80 +159,62 @@ int UnescapeStringLiteral(const char *p_string, long *r_unescaped_string)
                     t_value[t_length++] = '\t';
                 else if (*t_ptr == '\\')
                     t_value[t_length++] = '\\';
-                else if (*t_ptr == 'x')
-                {
-                    t_ptr += 1;
-                    
-                    if (t_ptr + 1 < t_limit)
-                    {
-                        int t_nibble_1, t_nibble_2;
-                        int t_char;
-                        
-                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
-                            goto error_exit;
-                        
-                        t_char = (t_nibble_1 << 4) | t_nibble_2;
-                        append_utf8_char(t_value, &t_length, t_char);
-                    }
-                }
                 else if (*t_ptr == 'u')
                 {
+                    // We expect the form:
+                    //   \u{ABCDEF}
+                    // With BCDEF all optional.
                     t_ptr += 1;
-                    
-                    if (t_ptr + 3 < t_limit)
+                    if (t_ptr < t_limit && *t_ptr == '{')
                     {
-                        int t_nibble_1, t_nibble_2, t_nibble_3, t_nibble_4;
-                        int t_char;
+                        int t_overflow;
+                        unsigned int t_char;
+                        t_char = 0;
+                        t_overflow = 0;
+                        for(;;)
+                        {
+                            // Advance the input ptr - if we are at the end here
+                            // it is an error.
+                            t_ptr += 1;
+                            if (t_ptr >= t_limit)
+                                goto error_exit;
+                            
+                            // If we get a } we are done, unless we haven't seen
+                            // a nibble yet, in which case it is an error.
+                            if (*t_ptr == '}')
+                            {
+                                if (t_ptr == t_escape + 3)
+                                    Warning_EmptyUnicodeEscape(p_position + (t_escape - p_string));
+                                break;
+                            }
+                            
+                            // Parse the next nibble, shift and add it.
+                            unsigned int t_nibble;
+                            if (!char_to_nibble(*t_ptr, &t_nibble))
+                                goto error_exit;
+                            
+                            t_char = t_char << 4;
+                            t_char |= t_nibble;
+                            
+                            if (t_char > 0x10FFFF)
+                                t_overflow = 1;
+                        }
                         
-                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_3))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_4))
+                        // If we get here and we are not looking at } then it
+                        // is an error.
+                        if (*t_ptr != '}')
                             goto error_exit;
                         
-                        t_char = (t_nibble_1 << 12) | (t_nibble_2 << 8) | (t_nibble_3  << 4) | t_nibble_4;
+                        if (t_overflow)
+                        {
+                            Warning_UnicodeEscapeTooBig(p_position + (t_escape - p_string));
+                            t_char = 0xFFFD;
+                        }
+                        
                         append_utf8_char(t_value, &t_length, t_char);
                     }
-                }
-                else if (*t_ptr == 'U')
-                {
-                    t_ptr += 1;
-                    
-                    if (t_ptr + 5 < t_limit)
-                    {
-                        int t_nibble_1, t_nibble_2, t_nibble_3, t_nibble_4, t_nibble_5, t_nibble_6;
-                        int t_char;
-                        
-                        if (!char_to_nibble(*t_ptr, &t_nibble_1))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_2))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_3))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_4))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_5))
-                            goto error_exit;
-                        t_ptr += 1;
-                        if (!char_to_nibble(*t_ptr, &t_nibble_6))
-                            goto error_exit;
-                        
-                        t_char = (t_nibble_1 << 20) | (t_nibble_2 << 16) | (t_nibble_3 << 12) | (t_nibble_4 << 8) | (t_nibble_5 << 4) | t_nibble_6;
-                        append_utf8_char(t_value, &t_length, t_char);
-                    }
+                    else
+                        goto error_exit;
                 }
                 else
                     goto error_exit;
@@ -260,8 +246,7 @@ void MakeStringLiteral(const char *p_token, long *r_literal)
     *r_literal = (long)t_value;
 }
 
-                    
-void MakeNameLiteral(const char *p_token, NameRef *r_literal)
+void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_literal)
 {
     NameRef t_name;
     for(t_name = s_names; t_name != NULL; t_name = t_name -> next)
@@ -274,7 +259,7 @@ void MakeNameLiteral(const char *p_token, NameRef *r_literal)
         if (t_name == NULL)
             Fatal_OutOfMemory();
         
-        t_name -> token = strdup(p_token);
+        t_name -> token = strndup(p_token, p_token_length);
         if (t_name -> token == NULL)
             Fatal_OutOfMemory();
         
@@ -285,6 +270,11 @@ void MakeNameLiteral(const char *p_token, NameRef *r_literal)
     *r_literal = t_name;
 }
 
+void MakeNameLiteral(const char *p_token, NameRef *r_literal)
+{
+    MakeNameLiteralN(p_token, strlen(p_token), r_literal);
+}
+
 void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
 {
     *r_string = ((NameRef)p_literal) -> token;
@@ -293,6 +283,11 @@ void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
 int IsNameEqualToString(NameRef p_name, const char *p_string)
 {
     return strcmp(p_name -> token, p_string) == 0;
+}
+
+int IsStringEqualToString(const char *p_left, const char *p_right)
+{
+    return strcmp(p_left, p_right) == 0;
 }
 
 void NegateReal(long p_real, long *r_real)

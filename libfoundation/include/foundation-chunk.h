@@ -19,22 +19,29 @@
 
 #include "foundation.h"
 
+struct MCChunkCountInRangeState
+{
+    MCValueRef value;
+    MCRange *range;
+};
+
 typedef uinteger_t (MCChunkCountCallback(void *context));
 
 uinteger_t MCChunkCountByteChunkCallback(void *context);
 uinteger_t MCChunkCountCodepointChunkCallback(void *context);
 
-void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsByRangeInRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsByExpressionInRange(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfByteChunkByRange(MCDataRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfByteChunkByExpression(MCDataRef p_data, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfByteChunkByRangeInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfCodeunitChunkByRange(MCStringRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfCodeunitChunkByExpression(MCStringRef p_data, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfByteChunkByExpressionInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfElementChunkByRange(MCProperListRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfElementChunkByExpression(MCProperListRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfCodeunitChunkByRangeInRange(MCStringRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(MCStringRef p_data, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+
+void MCChunkGetExtentsOfElementChunkByRangeInRange(MCProperListRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfElementChunkByExpressionInRange(MCProperListRef p_string, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
 
 #endif // __MC_FOUNDATION_CHUNK__

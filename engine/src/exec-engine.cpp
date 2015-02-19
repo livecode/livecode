@@ -1773,7 +1773,8 @@ void MCEngineEvalOwnerAsObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObje
     if (!(p_object . object -> gettype() == CT_STACK && MCdispatcher -> ismainstack(static_cast<MCStack *>(p_object . object))))
     {
         r_owner . object = p_object . object -> getparent();
-        r_owner . part_id  = 0;
+        // SN-2015-01-13: [[ Bug 14376 ]] Let's get the parid of the owner, as in pre-7.0
+        r_owner . part_id  = p_object . part_id;
         return;
     }
     

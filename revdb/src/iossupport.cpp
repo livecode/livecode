@@ -185,7 +185,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 4);
 	sprintf(t_filename, "%s.dylib", p_path);
 
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
 	void *t_driver_handle;
 	t_driver_handle = dlopen(t_filename, RTLD_NOW);
 
