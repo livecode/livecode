@@ -342,8 +342,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          -- Make the minimum run version of the engine 4.3
          -- SN-2015-02-05: [[ Bug 14422 ]] The linker minimum iphoneOS version
          --   should be relevant with the desired minimum version.
-         put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tVersion
-         put "-miphoneos-version-min=" & tVersion["armv7"] & return after tLinkCommand
+         -- SN-2015-02-19: [[ Bug 14625 ]] Minimum version is architecture-specific
+         --put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tVersion
+         --put "-miphoneos-version-min=" & tVersion["armv7"] & return after tLinkCommand
          
          -- MW-2013-06-26: [[ CloneAndRun ]] Only dead strip if an installed env.
          if revEnvironmentIsInstalled() then
@@ -373,15 +374,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             end if
          end repeat
          
-         -- Make a temporary file for link options and execute it
-         local tLinkOptionsFile
-         put tempName() into tLinkOptionsFile        
-         
-         -- MM-2011-09-28: Create the engine for the instruction set specified in the build type setting.
-         --
-         put tempName() into tSDKs[tInstSet]["engine file"]
-         put tLinkCommand & "-o" && quote & tSDKs[tInstSet]["engine file"] & quote & return into url ("binfile:" & tLinkOptionsFile)
-         
          -- Compute the list of archs in the fat binary
          local tRawArchs
          put shell("otool -fv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
@@ -391,21 +383,50 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          
          local tArchs
          if tRawArchs contains "ARM64" then
-            put "-arch arm64 " after tArchs
+            put "arm64 " after tArchs
          end if
          if tRawArchs contains "V7" then
-            put "-arch armv7 " after tArchs
+            put "armv7 " after tArchs
          end if
          
-         -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
-         -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
+         -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
+         -- to their architecture.
+         put empty into tArchSpecificEngineList
+         repeat for each word tArch in tArchs
+            -- Make a temporary file for link options and execute it
+            local tLinkOptionsFile
+            put tempName() into tLinkOptionsFile
+
+            put tempName() into tArchSpecificEngineFile
+            put tLinkCommand & "-o" && quote & tArchSpecificEngineFile & quote & return into url ("binfile:" & tLinkOptionsFile)
+
+            local tiPhoneMinVersion
+            if tArch = "arm64" then
+               put "7.0.0" into tiPhoneMinVersion
+            else
+               put "5.1.1" into tiPhoneMinVersion
+            end if
+            -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
+            -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
+            -- SN-2015-02-19: [[ Bug 14625 ]] The minimum iOS version is bound to the architecture
+            get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion && quote & "@" & tLinkOptionsFile & quote)
+
+            put tArchSpecificEngineFile & space after tArchSpecificEngineList
+            delete file tLinkOptionsFile
+            if it is not empty or there is no file tArchSpecificEngineFile then
+               throw "linking for" && tInstSet && " (" & tArch & ") failed with " & it
+            end if
+         end repeat
+
+         -- MM-2011-09-28: Create the engine for the instruction set specified in the build type setting.
          --
-         get shell("g++ " & tArchs && quote & "@" & tLinkOptionsFile & quote)
+         put tempName() into tSDKs[tInstSet]["engine file"]
+         -- SN-2015-02-19: [[ Bug 14625 ]] Make the fat binary with the architecture-specific engines
+         get shell("lipo -create " & tArchSpecificEngineList & " -output " & quote & tSDKs[tInstSet]["engine file"] & quote)
          
-         delete file tLinkOptionsFile
          if it is not empty or there is no file tSDKs[tInstSet]["engine file"] then
             throw "linking for" && tInstSet && "failed with " & it
-         end if         
+         end if
          
          -- Put the path back the way it was
          put tOldPath into $PATH
