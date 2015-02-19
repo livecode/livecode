@@ -3091,7 +3091,11 @@ void MCStack::unloadexternals(void)
 bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 {
     if (MCStringIsEmpty(p_path))
+    {
+        // PM-2015-01-26: [[ Bug 14437 ]] If we clear the player filename in the property inspector or by script, make sure we resolve empty, to prevent a crash
+        r_resolved = MCValueRetain(kMCEmptyString);
 		return false;
+    }
 
 	MCStringRef t_stack_filename;
 	t_stack_filename = getfilename();
