@@ -71,19 +71,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    
    local tSDKs
    if pTarget is "Device" then      
-      if revIDEDeployIOSSanatizeSystemVersion() < 100700 then   
-         
-         get revIDEDeployIOSGetDeviceSDK("5.0")
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") then
-            throw "performing iOS device builds requires the iOS 5.0 SDK platform to be installed (available with XCode 4.2)"
-         end if 
-         
-         put it into tSDKs["arm"]["root path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["arm"]["sdk path"]
-         put "5_0" into tSDKs["arm"]["suffix"] 
-         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
-         
-      else if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
+      -- PM-2015-02-06: [[ Bug 14422 ]] Drop support for OSX 10.6 and iOS 5.0 
+      if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
          
          -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
          --  
@@ -128,12 +117,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       
       -- MM-2012-09-18: We now only support the 4.3 simulators or later.
       -- For sim builds we just need the suffix (so we can extract the correct external) and where to look for the engines (runtime folder).
+      -- SN-2015-02-05: [[ Bug 14422 ]] We only support 5.1 simulator or later.
       --
-      if pTarget contains "4.3" then
-         put "4_3" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "5.0" then
-         put "5_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "5.1" then
+      if pTarget contains "5.1" then
          put "5_1" into tSDKs["sim"]["suffix"]
       else if pTarget contains "6.0" then
          put "6_0" into tSDKs["sim"]["suffix"]
@@ -354,7 +340,11 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          -- MW-2013-06-25: [[ PIE ]] Make sure we make the minversion 4.3 so we can make
          --   ARMv7+ PIE builds.
          -- Make the minimum run version of the engine 4.3
-         put "-miphoneos-version-min=4.3" & return after tLinkCommand
+         -- SN-2015-02-05: [[ Bug 14422 ]] The linker minimum iphoneOS version
+         --   should be relevant with the desired minimum version.
+         -- SN-2015-02-19: [[ Bug 14625 ]] Minimum version is architecture-specific
+         --put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tVersion
+         --put "-miphoneos-version-min=" & tVersion["armv7"] & return after tLinkCommand
          
          -- MW-2013-06-26: [[ CloneAndRun ]] Only dead strip if an installed env.
          if revEnvironmentIsInstalled() then
@@ -384,15 +374,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             end if
          end repeat
          
-         -- Make a temporary file for link options and execute it
-         local tLinkOptionsFile
-         put tempName() into tLinkOptionsFile        
-         
-         -- MM-2011-09-28: Create the engine for the instruction set specified in the build type setting.
-         --
-         put tempName() into tSDKs[tInstSet]["engine file"]
-         put tLinkCommand & "-o" && quote & tSDKs[tInstSet]["engine file"] & quote & return into url ("binfile:" & tLinkOptionsFile)
-         
          -- Compute the list of archs in the fat binary
          local tRawArchs
          put shell("otool -fv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
@@ -402,21 +383,50 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          
          local tArchs
          if tRawArchs contains "ARM64" then
-            put "-arch arm64 " after tArchs
+            put "arm64 " after tArchs
          end if
          if tRawArchs contains "V7" then
-            put "-arch armv7 " after tArchs
+            put "armv7 " after tArchs
          end if
          
-         -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
-         -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
+         -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
+         -- to their architecture.
+         put empty into tArchSpecificEngineList
+         repeat for each word tArch in tArchs
+            -- Make a temporary file for link options and execute it
+            local tLinkOptionsFile
+            put tempName() into tLinkOptionsFile
+
+            put tempName() into tArchSpecificEngineFile
+            put tLinkCommand & "-o" && quote & tArchSpecificEngineFile & quote & return into url ("binfile:" & tLinkOptionsFile)
+
+            local tiPhoneMinVersion
+            if tArch = "arm64" then
+               put "7.0.0" into tiPhoneMinVersion
+            else
+               put "5.1.1" into tiPhoneMinVersion
+            end if
+            -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
+            -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
+            -- SN-2015-02-19: [[ Bug 14625 ]] The minimum iOS version is bound to the architecture
+            get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion && quote & "@" & tLinkOptionsFile & quote)
+
+            put tArchSpecificEngineFile & space after tArchSpecificEngineList
+            delete file tLinkOptionsFile
+            if it is not empty or there is no file tArchSpecificEngineFile then
+               throw "linking for" && tInstSet && " (" & tArch & ") failed with " & it
+            end if
+         end repeat
+
+         -- MM-2011-09-28: Create the engine for the instruction set specified in the build type setting.
          --
-         get shell("g++ " & tArchs && quote & "@" & tLinkOptionsFile & quote)
+         put tempName() into tSDKs[tInstSet]["engine file"]
+         -- SN-2015-02-19: [[ Bug 14625 ]] Make the fat binary with the architecture-specific engines
+         get shell("lipo -create " & tArchSpecificEngineList & " -output " & quote & tSDKs[tInstSet]["engine file"] & quote)
          
-         delete file tLinkOptionsFile
          if it is not empty or there is no file tSDKs[tInstSet]["engine file"] then
             throw "linking for" && tInstSet && "failed with " & it
-         end if         
+         end if
          
          -- Put the path back the way it was
          put tOldPath into $PATH
@@ -1057,6 +1067,29 @@ end revCopyMobileStackFiles
 
 ################################################################################
 
+private function revGetMinimumOSByArch pMinimumOS 
+   local tMinimumOSByArch  
+   -- MM-2013-09-23: We only support iOS 4.3 and later
+   -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version is the
+   --  same for all archs, and we only support version >= 5.1.1
+   --
+   if pMinimumOS is empty or pMinimumOS <= "5.1" then
+      put "5.1.1" into tMinimumOSByArch["i386"]
+   else
+      put pMinimumOS & ".0" after tMinimumOSByArch["i386"]
+   end if
+   
+   -- Assign the same value to the other architectures.
+   -- Possible architectures:
+   --   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv6"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv7"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv7s"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["arm64"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["x86-64"]
+   return tMinimumOSByArch
+end revGetMinimumOSByArch
+
 private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    local tTemplateFile
    put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Settings.plist") into tTemplateFile
@@ -1066,7 +1099,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    
    ----------
    
-   local tExeName, tBundleId, tBundleVersion
+   local tExeName, tBundleId, tBundleVersion,tMinimumOSByArch
    put pSettings["name"] into tExeName
    put pSettings["ios,bundle id"] into tBundleId
    put pSettings["ios,bundle version"] into tBundleVersion
@@ -1094,11 +1127,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    if tDisplayName is empty then
       put tExeName into tDisplayName
    end if
-   -- MM-2013-09-23: We only support iOS 4.3 and later
-   --
-   if tMinimumOS is empty or tMinimumOS < "4.3" then
-      put "4.3" into tMinimumOS
-   end if
+   
+   put revGetMinimumOSByArch(tMinimumOS) into tMinimumOSByArch
    if tDeviceFamily is empty then
       put "1" into tDeviceFamily
    end if
@@ -1185,7 +1215,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in tPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
-   replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOS & "</string>" in tPlist
+   -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
+   replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in tPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in tPlist
    
    get empty
