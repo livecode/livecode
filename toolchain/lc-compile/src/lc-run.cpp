@@ -62,11 +62,11 @@ MCRunUsage (int p_exit_status)
 	fprintf (stderr,
 "Usage: lc-run [OPTIONS] [--] LCMFILE [ARGS ...]\n"
 "\n"
-"Run a compiled Modular Livecode bytecode file.\n"
+"Run a compiled Livecode Builder bytecode file.\n"
 "\n"
 "Options:\n"
 "  -H, --handler NAME   Specify name of handler to run.\n"
-"  --list-handlers      List possible entry points in LCMFILE and exit.\n"
+"      --list-handlers  List possible entry points in LCMFILE and exit.\n"
 "  -h, --help           Print this message.\n"
 "  --                   Treat next argument as bytecode filename.\n"
 "\n"
