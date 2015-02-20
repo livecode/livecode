@@ -1177,7 +1177,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle, 
    -- which is opaque and automatically shifts down the app view by 20 pixels
    if tStatusBarStyle is "solid" then
-      put "Opaque" into tStatusBarStyle
+      put "BlackOpaque" into tStatusBarStyle
       put true into tStatusBarSolid
    end if
    
