@@ -1318,12 +1318,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    
    local tUsesLocalNotifications
    if pSettings["ios,local notifications"] then
-      put true into tUsesLocalNotifications   
+      put "true" into tUsesLocalNotifications   
    else
-      put false into tUsesLocalNotifications 
+      put "false" into tUsesLocalNotifications 
    end if
    
-   replace "${USES_LOCAL_NOTIFICATIONS}" with tUsesLocalNotifications in tPlist
+   replace "${USES_LOCAL_NOTIFICATIONS}" with "<" & tUsesLocalNotifications & "/>" in tPlist
    
    if pSettings["ios,url name"] is not empty then
       get URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "URLSchemeSettings.plist"))
