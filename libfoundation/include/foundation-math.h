@@ -30,7 +30,9 @@
 #    define NAN ((float)(INFINITY*0.));
 #  endif
 #  include <float.h>
-#  define isinf(x) (!_finite(x))
+/* C++: isinf(x) should return non-zero if is an infinity.
+ * C99: isinf(x) should return 1 if x is +Inf, -1 if x is -Inf, 0 otherwise. */
+#  define isinf(x) ((_fpclass(x) == _FPCLASS_PINF) ? 1 : ((_fpclass(x) == _FPCLASS_NINF) ? -1 : 0))
 #  define copysign _copysign
 #  define isfinite(x) _finite(x)
 #endif
