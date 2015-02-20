@@ -334,12 +334,18 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (t_cls)
     {
 #ifdef __IPHONE_8_0
-        // PM-2014-11-14: [[ Bug 13927 ]] From iOS 8 we have to ask for user permission for local notifications
-        if ([UIApplication instancesRespondToSelector:@selector(registerUserNotificationSettings:)])
+        // PM-2015-02-18: [[ Bug 14400 ]] Ask for permission for local notifications only if this option is selected in standalone application settings
+        NSNumber *t_uses_local_notifications;
+        t_uses_local_notifications = [t_dict objectForKey:@"com_livecode_UsesLocalNotifications"];
+        if ([t_uses_local_notifications boolValue])
         {
-            UIUserNotificationSettings *t_local_settings;
-            t_local_settings = [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound categories:nil];
-            [[UIApplication sharedApplication] registerUserNotificationSettings:t_local_settings];
+            // PM-2014-11-14: [[ Bug 13927 ]] From iOS 8 we have to ask for user permission for local notifications
+            if ([UIApplication instancesRespondToSelector:@selector(registerUserNotificationSettings:)])
+            {
+                UIUserNotificationSettings *t_local_settings;
+                t_local_settings = [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound categories:nil];
+                [[UIApplication sharedApplication] registerUserNotificationSettings:t_local_settings];
+            }
         }
 #endif
         UILocalNotification *t_notification = [p_launchOptions objectForKey: UIApplicationLaunchOptionsLocalNotificationKey];
