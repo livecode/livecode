@@ -44,11 +44,15 @@ end deployIsAvailable
 function deployListTargets
    local tTargets
    
+   -- SN-2015-02-18: [[ ARM64 ]] We dropped support for 
+   --  iOS Simulators < 5.1
+   put "5.1,6.1,7.1,8.1" into tAvailableSimulators
+   
    repeat for each key tKey in sDeploySimulators
-      if tKey >= "4.2" then
+      if tKey is among the items of tAvailableSimulators then
          put "iPad Simulator" && tKey & return after tTargets
       end if
-      if tKey >= "4.0" then
+      if tKey is among the items of tAvailableSimulators then
          put "iPhone Simulator" && tKey & return after tTargets
       end if
    end repeat

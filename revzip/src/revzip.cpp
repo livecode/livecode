@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
 #define stricmp strcasecmp
+#include <unistd.h>
 #endif
 
 #define REVZIP_READ_BUFFER_SIZE 8192
