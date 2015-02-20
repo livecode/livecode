@@ -32,6 +32,7 @@
 #  include <float.h>
 #  define isinf(x) (!_finite(x))
 #  define copysign _copysign
+#  define isfinite(x) _finite(x)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

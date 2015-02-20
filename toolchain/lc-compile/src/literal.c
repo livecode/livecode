@@ -173,7 +173,9 @@ int UnescapeStringLiteral(long p_position, const char *p_string, long *r_unescap
                         t_overflow = 0;
                         for(;;)
                         {
-                            // Advance the input ptr - if we are at the end here
+                            unsigned int t_nibble;
+							
+							// Advance the input ptr - if we are at the end here
                             // it is an error.
                             t_ptr += 1;
                             if (t_ptr >= t_limit)
@@ -189,7 +191,6 @@ int UnescapeStringLiteral(long p_position, const char *p_string, long *r_unescap
                             }
                             
                             // Parse the next nibble, shift and add it.
-                            unsigned int t_nibble;
                             if (!char_to_nibble(*t_ptr, &t_nibble))
                                 goto error_exit;
                             
@@ -259,9 +260,11 @@ void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_litera
         if (t_name == NULL)
             Fatal_OutOfMemory();
         
-        t_name -> token = strndup(p_token, p_token_length);
+        t_name -> token = malloc(p_token_length + 1);
         if (t_name -> token == NULL)
             Fatal_OutOfMemory();
+        memcpy(t_name -> token, p_token, p_token_length);
+        t_name -> token[p_token_length] = '\0';
         
         t_name -> next = s_names;
         s_names = t_name;
