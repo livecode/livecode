@@ -1316,6 +1316,15 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
       replace "${REMOTE_NOTIFICATION_TYPES}" with empty in tPlist
    end if
    
+   local tUsesLocalNotifications
+   if pSettings["ios,local notifications"] then
+      put "true" into tUsesLocalNotifications   
+   else
+      put "false" into tUsesLocalNotifications 
+   end if
+   
+   replace "${USES_LOCAL_NOTIFICATIONS}" with "<" & tUsesLocalNotifications & "/>" in tPlist
+   
    if pSettings["ios,url name"] is not empty then
       get URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "URLSchemeSettings.plist"))
       replace "${BUNDLE_IDENTIFIER}" with tBundleId in it
