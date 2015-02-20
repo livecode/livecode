@@ -260,6 +260,22 @@ bool MCMemoryOutputStreamFinish(MCStreamRef p_stream, void*& r_buffer, size_t& r
 	return true;
 }
 
+bool MCMemoryOutputStreamFinishAsDataRef(MCStreamRef p_stream, MCDataRef& r_data)
+{
+    void *t_buffer;
+    size_t t_size;
+    if (!MCMemoryOutputStreamFinish(p_stream, t_buffer, t_size))
+        return false;
+    
+    if (!MCDataCreateWithBytesAndRelease((byte_t *)t_buffer, t_size, r_data))
+    {
+        free(t_buffer);
+        return false;
+    }
+    
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void __MCStreamDestroy(MCValueRef p_value)

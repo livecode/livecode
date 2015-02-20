@@ -2640,6 +2640,7 @@ MC_DLLEXPORT bool MCMemoryOutputStreamCreate(MCStreamRef& r_stream);
 // Finish the memory output and return the buffer. The stream will continue
 // to work, but will be reset to empty and a new buffer accumulated.
 MC_DLLEXPORT bool MCMemoryOutputStreamFinish(MCStreamRef stream, void*& r_buffer, size_t& r_size);
+MC_DLLEXPORT bool MCMemoryOutputStreamFinishAsDataRef(MCStreamRef stream, MCDataRef& r_data);
 
 // Capabilities
 
