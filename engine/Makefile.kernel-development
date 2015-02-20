@@ -7,7 +7,7 @@ SOURCES= \
 	ide.cpp internal_development.cpp lextable.cpp mode_development.cpp \
 	deploy.cpp deploy_linux.cpp deploy_windows.cpp \
 	deploy_macosx.cpp deploy_capsule.cpp deploy_sign.cpp deploy_file.cpp \
-	deploy_dmg.cpp bsdiff_build.cpp encodederrors.cpp
+	deploy_dmg.cpp deploy_builder.cpp bsdiff_build.cpp encodederrors.cpp
 
 MLC_LIST = libkernel-modules.list
 
