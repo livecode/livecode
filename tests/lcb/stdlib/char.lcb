@@ -143,11 +143,20 @@ public handler TestOffsetAfter()
 	test "first offset chars after (multiple)" when the first offset of chars "xx" after 1 in "xx.xxx." is 3
 	test "last offset chars after (multiple)" when the last offset of chars "xx" after 1 in "xx.xxx." is 4
 
-	test "offset (single, missing)" when the offset of "x" after 2 in "x.." is 0
-	test "offset (multiple, missing)" when the offset of "xx" after 1 in "xx.x." is 0
+	test "offset after (single, missing)" when the offset of "x" after 2 in "x.." is 0
+	test "offset after (multiple, missing)" when the offset of "xx" after 1 in "xx.x." is 0
 
-	test "last offset (single, missing)" when the last offset of "x" after 2 in "x.." is 0
-	test "last offset (multiple, missing)" when the last offset of "xxx" after 2 in "xxx.xx.x." is 0
+	test "last offset after (single, missing)" when the last offset of "x" after 2 in "x.." is 0
+	test "last offset after (multiple, missing)" when the last offset of "xxx" after 2 in "xxx.xx.x." is 0
+
+	skip test "last offset after (0)" because "bug 14677"
+	--test "last offset after (0)" when the last offset of "x" after 0 in "x" is ???
+
+	skip test "last offset after (before start)" because "bug 14677"
+	--test "last offset after (-ve)" when the last offset of "x" after -1000 in "x" is 1
+
+	broken test "last offset after (-ve)" when the last offset of "x" after -1 in "x" is 1
+	test "last offset after (after end)" when the last offset of "x" after 1000 in "x" is 0
 end handler
 
 public handler TestBeginsWith()
