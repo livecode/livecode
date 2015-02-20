@@ -514,8 +514,13 @@ void MCInterfaceEvalScreenLoc(MCExecContext& ctxt, MCStringRef& r_string)
     MCDisplay const *t_displays;
     MCscreen->getdisplays(t_displays, false);
     integer_t x, y;
-    x = t_displays->viewport.x + (t_displays->viewport.width >> 1);
-    y = t_displays->viewport.y + (t_displays->viewport.height >> 1);
+    if (t_displays != nil)
+    {
+        x = t_displays->viewport.x + (t_displays->viewport.width >> 1);
+        y = t_displays->viewport.y + (t_displays->viewport.height >> 1);
+    }
+    else
+        x = y = 0;
     
     if (MCStringFormat(r_string, "%d,%d", x, y))
         return;
