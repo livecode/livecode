@@ -173,59 +173,6 @@ bool MCStoreMakePurchase(const char *p_prod_id, const char *p_quantity, const ch
   
 }
   
-/*
-bool MCStoreMakePurchase(MCPurchase *p_purchase)
-{
-    if (p_purchase->state != kMCPurchaseStateInitialized)
-        return false;
-    
-    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
-    
-    bool t_success = false;
-    
-    MCAndroidEngineRemoteCall("storeMakePurchase", "bsss", &t_success, p_purchase->prod_id, "1", t_android_data->developer_payload);
-    
-    return t_success;
-}
-
-
-char* MCStoreAndroidRequestProductDetails(const char *p_purchase_id)
-{
-    
-    char* t_result;
-    
-    MCAndroidEngineRemoteCall("storeRequestProductDetails", "ss", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-*/
-
-
-// REMOVE THIS METHOD
-bool MCStoreRequestForProductDetails(const char *p_purchase_id)
-{
-    
-    bool t_result;
-    
-    MCAndroidEngineRemoteCall("storeRequestProductDetails", "bs", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-
-char* MCStoreReceiveProductDetails(const char *p_purchase_id)
-{
-    
-    char* t_result;
-    
-    MCAndroidEngineRemoteCall("storeReceiveProductDetails", "ss", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseFindByProductId(const char *p_product_id, MCPurchase *&r_purchase)
@@ -405,6 +352,9 @@ static bool purchase_confirm(MCPurchase *p_purchase)
     
     MCLog("confirming notification: purchaseId=%d, notificationId=%s", p_purchase->id, t_android_data->notification_id);
     MCAndroidEngineRemoteCall("purchaseConfirmDelivery", "bis", &t_result, p_purchase->id, t_android_data->notification_id);
+    
+    if (t_result)
+        MCPurchaseCompleteListUpdate(p_purchase);
     
     return t_result;
 }

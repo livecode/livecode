@@ -1249,14 +1249,15 @@ static void *mobile_main(void *arg)
 
 	MCLog("Starting up project", 0);
 	send_startup_message(false);
-
+    
+    // PM-2015-02-02: [[ Bug 14456 ]] Make sure the billing provider is properly initialized before a preopenstack/openstack message is sent
+    MCAndroidInitEngine();
+    
 	if (!MCquit)
 		MCdispatcher -> gethome() -> open();
-
+    
 	MCLog("Hiding splash screen", 0);
 	MCAndroidEngineRemoteCall("hideSplashScreen", "v", nil);
-
-    MCAndroidInitEngine();
 
 	while(s_engine_running)
 	{

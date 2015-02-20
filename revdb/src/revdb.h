@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 typedef DBConnection *(*new_connectionrefptr) ();
 typedef void (*release_connectionrefptr) (DBConnection *dbref);
 typedef void (*idcounterrefptr) (unsigned int *tidcounter);
+typedef void (*set_callbacksrefptr)(const DBcallbacks *callbacks);
 
 struct DATABASEREC;
 
