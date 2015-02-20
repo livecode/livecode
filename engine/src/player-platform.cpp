@@ -1454,7 +1454,11 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             // 1. Set defaultFolder to defaultFolderB. Set the filename to filenameA. Video will become empty, since the relative path is invalid.
             // 2. Change the defaultFolder to defaultFolderA. Set the filename again to filenameA. Now the relative path is valid
             char *t_resolved_filename;
-            resolveplayerfilename(filename, t_resolved_filename);
+            bool t_success = false;
+            t_success = resolveplayerfilename(filename, t_resolved_filename);
+            
+            if (!t_success)
+                t_resolved_filename = nil;
             
             // Compare with the resolved filename so handle the edge case mentioned below
             if (filename == NULL || data != filename || data != t_resolved_filename)
