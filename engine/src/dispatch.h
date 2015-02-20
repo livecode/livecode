@@ -57,6 +57,8 @@ class MCDispatch : public MCObject
     
 	static MCImage *imagecache;
 
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add resource mapping array to MCDispatch object.
+    MCVariableValue *m_library_mapping;
 public:
 	MCDispatch();
 	// virtual functions from MCObject
@@ -223,7 +225,12 @@ public:
 	{
 		return stacks;
 	}
-
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
+    //  in the resource mapping array of MCdispatcher.
+    void addlibrarymapping(const char *p_mapping);
+    bool fetchlibrarymapping(const char *p_name, char*& r_path);
+    
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.

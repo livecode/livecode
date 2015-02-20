@@ -44,11 +44,15 @@ end deployIsAvailable
 function deployListTargets
    local tTargets
    
+   -- SN-2015-02-18: [[ ARM64 ]] We dropped support for 
+   --  iOS Simulators < 5.1
+   put "5.1,6.1,7.1,8.1" into tAvailableSimulators
+   
    repeat for each key tKey in sDeploySimulators
-      if tKey >= "4.2" then
+      if tKey is among the items of tAvailableSimulators then
          put "iPad Simulator" && tKey & return after tTargets
       end if
-      if tKey >= "4.0" then
+      if tKey is among the items of tAvailableSimulators then
          put "iPhone Simulator" && tKey & return after tTargets
       end if
    end repeat
@@ -297,18 +301,19 @@ command deployUpdateSDKs
    repeat for each line tSDK in tSDKs
       set the folder to tSDK & "/Platforms/iPhoneSimulator.platform/Developer/SDKs"
       if the result is empty then
-         -- Include each simulator that isn't < 4.0 in the array, and ignore any
-         -- above 5.0 as that's the upper limit on supported versions for the
+         -- Include each simulator that isn't < 5.1 in the array, and ignore any
+         -- above 8.1 as that's the upper limit on supported versions for the
          -- current release.
          repeat for each line tSim in (the folders & return & the files)
             get char 16 to -5 of tSim
             
             -- MM-2012-09-18: We no no longer support simulators before 4.3.
-            if it < "4.3" then
+            -- PM-2015-02-06: We no no longer support simulators before 5.1.
+            if it < "5.1" then
                next repeat
             end if
             
-            -- MW-2012-03-21: Allow anything up to and including 5.1 support.
+            -- MW-2012-03-21: Allow anything up to and including 8.1 support.
             if it > "8.1" then
                next repeat
             end if
@@ -327,7 +332,7 @@ command deployUpdateSDKs
       if the result is empty then
          repeat for each line tDevSDK in (the folders & return & the files)
             get char 9 to -5 of tDevSDK
-            if it is not among the words of "5.0 5.1 6.0 6.1 7.0 7.1 8.0 8.1" then
+            if it is not among the words of "5.1 6.0 6.1 7.0 7.1 8.0 8.1" then
                next repeat
             end if
             if tDeviceSDKs[it] is not empty then
@@ -445,13 +450,6 @@ end deployAutoconfigureSDKs
 function deployIsValidSDK pSDK
    if pSDK is empty then
       return false
-   end if
-   
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator4.3.sdk") then
-      return true
-   end if
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.0.sdk") then
-      return true
    end if
    if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.1.sdk") then
       return true

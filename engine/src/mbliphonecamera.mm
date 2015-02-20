@@ -72,8 +72,14 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 	return t_data;
 }
 
+// PM-2015-02-17: [[ Bug 11544 ]] Make sure the visibility of the status bar is respected when presenting a UIImagePickerController
+- (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+    [[UIApplication sharedApplication] setStatusBarHidden:m_status_bar_hidden];
+}
+
 // MW-2011-01-18: [[ Bug 9303 ]] Make sure we take account of scale and orientation of the UIImage.
-- imagePickerController: (UIImagePickerController*)controller didFinishPickingImage: (UIImage *)p_image editingInfo: (NSDictionary*)info
+- (void)imagePickerController: (UIImagePickerController*)controller didFinishPickingImage: (UIImage *)p_image editingInfo: (NSDictionary*)info
 {
 	uint32_t t_width, t_height;
 	t_width = [p_image size] . width * [p_image scale];
@@ -115,7 +121,7 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 	MCscreen -> pingwait();
 }
 
-- imagePickerControllerDidCancel: (UIImagePickerController*)controller
+- (void)imagePickerControllerDidCancel: (UIImagePickerController*)controller
 {
 	m_running = false;
 	
@@ -123,7 +129,7 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 	MCscreen -> pingwait();
 }
 
-- popoverControllerDidDismissPopover: (UIPopoverController *)popoverController
+- (void)popoverControllerDidDismissPopover: (UIPopoverController *)popoverController
 {
 	m_running = false;
 	
