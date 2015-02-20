@@ -36,7 +36,11 @@ static jmethodID s_integer_constructor = nil;
 static bool init_integer_class(JNIEnv *env)
 {
     if (s_integer_class == nil)
-        s_integer_class = env->FindClass("java/lang/Integer");
+    {
+        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+        jclass t_integer_class = env->FindClass("java/lang/Integer");
+        s_integer_class = (jclass)env->NewGlobalRef(t_integer_class);
+    }
     if (s_integer_class == nil)
 		return false;
 
@@ -53,7 +57,11 @@ static jclass s_string_class = nil;
 static bool init_string_class(JNIEnv *env)
 {
 	if (s_string_class == nil)
-		s_string_class = env->FindClass("java/lang/String");
+    {
+        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+        jclass t_string_class = env->FindClass("java/lang/String");
+        s_string_class = (jclass)env->NewGlobalRef(t_string_class);
+    }
 	if (s_string_class == nil)
 		return false;
 
@@ -88,16 +96,6 @@ bool init_arraylist_class(JNIEnv *env)
 	return true;
 }
 
-// PM-2015-02-16: [[ Bug 14489 ]] Delete global ref
-void free_arraylist_class(JNIEnv *env)
-{
-    if (s_array_list_class != nil)
-    {
-        env->DeleteGlobalRef(s_array_list_class);
-        s_array_list_class = nil;
-    }
-}
-
 static jclass s_hash_map_class = nil;
 static jmethodID s_hash_map_constructor = nil;
 static jmethodID s_hash_map_put = nil;
@@ -110,7 +108,11 @@ static jmethodID s_map_entry_get_value = nil;
 static bool init_hashmap_class(JNIEnv *env)
 {
 	if (s_hash_map_class == nil)
-		s_hash_map_class = env->FindClass("java/util/HashMap");
+    {
+        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+        jclass t_hash_map_class = env->FindClass("java/util/HashMap");
+        s_hash_map_class = (jclass)env->NewGlobalRef(t_hash_map_class);
+    }
 	if (s_hash_map_class == nil)
 		return false;
 	
@@ -131,7 +133,11 @@ static bool init_hashmap_class(JNIEnv *env)
 	
 	
 	if (s_map_entry_class == nil)
-		s_map_entry_class = env->FindClass("java/util/Map$Entry");
+    {
+        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+        jclass t_map_entry_class = env->FindClass("java/util/Map$Entry");
+        s_map_entry_class = (jclass)env->NewGlobalRef(t_map_entry_class);
+    }
 	if (s_map_entry_class == nil)
 		return false;
 	
@@ -155,7 +161,11 @@ static jmethodID s_iterator_next = nil;
 static bool init_iterator_class(JNIEnv *env)
 {
 	if (s_iterator_class == nil)
-		s_iterator_class = env->FindClass("java/util/Iterator");
+    {
+        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+        jclass t_iterator_class = env->FindClass("java/util/Iterator");
+        s_iterator_class = (jclass)env->NewGlobalRef(t_iterator_class);
+    }
 	if (s_iterator_class == nil)
 		return false;
 	
@@ -178,7 +188,11 @@ static jmethodID s_set_iterator = nil;
 static bool init_set_class(JNIEnv *env)
 {
 	if (s_set_class == nil)
-		s_set_class = env->FindClass("java/util/Set");
+    {
+        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+        jclass t_set_class = env->FindClass("java/util/Set");
+        s_set_class = (jclass)env->NewGlobalRef(t_set_class);
+    }
 	if (s_set_class == nil)
 		return false;
 	
@@ -188,6 +202,72 @@ static bool init_set_class(JNIEnv *env)
 		return false;
 	
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// PM-2015-02-16: [[ Bug 14489 ]] Delete global ref
+void free_arraylist_class(JNIEnv *env)
+{
+    if (s_array_list_class != nil)
+    {
+        env->DeleteGlobalRef(s_array_list_class);
+        s_array_list_class = nil;
+    }
+}
+
+void free_integer_class(JNIEnv *env)
+{
+    if (s_integer_class != nil)
+    {
+        env->DeleteGlobalRef(s_integer_class);
+        s_integer_class = nil;
+    }
+}
+
+void free_string_class(JNIEnv *env)
+{
+    if (s_string_class != nil)
+    {
+        env->DeleteGlobalRef(s_string_class);
+        s_string_class = nil;
+    }
+}
+
+void free_hashmap_class(JNIEnv *env)
+{
+    if (s_hash_map_class != nil)
+    {
+        env->DeleteGlobalRef(s_hash_map_class);
+        s_hash_map_class = nil;
+    }
+}
+
+void free_map_entry_class(JNIEnv *env)
+{
+    if (s_map_entry_class != nil)
+    {
+        env->DeleteGlobalRef(s_map_entry_class);
+        s_map_entry_class = nil;
+    }
+}
+
+void free_iterator_class(JNIEnv *env)
+{
+    if (s_iterator_class != nil)
+    {
+        env->DeleteGlobalRef(s_iterator_class);
+        s_iterator_class = nil;
+    }
+}
+
+void free_set_class(JNIEnv *env)
+{
+    if (s_set_class != nil)
+    {
+        env->DeleteGlobalRef(s_set_class);
+        s_set_class = nil;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,6 +513,42 @@ bool MCJavaIntegerFromInt(JNIEnv *env, jint p_int, jobject &r_integer)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCJavaInitialize(JNIEnv *env)
+{
+    if (!init_integer_class(env))
+        return false;
+    
+    if (!init_string_class(env))
+        return false;
+    
+    if (!init_arraylist_class(env))
+        return false;
+    
+    if (!init_hashmap_class(env))
+        return false;
+    
+    if (!init_iterator_class(env))
+        return false;
+    
+    if (!init_set_class(env))
+        return false;
+    
+    return true;
+}
+
+void MCJavaFinalize(JNIEnv *env)
+{
+    free_arraylist_class(env);
+    free_integer_class(env);
+    free_string_class(env);
+    free_hashmap_class(env);
+    free_map_entry_class(env);
+    free_iterator_class(env);
+    free_set_class(env);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCJavaInitList(JNIEnv *env, jobject &r_list)
 {
     bool t_success = true;
@@ -453,7 +569,6 @@ bool MCJavaInitList(JNIEnv *env, jobject &r_list)
 bool MCJavaFreeList(JNIEnv *env, jobject p_list)
 {
     env->DeleteLocalRef(p_list);
-    free_arraylist_class(env);
     return true;
 }
 
