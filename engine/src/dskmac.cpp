@@ -7425,7 +7425,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 {
                     if (MCprocesses[index].pid != 0)
                         Kill(MCprocesses[index].pid, SIGKILL);
-                    return IO_ERROR;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return a boolean
+                    return false;
                 }
                 if (MCprocesses[index].pid == 0)
                     break;

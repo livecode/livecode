@@ -2358,7 +2358,8 @@ public:
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                    return true;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
                 }
             }
             else
@@ -2367,14 +2368,16 @@ public:
                 close(tochild[1]);
                 MCeerror->add
                 (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                return true;
+                // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                return false;
             }
         }
         else
         {
             MCeerror->add
             (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-            return true;
+            // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+            return false;
         }
         char *buffer;
         uint4 buffersize;
@@ -2425,7 +2428,8 @@ public:
                 {
                     if (MCprocesses[index].pid != 0)
                         Kill(MCprocesses[index].pid, SIGKILL);
-                    return true;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
                 }
                 if (MCprocesses[index].pid == 0)
                     break;
