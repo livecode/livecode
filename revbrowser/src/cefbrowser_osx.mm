@@ -28,6 +28,8 @@
 #include "WebAuthenticationPanel.h"
 #include <include/cef_url.h>
 
+#include <dlfcn.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCCefStringFromNSString(NSString *p_string, CefString &r_string)
@@ -141,8 +143,76 @@ const char *MCCefPlatformGetCefFrameworkFolder()
 	return s_path;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * libcef on OSX expects the NSApplication class to implement CrAppProtocol,
+ * which defines the following instance method to determine if the class's
+ * "sendEvent" method is currently being called:
+ *
+ * - (BOOL) isHandlingSendEvent
+ *
+ * The LiveCode NSApplication subclass has no implementation of that method, so
+ * before creating a browser, we need to dynamically attach our own version of
+ * that method to the subclass.
+ *
+ */
+
+// Returns the number of occurences of the function pointed to by p_func_ptr
+// on the call stack.
+static uint32_t _function_on_stack(void *p_func_ptr)
+{
+	uint32_t t_count;
+	t_count = 0;
+	
+	NSArray *t_stack;
+	t_stack = [NSThread callStackReturnAddresses];
+	
+	for (uint32_t i = 0; i < [t_stack count]; i++)
+	{
+		id t_obj;
+		t_obj = [t_stack objectAtIndex:i];
+		
+		// Find the function that the return address returns to.
+		Dl_info t_info;
+		if (t_obj != nil && 0 != dladdr((void*)[t_obj unsignedIntegerValue], &t_info))
+		{
+			if (t_info.dli_saddr == p_func_ptr)
+				t_count++;
+		}
+	}
+	
+	return t_count;
+}
+
+static BOOL _isHandlingSendEvent(id self, SEL _cmd)
+{
+	// Check if the NSApplication method "sendEvent" is on the call stack.
+	
+	IMP t_sendEvent;
+	t_sendEvent = class_getMethodImplementation(object_getClass([NSApplication sharedApplication]), @selector(sendEvent:));
+	return _function_on_stack((void*)t_sendEvent) > 0;
+}
+
+void MCCefInitNSApplication()
+{
+	// Test for the presence of the "isHandlingSendEvent" method and attach our own if not present.
+	
+	NSApplication *t_app;
+	t_app = [NSApplication sharedApplication];
+	
+	if ([t_app respondsToSelector:@selector(isHandlingSendEvent)])
+		return;
+	
+	class_addMethod(object_getClass(t_app), @selector(isHandlingSendEvent), (IMP)_isHandlingSendEvent, "c@:");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 {
+	MCCefInitNSApplication();
+	
 	NSWindow *t_app_window;
 	t_app_window = [NSApp windowWithWindowNumber:p_window_id];
 	

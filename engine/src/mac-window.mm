@@ -1629,6 +1629,7 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 	m_shadow_changed = false;
 	m_synchronizing = false;
 	m_has_sheet = false;
+	m_frame_locked = false;
 	
 	m_parent = nil;
 }
@@ -1692,6 +1693,14 @@ void MCMacPlatformWindow::ProcessDidMove(void)
 	// Don't handle move/resize events when synchronizing properties.
 	if (m_synchronizing)
 		return;
+	
+	// IM-2015-01-30: [[ Bug 14140 ]] Reset any rect changes while the frame is locked.
+	if (m_frame_locked)
+	{
+		m_changes.content_changed = true;
+		DoSynchronize();
+		return;
+	}
 	
 	// Get the window's new content rect.
 	NSRect t_new_cocoa_content;
@@ -1764,6 +1773,13 @@ void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint
 void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
 	HandleKeyUp(p_key_code, p_mapped_char, p_unmapped_char);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCMacPlatformWindow::SetFrameLocked(bool p_locked)
+{
+	m_frame_locked = p_locked;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2236,7 +2252,8 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
 	
 	if (t_mask->references > 1)
 	{
-		t_mask->references++;
+        // PM-2015-02-13: [[ Bug 14588 ]] Decrease ref count
+		t_mask->references--;
 		return;
 	}
 	

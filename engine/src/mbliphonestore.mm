@@ -311,6 +311,10 @@ bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 	
 	[[SKPaymentQueue defaultQueue] finishTransaction: t_ios_data->transaction];
 	p_purchase->state = kMCPurchaseStateComplete;
+    
+    // PM-2015-01-28: [[ Bug 14461 ]] Once the purchase is completed, add the productID to the completed purchases list
+    MCPurchaseCompleteListUpdate(p_purchase);
+    
 	MCPurchaseNotifyUpdate(p_purchase);
 	MCPurchaseRelease(p_purchase);
 	
@@ -864,35 +868,10 @@ bool MCStoreConsumePurchase(char const*)
 
 char *MCStoreGetPurchaseList()
 {
-    bool found;
-    
-    MCExecPoint ep(nil,nil,nil);
-    for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != nil; t_purchase = t_purchase->next)
-    {
-        found = false;
-        for (MCPurchase *t_next_purchase = t_purchase->next ; t_next_purchase != nil; t_next_purchase = t_next_purchase->next)
-        {
-            if (strcmp(t_next_purchase->prod_id, t_purchase->prod_id) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-        
-        if (!found)
-        {
-            ep.concatcstring(t_purchase->prod_id, EC_RETURN, ep.isempty());
-        }
-    }
-    return strdup(ep.getcstring());
+    return nil;
 }
 
 bool MCStoreSetPurchaseProperty(char const*, char const*, char const*)
 {
     return true;
-}
-
-char *MCStoreReceiveProductDetails(char const*)
-{
-    return nil;
 }

@@ -426,7 +426,7 @@ public class GoogleBillingProvider implements BillingProvider
     
             if (result.isFailure())
             {
-                complain("Error purchasing: " + result);
+				// PM-2015-01-27: [[ Bug 14450 ]] [Removed code] No need to display an alert with the error message, since this information is also contained in the purchaseStateUpdate message
                 mPurchaseObserver.onPurchaseStateChanged(pendingPurchaseSku, mapResponseCode(result.getResponse()));
                 pendingPurchaseSku = "";
                 return;

@@ -75,8 +75,9 @@ static struct {const char *name; MCPurchaseState state;} s_purchase_states[] =
     {"unverified", kMCPurchaseStateUnverified},
 };
 
-// we maintain here a list of known pending purchases
+// we maintain here a list of known pending purchases, and a list of completed purchases
 static MCPurchase *s_purchases = nil;
+static MCExecPoint s_completed_purchases;
 static uint32_t s_last_purchase_id = 1;
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
@@ -343,6 +344,10 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 	MCEventQueuePostCustom(t_event);
 }
 
+void MCPurchaseCompleteListUpdate(MCPurchase *p_purchase)
+{
+    s_completed_purchases.concatcstring(p_purchase->prod_id, EC_RETURN, s_completed_purchases.isempty());
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -395,7 +400,9 @@ Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters)
 Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters)
 {
     char *t_purchases;
-    t_purchases = MCStoreGetPurchaseList();
+    
+    // PM-2015-01-28: [[ Bug 14461 ]] Maintain a list of successfully purchased/restored items
+    t_purchases = strdup(s_completed_purchases.getcstring());
     
     MCresult -> sets(t_purchases);
     return ES_NORMAL;
@@ -436,59 +443,6 @@ Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters)
     MCCStringFree(t_product_id);
     MCCStringFree(t_prop_name);
     MCCStringFree(t_prop_value);
-    
-    return ES_NORMAL;
-}
-
-//REMOVE THIS
-/*
-Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_success = MCStoreRequestForProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-
-    return ES_NORMAL;
-}
-*/
-
-// MOVE THIS to mblandroidstore.cpp
-/*
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_success = MCStoreRequestProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-    
-    return ES_NORMAL;
-}
-*/
-
-Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    const char* t_product_details;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_product_details = MCStoreReceiveProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-    MCresult -> sets(t_product_details);
     
     return ES_NORMAL;
 }

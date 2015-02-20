@@ -93,6 +93,7 @@ bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_
 
 void MCPurchaseRetain(MCPurchase *p_purchase);
 void MCPurchaseRelease(MCPurchase *p_purchase);
+void MCPurchaseCompleteListUpdate(MCPurchase *p_purchase);
 
 bool MCPurchaseSendRequest(MCPurchase *p_purchase);
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase);
@@ -107,12 +108,7 @@ char* MCStoreGetPurchaseProperty(const char *p_purchase_id, const char *p_proper
 char* MCStoreGetPurchaseList();
 bool MCStoreConsumePurchase(const char *p_product_id);
 bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload);
-//bool MCStoreMakePurchase(MCPurchase *p);
 bool MCStoreRequestProductDetails(const char *p_product_id);
-bool MCStoreRequestForProductDetails(const char *p_product_id);
-char* MCStoreReceiveProductDetails(const char *p_product_id);
-//char* MCStoreAndroidRequestProductDetails(const char *p_product_id);
-
 
 bool MCStoreRestorePurchases();
 
