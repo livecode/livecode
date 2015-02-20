@@ -50,6 +50,13 @@ IO_stat MCStackSecurityRead(char *r_string, uint32_t p_length, IO_handle p_strea
 
 void MCStackSecurityProcessCapsule(void *p_start, void *p_finish);
 
+//////////
+
+// This wraps the given stream so that:
+//   - when reading from the new stream protection will be removed.
+//   - when writing to the new stream protection will be applied.
+bool MCStackSecurityProcessModule(MCStreamRef p_original_stream, MCStreamRef& r_new_stream);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

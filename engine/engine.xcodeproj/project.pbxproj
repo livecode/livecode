@@ -302,6 +302,7 @@
 		4D8BED0211B959F500DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D8BED0311B95A0300DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D8BED4811B95A1000DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
+		4D9381CE1A9747F0003CAB64 /* deploy_builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9381CD1A9747F0003CAB64 /* deploy_builder.cpp */; };
 		4DAB7B370FE120060009F91E /* bitmapeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7B350FE120060009F91E /* bitmapeffect.cpp */; };
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
 		4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DADCD5912392EAF003CD17C /* sha1.cpp */; };
@@ -2031,6 +2032,7 @@
 		4D8B47960BE7B3240046CD2F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		4D8BEC4411B9389C00DED42A /* bsdiff_build.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bsdiff_build.cpp; path = src/bsdiff_build.cpp; sourceTree = "<group>"; };
 		4D8BED0111B959F500DED42A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		4D9381CD1A9747F0003CAB64 /* deploy_builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = deploy_builder.cpp; sourceTree = "<group>"; };
 		4D9797D10D1845B700CD2DD0 /* itransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = itransform.cpp; path = src/itransform.cpp; sourceTree = "<group>"; };
 		4D982A4513C1B9A90066119A /* srvmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmac.cpp; path = src/srvmac.cpp; sourceTree = "<group>"; };
 		4D982B1113C1CDC10066119A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -3163,6 +3165,7 @@
 				4DAB7D1A0FF128F10009F91E /* deploy.cpp */,
 				4DE2AB01100CCA9300A69884 /* deploy.h */,
 				4DF65E4510016351005A19CA /* deploy_capsule.cpp */,
+				4D9381CD1A9747F0003CAB64 /* deploy_builder.cpp */,
 				4DCA084D11E8DAC7005CF640 /* deploy_dmg.cpp */,
 				4DCF875810C01A4200D14F5B /* deploy_file.cpp */,
 				4DAB7D1B0FF128F10009F91E /* deploy_linux.cpp */,
@@ -5241,6 +5244,7 @@
 				4D221ABF171D59A600E7E557 /* deploy_linux.cpp in Sources */,
 				4D221AC0171D59A600E7E557 /* deploy_macosx.cpp in Sources */,
 				4D221AC1171D59A600E7E557 /* deploy_windows.cpp in Sources */,
+				4D9381CE1A9747F0003CAB64 /* deploy_builder.cpp in Sources */,
 				4D221AC2171D59A600E7E557 /* deploy_capsule.cpp in Sources */,
 				4D221AC3171D59A600E7E557 /* deploy_sign.cpp in Sources */,
 				4D221AC4171D59A600E7E557 /* deploy_file.cpp in Sources */,

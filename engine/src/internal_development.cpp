@@ -79,6 +79,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "internal.h"
 #include "ide.h"
 #include "bsdiff.h"
+#include "deploy.h"
+#include "system.h"
 
 #ifdef _WINDOWS
 #include "w32prefix.h"
@@ -926,10 +928,21 @@ MCInternalVerbInfo MCinternalverbs[] =
 {
 	{ "break", nil, class_factory<MCInternalBreak> },
     { "call", nil, class_factory<MCInternalCall> },
-	{ "deploy", nil, class_factory<MCIdeDeploy> },
+	
+    { "deploy", nil, class_factory<MCIdeDeploy> },
 	{ "sign", nil, class_factory<MCIdeSign> },
 	{ "diet", nil, class_factory<MCIdeDiet> },
 	{ "extract", nil, class_factory<MCIdeExtract> },
+    
+	{ "dmg", "dump", class_factory<MCIdeDmgDump> },
+	{ "dmg", "build", class_factory<MCIdeDmgBuild> },
+    
+    { "builder", "validate", class_factory<MCIdeBuilderValidate> },
+    { "builder", "protect", class_factory<MCIdeBuilderProtect> },
+    
+    { "builder", "sign", class_factory<MCIdeBuilderSign> },
+    { "builder", "check", class_factory<MCIdeBuilderCheck> },
+    
 	{ "script", "flush", class_factory<MCIdeScriptFlush> },
 	{ "script", "colorize", class_factory<MCIdeScriptColourize> },
 	{ "script", "configure", class_factory<MCIdeScriptConfigure> },
@@ -939,19 +952,88 @@ MCInternalVerbInfo MCinternalverbs[] =
 	{ "script", "tokenize", class_factory<MCIdeScriptTokenize> },
 	{ "script", "classify", class_factory<MCIdeScriptClassify> },
 	{ "bsdiff", nil, class_factory<MCInternalBsDiff> },
-	{ "dmg", "dump", class_factory<MCIdeDmgDump> },
-	{ "dmg", "build", class_factory<MCIdeDmgBuild> },
+
+
 	{ "bootstrap", nil, class_factory<MCInternalBootstrap> },
+
 #ifdef FEATURE_PROPERTY_LISTENER
 	{ "listen", nil, class_factory<MCInternalObjectListen> },
 	{ "cancel", nil, class_factory<MCInternalObjectUnListen> },
 #endif
-	{ "syntax", "tokenize", class_factory<MCIdeSyntaxTokenize> },
+	
+    { "syntax", "tokenize", class_factory<MCIdeSyntaxTokenize> },
 	{ "syntax", "recognize", class_factory<MCIdeSyntaxRecognize> },
 	{ "syntax", "compile", class_factory<MCIdeSyntaxCompile> },
-	{ "filter", "controls", class_factory<MCIdeFilterControls> },
+	
+    { "filter", "controls", class_factory<MCIdeFilterControls> },
+    
 	{ nil, nil, nil }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
+
+int MCU_internal_action(int argc, MCStringRef *argv)
+{
+    extern Boolean MCruninternalaction;
+    MCruninternalaction = True;
+    if (X_init(argc, argv, nil))
+    {
+        MCresult -> clear();
+        
+        int t_result;
+        if (argc == 4 &&
+                 MCStringIsEqualToCString(argv[2], "builder_validate", kMCStringOptionCompareExact))
+        {
+            MCDeployBuilderValidate(argv[3]);
+        }
+        else if (argc == 4 &&
+                 MCStringIsEqualToCString(argv[2], "builder_protect", kMCStringOptionCompareExact))
+        {
+            MCDeployBuilderProtect(argv[3]);
+        }
+        else if (argc >= 6 && argc <= 7 &&
+                 MCStringIsEqualToCString(argv[2], "builder_sign", kMCStringOptionCompareExact))
+        {
+            MCDeployBuilderTrustParameters t_params;
+            t_params . package_file = argv[3];
+            t_params . certificate_file = argv[4];
+            t_params . key_file = argv[5];
+            t_params . passphrase = (argc > 5 ? argv[6] : argv[5]);
+            MCDeployBuilderSign(t_params);
+            
+        }
+        else if (argc == 5 &&
+                 MCStringIsEqualToCString(argv[2], "builder_check", kMCStringOptionCompareExact))
+        {
+            MCDeployBuilderTrustParameters t_params;
+            t_params . package_file = argv[3];
+            t_params . certificate_file = argv[4];
+            t_params . key_file = nil;
+            t_params . passphrase = nil;
+            MCDeployBuilderCheck(t_params);
+        }
+        else
+        {
+            MCErrorThrowGeneric(MCSTR(
+            ("Usage:\n"
+             "  <engine> -internal builder_validate <module_filename>\n"
+             "  <engine> -internal builder_protect <module_filename>\n"
+             "  <engine> -internal builder_sign <package_filename> <cert_filename> <key_filename> [ <passphrase> ]\n"
+             "  <engine> -internal builder_check <package_filename> <cert_filename>\n")));
+        }
+    }
+    
+    MCAutoErrorRef t_error;
+    if (MCErrorCatch(&t_error))
+    {
+        fprintf(stderr, "%s\n", MCStringGetCString(MCErrorGetMessage(*t_error)));
+        return 1;
+    }
+    
+    return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
