@@ -132,9 +132,10 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
-    // We require that source is concrete - this means that it must be a named
-    // type.
-    MCAssert(MCTypeInfoIsNamed(source));
+    // We require that source is concrete for all but handler types (as handlers
+    // have unnamed typeinfos which we need to compare with potentially named
+    // handler type typeinfos).
+    MCAssert(MCTypeInfoIsNamed(source) || MCTypeInfoIsHandler(source));
     
     // Resolve the source type.
     MCResolvedTypeInfo t_resolved_source;
