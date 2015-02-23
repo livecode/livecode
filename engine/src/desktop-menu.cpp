@@ -444,8 +444,7 @@ void MCButton::macopenmenu(void)
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
                 //  in case some menus are nested
                 MCStringRef t_menupick;
-                // PM-2015-02-09: [[ Bug 14521 ]] Make sure we don't pass nil to message_with_valueref_args
-                t_menupick = !MCStringIsEmpty(s_popup_menupick) ? s_popup_menupick : kMCEmptyString;
+                t_menupick = s_popup_menupick;
                 s_popup_menupick = nil;
                 
 				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
