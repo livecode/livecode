@@ -329,6 +329,10 @@ public:
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
 	
+	// IM-2015-02-23: [[ WidgetPopup ]] Return true if the contents of this stack are competely opaque.
+	// By default, stacks are opaque.
+	virtual bool isopaque(void) { return true; }
+	
 	// MW-2011-08-17: [[ Redraw ]] Render the stack into the given context 'dirty' is the
 	//   hull of the clipping region.
     virtual void render(MCContext *dc, const MCRectangle& dirty);
