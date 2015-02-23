@@ -396,9 +396,9 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
     if (t_success)
         for(uint32_t i = 0; i < MCArrayGetCount(p_params.library) && t_success; i++)
         {
-            MCValueRef t_value;
+            MCValueRef t_val;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.library, i + 1, t_val);
-            t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeLibrary, (MCStringRef)t_val);
+            t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeLibrary, (MCStringRef)t_val);
         }
     
 	// Now add the externals, if any

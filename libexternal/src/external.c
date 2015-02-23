@@ -666,7 +666,7 @@ void ShowImageByIdUTF8(const char *p_group, unsigned long p_id, int *r_success)
 
     // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
     if (s_external_interface_version < 2 ||
-            s_operations[OPEROPERATION_SHOW_IMAGE_BY_ID_UTF8] == NULL)
+            s_operations[OPERATION_SHOW_IMAGE_BY_ID_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;

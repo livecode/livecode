@@ -244,7 +244,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     {
         char *t_mapping;
         t_mapping = new char[p_length];
-        if (IO_read_bytes(t_mapping, p_length, p_stream) != IO_NORMAL)
+        if (IO_read(t_mapping, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read library mapping");
             return false;
