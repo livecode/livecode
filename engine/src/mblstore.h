@@ -144,6 +144,7 @@ void MCPurchaseDelete(MCPurchase *p_purchase);
 
 void MCPurchaseRetain(MCPurchase *p_purchase);
 void MCPurchaseRelease(MCPurchase *p_purchase);
+void MCPurchaseCompleteListUpdate(MCPurchase *p_purchase);
 
 bool MCPurchaseSendRequest(MCPurchase *p_purchase);
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase);
@@ -171,5 +172,7 @@ bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef &r_error);
 bool MCStoreRequestProductDetails(MCStringRef p_product_id);
 
 void MCPurchaseNotifyUpdate(MCPurchase *p_purchase);
+
+void MCPurchaseClearList(void);
 
 #endif //MBLSTORE_H

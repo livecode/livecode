@@ -74,8 +74,10 @@ static struct {const char *name; MCPurchaseState state;} s_purchase_states[] =
     {"unverified", kMCPurchaseStateUnverified},
 };
 
-// we maintain here a list of known pending purchases
+// we maintain here a list of known pending purchases, and a list of completed purchases
 static MCPurchase *s_purchases = nil;
+#error "NEed to finish"
+static MCListRef s_completed_purchases = nil;
 static uint32_t s_last_purchase_id = 1;
 static uint32_t s_id = 0;
 
@@ -141,14 +143,8 @@ bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string)
 }
 
 bool MCPurchaseList(MCStringRef& r_string)
-{   
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-        MCListAppendFormat(*t_list,"%@", t_purchase -> prod_id); // we want a list of product IDs
-	
-	return MCListCopyAsString(*t_list, r_string);
+{
+    return MCListCopyAsString(s_completed_purchases, r_string);
 }
 
 bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);
@@ -347,8 +343,21 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 	MCEventQueuePostCustom(t_event);
 }
 
+void MCPurchaseCompleteListUpdate(MCPurchase *p_purchase)
+{
+    if (s_completed_purchases == NULL)
+        /* UNCHECKED */ MCListCreateMutable('\n', s_completed_purchases);
+
+    MCListAppend(s_completed_purchases, p_purchase -> prod_id);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCPurchaseClearList(void)
+{
+    MCValueRelease(s_completed_purchases);
+    s_completed_purchases = NULL;
+}
 
 #ifdef LEGACY_EXEC
 static bool list_purchases(void *context, MCPurchase* p_purchase)

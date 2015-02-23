@@ -52,7 +52,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       throw "not supported on this platform"
    end if
    
-   start using stack "revSBLibrary" of stack "revStandaloneSettings"
+   start using stack "revSBLibrary"
    revStandaloneResetWarnings
    
    local tSettings
@@ -455,7 +455,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    
    -- If the datagrid is used, then include the library as an aux stack
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      put the effective filename of stack "revDataGridLibrary" into tDeploy["auxillary_stackfiles"]
+      put the effective filename of stack "revDataGridLibrary" into tDeploy["auxiliary_stackfiles"]
    end if
    
    -- Externals to reference
@@ -1146,8 +1146,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end if
    
    ----------
-   
-   local tStatusBarHidden, tStatusBarStyle, tIPadStatusBarHidden
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle
+   local tStatusBarHidden, tStatusBarStyle, tIPadStatusBarHidden, tStatusBarSolid
    put pSettings["ios,status bar hidden"] into tStatusBarHidden
    put pSettings["ios,status bar style"] into tStatusBarStyle
    put pSettings["ios,ipad status bar hidden"] into tIPadStatusBarHidden
@@ -1194,6 +1194,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end if
    if tStatusBarStyle is empty then
       put "Default" into tStatusBarStyle
+   end if
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle, 
+   -- which is opaque and automatically shifts down the app view by 20 pixels
+   if tStatusBarStyle is "solid" then
+      put "BlackOpaque" into tStatusBarStyle
+      put true into tStatusBarSolid
    end if
    
    ----------
@@ -1265,6 +1271,13 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    replace "${STATUS_BAR_HIDDEN}" with "<" & tStatusBarHidden & "/>" in tPlist
    replace "${IPAD_STATUS_BAR_HIDDEN}" with "<" & tIPadStatusBarHidden & "/>" in tPlist
    
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle
+   if tStatusBarSolid is empty then
+      put false into tStatusBarSolid
+   end if
+   replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in tPlist
+   
+   
    -- MM-2013-10-08: [[ Bug 11257 ]] Make sure we include the new iOS 7 icons in the plist.
    get empty
    repeat for each item tItem in ",-72,-114,-144,-120,-180,-76,-152"
@@ -1324,6 +1337,15 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    else
       replace "${REMOTE_NOTIFICATION_TYPES}" with empty in tPlist
    end if
+   
+   local tUsesLocalNotifications
+   if pSettings["ios,local notifications"] then
+      put "true" into tUsesLocalNotifications   
+   else
+      put "false" into tUsesLocalNotifications 
+   end if
+   
+   replace "${USES_LOCAL_NOTIFICATIONS}" with "<" & tUsesLocalNotifications & "/>" in tPlist
    
    if pSettings["ios,url name"] is not empty then
       get URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "URLSchemeSettings.plist"))

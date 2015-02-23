@@ -41,7 +41,7 @@ enum
 	/* V1 */ OPERATION_REMOVE_RUNLOOP_ACTION,
 	/* V1 */ OPERATION_RUNLOOP_WAIT,
     
-	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+    // IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
 	/* V1 */ OPERATION_STACK_TO_WINDOW_RECT,
 	/* V1 */ OPERATION_WINDOW_TO_STACK_RECT,
     
@@ -68,7 +68,12 @@ enum
 	/* V2 */ OPERATION_GET_ARRAY_UTF8_TEXT,
 	/* V2 */ OPERATION_GET_ARRAY_UTF8_BINARY,
 	/* V2 */ OPERATION_SET_ARRAY_UTF8_TEXT,
-	/* V2 */ OPERATION_SET_ARRAY_UTF8_BINARY,
+    /* V2 */ OPERATION_SET_ARRAY_UTF8_BINARY,
+    
+    // AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
+    /* V3 */ OPERATION_LOAD_MODULE,
+    /* V3 */ OPERATION_UNLOAD_MODULE,
+    /* V3 */ OPERATION_RESOLVE_SYMBOL_IN_MODULE,
 };
 
 enum
@@ -442,7 +447,9 @@ void SendCardMessageUTF8(const char *p_message, int *r_success)
 {
 	char *t_result;
     
-	if (s_external_interface_version < 2)
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_SEND_CARD_MESSAGE_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
@@ -457,8 +464,10 @@ void SendCardMessageUTF8(const char *p_message, int *r_success)
 char *EvalExprUTF8(const char *p_expression, int *r_success)
 {
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_EVAL_EXP_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return NULL;
@@ -471,8 +480,10 @@ char *EvalExprUTF8(const char *p_expression, int *r_success)
 char *GetGlobalUTF8(const char *p_name, int *r_success)
 {
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_GET_GLOBAL_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return NULL;
@@ -486,8 +497,10 @@ char *GetGlobalUTF8(const char *p_name, int *r_success)
 void SetGlobalUTF8(const char *p_name, const char *p_value, int *r_success)
 {
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_SET_GLOBAL_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
@@ -501,8 +514,10 @@ void SetGlobalUTF8(const char *p_name, const char *p_value, int *r_success)
 char *GetFieldByNameUTF8(const char *p_group, const char *p_name, int *r_success)
 {
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_GET_FIELD_BY_NAME_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return NULL;
@@ -517,8 +532,10 @@ char *GetFieldByNumUTF8(const char *p_group, int p_index, int *r_success)
 {
 	char t_index_str[16];
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_GET_FIELD_BY_NUM_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return NULL;
@@ -534,15 +551,17 @@ char *GetFieldByIdUTF8(const char *p_group, unsigned long p_id, int *r_success)
 {
 	char t_index_str[16];
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_GET_FIELD_BY_ID_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return NULL;
 	}
     
 	sprintf(t_index_str, "%ld", p_id);
-	t_result = (s_operations[OPERATION_GET_FIELD_BY_ID])(t_index_str, p_group, NULL, r_success);
+    t_result = (s_operations[OPERATION_GET_FIELD_BY_ID_UTF8])(t_index_str, p_group, NULL, r_success);
     
 	return retstr(t_result);
 }
@@ -550,8 +569,10 @@ char *GetFieldByIdUTF8(const char *p_group, unsigned long p_id, int *r_success)
 void SetFieldByNameUTF8(const char *p_group, const char *p_name, const char *p_value, int *r_success)
 {
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_SET_FIELD_BY_NAME_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
@@ -567,8 +588,10 @@ void SetFieldByNumUTF8(const char *p_group, int p_index, const char *p_value, in
 {
 	char t_index_str[16];
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_SET_FIELD_BY_NUM_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
@@ -584,15 +607,17 @@ void SetFieldByIdUTF8(const char *p_group, unsigned long p_id, const char *p_val
 {
 	char t_index_str[16];
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_SET_FIELD_BY_ID_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
 	}
     
 	sprintf(t_index_str, "%ld", p_id);    
-	t_result = (s_operations[OPERATION_SET_FIELD_BY_ID])(t_index_str, p_group, p_value, r_success);
+    t_result = (s_operations[OPERATION_SET_FIELD_BY_ID_UTF8])(t_index_str, p_group, p_value, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -600,8 +625,10 @@ void SetFieldByIdUTF8(const char *p_group, unsigned long p_id, const char *p_val
 void ShowImageByNameUTF8(const char *p_group, const char *p_name, int *r_success)
 {
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_SHOW_IMAGE_BY_NAME_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
@@ -617,8 +644,10 @@ void ShowImageByNumUTF8(const char *p_group, int p_index, int *r_success)
 {
 	char t_index_str[16];
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_SHOW_IMAGE_BY_NUM_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
@@ -634,15 +663,17 @@ void ShowImageByIdUTF8(const char *p_group, unsigned long p_id, int *r_success)
 {
 	char t_index_str[16];
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPEROPERATION_SHOW_IMAGE_BY_ID_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
 	}
     
 	sprintf(t_index_str, "%ld", p_id);
-	t_result = (s_operations[OPERATION_SHOW_IMAGE_BY_ID])(t_index_str, p_group, NULL, r_success);
+    t_result = (s_operations[OPERATION_SHOW_IMAGE_BY_ID_UTF8])(t_index_str, p_group, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -650,8 +681,10 @@ void ShowImageByIdUTF8(const char *p_group, unsigned long p_id, int *r_success)
 char *GetVariableUTF8(const char *p_name, int *r_success)
 {
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_GET_VARIABLE_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return NULL;
@@ -664,8 +697,10 @@ char *GetVariableUTF8(const char *p_name, int *r_success)
 void SetVariableUTF8(const char *p_name, const char *p_value, int *r_success)
 {
 	char *t_result;
-    
-	if (s_external_interface_version < 2)
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[OPERATION_SET_VARIABLE_UTF8] == NULL)
 	{
 		*r_success = EXTERNAL_FAILURE;
 		return;
@@ -681,16 +716,18 @@ void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalStri
 	char *t_result;
     int t_operation;
     
-	if (s_external_interface_version < 2)
-	{
-		*r_success = EXTERNAL_FAILURE;
-		return;
-	}
-    
     if (p_is_text)
         t_operation = OPERATION_GET_VARIABLE_EX_UTF8_TEXT;
     else
         t_operation = OPERATION_GET_VARIABLE_EX_UTF8_BINARY;
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[t_operation] == NULL)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
     
 	t_result = (s_operations[t_operation])(p_name, p_key, (char *)r_value, r_success);
     if (t_result != NULL)
@@ -702,16 +739,19 @@ void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalStri
 	char *t_result;
     int t_operation;
     
-	if (s_external_interface_version < 2)
-	{
-		*r_success = EXTERNAL_FAILURE;
-		return;
-	}
-    
     if (p_is_text)
         t_operation = OPERATION_SET_VARIABLE_EX_UTF8_TEXT;
     else
         t_operation = OPERATION_SET_VARIABLE_EX_UTF8_BINARY;
+
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[t_operation] == NULL)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
     
 	t_result = (s_operations[t_operation])(p_name, p_key, (char *)p_value, r_success);
     if (t_result != NULL)
@@ -722,18 +762,22 @@ void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_va
 {
 	ExternalArray t_array;
 	int t_operation;
-	char *t_result;
-    
-	if (s_external_interface_version < 2)
-	{
-		*r_success = EXTERNAL_FAILURE;
-		return;
-	}
+    char *t_result;
+
     if (p_is_text)
         t_operation = OPERATION_GET_ARRAY_UTF8_TEXT;
     else
         t_operation = OPERATION_GET_ARRAY_UTF8_BINARY;
-    
+
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[t_operation] == NULL)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+
 	t_array . nelements = *r_element_count;
 	t_array . strings = r_values;
 	t_array . keys = r_keys;
@@ -749,18 +793,20 @@ void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_val
 {
 	ExternalArray t_array;
 	int t_operation;
-	char *t_result;
-    
-	if (s_external_interface_version < 2)
-	{
-		*r_success = EXTERNAL_FAILURE;
-		return;
-	}
+    char *t_result;
     
     if (p_is_text)
         t_operation = OPERATION_SET_ARRAY_UTF8_TEXT;
     else
         t_operation = OPERATION_SET_ARRAY_UTF8_BINARY;
+
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[t_operation] == NULL)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
     
 	t_array . nelements = p_element_count;
 	t_array . strings = p_values;
@@ -772,7 +818,9 @@ void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_val
 
 Bool SecurityCanAccessFileUTF8(const char *p_file)
 {
-	if (s_external_interface_version < 2)
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[SECURITY_CHECK_FILE_UTF8] == NULL)
 		return False;
     
 	if (s_security_handlers != NULL)
@@ -782,7 +830,9 @@ Bool SecurityCanAccessFileUTF8(const char *p_file)
 
 Bool SecurityCanAccessHostUTF8(const char *p_host)
 {
-	if (s_external_interface_version < 2)
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[SECURITY_CHECK_HOST_UTF8] == NULL)
 		return False;
     
 	if (s_security_handlers != NULL)
@@ -792,12 +842,63 @@ Bool SecurityCanAccessHostUTF8(const char *p_host)
 
 Bool SecurityCanAccessLibraryUTF8(const char *p_library)
 {
-	if (s_external_interface_version < 2)
+    // ExternalV0, interface V3 from LiveCode 6.7.4 have no UTF-8 functions
+    if (s_external_interface_version < 2 ||
+            s_operations[SECURITY_CHECK_LIBRARY_UTF8] == NULL)
 		return False;
     
 	if (s_security_handlers != NULL)
 		return s_security_handlers[SECURITY_CHECK_LIBRARY_UTF8](p_library);
 	return True;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
+void LoadModule(const char *p_module, void **r_handle, int *r_success)
+{
+    if (s_external_interface_version < 3 ||
+            s_operations[OPERATION_LOAD_MODULE] == NULL)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_LOAD_MODULE])(p_module, (const char *)r_handle, NULL, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+void UnloadModule(void *p_handle, int *r_success)
+{
+    if (s_external_interface_version < 3)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_UNLOAD_MODULE])(p_handle, NULL, NULL, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolved, int *r_success)
+{
+    if (s_external_interface_version < 3)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    char *t_result;
+    t_result = (s_operations[OPERATION_RESOLVE_SYMBOL_IN_MODULE])(p_handle, p_symbol, (const char *)r_resolved, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

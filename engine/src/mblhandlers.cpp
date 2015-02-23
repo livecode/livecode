@@ -4469,17 +4469,32 @@ Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters)
 #ifdef /* MCHandleSetStatusBarStyle */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	
-	UIStatusBarStyle t_style;
-	t_style = UIStatusBarStyleDefault;
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		if (ep . getsvalue() == "default")
-			t_style = UIStatusBarStyleDefault;
-		else if (ep . getsvalue() == "translucent")
-			t_style = UIStatusBarStyleBlackTranslucent;
-		else if (ep . getsvalue() == "opaque")
-			t_style = UIStatusBarStyleBlackOpaque;
+    UIStatusBarStyle t_style;
+    t_style = UIStatusBarStyleDefault;
+    if (p_parameters != nil)
+    {
+        p_parameters -> eval_argument(ep);
+        if (ep . getsvalue() == "default")
+        {
+            t_style = UIStatusBarStyleDefault;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
+        else if (ep . getsvalue() == "translucent")
+        {
+            t_style = UIStatusBarStyleBlackTranslucent;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
+        else if (ep . getsvalue() == "opaque")
+        {
+            t_style = UIStatusBarStyleBlackOpaque;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
+        // PM-2015-02-17: [[ Bug 14482 ]] "solid" status bar style means opaque and automatically shift down the app view by 20 pixels
+        else if (ep . getsvalue() == "solid")
+        {
+            t_style = UIStatusBarStyleBlackOpaque;
+            [MCIPhoneGetApplication() setStatusBarSolid:YES];
+        }
 	}
 	
 	[MCIPhoneGetApplication() switchToStatusBarStyle: t_style];

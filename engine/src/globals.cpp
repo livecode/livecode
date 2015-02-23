@@ -1283,6 +1283,8 @@ int X_close(void)
     MCValueRelease(MClicenseparameters . license_organization);
 	MCValueRelease(MClicenseparameters . addons);
 
+
+
 	// Cleanup the startup stacks list
 	for(uint4 i = 0; i < MCnstacks; ++i)
 		MCValueRelease(MCstacknames[i]);

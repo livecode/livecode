@@ -200,9 +200,9 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(stackfile, t_temp_string);
 	MCValueRelease(t_temp_string);
 	
-	if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("auxillary_stackfiles"), false, t_temp_array))
+    if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("auxiliary_stackfiles"), false, t_temp_array))
 		return false;
-	MCValueAssign(auxillary_stackfiles, t_temp_array);
+    MCValueAssign(auxiliary_stackfiles, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
     // The externals listed by the IDE are LF separated
@@ -260,6 +260,14 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		return false;
 	MCValueAssign(version_info, t_temp_array);
 	MCValueRelease(t_temp_array);
+
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch the resource mappings, if any.
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("library"), false, t_temp_string))
+        return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(library, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
 
     // The 'min_os_version' is either a string or an array. If it is a string then
     // it encodes the version against the 'Unknown' architecture which is interpreted
@@ -368,22 +376,31 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	if (t_success)
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
 
-	// Now we add the auxillary stackfiles, if any
+	// Now we add the auxiliary stackfiles, if any
 	MCDeployFileRef *t_aux_stackfiles;
 	t_aux_stackfiles = nil;
+    if (t_success)
+        t_success = MCMemoryNewArray(MCArrayGetCount(p_params . auxiliary_stackfiles), t_aux_stackfiles);
 	if (t_success)
-		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . auxillary_stackfiles), t_aux_stackfiles);
-	if (t_success)
-		for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles) && t_success; i++)
+        for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxiliary_stackfiles) && t_success; i++)
 		{
 			MCValueRef t_val;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxillary_stackfiles, i + 1, t_val);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxiliary_stackfiles, i + 1, t_val);
 			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCOpenFileModeRead, t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
-				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
+				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxiliaryStack, t_aux_stackfiles[i]);
 		}
 	
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.
+    if (t_success)
+        for(uint32_t i = 0; i < MCArrayGetCount(p_params.library) && t_success; i++)
+        {
+            MCValueRef t_value;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.library, i + 1, t_val);
+            t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeLibrary, (MCStringRef)t_val);
+        }
+    
 	// Now add the externals, if any
 	if (t_success)
 		for(uint32_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
@@ -409,8 +426,8 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	if (t_success)
 		t_success = MCDeployCapsuleGenerate(t_capsule, p_output, t_spill, x_offset);
 
-	MCDeployCapsuleDestroy(t_capsule);
-	for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles); i++)
+    MCDeployCapsuleDestroy(t_capsule);
+    for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxiliary_stackfiles); i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
 	MCMemoryDeleteArray(t_aux_stackfiles);
 	MCDeployFileClose(t_spill);
@@ -556,7 +573,7 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 {
 	bool t_soft_error;
-	t_soft_error = false;
+    t_soft_error = false;
     bool t_has_error;
     t_has_error = false;
     
@@ -624,7 +641,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
             ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
-		else
+        else
             ctxt . SetTheResultToEmpty();
     }
     

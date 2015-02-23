@@ -62,7 +62,8 @@ extern MCExecContext *MCECptr;
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Add revision number to v0 external interface
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Bump revision number after unicode update
-#define EXTERNAL_INTERFACE_VERSION 2
+// AL-2015-02-06: [[ SB Inclusions ]] Increment revision number of v0 external interface
+#define EXTERNAL_INTERFACE_VERSION 3
 
 typedef struct _Xternal
 {
@@ -1677,8 +1678,49 @@ static char *window_to_stack_rect(const char *arg1, const char *arg2,
 	return nil;
 }
 
+// AL-2015-02-10: [[ SB Inclusions ]] Add module loading callbacks to ExternalV0 interface
+static char *load_module(const char *arg1, const char *arg2,
+                         const char *arg3, int *retval)
+{
+    MCSysModuleHandle *t_result;
+    t_result = (MCSysModuleHandle *)arg2;
+    
+    *t_result = MCU_loadmodule(arg1);
+    
+    if (*t_result == nil)
+        *retval = xresFail;
+    else
+        *retval = xresSucc;
+    
+    return nil;
+}
+
+static char *unload_module(const char *arg1, const char *arg2,
+                          const char *arg3, int *retval)
+{
+    MCU_unloadmodule((MCSysModuleHandle)arg1);
+    *retval = xresSucc;
+    return nil;
+}
+
+static char *resolve_symbol_in_module(const char *arg1, const char *arg2,
+                                      const char *arg3, int *retval)
+{
+    void** t_resolved;
+    t_resolved = (void **)arg3;
+    *t_resolved = MCU_resolvemodulesymbol((MCSysModuleHandle)arg1, arg2);
+    
+    if (*t_resolved == nil)
+        *retval = xresFail;
+    else
+        *retval = xresSucc;
+    
+    return nil;
+}
+
 // IM-2014-03-06: [[ revBrowserCEF ]] Add externals extension to the callback list
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Add externals extension to handle UTF8-encoded parameters
+// AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
 XCB MCcbs[] =
 {
 	// Externals interface V0 functions
@@ -1741,6 +1783,11 @@ XCB MCcbs[] =
 	set_array_utf8_text,
 	set_array_utf8_binary,
 
+    // AL-2015-02-10: [[ SB Inclusions ]] Externals interface V3 functions
+    load_module,
+    unload_module,
+    resolve_symbol_in_module,
+    
 	NULL
 };
 

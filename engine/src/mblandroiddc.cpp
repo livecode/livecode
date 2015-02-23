@@ -93,7 +93,7 @@ static jmethodID s_openglview_configure_method = 0;
 static JavaVM *s_java_vm = nil;
 // The JNIEnv for the android UI thread.
 static JNIEnv *s_android_ui_env;
-// The JNI environment pointer *for our auxillary thread*. This only has lifetime
+// The JNI environment pointer *for our auxiliary thread*. This only has lifetime
 // as long as 'mobile_main' is running.
 static JNIEnv *s_java_env = nil;
 
@@ -1248,14 +1248,15 @@ static void *mobile_main(void *arg)
 
 	MCLog("Starting up project", 0);
 	send_startup_message(false);
-
+    
+    // PM-2015-02-02: [[ Bug 14456 ]] Make sure the billing provider is properly initialized before a preopenstack/openstack message is sent
+    MCAndroidInitEngine();
+    
 	if (!MCquit)
 		MCdispatcher -> gethome() -> open();
-
+    
 	MCLog("Hiding splash screen", 0);
 	MCAndroidEngineRemoteCall("hideSplashScreen", "v", nil);
-
-    MCAndroidInitEngine();
 
 	while(s_engine_running)
 	{
