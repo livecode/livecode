@@ -197,17 +197,17 @@ providers a method of signing a package is required.
 
 There are two types of signing which can be performed on a package.
 
-The first signs a hash generated from the whole package file, appending the
-signature to the archive in a way which does not prevent usage of the archive
+The first signs a hash generated from the whole package archive, appending the
+signature to the archive in a way which does not prevent usage of the file
 as a ZIP.
 
 The second signs per-file hashes of each file within the package. The signature
 is stored in a META-INF folder within the zip archive alongside a manifest which
 describes the hashes of each file.
 
-### Whole-file Signatures
+### Whole-archive Signatures
 
-[This method of whole-file signing is taken from Android APK OTA signing as
+[This method of whole-archive signing is taken from Android APK OTA signing as
 described here http://nelenkov.blogspot.co.uk/2013/04/android-code-signing.html]
 
 A DER encoded PKCS#7 signature using SHA256 digest algorithm is generated for all
