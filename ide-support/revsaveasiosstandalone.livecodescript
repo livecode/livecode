@@ -346,6 +346,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          --put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tVersion
          --put "-miphoneos-version-min=" & tVersion["armv7"] & return after tLinkCommand
          
+         -- SN-2015-02-23: [[ Bug 14625 ]] Use a iOS 5.1/iOS 7.0 consistent stdlib
+         put "-stdlib=libc++" & return after tLinkCommand
+         
          -- MW-2013-06-26: [[ CloneAndRun ]] Only dead strip if an installed env.
          if revEnvironmentIsInstalled() then
             -- Strip any dead code and data from the engine
@@ -401,15 +404,12 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             put tLinkCommand & "-o" && quote & tArchSpecificEngineFile & quote & return into url ("binfile:" & tLinkOptionsFile)
 
             local tiPhoneMinVersion
-            if tArch = "arm64" then
-               put "7.0.0" into tiPhoneMinVersion
-            else
-               put "5.1.1" into tiPhoneMinVersion
-            end if
+            put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tiPhoneMinVersion
+            
             -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
             -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
             -- SN-2015-02-19: [[ Bug 14625 ]] The minimum iOS version is bound to the architecture
-            get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion && quote & "@" & tLinkOptionsFile & quote)
+            get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion[tArch] && quote & "@" & tLinkOptionsFile & quote)
 
             put tArchSpecificEngineFile & space after tArchSpecificEngineList
             delete file tLinkOptionsFile
