@@ -207,6 +207,9 @@ describes the hashes of each file.
 
 ### Whole-file Signatures
 
+[This method of whole-file signing is taken from Android APK OTA signing as
+described here http://nelenkov.blogspot.co.uk/2013/04/android-code-signing.html]
+
 A DER encoded PKCS#7 signature using SHA256 digest algorithm is generated for all
 the bytes in the archive up to, but not including the final comment length and
 comment field in the ZIP archive.
