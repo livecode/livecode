@@ -1286,7 +1286,11 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 			//
 			uint32_t t_id;
 			t_id = t_object -> getid();
-
+            
+            // If the object is a stack, then the id should be 0.
+            if (t_object -> gettype() == CT_STACK)
+                t_id = 0;
+                
 			MCNameRef t_stack;
 			t_stack = t_object -> getstack() -> getname();
 
