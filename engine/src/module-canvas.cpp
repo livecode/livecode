@@ -455,7 +455,7 @@ MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
-MCTypeInfoRef kMCSVGPathParseErrorTypeInfo;
+MCTypeInfoRef kMCCanvasSVGPathParseErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -5645,8 +5645,8 @@ void MCCanvasErrorsInitialize()
 	kMCCanvasGradientTypeErrorTypeInfo = nil;
 	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.GradientTypeError"), MCSTR("Unrecognised gradient type."), kMCCanvasGradientTypeErrorTypeInfo);
 	
-	kMCSVGPathParseErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.SVGPathParseError"), MCSTR("Unable to parse path data: \"%{reason}\" at position %{position}"), kMCSVGPathParseErrorTypeInfo);
+	kMCCanvasSVGPathParseErrorTypeInfo = nil;
+	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.SVGPathParseError"), MCSTR("Unable to parse path data: \"%{reason}\" at position %{position}"), kMCCanvasSVGPathParseErrorTypeInfo);
 }
 
 void MCCanvasErrorsFinalize()
@@ -5670,7 +5670,7 @@ void MCCanvasErrorsFinalize()
 	MCValueRelease(kMCCanvasGradientStopOrderErrorTypeInfo);
 	MCValueRelease(kMCCanvasGradientTypeErrorTypeInfo);
 
-	MCValueRelease(kMCSVGPathParseErrorTypeInfo);
+	MCValueRelease(kMCCanvasSVGPathParseErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5922,7 +5922,7 @@ bool MCSVGThrowPathParseError(uint32_t p_char_position, MCStringRef p_error)
 	if (!MCNumberCreateWithUnsignedInteger(p_char_position + 1, &t_number))
 		return false;
 	
-	return MCErrorCreateAndThrow(kMCSVGPathParseErrorTypeInfo,
+	return MCErrorCreateAndThrow(kMCCanvasSVGPathParseErrorTypeInfo,
 								 "position", *t_number,
 								 "reason", p_error,
 								 nil);
