@@ -174,28 +174,115 @@ struct zip_eocd_t
 #define ZIP_EOCD_BYTE_SIZE 22
 #define ZIP_EOCD_COMMENT_BYTE_SIZE_OFFSET (ZIP_EOCD_BYTE_SIZE - sizeof(uint16_t))
 
-#define kMCDeployBuilderSignatureSize 256
-#define kMCDeployBuilderWithoutSignatureOffset (ZIP_EOCD_BYTE_SIZE)
-#define kMCDeployBuilderWithSignatureOffset (kMCDeployBuilderSignatureSize + ZIP_EOCD_BYTE_SIZE)
-
-static bool MCDeployBuilderFindCommentWithEOCDAtOffset(IO_handle p_stream, int64_t p_offset)
+static bool __read_at_offset_from_end(IO_handle p_stream, int64_t p_offset, byte_t *p_buffer, size_t p_buffer_size, bool& r_out_of_range)
 {
-    // Seek to where we should see the EOCD.
-    if (MCS_seek_end(p_stream, -p_offset) != IO_NORMAL)
+    int64_t t_fsize;
+    t_fsize = MCS_fsize(p_stream);
+    if (MCAbs(p_offset) > t_fsize)
+    {
+        r_out_of_range = true;
+        return true;
+    }
+    
+    if (MCS_seek_end(p_stream, p_offset) != IO_NORMAL ||
+        MCS_readfixed(p_buffer, p_buffer_size, p_stream) != IO_NORMAL)
+    {
+        if (!MCErrorIsPending())
+            MCErrorThrowGeneric(MCSTR("io error"));
+        return false;
+    }
+    
+    return true;
+}
+
+// This method looks at the ZIP file in the given stream and returns the offset
+// of the comment field *if it can be used for a whole-file signature*.
+//
+// Only ZIP files which either have an empty comment field; or ZIP files which
+// have been previously signed with a whole-file signature are suitable.
+//
+// If the ZIP file is suitable then r_offset is set to the offset within the file
+// from the start of the stream.
+//
+// If the ZIP file is not suitable, then r_offset is set to 0.
+//
+// If an error occurs whilst processing the stream, false is returned.
+//
+static bool MCDeployBuilderFindOffsetForSignatureCommentInZip(IO_handle p_stream, int64_t& r_offset)
+{
+    bool t_out_of_range;
+    t_out_of_range = false;
+
+    // If the file is a commentless ZIP archive then the EOCD will be 22 bytes
+    // from the end of the file, meaning that we will find the byte sequence
+    // 0x50, 0x4b, 0x05, 0x06 there. Additionally, the final two bytes of the file
+    // will by 0x00, 0x00 (zero comment length).
+    byte_t t_eocd_magic[4];
+    if (!__read_at_offset_from_end(p_stream, -ZIP_EOCD_BYTE_SIZE, t_eocd_magic, 4, t_out_of_range))
         return false;
     
-    // Read the magic four bytes.
-    char t_magic[4];
-    if (MCS_readfixed(t_magic, 4, p_stream) != IO_NORMAL)
+    // If the field was read successfully and is the magic byte sequence then this
+    // is a commentless archive and so suitable. The offset is -2 since the comment
+    // length is the last two bytes of the archive.
+    if (!t_out_of_range &&
+        memcmp(t_eocd_magic, "\x50\x4b\x05\x06", 4) == 0)
+    {
+        r_offset = sizeof(uint16_t);
+        return true;
+    }
+    
+    // If the file is a previously signed ZIP archive then we take:
+    //   sig_comment_size = zip[-2:-1]
+    //   sig_offset = zip[-6:-5]
+    //   sig_pad = zip[-4:-3]
+    //   eocd_comment_size = zip[-sig_comment_size-2:-sig_comment_size-1]
+    //   eocd_header = zip[-sig_comment_size-22:-sig_comment_size-21]
+    //   message_terminator = zip[-sig_offset:-sig_offset]
+    // With conditions:
+    //   sig_comment_size == eocd_comment_size
+    //   sig_offset < sig_comment_size
+    //   sig_pad = 0xffff
+    //   message_terminator == '\0'
+    //   eocd_header == 0x50, 0x4b, 0x05, 0x06
+    //
+    
+    byte_t t_sig_fields[6];
+    if (!__read_at_offset_from_end(p_stream, -6, t_sig_fields, sizeof(t_sig_fields), t_out_of_range))
+        return false;
+        
+    int32_t t_sig_comment_size, t_sig_pad, t_sig_offset;
+    t_sig_comment_size = (t_sig_fields[4] << 0) | (t_sig_fields[5] << 8);
+    t_sig_pad = (t_sig_fields[2] << 0) | (t_sig_fields[3] << 8);
+    t_sig_offset = (t_sig_fields[0] << 0) | (t_sig_fields[1] << 8);
+    
+    byte_t t_message_terminator;
+    if (!__read_at_offset_from_end(p_stream, -t_sig_offset - 1, &t_message_terminator, 1, t_out_of_range))
         return false;
     
-    // If the magic doesn't match, the EOCD is not here.
-    if (memcmp(t_magic, "\x50\x4b\x05\x06", 4) != 0)
+    byte_t t_eocd_bytes[ZIP_EOCD_BYTE_SIZE];
+    if (!__read_at_offset_from_end(p_stream, -t_sig_comment_size - ZIP_EOCD_BYTE_SIZE, t_eocd_bytes, sizeof(t_eocd_bytes), t_out_of_range))
         return false;
+
+    byte_t *t_eocd_header;
+    t_eocd_header = t_eocd_bytes;
     
-    // Seek to the start of the (comment size, comment string) pait.
-    if (MCS_seek_end(p_stream, -p_offset + ZIP_EOCD_COMMENT_BYTE_SIZE_OFFSET) != IO_NORMAL)
-        return false;
+    uint32_t t_eocd_comment_size;
+    t_eocd_comment_size = t_eocd_bytes[20] | (t_eocd_bytes[21] << 8);
+    
+    // If this fails to satisfy the constraints for a signed archive, then it is
+    // not suitable.
+    if (t_out_of_range ||
+        t_sig_comment_size != t_eocd_comment_size ||
+        t_sig_offset >= t_sig_comment_size ||
+        t_sig_pad != 0xffff ||
+        t_message_terminator != 0 ||
+        memcmp(t_eocd_header, "\x50\x4b\x05\x06", 4) != 0)
+    {
+        r_offset = -1;
+        return true;
+    }
+    
+    r_offset = t_eocd_comment_size + sizeof(uint16_t);
     
     return true;
 }
@@ -220,22 +307,31 @@ static bool MCDeployBuilderOpenZipAtComment(MCStringRef p_filename, MCOpenFileMo
         return false;
     }
     
-    // We assume that either the zip file has an empty comment section; or
-    // it has one of the size of signature.
-    if (!MCDeployBuilderFindCommentWithEOCDAtOffset(t_stream, kMCDeployBuilderWithoutSignatureOffset) &&
-        !MCDeployBuilderFindCommentWithEOCDAtOffset(t_stream, kMCDeployBuilderWithSignatureOffset))
+    // Find the offset of a suitable (comment size, comment) field in the zip.
+    int64_t t_offset;
+    if (!MCDeployBuilderFindOffsetForSignatureCommentInZip(t_stream, t_offset))
+        goto error_exit;
+    
+    if (t_offset < 0)
+    {
+        MCErrorThrowGeneric(MCSTR("package file is not suitable for signing"));
+        goto error_exit;
+    }
+    
+    if (MCS_seek_end(t_stream, -t_offset) != IO_NORMAL)
     {
         if (!MCErrorIsPending())
-            MCErrorThrowGeneric(MCSTR("package file is not suitable for signing"));
-        
-        MCS_close(t_stream);
-        
-        return false;
+            MCErrorThrowGeneric(MCSTR("io error"));
+        goto error_exit;
     }
     
     r_stream = t_stream;
     
     return true;
+    
+error_exit:
+    MCS_close(t_stream);
+    return false;
 }
                                             
 // The 'sign' builder command signs the given package zip using the specified
@@ -246,15 +342,59 @@ void MCDeployBuilderSign(MCDeployBuilderTrustParameters& p_params)
     if (!MCDeployBuilderOpenZipAtComment(p_params . package_file, kMCOpenFileModeUpdate, t_stream))
         return;
     
-    char t_signature[256];
-    for(int i = 0; i < 256; i++)
-        t_signature[i] = i;
+    const char *t_message;
+    size_t t_message_length;
+    t_message = "signed by LiveCode";
+    t_message_length = strlen(t_message);
     
-    byte_t t_length[2];
-    t_length[0] = 0;
-    t_length[1] = 1;
-    if (MCS_write(t_length, 1, 2, t_stream) == IO_ERROR ||
-        MCS_write(t_signature, 1, 256, t_stream) == IO_ERROR)
+    uint8_t *t_signature;
+    size_t t_signature_length;
+    t_signature = NULL;
+    t_signature_length = 0;
+    
+    // We append 6 bytes to the end of the signature (offset:u2, pad:u1, pad:u1, length:u2).
+    // So the offset from the end to the start of it is (siglength + 6)
+    uint32_t t_offset_to_signature;
+    t_offset_to_signature = t_signature_length + 6;
+    
+    // The total comment length is the message + a NUL byte terminator + the signature +
+    // the 6 extra bytes.
+    uint32_t t_comment_length;
+    t_comment_length = t_message_length + 1 + t_signature_length + 6;
+    
+    // The encoded form of all the values we write out at the offset.
+    const char *t_enc_message;
+    uint8_t t_enc_terminator;
+    uint8_t *t_enc_signature;
+    uint8_t t_enc_offset_to_signature[2];
+    uint8_t t_enc_pad[2];
+    uint8_t t_enc_comment_length[2];
+    t_enc_message = t_message;
+    t_enc_terminator = 0;
+    t_enc_signature = t_signature;
+    t_signature_length = 0;
+    t_enc_offset_to_signature[0] = t_offset_to_signature & 0xFF;
+    t_enc_offset_to_signature[1] = (t_offset_to_signature >> 8) & 0xFF;
+    t_enc_comment_length[0] = t_comment_length & 0xFF;
+    t_enc_comment_length[1] = (t_comment_length >> 8) & 0xFF;
+    t_enc_pad[0] = 0xFF;
+    t_enc_pad[1] = 0xFF;
+    
+    // Our stream is at the offset of the EOCD comment length field. So we write out:
+    //   enc_comment_length
+    //   enc_message[message_length]
+    //   enc_signature[signature_length]
+    //   enc_offset_to_signature
+    //   enc_pad
+    //   enc_comment_length
+    if (MCS_write(t_enc_comment_length, sizeof(t_enc_comment_length), 1, t_stream) == IO_ERROR ||
+        MCS_write(t_enc_message, 1, t_message_length, t_stream) == IO_ERROR ||
+        MCS_write(&t_enc_terminator, sizeof(t_enc_terminator), 1, t_stream) == IO_ERROR ||
+        MCS_write(t_enc_signature, 1, t_signature_length, t_stream) == IO_ERROR ||
+        MCS_write(t_enc_offset_to_signature, sizeof(t_enc_offset_to_signature), 1, t_stream) == IO_ERROR ||
+        MCS_write(t_enc_pad, sizeof(t_enc_pad), 1, t_stream) == IO_ERROR ||
+        MCS_write(t_enc_comment_length, sizeof(t_enc_comment_length), 1, t_stream) == IO_ERROR ||
+        MCS_trunc(t_stream) == IO_ERROR)
     {
         if (!MCErrorIsPending())
             MCErrorThrowGeneric(MCSTR("could not update package file with new signature"));
