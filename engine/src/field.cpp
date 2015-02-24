@@ -385,13 +385,15 @@ const char *MCField::gettypestring()
 	return MCfieldstring;
 }
 
-bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCField::visit_self(MCObjectVisitor *p_visitor)
+{
+	return p_visitor -> OnField(this);
+}
+
+bool MCField::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnField(this);
 
 	if (t_continue && fdata != NULL)
 	{
@@ -423,7 +425,7 @@ bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 				MCParagraph *tpgptr = pgptr;
 				do
 				{
-					t_continue = tpgptr -> visit(p_style, p_part, p_visitor);
+					t_continue = tpgptr -> visit(p_options, p_part, p_visitor);
 					tpgptr = tpgptr->next();
 				}
 				while(t_continue && tpgptr != pgptr);
@@ -433,9 +435,6 @@ bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 		}
 		while(t_fdata != fdata);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnField(this);
 
 	return t_continue;
 }

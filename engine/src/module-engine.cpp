@@ -34,6 +34,8 @@
 #include "redraw.h"
 #include "eventqueue.h"
 
+#include "dispatch.h"
+
 #include "module-engine.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,6 +81,12 @@ bool MCEngineThrowScriptError(void)
     // TODO: Process MCeerror and such.
     MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("script error"), nil);
     return false;
+}
+
+bool MCEngineThrowScripObjectDoesNotExistError(void)
+{
+	MCErrorCreateAndThrow(kMCEngineScriptObjectDoesNotExistErrorTypeInfo, nil);
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,18 +170,28 @@ static Properties parse_property_name(MCStringRef p_name)
 	return P_CUSTOM;
 }
 
+static inline bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, MCObject *&r_object, uint32_t &r_part_id)
+{
+	__MCScriptObjectImpl *t_script_object_imp;
+	t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
+	if (t_script_object_imp -> handle == nil ||
+		!t_script_object_imp -> handle -> Exists())
+	{
+		return MCEngineThrowScripObjectDoesNotExistError();
+	}
+	
+	r_object = t_script_object_imp->handle->Get();
+	r_part_id = t_script_object_imp->part_id;
+	return true;
+}
+
 extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object)
 {
-    __MCScriptObjectImpl *t_script_object_imp;
-    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
-    if (t_script_object_imp -> handle == nil ||
-        !t_script_object_imp -> handle -> Exists())
-    {
-        // TODO: Throw script object doesn't exist error.
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
-        return nil;
-    }
-    
+	MCObject *t_object;
+	uint32_t t_part_id;
+	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+		return nil;
+	
 	Properties t_prop;
 	t_prop = parse_property_name(p_property);
     
@@ -183,13 +201,13 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStrin
     if (t_prop == P_CUSTOM)
     {
         MCNewAutoNameRef t_propset_name, t_propset_key;
-        t_propset_name = t_script_object_imp -> handle -> Get() -> getdefaultpropsetname();
+        t_propset_name = t_object -> getdefaultpropsetname();
         if (!MCNameCreate(p_property, &t_propset_key))
             return nil;
-        t_script_object_imp -> handle -> Get() -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
+        t_object -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
     }
     else
-        t_script_object_imp -> handle -> Get() -> getprop(ctxt, t_script_object_imp -> part_id, t_prop, nil, False, t_value);
+        t_object -> getprop(ctxt, t_part_id, t_prop, nil, False, t_value);
 
     if (ctxt . HasError())
     {
@@ -209,16 +227,11 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStrin
 
 extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef p_value)
 {
-    __MCScriptObjectImpl *t_script_object_imp;
-    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
-    if (t_script_object_imp -> handle == nil ||
-        !t_script_object_imp -> handle -> Exists())
-    {
-        // TODO: Throw script object doesn't exist error.
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
-        return;
-    }
-    
+	MCObject *t_object;
+	uint32_t t_part_id;
+	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+		return;
+	
     MCValueRef t_value_copy;
     t_value_copy = MCValueRetain(p_value);
     
@@ -241,22 +254,79 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
     if (t_prop == P_CUSTOM)
     {
         MCNewAutoNameRef t_propset_name, t_propset_key;
-        t_propset_name = t_script_object_imp -> handle -> Get() -> getdefaultpropsetname();
+        t_propset_name = t_object -> getdefaultpropsetname();
         if (!MCNameCreate(p_property, &t_propset_key))
         {
             MCValueRelease(t_value_copy);
             return;
         }
-        t_script_object_imp -> handle -> Get() -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
+        t_object -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
     }
     else
-        t_script_object_imp -> handle -> Get() -> setprop(ctxt, t_script_object_imp -> part_id, t_prop, nil, False, t_value);
+        t_object -> setprop(ctxt, t_part_id, t_prop, nil, False, t_value);
     
     if (ctxt . HasError())
     {
         MCEngineThrowScriptError();
         return;
     }
+}
+
+extern "C" MC_DLLEXPORT void MCEngineEvalOwnerOfScriptObject(MCScriptObjectRef p_object, MCScriptObjectRef &r_owner)
+{
+	MCObject *t_object;
+	uint32_t t_part_id;
+	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+		return;
+	
+	MCObject *t_owner;
+	if (t_object->gettype() == CT_STACK && MCdispatcher->ismainstack((MCStack*)t_object))
+		t_owner = nil;
+	else
+		t_owner = t_object->getparent();
+	
+	MCScriptObjectCreate(t_owner, t_part_id, r_owner);
+}
+
+struct MCScriptObjectChildControlsVisitor : public MCObjectVisitor
+{
+	MCScriptObjectChildControlsVisitor(MCProperListRef p_list)
+	{
+		m_list = p_list;
+	}
+	
+	virtual bool OnObject(MCObject *p_object)
+	{
+		MCAutoValueRefBase<MCScriptObjectRef> t_object_ref;
+		
+		return MCScriptObjectCreate(p_object, 0, &t_object_ref) && MCProperListPushElementOntoBack(m_list, *t_object_ref);
+	}
+	
+	virtual bool OnStyledText(MCStyledText *p_text)
+	{
+		// don't include styled text objects
+		return true;
+	}
+	
+	MCProperListRef m_list;
+};
+
+extern "C" MC_DLLEXPORT void MCEngineEvalChildrenOfScriptObject(MCScriptObjectRef p_object, MCProperListRef &r_controls)
+{
+	MCObject *t_object;
+	uint32_t t_part_id;
+	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+		return;
+	
+	MCAutoProperListRef t_list;
+	if (!MCProperListCreateMutable(&t_list))
+		return;
+	
+	MCScriptObjectChildControlsVisitor t_visitor(*t_list);
+	if (!t_object->visit_children(kMCObjectVisitorHeirarchical, t_part_id, &t_visitor))
+		return;
+	
+	MCProperListCopy(*t_list, r_controls);
 }
 
 MCValueRef MCEngineDoDispatchToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments)
@@ -323,17 +393,12 @@ cleanup:
 
 extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
 {
-    __MCScriptObjectImpl *t_script_object_imp;
-    t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
-    if (t_script_object_imp -> handle == nil ||
-        !t_script_object_imp -> handle -> Exists())
-    {
-        // TODO: Throw script object doesn't exist error.
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("object does not exist"), nil);
-        return nil;
-    }
-    
-    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, t_script_object_imp -> handle -> Get(), p_arguments);
+	MCObject *t_object;
+	uint32_t t_part_id;
+	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+		return nil;
+	
+    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, t_object, p_arguments);
 }
 
 extern "C" MC_DLLEXPORT MCValueRef MCEngineExecDispatchToScriptObject(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object)
@@ -404,12 +469,19 @@ static bool __MCScriptObjectCopy(MCValueRef p_value, bool p_release, MCValueRef&
 
 static bool __MCScriptObjectEqual(MCValueRef p_left, MCValueRef p_right)
 {
-    return p_left == p_right;
+	__MCScriptObjectImpl *t_left, *t_right;
+	t_left = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_left);
+	t_right = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_right);
+	
+	return t_left->handle == t_right->handle && t_left->part_id == t_right->part_id;
 }
 
 static hash_t __MCScriptObjectHash(MCValueRef p_value)
 {
-    return MCHashPointer(p_value);
+	__MCScriptObjectImpl *self;
+	self = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_value);
+
+	return MCHashPointer(self->handle) ^ MCHashInteger(self->part_id);
 }
 
 static bool __MCScriptObjectDescribe(MCValueRef p_value, MCStringRef& r_description)
@@ -517,6 +589,10 @@ extern "C" MC_DLLEXPORT void MCEngineExecLogWithValues(MCStringRef p_message, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void __create_named_custom_typeinfo(MCTypeInfoRef p_base, const MCValueCustomCallbacks *p_callbacks, MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
 {
     MCAutoTypeInfoRef t_unnamed;
@@ -525,8 +601,28 @@ static void __create_named_custom_typeinfo(MCTypeInfoRef p_base, const MCValueCu
     /* UNCHECKED */ MCNamedTypeInfoBind(r_typeinfo, *t_unnamed);
 }
 
+static bool __create_named_error_typeinfo(MCNameRef p_domain, MCNameRef p_name, MCStringRef p_message, MCTypeInfoRef &r_typeinfo)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCErrorTypeInfoCreate(p_domain, p_message, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_typeinfo = MCValueRetain(*t_named_type);
+	
+	return true;
+}
+
 bool MCEngineModuleInitialize(void)
 {
+	/* UNCHECKED */ __create_named_error_typeinfo(MCNAME("engine"), MCNAME("com.livecode.engine.ScriptObjectDoesNotExistError"), MCSTR("object does not exist"), kMCEngineScriptObjectDoesNotExistErrorTypeInfo);
+	
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCScriptObjectCustomValueCallbacks, MCNAME("com.livecode.engine.ScriptObject"), kMCEngineScriptObjectTypeInfo);
     
     /* UNCHECKED */ MCStringCreateMutable(0, s_log_buffer);
@@ -538,6 +634,7 @@ void MCEngineModuleFinalize(void)
 {
     MCValueRelease(s_log_buffer);
     MCValueRelease(kMCEngineScriptObjectTypeInfo);
+	MCValueRelease(kMCEngineScriptObjectDoesNotExistErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

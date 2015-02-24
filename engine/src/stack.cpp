@@ -634,13 +634,15 @@ const char *MCStack::gettypestring()
 	return MCstackstring;
 }
 
-bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCStack::visit_self(MCObjectVisitor* p_visitor)
+{
+	return p_visitor -> OnStack(this);
+}
+
+bool MCStack::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnStack(this);
 
 	if (t_continue && cards != nil)
 	{
@@ -648,7 +650,10 @@ bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_vi
 		t_card = cards;
 		do
 		{
-			t_continue = p_visitor -> OnCard(t_card);
+			if (MCObjectVisitorIsHeirarchical(p_options))
+				t_continue = t_card->visit(p_options, p_part, p_visitor);
+			else
+				t_continue = t_card->visit_self(p_visitor);
 			t_card = t_card -> next();
 		}
 		while(t_continue && t_card != cards);
@@ -660,15 +665,24 @@ bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_vi
 		t_control = controls;
 		do
 		{
-			t_continue = t_control -> visit(p_style, 0, p_visitor);
+			if (!MCObjectVisitorIsHeirarchical(p_options) || t_control->getparent() == this)
+				t_continue = t_control -> visit(p_options, 0, p_visitor);
 			t_control = t_control -> next();
 		}
 		while(t_continue && t_control != controls);
 	}
 
-	if (p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnStack(this);
-
+	if (t_continue && MCObjectVisitorIsHeirarchical(p_options) && substacks != nil)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+			t_continue = t_stack->visit(p_options, 0, p_visitor);
+			t_stack = t_stack->next();
+		}
+		while (t_continue && t_stack != substacks);
+	}
+	
 	return true;
 }
 
