@@ -3275,11 +3275,11 @@ void *MCU_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
     if (t_symbol != NULL)
         return NSAddressOfSymbol(t_symbol);
 #endif
-    MCAutoStringRef t_symbol;
-    if (!MCStringCreateWithCString(p_symbol, &t_symbol))
+    MCAutoStringRef t_symbol_str;
+    if (!MCStringCreateWithCString(p_symbol, &t_symbol_str))
         return nil;
 
-    return MCS_resolvemodulesymbol(p_module, *t_symbol);
+    return MCS_resolvemodulesymbol(p_module, *t_symbol_str);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
