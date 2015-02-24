@@ -40,16 +40,41 @@ enum
 	// V1
 	OPERATION_ADD_RUNLOOP_ACTION,
 	OPERATION_REMOVE_RUNLOOP_ACTION,
-	OPERATION_RUNLOOP_WAIT,
+    OPERATION_RUNLOOP_WAIT,
 
 	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
 	OPERATION_STACK_TO_WINDOW_RECT,
 	OPERATION_WINDOW_TO_STACK_RECT,
+
+    // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Add externals extensions to allow utf8-encoded arguments
+    /* V2 */ OPERATION_SEND_CARD_MESSAGE_UTF8,
+    /* V2 */ OPERATION_EVAL_EXP_UTF8,
+    /* V2 */ OPERATION_GET_GLOBAL_UTF8,
+    /* V2 */ OPERATION_SET_GLOBAL_UTF8,
+    /* V2 */ OPERATION_GET_FIELD_BY_NAME_UTF8,
+    /* V2 */ OPERATION_GET_FIELD_BY_NUM_UTF8,
+    /* V2 */ OPERATION_GET_FIELD_BY_ID_UTF8,
+    /* V2 */ OPERATION_SET_FIELD_BY_NAME_UTF8,
+    /* V2 */ OPERATION_SET_FIELD_BY_NUM_UTF8,
+    /* V2 */ OPERATION_SET_FIELD_BY_ID_UTF8,
+    /* V2 */ OPERATION_SHOW_IMAGE_BY_NAME_UTF8,
+    /* V2 */ OPERATION_SHOW_IMAGE_BY_NUM_UTF8,
+    /* V2 */ OPERATION_SHOW_IMAGE_BY_ID_UTF8,
+    /* V2 */ OPERATION_GET_VARIABLE_UTF8,
+    /* V2 */ OPERATION_SET_VARIABLE_UTF8,
+    /* V2 */ OPERATION_GET_VARIABLE_EX_UTF8_TEXT,
+    /* V2 */ OPERATION_GET_VARIABLE_EX_UTF8_BINARY,
+    /* V2 */ OPERATION_SET_VARIABLE_EX_UTF8_TEXT,
+    /* V2 */ OPERATION_SET_VARIABLE_EX_UTF8_BINARY,
+    /* V2 */ OPERATION_GET_ARRAY_UTF8_TEXT,
+    /* V2 */ OPERATION_GET_ARRAY_UTF8_BINARY,
+    /* V2 */ OPERATION_SET_ARRAY_UTF8_TEXT,
+    /* V2 */ OPERATION_SET_ARRAY_UTF8_BINARY,
     
     // AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
-    OPERATION_LOAD_MODULE,
-    OPERATION_UNLOAD_MODULE,
-    OPERATION_RESOLVE_SYMBOL_IN_MODULE,
+    /* V3 */ OPERATION_LOAD_MODULE,
+    /* V3 */ OPERATION_UNLOAD_MODULE,
+    /* V3 */ OPERATION_RESOLVE_SYMBOL_IN_MODULE,
 };
 
 enum
@@ -418,7 +443,7 @@ void LoadModuleByName(const char *p_module, void **r_handle, int *r_success)
 {
     char *t_result;
 
-    if (s_external_interface_version < 2)
+    if (s_external_interface_version < 3)
     {
         *r_success = EXTERNAL_FAILURE;
         return;
@@ -434,7 +459,7 @@ void UnloadModule(void *p_handle, int *r_success)
 {
     char *t_result;
 
-    if (s_external_interface_version < 2)
+    if (s_external_interface_version < 3)
     {
         *r_success = EXTERNAL_FAILURE;
         return;
@@ -450,7 +475,7 @@ void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolv
 {
     char *t_result;
 
-    if (s_external_interface_version < 2)
+    if (s_external_interface_version < 3)
     {
         *r_success = EXTERNAL_FAILURE;
         return;
