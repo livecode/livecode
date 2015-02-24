@@ -26,6 +26,8 @@ An LCB package is a ZIP archive with a standard layout:
         module.lcm (current)
         modules/
             <compiled module code> (revised)
+        source/
+            <source files for compiled modules>
         code/
             mac-x86_64-10_6/
                 <compiled foreign code for 64-bit Mac min version 10.6>
@@ -37,8 +39,6 @@ An LCB package is a ZIP archive with a standard layout:
                 ...
         resources/
             <resource files for compiled modules>
-        source/
-            <source files for compiled modules>
         support/
             <structure defined by loading environment>
         docs/
@@ -116,6 +116,13 @@ This is an invalid package:
             com.example.foo.lcb
             org.example.foo.lcb
 
+### Source
+
+The source folder contains the original source files which were used to build the
+compiled modules contained within the modules folder. The original folder structure
+of the source will be preserved as much as possible, with the debug annotations
+within the compiled modules themselves referencing files relative to <package>/source.
+
 ### Code (revised)
 
 The code folder contains all the (non-system) foreign code components that are
@@ -174,8 +181,12 @@ filenames which are resolved relative to <package>/resources/.
 
 ### Support
 
-### Source
+The contents of the support folder is defined by the environment that will be
+using the package.
 
 ### Docs
+
+The contents of the docs folder is defined by the environment that will be
+using the package.
 
 ## Signing
