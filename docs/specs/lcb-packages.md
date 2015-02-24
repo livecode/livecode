@@ -77,6 +77,7 @@ The outline of the manifest file format is as follows:
         <name>com.livecode.foo</name>
         <version>X.Y.Z</version>
         <type>widget|library</type>
+        <metadata key="mykey">myvalue</metadata>
         <requires name="com.livecode.bar" version="X.Y.Z" />
         <requires name="com.livecode.baz" version="X.Y.Z" />
         <property name="foo" get="optional(integer)" set="optional(integer)" />
@@ -190,3 +191,52 @@ The contents of the docs folder is defined by the environment that will be
 using the package.
 
 ## Signing
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+In order to establish some level of trust between package consumers and package
+providers a method of signing a package is required.
+
+There are two types of signing which can be performed on a package.
+
+The first signs a hash generated from the whole package file, appending the
+signature to the archive in a way which does not prevent usage of the archive
+as a ZIP.
+
+The second signs per-file hashes of each file within the package. The signature
+is stored in a META-INF folder within the zip archive alongside a manifest which
+describes the hashes of each file.
+
+### Whole-file Signatures
+
+A DER encoded PKCS#7 signature using SHA256 digest algorithm is generated for all
+the bytes in the archive up to, but not including the final comment length and
+comment field in the ZIP archive.
+
+The resulting sequence of bytes is placed in the comment field in the following
+layout:
+    char[] message;
+    uint8_t terminator;
+    uint8_t[] signature;
+    uint16_t offset_to_signature;
+    uint8_t pad0;
+    uint8_t pad1;
+    uint16_t comment_length;
+    
+The message is a string which ZIP tools might display if they extract the comment.
+It currently says "signed by LiveCode".
+    
+The terminator is always the NUL byte (hopefully meaning ZIP tools will only see
+'signed by LiveCode' in the comment).
+
+The sigature is the encoded PKCS#7 signature.
+
+The offset_to_signature is the offset from the end of the file to the start of
+the signature data.
+
+The pad0, pad1 fields are always 0xFF. This helps check whether the input file
+is a commentless archive, or a previously whole-file signed ZIP.
+
+The comment_length is the total length of the comment field.
+
+### Per-file Signatures
+
+TBD
