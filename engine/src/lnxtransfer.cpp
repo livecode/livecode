@@ -586,7 +586,7 @@ MCMIMEtype * MCGdkTransferStore::rev_to_MIME_stored(MCTransferType p_type)
 GdkAtom *MCGdkTransferStore::QueryAtoms(size_t &r_count)
 {
     uint32_t t_top = 0;
-    uint32_t t_index;
+    int32_t t_index;
     uint32_t t_count = 0;
     
     if (m_entries != NULL)

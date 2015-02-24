@@ -156,6 +156,7 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSVGPathParseErrorTypeInfo;
 
 }

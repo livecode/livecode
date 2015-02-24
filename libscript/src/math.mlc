@@ -20,6 +20,8 @@ This library consists of the mathematical operations included in the standard li
 
 module com.livecode.math
 
+use com.livecode.foreign
+
 public foreign handler MCMathEvalRealToPowerOfReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalNumberToPowerOfNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 

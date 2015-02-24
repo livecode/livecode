@@ -20,6 +20,8 @@ This module specifies the bitwise operations on integers included in the standar
 
 module com.livecode.bitwise
 
+use com.livecode.foreign
+
 public foreign handler MCBitwiseEvalBitwiseAnd(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
 public foreign handler MCBitwiseEvalBitwiseOr(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
 public foreign handler MCBitwiseEvalBitwiseNot(in Operand as int, out Value as int) as undefined binds to "<builtin>"

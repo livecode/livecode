@@ -412,7 +412,16 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		MCRedrawUpdateScreen();
 
 		if (curtime < eventtime)
-			done = MCS_poll(donepending ? 0 : eventtime - curtime, x11::XConnectionNumber(x11::gdk_x11_display_get_xdisplay(dpy)));
+        {
+            // If there are run loop actions, ensure they are run occasionally
+            real64_t t_sleep;
+            t_sleep = eventtime - curtime;
+            if (HasRunloopActions())
+                t_sleep = MCMin(t_sleep, 0.01);
+            
+            done = MCS_poll(donepending ? 0 : t_sleep, x11::XConnectionNumber(x11::gdk_x11_display_get_xdisplay(dpy)));
+        }
+        
 		curtime = MCS_time();
 	}
 	while (curtime < exittime && !(anyevent && (done || donepending)));

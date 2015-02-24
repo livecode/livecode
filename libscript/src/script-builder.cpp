@@ -62,6 +62,8 @@ struct MCScriptModuleBuilder
     
     uindex_t current_file;
     uindex_t current_line;
+    
+    MCProperListRef current_list_value;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +124,8 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     self -> current_file = 0;
     self -> current_line = 0;
     
+    self -> current_list_value = nil;
+    
     r_builder = self;
 }
 
@@ -158,6 +162,8 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
     MCMemoryDeleteArray(self -> labels);
     MCMemoryDeleteArray(self -> instructions);
     MCMemoryDeleteArray(self -> operands);
+    
+    MCValueRelease(self -> current_list_value);
     
     MCMemoryDelete(self);
 
@@ -274,6 +280,51 @@ void MCScriptAddDefinitionToModule(MCScriptModuleBuilderRef self, uindex_t& r_in
     }
 }
 
+void MCScriptAddValueToModule(MCScriptModuleBuilderRef self, MCValueRef p_value, uindex_t& r_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __emit_constant(self, p_value, r_index);
+}
+
+void MCScriptBeginListValueInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_list_value != nil ||
+        !MCProperListCreateMutable(self -> current_list_value))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptContinueListValueInModule(MCScriptModuleBuilderRef self, uindex_t p_const_idx)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_list_value == nil ||
+        !MCProperListPushElementOntoBack(self -> current_list_value, self -> module . values[p_const_idx]))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptEndListValueInModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    MCScriptAddValueToModule(self, self -> current_list_value, r_index);
+    
+    MCValueRelease(self -> current_list_value);
+    self -> current_list_value = nil;
+}
+
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
 {
     if (self == nil || !self -> valid)
@@ -296,7 +347,7 @@ void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, ui
     t_definition -> type = p_type;
 }
 
-void MCScriptAddConstantToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCValueRef p_value, uindex_t p_index)
+void MCScriptAddConstantToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_const_idx, uindex_t p_index)
 {
     if (self == nil || !self -> valid)
         return;
@@ -315,7 +366,7 @@ void MCScriptAddConstantToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     t_definition = static_cast<MCScriptConstantDefinition *>(self -> module . definitions[p_index]);
     
     t_definition -> kind = kMCScriptDefinitionKindConstant;
-    t_definition -> value = MCValueRetain(p_value);
+    t_definition -> value = p_const_idx;
 }
 
 void MCScriptAddVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
@@ -338,6 +389,29 @@ void MCScriptAddVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     
     t_definition -> kind = kMCScriptDefinitionKindVariable;
     t_definition -> type = p_type;
+}
+
+void MCScriptAddContextVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_def_index, uindex_t p_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (p_index >= self -> module . definition_count ||
+        self -> module . definitions[p_index] != nil ||
+        !MCMemoryNew((MCScriptContextVariableDefinition*&)self -> module . definitions[p_index]))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    __assign_definition_name(self, p_index, p_name);
+    
+    MCScriptContextVariableDefinition *t_definition;
+    t_definition = static_cast<MCScriptContextVariableDefinition *>(self -> module . definitions[p_index]);
+    
+    t_definition -> kind = kMCScriptDefinitionKindContextVariable;
+    t_definition -> type = p_type;
+    t_definition -> default_value = p_def_index;
 }
 
 void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_signature, MCStringRef p_binding, uindex_t p_index)
@@ -418,7 +492,6 @@ static void __add_script_type(MCScriptModuleBuilderRef self, MCScriptType *p_typ
         return;
     
     self -> module . types[r_index] = p_type;
-    r_index = r_index;
 }
 
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_index, uindex_t& r_type)
@@ -988,7 +1061,7 @@ static void __emit_constant(MCScriptModuleBuilderRef self, MCValueRef p_constant
     for(uindex_t i = 0; i < self -> module . value_count; i++)
         if (MCValueIsEqualTo(p_constant, self -> module . values[i]))
         {
-            r_index = i + 1;
+            r_index = i;
             return;
         }
     
@@ -998,7 +1071,7 @@ static void __emit_constant(MCScriptModuleBuilderRef self, MCValueRef p_constant
     
     self -> module . values[t_vindex] = MCValueRetain(p_constant);
     
-    r_index = t_vindex + 1;
+    r_index = t_vindex;
 }
 
 static void __begin_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeOp p_operation)
@@ -1071,7 +1144,7 @@ static void __emit_position(MCScriptModuleBuilderRef self, uindex_t p_address, u
     self -> module . positions[t_pindex] . line = p_line;
 }
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCScriptHandlerScope p_scope, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
 {
     if (self == nil || !self -> valid)
         return;
@@ -1092,6 +1165,7 @@ void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_nam
     t_definition -> kind = kMCScriptDefinitionKindHandler;
     t_definition -> type = p_type;
     t_definition -> start_address = self -> module . bytecode_count;
+    t_definition -> scope = p_scope;
     
     self -> current_handler = p_index;
     self -> current_param_count = 0;
@@ -1277,15 +1351,12 @@ void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef self, uindex_t p_va
     __emit_instruction(self, kMCScriptBytecodeOpJumpIfTrue, 2, p_value_reg, p_target_label);
 }
 
-void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef self, uindex_t p_reg, MCValueRef p_constant)
+void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef self, uindex_t p_reg, uindex_t p_const_idx)
 {
     if (self == nil || !self -> valid)
         return;
     
-    uindex_t t_constant_index;
-    __emit_constant(self, p_constant, t_constant_index);
-    
-    __emit_instruction(self, kMCScriptBytecodeOpAssignConstant, 2, p_reg, t_constant_index - 1);
+    __emit_instruction(self, kMCScriptBytecodeOpAssignConstant, 2, p_reg, p_const_idx);
 }
 
 void MCScriptEmitBeginAssignListInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)

@@ -132,9 +132,10 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
-    // We require that source is concrete - this means that it must be a named
-    // type.
-    MCAssert(MCTypeInfoIsNamed(source));
+    // We require that source is concrete for all but handler types (as handlers
+    // have unnamed typeinfos which we need to compare with potentially named
+    // handler type typeinfos).
+    MCAssert(MCTypeInfoIsNamed(source) || MCTypeInfoIsHandler(source));
     
     // Resolve the source type.
     MCResolvedTypeInfo t_resolved_source;
@@ -958,7 +959,7 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     else if (t_code == kMCValueTypeCodeError)
     {
         t_hash = MCHashBytesStream(t_hash, &self -> error . domain, sizeof(self -> error . domain));
-        t_hash = MCHashBytesStream(t_hash, self -> error . message, sizeof(self -> error . message));
+        t_hash = MCHashBytesStream(t_hash, &self -> error . message, sizeof(self -> error . message));
     }
     else if (t_code == kMCValueTypeCodeCustom)
     {
@@ -1037,7 +1038,25 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
 
 bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
 {
-    return false;
+	MCAutoStringRef tOptionalPart;
+	if (MCTypeInfoIsOptional (self))
+		tOptionalPart = MCSTR("optional ");
+	else
+		tOptionalPart = kMCEmptyString;
+
+	MCAutoStringRef tNamePart;
+	if (MCTypeInfoIsNamed (self))
+	{
+		tNamePart = MCNameGetString (MCNamedTypeInfoGetName (self));
+	}
+	else
+	{
+		if (!MCStringFormat (&tNamePart, "unnamed[%p]", self))
+			return false;
+	}
+
+	return MCStringFormat (r_description, "<type: %@%@>",
+	                       *tOptionalPart, *tNamePart);
 }
 
 static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)

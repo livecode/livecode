@@ -20,6 +20,8 @@ This library consists of the operations on bytes included in the standard librar
 
 module com.livecode.byte
 
+use com.livecode.foreign
+
 public foreign handler MCByteEvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
 
 public foreign handler MCByteEvalOffsetOfBytes(in IsLast as bool, in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"

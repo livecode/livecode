@@ -53,10 +53,9 @@ Protocol) format.
 
 module com.livecode.unittest
 
-public foreign handler MCUnitPlan(in Count as number) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitPlan"
-public foreign handler MCUnitDiagnostic(in Message as string) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitDiagnostic"
-
-foreign handler MCUnitOutputTest(in Condition as boolean, in Description as string, in Directive as string, in Reason as string) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitOutputTest"
+public foreign handler MCUnitPlan(in pCount as number) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitPlan"
+public foreign handler MCUnitDiagnostic(in pMessage as string) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitDiagnostic"
+foreign handler MCUnitOutputTest(in pCondition as boolean, in pDescription as string, in pDirective as string, in pReason as string) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitOutputTest"
 
 ----------------------------------------------------------------
 -- Test syntax

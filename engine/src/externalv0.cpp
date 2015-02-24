@@ -62,7 +62,7 @@ extern MCExecContext *MCECptr;
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Add revision number to v0 external interface
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Bump revision number after unicode update
-#define EXTERNAL_INTERFACE_VERSION 2
+#define EXTERNAL_INTERFACE_VERSION 3
 
 typedef struct _Xternal
 {
@@ -1677,6 +1677,26 @@ static char *window_to_stack_rect(const char *arg1, const char *arg2,
 	return nil;
 }
 
+static char *get_display_handle(const char *arg1, const char *arg2, const char *arg3, int *retval)
+{
+	void *t_display;
+	t_display = nil;
+	
+	if (!MCscreen->platform_get_display_handle(t_display))
+	{
+		*retval = xresFail;
+		return nil;
+	}
+	
+	void **t_return;
+	t_return = (void**)arg3;
+	
+	*t_return = t_display;
+	*retval = xresSucc;
+	
+	return nil;
+}
+
 // IM-2014-03-06: [[ revBrowserCEF ]] Add externals extension to the callback list
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Add externals extension to handle UTF8-encoded parameters
 XCB MCcbs[] =
@@ -1740,6 +1760,8 @@ XCB MCcbs[] =
 	get_array_utf8_binary,
 	set_array_utf8_text,
 	set_array_utf8_binary,
+	
+	get_display_handle,
 
 	NULL
 };

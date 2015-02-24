@@ -136,7 +136,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
                     t_has_transform = true;
                     t_transform = MCGAffineTransformMakeIdentity();
                 }
-                t_transform = MCGAffineTransformScale(t_transform, dw / (float)sw, dh / (float)sh);
+                t_transform = MCGAffineTransformPreScale(t_transform, dw / (float)sw, dh / (float)sh);
             }
             
 			MCGFloat t_device_scale;

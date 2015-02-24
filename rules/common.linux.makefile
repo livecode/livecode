@@ -38,6 +38,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libskia/include/pathops \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/ports \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/utils \
+	$(SOLUTION_DIR)/thirdparty/libfreetype/include \
 	$(SOLUTION_DIR)/prebuilt/include \
 	$(SOLUTION_DIR)/thirdparty/libffi/linux/i686-pc-linux-gnu
 	
@@ -74,19 +75,27 @@ OBJECTS=$(SRC_OBJECTS) $(CUSTOM_OBJECTS)
 HDEPS:=$(SRC_OBJECTS:.o=.d)
 -include $(HDEPS)
 
-VPATH=./src $(SOURCE_DIRS) $(CACHE_DIR) $(BUILD_DIR)
+ifeq ($(SOURCE_DIR),)
+	SOURCE_DIR=./src
+endif
+
+VPATH=$(SOURCE_DIR) $(SOURCE_DIRS) $(CACHE_DIR) $(BUILD_DIR)
 
 $(CACHE_DIR)/%.o: %.cpp
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	$(CXX) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.cpp
+	$(CXX) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o $(SOURCE_DIR)/$*.cpp
+
+$(CACHE_DIR)/%.o: %.cc
+	mkdir -p $(CACHE_DIR)/$(dir $*)
+	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o $(SOURCE_DIR)/$*.cc
 
 $(CACHE_DIR)/%.o: %.c
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.c
+	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o $(SOURCE_DIR)/$*.c
 	
 $(CACHE_DIR)/%.o: %.s
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
+	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o $(SOURCE_DIR)/$*.s
 
 $(CACHE_DIR)/%.o: %.S
 	mkdir -p $(CACHE_DIR)/$(dir $*)

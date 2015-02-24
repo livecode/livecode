@@ -23,57 +23,142 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template<typename T> class MCAutoValueRefBase;
+
+template<typename T> inline T In(const MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . In();
+}
+
+template<typename T> inline T& Out(MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . Out();
+}
+
+template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . InOut();
+}
+
 template<typename T> class MCAutoValueRefBase
 {
 public:
-
-	MCAutoValueRefBase(void)
+	inline MCAutoValueRefBase(void)
 	{
 		m_value = nil;
 	}
 
-	~MCAutoValueRefBase(void)
+	inline ~MCAutoValueRefBase(void)
 	{
 		MCValueRelease(m_value);
 	}
 
-	T operator = (T value)
+	inline T operator = (T value)
 	{
 		MCAssert(m_value == nil);
 		m_value = (T)MCValueRetain(value);
 		return value;
 	}
 
-	T& operator & (void)
+	inline T& operator & (void)
 	{
 		MCAssert(m_value == nil);
 		return m_value;
 	}
 
-	T operator * (void) const
+	inline T operator * (void) const
 	{
 		return m_value;
 	}
-
-private:
+    
+    inline T& operator ! (void)
+    {
+		return m_value;
+    }
+    
+    // The give method places the given value into the container without
+    // retaining it - the auto container is considered to now own the value.
+    inline void Give(T value)
+    {
+        MCAssert(m_value == nil);
+        m_value = value;
+    }
+    
+    // The take method removes the value from the container passing ownership
+    // to the caller.
+    inline T Take(void)
+    {
+        T t_value;
+        t_value = m_value;
+        m_value = nil;
+        return t_value;
+    }
+    
+    friend T In<>(const MCAutoValueRefBase<T>&);
+    friend T& Out<>(MCAutoValueRefBase<T>&);
+    friend T& InOut<>(MCAutoValueRefBase<T>&);
+    
+protected:
 	T m_value;
     
+    // Return the contents of the auto pointer in a form for an in parameter.
+    inline T In(void) const
+    {
+        return m_value;
+    }
+    
+    // Return the contents of the auto pointer in a form for an out parameter.
+    inline T& Out(void)
+    {
+		MCAssert(m_value == nil);
+		return m_value;
+    }
+    
+    // Return the contents of the auto pointer in a form for an inout parameter.
+    inline T& InOut(void)
+    {
+        return m_value;
+    }
+
+private:
     MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
+};
+
+template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)> class MCAutoMutableValueRefBase: public MCAutoValueRefBase<T>
+{
+public:
+	inline T operator = (T value)
+	{
+        return MCAutoValueRefBase<T>::operator =(value);
+	}
+    
+    inline bool MakeMutable(void)
+    {
+        return MutableCopyAndRelease(MCAutoValueRefBase<T>::m_value, MCAutoValueRefBase<T>::m_value);
+    }
+    
+    inline bool MakeImmutable(void)
+    {
+        return ImmutableCopyAndRelease(MCAutoValueRefBase<T>::m_value, MCAutoValueRefBase<T>::m_value);
+    }
+    
+private:
+    MCAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& operator = (MCAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& x);
 };
 
 typedef MCAutoValueRefBase<MCValueRef> MCAutoValueRef;
 typedef MCAutoValueRefBase<MCNumberRef> MCAutoNumberRef;
-typedef MCAutoValueRefBase<MCStringRef> MCAutoStringRef;
-typedef MCAutoValueRefBase<MCArrayRef> MCAutoArrayRef;
+typedef MCAutoMutableValueRefBase<MCStringRef, MCStringMutableCopyAndRelease, MCStringCopyAndRelease> MCAutoStringRef;
+typedef MCAutoMutableValueRefBase<MCArrayRef, MCArrayMutableCopyAndRelease, MCArrayCopyAndRelease> MCAutoArrayRef;
 typedef MCAutoValueRefBase<MCListRef> MCAutoListRef;
 typedef MCAutoValueRefBase<MCBooleanRef> MCAutoBooleanRef;
-typedef MCAutoValueRefBase<MCSetRef> MCAutoSetRef;
+typedef MCAutoMutableValueRefBase<MCSetRef, MCSetMutableCopyAndRelease, MCSetCopyAndRelease> MCAutoSetRef;
 typedef MCAutoValueRefBase<MCNameRef> MCNewAutoNameRef;
-typedef MCAutoValueRefBase<MCDataRef> MCAutoDataRef;
-typedef MCAutoValueRefBase<MCProperListRef> MCAutoProperListRef;
+typedef MCAutoMutableValueRefBase<MCDataRef, MCDataMutableCopyAndRelease, MCDataCopyAndRelease> MCAutoDataRef;
 typedef MCAutoValueRefBase<MCTypeInfoRef> MCAutoTypeInfoRef;
-typedef MCAutoValueRefBase<MCRecordRef> MCAutoRecordRef;
+typedef MCAutoMutableValueRefBase<MCRecordRef, MCRecordMutableCopyAndRelease, MCRecordCopyAndRelease> MCAutoRecordRef;
 typedef MCAutoValueRefBase<MCErrorRef> MCAutoErrorRef;
+typedef MCAutoMutableValueRefBase<MCProperListRef, MCProperListMutableCopyAndRelease, MCProperListCopyAndRelease> MCAutoProperListRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -195,6 +280,14 @@ public:
 
 		return true;
 	}
+    
+    bool Push(T p_value)
+    {
+        if (!Extend(m_value_count + 1))
+            return false;
+        m_values[m_value_count - 1] = MCValueRetain(p_value);
+        return true;
+    }
 
 	//////////
 
@@ -294,6 +387,7 @@ public:
     MCAutoStringRefAsUTF8String(void)
     {
         m_utf8string = nil;
+		m_size = 0;
     }
     
     ~MCAutoStringRefAsUTF8String(void)
@@ -600,7 +694,7 @@ private:
 	T *m_ptr;
 };
 
-template<typename T, void (*FREE)(const void*)> class MCAutoCustomPointer
+template<typename T, void (*FREE)(T*)> class MCAutoCustomPointer
 {
 	
 public:
@@ -614,32 +708,39 @@ public:
 		FREE(m_ptr);
 	}
 	
-	T operator = (T value)
+	T *operator = (T *value)
 	{
 		FREE(m_ptr);
 		m_ptr = value;
 		return value;
 	}
 	
-	T& operator & (void)
+	T*& operator & (void)
 	{
 		MCAssert(m_ptr == nil);
 		return m_ptr;
 	}
 	
-	T operator * (void) const
+	T *operator * (void) const
 	{
 		return m_ptr;
 	}
 	
-	void Take(T&r_ptr)
+	void Take(T*&r_ptr)
 	{
 		r_ptr = m_ptr;
 		m_ptr = nil;
 	}
 	
+	T *Take()
+	{
+		T *t_ptr = m_ptr;
+		m_ptr = nil;
+		return t_ptr;
+	}
+	
 private:
-	T m_ptr;
+	T *m_ptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

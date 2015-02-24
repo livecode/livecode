@@ -707,11 +707,13 @@ class MCLoad : public MCStatement
 	MCExpression *url;
 	MCExpression *message;
     bool is_extension : 1;
+	bool has_resource_path : 1;
 public:
 	MCLoad()
 	{
 		url = message = NULL;
         is_extension = false;
+		has_resource_path = false;
 	}
 	virtual ~MCLoad();
 	virtual Parse_stat parse(MCScriptPoint &);

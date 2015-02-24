@@ -2806,6 +2806,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     // First try an expression.
     MCAutoStringRef t_expr_error;
     uint2 t_expr_pos;
+    t_expr_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in this form.
@@ -2831,6 +2832,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     // Now try a command.
     MCAutoStringRef t_cmd_error;
     uint2 t_cmd_pos;
+    t_cmd_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in ep in this form.

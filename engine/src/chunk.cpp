@@ -369,7 +369,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						{
 							if (sp.lookup(SP_FACTOR, ite) == PS_NORMAL
 							        && ite->type == TT_CHUNK
-							        && ite->which >= CT_LAYER && ite->which <= CT_FIELD)
+							        && ite->which >= CT_LAYER && ite->which <= CT_LAST_CONTROL)
 							{
 								curref->ptype = curref->otype;
 								nterm = curref->otype = (Chunk_term)ite->which;
@@ -384,7 +384,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 							curref->etype = CT_ID;
 						else
 							curref->etype = CT_EXPRESSION;
-						if (sp.parseexp(curref->otype <= CT_FIELD, False,
+						if (sp.parseexp(curref->otype <= CT_LAST_CONTROL, False,
 						                &curref->startpos) != PS_NORMAL)
 						{
 							MCperror->add(PE_CHUNK_NOSTARTEXP, sp);
@@ -982,12 +982,15 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
             return;
         }
-        if (background == nil && card == nil && group == nil && object == nil)
-        {
-            r_object . object = t_object . object;
-            r_object . part_id = t_object . part_id;
-            return;
-        }
+        // SN-2015-01-13: [[ Bug 14376 ]] Remove this if statement added during the refactoring process
+        // (commit 15a49a27e387f3e49e5bcce8f8316348578bf810)
+        //  which leads to a part_id of 0 instead of the card part id.
+//        if (background == nil && card == nil && group == nil && object == nil)
+//        {
+//            r_object . object = t_object . object;
+//            r_object . part_id = t_object . part_id;
+//            return;
+//        }
         switch (t_object . object -> gettype())
         {
             case CT_AUDIO_CLIP:
@@ -5674,6 +5677,89 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
         MCLocaleBreakIteratorRelease(break_iterator);
 }
 
+// AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text, MCRange p_restriction)
+{
+    /* UNCHECKED */ MCStringCopy(p_text, text);
+    type = p_chunk_type;
+    
+    if (type == CT_CHARACTER && (MCStringIsNative(text) || (MCStringIsSimple(text) && MCStringIsUncombined(text))))
+        type = CT_CODEUNIT;
+    
+    MCBreakIteratorRef break_iterator;
+    
+    break_iterator = nil;
+    sp = nil;
+    range = MCRangeMake(p_restriction . offset, 0);
+    length = p_restriction . length == UINDEX_MAX ? MCStringGetLength(text) : p_restriction . offset + p_restriction . length;
+    // AL-2014-10-24: [[ Bug 13783 ]] Set exhausted to true if the string is immediately exhausted
+    exhausted = (p_restriction . length == 0 || p_restriction . offset>= MCStringGetLength(text));
+    first_chunk = true;
+    break_position = 0;
+    delimiter_length = 0;
+    
+    switch (type)
+    {
+        case CT_TOKEN:
+        {
+            MCAutoStringRef t_substring;
+            MCStringCopySubstring(text, p_restriction, &t_substring);
+            MCValueAssign(text, *t_substring);
+            sp = new MCScriptPoint(text);
+        }
+            break;
+        case CT_CHARACTER:
+        case CT_SENTENCE:
+        {
+            MCAutoStringRef t_substring;
+            MCStringCopySubstring(text, p_restriction, &t_substring);
+            MCRange t_range;
+            uindex_t t_end;
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == CT_SENTENCE ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, *t_substring);
+            t_range . length = p_restriction . length;
+            t_range . offset = p_restriction . offset;
+            
+            while ((t_end = MCLocaleBreakIteratorAdvance(break_iterator)) != kMCLocaleBreakIteratorDone)
+            {
+                t_range . offset += t_range . length;
+                t_range . length = t_end - t_range . offset;
+                breaks . Push(t_range);
+            }
+        }
+            break;
+        case CT_TRUEWORD:
+        {
+            MCAutoStringRef t_substring;
+            MCStringCopySubstring(text, p_restriction, &t_substring);
+            MCAutoArray<uindex_t> t_breaks;
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, *t_substring);
+            MCRange t_range;
+            t_range . length = p_restriction . length;
+            t_range . offset = p_restriction . offset;
+            
+            while (MCLocaleWordBreakIteratorAdvance(*t_substring, break_iterator, t_range)
+                   && t_range . offset + t_range . length != kMCLocaleBreakIteratorDone)
+            {
+                breaks . Push(t_range);
+            }
+        }
+            break;
+        case CT_LINE:
+        case CT_ITEM:
+        case CT_PARAGRAPH:
+            // delimiter length may vary for line and item.
+            delimiter_length = 1;
+        default:
+            break;
+    }
+    
+    if (break_iterator != nil)
+        MCLocaleBreakIteratorRelease(break_iterator);
+}
+
+
 MCTextChunkIterator::~MCTextChunkIterator()
 {    
     MCValueRelease(text);
@@ -5740,7 +5826,8 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
             MCRange t_found_range;
             // calculate the length of the line / item
-            if (!MCStringFind(text, MCRangeMake(t_offset, UINDEX_MAX), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
+            // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for delimiter search
+            if (!MCStringFind(text, MCRangeMake(t_offset, length - t_offset), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
             {
                 range . length = length - range . offset;
                 exhausted = true;
@@ -5760,8 +5847,9 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             uindex_t t_pg_offset;
             bool t_newline_found, t_pg_found;
             
+            // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for delimiter search
             t_pg_offset = t_offset;
-            t_newline_found = MCStringFirstIndexOfChar(text, '\n', t_offset, kMCCompareExact, t_offset);
+            t_newline_found = MCStringFirstIndexOfCharInRange(text, '\n', MCRangeMake(t_offset, length - t_offset), kMCCompareExact, t_offset);
             // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
             t_pg_found = false; /*MCStringFirstIndexOfChar(text, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);*/
             
@@ -5792,7 +5880,8 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
             MCStringsSkipWord(ctxt, text, false, t_offset);
             
-            if (t_offset == length)
+            // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for exhaustion check
+            if (t_offset >= length)
                 exhausted = true;
             
             range . length = t_offset - range . offset;
@@ -5848,11 +5937,11 @@ bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
             // Otherwise we need to find p_needle and check to see if there is a delimiter either side.
             // This is because of the case where the delimiter is within p_needle - e.g.
             // "a,b" is among the items of "a,b,c,d" should return true.
-            
+            // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for isamong search
             if (type == CT_PARAGRAPH)
-                return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_needle, text, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+                return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_needle, text, ctxt . GetStringComparisonType(), MCRangeMake(range . offset, length));
             
-            return MCStringsIsAmongTheChunksOfRange(ctxt, p_needle, text, type, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+            return MCStringsIsAmongTheChunksOfRange(ctxt, p_needle, text, type, ctxt . GetStringComparisonType(), MCRangeMake(range . offset, length));
         }
         default:
             if (MCStringIsEmpty(p_needle))

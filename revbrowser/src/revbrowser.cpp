@@ -61,28 +61,6 @@ inline char *IntToStr(int p_value)
 	return t_string;
 }
 
-void DispatchMetaCardMessage(const char *messagename, const char *tmessage)
-{
-	int retvalue = 0;
-	SetGlobal("XBrowservar",tmessage,&retvalue);
-	char *mcmessage = nil;
-    // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
-    MCCStringFormat(mcmessage,"global XBrowservar;send \"%s\" && %s to current card of stack the topstack;put current card of stack topstack;put 0 into Xbrowservar",messagename,tmessage); //of stack the topstack
-	SendCardMessage(mcmessage, &retvalue);
-	delete mcmessage;
-}
-
-void DispatchMetaCardMessage(const char *messagename, const char *tmessage, int instID)
-{
-	int retvalue = 0;
-	SetGlobal("XBrowservar",tmessage,&retvalue);
-	char *mcmessage = nil;
-    // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
-    MCCStringFormat(mcmessage, "global XBrowservar;send \"%s %s,%s\" to current card of stack the topstack;put 0 into Xbrowservar",messagename,tmessage,instID);
-	SendCardMessage(mcmessage, &retvalue);
-    delete mcmessage;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  INSTANCE HANDLING
@@ -408,9 +386,9 @@ bool BrowserInstances::Callback(int p_id, const char *p_message, char **p_args, 
 	{
 		int t_retval;
 		if (t_instance -> stack_id != NULL)
-			SetGlobal("XBrowservar", t_instance -> stack_id, &t_retval);
+			SetGlobalUTF8("XBrowservar", t_instance -> stack_id, &t_retval);
 		else
-			SetGlobal("XBrowservar", "", &t_retval);
+			SetGlobalUTF8("XBrowservar", "", &t_retval);
 	}
 
 	char *t_script;
@@ -438,18 +416,18 @@ void BrowserInstances::SendMessage(BrowserInstance *p_instance, const char *p_me
 	SetGlobal(p_instance->xbrowser_callbacks ? "XBrowserCancel" : "browserCancel", "FALSE", &t_retval);
 
 	p_instance -> callback_depth += 1;
-	SendCardMessage(p_message, &t_retval);
+	SendCardMessageUTF8(p_message, &t_retval);
 	p_instance -> callback_depth -= 1;
 	
 	if (p_instance -> stack_id != NULL)
 		free(p_instance -> stack_id);
 
-	p_instance -> stack_id = GetGlobal("XBrowservar", &t_retval);
+	p_instance -> stack_id = GetGlobalUTF8("XBrowservar", &t_retval);
 
 	bool t_pass;
 
 	char *t_cancel;
-	t_cancel = GetGlobal(p_instance -> xbrowser_callbacks ? "XBrowserCancel" : "browserCancel", &t_retval);
+	t_cancel = GetGlobalUTF8(p_instance -> xbrowser_callbacks ? "XBrowserCancel" : "browserCancel", &t_retval);
 	if (t_cancel != NULL)
 	{
 		t_pass = !StrToBool(t_cancel);
@@ -506,9 +484,9 @@ send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 
 	int t_retval;
 	if (t_instance -> stack_id != NULL)
-		SetGlobal("XBrowservar", t_instance -> stack_id, &t_retval);
+		SetGlobalUTF8("XBrowservar", t_instance -> stack_id, &t_retval);
 	else
-		SetGlobal("XBrowservar", "", &t_retval);
+		SetGlobalUTF8("XBrowservar", "", &t_retval);
 
 	int t_window_id;
 	t_window_id = t_instance -> browser -> GetWindowId();
@@ -527,10 +505,10 @@ send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 			MCCStringFormat(t_message, s_message_template_with_argument, t_window_id, t_window_id, p_message, p_id, p_argument);
 	}
 
-	SetGlobal(t_instance -> xbrowser_callbacks ? "XBrowserCancel" : "browserCancel", "FALSE", &t_retval);
+	SetGlobalUTF8(t_instance -> xbrowser_callbacks ? "XBrowserCancel" : "browserCancel", "FALSE", &t_retval);
 	
 	t_instance -> callback_depth += 1;
-	SendCardMessage(t_message, &t_retval);
+	SendCardMessageUTF8(t_message, &t_retval);
 	t_instance -> callback_depth -= 1;
 	
     delete t_message;
@@ -538,7 +516,7 @@ send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 	if (t_instance -> stack_id != NULL)
 		free(t_instance -> stack_id);
 
-	t_instance -> stack_id = GetGlobal("XBrowservar", &t_retval);
+	t_instance -> stack_id = GetGlobalUTF8("XBrowservar", &t_retval);
 
 	bool t_pass;
 
@@ -1918,42 +1896,42 @@ template<BrowserHandler u_handler> void revBrowserWrapper(char *p_arguments[], i
 }
 
 EXTERNAL_BEGIN_DECLARATIONS("revBrowser")
-	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserOpen", revBrowserOpen)
-	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserOpenCef", revBrowserOpenCef)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserClose", revBrowserWrapper<revBrowserClose>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserStop", revBrowserWrapper<revBrowserStop>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserRefresh", revBrowserWrapper<revBrowserRefresh>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserNavigate", revBrowserWrapper<revBrowserNavigate>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserForward", revBrowserWrapper<revBrowserForward>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserBack", revBrowserWrapper<revBrowserBack>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserPrint", revBrowserWrapper<revBrowserPrint>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserRedraw", revBrowserWrapper<revBrowserRedraw>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserMakeTextBigger", revBrowserWrapper<revBrowserMakeTextBigger>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserMakeTextSmaller", revBrowserWrapper<revBrowserMakeTextSmaller>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserSet", revBrowserWrapper<revBrowserSetProp>)
-	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserGet", revBrowserWrapper<revBrowserGetProp>)
-	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserInstances", revBrowserInstances)
-	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserExecuteScript", revBrowserWrapper<revBrowserExecuteScript>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserSnapshot", revBrowserWrapper<revBrowserSnapshot>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserFind", revBrowserWrapper<revBrowserFind>)
-	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserCallScript", revBrowserWrapper<revBrowserCallScript>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserAddJavaScriptHandler", revBrowserWrapper<revBrowserAddJavaScriptHandler>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserRemoveJavaScriptHandler", revBrowserWrapper<revBrowserRemoveJavaScriptHandler>)
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Open", XBrowserOpen)
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Close", XBrowserWrapper<revBrowserClose> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Stop", XBrowserWrapper<revBrowserStop> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Halt", XBrowserWrapper<revBrowserStop> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Refresh", XBrowserWrapper<revBrowserRefresh> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Navigate", XBrowserWrapper2<revBrowserNavigate> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Forward", XBrowserWrapper<revBrowserForward> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Back", XBrowserWrapper<revBrowserBack> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Set", XBrowserSetProp)
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Focus", XBrowserWrapper<revBrowserFocus> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Unfocus", XBrowserWrapper<revBrowserUnfocus> )
-	EXTERNAL_DECLARE_FUNCTION_OBJC("XBrowser_Get", XBrowserGetProp)
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Print", XBrowserWrapper<revBrowserPrint> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Redraw", XBrowserWrapper<revBrowserRedraw> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_MakeTextBigger", XBrowserWrapper<revBrowserMakeTextBigger> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_MakeTextSmaller", XBrowserWrapper<revBrowserMakeTextSmaller> )
-	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Init", XBrowserInit)
+	EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8("revBrowserOpen", revBrowserOpen)
+	EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8("revBrowserOpenCef", revBrowserOpenCef)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserClose", revBrowserWrapper<revBrowserClose>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserStop", revBrowserWrapper<revBrowserStop>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserRefresh", revBrowserWrapper<revBrowserRefresh>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserNavigate", revBrowserWrapper<revBrowserNavigate>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserForward", revBrowserWrapper<revBrowserForward>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserBack", revBrowserWrapper<revBrowserBack>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserPrint", revBrowserWrapper<revBrowserPrint>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserRedraw", revBrowserWrapper<revBrowserRedraw>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserMakeTextBigger", revBrowserWrapper<revBrowserMakeTextBigger>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserMakeTextSmaller", revBrowserWrapper<revBrowserMakeTextSmaller>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserSet", revBrowserWrapper<revBrowserSetProp>)
+	EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8("revBrowserGet", revBrowserWrapper<revBrowserGetProp>)
+	EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8("revBrowserInstances", revBrowserInstances)
+	EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8("revBrowserExecuteScript", revBrowserWrapper<revBrowserExecuteScript>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserSnapshot", revBrowserWrapper<revBrowserSnapshot>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserFind", revBrowserWrapper<revBrowserFind>)
+	EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8("revBrowserCallScript", revBrowserWrapper<revBrowserCallScript>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserAddJavaScriptHandler", revBrowserWrapper<revBrowserAddJavaScriptHandler>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("revBrowserRemoveJavaScriptHandler", revBrowserWrapper<revBrowserRemoveJavaScriptHandler>)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Open", XBrowserOpen)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Close", XBrowserWrapper<revBrowserClose> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Stop", XBrowserWrapper<revBrowserStop> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Halt", XBrowserWrapper<revBrowserStop> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Refresh", XBrowserWrapper<revBrowserRefresh> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Navigate", XBrowserWrapper2<revBrowserNavigate> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Forward", XBrowserWrapper<revBrowserForward> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Back", XBrowserWrapper<revBrowserBack> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Set", XBrowserSetProp)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Focus", XBrowserWrapper<revBrowserFocus> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Unfocus", XBrowserWrapper<revBrowserUnfocus> )
+	EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8("XBrowser_Get", XBrowserGetProp)
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Print", XBrowserWrapper<revBrowserPrint> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Redraw", XBrowserWrapper<revBrowserRedraw> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_MakeTextBigger", XBrowserWrapper<revBrowserMakeTextBigger> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_MakeTextSmaller", XBrowserWrapper<revBrowserMakeTextSmaller> )
+	EXTERNAL_DECLARE_COMMAND_OBJC_UTF8("XBrowser_Init", XBrowserInit)
 EXTERNAL_END_DECLARATIONS

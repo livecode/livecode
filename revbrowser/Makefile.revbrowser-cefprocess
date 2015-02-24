@@ -1,0 +1,35 @@
+NAME=revbrowser-cefprocess
+TYPE=application
+
+include ../rules/environment.linux.makefile
+
+SOURCES=\
+	cefprocess.cpp \
+	cefprocess_lnx.cpp \
+	cefshared_lnx.cpp
+	
+SOURCE_DIRS=
+
+#CUSTOM_OVERRIDE_DEFINES=1
+
+#CUSTOM_DEFINES=\
+#	_SERVER _LINUX_SERVER __LITTLE_ENDIAN__
+
+CUSTOM_INCLUDES=./src ../libcore/include ../thirdparty/libcef
+
+CUSTOM_LIBS=core cefwrapper cef
+CUSTOM_DYNAMIC_LIBS=dl
+#CUSTOM_DEPS=libkernel-server.a
+
+#CUSTOM_STATIC_LIBS=curl ssl crypto rt icudata icui18n icuio icule iculx icuuc $(MODE_STATIC_LIBS)
+#CUSTOM_DYNAMIC_LIBS=dl m pthread
+
+#CUSTOM_CCFLAGS=\
+#	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \
+#	-fmessage-length=0 
+
+#CUSTOM_LDFLAGS_LTO=-export-dynamic -Wl,-x
+
+include ../rules/application.linux.makefile
+
+

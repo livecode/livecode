@@ -1372,7 +1372,8 @@ static const char **nametable[] =
     &MCnullstring, &MCscrollbarstring,
     &MCimagestring, &MCgraphicstring,
     &MCepsstring, &MCmagnifierstring,
-    &MCcolorstring, &MCfieldstring
+    &MCcolorstring, &MCwidgetstring,
+    &MCfieldstring
 };
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
@@ -1420,7 +1421,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
 	{
-		delete points;
+		delete[] points;
 		points = new MCPoint[4 * QA_NPOINTS + 1];
 	}
 
@@ -1541,9 +1542,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 	Boolean allvalid = True;
 	uint2 npoints = 0;
 	uint4 l = MCStringGetLength(data);
-    char *t_data;
-    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
-	const char *sptr = t_data;
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
+	const char *sptr = *t_data;
 	while (l)
 	{
 		Boolean done1, done2;
@@ -1580,9 +1581,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 
 Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
-    char *t_data;
-    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
-	const char *sptr = t_data;
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
+	const char *sptr = *t_data;
 	uint4 l = MCStringGetLength(data);
 	Boolean done1, done2;
 	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
@@ -2644,13 +2645,12 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
 	{
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 
 		// Send "putURL" message
 		Boolean oldlock = MClockmessages;
 		MClockmessages = False;
 		MCParameter p1;
-		p1 . setvalueref_argument(*t_data);
+		p1 . setvalueref_argument(p_data);
 		MCParameter p2;
 		p2 . setvalueref_argument(p_url);
 		p1.setnext(&p2);
@@ -2663,6 +2663,7 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 		case ES_PASS:
 			// Either there was no message handler, or the handler passed the message,
 			// so process the URL in the engine.
+			/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 			MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
 			break;
 

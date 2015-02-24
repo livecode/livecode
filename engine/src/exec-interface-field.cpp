@@ -1241,6 +1241,9 @@ void MCField::GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*
             pgptr = pgptr->next();
             if (pgptr == paragraphs)
                 break;
+            
+            // SN-2015-01-12: [[ Bug 14305 ]] j should count how many times we passed through the loop.
+            ++j;
         }
         if (theight != height)
         {
