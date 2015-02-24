@@ -817,7 +817,7 @@ static char *load_module(const char *arg1, const char *arg2,
     MCSysModuleHandle *t_result;
     t_result = (MCSysModuleHandle *)arg2;
     
-    *t_result = MCU_loadmodule(arg1);
+    *t_result = (MCSysModuleHandle)MCU_loadmodule(arg1);
     
     if (*t_result == nil)
         *retval = xresFail;

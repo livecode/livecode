@@ -139,7 +139,7 @@ static void *DBcallback_loadmodule(const char *p_path)
 {
     int t_success;
     void *t_handle;
-    LoadModule(p_path, &t_handle, &t_success);
+    LoadModuleByName(p_path, &t_handle, &t_success);
     if (t_success == EXTERNAL_FAILURE)
         return NULL;
     return t_handle;
@@ -271,7 +271,7 @@ DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
     int t_retvalue;
     void *t_handle;
     t_handle = NULL;
-    LoadModule(p_type, &t_handle, &t_retvalue);
+    LoadModuleByName(p_type, &t_handle, &t_retvalue);
     
     if (t_handle == NULL)
         return NULL;
@@ -280,8 +280,10 @@ DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
     t_result = new DATABASEREC;
 #if (defined _MACOSX && !defined _MAC_SERVER)
     t_result -> driverref = (CFBundleRef)t_handle;
+#elif (defined _WINDOWS)
+    t_result -> driverref = (HINSTANCE)t_handle;
 #else
-    t_result -> driverref = t_handle;
+	t_result -> driverref = t_handle;
 #endif
     
     void *id_counterref_ptr, *new_connectionref_ptr, *release_connectionref_ptr;
