@@ -2933,8 +2933,10 @@ Boolean MCStack::del()
 	//   flag set, flush the parentscripts table.
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 		MCParentScript::FlushStack(this);
-
-	return True;
+    
+    // MCObject now does things on del(), so we must make sure we finish by
+    // calling its implementation.
+    return MCObject::del();
 }
 
 void MCStack::paste(void)

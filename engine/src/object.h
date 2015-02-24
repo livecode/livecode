@@ -262,6 +262,9 @@ protected:
 	
 	// IM-2013-04-16: [[ BZ 10848 ]] // flag to record encrypted state of object script
 	bool m_script_encrypted : 1;
+    
+    // If this is true, then this object is in the parentScript resolution table.
+    bool m_is_parent_script : 1;
 	
 	MCStringRef tooltip;
 	
@@ -836,6 +839,16 @@ public:
 	{
 		return m_in_id_cache;
 	}
+    
+    void setisparentscript(bool p_value)
+    {
+        m_is_parent_script = p_value;
+    }
+    
+    bool getisparentscript(void)
+    {
+        return m_is_parent_script;
+    }
     
     MCRectangle measuretext(MCStringRef p_text, bool p_is_unicode);
     
