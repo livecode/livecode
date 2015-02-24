@@ -213,6 +213,7 @@ comment field in the ZIP archive.
 
 The resulting sequence of bytes is placed in the comment field in the following
 layout:
+
     char[] message;
     uint8_t terminator;
     uint8_t[] signature;
