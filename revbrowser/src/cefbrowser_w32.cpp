@@ -533,5 +533,5 @@ void MCU_unloadmodule(void *p_module)
 
 void *MCU_resolvemodulesymbol(void *p_module, const char *p_name)
 {
-    return GetProcAddress(p_module, p_name);
+    return GetProcAddress((HMODULE)p_module, p_name);
 }

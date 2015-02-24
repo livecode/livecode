@@ -2930,7 +2930,9 @@ bool MCU_random_bytes(size_t p_count, void *p_buffer)
 // AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading where
 //  p_module can be a universal module name, where a mapping from module names to
 // relative paths has been provided.
-MCSysModuleHandle MCU_loadmodule(const char *p_module)
+// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
+//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+void* MCU_loadmodule(const char *p_module)
 {
     MCSysModuleHandle t_handle;
     t_handle = nil;
@@ -2998,12 +3000,16 @@ MCSysModuleHandle MCU_loadmodule(const char *p_module)
     return t_handle;
 }
 
-void MCU_unloadmodule(MCSysModuleHandle p_module)
+// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
+//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+void MCU_unloadmodule(void *p_module)
 {
-    MCS_unloadmodule(p_module);
+    MCS_unloadmodule((MCSysModuleHandle)p_module);
 }
 
-void *MCU_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
+// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
+//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
 {
 #if defined(_MACOSX) || defined(_MAC_SERVER)
     NSSymbol t_symbol;
@@ -3011,7 +3017,7 @@ void *MCU_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
     if (t_symbol != NULL)
         return NSAddressOfSymbol(t_symbol);
 #endif
-    return MCS_resolvemodulesymbol(p_module, p_symbol);
+    return MCS_resolvemodulesymbol((MCSysModuleHandle)p_module, p_symbol);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

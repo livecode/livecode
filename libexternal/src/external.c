@@ -413,15 +413,17 @@ void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 ////////////////////////////////////////////////////////////////////////////////
 
 // AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
-void LoadModule(const char *p_module, void **r_handle, int *r_success)
+// SN-2015-02-24: [[ Broken Win Compilation ]] LoadModule is a Win32 API function...
+void LoadModuleByName(const char *p_module, void **r_handle, int *r_success)
 {
+    char *t_result;
+
     if (s_external_interface_version < 2)
     {
         *r_success = EXTERNAL_FAILURE;
         return;
     }
-    
-    char *t_result;
+
     t_result = (s_operations[OPERATION_LOAD_MODULE])(p_module, (const char *)r_handle, NULL, r_success);
     
     if (t_result != NULL)
@@ -430,13 +432,14 @@ void LoadModule(const char *p_module, void **r_handle, int *r_success)
 
 void UnloadModule(void *p_handle, int *r_success)
 {
+    char *t_result;
+
     if (s_external_interface_version < 2)
     {
         *r_success = EXTERNAL_FAILURE;
         return;
     }
-    
-    char *t_result;
+
     t_result = (s_operations[OPERATION_UNLOAD_MODULE])(p_handle, NULL, NULL, r_success);
     
     if (t_result != NULL)
@@ -445,13 +448,14 @@ void UnloadModule(void *p_handle, int *r_success)
 
 void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolved, int *r_success)
 {
+    char *t_result;
+
     if (s_external_interface_version < 2)
     {
         *r_success = EXTERNAL_FAILURE;
         return;
     }
-    
-    char *t_result;
+
     t_result = (s_operations[OPERATION_RESOLVE_SYMBOL_IN_MODULE])(p_handle, p_symbol, (const char *)r_resolved, r_success);
     
     if (t_result != NULL)
