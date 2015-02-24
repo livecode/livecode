@@ -140,6 +140,8 @@ bool MCModulesInitialize(void)
         return false;
     if (!MCEngineModuleInitialize())
         return false;
+	if (!MCCanvasModuleInitialize())
+		return false;
     return true;
 }
 
@@ -151,4 +153,5 @@ void MCModulesFinalize(void)
     MCEngineModuleFinalize();
     MCCanvasModuleFinalize();
     MCForeignModuleFinalize();
+	MCCanvasModuleFinalize();
 }

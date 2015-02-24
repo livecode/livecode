@@ -230,4 +230,14 @@ private:
     MCNativeLayer* createNativeLayer();
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo;
+extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo;
+
+extern "C" MC_DLLEXPORT bool MCWidgetModuleInit(void);
+extern "C" MC_DLLEXPORT void MCWidgetModuleFinalize(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif
