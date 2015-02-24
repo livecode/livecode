@@ -356,9 +356,9 @@ bool MCBrowserAuthDialogMakeStrings(const CefString &p_url, const CefString &p_r
 	t_port = 0;
 
 	if (t_success)
-		t_success = MCCefStringToCString(CefString(&t_url_parts.host), t_host);
+		t_success = MCCefStringToUtf8String(CefString(&t_url_parts.host), t_host);
 	if (t_success)
-		t_success = MCCefStringToCString(p_realm, t_realm);
+		t_success = MCCefStringToUtf8String(p_realm, t_realm);
 	if (t_success)
 	{
 		CefString t_port_string(&t_url_parts.port);

@@ -41,10 +41,43 @@ enum {
 typedef bool (*MCObjectListFontsCallback)(void *p_context, unsigned int p_index);
 typedef bool (*MCObjectResetFontsCallback)(void *p_context, unsigned int p_index, unsigned int p_new_index);
 
+// IM-2015-02-12: [[ ScriptObjectProps ]] Add object visitor flags
+// Descend recursively to the children of an object
+#define kMCObjectVisitorRecursive (1 << 0)
+
+// Visit the children of an object before itself
+#define kMCObjectVisitorDepthFirst (1 << 1)
+
+// Only visit children who are direct descendants of an object.
+#define kMCObjectVisitorHeirarchical (1 << 2)
+
+typedef uint32_t MCObjectVisitorOptions;
+
+inline bool MCObjectVisitorIsDepthFirst(MCObjectVisitorOptions p_options)
+{
+	return (p_options & kMCObjectVisitorDepthFirst) != 0;
+}
+
+inline bool MCObjectVisitorIsDepthLast(MCObjectVisitorOptions p_options)
+{
+	return !MCObjectVisitorIsDepthFirst(p_options);
+}
+
+inline bool MCObjectVisitorIsRecursive(MCObjectVisitorOptions p_options)
+{
+	return (p_options & kMCObjectVisitorRecursive) != 0;
+}
+
+inline bool MCObjectVisitorIsHeirarchical(MCObjectVisitorOptions p_options)
+{
+	return (p_options & kMCObjectVisitorHeirarchical) != 0;
+}
+
+/* LEGACY - Set flags for visit styles to perform previously defined behaviour */
 enum MCVisitStyle
 {
-	VISIT_STYLE_DEPTH_FIRST,
-	VISIT_STYLE_DEPTH_LAST
+	VISIT_STYLE_DEPTH_FIRST = (kMCObjectVisitorRecursive | kMCObjectVisitorDepthFirst),
+	VISIT_STYLE_DEPTH_LAST = (kMCObjectVisitorRecursive)
 };
 
 enum MCObjectIntersectType
@@ -282,7 +315,9 @@ public:
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
-	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
+	virtual bool visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
+	virtual bool visit_self(MCObjectVisitor *p_visitor);
+	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);

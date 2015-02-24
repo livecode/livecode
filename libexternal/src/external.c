@@ -69,6 +69,8 @@ enum
 	/* V2 */ OPERATION_GET_ARRAY_UTF8_BINARY,
 	/* V2 */ OPERATION_SET_ARRAY_UTF8_TEXT,
 	/* V2 */ OPERATION_SET_ARRAY_UTF8_BINARY,
+
+	/* V3 */ OPERATION_GET_XDISPLAY_HANDLE,
 };
 
 enum
@@ -798,6 +800,25 @@ Bool SecurityCanAccessLibraryUTF8(const char *p_library)
 	if (s_security_handlers != NULL)
 		return s_security_handlers[SECURITY_CHECK_LIBRARY_UTF8](p_library);
 	return True;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// IM-2014-09-23: [[ RevBrowserCEF ]] External V3 functions
+
+extern void GetXDisplayHandle(void **r_display, int *r_success)
+{
+	char *t_result;
+    
+	if (s_external_interface_version < 3)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+    
+	t_result = (s_operations[OPERATION_GET_XDISPLAY_HANDLE])(NULL, NULL, r_display, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

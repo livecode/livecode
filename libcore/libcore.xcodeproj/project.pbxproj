@@ -7,10 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3CBA4C2A1090B637008784BF /* sserialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3CBA4C281090B637008784BF /* sserialize.cpp */; };
-		3CBA4C381090BB27008784BF /* sserialize_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3CBA4C361090BB27008784BF /* sserialize_osx.cpp */; };
 		4D241F6A107113C90067FA7D /* core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D241F68107113C90067FA7D /* core.cpp */; };
-		4D3467361091E49500FF32F9 /* binary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D3467351091E49500FF32F9 /* binary.cpp */; };
 		4D830324120B4D0D005F2384 /* module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D830322120B4D0D005F2384 /* module.cpp */; };
 		4D830325120B4D0D005F2384 /* filesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D830323120B4D0D005F2384 /* filesystem.cpp */; };
 /* End PBXBuildFile section */
@@ -28,10 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3CBA4C281090B637008784BF /* sserialize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sserialize.cpp; path = src/sserialize.cpp; sourceTree = "<group>"; };
-		3CBA4C361090BB27008784BF /* sserialize_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sserialize_osx.cpp; path = src/sserialize_osx.cpp; sourceTree = "<group>"; };
 		4D241F68107113C90067FA7D /* core.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = core.cpp; path = src/core.cpp; sourceTree = "<group>"; };
-		4D3467351091E49500FF32F9 /* binary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = binary.cpp; path = src/binary.cpp; sourceTree = "<group>"; };
 		4D830322120B4D0D005F2384 /* module.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = module.cpp; path = src/module.cpp; sourceTree = "<group>"; };
 		4D830323120B4D0D005F2384 /* filesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = filesystem.cpp; path = src/filesystem.cpp; sourceTree = "<group>"; };
 		4DCA07C111E8D749005CF640 /* core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = core.h; path = include/core.h; sourceTree = "<group>"; };
@@ -104,9 +98,6 @@
 				4D830322120B4D0D005F2384 /* module.cpp */,
 				4D830323120B4D0D005F2384 /* filesystem.cpp */,
 				4D241F68107113C90067FA7D /* core.cpp */,
-				3CBA4C281090B637008784BF /* sserialize.cpp */,
-				3CBA4C361090BB27008784BF /* sserialize_osx.cpp */,
-				4D3467351091E49500FF32F9 /* binary.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -164,9 +155,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D241F6A107113C90067FA7D /* core.cpp in Sources */,
-				3CBA4C2A1090B637008784BF /* sserialize.cpp in Sources */,
-				3CBA4C381090BB27008784BF /* sserialize_osx.cpp in Sources */,
-				4D3467361091E49500FF32F9 /* binary.cpp in Sources */,
 				4D830324120B4D0D005F2384 /* module.cpp in Sources */,
 				4D830325120B4D0D005F2384 /* filesystem.cpp in Sources */,
 			);

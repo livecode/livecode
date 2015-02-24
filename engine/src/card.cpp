@@ -231,17 +231,24 @@ const char *MCCard::gettypestring()
 	return MCcardstring;
 }
 
-bool MCCard::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCCard::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
-	bool t_continue;
-	t_continue = true;
-
 	// If the card doesn't match the part number, we do nothing.
 	if (p_part != 0 && getid() != p_part)
 		return true;
 
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnCard(this);
+	return MCObject::visit(p_options, p_part, p_visitor);
+}
+
+bool MCCard::visit_self(MCObjectVisitor *p_visitor)
+{
+	return p_visitor -> OnCard(this);
+}
+
+bool MCCard::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	bool t_continue;
+	t_continue = true;
 
 	if (t_continue && objptrs != NULL)
 	{
@@ -249,14 +256,11 @@ bool MCCard::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vis
 		t_objptr = objptrs;
 		do
 		{
-			t_continue = t_objptr -> visit(p_style, p_part, p_visitor);
+			t_continue = t_objptr -> visit(p_options, p_part, p_visitor);
 			t_objptr = t_objptr -> next();
 		}
 		while(t_continue && t_objptr != objptrs);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnCard(this);
 
 	return t_continue;
 }

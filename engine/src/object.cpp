@@ -4982,9 +4982,31 @@ bool MCObject::haswidgets(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCObject::visit_self(MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnObject(this);
+}
+
+bool MCObject::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (MCObjectVisitorIsDepthLast(p_options))
+		t_continue = visit_self(p_visitor);
+	
+	if (t_continue && MCObjectVisitorIsRecursive(p_options))
+		t_continue = visit_children(p_options, p_part, p_visitor);
+	
+	if (t_continue && MCObjectVisitorIsDepthFirst(p_options))
+		t_continue = visit_self(p_visitor);
+	
+	return t_continue;
+}
+
+bool MCObject::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

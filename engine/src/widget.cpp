@@ -160,7 +160,7 @@ const MCObjectPropertyTable *MCWidget::getpropertytable(void) const
 	return &kPropertyTable;
 }
 
-bool MCWidget::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCWidget::visit_self(MCObjectVisitor* p_visitor)
 {
     return p_visitor -> OnWidget(this);
 }
