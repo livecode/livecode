@@ -116,7 +116,52 @@ This is an invalid package:
             com.example.foo.lcb
             org.example.foo.lcb
 
-### Code
+### Code (revised)
+
+The code folder contains all the (non-system) foreign code components that are
+needed by any compiled module 'foreign handler' definitions.
+
+The folder is split up into sub-folders by architecture triples:
+
+    <platform>-<arch>-<variant>
+    
+The platform field specifies the target platform. It can be one of the following:
+
+    - mac
+    - windows
+    - linux
+    - ios
+    - ios_simulated
+    - android
+    
+The arch field specifies what architecture the platform has been compiled for.
+The supported values depend on the platform:
+
+    - mac: i386, x86_64 (future)
+    - windows: i386, x86_64 (future)
+    - linux: i386, x86_64
+    - ios: armv6, armv7, armv7s, arm64
+    - ios_simulated: i386, x86_64
+    - android: java, armv6, armv7 (future)
+
+The variant field is optional and specifies per platform-arch specific variants.
+For example, iOS can be compiled against differing C++ library versions and
+target different minimum OS versions which can affect the linkability of the
+end products. (TBD)
+
+For Mac, Windows and Linux the binary components should be provided as shared
+libraries (.bundle or .dylib for Mac, .dll for Windows, .so for Linux). In the
+future partially compiled object code might also be supported.
+
+For iOS, the binary components should be provided as partially compiled object
+code.
+
+For iOS-Simulated, the binary components should be provided as shared libraries
+(.dylib).
+
+For Android, the native code binary components should be provided as shared
+libraries (.so) whilst the Java 'native code' binary components should be
+provided in dex format (.dex).
 
 ### Resources
 
