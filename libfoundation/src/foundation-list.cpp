@@ -53,7 +53,8 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 	if (t_first)
 		if (!MCStringCreateMutable(0, self -> buffer))
 			return false;
-
+    
+    MCAutoStringRef t_desc;
 	MCStringRef t_string = nil;
 
 	switch (MCValueGetTypeCode(p_value))
@@ -78,8 +79,11 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 
 	default:
 		// value type conversion not implemented
-		MCAssert(false);
-		return false;
+        if (!MCValueCopyDescription(p_value, &t_desc))
+            return false;
+        
+        t_string = *t_desc;
+        break;
 	}
 	if (!t_first && !MCStringAppend(self -> buffer, self -> delimiter))
 		return false;

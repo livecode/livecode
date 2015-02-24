@@ -46,6 +46,8 @@
 		4D79B6E11A27405600DD750C /* string.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B67C1A273BA000DD750C /* string.mlc */; };
 		4D79B6E31A27405600DD750C /* type.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B67E1A273BA000DD750C /* type.mlc */; };
 		4D79B8ED1A375F4700DD750C /* type-convert.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B67D1A273BA000DD750C /* type-convert.mlc */; };
+		4DA728B01A94C16300DDE38F /* module-encoding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65E1A273BA000DD750C /* module-encoding.cpp */; };
+		4DA728B41A94C16D00DDE38F /* encoding.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B66F1A273BA000DD750C /* encoding.mlc */; };
 		4DDA20451A136FF4001B0CA2 /* script-builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA20441A136FF4001B0CA2 /* script-builder.cpp */; };
 		5DDE27B91A37909500D5ABD2 /* math-foundation.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6781A273BA000DD750C /* math-foundation.mlc */; };
 		766113441A2F298E0042DE7F /* list.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6751A273BA000DD750C /* list.mlc */; };
@@ -553,6 +555,7 @@
 			files = (
 				4D4067D11A84DCD200A5B6BC /* unittest.mlc in Sources */,
 				4D4067D21A84DCD200A5B6BC /* unittest-impl.mlc in Sources */,
+				4DA728B41A94C16D00DDE38F /* encoding.mlc in Sources */,
 				4D4EAFDD1A7A671D0067E90B /* foreign.mlc in Sources */,
 				C741ECD11A6933CF0096D171 /* stream.mlc in Sources */,
 				76FEC2361A5D43E000188FD4 /* file.mlc in Sources */,
@@ -570,11 +573,12 @@
 				4D79B6DB1A27405600DD750C /* logic.mlc in Sources */,
 				4D79B6DE1A27405600DD750C /* math.mlc in Sources */,
 				4D79B6DF1A27405600DD750C /* segmentchunk.mlc in Sources */,
-				4D4EAFE01A7A67B30067E90B /* module-foreign.cpp in Sources */,
 				4D79B6E01A27405600DD750C /* sort.mlc in Sources */,
 				4D79B6E11A27405600DD750C /* string.mlc in Sources */,
 				C7A74E1B1A6D083D0031099F /* system.mlc in Sources */,
 				4D79B6E31A27405600DD750C /* type.mlc in Sources */,
+				4DA728B01A94C16300DDE38F /* module-encoding.cpp in Sources */,
+				4D4EAFE01A7A67B30067E90B /* module-foreign.cpp in Sources */,
 				C741ECC91A6932E60096D171 /* module-stream.cpp in Sources */,
 				4D79B8ED1A375F4700DD750C /* type-convert.mlc in Sources */,
 				7661138A1A31FB690042DE7F /* module-array.cpp in Sources */,

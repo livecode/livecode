@@ -25,8 +25,8 @@ foreign handler ExecDecompress(inout Target as data) as undefined binds to "<bui
 foreign handler ExecEncodeUsingBase64(in Source as data, out Value as string) as undefined binds to "<builtin>"
 foreign handler ExecDecodeUsingBase64(in Source as string, out Value as data) as undefined binds to "<builtin>"
 
-foreign handler ExecEncodeUsingBinary(in Source as data, in Format as string, out Value as string) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingBinary(in Source as string, in Format as string, out Value as data) as undefined binds to "<builtin>"
+public foreign handler MCEncodingExecEncodeUsingBinary(in Source as list, in Format as string) as data binds to "<builtin>"
+public foreign handler MCEncodingExecDecodeUsingBinary(in Source as data, in Format as string) as list binds to "<builtin>"
 
 foreign handler ExecEncodeUsingUTF8(in Source as string, out Target as data) as undefined binds to "<builtin>"
 foreign handler ExecDecodeUsingUTF8(in Source as data, out Target as string) as undefined binds to "<builtin>"
@@ -42,6 +42,7 @@ foreign handler EvalURLDecoded(in Target as string, out Value as string) as unde
 
 --
 
+/*
 syntax EncodeValue is statement
    "the" "encoded" "of" <Target: Expression>
 begin 
@@ -67,9 +68,11 @@ syntax DecompressData is statement
 begin 
     ExecCompress(Target)
 end syntax
+*/
 
 --
 
+/*
 syntax EncodeUsingBase64 is statement
 "encode" <Source: Expression> "using" "base64" ["into" <Target: Expression>]
 begin
@@ -83,25 +86,25 @@ begin
     ExecDecodeUsingBase64(Source, Source)
     ExecDecodeUsingBase64(Source, Target)
 end syntax
+*/
 
 --
 
 syntax EncodeUsingBinary is statement
-"encode" <Source: Expression> "using" "binary" "format" <Format: Expression> ["into" <Target: Expression>]
+"encode" <Source: Expression> "using" "binary" "format" <Format: Expression>
 begin
-    ExecEncodeUsingBinary(Source, Format, Source)
-    ExecEncodeUsingBinary(Source, Format, Target)
+    MCEncodingExecEncodeUsingBinary(Source, Format)
 end syntax
 
 syntax DecodeUsingBinary is statement
-   "decode" <Source: Expression> "using" "binary" "format" <Format: Expression> ["into" <Target: Expression>]
+   "decode" <Source: Expression> "using" "binary" "format" <Format: Expression>
 begin
-    ExecDecodeUsingBinary(Source, Format, Source)
-    ExecDecodeUsingBinary(Source, Format, Target)
+    MCEncodingExecDecodeUsingBinary(Source, Format)
 end syntax
 
 --
 
+/*
 syntax EncodeTextUsingUTF8 is statement
     "encode" <Target: Expression> "using" "utf8"
 begin
@@ -149,9 +152,11 @@ syntax DecodeTextUsingASCII is statement
 begin
     ExecDecodeTextUsingASCII(Target, Target)
 end syntax
+*/
 
 --
 
+/*
 syntax URLEncoded is prefix operator with precedence 3
     "the" "url" "encoded" "of" <Target: Expression>
 begin
@@ -163,6 +168,7 @@ syntax URLDecoded is prefix operator with precedence 3
 begin
     EvalURLDecoded(Target, output)
 end syntax
+*/
 
 --
 

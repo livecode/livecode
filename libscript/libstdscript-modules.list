@@ -24,5 +24,6 @@ string.mlc
 system.mlc
 type.mlc
 type-convert.mlc
+encoding.mlc
 !unittest-impl.mlc
 unittest.mlc

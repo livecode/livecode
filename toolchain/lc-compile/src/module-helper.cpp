@@ -47,6 +47,7 @@ extern builtin_module_descriptor __com_livecode_string_module_info;
 extern builtin_module_descriptor __com_livecode_system_module_info;
 extern builtin_module_descriptor __com_livecode_type_module_info;
 extern builtin_module_descriptor __com_livecode_typeconvert_module_info;
+extern builtin_module_descriptor __com_livecode_encoding_module_info;
 extern builtin_module_descriptor __com_livecode_unittest_module_info;
 extern builtin_module_descriptor __com_livecode_unittest___IMPL_module_info;
 
@@ -75,6 +76,7 @@ builtin_module_descriptor* g_builtin_modules[] =
     &__com_livecode_system_module_info,
     &__com_livecode_type_module_info,
     &__com_livecode_typeconvert_module_info,
+    &__com_livecode_encoding_module_info,
     &__com_livecode_unittest_module_info,
     &__com_livecode_unittest___IMPL_module_info,
 };
@@ -98,6 +100,7 @@ extern void (*MCStreamExecWriteToStream)();
 extern void (*MCStringEvalConcatenate)();
 extern void (*MCSystemExecGetOperatingSystem)();
 extern void (*MCTypeEvalIsEmpty)();
+extern void (*MCEncodingExecDecodeUsingBinary)();
 extern void (*MCTypeConvertExecSplitStringByDelimiter)();
 
 // Pull in a reference to all of the module-*.cpp objects too
@@ -120,7 +123,8 @@ void *g_builtin_ptrs[] =
     &MCStringEvalConcatenate,
     &MCSystemExecGetOperatingSystem,
     &MCTypeEvalIsEmpty,
-    &MCTypeConvertExecSplitStringByDelimiter
+    &MCTypeConvertExecSplitStringByDelimiter,
+    &MCEncodingExecDecodeUsingBinary,
 };
 
 }
