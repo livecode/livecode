@@ -513,3 +513,8 @@ bool MCCefWin32Browser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 
 	return t_success;
 }
+
+const char* MCCefPlatformGetResourcesDirPath()
+{
+	return NULL;
+}
