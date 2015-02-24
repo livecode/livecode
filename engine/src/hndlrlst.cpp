@@ -401,7 +401,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, const char *script)
 	//   (for example 'getdefaultprinter()' on Linux) so don't indirect in this case.
 	bool t_is_parent_script;
 	if (objptr != NULL)
-		t_is_parent_script = objptr -> getstate(CS_IS_PARENTSCRIPT) && objptr -> gettype() == CT_BUTTON;
+		t_is_parent_script = objptr -> getisparentscript();
 	else
 		t_is_parent_script = false;
 
