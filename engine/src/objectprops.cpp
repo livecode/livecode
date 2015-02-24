@@ -1302,11 +1302,13 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 	uint32_t t_part_id;
 	if (t_stat == ES_NORMAL)
 		t_stat = t_chunk -> getobj(ep2, t_object, t_part_id, False);
-
-	// Check that the object is a button
-	if (t_stat == ES_NORMAL && t_object -> gettype() != CT_BUTTON)
-		t_stat = ES_ERROR;
 	
+	// Check that the object is a button or a stack.
+	if (t_stat == ES_NORMAL &&
+        t_object -> gettype() != CT_BUTTON &&
+        t_object -> gettype() != CT_STACK)
+		t_stat = ES_ERROR;
+    
 	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
 	//   of the parentScript.
 	bool t_is_cyclic;
