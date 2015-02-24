@@ -76,10 +76,21 @@ static struct {const char *name; MCPurchaseState state;} s_purchase_states[] =
 
 // we maintain here a list of known pending purchases, and a list of completed purchases
 static MCPurchase *s_purchases = nil;
-#error "NEed to finish"
 static MCListRef s_completed_purchases = nil;
 static uint32_t s_last_purchase_id = 1;
 static uint32_t s_id = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+// SN-2015-02-24: [[ Merg 6.7.4-rc-1 ]] Add a function to clean the completed
+//  purchase list
+void MCPurchaseClearPurchaseList()
+{
+    MCValueRelease(s_completed_purchases);
+    s_completed_purchases = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
 {

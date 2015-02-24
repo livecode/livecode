@@ -911,19 +911,7 @@ void MCiOSPlayerControl::Play()
 void MCiOSPlayerControl::ExecPlay(MCExecContext& ctxt)
 {
     // PM-2014-09-18: [[ Bug 13048 ]] Make sure movieTouched message is sent
-    if ([m_controller isFullscreen])
-    {
-        // The movie's window is the one that is active
-        UIWindow *t_window = [[UIApplication sharedApplication] keyWindow];
-
-        // Now we create an invisible control with the same size as the window
-        [m_delegate setOverlay: [[UIControl alloc] initWithFrame: [t_window frame]]];
-
-        // We want to get notified whenever the overlay control is touched
-        [m_delegate.getOverlay addTarget: m_delegate action: @selector(playerWindowTouched:) forControlEvents: UIControlEventTouchDown];
-        [t_window addSubview: m_delegate.getOverlay];
-
-    }
+    [m_delegate beginWithOverlay:[m_controller isFullscreen]];
     [m_controller play];
 }
 void MCiOSPlayerControl::ExecPause(MCExecContext& ctxt)
