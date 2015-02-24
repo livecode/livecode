@@ -165,6 +165,13 @@ provided in dex format (.dex).
 
 ### Resources
 
+The resources folder is a file hierarchy defined by the package author. It
+provides a private collection of resources which can (notionally) only be
+accessed by modules from within the package.
+
+Explicit syntax in LCB provides access to such resource files using absolute
+filenames which are resolved relative to <package>/resources/.
+
 ### Support
 
 ### Source
