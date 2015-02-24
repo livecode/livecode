@@ -1685,7 +1685,7 @@ static char *load_module(const char *arg1, const char *arg2,
     MCSysModuleHandle *t_result;
     t_result = (MCSysModuleHandle *)arg2;
     
-    *t_result = MCU_loadmodule(arg1);
+    *t_result = (MCSysModuleHandle)MCU_loadmodule(arg1);
     
     if (*t_result == nil)
         *retval = xresFail;
@@ -1784,9 +1784,9 @@ XCB MCcbs[] =
 	set_array_utf8_binary,
 
     // AL-2015-02-10: [[ SB Inclusions ]] Externals interface V3 functions
-    load_module,
-    unload_module,
-    resolve_symbol_in_module,
+    /* V3 */ load_module,
+    /* V3 */ unload_module,
+    /* V3 */ resolve_symbol_in_module,
     
 	NULL
 };
