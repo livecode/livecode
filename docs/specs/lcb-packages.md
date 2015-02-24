@@ -191,7 +191,7 @@ The contents of the docs folder is defined by the environment that will be
 using the package.
 
 ## Signing
-12345678901234567890123456789012345678901234567890123456789012345678901234567890
+
 In order to establish some level of trust between package consumers and package
 providers a method of signing a package is required.
 
