@@ -184,7 +184,10 @@ Exec_stat MCVideoClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 Boolean MCVideoClip::del()
 {
 	getstack()->removevclip(this);
-	return True;
+    
+    // MCObject now does things on del(), so we must make sure we finish by
+    // calling its implementation.
+    return MCObject::del();
 }
 
 void MCVideoClip::paste(void)
