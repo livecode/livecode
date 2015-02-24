@@ -57,14 +57,14 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
     ARCHS="-arch ${ARCHS// / -arch }"
 
 	if [ $BUILD_DYLIB -eq 1 ]; then
-		$BIN_DIR/g++ -stdlib=libc++ -dynamiclib ${ARCHS} $MIN_OS_VERSION -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS
+		"$PLATFORM_DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS
 	fi
 
 	if [ $? -ne 0 ]; then
 		exit $?
 	fi
 
-	$BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS ${ARCHS} $MIN_OS_VERSION -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS
+	"$PLATFORM_DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$LIVECODE_DEP_FILE"
 else
 	# Only executed if the binaries have a FAT header, and we need an architecture-specific
 	# linking
@@ -92,7 +92,7 @@ else
 		fi
 
 		# Build the 'object file' form of the external - this is used by device builds.
-		"$PLATFORM_DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x -arch $ARCH -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" -o "$LCEXT_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$LIVECODE_DEP_FILE" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+		"$PLATFORM_DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x -arch $ARCH  -miphoneos-version-min=${MIN_VERSION}-isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$LIVECODE_DEP_FILE"
 		if [ $? != 0 ]; then
 			echo "error: linking step of external object build failed"
 			exit $?
