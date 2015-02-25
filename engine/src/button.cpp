@@ -3835,6 +3835,15 @@ void MCButton::setupmenu()
 	flags = MENU_FLAGS;
 }
 
+bool MCButton::menuisopen()
+{
+#ifdef _MAC_DESKTOP
+	return macmenuisopen();
+#else
+	return menu != nil && menu->getopened();
+#endif
+}
+
 bool MCButton::selectedchunk(MCStringRef& r_string)
 {
     MCExecContext ctxt(nil, nil, nil);

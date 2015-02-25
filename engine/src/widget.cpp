@@ -2131,6 +2131,15 @@ extern "C" MC_DLLEXPORT MCStringRef MCWidgetExecPopupMenuAtLocation(MCStringRef 
 	
 	MCInterfaceExecPopupButton(ctxt, t_button, t_at_ptr);
 
+	while (t_button->menuisopen() && !MCquit)
+	{
+		MCU_resetprops(True);
+		// MW-2011-09-08: [[ Redraw ]] Make sure we flush any updates.
+		MCRedrawUpdateScreen();
+		MCscreen->siguser();
+		MCscreen->wait(REFRESH_INTERVAL, True, True);
+	}
+	
 	t_button->SetVisible(ctxt, 0, false);
 	t_button->del();
 	t_button->scheduledelete();

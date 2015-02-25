@@ -502,6 +502,11 @@ void MCButton::getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym 
 {
 }
 
+bool MCButton::macmenuisopen()
+{
+	return m_system_menu != nil;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This structure holds info about each currently set main menu.

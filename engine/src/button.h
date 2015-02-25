@@ -303,6 +303,9 @@ public:
 	MCRange getmenurange();
 	void docascade(MCStringRef t_pick);
 	void setupmenu();
+	
+	bool menuisopen();
+	
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
 	bool selectedtext(MCStringRef& r_string);
@@ -335,6 +338,8 @@ public:
 	void macopenmenu(void);
 	void macfreemenu(void);
     static void getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
+    
+    bool macmenuisopen();
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}
