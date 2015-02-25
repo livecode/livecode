@@ -551,7 +551,10 @@ static UIStatusBarStyle MCMiscUIStatusBarStyleFromMCExecEnum(MCMiscStatusBarStyl
 {
     switch(p_status_bar_style)
     {
+        // PM-2015-02-17: [[ Bug 14482 ]] "solid" status bar style means
+        //  opaque and automatically shift down the app view by 20 pixels
         case kMCMiscStatusBarStyleOpaque:
+        case kMCMiscStatusBarStyleSolid:
             return UIStatusBarStyleBlackOpaque;
         case kMCMiscStatusBarStyleTranslucent:
             return UIStatusBarStyleBlackTranslucent;
@@ -562,7 +565,15 @@ static UIStatusBarStyle MCMiscUIStatusBarStyleFromMCExecEnum(MCMiscStatusBarStyl
 
 bool MCSystemSetStatusBarStyle(intenum_t p_status_bar_style)
 {	
-	[MCIPhoneGetApplication() switchToStatusBarStyle: MCMiscUIStatusBarStyleFromMCExecEnum((MCMiscStatusBarStyle)p_status_bar_style)];
+    UIStatusBarStyle t_style;
+    t_style = MCMiscUIStatusBarStyleFromMCExecEnum((MCMiscStatusBarStyle)p_status_bar_style);
+    [MCIPhoneGetApplication() switchToStatusBarStyle: t_style];
+
+    // PM-2015-02-17: [[ Bug 14482 ]] "solid" status bar style means opaque and automatically shift down the app view by 20 pixels
+    if (p_status_bar_style == kMCMiscStatusBarStyleSolid)
+        [MCIPhoneGetApplication() setStatusBarSolid:YES];
+    else
+        [MCIPhoneGetApplication() setStatusBarSolid:NO];
     
     return true;
 }

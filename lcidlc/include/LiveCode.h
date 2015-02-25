@@ -355,23 +355,34 @@ enum
     // The 'value' parameter is a point to a uint16_t * variable (UTF-16 encoding)
     kLCValueOptionAsUTF16CString = 10,
 
-    // SN-2014-07-16: [[ ExternalsApiV6 ]] Enum updated to match
-    //  the enum declared in externalsv1.cpp in the Engine
 	// The 'value' parameter is a pointer to an LCArrayRef variable.
 	kLCValueOptionAsLCArray = 16,
 	// The 'value' parameter is a pointer to an NSNumber* variable.
 	kLCValueOptionAsObjcNumber = 17,
 	// The 'value' parameter is a pointer to an NSString* variable.
-	kLCValueOptionAsObjcString = 19,
+	kLCValueOptionAsObjcString = 18,
 	// The 'value' parameter is a pointer to an NSData* variable.
-	kLCValueOptionAsObjcData = 21,
+	kLCValueOptionAsObjcData = 19,
 	// The 'value' parameter is a pointer to an NSArray* variable.
-	kLCValueOptionAsObjcArray = 23,
+	kLCValueOptionAsObjcArray = 20,
 	// The 'value' parameter is a pointer to an NSDictionary *variable.
-	kLCValueOptionAsObjcDictionary = 25,
+	kLCValueOptionAsObjcDictionary = 21,
 	
 	// The 'value' parameter is a pointer to a char variable (native encoding)
-	kLCValueOptionAsCChar = 28,
+	kLCValueOptionAsCChar = 22,
+    
+    // SN-2015-02-13: [[ ExternalsApiV6 ]] Added CF-type arguments, which
+    //  are NOT autoreleased when used as input
+    // The 'value' parameter is a pointer to an CFNumberRef variable.
+    kLCValueOptionAsCFNumber = 23,
+    // The 'value' parameter is a pointer to an CFStringRef variable.
+    kLCValueOptionAsCFString = 24,
+    // The 'value' parameter is a pointer to an CFDataRef variable.
+    kLCValueOptionAsCFData = 25,
+    // The 'value' parameter is a pointer to an CFArrayRef variable.
+    kLCValueOptionAsCFArray = 26,
+    // The 'value' parameter is a pointer to an CFDictionaryRef variable.
+    kLCValueOptionAsCFDictionary = 27,
 	
 	// Treat array keys as case-insensitive.
 	kLCValueOptionCaseSensitiveFalse = 0 << 30,
@@ -884,6 +895,111 @@ LCError LCContextColumnDelimiter(unsigned int options, void *r_value);
 //
 LCError LCContextRowDelimiter(unsigned int options, void *r_value);
 
+    
+// Function:
+//   LCContextUnicodeItemDelimiter
+// Parameters:
+//   (in) options - unsigned int
+//   (out) value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+//   This function will only work if the external is called by an engine post-7.0
+//      and return NotImplemented for the earlier versions.
+//   The returned value must be free'd by the caller of this function.
+// Semantics:
+//   Returns a the current value of the local 'itemDelimiter' property.
+//
+LCError LCContextUnicodeItemDelimiter(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextUnicodeLineDelimiter
+// Parameters:
+//   (in) options - unsigned int
+//   (out) value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+//   This function will only work if the external is called by an engine post-7.0
+//      and return NotImplemented for the earlier versions.
+//   The returned value must be free'd by the caller of this function.
+// Semantics:
+//   Returns a the current value of the local 'lineDelimiter' property.
+//
+LCError LCContextUnicodeLineDelimiter(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextUnicodeColumnDelimiter
+// Parameters:
+//   (in) options - unsigned int
+//   (out) value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+//   This function will only work if the external is called by an engine post-7.0
+//      and return NotImplemented for the earlier versions.
+//   The returned value must be free'd by the caller of this function.
+// Semantics:
+//   Returns a the current value of the local 'columnDelimiter' property.
+//
+LCError LCContextColumnDelimiter(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextUnicodeRowDelimiter
+// Parameters:
+//   (in) options - unsigned int
+//   (out) value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+//   This function will only work if the external is called by an engine post-7.0
+//      and return NotImplemented for the earlier versions.
+//   The returned value must be free'd by the caller of this function.
+// Semantics:
+//   Returns a the current value of the local 'rowDelimiter' property.
+//
+LCError LCContextRowDelimiter(unsigned int options, void *r_value);
+
 // Function:
 //   LCContextResult
 // Parameters:
@@ -1103,7 +1219,11 @@ LCError LCWaitBreak(LCWaitRef wait);
 LCError LCWaitReset(LCWaitRef wait);
 
 ////////////////////////////////////////////////////////////////////////////////
+    
+// SN-2015-01-28: [[ Bug 13781 ]] Image functions disabled as they were using
+//  imagePixmapId and maskPixmapId, which are no longer working reliably.
 
+/*
 typedef enum LCImageRasterFormat
 {
 	// The raster uses the gray colorspace with 1-bit per pixel (i.e. it is a
@@ -1250,6 +1370,8 @@ LCError LCImageUpdate(LCImageRef image);
 //   top-left of the image.
 //	
 LCError LCImageUpdateRect(LCImageRef image, int top, int left, int right, int bottom);
+
+*/
 	
 ////////////////////////////////////////////////////////////////////////////////
 

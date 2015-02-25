@@ -236,6 +236,13 @@ extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, cons
 #endif
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
 
+// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading
+// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
+//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+extern "C" void* MCU_loadmodule(const char *p_module);
+extern "C" void MCU_unloadmodule(void* p_module);
+extern "C" void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol);
+
 // 
 
 struct MCInterval

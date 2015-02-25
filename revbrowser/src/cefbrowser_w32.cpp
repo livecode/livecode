@@ -516,5 +516,27 @@ bool MCCefWin32Browser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 
 const char* MCCefPlatformGetResourcesDirPath()
 {
-	return NULL;
+    return NULL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
+#include <stdlib.h>
+#include <stdio.h>
+#include <cstring>
+
+void *MCU_loadmodule(const char *p_source)
+{
+    return LoadLibraryA(p_source);
+}
+
+void MCU_unloadmodule(void *p_module)
+{
+    
+}
+
+void *MCU_resolvemodulesymbol(void *p_module, const char *p_name)
+{
+    return GetProcAddress((HMODULE)p_module, p_name);
 }

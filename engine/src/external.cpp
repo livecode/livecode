@@ -272,7 +272,11 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 	t_module = nil;
 	if (t_success)
 	{
-		t_module = MCS_loadmodule(p_filename);
+        // AL-2015-02-10: [[ SB Inclusions ]] Load external using new module loading utility
+        MCAutoPointer<char> t_filename_cstring;
+        if (MCStringConvertToCString(p_filename, &t_filename_cstring))
+            t_module = (MCSysModuleHandle)MCU_loadmodule(*t_filename_cstring);
+
 		if (t_module == NULL)
 			t_success = false;
 	}

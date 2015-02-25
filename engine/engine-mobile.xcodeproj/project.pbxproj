@@ -2406,7 +2406,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"";
+			shellScript = "# SN-2015-02-19: [[ Bug 14625 ]] Only copy revsecurity.dylib fo rthe simulator\nif [ \"${SDK_NAME:0:8}\" != \"iphoneos\" ]; then\n    cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"\nfi";
 		};
 		729D0F9B1A6FEA3000B0CA0F /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;

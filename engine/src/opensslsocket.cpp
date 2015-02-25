@@ -731,6 +731,9 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
             return t_data;
 		}
 	}
+    
+    // SN-2015-01-29: [[ Bug 14409 ]] The function must return something
+    return t_data;
 }
 
 void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef mptr)
