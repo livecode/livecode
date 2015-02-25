@@ -53,6 +53,7 @@
 		7286368D1A6D7359001D1FBF /* date.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363A1A6D71E2001D1FBF /* date.mlc */; };
 		7286368E1A6D7359001D1FBF /* stream.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363E1A6D71E2001D1FBF /* stream.mlc */; };
 		7286368F1A6D7359001D1FBF /* system.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363F1A6D71E2001D1FBF /* system.mlc */; };
+		729D112F1A9CE52700B0CA0F /* foreign.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D7060D61A80CFFB00415A88 /* foreign.mlc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -312,6 +313,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				729D112F1A9CE52700B0CA0F /* foreign.mlc in Sources */,
 				728636781A6D7359001D1FBF /* arithmetic.mlc in Sources */,
 				728636791A6D7359001D1FBF /* array.mlc in Sources */,
 				7286367A1A6D7359001D1FBF /* binary.mlc in Sources */,
