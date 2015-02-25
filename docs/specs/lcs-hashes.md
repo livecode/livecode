@@ -109,9 +109,9 @@ added.
 
 The syntax for the sha-2 hash function is as follows:
 
-  the sha2digest of <data>
-  sha2digest(<data>)
-  sha2digest(<data>, <form>)
+    the sha2digest of <data>
+    sha2digest(<data>)
+    sha2digest(<data>, <form>)
   
 The first two variants use SHA-256.
 
