@@ -126,18 +126,9 @@ static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc
     MCNewAutoNameRef t_name_name;
     if (!MCNameCreate(*t_name_string, &t_name_name))
         return false;
-    
-    MCAutoTypeInfoRef t_base_typeinfo;
-    if (!MCForeignTypeInfoCreate(p_desc, &t_base_typeinfo))
-        return false;
-    
-    MCTypeInfoRef t_named_typeinfo;
-    if (!MCNamedTypeInfoCreate(*t_name_name, t_named_typeinfo))
-        return false;
-    if (!MCNamedTypeInfoBind(t_named_typeinfo, *t_base_typeinfo))
-        return false;
-    
-    r_typeinfo = t_named_typeinfo;
+	
+	if (!MCNamedForeignTypeInfoCreate(*t_name_name, p_desc, r_typeinfo))
+		return false;
     
     return true;
 }
