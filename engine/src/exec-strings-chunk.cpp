@@ -1026,12 +1026,11 @@ void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_typ
     int4 t_start, t_end;
     MCStringsMarkTextChunkInRange(ctxt, (MCStringRef)x_mark . text, t_cu_range, p_chunk_type, t_first, t_chunk_count, t_start, t_end, p_whole_chunk, p_further_chunks, true, t_add);
     
-    // The indices returned by MarkTextChunk are code unit indices
-    t_cu_range.offset += t_start;
-    t_cu_range.length = t_end - t_start;
-    
-    x_mark . start = t_cu_range.offset;
-    x_mark . finish = t_cu_range.offset + t_cu_range.length;
+
+    // AL-2015-02-25: [[ Bug 14532 ]] Set the mark to the correct indices -
+    //  those returned from MarkTextChunkInRange are absolute.
+    x_mark . start = t_start;
+    x_mark . finish = t_end;
 
     if (p_force)
         MCStringsAddChunks(ctxt, p_chunk_type, t_add, x_mark);
