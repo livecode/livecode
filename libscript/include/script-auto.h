@@ -63,4 +63,62 @@ typedef MCAutoScriptObjectRefBase<MCScriptInstanceRef, MCScriptRetainInstance, M
 
 /* ================================================================ */
 
+template <typename T, T (*REF)(T), void (*UNREF)(T)>
+class MCAutoScriptObjectRefArrayBase
+{
+public:
+	MCAutoScriptObjectRefArrayBase (void)
+		: m_values(nil), m_count(0)
+	{}
+
+	~MCAutoScriptObjectRefArrayBase (void)
+	{
+		if (nil == m_values) return;
+		for (size_t i = 0; i < m_count; ++i)
+		{
+			UNREF(m_values[i]);
+		}
+		MCMemoryDeleteArray (m_values);
+		m_values = 0;
+		m_count = 0;
+	}
+
+	bool New (uindex_t p_size)
+	{
+		MCAssert (nil == m_values);
+		return MCMemoryNewArray (p_size, m_values, m_count);
+	}
+
+	T* Ptr ()
+	{
+		return m_values;
+	}
+
+	uindex_t Size() const
+	{
+		return m_count;
+	}
+
+	bool Resize(uindex_t p_new_count)
+	{
+		return MCMemoryResizeArray (p_new_count, m_values, m_count);
+	}
+
+	T & operator [] (const int p_index)
+	{
+		MCAssert (nil != m_values);
+		MCAssert (p_index >= 0);
+		return m_values[p_index];
+	}
+
+private:
+	T *m_values;
+	uindex_t m_count;
+};
+
+typedef MCAutoScriptObjectRefArrayBase<MCScriptModuleRef, MCScriptRetainModule, MCScriptReleaseModule> MCAutoScriptModuleRefArray;
+typedef MCAutoScriptObjectRefArrayBase<MCScriptInstanceRef, MCScriptRetainInstance, MCScriptReleaseInstance> MCAutoScriptInstanceRefArray;
+
+/* ================================================================ */
+
 #endif /* !__MC_SCRIPT_AUTO__ */
