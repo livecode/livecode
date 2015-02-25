@@ -2,7 +2,7 @@
 Copyright 2015 LiveCode Ltd.
 
 ## Introduction
-12345678901234567890123456789012345678901234567890123456789012345678901234567890
+
 Cryptographic hash functions are a key part of many applications when dealing
 with security and trust issues. It is important that applications can easily
 generate such hashes for binary data inputs.
