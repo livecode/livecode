@@ -192,7 +192,7 @@ public handler OnMouseUp()
 	
 	dispatch command "mouseUp" to my script object
 	
-	if ispopup then
+	if currently popped up then
 		if mSelected is 3 then
 			close popup
 		else
