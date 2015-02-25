@@ -25,6 +25,12 @@ the value of `the command arguments`.
 
 ## OPTIONS
 
+* -l, --load _LCMLIB_:
+  In addition to loading the _LCMFILE_, load a module from the
+  bytecode file _LCMLIB_.  Any number of `--preload` options may be
+  provided.  _LCMFILE_ is loaded first, followed by the _LCMLIB_s in
+  reverse order.
+
 * -H, --handler _NAME_:
   Call the handler with the specified _NAME_ as the entry point of the program.
   _NAME_ must have public visibility and accept no arguments.  The default value

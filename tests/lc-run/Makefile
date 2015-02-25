@@ -20,6 +20,8 @@ TEST_DIR = $(SOLUTION_DIR)/_tests/lc-run
 check:
 	mkdir -p $(TEST_DIR)
 	$(LC_COMPILE) --modulepath $(TEST_DIR) --modulepath $(MODULE_DIR) \
+	    lc-run-lib.mlc --output $(TEST_DIR)/lc-run-lib.lcm
+	$(LC_COMPILE) --modulepath $(TEST_DIR) --modulepath $(MODULE_DIR) \
 	    lc-run-test.mlc --output $(TEST_DIR)/lc-run-test.lcm
-	$(LC_RUN) $(TEST_DIR)/lc-run-test.lcm
-	test "`$(LC_RUN) --list-handlers $(TEST_DIR)/lc-run-test.lcm`" = "main"
+	$(LC_RUN) -l $(TEST_DIR)/lc-run-lib.lcm $(TEST_DIR)/lc-run-test.lcm
+	test "`$(LC_RUN) -l $(TEST_DIR)/lc-run-lib.lcm --list-handlers $(TEST_DIR)/lc-run-test.lcm`" = "main"
