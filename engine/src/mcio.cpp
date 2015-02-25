@@ -1111,7 +1111,7 @@ IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle p_stream)
 			}
             break;
 			case IO_VALUEREF_LIST_EMPTY:
-				r_value = MCValueRetain(kMCEmptyList);
+				r_value = MCValueRetain(kMCEmptyProperList);
 				break;
 			case IO_VALUEREF_LIST_ANY:
 			{
