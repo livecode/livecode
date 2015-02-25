@@ -932,7 +932,10 @@ function revSBLibraryList
    end repeat
    
    -- rev externals
-   put revExternalsList() & cr after tLibraries
+   get revExternalsList()
+   if it is not empty then
+      put it & cr after tLibraries
+   end if
    -- user script libraries
    
    local tEnvironmentScripts
@@ -950,6 +953,7 @@ function revSBLibraryList
    if "Browser" is among the lines of tLibraries then
       put "Browser (CEF)" & cr after tLibraries
    end if
-   
+
+   delete the last char of tLibraries
    return tLibraries
 end revSBLibraryList

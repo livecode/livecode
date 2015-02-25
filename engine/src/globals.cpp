@@ -1249,6 +1249,12 @@ int X_close(void)
 	
 #ifndef _MOBILE
 	ShutdownSSL();
+#else
+    // SN-2015-02-24: [[ Merge 6.7.4-rc-1 ]] Need to clean-up the completed
+    //  purchase list
+    extern void MCPurchaseClearPurchaseList();
+    
+    MCPurchaseClearPurchaseList();
 #endif
 	MCS_shutdown();
 	delete MCundos;
@@ -1288,6 +1294,8 @@ int X_close(void)
     MCValueRelease(MClicenseparameters . license_name);
     MCValueRelease(MClicenseparameters . license_organization);
 	MCValueRelease(MClicenseparameters . addons);
+
+
 
 	// Cleanup the startup stacks list
 	for(uint4 i = 0; i < MCnstacks; ++i)

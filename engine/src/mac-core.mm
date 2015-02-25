@@ -781,7 +781,10 @@ void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
 	s_modal_sessions[s_modal_session_count - 1] . window = p_window;
 	p_window -> Retain();
+	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
+	p_window->SetFrameLocked(true);
 	s_modal_sessions[s_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+	p_window->SetFrameLocked(false);
 }
 
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)

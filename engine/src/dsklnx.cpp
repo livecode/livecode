@@ -244,8 +244,16 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
             t_poll_fd . events = POLLIN;
             t_poll_fd . revents = 0;
 
+            // SN-2015-02-12: [[ Bug 14441 ]] poll might as well get signal interrupted
+            //  and we don't want to miss the reading for that only reason.
             int t_result;
-            t_result = poll(&t_poll_fd, 1, -1);
+            do
+            {
+                t_result = poll(&t_poll_fd, 1, -1);
+            }
+            while (t_result != 1 ||
+                   (errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK));
+
             if (t_result != 1)
                 break;
 #else
@@ -1777,6 +1785,12 @@ public:
             break;
         }
 
+        // SN-2015-02-11: [[ Bug 14587 ]] Do not buffer if the
+        //  targetted fd is a TTY
+        //  see srvposix.cpp, former MCStdioFileHandle::OpenFd
+        if (t_fptr && isatty(p_fd))
+            setbuf(t_fptr, NULL);
+
         if (t_fptr != NULL)
             t_handle = new MCStdioFileHandle(t_fptr);
 
@@ -2350,7 +2364,8 @@ public:
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                    return true;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
                 }
             }
             else
@@ -2359,14 +2374,16 @@ public:
                 close(tochild[1]);
                 MCeerror->add
                 (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                return true;
+                // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                return false;
             }
         }
         else
         {
             MCeerror->add
             (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-            return true;
+            // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+            return false;
         }
         char *buffer;
         uint4 buffersize;
@@ -2389,6 +2406,25 @@ public:
 
         close(toparent[0]);
         CheckProcesses();
+
+        // SN-2015-02-09: [[ Bug 14441 ]] We want to avoid the waiting time
+        //  that MCScreen->wait can bring, and which was avoided in
+        //  MCPosixSystem::Shell
+#ifdef _SERVER
+        pid_t t_wait_result;
+        int t_wait_stat;
+        t_wait_result = waitpid(MCprocesses[index].pid, &t_wait_stat, WNOHANG);
+        if (t_wait_result == 0)
+        {
+            Kill(MCprocesses[index].pid, SIGKILL);
+            waitpid(MCprocesses[index].pid, &t_wait_stat, 0);
+        }
+        else
+            t_wait_stat = 0;
+
+        MCprocesses[index].retcode = WEXITSTATUS(t_wait_stat);
+#else
+
         if (MCprocesses[index].pid != 0)
         {
             uint2 count = SHELL_COUNT;
@@ -2398,7 +2434,8 @@ public:
                 {
                     if (MCprocesses[index].pid != 0)
                         Kill(MCprocesses[index].pid, SIGKILL);
-                    return true;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
                 }
                 if (MCprocesses[index].pid == 0)
                     break;
@@ -2409,6 +2446,7 @@ public:
                 Kill(MCprocesses[index].pid, SIGKILL);
             }
         }
+#endif
 
         r_retcode = MCprocesses[index].retcode;
         return true;

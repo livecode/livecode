@@ -1280,8 +1280,8 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-                // PM-2014-11-05: [[ Bug 13938 ]] Make sure new alphaData does not add to previous one
-				t_success = lockbitmap(t_copy, false);
+                // PM-2015-02-09: [[ Bug 14483 ]] Reverted patch for bugfix 13938
+                t_success = copybitmap(false, t_copy);
 			}
 			else
 			{
@@ -1293,8 +1293,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			if (t_success)
 			{
 				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), true);
-                // PM-2015-01-15: [[ Bug 14347 ]] Unlock bitmap to prevent a crash
-                unlockbitmap(t_copy);
+                // PM-2015-02-09: [[ Bug 14483 ]] Reverted patch for bugfix 14347
 				setbitmap(t_copy, 1.0);
             }
 
@@ -2760,7 +2759,8 @@ bool MCImage::copybitmap(bool p_premultiplied, MCImageBitmap *&r_bitmap)
 	MCImageBitmap *t_bitmap;
 	t_bitmap = nil;
 
-	t_success = lockbitmap(t_bitmap, true);
+    // PM-2014-11-05: [[ Bug 13938 ]] Make sure new alphaData does not add to previous one
+	t_success = lockbitmap(t_bitmap, p_premultiplied);
 
 	if (t_success)
 	{

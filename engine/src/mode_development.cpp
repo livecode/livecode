@@ -376,7 +376,11 @@ IO_stat MCDispatch::startup(void)
 
 		send_relaunch();
         MCNewAutoNameRef t_name;
-        ctxt . ConvertToName(t_valueref, &t_name);
+        if(!ctxt . ConvertToName(t_valueref, &t_name))
+        {
+            ctxt . Throw();
+            return IO_ERROR;
+        }
 
 		sptr = findstackname(*t_name);
         if (t_valueref != nil)

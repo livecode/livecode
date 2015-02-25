@@ -62,7 +62,8 @@ extern MCExecContext *MCECptr;
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Add revision number to v0 external interface
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Bump revision number after unicode update
-#define EXTERNAL_INTERFACE_VERSION 3
+// AL-2015-02-06: [[ SB Inclusions ]] Increment revision number of v0 external interface
+#define EXTERNAL_INTERFACE_VERSION 4
 
 typedef struct _Xternal
 {
@@ -1677,28 +1678,77 @@ static char *window_to_stack_rect(const char *arg1, const char *arg2,
 	return nil;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+// Interface V3
+//
+
+// AL-2015-02-10: [[ SB Inclusions ]] Add module loading callbacks to ExternalV0 interface
+static char *load_module(const char *arg1, const char *arg2,
+                         const char *arg3, int *retval)
+{
+    MCSysModuleHandle *t_result;
+    t_result = (MCSysModuleHandle *)arg2;
+    
+    *t_result = (MCSysModuleHandle)MCU_loadmodule(arg1);
+    
+    if (*t_result == nil)
+        *retval = xresFail;
+    else
+        *retval = xresSucc;
+    
+    return nil;
+}
+
+static char *unload_module(const char *arg1, const char *arg2,
+                          const char *arg3, int *retval)
+{
+    MCU_unloadmodule((MCSysModuleHandle)arg1);
+    *retval = xresSucc;
+    return nil;
+}
+
+static char *resolve_symbol_in_module(const char *arg1, const char *arg2,
+                                      const char *arg3, int *retval)
+{
+    void** t_resolved;
+    t_resolved = (void **)arg3;
+    *t_resolved = MCU_resolvemodulesymbol((MCSysModuleHandle)arg1, arg2);
+    
+    if (*t_resolved == nil)
+        *retval = xresFail;
+    else
+        *retval = xresSucc;
+    
+    return nil;
+}
+
+////////////////////////////////////////////////////////////////////////
+// Interface V4
+//
+
 static char *get_display_handle(const char *arg1, const char *arg2, const char *arg3, int *retval)
 {
-	void *t_display;
-	t_display = nil;
-	
-	if (!MCscreen->platform_get_display_handle(t_display))
-	{
-		*retval = xresFail;
-		return nil;
-	}
-	
-	void **t_return;
-	t_return = (void**)arg3;
-	
-	*t_return = t_display;
-	*retval = xresSucc;
-	
-	return nil;
+    void *t_display;
+    t_display = nil;
+
+    if (!MCscreen->platform_get_display_handle(t_display))
+    {
+        *retval = xresFail;
+        return nil;
+    }
+
+    void **t_return;
+    t_return = (void**)arg3;
+
+    *t_return = t_display;
+    *retval = xresSucc;
+
+    return nil;
 }
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Add externals extension to the callback list
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Add externals extension to handle UTF8-encoded parameters
+// AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
 XCB MCcbs[] =
 {
 	// Externals interface V0 functions
@@ -1760,9 +1810,16 @@ XCB MCcbs[] =
 	get_array_utf8_binary,
 	set_array_utf8_text,
 	set_array_utf8_binary,
-	
-	get_display_handle,
 
+    // AL-2015-02-10: [[ SB Inclusions ]] Externals interface V3 functions
+    /* V3 */ load_module,
+    /* V3 */ unload_module,
+    /* V3 */ resolve_symbol_in_module,
+	
+    // SN-2015-02-25: [[ Merge 7.0.4-rc-1 ]] get_display_handle is part of
+    //  the interface V4, as load_module and others are the V3.
+    /* V4 */ get_display_handle,
+    
 	NULL
 };
 

@@ -290,6 +290,20 @@ inline void DBString::Set(char *p_string, int p_length, Bool p_binary)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#define DBcallbacks_version 0
+
+struct DBcallbacks
+{
+    unsigned int version;
+
+    // V0 callbacks
+    void *(*load_module)(const char *module);
+    void (*unload_module)(void *module);
+    void *(*resolve_symbol_in_module)(void *module, const char *symbol);
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
 // These are the standard exported functions for all db-drivers. We predeclare
 // them here with appropriate visibility so we don't have to do this in all
 // driver files.
@@ -298,6 +312,7 @@ inline void DBString::Set(char *p_string, int p_length, Bool p_binary)
 extern "C" DBConnection *newdbconnectionref() __attribute__((visibility("default")));
 extern "C" void releasedbconnectionref(DBConnection *dbref) __attribute__((visibility("default")));
 extern "C" void setidcounterref(unsigned int *tidcounter) __attribute__((visibility("default")));
+extern "C" void setcallbacksref(DBcallbacks *callbacks) __attribute__((visibility("default")));
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
