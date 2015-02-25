@@ -24,35 +24,52 @@ in V7 and above.
 
 ## General Considerations
 
-The effect of transparent Unicode support on any API depends on whether any
-particular parameter or result is treated as binary data or as a text string.
-Which of these this is in any particular case depends on how the API is
-using the parameter or result (prior to V7 nothing distinguished between these
-two things as text and binary data were 'the same thing).
+The effect of transparent Unicode support on any API depends on classifying all
+parameters and return values in one of the following ways:
 
-Additionally, any updates to the API need to take into account the following
-use-cases:
+  - always text: the value is presumed to be a text string by the API and currently
+processed as such (i.e. as a native encoded string).
+  - always binary: the value is presumed to be data by the API and is never
+interpreted as text (i.e. a block of bytes)
+  - maybe text: the value is actually text data but the API has relied on explicit
+code in script to translate it to the native encoding (i.e. utf-8 bytes) as required.
+
+If a value is 'always text' then there is no problem with updating the parameter
+or return value to be treated as a string in the revised V7 interface.
+
+If a value is 'always binary' then there is no problem with updating the parameter
+or return value to be treated as data in the revised V7 interface.
+
+If an API (as a whole) only has 'always text' and 'always binary' values then it can
+be updated in a completely backwards-compatible manner without explicit changes to
+the script-visible API.
+
+Unfortunately though, if an API has 'maybe text' values then explicit consideration
+needs to be given to three use-cases:
 
   - existing: existing code which uses the APIs already
   - transitional: code which is in transition from current usage to updated usage
   - new: new code which only needs updated usage
 
 The existing case means that any code which use the APIs right now must
-function exactly the same after the changes as before. In practice this means
-parameters or results of API calls which are treated as text strings (in 
-script) can be updated to Unicode directly; whereas parameters or results
-which are binary data which *might* be text strings cannot.
-
-The transitional case is where an author is in the process of updating their
-scripts to be Unicode-aware. This is particularly important in the case where
-an API creates a state object which might be manipulated anywhere in a large
-program and where parameters or results of the APIs which manipulate it which
-are binary data *might* be text strings (as in this case there will be explicit
-code in script for 'doing the right thing' with the binary data).
+function exactly the same after the changes as before. In practice this means that
+the 'maybe text' values in the API must remain as binary data in the default case
+of the author not having made any changes to their scripts.
 
 The new case is where a new app is being developed from scratch. In this case
 the author would not want to be bothered by any backwards-compatibility
-requirements.
+requirements. In practice this means that there must be a mode of using the 
+revised API where the 'maybe text' values in the API are eliminated.
+
+The transitional case is where an author is in the process of updating their
+scripts to be Unicode-aware. This is particularly important in the situation where
+an API creates a state object which might be manipulated anywhere in a large
+program and where parameters or results of the APIs which manipulate it which
+are binary data *might* be text strings (as in this case there will be explicit
+code in script for 'doing the right thing' with the binary data). In practice this
+means that there must be a mode of using the revised API where the author can update
+some code to remove explicit handling of 'maybe text' values; whilst code which still
+has the explicit handling works the same as it did before.
 
 ## revXML Specific Considerations
 
@@ -69,10 +86,7 @@ revXML external processes it).
 As libxml2 uses utf-8 as the universal internal encoding (it translates to/from
 the encoding specified in the xml file automatically) we have to assume that
 any use of data passed directly to/from libxml2 through the revXML APIs is
-being treated as binary data in script (and thus being encoded/decoded as
-needed).
-
-
+'maybe text'.
 
 
 
