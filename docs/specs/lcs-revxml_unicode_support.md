@@ -73,20 +73,48 @@ has the explicit handling works the same as it did before.
 
 ## revXML Specific Considerations
 
-In the case of revXML all parameters and results fall into two categories:
+In the case of revXML all parameters and results fall into three categories:
 
+    - an id
     - a path
     - options
     - data that is passed to, or passed back from, libxml2
 
-Here we can assume that any parameter or result which is a 'path' or 'options'
-is being treated as a text string in any existing script (as that is how the
-revXML external processes it).
+Here we can assume that any parameter or result which is 'id','path' or 'options'
+is 'text'. However, as libxml2 uses utf-8 as the universal internal encoding (it
+translates to/from the encoding specified in the xml file automatically) we have
+to assume that any use of data passed directly to/from libxml2 through the revXML
+APIs is 'maybe text'.
 
-As libxml2 uses utf-8 as the universal internal encoding (it translates to/from
-the encoding specified in the xml file automatically) we have to assume that
-any use of data passed directly to/from libxml2 through the revXML APIs is
-'maybe text'.
+As revXML is a state-object based API then there is an object to which the intent
+of use of the object (with regards whether 'maybe text' values are treated as
+binary or text in script) can be attached.
+
+In practice, this means we can achieve usage in all three possible use-cases by
+having duplicate entry points for each API - the existing set, and a set with
+'Unicode' as a suffix.
+
+This would work as follows:
+
+  - the existing Create APIs would create a document object which was marked as
+treating 'maybe text' values as binary.
+  - the new CreateUnicode APIs would create a document object which was marked as
+treating 'maybe text' values as text.
+  - the existing non-Unicode APIs would treat 'maybe text' values as binary for
+document objects marked as binary
+  - the existing non-Unicode APIs would treat 'maybe text' values as text for
+document objects marked as text
+  - the new non-Create Unicode APIs would treat 'maybe text' values as text
+
+This covers the three required use-cases as follows:
+
+  - existing: script will be using non-Unicode Create API, so will continue to
+create document objects on which all the existing APIs work the same way as they
+do now.
+  - transitional: the author can update all uses of the non-Create non-Unicode revXML
+APIs to the unicode variants as they update their code.
+  - new: the author uses the Unicode Create API, and can then use the non-Unicode revXML
+APIs to manipulate the created documents.
 
 
 
