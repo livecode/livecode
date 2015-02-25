@@ -785,7 +785,7 @@ public:
 		{
 			char *t_err_str;
 			t_err_str = nil;
-			/* UNCHECKED */ MCCefStringToCString(t_error, t_err_str);
+            /* UNCHECKED */ MCCefStringToUtf8String(t_error, t_err_str);
 			
 			if (p_frame->IsMain())
 				CB_DocumentFailed(m_owner->GetInst(), t_url_str, t_err_str);
