@@ -1503,6 +1503,17 @@ public:
 	
 	//////////
 	
+	Boolean mdown(uint2 which)
+	{
+		if (MCU_point_in_rect(m_widget->getrect(), MCmousex, MCmousey))
+			return MCStack::mdown(which);
+			
+		close();
+		return True;
+	}
+	
+	//////////
+	
 	bool openpopup(MCNameRef p_kind, const MCPoint &p_at, MCArrayRef p_properties)
 	{
 		if (!createwidget(p_kind, p_properties))
