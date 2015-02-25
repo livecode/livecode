@@ -27,8 +27,8 @@ the value of `the command arguments`.
 
 * -l, --load _LCMLIB_:
   In addition to loading the _LCMFILE_, load a module from the
-  bytecode file _LCMLIB_.  Any number of `--preload` options may be
-  provided.  _LCMFILE_ is loaded first, followed by the _LCMLIB_s in
+  bytecode file _LCMLIB_.  Any number of `--load` options may be
+  provided.  _LCMFILE_ is loaded first, followed by each _LCMLIB_ in
   reverse order.
 
 * -H, --handler _NAME_:
@@ -49,7 +49,7 @@ the value of `the command arguments`.
 Copyright 2015 LiveCode Ltd.
 
 This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ## SEE ALSO
 
