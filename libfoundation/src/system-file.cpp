@@ -205,44 +205,27 @@ MCTypeInfoRef kMCSFileIOErrorTypeInfo;
 MCTypeInfoRef kMCSFileEndOfFileErrorTypeInfo;
 MCTypeInfoRef kMCSFileInvalidPathErrorTypeInfo;
 
-static bool
-__MCSFileCreateNamedErrorType (MCNameRef p_name,
-                               MCStringRef p_message,
-                               MCTypeInfoRef & r_error_type)
-{
-	MCAutoTypeInfoRef t_raw_typeinfo, t_typeinfo;
-
-	if (!MCErrorTypeInfoCreate (MCNAME("file"), p_message, &t_raw_typeinfo))
-		return false;
-
-	if (!MCNamedTypeInfoCreate (p_name, &t_typeinfo))
-		return false;
-
-	if (!MCNamedTypeInfoBind (*t_typeinfo, *t_raw_typeinfo))
-		return false;
-
-	r_error_type = MCValueRetain (*t_typeinfo);
-	return true;
-}
-
 bool
 __MCSFileInitialize (void)
 {
 	/* Create error types */
-	if (!__MCSFileCreateNamedErrorType (
+	if (!MCNamedErrorTypeInfoCreate(
 	        MCNAME("livecode.lang.FileIOError"),
+			MCNAME("file"),
 	        MCSTR("File input/output error for '%{path}': %{description}"),
 	        kMCSFileIOErrorTypeInfo))
 		return false;
 
-	if (!__MCSFileCreateNamedErrorType (
+	if (!MCNamedErrorTypeInfoCreate (
 	        MCNAME("livecode.lang.EndOfFileError"),
+			MCNAME("file"),
 	        MCSTR("End of file '%{path}'"),
 	        kMCSFileEndOfFileErrorTypeInfo))
 		return false;
 
-	if (!__MCSFileCreateNamedErrorType (
+	if (!MCNamedErrorTypeInfoCreate (
 	        MCNAME("livecode.lang.InvalidFilenameError"),
+			MCNAME("file"),
 	        MCSTR("No valid native path representation for path '%{path}'"),
 	        kMCSFileInvalidPathErrorTypeInfo))
 		return false;

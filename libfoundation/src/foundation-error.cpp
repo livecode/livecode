@@ -359,20 +359,10 @@ bool __MCErrorCopyDescription(__MCError *self, MCStringRef& r_string)
 
 bool __MCErrorInitialize(void)
 {
-    MCAutoTypeInfoRef t_oom_typeinfo;
-    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("out of memory"), &t_oom_typeinfo))
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.OutOfMemoryError"), MCNAME("runtime"), MCSTR("out of memory"), kMCOutOfMemoryErrorTypeInfo))
         return false;
-    if (!MCNamedTypeInfoCreate(MCNAME("livecode.lang.OutOfMemoryError"), kMCOutOfMemoryErrorTypeInfo))
-        return false;
-    if (!MCNamedTypeInfoBind(kMCOutOfMemoryErrorTypeInfo, *t_oom_typeinfo))
-        return false;
-    
-    MCAutoTypeInfoRef t_ge_typeinfo;
-    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("%{reason}"), &t_ge_typeinfo))
-        return false;
-    if (!MCNamedTypeInfoCreate(MCNAME("livecode.lang.GenericError"), kMCGenericErrorTypeInfo))
-        return false;
-    if (!MCNamedTypeInfoBind(kMCGenericErrorTypeInfo, *t_ge_typeinfo))
+	
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.GenericError"), MCNAME("runtime"), MCSTR("%{reason}"), kMCGenericErrorTypeInfo))
         return false;
     
     if (!MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
