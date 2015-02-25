@@ -32,7 +32,7 @@ public:
 	MCObjptr();
 	virtual ~MCObjptr();
 
-	bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
+	bool visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor);
 
 	IO_stat load(IO_handle stream);
 	IO_stat save(IO_handle stream, uint4 p_part);

@@ -137,7 +137,7 @@ MCBlock::~MCBlock()
 		freeatts();
 }
 
-bool MCBlock::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCBlock::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnBlock(this);
 }
