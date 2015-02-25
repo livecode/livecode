@@ -373,6 +373,12 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Browser client - receives callback messages from the browser
 
+struct MCCefErrorInfo
+{
+	CefString url;
+	CefString error_message;
+};
+
 class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, CefDownloadHandler, CefLoadHandler, CefContextMenuHandler
 {
 private:
@@ -381,7 +387,7 @@ private:
 	MCCefBrowserBase *m_owner;
 
 	MCCefMessageResult m_message_result;
-	std::map<int64_t, CefString> m_load_error_frames;
+	std::map<int64_t, MCCefErrorInfo> m_load_error_frames;
 	
 	// IM-2014-05-06: [[ Bug 12384 ]] Set of URLs for which callback messages will not be sent 
 	std::set<CefString> m_ignore_urls;
@@ -390,20 +396,22 @@ private:
 
 	// Error handling - we need to keep track of url that failed to load in a
 	// frame so we can send the correct url in onLoadEnd()
-	void AddLoadErrorFrame(int64_t p_id, const CefString &p_url)
+	void AddLoadErrorFrame(int64_t p_id, const CefString &p_url, const CefString &p_error_msg)
 	{
-		m_load_error_frames[p_id] = p_url;
+		m_load_error_frames[p_id].url = p_url;
+		m_load_error_frames[p_id].error_message = p_error_msg;
 	}
 
-	bool RemoveLoadErrorFrame(int64_t p_id, CefString &r_error_url)
+	bool RemoveLoadErrorFrame(int64_t p_id, CefString &r_error_url, CefString &r_error_msg)
 	{
-		std::map<int64_t, CefString>::iterator t_iter;
+		std::map<int64_t, MCCefErrorInfo>::iterator t_iter;
 		t_iter = m_load_error_frames.find(p_id);
 
 		if (t_iter == m_load_error_frames.end())
 			return false;
 
-		r_error_url = t_iter->second;
+		r_error_url = t_iter->second.url;
+		r_error_msg = t_iter->second.error_message;
 		m_load_error_frames.erase(t_iter);
 
 		return true;
@@ -760,10 +768,10 @@ public:
 		if (nil == m_owner)
 			return;
 		
-		CefString t_url;
+		CefString t_url, t_error;
 
 		bool t_is_error;
-		t_is_error = RemoveLoadErrorFrame(p_frame->GetIdentifier(), t_url);
+		t_is_error = RemoveLoadErrorFrame(p_frame->GetIdentifier(), t_url, t_error);
 
 		/* TODO - Load error handling */
 		// For now we don't send a browser load error message - instead make sure documentComplete is sent with the correct url
@@ -777,11 +785,28 @@ public:
 		t_url_str = nil;
 		/* UNCHECKED */ MCCefStringToCString(t_url, t_url_str);
 
-		if (p_frame->IsMain())
-			CB_DocumentComplete(m_owner->GetInst(), t_url_str);
+		if (t_is_error)
+		{
+			char *t_err_str;
+			t_err_str = nil;
+			/* UNCHECKED */ MCCefStringToCString(t_error, t_err_str);
+			
+			if (p_frame->IsMain())
+				CB_DocumentFailed(m_owner->GetInst(), t_url_str, t_err_str);
+			else
+				CB_DocumentFrameFailed(m_owner->GetInst(), t_url_str, t_err_str);
+			
+			if (t_err_str != nil)
+				MCCStringFree(t_err_str);
+		}
 		else
-			CB_DocumentFrameComplete(m_owner->GetInst(), t_url_str);
-
+		{
+			if (p_frame->IsMain())
+				CB_DocumentComplete(m_owner->GetInst(), t_url_str);
+			else
+				CB_DocumentFrameComplete(m_owner->GetInst(), t_url_str);
+		}
+		
 		if (t_url_str != nil)
 			MCCStringFree(t_url_str);
 	}
@@ -791,7 +816,7 @@ public:
 		if (IgnoreUrl(p_failed_url))
 			return;
 
-		AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url);
+		AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text);
 	}
 
 	// ContextMenuHandler interface
