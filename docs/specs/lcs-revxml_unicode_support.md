@@ -75,10 +75,10 @@ has the explicit handling works the same as it did before.
 
 In the case of revXML all parameters and results fall into three categories:
 
-    - an id
-    - a path
-    - options
-    - data that is passed to, or passed back from, libxml2
+  - an id
+  - a path
+  - options
+  - data that is passed to, or passed back from, libxml2
 
 Here we can assume that any parameter or result which is 'id','path' or 'options'
 is 'text'. However, as libxml2 uses utf-8 as the universal internal encoding (it
