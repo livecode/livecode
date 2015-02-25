@@ -3252,10 +3252,12 @@ void* MCU_loadmodule(const char *p_module)
     else
     {
         uindex_t t_last_slash_index;
-        if (!MCStringLastIndexOfChar(*t_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
-            t_last_slash_index = MCStringGetLength(*t_path);
+        if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
+            t_last_slash_index = MCStringGetLength(MCcmd);
 
-        if (!MCStringFormat(&t_filename, "%*@/%s", MCRangeMake(0, t_last_slash_index), MCcmd, *t_path))
+        MCRange t_range;
+        t_range = MCRangeMake(0, t_last_slash_index);
+        if (!MCStringFormat(&t_filename, "%*@/%@", &t_range, MCcmd, *t_path))
             return nil;
     }
 
