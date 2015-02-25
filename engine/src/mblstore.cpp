@@ -155,7 +155,13 @@ bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string)
 
 bool MCPurchaseList(MCStringRef& r_string)
 {
-    return MCListCopyAsString(s_completed_purchases, r_string);
+    if (s_completed_purchases != NULL)
+        return MCListCopyAsString(s_completed_purchases, r_string);
+    else
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
 }
 
 bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);
@@ -363,12 +369,6 @@ void MCPurchaseCompleteListUpdate(MCPurchase *p_purchase)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void MCPurchaseClearList(void)
-{
-    MCValueRelease(s_completed_purchases);
-    s_completed_purchases = NULL;
-}
 
 #ifdef LEGACY_EXEC
 static bool list_purchases(void *context, MCPurchase* p_purchase)

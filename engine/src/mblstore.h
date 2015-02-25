@@ -173,6 +173,4 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id);
 
 void MCPurchaseNotifyUpdate(MCPurchase *p_purchase);
 
-void MCPurchaseClearList(void);
-
 #endif //MBLSTORE_H
