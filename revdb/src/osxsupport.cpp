@@ -137,6 +137,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_result -> idcounterptr = (idcounterrefptr)CFBundleGetFunctionPointerForName(t_bundle, CFSTR("setidcounterref"));
 	t_result -> newconnectionptr = (new_connectionrefptr)CFBundleGetFunctionPointerForName(t_bundle, CFSTR("newdbconnectionref"));
 	t_result -> releaseconnectionptr = (release_connectionrefptr)CFBundleGetFunctionPointerForName(t_bundle, CFSTR("releasedbconnectionref"));
+    t_result -> setcallbacksptr = (set_callbacksrefptr)CFBundleGetFunctionPointerForName(t_bundle, CFSTR("setcallbacksref"));
 	
 	return t_result;
 }
@@ -176,6 +177,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_result -> idcounterptr = (idcounterrefptr)dlsym(t_driver_handle, "setidcounterref");
 	t_result -> newconnectionptr = (new_connectionrefptr)dlsym(t_driver_handle, "newdbconnectionref");
 	t_result -> releaseconnectionptr = (release_connectionrefptr)dlsym(t_driver_handle, "releasedbconnectionref");
+    t_result -> setcallbacksptr = (set_callbacksrefptr)dlsym(t_driver_handle, "setcallbacksref");
 	free(t_filename);
 	return t_result;
 	

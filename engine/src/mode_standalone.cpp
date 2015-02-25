@@ -238,7 +238,25 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		delete t_external;
 	}
 	break;
-			
+
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch a resource mapping and add it to the array stored in MCdispatcher.
+    case kMCCapsuleSectionTypeLibrary:
+    {
+        char *t_mapping;
+        t_mapping = new char[p_length];
+        if (IO_read(t_mapping, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read library mapping");
+            return false;
+        }
+        
+        MCAutoStringRef t_mapping_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_mapping, &t_mapping_str);
+        MCdispatcher -> addlibrarymapping(*t_mapping_str);
+        delete t_mapping;
+    }
+        break;
+            
 	case kMCCapsuleSectionTypeStartupScript:
 	{
 		char *t_script;
@@ -259,12 +277,12 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	}
 	break;
 			
-	case kMCCapsuleSectionTypeAuxillaryStack:
+	case kMCCapsuleSectionTypeAuxiliaryStack:
 	{
 		MCStack *t_aux_stack;
 		if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
 		{
-			MCresult -> sets("failed to read auxillary stack");
+            MCresult -> sets("failed to read auxiliary stack");
 			return false;
 		}
 	}

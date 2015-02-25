@@ -60,11 +60,11 @@ struct MCDeployParameters
     MCDeployMinOSVersion *min_os_versions;
     uindex_t min_os_version_count;
     
-	// The root stackfile to be included in the standalone.
+    // The root stackfile to be included in the standalone.
 	MCStringRef stackfile;
 	
-	// The array of auxillary stackfiles to be included in the standalone.
-	MCArrayRef auxillary_stackfiles;
+    // The array of auxiliary stackfiles to be included in the standalone.
+    MCArrayRef auxiliary_stackfiles;
 
 	// The array of externals to be loaded on startup by the standalone.
 	MCArrayRef externals;
@@ -78,6 +78,9 @@ struct MCDeployParameters
 	// The list of redirection mappings
 	MCArrayRef redirects;
 
+    // AL-2015-02-10: [[ Standalone Inclusions ]] The list of resource mappings.
+    MCArrayRef library;
+    
 	// On Windows, the icon files to be inserted into the resource directory.
 	MCStringRef app_icon;
 	MCStringRef doc_icon;
@@ -104,7 +107,7 @@ struct MCDeployParameters
 		engine_ppc		= MCValueRetain(kMCEmptyString);
 		version_info	= MCValueRetain(kMCEmptyArray);
 		stackfile		= MCValueRetain(kMCEmptyString);
-		auxillary_stackfiles = MCValueRetain(kMCEmptyArray);
+        auxiliary_stackfiles = MCValueRetain(kMCEmptyArray);
 		externals		= MCValueRetain(kMCEmptyArray);
 		startup_script	= MCValueRetain(kMCEmptyString);
 		timeout			= 0;
@@ -115,6 +118,7 @@ struct MCDeployParameters
 		payload			= MCValueRetain(kMCEmptyString);
 		spill			= MCValueRetain(kMCEmptyString);
 		output			= MCValueRetain(kMCEmptyString);
+        library         = MCValueRetain(kMCEmptyArray);
         
         // SN-2015-02-04: [[ Merge-6.7.2 ]] Init the versions pointer / count
         min_os_versions = nil;
@@ -128,7 +132,7 @@ struct MCDeployParameters
 			MCValueRelease(engine_ppc);
 			MCValueRelease(version_info);
 			MCValueRelease(stackfile);
-			MCValueRelease(auxillary_stackfiles);
+            MCValueRelease(auxiliary_stackfiles);
 			MCValueRelease(externals);
 			MCValueRelease(startup_script);
 			MCValueRelease(redirects);
@@ -138,6 +142,7 @@ struct MCDeployParameters
 			MCValueRelease(payload);
 			MCValueRelease(spill);
 			MCValueRelease(output);
+            MCValueRelease(library);
             MCMemoryDeleteArray(min_os_versions);
 	}
 	
