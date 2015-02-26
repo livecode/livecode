@@ -496,6 +496,12 @@ extern void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int 
 // IM-2014-07-09: [[ Bug 12225 ]] Convert logical window coords to stack coords
 extern void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
 
+// AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
+// SN-2015-02-24: [[ Broken Win Compilation ]] LoadModule is a Win32 API function...
+extern void LoadModuleByName(const char *p_module, void **r_handle, int *r_success);
+extern void UnloadModule(void *p_handle, int *r_success);
+extern void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolved, int *r_success);
+    
 //
 extern Bool SecurityCanAccessFile(const char *p_file);
 extern Bool SecurityCanAccessHost(const char *p_host);	
@@ -506,6 +512,10 @@ extern Bool SecurityCanAccessFileUTF8(const char *p_file);
 extern Bool SecurityCanAccessHostUTF8(const char *p_host);
 extern Bool SecurityCanAccessLibraryUTF8(const char *p_library);
 	
+// IM-2014-09-23: [[ RevBrowserCEF ]] Retrieve the Xserver connection info
+extern void GetXDisplayHandle(void **r_display, int *r_success);
+extern void GetXScreenHandle(void **r_screen, int *r_success);
+
 #ifdef __cplusplus
 };
 #endif
@@ -669,10 +679,10 @@ template<ExternalHandler u_handler> void ExternalWrapperObjC(char *p_arguments[]
 #define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
 		{ m_name, "F", 0, ExternalWrapperObjC<m_function>, NULL },
 
-#define EXTERNAL_DECLARE_COMMAND_OBJC(m_name, m_function) \
+#define EXTERNAL_DECLARE_COMMAND_OBJC_UTF8(m_name, m_function) \
         { m_name, "c", 0, ExternalWrapperObjC<m_function>, NULL },
 
-#define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
+#define EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8(m_name, m_function) \
         { m_name, "f", 0, ExternalWrapperObjC<m_function>, NULL },
 
 #else

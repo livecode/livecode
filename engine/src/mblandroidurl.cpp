@@ -261,6 +261,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUrlDidReceiveData(JNIEnv
 		MCAutoDataRef t_data;
 		MCJavaByteArrayToDataRef(env, bytes, &t_data);
 		t_info->callback(t_info->context, kMCSystemUrlStatusLoading, *t_data);
+        // PM-2015-02-11: [[ Bug 14515 ]] Unpin the bytes array in the JNI to prevent a crash
+        env->ReleaseByteArrayElements(bytes, t_bytes, 0);
 	}
 }
 

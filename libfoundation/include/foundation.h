@@ -1568,6 +1568,17 @@ MC_DLLEXPORT bool MCErrorTypeInfoCreate(MCNameRef domain, MCStringRef message, M
 MC_DLLEXPORT MCNameRef MCErrorTypeInfoGetDomain(MCTypeInfoRef error);
 MC_DLLEXPORT MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef error);
 
+//////////
+
+// Create a named typeinfo bound to an error typeinfo.
+MC_DLLEXPORT bool MCNamedErrorTypeInfoCreate(MCNameRef p_name, MCNameRef p_domain, MCStringRef p_message, MCTypeInfoRef &r_typeinfo);
+
+// Create a named typeinfo bound to a custom typeinfo.
+MC_DLLEXPORT bool MCNamedCustomTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef base, const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo);
+	
+// Create a named typeinfo bound to a foreign typeinfo.
+MC_DLLEXPORT bool MCNamedForeignTypeInfoCreate(MCNameRef p_name, const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo);
+	
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  BOOLEAN DEFINITIONS

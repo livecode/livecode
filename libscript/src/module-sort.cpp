@@ -57,9 +57,9 @@ extern "C" MC_DLLEXPORT void MCSortExecSortList(MCProperListRef& x_target, bool 
     switch (t_type)
     {
         case kMCValueTypeCodeString:
-            // For now, just compare caseless.
+            // AL-2015-02-13: [[ Bug 14599 ]] Use exact comparison here for consistency.
             MCStringOptions t_option;
-            t_option = kMCStringOptionCompareCaseless;
+            t_option = kMCStringOptionCompareExact;
             MCProperListStableSort(*t_mutable_list, p_descending, MCSortCompareText, &t_option);
             break;
         case kMCValueTypeCodeData:
@@ -102,9 +102,9 @@ extern "C" MC_DLLEXPORT void MCSortExecSortListText(MCProperListRef& x_target, b
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
         return;
     
-    // For now, just compare caseless.
+    // AL-2015-02-13: [[ Bug 14599 ]] Use exact comparison here for consistency.
     MCStringOptions t_option;
-    t_option = kMCStringOptionCompareCaseless;
+    t_option = kMCStringOptionCompareExact;
     MCProperListStableSort(*t_mutable_list, p_descending, MCSortCompareText, &t_option);
     
     MCAutoProperListRef t_sorted_list;

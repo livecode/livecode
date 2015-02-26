@@ -1299,7 +1299,7 @@ void MCIPhoneHandleDidBecomeActive(void)
 	// Convert the current thread to the main fiber (system owned).
 	MCFiberConvert(s_main_fiber);
 
-	// Create our auxillary script fiber.
+    // Create our auxiliary script fiber.
 	MCFiberCreate(256 * 1024, s_script_fiber);
 	
 	// Transfer control to the engine fiber.

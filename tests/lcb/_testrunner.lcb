@@ -88,7 +88,7 @@ handler PrintStatus(in pType as string, in pMessage as string)
 
 	variable tOutput as string
 	put pType & ":" && pMessage into tOutput
-	write EncodeUTF8(tOutput) to stream the error stream
+	write EncodeUTF8(tOutput) to the error stream
 end handler
 
 -- The error message is used to indicate that something went wrong
@@ -387,8 +387,8 @@ public handler RunModuleTests()
 			PrintPass(tPrettyModule, tHandlerName)
 		end if
 
-		write EncodeUTF8(tHandlerOutput) to stream the output stream
-		write EncodeUTF8("\n") to stream the output stream
+		write EncodeUTF8(tHandlerOutput) to the output stream
+		write EncodeUTF8("\n") to the output stream
 
 	end repeat
 end handler
@@ -433,7 +433,7 @@ handler PrintTestSummary(in tPass as number, in tXPass as number, in tXFail as n
 	put "================================================================\n" into tDecoration
 	put tDecoration & tSummaryString & tDecoration into tSummaryString
 
-	write EncodeUTF8(tSummaryString) to stream the error stream
+	write EncodeUTF8(tSummaryString) to the error stream
 end handler
 
 ----------------------------------------------------------------

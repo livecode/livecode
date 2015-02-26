@@ -356,9 +356,9 @@ bool MCBrowserAuthDialogMakeStrings(const CefString &p_url, const CefString &p_r
 	t_port = 0;
 
 	if (t_success)
-		t_success = MCCefStringToCString(CefString(&t_url_parts.host), t_host);
+		t_success = MCCefStringToUtf8String(CefString(&t_url_parts.host), t_host);
 	if (t_success)
-		t_success = MCCefStringToCString(p_realm, t_realm);
+		t_success = MCCefStringToUtf8String(p_realm, t_realm);
 	if (t_success)
 	{
 		CefString t_port_string(&t_url_parts.port);
@@ -512,4 +512,31 @@ bool MCCefWin32Browser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 	MCBrowserAuthDialogFreeStrings(t_state.strings);
 
 	return t_success;
+}
+
+const char* MCCefPlatformGetResourcesDirPath()
+{
+    return NULL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
+#include <stdlib.h>
+#include <stdio.h>
+#include <cstring>
+
+void *MCU_loadmodule(const char *p_source)
+{
+    return LoadLibraryA(p_source);
+}
+
+void MCU_unloadmodule(void *p_module)
+{
+    
+}
+
+void *MCU_resolvemodulesymbol(void *p_module, const char *p_name)
+{
+    return GetProcAddress((HMODULE)p_module, p_name);
 }

@@ -127,31 +127,27 @@ public handler TestOffset()
 end handler
 
 public handler TestOffsetAfter()
-	broken test "offset after (single)" when the offset of "x" after 1 in "x.xx." is 3 because "bug 14590"
-	broken test "first offset after (single)" when the first offset of "x" after 1 in "x.xx." is 3 because "bug 14590"
-	broken test "last offset after (single)" when the last offset of "x" after 1 in "x.xx." is 4 because "bug 14590"
+	test "offset after (single)" when the offset of "x" after 1 in "x.xx." is 2
+	test "first offset after (single)" when the first offset of "x" after 1 in "x.xx." is 2
+	test "last offset after (single)" when the last offset of "x" after 1 in "x.xx." is 3
 
-	broken test "offset chars after (single)" when the offset of chars "x" after 1 in "x.xx." is 3 because "bug 14590"
-	broken test "first offset chars after (single)" when the first offset of chars "x" after 1 in "x.xx." is 3 because "bug 14590"
-	broken test "last offset chars after (single)" when the last offset of chars "x" after 1 in "x.xx." is 4 because "bug 14590"
+	test "offset chars after (single)" when the offset of chars "x" after 2 in ".x.xx." is 2
+	test "first offset chars after (single)" when the first offset of chars "x" after 2 in ".x.xx." is 2
+	test "last offset chars after (single)" when the last offset of chars "x" after 2 in ".x.xx." is 3
 
-	broken test "offset after (multiple)" when the offset of "xx" after 1 in "xx.xxx." is 4 because "bug 14590"
-	broken test "first offset after (multiple)" when the first offset of "xx" after 1 in "xx.xxx." is 4 because "bug 14590"
-	broken test "last offset after (multiple)" when the last offset of "xx" after 1 in "xx.xxx." is 5 because "bug 14590"
+	test "offset after (multiple)" when the offset of "xx" after 1 in "xx.xxx." is 3
+	test "first offset after (multiple)" when the first offset of "xx" after 1 in "xx.xxx." is 3
+	test "last offset after (multiple)" when the last offset of "xx" after 1 in "xx.xxx." is 4
 
-	broken test "offset chars after (multiple)" when the offset of chars "xx" after 1 in "xx.xxx." is 4 because "bug 14590"
-	broken test "first offset chars after (multiple)" when the first offset of chars "xx" after 1 in "xx.xxx." is 4 because "bug 14590"
-	broken test "last offset chars after (multiple)" when the last offset of chars "xx" after 1 in "xx.xxx." is 5 because "bug 14590"
+	test "offset chars after (multiple)" when the offset of chars "xx" after 1 in "xx.xxx." is 3
+	test "first offset chars after (multiple)" when the first offset of chars "xx" after 1 in "xx.xxx." is 3
+	test "last offset chars after (multiple)" when the last offset of chars "xx" after 1 in "xx.xxx." is 4
 
-	test "offset (missing)" when the offset of "xx" in ".x.x." is 0
+	test "offset (single, missing)" when the offset of "x" after 2 in "x.." is 0
+	test "offset (multiple, missing)" when the offset of "xx" after 1 in "xx.x." is 0
 
-	-- One of the few useful examples we could come up with
-	variable tFilename
-	variable tExtensionOffset
-	put "/.dotdir/file_noext" into tFilename
-	put the last offset of "." after the last offset of "/" in tFilename in tFilename into tExtensionOffset
-
-	broken test "last offset after (example)" when tExtensionOffset is 0 because "bug 14590"
+	test "last offset (single, missing)" when the last offset of "x" after 2 in "x.." is 0
+	test "last offset (multiple, missing)" when the last offset of "xxx" after 2 in "xxx.xx.x." is 0
 end handler
 
 public handler TestBeginsWith()

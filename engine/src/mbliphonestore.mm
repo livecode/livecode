@@ -584,6 +584,10 @@ bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 	
 	[[SKPaymentQueue defaultQueue] finishTransaction: t_ios_data->transaction];
 	p_purchase->state = kMCPurchaseStateComplete;
+    
+    // PM-2015-01-28: [[ Bug 14461 ]] Once the purchase is completed, add the productID to the completed purchases list
+    MCPurchaseCompleteListUpdate(p_purchase);
+    
 	MCPurchaseNotifyUpdate(p_purchase);
 	MCPurchaseRelease(p_purchase);
 	

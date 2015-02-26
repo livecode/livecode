@@ -162,11 +162,11 @@ public handler TestAscendingText() -- RANDOMIZED
 	-- Test sorting
 	put tRandom into tList
 	sort tList in ascending text order
-	broken test "sort ascending text" when IsSorted(tList, false) because "bug 14599"
+	test "sort ascending text" when IsSorted(tList, false)
 
 	put tRandom into tList
 	sort tList in ascending order
-	broken test "sort ascending generic (text)" when IsSorted(tList, false) because "bug 14599"
+	test "sort ascending generic (text)" when IsSorted(tList, false)
 
 	-- Test sorting stability
 	variable tStable
@@ -189,11 +189,11 @@ public handler TestDescendingText() -- RANDOMIZED
 	-- Test sorting
 	put tRandom into tList
 	sort tList in descending text order
-	broken test "sort descending text" when IsSorted(tList, true) because "bug 14599"
+	test "sort descending text" when IsSorted(tList, true)
 
 	put tRandom into tList
 	sort tList in descending order
-	broken test "sort descending generic (text)" when IsSorted(tList, true) because "bug 14599"
+	test "sort descending generic (text)" when IsSorted(tList, true)
 
 	-- Test sorting stability
 	variable tStable

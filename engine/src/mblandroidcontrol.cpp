@@ -460,7 +460,7 @@ MCGAffineTransform MCNativeControlUserToDeviceTransform()
 	// IM-2014-02-25: [[ Bug 11816 ]] Use scaled stack->view transform as view backing scale may not have been set yet
     float t_scale;
     t_scale = MCResGetPixelScale();
-    return MCGAffineTransformScale(MCdefaultstackptr -> getviewtransform(), t_scale, t_scale);
+    return MCGAffineTransformPreScale(MCdefaultstackptr -> getviewtransform(), t_scale, t_scale);
 }
 
 MCGAffineTransform MCNativeControlUserFromDeviceTransform()

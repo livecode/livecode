@@ -604,7 +604,7 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
 		if (MCPatternLockForContextTransform(p, MCGContextGetDeviceTransform(m_gcontext), t_image, t_transform))
 		{
-			t_transform = MCGAffineTransformTranslate(t_transform, x, y);
+			t_transform = MCGAffineTransformPreTranslate(t_transform, x, y);
 			// IM-2014-05-21: [[ HiResPatterns ]] Use the pattern filter value
 			MCGImageFilter t_filter;
 			/* UNCHECKED */ MCPatternGetFilter(p, t_filter);
@@ -1266,7 +1266,7 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
         {
             MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
             t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
-            t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+            t_transform = MCGAffineTransformPreTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
             
             MCGContextConcatCTM(m_gcontext, t_transform);
         }

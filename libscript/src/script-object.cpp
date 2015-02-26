@@ -52,23 +52,6 @@ static MCScriptModuleRef *s_builtin_modules = nil;
 static uindex_t s_builtin_module_count = 0;
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
 
-static bool MCScriptCreateNamedErrorType(MCNameRef p_name, MCStringRef p_message, MCTypeInfoRef &r_error_type)
-{
-	MCAutoTypeInfoRef t_type, t_named_type;
-	
-	if (!MCErrorTypeInfoCreate(MCNAME("runtime"), p_message, &t_type))
-		return false;
-	
-	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
-		return false;
-	
-	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
-		return false;
-	
-	r_error_type = MCValueRetain(*t_named_type);
-	return true;
-}
-
 bool MCScriptInitialize(void)
 {
     MCBuiltinModule **t_modules;
@@ -266,22 +249,38 @@ bool MCScriptInitialize(void)
     
     // This block creates all the default errors
     {
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.InParameterNotDefinedError"), MCSTR("In parameters must be defined before calling - parameter %{parameter} of %{module}.%{handler}"), kMCScriptInParameterNotDefinedErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.OutParameterNotDefinedError"), MCSTR("Out parameters must be defined before returning - parameter %{parameter} of %{module}.%{handler}"), kMCScriptOutParameterNotDefinedErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.VariableUsedBeforeDefinedError"), MCSTR("Variables must be defined before being used - variable %{variable} in %{module}.%{handler}"), kMCScriptVariableUsedBeforeDefinedErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ReturnValueTypeError"), MCSTR("Value is not of correct type for return - expected type %{type} when returning from %{module}.%{handler}"), kMCScriptInvalidReturnValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.VariableValueTypeError"), MCSTR("Value is not of correct type for assignment to variable - expected type %{type} for assigning to variable %{variable} in %{module}.%{handler}"), kMCScriptInvalidVariableValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ArgumentValueTypeError"), MCSTR("Value is not of correct type for passing as argument - expected type %{type} for passing to parameter %{parameter} of %{module}.%{handler}"), kMCScriptInvalidArgumentValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.NotABooleanValueError"), MCSTR("Value is not a boolean"), kMCScriptNotABooleanValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.WrongNumberOfArgumentsError"), MCSTR("Wrong number of arguments passed to handler %{module}.%{handler}"), kMCScriptWrongNumberOfArgumentsErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCSTR("Unable to bind foreign handler %{module}.%{handler}"), kMCScriptForeignHandlerBindingErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.PolymorphicHandlerBindingError"), MCSTR("Unable to bind appropriate handler"), kMCScriptMultiInvokeBindingErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.TypeBindingError"), MCSTR("Attempt to use unbound named type %{type}"), kMCScriptTypeBindingErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.NoMatchingHandlerError"), MCSTR("No matching handler for arguments with types (%{types}) - possible handlers (%{handlers})"), kMCScriptNoMatchingHandlerErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.CannotSetReadOnlyPropertyError"), MCSTR("Cannot set read-only property %{module}.%{property}"), kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.PropertyValueTypeError"), MCSTR("Value is not of correct type for setting property - expected type %{type} for setting property %{module}.%{property}"), kMCScriptInvalidPropertyValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.NotAHandlerValueError"), MCSTR("Value is not a handler"), kMCScriptNotAHandlerValueErrorTypeInfo);
-        MCScriptCreateNamedErrorType(MCNAME("livecode.lang.CannotCallContextHandlerError"), MCSTR("Cannot call context handler"), kMCScriptCannotCallContextHandlerErrorTypeInfo);
+        if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.InParameterNotDefinedError"), MCNAME("runtime"), MCSTR("In parameters must be defined before calling - parameter %{parameter} of %{module}.%{handler}"), kMCScriptInParameterNotDefinedErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.OutParameterNotDefinedError"), MCNAME("runtime"), MCSTR("Out parameters must be defined before returning - parameter %{parameter} of %{module}.%{handler}"), kMCScriptOutParameterNotDefinedErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.VariableUsedBeforeDefinedError"), MCNAME("runtime"), MCSTR("Variables must be defined before being used - variable %{variable} in %{module}.%{handler}"), kMCScriptVariableUsedBeforeDefinedErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ReturnValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for return - expected type %{type} when returning from %{module}.%{handler}"), kMCScriptInvalidReturnValueErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.VariableValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for assignment to variable - expected type %{type} for assigning to variable %{variable} in %{module}.%{handler}"), kMCScriptInvalidVariableValueErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ArgumentValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for passing as argument - expected type %{type} for passing to parameter %{parameter} of %{module}.%{handler}"), kMCScriptInvalidArgumentValueErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NotABooleanValueError"), MCNAME("runtime"), MCSTR("Value is not a boolean"), kMCScriptNotABooleanValueErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.WrongNumberOfArgumentsError"), MCNAME("runtime"), MCSTR("Wrong number of arguments passed to handler %{module}.%{handler}"), kMCScriptWrongNumberOfArgumentsErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCNAME("runtime"), MCSTR("Unable to bind foreign handler %{module}.%{handler}"), kMCScriptForeignHandlerBindingErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PolymorphicHandlerBindingError"), MCNAME("runtime"), MCSTR("Unable to bind appropriate handler"), kMCScriptMultiInvokeBindingErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.TypeBindingError"), MCNAME("runtime"), MCSTR("Attempt to use unbound named type %{type}"), kMCScriptTypeBindingErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NoMatchingHandlerError"), MCNAME("runtime"), MCSTR("No matching handler for arguments with types (%{types}) - possible handlers (%{handlers})"), kMCScriptNoMatchingHandlerErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.CannotSetReadOnlyPropertyError"), MCNAME("runtime"), MCSTR("Cannot set read-only property %{module}.%{property}"), kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PropertyValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for setting property - expected type %{type} for setting property %{module}.%{property}"), kMCScriptInvalidPropertyValueErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NotAHandlerValueError"), MCNAME("runtime"), MCSTR("Value is not a handler"), kMCScriptNotAHandlerValueErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.CannotCallContextHandlerError"), MCNAME("runtime"), MCSTR("Cannot call context handler"), kMCScriptCannotCallContextHandlerErrorTypeInfo))
+			return false;
     }
 
     return true;

@@ -71,9 +71,17 @@ function revTestExternalTestObjcArrays
 	in array as objc-array
 	return objc-array
 
+function revTestExternalTestSameDictionary
+    in dictionary as objc-dictionary
+    return objc-dictionary
+
 function revTestExternalTestObjcDictionaries
 	in dict as objc-dictionary
 	return objc-dictionary
+
+function revTestExternalTestArrayToDictionaryCopy
+    in p_array as objc-dictionary
+    return objc-dictionary
     
 function revTestExternalTestObjcNumber
     in number as objc-number

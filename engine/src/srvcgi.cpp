@@ -707,12 +707,11 @@ static void cgi_store_form_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
 
 static void cgi_fix_path_variables()
 {
-	char *t_path, *t_path_end;
+    char *t_path;
 
 	MCStringRef env;
     env = nil;
-	t_path = nil;
-    t_path_end = nil;
+    t_path = nil;
     
     // SN-2014-07-29: [[ Bug 12865 ]] When a LiveCode CGI script has a .cgi extension and has
     //  the appropriate shebang pointing to the LiveCode server, PATH_TRANSLATED is not set by Apache.
@@ -722,46 +721,68 @@ static void cgi_fix_path_variables()
     else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env))
         t_path = strdup(MCStringGetCString(env));
 
-    MCAutoStringRef t_path_string;
-    /* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
+    // SN-2015-02-11: [[ Bug 14457 ]] We want to split PATH_TRANSLATED
+    //  between what is the real filename (into PATH_TRANSLATED)
+    //  and what was appended to the URI (into PATH_INFO)
+    MCStringRef t_path_string;
+    MCStringRef t_path_info;
              
     if (t_path != nil)
     {
-		t_path_end = t_path + strlen(t_path);
-        
 #ifdef _WINDOWS_SERVER
 		for(uint32_t i = 0; t_path[i] != '\0'; i++)
 			if (t_path[i] == '\\')
 				t_path[i] = '/';
 #endif
-             
-        char t_sep;
-        t_sep = '\0';
+
+        // SN-2015-02-12: [[ Bug 14457 ]] We use a mutable string for
+        //  the path info, as we will need to prepend each segment we
+        //  cut off of the TRANSLATED_PATH.
+        // Initialise path_string and path_info
+        MCAutoStringRef t_mutable_path_info;
+        /* UNCHECKED */ MCStringCreateWithCString(t_path, t_path_string);
+        MCStringCreateMutable(0, &t_mutable_path_info);
         
-        while (!MCS_exists(*t_path_string, True))
+        // SN-2015-02-12: [[ Bug 14457 ]] As long as the path does not lead
+        //  to an existing file, we cut it at the last path separator.
+        //
+        while (!MCS_exists(t_path_string, True))
         {
-            char *t_new_end;
-            t_new_end = strrchr(t_path, '/');
-            *t_path_end = t_sep;
-            if (t_new_end == NULL)
-            {
-                t_sep = '\0';
+            uindex_t t_offset;
+            MCAutoStringRef t_new_path;
+            MCAutoStringRef t_new_path_info;
+
+            // SN-2015-02-11: [[ Bug 14457 ]] If we cannot find any slash, we are done.
+            if (!MCStringLastIndexOfChar(t_path_string, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_offset))
                 break;
-            }
-            t_path_end = t_new_end;
-            t_sep = *t_path_end;
-            *t_path_end = '\0';
+
+            // We take split from the last separator (which must be
+            // included in the tail).
+            if (!MCStringCopySubstring(t_path_string, MCRangeMake(0, t_offset), &t_new_path)
+                    || !MCStringCopySubstring(t_path_string, MCRangeMake(t_offset, UINDEX_MAX), &t_new_path_info))
+                break;
+
+            // SN-2015-02-11: [[ Bug 14457 ]] Update path and path_info
+            MCValueAssign(t_path_string, *t_new_path);
+           /* UNCHECKED */ MCStringPrepend(*t_mutable_path_info, *t_new_path_info);
         }
-        
-        *t_path_end = t_sep;
+
+        // SN-2015-02-12: [[ Bug 14457 ]] We get the constructed path info
+        /* UNCHECKED */ MCStringCopy(*t_mutable_path_info, t_path_info);
+    }
+    else
+    {
+        // SN-2015-02-11: [[ Bug 14457 ]] Initialise the values to empty
+        //  if we failed to get the path
+        t_path_string = MCValueRetain(kMCEmptyString);
+        t_path_info = MCValueRetain(kMCEmptyString);
     }
 
-    MCS_setenv(MCSTR("PATH_TRANSLATED"), *t_path_string);
-             
-	MCAutoStringRef t_path_end_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_path_end, &t_path_end_string);
-	MCS_setenv(MCSTR("PATH_INFO"), *t_path_end_string);
+    MCS_setenv(MCSTR("PATH_TRANSLATED"), t_path_string);
+    MCS_setenv(MCSTR("PATH_INFO"), t_path_info);
 
+    MCValueRelease(t_path_string);
+    MCValueRelease(t_path_info);
 	free(t_path);
 }
 
@@ -1001,8 +1022,6 @@ typedef struct
 	uint32_t file_size;
 	MCMultiPartFileStatus file_status;
 
-    MCArrayRef file_variable;
-
     MCStringRef boundary;
 	
     MCStringRef post_variable;
@@ -1021,7 +1040,6 @@ static void cgi_dispose_multipart_context(cgi_multipart_context_t *p_context)
 	if (p_context->file_handle != NULL)
 		MCS_close(p_context->file_handle);
 
-    MCValueRelease(p_context->file_variable);
     MCValueRelease(p_context->post_binary_variable);
     MCValueRelease(p_context->post_variable);
 	
@@ -1068,21 +1086,29 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 				if (MCCStringEqualCaseless(p_header->param_name[i], "name"))
                 {
                     MCAutoStringRef t_name;
-                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], &t_name);
+                    // SN-2015-02-06: [[ Bug 14477 ]] We don't want to release this values
+                    //  that are released again later in srvmultipart.cpp
+                    MCStringCreateWithCString(p_header->param_value[i], &t_name);
                     MCNameCreate(*t_name, t_context->name);
                 }
 				else if (MCCStringEqualCaseless(p_header->param_name[i], "filename"))
-                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], t_context->file_name);
+                    // SN-2015-02-06: [[ Bug 14477 ]] We don't want to release this values
+                    //  that are released again later in srvmultipart.cpp
+                    MCStringCreateWithCString(p_header->param_value[i], t_context->file_name);
 			}
 		}
 		else if (MCCStringEqualCaseless(p_header->name, "Content-Type"))
 		{
-            MCStringCreateWithCStringAndRelease(p_header->value, t_context->type);
+            // SN-2015-02-06: [[ Bug 14477 ]] We don't want to release this values
+            //  that are released again later in srvmultipart.cpp
+            MCStringCreateWithCString(p_header->value, t_context->type);
 			
 			for (uint32_t i = 0; i < p_header->param_count; i++)
 			{
 				if (MCCStringEqualCaseless(p_header->param_name[i], "boundary"))
-                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], t_context->boundary);
+                    // SN-2015-02-06: [[ Bug 14477 ]] We don't want to release this values
+                    //  that are released again later in srvmultipart.cpp
+                    MCStringCreateWithCString(p_header->param_value[i], t_context->boundary);
 			}
 		}
 	}
@@ -1095,11 +1121,23 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 			{
                 // We need to reset the binary data fetched from the global variable
                 // and create a mutable DataRef
-                cgi_fetch_valueref_for_key(s_cgi_post, t_context->name, (MCValueRef&)t_context->post_variable);
+                // SN-2015-02-06: [[ Bug 14477 ]] We want to copy the valueRef in
+                //  t_context->post_variable, as it will be released in the end.
+                MCValueRef t_value;
+                cgi_fetch_valueref_for_key(s_cgi_post, t_context->name, t_value);
 
-                cgi_fetch_valueref_for_key(s_cgi_post_binary, t_context -> name, (MCValueRef&)t_context->post_binary_variable);
-                MCValueRelease(t_context->post_binary_variable);
-                MCDataCreateMutable(0, t_context->post_binary_variable);
+                if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
+                    t_context->post_variable = (MCStringRef)MCValueRetain(t_value);
+                else
+                    t_success = false;
+            }
+
+            if (t_success)
+            {
+                // SN-2015-02-06: [[ Bug 14477 ]] We want to replace the data with a new,
+                //  empty one
+                t_success = MCDataCreateMutable(0, t_context->post_binary_variable)
+                        && cgi_store_control_value(s_cgi_post_binary, t_context -> name, t_context -> post_binary_variable);
 			}
 		}
 		else if (cgi_context_is_file(t_context))
@@ -1157,7 +1195,20 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 		
 		if (t_success && (p_finished || p_truncated))
         {
-            cgi_fetch_valueref_for_key(s_cgi_files, t_context->name, (MCValueRef &)t_context->file_variable);
+            // SN-2015-02-06: [[ Bug 14477 ]] We want to copy the valueRef from
+            //  s_cgi_files, since it will be released in the end.
+            //  If the value was not an array (like kMCExecValueTypeNone), we
+            //  create a new *mutable* array.
+            //  We then store the changed array in place of the value we fetched
+            MCValueRef t_file_variable;
+            MCAutoArrayRef t_file_array;
+
+            cgi_fetch_valueref_for_key(s_cgi_files, t_context->name, t_file_variable);
+
+            if (MCValueIsArray(t_file_variable))
+                t_file_array = (MCArrayRef)MCValueRetain(t_file_variable);
+            else
+                t_success = MCArrayCreateMutable(&t_file_array);
 			
 			if (t_context->file_status == kMCFileStatusOK && t_context->file_size == 0)
 				t_context->file_status = kMCFileStatusFailed;
@@ -1170,14 +1221,17 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 
             MCNumberCreateWithUnsignedInteger(t_context->file_size, &t_size);
 
-            MCArrayStoreValue(t_context->file_variable, false, MCNAME("name"), t_context->file_name);
-            MCArrayStoreValue(t_context->file_variable, false, MCNAME("type"), t_context->type);
-            MCArrayStoreValue(t_context->file_variable, false, MCNAME("filename"), t_context->temp_name);
-            MCArrayStoreValue(t_context->file_variable, false, MCNAME("size"), *t_size);
+            MCArrayStoreValue(*t_file_array, false, MCNAME("name"), t_context->file_name);
+            MCArrayStoreValue(*t_file_array, false, MCNAME("type"), t_context->type);
+            MCArrayStoreValue(*t_file_array, false, MCNAME("filename"), t_context->temp_name);
+            MCArrayStoreValue(*t_file_array, false, MCNAME("size"), *t_size);
 
             if (t_context->file_status != kMCFileStatusOK
                     && MCMultiPartGetErrorMessage(t_context->file_status, &t_error))
-                MCArrayStoreValue(t_context->file_variable, false, MCNAME("error"), *t_error);
+                MCArrayStoreValue(*t_file_array, false, MCNAME("error"), *t_error);
+
+            if (t_success)
+                cgi_store_control_value(s_cgi_files, t_context->name, *t_file_array);
 		}
 	}
 	
@@ -1196,6 +1250,9 @@ static bool cgi_store_form_multipart(IO_handle p_stream)
 	
 	cgi_multipart_context_t t_context;
 	MCMemoryClear(&t_context, sizeof(t_context));
+    // SN-2015-02-06: [[ Bug 14477 ]] Initialise the temp_name (which is
+    //  only reassigned, never directly set).
+    t_context . temp_name = MCValueRetain(kMCEmptyString);
 	
 	uint32_t t_bytes_read = 0;
 	
