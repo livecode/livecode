@@ -1770,6 +1770,10 @@ void MCVarref::clearuql()
 		ref->clearuql();
 	else if (!isparam)
 		handler->getvar(index, isparam)->clearuql();
+    // SN-2015-02-25: [[ Bug 14536 ]] Reinstate the UQL unsetting
+    //  for the container as well.
+    else
+        handler->getcontainer(index, isparam)->getvar()->clearuql();
 }
 
 // MW-2008-08-18: [[ Bug 6945 ]] Cannot delete a nested array key.
