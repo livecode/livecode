@@ -1098,11 +1098,6 @@ extern "C" {
 MC_DLLEXPORT hash_t MCHashInteger(integer_t i);
 MC_DLLEXPORT hash_t MCHashUnsignedInteger(uinteger_t i);
 
-MC_DLLEXPORT hash_t MCHashInt32(int32_t i);
-MC_DLLEXPORT hash_t MCHashUInt32(uint32_t i);
-MC_DLLEXPORT hash_t MCHashInt64(int64_t i);
-MC_DLLEXPORT hash_t MCHashUInt64(uint64_t i);
-
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.
 MC_DLLEXPORT hash_t MCHashDouble(double d);
@@ -1595,10 +1590,12 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 //  NUMBER DEFINITIONS
 //
 
-// An MCNumber value can hold a 64-bit IEEE binary floating point value, a 32-bit
-// unsigned integer value, or a 32-bit signed integer value.
+// An MCNumber value can hold a 64-bit IEEE binary floating point value, a 32/64-bit
+// unsigned integer value, or a 32/64-bit signed integer value. (The size of the
+// integer representation depends on the settings of the 'MCNumber*Integer' typedefs
+// and constants).
 //
-// An MCNumber is considered an integer if it was created with a 32-bit signed or
+// An MCNumber is considered an integer if it was created with a signed or
 // unsigned integer.
 //
 // An MCNumber is considered a real if it was created with a 64-bit IEEE binary
@@ -1609,8 +1606,15 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 // a distinction between values such as 1.0 and 1 and thus leaves any automagic up
 // to higher-level concerns.
 //
-// The standard number arithmetic methods promote upwards from integer to real
-// as necessary:
+// There are the following sets of functions for dealing with numbers:
+//   - auto-promoting MCNumber arithmetic operations
+//   - checked auto-promoting MCNumberFinite arithmetic operations
+//   - integer-only MCNumberInteger arithmetic operations
+//   - real-only MCNumberReal arithmetic operations
+//   - checked real-only MCNUmberFiniteReal arithmetic operations
+//
+// The auto-promoting operations take mixtures of integers and reals and will
+// promote up from integer to real in mixed cases:
 //
 //   if x and y are integers then
 //     if x op y is representable as an integer then
@@ -1622,8 +1626,15 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 //     result will be real
 //   end if
 //
-// There are also more specialized (integral) variants which will not promote and
-// will throw overflow errors instead.
+// The checked (or finite) operations will check the resulting outputs for non-
+// finite results (i.e. infinity / NaN) and raise an appropriate error in that
+// case.
+//
+// The integer-only operations expect integers to be passed in (it is an unchecked
+// runtime error to not do this).
+//
+// The real-only operations expect reals to be passed in (it is an unchecked
+// runtime error to not do this).
 //
 // There is no general 'compare' method for numbers - instead there are distinct
 // methods for each comparison to be performed. The reason for this is to capture
@@ -1637,7 +1648,7 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 // of the numbers which result and take any appropriate action. In particular,
 // the non-integral division operations will *not* throw an exception as the
 // result will come out as an infinity (and so is 'representable' in some way).
-
+//
 // The internal representation of integers and unsigned integers depend on the
 // following definitions.
     

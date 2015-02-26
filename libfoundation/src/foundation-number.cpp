@@ -439,17 +439,17 @@ hash_t __MCNumberHash(__MCNumber *self)
     {
         case __kMCNumberRepSignedInteger:
 #if kMCNumberSignedIntegerMax <= INT32_MAX
-            return MCHashInt32(self -> integer);
+            return MCHashInteger(self -> integer);
 #elif kMCNumberSignedIntegerMax <= INT64_MAX
-            return MCHashInt64(self -> integer);
+            return MCHashInteger((self -> integer & 0xFFFFFFFF) ^ (self -> integer >> 32));
 #elif
 #error "NOT SUPPORTED - Hash for int > 64-bit"
 #endif
         case __kMCNumberRepUnsignedInteger:
 #if kMCNumberSignedIntegerMax <= INT32_MAX
-            return MCHashUInt32(self -> unsigned_integer);
+            return MCHashInteger((signed)self -> unsigned_integer);
 #elif kMCNumberSignedIntegerMax <= INT64_MAX
-            return MCHashUInt64(self -> unsigned_integer);
+            return MCHashInteger((signed)((self -> integer & 0xFFFFFFFF) ^ (self -> integer >> 32)));
 #else
 #error "NOT SUPPORTED - Hash for int > 64-bit"
 #endif
@@ -486,6 +486,33 @@ bool __MCNumberIsEqualTo(__MCNumber *self, __MCNumber *p_other_self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __clang__
+
+#if kMCNumberSignedIntegerMax <= INT32_MAX
+
+#define __checked_signed_add(x, y, z) __builtin_sadd_overflow((x), (y), (z))
+#define __checked_signed_subtract(x, y, z) __builtin_ssub_overflow((x), (y), (z))
+#define __checked_signed_multiply(x, y, z) __builtin_smul_overflow((x), (y), (z))
+#define __checked_unsigned_add(x, y, z) __builtin_uadd_overflow((x), (y), (z))
+#define __checked_unsigned_subtract(x, y, z) __builtin_usub_overflow((x), (y), (z))
+#define __checked_unsigned_multiply(x, y, z) __builtin_umul_overflow((x), (y), (z))
+
+#elif kMCNumberSignedIntegerMax <= INT64_MAX
+
+#define __checked_signed_add(x, y, z) __builtin_saddll_overflow((x), (y), (z))
+#define __checked_signed_subtract(x, y, z) __builtin_ssubll_overflow((x), (y), (z))
+#define __checked_signed_multiply(x, y, z) __builtin_smulll_overflow((x), (y), (z))
+#define __checked_unsigned_add(x, y, z) __builtin_uaddll_overflow((x), (y), (z))
+#define __checked_unsigned_subtract(x, y, z) __builtin_usubll_overflow((x), (y), (z))
+#define __checked_unsigned_multiply(x, y, z) __builtin_umulll_overflow((x), (y), (z))
+
+#else
+
+#error "NOT SUPPORTED - no clang builtins for int > 64-bit"
+
+#endif
+
+#else
 static inline bool __checked_signed_add(MCNumberSignedInteger x, MCNumberSignedInteger y, MCNumberSignedInteger *z)
 {
     if (((y > 0) && (x > (kMCNumberSignedIntegerMax - y))) ||
@@ -565,6 +592,7 @@ static inline bool __checked_unsigned_multiply(MCNumberUnsignedInteger x, MCNumb
     
     return true;
 }
+#endif
 
 // Returns the unsigned value which is the negation of the signed value x.
 // Note that x is known to be strictly negative.
