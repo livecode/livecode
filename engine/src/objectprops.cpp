@@ -587,9 +587,13 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 			MCParentScript *t_parent;
 			t_parent = parent_script -> GetParent();
  
-			ep . setstringf("button id %d of stack \"%@\"",
-								t_parent -> GetObjectId(),
-								MCNameGetString(t_parent -> GetObjectStack()));
+            if (t_parent -> GetObjectId() != 0)
+                ep . setstringf("button id %d of stack \"%s\"",
+                                    t_parent -> GetObjectId(),
+                                    MCNameGetCString(t_parent -> GetObjectStack()));
+            else
+                ep . setstringf("stack \"%s\"",
+                                    MCNameGetCString(t_parent -> GetObjectStack()));
 		}
 	}
 	break;
@@ -1302,11 +1306,13 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 	uint32_t t_part_id;
 	if (t_stat == ES_NORMAL)
 		t_stat = t_chunk -> getobj(ep2, t_object, t_part_id, False);
-
-	// Check that the object is a button
-	if (t_stat == ES_NORMAL && t_object -> gettype() != CT_BUTTON)
-		t_stat = ES_ERROR;
 	
+	// Check that the object is a button or a stack.
+	if (t_stat == ES_NORMAL &&
+        t_object -> gettype() != CT_BUTTON &&
+        t_object -> gettype() != CT_STACK)
+		t_stat = ES_ERROR;
+    
 	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
 	//   of the parentScript.
 	bool t_is_cyclic;
@@ -1348,7 +1354,11 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 			//
 			uint32_t t_id;
 			t_id = t_object -> getid();
-
+            
+            // If the object is a stack, then the id should be 0.
+            if (t_object -> gettype() == CT_STACK)
+                t_id = 0;
+                
 			MCNameRef t_stack;
 			t_stack = t_object -> getstack() -> getname();
 
@@ -1383,7 +1393,7 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 			//   is because the inheritence hierarchy has been updated and so the
 			//   super_use chains need to be remade.
 			MCParentScript *t_this_parent;
-			if (getstate(CS_IS_PARENTSCRIPT))
+			if (m_is_parent_script)
 			{
 				t_this_parent = MCParentScript::Lookup(this);
 				if (t_this_parent != nil)

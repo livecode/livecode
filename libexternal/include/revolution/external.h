@@ -496,6 +496,12 @@ extern void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int 
 // IM-2014-07-09: [[ Bug 12225 ]] Convert logical window coords to stack coords
 extern void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
 
+// AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
+// SN-2015-02-24: [[ Broken Win Compilation ]] LoadModule is a Win32 API function...
+extern void LoadModuleByName(const char *p_module, void **r_handle, int *r_success);
+extern void UnloadModule(void *p_handle, int *r_success);
+extern void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolved, int *r_success);
+    
 //
 extern Bool SecurityCanAccessFile(const char *p_file);
 extern Bool SecurityCanAccessHost(const char *p_host);	

@@ -812,6 +812,62 @@ MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef unresolved_self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCNamedErrorTypeInfoCreate(MCNameRef p_name, MCNameRef p_domain, MCStringRef p_message, MCTypeInfoRef &r_typeinfo)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCErrorTypeInfoCreate(p_domain, p_message, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_typeinfo = MCValueRetain(*t_named_type);
+	
+	return true;
+}
+
+bool MCNamedCustomTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef base, const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCCustomTypeInfoCreate(base, callbacks, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_typeinfo = MCValueRetain(*t_named_type);
+	
+	return true;
+}
+
+bool MCNamedForeignTypeInfoCreate(MCNameRef p_name, const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCForeignTypeInfoCreate(p_descriptor, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_typeinfo = MCValueRetain(*t_named_type);
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCCustomTypeInfoCreate(MCTypeInfoRef p_base, const MCValueCustomCallbacks *p_callbacks, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;

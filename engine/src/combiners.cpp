@@ -418,6 +418,9 @@ template<BitwiseOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE
 	case OPERATION_SET:
 		r = 0x00ffffff;
 	break;
+    default:
+        MCUnreachable();
+    break;
 	}
 
 	if (x_src_alpha && x_dst_alpha)
@@ -548,6 +551,9 @@ template<ArithmeticOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INL
 		r = rr | rg | rb;
 	}
 	break;
+    default:
+        MCUnreachable();
+    break;
 	}
 
 	if (x_src_alpha && x_dst_alpha)
@@ -660,6 +666,9 @@ template<BasicImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> I
 	case OPERATION_BLEND_SCREEN:
 		r = packed_multiply_bounded(src, packed_inverse(dst)) + dst;
 	break;
+    default:
+        MCUnreachable();
+    break;
 	}
 
 	return r;
@@ -884,6 +893,9 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 		t_blue = downscale(t_src_blue * (t_dst_alpha - t_dst_blue) + t_dst_blue * (t_src_alpha - t_src_blue) + t_inv_dst_alpha_src_blue + t_inv_src_alpha_dst_blue);
 		t_alpha = t_src_alpha + t_dst_alpha - downscale(t_src_alpha_dst_alpha);
 	break;
+    default:
+        MCUnreachable();
+    break;
 	}
 
 	if (x_dst_alpha)

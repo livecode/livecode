@@ -69,3 +69,27 @@ const char *MCCefPlatformGetCefLibraryPath(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// SN-2015-02-25: [[ Merge 7.0.4-rc-1 ]] Added MCU_*module* functions for Linux
+//  since CEF browser is implemented in LC 8
+
+// AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
+#include <stdlib.h>
+#include <stdio.h>
+#include <cstring>
+#include <dlfcn.h>
+
+void *MCU_loadmodule(const char *p_source)
+{
+    return dlopen(p_source, (RTLD_NOW | RTLD_LOCAL));
+}
+
+void MCU_unloadmodule(void *p_module)
+{
+
+}
+
+void *MCU_resolvemodulesymbol(void *p_module, const char *p_name)
+{
+    return dlsym(p_module, p_name);
+}

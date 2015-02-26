@@ -303,9 +303,10 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
         FILE *t_stream;
         MCAutoStringRefAsUTF8String t_utf8_path;
         /* UNCHECKED */ t_utf8_path . Lock(p_path);
-		t_stream = fopen(*t_utf8_path, s_modes[t_mode]);
-		if (t_stream == NULL)
-			return NULL;
+        t_stream = fopen(*t_utf8_path, s_modes[t_mode]);
+        
+        // SN-2015-01-28: [[ Bug 14383 ]] Removed code: we want to check that we
+        //  are not updating before returning because of a NULL FILE*
         
 		if (t_stream == NULL && p_mode == kMCOpenFileModeUpdate)
 			t_stream = fopen(*t_utf8_path, "w+");
