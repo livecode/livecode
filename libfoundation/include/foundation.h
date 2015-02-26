@@ -600,7 +600,21 @@ typedef const struct __CFData *CFDataRef;
 //  POINTER TYPES
 //
 
-#define nil 0
+#if defined(__cplusplus) /* C++ */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil uintptr_t(0)
+#	endif
+
+#else /* C */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil ((void*)0)
+#	endif
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
