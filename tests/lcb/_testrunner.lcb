@@ -51,8 +51,12 @@ handler Shell(in pCommand as string) as number
 		return tExitStatus
 	end if
 
-	-- Basically the WEXITSTATUS macro from C...
-	return (tExitStatus - (tExitStatus mod 256)) / 256
+	if the operating system is "linux" then
+		-- Basically the WEXITSTATUS macro from C...
+		return tExitStatus shifted right by 8 bitwise
+	else
+		return tExitStatus
+	end if
 end handler
 
 ----------------------------------------------------------------

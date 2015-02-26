@@ -27,7 +27,11 @@ foreign handler __fork() as ProcessID binds to "fork"
 foreign handler __waitpid(in Pid as ProcessID, out Status as int, in Options as int) as int binds to "waitpid"
 
 handler WEXITSTATUS(in pStatus as int) as int
-	return (pStatus - (pStatus mod 256)) / 256
+	if the operating system is "linux" then
+		return pStatus shifted right by 8 bitwise
+	else
+		return pStatus
+	end if
 end handler
 
 -- The idea is that this will run on platforms with fork() but skip
