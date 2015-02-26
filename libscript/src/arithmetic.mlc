@@ -38,7 +38,7 @@ public foreign handler MCArithmeticEvalNumberTimesNumber(in Left as number, in R
 public foreign handler MCArithmeticEvalNumberOverNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalNumberDivNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalNumberModNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
--- public foreign handler MCArithmeticEvalNumberWrapNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberWrapNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalNumberIsEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalNumberIsNotEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
@@ -63,7 +63,7 @@ public foreign handler MCArithmeticEvalRealTimesReal(in Left as real, in Right a
 public foreign handler MCArithmeticEvalRealOverReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealDivReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealModReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
--- public foreign handler MCArithmeticEvalRealWrapReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealWrapReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalRealIsEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealIsNotEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
@@ -86,7 +86,7 @@ public foreign handler MCArithmeticEvalIntegerMinusInteger(in Left as integer, i
 public foreign handler MCArithmeticEvalIntegerTimesInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerDivInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerModInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
--- public foreign handler MCArithmeticEvalIntegerWrapInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalIntegerWrapInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalIntegerIsEqualToInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerIsNotEqualToInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
@@ -420,13 +420,13 @@ successive values of x wrap y cycle through the sequence 1, 2, ..., y.
 
 */
 
-/* syntax WrapOperator is neutral binary operator with precedence 3
+syntax WrapOperator is neutral binary operator with precedence 3
     <Left: Expression> "wrap" <Right: Expression>
 begin
     MCArithmeticEvalIntegerWrapInteger(Left, Right, output)
     MCArithmeticEvalRealWrapReal(Left, Right, output)
     MCArithmeticEvalNumberWrapNumber(Left, Right, output)
-end syntax */
+end syntax
 
 --
 

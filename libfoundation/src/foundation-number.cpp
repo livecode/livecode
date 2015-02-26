@@ -80,13 +80,13 @@ static inline void __MCNumberAssignSigned(__MCNumber& self, MCNumberSignedIntege
 {
     // We don't set the flags here because this method is used immediately after
     // __MCNumberCreate so we are already signed rep.
-    self . real = p_value;
+    self . integer = p_value;
 }
 
 static inline void __MCNumberAssignUnsigned(__MCNumber& self, MCNumberUnsignedInteger p_value)
 {
     self . flags |= kMCNumberFlagUnsignedIntegerRep;
-    self . real = p_value;
+    self . unsigned_integer = p_value;
 }
 
 bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
@@ -373,23 +373,28 @@ bool MCNumberTryToParse(MCStringRef p_string, MCNumberRef& r_number)
     
 #if kMCNumberSignedIntegerMax <= INT32_MAX
     char *t_end;
+    
     MCNumberSignedInteger t_integer;
+    errno = 0;
     t_integer = strtol((const char *)t_chars, &t_end, 10);
     if (errno != ERANGE && *t_end == '\0')
         return MCNumberCreateWithInteger(t_integer, r_number);
     
     MCNumberUnsignedInteger t_uinteger;
+    errno = 0;
     t_uinteger = strtoul((const char *)t_chars, &t_end, 10);
     if (errno != ERANGE && *t_end == '\0')
         return MCNumberCreateWithUnsignedInteger(t_uinteger, r_number);
 #elif kMCNumberSignedIntegerMax <= INT64_MAX
     char *t_end;
     MCNumberSignedInteger t_integer;
+    errno = 0;
     t_integer = strtoll((const char *)t_chars, &t_end, 10);
     if (errno != ERANGE && *t_end == '\0')
         return MCNumberCreateWithInteger(t_integer, r_number);
     
     MCNumberUnsignedInteger t_uinteger;
+    errno = 0;
     t_uinteger = strtoull((const char *)t_chars, &t_end, 10);
     if (errno != ERANGE && *t_end == '\0')
         return MCNumberCreateWithUnsignedInteger(t_uinteger, r_number);
@@ -490,21 +495,21 @@ bool __MCNumberIsEqualTo(__MCNumber *self, __MCNumber *p_other_self)
 
 #if kMCNumberSignedIntegerMax <= INT32_MAX
 
-#define __checked_signed_add(x, y, z) __builtin_sadd_overflow((x), (y), (z))
-#define __checked_signed_subtract(x, y, z) __builtin_ssub_overflow((x), (y), (z))
-#define __checked_signed_multiply(x, y, z) __builtin_smul_overflow((x), (y), (z))
-#define __checked_unsigned_add(x, y, z) __builtin_uadd_overflow((x), (y), (z))
-#define __checked_unsigned_subtract(x, y, z) __builtin_usub_overflow((x), (y), (z))
-#define __checked_unsigned_multiply(x, y, z) __builtin_umul_overflow((x), (y), (z))
+#define __checked_signed_add(x, y, z) (!__builtin_sadd_overflow((x), (y), (z)))
+#define __checked_signed_subtract(x, y, z) (!__builtin_ssub_overflow((x), (y), (z)))
+#define __checked_signed_multiply(x, y, z) (!__builtin_smul_overflow((x), (y), (z)))
+#define __checked_unsigned_add(x, y, z) (!__builtin_uadd_overflow((x), (y), (z)))
+#define __checked_unsigned_subtract(x, y, z) (!__builtin_usub_overflow((x), (y), (z)))
+#define __checked_unsigned_multiply(x, y, z) (!__builtin_umul_overflow((x), (y), (z)))
 
 #elif kMCNumberSignedIntegerMax <= INT64_MAX
 
-#define __checked_signed_add(x, y, z) __builtin_saddll_overflow((x), (y), (z))
-#define __checked_signed_subtract(x, y, z) __builtin_ssubll_overflow((x), (y), (z))
-#define __checked_signed_multiply(x, y, z) __builtin_smulll_overflow((x), (y), (z))
-#define __checked_unsigned_add(x, y, z) __builtin_uaddll_overflow((x), (y), (z))
-#define __checked_unsigned_subtract(x, y, z) __builtin_usubll_overflow((x), (y), (z))
-#define __checked_unsigned_multiply(x, y, z) __builtin_umulll_overflow((x), (y), (z))
+#define __checked_signed_add(x, y, z) (!__builtin_saddll_overflow((x), (y), (z)))
+#define __checked_signed_subtract(x, y, z) (!__builtin_ssubll_overflow((x), (y), (z)))
+#define __checked_signed_multiply(x, y, z) (!__builtin_smulll_overflow((x), (y), (z)))
+#define __checked_unsigned_add(x, y, z) (!__builtin_uaddll_overflow((x), (y), (z)))
+#define __checked_unsigned_subtract(x, y, z) (!__builtin_usubll_overflow((x), (y), (z)))
+#define __checked_unsigned_multiply(x, y, z) (!__builtin_umulll_overflow((x), (y), (z)))
 
 #else
 
@@ -615,9 +620,15 @@ static inline double __flooring_real_mod(double x, double y)
 // is undefined if either x or y are negative.
 template<typename T> inline T __flooring_integral_mod(T x, T y)
 {
-    if (x < y || y < 0)
-        return x - (x / y) * y;
-    return x % y;
+    if (x >= 0 && y >= 0)
+    {
+        return x % y;
+    }
+    else if (y >= 0)
+    {
+        return MCAbs(x) % y;
+    }
+    return -(x % MCAbs(y));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -913,6 +924,7 @@ static inline bool unsigned_add(MCNumberUnsignedInteger x, MCNumberUnsignedInteg
     MCNumberUnsignedInteger uz;
     if (LIKELY(__checked_unsigned_add(x, y, &uz)))
     {
+        // Adding two unsigneds will always produce an unsigned.
         __MCNumberAssignUnsigned(r_z, uz);
         return true;
     }
@@ -925,7 +937,8 @@ static inline bool signed_add(MCNumberSignedInteger x, MCNumberSignedInteger y, 
     MCNumberSignedInteger sz;
     if (LIKELY(__checked_signed_add(x, y, &sz)))
     {
-        __MCNumberAssignUnsigned(r_z, sz);
+        // Adding two signeds will always produce a signed if no overflow.
+        __MCNumberAssignSigned(r_z, sz);
         return true;
     }
     
@@ -950,7 +963,12 @@ static inline bool unsigned_subtract(MCNumberUnsignedInteger x, MCNumberUnsigned
     MCNumberUnsignedInteger uz;
     if (LIKELY(__checked_unsigned_subtract(x, y, &uz)))
     {
-        __MCNumberAssignUnsigned(r_z, uz);
+        // If unsigned subtraction succeeds we need to check if it should be a signed
+        // rep.
+        if (LIKELY(uz <= kMCNumberSignedIntegerMax))
+            __MCNumberAssignSigned(r_z, (MCNumberSignedInteger)uz);
+        else
+            __MCNumberAssignUnsigned(r_z, uz);
         return true;
     }
     
@@ -1082,12 +1100,12 @@ static inline bool signed_div(MCNumberSignedInteger x, MCNumberSignedInteger y, 
 
 static inline bool unsigned_div_signed(MCNumberUnsignedInteger x, MCNumberSignedInteger y, __MCNumber& r_z)
 {
-    // If y > -1 then result is only representable if x == INTEGER_MAX.
+    // If y == -1 then result is only representable if x == -INTEGER_MIN.
     if (y == -1)
     {
-        if (LIKELY(x == INTEGER_MAX))
+        if (LIKELY(x == __negate_negative_signed(kMCNumberSignedIntegerMin)))
         {
-            __MCNumberAssignSigned(r_z, -INTEGER_MAX);
+            __MCNumberAssignSigned(r_z, __negate_negative_signed(kMCNumberSignedIntegerMin));
             return true;
         }
         
@@ -1099,7 +1117,7 @@ static inline bool unsigned_div_signed(MCNumberUnsignedInteger x, MCNumberSigned
         return any_unsigned_div(x, (MCNumberUnsignedInteger)y, r_z);
     
     // Otherwise we have negation of unsigned division.
-    __MCNumberAssignSigned(r_z, -(MCNumberSignedInteger)(x / (MCNumberUnsignedInteger)y));
+    __MCNumberAssignSigned(r_z, -(MCNumberSignedInteger)(x / __negate_negative_signed(y)));
     
     return true;
 }
@@ -1115,6 +1133,9 @@ static inline bool double_mod(double x, double y, __MCNumber& r_z)
 // This method computes the correct result regardless of the range of x and y.
 static inline bool any_unsigned_mod(MCNumberUnsignedInteger x, MCNumberUnsignedInteger y, __MCNumber& r_z)
 {
+    if (y == 0)
+        return false;
+    
     MCNumberUnsignedInteger z;
     z = x % y;
     if (LIKELY(z <= kMCNumberSignedIntegerMax))
@@ -1127,22 +1148,62 @@ static inline bool any_unsigned_mod(MCNumberUnsignedInteger x, MCNumberUnsignedI
 
 static inline bool signed_mod(MCNumberSignedInteger x, MCNumberSignedInteger y, __MCNumber& r_z)
 {
-    __MCNumberAssignSigned(r_z, __flooring_integral_mod(x, y));
+    if (y == 0)
+        return false;
+    
+    MCNumberUnsignedInteger ux, uy, uz;
+    if (LIKELY(x >= 0))
+        ux = (MCNumberUnsignedInteger)x;
+    else
+        ux = __negate_negative_signed(x);
+    
+    if (LIKELY(y >= 0))
+        uy = (MCNumberUnsignedInteger)y;
+    else
+        uy = __negate_negative_signed(y);
+    
+    uz = ux % uy;
+    
+    if (LIKELY(y >= 0))
+    {
+        if (LIKELY(uz <= kMCNumberSignedIntegerMax))
+            __MCNumberAssignSigned(r_z, uz);
+        else
+            __MCNumberAssignUnsigned(r_z, uz);
+        
+        return true;
+    }
+    
+    __MCNumberAssignSigned(r_z, -uz);
+    
     return true;
 }
 
 static inline bool unsigned_mod_signed(MCNumberUnsignedInteger x, MCNumberSignedInteger y, __MCNumber& r_z)
 {
-    if (LIKELY(y >= 0))
-        return any_unsigned_mod(x, (MCNumberUnsignedInteger)y, r_z);
+    if (y == 0)
+        return false;
     
-    MCNumberUnsignedInteger z;
-    z = x % (-y);
-    if (LIKELY(z <= kMCNumberSignedIntegerMax))
-        __MCNumberAssignSigned(r_z, z);
+    MCNumberUnsignedInteger uy, uz;
+    if (LIKELY(y >= 0))
+        uy = (MCNumberUnsignedInteger)y;
     else
-        __MCNumberAssignUnsigned(r_z, z);
- 
+        uy = __negate_negative_signed(y);
+    
+    uz = x % uy;
+    
+    if (LIKELY(y >= 0))
+    {
+        if (LIKELY(uz <= kMCNumberSignedIntegerMax))
+            __MCNumberAssignSigned(r_z, uz);
+        else
+            __MCNumberAssignUnsigned(r_z, uz);
+        
+        return true;
+    }
+    
+    __MCNumberAssignSigned(r_z, -uz);
+    
     return true;
 }
 
@@ -1197,7 +1258,7 @@ template<bool (*OPERATOR)(double, double, __MCNumber&)> static ensure_forceinlin
 
 static ensure_forceinline bool __MCNumberTryToIntegerAdd(__MCNumberBinaryOpType t, MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
-    switch(__MCNumberComputeBinaryType(x, y))
+    switch(t)
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
             if (LIKELY(signed_add(x -> integer, y -> integer, *r_z)))
@@ -1227,7 +1288,7 @@ static ensure_forceinline bool __MCNumberTryToIntegerAdd(__MCNumberBinaryOpType 
             }
             else
             {
-                if (LIKELY(unsigned_subtract(x -> unsigned_integer, __negate_negative_signed(x -> integer), *r_z)))
+                if (LIKELY(unsigned_subtract(x -> unsigned_integer, __negate_negative_signed(y -> integer), *r_z)))
                     return true;
             }
             
@@ -1321,6 +1382,12 @@ static ensure_forceinline bool  __MCNumberTryToIntegerMultiply(__MCNumberBinaryO
                 if (LIKELY(unsigned_multiply(x -> integer, y -> unsigned_integer, *r_z)))
                     return true;
             }
+            else if (x -> integer == -1 &&
+                     y -> unsigned_integer <= __negate_negative_signed(kMCNumberSignedIntegerMin))
+            {
+                __MCNumberAssignSigned(*r_z, __negate_negative_signed(y -> unsigned_integer));
+                return true;
+            }
             
             return false;
             
@@ -1329,6 +1396,12 @@ static ensure_forceinline bool  __MCNumberTryToIntegerMultiply(__MCNumberBinaryO
             {
                 if (LIKELY(unsigned_multiply(x -> unsigned_integer, y -> integer, *r_z)))
                     return true;
+            }
+            else if (y -> integer == -1 &&
+                     x -> unsigned_integer <= __negate_negative_signed(kMCNumberSignedIntegerMin))
+            {
+                __MCNumberAssignSigned(*r_z, __negate_negative_signed(y -> unsigned_integer));
+                return true;
             }
             
             return false;
@@ -1349,7 +1422,7 @@ static ensure_forceinline bool  __MCNumberTryToIntegerMultiply(__MCNumberBinaryO
 
 static ensure_forceinline bool __MCNumberTryToIntegerDiv(__MCNumberBinaryOpType t, MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
-    switch(__MCNumberComputeBinaryType(x, y))
+    switch(t)
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
             if (LIKELY(signed_div(x -> integer, y -> integer, *r_z)))
@@ -1358,9 +1431,18 @@ static ensure_forceinline bool __MCNumberTryToIntegerDiv(__MCNumberBinaryOpType 
             return false;
             
         case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
-            // Unsigneds > signeds so result is always zero which is what
-            // r_z is on input.
-            return false;
+            // If the signed int is greater than min int then result is 0.
+            if (LIKELY(x -> integer > kMCNumberSignedIntegerMin))
+                return true;
+            
+            // If the unsigned is not representable as a signed, then the result
+            // is zero.
+            if (LIKELY(y -> unsigned_integer > __negate_negative_signed(kMCNumberSignedIntegerMin)))
+                return true;
+            
+            // We must have x == -y, so the result is -1.
+            __MCNumberAssignSigned(*r_z, -1);
+            return true;
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
             if (LIKELY(unsigned_div_signed(x -> unsigned_integer, y -> integer, *r_z)))
@@ -1384,7 +1466,7 @@ static ensure_forceinline bool __MCNumberTryToIntegerDiv(__MCNumberBinaryOpType 
 
 static ensure_forceinline bool __MCNumberTryToIntegerMod(__MCNumberBinaryOpType t, MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
-    switch(__MCNumberComputeBinaryType(x, y))
+    switch(t)
     {
         case __kMCNumberBinaryOpTypeSignedIntegerBySignedInteger:
             if (LIKELY(signed_mod(x -> integer, y -> integer, *r_z)))
@@ -1394,8 +1476,18 @@ static ensure_forceinline bool __MCNumberTryToIntegerMod(__MCNumberBinaryOpType 
             return false;
             
         case __kMCNumberBinaryOpTypeSignedIntegerByUnsignedInteger:
-            // Unsigneds > signeds so result is always zero which is what
-            // r_z is on input.
+            // If the unsigned value is greater than -INT_MIN then the result is abx(x)
+            // If the signed value is greater than INT_MIN then the result is abs(x)
+            if (LIKELY(y -> unsigned_integer > __negate_negative_signed(kMCNumberSignedIntegerMin) ||
+                       x -> integer > kMCNumberSignedIntegerMin))
+            {
+                __MCNumberAssignSigned(*r_z, x -> integer >= 0 ? x -> integer : -x -> integer);
+                return true;
+            }
+            
+            // Otherwise, the result must be 1.
+            __MCNumberAssignSigned(*r_z, 1);
+            
             return true;
             
         case __kMCNumberBinaryOpTypeUnsignedIntegerBySignedInteger:
@@ -1926,7 +2018,22 @@ bool MCNumberIntegerDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 
 bool MCNumberIntegerMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z)
 {
-    return __MCNumberIntegerOp<__MCNumberTryToIntegerMod>(x, y, r_z);
+    // Create a raw number this will be initialize to 0 signed int.
+    MCNumberRef z;
+    if (!__MCNumberCreate(z))
+        return false;
+    
+    // Attempt the operation.
+    if (LIKELY(__MCNumberTryToIntegerMod(__MCNumberComputeBinaryType(x, y), x, y, z)))
+        return r_z = z, true;
+    
+    // Failure so clean up.
+    MCValueRelease(z);
+    
+    if (MCNumberFetchAsInteger(y) == 0)
+        return __MCNumberThrowDivisionByZeroError();
+    
+    return __MCNumberThrowOverflowError();
 }
 
 bool MCNumberIntegerIsEqualTo(MCNumberRef x, MCNumberRef y)
