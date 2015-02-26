@@ -526,17 +526,3 @@ const char* MCCefPlatformGetResourcesDirPath()
 #include <stdio.h>
 #include <cstring>
 
-void *MCU_loadmodule(const char *p_source)
-{
-    return LoadLibraryA(p_source);
-}
-
-void MCU_unloadmodule(void *p_module)
-{
-    
-}
-
-void *MCU_resolvemodulesymbol(void *p_module, const char *p_name)
-{
-    return GetProcAddress((HMODULE)p_module, p_name);
-}
