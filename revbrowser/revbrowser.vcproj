@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\cefshared_w32.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\osxbrowser.cpp"
 				>
 				<FileConfiguration
