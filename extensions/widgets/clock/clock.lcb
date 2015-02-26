@@ -16,10 +16,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-Module: com.livecode.extensions.livecode.clock
-
-Type: widget
-
 Description: This widget consists of an analogue clock. 
 This widget has two properties that can be set: day and timeZone.
 */
@@ -31,7 +27,7 @@ widget com.livecode.extensions.livecode.clock
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "Clock"
 metadata author is "Georgia Hutchings"
-metadata version is "1.0.2"
+metadata version is "1.0.3"
 --
 
 -- dependency declarations
@@ -49,16 +45,15 @@ property timeZone		get mTimeZone		set setTimeZone
 private variable mIsDay			as boolean
 private variable mTimeZone		as number
 private variable mCurrentTime 	as list
-
-private variable mColorWhite	as Color
-private variable mColorBlack 	as Color
-private variable mColorRed		as Color
-private variable mFontSize		as number
+private variable mFontSize 		as real
 --
 
 -- constants
 constant kStartDay is 6
 constant kEndDay is 20
+constant kWhite is [1,1,1]
+constant kBlack is [0,0,0]
+constant kRed is [1,0,0]
 --
 
 ----------
@@ -87,12 +82,7 @@ public handler OnCreate()
 	put false into mIsDay
 	put 0 into mTimeZone
 	put getTimeComponents() into mCurrentTime
-	
-	put color [1.0, 1.0, 1.0] into mColorWhite
-	put color [0.0, 0.0, 0.0] into mColorBlack
-	put color [1.0, 0.0, 0.0] into mColorRed
 	put 12 into mFontSize
-	
 	schedule timer in computeNextTimer() seconds
 end handler
 ----------
@@ -232,17 +222,17 @@ private handler getPaint(in pObject as string) as Paint
 		if mIsDay is true then
 			return solid paint with color [224/255, 224/255, 224/255, 0.25]
 		else 
-			return solid paint with mColorBlack
+			return solid paint with color kBlack
 		end if
 		
 	else if pObject is "second hand" or pObject is "inner nub" then
-		return solid paint with mColorRed
+		return solid paint with color kRed
 		
 	else
 		if mIsDay is true then
-			return solid paint with mColorBlack
+			return solid paint with color kBlack
 		else 
-			return solid paint with mColorWhite
+			return solid paint with color kWhite
 		end if
 		
 	end if

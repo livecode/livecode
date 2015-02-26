@@ -15,24 +15,18 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-
 /* 
-Module: com.livecode.extensions.livecode.button
-
-Type: widget
-
-Description: This widget is a push button that dispatches mouse events to its script object.
+This widget is a push button that dispatches mouse events to its script object.
 This widget has three properties that can be set: theme; buttonStyle and label.
 */
  
-
 -- declaring the extension as a widget, followed by the identifier
 widget com.livecode.extensions.livecode.button
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata author is "Benjamin Beaumont"
-metadata version is "1.0.1"
+metadata version is "1.0.2"
 metadata title is "Cross Platform Button"
 --
 
@@ -87,7 +81,7 @@ end handler
 ----------
 -- this handler is called when the widget is created
 public handler OnCreate() as undefined
-	put "macos-10.10" into mTheme
+	put "ios-8" into mTheme
 	put "Button" into mLabel
 	put "default" into mStyle
 	put "none" into mState

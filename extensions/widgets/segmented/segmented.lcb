@@ -16,12 +16,9 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-Module: com.livecode.extensions.livecode.segmentedControl
-
-Type: widget
-
-Description: This widget is a segmented control. 
-This widget has three properties that can be set: theme; labels and selectedSegment.
+Description: This widget is a segmented control.
+A segmented control is a horizontal control that is made up of multiple segments, where each segment functions as a discrete button.
+This widget has three properties that can be set: theme; labels; selectedSegment and fontSize.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -31,7 +28,7 @@ widget com.livecode.extensions.livecode.segmentedControl
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "Segmented Control"
 metadata author is "Georgia Hutchings"
-metadata version is "1.0.1"
+metadata version is "1.0.3"
 --
 
 -- dependency declarations
@@ -44,17 +41,19 @@ use com.livecode.engine
 property theme				get mTheme				set setTheme
 property labels				get getLabels			set setLabels
 property selectedSegment	get mSelected			set setSelectedSegment
+property fontSize			get mFontSize			set setFontSize
 --
 
 -- private instance variables
-private variable mTheme as string
-private variable mLabels as list
-private variable mSelected as integer
-private variable mNumSegments as integer
+private variable mTheme 		as string
+private variable mLabels 		as list
+private variable mSelected 		as integer
+private variable mFontSize 		as string
+private variable mNumSegments 	as integer
 
-private variable mWidth as real
-private variable mLeft as real
-private variable mRadius as real
+private variable mWidth 		as real
+private variable mLeft 			as real
+private variable mRadius 		as real
 --
 
 -- constants
@@ -71,6 +70,7 @@ public handler OnSave(out rProperties as array)
 	put mTheme into rProperties["theme"]
 	put mLabels into rProperties["labels"]
 	put mSelected into rProperties["selected"]
+	put mFontSize into rProperties["fontSize"]
 	
 	return rProperties
 end handler
@@ -82,6 +82,7 @@ public handler OnLoad(in pProperties as array)
 	put pProperties["theme"] into mTheme
 	put pProperties["labels"] into mLabels
 	put pProperties["selected"] into mSelected
+	put pProperties["fontSize"] into mFontSize
 end handler
 ----------
 
@@ -92,6 +93,7 @@ public handler OnCreate()
 	put "ios-8" into mTheme
 	put ["Title", "Title", "Title"] into mLabels
 	put 1 into mSelected
+	put the empty string into mFontSize
 	put the number of elements in mLabels into mNumSegments
 	
 	-- variables
@@ -174,7 +176,10 @@ public handler OnMouseUp()
 		end repeat
 	
 		redraw all
-		dispatch command "mouseUp" to my script object with [mSelected]
+		
+		variable tLabel as string
+		put element mSelected of mLabels into tLabel
+		dispatch command "mouseUp" to my script object with [tLabel]
 		
 	end if
 end handler
@@ -230,25 +235,37 @@ end handler
 ----------
 -- this handler returns a font
 private handler getFont() as Font
+	
 	if mTheme is "ios-8" then
 	
-		variable tSize as number
-		if mWidth/5 > kMaxFontSize then
-			put kMaxFontSize into tSize
-		else if mWidth/5 < kMinFontSize then
-			put kMinFontSize into tSize
-		else
-			put mWidth/5 into tSize
-		end if
+		if mFontSize is the empty string then
 		
-		if tSize > (my height)/1.5 then
-			put (my height)/1.5 into tSize
+			variable tSize as number
+			
+			if mWidth/5 > kMaxFontSize then
+				put kMaxFontSize into tSize
+			else if mWidth/5 < kMinFontSize then
+				put kMinFontSize into tSize
+			else
+				put mWidth/5 into tSize
+			end if
+		
+			if tSize > (my height)/1.5 then
+				put (my height)/1.5 into tSize
+			end if
+			
+		else
+			put (mFontSize parsed as number) into tSize
+			
 		end if
 		
 		return font "Helvetica Neue" at size tSize
+	
 	else 
 		return the font of this canvas
+		
 	end if
+	
 end handler
 ----------
 
@@ -309,6 +326,24 @@ Selects the segment of number pSelected.
 */
 public handler setSelectedSegment(in pSelected as integer) as undefined
 	put pSelected into mSelected
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the selected segment
+/*
+Summary: Sets the font size.
+
+Parameters:
+pFontSize: The font size.
+
+Description:
+Sets the fontSize property.
+Sets the size of the font of the labels.
+*/
+public handler setFontSize(in pFontSize as string) as undefined
+	put pFontSize into mFontSize
 	redraw all
 end handler
 ----------
