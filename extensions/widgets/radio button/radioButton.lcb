@@ -1,1 +1,360 @@
-/*Copyright (C) 2015 Runtime Revolution Ltd.This file is part of LiveCode.LiveCode is free software; you can redistribute it and/or modify it underthe terms of the GNU General Public License v3 as published by the FreeSoftware Foundation.LiveCode is distributed in the hope that it will be useful, but WITHOUT ANYWARRANTY; without even the implied warranty of MERCHANTABILITY orFITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Licensefor more details.You should have received a copy of the GNU General Public Licensealong with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */-- declaring extension as widget, followed by identifierwidget com.livecode.extensions.livecode.radioButton---- adding metadata to ensure extension displays correctly in livecodemetadata title is "Radio Button"metadata author is "Georgia Hutchings"metadata version is "1.0.2"----- dependancy declarationsuse com.livecode.canvasuse com.livecode.widget----- property declarationsproperty buttonChecked		get mButtonChecked			set setButtonCheckedproperty theme				get mTheme					set setThemeproperty label				get mLabelText				set setLabelText----- private instance variablesprivate variable mButtonChecked	as booleanprivate variable mTheme as stringprivate variable mLabelText as stringprivate variable mState as stringprivate variable mTransparent as Colorprivate variable mColorWhite as Colorprivate variable mColorBlack as Colorprivate variable mColorMacBlue as Colorprivate variable mColorWinGrey as Color--------------- called when the widget is createdpublic handler OnCreate()	put false into mButtonChecked	put "Radio" into mLabelText		put "unchecked" into mState		put color [1.0, 1.0, 1.0, 0.0] into mTransparent	put color [1.0, 1.0, 1.0, 1.0] into mColorWhite	put color [0.0, 0.0, 0.0] into mColorBlack	put color [51/255, 153/255, 1.0] into mColorMacBlue	put color [96/255, 96/255, 96/255] into mColorWinGrey		put "macos-10.0" into mThemeend handler--------------------	-- called whenever LiveCode needs to redraw the widgetpublic handler OnPaint()	-- draw the outer circle and fill with paint	variable tCirclePath as Path	put circle path centered at getCircleCenter() with radius 7.5 into tCirclePath	set the paint of this canvas to getOuterCirclePaint()	fill tCirclePath on this canvas	--		-- draw the circle border by stroking the circle	set the stroke width of this canvas to getOuterCircleStroke()	set the paint of this canvas to solid paint with getStrokeColor()	stroke tCirclePath on this canvas	--		-- make a circular path for the inner circle	variable tInnerCirclePath as Path	put circle path centered at getCircleCenter() with radius getInnerCircleRadius() into tInnerCirclePath	--		-- draw the inner circle by filling with paint	set the paint of this canvas to solid paint with getInnerCircleColor()	fill tInnerCirclePath on this canvas	--		-- creating the label 	variable tLabelRect as Rectangle	variable tLabelRectPath as Path		-- draw label rectangle then get the path of that rectangle	put rectangle path of getLabelRect() into tLabelRectPath		-- fill the label and make transparent	set the paint of this canvas to solid paint with mTransparent	fill tLabelRectPath on this canvas		set the font of this canvas to font getLabelFont() at size getLabelFontSize()		-- put text into label and fill the text	set the paint of this canvas to solid paint with getLabelFontColor()	fill text mLabelText at left of getLabelRect() on this canvas	--	end handler---------------------- called when the widget is pressedpublic handler OnMouseDown()	if mButtonChecked is true then		put "pressed and checked" into mState	end if	setButtonChecked(not(mButtonChecked))	redraw allend handler---------------------- called when the widget is no longer pressedpublic handler OnMouseUp()	if mState is "pressed and checked" then		put "checked" into mState	end if	redraw all	dispatch "buttonClicked" to my script objectend handler---------------------- this handler sets mButtonChecked to true/false if it is checked/uncheckedprivate handler setButtonChecked(in pChecked as boolean) as undefined	-- once a radio button is checked, can only be unchecked if another radio button is checked	if pChecked is true then 		put true into mButtonChecked	end ifend handler---------------------- this handler sets the theme of the widgetpublic handler setTheme(in pTheme as string) as undefined	put pTheme into mTheme	redraw allend handler---------------------- this handler sets the label of the buttonpublic handler setLabelText(in pLabel as string) as undefined	put pLabel into mLabelText	redraw allend handler---------------------- this handler returns the center point of the inner and outer circlesprivate handler getCircleCenter() as Point	return point [the left of my bounds + 10, the height of my bounds/2]end handler--------------------	-- this handler returns the paint of the outer circleprivate handler getOuterCirclePaint() as Paint		variable tStop1		variable tStop2		variable tStop3		variable tColor1 as Color		variable tColor2 as Color		variable tColor3 as Color		variable tTop as real		variable tBottom as real		variable tHeight as real		variable tPaint as Paint				put the top of my bounds into tTop		put the bottom of my bounds into tBottom		put the height of my bounds into tHeight			if mButtonChecked is true then		if mTheme is "macos-yosemite" then			return solid paint with mColorMacBlue		else if mTheme is "macos-10.0" then			if mState is "pressed and checked" then				put color [0/255, 102/255, 255/255, 0.3] into tColor1				put color [0/255, 102/255, 255/255, 0.75] into tColor2				put color [0/255, 102/255, 255/255, 0.3] into tColor3			else				put color [102/255, 178/255, 1.0, 0.05] into tColor1				put color [102/255, 178/255, 1.0, 0.85] into tColor2				put color [102/255, 178/255, 1.0, 0.05] into tColor3			end if						-- create a new gradient paint			put gradient stop at 0.25 with tColor1 into tStop1			put gradient stop at 0.5 with tColor2 into tStop2			put gradient stop at 0.75 with tColor3 into tStop3									put linear gradient with ramp [tStop1, tStop2, tStop3] into tPaint			scale tPaint by [my height, my width]			rotate tPaint by 90						return tPaint					else if mTheme is "windows-8" then			return solid paint with mColorWhite		end if			else if mTheme is "macos-10.0" then			-- create a new gradient paint		put gradient stop at 0.25 with mColorWhite into tStop1		put gradient stop at 0.5 with color [224/255, 224/255, 224/255, 0.25] into tStop2		put gradient stop at 0.75 with color [192/255, 192/255, 192/255, 0.75] into tStop3					put linear gradient with ramp [tStop1, tStop2, tStop3] into tPaint		scale tPaint by [my height, my width]		rotate tPaint by 90					return tPaint	else		return solid paint with mColorWhite	end ifend handler---------------------- this handler returns the color of the inner circleprivate handler getInnerCircleColor() as Color	if mButtonChecked is true then		if mTheme is "windows-8" then			return mColorBlack		else if mTheme is "macos-yosemite" then			return mColorWhite		else if mTheme is "macos-10.0" then			return mColorBlack		end if	else		return mTransparent	end ifend handler---------------------- this handler returns the radius of the inner circleprivate handler getInnerCircleRadius() as real	if mButtonChecked is true then		if mTheme is "windows-8" then			return 3.5		else if mTheme contains "macos" then			return 2.5		end if	else		return 1.0	end ifend handler---------------------- this handler returns the stroke thickness for the outer circleprivate handler getOuterCircleStroke() as real	if mTheme contains "macos" then			return 1.0	else if mTheme is "windows-8" then		return 1.5	end ifend handler---------------------- this handler returns the color of the stroke of the outer circleprivate handler getStrokeColor() as Color	if mTheme is "macos-yosemite" then		if mButtonChecked is true then		 	return mColorMacBlue		 else		 	return color [160/255, 160/255, 160/255]		end if	else if mTheme is "macos-10.0" then		if mButtonChecked is true then			return color [96/255, 96/255, 96/255]		else			return color [160/255, 160/255, 160/255]		end if	else if mTheme is "windows-8" then		return mColorWinGrey	end ifend handler---------------------- this handler returns a rectangle in which the label will be filledprivate handler getLabelRect() as Rectangle	variable tLabelRect as Rectangle	put my bounds into tLabelRect	add 22 to the x of tLabelRect	return tLabelRectend handler---------------------- this handler returns the font of the text in the button labelprivate handler getLabelFont() as string	if mTheme is "macos-yosemite" then		return "Helvetica Neue"	else if mTheme is "macos-10.0" then		return "Lucida Grande"	else if mTheme is "windows-8" then		return "Segoe WP"	end ifend handler---------------------- this handler returns the color of the text in the button labelprivate handler getLabelFontColor() as Color	if mTheme is "macos-yosemite" then		return color [32/255, 32/255, 32/255]	else if mTheme is "macos-10.0" then		return mColorBlack	else if mTheme is "windows-8" then		return mColorWinGrey	end ifend handler---------------------- this handler returns a font size for the text in the button labelprivate handler getLabelFontSize() as int	if mTheme is "macos-10.0" then		return 11	else 		return 12	end ifend handler----------end widget
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+Module: com.livecode.extensions.livecode.radioButton
+
+Type: widget
+
+Description: This widget is a radio button. 
+This widget has three properties that can be set: buttonChecked; theme and label.
+*/
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.extensions.livecode.radioButton
+--
+
+-- adding metadata to ensure extension displays correctly in livecode
+metadata title is "Radio Button"
+metadata author is "Georgia Hutchings"
+metadata version is "1.0.2"
+---
+
+-- dependancy declarations
+use com.livecode.canvas
+use com.livecode.widget
+---
+
+-- property declarations
+property checked			get mIsChecked				set setChecked
+property theme				get mTheme					set setTheme
+property label				get mLabelText				set setLabelText
+---
+
+-- private instance variables
+private variable mIsChecked	as boolean
+private variable mTheme as string
+private variable mLabelText as string
+
+private variable mState as string
+--
+
+-- constants
+constant kTransparent is [1,1,10]
+constant kWhite is [1,1,1]
+constant kBlack is [0,0,0]
+--
+
+----------
+-- this handler is called when the widget is saved
+public handler OnSave(out rProperties as array)
+	put the empty array into rProperties
+	
+	put mIsChecked into rProperties["checked"]
+	put mTheme into rProperties["theme"]
+	put mLabelText into rProperties["label"]
+	
+	return rProperties
+end handler
+----------
+
+----------
+-- this handler is called when the widget is loaded
+public handler OnLoad(in pProperties as array)
+	put pProperties["theme"] into mTheme
+	put pProperties["checked"] into mIsChecked
+	put pProperties["label"] into mLabelText
+end handler
+----------
+
+----------
+-- called when the widget is created
+public handler OnCreate()
+	-- properties
+	put false into mIsChecked
+	put "macos-10.0" into mTheme
+	put "Radio" into mLabelText
+	
+	-- variables
+	put "unchecked" into mState
+end handler
+----------
+
+----------	
+-- called whenever LiveCode needs to redraw the widget
+public handler OnPaint()
+
+	-- draw the outer circle and fill with paint
+	set the paint of this canvas to getPaint("outer circle")
+	fill getPath("outer circle") on this canvas
+	--
+	
+	-- draw the circle border by stroking the circle
+	set the stroke width of this canvas to getStroke()
+	set the paint of this canvas to getPaint("outer circle stroke")
+	stroke getPath("outer circle") on this canvas
+	--
+	
+	-- draw the inner circle by filling with paint
+	set the paint of this canvas to getPaint("inner circle")
+	fill getPath("inner circle") on this canvas
+	--
+	
+	-- draw the label
+	set the font of this canvas to getFont()
+	set the paint of this canvas to getPaint("label")
+	fill text mLabelText at left of getLabelRect() on this canvas
+	--
+	
+end handler
+----------
+
+----------
+-- called when the widget is pressed
+public handler OnMouseDown()
+	if mIsChecked is true then
+		put "pressed and checked" into mState
+	end if
+	setChecked(not(mIsChecked))
+	redraw all
+end handler
+----------
+
+----------
+-- called when the widget is no longer pressed
+public handler OnMouseUp()
+	if mState is "pressed and checked" then
+		put "checked" into mState
+	end if
+	redraw all
+	dispatch "buttonChecked" to my script object with [mLabelText]
+end handler
+----------
+
+----------
+-- this handler returns a path
+private handler getPath(in pObject as string) as Path
+	if pObject is "outer circle" then
+		return circle path centered at point [10, my height/2] with radius 7.5
+		
+	else if pObject is "inner circle" then
+		variable tRadius as real 
+		
+		if mIsChecked is true then
+			if mTheme is "windows-8" then
+				put 3.5 into tRadius
+			else if mTheme contains "macos" then
+				put 2.5 into tRadius
+			end if
+			
+		else
+			put 1.0 into tRadius
+		end if
+		
+		return circle path centered at point [10, my height/2] with radius tRadius
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a stroke width
+private handler getStroke() as number
+	if mTheme contains "macos" then
+		return 1.0
+	else if mTheme is "windows-8" then
+		return 1.5
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a paint
+private handler getPaint(in pObject as string) as Paint
+	if pObject is "outer circle" then
+		variable tStop1
+		variable tStop2
+		variable tStop3
+		variable tColor1 as Color
+		variable tColor2 as Color
+		variable tColor3 as Color
+		variable tPaint as Paint
+		
+		if mIsChecked is true then
+			if mTheme is "macos-yosemite" then
+				return solid paint with color [51/255, 153/255, 1.0]
+
+			else if mTheme is "macos-10.0" then
+				if mState is "pressed and checked" then
+					put color [0/255, 102/255, 255/255, 0.3] into tColor1
+					put color [0/255, 102/255, 255/255, 0.75] into tColor2
+					put color [0/255, 102/255, 255/255, 0.3] into tColor3
+				else
+					put color [102/255, 178/255, 1.0, 0.05] into tColor1
+					put color [102/255, 178/255, 1.0, 0.85] into tColor2
+					put color [102/255, 178/255, 1.0, 0.05] into tColor3
+				end if
+			
+				-- create a new gradient paint
+				put gradient stop at 0.25 with tColor1 into tStop1
+				put gradient stop at 0.5 with tColor2 into tStop2
+				put gradient stop at 0.75 with tColor3 into tStop3
+						
+				put linear gradient with ramp [tStop1, tStop2, tStop3] into tPaint
+				scale tPaint by [my height, my width]
+				rotate tPaint by 90
+			
+				return tPaint
+			
+			else if mTheme is "windows-8" then
+				return solid paint with color kWhite
+			end if
+		
+		else if mTheme is "macos-10.0" then
+	
+			-- create a new gradient paint
+			put gradient stop at 0.25 with color kWhite into tStop1
+			put gradient stop at 0.5 with color [224/255, 224/255, 224/255, 0.25] into tStop2
+			put gradient stop at 0.75 with color [192/255, 192/255, 192/255, 0.75] into tStop3
+				
+			put linear gradient with ramp [tStop1, tStop2, tStop3] into tPaint
+			scale tPaint by [my height, my width]
+			rotate tPaint by 90
+			
+			return tPaint
+		else
+			return solid paint with color kWhite
+		end if
+	
+	else if pObject is "outer circle stroke" then
+	
+		if mTheme is "macos-yosemite" then
+			if mIsChecked is true then
+		 		return solid paint with color [51/255, 153/255, 1]
+			else
+		 		return solid paint with color [160/255, 160/255, 160/255]
+			end if
+		else if mTheme is "macos-10.0" then
+			if mIsChecked is true then
+				return solid paint with color [96/255, 96/255, 96/255]
+			else
+				return solid paint with color [160/255, 160/255, 160/255]
+			end if
+		else if mTheme is "windows-8" then
+			return solid paint with color [96/255, 96/255, 96/255]
+		end if
+		
+	else if pObject is "inner circle" then
+		if mIsChecked is true then
+			if mTheme is "macos-yosemite" then
+				return solid paint with color kWhite
+			else
+				return solid paint with color kBlack
+			end if
+		else
+			return solid paint with color kTransparent
+		end if
+		
+	else if pObject is "label" then
+		if mTheme is "macos-yosemite" then
+			return solid paint with color [32/255, 32/255, 32/255]
+		else if mTheme is "macos-10.0" then
+			return solid paint with color kBlack
+		else if mTheme is "windows-8" then
+			return solid paint with color [96/255, 96/255, 96/255]
+		end if
+		
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a font
+private handler getFont() as Font
+	if mTheme is "macos-yosemite" then
+		return font "Helvetica Neue" at size 12
+	else if mTheme is "macos-10.0" then
+		return font "Lucida Grande" at size 11
+	else if mTheme is "windows-8" then
+		return font "Segoe WP" at size 12
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a rectangle in which the label will be filled
+private handler getLabelRect() as Rectangle
+	variable tLabelRect as Rectangle
+	put my bounds into tLabelRect
+	add 22 to the x of tLabelRect
+	return tLabelRect
+end handler
+----------
+
+----------
+-- this handler sets mButtonChecked to true/false if it is checked/unchecked
+/*
+Summary: Sets whether the radio button is checked or not.
+
+Parameters:
+pIsChecked: The state of the radio button.
+
+Description:
+Sets the checked property of the progress bar to either "macos-10", "macos-yosemite" or "windows-8".
+*/
+private handler setChecked(in pIsChecked as boolean) as undefined
+	-- once a radio button is checked, can only be unchecked if another radio button is checked
+	if pIsChecked is true then 
+		put true into mIsChecked
+	end if
+end handler
+----------
+
+----------
+-- this handler sets the theme of the widget
+/*
+Summary: Sets the theme of the radio button.
+
+Parameters:
+pTheme: The name of the theme.
+
+Description:
+Sets the theme property of the radio button to either "macos-10", "macos-yosemite" or "windows-8".
+*/
+public handler setTheme(in pTheme as string) as undefined
+	put pTheme into mTheme
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the label of the button
+/*
+Summary: Sets the label of the radio button.
+
+Parameters:
+pLabel: The label of the radio button.
+
+Description:
+Sets the label property of the radio button to either "macos-10", "macos-yosemite" or "windows-8".
+*/
+public handler setLabelText(in pLabel as string) as undefined
+	put pLabel into mLabelText
+	redraw all
+end handler
+----------
+
+end widget
