@@ -1111,6 +1111,7 @@ extern "C" {
 
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t i);
+MC_DLLEXPORT hash_t MCHashUnsignedInteger(uinteger_t i);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.
@@ -1334,6 +1335,8 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCAnyTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCNullTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCBooleanTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCNumberTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCRealTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCIntegerTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCStringTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCNameTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDataTypeInfo;
@@ -1613,24 +1616,257 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 //  NUMBER DEFINITIONS
 //
 
-MC_DLLEXPORT bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
-MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
+// An MCNumber value can hold a 64-bit IEEE binary floating point value, a 32/64-bit
+// unsigned integer value, or a 32/64-bit signed integer value. (The size of the
+// integer representation depends on the settings of the 'MCNumber*Integer' typedefs
+// and constants).
+//
+// An MCNumber is considered an integer if it was created with a signed or
+// unsigned integer.
+//
+// An MCNumber is considered a real if it was created with a 64-bit IEEE binary
+// floating point value.
+//
+// In particular, MCNumber *does not* check for a fractional part in a double to
+// determine whether it is considered real or not. The reason for this is to enable
+// a distinction between values such as 1.0 and 1 and thus leaves any automagic up
+// to higher-level concerns.
+//
+// There are the following sets of functions for dealing with numbers:
+//   - auto-promoting MCNumber arithmetic operations
+//   - checked auto-promoting MCNumberFinite arithmetic operations
+//   - integer-only MCNumberInteger arithmetic operations
+//   - real-only MCNumberReal arithmetic operations
+//   - checked real-only MCNUmberFiniteReal arithmetic operations
+//
+// The auto-promoting operations take mixtures of integers and reals and will
+// promote up from integer to real in mixed cases:
+//
+//   if x and y are integers then
+//     if x op y is representable as an integer then
+//       result will be integer
+//     else
+//       result will be a real
+//     end if
+//   else
+//     result will be real
+//   end if
+//
+// The checked (or finite) operations will check the resulting outputs for non-
+// finite results (i.e. infinity / NaN) and raise an appropriate error in that
+// case.
+//
+// The integer-only operations expect integers to be passed in (it is an unchecked
+// runtime error to not do this).
+//
+// The real-only operations expect reals to be passed in (it is an unchecked
+// runtime error to not do this).
+//
+// There is no general 'compare' method for numbers - instead there are distinct
+// methods for each comparison to be performed. The reason for this is to capture
+// the subtle semantics of non-finite numbers which are possible to represent
+// with doubles without having to check for them before performing an operation
+// (i.e. so the hopefully hardware-based implementation can do it for us).
+//
+// All the (non-integral) MCNumber operations will silently allow doubles which
+// are not finite and normal - the results of each operation in this case being
+// defined by the IEEE standard. It is up to the caller to check the validity
+// of the numbers which result and take any appropriate action. In particular,
+// the non-integral division operations will *not* throw an exception as the
+// result will come out as an infinity (and so is 'representable' in some way).
+//
+// The internal representation of integers and unsigned integers depend on the
+// following definitions.
+    
+typedef int32_t MCNumberSignedInteger;
+typedef uint32_t MCNumberUnsignedInteger;
+    
+#define kMCNumberSignedIntegerMin INT32_MIN
+#define kMCNumberSignedIntegerMax INT32_MAX
+#define kMCNumberUnsignedIntegerMax UINT32_MAX
+    
+#define kMCNumberSignedIntegerFormat "%d"
+#define kMCNumberUnsignedIntegerFormat "%u"
+    
+// These methods create an MCNumber with the given value. Integers will remain as
+// integers, reals as reals.
+//
+MC_DLLEXPORT bool MCNumberCreateWithInteger(MCNumberSignedInteger value, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(MCNumberUnsignedInteger value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
 
+// This method returns true if the number is stored as either a signed or unsigned integer.
 MC_DLLEXPORT bool MCNumberIsInteger(MCNumberRef number);
+// This method returns true if the number is stored as a floating-point value.
 MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
+    
+// This method returns true if the number is a 'finite' number. Integers are always
+// finite, reals are finite if they are not infinity nor NaN.
+MC_DLLEXPORT bool MCNumberIsFinite(MCNumberRef number);
 
-MC_DLLEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
-MC_DLLEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
+// This method returns true if the number can be fetched as an integer_t. (i.e.
+// it is internally an integer, or a unsigned integer in the range 0...INT_MAX).
+MC_DLLEXPORT bool MCNumberIsFetchableAsInteger(MCNumberRef number);
+    
+// This method returns true if the number can be fetched as a uinteger_t. (i.e.
+// it is internally an unsigned integer, or a signed integer in the range 0...INT_MAX).
+MC_DLLEXPORT bool MCNumberIsFetchableAsUnsignedInteger(MCNumberRef number);
+    
+// This method will do its best to fetch the contents as an integer_t - out of range
+// values will clamp.
+MC_DLLEXPORT MCNumberSignedInteger MCNumberFetchAsInteger(MCNumberRef number);
+    
+// This method will do its best to fetch the contents as a uinteger_t - out of range
+// values will clamp.
+MC_DLLEXPORT MCNumberUnsignedInteger MCNumberFetchAsUnsignedInteger(MCNumberRef number);
+    
+// This method will do its best to fetch the contents as a double - at the moment
+// this is always possible without losing information.
 MC_DLLEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
+
+// Auto-promoting methods.
+//
+// These methods will perform an integer operation if possible, otherwise both
+// arguments will be promoted to double and the operation performed there.
+//
+// Double operations are 'unchecked' in the sense that they will silently allow
+// invalid numbers (as defined by MCNumberIsValid) to flow through them and be
+// produced as results.
+    
+MC_DLLEXPORT bool MCNumberNegate(MCNumberRef x, MCNumberRef& r_y);
+
+MC_DLLEXPORT bool MCNumberAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+
+MC_DLLEXPORT bool MCNumberIsEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIsNotEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIsLessThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIsGreaterThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+
+// These methods are 'finite' in the sense that they check the result IsFinite.
+// If it is not, then they will throw the appropriate error (overflow or divide
+// by zero).
+    
+MC_DLLEXPORT bool MCNumberFiniteNegate(MCNumberRef x, MCNumberRef& r_y);
+
+MC_DLLEXPORT bool MCNumberFiniteAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+
+// Real methods
+//
+// These methods require numberrefs for which IsReal() returns true (it is an
+// unchecked programmatic error to not conform to this).
+//
+// If the result of an operation cannot fit into an integer, then an appropriate
+// error will be raised.
+    
+MC_DLLEXPORT bool MCNumberRealNegate(MCNumberRef x, MCNumberRef& r_y);
+
+MC_DLLEXPORT bool MCNumberRealAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberRealMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+
+MC_DLLEXPORT bool MCNumberRealIsEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsNotEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsLessThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsGreaterThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberRealIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+    
+// These methods are 'finite' in the sense that they check the result IsFinite.
+// If it is not, then they will throw the appropriate error (overflow or divide
+// by zero).
+    
+MC_DLLEXPORT bool MCNumberFiniteRealAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberFiniteRealMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+
+// Integral methods.
+//
+// These methods require numberrefs for which IsInteger() returns true (it is
+// a unchecked programmatic error to not conform to this).
+//
+// If the result of an operation cannot fit into an integer, then an appropriate
+// error will be raised.
+    
+MC_DLLEXPORT bool MCNumberIntegerNegate(MCNumberRef x, MCNumberRef& r_y);
+
+MC_DLLEXPORT bool MCNumberIntegerAdd(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerSubtract(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerMultiply(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerDivide(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerDiv(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+MC_DLLEXPORT bool MCNumberIntegerMod(MCNumberRef x, MCNumberRef y, MCNumberRef& r_z);
+
+MC_DLLEXPORT bool MCNumberIntegerIsEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsNotEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsLessThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsLessThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsGreaterThan(MCNumberRef x, MCNumberRef y);
+MC_DLLEXPORT bool MCNumberIntegerIsGreaterThanOrEqualTo(MCNumberRef x, MCNumberRef y);
+
+// Format the given number as a string. If the number is represented as an integer
+// it will have no fractional part. If the number is represented as a real then
+// if will be formatted with standard %lf formatting.
+MC_DLLEXPORT bool MCNumberFormat(MCNumberRef p_number, MCStringRef& r_string);
+
+// Attempt to parse the string as a number. If parsing is not possible (due
+// to it being a malformed numeric string), then r_number will be nil (i.e undefined).
+MC_DLLEXPORT bool MCNumberTryToParse(MCStringRef p_string, MCNumberRef& r_number);
+    
+// Attempt to parse the string as an integer. If parsing is not possible (due
+// to it being a malformed numeric string), then r_number will be nil (i.e undefined).
+MC_DLLEXPORT bool MCNumberTryToParseInteger(MCStringRef p_string, MCNumberRef& r_number);
+    
+// Attempt to parse the string as a real. If parsing is not possible (due
+// to it being a malformed numeric string), then r_number will be nil (i.e undefined).
+MC_DLLEXPORT bool MCNumberTryToParseReal(MCStringRef p_string, MCNumberRef& r_number);
+
+// Type conversion
+
+// This method converts the given number to a real (double rep).
+MC_DLLEXPORT bool MCNumberAsReal(MCNumberRef p_number, MCNumberRef& r_real);
+    
+// This method takes the floor of the given number and returns that as an integer.
+// If the value is too big then an overflow error is thrown.
+MC_DLLEXPORT bool MCNumberAsInteger(MCNumberRef p_number, MCNumberRef& r_integer);
+    
+// Parsing methods.
 
 MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
 MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
 
-MC_DLLEXPORT extern MCNumberRef kMCZero;
-MC_DLLEXPORT extern MCNumberRef kMCOne;
-MC_DLLEXPORT extern MCNumberRef kMCMinusOne;
+// Useful constant values.
+    
+MC_DLLEXPORT extern MCNumberRef kMCIntegerZero;
+MC_DLLEXPORT extern MCNumberRef kMCIntegerOne;
+MC_DLLEXPORT extern MCNumberRef kMCIntegerMinusOne;
+    
+MC_DLLEXPORT extern MCNumberRef kMCRealZero;
+MC_DLLEXPORT extern MCNumberRef kMCRealOne;
+MC_DLLEXPORT extern MCNumberRef kMCRealMinusOne;
+    
+// Error types
+    
+MC_DLLEXPORT extern MCTypeInfoRef kMCNumberDivisionByZeroErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNumberOverflowErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2534,6 +2770,7 @@ MC_DLLEXPORT void *MCHandlerGetContext(MCHandlerRef handler);
 MC_DLLEXPORT const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef handler);
     
 MC_DLLEXPORT bool MCHandlerInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+MC_DLLEXPORT MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

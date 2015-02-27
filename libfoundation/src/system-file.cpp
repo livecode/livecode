@@ -49,7 +49,7 @@ __MCSFileThrowIOErrorWithErrno (MCStringRef p_native_path,
 	else
 	{
 		t_description = MCSTR("Unknown error");
-		t_error_code = kMCZero;
+		t_error_code = kMCIntegerZero;
 	}
 
 	MCAutoStringRef t_path;

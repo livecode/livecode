@@ -71,6 +71,10 @@ struct __MCTypeInfo: public __MCValue
     {
         struct
         {
+            MCTypeInfoRef base;
+        } typecode;
+        struct
+        {
             MCNameRef name;
             MCTypeInfoRef typeinfo;
         } named, alias;
@@ -124,14 +128,19 @@ struct __MCBoolean: public __MCValue
 
 enum
 {
-	kMCNumberFlagIsReal = 1 << 0,
+    kMCNumberFlagRepMask = 0x03,
+    kMCNumberFlagRepBitCount = 2,
+    kMCNumberFlagSignedIntegerRep = 0,
+    kMCNumberFlagUnsignedIntegerRep = 1,
+    kMCNumberFlagDoubleRep = 2,
 };
 
 struct __MCNumber: public __MCValue
 {
 	union
 	{
-		integer_t integer;
+		MCNumberSignedInteger integer;
+        MCNumberUnsignedInteger unsigned_integer;
 		real64_t real;
 	};
 };

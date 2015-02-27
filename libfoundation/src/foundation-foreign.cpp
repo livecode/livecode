@@ -409,7 +409,7 @@ bool __MCForeignValueInitialize(void)
     
     d . size = sizeof(integer_t);
     d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNumberTypeInfo;
+    d . bridgetype = kMCIntegerTypeInfo;
     p = kMCForeignPrimitiveTypeSInt32;
     d . layout = &p;
     d . layout_size = 1;
@@ -428,7 +428,7 @@ bool __MCForeignValueInitialize(void)
     
     d . size = sizeof(uinteger_t);
     d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNumberTypeInfo;
+    d . bridgetype = kMCIntegerTypeInfo;
     p = kMCForeignPrimitiveTypeUInt32;
     d . layout = &p;
     d . layout_size = 1;
@@ -447,7 +447,7 @@ bool __MCForeignValueInitialize(void)
     
     d . size = sizeof(float);
     d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNumberTypeInfo;
+    d . bridgetype = kMCRealTypeInfo;
     p = kMCForeignPrimitiveTypeFloat32;
     d . layout = &p;
     d . layout_size = 1;
@@ -466,7 +466,7 @@ bool __MCForeignValueInitialize(void)
     
     d . size = sizeof(double);
     d . basetype = kMCNullTypeInfo;
-    d . bridgetype = kMCNumberTypeInfo;
+    d . bridgetype = kMCRealTypeInfo;
     p = kMCForeignPrimitiveTypeFloat64;
     d . layout = &p;
     d . layout_size = 1;

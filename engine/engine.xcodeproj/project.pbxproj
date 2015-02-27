@@ -1698,6 +1698,7 @@
 		4D17F4351042877000C49A3B /* externalv0.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = externalv0.cpp; path = src/externalv0.cpp; sourceTree = "<group>"; };
 		4D17F4361042877000C49A3B /* externalv1.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = externalv1.cpp; path = src/externalv1.cpp; sourceTree = "<group>"; };
 		4D1B954810A2CA8B0039C679 /* eventqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eventqueue.h; path = src/eventqueue.h; sourceTree = "<group>"; };
+		4D1DB9A61A9F1E0B000F4C90 /* lcb */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lcb; path = ../tests/lcb; sourceTree = "<group>"; };
 		4D1F9C2E171C64320091C6CB /* libsecurity-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libsecurity-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D1F9D17171C67B00091C6CB /* libkernel-server.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libkernel-server.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D2192330C6386C90027A96D /* printer.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = printer.h; path = src/printer.h; sourceTree = "<group>"; };
@@ -2956,6 +2957,7 @@
 		4D6C26DA1647D765007C96B7 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				4D1DB9A61A9F1E0B000F4C90 /* lcb */,
 				4D6C26DB1647D781007C96B7 /* files */,
 				4D6C26F11647D781007C96B7 /* strings */,
 				4D6C270E1647D781007C96B7 /* pasteboard */,
@@ -4956,7 +4958,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "LC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-compile\"\n\nTEST_DIR=\"${SOLUTION_DIR}/_tests/lcb\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\n\ncd \"${SRCROOT}/../tests/lcb\"\n\n# Prepare test working dir, removing old logs and LCM files\nmkdir -p \"${TEST_DIR}\"\nrm -rf \"${TEST_DIR}/*\"\n\nlcb2lcm() {\n    echo \"$1\" | sed -e 's:\\.lcb$:.lcm:' | sed -e \"s:^.:${TEST_DIR}:\"\n}\nalias escape_space=\"sed -e's: :\\\\ :g'\"\n\n# Create any needed subdirectories in the working dir\nfind . -name '*.lcb' | escape_space | xargs -n1 dirname | uniq | sed -e \"s:^\\.:${TEST_DIR}:\" | xargs -n1 mkdir -p\n\n# Compile .lcb files to .lcm\ncompile () {\n    while read; do\n        lcb=\"${REPLY}\"\n        lcm=$(lcb2lcm \"${lcb}\")\n        \"${LC_COMPILE}\" \\\n            --modulepath \"${TEST_DIR}\" \\\n            --modulepath \"${MODULE_DIR}\" \\\n            --output \"${lcm}\" \"${lcb}\" || exit $?\n    done\n}\nfind . -name '*.lcb' | compile || exit $?";
+			shellScript = "LC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-compile\"\n\nTEST_DIR=\"${SOLUTION_DIR}/_tests/lcb\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\n\ncd \"${SRCROOT}/../tests/lcb\"\n\n# Prepare test working dir, removing old logs and LCM files\nmkdir -p \"${TEST_DIR}\"\nrm -rf \"${TEST_DIR}/*\"\n\nlcb2lcm() {\n    echo \"$1\" | sed -e 's:\\.lcb$:.lcm:' | sed -e \"s:^.:${TEST_DIR}:\"\n}\nalias escape_space=\"sed -e's: :\\\\ :g'\"\n\n# Create any needed subdirectories in the working dir\nfind . -name '*.lcb' | escape_space | xargs -n1 dirname | uniq | sed -e \"s:^\\.:${TEST_DIR}:\" | xargs -n1 mkdir -p\n\n# Compile .lcb files to .lcm\ncompile () {\n    while read; do\n        lcb=\"${REPLY}\"\n        lcm=$(lcb2lcm \"${lcb}\")\n        \"${LC_COMPILE}\" \\\n            --modulepath \"${TEST_DIR}\" \\\n            --modulepath \"${MODULE_DIR}\" \\\n            --output \"${lcm}\" \"`pwd`/${lcb}\" || exit $?\n    done\n}\nfind . -name '*.lcb' | compile || exit $?";
 		};
 		C7C542301A8B695A003E8DB3 /* LCB Unit Tests [Run] */ = {
 			isa = PBXShellScriptBuildPhase;

@@ -69,7 +69,9 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
         case kMCValueTypeCodeBoolean:
             return kMCBooleanTypeInfo;
         case kMCValueTypeCodeNumber:
-            return kMCNumberTypeInfo;
+            if (MCNumberIsReal((MCNumberRef)p_value))
+                return kMCRealTypeInfo;
+            return kMCIntegerTypeInfo;
         case kMCValueTypeCodeName:
             return kMCNameTypeInfo;
         case kMCValueTypeCodeString:

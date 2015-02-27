@@ -251,15 +251,15 @@ static bool MCPickleReadValueRef(MCStreamRef stream, MCValueRef& r_value)
             break;
             
         case kMCEncodedValueKindIntegerZero:
-            r_value = MCValueRetain(kMCZero);
+            r_value = MCValueRetain(kMCIntegerZero);
             break;
             
         case kMCEncodedValueKindIntegerOne:
-            r_value = MCValueRetain(kMCOne);
+            r_value = MCValueRetain(kMCIntegerOne);
             break;
             
         case kMCEncodedValueKindIntegerMinusOne:
-            r_value = MCValueRetain(kMCMinusOne);
+            r_value = MCValueRetain(kMCIntegerMinusOne);
             break;
             
         case kMCEncodedValueKindIntegerPositive:
@@ -283,15 +283,15 @@ static bool MCPickleReadValueRef(MCStreamRef stream, MCValueRef& r_value)
             break;
             
         case kMCEncodedValueKindRealZero:
-            r_value = MCValueRetain(kMCZero); // TODO - this needs to be real zero
+            r_value = MCValueRetain(kMCRealZero);
             break;
             
         case kMCEncodedValueKindRealOne:
-            r_value = MCValueRetain(kMCOne); // TODO - this needs to be real one
+            r_value = MCValueRetain(kMCRealOne);
             break;
             
         case kMCEncodedValueKindRealMinusOne:
-            r_value = MCValueRetain(kMCMinusOne); // TODO - this needs to be real minus one
+            r_value = MCValueRetain(kMCRealMinusOne);
             break;
             
         case kMCEncodedValueKindReal:

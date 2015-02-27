@@ -1188,6 +1188,17 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_arity)
         return MCScriptThrowWrongNumberOfArgumentsForInvokeError(p_instance -> module, p_handler, p_arity);
     
+    // In order to do a foreign call, libffi expects an array of pointers to the
+    // values to pass to the foreign function.
+    //
+    // For 'in' parameters, the value we pass a pointer to is either:
+    //   - for valuerefs: a void *
+    //   - for foreigns: a <Type> * where <Type> is determined by the foreign
+    //
+    // For 'out' parameters, the value we pass a pointer to is a pointer to
+    // the storage we'd need for an in parameter.
+    //
+    
     MCHandlerTypeFieldMode t_modes[16];
     MCResolvedTypeInfo t_types[16];
     void *t_args[16];
@@ -1217,10 +1228,12 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
         else
             t_descriptor = nil;
         
+        // First we allocate storage for the value. For 'in' arguments we can borrow
+        // the value. However, for 'inout' arguments we need to copy the value.
         void *t_argument;
         if (t_modes[t_arg_index] != kMCHandlerTypeFieldModeOut)
         {
-            // Not an out mode, so we have an input value.
+            // We only have an initial value of in and inout variables.
             MCValueRef t_value;
             if (!MCScriptCheckedFetchFromRegisterInFrame(x_frame, p_arguments[t_arg_index], t_value))
                 return false;
@@ -1243,21 +1256,19 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 
                 if (MCTypeInfoIsForeign(t_source . type))
                 {
-                    // The source type is foreign - they must be contents compatible
-                    // due to conformance.
+                    // The source type is foreign so we already have the right
+                    // contents ptr available. Thus we only copy if in inout mode.
                     if (t_modes[t_arg_index] == kMCHandlerTypeFieldModeIn)
                     {
-                        // For in mode, we can use the contentsptr direct.
-                        
+                        // Fetch the contents direct.
                         t_argument = MCForeignValueGetContentsPtr(t_value);
-                    
+                        
                         // Nothing to free.
                         t_arg_new[t_arg_index] = false;
                     }
                     else
                     {
-                        // For inout mode, we need to copy it.
-                        
+                        // Copy the contents.
                         if (!t_descriptor -> copy(MCForeignValueGetContentsPtr(t_value), t_storage + t_storage_index))
                             break;
                         
@@ -1270,16 +1281,16 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 }
                 else
                 {
-                    // The source type is not foreign - it must be the target type's
-                    // bridge type or null. Thus we must export the value.
-                    if (t_value == kMCNull)
+                    // The source type is not foreign so it will either be the bridge
+                    // type for the value, or null.
+                    if (t_value != kMCNull)
                     {
-                        if (!t_descriptor -> initialize(t_storage + t_storage_index))
+                        if (!t_descriptor -> doexport(t_value, false, t_storage + t_storage_index))
                             break;
                     }
                     else
                     {
-                        if (!t_descriptor -> doexport(t_value, false, t_storage + t_storage_index))
+                        if (!t_descriptor -> initialize(t_storage + t_storage_index))
                             break;
                     }
                     
@@ -1292,7 +1303,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             }
             else
             {
-                // The target type is not foreign - t_argument will be a valueref ptr.
+                MCValueRef t_actual_value;
                 
                 if (MCTypeInfoIsForeign(t_source . type))
                 {
@@ -1301,7 +1312,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     const MCForeignTypeDescriptor *t_src_descriptor;
                     t_src_descriptor = MCForeignTypeInfoGetDescriptor(t_source . type);
                     
-                    if (!t_src_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_argument))
+                    if (!t_src_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_actual_value))
                         break;
                     
                     // Need to release the argument.
@@ -1317,10 +1328,10 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                         // For in mode, we just use it direct - but change to nil if
                         // kMCNull.
                         if (t_value != kMCNull)
-                            t_argument = t_value;
+                            t_actual_value = t_value;
                         else
-                            t_argument = nil;
-                    
+                            t_actual_value = nil;
+                        
                         // Nothing to free.
                         t_arg_new[t_arg_index] = false;
                     }
@@ -1328,14 +1339,21 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     {
                         // For inout mode, we must copy.
                         if (t_value != kMCNull)
-                            t_argument = MCValueRetain(t_value);
+                            t_actual_value = MCValueRetain(t_value);
                         else
-                            t_argument = nil;
+                            t_actual_value = nil;
                         
                         // Need to release the argument
                         t_arg_new[t_arg_index] = true;
                     }
                 }
+
+                // The argument must be a pointer to the valueref we are
+                // passing.
+                t_argument = t_storage + t_storage_index;
+                t_storage_index += sizeof(MCValueRef);
+                
+                *(MCValueRef *)t_argument = t_actual_value;
             }
         }
         else
@@ -1364,62 +1382,41 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             }
             else
             {
-                // Target is not foreign, so we initialize to nil.
-                t_argument = nil;
+                // Target is not foreign, so it must be a valueref.
+                t_argument = t_storage + t_storage_index;
+                t_storage_index += sizeof(MCValueRef);
                 
-                // Nothing to free.
+                // Out valueref paramaeters start off as undefined (nil).
+                *(MCValueRef *)t_argument = nil;
+                
+                t_arg_new[t_arg_index] = false;
             }
         }
         
         // We now have the argument in storage, so process according to mode.
         if (t_modes[t_arg_index] == kMCHandlerTypeFieldModeIn)
         {
-            
             // In mode types are the map of the foreign type, or pointer if a
             // valueref.
+            t_args[t_arg_index] = t_argument;
             if (t_descriptor != nil)
-            {
-                // In mode arguments are the value themselves.
-                t_args[t_arg_index] = t_argument;
                 t_arg_types[t_arg_index] = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_types[t_arg_index] . type);
-            }
             else
-            {
-                // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
-                *(void **)t_args[t_arg_index] = t_argument;
                 t_arg_types[t_arg_index] = &ffi_type_pointer;
-            }
         }
         else
         {
-            // Out mode arguments are the contents for foreign values but
-            // marked 'pointer' type. However, for valuerefs we must make storage
-            // to put the valueref in.
+            // Out mode arguments are a pointer to the value so we must allocate
+            // some storage.
+            t_args[t_arg_index] = t_storage + t_storage_index;
+            t_storage_index += sizeof(void *);
+            
+            // The contents of the pointer sized storage is the pointer to the
+            // argument we generated above.
+            *(void **)t_args[t_arg_index] = t_argument;
+            
+            // The type of out/inout arguments is pointer.
             t_arg_types[t_arg_index] = &ffi_type_pointer;
-            
-            if (t_descriptor != nil)
-            {
-                // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
-                
-                *(void **)t_args[t_arg_index] = t_argument;
-            }
-            else
-            {
-                // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
-                
-                // The argument is the storage pointer.
-                *(void **)t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
-                
-                **(void ***)t_args[t_arg_index] = t_argument;
-            }
-            
         }
     }
     
@@ -1527,7 +1524,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                         if (!t_descriptor -> doimport(*(void**)t_args[i], true, t_out_values[i]))
                         {
                             // If that failed, finalize the contents.
-                            t_descriptor -> finalize(t_args[i]);
+                            t_descriptor -> finalize(*(void **)t_args[i]);
                             t_success = false;
                             t_out_arg_index = i;
                         }
@@ -1537,7 +1534,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                         if (!MCForeignValueCreateAndRelease(t_types[i] . named_type, *(void**)t_args[i], (MCForeignValueRef&)t_out_values[i]))
                         {
                             // If that failed, finalize the contents.
-                            t_descriptor -> finalize(t_args[i]);
+                            t_descriptor -> finalize(*(void **)t_args[i]);
                             t_success = false;
                             t_out_arg_index = i;
                         }
@@ -1549,7 +1546,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 // It's just a valueref - nice and easy to do something with.
                 
                 // If it is non-nil then just take the value; otherwise take kMCNull.
-                if (*(MCValueRef *)t_args[i] != nil)
+                if (**(MCValueRef **)t_args[i] != nil)
                     t_out_values[i] = **(MCValueRef **)t_args[i];
                 else
                     t_out_values[i] = MCValueRetain(kMCNull);
@@ -1562,13 +1559,13 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             if (t_descriptor != nil)
             {
                 if (t_arg_new[i])
-                    t_descriptor -> finalize(t_args[i]);
+                    t_descriptor -> finalize(*(void **)t_args[i]);
             }
             else
             {
                 if (t_arg_new[i] &&
-                    *(MCValueRef *)t_args[i] != nil)
-                    MCValueRelease(*(MCValueRef *)t_args[i]);
+                    **(MCValueRef **)t_args[i] != nil)
+                    MCValueRelease(**(MCValueRef **)t_args[i]);
             }
         }
     }
@@ -1702,7 +1699,9 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
         t_score = 0;
         for(uindex_t j = 0; j < p_arity - 1; j++)
         {
-            if (MCHandlerTypeInfoGetParameterMode(t_type, j) == kMCHandlerTypeFieldModeOut)
+            MCHandlerTypeFieldMode t_mode;
+            t_mode = MCHandlerTypeInfoGetParameterMode(t_type, j);
+            if (t_mode == kMCHandlerTypeFieldModeOut)
                 continue;
             
             MCValueRef t_value;
@@ -1741,7 +1740,7 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
             if (t_resolved_value_type . type == t_resolved_param_type . type)
                 continue;
             
-            // If the types don't conform, then this method is no good.
+            // If the types don't conform for in, then this method is no good.
             if (!MCResolvedTypeInfoConforms(t_resolved_value_type, t_resolved_param_type))
             {
                 t_score = UINDEX_MAX;
@@ -2491,24 +2490,32 @@ extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
     return true;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatUpToCondition(MCNumberRef p_counter, MCNumberRef p_limit)
 {
-    return p_counter <= p_limit;
+    return MCNumberIsLessThanOrEqualTo(p_counter, p_limit);
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
+extern "C" MCNumberRef MC_DLLEXPORT MCScriptBuiltinRepeatUpToIterate(MCNumberRef p_counter, MCNumberRef p_step)
 {
-    return p_counter + p_step;
+    MCNumberRef t_new_counter;
+    if (!MCNumberAdd(p_counter, p_step, t_new_counter))
+        return nil;
+    
+    return t_new_counter;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatDownToCondition(MCNumberRef p_counter, MCNumberRef p_limit)
 {
-    return p_counter >= p_limit;
+    return MCNumberIsLessThanOrEqualTo(p_counter, p_limit);
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
+extern "C" MCNumberRef MC_DLLEXPORT MCScriptBuiltinRepeatDownToIterate(MCNumberRef p_counter, MCNumberRef p_step)
 {
-    return p_counter + p_step;
+    MCNumberRef t_new_counter;
+    if (!MCNumberAdd(p_counter, p_step, t_new_counter))
+        return nil;
+    
+    return t_new_counter;
 }
 
 extern "C" void MC_DLLEXPORT MCScriptBuiltinThrow(MCStringRef p_reason)

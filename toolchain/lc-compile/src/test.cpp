@@ -27,7 +27,7 @@ extern "C" void MCCharFetchCharOf(void);
 void dummy(void)
 {
     MCStringExecPutStringAfter();
-    MCArithmeticExecAddIntegerToInteger();
+    //MCArithmeticExecAddIntegerToInteger();
     MCCharFetchCharOf();
 }
 
@@ -140,9 +140,20 @@ int main(int argc, char *argv[])
 	}
 	else if (MCErrorCatch (t_error))
 	{
-		/* UNCHECKED */ MCStringFormat (&t_message,
-		                                "Failed to execute test: %@\n",
-		                                MCErrorGetMessage (t_error));
+        if (MCErrorGetDepth(t_error) > 0)
+        {
+            /* UNCHECKED */ MCStringFormat (&t_message,
+                                            "Failed to execute test: %@\n  file: %@\n  line: %d\n",
+                                            MCErrorGetMessage (t_error),
+                                            MCErrorGetTargetAtLevel(t_error, 0),
+                                            MCErrorGetRowAtLevel(t_error, 0));
+        }
+        else
+        {
+            /* UNCHECKED */ MCStringFormat (&t_message,
+                                            "Failed to execute test: %@\n",
+                                            MCErrorGetMessage (t_error));
+        }
 	}
 	else
 	{

@@ -81,7 +81,7 @@ builtin_module_descriptor* g_builtin_modules[] =
 
 unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);
 
-extern void (*MCArithmeticExecAddIntegerToInteger)();
+extern void (*MCArithmeticExecAddNumberToNumber)();
 extern void (*MCArrayEvalKeysOf)();
 extern void (*MCBinaryEvalConcatenateBytes)();
 extern void (*MCBitwiseEvalBitwiseAnd)();
@@ -103,7 +103,7 @@ extern void (*MCTypeConvertExecSplitStringByDelimiter)();
 // Pull in a reference to all of the module-*.cpp objects too
 void *g_builtin_ptrs[] =
 {
-    &MCArithmeticExecAddIntegerToInteger,
+    &MCArithmeticExecAddNumberToNumber,
     &MCArrayEvalKeysOf,
     &MCBinaryEvalConcatenateBytes,
     &MCBitwiseEvalBitwiseAnd,

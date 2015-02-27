@@ -92,6 +92,7 @@
 		4D03912E1A27371100CB9E06 /* libiculx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiculx.a; path = ../prebuilt/lib/mac/libiculx.a; sourceTree = "<group>"; };
 		4D03912F1A27371100CB9E06 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
 		4D0391301A27371100CB9E06 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
+		4D29AF241A9F51B100A1EF04 /* foundation-number-test_table.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-number-test_table.cpp"; path = "src/foundation-number-test_table.cpp"; sourceTree = "<group>"; };
 		4D44E3761A13A4080073FFA2 /* foundation-handler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-handler.cpp"; path = "src/foundation-handler.cpp"; sourceTree = "<group>"; };
 		4D44E4BF1A238EF30073FFA2 /* foundation-foreign.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-foreign.cpp"; path = "src/foundation-foreign.cpp"; sourceTree = "<group>"; };
 		4D58375B18069F4B006DE6A2 /* foundation-objc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-objc.h"; path = "include/foundation-objc.h"; sourceTree = "<group>"; };
@@ -288,6 +289,7 @@
 				4D7FA7941594E09500EEF440 /* foundation-name.cpp */,
 				4D7FA7951594E09500EEF440 /* foundation-nativechars.cpp */,
 				4D7FA7961594E09500EEF440 /* foundation-number.cpp */,
+				4D29AF241A9F51B100A1EF04 /* foundation-number-test_table.cpp */,
 				7653455819F656640032E6E2 /* foundation-proper-list.cpp */,
 				C7264E531A669AF100BFD8E3 /* foundation-random.cpp */,
 				4D7FA7981594E09500EEF440 /* foundation-set.cpp */,

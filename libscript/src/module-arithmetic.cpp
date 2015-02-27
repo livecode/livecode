@@ -19,461 +19,141 @@
 
 #include <float.h>
 
-extern "C" MC_DLLEXPORT void MCArithmeticExecAddIntegerToInteger(integer_t p_number, integer_t& x_target)
-{
-    if (p_number > 0 && INTEGER_MAX - p_number < x_target)
-        // overflow
-        return;
-    else if (p_number < 0 && INTEGER_MIN - p_number > x_target)
-        // underflow
-        return;
-    else
-        x_target += p_number;
-}
+// We use 'checked' forms of all the (non-integral) number operations at the moment.
+// This includes not allowing non-finite numbers out of Parse.
+//
+// When we have an improved (zero-cost!) implementation of context variables
+// how to handle 'invalid' numbers will be controlled by such.
 
-extern "C" MC_DLLEXPORT void MCArithmeticExecAddRealToReal(double p_number, double& x_target)
-{
-    x_target += p_number;
-}
+#define MC_ARITHMETIC_BINARY_OP(OpName, TargettedName, ResultName) \
+    extern "C" MC_DLLEXPORT void MCArithmeticExec##TargettedName(MCNumberRef p_source, MCNumberRef& x_target) \
+    { \
+        MCNumberRef t_result; \
+        if (!MCNumber##OpName(x_target, p_source, t_result)) \
+            return; \
+        MCValueAssign(x_target, t_result); \
+    } \
+    extern "C" MC_DLLEXPORT void MCArithmeticEval##ResultName(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_result) \
+    { \
+        MCNumber##OpName(p_left, p_right, r_result); \
+    }
 
-extern "C" MC_DLLEXPORT void MCArithmeticExecAddNumberToNumber(MCNumberRef p_number, MCNumberRef& x_target)
-{    
-    double t_target, t_number;
-    t_target = MCNumberFetchAsReal(x_target);
-    t_number = MCNumberFetchAsReal(p_number);
-    
-    MCArithmeticExecAddRealToReal(t_number, t_target);
-    
-    MCAutoNumberRef t_new_number;
-    MCNumberCreateWithReal(t_target, &t_new_number);
-    
-    MCValueAssign(x_target, *t_new_number);
-}
+#define MC_ARITHMETIC_BINARY_OP_R(OpName, TargettedName, ResultName) \
+    extern "C" MC_DLLEXPORT void MCArithmeticExec##TargettedName(MCNumberRef& x_target, MCNumberRef p_source ) \
+    { \
+        MCNumberRef t_result; \
+        if (!MCNumber##OpName(x_target, p_source, t_result)) \
+            return; \
+        MCValueAssign(x_target, t_result); \
+    } \
+    extern "C" MC_DLLEXPORT void MCArithmeticEval##ResultName(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_result) \
+    { \
+        MCNumber##OpName(p_left, p_right, r_result); \
+    }
 
-extern "C" MC_DLLEXPORT void MCArithmeticExecSubtractIntegerFromInteger(integer_t p_number, integer_t& x_target)
-{
-    if (p_number > 0 && INTEGER_MIN + p_number > x_target)
-        // overflow
-        return;
-    else if (p_number < 0 && INTEGER_MAX + p_number < x_target)
-        // underflow
-        return;
-    else
-        x_target -= p_number;
-}
+#define MC_ARITHMETIC_EXPR_BINARY_OP(OpName, ResultName) \
+    extern "C" MC_DLLEXPORT void MCArithmeticEval##ResultName(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_result) \
+    { \
+        MCNumber##OpName(p_left, p_right, r_result); \
+    }
 
-extern "C" MC_DLLEXPORT void MCArithmeticExecSubtractRealFromReal(double p_number, double& x_target)
-{
-    x_target -= p_number;
-}
+#define MC_ARITHMETIC_COMPARE_OP(OpName) \
+    extern "C" MC_DLLEXPORT void MCArithmeticEvalNumber##OpName##Number(MCNumberRef p_left, MCNumberRef p_right, bool& r_output) \
+    { \
+        r_output = MCNumber##OpName(p_left, p_right); \
+    } \
+    extern "C" MC_DLLEXPORT void MCArithmeticEvalReal##OpName##Real(MCNumberRef p_left, MCNumberRef p_right, bool& r_output) \
+    { \
+        r_output = MCNumberReal##OpName(p_left, p_right); \
+    } \
+    extern "C" MC_DLLEXPORT void MCArithmeticEvalInteger##OpName##Integer(MCNumberRef p_left, MCNumberRef p_right, bool& r_output) \
+    { \
+        r_output = MCNumberInteger##OpName(p_left, p_right); \
+    }
 
-extern "C" MC_DLLEXPORT void MCArithmeticExecSubtractNumberFromNumber(MCNumberRef p_number, MCNumberRef& x_target)
-{
-    double t_target, t_number;
-    t_target = MCNumberFetchAsReal(x_target);
-    t_number = MCNumberFetchAsReal(p_number);
-    
-    MCArithmeticExecSubtractRealFromReal(t_number, t_target);
-    
-    MCAutoNumberRef t_new_number;
-    MCNumberCreateWithReal(t_target, &t_new_number);
-    
-    MCValueAssign(x_target, *t_new_number);
-}
+MC_ARITHMETIC_BINARY_OP(FiniteAdd, AddNumberToNumber, NumberPlusNumber)
+MC_ARITHMETIC_BINARY_OP(FiniteRealAdd, AddRealToReal, RealPlusReal)
+MC_ARITHMETIC_BINARY_OP(IntegerAdd, AddIntegerToInteger, IntegerPlusInteger)
+MC_ARITHMETIC_BINARY_OP(FiniteSubtract, SubtractNumberFromNumber, NumberMinusNumber)
+MC_ARITHMETIC_BINARY_OP(FiniteRealSubtract, SubtractRealFromReal, RealMinusReal)
+MC_ARITHMETIC_BINARY_OP(IntegerSubtract, SubtractIntegerFromInteger, IntegerMinusInteger)
+MC_ARITHMETIC_BINARY_OP_R(FiniteMultiply, MultiplyNumberByNumber, NumberTimesNumber)
+MC_ARITHMETIC_BINARY_OP_R(FiniteRealMultiply, MultiplyRealByReal, RealTimesReal)
+MC_ARITHMETIC_BINARY_OP_R(IntegerMultiply, MultiplyIntegerByInteger, IntegerTimesInteger)
+MC_ARITHMETIC_BINARY_OP_R(FiniteDivide, DivideNumberByNumber, NumberOverNumber)
+MC_ARITHMETIC_BINARY_OP_R(FiniteRealDivide, DivideRealByReal, RealOverReal)
 
-extern "C" MC_DLLEXPORT void MCArithmeticExecMultiplyIntegerByInteger(integer_t& x_target, integer_t p_number)
-{
-    if (p_number > 0 && INTEGER_MAX / p_number < x_target)
-        // overflow
-        return;
-    else if (p_number < 0 && INTEGER_MIN / p_number > x_target)
-        // underflow
-        return;
-    else
-        x_target *= p_number;
-}
+MC_ARITHMETIC_EXPR_BINARY_OP(FiniteDiv, NumberDivNumber)
+MC_ARITHMETIC_EXPR_BINARY_OP(FiniteRealDiv, RealDivReal)
+MC_ARITHMETIC_EXPR_BINARY_OP(IntegerDiv, IntegerDivInteger)
+MC_ARITHMETIC_EXPR_BINARY_OP(FiniteMod, NumberModNumber)
+MC_ARITHMETIC_EXPR_BINARY_OP(FiniteRealMod, RealModReal)
+MC_ARITHMETIC_EXPR_BINARY_OP(IntegerMod, IntegerModInteger)
 
-extern "C" MC_DLLEXPORT void MCArithmeticExecMultiplyRealByReal(double& x_target, double p_number)
-{
-    x_target *= p_number;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef& x_target, MCNumberRef p_number)
-{
-    double t_target, t_number;
-    t_target = MCNumberFetchAsReal(x_target);
-    t_number = MCNumberFetchAsReal(p_number);
-    
-    MCArithmeticExecMultiplyRealByReal(t_target, t_number);
-    
-    MCAutoNumberRef t_new_number;
-    MCNumberCreateWithReal(t_target, &t_new_number);
-    
-    MCValueAssign(x_target, *t_new_number);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticExecDivideIntegerByInteger(integer_t& x_target, integer_t p_number)
-{
-    x_target /= p_number;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticExecDivideRealByReal(double& x_target, double p_number)
-{
-    x_target /= p_number;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticExecDivideNumberByNumber(MCNumberRef& x_target, MCNumberRef p_number)
-{
-    double t_target, t_number;
-    t_target = MCNumberFetchAsReal(x_target);
-    t_number = MCNumberFetchAsReal(p_number);
-    
-    MCArithmeticExecDivideRealByReal(t_target, t_number);
-    
-    MCAutoNumberRef t_new_number;
-    MCNumberCreateWithReal(t_target, &t_new_number);
-    
-    MCValueAssign(x_target, *t_new_number);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerPlusInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
-{
-    MCArithmeticExecAddIntegerToInteger(p_left, p_right);
-    
-    //if no error
-    r_output = p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealPlusReal(double p_left, double p_right, double& r_output)
-{
-    MCArithmeticExecAddRealToReal(p_left, p_right);
-    
-    //if no error
-    r_output = p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberPlusNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
-{
-    MCNumberRef t_number;
-    MCNumberCreateWithReal(MCNumberFetchAsReal(p_right), t_number);
-    MCArithmeticExecAddNumberToNumber(p_left, t_number);
-    
-    //if no error
-    r_output = t_number;
-    return;
-    
-    //else
-    MCValueRelease(t_number);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerMinusInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
-{
-    MCArithmeticExecSubtractIntegerFromInteger(p_right, p_left);
-    
-    //if no error
-    r_output = p_left;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealMinusReal(double p_left, double p_right, double& r_output)
-{
-    MCArithmeticExecSubtractRealFromReal(p_right, p_left);
-    
-    //if no error
-    r_output = p_left;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberMinusNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
-{
-    MCNumberRef t_number;
-    MCNumberCreateWithReal(MCNumberFetchAsReal(p_left), t_number);
-    MCArithmeticExecSubtractNumberFromNumber(p_right, t_number);
-    
-    //if no error
-    r_output = t_number;
-    return;
-    
-    //else
-    MCValueRelease(t_number);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerTimesInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
-{
-    MCArithmeticExecMultiplyIntegerByInteger(p_left, p_right);
-    
-    //if no error
-    r_output = p_left;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealTimesReal(double p_left, double p_right, double& r_output)
-{
-    MCArithmeticExecMultiplyRealByReal(p_left, p_right);
-    
-    //if no error
-    r_output = p_left;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberTimesNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
-{
-    MCNumberRef t_number;
-    MCNumberCreateWithReal(MCNumberFetchAsReal(p_right), t_number);
-    MCArithmeticExecMultiplyNumberByNumber(t_number, p_left);
-    
-    //if no error
-    r_output = t_number;
-    return;
-    
-    //else
-    MCValueRelease(t_number);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerOverInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
-{
-    MCArithmeticExecDivideIntegerByInteger(p_left, p_right);
-    
-    //if no error
-    r_output = p_left;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealOverReal(double p_left, double p_right, double& r_output)
-{
-    MCArithmeticExecDivideRealByReal(p_left, p_right);
-    
-    //if no error
-    r_output = p_left;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberOverNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
-{
-    MCNumberRef t_number;
-    MCNumberCreateWithReal(MCNumberFetchAsReal(p_left), t_number);
-    MCArithmeticExecDivideNumberByNumber(t_number, p_right);
-    
-    //if no error
-    r_output = t_number;
-    return;
-    
-    //else
-    MCValueRelease(t_number);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerModInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
-{
-    if (p_right == 0)
-        return;
-    
-    r_output = fmod(double(p_left), double(p_right));
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealModReal(double p_left, double p_right, double& r_output)
-{
-    double n = 0.0;
-    n = p_left / p_right;
-    //if (n == MCinfinity)
-    
-    r_output = fmod(p_left, p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberModNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
-{
-    double t_left, t_right;
-    t_left = MCNumberFetchAsReal(p_left);
-    t_right = MCNumberFetchAsReal(p_right);
-    
-    double t_result;
-    MCArithmeticEvalRealModReal(t_left, t_right, t_result);
-    
-    MCNumberCreateWithReal(t_result, r_output);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerWrapInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
-{
-    if (p_right == 0)
-        return;
-    
-    integer_t t_y;
-	t_y = p_left > 0 ? p_right : -p_right;
-	if (p_left >= 0)
-		r_output = (fmod(double(p_left - 1), double(t_y)) + 1);
-	else
-		r_output = -(fmod(double(-p_left - 1), double(t_y)) + 1);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealWrapReal(double p_left, double p_right, double& r_output)
-{
-    double n = 0.0;
-    n = p_left / p_right;
-    //if (n == MCinfinity)
-    
-    double t_y;
-	t_y = p_left > 0 ? p_right : -p_right;
-	if (p_left >= 0)
-		r_output = (fmod(p_left - 1, t_y) + 1);
-	else
-		r_output = -(fmod(-p_left - 1, t_y) + 1);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberWrapNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
-{
-    double t_left, t_right;
-    t_left = MCNumberFetchAsReal(p_left);
-    t_right = MCNumberFetchAsReal(p_right);
-    
-    double t_result;
-    MCArithmeticEvalRealWrapReal(t_left, t_right, t_result);
-    
-    MCNumberCreateWithReal(t_result, r_output);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerIsGreaterThanInteger(integer_t p_left, integer_t p_right, bool& r_output)
-{
-    r_output = (p_left > p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealIsGreaterThanReal(double p_left, double p_right, bool& r_output)
-{
-    r_output = (p_left > p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberIsGreaterThanNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
-{
-    r_output = (MCNumberFetchAsReal(p_left) > MCNumberFetchAsReal(p_right));
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerIsGreaterThanOrEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
-{
-    r_output = (p_left >= p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealIsGreaterThanOrEqualToReal(double p_left, double p_right, bool& r_output)
-{
-    r_output = (p_left >= p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
-{
-    r_output = (MCNumberFetchAsReal(p_left) >= MCNumberFetchAsReal(p_right));
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerIsLessThanInteger(integer_t p_left, integer_t p_right, bool& r_output)
-{
-    r_output = (p_left < p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealIsLessThanReal(double p_left, double p_right, bool& r_output)
-{
-    r_output = (p_left < p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberIsLessThanNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
-{
-    r_output = (MCNumberFetchAsReal(p_left) < MCNumberFetchAsReal(p_right));
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalIntegerIsLessThanOrEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
-{
-    r_output = (p_left <= p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalRealIsLessThanOrEqualToReal(double p_left, double p_right, bool& r_output)
-{
-    r_output = (p_left <= p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberIsLessThanOrEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
-{
-    r_output = (MCNumberFetchAsReal(p_left) <= MCNumberFetchAsReal(p_right));
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalPlusInteger(integer_t p_operand, integer_t& r_output)
-{
-    r_output = p_operand;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalPlusReal(double p_operand, double& r_output)
-{
-    r_output = p_operand;
-}
+MC_ARITHMETIC_COMPARE_OP(IsEqualTo)
+MC_ARITHMETIC_COMPARE_OP(IsNotEqualTo)
+MC_ARITHMETIC_COMPARE_OP(IsGreaterThan)
+MC_ARITHMETIC_COMPARE_OP(IsGreaterThanOrEqualTo)
+MC_ARITHMETIC_COMPARE_OP(IsLessThan)
+MC_ARITHMETIC_COMPARE_OP(IsLessThanOrEqualTo)
 
 extern "C" MC_DLLEXPORT void MCArithmeticEvalPlusNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     r_output = MCValueRetain(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusInteger(integer_t p_operand, integer_t& r_output)
+extern "C" MC_DLLEXPORT void MCArithmeticEvalPlusReal(MCNumberRef p_operand, MCNumberRef& r_output)
 {
-    r_output = -p_operand;
+    r_output = MCValueRetain(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT void MCArithmeticEvalPlusInteger(MCNumberRef p_operand, MCNumberRef& r_output)
 {
-    r_output = -p_operand;
+    r_output = MCValueRetain(p_operand);
 }
 
 extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
-    if (MCNumberIsInteger(p_operand))
-        MCNumberCreateWithInteger(-MCNumberFetchAsInteger(p_operand), r_output);
-    else
-        MCNumberCreateWithReal(-MCNumberFetchAsReal(p_operand), r_output);
+    MCNumberNegate(p_operand, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCArithmeticEvalEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusReal(MCNumberRef p_operand, MCNumberRef& r_output)
 {
-    r_output = p_left == p_right;
+    MCNumberRealNegate(p_operand, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCArithmeticEvalEqualToReal(double p_left, double p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArithmeticEvalMinusInteger(MCNumberRef p_operand, MCNumberRef& r_output)
 {
-    r_output = p_left == p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
-{
-    r_output = MCNumberFetchAsReal(p_left) == MCNumberFetchAsReal(p_right);
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
-{
-    r_output = p_left != p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToReal(double p_left, double p_right, bool& r_output)
-{
-    r_output = p_left != p_right;
-}
-
-extern "C" MC_DLLEXPORT void MCArithmeticEvalNotEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
-{
-    r_output = MCNumberFetchAsReal(p_left) != MCNumberFetchAsReal(p_right);
+    MCNumberIntegerNegate(p_operand, r_output);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT MCStringRef MCArithmeticExecFormatNumberAsString(MCNumberRef p_operand)
 {
-    MCAutoStringRef t_output;
-    MCStringFormat(&t_output, "%f", MCNumberFetchAsReal(p_operand));
-    return MCValueRetain(*t_output);
+    MCStringRef t_string;
+    if (!MCNumberFormat(p_operand, t_string))
+        return nil;
+    
+    return t_string;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCArithmeticExecParseStringAsNumber(MCStringRef p_operand)
+extern "C" MC_DLLEXPORT MCNumberRef MCArithmeticExecParseStringAsNumber(MCStringRef p_operand)
 {
-    double t_converted;
-    if (!MCTypeConvertStringToReal(p_operand, t_converted))
-        return MCValueRetain(kMCNull);
-    
-    MCAutoNumberRef t_number;
-    if (!MCNumberCreateWithReal(t_converted, &t_number))
-        return MCValueRetain(kMCNull);
-    
-    return MCValueRetain(*t_number);
+    MCNumberRef t_number;
+    if (!MCNumberTryToParse(p_operand, t_number))
+        return nil;
+    if (t_number == nil ||
+        !MCNumberIsFinite(t_number))
+        return nil;
+    return t_number;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCArithmeticExecParseListOfStringAsListOfNumber(MCProperListRef p_list_of_string)
+extern "C" MC_DLLEXPORT MCProperListRef MCArithmeticExecParseListOfStringAsListOfNumber(MCProperListRef p_list_of_string)
 {
     MCAutoProperListRef t_output;
     if (!MCProperListCreateMutable(&t_output))
-        return MCValueRetain(kMCNull);
+        return nil;
     
     for(uindex_t i = 0; i < MCProperListGetLength(p_list_of_string); i++)
     {
@@ -482,18 +162,22 @@ extern "C" MC_DLLEXPORT MCValueRef MCArithmeticExecParseListOfStringAsListOfNumb
         if (MCValueGetTypeCode(t_element) != kMCValueTypeCodeString)
         {
             MCErrorThrowGeneric(MCSTR("not a list of string"));
-            return MCValueRetain(kMCNull);
+            return nil;
         }
         
-        if (!MCProperListPushElementOntoBack(*t_output, MCArithmeticExecParseStringAsNumber((MCStringRef)t_element)))
-            return MCValueRetain(kMCNull);
+        MCAutoNumberRef t_numeric_element;
+        if (!MCNumberTryToParse((MCStringRef)t_element, &t_numeric_element))
+            return nil;
+        
+        if (!MCProperListPushElementOntoBack(*t_output, *t_numeric_element != nil ? (MCValueRef)*t_numeric_element : (MCValueRef)kMCNull))
+            return nil;
     }
     
     MCAutoProperListRef t_list;
     if (!MCProperListCopy(*t_output, &t_list))
-        return MCValueRetain(kMCNull);
+        return nil;
     
-    return MCValueRetain(*t_list);
+    return t_list . Take();
 }
 
 extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberFormattedAsString(MCNumberRef p_operand, MCStringRef& r_output)
@@ -501,7 +185,7 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalNumberFormattedAsString(MCNumberRef
     r_output = MCArithmeticExecFormatNumberAsString(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCArithmeticEvalStringParsedAsNumber(MCStringRef p_operand, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT void MCArithmeticEvalStringParsedAsNumber(MCStringRef p_operand, MCNumberRef& r_output)
 {
     r_output = MCArithmeticExecParseStringAsNumber(p_operand);
 }

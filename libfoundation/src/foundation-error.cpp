@@ -271,7 +271,7 @@ MCErrorCreateAndThrowWithMessageV (MCTypeInfoRef p_error_type,
     }
     
     MCAutoErrorRef t_error;
-    if (!MCErrorCreate(p_error_type, *t_info, &t_error))
+    if (!MCErrorCreateWithMessage(p_error_type, p_message, *t_info, &t_error))
         return false;
     
     return MCErrorThrow(*t_error);
