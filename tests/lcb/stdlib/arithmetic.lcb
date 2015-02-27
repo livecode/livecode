@@ -126,16 +126,11 @@ private handler PerformIntegerBinaryOpTest(in pLabel as string, in pIndex as int
             put tTestLabel && "ovf" into tTestLabel
         end if
 
-        test diagnostic tTestLabel
-
         variable tActualZ
         if (element pIndex of tTest) is not empty then
             put pOp(tX, tY) into tActualZ
 
             test tTestLabel when tActualZ is tZ
-            if tActualZ is not tZ then
-                test diagnostic "DON'T PANIC!" && (tX formatted as string) && (tY formatted as string) && (tZ formatted as string) && (tActualZ formatted as string)
-            end if
         else
             variable tError as optional any
             variable tArgs as optional list
