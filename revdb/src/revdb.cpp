@@ -280,7 +280,7 @@ DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
     t_result = new DATABASEREC;
 #if (defined _MACOSX && !defined _MAC_SERVER)
     t_result -> driverref = (CFBundleRef)t_handle;
-#elif (defined _WINDOWS)
+#elif (defined _WINDOWS) || defined _WINDOWS_SERVER
     t_result -> driverref = (HINSTANCE)t_handle;
 #else
 	t_result -> driverref = t_handle;

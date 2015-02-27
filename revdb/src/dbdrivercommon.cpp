@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dbdrivercommon.h"
 
-#if defined(_WINDOWS)
+#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 #define LIBRARY_EXPORT __declspec(dllexport)
 #elif defined(_MACOSX)
 #define LIBRARY_EXPORT
