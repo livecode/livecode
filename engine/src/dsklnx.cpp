@@ -252,8 +252,8 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
             while (t_result != 1 ||
                    (errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK));
 
-            if (t_result != 1)
-                break;
+            // SN-2015-02-26: [[ CID 37859 ]] Dead code removed (t_result is
+            //  always different from -1 here
 #else
             if (MCscreen->wait(READ_INTERVAL, False, True))
             {

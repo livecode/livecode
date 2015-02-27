@@ -2598,6 +2598,10 @@ static MCExternalError MCExternalVariableIterateKeys(MCExternalVariableRef var, 
         return kMCExternalErrorNone;
     }
     
+    // SN-2015-02-26: [[ CID 37860 ]] Giving a NULL key should return an error
+    if (p_key == nil)
+        return kMCExternalErrorNoVariable;
+    
     MCNameRef t_key;
     MCValueRef t_array_value;
     uintptr_t t_iterator = *(uintptr_t*)p_iterator;
