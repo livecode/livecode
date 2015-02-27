@@ -1,0 +1,40 @@
+<package version="0.0">
+  <name>com.livecode.extensions.livecode.linegraph</name>
+  <title>Line Graph</title>
+  <author>Benjamin Beaumont</author>
+  <version>1.0.1</version>
+  <license>community</license>
+  <type>widget</type>
+  <requires name="com.livecode.canvas"/>
+  <requires name="com.livecode.arithmetic"/>
+  <requires name="com.livecode.binary"/>
+  <requires name="com.livecode.list"/>
+  <requires name="com.livecode.logic"/>
+  <requires name="com.livecode.string"/>
+  <requires name="com.livecode.typeconvert"/>
+  <requires name="com.livecode.char"/>
+  <requires name="com.livecode.array"/>
+  <requires name="com.livecode.engine"/>
+  <requires name="com.livecode.type"/>
+  <requires name="com.livecode.widget"/>
+  <requires name="com.livecode.mathfoundation"/>
+  <requires name="com.livecode.byte"/>
+  <property name="graphData" get="string" set="string"/>
+  <metadata key="graphData.editor">com.livecode.pi.text</metadata>
+  <property name="graphColors" get="string" set="string"/>
+  <metadata key="graphColors.editor">com.livecode.pi.text</metadata>
+  <property name="graphXLines" get="boolean" set="boolean"/>
+  <property name="graphYLines" get="boolean" set="boolean"/>
+  <handler name="OnCreate" parameters="" return="undefined"/>
+  <handler name="OnPaint" parameters="" return="undefined"/>
+  <handler name="setData" parameters="in string" return="undefined"/>
+  <handler name="setColors" parameters="in string" return="undefined"/>
+  <handler name="setShowHGrid" parameters="in boolean" return="undefined"/>
+  <handler name="setShowVGrid" parameters="in boolean" return="undefined"/>
+  <handler name="setXLinesVisibility" parameters="in boolean" return="undefined"/>
+  <handler name="setYLinesVisibility" parameters="in boolean" return="undefined"/>
+  <handler name="getColors" parameters="" return="string"/>
+  <handler name="getData" parameters="" return="string"/>
+  <handler name="getPaint" parameters="in optional any,in optional any" return="Paint"/>
+  <handler name="onGeometryChanged" parameters="" return="undefined"/>
+</package>

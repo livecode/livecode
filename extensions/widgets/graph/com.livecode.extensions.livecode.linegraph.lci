@@ -1,0 +1,28 @@
+import module com.livecode.extensions.livecode.linegraph
+  use com.livecode.canvas
+  use com.livecode.arithmetic
+  use com.livecode.binary
+  use com.livecode.list
+  use com.livecode.logic
+  use com.livecode.string
+  use com.livecode.typeconvert
+  use com.livecode.char
+  use com.livecode.array
+  use com.livecode.engine
+  use com.livecode.type
+  use com.livecode.widget
+  use com.livecode.mathfoundation
+  use com.livecode.byte
+  handler OnCreate() as undefined
+  handler OnPaint() as undefined
+  handler setData(in pData as string) as undefined
+  handler setColors(in pData as string) as undefined
+  handler setShowHGrid(in pState as boolean) as undefined
+  handler setShowVGrid(in pState as boolean) as undefined
+  handler setXLinesVisibility(in pState as boolean) as undefined
+  handler setYLinesVisibility(in pState as boolean) as undefined
+  handler getColors() as string
+  handler getData() as string
+  handler getPaint(in pLocation as optional any, in pType as optional any) as Paint
+  handler onGeometryChanged() as undefined
+end module
