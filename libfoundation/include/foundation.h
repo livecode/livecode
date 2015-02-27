@@ -146,7 +146,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR MAC
 //
 
-#if defined(__GNUC__) && defined(__APPLE__) && !defined(TARGET_OS_IPHONE)
+#if defined(__GNUC__) && defined(__APPLE__) && !TARGET_OS_IPHONE
 
 // Compiler
 #define __GCC__ 1
@@ -227,7 +227,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR IOS
 //
 
-#if defined(__GNUC__) && defined(__APPLE__) && defined(TARGET_OS_IPHONE)
+#if defined(__GNUC__) && defined(__APPLE__) && TARGET_OS_IPHONE
 
 // Compiler
 #define __GCC__ 1
@@ -365,6 +365,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	define __HAVE_STDINT_H__
 #	define __STDC_LIMIT_MACROS
 #	include <stdint.h>
+#   include <stddef.h>
 #endif
 
 #if !defined(__HAVE_STDINT_H__)
