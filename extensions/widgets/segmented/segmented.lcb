@@ -38,7 +38,6 @@ use com.livecode.engine
 --
 
 -- property declarations
-property theme				get mTheme				set setTheme
 property labels				get getLabels			set setLabels
 property selectedSegment	get mSelected			set setSelectedSegment
 property fontSize			get mFontSize			set setFontSize
@@ -49,7 +48,6 @@ private variable mTheme 		as string
 private variable mLabels 		as list
 private variable mSelected 		as integer
 private variable mFontSize 		as string
-private variable mNumSegments 	as integer
 
 private variable mWidth 		as real
 private variable mLeft 			as real
@@ -120,7 +118,7 @@ public handler OnPaint()
 	set the antialias of this canvas to false
 	set the stroke width of this canvas to 1
 	variable tX as optional integer
-	repeat with tX from 1 up to mNumSegments-1
+	repeat with tX from 1 up to the number of elements in mLabels
 		stroke getPath("line",tX) on this canvas
 	end repeat
 	set the antialias of this canvas to true
@@ -130,10 +128,9 @@ public handler OnPaint()
 	variable tBackgroundPath as Path
 	set the paint of this canvas to getPaint("background")
 	
-	if mSelected is 1 or mSelected is mNumSegments then
+	if mSelected is 1 or mSelected is the number of elements in mLabels then
 		put rounded rectangle path of getRect(mSelected) with radius mRadius into tBackgroundPath
 		fill getPath("rectangle", mSelected) on this canvas
-	
 	else
 		put rectangle path of getRect(mSelected) into tBackgroundPath
 	end if
@@ -147,8 +144,7 @@ public handler OnPaint()
 	variable tY as integer
 	variable tLabelText as string
 	
-	repeat with tY from 1 up to mNumSegments
-		
+	repeat with tY from 1 up to the number of elements in mLabels
 		if tY is mSelected then
 			set the paint of this canvas to getPaint("selected label")
 		else 
