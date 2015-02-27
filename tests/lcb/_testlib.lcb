@@ -35,7 +35,9 @@ handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as strin
 	variable tHasError as boolean
 	put tMaybeError is defined into tHasError
 
-	test diagnostic tMaybeError
+	if tHasError then
+		test diagnostic tMaybeError
+	end if
 	if pBroken then
 		broken test pDescription when tHasError because pReason
 	else
