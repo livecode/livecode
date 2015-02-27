@@ -25,22 +25,29 @@ This widget has three properties that can be set: theme; labels; selectedSegment
 widget com.livecode.extensions.livecode.segmentedControl
 --
 
--- adding metadata to ensure the extension displays correctly in livecode
-metadata title is "Segmented Control"
-metadata author is "Georgia Hutchings"
-metadata version is "1.0.3"
---
-
 -- dependency declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 --
 
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Segmented Control"
+metadata author is "Georgia Hutchings"
+metadata version is "1.0.3"
+--
+
 -- property declarations
 property labels				get getLabels			set setLabels
+metadata labels.default is "One,Two,Three"
+
 property selectedSegment	get mSelected			set setSelectedSegment
+metadata selectedSegment.default is "1"
+
 property fontSize			get mFontSize			set setFontSize
+metadata fontSize.editor is "com.livecode.pi.enum"
+metadata fontSize.options is "8,9,10,11,12,14,16,18,20"
+metadata fontSize.default is ""
 --
 
 -- private instance variables
@@ -48,7 +55,6 @@ private variable mTheme 		as string
 private variable mLabels 		as list
 private variable mSelected 		as integer
 private variable mFontSize 		as string
-
 private variable mWidth 		as real
 private variable mLeft 			as real
 private variable mRadius 		as real
@@ -89,10 +95,9 @@ end handler
 public handler OnCreate()
 	-- properties
 	put "ios-8" into mTheme
-	put ["Title", "Title", "Title"] into mLabels
+	put ["One", "Two", "Three"] into mLabels
 	put 1 into mSelected
 	put the empty string into mFontSize
-	put the number of elements in mLabels into mNumSegments
 	
 	-- variables
 	put 0 into mWidth
@@ -165,7 +170,7 @@ public handler OnMouseUp()
 	if the click position is not within getRect(mSelected) then
 	
 		variable tX as integer
-		repeat with tX from 1 up to mNumSegments
+		repeat with tX from 1 up to the number of elements in mLabels
 			if the click position is within getRect(tX) then
 				put tX into mSelected
 			end if 
@@ -347,9 +352,8 @@ end handler
 ----------
 -- this handler updates the value of private instance variables
 public handler updateVariables() as undefined
-	put the number of elements in mLabels into mNumSegments
-	put (my width)/mNumSegments into mWidth
-	put (my width)/2 - mNumSegments*mWidth/2 into mLeft
+	put (my width)/the number of elements in mLabels into mWidth
+	put (my width)/2 - the number of elements in mLabels*mWidth/2 into mLeft
 	put (the trunc of my height)/5 into mRadius
 end handler
 ----------
