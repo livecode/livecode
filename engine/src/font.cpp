@@ -485,6 +485,54 @@ MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string,
     return ctxt . m_width;
 }
 
+struct font_measure_text_image_bounds_context
+{
+	MCGRectangle m_bounds;
+	
+	// MM-2014-04-16: [[ Bug 11964 ]] Store the transform that effects the measurement.
+	MCGAffineTransform m_transform;
+};
+
+static void MCFontMeasureTextImageBoundsCallback(MCFontRef p_font, MCStringRef p_string, MCRange p_range, void *p_ctxt)
+{
+	font_measure_text_image_bounds_context *ctxt;
+	ctxt = static_cast<font_measure_text_image_bounds_context*>(p_ctxt);
+	
+	if (MCStringIsEmpty(p_string) || p_range.length == 0)
+		return;
+	
+	MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font->fontstruct);
+	
+	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
+	t_font . fixed_advance = p_font -> fixed_advance;
+	
+	MCGRectangle t_bounds;
+	if (MCGContextMeasurePlatformTextImageBounds(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font, ctxt -> m_transform, t_bounds))
+	{
+		t_bounds.origin.x += ctxt->m_bounds.size.width;
+		ctxt->m_bounds = MCGRectangleUnion(ctxt->m_bounds, t_bounds);
+	}
+}
+
+bool MCFontMeasureTextImageBounds(MCFontRef p_font, MCStringRef p_string, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds)
+{
+	return MCFontMeasureTextSubstringImageBounds(p_font, p_string, MCRangeMake(0, MCStringGetLength(p_string)), p_transform, r_bounds);
+}
+
+bool MCFontMeasureTextSubstringImageBounds(MCFontRef p_font, MCStringRef p_string, MCRange p_range, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds)
+{
+	font_measure_text_image_bounds_context ctxt;
+	ctxt.m_transform = p_transform;
+	ctxt.m_bounds = MCGRectangleMake(0, 0, 0, 0);
+	
+	MCFontBreakText(p_font, p_string, p_range, MCFontMeasureTextImageBoundsCallback, &ctxt, false);
+	
+	r_bounds = ctxt.m_bounds;
+	
+	return true;
+}
+
 struct font_draw_text_context
 {
     MCGContextRef m_gcontext;

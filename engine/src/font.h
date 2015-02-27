@@ -71,6 +71,9 @@ MCGFloat MCFontMeasureTextFloat(MCFontRef font, MCStringRef p_text, const MCGAff
 int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
 
+bool MCFontMeasureTextImageBounds(MCFontRef p_font, MCStringRef p_string, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
+bool MCFontMeasureTextSubstringImageBounds(MCFontRef p_font, MCStringRef p_string, MCRange p_range, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
+
 void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break);
 void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl, bool p_can_break);
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
