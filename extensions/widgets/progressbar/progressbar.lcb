@@ -230,14 +230,14 @@ private handler getProgressPaint() as Paint
 		
 		if mThumbPosition is my width then
 			
-			put "/Users/georgia/Documents/livecode/extensions/widgets/progress bar/scrollbar complete.png" into tFile
-			put image from file tFile into tImage 
+			put "scrollbar_complete.png" into tFile
+			put image from resource file tFile into tImage 
 			put pattern with tImage into tPaint
 			scale tPaint by [my width, 0.9]
 			
 		else
-			put "/Users/georgia/Documents/livecode/extensions/widgets/progress bar/scrollbar.png" into tFile
-			put image from file tFile into tImage
+			put "scrollbar.png" into tFile
+			put image from resource file tFile into tImage
 			put pattern with tImage into tPaint
 			translate tPaint by [-mShift,0]
 			
