@@ -4207,7 +4207,7 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 
 // SN-2015-02-13: [[ Bug 14467 ]] [[ Bug 14053 ]] Refactored object properties
 //  lookup, to ensure it is done the same way in MCChunk::getprop / setprop
-bool MCChunk::applyPropertyOperation(MCExecContext &ctxt, Properties which, MCNameRef index, Boolean effective, bool p_is_get_operation, MCExecValue &r_value)
+bool MCChunk::getsetprop(MCExecContext &ctxt, Properties which, MCNameRef index, Boolean effective, bool p_is_get_operation, MCExecValue &r_value)
 {
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
@@ -4300,14 +4300,14 @@ bool MCChunk::applyPropertyOperation(MCExecContext &ctxt, Properties which, MCNa
 bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
 {
     // SN-2015-02-13: [[ Bug 14467 ]] Object property getting / setting refactored
-    return applyPropertyOperation(ctxt, which, index, effective, true, r_value);
+    return getsetprop(ctxt, which, index, effective, true, r_value);
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
 {
     // SN-2015-02-13: [[ Bug 14467 ]] Object property getting / setting refactored
-    return applyPropertyOperation(ctxt, which, index, effective, false, p_value);
+    return getsetprop(ctxt, which, index, effective, false, p_value);
 }
 
 Chunk_term MCChunk::getlastchunktype(void)
