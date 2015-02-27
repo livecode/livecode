@@ -1,1 +1,687 @@
-/*Copyright (C) 2015 Runtime Revolution Ltd.This file is part of LiveCode.LiveCode is free software; you can redistribute it and/or modify it underthe terms of the GNU General Public License v3 as published by the FreeSoftware Foundation.LiveCode is distributed in the hope that it will be useful, but WITHOUT ANYWARRANTY; without even the implied warranty of MERCHANTABILITY orFITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Licensefor more details.You should have received a copy of the GNU General Public Licensealong with LiveCode.  If not see <http://www.gnu.org/licenses/>.  *//*Module: com.livecode.extensions.livecode.headerBarType: widgetDescription: This widget is a header bar.This widget has five properties which can be set: actions; enableBackButton; label; theme and actionStyle.*/-- declaring extension as widget, followed by identifierwidget com.livecode.extensions.livecode.headerBar---- adding metadata to ensure the extension displays correctly in livecodemetadata title is "Header Bar"metadata author is "Georgia Hutchings"metadata version is "1.0.7"--metadata "style.type" is "enum(icons,names)"---- dependency declarationsuse com.livecode.canvasuse com.livecode.widgetuse com.livecode.engine---- property declarationsproperty actions				get getActions		set setActionsproperty enableBackButton		get mBackIsEnabled	set setEnableBackproperty label					get mLabel			set setLabelproperty theme					get mTheme			set setThemeproperty actionStyle			get mActionStyle	set setActionStyle---- private instance variablesprivate variable mActions 			as listprivate variable mBackIsEnabled 	as booleanprivate variable mLabel 			as stringprivate variable mTheme 			as stringprivate variable mActionStyle 		as stringprivate variable mIconWidth 		as realprivate variable mSize 				as realprivate variable mSelectedIcon 		as integerprivate variable mRight 			as realprivate variable mLetterCount		as real---- constantsconstant kBlack is [0,0,0]constant kIconMax is 56constant kIconMin is 16constant kMaxSize is 40constant kMinSize is 12-------------- this handler is called when the widget is savedpublic handler OnSave(out rProperties as array)	put the empty array into rProperties		put mActions into rProperties["actions"]	put mBackIsEnabled into rProperties["enableBack"]	put mLabel into rProperties["label"]	put mTheme into rProperties["theme"]	put mActionStyle into rProperties["actionStyle"]		return rPropertiesend handler---------------------- this handler is called when the widget is loadedpublic handler OnLoad(in pPropreties as array)	put pPropreties["actions"] into mActions	put pPropreties["enableBack"] into mBackIsEnabled	put pPropreties["label"] into mLabel	put pPropreties["theme"] into mTheme	put pPropreties["actionStyle"] into mActionStyleend handler---------------------- called when the widget is createdpublic handler OnCreate()		-- creating a list of actions	put the empty list into mActions	put [["Tone","Volume"],["f0f3","f0a1"]] into mActions	--		-- properties	put true into mBackIsEnabled	put "Header" into mLabel	put "ios-8" into mTheme	put "icons" into mActionStyle		-- variables	put 20 into mIconWidth	put 10 into mSize	put 0 into mSelectedIcon	put 0 into mRight	put 0 into mLetterCountend handler---------------------- called whenever LiveCode needs to redraw the widgetpublic handler OnPaint()		updateIconWidth()	updateSize()		-- draw the background rectangle	set the paint of this canvas to getPaint("background")	fill getPath("background") on this canvas	--		-- drawing the line at the bottom of the header bar	set the paint of this canvas to getPaint("line")	fill getPath("line") on this canvas	--		-- filling in the text of the label		set the font of this canvas to getFont("title")	set the paint of this canvas to getPaint("title")	fill text mLabel at center of getRect("label") on this canvas	--		-- drawing the back button and filling in the label, if mEnableback is true	if mBackIsEnabled is true then		if mSelectedIcon is 1 then			set the paint of this canvas to getPaint("back button selected")		else			set the paint of this canvas to getPaint("back button")		end if			set the font of this canvas to getFont("icon")		execute script ("return numtocodepoint(0xf053)")		fill text the result at center of getRect("back button icon") on this canvas			set the font of this canvas to getFont("label")		fill text "Back" at left of getRect("back button label") on this canvas	end if	--	-- draw the actions	variable tX as integer	variable tActionsCount as integer	variable tCount as integer		put the number of elements in (element 1 of mActions) into tActionsCount	put 1 into tCount	put my width into mRight	put 0 into mLetterCount		repeat with tX from 1 up to tActionsCount			if tCount+1 is mSelectedIcon then			set the paint of this canvas to getPaint("selected action")		else 			set the paint of this canvas to getPaint("actions")		end if				if mActionStyle is "icons" then			set the font of this canvas to getFont("icon")			execute script ("return numtocodepoint(0x" & (element tX of element 2 of mActions) & ")")			fill text the result at center of getRect("action icon") on this canvas						updateRight()					else if mActionStyle is "names" then			put the number of chars in element tX of element 1 of mActions into mLetterCount			add 2 to mLetterCount			set the font of this canvas to getFont("label")			fill text (element tX of element 1 of mActions) at center of getRect("action name") on this canvas						updateRight()		end if				add 1 to tCount	end repeat	--	end handler---------------------- the following handlers deal with mouse eventspublic handler OnMouseDown()	-- the icons change color when they are pressed down	variable tSelectedDown as optional integer	put getSelectedIcon() into tSelectedDown		if tSelectedDown > 0 then		put tSelectedDown into mSelectedIcon		redraw all	end ifend handler--public handler OnMouseUp()	-- the icons change back to their original colors on mouse up	put 0 into mSelectedIcon	redraw all		-- the relevant commands are dispatched to the script object	variable tSelectedUp as optional integer	put getSelectedIcon() into tSelectedUp		if tSelectedUp > 1 then				variable tActionCount as optional integer		variable tNumActions as number		variable tX as number				put the number of elements in (element 1 of mActions) into tNumActions		put 1 into tActionCount					repeat with tX from 1 up to tNumActions					if tActionCount is tSelectedUp-1 then				variable tLabel as string				put element tX of (element 1 of mActions) into tLabel				dispatch command "headerAction" to my script object with [tLabel]			end if							add 1 to tActionCount		end repeat			else if tSelectedUp = 1 then		dispatch command "backAction" to my script object	end if	end handler----------						------------ this handler returns a paintprivate handler getPaint(in pObject as string) as Paint	if pObject is "background" then		return solid paint with color [246/255, 246/255, 247/255]			else if pObject is "actions" then		return solid paint with  color [51/255, 153/255, 1.0] 			else if pObject is "selected action" then		return solid paint with color [51/255, 153/255, 1.0, 0.25]			else if pObject is "back button" then		return solid paint with  color [51/255, 153/255, 1.0] 			else if pObject is "back button selected" then		return solid paint with color [51/255, 153/255, 1.0, 0.25]		else if pObject is "line" then		return solid paint with color [178/255, 178/255, 178/255]			else if pObject is "title" then		 return solid paint with color kBlack			end if	end handler---------------------- this handler returns a fontprivate handler getFont(in pType as string) as Font		variable tFont as string	if mTheme is "ios-8" then		put "Helvetica Neue" into tFont	else		put the name of the font of this canvas into tFont	end if		if pType is "title" then 		return font tFont with bold style at size mSize	else if pType is "label" then		return font tFont at size mSize	else if pType is "icon" then		return font "fontawesome" at size mSize	end ifend handler---------------------- this handler returns a Pathprivate handler getPath(in pObject as string) as Path		if pObject is "background" then		return rectangle path of rectangle [0, 0, my width, my height]			else if pObject is "line" then 		return rectangle path of rectangle [0,my height,my width,(my height)-1]			end ifend handler---------------------- this handler returns a rectangle in which text is writtenprivate handler getRect(in pObject as string) as Rectangle	variable tLabelRect as Rectangle 	put my bounds into tLabelRect		if pObject is "label" then		return tLabelRect		else if pObject is "back button label" then		add mIconWidth/2 to the right of tLabelRect		return tLabelRect		else if pObject is "back button icon" then		return rectangle [0, 0, mIconWidth/2, my height]			else if pObject is "action icon" then		return rectangle [mRight-1.5*mIconWidth,0,mRight,my height]			else if pObject is "action name" then		return rectangle [mRight-mLetterCount*mSize/2,0,mRight,my height]			end ifend handler---------------------- this handler converts mActions into a form that can be combined for outputprivate handler getActions() as string		variable tActions as list	put the empty list into tActions		variable tX as integer	variable tActionCount as integer	variable tListLine as list	variable tStringLine as string	variable tActionList as list		put the number of elements in element 1 of mActions into tActionCount	put the empty string into tStringLine	put the empty list into tActionList		repeat with tX from 1 up to tActionCount		put the empty list into tListLine		push element tX of element 1 of mActions onto back of tListLine		push element tX of element 2 of mActions onto back of tListLine				combine tListLine with "," into tStringLine		push tStringLine onto back of tActionList	end repeat		variable tActionString as string	put the empty string into tActionString	combine tActionList with newline into tActionString			return tActionStringend handler---------------------- this handler sets the label of the header bar/*Summary: Sets the title of the header barParameters:pLabel: The text of the title of the header bar.Description:Sets the title of the header bar to any string.*/public handler setLabel(in pLabel as string) as undefined	put pLabel into mLabel	redraw allend handler---------------------- this handler sets the list of actions/*Summary: Sets the actions of the header barParameters:pActions: The list of actions.Description:Sets the actions of the header bar from pActions, where pActions is a line delimited list of the actions, where each line is a comma delimited list of the different components of the action: name, icon, command*/public handler setActions(in pActions as string) as undefined	variable tActions as list	split pActions by newline into tActions	variable tActionElement	variable tListElement		variable tFinalActions as list	variable tStringToList as list	put the empty list into tFinalActions		repeat for each element tActionElement in tActions		put the empty list into tStringToList		split tActionElement by "," into tStringToList				repeat for each element tListElement in tStringToList			push tListElement onto back of tFinalActions		end repeat			end repeat			variable tActionCount as integer	variable tCount as integer	put the trunc of (the number of elements in tFinalActions)/3 into tActionCount		variable tLabelList as list	variable tIconList as list	put the empty list into tLabelList	put the empty list into tIconList		repeat with tCount from 1 up to tActionCount		push element (3*tCount)-2 of tFinalActions onto back of tLabelList		push element (3*tCount)-1 of tFinalActions onto back of tIconList	end repeat		variable tTestLabel as string	combine tLabelList with "," into tTestLabel	put [tLabelList,tIconList] into mActions		redraw allend handler---------------------- this handler sets whether the back button is enabled or not/*Summary: Sets whether the back button is enabledParameters:pIsEnabled: The state of the back button.Description:If pEnable is true, then the back button is visible and enabled. If pEnable is false, then the back button is invisible and disabled.*/public handler setEnableBack(in pIsEnabled as boolean) as undefined	put pIsEnabled into mBackIsEnabled	redraw allend handler---------------------- this handler sets the theme of the widget/*Summary: Sets the theme of the header barParameters:pTheme: The name of the theme.Description:Sets the theme of the widget (currently, only "ios-8").*/public handler setTheme(in pTheme as string) as undefined	put pTheme into mTheme	redraw allend handler---------------------- this handler sets the action style of the header bar/*Summary: Sets the style of the action label Parameters:pStyle: The style of the action label.Description:Sets the style of the action labels to either "names" or "icons".*/public handler setActionStyle(in pStyle as string) as undefined	put pStyle into mActionStyle	redraw allend handler---------------------- this handler updates mIconWidthprivate handler updateIconWidth() as undefined	if (my width)/10 > kIconMax then		put kIconMax into mIconWidth	else if (my width)/10 < kIconMin then		put kIconMin into mIconWidth	else		put (my width)/10 into mIconWidth	end if end handler---------------------- this handler updates mSizeprivate handler updateSize() as undefined	if (my width)/30 > kMaxSize then		put kMaxSize into mSize	else if (my width)/30 < kMinSize then		put kMinSize into mSize	else		put (my width)/30 into mSize	end ifend handler---------------------- this handler updates mRightprivate handler updateRight() as undefined	if mActionStyle is "icons" then			if (my width)/15 < kIconMin then			add -kIconMin to mRight		else if (my width)/15 > kIconMax then			add -kIconMax to mRight		else			add (-(my width)/15) to mRight		end if		else if mActionStyle is "names" then		put mRight-mLetterCount*mSize/2 into mRight		end ifend handler---------------------- this handler adds an action/*Summary: Adds an actionParameters:pNewAction: The new action.Description:Adds the new action to the header bar , where pNewAction is a comma delimited list of the components of the action:name, iconUpdates the actions property to include the new action and redraws the widget.*/public handler addAction(in pNewAction as string) as undefined		variable tNewAction as list	split pNewAction by "," into tNewAction		variable tLabelList as list	variable tIconList as list	variable tActionList as list	put element 1 of mActions into tLabelList	put element 2 of mActions into tIconList		push element 1 of tNewAction onto back of tLabelList	push element 2 of tNewAction onto back of tIconList		put [tLabelList,tIconList] into mActions		redraw allend handler---------------------- this handler removes an action/*Summary: Removes an actionParameters:pAction: The action to be removed.Description:Removes the action from the header bar, where pAction is any component of the of the action:name or iconUpdates the actions property to exclude the action and redraws the widget.*/public handler removeAction(in pAction as string) as undefined	variable tActions as string	variable tActionList as list	put getActions() into tActions	split tActions by newline into tActionList	put the empty string into tActions		variable tActionElement	variable tCount as integer	put 1 into tCount		repeat for each element tActionElement in tActionList		if tActionElement contains pAction then			delete element tCount of tActionList		end if		add 1 to tCount	end repeat		combine tActionList	with newline into tActions		setActions(tActions)			redraw allend handler---------------------- this handler returns the number of the action the mouse has clicked onprivate handler getSelectedIcon() as integer	variable tSelected as integer	if mBackIsEnabled is true and the click position is within rectangle [0, 0, 1.2*mIconWidth+mIconWidth/4, my height] then		put 1 into tSelected	else		put locToAction(the click position) into tSelected	end if		return tSelectedend handler---------------------- this handler returns the number of the icon which is being clicked	private handler locToAction(in pLoc as Point) as integer	variable tActionCount as integer	put the number of elements in mActions into tActionCount		variable tX as integer	repeat with tX from 1 up to tActionCount		if pLoc is within actionRect(tX) then			return tX+1		end if	end repeat		return 0end handler---------------------- this handler returns the rectangle around the iconprivate handler actionRect(in pItemCount as integer) as Rectangle		variable tRight as real	put my width - (mIconWidth)*(pItemCount-1) into tRight		return rectangle [tRight-mIconWidth,0,tRight-mIconWidth/4,my height]end handler----------end widget
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+Module: com.livecode.extensions.livecode.headerBar
+
+Type: widget
+
+Description: This widget is a header bar.
+This widget has five properties which can be set: actions; enableBackButton; label; theme and actionStyle.
+*/
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.extensions.livecode.headerBar
+--
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Header Bar"
+metadata author is "Georgia Hutchings"
+metadata version is "1.0.7"
+--metadata "style.type" is "enum(icons,names)"
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- property declarations
+property actions				get getActions		set setActions
+metadata actions.editor is "com.livecode.pi.text"
+metadata actions.default is "Title"
+metadata actions.default is "new,f067"
+
+property enableBackButton		get mBackIsEnabled	set setEnableBack
+metadata enableBackButton.default is "true"
+
+property label					get mLabel			set setLabel
+metadata label.default is "Title"
+
+
+property actionStyle			get mActionStyle	set setActionStyle
+metadata actionStyle.editor is "com.livecode.pi.enum"
+metadata actionStyle.options is "icons,names"
+metadata actionStyle.default is "icons"
+--
+
+-- private instance variables
+private variable mActions 			as list
+private variable mBackIsEnabled 	as boolean
+private variable mLabel 			as string
+private variable mTheme 			as string
+private variable mActionStyle 		as string
+
+private variable mIconWidth 		as real
+private variable mSize 				as real
+private variable mSelectedIcon 		as integer
+private variable mRight 			as real
+private variable mLetterCount		as real
+--
+
+-- constants
+constant kBlack is [0,0,0]
+constant kIconMax is 56
+constant kIconMin is 16
+constant kMaxSize is 40
+constant kMinSize is 12
+--
+
+----------
+-- this handler is called when the widget is saved
+public handler OnSave(out rProperties as array)
+	put the empty array into rProperties
+	
+	put mActions into rProperties["actions"]
+	put mBackIsEnabled into rProperties["enableBack"]
+	put mLabel into rProperties["label"]
+	put mTheme into rProperties["theme"]
+	put mActionStyle into rProperties["actionStyle"]
+	
+	return rProperties
+end handler
+----------
+
+----------
+-- this handler is called when the widget is loaded
+public handler OnLoad(in pPropreties as array)
+	put pPropreties["actions"] into mActions
+	put pPropreties["enableBack"] into mBackIsEnabled
+	put pPropreties["label"] into mLabel
+	put pPropreties["theme"] into mTheme
+	put pPropreties["actionStyle"] into mActionStyle
+end handler
+----------
+
+----------
+-- called when the widget is created
+public handler OnCreate()
+	
+	-- creating a list of actions
+	put the empty list into mActions
+	put [["new"],["f067"]] into mActions
+	--
+	
+	-- properties
+	put true into mBackIsEnabled
+	put "Title" into mLabel
+	put "ios-8" into mTheme
+	put "icons" into mActionStyle
+	
+	-- variables
+	put 20 into mIconWidth
+	put 10 into mSize
+	put 0 into mSelectedIcon
+	put 0 into mRight
+	put 0 into mLetterCount
+end handler
+----------
+
+----------
+-- called whenever LiveCode needs to redraw the widget
+public handler OnPaint()
+	
+	updateIconWidth()
+	updateSize()
+	
+	-- draw the background rectangle
+	set the paint of this canvas to getPaint("background")
+	fill getPath("background") on this canvas
+	--
+	
+	-- drawing the line at the bottom of the header bar
+	set the paint of this canvas to getPaint("line")
+	fill getPath("line") on this canvas
+	--
+	
+	-- filling in the text of the label	
+	set the font of this canvas to getFont("title")
+	set the paint of this canvas to getPaint("title")
+	fill text mLabel at center of getRect("label") on this canvas
+	--
+	
+	-- drawing the back button and filling in the label, if mEnableback is true
+	if mBackIsEnabled is true then
+		if mSelectedIcon is 1 then
+			set the paint of this canvas to getPaint("back button selected")
+		else
+			set the paint of this canvas to getPaint("back button")
+		end if
+	
+		set the font of this canvas to getFont("icon")
+		execute script ("return numtocodepoint(0xf053)")
+		fill text the result at center of getRect("back button icon") on this canvas
+	
+		set the font of this canvas to getFont("label")
+		fill text "Back" at left of getRect("back button label") on this canvas
+	end if
+	--
+
+	-- draw the actions
+	variable tX as integer
+	variable tActionsCount as integer
+	variable tCount as integer
+	
+	put the number of elements in (element 1 of mActions) into tActionsCount
+	put 1 into tCount
+	put my width into mRight
+	put 0 into mLetterCount
+	
+	repeat with tX from 1 up to tActionsCount
+	
+		if tCount+1 is mSelectedIcon then
+			set the paint of this canvas to getPaint("selected action")
+		else 
+			set the paint of this canvas to getPaint("actions")
+		end if
+		
+		if mActionStyle is "icons" then
+			set the font of this canvas to getFont("icon")
+			execute script ("return numtocodepoint(0x" & (element tX of element 2 of mActions) & ")")
+			fill text the result at center of getRect("action icon") on this canvas
+			
+			updateRight()
+			
+		else if mActionStyle is "names" then
+			put the number of chars in element tX of element 1 of mActions into mLetterCount
+			add 2 to mLetterCount
+			set the font of this canvas to getFont("label")
+			fill text (element tX of element 1 of mActions) at center of getRect("action name") on this canvas
+			
+			updateRight()
+
+		end if
+		
+		add 1 to tCount
+	end repeat
+	--
+	
+end handler
+----------
+
+----------
+-- the following handlers deal with mouse events
+public handler OnMouseDown()
+
+	-- the icons change color when they are pressed down
+	variable tSelectedDown as optional integer
+	put getSelectedIcon() into tSelectedDown
+	
+	if tSelectedDown > 0 then
+		put tSelectedDown into mSelectedIcon
+		redraw all
+	end if
+
+end handler
+--
+public handler OnMouseUp()
+
+	-- the icons change back to their original colors on mouse up
+	put 0 into mSelectedIcon
+	redraw all
+	
+	-- the relevant commands are dispatched to the script object
+	variable tSelectedUp as optional integer
+	put getSelectedIcon() into tSelectedUp
+	
+	if tSelectedUp > 1 then
+		
+		variable tActionCount as optional integer
+		variable tNumActions as number
+		variable tX as number
+		
+		put the number of elements in (element 1 of mActions) into tNumActions
+		put 1 into tActionCount	
+		
+		repeat with tX from 1 up to tNumActions
+		
+			if tActionCount is tSelectedUp-1 then
+				variable tLabel as string
+				put element tX of (element 1 of mActions) into tLabel
+				dispatch command "headerAction" to my script object with [tLabel]
+			end if
+				
+			add 1 to tActionCount
+		end repeat
+		
+	else if tSelectedUp = 1 then
+		dispatch command "backAction" to my script object
+	end if
+	
+end handler
+----------
+						
+----------
+-- this handler returns a paint
+private handler getPaint(in pObject as string) as Paint
+
+	if pObject is "background" then
+		return solid paint with color [246/255, 246/255, 247/255]
+		
+	else if pObject is "actions" then
+		return solid paint with  color [51/255, 153/255, 1.0] 
+		
+	else if pObject is "selected action" then
+		return solid paint with color [51/255, 153/255, 1.0, 0.25]
+		
+	else if pObject is "back button" then
+		return solid paint with  color [51/255, 153/255, 1.0] 
+		
+	else if pObject is "back button selected" then
+		return solid paint with color [51/255, 153/255, 1.0, 0.25]
+	
+	else if pObject is "line" then
+		return solid paint with color [178/255, 178/255, 178/255]
+		
+	else if pObject is "title" then
+		 return solid paint with color kBlack
+		
+	end if
+	
+end handler
+----------
+
+----------
+-- this handler returns a font
+private handler getFont(in pType as string) as Font
+	
+	variable tFont as string
+	if mTheme is "ios-8" then
+		put "Helvetica Neue" into tFont
+	else
+		put the name of the font of this canvas into tFont
+	end if
+	
+	if pType is "title" then 
+		return font tFont with bold style at size mSize
+	else if pType is "label" then
+		return font tFont at size mSize
+	else if pType is "icon" then
+		return font "fontawesome" at size mSize
+	end if
+
+end handler
+----------
+
+----------
+-- this handler returns a Path
+private handler getPath(in pObject as string) as Path
+	
+	if pObject is "background" then
+		return rectangle path of rectangle [0, 0, my width, my height]
+		
+	else if pObject is "line" then 
+		return rectangle path of rectangle [0,my height,my width,(my height)-1]
+		
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a rectangle in which text is written
+private handler getRect(in pObject as string) as Rectangle
+
+	variable tLabelRect as Rectangle 
+	put my bounds into tLabelRect
+	
+	if pObject is "label" then
+		return tLabelRect
+	
+	else if pObject is "back button label" then
+		add mIconWidth/2 to the right of tLabelRect
+		return tLabelRect
+	
+	else if pObject is "back button icon" then
+		return rectangle [0, 0, mIconWidth/2, my height]
+		
+	else if pObject is "action icon" then
+		return rectangle [mRight-1.5*mIconWidth,0,mRight,my height]
+		
+	else if pObject is "action name" then
+		return rectangle [mRight-mLetterCount*mSize/2,0,mRight,my height]
+		
+	end if
+end handler
+----------
+
+----------
+-- this handler converts mActions into a form that can be combined for output
+private handler getActions() as string
+	
+	variable tActions as list
+	put the empty list into tActions
+	
+	variable tX as integer
+	variable tActionCount as integer
+	variable tListLine as list
+	variable tStringLine as string
+	variable tActionList as list
+	
+	put the number of elements in element 1 of mActions into tActionCount
+	put the empty string into tStringLine
+	put the empty list into tActionList
+	
+	repeat with tX from 1 up to tActionCount
+		put the empty list into tListLine
+
+		push element tX of element 1 of mActions onto back of tListLine
+		push element tX of element 2 of mActions onto back of tListLine
+		
+		combine tListLine with "," into tStringLine
+		push tStringLine onto back of tActionList
+	end repeat
+	
+	variable tActionString as string
+	put the empty string into tActionString
+	combine tActionList with newline into tActionString
+		
+	return tActionString
+end handler
+----------
+
+----------
+-- this handler sets the label of the header bar
+/*
+Summary: Sets the title of the header bar
+
+Parameters:
+pLabel: The text of the title of the header bar.
+
+Description:
+Sets the title of the header bar to any string.
+*/
+public handler setLabel(in pLabel as string) as undefined
+	put pLabel into mLabel
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the list of actions
+/*
+Summary: Sets the actions of the header bar
+
+Parameters:
+pActions: The list of actions.
+
+Description:
+Sets the actions of the header bar from pActions, where pActions is a line delimited list of the actions, where each line is a comma delimited list 
+of the different components of the action: name, icon, command
+*/
+public handler setActions(in pActions as string) as undefined
+
+	variable tActions as list
+	split pActions by newline into tActions
+
+	variable tActionElement
+	variable tListElement
+	
+	variable tFinalActions as list
+	variable tStringToList as list
+	put the empty list into tFinalActions
+	
+	repeat for each element tActionElement in tActions
+		put the empty list into tStringToList
+		split tActionElement by "," into tStringToList
+		
+		repeat for each element tListElement in tStringToList
+			push tListElement onto back of tFinalActions
+		end repeat
+		
+	end repeat
+		
+	variable tActionCount as integer
+	variable tCount as integer
+	put the trunc of (the number of elements in tFinalActions)/3 into tActionCount
+	log tActionCount
+	
+	variable tLabelList as list
+	variable tIconList as list
+	put the empty list into tLabelList
+	put the empty list into tIconList
+	
+	repeat with tCount from 1 up to tActionCount
+		push element (3*tCount)-2 of tFinalActions onto back of tLabelList
+		push element (3*tCount)-1 of tFinalActions onto back of tIconList
+	end repeat
+	
+	variable tTestLabel as string
+	combine tLabelList with "," into tTestLabel
+
+	put [tLabelList,tIconList] into mActions
+	
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets whether the back button is enabled or not
+/*
+Summary: Sets whether the back button is enabled
+
+Parameters:
+pIsEnabled: The state of the back button.
+
+Description:
+If pEnable is true, then the back button is visible and enabled. If pEnable is false, then the back button is invisible and disabled.
+*/
+
+public handler setEnableBack(in pIsEnabled as boolean) as undefined
+	put pIsEnabled into mBackIsEnabled
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the theme of the widget
+/*
+Summary: Sets the theme of the header bar
+
+Parameters:
+pTheme: The name of the theme.
+
+Description:
+Sets the theme of the widget (currently, only "ios-8").
+*/
+
+public handler setTheme(in pTheme as string) as undefined
+	put pTheme into mTheme
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the action style of the header bar
+/*
+Summary: Sets the style of the action label 
+
+Parameters:
+pStyle: The style of the action label.
+
+Description:
+Sets the style of the action labels to either "names" or "icons".
+*/
+public handler setActionStyle(in pStyle as string) as undefined
+	put pStyle into mActionStyle
+	redraw all
+end handler
+----------
+
+----------
+-- this handler updates mIconWidth
+private handler updateIconWidth() as undefined
+	if (my width)/10 > kIconMax then
+		put kIconMax into mIconWidth
+	else if (my width)/10 < kIconMin then
+		put kIconMin into mIconWidth
+	else
+		put (my width)/10 into mIconWidth
+	end if 
+end handler
+----------
+
+----------
+-- this handler updates mSize
+private handler updateSize() as undefined
+	if (my width)/30 > kMaxSize then
+		put kMaxSize into mSize
+	else if (my width)/30 < kMinSize then
+		put kMinSize into mSize
+	else
+		put (my width)/30 into mSize
+	end if
+end handler
+----------
+
+----------
+-- this handler updates mRight
+private handler updateRight() as undefined
+	if mActionStyle is "icons" then
+	
+		if (my width)/15 < kIconMin then
+			add -kIconMin to mRight
+		else if (my width)/15 > kIconMax then
+			add -kIconMax to mRight
+		else
+			add (-(my width)/15) to mRight
+		end if
+	
+	else if mActionStyle is "names" then
+		put mRight-mLetterCount*mSize/2 into mRight
+	
+	end if
+end handler
+----------
+
+----------
+-- this handler adds an action
+/*
+Summary: Adds an action
+
+Parameters:
+pNewAction: The new action.
+
+Description:
+Adds the new action to the header bar , where pNewAction is a comma delimited list of the components of the action:
+name, icon
+Updates the actions property to include the new action and redraws the widget.
+*/
+public handler addAction(in pNewAction as string) as undefined
+	
+	variable tNewAction as list
+	split pNewAction by "," into tNewAction
+	
+	variable tLabelList as list
+	variable tIconList as list
+	variable tActionList as list
+	put element 1 of mActions into tLabelList
+	put element 2 of mActions into tIconList
+	
+	push element 1 of tNewAction onto back of tLabelList
+	push element 2 of tNewAction onto back of tIconList
+	
+	put [tLabelList,tIconList] into mActions
+	
+	redraw all
+end handler
+----------
+
+----------
+-- this handler removes an action
+/*
+Summary: Removes an action
+
+Parameters:
+pAction: The action to be removed.
+
+Description:
+Removes the action from the header bar, where pAction is any component of the of the action:
+name or icon
+Updates the actions property to exclude the action and redraws the widget.
+*/
+public handler removeAction(in pAction as string) as undefined
+
+	variable tActions as string
+	variable tActionList as list
+	put getActions() into tActions
+	split tActions by newline into tActionList
+	put the empty string into tActions
+	
+	variable tActionElement
+	variable tCount as integer
+	put 1 into tCount
+	
+	repeat for each element tActionElement in tActionList
+		if tActionElement contains pAction then
+			delete element tCount of tActionList
+		end if
+		add 1 to tCount
+	end repeat
+	
+	combine tActionList	with newline into tActions
+	
+	setActions(tActions)
+		
+	redraw all
+end handler
+----------
+
+----------
+-- this handler returns the number of the action the mouse has clicked on
+private handler getSelectedIcon() as integer
+
+	variable tSelected as integer
+	if mBackIsEnabled is true and the click position is within rectangle [0, 0, 1.2*mIconWidth+mIconWidth/4, my height] then
+		put 1 into tSelected
+	else
+		put locToAction(the click position) into tSelected
+	end if
+	
+	return tSelected
+end handler
+----------
+
+----------
+-- this handler returns the number of the icon which is being clicked	
+private handler locToAction(in pLoc as Point) as integer
+	variable tActionCount as integer
+	put the number of elements in mActions into tActionCount
+	
+	variable tX as integer
+	repeat with tX from 1 up to tActionCount
+		if pLoc is within actionRect(tX) then
+			return tX+1
+		end if
+	end repeat
+	
+	return 0
+end handler
+----------
+
+----------
+-- this handler returns the rectangle around the icon
+private handler actionRect(in pItemCount as integer) as Rectangle	
+
+	variable tRight as real
+	put my width - (mIconWidth)*(pItemCount-1) into tRight
+	
+	return rectangle [tRight-mIconWidth,0,tRight-mIconWidth/4,my height]
+end handler
+----------
+
+end widget
