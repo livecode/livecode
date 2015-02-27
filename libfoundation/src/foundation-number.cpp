@@ -371,6 +371,10 @@ bool MCNumberTryToParse(MCStringRef p_string, MCNumberRef& r_number)
     if (isspace(t_chars[0]))
         goto error_exit;
     
+    // If the first byte is a NUL byte, then it isn't a number
+    if (t_chars[0] == '\0')
+        goto error_exit;
+    
 #if kMCNumberSignedIntegerMax <= INT32_MAX
     char *t_end;
     
