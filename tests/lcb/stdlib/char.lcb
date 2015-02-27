@@ -18,24 +18,108 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.char.tests
 
 use com.livecode.char
+use com.livecode.__INTERNAL._testlib
 
 public handler TestCount()
 	test "count" when the number of chars in "xxx" is 3
 end handler
 
-public handler TestRange()
+----------------------------------------------------------------
+
+handler TestPutChar_Zero()
 	variable t
-	put "xxxx" into t
+	put "xxx" into t
+	put "." into char 0 of t
+end handler
+handler TestPutChar_Before()
+	variable t
+	put "xxx" into t
+	put "." into char -4 of t
+end handler
+handler TestPutChar_After()
+	variable t
+	put "xxx" into t
+	put "." into char 4 of t
+end handler
+public handler TestPutChar()
+	variable t
+	put "xxx" into t
+	put "." into char 2 of t
+	test "put char (+ve)" when t is "x.x"
 
-	put "." into char 2 to 2 of t
-	test "range (put single)" when t is "x.xx"
+	put "xxx" into t
+	put "." into char -2 of t
+	test "put char (-ve)" when t is "x.x"
 
-	put "." into char 2 to 3 of t
-	test "range (put multiple)" when t is "x.x"
-
-	test "range (get)" when char 2 to 3 of t is ".x"
+	MCUnitTestHandlerThrows(TestPutChar_Zero, "put char (0)")
+	MCUnitTestHandlerThrows(TestPutChar_Before, "put char (before)")
+	MCUnitTestHandlerThrows(TestPutChar_After, "put char (after)")
 end handler
 
+handler TestGetChar_Zero()
+	variable t
+	put "xxx" into t
+	get char 0 of t
+end handler
+handler TestGetChar_Before()
+	variable t
+	put char -4 of "xxx" into t
+end handler
+handler TestGetChar_After()
+	variable t
+	put char 4 of "xxx" into t
+end handler
+public handler TestGetChar()
+	variable t
+	put char 2 of "x.x" into t
+	test "get char (+ve)" when t is "."
+
+	put char -2 of "x.x" into t
+	test "get char (-ve)" when t is "."
+
+	MCUnitTestHandlerThrows(TestGetChar_Zero, "get char (0)")
+	MCUnitTestHandlerThrows(TestGetChar_Before, "get char (before)")
+	MCUnitTestHandlerThrows(TestGetChar_After, "get char (after)")
+end handler
+
+----------------------------------------------------------------
+
+public handler TestRange()
+	variable t
+
+	-- Put into range
+	put "xxxx" into t
+	put "." into char 2 to 2 of t
+	test "range (put, +ve, equal)" when t is "x.xx"
+
+	put "." into char 2 to 3 of t
+	test "range (put, +ve)" when t is "x.x"
+
+	put "xxxx" into t
+	put "." into char -2 to -2 of t
+	test "range (put, -ve, equal)" when t is "xx.x"
+
+	put "." into char -3 to -2 of t
+	test "range (put, -ve)" when t is "x.x"
+
+	-- Get from range
+	put "xx.x" into t
+	test "range (get, +ve, equal)" when char 3 to 3 of t is "."
+	test "range (get, +ve)" when char 2 to 3 of t is "x."
+	test "range (get, +ve, equal)" when char -2 to -2 of t is "."
+	test "range (get, +ve)" when char -3 to -2 of t is "x."
+end handler
+
+----------------------------------------------------------------
+
+handler TestFirst_GetEmpty()
+	variable t
+	put the first char of "" into t
+end handler
+handler TestFirst_PutEmpty()
+	variable t
+	put the first char of "" into t
+end handler
 public handler TestFirst()
 	variable t
 
@@ -51,8 +135,19 @@ public handler TestFirst()
 	put "xyz" into t
 	put t into the first char of t
 	test "first (self)" when t is "xyzyz"
+
+	MCUnitTestHandlerThrows(TestFirst_GetEmpty, "first (get empty)")
+	MCUnitTestHandlerThrows(TestFirst_PutEmpty, "first (put empty)")
 end handler
 
+handler TestLast_GetEmpty()
+	variable t
+	put the last char of "" into t
+end handler
+handler TestLast_PutEmpty()
+	variable t
+	put the last char of "" into t
+end handler
 public handler TestLast()
 	variable t
 
@@ -68,22 +163,52 @@ public handler TestLast()
 	put "xyz" into t
 	put t into the last char of t
 	test "first (self)" when t is "xyxyz"
+
+	MCUnitTestHandlerThrows(TestLast_GetEmpty, "last (get empty)")
+	MCUnitTestHandlerThrows(TestLast_PutEmpty, "last (put empty)")
 end handler
 
-public handler TestDelete()
+----------------------------------------------------------------
+
+handler TestDeleteSingle_Zero()
+	variable t
+	put "x" into t
+	delete char 0 of t
+end handler
+handler TestDeleteSingle_Before()
+	variable t
+	put "x" into t
+	delete char -2 of t
+end handler
+handler TestDeleteSingle_After()
+	variable t
+	put "x" into t
+	delete char 2 of t
+end handler
+handler TestDeleteSingle_FirstEmpty()
+	variable t
+	put "" into t
+	delete the first char of t
+end handler
+handler TestDeleteSingle_LastEmpty()
+	variable t
+	put "" into t
+	delete the last char of t
+end handler
+public handler TestDeleteSingle()
 	variable t
 
 	put "xyz" into t
 	delete char 2 of t
-	test "delete" when t is "xz"
+	test "delete single (+ve)" when t is "xz"
 
 	put "xyz" into t
-	delete char 2 to 2 of t
-	test "delete range (single)" when t is "xz"
+	delete char -2 of t
+	test "delete single (-ve)" when t is "xz"
 
-	put "wxyz" into t
-	delete char 2 to 3 of t
-	test "delete range (multiple)" when t is "wz"
+	MCUnitTestHandlerThrows(TestDeleteSingle_Zero, "delete (single, 0)")
+	MCUnitTestHandlerThrows(TestDeleteSingle_Before, "delete (single, before)")
+	MCUnitTestHandlerThrows(TestDeleteSingle_After, "delete (single, after)")
 
 	put "xyz" into t
 	delete the first char of t
@@ -92,7 +217,58 @@ public handler TestDelete()
 	put "xyz" into t
 	delete the last char of t
 	test "delete last" when t is "xy"
+
+	MCUnitTestHandlerThrows(TestDeleteSingle_FirstEmpty, "delete first (empty)")
+	MCUnitTestHandlerThrows(TestDeleteSingle_LastEmpty, "delete last (empty)")
 end handler
+
+handler TestDeleteRange_Zero()
+	variable t
+	put "xxx" into t
+	delete char 0 to 0 of t
+end handler
+handler TestDeleteRange_Reverse()
+	variable t
+	put "xxx" into t
+	delete char 3 to 2 of t
+end handler
+handler TestDeleteRange_After()
+	variable t
+	put "xyz" into t
+	delete char 3 to 5 of t
+end handler
+handler TestDeleteRange_Before()
+	variable t
+	put "xyz" into t
+	delete char -5 to -3 of t
+	test diagnostic t
+end handler
+public handler TestDeleteRange()
+	variable t
+
+	put "xyz" into t
+	delete char 2 to 2 of t
+	test "delete range (+ve, equal)" when t is "xz"
+
+	put "xyz" into t
+	delete char -2 to -2 of t
+	test "delete range (-ve, equal)" when t is "xz"
+
+	put "wxyz" into t
+	delete char 2 to 3 of t
+	test "delete range (+ve)" when t is "wz"
+
+	put "wxyz" into t
+	delete char -3 to -2 of t
+	test "delete range (+ve)" when t is "wz"
+
+	MCUnitTestHandlerThrows(TestDeleteRange_Zero, "delete range (0)")
+	MCUnitTestHandlerThrowsBroken(TestDeleteRange_Before, "delete range (before)", "bug 14701")
+	MCUnitTestHandlerThrows(TestDeleteRange_After, "delete range (after)")
+	MCUnitTestHandlerThrows(TestDeleteRange_Reverse, "delete range (reverse)")
+end handler
+
+----------------------------------------------------------------
 
 public handler TestContainsChar()
 	test "char is in" when "y" is in "xyz"
@@ -107,56 +283,80 @@ public handler TestContainsString()
 end handler
 
 public handler TestOffset()
+	-- Only test single-character needles for now
 	test "offset (single)" when the offset of "x" in ".xx." is 2
 	test "first offset (single)" when the first offset of "x" in ".xx." is 2
 	test "last offset (single)" when the last offset of "x" in ".xx." is 3
 
-	test "offset chars (single)" when the first offset of chars "x" in ".xx." is 2
-	test "first offset chars (single)" when the first offset of chars "x" in ".xx." is 2
-	test "last offset chars (single)" when the last offset of chars "x" in ".xx." is 3
-
-	test "offset (multiple)" when the offset of "xx" in ".xxx." is 2
-	test "first offset (multiple)" when the first offset of "xx" in ".xxx." is 2
-	test "last offset (multiple)" when the last offset of "xx" in ".xxx." is 3
-
-	test "offset chars (multiple)" when the offset of chars "xx" in ".xxx." is 2
-	test "first offset chars (multiple)" when the first offset of chars "xx" in ".xxx." is 2
-	test "last offset chars (multiple)" when the last offset of chars "xx" in ".xxx." is 3
-
 	test "offset (missing)" when the offset of "xx" in ".x.x." is 0
+
+	test "offset (single, same)" when the offset of "x" in "x" is 1
+	test "first offset (single, same)" when the first offset of "x" in "x" is 1
+	skip test "last offset (single, same)" because "bug 14677"
+	--test "last offset (single, same)" when the last offset of "x" in "x" is 1
+
+	-- "chars" variant
+	test "offset chars (single)" when the first offset of chars "x" in ".xx." is 2
 end handler
 
+handler TestOffsetAfter_Before()
+	variable t
+	put the offset of "x" after -2 in "x" into t
+	test diagnostic t
+end handler
+handler TestOffsetAfter_After()
+	variable t
+	put the offset of "x" after 2 in "x" into t
+	test diagnostic t
+end handler
 public handler TestOffsetAfter()
-	test "offset after (single)" when the offset of "x" after 1 in "x.xx." is 2
-	test "first offset after (single)" when the first offset of "x" after 1 in "x.xx." is 2
-	test "last offset after (single)" when the last offset of "x" after 1 in "x.xx." is 3
+	-- Only test single-character needles for now
+	test "offset after (single, +ve)" when the offset of "x" after 1 in "x.xx." is 2
+	test "first offset after (single, +ve)" when the first offset of "x" after 1 in "x.xx." is 2
+	test "last offset after (single, +ve)" when the last offset of "x" after 1 in "x.xx." is 3
+	test "offset after (single, -ve)" when the offset of "x" after -5 in "x.xx." is 2
+	test "first offset after (single, -ve)" when the first offset of "x" after -5 in "x.xx." is 2
+	test "last offset after (single, -ve)" when the last offset of "x" after -5 in "x.xx." is 3
 
-	test "offset chars after (single)" when the offset of chars "x" after 2 in ".x.xx." is 2
-	test "first offset chars after (single)" when the first offset of chars "x" after 2 in ".x.xx." is 2
-	test "last offset chars after (single)" when the last offset of chars "x" after 2 in ".x.xx." is 3
+	test "offset after (single, missing, +ve)" when the offset of "x" after 1 in "x.." is 0
+	test "first offset after (single, missing, +ve)" when the first offset of "x" after 1 in "x.." is 0
+	test "last offset after (single, missing, +ve)" when the last offset of "x" after 1 in "x.." is 0
+	test "offset after (single, missing, -ve)" when the offset of "x" after -3 in "x.." is 0
+	test "first offset after (single, missing, -ve)" when the first offset of "x" after -3 in "x.." is 0
+	test "last offset after (single, missing, -ve)" when the last offset of "x" after -3 in "x.." is 0
 
-	test "offset after (multiple)" when the offset of "xx" after 1 in "xx.xxx." is 3
-	test "first offset after (multiple)" when the first offset of "xx" after 1 in "xx.xxx." is 3
-	test "last offset after (multiple)" when the last offset of "xx" after 1 in "xx.xxx." is 4
+	-- "after X" where X does not map to a valid coordinate should
+	-- wrap to the ends of the string (i.e. if X > L then treat X
+	-- as L, and if X < -L then treat X as 0).
+	test "offset after (single, invalid +ve)" when the offset of "x" after 3 in "x" is 0
+	test "offset after (single, invalid -ve)" when the offset of "x" after -3 in "x" is 1
+	test "first offset after (single, invalid +ve)" when the first offset of "x" after 3 in "x" is 0
+	test "first offset after (single, invalid -ve)" when the first offset of "x" after -3 in "x" is 1
+	test "last offset after (single, invalid +ve)" when the last offset of "x" after 3 in "x" is 0
+	skip test "last offset after (single, invalid -ve)" because "bug 14677"
+	--test "last offset after (single, invalid -ve)" when the last offset of "x" after -3 in "x" is 1
 
-	test "offset chars after (multiple)" when the offset of chars "xx" after 1 in "xx.xxx." is 3
-	test "first offset chars after (multiple)" when the first offset of chars "xx" after 1 in "xx.xxx." is 3
-	test "last offset chars after (multiple)" when the last offset of chars "xx" after 1 in "xx.xxx." is 4
+	-- "chars" variants
+	test "offset after chars (single, +ve)" when the offset of chars "x" after 1 in "x.xx." is 2
+	test "first offset after chars (single, +ve)" when the first offset of chars "x" after 1 in "x.xx." is 2
+	test "last offset after chars (single, +ve)" when the last offset of chars "x" after 1 in "x.xx." is 3
+end handler
 
-	test "offset after (single, missing)" when the offset of "x" after 2 in "x.." is 0
-	test "offset after (multiple, missing)" when the offset of "xx" after 1 in "xx.x." is 0
+public handler TestOffsetAfterZero()
+	-- "offset of _ after 0 in _" should be equivalent to "offset of _ in _"
+	variable tNoAfter
+	put the offset of "x" in "x" into tNoAfter
+	test "offset after (single, 0)" when the offset of "x" after 0 in "x" is tNoAfter
 
-	test "last offset after (single, missing)" when the last offset of "x" after 2 in "x.." is 0
-	test "last offset after (multiple, missing)" when the last offset of "xxx" after 2 in "xxx.xx.x." is 0
+	put the first offset of "x" in "x" into tNoAfter
+	test "first offset after (single, 0)" when the first offset of "x" after 0 in "x" is tNoAfter
 
-	skip test "last offset after (0)" because "bug 14677"
-	--test "last offset after (0)" when the last offset of "x" after 0 in "x" is ???
+	put the last offset of "x" in ".x." into tNoAfter
+	test "last offset after (single, 0)" when the last offset of "x" after 0 in ".x." is tNoAfter
 
-	skip test "last offset after (before start)" because "bug 14677"
-	--test "last offset after (-ve)" when the last offset of "x" after -1000 in "x" is 1
-
-	broken test "last offset after (-ve)" when the last offset of "x" after -1 in "x" is 1
-	test "last offset after (after end)" when the last offset of "x" after 1000 in "x" is 0
+	skip test "last offset after (single, 0, same)" because "bug 14677"
+	--put the last offset of "x" in "x" into tNoAfter
+	--test "the last offset after (single, 0, same)" when the last offset of "x" after 0 in "x" is tNoAfter
 end handler
 
 public handler TestBeginsWith()
@@ -179,9 +379,9 @@ public handler TestRepeatChar()
 
 	put 0 into tCount
 
-	repeat for each char tIter in "xxx"
-		test "repeatchar (iter)" when tIter is "x"
+	repeat for each char tIter in "xyz"
 		add 1 to tCount
+		test "repeatchar (iter)" when tIter is char tCount of "xyz"
 	end repeat
 
 	test "repeatchar (count)" when tCount is 3
