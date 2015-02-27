@@ -28,21 +28,23 @@ This widget has two properties that can be set: theme and checked.
 widget com.livecode.extensions.livecode.switchButton
 --
 
--- adding metadata to ensure the extension displays correctly in livecode
-metadata title is "Switch Button"
-metadata author is "Georgia Hutchings"
-metadata version is "1.0.3"
---
-
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 --
 
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Switch Button"
+metadata author is "Georgia Hutchings"
+metadata version is "1.0.3"
+--
+
+
+
 -- property declarations
-property theme				get mTheme			set setTheme
 property checked			get mIsChecked		set setChecked
+metadata checked.default is "false"
 --
 
 -- private instance variables
