@@ -686,7 +686,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	typename T::Shdr *t_project_section, *t_payload_section;
 	t_project_section = NULL;
 	t_payload_section = NULL;
-	for(uint32_t i = 0; i < t_success && t_header . e_shnum && t_project_section == NULL && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum && t_project_section == NULL; i++)
 	{
 		char *t_section_name;
 		t_success = MCDeployToLinuxReadString<T>(t_engine, t_section_headers[t_header . e_shstrndx], t_section_headers[i] . sh_name, t_section_name);
