@@ -52,12 +52,17 @@ the expected error will be 'divide by zero', unless y is not 0.
 /* Functionality tests */
 
 foreign handler MCStringDecode(in Encoded as data, in Encoding as int, in IsExternalRep as bool, out String as string) as bool binds to "<builtin>"
+foreign handler MCErrorGetDomain(in Error as any) as string binds to "<builtin>"
+foreign handler MCErrorGetMessage(in Error as any) as string binds to "<builtin>"
+foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional list, out Result as optional any) as optional any binds to "<builtin>"
 
 private handler DecodeUTF8(in pData as data) as string
 	variable tString as string
 	MCStringDecode(pData, 4 /* UTF-8 */, false, tString)
 	return tString
 end handler
+
+////
 
 private handler type IntegerOpCallback(in pLeft as integer, in pRight as integer) as integer
 
@@ -81,6 +86,8 @@ private handler IntegerOpMod(in pLeft as integer, in pRight as integer) as integ
     return pLeft mod pRight
 end handler
 
+////
+
 private handler LoadIntegerTestTable() as list
     variable tTable as list
     put the empty list into tTable
@@ -96,53 +103,73 @@ private handler LoadIntegerTestTable() as list
     return tTable
 end handler
 
-private handler PerformIntegerBinaryOpTest(in pLabel as string, in pIndex as integer, in pOp as IntegerOpCallback)
+private handler PerformIntegerBinaryOpTest(in pLabel as string, in pIndex as integer, in pOp as IntegerOpCallback, in pDivideByZero as boolean)
     variable tTable as list
     put LoadIntegerTestTable() into tTable
     
     variable tTest as list
     repeat for each element tTest in tTable
-        variable tTestLabel
-        put element 1 of tTest && pLabel && element 2 of tTest && "=" && element pIndex of tTest into tTestLabel
-        test diagnostic tTestLabel
-
         variable tX as integer
         variable tY as integer
-        variable tZ as integer
+        variable tZ as optional integer
         put (element 1 of tTest) parsed as number into tX
         put (element 2 of tTest) parsed as number into tY
         put (element pIndex of tTest) parsed as number into tZ
 
+        variable tTestLabel
+        put element 1 of tTest && pLabel && element 2 of tTest && "=" into tTestLabel
+        if tZ is defined then
+            put tTestLabel && element pIndex of tTest into tTestLabel
+        else if pDivideByZero and tY is 0 then
+            put tTestLabel && "dvb" into tTestLabel
+        else
+            put tTestLabel && "ovf" into tTestLabel
+        end if
+
+        test diagnostic tTestLabel
+
+        variable tActualZ
         if (element pIndex of tTest) is not empty then
-            variable tActualZ
             put pOp(tX, tY) into tActualZ
 
             test tTestLabel when tActualZ is tZ
             if tActualZ is not tZ then
                 test diagnostic "DON'T PANIC!" && (tX formatted as string) && (tY formatted as string) && (tZ formatted as string) && (tActualZ formatted as string)
             end if
+        else
+            variable tError as optional any
+            variable tArgs as optional list
+            put [ tX, tY ] into tArgs
+            put MCHandlerTryToInvokeWithList(pOp, tArgs, tActualZ) into tError
+            if pDivideByZero and tY is 0 then
+                test tTestLabel when tError is defined and MCErrorGetMessage(tError) is "division by zero"
+            else
+                test tTestLabel when tError is defined and MCErrorGetMessage(tError) is "numeric overflow"
+            end if
         end if
     end repeat
 end handler
 
+////
+
 public handler TestIntegerAdd()
-    PerformIntegerBinaryOpTest("+", 3, IntegerOpAdd)
+    PerformIntegerBinaryOpTest("+", 3, IntegerOpAdd, false)
 end handler
 
 public handler TestIntegerSubtract()
-    PerformIntegerBinaryOpTest("-", 4, IntegerOpSubtract)
+    PerformIntegerBinaryOpTest("-", 4, IntegerOpSubtract, false)
 end handler
 
 public handler TestIntegerMultiply()
-    PerformIntegerBinaryOpTest("*", 5, IntegerOpMultiply)
+    PerformIntegerBinaryOpTest("*", 5, IntegerOpMultiply, false)
 end handler
 
 public handler TestIntegerDiv()
-    PerformIntegerBinaryOpTest("div", 6, IntegerOpDiv)
+    PerformIntegerBinaryOpTest("div", 6, IntegerOpDiv, true)
 end handler
 
 public handler TestIntegerMod()
-    PerformIntegerBinaryOpTest("mod", 7, IntegerOpMod)
+    PerformIntegerBinaryOpTest("mod", 7, IntegerOpMod, true)
 end handler
 
 /* Syntax and type related tests */
