@@ -18,66 +18,30 @@ end handler
 
 ----------------------------------------------------------------
 
-type FileDescriptor is int
-type ProcessID is int
+foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional list, out Result as optional any) as optional any binds to "<builtin>"
 
-foreign handler __close(in Fd as FileDescriptor) as int binds to "close"
-
-foreign handler __fork() as ProcessID binds to "fork"
-foreign handler __waitpid(in Pid as ProcessID, out Status as int, in Options as int) as int binds to "waitpid"
-
-handler WEXITSTATUS(in pStatus as int) as int
-	if the operating system is "linux" then
-		return pStatus shifted right by 8 bitwise
-	else
-		return pStatus
-	end if
-end handler
-
--- The idea is that this will run on platforms with fork() but skip
--- the test otherwise.
 handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as string, in pBroken as boolean, in pReason as string) as undefined
 
 	variable tHandler as Thunk
 	put pHandler into tHandler
 
-	-- FIXME we ought to also check whether we're running under
-	-- lc-run or in the engine
-	if the operating system is "windows" then
-		skip test pDescription because "Throw tests not implemented on Windows"
-		return
-	end if
+	variable tArgList as optional list
+	variable tResult as optional any
+	variable tMaybeError as optional any
 
-	-- This is pretty nasty.  We call the handler in the
-	-- subprocess, and try to detect whether the subprocess
-	-- crashes.
-	variable tPid as int
-	put __fork() into tPid
+	put [] into tArgList
+	put MCHandlerTryToInvokeWithList(tHandler, tArgList, tResult) into tMaybeError
 
-	if tPid is 0 then
-		-- Discard error message
-		-- FIXME we ought to capture the error message and
-		-- then emit it as test log diagnostic lines.
-		__close(2)
+	variable tHasError as boolean
+	put tMaybeError is defined into tHasError
 
-		-- Call the handler and quit
-		tHandler()
-		quit with status 0
+	test diagnostic tMaybeError
+	if pBroken then
+		broken test pDescription when tHasError because pReason
 	else
-		variable tStatus as int
-		__waitpid(tPid, tStatus, 0)
-
-		-- The "uncaught error" exit status from lc-run is
-		-- 126.
-		variable tHasError as boolean
-		put WEXITSTATUS(tStatus) is 126 into tHasError
-
-		if pBroken then
-			broken test pDescription when tHasError because pReason
-		else
-			test pDescription when tHasError
-		end if
+		test pDescription when tHasError
 	end if
+
 end handler
 
 end module
