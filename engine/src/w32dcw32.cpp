@@ -315,12 +315,19 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 
                 TranslateMessage(&msg);
 
-				// SN-2014-09-05: [[ Bug 13348 ]] Remove the WM_KEYDOWN, WM_SYSKEYDOWN messages
-				// in case TranslateMessage succeeded, and queued a WM_[SYS]CHAR message
-				bool t_cleaned_queue;
-				t_cleaned_queue = PeekMessageW(&msg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE);				
-				if (!t_cleaned_queue)
-					t_cleaned_queue = PeekMessageW(&msg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
+				// If the window receiving the key message is a stack window then we
+				// only want to see WM_CHAR and not WM_KEYDOWN. However, if it is a
+				// non-stack window (like CEF Browser's) we don't want to fiddle with
+				// the message flow.
+				if (MCdispatcher -> findstackwindowid((uintptr_t)msg . hwnd) != NULL)
+				{
+					// SN-2014-09-05: [[ Bug 13348 ]] Remove the WM_KEYDOWN, WM_SYSKEYDOWN messages
+					// in case TranslateMessage succeeded, and queued a WM_[SYS]CHAR message
+					bool t_cleaned_queue;
+					t_cleaned_queue = PeekMessageW(&msg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE);				
+					if (!t_cleaned_queue)
+						t_cleaned_queue = PeekMessageW(&msg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
+				}
 
 				DispatchMessageW(&msg);
 			}
