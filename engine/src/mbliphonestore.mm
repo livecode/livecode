@@ -771,7 +771,7 @@ void update_purchase_state(MCPurchase *p_purchase)
     if (!s_did_restore)
     {
         MCPurchase *t_empty_purchase = new MCPurchase[1]();
-        t_empty_purchase -> prod_id = "";
+        t_empty_purchase -> prod_id = MCValueRetain(kMCEmptyString);
         t_empty_purchase -> id = 0;
         t_empty_purchase -> ref_count = 0;
         t_empty_purchase -> state = kMCPurchaseStateRestored;
