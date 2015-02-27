@@ -2103,10 +2103,10 @@ bool __MCNumberInitialize(void)
     if (!MCNumberCreateWithReal(-1.0, kMCRealMinusOne))
         return false;
 		
-    if (!MCErrorTypeInfoCreate(MCNAME("arithmetic"), MCSTR("division by zero"), kMCNumberDivisionByZeroErrorTypeInfo))
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.DivisionByZeroError"), MCNAME("arithmetic"), MCSTR("division by zero"), kMCNumberDivisionByZeroErrorTypeInfo))
         return false;
     
-    if (!MCErrorTypeInfoCreate(MCNAME("arithmetic"), MCSTR("numeric overflow"), kMCNumberOverflowErrorTypeInfo))
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NumericOverflowError"), MCNAME("arithmetic"), MCSTR("numeric overflow"), kMCNumberOverflowErrorTypeInfo))
         return false;
     
     return true;
