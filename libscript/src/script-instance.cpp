@@ -396,7 +396,7 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     t_setter = t_definition -> setter != 0 ? self -> module -> definitions[t_definition -> setter - 1] : nil;
     
     // If there is no setter for the property then this is an error.
-    if (t_definition -> setter == nil)
+    if (t_setter == nil)
         return MCScriptThrowAttemptToSetReadOnlyPropertyError(self -> module, p_property);
     
     /* LOAD CHECK */ __MCScriptAssert__(t_setter != nil,
