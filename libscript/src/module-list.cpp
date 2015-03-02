@@ -20,11 +20,25 @@
 
 extern "C" MC_DLLEXPORT void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
 {
+	if (MCProperListIsEmpty (p_target))
+	{
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
+		r_output = nil;
+		return;
+	}
+
     r_output = MCValueRetain(MCProperListFetchHead(p_target));
 }
 
 extern "C" MC_DLLEXPORT void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
 {
+	if (MCProperListIsEmpty (p_target))
+	{
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
+		r_output = nil;
+		return;
+	}
+
     r_output = MCValueRetain(MCProperListFetchTail(p_target));
 }
 
