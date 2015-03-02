@@ -7474,3 +7474,15 @@ void MCMeasureText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         r_value . type = kMCExecValueTypeStringRef;
     }
 }
+
+#ifdef _TEST
+#include "test.h"
+
+static void TestIsOperator(void)
+{
+    MCTestAssertTrue("something is correct", true);
+}
+
+TEST_DEFINE(IsOperator, TestIsOperator)
+
+#endif

@@ -66,6 +66,9 @@ public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
+#ifdef MODE_TEST
+	virtual void timer(MCNameRef mptr, MCParameter *params);
+#endif
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
@@ -73,6 +76,7 @@ public:
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
+
 	// dummy cut function for checking licensing
 	virtual Boolean cut(Boolean home);
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *params, MCObject *pass_from);
