@@ -855,7 +855,7 @@ void MCRound::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         return;
 
     real64_t t_digit;
-    if (!ctxt . EvalOptionalExprAsDouble(digit, nil, EE_RANDOM_BADSOURCE, t_digit))
+    if (!ctxt . EvalOptionalExprAsDouble(digit, 0, EE_RANDOM_BADSOURCE, t_digit))
         return;
 
 	if (digit != nil)
@@ -991,7 +991,7 @@ void MCStatRound::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	
 
     real64_t t_digit;
-    if (!ctxt . EvalOptionalExprAsDouble(digit, nil, EE_RANDOM_BADSOURCE, t_digit))
+    if (!ctxt . EvalOptionalExprAsDouble(digit, 0, EE_RANDOM_BADSOURCE, t_digit))
         return;
     
     if (digit != nil)
