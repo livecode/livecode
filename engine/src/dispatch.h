@@ -63,6 +63,9 @@ public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
+#ifdef _TEST
+	virtual void timer(MCNameRef mptr, MCParameter *params);
+#endif
 	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	// dummy cut function for checking licensing

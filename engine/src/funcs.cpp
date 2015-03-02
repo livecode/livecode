@@ -6942,3 +6942,15 @@ Exec_stat MCMeasureText::eval(MCExecPoint &ep)
     ep.setuint(t_bounds . width);
     return ES_NORMAL;
 }
+
+#ifdef _TEST
+#include "test.h"
+
+static void TestIsOperator(void)
+{
+    MCTestAssertTrue("something is correct", true);
+}
+
+TEST_DEFINE(IsOperator, TestIsOperator)
+
+#endif
