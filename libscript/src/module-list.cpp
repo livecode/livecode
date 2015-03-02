@@ -60,7 +60,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCListExecPopElement(bool p_is_front, MCPrope
     MCAutoProperListRef t_mutable_list;
     MCAutoValueRef t_result;
 
-	if (MCProperListGetLength (x_source) < 1)
+    if (MCProperListIsEmpty (x_source))
 	{
 		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("pop from empty list"), nil);
 		return nil;
