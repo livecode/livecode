@@ -6,6 +6,8 @@
 	<string>${APP_IDENTIFIER}.${BUNDLE_IDENTIFIER}</string>
 	<key>get-task-allow</key>
 	<false/>
+	<key>beta-reports-active</key>
+	<true/>
 	${REMOTE_NOTIFICATIONS}
 </dict>
 </plist>
