@@ -3161,9 +3161,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				char *t_buffer = (char*)MapViewOfFile(t_file_mapped_handle,
 													  FILE_MAP_READ, 0, 0, 0);
 				
+				// SN-2015-03-02: [[ Bug 14696 ]] If the file is too large,
+				//  the file mapping won't work, and a normal file handler
+				//  should be used.
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
+					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
 				}
 				else
 				{
