@@ -155,8 +155,9 @@ void MCStoreGetPurchaseError(MCExecContext& ctxt, int p_id, MCStringRef& r_error
     
     t_success = MCPurchaseFindById(p_id, t_purchase);
 	
+    // PM-2015-01-19: [[ Bug 14401 ]] Fixed mismerge issue that caused mobileStorePurchaseError to return empty 
     if (t_success)
-        t_success = (t_purchase == nil || t_purchase->state != kMCPurchaseStateError);
+        t_success = (t_purchase != nil && t_purchase->state == kMCPurchaseStateError);
     
 	if (t_success)
 		t_success = MCPurchaseGetError(t_purchase, &t_error);

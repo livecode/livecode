@@ -21,6 +21,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCDeployArchitecture
+{
+    kMCDeployArchitecture_Unknown,
+    kMCDeployArchitecture_I386,
+    kMCDeployArchitecture_X86_64,
+    kMCDeployArchitecture_ARMV6,
+    kMCDeployArchitecture_ARMV7,
+    kMCDeployArchitecture_ARMV7S,
+    kMCDeployArchitecture_ARM64,
+    kMCDeployArchitecture_PPC,
+    kMCDeployArchitecture_PPC64,
+};
+
+struct MCDeployMinOSVersion
+{
+    // The architecture this version applies to.
+    MCDeployArchitecture architecture;
+    // The version word encoded as nibbles XXXX.YY.ZZ for X.Y.Z.
+    uint32_t version;
+};
+
 struct MCDeployParameters
 {
 	// The path to the engine binaries to use. On Windows and Linux this should
@@ -34,11 +55,16 @@ struct MCDeployParameters
 	// fields.
 	MCArrayRef version_info;
 
-	// The root stackfile to be included in the standalone.
+    // When building for Mac/iOS, you can specify a min os version per arch
+    // slice.
+    MCDeployMinOSVersion *min_os_versions;
+    uindex_t min_os_version_count;
+    
+    // The root stackfile to be included in the standalone.
 	MCStringRef stackfile;
 	
-	// The array of auxillary stackfiles to be included in the standalone.
-	MCArrayRef auxillary_stackfiles;
+    // The array of auxiliary stackfiles to be included in the standalone.
+    MCArrayRef auxiliary_stackfiles;
 
 	// The array of externals to be loaded on startup by the standalone.
 	MCArrayRef externals;
@@ -52,6 +78,9 @@ struct MCDeployParameters
 	// The list of redirection mappings
 	MCArrayRef redirects;
 
+    // AL-2015-02-10: [[ Standalone Inclusions ]] The list of resource mappings.
+    MCArrayRef library;
+    
 	// On Windows, the icon files to be inserted into the resource directory.
 	MCStringRef app_icon;
 	MCStringRef doc_icon;
@@ -81,7 +110,7 @@ struct MCDeployParameters
 		engine_ppc		= MCValueRetain(kMCEmptyString);
 		version_info	= MCValueRetain(kMCEmptyArray);
 		stackfile		= MCValueRetain(kMCEmptyString);
-		auxillary_stackfiles = MCValueRetain(kMCEmptyArray);
+        auxiliary_stackfiles = MCValueRetain(kMCEmptyArray);
 		externals		= MCValueRetain(kMCEmptyArray);
 		startup_script	= MCValueRetain(kMCEmptyString);
 		timeout			= 0;
@@ -91,18 +120,23 @@ struct MCDeployParameters
 		manifest		= MCValueRetain(kMCEmptyString);
 		payload			= MCValueRetain(kMCEmptyString);
 		spill			= MCValueRetain(kMCEmptyString);
-		output			= MCValueRetain(kMCEmptyString);
+        output			= MCValueRetain(kMCEmptyString);
         modules         = MCValueRetain(kMCEmptyArray);
+        library         = MCValueRetain(kMCEmptyArray);
+        
+        // SN-2015-02-04: [[ Merge-6.7.2 ]] Init the versions pointer / count
+        min_os_versions = nil;
+        min_os_version_count = 0;
 	}
 	
 	~MCDeployParameters()
-	{
+    {
         MCValueRelease(engine);
         MCValueRelease(engine_x86);
         MCValueRelease(engine_ppc);
         MCValueRelease(version_info);
         MCValueRelease(stackfile);
-        MCValueRelease(auxillary_stackfiles);
+        MCValueRelease(auxiliary_stackfiles);
         MCValueRelease(externals);
         MCValueRelease(startup_script);
         MCValueRelease(redirects);
@@ -113,6 +147,8 @@ struct MCDeployParameters
         MCValueRelease(spill);
         MCValueRelease(output);
         MCValueRelease(modules);
+        MCValueRelease(library);
+        MCMemoryDeleteArray(min_os_versions);
 	}
 	
 	// Creates using an array of parameters

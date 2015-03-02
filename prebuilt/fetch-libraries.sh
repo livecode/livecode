@@ -67,7 +67,7 @@ else
     SELECTED_PLATFORMS="$@"
 fi
 
-for PLATFORM in ${SELECTED_PLATFORMS}; do
+for PLATFORM in ${SELECTED_PLATFORMS} ; do
 	eval "ARCHS=( \${ARCHS_${PLATFORM}[@]} )"
 	eval "LIBS=( \${LIBS_${PLATFORM}[@]} )"
 	eval "SUBPLATFORMS=( \${SUBPLATFORMS_${PLATFORM}[@]} )"

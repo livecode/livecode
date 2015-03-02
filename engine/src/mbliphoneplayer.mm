@@ -65,6 +65,8 @@ class MCiOSPlayerControl;
 }
 
 - (id)initWithInstance:(MCiOSPlayerControl*)instance;
+- (void)beginWithOverlay: (bool)p_overlay;
+- (void)end;
 - (void)dealloc;
 
 - (void)movieDurationAvailable: (NSNotification *)notification;
@@ -80,8 +82,6 @@ class MCiOSPlayerControl;
 - (void)playerPlaybackStateDidChange: (NSNotification *)notification;
 - (void)playerScalingModeDidChange: (NSNotification *)notification;
 - (void)playerWindowTouched: (UIControl*) p_sender;
-- (UIControl*)getOverlay;
-- (void)setOverlay: (UIControl*) p_overlay;
 
 @end
 
@@ -603,12 +603,13 @@ void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadSt
         MPMovieLoadState t_state;
         t_state = [m_controller loadState];
         
+        // PM-2015-02-13: [[ Bug 14604 ]] Used (1 << kMCNativeControlLoadState*) to align with the definition of MCExecFormatSet()
         if (t_state & MPMovieLoadStatePlayable)
-            t_load_state |= kMCNativeControlLoadStatePlayable;
+            t_load_state |= 1 << kMCNativeControlLoadStatePlayable;
         if (t_state & MPMovieLoadStatePlaythroughOK)
-            t_load_state |= kMCNativeControlLoadStatePlaythroughOK;
+            t_load_state |= 1 << kMCNativeControlLoadStatePlaythroughOK;
         if (t_state & MPMovieLoadStateStalled)
-            t_load_state |= kMCNativeControlLoadStateStalled;
+            t_load_state |= 1 << kMCNativeControlLoadStateStalled;
     }
     r_state = (MCNativeControlLoadState)t_load_state;
 }
@@ -902,25 +903,15 @@ Exec_stat MCiOSPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoin
 
 void MCiOSPlayerControl::Play()
 {
+    // PM-2014-09-18: [[ Bug 13048 ]] Make sure movieTouched message is sent
+    [m_delegate beginWithOverlay:[m_controller isFullscreen]];
     [m_controller play];
 }
 
 void MCiOSPlayerControl::ExecPlay(MCExecContext& ctxt)
 {
     // PM-2014-09-18: [[ Bug 13048 ]] Make sure movieTouched message is sent
-    if ([m_controller isFullscreen])
-    {
-        // The movie's window is the one that is active
-        UIWindow *t_window = [[UIApplication sharedApplication] keyWindow];
-
-        // Now we create an invisible control with the same size as the window
-        [m_delegate setOverlay: [[UIControl alloc] initWithFrame: [t_window frame]]];
-
-        // We want to get notified whenever the overlay control is touched
-        [m_delegate.getOverlay addTarget: m_delegate action: @selector(playerWindowTouched:) forControlEvents: UIControlEventTouchDown];
-        [t_window addSubview: m_delegate.getOverlay];
-
-    }
+    [m_delegate beginWithOverlay:[m_controller isFullscreen]];
     [m_controller play];
 }
 void MCiOSPlayerControl::ExecPause(MCExecContext& ctxt)
@@ -1157,15 +1148,37 @@ static struct { NSString* const* name; SEL selector; } s_player_notifications[] 
 	return self;
 }
 
-- (void)dealloc
+// PM-2015-02-12: [[ Bug 14525 ]] Moved the overlay code entirely into the delegate
+- (void)beginWithOverlay:(bool)p_overlay
+{
+    if (p_overlay)
+    {
+        // The movie's window is the one that is active
+        UIWindow *t_window = [[UIApplication sharedApplication] keyWindow];
+
+        // Now we create an invisible control with the same size as the window
+        m_overlay = [[UIControl alloc] initWithFrame: [t_window frame]];
+        
+        // We want to get notified whenever the overlay control is touched
+        [m_overlay addTarget: self action: @selector(playerWindowTouched:) forControlEvents: UIControlEventTouchDown];
+        [t_window addSubview: m_overlay];
+    }
+}
+
+- (void)end
 {
     if (m_overlay != nil)
     {
         [m_overlay removeTarget: self action: @selector(playerWindowTouched:) forControlEvents: UIControlEventTouchDown];
         [m_overlay removeFromSuperview];
         [m_overlay release];
+        m_overlay = nil;
     }
-    
+}
+
+- (void)dealloc
+{
+    [self end];
 	[[NSNotificationCenter defaultCenter] removeObserver: self];
 	[super dealloc];
 }
@@ -1215,12 +1228,7 @@ static struct { NSString* const* name; SEL selector; } s_player_notifications[] 
 - (void)playerPlaybackDidFinish: (NSNotification *)notification
 {
     // PM-2014-09-18: [[ Bug 13048 ]] Clear m_overlay if playback finishes for any reason
-    if (m_overlay != nil)
-    {
-        [m_overlay removeTarget: self action: @selector(playerWindowTouched:) forControlEvents: UIControlEventTouchDown];
-        [m_overlay removeFromSuperview];
-        [m_overlay release];
-    }
+    [self end];
     
 	NSObject *t_value;
 	
@@ -1257,16 +1265,6 @@ static struct { NSString* const* name; SEL selector; } s_player_notifications[] 
 - (void)playerWindowTouched: (UIControl*) p_sender
 {
     MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, MCM_movie_touched));
-}
-
-- (UIControl*)getOverlay
-{
-    return m_overlay;
-}
-
-- (void)setOverlay:(UIControl *)p_overlay
-{
-    m_overlay = p_overlay;
 }
 @end
 

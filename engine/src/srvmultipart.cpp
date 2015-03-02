@@ -50,6 +50,10 @@ public:
 	{
 		m_stream = p_stream;
 		m_table = NULL;
+        // SN-2015-02-09: [[ Bug 14477 ]] Initialise to NULL,
+        //  otherwise setBoundary calls MCValueRelease on some
+        //  random position in the memory.
+        m_boundary = NULL;
 		
 		setBoundary(p_boundary);
 		
@@ -59,6 +63,8 @@ public:
 	~MCBoundaryReader()
 	{
 		MCMemoryDeleteArray(m_table);
+        // SN-2015-02-09: [[ Bug 14477 ]] Release what we retained.
+        MCValueRelease(m_boundary);
 	}
 	
 	void setBoundary(MCStringRef p_boundary)
@@ -544,10 +550,16 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary
 	// after a CRLF
 	if (t_success)
 	{
+        // SN-2015-02-26: [[ CID 37861 ]] Make sure that we never try to create
+        //  a MCBoundaryReader with a NULL p_boundary.
         MCAutoStringRef t_boundary_head, t_boundary_tail;
-        /* UNCHECKED */ MCStringDivideAtIndex(t_boundary, 2, &t_boundary_head, &t_boundary_tail);
-		t_reader = new MCBoundaryReader(p_stream, *t_boundary_tail);
-		t_success = t_reader != NULL;
+        if (!MCStringDivideAtIndex(t_boundary, 2, &t_boundary_head, &t_boundary_tail))
+            t_success = false;
+        else
+        {
+            t_reader = new MCBoundaryReader(p_stream, *t_boundary_tail);
+            t_success = t_reader != NULL;
+        }
 	}
 	
 	bool t_boundary_reached = false;

@@ -307,6 +307,7 @@ __MCSFileSetContents (MCStringRef p_native_path,
 		{
 			t_success = __MCSFileThrowWriteErrorWithErrno (*t_temp_native_path, errno);
 		}
+		t_total_written += t_written_len;
 	}
 
 	/* Set the mode.  The default permissions are the same as if the

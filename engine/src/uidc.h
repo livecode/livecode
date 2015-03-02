@@ -384,6 +384,8 @@ public:
 
 	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);
 	
+	virtual bool platform_get_display_handle(void *&r_display);
+	
 ////////////////////////////////////////////////////////////////////////////////
 	
 	// IM-2013-09-30: [[ FullscreenMode ]] Returns true if windows on this display are 

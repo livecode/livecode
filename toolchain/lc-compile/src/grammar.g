@@ -180,7 +180,19 @@
     'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
         "foreign" @(-> Position) "type" Identifier(-> Id)
     
-    'rule' ImportDefinition(-> handler(Position, public, Id, Signature, nil, nil)):
+    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, Signature))):
+        "handler" @(-> Position) "type" Identifier(-> Id) Signature(-> Signature)
+        
+    'rule' ImportDefinition(-> type(Position, public, Id, Type)):
+        "type" @(-> Position) Identifier(-> Id) "is" Type(-> Type)
+
+    'rule' ImportDefinition(-> constant(Position, public, Id, nil)):
+        "constant" @(-> Position) Identifier(-> Id)
+
+    'rule' ImportDefinition(-> variable(Position, public, Id, Type)):
+        "variable" @(-> Position) Identifier(-> Id) "as" Type(-> Type)
+
+    'rule' ImportDefinition(-> handler(Position, public, Id, normal, Signature, nil, nil)):
         "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
     'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
@@ -283,7 +295,7 @@
 'nonterm' ConstantDefinition(-> DEFINITION)
 
     'rule' ConstantDefinition(-> constant(Position, Access, Name, Value)):
-        Access(-> Access) "constant" @(-> Position) Identifier(-> Name) "is" ConstantTermExpression(-> Value)
+        Access(-> Access) "constant" @(-> Position) Identifier(-> Name) "is" Expression(-> Value)
 
 'nonterm' Access(-> ACCESS)
 
@@ -305,6 +317,9 @@
 
     'rule' VariableDefinition(-> variable(Position, Access, Name, Type)):
         Access(-> Access) "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
+
+    'rule' VariableDefinition(-> contextvariable(Position, Access, Name, Type, Default)):
+        Access(-> Access) "context" @(-> Position) "variable" Identifier(-> Name) OptionalTypeClause(-> Type) "default" Expression(-> Default)
         
 'nonterm' OptionalTypeClause(-> TYPE)
 
@@ -403,12 +418,16 @@
 
 'nonterm' HandlerDefinition(-> DEFINITION)
 
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, normal, Signature, nil, Body)):
         Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
         
-    --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, context, Signature, nil, Body)):
+        Access(-> Access) "context" @(-> Position) "handler" Identifier(-> Name) Signature(-> Signature) Separator
+            Statements(-> Body)
+        "end" "handler"
+            --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
     --    Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
     --        Definitions(-> Definitions)
     --    "begin"
@@ -601,7 +620,7 @@
         
     'rule' Statements(-> nil):
         -- empty
-        
+
 'nonterm' Statement(-> STATEMENT)
 
     'rule' Statement(-> variable(Position, Name, Type)):
@@ -681,6 +700,9 @@
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+
+    'rule' Statement(-> postfixinto(Position, Statement, Target)):
+        CustomStatements(-> Statement) "into" @(-> Position) Expression(-> Target)
 
     'rule' Statement(-> Statement):
         CustomStatements(-> Statement)
@@ -846,6 +868,14 @@
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
 
+/*'nonterm' ConstantTermExpressionList(-> EXPRESSIONLIST)
+
+    'rule' ConstantTermExpressionList(-> expressionlist(Head, Tail)):
+        ConstantTermExpression(-> Head) "," ConstantTermExpressionList(-> Tail)
+        
+    'rule' ConstantTermExpressionList(-> expressionlist(Tail, nil)):
+        ConstantTermExpression(-> Tail)*/
+
 'nonterm' ConstantTermExpression(-> EXPRESSION)
 
     'rule' ConstantTermExpression(-> undefined(Position)):
@@ -865,6 +895,12 @@
 
     'rule' ConstantTermExpression(-> string(Position, Value)):
         StringLiteral(-> Value) @(-> Position)
+        
+/*    'rule' ConstantTermExpression(-> list(Position, Value)):
+        "[" @(-> Position) ConstantTermExpressionList(-> Value) "]"
+        
+    'rule' ConstantTermExpression(-> list(Position, nil)):
+        "[" @(-> Position) "]"*/
 
 ----------
 
@@ -1089,7 +1125,7 @@
     'rule' StringLiteral(-> Value):
         STRING_LITERAL(-> EscapedValue) @(-> Position)
         (|
-            UnescapeStringLiteral(EscapedValue -> Value)
+            UnescapeStringLiteral(Position, EscapedValue -> Value)
         ||
             Error_MalformedEscapedString(Position, EscapedValue)
             where(EscapedValue -> Value)

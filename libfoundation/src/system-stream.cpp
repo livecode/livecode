@@ -79,36 +79,18 @@ static MCTypeInfoRef kMCSStreamIOErrorTypeInfo;
 static MCTypeInfoRef kMCSStreamEndOfFileErrorTypeInfo;
 
 static bool
-__MCSStreamCreateNamedErrorType (MCNameRef p_name,
-                                 MCStringRef p_message,
-                                 MCTypeInfoRef & r_error_type)
-{
-	MCAutoTypeInfoRef t_raw_typeinfo, t_typeinfo;
-
-	if (!MCErrorTypeInfoCreate (MCNAME("stdio"), p_message, &t_raw_typeinfo))
-		return false;
-
-	if (!MCNamedTypeInfoCreate (p_name, &t_typeinfo))
-		return false;
-
-	if (!MCNamedTypeInfoBind (*t_typeinfo, *t_raw_typeinfo))
-		return false;
-
-	r_error_type = MCValueRetain (*t_typeinfo);
-	return true;
-}
-
-static bool
 __MCSStreamInitializeErrors (void)
 {
-	if (!__MCSStreamCreateNamedErrorType(
+	if (!MCNamedErrorTypeInfoCreate(
 	        MCNAME("com.livecode.stream.IOError"),
+			MCNAME("stdio"),
 	        MCSTR("Stream input/output error: %{description}"),
 	        kMCSStreamIOErrorTypeInfo))
 		return false;
 
-	if (!__MCSStreamCreateNamedErrorType(
+	if (!MCNamedErrorTypeInfoCreate(
 	         MCNAME("com.livecode.stream.EndOfFileError"),
+			 MCNAME("stdio"),
 	         MCSTR("Reached end of file while reading from stream"),
 	         kMCSStreamEndOfFileErrorTypeInfo))
 		return false;
@@ -432,6 +414,9 @@ __MCSStreamGetStandardStream (FILE *p_cstream,
 	if (NULL == x_static_stream ||
 	    p_cstream != __MCSStdioStreamGetCStream (x_static_stream))
 	{
+		/* Always disable buffering */
+		setvbuf (p_cstream, NULL, _IONBF, 0);
+
 		MCValueRelease (x_static_stream);
 		if (!__MCSStreamCreateWithStdio (p_cstream, x_static_stream))
 			return false;

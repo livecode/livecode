@@ -22,79 +22,102 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /* ================================================================ */
 
-class MCAutoScriptModuleRef
+template <typename T, T (*REF)(T), void (*UNREF)(T)>
+class MCAutoScriptObjectRefBase
 {
 public:
-	MCAutoScriptModuleRef (void)
+	MCAutoScriptObjectRefBase (void)
+		: m_value(nil)
+	{}
+
+	~MCAutoScriptObjectRefBase (void)
 	{
-		m_value = nil;
+		UNREF (m_value);
 	}
 
-	~MCAutoScriptModuleRef (void)
-	{
-		MCScriptReleaseModule (m_value);
-	}
-
-	MCScriptModuleRef operator = (MCScriptModuleRef value)
+	MCAutoScriptObjectRefBase operator = (T value)
 	{
 		MCAssert (nil == m_value);
-		m_value = MCScriptRetainModule (value);
+		m_value = REF (value);
 		return value;
 	}
 
-	MCScriptModuleRef& operator & (void)
+	T & operator & (void)
 	{
 		MCAssert (nil == m_value);
 		return m_value;
 	}
 
-	MCScriptModuleRef operator * (void) const
+	T operator * (void) const
 	{
 		return m_value;
 	}
 
 private:
-	MCScriptModuleRef m_value;
-
-	MCAutoScriptModuleRef & operator = (MCAutoScriptModuleRef & x);
+	T m_value;
+	MCAutoScriptObjectRefBase<T,REF,UNREF> & operator = (MCAutoScriptObjectRefBase<T,REF,UNREF> & x);
 };
 
-class MCAutoScriptInstanceRef
+typedef MCAutoScriptObjectRefBase<MCScriptModuleRef, MCScriptRetainModule, MCScriptReleaseModule> MCAutoScriptModuleRef;
+typedef MCAutoScriptObjectRefBase<MCScriptInstanceRef, MCScriptRetainInstance, MCScriptReleaseInstance> MCAutoScriptInstanceRef;
+
+/* ================================================================ */
+
+template <typename T, T (*REF)(T), void (*UNREF)(T)>
+class MCAutoScriptObjectRefArrayBase
 {
 public:
-	MCAutoScriptInstanceRef (void)
+	MCAutoScriptObjectRefArrayBase (void)
+		: m_values(nil), m_count(0)
+	{}
+
+	~MCAutoScriptObjectRefArrayBase (void)
 	{
-		m_value = nil;
+		if (nil == m_values) return;
+		for (size_t i = 0; i < m_count; ++i)
+		{
+			UNREF(m_values[i]);
+		}
+		MCMemoryDeleteArray (m_values);
+		m_values = 0;
+		m_count = 0;
 	}
 
-	~MCAutoScriptInstanceRef (void)
+	bool New (uindex_t p_size)
 	{
-		MCScriptReleaseInstance (m_value);
+		MCAssert (nil == m_values);
+		return MCMemoryNewArray (p_size, m_values, m_count);
 	}
 
-	MCScriptInstanceRef operator = (MCScriptInstanceRef value)
+	T* Ptr ()
 	{
-		MCAssert (nil == m_value);
-		m_value = MCScriptRetainInstance (value);
-		return value;
+		return m_values;
 	}
 
-	MCScriptInstanceRef& operator & (void)
+	uindex_t Size() const
 	{
-		MCAssert (nil == m_value);
-		return m_value;
+		return m_count;
 	}
 
-	MCScriptInstanceRef operator * (void) const
+	bool Resize(uindex_t p_new_count)
 	{
-		return m_value;
+		return MCMemoryResizeArray (p_new_count, m_values, m_count);
+	}
+
+	T & operator [] (const int p_index)
+	{
+		MCAssert (nil != m_values);
+		MCAssert (p_index >= 0);
+		return m_values[p_index];
 	}
 
 private:
-	MCScriptInstanceRef m_value;
-
-	MCAutoScriptInstanceRef & operator = (MCAutoScriptInstanceRef & x);
+	T *m_values;
+	uindex_t m_count;
 };
+
+typedef MCAutoScriptObjectRefArrayBase<MCScriptModuleRef, MCScriptRetainModule, MCScriptReleaseModule> MCAutoScriptModuleRefArray;
+typedef MCAutoScriptObjectRefArrayBase<MCScriptInstanceRef, MCScriptRetainInstance, MCScriptReleaseInstance> MCAutoScriptInstanceRefArray;
 
 /* ================================================================ */
 

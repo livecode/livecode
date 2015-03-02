@@ -485,7 +485,8 @@ enum MCMiscStatusBarStyle
 {
     kMCMiscStatusBarStyleDefault,
     kMCMiscStatusBarStyleTranslucent,
-    kMCMiscStatusBarStyleOpaque
+    kMCMiscStatusBarStyleOpaque,
+    kMCMiscStatusBarStyleSolid
 };
 
 enum MCMiscKeyboardType

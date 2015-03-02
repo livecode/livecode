@@ -45,7 +45,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "exec.h"
 #include "system.h"
+#include "dispatch.h"
 
+#if defined(_MACOSX) || defined(_MAC_SERVER)
+#include <mach-o/dyld.h>
+#endif
 
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
@@ -2645,13 +2649,12 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
 	{
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 
 		// Send "putURL" message
 		Boolean oldlock = MClockmessages;
 		MClockmessages = False;
 		MCParameter p1;
-		p1 . setvalueref_argument(*t_data);
+		p1 . setvalueref_argument(p_data);
 		MCParameter p2;
 		p2 . setvalueref_argument(p_url);
 		p1.setnext(&p2);
@@ -2664,6 +2667,7 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 		case ES_PASS:
 			// Either there was no message handler, or the handler passed the message,
 			// so process the URL in the engine.
+			/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 			MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
 			break;
 
@@ -3197,6 +3201,112 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 	return t_compval;
 }
 #endif
+
+///////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading where
+//  p_module can be a universal module name, where a mapping from module names to
+// relative paths has been provided.
+// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
+//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+void* MCU_loadmodule(const char *p_module)
+{
+    MCSysModuleHandle t_handle;
+    t_handle = nil;
+#if defined(_MACOSX) || defined(_MAC_SERVER)
+    t_handle = (MCSysModuleHandle)NSAddImage(p_module, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+    if (t_handle != nil)
+        return t_handle;
+    // MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
+    uint32_t t_buffer_size;
+    t_buffer_size = 0;
+    _NSGetExecutablePath(NULL, &t_buffer_size);
+    char *t_module_path;
+    t_module_path = (char *) malloc(t_buffer_size + strlen(p_module) + 1);
+    if (t_module_path != NULL)
+    {
+        if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
+        {
+            char *t_last_slash;
+            t_last_slash = t_module_path + t_buffer_size;
+            for (uint32_t i = 0; i < t_buffer_size; i++)
+            {
+                if (*t_last_slash == '/')
+                {
+                    *(t_last_slash + 1) = '\0';
+                    break;
+                }
+                t_last_slash--;
+            }
+            strcat(t_module_path, p_module);
+            t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+        }
+        free(t_module_path);
+        // AL-2015-02-17: [[ SB Inclusions ]] Return the handle if found here.
+        if (t_handle != nil)
+            return t_handle;
+    }
+#endif
+
+    MCAutoStringRef t_path;
+    
+    if (!MCdispatcher || !MCdispatcher -> fetchlibrarymapping(p_module, &t_path))
+    {
+        if (!MCStringCreateWithCString(p_module, &t_path))
+            return nil;
+    }
+
+    t_handle = MCS_loadmodule(*t_path);
+    
+    if (t_handle != nil)
+        return t_handle;
+    
+    MCAutoStringRef t_filename;
+    if (MCStringGetCharAtIndex(*t_path ,0) == '/')
+    {
+        if (!MCStringCopy(*t_path, &t_filename))
+            return nil;
+    }
+    else
+    {
+        uindex_t t_last_slash_index;
+        if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
+            t_last_slash_index = MCStringGetLength(MCcmd);
+
+        MCRange t_range;
+        t_range = MCRangeMake(0, t_last_slash_index);
+        if (!MCStringFormat(&t_filename, "%*@/%@", &t_range, MCcmd, *t_path))
+            return nil;
+    }
+
+    t_handle = MCS_loadmodule(*t_filename);
+    
+    return t_handle;
+}
+
+// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
+//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+void MCU_unloadmodule(void *p_module)
+{
+    MCS_unloadmodule((MCSysModuleHandle)p_module);
+}
+
+// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
+//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
+{
+#if defined(_MACOSX) || defined(_MAC_SERVER)
+    NSSymbol t_symbol;
+    t_symbol = NSLookupSymbolInImage((mach_header *)p_module, p_symbol, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+    if (t_symbol != NULL)
+        return NSAddressOfSymbol(t_symbol);
+#endif
+    MCAutoStringRef t_symbol_str;
+    if (!MCStringCreateWithCString(p_symbol, &t_symbol_str))
+        return nil;
+
+    return MCS_resolvemodulesymbol((MCSysModuleHandle)p_module, *t_symbol_str);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

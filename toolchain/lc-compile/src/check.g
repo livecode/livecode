@@ -73,7 +73,12 @@
     --
 
     'rule' CheckBindings(DEFINITION'constant(Position, _, _, Value)):
-        /* BD1 */ CheckBindingsOfConstantExpression(Value)
+        --/* BD1 */ CheckBindingsOfConstantExpression(Value)
+        (|
+            IsExpressionSimpleConstant(Value)
+        ||
+            Error_ConstantsMustBeSimple(Position)
+        |)
 
     'rule' CheckBindings(DEFINITION'property(Position, _, _, Getter, OptionalSetter)):
         /* BD2 */ CheckBindingIsVariableOrHandlerId(Getter)
@@ -119,7 +124,7 @@
     --
 
     'rule' CheckBindings(EXPRESSION'slot(_, Name)):
-        /* BE1 */ CheckBindingIsVariableOrHandlerId(Name)
+        /* BE1 */ CheckBindingIsConstantOrVariableOrHandlerId(Name)
 
     'rule' CheckBindings(EXPRESSION'call(_, Handler, Arguments)):
         /* BE2 */ CheckBindingIsCallableVariableOrHandlerId(Handler)
@@ -203,6 +208,9 @@
         QueryKindOfSymbolId(Id -> local)
 
     'rule' CheckBindingIsVariableId(Id):
+        QueryKindOfSymbolId(Id -> context)
+
+    'rule' CheckBindingIsVariableId(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToAVariable(Position, Name)
@@ -225,12 +233,46 @@
         QueryKindOfSymbolId(Id -> local)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> context)
+
+    'rule' CheckBindingIsVariableOrHandlerId(Id):
         QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToAVariableOrHandler(Position, Name)
+        -- Mark this id as being in error.
+        Id'Meaning <- error
+
+'action' CheckBindingIsConstantOrVariableOrHandlerId(ID)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        -- Do nothing if the meaning is error.
+        QueryId(Id -> error)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> constant)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> variable)
+        
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> parameter)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> local)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> context)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> handler)
+
+    'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Error_NotBoundToAConstantOrVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
 
@@ -344,6 +386,26 @@
         Error_NotBoundToASyntaxMark(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
+
+'condition' IsExpressionSimpleConstant(EXPRESSION)
+
+    'rule' IsExpressionSimpleConstant(undefined(_)):
+    'rule' IsExpressionSimpleConstant(true(_)):
+    'rule' IsExpressionSimpleConstant(false(_)):
+    'rule' IsExpressionSimpleConstant(integer(_, _)):
+    'rule' IsExpressionSimpleConstant(real(_, _)):
+    'rule' IsExpressionSimpleConstant(string(_, _)):
+    'rule' IsExpressionSimpleConstant(list(_, List)):
+        IsExpressionListSimpleConstant(List)
+        
+'condition' IsExpressionListSimpleConstant(EXPRESSIONLIST)
+
+    'rule' IsExpressionListSimpleConstant(expressionlist(Head, Tail)):
+        IsExpressionSimpleConstant(Head)
+        IsExpressionListSimpleConstant(Tail)
+
+    'rule' IsExpressionListSimpleConstant(nil):
+        -- nothing
 
 --------------------------------------------------------------------------------
 
@@ -1179,7 +1241,7 @@
         CheckExpressionIsAssignable(Target)
         CheckInvokes(Source)
         CheckInvokes(Target)
-        
+
     'rule' CheckInvokes(STATEMENT'repeatcounted(Position, Count, Body)):
         CheckExpressionIsEvaluatable(Count)
         CheckInvokes(Count)
@@ -1354,11 +1416,16 @@
         |)
         
     'rule' CheckExpressionIsAssignable(slot(Position, Id)):
-        [|
+        (|
             QueryKindOfSymbolId(Id -> handler)
             Id'Name -> Name
             Error_CannotAssignToHandlerId(Position, Name)
-        |]
+        ||
+            QueryKindOfSymbolId(Id -> constant)
+            Id'Name -> Name
+            Error_CannotAssignToConstantId(Position, Name)
+        ||
+        |)
         
     'rule' CheckExpressionIsAssignable(Expr):
         -- everything else is not
@@ -1439,6 +1506,14 @@
             --Error_VariableMustHaveHighLevelType(Position)
         |)
         
+    'rule' CheckDeclaredTypes(DEFINITION'contextvariable(Position, _, _, Type, _)):
+        -- Variable types must be high-level
+        (|
+            IsHighLevelType(Type)
+        ||
+            --Error_VariableMustHaveHighLevelType(Position)
+        |)
+
     'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(_, _, _, Signature, _)):
         -- Foreign handler signatures can contain any type so no need to
         -- check anything here.

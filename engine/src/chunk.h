@@ -169,6 +169,10 @@ public:
 	Exec_stat setprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
 #endif
 
+    // SN-2015-02-13: [[ Bug 14467 ]] [[ Bug 14053 ]] Refactored object properties
+    //  lookup, to ensure it is done the same way in MCChunk::getprop / setprop
+    bool getsetprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, bool p_is_get_operation, MCExecValue& r_value);
+    
     bool getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value);
     bool setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value);
     
@@ -250,6 +254,8 @@ class MCTextChunkIterator
     
     public:
     MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text, MCRange p_restriction);
     ~MCTextChunkIterator();
     
     MCRange getrange()

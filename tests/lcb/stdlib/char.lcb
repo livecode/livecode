@@ -1,0 +1,181 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.char.tests
+
+use com.livecode.char
+
+public handler TestCount()
+	test "count" when the number of chars in "xxx" is 3
+end handler
+
+public handler TestRange()
+	variable t
+	put "xxxx" into t
+
+	put "." into char 2 to 2 of t
+	test "range (put single)" when t is "x.xx"
+
+	put "." into char 2 to 3 of t
+	test "range (put multiple)" when t is "x.x"
+
+	test "range (get)" when char 2 to 3 of t is ".x"
+end handler
+
+public handler TestFirst()
+	variable t
+
+	put "xxx" into t
+	put "." into the first char of t
+	test "first (put single)" when t is ".xx"
+
+	put "yz" into the first char of t
+	test "first (put multiple)" when t is "yzxx"
+
+	test "first (get)" when the first char of t is "y"
+
+	put "xyz" into t
+	put t into the first char of t
+	test "first (self)" when t is "xyzyz"
+end handler
+
+public handler TestLast()
+	variable t
+
+	put "xxx" into t
+	put "." into the last char of t
+	test "last (put)" when t is "xx."
+
+	put "yz" into the last char of t
+	test "last (put multiple)" when t is "xxyz"
+
+	test "last (get)" when the last char of t is "z"
+
+	put "xyz" into t
+	put t into the last char of t
+	test "first (self)" when t is "xyxyz"
+end handler
+
+public handler TestDelete()
+	variable t
+
+	put "xyz" into t
+	delete char 2 of t
+	test "delete" when t is "xz"
+
+	put "xyz" into t
+	delete char 2 to 2 of t
+	test "delete range (single)" when t is "xz"
+
+	put "wxyz" into t
+	delete char 2 to 3 of t
+	test "delete range (multiple)" when t is "wz"
+
+	put "xyz" into t
+	delete the first char of t
+	test "delete first" when t is "yz"
+
+	put "xyz" into t
+	delete the last char of t
+	test "delete last" when t is "xy"
+end handler
+
+public handler TestContainsChar()
+	test "char is in" when "y" is in "xyz"
+	test "char isn't in" when not "w" is in "xyz"
+
+	test diagnostic "TODO 'y' is not in 'xyz'"
+end handler
+
+public handler TestContainsString()
+	test "contains" when "wxyz" contains "xy"
+	test "contains (missing)" when not "wxyz" contains ".xy"
+end handler
+
+public handler TestOffset()
+	test "offset (single)" when the offset of "x" in ".xx." is 2
+	test "first offset (single)" when the first offset of "x" in ".xx." is 2
+	test "last offset (single)" when the last offset of "x" in ".xx." is 3
+
+	test "offset chars (single)" when the first offset of chars "x" in ".xx." is 2
+	test "first offset chars (single)" when the first offset of chars "x" in ".xx." is 2
+	test "last offset chars (single)" when the last offset of chars "x" in ".xx." is 3
+
+	test "offset (multiple)" when the offset of "xx" in ".xxx." is 2
+	test "first offset (multiple)" when the first offset of "xx" in ".xxx." is 2
+	test "last offset (multiple)" when the last offset of "xx" in ".xxx." is 3
+
+	test "offset chars (multiple)" when the offset of chars "xx" in ".xxx." is 2
+	test "first offset chars (multiple)" when the first offset of chars "xx" in ".xxx." is 2
+	test "last offset chars (multiple)" when the last offset of chars "xx" in ".xxx." is 3
+
+	test "offset (missing)" when the offset of "xx" in ".x.x." is 0
+end handler
+
+public handler TestOffsetAfter()
+	test "offset after (single)" when the offset of "x" after 1 in "x.xx." is 2
+	test "first offset after (single)" when the first offset of "x" after 1 in "x.xx." is 2
+	test "last offset after (single)" when the last offset of "x" after 1 in "x.xx." is 3
+
+	test "offset chars after (single)" when the offset of chars "x" after 2 in ".x.xx." is 2
+	test "first offset chars after (single)" when the first offset of chars "x" after 2 in ".x.xx." is 2
+	test "last offset chars after (single)" when the last offset of chars "x" after 2 in ".x.xx." is 3
+
+	test "offset after (multiple)" when the offset of "xx" after 1 in "xx.xxx." is 3
+	test "first offset after (multiple)" when the first offset of "xx" after 1 in "xx.xxx." is 3
+	test "last offset after (multiple)" when the last offset of "xx" after 1 in "xx.xxx." is 4
+
+	test "offset chars after (multiple)" when the offset of chars "xx" after 1 in "xx.xxx." is 3
+	test "first offset chars after (multiple)" when the first offset of chars "xx" after 1 in "xx.xxx." is 3
+	test "last offset chars after (multiple)" when the last offset of chars "xx" after 1 in "xx.xxx." is 4
+
+	test "offset (single, missing)" when the offset of "x" after 2 in "x.." is 0
+	test "offset (multiple, missing)" when the offset of "xx" after 1 in "xx.x." is 0
+
+	test "last offset (single, missing)" when the last offset of "x" after 2 in "x.." is 0
+	test "last offset (multiple, missing)" when the last offset of "xxx" after 2 in "xxx.xx.x." is 0
+end handler
+
+public handler TestBeginsWith()
+	test "begins with" when "xx." begins with "xx"
+	test "begins with (missing)" when not ".xx" begins with "xx"
+end handler
+
+public handler TestEndsWith()
+	test "ends with" when ".xx" ends with "xx"
+	test "ends with (missing)" when not "xx." ends with "xx"
+end handler
+
+public handler TestNewline()
+	test "newline" when newline is "\n"
+end handler
+
+public handler TestRepeatChar()
+	variable tIter
+	variable tCount
+
+	put 0 into tCount
+
+	repeat for each char tIter in "xxx"
+		test "repeatchar (iter)" when tIter is "x"
+		add 1 to tCount
+	end repeat
+
+	test "repeatchar (count)" when tCount is 3
+end handler
+
+end module

@@ -151,9 +151,12 @@ MCObject::MCObject()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_in_id_cache = false;
-	
+    
 	// IM-2013-04-16: Initialize to false;
 	m_script_encrypted = false;
+    
+    // Object's do not begin in the parentScript table.
+    m_is_parent_script = false;
 }
 
 MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
@@ -245,6 +248,10 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_in_id_cache = false;
+    
+    // Cloned objects have a different identifier so are not in the parentScript
+    // table at the start.
+    m_is_parent_script = false;
 }
 
 MCObject::~MCObject()
@@ -297,6 +304,10 @@ MCObject::~MCObject()
 	//   all deletions vector through 'scheduledelete'.
 	if (m_in_id_cache)
 		getstack() -> uncacheobjectbyid(this);
+    
+    // If this object is a parent-script make sure we flush it from the table.
+	if (m_is_parent_script)
+		MCParentScript::FlushObject(this);
 }
 
 Chunk_term MCObject::gettype() const
@@ -810,8 +821,15 @@ void MCObject::deselect()
 
 Boolean MCObject::del()
 {
-	fprintf(stderr, "Object: ERROR tried to delete %s\n", getname_cstring());
-	return False;
+    // If the object is marked as being used as a parentScript, flush the parentScript
+    // table so we don't get any dangling pointers.
+	if (m_is_parent_script)
+	{
+		MCParentScript::FlushObject(this);
+        m_is_parent_script = false;
+	}
+    
+	return True;
 }
 
 void MCObject::paste(void)
@@ -2955,7 +2973,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	
 	MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-r.x, -r.y);
 	if (p_size != nil)
-		t_transform = MCGAffineTransformScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
+		t_transform = MCGAffineTransformPreScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
 
 	MCGContextConcatCTM(t_gcontext, t_transform);
 	
@@ -3943,20 +3961,26 @@ bool MCObject::resolveparentscript(void)
 	t_stack = getstack() -> findstackname(t_script -> GetObjectStack());
 
 	// Next search for the control we need.
-	MCControl *t_control;
-	t_control = NULL;
+	MCObject *t_object;
+	t_object = NULL;
 	if (t_stack != NULL)
-		t_control = t_stack -> getcontrolid(CT_BUTTON, t_script -> GetObjectId(), true);
+    {
+        if (t_script -> GetObjectId() != 0)
+            t_object = t_stack -> getcontrolid(CT_BUTTON, t_script -> GetObjectId(), true);
+        else
+            t_object = t_stack;
+    }
 
 	// If we found a control, resolve the parent script. Otherwise block it.
-	if (t_control != NULL)
+	if (t_object != NULL &&
+        t_object != this)
 	{
-		t_script -> Resolve(t_control);
+		t_script -> Resolve(t_object);
 
 		// MW-2015-05-30: [[ InheritedPscripts ]] Next we must ensure the
 		//   existence of the inheritence hierarchy, so resolve the parentScript's
 		//   parentScript.
-		if (!t_control -> resolveparentscript())
+		if (!t_object -> resolveparentscript())
 			return false;
 
 		// MW-2015-05-30: [[ InheritedPscripts ]] And then make sure it creates its
@@ -4988,9 +5012,31 @@ bool MCObject::haswidgets(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCObject::visit_self(MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnObject(this);
+}
+
+bool MCObject::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (MCObjectVisitorIsDepthLast(p_options))
+		t_continue = visit_self(p_visitor);
+	
+	if (t_continue && MCObjectVisitorIsRecursive(p_options))
+		t_continue = visit_children(p_options, p_part, p_visitor);
+	
+	if (t_continue && MCObjectVisitorIsDepthFirst(p_options))
+		t_continue = visit_self(p_visitor);
+	
+	return t_continue;
+}
+
+bool MCObject::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

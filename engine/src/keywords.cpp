@@ -160,6 +160,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
             //   next token is a number.
 			if (type == ST_MIN || (type == ST_OP && sp.token_is_cstring("+")))
 			{
+                bool t_is_minus = type == ST_MIN;
                 // negative or positive initializer
 				if (sp.next(type) != PS_NORMAL || type != ST_NUM)
 				{
@@ -169,7 +170,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 						MCperror->add(PE_LOCAL_BADINIT, sp);
 					return PS_ERROR;
 				}
-                if (type == ST_MIN)
+                // PM-2015-01-30: [[ Bug 14439 ]] Make sure minus sign is not ignored when assigning value to var at declaration
+                if (t_is_minus)
                     /* UNCHECKED */ MCStringFormat(&init, "-%@", sp.gettoken_stringref());
                 else
                     init = sp.gettoken_stringref();

@@ -118,11 +118,16 @@ MC_PICKLE_BEGIN_RECORD(MCScriptTypeDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptConstantDefinition)
-    MC_PICKLE_VALUEREF(value)
+    MC_PICKLE_UINDEX(value)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptVariableDefinition)
     MC_PICKLE_UINDEX(type)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptContextVariableDefinition)
+    MC_PICKLE_UINDEX(type)
+    MC_PICKLE_UINDEX(default_value)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
@@ -131,6 +136,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
     MC_PICKLE_ARRAY_OF_NAMEREF(local_names, local_name_count)
     MC_PICKLE_UINDEX(start_address)
     MC_PICKLE_UINDEX(finish_address)
+    MC_PICKLE_INTENUM(MCScriptHandlerScope, scope)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptForeignHandlerDefinition)
@@ -167,6 +173,7 @@ MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindEvent, MCScriptEventDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindSyntax, MCScriptSyntaxDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindDefinitionGroup, MCScriptDefinitionGroupDefinition)
+    MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindContextVariable, MCScriptContextVariableDefinition)
 MC_PICKLE_END_VARIANT()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptModule)
@@ -191,6 +198,8 @@ MC_PICKLE_END_RECORD()
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCScriptModule *s_modules = nil;
+static MCScriptModule **s_context_slot_owners = nil;
+static uindex_t s_context_slot_count;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -214,6 +223,11 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
             MCMemoryDelete(t_def -> function_cif);
         }
     
+    // Remove ourselves from the context slot owners list.
+    for(uindex_t i = 0; i < s_context_slot_count; i++)
+        if (s_context_slot_owners[i] == self)
+            s_context_slot_owners[i] = nil;
+    
     // Remove ourselves from the global module list.
     if (s_modules == self)
         s_modules = self -> next_module;
@@ -236,6 +250,30 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             MCScriptVariableDefinition *t_variable;
             t_variable = static_cast<MCScriptVariableDefinition *>(self -> definitions[i]);
             t_variable -> slot_index = self -> slot_count++;
+        }
+        else if (self -> definitions[i] -> kind == kMCScriptDefinitionKindContextVariable)
+        {
+            MCScriptContextVariableDefinition *t_variable;
+            t_variable = static_cast<MCScriptContextVariableDefinition *>(self -> definitions[i]);
+            
+            uindex_t t_index;
+            t_index = UINDEX_MAX;
+            for(uindex_t i = 0; i < s_context_slot_count; i++)
+                if (s_context_slot_owners[i] == nil)
+                {
+                    t_index = i;
+                    break;
+                }
+
+            if (t_index == UINDEX_MAX)
+            {
+                if (!MCMemoryResizeArray(s_context_slot_count + 1, s_context_slot_owners, s_context_slot_count))
+                    return false;
+                
+                t_index = s_context_slot_count - 1;
+            }
+            
+            s_context_slot_owners[t_index] = self;
         }
         else if (self -> definitions[i] -> kind == kMCScriptDefinitionKindHandler)
         {
@@ -355,6 +393,8 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             t_handler -> slot_count = MCHandlerTypeInfoGetParameterCount(t_signature) + t_handler -> local_type_count + t_temporary_count;
         }
     
+    // If the module has context
+    
     return true;
 }
 
@@ -369,6 +409,9 @@ MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef self)
 
 void MCScriptReleaseModule(MCScriptModuleRef self)
 {
+	if (nil == self)
+		return;
+
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
     
     MCScriptReleaseObject(self);
@@ -957,6 +1000,13 @@ MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef self, uindex
     return kMCEmptyName;
 }
 
+MCNameRef MCScriptGetNameOfContextVariableInModule(MCScriptModuleRef self, uindex_t p_index)
+{
+    if (self -> definition_name_count > 0)
+        return self -> definition_names[p_index];
+    return kMCEmptyName;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static int s_current_indent = 0;
@@ -1085,9 +1135,33 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                 switch(t_type -> kind)
                 {
                     case kMCScriptTypeKindForeign:
+                    {
                         __writeln(stream, "foreign type %@", t_def_name);
+                    }
+                    break;
+                    case kMCScriptTypeKindHandler:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "handler type %@%@", t_def_name, *t_sig);
+                    }
+                    break;
+                    case kMCScriptTypeKindRecord:
+                        // TODO - Records not yet supported
                         break;
+                    default:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "type %@ is %@", t_def_name, *t_sig);
+                    }
+                    break;
                 }
+            }
+            break;
+            case kMCScriptDefinitionKindConstant:
+            {
+                __writeln(stream, "constant %@", t_def_name);
             }
             break;
             case kMCScriptDefinitionKindVariable:

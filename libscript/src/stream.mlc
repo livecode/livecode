@@ -1,4 +1,21 @@
 /*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
 This module specifies the syntax definitions and bindings for
 stream input and output operations in modular LiveCode.
 */
@@ -10,6 +27,7 @@ public foreign type Stream binds to "kMCStreamTypeInfo"
 --
 
 public foreign handler MCStreamExecGetStandardOutput(out Stdout as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecGetStandardError(out Stderr as Stream) as undefined binds to "<builtin>"
 
 /*
 Summary:	Default output stream.
@@ -28,6 +46,25 @@ syntax DefaultOutputStream is expression
 	"the" "output" "stream"
 begin
 	MCStreamExecGetStandardOutput(output)
+end syntax
+
+/*
+Summary:	Default error stream.
+Returns:	The default error stream.
+
+Description:
+The default error stream for diagnostic information.
+
+In command-line programs, this is usually used to display error
+messages.  In server programs, data output through this stream may be
+stored in the system log, depending on the server configuration.
+
+Tags: IO
+*/
+syntax DefaultErrorStream is expression
+	"the" "error" "stream"
+begin
+	MCStreamExecGetStandardError(output)
 end syntax
 
 --
@@ -52,7 +89,7 @@ fails with an error.
 Tags: IO
 */
 syntax WriteToStream is statement
-	"write" <Buffer: Expression> "to" "stream" <Destination: Expression>
+	"write" <Buffer: Expression> "to" <Destination: Expression>
 begin
 	MCStreamExecWriteToStream(Buffer, Destination)
 end syntax

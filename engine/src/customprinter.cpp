@@ -848,7 +848,7 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 				MCGRaster t_tile_raster;
 				/* UNCHECKED */ MCGImageGetRaster(t_image, t_tile_raster);
 				
-				t_transform = MCGAffineTransformTranslate(t_transform, p_mark->fill->origin.x, p_mark->fill->origin.y);
+				t_transform = MCGAffineTransformPreTranslate(t_transform, p_mark->fill->origin.x, p_mark->fill->origin.y);
 				
 				// Construct the paint pattern.
 				t_paint . type = kMCCustomPrinterPaintPattern;

@@ -603,8 +603,8 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		MCImageBitmap *t_copy = nil;
 		if (m_rep != nil)
 		{
-            // PM-2014-11-05: [[ Bug 13938 ]] Make sure new alphaData does not add to previous one
-            t_success = lockbitmap(t_copy, false);
+            // PM-2015-02-09: [[ Bug 14483 ]] Reverted patch for bugfix 13938
+            t_success = copybitmap(false, t_copy);
 		}
 		else
 		{
@@ -616,7 +616,8 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		if (t_success)
 		{
 			MCImageSetMask(t_copy, (uint8_t*)MCDataGetBytePtr(p_data), t_length, !p_flatten);
-			setbitmap(t_copy, 1.0);
+            // PM-2015-02-09: [[ Bug 14483 ]] Reverted patch for bugfix 14347
+            setbitmap(t_copy, 1.0);
 		}
 		
 		MCImageFreeBitmap(t_copy);

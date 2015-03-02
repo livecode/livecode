@@ -269,7 +269,10 @@ Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 Boolean MCAudioClip::del()
 {
 	getstack()->removeaclip(this);
-	return True;
+    
+    // MCObject now does things on del(), so we must make sure we finish by
+    // calling its implementation.
+	return MCObject::del();
 }
 
 void MCAudioClip::paste(void)

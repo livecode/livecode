@@ -982,12 +982,15 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
             return;
         }
-        if (background == nil && card == nil && group == nil && object == nil)
-        {
-            r_object . object = t_object . object;
-            r_object . part_id = t_object . part_id;
-            return;
-        }
+        // SN-2015-01-13: [[ Bug 14376 ]] Remove this if statement added during the refactoring process
+        // (commit 15a49a27e387f3e49e5bcce8f8316348578bf810)
+        //  which leads to a part_id of 0 instead of the card part id.
+//        if (background == nil && card == nil && group == nil && object == nil)
+//        {
+//            r_object . object = t_object . object;
+//            r_object . part_id = t_object . part_id;
+//            return;
+//        }
         switch (t_object . object -> gettype())
         {
             case CT_AUDIO_CLIP:
@@ -4206,80 +4209,23 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	return nil;
 }
 
-// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
-bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
+// SN-2015-02-13: [[ Bug 14467 ]] [[ Bug 14053 ]] Refactored object properties
+//  lookup, to ensure it is done the same way in MCChunk::getprop / setprop
+bool MCChunk::getsetprop(MCExecContext &ctxt, Properties which, MCNameRef index, Boolean effective, bool p_is_get_operation, MCExecValue &r_value)
 {
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
         return false;
-
+    
     MCPropertyInfo *t_info;
     
     if (t_obj_chunk . chunk == CT_UNDEFINED)
     {
         bool t_success;
-        t_success = t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
-        MCValueRelease(t_obj_chunk . mark . text);
-        return t_success;
-    }
-    else
-	{
-        // AL-2014-07-09: [[ Bug 12733 ]] Buttons are also valid containers wrt text chunk properties.
-		if (t_obj_chunk . object -> gettype() != CT_FIELD &&
-            t_obj_chunk . object -> gettype() != CT_BUTTON)
-		{
-			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
-            MCValueRelease(t_obj_chunk . mark . text);
-			return false;
-		}
-        
-        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
-        //   prop, else its an array prop.
-        bool t_is_array_prop;
-        t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
-        
-        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
-        
-        if (islinechunk() && t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
-        
-        if (t_info == nil || t_info -> getter == nil)
-        {
-            MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
-            MCValueRelease(t_obj_chunk . mark . text);
-            return false;
-        }
-        
-        if (t_is_array_prop)
-        {
-            MCObjectChunkIndexPtr t_obj_chunk_index;
-            t_obj_chunk_index . object = t_obj_chunk . object;
-            t_obj_chunk_index . part_id = t_obj_chunk . part_id;
-            t_obj_chunk_index . chunk = t_obj_chunk . chunk;
-            t_obj_chunk_index . mark = t_obj_chunk . mark;
-            t_obj_chunk_index . index = index;
-            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk_index, r_value);
-        }
+        if (p_is_get_operation)
+            t_success = t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
         else
-            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
-	}
-    
-    MCValueRelease(t_obj_chunk . mark . text);
-    return !ctxt . HasError();
-}
-
-// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
-bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
-{
-    MCObjectChunkPtr t_obj_chunk;
-    if (evalobjectchunk(ctxt, false, true, t_obj_chunk) != ES_NORMAL)
-        return false;
-    
-    MCPropertyInfo *t_info;
-    
-    if (t_obj_chunk . chunk == CT_UNDEFINED)
-    {
-        bool t_success = t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, p_value);
+            t_success = t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
         MCValueRelease(t_obj_chunk . mark . text);
         return t_success;
     }
@@ -4293,31 +4239,31 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             MCValueRelease(t_obj_chunk . mark . text);
             return false;
         }
-    
+        
         // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
         //   prop, else its an array prop.
         bool t_is_array_prop;
         t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
         
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
-        if (islinechunk() && t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
         
-        // SN-2014-11-24: [[ Bug 14053 ]] Even if the chunk is not an explicit line, the property of the line containing this chunk should be set
-        if (t_info == nil && !islinechunk())
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeLine);
+        // If we could not get the line property for this chunk, then we try to get the char prop.
+        // If we could not get the char property for this chunk, then we try to get the line prop.
+        if (t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeChar : kMCPropertyInfoChunkTypeLine);
         
-        if (t_info == nil || t_info -> setter == nil)
+        if (t_info == nil
+                || (p_is_get_operation && t_info -> getter == nil)
+                || (!p_is_get_operation && t_info -> setter == nil))
         {
-            MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+            if (p_is_get_operation)
+                MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
+            else
+                MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+            
             MCValueRelease(t_obj_chunk . mark . text);
             return false;
         }
-        
-        // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
-        //   handle specific styles.
-        // MW-2012-01-25: [[ ParaStyles ]] Pass whether this was an explicit line chunk
-        //   or not. This is used to disambiguate the setting of 'backColor'.
         
         if (t_is_array_prop)
         {
@@ -4327,16 +4273,23 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             t_obj_chunk_index . chunk = t_obj_chunk . chunk;
             t_obj_chunk_index . mark = t_obj_chunk . mark;
             t_obj_chunk_index . index = index;
-            
-            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk_index, p_value);
+            if (p_is_get_operation)
+                MCExecFetchProperty(ctxt, t_info, &t_obj_chunk_index, r_value);
+            else
+                MCExecStoreProperty(ctxt, t_info, &t_obj_chunk_index, r_value);
         }
         else
-            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, p_value);
+        {
+            if (p_is_get_operation)
+                MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
+            else
+                MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, r_value);
+        }
     }
-
-    MCValueRelease(t_obj_chunk . mark. text);
-
-    if (!ctxt . HasError())
+    
+    MCValueRelease(t_obj_chunk . mark . text);
+    
+    if (!p_is_get_operation && !ctxt . HasError())
     {
         // MM-2012-09-05: [[ Property Listener ]] Make sure any listeners are updated of the property change.
         //  Handled at this point rather than MCProperty::set as here we know if it is a valid object set prop.
@@ -4344,7 +4297,21 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         return true;
     }
     
-    return false;
+    return !ctxt . HasError();
+}
+
+// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
+bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
+{
+    // SN-2015-02-13: [[ Bug 14467 ]] Object property getting / setting refactored
+    return getsetprop(ctxt, which, index, effective, true, r_value);
+}
+
+// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
+bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
+{
+    // SN-2015-02-13: [[ Bug 14467 ]] Object property getting / setting refactored
+    return getsetprop(ctxt, which, index, effective, false, p_value);
 }
 
 Chunk_term MCChunk::getlastchunktype(void)
@@ -5674,6 +5641,89 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
         MCLocaleBreakIteratorRelease(break_iterator);
 }
 
+// AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text, MCRange p_restriction)
+{
+    /* UNCHECKED */ MCStringCopy(p_text, text);
+    type = p_chunk_type;
+    
+    if (type == CT_CHARACTER && (MCStringIsNative(text) || (MCStringIsSimple(text) && MCStringIsUncombined(text))))
+        type = CT_CODEUNIT;
+    
+    MCBreakIteratorRef break_iterator;
+    
+    break_iterator = nil;
+    sp = nil;
+    range = MCRangeMake(p_restriction . offset, 0);
+    length = p_restriction . length == UINDEX_MAX ? MCStringGetLength(text) : p_restriction . offset + p_restriction . length;
+    // AL-2014-10-24: [[ Bug 13783 ]] Set exhausted to true if the string is immediately exhausted
+    exhausted = (p_restriction . length == 0 || p_restriction . offset>= MCStringGetLength(text));
+    first_chunk = true;
+    break_position = 0;
+    delimiter_length = 0;
+    
+    switch (type)
+    {
+        case CT_TOKEN:
+        {
+            MCAutoStringRef t_substring;
+            MCStringCopySubstring(text, p_restriction, &t_substring);
+            MCValueAssign(text, *t_substring);
+            sp = new MCScriptPoint(text);
+        }
+            break;
+        case CT_CHARACTER:
+        case CT_SENTENCE:
+        {
+            MCAutoStringRef t_substring;
+            MCStringCopySubstring(text, p_restriction, &t_substring);
+            MCRange t_range;
+            uindex_t t_end;
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == CT_SENTENCE ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, *t_substring);
+            t_range . length = p_restriction . length;
+            t_range . offset = p_restriction . offset;
+            
+            while ((t_end = MCLocaleBreakIteratorAdvance(break_iterator)) != kMCLocaleBreakIteratorDone)
+            {
+                t_range . offset += t_range . length;
+                t_range . length = t_end - t_range . offset;
+                breaks . Push(t_range);
+            }
+        }
+            break;
+        case CT_TRUEWORD:
+        {
+            MCAutoStringRef t_substring;
+            MCStringCopySubstring(text, p_restriction, &t_substring);
+            MCAutoArray<uindex_t> t_breaks;
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, *t_substring);
+            MCRange t_range;
+            t_range . length = p_restriction . length;
+            t_range . offset = p_restriction . offset;
+            
+            while (MCLocaleWordBreakIteratorAdvance(*t_substring, break_iterator, t_range)
+                   && t_range . offset + t_range . length != kMCLocaleBreakIteratorDone)
+            {
+                breaks . Push(t_range);
+            }
+        }
+            break;
+        case CT_LINE:
+        case CT_ITEM:
+        case CT_PARAGRAPH:
+            // delimiter length may vary for line and item.
+            delimiter_length = 1;
+        default:
+            break;
+    }
+    
+    if (break_iterator != nil)
+        MCLocaleBreakIteratorRelease(break_iterator);
+}
+
+
 MCTextChunkIterator::~MCTextChunkIterator()
 {    
     MCValueRelease(text);
@@ -5740,7 +5790,8 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
             MCRange t_found_range;
             // calculate the length of the line / item
-            if (!MCStringFind(text, MCRangeMake(t_offset, UINDEX_MAX), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
+            // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for delimiter search
+            if (!MCStringFind(text, MCRangeMake(t_offset, length - t_offset), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
             {
                 range . length = length - range . offset;
                 exhausted = true;
@@ -5760,8 +5811,9 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             uindex_t t_pg_offset;
             bool t_newline_found, t_pg_found;
             
+            // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for delimiter search
             t_pg_offset = t_offset;
-            t_newline_found = MCStringFirstIndexOfChar(text, '\n', t_offset, kMCCompareExact, t_offset);
+            t_newline_found = MCStringFirstIndexOfCharInRange(text, '\n', MCRangeMake(t_offset, length - t_offset), kMCCompareExact, t_offset);
             // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
             t_pg_found = false; /*MCStringFirstIndexOfChar(text, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);*/
             
@@ -5792,7 +5844,8 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
             MCStringsSkipWord(ctxt, text, false, t_offset);
             
-            if (t_offset == length)
+            // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for exhaustion check
+            if (t_offset >= length)
                 exhausted = true;
             
             range . length = t_offset - range . offset;
@@ -5848,11 +5901,11 @@ bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
             // Otherwise we need to find p_needle and check to see if there is a delimiter either side.
             // This is because of the case where the delimiter is within p_needle - e.g.
             // "a,b" is among the items of "a,b,c,d" should return true.
-            
+            // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for isamong search
             if (type == CT_PARAGRAPH)
-                return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_needle, text, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+                return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_needle, text, ctxt . GetStringComparisonType(), MCRangeMake(range . offset, length));
             
-            return MCStringsIsAmongTheChunksOfRange(ctxt, p_needle, text, type, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+            return MCStringsIsAmongTheChunksOfRange(ctxt, p_needle, text, type, ctxt . GetStringComparisonType(), MCRangeMake(range . offset, length));
         }
         default:
             if (MCStringIsEmpty(p_needle))
