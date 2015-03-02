@@ -175,7 +175,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 
 	// Copy the family name
 	if (StringCchCopyW(logfont.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
-		return;
+			return;
 
 	// MW-2012-05-03: [[ Bug 10180 ]] Make sure the default charset for the font
 	//   is chosen - otherwise things like WingDings don't work!
@@ -314,27 +314,42 @@ void MCFontlist::freeprinterfonts()
 	while (tmp != fonts);
 }
 
+// SN-2015-03-02: [[ Bug 14661 ]] New context for the
+//  font listing callback function.
+//  An array is used to keep track of the font already
+//  added (hash comparison faster than that looking for
+//  a string in a list)
+struct MCFontListing
+{
+	MCArrayRef array;
+	MCListRef list;
+};
+
 int CALLBACK fontnames_FontFamProc(const LOGFONTW * lpelf,
 								   const TEXTMETRICW * lpntm,
 								   DWORD FontType, LPARAM lParam)
 {
-	MCListRef t_list = (MCListRef)lParam;
-	MCAutoStringRef t_name;
+	// SN-2015-03-02: [[ Bug 14661 ]] A MCFontListing struct
+	//  is now passed to the callback functions.
+	MCFontListing* t_fontlist = (MCFontListing*)lParam;
+	MCNewAutoNameRef t_name;
 
 	size_t t_length;
 	if (StringCchLength(lpelf->lfFaceName, LF_FACESIZE, &t_length) != S_OK)
 		return False;
 
-	if (!MCStringCreateWithChars(lpelf->lfFaceName, t_length, &t_name))
+	if (!MCNameCreateWithChars(lpelf->lfFaceName, t_length, &t_name))
 		return False;
 
-	// Skip names that we have already added to the list
-	MCAutoStringRef t_list_string;
-	/* UNCHECKED */ MCListCopyAsString(t_list, &t_list_string);
-	if (MCStringContains(*t_list_string, *t_name, kMCStringOptionCompareCaseless))
+	// SN-2015-03-02: [[ Bug 14661 ]] Skip names that 
+	//  we have already added to the array
+	MCValueRef t_value;
+	if (MCArrayFetchValue(t_fontlist->array, true, *t_name, t_value))
 		return True;
 
-	return MCListAppend(t_list, *t_name) ? True : False;
+	// Add the font name in the array, and in the list.
+	MCArrayStoreValue(t_fontlist -> array, true, *t_name, kMCEmptyString);
+	return MCListAppend(t_fontlist->list, MCNameGetString(*t_name)) ? True : False;
 }
 
 bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
@@ -344,11 +359,6 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 		r_names = MCValueRetain(kMCEmptyList);
 		return true;
 	}
-
-	MCAutoListRef t_list;
-
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
 
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	HDC hdc;
@@ -363,10 +373,27 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 	lf.lfCharSet = DEFAULT_CHARSET;
 	lf.lfFaceName[0] = '\0';
 	lf.lfPitchAndFamily = 0;
-	if (EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontnames_FontFamProc, (LPARAM)*t_list, 0) != True)
-		return false;
 
-	return MCListCopy(*t_list, r_names);
+	// SN-2015-03-02: [[ Bug 14661 ]] Initialise the
+	//  MCFontListing members.
+	bool t_success;
+	MCFontListing t_fontlist = {nil, nil};
+
+	t_success = MCArrayCreateMutable(t_fontlist.array)
+				&& MCListCreateMutable('\n', t_fontlist.list);
+
+	if (t_success)
+		t_success = EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontnames_FontFamProc, (LPARAM)(&t_fontlist), 0) == True;
+
+	if (t_success)
+		t_success = MCListCopy(t_fontlist.list, r_names);
+
+	// SN-2015-03-02: [[ Bug 14661 ]] Cleanup the
+	//  MCFontListing members.
+	MCValueRelease(t_fontlist . array);
+	MCValueRelease(t_fontlist . list);
+
+	return t_success;
 }
 
 typedef struct
