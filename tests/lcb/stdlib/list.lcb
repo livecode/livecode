@@ -126,10 +126,9 @@ public handler TestPop()
 	pop tList
 	test "pop (no output)" when tList is empty
 
-	skip test "pop (empty)" because "bug 14703"
-	--MCUnitTestHandlerThrows(TestPop_Empty, "pop (empty)")
-	--MCUnitTestHandlerThrows(TestPop_FrontEmpty, "pop front (empty)")
-	--MCUnitTestHandlerThrows(TestPop_BackEmpty, "pop back (empty)")
+	MCUnitTestHandlerThrows(TestPop_Empty, "pop (empty)")
+	MCUnitTestHandlerThrows(TestPop_FrontEmpty, "pop front (empty)")
+	MCUnitTestHandlerThrows(TestPop_BackEmpty, "pop back (empty)")
 end handler
 
 public handler TestCount()
