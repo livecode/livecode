@@ -285,7 +285,7 @@ bool is_escape_char(char p_char)
 bool MCCStringQuote(const char *p_string, char *&r_quoted)
 {
 	if (p_string == nil || p_string[0] == '\0')
-		return MCCStringClone("", r_quoted);
+		return MCCStringClone("\"\"", r_quoted);
 
 	bool t_success;
 	t_success = true;
@@ -771,6 +771,21 @@ void CB_DocumentComplete(int p_instance_id, const char *p_url)
 }
 
 // Callback:
+//   browserDocumentFailed pInstanceId, pURL, pErrorMessage
+// Description:
+//   The browser sends this message when a given URL has failed to load.
+//
+void CB_DocumentFailed(int p_instance_id, const char *p_url, const char *p_error)
+{
+	const char *t_params[2];
+	t_params[0] = p_url;
+	t_params[1] = p_error;
+	
+	bool t_pass;
+	s_browsers . Callback(p_instance_id, "browserDocumentFailed", (char**)t_params, 2, t_pass);
+}
+
+// Callback:
 //   XBrowser_DocumentCompleteFrame pURL, pInstanceId
 // Description:
 //   The browser sends this message when a given URL has finished
@@ -779,6 +794,21 @@ void CB_DocumentComplete(int p_instance_id, const char *p_url)
 void CB_DocumentFrameComplete(int p_instance_id, const char *p_url)
 {
 	s_browsers . Callback(p_instance_id, "DocumentCompleteFrame", p_url);
+}
+
+// Callback:
+//   browserDocumentFailedFrame pInstanceId, pURL, pErrorMessage
+// Description:
+//   The browser sends this message when a given URL has failed to load into a frame.
+//
+void CB_DocumentFrameFailed(int p_instance_id, const char *p_url, const char *p_error)
+{
+	const char *t_params[2];
+	t_params[0] = p_url;
+	t_params[1] = p_error;
+	
+	bool t_pass;
+	s_browsers . Callback(p_instance_id, "browserDocumentFailedFrame", (char**)t_params, 2, t_pass);
 }
 
 // Callback:

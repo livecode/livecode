@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <StoreKit/StoreKit.h>
 
 static MCPurchase *s_purchase_request = nil;
+static bool s_did_restore = false;
 
 typedef struct
 {
@@ -365,6 +366,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 				break;
 			case SKPaymentTransactionStateRestored:
 				p_purchase->state = kMCPurchaseStateRestored;
+                s_did_restore = true;
 				break;
 			case SKPaymentTransactionStateFailed:
 			{
@@ -460,6 +462,17 @@ void update_purchase_state(MCPurchase *p_purchase)
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
 {
+    // PM-2015-02-12: [[ Bug 14402 ]] When there are no previous purchases to restore, send a purchaseStateUpdate msg with state=restored and productID=""
+    if (!s_did_restore)
+    {
+        MCPurchase *t_empty_purchase = new MCPurchase[1]();
+        t_empty_purchase -> prod_id = "";
+        t_empty_purchase -> id = 0;
+        t_empty_purchase -> ref_count = 0;
+        t_empty_purchase -> state = kMCPurchaseStateRestored;
+        
+        MCPurchaseNotifyUpdate(t_empty_purchase);
+    }
 }
 
 @end
