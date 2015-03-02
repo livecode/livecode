@@ -292,8 +292,8 @@ public handler TestOffset()
 
 	test "offset (single, same)" when the offset of "x" in "x" is 1
 	test "first offset (single, same)" when the first offset of "x" in "x" is 1
-	skip test "last offset (single, same)" because "bug 14677"
-	--test "last offset (single, same)" when the last offset of "x" in "x" is 1
+	-- bug 14677
+	test "last offset (single, same)" when the last offset of "x" in "x" is 1
 
 	-- "chars" variant
 	test "offset chars (single)" when the first offset of chars "x" in ".xx." is 2
@@ -333,8 +333,8 @@ public handler TestOffsetAfter()
 	test "first offset after (single, invalid +ve)" when the first offset of "x" after 3 in "x" is 0
 	test "first offset after (single, invalid -ve)" when the first offset of "x" after -3 in "x" is 1
 	test "last offset after (single, invalid +ve)" when the last offset of "x" after 3 in "x" is 0
-	skip test "last offset after (single, invalid -ve)" because "bug 14677"
-	--test "last offset after (single, invalid -ve)" when the last offset of "x" after -3 in "x" is 1
+	-- bug 14677
+	test "last offset after (single, invalid -ve)" when the last offset of "x" after -3 in "x" is 1
 
 	-- "chars" variants
 	test "offset after chars (single, +ve)" when the offset of chars "x" after 1 in "x.xx." is 2
@@ -354,9 +354,9 @@ public handler TestOffsetAfterZero()
 	put the last offset of "x" in ".x." into tNoAfter
 	test "last offset after (single, 0)" when the last offset of "x" after 0 in ".x." is tNoAfter
 
-	skip test "last offset after (single, 0, same)" because "bug 14677"
-	--put the last offset of "x" in "x" into tNoAfter
-	--test "the last offset after (single, 0, same)" when the last offset of "x" after 0 in "x" is tNoAfter
+	-- bug 14677
+	put the last offset of "x" in "x" into tNoAfter
+	test "the last offset after (single, 0, same)" when the last offset of "x" after 0 in "x" is tNoAfter
 end handler
 
 public handler TestBeginsWith()
