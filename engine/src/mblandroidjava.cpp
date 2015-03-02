@@ -35,12 +35,10 @@ static jmethodID s_integer_constructor = nil;
 
 static bool init_integer_class(JNIEnv *env)
 {
-    if (s_integer_class == nil)
-    {
-        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
-        jclass t_integer_class = env->FindClass("java/lang/Integer");
-        s_integer_class = (jclass)env->NewGlobalRef(t_integer_class);
-    }
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_integer_class = env->FindClass("java/lang/Integer");
+    s_integer_class = (jclass)env->NewGlobalRef(t_integer_class);
+    
     if (s_integer_class == nil)
 		return false;
 
@@ -56,12 +54,10 @@ static jclass s_string_class = nil;
 
 static bool init_string_class(JNIEnv *env)
 {
-	if (s_string_class == nil)
-    {
-        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
-        jclass t_string_class = env->FindClass("java/lang/String");
-        s_string_class = (jclass)env->NewGlobalRef(t_string_class);
-    }
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_string_class = env->FindClass("java/lang/String");
+    s_string_class = (jclass)env->NewGlobalRef(t_string_class);
+    
 	if (s_string_class == nil)
 		return false;
 
@@ -74,12 +70,10 @@ static jmethodID s_array_list_append = nil;
 
 bool init_arraylist_class(JNIEnv *env)
 {
-    if (s_array_list_class == nil)
-    {
-        // PM-2014-02-16: Bug [[ 14489 ]] Use global ref for s_array_list_class to ensure it will be valid next time we use it
-        jclass t_array_list_class = env->FindClass("java/util/ArrayList");
-        s_array_list_class = (jclass)env->NewGlobalRef(t_array_list_class);
-    }
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global ref for s_array_list_class to ensure it will be valid next time we use it
+    jclass t_array_list_class = env->FindClass("java/util/ArrayList");
+    s_array_list_class = (jclass)env->NewGlobalRef(t_array_list_class);
+    
     if (s_array_list_class == nil)
 		return false;
 
@@ -107,12 +101,10 @@ static jmethodID s_map_entry_get_value = nil;
 
 static bool init_hashmap_class(JNIEnv *env)
 {
-	if (s_hash_map_class == nil)
-    {
-        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
-        jclass t_hash_map_class = env->FindClass("java/util/HashMap");
-        s_hash_map_class = (jclass)env->NewGlobalRef(t_hash_map_class);
-    }
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_hash_map_class = env->FindClass("java/util/HashMap");
+    s_hash_map_class = (jclass)env->NewGlobalRef(t_hash_map_class);
+    
 	if (s_hash_map_class == nil)
 		return false;
 	
@@ -160,12 +152,10 @@ static jmethodID s_iterator_next = nil;
 
 static bool init_iterator_class(JNIEnv *env)
 {
-	if (s_iterator_class == nil)
-    {
-        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
-        jclass t_iterator_class = env->FindClass("java/util/Iterator");
-        s_iterator_class = (jclass)env->NewGlobalRef(t_iterator_class);
-    }
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_iterator_class = env->FindClass("java/util/Iterator");
+    s_iterator_class = (jclass)env->NewGlobalRef(t_iterator_class);
+    
 	if (s_iterator_class == nil)
 		return false;
 	
@@ -187,12 +177,10 @@ static jmethodID s_set_iterator = nil;
 
 static bool init_set_class(JNIEnv *env)
 {
-	if (s_set_class == nil)
-    {
-        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
-        jclass t_set_class = env->FindClass("java/util/Set");
-        s_set_class = (jclass)env->NewGlobalRef(t_set_class);
-    }
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_set_class = env->FindClass("java/util/Set");
+    s_set_class = (jclass)env->NewGlobalRef(t_set_class);
+
 	if (s_set_class == nil)
 		return false;
 	
@@ -498,9 +486,6 @@ bool MCJavaIntegerFromInt(JNIEnv *env, jint p_int, jobject &r_integer)
 {
     bool t_success = true;
     
-	if (!init_integer_class(env))
-		return false;
-    
     jobject t_integer = nil;
     t_integer = env->NewObject(s_integer_class, s_integer_constructor, p_int);
     t_success = nil != t_integer;
@@ -552,9 +537,6 @@ void MCJavaFinalize(JNIEnv *env)
 bool MCJavaInitList(JNIEnv *env, jobject &r_list)
 {
     bool t_success = true;
-    
-	if (!init_arraylist_class(env))
-		return false;
 	
     jobject t_list = nil;
     t_list = env->NewObject(s_array_list_class, s_array_list_constructor);
@@ -620,9 +602,6 @@ bool MCJavaListAppendInt(JNIEnv *env, jobject p_list, jint p_int)
 
 bool MCJavaInitMap(JNIEnv *env, jobject &r_map)
 {
-	if (!init_hashmap_class(env))
-		return false;
-    
     jobject t_map = nil;
     t_map = env->NewObject(s_hash_map_class, s_hash_map_constructor);
     if (nil == t_map)
@@ -686,9 +665,6 @@ bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, const char *p_key, c
 
 bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, void *p_context)
 {
-	if (!init_hashmap_class(env) || !init_set_class(env) || !init_iterator_class(env))
-		return false;
-	
 	bool t_success = true;
 	jobject t_set = nil, t_iterator = nil;
 	// get set of entries from map
@@ -741,9 +717,6 @@ bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, 
 
 bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_array, jobject &r_object)
 {
-	if (!init_hashmap_class(p_env))
-		return false;
-	
 	bool t_success = true;
 	
 	MCExecPoint ep(p_ep);
@@ -827,9 +800,6 @@ static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_
 
 bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariableValue *&r_array)
 {
-	if (!init_string_class(p_env) || !init_hashmap_class(p_env))
-		return false;
-	
 	bool t_success = true;
 	
 	MCVariableValue *t_array = nil;

@@ -1186,7 +1186,10 @@ static void *mobile_main(void *arg)
 
     // PM-2015-02-19: [[ Bug 14489 ]] Init statics on restart of an app
     if (!MCJavaInitialize(s_java_env))
-        MCJavaFinalize(s_java_env);
+    {
+		co_leave_engine();
+		return (void *)1;
+	}
     
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
