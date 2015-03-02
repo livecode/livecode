@@ -1357,6 +1357,20 @@
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
 		};
+		5D1353271AA203D400594083 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5D1353231AA203D400594083 /* extensions.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5D2262B21AA1E72000400628;
+			remoteInfo = extensions;
+		};
+		5D13532D1AA203F400594083 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5D1353231AA203D400594083 /* extensions.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 5D2262B11AA1E72000400628;
+			remoteInfo = extensions;
+		};
 		724459D41A6933AB00D22C2C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
@@ -2220,6 +2234,7 @@
 		4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
 		4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxnetwork.cpp; path = src/sysunxnetwork.cpp; sourceTree = "<group>"; };
 		4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
+		5D1353231AA203D400594083 /* extensions.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = extensions.xcodeproj; path = ../extensions/extensions.xcodeproj; sourceTree = "<group>"; };
 		720E34F519F56FE700EA00ED /* native-layer-ios.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = "native-layer-ios.mm"; path = "src/native-layer-ios.mm"; sourceTree = "<group>"; };
 		720E34F619F56FE700EA00ED /* native-layer-ios.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "native-layer-ios.h"; path = "src/native-layer-ios.h"; sourceTree = "<group>"; };
 		721CAAC018351E1800858545 /* libicui18n.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicui18n.a; path = ../prebuilt/lib/mac/libicui18n.a; sourceTree = "<group>"; };
@@ -2892,6 +2907,7 @@
 		4D587FAE0B809C0C00200116 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				5D1353231AA203D400594083 /* extensions.xcodeproj */,
 				C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */,
 				7261916C1A260B6C00851787 /* libscript.xcodeproj */,
 				726191581A26091900851787 /* libffi.xcodeproj */,
@@ -3587,6 +3603,14 @@
 				4C529CC219741CC8007C5F7C /* sysw32threads.cpp */,
 			);
 			name = System;
+			sourceTree = "<group>";
+		};
+		5D1353241AA203D400594083 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5D1353281AA203D400594083 /* libextensions.dylib */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		726191591A26091900851787 /* Products */ = {
@@ -4344,6 +4368,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				5D13532E1AA203F400594083 /* PBXTargetDependency */,
 				4DEE2B2B0FDE42E70009423C /* PBXTargetDependency */,
 				4D221ACD171D59F500E7E557 /* PBXTargetDependency */,
 				4D1F9C49171C655E0091C6CB /* PBXTargetDependency */,
@@ -4523,6 +4548,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 5D1353241AA203D400594083 /* Products */;
+					ProjectRef = 5D1353231AA203D400594083 /* extensions.xcodeproj */;
+				},
+				{
 					ProductGroup = C7C148D11A8B5B440048A5AE /* Products */;
 					ProjectRef = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
 				},
@@ -4663,6 +4692,13 @@
 			fileType = "compiled.mach-o.dylib";
 			path = revsecurity.dylib;
 			remoteRef = 4DBF58641801CA57009CAB2E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		5D1353281AA203D400594083 /* libextensions.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = libextensions.dylib;
+			remoteRef = 5D1353271AA203D400594083 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		7261915D1A26091900851787 /* libffi.a */ = {
@@ -6018,6 +6054,11 @@
 			isa = PBXTargetDependency;
 			name = external;
 			targetProxy = 4DEE2BD20FDE4A1E0009423C /* PBXContainerItemProxy */;
+		};
+		5D13532E1AA203F400594083 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = extensions;
+			targetProxy = 5D13532D1AA203F400594083 /* PBXContainerItemProxy */;
 		};
 		724459D51A6933AB00D22C2C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
