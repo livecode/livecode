@@ -828,6 +828,7 @@ MCPlayer::MCPlayer()
 	nextplayer = NULL;
 	rect.width = rect.height = 128;
 	filename = NULL;
+    resolved_filename = NULL;
 	istmpfile = False;
 	scale = 1.0;
 	rate = 1.0;
@@ -881,6 +882,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
 	nextplayer = NULL;
 	filename = strclone(sref.filename);
+    resolved_filename = strclone(sref.resolved_filename);
 	istmpfile = False;
 	scale = 1.0;
 	rate = sref.rate;
@@ -942,6 +944,7 @@ MCPlayer::~MCPlayer()
 		MCPlatformPlayerRelease(m_platform_player);
     
 	delete filename;
+    delete resolved_filename;
 	delete userCallbackStr;
 }
 
@@ -1455,13 +1458,13 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             // 2. Change the defaultFolder to defaultFolderA. Set the filename again to filenameA. Now the relative path is valid
             char *t_resolved_filename;
             bool t_success = false;
-            t_success = resolveplayerfilename(filename, t_resolved_filename);
+            t_success = resolveplayerfilename(data.clone(), t_resolved_filename);
             
             if (!t_success)
                 t_resolved_filename = nil;
             
             // Compare with the resolved filename so handle the edge case mentioned below
-            if (filename == NULL || data != filename || data != t_resolved_filename)
+            if (filename == NULL || data != filename || resolved_filename != t_resolved_filename)
             {
                 delete filename;
                 filename = NULL;
@@ -1472,6 +1475,13 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 // PM-2015-01-26: [[ Bug 14435 ]] Resolve the filename in MCPlayer::prepare(), to avoid prepending the defaultFolder or the stack folder to the filename property
                 if (data != MCnullmcstring)
                     filename = data.clone();
+                
+                if (resolved_filename != t_resolved_filename)
+                {
+                    delete resolved_filename;
+                    resolved_filename = t_resolved_filename;
+                }
+                
                 prepare(MCnullstring);
                 
                 // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
@@ -1845,6 +1855,8 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
 			return stat;
+        if ((stat = IO_write_string(resolved_filename, stream)) != IO_NORMAL)
+			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(endtime, stream)) != IO_NORMAL)
@@ -1865,6 +1877,8 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_string(filename, stream)) != IO_NORMAL)
+		return stat;
+    if ((stat = IO_read_string(resolved_filename, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
@@ -2144,18 +2158,12 @@ Boolean MCPlayer::prepare(const char *options)
 	if (m_platform_player == nil)
 		MCPlatformCreatePlayer(m_platform_player);
     
-    // PM-2015-01-26: [[ Bug 14435 ]] Use a temp var to resolve the filename, to avoid prepending the defaultFolder or the stack folder to the filename property
-    char *t_filename;
-    bool t_success = false;
-    t_success = resolveplayerfilename(filename, t_filename);
+    // PM-2015-01-26: [[ Bug 14435 ]] Avoid prepending the defaultFolder or the stack folder to the filename property. Use resolved_filename to set the "internal" absolute path
     
-    if (!t_success)
-        t_filename = nil;
-    
-	if (strnequal(t_filename, "https:", 6) || strnequal(t_filename, "http:", 5) || strnequal(t_filename, "ftp:", 4) || strnequal(t_filename, "file:", 5) || strnequal(t_filename, "rtsp:", 5))
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &t_filename);
+	if (strnequal(resolved_filename, "https:", 6) || strnequal(resolved_filename, "http:", 5) || strnequal(resolved_filename, "ftp:", 4) || strnequal(resolved_filename, "file:", 5) || strnequal(resolved_filename, "rtsp:", 5))
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &resolved_filename);
 	else
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &t_filename);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &resolved_filename);
 	
     if (!hasfilename())
         return True;

@@ -59,6 +59,7 @@ class MCPlayer : public MCControl
 {
 	MCPlayer *nextplayer;
 	char *filename;
+    char *resolved_filename;
 	uint2 framerate;
 	Boolean disposable;
 	Boolean istmpfile;
