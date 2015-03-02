@@ -177,7 +177,6 @@ bool MCStoreProductSetType(MCStringRef p_product_id, MCStringRef p_product_type)
     return t_result;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseFindByProductId(MCStringRef p_product_id, MCPurchase *&r_purchase) 
@@ -447,6 +446,9 @@ static bool purchase_confirm(MCPurchase *p_purchase)
     
     MCLog("confirming notification: purchaseId=%d, notificationId=%@", p_purchase->id, t_android_data->notification_id);
     MCAndroidEngineRemoteCall("purchaseConfirmDelivery", "bix", &t_result, p_purchase->id, t_android_data->notification_id);
+    
+    if (t_result)
+        MCPurchaseCompleteListUpdate(p_purchase);
     
     return t_result;
 }

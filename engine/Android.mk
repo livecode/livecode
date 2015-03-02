@@ -2,7 +2,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-DERIVED_SRC = ../_cache/mac/Debug/kernel.build/DerivedSources
+DERIVED_SRC = ../_cache/mac/Release/kernel.build/DerivedSources
 
 TARGET_PLATFORM=android-8
 
@@ -88,8 +88,8 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	foundation-legacy.cpp legacy_spec.cpp \
 	stacktile.cpp sysunxthreads.cpp \
 	widget.cpp widget-events.cpp native-layer.cpp native-layer-android.cpp \
-	module-canvas.cpp module-engine.cpp modules.cpp \
-	exec-extension.cpp exec-keywords.cpp) \
+	module-canvas.cpp module-engine.cpp module-resources.cpp modules.cpp \
+	exec-extension.cpp exec-keywords.cpp filepath.cpp) \
 	$(DERIVED_SRC)/canvas.mlc.c $(DERIVED_SRC)/engine.mlc.c $(DERIVED_SRC)/widget.mlc.c
 
 LOCAL_C_INCLUDES := \

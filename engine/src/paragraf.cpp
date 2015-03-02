@@ -444,12 +444,12 @@ uint8_t MCParagraph::firststrongisolate(uindex_t p_offset) const
     return t_level;
 }
 
-bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCParagraph::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
 
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
+	if (MCObjectVisitorIsDepthLast(p_options))
 		t_continue = p_visitor -> OnParagraph(this);
 	
 	if (t_continue && blocks != NULL)
@@ -457,13 +457,13 @@ bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* 
 		MCBlock *bptr = blocks;
 		do
 		{
-			t_continue = bptr -> visit(p_style, p_part, p_visitor);
+			t_continue = bptr -> visit(p_options, p_part, p_visitor);
 			bptr = bptr->next();
 		}
 		while(t_continue && bptr != blocks);
 	}
 
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
+	if (t_continue && MCObjectVisitorIsDepthFirst(p_options))
 		t_continue = p_visitor -> OnParagraph(this);
 
 	return t_continue;
@@ -1037,8 +1037,15 @@ void MCParagraph::flow(void)
 	// MW-2012-01-25: [[ ParaStyles ]] Compute the normal and first line layout width for
 	//   wrapping purposes.
 	int32_t pwidth, twidth;
-	computelayoutwidths(pwidth, twidth);
+    computelayoutwidths(pwidth, twidth);
 
+    // SN-2015-01-21: [[ Bug 14229 ]] We want to keep the former lines, to be able
+    //  to update the dirtywidth of a newly empty line with the former line length.
+    MCLine *t_old_line, *t_first_line;
+    t_old_line = lines;
+    t_first_line = lines;
+    lines = NULL;
+    
     // Delete all existing lines and segments
     deletelines();
     
@@ -1054,7 +1061,21 @@ void MCParagraph::flow(void)
         
         // Do block fitting on this line and get back a line containing the
         // left-overs that would not fit into the line
-        lptr = lptr->Fit(twidth);
+        
+        // SN-2015-01-21: [[ Bug 14229 ]] We update the dirtywidth of the
+        // the new line with the former line.
+        MCLine* t_leftover;
+        t_leftover = lptr->Fit(twidth);
+        
+        if (t_old_line != NULL)
+        {
+            lptr -> takewidth(t_old_line);
+            t_old_line = t_old_line -> next();
+            if (t_old_line == t_first_line)
+                t_old_line = NULL;
+        }
+        
+        lptr = t_leftover;
         
         // MW-2008-06-12: [[ Bug 6482 ]] Make sure we only take the firstIndent into account
 		//   on the first line of the paragraph.

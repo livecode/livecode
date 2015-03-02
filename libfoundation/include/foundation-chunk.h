@@ -36,41 +36,48 @@ enum MCChunkType
     kMCChunkTypeByte,
 };
 
+struct MCChunkCountInRangeState
+{
+    MCValueRef value;
+    MCRange *range;
+};
+
 typedef uinteger_t (MCChunkCountCallback(void *context));
 
 uinteger_t MCChunkCountByteChunkCallback(void *context);
 uinteger_t MCChunkCountCodepointChunkCallback(void *context);
 
-uindex_t MCChunkCountChunkChunks(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options);
+uindex_t MCChunkCountChunkChunksInRange(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCRange *p_range);
 
-bool MCChunkEnsureExtentsByRange(bool p_strict, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
-bool MCChunkEnsureExtentsByExpression(bool p_strict, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkEnsureExtentsByRangeInRange(bool p_strict, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkEnsureExtentsByExpressionInRange(bool p_strict, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsByRangeInRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsByExpressionInRange(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfByteChunkByRange(MCDataRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfByteChunkByExpression(MCDataRef p_data, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfByteChunkByRangeInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfCodeunitChunkByRange(MCStringRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfCodeunitChunkByExpression(MCStringRef p_data, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfByteChunkByExpressionInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
 
-bool MCChunkGetExtentsOfGraphemeChunkByRange(MCStringRef p_string, integer_t p_first, integer_t p_last, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count);
-bool MCChunkGetExtentsOfGraphemeChunkByExpression(MCStringRef p_string, integer_t p_first, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfCodeunitChunkByRangeInRange(MCStringRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(MCStringRef p_data, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfElementChunkByRange(MCProperListRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfElementChunkByExpression(MCProperListRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfGraphemeChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfGraphemeChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfChunkChunkByRange(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfChunkChunkByExpression(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfElementChunkByRangeInRange(MCProperListRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfElementChunkByExpressionInRange(MCProperListRef p_string, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+
+void MCChunkGetExtentsOfChunkChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfChunkChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
 
 bool MCChunkIsAmongTheChunksOfRange(MCStringRef p_chunk, MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCRange p_range);
 
 bool MCChunkOffsetOfChunkInRange(MCStringRef p_string, MCStringRef p_needle, MCStringRef p_delimiter, bool p_whole_matches, MCStringOptions p_options, MCRange p_range, uindex_t& r_offset);
 
 typedef bool (*MCChunkApplyCallback)(void *context, MCStringRef string, MCRange chunk_range);
-bool MCChunkApply(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCChunkApplyCallback p_callback, void *context);
+bool MCChunkApplyInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, MCChunkApplyCallback p_callback, void *context);
 
 bool MCChunkIterate(MCRange& x_range, MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, bool p_first);
 
@@ -88,6 +95,9 @@ protected:
     
 public:
     MCTextChunkIterator(MCStringRef p_text, MCChunkType p_chunk_type);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction);
+    
     virtual ~MCTextChunkIterator();
     
     MCRange GetRange() const
@@ -187,6 +197,8 @@ class MCTextChunkIterator_Codepoint : public MCTextChunkIterator
 {
 public:
     MCTextChunkIterator_Codepoint(MCStringRef p_text, MCChunkType p_chunk_type);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator_Codepoint(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction);
     ~MCTextChunkIterator_Codepoint();
     
     virtual bool Next();
@@ -197,6 +209,8 @@ class MCTextChunkIterator_Codeunit : public MCTextChunkIterator
 {
 public:
     MCTextChunkIterator_Codeunit(MCStringRef p_text, MCChunkType p_chunk_type);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator_Codeunit(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction);
     ~MCTextChunkIterator_Codeunit();
     
     virtual uindex_t CountChunks();
@@ -214,6 +228,8 @@ class MCTextChunkIterator_Delimited : public MCTextChunkIterator
     bool m_first_chunk;
 public:
     MCTextChunkIterator_Delimited(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_delimiter);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator_Delimited(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_delimiter, MCRange p_restriction);
     ~MCTextChunkIterator_Delimited();
     
     void SetDelimiter(MCStringRef p_delimiter)
@@ -232,7 +248,9 @@ class MCTextChunkIterator_Word : public MCTextChunkIterator
     //  delimiter, so that we can increment the range appropriately.
     MCStringRef m_line_delimiter;
 public:
-    MCTextChunkIterator_Word(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_delimiter);
+    MCTextChunkIterator_Word(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_line_delimiter);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator_Word(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_line_delimiter, MCRange p_restriction);
     ~MCTextChunkIterator_Word();
     
     void SetLineDelimiter(MCStringRef p_delimiter)
@@ -249,6 +267,8 @@ class MCTextChunkIterator_ICU : public MCTextChunkIterator
     uindex_t m_break_position;
 public:
     MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType p_chunk_type);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction);
     ~MCTextChunkIterator_ICU();
     
     virtual bool Next();
@@ -261,6 +281,8 @@ class MCTextChunkIterator_Tokenized : public MCTextChunkIterator
     MCScriptPoint *m_sp;
 public:
     MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type);
+    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
+    MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction);
     ~MCTextChunkIterator_Tokenized();
     
     virtual bool Next();

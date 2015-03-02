@@ -77,6 +77,7 @@ const MCPurchasePropertyTable *getpropertytable()
 }
 
 static MCPurchase *s_purchase_request = nil;
+static bool s_did_restore = false;
 
 typedef struct
 {
@@ -584,6 +585,10 @@ bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 	
 	[[SKPaymentQueue defaultQueue] finishTransaction: t_ios_data->transaction];
 	p_purchase->state = kMCPurchaseStateComplete;
+    
+    // PM-2015-01-28: [[ Bug 14461 ]] Once the purchase is completed, add the productID to the completed purchases list
+    MCPurchaseCompleteListUpdate(p_purchase);
+    
 	MCPurchaseNotifyUpdate(p_purchase);
 	MCPurchaseRelease(p_purchase);
 	
@@ -663,6 +668,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 				break;
 			case SKPaymentTransactionStateRestored:
 				p_purchase->state = kMCPurchaseStateRestored;
+                s_did_restore = true;
 				break;
 			case SKPaymentTransactionStateFailed:
 			{
@@ -761,6 +767,17 @@ void update_purchase_state(MCPurchase *p_purchase)
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
 {
+    // PM-2015-02-12: [[ Bug 14402 ]] When there are no previous purchases to restore, send a purchaseStateUpdate msg with state=restored and productID=""
+    if (!s_did_restore)
+    {
+        MCPurchase *t_empty_purchase = new MCPurchase[1]();
+        t_empty_purchase -> prod_id = MCValueRetain(kMCEmptyString);
+        t_empty_purchase -> id = 0;
+        t_empty_purchase -> ref_count = 0;
+        t_empty_purchase -> state = kMCPurchaseStateRestored;
+        
+        MCPurchaseNotifyUpdate(t_empty_purchase);
+    }
 }
 
 @end

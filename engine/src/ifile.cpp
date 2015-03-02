@@ -32,6 +32,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "context.h"
 
+#include "filepath.h"
+
+#include "module-resources.h"
+
 //////////////////////////////////////////////////////////////////////
 
 // MW-2014-07-17: [[ ImageMetadata ]] Convert array to the metadata struct.
@@ -391,22 +395,6 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPathIsAbsolute(MCStringRef p_path)
-{
-	if (p_path == nil)
-		return false;
-	
-	return (MCStringBeginsWith(p_path, MCSTR("/"), kMCStringOptionCompareExact) ||
-            MCStringBeginsWith(p_path, MCSTR(":"), kMCStringOptionCompareExact));
-}
-
-bool MCPathIsRemoteURL(MCStringRef p_path)
-{
-	return (MCStringBeginsWith(p_path, MCSTR("http://"), kMCStringOptionCompareCaseless) ||
-            MCStringBeginsWith(p_path, MCSTR("https://"), kMCStringOptionCompareCaseless) ||
-            MCStringBeginsWith(p_path, MCSTR("ftp://"), kMCStringOptionCompareCaseless));
-}
-
 bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep)
 {
 	bool t_success = true;
@@ -460,6 +448,15 @@ bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, 
 		r_rep = t_rep;
 	
 	return t_success;
+}
+
+bool MCImageGetFileRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep)
+{
+	MCAutoStringRef t_path;
+	if (!MCResourceResolvePath(p_resource_file, &t_path))
+		return false;
+	
+	return MCImageRepGetDensityMapped(*t_path, r_rep);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

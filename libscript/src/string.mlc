@@ -21,6 +21,8 @@ This library consists of the operations on strings included in the standard libr
 
 module com.livecode.string
 
+use com.livecode.foreign
+
 public foreign handler MCStringExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
 public foreign handler MCStringExecPutStringAfter(in Source as string, inout Target as string) as undefined binds to "<builtin>"
 

@@ -31,7 +31,7 @@
 -- the defining id.
 'action' Bind(MODULE, MODULELIST)
 
-    'rule' Bind(Module:module(Position, Kind, Name, _, Imports, Definitions), ImportedModules):
+    'rule' Bind(Module:module(Position, Kind, Name, Imports, Definitions), ImportedModules):
         DefineModuleId(Name)
 
         -- Make sure all the imported modules are bound
@@ -40,14 +40,21 @@
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.
         EnterScope
+
         -- Import all the used modules
         DeclareImports(Imports, ImportedModules)
+        
+        EnterScope
+
         -- Declare the predefined ids
         DeclarePredefinedIds
         -- Assign the defining id to all top-level names.
         Declare(Definitions)
         -- Resolve all references to id's.
         Apply(Definitions)
+        
+        LeaveScope
+
         LeaveScope
         
         -- Step 2: Ensure all definitions have their appropriate meaning
@@ -106,7 +113,10 @@
     'rule' DeclareImportedDefinitions(variable(Position, _, Name, _)):
         DeclareId(Name)
     
-    'rule' DeclareImportedDefinitions(handler(Position, _, Name, _, _, _)):
+    'rule' DeclareImportedDefinitions(contextvariable(Position, _, Name, _, _)):
+        DeclareId(Name)
+
+    'rule' DeclareImportedDefinitions(handler(Position, _, Name, _, _, _, _)):
         DeclareId(Name)
     
     'rule' DeclareImportedDefinitions(foreignhandler(Position, _, Name, _, _)):
@@ -120,6 +130,9 @@
 
     'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
+
+    'rule' DeclareImportedDefinitions(metadata(_, _, _)):
+        -- do nothing
 
     'rule' DeclareImportedDefinitions(nil):
         -- do nothing
@@ -162,7 +175,10 @@
     'rule' Declare(variable(Position, _, Name, _)):
         DeclareId(Name)
     
-    'rule' Declare(handler(Position, _, Name, _, _, _)):
+    'rule' Declare(contextvariable(Position, _, Name, _, _)):
+        DeclareId(Name)
+    
+    'rule' Declare(handler(Position, _, Name, _, _, _, _)):
         DeclareId(Name)
     
     'rule' Declare(foreignhandler(Position, _, Name, _, _)):
@@ -177,6 +193,9 @@
     'rule' Declare(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
     
+    'rule' Declare(metadata(_, _, _)):
+        -- do nothing
+        
     'rule' Declare(nil):
         -- do nothing
 
@@ -223,13 +242,16 @@
         |]
     
     'rule' Define(ModuleId, constant(Position, Access, Name, Value)):
-        ComputeTypeOfConstantTermExpression(Value -> Type)
-        DefineSymbolId(Name, ModuleId, Access, constant, Type)
+        --ComputeTypeOfConstantTermExpression(Value -> Type)
+        DefineSymbolId(Name, ModuleId, Access, constant, undefined(Position))
     
     'rule' Define(ModuleId, variable(Position, Access, Name, Type)):
         DefineSymbolId(Name, ModuleId, Access, variable, Type)
+
+    'rule' Define(ModuleId, contextvariable(Position, Access, Name, Type, _)):
+        DefineSymbolId(Name, ModuleId, Access, context, Type)
     
-    'rule' Define(ModuleId, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _)):
+    'rule' Define(ModuleId, handler(Position, Access, Name, _, Signature:signature(Parameters, _), _, _)):
         DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
         DefineParameters(Name, Parameters)
     
@@ -247,7 +269,10 @@
     'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, Methods)):
         DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
     
-    'rule' Define(ModuleId, nil):
+    'rule' Define(_, metadata(_, _, _)):
+        -- do nothing
+        
+    'rule' Define(_, nil):
         -- do nothing
 
 'action' DefineParameters(ID, PARAMETERLIST)
@@ -297,7 +322,7 @@
 
     ----------
 
-    'rule' Apply(DEFINITION'handler(_, _, Id, signature(Parameters, Type), _, Body)):
+    'rule' Apply(DEFINITION'handler(_, _, Id, _, signature(Parameters, Type), _, Body)):
         -- The type of the handler is resolved in the current scope
         Apply(Type)
         
@@ -349,22 +374,6 @@
 
     'rule' Apply(TYPE'named(_, Name)):
         ApplyId(Name)
-        
-    'rule' Apply(TYPE'opaque(_, BaseType, Fields)):
-        -- Apply the base type
-        Apply(BaseType)
-        
-        -- Enter a new scope for fields
-        EnterScope
-        
-        -- Declare the fields first
-        DeclareFields(Fields)
-        
-        -- Now apply all id's in the fields
-        Apply(Fields)
-        
-        -- Leave the fields scope
-        LeaveScope
     
     'rule' Apply(TYPE'record(_, BaseType, Fields)):
         -- Apply the base type
@@ -680,7 +689,7 @@
 
 'sweep' DumpBindings(ANY)
 
-    'rule' DumpBindings(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
+    'rule' DumpBindings(MODULE'module(_, Kind, Name, Imports, Definitions)):
         DumpId("module", Name)
         DumpBindings(Imports)
         DumpBindings(Definitions)
@@ -697,7 +706,10 @@
     'rule' DumpBindings(DEFINITION'variable(_, _, Name, Type)):
         DumpId("variable", Name)
         DumpBindings(Type)
-    'rule' DumpBindings(DEFINITION'handler(_, _, Name, Signature, Definitions, Body)):
+    'rule' DumpBindings(DEFINITION'contextvariable(_, _, Name, Type, _)):
+        DumpId("variable", Name)
+        DumpBindings(Type)
+    'rule' DumpBindings(DEFINITION'handler(_, _, Name, _, Signature, Definitions, Body)):
         DumpId("handler", Name)
         DumpBindings(Signature)
         DumpBindings(Definitions)

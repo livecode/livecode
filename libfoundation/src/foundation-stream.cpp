@@ -765,14 +765,9 @@ bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value)
 
 bool __MCStreamInitialize(void)
 {
-    if (!MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
-        return false;
-    
-    MCAutoTypeInfoRef t_unnamed;
-    /* UNCHECKED */ MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, &t_unnamed);
-    /* UNCHECKED */ MCNamedTypeInfoCreate(MCNAME("livecode.lang.Stream"), kMCStreamTypeInfo);
-    /* UNCHECKED */ MCNamedTypeInfoBind(kMCStreamTypeInfo, *t_unnamed);
-    
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("livecode.lang.Stream"), kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
+		return false;
+	
     return true;
 }
 

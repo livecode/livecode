@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-system.h>
 
 /* ================================================================
  * System identification
@@ -41,4 +42,20 @@ MCSystemExecGetOperatingSystem (MCStringRef & r_string)
 		;
 
 	/* UNCHECKED */ MCStringCreateWithCString (t_os, r_string);
+}
+
+/* ================================================================
+ * Command-line information
+ * ================================================================ */
+
+extern "C" MC_DLLEXPORT void
+MCSystemExecGetCommandName (MCStringRef & r_string)
+{
+	/* UNCHECKED */ MCSCommandLineGetName (r_string);
+}
+
+extern "C" MC_DLLEXPORT void
+MCSystemExecGetCommandArguments (MCProperListRef & r_list)
+{
+	/* UNCHECKED */ MCSCommandLineGetArguments (r_list);
 }

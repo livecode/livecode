@@ -83,7 +83,9 @@ extern "C" MC_DLLEXPORT void MCArrayEvalNumberOfElementsIn(MCArrayRef p_target, 
 
 extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
-    r_output = !MCArrayApply(p_target, is_not_among_the_elements_of, p_needle);
+    MCValueRef t_value;
+    t_value = p_needle != nil ? p_needle : kMCNull;
+    r_output = !MCArrayApply(p_target, is_not_among_the_elements_of, t_value);
 }
 
 extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOfCaseless(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
@@ -125,8 +127,11 @@ extern "C" MC_DLLEXPORT void MCArrayStoreElementOfCaseless(MCValueRef p_value, M
     MCAutoArrayRef t_array;
     MCArrayMutableCopy(x_target, &t_array);
     
+    MCValueRef t_value;
+    t_value = p_value != nil ? p_value : kMCNull;
+    
     if (!create_key_for_array(p_key, x_target, &t_key) ||
-        !MCArrayStoreValue(*t_array, MCArrayIsCaseSensitive(*t_array), *t_key, p_value))
+        !MCArrayStoreValue(*t_array, MCArrayIsCaseSensitive(*t_array), *t_key, t_value))
         return;
     
     MCAutoArrayRef t_new_array;

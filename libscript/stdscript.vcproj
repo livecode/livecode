@@ -131,6 +131,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{82AB9A7D-6D59-4AA1-A6C0-9799E293C1F5}"
+			RelativePathToProject=".\toolchain\lc-compile\src\lc-compile.vcproj"
 		/>
 	</References>
 	<Files>
@@ -173,6 +174,10 @@
 			</File>
 			<File
 				RelativePath=".\src\module-file.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-foreign.cpp"
 				>
 			</File>
 			<File
@@ -256,6 +261,10 @@
 				</File>
 				<File
 					RelativePath=".\src\file.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\foreign.mlc"
 					>
 				</File>
 				<File
@@ -344,6 +353,10 @@
 				</File>
 				<File
 					RelativePath=".\generated\file.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\foreign.c"
 					>
 				</File>
 				<File

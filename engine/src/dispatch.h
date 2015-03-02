@@ -59,6 +59,9 @@ class MCDispatch : public MCObject
 
     static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add resource mapping array to MCDispatch object.
+    MCArrayRef m_library_mapping;
 public:
 	MCDispatch();
 	// virtual functions from MCObject
@@ -253,6 +256,11 @@ public:
 	void GetDefaultBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
     
 	void GetDefaultPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
+    //  in the resource mapping array of MCdispatcher.
+    void addlibrarymapping(MCStringRef p_mapping);
+    bool fetchlibrarymapping(const char *p_name, MCStringRef &r_path);
     
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This

@@ -554,18 +554,11 @@ bool __MCHandlerCopyDescription(__MCHandler *self, MCStringRef& r_description);
 bool __MCStreamInitialize(void);
 void __MCStreamFinalize(void);
 
-bool __MCStdioStreamCreate(FILE *, MCStreamRef &);
-
-bool __MCStdioStreamInitialize(void);
-void __MCStdioStreamFinalize(void);
-
-bool __MCFileInitialize(void);
-void __MCFileFinalize(void);
-
-bool __MCRandomBytes (void *, size_t);
-
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */
+MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value);
+bool __MCCustomCopyDescription (MCValueRef self, MCStringRef & r_desc);
+
 void __MCCustomDefaultDestroy(MCValueRef);
 bool __MCCustomDefaultCopy(MCValueRef, bool, MCValueRef &);
 bool __MCCustomDefaultEqual(MCValueRef, MCValueRef);

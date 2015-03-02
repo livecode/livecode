@@ -1596,9 +1596,20 @@ void MCObject::GetParentScript(MCExecContext& ctxt, MCStringRef& r_parent_script
 		MCParentScript *t_parent;
 		t_parent = parent_script -> GetParent();
 		
-		if (MCStringFormat(r_parent_script, "button id %d of stack \"%@\"", t_parent -> GetObjectId(),
-							t_parent -> GetObjectStack()))
-			return;
+        if (t_parent -> GetObjectId() != 0)
+        {
+            if (MCStringFormat(r_parent_script, "button id %d of stack \"%@\"", t_parent -> GetObjectId(),
+                               t_parent -> GetObjectStack()))
+            
+                return;
+        }
+        else
+        {
+            if (MCStringFormat(r_parent_script, "stack \"%@\"",
+                               t_parent -> GetObjectStack()))
+                
+                return;
+        }
 
 		ctxt . Throw();
 	}
@@ -1648,10 +1659,6 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	if (t_success)
         t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
 
-	// Check that the object is a button
-	if (t_success)
-		t_success =	t_object -> gettype() == CT_BUTTON;
-
 	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
 	//   of the parentScript.
 	bool t_is_cyclic;
@@ -1694,6 +1701,10 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 			uint32_t t_id;
 			t_id = t_object -> getid();
 
+            // If the object is a stack, then it has an id of zero.
+            if (t_object -> gettype() == CT_STACK)
+                t_id = 0;
+            
 			MCNameRef t_stack;
 			t_stack = t_object -> getstack() -> getname();
 
@@ -1728,7 +1739,7 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 			//   is because the inheritence hierarchy has been updated and so the
 			//   super_use chains need to be remade.
 			MCParentScript *t_this_parent;
-			if (getstate(CS_IS_PARENTSCRIPT))
+			if (getisparentscript())
 			{
 				t_this_parent = MCParentScript::Lookup(this);
 				if (t_success && t_this_parent != nil)
@@ -3327,6 +3338,8 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
 		tablesize = ELEMENTS(videoclipprops);
 		break;
     case CT_WIDGET:
+		table = NULL;
+		tablesize = 0;
         // WIDGET-TODO: Implement properties
         break;
 	default:
@@ -3478,7 +3491,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
     
             // MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
             //   'filename' of an image if it is non-empty or the image has a filename.
-            if (s_preprocess_props[j].prop == P_FILE_NAME && gettype() == CT_IMAGE &&
+            if (te->which == P_FILE_NAME && gettype() == CT_IMAGE &&
                 MCValueIsEmpty(t_value) && !getflag(F_HAS_FILENAME))
                 continue;
             

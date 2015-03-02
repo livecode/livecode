@@ -486,6 +486,9 @@ public:
 	void MapMCRectangleToNSRect(MCRectangle rect, NSRect& r_ns_rect);
 	void MapNSRectToMCRectangle(NSRect rect, MCRectangle& r_mc_rect);
 	
+	// IM-2015-01-30: [[ Bug 14140 ]] Locking the frame will prevent the window from being moved or resized
+	void SetFrameLocked(bool p_locked);
+	
 protected:
 	virtual void DoRealize(void);
 	virtual void DoSynchronize(void);
@@ -535,6 +538,9 @@ private:
 		
 		// When set to true, the window has a sheet.
 		bool m_has_sheet : 1;
+		
+		// When the frame is locked, any changes to the window rect will be prevented.
+		bool m_frame_locked : 1;
 	};
 	
 	// A window might map to one of several different classes, so we use a

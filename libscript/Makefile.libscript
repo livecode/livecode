@@ -16,6 +16,7 @@ SOURCES += \
 	module-date.cpp \
 	module-encoding.cpp \
 	module-file.cpp \
+	module-foreign.cpp \
 	module-list.cpp \
 	module-logic.cpp \
 	module-map.cpp \

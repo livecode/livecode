@@ -56,6 +56,7 @@ struct MCLoadedExtension
 {
     MCLoadedExtension *next;
     MCStringRef filename;
+	MCStringRef resource_path;
     MCScriptModuleRef module;
     MCScriptInstanceRef instance;
 };
@@ -128,7 +129,36 @@ bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_
     return true;
 }
 
-void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
+bool MCEngineAddResourcePathForModule(MCScriptModuleRef p_module, MCStringRef p_resource_path)
+{
+	for (MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext->next)
+	{
+		if (t_ext->module == p_module)
+		{
+			MCAutoStringRef t_resolved_path;
+			if (!MCS_resolvepath(p_resource_path, &t_resolved_path))
+				return false;
+			
+			MCValueAssign(t_ext->resource_path, *t_resolved_path);
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef &r_resource_path)
+{
+	for (const MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext->next)
+	{
+		if (t_ext->module == p_module)
+			return MCStringCopy(t_ext->resource_path != nil ? t_ext->resource_path : kMCEmptyString, r_resource_path);
+	}
+	
+	return false;
+}
+
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
 {
     MCAutoStringRef t_resolved_filename;
     /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
@@ -155,6 +185,8 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     MCValueRelease(t_stream);
     
     MCEngineAddExtensionFromModule(*t_resolved_filename, t_module);
+	if (p_resource_path != nil)
+		MCEngineAddResourcePathForModule(t_module, p_resource_path);
     
     MCScriptReleaseModule(t_module);
     
@@ -173,6 +205,7 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
                 MCScriptReleaseInstance(t_ext -> instance);
             MCScriptReleaseModule(t_ext -> module);
             MCValueRelease(t_ext -> filename);
+			MCValueRelease(t_ext -> resource_path);
             if (t_previous != nil)
                 t_previous -> next = t_ext -> next;
             else
@@ -421,6 +454,60 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
         case kMCValueTypeCodeName:
         case kMCValueTypeCodeData:
             return true;
+        
+        case kMCValueTypeCodeArray:
+        {
+            // We start off with no new value - we only create a new array if one
+            // of the elements changes.
+            MCAutoArrayRef t_mutated_value;
+            t_mutated_value = nil;
+            
+            MCNameRef t_key;
+            MCValueRef t_element;
+            uintptr_t t_iterator;
+            t_iterator = 0;
+            while(MCArrayIterate((MCArrayRef)x_value, t_iterator, t_key, t_element))
+            {
+                // 'Copy' the value (as we don't own it).
+                MCAutoValueRef t_new_element;
+                t_new_element = t_element;
+                
+                // Attempt to convert it to a script type.
+                if (!MCExtensionConvertToScriptType(ctxt, InOut(t_new_element)))
+                    return false;
+                
+                // If the value has changed then we must do a store.
+                if (*t_new_element != t_element)
+                {
+                    // If we haven't had to change anything yet, we must copy the original
+                    // array.
+                    if (*t_mutated_value == nil)
+                    {
+                        if (!MCArrayMutableCopy((MCArrayRef)x_value, Out(t_mutated_value)))
+                            return false;
+                    }
+                    
+                    // Store the element in the array.
+                    if (!MCArrayStoreValue(In(t_mutated_value), true, t_key, In(t_new_element)))
+                        return false;
+                    
+                    continue;
+                }
+    
+                // If we get here then we haven't had to mutate the input array yet
+                // and this element has not changed through conversion so there is
+                // nothing to do!
+                
+                continue;
+            }
+            
+            // If we get here then all is well. If we had to mutate the input value
+            // then return it in x_value (after releasing the original value since
+            // it is an inout).
+            if (*t_mutated_value != nil)
+                MCValueAssignAndRelease(x_value, (MCValueRef)t_mutated_value . Take());
+        }
+        return true;
             
         // ProperLists map to sequences (arrays with numeric keys)
         case kMCValueTypeCodeProperList:
@@ -502,7 +589,6 @@ bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_
     MCResolvedTypeInfo t_resolved_type;
     MCTypeInfoResolve(p_as_type, t_resolved_type);
     
-    bool t_converted;
     if (t_resolved_type . named_type == kMCBooleanTypeInfo)
     {
         if (!__script_try_to_convert_to_boolean(ctxt, t_resolved_type . is_optional, x_value, r_converted))
@@ -543,6 +629,8 @@ bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_
         if (!__script_try_to_convert_to_foreign(ctxt, t_resolved_type . named_type, x_value, r_converted))
             return false;
     }
+    else
+        MCUnreachable();
     
     return true;
 }
@@ -559,6 +647,71 @@ bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_as_ty
     return MCExtensionThrowTypeConversionError(p_as_type, x_value);
 }
 
+// Ensure that if the input value is a name it comes out as a string.
+// Ensure that if the input value is an array, all elements that are names (recursed)
+// come out as strings.
+// If r_output is nil, then no mutation occured; otherwise it is the mutated value.
+static bool __script_ensure_names_are_strings(MCValueRef p_input, MCValueRef& r_output)
+{
+    if (MCValueGetTypeCode(p_input) == kMCValueTypeCodeName)
+    {
+        r_output = MCValueRetain(MCNameGetString((MCNameRef)p_input));
+        return true;
+    }
+    
+    if (MCValueGetTypeCode(p_input) == kMCValueTypeCodeArray)
+    {
+        MCAutoArrayRef t_mutated_input;
+        t_mutated_input = nil;
+        
+        MCNameRef t_key;
+        MCValueRef t_element;
+        uintptr_t t_iterator;
+        t_iterator = 0;
+        while(MCArrayIterate((MCArrayRef)p_input, t_iterator, t_key, t_element))
+        {
+            // Ensure the element's names are all strings.
+            MCAutoValueRef t_mutated_element;
+            if (!__script_ensure_names_are_strings(t_element, Out(t_mutated_element)))
+                return false;
+            
+            // If something changed then we must replace the existing value.
+            if (*t_mutated_element != nil)
+            {
+                // First make sure we have a copy of the original to mutate.
+                if (*t_mutated_input == nil)
+                {
+                    if (!MCArrayMutableCopy((MCArrayRef)p_input, Out(t_mutated_input)))
+                        return false;
+                }
+                
+                // Now store the value.
+                if (!MCArrayStoreValue(In(t_mutated_input), true, t_key, In(t_mutated_element)))
+                    return false;
+                
+                // We are done for this element.
+                continue;
+            }
+            
+            // If we get here then nothing has changed, so there's nothing to do.
+        }
+        
+        // Either return the original or the mutated version depending on whether
+        // any of its elements mutated.
+        if (*t_mutated_input == nil)
+            r_output = nil;
+        else
+            r_output = t_mutated_input . Take();
+        
+        return true;
+    }
+    
+    // If no changes are made, return nil for the output.
+    r_output = nil;
+    
+    return true;
+}
+
 // Convert a script value to a boolean following standard lax-scripting rules.
 static bool __script_try_to_convert_to_boolean(MCExecContext& ctxt, bool p_optional, MCValueRef& x_value, bool& r_converted)
 {
@@ -566,6 +719,7 @@ static bool __script_try_to_convert_to_boolean(MCExecContext& ctxt, bool p_optio
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeBoolean)
     {
         r_converted = true;
+        
         return true;
     }
     
@@ -581,6 +735,9 @@ static bool __script_try_to_convert_to_boolean(MCExecContext& ctxt, bool p_optio
         if (MCStringIsEmpty((MCStringRef)x_value) && p_optional)
         {
             MCValueAssign((MCNullRef&)x_value, kMCNull);
+            
+            r_converted = true;
+            
             return true;
         }
      
@@ -588,6 +745,9 @@ static bool __script_try_to_convert_to_boolean(MCExecContext& ctxt, bool p_optio
         if (MCStringIsEqualTo((MCStringRef)x_value, kMCTrueString, kMCStringOptionCompareCaseless))
         {
             MCValueAssign((MCBooleanRef&)x_value, kMCTrue);
+            
+            r_converted = true;
+            
             return true;
         }
         
@@ -595,12 +755,16 @@ static bool __script_try_to_convert_to_boolean(MCExecContext& ctxt, bool p_optio
         if (MCStringIsEqualTo((MCStringRef)x_value, kMCFalseString, kMCStringOptionCompareCaseless))
         {
             MCValueAssign((MCBooleanRef&)x_value, kMCFalse);
+            
+            r_converted = true;
+            
             return true;
         }
     }
     
     // We failed to convert.
     r_converted = false;
+    
     return true;
 }
 
@@ -609,7 +773,11 @@ static bool __script_try_to_convert_to_number(MCExecContext& ctxt, bool p_option
 {
     // If it is already a number, we are done.
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeNumber)
+    {
+        r_converted = true;
+        
         return true;
+    }
     
     // Otherwise convert to a string and attempt to parse.
     bool t_is_string;
@@ -623,6 +791,9 @@ static bool __script_try_to_convert_to_number(MCExecContext& ctxt, bool p_option
         if (MCStringIsEmpty((MCStringRef)x_value) && p_optional)
         {
             MCValueAssign((MCNullRef&)x_value, kMCNull);
+            
+            r_converted = true;
+            
             return true;
         }
         
@@ -636,12 +807,16 @@ static bool __script_try_to_convert_to_number(MCExecContext& ctxt, bool p_option
             
             MCValueRelease(x_value);
             x_value = t_number;
+            
+            r_converted = true;
+            
             return true;
         }
     }
     
     // We failed to convert.
     r_converted = false;
+    
     return true;
 }
 
@@ -651,6 +826,7 @@ static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeString)
     {
         r_converted = true;
+        
         return true;
     }
     
@@ -658,7 +834,9 @@ static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeName)
     {
         MCValueAssign((MCStringRef&)x_value, MCNameGetString((MCNameRef)x_value));
+        
         r_converted = true;
+        
         return true;
     }
     
@@ -667,7 +845,9 @@ static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x
     {
         if (!MCStringDecodeAndRelease((MCDataRef)x_value, kMCStringEncodingNative, false, (MCStringRef&)x_value))
             return false;
+        
         r_converted = true;
+        
         return true;
     }
 
@@ -675,7 +855,9 @@ static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeBoolean)
     {
         MCValueAssign((MCStringRef&)x_value, x_value == kMCTrue ? kMCTrueString : kMCFalseString);
+        
         r_converted = true;
+        
         return true;
     }
     
@@ -695,7 +877,9 @@ static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x
         
         MCValueRelease(x_value);
         x_value = t_string;
+        
         r_converted = true;
+        
         return true;
     }
     
@@ -703,7 +887,9 @@ static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeArray)
     {
         MCValueAssign((MCStringRef&)x_value, kMCEmptyString);
+        
         r_converted = true;
+        
         return true;
     }
     
@@ -711,7 +897,9 @@ static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeNull)
     {
         MCValueAssign((MCStringRef&)x_value, kMCEmptyString);
+        
         r_converted = true;
+        
         return true;
     }
     
@@ -726,6 +914,7 @@ static bool __script_try_to_convert_to_data(MCExecContext& ctxt, MCValueRef& x_v
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeData)
     {
         r_converted = true;
+        
         return true;
     }
     
@@ -743,12 +932,16 @@ static bool __script_try_to_convert_to_data(MCExecContext& ctxt, MCValueRef& x_v
         
         MCValueRelease(x_value);
         x_value = t_data;
+        
         r_converted = true;
+        
         return true;
     }
     
     // We failed to convert.
+    
     r_converted = false;
+    
     return true;
 }
 
@@ -757,7 +950,15 @@ static bool __script_try_to_convert_to_array(MCExecContext& ctxt, MCValueRef& x_
     // If it is already an array, we are done.
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeArray)
     {
+        MCValueRef t_mutated_value;
+        if (!__script_ensure_names_are_strings(x_value, t_mutated_value))
+            return false;
+        
+        if (t_mutated_value != nil)
+            MCValueAssignAndRelease(x_value, t_mutated_value);
+        
         r_converted = true;
+        
         return true;
     }
     
@@ -771,12 +972,15 @@ static bool __script_try_to_convert_to_array(MCExecContext& ctxt, MCValueRef& x_
     if (t_is_string)
     {
         MCValueAssign((MCArrayRef&)x_value, kMCEmptyArray);
+        
         r_converted = true;
+        
         return true;
     }
     
     // We failed to convert.
     r_converted = false;
+    
     return true;
 }
 
@@ -788,6 +992,7 @@ static bool __script_try_to_convert_to_list(MCExecContext& ctxt, MCValueRef& x_v
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeProperList)
     {
         r_converted = true;
+        
         return true;
     }
     
@@ -800,33 +1005,38 @@ static bool __script_try_to_convert_to_list(MCExecContext& ctxt, MCValueRef& x_v
     // we can convert.
     if (t_is_array && MCArrayIsSequence((MCArrayRef)x_value))
     {
-        MCProperListRef t_proper_list;
-        if (!MCProperListCreateMutable(t_proper_list))
+        MCAutoProperListRef t_proper_list;
+        if (!MCProperListCreateMutable(Out(t_proper_list)))
             return false;
+        
         for(uindex_t i = 0; i < MCArrayGetCount((MCArrayRef)x_value); i++)
         {
             // We know this will succeed as we have a sequence.
             MCValueRef t_element;
             MCArrayFetchValueAtIndex((MCArrayRef)x_value, i + 1, t_element);
-            if (!MCProperListPushElementOntoBack(t_proper_list, t_element))
-            {
-                MCValueRelease(t_proper_list);
+            
+            // Deal with the name/string issue.
+            MCAutoValueRef t_revised_element;
+            if (!__script_ensure_names_are_strings(t_element, &t_revised_element))
                 return false;
-            }
+                
+            if (!MCProperListPushElementOntoBack(In(t_proper_list), *t_revised_element == nil ? t_element : In(t_revised_element)))
+                return false;
         }
-        if (!MCProperListCopyAndRelease(t_proper_list, t_proper_list))
-        {
-            MCValueRelease(t_proper_list);
+        
+        if (!t_proper_list . MakeImmutable())
             return false;
-        }
-        MCValueRelease(x_value);
-        x_value = t_proper_list;
+        
+        MCValueAssignAndRelease(x_value, (MCValueRef)t_proper_list . Take());
+        
         r_converted = true;
+
         return true;
     }
     
     // We failed to convert.
     r_converted = false;
+    
     return true;
 }
 
@@ -838,6 +1048,7 @@ static bool __script_try_to_convert_to_record(MCExecContext& ctxt, MCTypeInfoRef
     if (MCValueGetTypeInfo(x_value) == p_type)
     {
         r_converted = true;
+        
         return true;
     }
     
@@ -871,7 +1082,9 @@ static bool __script_try_to_convert_to_record(MCExecContext& ctxt, MCTypeInfoRef
                 if (!MCArrayFetchValue((MCArrayRef)x_value, false, t_field_name, t_field_value))
                 {
                     MCValueRelease(t_record);
+                    
                     r_converted = false;
+                    
                     return true;
                 }
                 
@@ -897,7 +1110,9 @@ static bool __script_try_to_convert_to_record(MCExecContext& ctxt, MCTypeInfoRef
                 {
                     MCValueRelease(t_field_value);
                     MCValueRelease(t_record);
+                    
                     r_converted = false;
+                    
                     return true;
                 }
                 
@@ -922,11 +1137,13 @@ static bool __script_try_to_convert_to_record(MCExecContext& ctxt, MCTypeInfoRef
             x_value = t_record;
             
             r_converted = true;
+            
             return true;
         }
     }
     
     r_converted = false;
+    
     return true;
 }
 
@@ -938,6 +1155,7 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
     if (MCValueGetTypeInfo(x_value) == p_type)
     {
         r_converted = true;
+        
         return true;
     }
     
@@ -945,10 +1163,11 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
     const MCForeignTypeDescriptor *t_descriptor;
     t_descriptor = MCForeignTypeInfoGetDescriptor(p_type);
     
-    // If the briding type is null, then there is no bridge.
+    // If the bridging type is null, then there is no bridge.
     if (t_descriptor -> bridgetype == kMCNullTypeInfo)
     {
         r_converted = false;
+        
         return true;
     }
     
@@ -961,6 +1180,7 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
     if (!t_is_bridge)
     {
         r_converted = false;
+        
         return true;
     }
     
@@ -974,6 +1194,7 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
     x_value = t_foreign_value;
     
     r_converted = true;
+    
     return true;
 }
 

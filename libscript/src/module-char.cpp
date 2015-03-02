@@ -73,7 +73,7 @@ extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, M
 extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
-    if (!MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_start, p_finish, true, t_start, t_count))
+    if (!MCChunkGetExtentsOfGraphemeChunkByRangeInRange(p_target, nil, p_start, p_finish, true, t_start, t_count))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
@@ -85,8 +85,7 @@ extern "C" MC_DLLEXPORT void MCCharFetchCharRangeOf(index_t p_start, index_t p_f
 extern "C" MC_DLLEXPORT void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    
-    if (!MCChunkGetExtentsOfGraphemeChunkByRange(x_target, p_start, p_finish, true, t_start, t_count))
+    if (!MCChunkGetExtentsOfGraphemeChunkByRangeInRange(x_target, nil, p_start, p_finish, true, t_start, t_count))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
@@ -147,7 +146,7 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfChars(bool p_is_last, MCStringRef
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    if (!MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_after, p_after, true, t_start, t_count))
+    if (!MCChunkGetExtentsOfGraphemeChunkByRangeInRange(p_target, nil, p_after, p_after, true, t_start, t_count))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
@@ -159,7 +158,7 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStri
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, uindex_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    if (!MCChunkGetExtentsOfGraphemeChunkByRange(p_target, p_before, p_before, true, t_start, t_count))
+    if (!MCChunkGetExtentsOfGraphemeChunkByRangeInRange(p_target, nil, p_before, p_before, true, t_start, t_count))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;

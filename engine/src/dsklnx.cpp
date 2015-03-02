@@ -197,17 +197,18 @@ static void configureSerialPort(int sRefNum)
     {
         *each = '\0';
         each++;
-        if (str != NULL)
-            parseSerialControlStr(str, &theTermios);
+        parseSerialControlStr(str, &theTermios);
         str = each;
     }
-    delete controlptr;
+
     //configure the serial output device
     parseSerialControlStr(str,&theTermios);
     if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
     {
         MCLog("Error setting terminous attributes", nil);
     }
+
+    delete[] controlptr;
     return;
 }
 
@@ -243,10 +244,18 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
             t_poll_fd . events = POLLIN;
             t_poll_fd . revents = 0;
 
+            // SN-2015-02-12: [[ Bug 14441 ]] poll might as well get signal interrupted
+            //  and we don't want to miss the reading for that only reason.
             int t_result;
-            t_result = poll(&t_poll_fd, 1, -1);
-            if (t_result != 1)
-                break;
+            do
+            {
+                t_result = poll(&t_poll_fd, 1, -1);
+            }
+            while (t_result != 1 ||
+                   (errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK));
+
+            // SN-2015-02-26: [[ CID 37859 ]] Dead code removed (t_result is
+            //  always different from -1 here
 #else
             if (MCscreen->wait(READ_INTERVAL, False, True))
             {
@@ -266,7 +275,7 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
 
 static Boolean MCS_lnx_nodelay(int4 fd)
 {
-    return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
+	return fcntl(fd, F_SETFL, (fcntl(fd, F_GETFL, 0) & O_APPEND) | O_NONBLOCK)
            >= 0;
 }
 
@@ -1739,6 +1748,8 @@ public:
             t_mode = IO_UPDATE_MODE;
         else if (p_mode == kMCOpenFileModeAppend)
             t_mode = IO_APPEND_MODE;
+		else /* No access requested */
+			return NULL;
 
         t_fptr = fopen(*t_path_sys, t_mode);
 
@@ -1774,6 +1785,12 @@ public:
             break;
         }
 
+        // SN-2015-02-11: [[ Bug 14587 ]] Do not buffer if the
+        //  targetted fd is a TTY
+        //  see srvposix.cpp, former MCStdioFileHandle::OpenFd
+        if (t_fptr && isatty(p_fd))
+            setbuf(t_fptr, NULL);
+
         if (t_fptr != NULL)
             t_handle = new MCStdioFileHandle(t_fptr);
 
@@ -1800,10 +1817,12 @@ public:
         if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
-        configureSerialPort((short)fileno(t_fptr));
-
         if (t_fptr != NULL)
+        {
+            configureSerialPort((short)fileno(t_fptr));
+
             t_handle = new MCStdioFileHandle(t_fptr);
+        }
 
         return t_handle;
     }
@@ -1978,9 +1997,9 @@ public:
     virtual bool GetExecutablePath(MCStringRef &r_executable)
     {
         char t_executable[PATH_MAX];
-        uint32_t t_size;
+		ssize_t t_size;
         t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
-        if (t_size == PATH_MAX)
+		if (t_size >= PATH_MAX || t_size < 0)
             return false;
         
         t_executable[t_size] = 0;
@@ -2345,7 +2364,8 @@ public:
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                    return true;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
                 }
             }
             else
@@ -2354,14 +2374,16 @@ public:
                 close(tochild[1]);
                 MCeerror->add
                 (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                return true;
+                // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                return false;
             }
         }
         else
         {
             MCeerror->add
             (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-            return true;
+            // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+            return false;
         }
         char *buffer;
         uint4 buffersize;
@@ -2384,6 +2406,25 @@ public:
 
         close(toparent[0]);
         CheckProcesses();
+
+        // SN-2015-02-09: [[ Bug 14441 ]] We want to avoid the waiting time
+        //  that MCScreen->wait can bring, and which was avoided in
+        //  MCPosixSystem::Shell
+#ifdef _SERVER
+        pid_t t_wait_result;
+        int t_wait_stat;
+        t_wait_result = waitpid(MCprocesses[index].pid, &t_wait_stat, WNOHANG);
+        if (t_wait_result == 0)
+        {
+            Kill(MCprocesses[index].pid, SIGKILL);
+            waitpid(MCprocesses[index].pid, &t_wait_stat, 0);
+        }
+        else
+            t_wait_stat = 0;
+
+        MCprocesses[index].retcode = WEXITSTATUS(t_wait_stat);
+#else
+
         if (MCprocesses[index].pid != 0)
         {
             uint2 count = SHELL_COUNT;
@@ -2393,7 +2434,8 @@ public:
                 {
                     if (MCprocesses[index].pid != 0)
                         Kill(MCprocesses[index].pid, SIGKILL);
-                    return true;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
                 }
                 if (MCprocesses[index].pid == 0)
                     break;
@@ -2404,6 +2446,7 @@ public:
                 Kill(MCprocesses[index].pid, SIGKILL);
             }
         }
+#endif
 
         r_retcode = MCprocesses[index].retcode;
         return true;
@@ -3231,8 +3274,8 @@ public:
             if (MCsockets[i]->resolve_state != kMCSocketStateResolving &&
                MCsockets[i]->resolve_state != kMCSocketStateError)
             {
-                if (MCsockets[i]->connected && !MCsockets[i]->closing
-                    && !MCsockets[i]->shared || MCsockets[i]->accepting)
+	            if ((MCsockets[i]->connected && !MCsockets[i]->closing
+	                 && !MCsockets[i]->shared) || MCsockets[i]->accepting)
                     FD_SET(MCsockets[i]->fd, &rmaskfd);
                 if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
                     FD_SET(MCsockets[i]->fd, &wmaskfd);

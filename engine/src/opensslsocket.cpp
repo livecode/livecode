@@ -638,8 +638,12 @@ void MCS_close_socket(MCSocket *s)
 	s->closing = True;
 }
 
-void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr, MCDataRef& r_data)
+// PM-2015-01-20: [[ Bug 14409 ]] Return nil in case of failure
+MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr)
 {
+    MCDataRef t_data;
+    t_data = nil;
+    
 	if (s->datagram)
 	{
 		MCNameDelete(s->message);
@@ -655,7 +659,7 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 		if (s->accepting)
 		{
 			MCresult->sets("can't read from this socket");
-			return;
+			return t_data;
 		}
 		if (until == NULL)
 		{
@@ -692,7 +696,7 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 					if (until != NULL && *until == '\n' && !*(until + 1)
 					        && size && s->rbuffer[size - 1] == '\r')
 						size--;
-					/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)s->rbuffer, size, r_data);
+					/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)s->rbuffer, size, t_data);
 					s->nread -= eptr->size;
 					// MW-2010-11-19: [[ Bug 9182 ]] This should be a memmove (I think)
 					memmove(s->rbuffer, s->rbuffer + eptr->size, s->nread);
@@ -724,8 +728,12 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 			(s->revents);
 			delete eptr;
 			s->waiting = False;
+            return t_data;
 		}
 	}
+    
+    // SN-2015-01-29: [[ Bug 14409 ]] The function must return something
+    return t_data;
 }
 
 void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef mptr)

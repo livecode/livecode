@@ -806,6 +806,11 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 				MCPlatformReleaseMenu(t_current_submenu_ref);
 			}
 			
+            // PM-2015-02-09: [[ Bug 14521 ]] No action since menu item has submenus
+            // SN-2015-01-12: [[ Bug 14346 ]] Menu items with a submenu should not be selectable
+            [t_item setAction: nil];
+            [t_item setTarget: nil];
+            
 			[t_item setSubmenu: (*(MCPlatformMenuRef *)p_value) -> menu];
 		}
 		break;

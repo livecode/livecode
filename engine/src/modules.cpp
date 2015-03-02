@@ -23,6 +23,7 @@ extern "C"
 {
     
     struct builtin_module_descriptor {};
+    extern builtin_module_descriptor __com_livecode_foreign_module_info;
     extern builtin_module_descriptor __com_livecode_arithmetic_module_info;
     extern builtin_module_descriptor __com_livecode_array_module_info;
     extern builtin_module_descriptor __com_livecode_binary_module_info;
@@ -52,6 +53,7 @@ extern "C"
     
     builtin_module_descriptor* g_builtin_modules[] =
     {
+        &__com_livecode_foreign_module_info,
         &__com_livecode_arithmetic_module_info,
         &__com_livecode_array_module_info,
         &__com_livecode_binary_module_info,
@@ -131,10 +133,13 @@ extern "C"
     
 }
 
+extern bool MCForeignModuleInitialize(void);
 extern bool MCCanvasModuleInitialize(void);
 extern bool MCEngineModuleInitialize(void);
 bool MCModulesInitialize(void)
 {
+    if (!MCForeignModuleInitialize())
+        return false;
     if (!MCCanvasModuleInitialize())
         return false;
     if (!MCEngineModuleInitialize())
@@ -142,10 +147,12 @@ bool MCModulesInitialize(void)
     return true;
 }
 
+extern void MCForeignModuleFinalize(void);
 extern void MCCanvasModuleFinalize(void);
 extern void MCEngineModuleFinalize(void);
 void MCModulesFinalize(void)
 {
     MCEngineModuleFinalize();
     MCCanvasModuleFinalize();
+    MCForeignModuleFinalize();
 }

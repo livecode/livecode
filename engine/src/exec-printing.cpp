@@ -323,6 +323,9 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 		return;
 	}
 	
+    if (t_ranges != nil)
+        MCMemoryDeallocate(t_ranges);
+    
 	ctxt . LegacyThrow(EE_PROPERTY_BADPRINTPROP);
 }
 

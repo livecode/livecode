@@ -30,15 +30,14 @@
 #    define NAN ((float)(INFINITY*0.));
 #  endif
 #  include <float.h>
-#  define isinf(x) (!_finite(x))
+/* C++: isinf(x) should return non-zero if is an infinity.
+ * C99: isinf(x) should return 1 if x is +Inf, -1 if x is -Inf, 0 otherwise. */
+#  define isinf(x) ((_fpclass(x) == _FPCLASS_PINF) ? 1 : ((_fpclass(x) == _FPCLASS_NINF) ? -1 : 0))
 #  define copysign _copysign
+#  define isfinite(x) _finite(x)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/* Return a random number in the range [0, 1).  If any random number
- * generation error occurs, returns a quiet NaN. */
-real64_t MCMathRandom (void);
 
 // Convert from base 10 to a string in the desired base. Destination base should be between 2 and 32 inclusive.
 bool MCMathConvertFromBase10(uint32_t p_value, bool p_negative, integer_t p_dest_base, MCStringRef& r_result);

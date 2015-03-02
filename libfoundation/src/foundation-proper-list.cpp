@@ -78,19 +78,21 @@ bool MCProperListCreateMutable(MCProperListRef& r_list)
 	return true;
 }	
 
-// Should this take ownership of buffer and values, or just values?
-/* bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list)
+bool
+MCProperListCreateAndRelease(MCValueRef *p_values,
+                             uindex_t p_length,
+                             MCProperListRef& r_list)
 {
-    __MCProperList *t_list;
-    if (!__MCValueCreate(kMCValueTypeCodeProperList, t_list))
-        return false;
-    
-    t_list -> list = p_values;
-    t_list -> length = p_length;
-    
-    r_list = t_list;
-    return true;
-} */
+	__MCProperList *t_list;
+	if (!__MCValueCreate(kMCValueTypeCodeProperList, t_list))
+		return false;
+
+	t_list -> list = p_values;
+	t_list -> length = p_length;
+
+	r_list = t_list;
+	return true;
+}
 
 bool MCProperListCopy(MCProperListRef self, MCProperListRef& r_new_list)
 {
@@ -268,7 +270,9 @@ bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
         return MCProperListPushElementsOntoBack(self, p_value -> list, p_value -> length);
     
     MCAutoProperListRef t_list;
-    MCProperListCopy(p_value, &t_list);
+	if (!MCProperListCopy(p_value, &t_list))
+		return false;
+
     return MCProperListAppendList(self, *t_list);
 }
 
@@ -303,7 +307,9 @@ bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index
         return MCProperListInsertElements(self, p_value -> list, p_value -> length, p_index);
     
     MCAutoProperListRef t_list;
-    MCProperListCopy(p_value, &t_list);
+	if (!MCProperListCopy(p_value, &t_list))
+		return false;
+
     return MCProperListInsertList(self, *t_list, p_index);
 }
 
@@ -317,7 +323,10 @@ bool MCProperListRemoveElements(MCProperListRef self, uindex_t p_start, uindex_t
     
     MCAutoArray<MCValueRef> t_values;
     for (uindex_t i = p_start; i < p_start + p_count; i++)
-        t_values . Push(self -> list[i]);
+	{
+		if (!t_values . Push(self -> list[i]))
+			return false;
+	}
     
     if (!__MCProperListShrinkAt(self, p_start, p_count))
         return false;
@@ -446,6 +455,13 @@ bool MCProperListFirstIndexOfList(MCProperListRef self, MCProperListRef p_needle
     while (!t_match && MCProperListFirstIndexOfElement(self, p_needle -> list[0], t_offset, t_new_offset))
     {
         t_match = true;
+
+		if (p_needle->length > self->length - t_new_offset)
+		{
+			t_match = false;
+			break;
+		}
+
         for (uindex_t i = 1; i < p_needle -> length; i++)
         {
             if (!MCValueIsEqualTo(p_needle -> list[i], self -> list[t_new_offset + i]))
@@ -492,34 +508,39 @@ bool MCProperListApply(MCProperListRef self, MCProperListApplyCallback p_callbac
     return true;
 }
 
-bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, MCProperListRef& r_new_list)
+bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context)
 {
     if (MCProperListIsIndirect(self))
         self = self -> contents;
     
-    MCAutoArray<MCValueRef> t_values;
+	MCAutoValueRefArray t_values;
+	if (!t_values.New (self -> length))
+		return false;
+
     bool t_success;
     t_success = true;
     
     for (uindex_t i = 0; t_success && i < self -> length; i++)
     {
         MCValueRef t_value;
-        if (!p_callback(self -> list[i], t_value))
+		t_value = NULL;
+
+        if (!p_callback(context, self -> list[i], t_value))
             t_success = false;
         
-        if (t_success);
-            t_values . Push(t_value);
+
+		/* In case the callback returns a value into t_value but also
+		 * indicates failure, make sure to release t_value on
+		 * failure. */
+		if (t_success)
+			t_values[i] = t_value;
+		else
+			MCValueRelease (t_value);
     }
     
     if (t_success)
-        t_success = MCProperListCreate(t_values . Ptr(), t_values . Size(), r_new_list);
+		t_success = t_values.TakeAsProperList (r_new_list);
 
-    if (!t_success)
-    {
-        for (uindex_t i = 0; i < t_values . Size(); i++)
-            MCValueRelease(t_values[i]);
-    }
-    
     return t_success;
 }
 
@@ -767,7 +788,27 @@ bool __MCProperListIsEqualTo(__MCProperList *self, __MCProperList *other_self)
 
 bool __MCProperListCopyDescription(__MCProperList *self, MCStringRef& r_string)
 {
-	return false;
+	/* Shortcut for empty lists */
+	if (MCProperListIsEmpty (self))
+		return MCStringCopy (MCSTR("[]"), r_string);
+
+	MCAutoListRef t_contents_list;
+	if (!MCListCreateMutable (MCSTR(", "), &t_contents_list))
+		return false;
+
+	uintptr_t t_iter = 0;
+	MCValueRef t_value;
+	while (MCProperListIterate (self, t_iter, t_value))
+	{
+		if (!MCListAppend (*t_contents_list, t_value))
+			return false;
+	}
+
+	MCAutoStringRef t_contents_string;
+	if (!MCListCopyAsString (*t_contents_list, &t_contents_string))
+		return false;
+
+	return MCStringFormat(r_string, "[%@]", *t_contents_string);
 }
 
 bool __MCProperListImmutableCopy(__MCProperList *self, bool p_release, __MCProperList*& r_immutable_self)

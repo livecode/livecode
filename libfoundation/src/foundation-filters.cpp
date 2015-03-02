@@ -229,10 +229,10 @@ bool MCFiltersCompress(MCDataRef p_source, MCDataRef& r_result)
 	uint32_t osize = zstrm.total_out + GZIP_HEADER_SIZE;
 	uint32_t check = crc32(0L, Z_NULL, 0);
 	check = crc32(check, (unsigned char *)t_src_ptr, t_src_len);
-    MCSwapInt32HostToBig(check);
+    check = MCSwapInt32HostToLittle(check);
 	memcpy(t_buffer.Bytes() + osize, &check, 4);
 	check = t_src_len;
-    MCSwapInt32HostToBig(check);
+    check = MCSwapInt32HostToLittle(check);
 	memcpy(t_buffer.Bytes() + osize + 4, &check, 4);
     
 	t_buffer.Shrink(osize + 8);
@@ -261,7 +261,7 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result)
 	{ /* skip the extra field */
 		uint16_t len;
 		memcpy(&len, &sptr[startindex], 2);
-        MCSwapInt16HostToBig(len);
+        len = MCSwapInt16LittleToHost(len);
 		startindex += len;
 	}
 	if (sptr[3] & GZIP_ORIG_NAME) /* skip the original file name */
@@ -274,7 +274,7 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result)
 		startindex += 2;
 	uint32_t size;
 	memcpy(&size, &sptr[t_src_len - 4], 4);
-    MCSwapInt32HostToBig(size);
+    size = MCSwapInt32LittleToHost(size);
 	if (size == 0)
 	{
 		r_result = MCValueRetain(kMCEmptyData);
@@ -340,19 +340,20 @@ static const char *url_table[256] =
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result)
 {
-    char *t_utf8_string;
-    char *s;
-    uint32_t l;
-    int32_t size;
+	MCAutoStringRefAsUTF8String t_utf8_string;
+	const char *s;
+	uindex_t l;
+	uindex_t size;
     
     // SN-2014-11-13: [[ Bug 14015 ]] We don't want to nativise the string,
     // but rather to encode it in UTF-8 and write the bytes (a '%' will be added).
-    if (!MCStringConvertToUTF8(p_source, t_utf8_string, l))
+	if (!t_utf8_string.Lock (p_source))
         return false;
     
-    s = t_utf8_string;
-    size = l + 1;
-    size += size / 4;
+	s = *t_utf8_string;
+	l = t_utf8_string.Size();
+	size = l + 1;
+	size += size / 4;
     
     MCAutoNativeCharArray buffer;
     if (!buffer . New(size))
@@ -380,7 +381,6 @@ bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result)
     
     buffer . Shrink(dptr - buffer . Chars());
     
-    MCMemoryDeleteArray(t_utf8_string);
     return buffer . CreateStringAndRelease(r_result);
 }
 
@@ -396,7 +396,10 @@ bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result)
         return false;
     
     if (!t_buffer . New(t_srclen))
+	{
+		MCMemoryDeleteArray (t_srcptr);
         return false;
+	}
     
     const uint8_t *sptr = (uint8_t *)t_srcptr;
     const uint8_t *eptr = sptr + t_srclen;

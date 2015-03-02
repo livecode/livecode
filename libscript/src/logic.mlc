@@ -20,6 +20,8 @@ This library consists of the logical operations included in the standard library
 
 module com.livecode.logic
 
+use com.livecode.foreign
+
 //foreign handler MCLogicEvalAnd(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
 //foreign handler MCLogicEvalOr(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCLogicEvalNot(in Operand as bool, out Value as bool) as undefined binds to "<builtin>"

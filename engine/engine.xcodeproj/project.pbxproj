@@ -18,6 +18,19 @@
 			name = version;
 			productName = version;
 		};
+		C7C148E01A8B5B5A0048A5AE /* unit-tests */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = C7C148E11A8B5B5A0048A5AE /* Build configuration list for PBXAggregateTarget "unit-tests" */;
+			buildPhases = (
+				C7C148E61A8B5B730048A5AE /* LCB Unit Tests [Compile] */,
+				C7C542301A8B695A003E8DB3 /* LCB Unit Tests [Run] */,
+			);
+			dependencies = (
+				C7C148E51A8B5B6B0048A5AE /* PBXTargetDependency */,
+			);
+			name = "unit-tests";
+			productName = "unit-tests";
+		};
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
@@ -995,6 +1008,11 @@
 		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E864B42115BDAB5200F5361C /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */; };
 		E8AF7D2319F7E3BF000F68E9 /* graphics_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */; };
+		E8CFD7261A8236B70073D392 /* module-resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7231A8231D10073D392 /* module-resources.cpp */; };
+		E8CFD7271A8236BB0073D392 /* module-resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7231A8231D10073D392 /* module-resources.cpp */; };
+		E8CFD72A1A824E540073D392 /* filepath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7291A824E540073D392 /* filepath.cpp */; };
+		E8CFD72B1A824E540073D392 /* filepath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7291A824E540073D392 /* filepath.cpp */; };
+		E8CFD72C1A8251380073D392 /* filepath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7291A824E540073D392 /* filepath.cpp */; };
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
 /* End PBXBuildFile section */
 
@@ -1548,6 +1566,41 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = foundation;
+		};
+		C7C148D71A8B5B440048A5AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D6F070B19CC36DD00DDC6E0;
+			remoteInfo = "lc-compile";
+		};
+		C7C148D91A8B5B440048A5AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D21B66B19E43BE100B64BEF;
+			remoteInfo = "lc-bootstrap-compile";
+		};
+		C7C148DB1A8B5B440048A5AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D44E4E01A24D6610073FFA2;
+			remoteInfo = "lc-test";
+		};
+		C7C148DD1A8B5B440048A5AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C72BED781A838B0D009B3CEB;
+			remoteInfo = "lc-run";
+		};
+		C7C148E41A8B5B6B0048A5AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C72BED771A838B0D009B3CEB;
+			remoteInfo = "lc-run";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -2451,6 +2504,8 @@
 		BEF9B8641A3758C000D3B706 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = rsrc/pt.lproj/Localisation.strings; sourceTree = "<group>"; };
 		BEFE81D317B2B32800C9D14F /* dskmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmac.cpp; path = src/dskmac.cpp; sourceTree = "<group>"; };
 		C74D7EE51A263A2200BC7FE8 /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = /Users/peterbrett/git/livecode/thirdparty/libffi/../../_build/mac/Debug/libffi.a; sourceTree = "<absolute>"; };
+		C77AA9811A83868600AAE40E /* libkernel-modules.list */ = {isa = PBXFileReference; lastKnownFileType = text; path = "libkernel-modules.list"; sourceTree = "<group>"; };
+		C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "lc-compile.xcodeproj"; path = "../toolchain/lc-compile/lc-compile.xcodeproj"; sourceTree = "<group>"; };
 		E8189EB515D17E8000194F25 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
 		E82206E0184F810A00117D10 /* resolution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resolution.cpp; path = src/resolution.cpp; sourceTree = "<group>"; };
 		E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
@@ -2483,6 +2538,10 @@
 		E8AE103215D90DE700A517E8 /* exec-scripting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-scripting.cpp"; path = "src/exec-scripting.cpp"; sourceTree = "<group>"; };
 		E8AF4890174D5563000B2F9E /* libskia.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libskia.xcodeproj; path = ../thirdparty/libskia/libskia.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphics_util.cpp; path = src/graphics_util.cpp; sourceTree = "<group>"; };
+		E8CFD7231A8231D10073D392 /* module-resources.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-resources.cpp"; path = "src/module-resources.cpp"; sourceTree = "<group>"; };
+		E8CFD7251A8231FC0073D392 /* module-resources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "module-resources.h"; path = "src/module-resources.h"; sourceTree = "<group>"; };
+		E8CFD7281A824DE20073D392 /* filepath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filepath.h; path = src/filepath.h; sourceTree = "<group>"; };
+		E8CFD7291A824E540073D392 /* filepath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = filepath.cpp; path = src/filepath.cpp; sourceTree = "<group>"; };
 		E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep.cpp; path = src/image_rep.cpp; sourceTree = "<group>"; };
 		E8EBC31D13E04C29003F6AA3 /* srvmultipart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvmultipart.h; path = src/srvmultipart.h; sourceTree = "<group>"; };
 		E8EBC31E13E04C29003F6AA3 /* srvmultipart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmultipart.cpp; path = src/srvmultipart.cpp; sourceTree = "<group>"; };
@@ -2833,6 +2892,7 @@
 		4D587FAE0B809C0C00200116 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */,
 				7261916C1A260B6C00851787 /* libscript.xcodeproj */,
 				726191581A26091900851787 /* libffi.xcodeproj */,
 				4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */,
@@ -3145,6 +3205,7 @@
 		4D79B7291A275A7C00DD750C /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				C77AA9811A83868600AAE40E /* libkernel-modules.list */,
 				4DD9D7661A3B185A0006366D /* engine.mlc */,
 				4D79B8AA1A37104800DD750C /* widget.mlc */,
 				4D79B7301A275ADE00DD750C /* canvas.mlc */,
@@ -3154,6 +3215,8 @@
 				E8A1AD031A27817E0078F401 /* module-canvas-internal.h */,
 				4DD9D7861A3B22E60006366D /* module-engine.cpp */,
 				4DD9D7891A3B3BFB0006366D /* module-engine.h */,
+				E8CFD7231A8231D10073D392 /* module-resources.cpp */,
+				E8CFD7251A8231FC0073D392 /* module-resources.h */,
 			);
 			name = Modules;
 			sourceTree = "<group>";
@@ -3762,6 +3825,17 @@
 			name = billing;
 			sourceTree = "<group>";
 		};
+		C7C148D11A8B5B440048A5AE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C7C148D81A8B5B440048A5AE /* lc-compile */,
+				C7C148DA1A8B5B440048A5AE /* lc-bootstrap-compile */,
+				C7C148DC1A8B5B440048A5AE /* lc-test */,
+				C7C148DE1A8B5B440048A5AE /* lc-run */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		E864B42215BDABB400F5361C /* Legacy */ = {
 			isa = PBXGroup;
 			children = (
@@ -4075,6 +4149,8 @@
 				4DFDDAB61074D70900FAE527 /* eventqueue.cpp */,
 				4D1B954810A2CA8B0039C679 /* eventqueue.h */,
 				4D587DD40B8096E600200116 /* filedefs.h */,
+				E8CFD7291A824E540073D392 /* filepath.cpp */,
+				E8CFD7281A824DE20073D392 /* filepath.h */,
 				4D8387241678B2F4003BEC7C /* flst.h */,
 				4D587E4E0B8096FD00200116 /* globals.cpp */,
 				4D587DDF0B8096E600200116 /* globals.h */,
@@ -4409,6 +4485,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = NO;
 				LastUpgradeCheck = 0460;
+				TargetAttributes = {
+					C7C148E01A8B5B5A0048A5AE = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+				};
 			};
 			buildConfigurationList = 4D587D950B80944100200116 /* Build configuration list for PBXProject "engine" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -4441,6 +4522,10 @@
 			productRefGroup = 4D587DA30B80945B00200116 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
+				{
+					ProductGroup = C7C148D11A8B5B440048A5AE /* Products */;
+					ProjectRef = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
+				},
 				{
 					ProductGroup = 4DB9036A0DAB898B0014A170 /* Products */;
 					ProjectRef = 4DB903690DAB898B0014A170 /* libexternal.xcodeproj */;
@@ -4504,6 +4589,7 @@
 				4DB846B3192B53E800771914 /* Server-Community */,
 				7699BD1E1A1CD51A00636397 /* Test-Community */,
 				7699BD621A1CD51E00636397 /* kernel-test */,
+				C7C148E01A8B5B5A0048A5AE /* unit-tests */,
 			);
 		};
 /* End PBXProject section */
@@ -4612,6 +4698,34 @@
 			fileType = archive.ar;
 			path = libskia.a;
 			remoteRef = 76F0CC8F18CA28E500C01A67 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C7C148D81A8B5B440048A5AE /* lc-compile */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-compile";
+			remoteRef = C7C148D71A8B5B440048A5AE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C7C148DA1A8B5B440048A5AE /* lc-bootstrap-compile */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-bootstrap-compile";
+			remoteRef = C7C148D91A8B5B440048A5AE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C7C148DC1A8B5B440048A5AE /* lc-test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-test";
+			remoteRef = C7C148DB1A8B5B440048A5AE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C7C148DE1A8B5B440048A5AE /* lc-run */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-run";
+			remoteRef = C7C148DD1A8B5B440048A5AE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -4830,6 +4944,34 @@
 			shellPath = /bin/sh;
 			shellScript = "#\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SOLUTION_DIR/tools/weak_stub_maker.lc\" < \"$SRCROOT/src/quicktime.stubs\" > \"$SRCROOT/src/quicktimestubs.mac.cpp\"\n\"$SOLUTION_DIR/util/weak_stub_maker.pl\" < \"$SRCROOT/src/quicktime.stubs\" > \"$SRCROOT/src/quicktimestubs.mac.cpp\"";
 		};
+		C7C148E61A8B5B730048A5AE /* LCB Unit Tests [Compile] */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "LCB Unit Tests [Compile]";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "LC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-compile\"\n\nTEST_DIR=\"${SOLUTION_DIR}/_tests/lcb\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\n\ncd \"${SRCROOT}/../tests/lcb\"\n\n# Prepare test working dir, removing old logs and LCM files\nmkdir -p \"${TEST_DIR}\"\nrm -rf \"${TEST_DIR}/*\"\n\nlcb2lcm() {\n    echo \"$1\" | sed -e 's:\\.lcb$:.lcm:' | sed -e \"s:^.:${TEST_DIR}:\"\n}\nalias escape_space=\"sed -e's: :\\\\ :g'\"\n\n# Create any needed subdirectories in the working dir\nfind . -name '*.lcb' | escape_space | xargs -n1 dirname | uniq | sed -e \"s:^\\.:${TEST_DIR}:\" | xargs -n1 mkdir -p\n\n# Compile .lcb files to .lcm\ncompile () {\n    while read; do\n        lcb=\"${REPLY}\"\n        lcm=$(lcb2lcm \"${lcb}\")\n        \"${LC_COMPILE}\" \\\n            --modulepath \"${TEST_DIR}\" \\\n            --modulepath \"${MODULE_DIR}\" \\\n            --output \"${lcm}\" \"${lcb}\" || exit $?\n    done\n}\nfind . -name '*.lcb' | compile || exit $?";
+		};
+		C7C542301A8B695A003E8DB3 /* LCB Unit Tests [Run] */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "LCB Unit Tests [Run]";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "LC_RUN=\"${BUILT_PRODUCTS_DIR}/lc-run\"\n\nTEST_DIR=\"${SOLUTION_DIR}/_tests/lcb\"\n\nTEST_LIB=\"${TEST_DIR}/_testlib.lcm\"\nTEST_RUNNER=\"${TEST_DIR}/_testrunner.lcm\"\n\ncd \"${SRCROOT}/../tests/lcb\"\n\nlcb2lcm() {\n    echo \"$1\" | sed -e 's:\\.lcb$:.lcm:' | sed -e \"s:^.:${TEST_DIR}:\"\n}\nlcb2log() {\n    lcb2lcm \"$1\" | sed -e 's:\\.lcm$:.log:'\n}\nalias escape_space=\"sed -e's: :\\\\ :g'\"\n\n# Run the tests\nrun_tests () {\n    while read; do\n        lcm=$(lcb2lcm \"${REPLY}\")\n        log=$(lcb2log \"${REPLY}\")\n        \"${LC_RUN}\" -H RunModuleTests \"${TEST_RUNNER}\" --lc-run \"${LC_RUN} -l ${TEST_LIB}\" \"${lcm}\" >\"${log}\" || exit $?\n    done\n}\necho\nfind . -name '*.lcb' -a -not -name '_*' | run_tests || exit $?\n\n# Summarize test results\nfind \"${TEST_DIR}\" -name '*.log' | escape_space | xargs \"${LC_RUN}\" -H SummarizeTests \"${TEST_RUNNER}\" --summary-log _test_suite.log\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -5005,6 +5147,7 @@
 				4CF4B865199E05F300E33AEE /* customprinter.cpp in Sources */,
 				4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */,
 				4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */,
+				E8CFD72B1A824E540073D392 /* filepath.cpp in Sources */,
 				4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */,
 				4D1F9DA5171C682E0091C6CB /* tilecachesw.cpp in Sources */,
 				4D1F9DA6171C682E0091C6CB /* paragrafattr.cpp in Sources */,
@@ -5015,6 +5158,7 @@
 				4D1F9DAC171C682E0091C6CB /* ibmp.cpp in Sources */,
 				4D1F9DAD171C682E0091C6CB /* image_rep.cpp in Sources */,
 				4D1F9DAE171C682E0091C6CB /* image_rep_encoded.cpp in Sources */,
+				E8CFD7271A8236BB0073D392 /* module-resources.cpp in Sources */,
 				4D1F9DAF171C682E0091C6CB /* image_rep_mutable.cpp in Sources */,
 				4D1F9DB1171C682E0091C6CB /* imagebitmap.cpp in Sources */,
 				4D1F9DB2171C682E0091C6CB /* irle.cpp in Sources */,
@@ -5243,6 +5387,7 @@
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
 				7269ECBC1A1DFEC1000723DB /* text-run.cpp in Sources */,
+				E8CFD72A1A824E540073D392 /* filepath.cpp in Sources */,
 				4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */,
 				4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */,
 				4DEE2AE60FDE42710009423C /* osxprinter.cpp in Sources */,
@@ -5301,6 +5446,7 @@
 				4D2A583D1198727F00135143 /* internal.cpp in Sources */,
 				4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */,
 				4DB98626130C09D6008A03DC /* mcutility.cpp in Sources */,
+				E8CFD7261A8236B70073D392 /* module-resources.cpp in Sources */,
 				4DE7ED0E13B33B7F002634F5 /* dskspec.cpp in Sources */,
 				4D4F9E3B13CDF24A00B9B15D /* osximage.cpp in Sources */,
 				4D4F9E3C13CDF24A00B9B15D /* osxmisc.cpp in Sources */,
@@ -5518,6 +5664,7 @@
 				7699BDC41A1CD51E00636397 /* osxprinter.cpp in Sources */,
 				7699BDC51A1CD51E00636397 /* osxstack.cpp in Sources */,
 				7699BDC61A1CD51E00636397 /* osxtheme.cpp in Sources */,
+				E8CFD72C1A8251380073D392 /* filepath.cpp in Sources */,
 				7699BDC71A1CD51E00636397 /* paragraf.cpp in Sources */,
 				7699BDC81A1CD51E00636397 /* param.cpp in Sources */,
 				7699BDC91A1CD51E00636397 /* parentscript.cpp in Sources */,
@@ -5997,6 +6144,11 @@
 			name = foundation;
 			targetProxy = BE3F705F175CD40000DBFB07 /* PBXContainerItemProxy */;
 		};
+		C7C148E51A8B5B6B0048A5AE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "lc-run";
+			targetProxy = C7C148E41A8B5B6B0048A5AE /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -6361,6 +6513,20 @@
 			};
 			name = Release;
 		};
+		C7C148E21A8B5B5A0048A5AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		C7C148E31A8B5B5A0048A5AE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -6477,6 +6643,15 @@
 			buildConfigurations = (
 				7699BE771A1CD51E00636397 /* Debug */,
 				7699BE781A1CD51E00636397 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C7C148E11A8B5B5A0048A5AE /* Build configuration list for PBXAggregateTarget "unit-tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7C148E21A8B5B5A0048A5AE /* Debug */,
+				C7C148E31A8B5B5A0048A5AE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

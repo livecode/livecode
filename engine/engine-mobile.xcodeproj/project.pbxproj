@@ -259,9 +259,6 @@
 		7201665E1A420FFB002B53F9 /* modules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201665B1A420FFB002B53F9 /* modules.cpp */; };
 		7201667F1A4212FF002B53F9 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7201664D1A420F4B002B53F9 /* libscript.a */; };
 		7201668D1A42136A002B53F9 /* exec-extension.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7201668C1A42136A002B53F9 /* exec-extension.cpp */; };
-		720166B51A421408002B53F9 /* canvas.mlc.c in Sources */ = {isa = PBXBuildFile; fileRef = 720166B21A421408002B53F9 /* canvas.mlc.c */; };
-		720166B61A421408002B53F9 /* engine.mlc.c in Sources */ = {isa = PBXBuildFile; fileRef = 720166B31A421408002B53F9 /* engine.mlc.c */; };
-		720166B71A421408002B53F9 /* widget.mlc.c in Sources */ = {isa = PBXBuildFile; fileRef = 720166B41A421408002B53F9 /* widget.mlc.c */; };
 		720E350719F5707F00EA00ED /* native-layer-ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 720E350019F5707F00EA00ED /* native-layer-ios.mm */; };
 		720E350819F5707F00EA00ED /* native-layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720E350119F5707F00EA00ED /* native-layer.cpp */; };
 		720E350919F5707F00EA00ED /* widget-events.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720E350319F5707F00EA00ED /* widget-events.cpp */; };
@@ -279,6 +276,11 @@
 		7268ED951848C30200D10598 /* exec-textmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449997175D02AE00346B49 /* exec-textmessaging.cpp */; };
 		7268ED961848C37D00D10598 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */; };
 		728636391A6D712F001D1FBF /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 728636361A6D70EB001D1FBF /* libffi.a */; };
+		729D10541A79580800B0CA0F /* canvas.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 729D102D1A7954B200B0CA0F /* canvas.mlc */; };
+		729D10551A79580800B0CA0F /* engine.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 729D102E1A7954B200B0CA0F /* engine.mlc */; };
+		729D10561A79580800B0CA0F /* widget.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 729D102F1A7954B200B0CA0F /* widget.mlc */; };
+		729D11341A9CE5D400B0CA0F /* filepath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 729D11301A9CE5D400B0CA0F /* filepath.cpp */; };
+		729D11351A9CE5D400B0CA0F /* module-resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 729D11321A9CE5D400B0CA0F /* module-resources.cpp */; };
 		72CC34B418A9378800BEC655 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3451858840300BA6A23 /* exec-keywords.cpp */; };
 		72CC34B518A9379200BEC655 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */; };
 		72CE28951993D7C10003BAE0 /* imageloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E89DBC50198A6F410009651B /* imageloader.cpp */; };
@@ -356,6 +358,20 @@
 		F6DF4CA615597DD000450B64 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA515597DD000450B64 /* EventKit.framework */; };
 		F6DF4CA815597DEB00450B64 /* EventKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA715597DEA00450B64 /* EventKitUI.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		729D10531A7957E500B0CA0F /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.mlc";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_NAME).c",
+			);
+			script = "mkdir -p \"${BUILT_PRODUCTS_DIR}/modules\"\n\"${BUILT_PRODUCTS_DIR}/../../../mac/Release/lc-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" --outputc \"${DERIVED_FILE_DIR}/${INPUT_FILE_NAME}.c\" \"${INPUT_FILE_PATH}\"";
+		};
+/* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
 		4D08A0D2138EA52B0081F990 /* PBXContainerItemProxy */ = {
@@ -980,9 +996,6 @@
 		7201665F1A4210BA002B53F9 /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "/Users/frasergordon/Workspace/LiveCode/livecode-8-priv/thirdparty/libffi/.././_build/ios/iphoneos8.1/Debug/libffi.a"; sourceTree = "<absolute>"; };
 		720166611A421106002B53F9 /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "/Users/frasergordon/Workspace/LiveCode/livecode-8-priv/thirdparty/libffi/.././_build/ios/iphoneos8.1/Debug/libffi.a"; sourceTree = "<absolute>"; };
 		7201668C1A42136A002B53F9 /* exec-extension.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-extension.cpp"; path = "src/exec-extension.cpp"; sourceTree = "<group>"; };
-		720166B21A421408002B53F9 /* canvas.mlc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = canvas.mlc.c; path = ../_cache/mac/Debug/kernel.build/DerivedSources/canvas.mlc.c; sourceTree = "<group>"; };
-		720166B31A421408002B53F9 /* engine.mlc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = engine.mlc.c; path = ../_cache/mac/Debug/kernel.build/DerivedSources/engine.mlc.c; sourceTree = "<group>"; };
-		720166B41A421408002B53F9 /* widget.mlc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = widget.mlc.c; path = ../_cache/mac/Debug/kernel.build/DerivedSources/widget.mlc.c; sourceTree = "<group>"; };
 		720E34FF19F5707F00EA00ED /* native-layer-ios.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "native-layer-ios.h"; path = "src/native-layer-ios.h"; sourceTree = "<group>"; };
 		720E350019F5707F00EA00ED /* native-layer-ios.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "native-layer-ios.mm"; path = "src/native-layer-ios.mm"; sourceTree = "<group>"; };
 		720E350119F5707F00EA00ED /* native-layer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "native-layer.cpp"; path = "src/native-layer.cpp"; sourceTree = "<group>"; };
@@ -1000,6 +1013,13 @@
 		7286362B1A6D6F9B001D1FBF /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "/Users/frasergordon/Workspace/LiveCode/livecode-8/thirdparty/libffi/../../_build/ios/iphoneos8.1/Debug/libffi.a"; sourceTree = "<absolute>"; };
 		7286362D1A6D7016001D1FBF /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "/Users/frasergordon/Workspace/LiveCode/livecode-8/thirdparty/libffi/../../_build/ios/iphoneos8.1/Debug/libffi.a"; sourceTree = "<absolute>"; };
 		728636361A6D70EB001D1FBF /* libffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libffi.a; path = "/Users/frasergordon/Workspace/LiveCode/livecode-8/thirdparty/libffi/../../_build/ios/iphoneos8.1/Debug/libffi.a"; sourceTree = "<absolute>"; };
+		729D102D1A7954B200B0CA0F /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = src/canvas.mlc; sourceTree = "<group>"; };
+		729D102E1A7954B200B0CA0F /* engine.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = engine.mlc; path = src/engine.mlc; sourceTree = "<group>"; };
+		729D102F1A7954B200B0CA0F /* widget.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = widget.mlc; path = src/widget.mlc; sourceTree = "<group>"; };
+		729D11301A9CE5D400B0CA0F /* filepath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = filepath.cpp; path = src/filepath.cpp; sourceTree = "<group>"; };
+		729D11311A9CE5D400B0CA0F /* filepath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filepath.h; path = src/filepath.h; sourceTree = "<group>"; };
+		729D11321A9CE5D400B0CA0F /* module-resources.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-resources.cpp"; path = "src/module-resources.cpp"; sourceTree = "<group>"; };
+		729D11331A9CE5D400B0CA0F /* module-resources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "module-resources.h"; path = "src/module-resources.h"; sourceTree = "<group>"; };
 		72FFE3451858840300BA6A23 /* exec-keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-keywords.cpp"; path = "src/exec-keywords.cpp"; sourceTree = "<group>"; };
 		72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
 		7607CF601769BB4C00ADB512 /* exec-interface-aclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-aclip.cpp"; path = "src/exec-interface-aclip.cpp"; sourceTree = "<group>"; };
@@ -1537,7 +1557,9 @@
 		720166551A420FDC002B53F9 /* Modules */ = {
 			isa = PBXGroup;
 			children = (
-				720166B11A4213EF002B53F9 /* Generated */,
+				729D102D1A7954B200B0CA0F /* canvas.mlc */,
+				729D102E1A7954B200B0CA0F /* engine.mlc */,
+				729D102F1A7954B200B0CA0F /* widget.mlc */,
 				720166561A420FFB002B53F9 /* module-canvas-internal.h */,
 				720166571A420FFB002B53F9 /* module-canvas.cpp */,
 				720166581A420FFB002B53F9 /* module-canvas.h */,
@@ -1546,16 +1568,6 @@
 				7201665B1A420FFB002B53F9 /* modules.cpp */,
 			);
 			name = Modules;
-			sourceTree = "<group>";
-		};
-		720166B11A4213EF002B53F9 /* Generated */ = {
-			isa = PBXGroup;
-			children = (
-				720166B21A421408002B53F9 /* canvas.mlc.c */,
-				720166B31A421408002B53F9 /* engine.mlc.c */,
-				720166B41A421408002B53F9 /* widget.mlc.c */,
-			);
-			name = Generated;
 			sourceTree = "<group>";
 		};
 		7607CF7F1769BB9B00ADB512 /* Exec-Interface */ = {
@@ -2004,6 +2016,10 @@
 		E84BE35C170C96D500807CF6 /* Core - Misc */ = {
 			isa = PBXGroup;
 			children = (
+				729D11301A9CE5D400B0CA0F /* filepath.cpp */,
+				729D11311A9CE5D400B0CA0F /* filepath.h */,
+				729D11321A9CE5D400B0CA0F /* module-resources.cpp */,
+				729D11331A9CE5D400B0CA0F /* module-resources.h */,
 				4DBF5B281802E635009CAB2E /* socket_resolve.cpp */,
 				4DD3DE051040ACE300CAC7EF /* debug.cpp */,
 				4DD3DE041040ACE300CAC7EF /* debug.h */,
@@ -2149,6 +2165,7 @@
 				4DABCD8715ECD40F0085E214 /* Sources */,
 			);
 			buildRules = (
+				729D10531A7957E500B0CA0F /* PBXBuildRule */,
 			);
 			dependencies = (
 				4D2220A4171D78EC00E7E557 /* PBXTargetDependency */,
@@ -2389,7 +2406,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"";
+			shellScript = "# SN-2015-02-19: [[ Bug 14625 ]] Only copy revsecurity.dylib fo rthe simulator\nif [ \"${SDK_NAME:0:8}\" != \"iphoneos\" ]; then\n    cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"\nfi";
 		};
 		729D0F9B1A6FEA3000B0CA0F /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2429,10 +2446,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				729D10541A79580800B0CA0F /* canvas.mlc in Sources */,
+				729D10551A79580800B0CA0F /* engine.mlc in Sources */,
+				729D10561A79580800B0CA0F /* widget.mlc in Sources */,
 				72CC34B518A9379200BEC655 /* image_rep_resampled.cpp in Sources */,
 				72CC34B418A9378800BEC655 /* exec-keywords.cpp in Sources */,
 				72CE28951993D7C10003BAE0 /* imageloader.cpp in Sources */,
-				720166B71A421408002B53F9 /* widget.mlc.c in Sources */,
 				4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */,
 				4DABCD9915ECD4700085E214 /* aclip.cpp in Sources */,
 				4DABCD9A15ECD4700085E214 /* answer.cpp in Sources */,
@@ -2487,7 +2506,6 @@
 				4DABCDCD15ECD4700085E214 /* funcsm.cpp in Sources */,
 				4DABCDCE15ECD4700085E214 /* globals.cpp in Sources */,
 				4DABCDCF15ECD4700085E214 /* gradient.cpp in Sources */,
-				720166B61A421408002B53F9 /* engine.mlc.c in Sources */,
 				4DABCDD015ECD4700085E214 /* graphic.cpp in Sources */,
 				4DABCDD115ECD4700085E214 /* group.cpp in Sources */,
 				4DABCDD215ECD4700085E214 /* handler.cpp in Sources */,
@@ -2527,6 +2545,7 @@
 				4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */,
 				4DABCDF115ECD4700085E214 /* mbliphone.mm in Sources */,
 				4DABCDF215ECD4700085E214 /* mbliphoneactivityindicator.mm in Sources */,
+				729D11351A9CE5D400B0CA0F /* module-resources.cpp in Sources */,
 				4D222096171D777400E7E557 /* mbliphoneapp.mm in Sources */,
 				4DABCE7A15ECD62C0085E214 /* mbliphoneappview.mm in Sources */,
 				4DABCDF515ECD4970085E214 /* mbliphonebrowser.mm in Sources */,
@@ -2601,13 +2620,13 @@
 				4DABCE3915ECD4B50085E214 /* printer.cpp in Sources */,
 				4DABCE3A15ECD4B50085E214 /* property.cpp in Sources */,
 				4DABCE3C15ECD4B50085E214 /* redraw.cpp in Sources */,
+				729D11341A9CE5D400B0CA0F /* filepath.cpp in Sources */,
 				4DABCE3D15ECD4B50085E214 /* regex.cpp in Sources */,
 				4C8544E8199E10DB00A568B6 /* coretextlayout.mm in Sources */,
 				4DABCE3E15ECD4B50085E214 /* rtf.cpp in Sources */,
 				4DABCE3F15ECD4B50085E214 /* rtfsupport.cpp in Sources */,
 				4DABCE4015ECD4B50085E214 /* scriptpt.cpp in Sources */,
 				4DABCE4115ECD4B50085E214 /* scrolbar.cpp in Sources */,
-				720166B51A421408002B53F9 /* canvas.mlc.c in Sources */,
 				4DABCE4215ECD4B50085E214 /* scrollbardraw.cpp in Sources */,
 				4DABCE4315ECD4B50085E214 /* securemode.cpp in Sources */,
 				4DABCE4415ECD4B50085E214 /* sellst.cpp in Sources */,

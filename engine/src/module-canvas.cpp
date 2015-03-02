@@ -350,7 +350,7 @@ bool MCSolveQuadraticEqn(MCGFloat p_a, MCGFloat p_b, MCGFloat p_c, MCGFloat &r_x
 
 // Custom Types
 
-void MCCanvasTypesInitialize();
+bool MCCanvasTypesInitialize();
 void MCCanvasTypesFinalize();
 
 MCTypeInfoRef kMCCanvasRectangleTypeInfo;
@@ -372,7 +372,7 @@ MCTypeInfoRef kMCCanvasTypeInfo;
 
 // Error types
 
-void MCCanvasErrorsInitialize();
+bool MCCanvasErrorsInitialize();
 void MCCanvasErrorsFinalize();
 
 MCTypeInfoRef kMCCanvasRectangleListFormatErrorTypeInfo;
@@ -397,6 +397,8 @@ MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
+MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Constant refs
@@ -406,7 +408,7 @@ MCCanvasColorRef kMCCanvasColorBlack = nil;
 MCCanvasFontRef kMCCanvasFont12PtHelvetica = nil;
 MCCanvasPathRef kMCCanvasEmptyPath = nil;
 
-void MCCanvasConstantsInitialize();
+bool MCCanvasConstantsInitialize();
 void MCCanvasConstantsFinalize();
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -427,6 +429,11 @@ bool MCCanvasJoinStyleFromString(MCStringRef p_string, MCGJoinStyle &r_style);
 bool MCCanvasCapStyleToString(MCGCapStyle p_style, MCStringRef &r_string);
 bool MCCanvasCapStyleFromString(MCStringRef p_string, MCGCapStyle &r_style);
 
+MCCanvasFloat MCCanvasColorGetRed(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetGreen(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetBlue(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetAlpha(MCCanvasColorRef color);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCNameRef s_blend_mode_map[kMCGBlendModeCount];
@@ -442,24 +449,28 @@ static MCNameRef s_cap_style_map[kMCGCapStyleCount];
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCCanvasStringsInitialize();
+bool MCCanvasStringsInitialize();
 void MCCanvasStringsFinalize();
 
 bool MCCanvasModuleInitialize()
 {
-	MCCanvasErrorsInitialize();
-	MCCanvasStringsInitialize();
-	MCCanvasTypesInitialize();
-	MCCanvasConstantsInitialize();
+	if (!MCCanvasErrorsInitialize())
+		return false;
+	if (!MCCanvasStringsInitialize())
+		return false;
+	if (!MCCanvasTypesInitialize())
+		return false;
+	if (!MCCanvasConstantsInitialize())
+		return false;
     return true;
 }
 
 void MCCanvasModuleFinalize()
 {
-	MCCanvasErrorsFinalize();
-	MCCanvasStringsFinalize();
-	MCCanvasTypesFinalize();
 	MCCanvasConstantsFinalize();
+	MCCanvasTypesFinalize();
+	MCCanvasStringsFinalize();
+	MCCanvasErrorsFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -504,8 +515,14 @@ static hash_t __MCCanvasRectangleHash(MCValueRef p_value)
 
 static bool __MCCanvasRectangleDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe rectangle
-	return false;
+	MCGRectangle t_rectangle;
+	MCCanvasRectangleGetMCGRectangle (static_cast<MCCanvasRectangleRef>(p_value), t_rectangle);
+
+	return MCStringFormat (r_desc, "<rectangle (%g, %g) - (%g, %g)>",
+	                       t_rectangle.origin.x,
+	                       t_rectangle.origin.y,
+	                       t_rectangle.origin.x + t_rectangle.size.width,
+	                       t_rectangle.origin.y + t_rectangle.size.height);
 }
 
 bool MCCanvasRectangleCreateWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rectangle)
@@ -717,8 +734,10 @@ static hash_t __MCCanvasPointHash(MCValueRef p_value)
 
 static bool __MCCanvasPointDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe point
-	return false;
+	MCGPoint t_point;
+	MCCanvasPointGetMCGPoint (static_cast<MCCanvasPointRef>(p_value), t_point);
+
+	return MCStringFormat (r_desc, "(%g, %g)", t_point.x, t_point.y);
 }
 
 bool MCCanvasPointCreateWithMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &r_point)
@@ -872,8 +891,19 @@ static hash_t __MCCanvasColorHash(MCValueRef p_value)
 
 static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+	MCCanvasColorRef t_color = static_cast<MCCanvasColorRef>(p_value);
+
+	if (1 <= MCCanvasColorGetAlpha (t_color)) /* Opaque case */
+		return MCStringFormat (r_desc, "<color: %g, %g, %g>",
+		                       MCCanvasColorGetRed (t_color),
+		                       MCCanvasColorGetGreen (t_color),
+		                       MCCanvasColorGetBlue (t_color));
+	else
+		return MCStringFormat (r_desc, "<color: %g, %g, %g, %g>",
+		                       MCCanvasColorGetRed (t_color),
+		                       MCCanvasColorGetGreen (t_color),
+		                       MCCanvasColorGetBlue (t_color),
+		                       MCCanvasColorGetAlpha (t_color));
 }
 
 //////////
@@ -1341,85 +1371,51 @@ void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTrans
 	MCCanvasTransformMake(MCGAffineTransformInvert(*MCCanvasTransformGet(p_transform)), r_transform);
 }
 
-// T = Tscale * Trotate * Tskew * Ttranslate
+// T = Ttranslate * Trotate * Tskew * Tscale
 
 MCGAffineTransform MCCanvasTransformCompose(const MCGPoint &p_scale, MCCanvasFloat p_rotation, const MCGPoint &p_skew, const MCGPoint &p_translation)
 {
 	MCGAffineTransform t_transform;
 	t_transform = MCGAffineTransformMakeScale(p_scale.x, p_scale.y);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeRotation(MCCanvasRadiansToDegrees(p_rotation)), t_transform);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeSkew(p_skew.x, p_skew.y), t_transform);
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeTranslation(p_translation.x, p_translation.y), t_transform);
+	t_transform = MCGAffineTransformPreSkew(t_transform, p_skew.x, p_skew.y);
+	t_transform = MCGAffineTransformPreRotate(t_transform, MCCanvasAngleFromRadians(p_rotation));
+	t_transform = MCGAffineTransformPreTranslate(t_transform, p_translation.x, p_translation.y);
 	
 	return t_transform;
 }
 
-/*
- * Ttranslate:
- * / 1 0 tx \
- * | 0 1 ty |
- * \ 0 0  1 /
- *
- * Tscale * Trotate * Tskew:
- * / a  c \   / 1  Skew \   / Cos(r) -Sin(r) \   / ScaleX       0 \   / -ScaleX * Skew * Sin(r) + ScaleX * Cos(r)   ScaleY * Skew * Cos(r) + ScaleY * Sin(r) \
- * \ b  d / = \ 0     1 / * \ Sin(r)  Cos(r) / * \      0  ScaleY / = \ -ScaleX * Sin(r)                            ScaleY * Cos(r)                          /
- */
 bool MCCanvasTransformDecompose(const MCGAffineTransform &p_transform, MCGPoint &r_scale, MCCanvasFloat &r_rotation, MCGPoint &r_skew, MCGPoint &r_translation)
 {
-	MCGFloat t_r, t_skew;
-	MCGPoint t_scale, t_trans;
+	MCGAffineTransform t_transform;
+	t_transform = p_transform;
 	
-	t_trans = MCGPointMake(p_transform.tx, p_transform.ty);
+	MCGPoint t_scale, t_skew, t_translation;
+	MCCanvasFloat t_rotation;
+
+	// Remove translation component.
+	t_translation = MCGPointMake(t_transform.tx, t_transform.ty);
+	t_transform.tx = t_transform.ty = 0;
 	
-	// if b == 0, take r to be 0 radians
-		if (p_transform.b == 0)
-	{
-		t_r = 0;
-		// a == ScaleX, d == ScaleY
-		t_scale = MCGPointMake(p_transform.a, p_transform.d);
-		// c = ScaleY * Skew => Skew = c / ScaleY => Skew = c / d
-		if (p_transform.d == 0)
-			return false;
-		t_skew = p_transform.c / p_transform.d;
-	}
-	// if d == 0, take r to be -pi / 2 radians
-	else if (p_transform.d == 0)
-	{
-		t_r = M_PI / 2;
-		// b == -ScaleX, c == ScaleY
-		t_scale = MCGPointMake(-p_transform.b, p_transform.c);
-		// a == -ScaleX * Skew => Skew == a / -ScaleX => Skew = a / b
-		if (p_transform.b == 0)
-			return false;
-		t_skew = p_transform.a / p_transform.b;
-	}
-	else
-	{
-		// Skew^2 + (a/b - c/d) * Skew + (1 + a/b * c/d) = 0
-		MCGFloat t_a_div_b, t_c_div_d;
-		t_a_div_b = p_transform.a / p_transform.b;
-		t_c_div_d = p_transform.c / p_transform.d;
-		
-		MCGFloat t_x1, t_x2;
-		if (!MCSolveQuadraticEqn(1, t_a_div_b - t_c_div_d, 1 + t_a_div_b * t_c_div_d, t_x1, t_x2))
-			return false;
-		
-		// choose skew with smallest absolute value
-		if (MCAbs(t_x1) < MCAbs(t_x2))
-			t_skew = t_x1;
-		else
-			t_skew = t_x2;
-		
-		// Tan(r) = c/d - Skew
-		t_r = atan(t_c_div_d - t_skew);
-		
-		t_scale = MCGPointMake(-p_transform.b / sinf(t_r), p_transform.d / cosf(t_r));
-	}
+	// Calculate rotation of transformed unit vector
+	MCGPoint t_point;
+	t_point = MCGPointApplyAffineTransform(MCGPointMake(1, 0), t_transform);
+	
+	t_rotation = atan2f(t_point.y, t_point.x);
+	
+	// remove rotation component from transform by applying rotation in the opposite direction
+	t_transform = MCGAffineTransformPreRotate(t_transform, MCCanvasAngleFromRadians(-t_rotation));
+	
+	if (t_transform.a == 0 || t_transform.d == 0)
+		return false;
+	
+	// scale and skew can now be obtained directly from the transform
+	t_scale = MCGPointMake(t_transform.a, t_transform.d);
+	t_skew = MCGPointMake(t_transform.c / t_transform.d, t_transform.b / t_transform.a);
 	
 	r_scale = t_scale;
-	r_rotation = -t_r; // calculations assume y increases upwards producing a rotation in the wrong direction, so take the negative.
-	r_skew = MCGPointMake(t_skew, 0);
-	r_translation = t_trans;
+	r_rotation = t_rotation;
+	r_skew = t_skew;
+	r_translation = t_translation;
 	
 	return true;
 }
@@ -1550,7 +1546,7 @@ void MCCanvasTransformSetTranslationAsList(MCProperListRef p_translation, MCCanv
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, const MCGAffineTransform &p_transform)
 {
-	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(p_transform, *MCCanvasTransformGet(x_transform)), x_transform);
+	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(*MCCanvasTransformGet(x_transform), p_transform), x_transform);
 }
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, MCCanvasTransformRef p_transform)
@@ -1605,6 +1601,14 @@ void MCCanvasTransformSkew(MCCanvasTransformRef &x_transform, MCProperListRef p_
 	MCCanvasTransformSkew(x_transform, t_skew.x, t_skew.y);
 }
 
+void MCCanvasTransformMultiply(MCCanvasTransformRef p_left, MCCanvasTransformRef p_right, MCCanvasTransformRef &r_transform)
+{
+	MCGAffineTransform t_transform;
+	t_transform = MCGAffineTransformConcat(*MCCanvasTransformGet(p_left), *MCCanvasTransformGet(p_right));
+	
+	MCCanvasTransformMake(t_transform, r_transform);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Image
@@ -1639,8 +1643,14 @@ static hash_t __MCCanvasImageHash(MCValueRef p_value)
 
 static bool __MCCanvasImageDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+	MCCanvasImageRef t_image = static_cast<MCCanvasImageRef>(p_value);
+
+	uint32_t t_width, t_height;
+	if (!MCImageRepGetGeometry(MCCanvasImageGetImageRep (t_image),
+	                           t_width, t_height))
+		return MCStringCopy (MCSTR("<image>"), r_desc);
+
+	return MCStringFormat(r_desc, "<image %ux%u>", t_width, t_height);
 }
 
 bool MCCanvasImageCreateWithImageRep(MCImageRep *p_image, MCCanvasImageRef &r_image)
@@ -1688,6 +1698,21 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	t_image_rep = nil;
 	
 	if (!MCImageGetFileRepForStackContext(p_path, MCwidgetobject->getstack(), t_image_rep))
+	{
+		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
+		return;
+	}
+	
+	MCCanvasImageMake(t_image_rep, r_image);
+	MCImageRepRelease(t_image_rep);
+}
+
+void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef &r_image)
+{
+	MCImageRep *t_image_rep;
+	t_image_rep = nil;
+	
+	if (!MCImageGetFileRepForResource(p_resource, t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
 		return;
@@ -2528,7 +2553,7 @@ void MCCanvasGradientTransformToPoints(const MCGAffineTransform &p_transform, MC
 	r_via = MCGPointApplyAffineTransform(MCGPointMake(0, 1), p_transform);
 }
 
-bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
+void MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via, MCGAffineTransform &r_transform)
 {
 	MCGAffineTransform t_transform;
 	t_transform . a = p_to . x - p_from . x;
@@ -2539,8 +2564,6 @@ bool MCCanvasGradientTransformFromPoints(const MCGPoint &p_from, const MCGPoint 
 	t_transform . ty = p_from . y;
 	
 	r_transform = t_transform;
-	
-	return true;
 }
 
 void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCGAffineTransform &r_transform)
@@ -2569,10 +2592,7 @@ void MCCanvasGradientGetPoints(MCCanvasGradientRef p_gradient, MCGPoint &r_from,
 void MCCanvasGradientSetPoints(MCCanvasGradientRef &x_gradient, const MCGPoint &p_from, const MCGPoint &p_to, const MCGPoint &p_via)
 {
 	MCGAffineTransform t_transform;
-	if (!MCCanvasGradientTransformFromPoints(p_from, p_to, p_via, t_transform))
-	{
-		// TODO - throw error
-	}
+	MCCanvasGradientTransformFromPoints(p_from, p_to, p_via, t_transform);
 	MCCanvasGradientSetTransform(x_gradient, t_transform);
 }
 
@@ -3084,7 +3104,7 @@ bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *r_points)
 		}
 		else
 		{
-			// TODO - throw point type error
+			MCCanvasThrowError(kMCCanvasPathPointListFormatErrorTypeInfo);
 			t_success = false;
 		}
 	}
@@ -5492,30 +5512,37 @@ static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
 	__MCCanvasDescribe,
 };
 
-static void __create_named_custom_typeinfo(MCTypeInfoRef p_base, const MCValueCustomCallbacks *p_callbacks, MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
+bool MCCanvasTypesInitialize()
 {
-    MCAutoTypeInfoRef t_unnamed;
-    /* UNCHECKED */ MCCustomTypeInfoCreate(p_base, p_callbacks, &t_unnamed);
-    /* UNCHECKED */ MCNamedTypeInfoCreate(p_name, r_typeinfo);
-    /* UNCHECKED */ MCNamedTypeInfoBind(r_typeinfo, *t_unnamed);
-}
-
-void MCCanvasTypesInitialize()
-{
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasRectangleCustomValueCallbacks, MCNAME("com.livecode.canvas.Rectangle"), kMCCanvasRectangleTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasPointCustomValueCallbacks, MCNAME("com.livecode.canvas.Point"), kMCCanvasPointTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasColorCustomValueCallbacks, MCNAME("com.livecode.canvas.Color"), kMCCanvasColorTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasTransformCustomValueCallbacks, MCNAME("com.livecode.canvas.Transform"), kMCCanvasTransformTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasImageCustomValueCallbacks, MCNAME("com.livecode.canvas.Image"), kMCCanvasImageTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasPaintCustomValueCallbacks, MCNAME("com.livecode.canvas.Paint"), kMCCanvasPaintTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCCanvasPaintTypeInfo, &kMCCanvasSolidPaintCustomValueCallbacks, MCNAME("com.livecode.canvas.SolidPaint"), kMCCanvasSolidPaintTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCCanvasPaintTypeInfo, &kMCCanvasPatternCustomValueCallbacks, MCNAME("com.livecode.canvas.Pattern"), kMCCanvasPatternTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCCanvasPaintTypeInfo, &kMCCanvasGradientCustomValueCallbacks, MCNAME("com.livecode.canvas.Gradient"), kMCCanvasGradientTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasGradientStopCustomValueCallbacks, MCNAME("com.livecode.canvas.GradientStop"), kMCCanvasGradientStopTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasPathCustomValueCallbacks, MCNAME("com.livecode.canvas.Path"), kMCCanvasPathTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasEffectCustomValueCallbacks, MCNAME("com.livecode.canvas.Effect"), kMCCanvasEffectTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasFontCustumValueCallbacks, MCNAME("com.livecode.canvas.Font"), kMCCanvasFontTypeInfo);
-	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasCustomValueCallbacks, MCNAME("com.livecode.canvas.Canvas"), kMCCanvasTypeInfo);
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Rectangle"), kMCNullTypeInfo, &kMCCanvasRectangleCustomValueCallbacks, kMCCanvasRectangleTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Point"), kMCNullTypeInfo, &kMCCanvasPointCustomValueCallbacks, kMCCanvasPointTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Color"), kMCNullTypeInfo, &kMCCanvasColorCustomValueCallbacks, kMCCanvasColorTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Transform"), kMCNullTypeInfo, &kMCCanvasTransformCustomValueCallbacks, kMCCanvasTransformTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Image"), kMCNullTypeInfo, &kMCCanvasImageCustomValueCallbacks, kMCCanvasImageTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Paint"), kMCNullTypeInfo, &kMCCanvasPaintCustomValueCallbacks, kMCCanvasPaintTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.SolidPaint"), kMCCanvasPaintTypeInfo, &kMCCanvasSolidPaintCustomValueCallbacks, kMCCanvasSolidPaintTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Pattern"), kMCCanvasPaintTypeInfo, &kMCCanvasPatternCustomValueCallbacks, kMCCanvasPatternTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Gradient"), kMCCanvasPaintTypeInfo, &kMCCanvasGradientCustomValueCallbacks, kMCCanvasGradientTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.GradientStop"), kMCNullTypeInfo, &kMCCanvasGradientStopCustomValueCallbacks, kMCCanvasGradientStopTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Path"), kMCNullTypeInfo, &kMCCanvasPathCustomValueCallbacks, kMCCanvasPathTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Effect"), kMCNullTypeInfo, &kMCCanvasEffectCustomValueCallbacks, kMCCanvasEffectTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Font"), kMCNullTypeInfo, &kMCCanvasFontCustumValueCallbacks, kMCCanvasFontTypeInfo))
+		return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Canvas"), kMCNullTypeInfo, &kMCCanvasCustomValueCallbacks, kMCCanvasTypeInfo))
+		return false;
+	return true;
 }
 
 void MCCanvasTypesFinalize()
@@ -5538,88 +5565,94 @@ void MCCanvasTypesFinalize()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCCanvasCreateNamedErrorType(MCNameRef p_name, MCStringRef p_message, MCTypeInfoRef &r_error_type)
-{
-	MCAutoTypeInfoRef t_type, t_named_type;
-	
-	if (!MCErrorTypeInfoCreate(MCNAME("canvas"), p_message, &t_type))
-		return false;
-	
-	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
-		return false;
-	
-	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
-		return false;
-	
-	r_error_type = MCValueRetain(*t_named_type);
-	return true;
-}
-
 bool MCCanvasThrowError(MCTypeInfoRef p_error_type)
 {
-	MCAutoValueRefBase<MCErrorRef> t_error;
+	MCAutoErrorRef t_error;
 	if (!MCErrorCreate(p_error_type, nil, &t_error))
 		return false;
 	
 	return MCErrorThrow(*t_error);
 }
 
-void MCCanvasErrorsInitialize()
+bool MCCanvasErrorsInitialize()
 {
 	kMCCanvasRectangleListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.RectangleListFormatError"), MCSTR("Rectangle parameter must be a list of 4 numbers."), kMCCanvasRectangleListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.RectangleListFormatError"), MCNAME("canvas"), MCSTR("Rectangle parameter must be a list of 4 numbers."), kMCCanvasRectangleListFormatErrorTypeInfo))
+		return false;
 	
 	kMCCanvasPointListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.PointListFormatError"), MCSTR("Point parameter must be a list of 2 numbers."), kMCCanvasPointListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.PointListFormatError"), MCNAME("canvas"), MCSTR("Point parameter must be a list of 2 numbers."), kMCCanvasPointListFormatErrorTypeInfo))
+		return false;
 	
 	kMCCanvasColorListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ColorListFormatError"), MCSTR("Color parameter must be a list of 3 or 4 numbers between 0 and 1."), kMCCanvasColorListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ColorListFormatError"), MCNAME("canvas"), MCSTR("Color parameter must be a list of 3 or 4 numbers between 0 and 1."), kMCCanvasColorListFormatErrorTypeInfo))
+		return false;
 	
 	kMCCanvasScaleListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ScaleListFormatError"), MCSTR("Scale parameter must be a list of 1 or 2 numbers."), kMCCanvasScaleListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ScaleListFormatError"), MCNAME("canvas"), MCSTR("Scale parameter must be a list of 1 or 2 numbers."), kMCCanvasScaleListFormatErrorTypeInfo))
+		return false;
 
 	kMCCanvasTranslationListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TranslationListFormatError"), MCSTR("Translation parameter must be a list of 2 numbers."), kMCCanvasTranslationListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.TranslationListFormatError"), MCNAME("canvas"), MCSTR("Translation parameter must be a list of 2 numbers."), kMCCanvasTranslationListFormatErrorTypeInfo))
+		return false;
 
 	kMCCanvasSkewListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.SkewListFormatError"), MCSTR("Skew parameter must be a list of 2 numbers."), kMCCanvasSkewListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.SkewListFormatError"), MCNAME("canvas"), MCSTR("Skew parameter must be a list of 2 numbers."), kMCCanvasSkewListFormatErrorTypeInfo))
+		return false;
 
 	kMCCanvasRadiiListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.RadiiListFormatError"), MCSTR("Radii parameter must be a list of 2 numbers."), kMCCanvasRadiiListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.RadiiListFormatError"), MCNAME("canvas"), MCSTR("Radii parameter must be a list of 2 numbers."), kMCCanvasRadiiListFormatErrorTypeInfo))
+		return false;
 	
 	kMCCanvasImageSizeListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageSizeListFormatError"), MCSTR("image size parameter must be a list of 2 integers greater than 0."), kMCCanvasImageSizeListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageSizeListFormatError"), MCNAME("canvas"), MCSTR("image size parameter must be a list of 2 integers greater than 0."), kMCCanvasImageSizeListFormatErrorTypeInfo))
+		return false;
 	
 	kMCCanvasTransformMatrixListFormatErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TransformMatrixListFormatError"), MCSTR("transform matrix parameter must be a list of 6 numbers."), kMCCanvasTransformMatrixListFormatErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.TransformMatrixListFormatError"), MCNAME("canvas"), MCSTR("transform matrix parameter must be a list of 6 numbers."), kMCCanvasTransformMatrixListFormatErrorTypeInfo))
+		return false;
 	
 	kMCCanvasTransformDecomposeErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.TransformDecomposeError"), MCSTR("Unable to decompose transform matrix."), kMCCanvasTransformDecomposeErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.TransformDecomposeError"), MCNAME("canvas"), MCSTR("Unable to decompose transform matrix."), kMCCanvasTransformDecomposeErrorTypeInfo))
+		return false;
 	
 	kMCCanvasImageRepReferencedErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageRepReferencedError"), MCSTR("Unable to create image from reference."), kMCCanvasImageRepReferencedErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepReferencedError"), MCNAME("canvas"), MCSTR("Unable to create image from reference."), kMCCanvasImageRepReferencedErrorTypeInfo))
+		return false;
 	
 	kMCCanvasImageRepDataErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageRepDataError"), MCSTR("Unable to create image from data."), kMCCanvasImageRepDataErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepDataError"), MCNAME("canvas"), MCSTR("Unable to create image from data."), kMCCanvasImageRepDataErrorTypeInfo))
+		return false;
 	
 	kMCCanvasImageRepPixelsErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageRepPixelsError"), MCSTR("Unable to create image with pixels."), kMCCanvasImageRepPixelsErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepPixelsError"), MCNAME("canvas"), MCSTR("Unable to create image with pixels."), kMCCanvasImageRepPixelsErrorTypeInfo))
+		return false;
 	
 	kMCCanvasImageRepGetGeometryErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageRepGetGeometryError"), MCSTR("Unable to get image geometry."), kMCCanvasImageRepGetGeometryErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepGetGeometryError"), MCNAME("canvas"), MCSTR("Unable to get image geometry."), kMCCanvasImageRepGetGeometryErrorTypeInfo))
+		return false;
 	
 	kMCCanvasImageRepLockErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageRepLockError"), MCSTR("Unable to lock image pixels."), kMCCanvasImageRepLockErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepLockError"), MCNAME("canvas"), MCSTR("Unable to lock image pixels."), kMCCanvasImageRepLockErrorTypeInfo))
+		return false;
 	
 	kMCCanvasGradientStopRangeErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.GradientStopRangeError"), MCSTR("Gradient stop offset must be between 0 and 1."), kMCCanvasGradientStopRangeErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.GradientStopRangeError"), MCNAME("canvas"), MCSTR("Gradient stop offset must be between 0 and 1."), kMCCanvasGradientStopRangeErrorTypeInfo))
+		return false;
 	
 	kMCCanvasGradientStopOrderErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.GradientStopOrderError"), MCSTR("Gradient stops must be provided in order of increasing offset."), kMCCanvasGradientStopOrderErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.GradientStopOrderError"), MCNAME("canvas"), MCSTR("Gradient stops must be provided in order of increasing offset."), kMCCanvasGradientStopOrderErrorTypeInfo))
+		return false;
 	
 	kMCCanvasGradientTypeErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.GradientTypeError"), MCSTR("Unrecognised gradient type."), kMCCanvasGradientTypeErrorTypeInfo);
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.GradientTypeError"), MCNAME("canvas"), MCSTR("Unrecognised gradient type."), kMCCanvasGradientTypeErrorTypeInfo))
+		return false;
 	
+	kMCCanvasPathPointListFormatErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.PathPointListFormatError"), MCNAME("canvas"), MCSTR("Invalid value in list of points."), kMCCanvasPathPointListFormatErrorTypeInfo))
+		return false;
+	
+	return true;
 }
 
 void MCCanvasErrorsFinalize()
@@ -5646,32 +5679,39 @@ void MCCanvasErrorsFinalize()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCCanvasConstantsInitialize()
+bool MCCanvasConstantsInitialize()
 {
-	/* UNCHECKED */ MCCanvasTransformCreateWithMCGAffineTransform(MCGAffineTransformMakeIdentity(), kMCCanvasIdentityTransform);
-	/* UNCHECKED */ MCCanvasColorCreateWithRGBA(0, 0, 0, 1, kMCCanvasColorBlack);
+	if (!MCCanvasTransformCreateWithMCGAffineTransform(MCGAffineTransformMakeIdentity(), kMCCanvasIdentityTransform))
+		return false;
+	if (!MCCanvasColorCreateWithRGBA(0, 0, 0, 1, kMCCanvasColorBlack))
+		return false;
 	// Defer creation until after initialize
 	kMCCanvasFont12PtHelvetica = nil;
-//	/* UNCHECKED */ MCCanvasFontCreate(MCNAME("Helvetica"), 0, 12, kMCCanvasFont12PtHelvetica);
-	/* UNCHECKED */ MCCanvasPathCreateEmpty(kMCCanvasEmptyPath);
+//	if (!MCCanvasFontCreate(MCNAME("Helvetica"), 0, 12, kMCCanvasFont12PtHelvetica))
+//		return false;
+	if (!MCCanvasPathCreateEmpty(kMCCanvasEmptyPath))
+		return false;
+	
+	return true;
 }
 
 void MCCanvasConstantsFinalize()
 {
 	MCValueRelease(kMCCanvasIdentityTransform);
 	MCValueRelease(kMCCanvasColorBlack);
+	MCValueRelease(kMCCanvasEmptyPath);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCCanvasStringsInitialize()
+bool MCCanvasStringsInitialize()
 {
 	MCMemoryClear(s_blend_mode_map, sizeof(s_blend_mode_map));
 	MCMemoryClear(s_transform_matrix_keys, sizeof(s_transform_matrix_keys));
 	MCMemoryClear(s_effect_type_map, sizeof(s_effect_type_map));
 	MCMemoryClear(s_effect_property_map, sizeof(s_effect_property_map));
 	MCMemoryClear(s_gradient_type_map, sizeof(s_gradient_type_map));
-	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_gradient_type_map));
+	MCMemoryClear(s_canvas_fillrule_map, sizeof(s_canvas_fillrule_map));
 	MCMemoryClear(s_image_filter_map, sizeof(s_image_filter_map));
 	MCMemoryClear(s_join_style_map, sizeof(s_join_style_map));
 	MCMemoryClear(s_cap_style_map, sizeof(s_cap_style_map));
@@ -5763,6 +5803,7 @@ void MCCanvasStringsInitialize()
 	s_cap_style_map[kMCGCapStyleSquare] = MCNAME("square");
 	
 /* UNCHECKED */
+	return true;
 }
 
 void MCCanvasStringsFinalize()
@@ -5853,7 +5894,7 @@ bool MCCanvasEffectTypeToString(MCCanvasEffectType p_type, MCStringRef &r_string
 
 bool MCCanvasEffectTypeFromString(MCStringRef p_string, MCCanvasEffectType &r_type)
 {
-	return _mcenumfromstring<MCCanvasEffectType, kMCGFillRuleCount>(s_effect_type_map, p_string, r_type);
+	return _mcenumfromstring<MCCanvasEffectType, _MCCanvasEffectTypeCount>(s_effect_type_map, p_string, r_type);
 }
 
 bool MCCanvasFillRuleToString(MCGFillRule p_fill_rule, MCStringRef &r_string)

@@ -96,7 +96,6 @@ MC_PICKLE_BEGIN_RECORD(MCScriptImportedDefinition)
     MC_PICKLE_UINDEX(module)
     MC_PICKLE_INTENUM(MCScriptDefinitionKind, kind)
     MC_PICKLE_NAMEREF(name)
-    // MC_PICKLE_TYPEINFOREF(type)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptSyntaxMethod)
@@ -119,18 +118,25 @@ MC_PICKLE_BEGIN_RECORD(MCScriptTypeDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptConstantDefinition)
-    MC_PICKLE_VALUEREF(value)
+    MC_PICKLE_UINDEX(value)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptVariableDefinition)
     MC_PICKLE_UINDEX(type)
 MC_PICKLE_END_RECORD()
 
+MC_PICKLE_BEGIN_RECORD(MCScriptContextVariableDefinition)
+    MC_PICKLE_UINDEX(type)
+    MC_PICKLE_UINDEX(default_value)
+MC_PICKLE_END_RECORD()
+
 MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
     MC_PICKLE_UINDEX(type)
-    MC_PICKLE_ARRAY_OF_UINDEX(locals, local_count)
+    MC_PICKLE_ARRAY_OF_UINDEX(local_types, local_type_count)
+    MC_PICKLE_ARRAY_OF_NAMEREF(local_names, local_name_count)
     MC_PICKLE_UINDEX(start_address)
     MC_PICKLE_UINDEX(finish_address)
+    MC_PICKLE_INTENUM(MCScriptHandlerScope, scope)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptForeignHandlerDefinition)
@@ -167,6 +173,7 @@ MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindEvent, MCScriptEventDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindSyntax, MCScriptSyntaxDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindDefinitionGroup, MCScriptDefinitionGroupDefinition)
+    MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindContextVariable, MCScriptContextVariableDefinition)
 MC_PICKLE_END_VARIANT()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptModule)
@@ -191,6 +198,8 @@ MC_PICKLE_END_RECORD()
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCScriptModule *s_modules = nil;
+static MCScriptModule **s_context_slot_owners = nil;
+static uindex_t s_context_slot_count;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -214,6 +223,11 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
             MCMemoryDelete(t_def -> function_cif);
         }
     
+    // Remove ourselves from the context slot owners list.
+    for(uindex_t i = 0; i < s_context_slot_count; i++)
+        if (s_context_slot_owners[i] == self)
+            s_context_slot_owners[i] = nil;
+    
     // Remove ourselves from the global module list.
     if (s_modules == self)
         s_modules = self -> next_module;
@@ -236,6 +250,30 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             MCScriptVariableDefinition *t_variable;
             t_variable = static_cast<MCScriptVariableDefinition *>(self -> definitions[i]);
             t_variable -> slot_index = self -> slot_count++;
+        }
+        else if (self -> definitions[i] -> kind == kMCScriptDefinitionKindContextVariable)
+        {
+            MCScriptContextVariableDefinition *t_variable;
+            t_variable = static_cast<MCScriptContextVariableDefinition *>(self -> definitions[i]);
+            
+            uindex_t t_index;
+            t_index = UINDEX_MAX;
+            for(uindex_t i = 0; i < s_context_slot_count; i++)
+                if (s_context_slot_owners[i] == nil)
+                {
+                    t_index = i;
+                    break;
+                }
+
+            if (t_index == UINDEX_MAX)
+            {
+                if (!MCMemoryResizeArray(s_context_slot_count + 1, s_context_slot_owners, s_context_slot_count))
+                    return false;
+                
+                t_index = s_context_slot_count - 1;
+            }
+            
+            s_context_slot_owners[t_index] = self;
         }
         else if (self -> definitions[i] -> kind == kMCScriptDefinitionKindHandler)
         {
@@ -261,54 +299,84 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                 switch(t_operation)
                 {
                     case kMCScriptBytecodeOpJump:
-                        // check arity == 1
+                        // jump <offset>
+                        if (t_arity != 1)
+                            return false;
+                        
                         // check resolved address is within handler
                         break;
                     case kMCScriptBytecodeOpJumpIfFalse:
                     case kMCScriptBytecodeOpJumpIfTrue:
-                        // check arity == 2
+                        // jumpiftrue <register>, <offset>
+                        // jumpiffalse <register>, <offset>
+                        if (t_arity != 2)
+                            return false;
+                        
                         // check resolved address is within handler
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpAssignConstant:
-                        // check arity == 2
+                        // assignconst <dst>, <index>
+                        if (t_arity != 2)
+                            return false;
+                        
                         // check index argument is within value pool range
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpAssign:
-                        // check arity == 2
+                        // assign <dst>, <src>
+                        if (t_arity != 2)
+                            return false;
+                        
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         t_temporary_count = MCMax(t_temporary_count, t_operands[1] + 1);
                         break;
                     case kMCScriptBytecodeOpReturn:
-                        // check arity == 1
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
+                        // return
+                        // return <value>
+                        if (t_arity != 0 && t_arity != 1)
+                            return false;
+                        
+                        if (t_arity == 1)
+                            t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpInvoke:
+                        // invoke <index>, <result>, [ <arg_1>, ..., <arg_n> ]
+                        if (t_arity < 2)
+                            return false;
+                        
                         // check index operand is within definition range
                         // check definition[index] is handler or definition group
                         // check signature of defintion[index] conforms with invoke arity
                         for(uindex_t i = 1; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
-                    case kMCScriptBytecodeOpAssignList:
                     case kMCScriptBytecodeOpInvokeIndirect:
+                        // invoke *<src>, <result>, [ <arg_1>, ..., <arg_n> ]
+                        if (t_arity < 2)
+                            return false;
+                        
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
-                    case kMCScriptBytecodeOpFetchLocal:
-                    case kMCScriptBytecodeOpStoreLocal:
-                        // check arity is 2
-                        // check local index is in range
-                        // check definition[index] is variable
+                    case kMCScriptBytecodeOpFetch:
+                    case kMCScriptBytecodeOpStore:
+                        // fetch <dst>, <index>
+                        // store <src>, <index>
+                        if (t_arity != 2)
+                            return false;
+                        
+                        // check definition[index] is variable or handler
+                        // check level is appropriate.
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
-                    case kMCScriptBytecodeOpFetchGlobal:
-                    case kMCScriptBytecodeOpStoreGlobal:
-                        // check arity is 2
-                        // check glob index is in definition range
-                        // check definition[index] is variable or handler
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
+                    case kMCScriptBytecodeOpAssignList:
+                        // assignlist <dst>, [ <elem_1>, ..., <elem_n> ]
+                        if (t_arity < 1)
+                            return false;
+                        
+                        for(uindex_t i = 0; i < t_arity; i++)
+                            t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
                 }
             }
@@ -322,9 +390,10 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             // The total number of slots we need is params (inc result) + temps.
             MCTypeInfoRef t_signature;
             t_signature = self -> types[t_handler -> type] -> typeinfo;
-            t_handler -> register_offset = MCHandlerTypeInfoGetParameterCount(t_signature) + t_handler -> local_count;
-            t_handler -> slot_count = t_handler -> register_offset + t_temporary_count;
+            t_handler -> slot_count = MCHandlerTypeInfoGetParameterCount(t_signature) + t_handler -> local_type_count + t_temporary_count;
         }
+    
+    // If the module has context
     
     return true;
 }
@@ -340,6 +409,9 @@ MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef self)
 
 void MCScriptReleaseModule(MCScriptModuleRef self)
 {
+	if (nil == self)
+		return;
+
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
     
     MCScriptReleaseObject(self);
@@ -432,6 +504,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
         if (t_module -> module_kind == kMCScriptModuleKindWidget)
             return false;
         
+        // A used module must be usable - do this before resolving imports so
+        // chained imports work.
+        if (!MCScriptEnsureModuleIsUsable(t_module))
+            return false;
+        
         // Check all the imported definitions from the module, and compute indicies.
         for(uindex_t t_import = 0; t_import < self -> imported_definition_count; t_import++)
         {
@@ -444,6 +521,17 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             if (!MCScriptLookupDefinitionInModule(t_module, t_import_def -> name, t_def))
                 return false;
             
+            MCScriptModuleRef t_mod;
+            if (t_def -> kind == kMCScriptDefinitionKindExternal)
+            {
+                MCScriptExternalDefinition *t_ext_def;
+                t_ext_def = static_cast<MCScriptExternalDefinition *>(t_def);
+                t_mod = t_module -> imported_definitions[t_ext_def -> index] . resolved_module;
+                t_def = t_module -> imported_definitions[t_ext_def -> index] . resolved_definition;
+            }
+            else
+                t_mod = t_module;
+            
             if (t_def -> kind != t_import_def -> kind)
             {
                 if (t_import_def -> kind != kMCScriptDefinitionKindHandler ||
@@ -453,12 +541,9 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             
             // Check that signatures match.
             
-            t_import_def -> definition = t_def;
+            t_import_def -> resolved_definition = t_def;
+            t_import_def -> resolved_module = t_mod;
         }
-        
-        // A used module must be usable.
-        if (!MCScriptEnsureModuleIsUsable(t_module))
-            return false;
         
         // Now create the instance we need.
         if (!MCScriptCreateInstanceOfModule(t_module, self -> dependencies[i] . instance))
@@ -538,8 +623,8 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_import = &self -> imported_definitions[t_ext_def -> index];
                     
                     MCScriptModuleRef t_module;
-                    t_module = self -> dependencies[t_import -> module] . instance -> module;
-                    t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> definition) -> type] -> typeinfo;
+                    t_module = t_import -> resolved_module;
+                    t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> resolved_definition) -> type] -> typeinfo;
                 }
                 else
                     return false;
@@ -899,13 +984,23 @@ MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef self, MCScrip
     MCScriptHandlerDefinition *t_handler;
     t_handler = static_cast<MCScriptHandlerDefinition *>(p_definition);
     
-    if (t_handler -> local_name_count != 0)
-        return t_handler -> local_names[p_index];
+    MCScriptHandlerType *t_type;
+    t_type = static_cast<MCScriptHandlerType *>(self -> types[t_handler -> type]);
     
-    return kMCEmptyName;
+    if (p_index < t_type -> parameter_name_count)
+        return t_type -> parameter_names[p_index];
+    
+    return t_handler -> local_names[p_index - t_type -> parameter_name_count];
 }
 
 MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef self, uindex_t p_index)
+{
+    if (self -> definition_name_count > 0)
+        return self -> definition_names[p_index];
+    return kMCEmptyName;
+}
+
+MCNameRef MCScriptGetNameOfContextVariableInModule(MCScriptModuleRef self, uindex_t p_index)
 {
     if (self -> definition_name_count > 0)
         return self -> definition_names[p_index];
@@ -1040,9 +1135,33 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                 switch(t_type -> kind)
                 {
                     case kMCScriptTypeKindForeign:
+                    {
                         __writeln(stream, "foreign type %@", t_def_name);
+                    }
+                    break;
+                    case kMCScriptTypeKindHandler:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "handler type %@%@", t_def_name, *t_sig);
+                    }
+                    break;
+                    case kMCScriptTypeKindRecord:
+                        // TODO - Records not yet supported
                         break;
+                    default:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "type %@ is %@", t_def_name, *t_sig);
+                    }
+                    break;
                 }
+            }
+            break;
+            case kMCScriptDefinitionKindConstant:
+            {
+                __writeln(stream, "constant %@", t_def_name);
             }
             break;
             case kMCScriptDefinitionKindVariable:

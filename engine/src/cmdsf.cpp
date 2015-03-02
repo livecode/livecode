@@ -2806,7 +2806,7 @@ int4 MCKill::lookup(MCStringRef s)
 {
 	uint2 size = ELEMENTS(signal_table);
 	while(size--)
-		if (MCStringIsEqualToCString(s, signal_table[size].token, kMCCompareCaseless));
+		if (MCStringIsEqualToCString(s, signal_table[size].token, kMCCompareCaseless))
 			return signal_table[size].which;
 	return SIGTERM;
 }

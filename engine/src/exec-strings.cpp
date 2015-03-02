@@ -1460,8 +1460,11 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 {
 	if (MCStringsConcatenate(p_left, p_right, r_result))
 		return;
-
-	ctxt.Throw();
+    
+    // SN-2015-01-13: [[ Bug 14354 ]] To reproduce the previous behaviour, we want to abort
+    // any loop if in case of a memory error.
+    ctxt . LegacyThrow(EE_NO_MEMORY);
+    MCabortscript = True;
 }
 
 bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
@@ -1477,23 +1480,32 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p
 	if (MCDataConcatenate(p_left, p_right, r_result))
 		return;
     
-	ctxt.Throw();
+    // SN-2015-01-13: [[ Bug 14354 ]] To reproduce the previous behaviour, we want to abort
+    // any loop if in case of a memory error.
+    ctxt . LegacyThrow(EE_NO_MEMORY);
+    MCabortscript = True;
 }
 
 void MCStringsEvalConcatenateWithSpace(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
 	if (MCStringsConcatenateWithChar(p_left, p_right, ' ', r_result))
 		return;
-
-	ctxt.Throw();
+    
+    // SN-2015-01-13: [[ Bug 14354 ]] To reproduce the previous behaviour, we want to abort
+    // any loop if in case of a memory error.
+    ctxt . LegacyThrow(EE_NO_MEMORY);
+    MCabortscript = True;
 }
 
 void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
 	if (MCStringsConcatenateWithChar(p_left, p_right, ',', r_result))
-		return;
-
-	ctxt.Throw();
+        return;
+    
+    // SN-2015-01-13: [[ Bug 14354 ]] To reproduce the previous behaviour, we want to abort
+    // any loop if in case of a memory error.
+    ctxt . LegacyThrow(EE_NO_MEMORY);
+    MCabortscript = True;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

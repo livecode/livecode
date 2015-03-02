@@ -369,7 +369,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						{
 							if (sp.lookup(SP_FACTOR, ite) == PS_NORMAL
 							        && ite->type == TT_CHUNK
-							        && ite->which >= CT_LAYER && ite->which <= CT_FIELD)
+							        && ite->which >= CT_LAYER && ite->which <= CT_LAST_CONTROL)
 							{
 								curref->ptype = curref->otype;
 								nterm = curref->otype = (Chunk_term)ite->which;
@@ -384,7 +384,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 							curref->etype = CT_ID;
 						else
 							curref->etype = CT_EXPRESSION;
-						if (sp.parseexp(curref->otype <= CT_FIELD, False,
+						if (sp.parseexp(curref->otype <= CT_LAST_CONTROL, False,
 						                &curref->startpos) != PS_NORMAL)
 						{
 							MCperror->add(PE_CHUNK_NOSTARTEXP, sp);
@@ -982,12 +982,15 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
             return;
         }
-        if (background == nil && card == nil && group == nil && object == nil)
-        {
-            r_object . object = t_object . object;
-            r_object . part_id = t_object . part_id;
-            return;
-        }
+        // SN-2015-01-13: [[ Bug 14376 ]] Remove this if statement added during the refactoring process
+        // (commit 15a49a27e387f3e49e5bcce8f8316348578bf810)
+        //  which leads to a part_id of 0 instead of the card part id.
+//        if (background == nil && card == nil && group == nil && object == nil)
+//        {
+//            r_object . object = t_object . object;
+//            r_object . part_id = t_object . part_id;
+//            return;
+//        }
         switch (t_object . object -> gettype())
         {
             case CT_AUDIO_CLIP:
@@ -4206,80 +4209,23 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	return nil;
 }
 
-// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
-bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
+// SN-2015-02-13: [[ Bug 14467 ]] [[ Bug 14053 ]] Refactored object properties
+//  lookup, to ensure it is done the same way in MCChunk::getprop / setprop
+bool MCChunk::getsetprop(MCExecContext &ctxt, Properties which, MCNameRef index, Boolean effective, bool p_is_get_operation, MCExecValue &r_value)
 {
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
         return false;
-
+    
     MCPropertyInfo *t_info;
     
     if (t_obj_chunk . chunk == CT_UNDEFINED)
     {
         bool t_success;
-        t_success = t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
-        MCValueRelease(t_obj_chunk . mark . text);
-        return t_success;
-    }
-    else
-	{
-        // AL-2014-07-09: [[ Bug 12733 ]] Buttons are also valid containers wrt text chunk properties.
-		if (t_obj_chunk . object -> gettype() != CT_FIELD &&
-            t_obj_chunk . object -> gettype() != CT_BUTTON)
-		{
-			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
-            MCValueRelease(t_obj_chunk . mark . text);
-			return false;
-		}
-        
-        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
-        //   prop, else its an array prop.
-        bool t_is_array_prop;
-        t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
-        
-        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
-        
-        if (islinechunk() && t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
-        
-        if (t_info == nil || t_info -> getter == nil)
-        {
-            MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
-            MCValueRelease(t_obj_chunk . mark . text);
-            return false;
-        }
-        
-        if (t_is_array_prop)
-        {
-            MCObjectChunkIndexPtr t_obj_chunk_index;
-            t_obj_chunk_index . object = t_obj_chunk . object;
-            t_obj_chunk_index . part_id = t_obj_chunk . part_id;
-            t_obj_chunk_index . chunk = t_obj_chunk . chunk;
-            t_obj_chunk_index . mark = t_obj_chunk . mark;
-            t_obj_chunk_index . index = index;
-            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk_index, r_value);
-        }
+        if (p_is_get_operation)
+            t_success = t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
         else
-            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
-	}
-    
-    MCValueRelease(t_obj_chunk . mark . text);
-    return !ctxt . HasError();
-}
-
-// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
-bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
-{
-    MCObjectChunkPtr t_obj_chunk;
-    if (evalobjectchunk(ctxt, false, true, t_obj_chunk) != ES_NORMAL)
-        return false;
-    
-    MCPropertyInfo *t_info;
-    
-    if (t_obj_chunk . chunk == CT_UNDEFINED)
-    {
-        bool t_success = t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, p_value);
+            t_success = t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
         MCValueRelease(t_obj_chunk . mark . text);
         return t_success;
     }
@@ -4293,31 +4239,31 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             MCValueRelease(t_obj_chunk . mark . text);
             return false;
         }
-    
+        
         // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
         //   prop, else its an array prop.
         bool t_is_array_prop;
         t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
         
         t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
-        if (islinechunk() && t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
         
-        // SN-2014-11-24: [[ Bug 14053 ]] Even if the chunk is not an explicit line, the property of the line containing this chunk should be set
-        if (t_info == nil && !islinechunk())
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeLine);
+        // If we could not get the line property for this chunk, then we try to get the char prop.
+        // If we could not get the char property for this chunk, then we try to get the line prop.
+        if (t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeChar : kMCPropertyInfoChunkTypeLine);
         
-        if (t_info == nil || t_info -> setter == nil)
+        if (t_info == nil
+                || (p_is_get_operation && t_info -> getter == nil)
+                || (!p_is_get_operation && t_info -> setter == nil))
         {
-            MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+            if (p_is_get_operation)
+                MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
+            else
+                MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+            
             MCValueRelease(t_obj_chunk . mark . text);
             return false;
         }
-        
-        // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
-        //   handle specific styles.
-        // MW-2012-01-25: [[ ParaStyles ]] Pass whether this was an explicit line chunk
-        //   or not. This is used to disambiguate the setting of 'backColor'.
         
         if (t_is_array_prop)
         {
@@ -4327,16 +4273,23 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             t_obj_chunk_index . chunk = t_obj_chunk . chunk;
             t_obj_chunk_index . mark = t_obj_chunk . mark;
             t_obj_chunk_index . index = index;
-            
-            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk_index, p_value);
+            if (p_is_get_operation)
+                MCExecFetchProperty(ctxt, t_info, &t_obj_chunk_index, r_value);
+            else
+                MCExecStoreProperty(ctxt, t_info, &t_obj_chunk_index, r_value);
         }
         else
-            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, p_value);
+        {
+            if (p_is_get_operation)
+                MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
+            else
+                MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, r_value);
+        }
     }
-
-    MCValueRelease(t_obj_chunk . mark. text);
-
-    if (!ctxt . HasError())
+    
+    MCValueRelease(t_obj_chunk . mark . text);
+    
+    if (!p_is_get_operation && !ctxt . HasError())
     {
         // MM-2012-09-05: [[ Property Listener ]] Make sure any listeners are updated of the property change.
         //  Handled at this point rather than MCProperty::set as here we know if it is a valid object set prop.
@@ -4344,7 +4297,21 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         return true;
     }
     
-    return false;
+    return !ctxt . HasError();
+}
+
+// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
+bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
+{
+    // SN-2015-02-13: [[ Bug 14467 ]] Object property getting / setting refactored
+    return getsetprop(ctxt, which, index, effective, true, r_value);
+}
+
+// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
+bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
+{
+    // SN-2015-02-13: [[ Bug 14467 ]] Object property getting / setting refactored
+    return getsetprop(ctxt, which, index, effective, false, p_value);
 }
 
 Chunk_term MCChunk::getlastchunktype(void)

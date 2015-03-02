@@ -20,6 +20,10 @@ encryptedstack.cpp
 encryptedstack.h
 stacksecurity_encrypted.cpp
 util/perfect/perfect.linux-*
+extensions/*/*/*.xml
+extensions/*/*/*.lci
+extensions/*/*/*.lcm
+extensions/*/*/*.lce
 
 # Compiled source #
 ###################
@@ -86,6 +90,7 @@ xcuserdata/
 _build/
 _cache/
 build/
+/_tests/
 
 # SDKs          #
 #################

@@ -90,6 +90,88 @@ extern Boolean InitSSLCrypt(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char *kMCDeployArchitectureStrings[] =
+{
+    "",
+    "i386",
+    "x86-64",
+    "armv6",
+    "armv7",
+    "armv7s",
+    "arm64",
+    "ppc",
+    "ppc64",
+    nil,
+};
+
+typedef struct
+{
+    MCDeployParameters* params;
+    MCExecContext* ctxt;
+}
+MCDeployArrayApplyCallbackContext;
+
+static bool MCDeployMapArchitectureString(MCStringRef p_string, MCDeployArchitecture& r_architecture)
+{
+    for(uindex_t i = 0; kMCDeployArchitectureStrings[i] != nil; i++)
+    {
+        // As 'p_string' is an MCString the '==' operator does a caseless comparison.
+        if (MCStringIsEqualToCString(p_string, kMCDeployArchitectureStrings[i], kMCStringOptionCompareCaseless))
+        {
+            r_architecture = (MCDeployArchitecture)i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool MCDeployPushMinOSVersion(MCDeployParameters* p_params, MCDeployArchitecture p_arch, MCStringRef p_vers_string)
+{
+    // Use sscanf to parse out the version string. We don't check the return value of
+    // sscanf as we don't care - any malformed / missing components will come out as
+    // 0.
+    int t_major, t_minor, t_inc;
+    t_major = t_minor = t_inc = 0;
+
+    MCAutoPointer<char> t_native_string;
+    MCStringConvertToCString(p_vers_string, &t_native_string);
+    sscanf(*t_native_string, "%d.%d.%d", &t_major, &t_minor, &t_inc);
+
+    if (!MCMemoryResizeArray(p_params -> min_os_version_count + 1, p_params -> min_os_versions, p_params -> min_os_version_count))
+        return false;
+
+    uint32_t t_version;
+    t_version = (t_major & 0xFFFF) << 16;
+    t_version |= (t_minor & 0xFF) << 8;
+    t_version |= (t_inc & 0xFF) << 0;
+
+    p_params -> min_os_versions[p_params -> min_os_version_count - 1] . architecture = p_arch;
+    p_params -> min_os_versions[p_params -> min_os_version_count - 1] . version = t_version;
+
+    return true;
+}
+
+static bool MCDeployGetArchitectures(void *context, MCArrayRef array, MCNameRef key, MCValueRef value)
+{
+    MCDeployArrayApplyCallbackContext *t_context;
+    t_context = (MCDeployArrayApplyCallbackContext*)context;
+
+    MCAutoStringRef t_value_as_string;
+    MCDeployArchitecture t_arch;
+
+    if (!t_context -> ctxt -> ConvertToString(value, &t_value_as_string))
+        return false;
+
+    if (!MCDeployMapArchitectureString(MCNameGetString(key), t_arch))
+        return false;
+
+    if (!MCDeployPushMinOSVersion(t_context -> params, t_arch, *t_value_as_string))
+        return false;
+
+    return true;
+}
+
 bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 {
 	MCStringRef t_temp_string;
@@ -118,9 +200,9 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(stackfile, t_temp_string);
 	MCValueRelease(t_temp_string);
 	
-	if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("auxillary_stackfiles"), false, t_temp_array))
+    if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("auxiliary_stackfiles"), false, t_temp_array))
 		return false;
-	MCValueAssign(auxillary_stackfiles, t_temp_array);
+    MCValueAssign(auxiliary_stackfiles, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
     // The externals listed by the IDE are LF separated
@@ -178,6 +260,53 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		return false;
 	MCValueAssign(version_info, t_temp_array);
 	MCValueRelease(t_temp_array);
+
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch the resource mappings, if any.
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("library"), false, t_temp_string))
+        return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(library, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
+
+    // The 'min_os_version' is either a string or an array. If it is a string then
+    // it encodes the version against the 'Unknown' architecture which is interpreted
+    // by the deploy command to mean all architectures. Otherwise, the keys in the
+    // array are assumed to be architecture names and each is pushed on the array.
+    // If the 'min_os_version' is empty, then no change is brought to the binaries.
+    // If multiple entries are present, then the 'unknown' mapping is used for any
+    // architecture not explicitly specified. The current architecture strings that are
+    // known are:
+    //   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
+    // The empty string is taken to be 'unknown'.
+    if (!ctxt . CopyOptElementAsArray(p_array, MCNAME("min_os_version"), false, t_temp_array))
+        return false;
+
+    // SN-2015-02-04: [[ Merge-6.7.2 ]] If the array is empty, try to convert to a string.
+    if (!MCArrayIsEmpty(t_temp_array))
+    {
+        MCDeployArrayApplyCallbackContext t_context;
+        t_context . ctxt = &ctxt;
+        t_context . params = this;
+
+        bool t_success;
+        t_success = MCArrayApply(t_temp_array, MCDeployGetArchitectures, (void*)&t_context);
+        MCValueRelease(t_temp_array);
+
+        if (!t_success)
+            return false;
+    }
+    else
+    {
+        MCValueRelease(t_temp_array);
+        if (!ctxt . CopyOptElementAsString(p_array, MCNAME("min_os_version"), false, t_temp_string))
+            return false;
+        
+        if (!MCStringIsEmpty(t_temp_string))
+            MCDeployPushMinOSVersion(this, kMCDeployArchitecture_Unknown, t_temp_string);
+        
+        MCValueRelease(t_temp_string);
+    }
 	
 	if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("modules"), false, t_temp_array))
 		return false;
@@ -241,7 +370,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 
 	// Add any redirects
 	if (t_success)
-		for(uint32_t i = 0; i < MCArrayGetCount(p_params.redirects) && t_success; i++)
+		for(uindex_t i = 0; i < MCArrayGetCount(p_params.redirects) && t_success; i++)
 		{
 			MCValueRef t_val;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.redirects, i + 1, t_val);
@@ -252,14 +381,11 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
     
     // Add all the modules before the stacks, this is so that widgets can resolve
     // themselves on load.
-    uindex_t t_module_file_count;
-	MCDeployFileRef *t_module_files;
-    t_module_file_count = 0;
-	t_module_files = nil;
+    MCAutoArray<MCDeployFileRef> t_module_files;
 	if (t_success)
-		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . modules), t_module_files, t_module_file_count);
+		t_success = t_module_files . New(MCArrayGetCount(p_params . modules));
     if (t_success)
-        for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules) && t_success; i++)
+        for(uindex_t i = 0; i < MCArrayGetCount(p_params.modules) && t_success; i++)
         {
             MCValueRef t_module_filename;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params .modules, i + 1, t_module_filename);
@@ -278,11 +404,17 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
         t_iterator = 0;
         while(t_success && MCEngineIterateExtensionFilenames(t_iterator, t_filename))
         {
-            t_success = MCMemoryResizeArray(t_module_file_count + 1, t_module_files, t_module_file_count);
-            if (t_success && !MCDeployFileOpen(t_filename, kMCOpenFileModeRead, t_module_files[t_module_file_count - 1]))
+            MCDeployFileRef t_file;
+            t_file = nil;
+            if (t_success &&
+                !MCDeployFileOpen(t_filename, kMCOpenFileModeRead, t_file))
                 t_success = MCDeployThrow(kMCDeployErrorNoModule);
             if (t_success)
-                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[t_module_file_count - 1]);
+                t_success = t_module_files . Push(t_file);
+            if (t_success)
+                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_file);
+            if (!t_success && t_file != nil)
+                MCDeployFileClose(t_file);
         }
     }
     
@@ -293,24 +425,32 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
 
 	// Now we add the auxillary stackfiles, if any
-	MCDeployFileRef *t_aux_stackfiles;
-	t_aux_stackfiles = nil;
+	MCAutoArray<MCDeployFileRef> t_aux_stackfiles;
 	if (t_success)
-		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . auxillary_stackfiles), t_aux_stackfiles);
+        t_success = t_aux_stackfiles . New(MCArrayGetCount(p_params . auxiliary_stackfiles));
 	if (t_success)
-		for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles) && t_success; i++)
+        for(uindex_t i = 0; i < MCArrayGetCount(p_params.auxiliary_stackfiles) && t_success; i++)
 		{
 			MCValueRef t_val;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxillary_stackfiles, i + 1, t_val);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxiliary_stackfiles, i + 1, t_val);
 			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCOpenFileModeRead, t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
-				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
+				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxiliaryStack, t_aux_stackfiles[i]);
 		}
 	
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.
+    if (t_success)
+        for(uindex_t i = 0; i < MCArrayGetCount(p_params.library) && t_success; i++)
+        {
+            MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.library, i + 1, t_val);
+            t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeLibrary, (MCStringRef)t_val);
+        }
+    
 	// Now add the externals, if any
 	if (t_success)
-		for(uint32_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
+		for(uindex_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
 		{
 			MCValueRef t_val;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.externals, i + 1, t_val);
@@ -334,12 +474,10 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployCapsuleGenerate(t_capsule, p_output, t_spill, x_offset);
 
 	MCDeployCapsuleDestroy(t_capsule);
-	for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles); i++)
+	for(uindex_t i = 0; i < t_aux_stackfiles . Size(); i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
-	MCMemoryDeleteArray(t_aux_stackfiles);
-	for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules); i++)
-		MCDeployFileClose(t_module_files[i]);
-    MCMemoryDeleteArray(t_module_files);
+    for(uindex_t i = 0; i < t_module_files . Size(); i++)
+        MCDeployFileClose(t_module_files[i]);
 	MCDeployFileClose(t_spill);
 	MCDeployFileClose(t_stackfile);
 
@@ -441,6 +579,7 @@ bool MCDeployWritePayload(const MCDeployParameters& p_params, bool p_to_network,
 MCIdeDeploy::MCIdeDeploy(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeDeploy::~MCIdeDeploy(void)
@@ -483,7 +622,7 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 {
 	bool t_soft_error;
-	t_soft_error = false;
+    t_soft_error = false;
     bool t_has_error;
     t_has_error = false;
     
@@ -494,7 +633,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
     if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
         return;
 
-	MCDeployParameters t_params;
+    MCDeployParameters t_params;
     t_has_error = !t_params.InitWithArray(ctxt, *t_array);
 	
 	// If platform is iOS and we are not Mac then error
@@ -551,13 +690,12 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_error = MCDeployCatch();
 		if (t_error != kMCDeployErrorNone)
             ctxt . SetTheResultToCString(MCDeployErrorToString(t_error));
-		else
+        else
             ctxt . SetTheResultToEmpty();
-	}
+    }
     
     if (t_has_error && !t_soft_error)
         ctxt . Throw();
-    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -565,6 +703,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 MCIdeSign::MCIdeSign(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeSign::~MCIdeSign(void)
@@ -666,6 +805,7 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 MCIdeDiet::MCIdeDiet(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeDiet::~MCIdeDiet(void)
@@ -789,8 +929,11 @@ void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
         }
 		FILE *t_output;
 		t_output = fopen("C:\\Users\\Mark\\Desktop\\dmg.txt", "w");
-		MCDeployDmgDump(*temp, stdfile_log, t_output);
-		fclose(t_output);
+        if (t_output != nil)
+        {
+            MCDeployDmgDump(*temp, stdfile_log, t_output);
+            fclose(t_output);
+        }
     }
 }
 
@@ -836,20 +979,15 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
         return;
     }
 	
-	MCDeployDmgItem *t_items;
-	uint32_t t_item_count;
-	t_items = nil;
-	t_item_count = 0;
+	MCAutoArray<MCDeployDmgItem> t_items;
 	if (!ctxt . HasError())
 	{
-		if (MCMemoryNewArray(MCArrayGetCount(*t_array), t_items))
-			t_item_count = MCArrayGetCount(*t_array);
-		else
-			ctxt . Throw();
+        if (!t_items . New(MCArrayGetCount(*t_array)))
+            ctxt . Throw();
 	}
 
 	if (!ctxt . HasError())
-		for(uint32_t i = 0; i < t_item_count && !ctxt . HasError(); i++)
+		for(uindex_t i = 0; i < t_items . Size() && !ctxt . HasError(); i++)
 		{
 			MCValueRef t_val = nil;
 			if (!MCArrayFetchValueAtIndex(*t_array, i + 1, t_val))
@@ -915,8 +1053,8 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
             return;
         }
 		MCDeployDmgParameters t_params;
-		t_params . items = t_items;
-		t_params . item_count = t_item_count;
+		t_params . items = t_items . Ptr();
+		t_params . item_count = t_items . Size();
 		t_params . output = *temp;
 		if (!MCDeployDmgBuild(t_params))
 			ctxt . Throw();
@@ -972,20 +1110,18 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 	MCAutoStringRef t_filename;
     if (!ctxt . EvalExprAsStringRef(m_filename, EE_IDE_EXTRACT_BADFILENAME, &t_filename))
         return;
-		
+
 	void *t_data;
 	uint32_t t_data_size;
     Exec_stat t_stat;
-	if (!ctxt . HasError())
-		t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
-	
-	if (t_stat == ES_NORMAL)
-	{
+    t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
+    if (t_stat == ES_NORMAL)
+    {
         MCAutoStringRef t_string;
         /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)t_data, t_data_size, &t_string);
         ctxt . SetItToValue(*t_string);
-	}
-	else
+    }
+    else
         ctxt . SetItToEmpty();
 }
 

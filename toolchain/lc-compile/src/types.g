@@ -21,9 +21,8 @@
 
 'export'
     MODULE MODULELIST MODULEKIND
-    METADATA
     IMPORT
-    DEFINITION SIGNATURE ACCESS
+    DEFINITION SIGNATURE ACCESS SCOPE
     TYPE FIELD FIELDLIST
     PARAMETER MODE PARAMETERLIST
     STATEMENT
@@ -54,23 +53,25 @@
     application
 
 'type' MODULE
-    module(Position: POS, Kind: MODULEKIND, Name: ID, Metadata: METADATA, Imports: IMPORT, Definitions: DEFINITION)
-
-'type' METADATA
-    metadata(Position: POS, Key: NAME, Value: STRING, Rest: METADATA)
-    nil
+    module(Position: POS, Kind: MODULEKIND, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
 
 'type' IMPORT
     sequence(Left: IMPORT, Right: IMPORT)
     import(Position: POS, Name: ID)
     nil
-    
+
+'type' SCOPE
+    normal
+    context
+
 'type' DEFINITION
     sequence(Left: DEFINITION, Right: DEFINITION)
+    metadata(Position: POS, Key: STRING, Value: STRING)
     type(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
-    handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
+    contextvariable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE, Default: EXPRESSION)
+    handler(Position: POS, Access: ACCESS, Name: ID, Scope: SCOPE, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
     property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
     event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)
@@ -92,16 +93,9 @@
     named(Position: POS, Name: ID)
     foreign(Position: POS, Binding: STRING)
     optional(Position: POS, Type: TYPE)
-    opaque(Position: POS, Base: TYPE, Fields: FIELDLIST)
     record(Position: POS, Base: TYPE, Fields: FIELDLIST)
     enum(Position: POS, Base: TYPE, Fields: FIELDLIST)
     handler(Position: POS, Signature: SIGNATURE)
-    pointer(Position: POS)
-    bool(Position: POS)
-    int(Position: POS)
-    uint(Position: POS)
-    float(Position: POS)
-    double(Position: POS)
     boolean(Position: POS)
     integer(Position: POS)
     real(Position: POS)
@@ -154,6 +148,7 @@
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
     throw(Position: POS, Error: EXPRESSION)
+    postfixinto(Position: POS, Command: STATEMENT, Target: EXPRESSION)
     nil
     
 'type' EXPRESSIONLIST
@@ -192,6 +187,7 @@
     list(Position: POS, Element: SYNTAX, Delimiter: SYNTAX)
     optional(Position: POS, Operand: SYNTAX)
     keyword(Position: POS, Value: STRING)
+    unreservedkeyword(Position: POS, Value: STRING)
     markedrule(Position: POS, Variable: ID, Name: ID)
     rule(Position: POS, Name: ID)
     mark(Position: POS, Variable: ID, Value: SYNTAXCONSTANT)
@@ -274,12 +270,13 @@
     module
     type
     constant
-    variable
     handler
     property
     event
+    variable
     parameter
     local
+    context
 
 'type' INTLIST
     intlist(Head: INT, Tail: INTLIST)
