@@ -393,8 +393,11 @@ void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
             return;
         }
     }
-    
-    MCStringCopy(*t_string, r_string);
+
+    if (*t_string == nil)
+        r_string = MCValueRetain(kMCEmptyString);
+    else
+        MCStringCopy(*t_string, r_string);
 }
 
 //////////
