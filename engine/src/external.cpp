@@ -222,7 +222,7 @@ MCExternal *MCExternal::Load(const char *p_filename)
 	if (t_success)
 	{
         // AL-2015-02-10: [[ SB Inclusions ]] Load external using new module loading utility
-		t_module = MCU_loadmodule(p_filename);
+		t_module = (MCSysModuleHandle)MCU_loadmodule(p_filename);
 		if (t_module == NULL)
 			t_success = false;
 	}

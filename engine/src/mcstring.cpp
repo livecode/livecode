@@ -165,7 +165,7 @@ const char *MClnfmotifstring = "Motif";
 const char *MClnfwinstring = "Windows 95";
 const char *MCuntitledstring = "Untitled";
 // MW-2012-08-29: [[ Bug 10309 ]] Update 'applicationstring' to be 'LiveCode'.
-const char *MCapplicationstring = "LiveCode";
+const char *MCapplicationstring = "livecode";
 const char *MCanswernamestring = "Answer Dialog";
 const char *MCasknamestring = "Ask Dialog";
 const char *MCfsnamestring = "File Selector";

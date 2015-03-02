@@ -32,23 +32,42 @@ fi
 # SN-2015-02019: [[ Bug 14625 ]] We build and link each arch separately, and lipo them
 #  togother once it's done.
 
-# We still want to produce revsecurity.dylib for the simulator
-if [ "${SDK_NAME:0:8}" != "iphoneos" -a "${EXECUTABLE_NAME}" = "librevsecurity.a" ]; then
+# We still want to produce dylibs for the simulator
+if [ "$EFFECTIVE_PLATFORM_NAME" = "-iphonesimulator" ]; then
 	BUILD_DYLIB=1
 else
 	BUILD_DYLIB=0
 fi
 
 # SN-2015-02-19: [[ Bug 14625 ]] Xcode only create FAT headers from iOS SDK 7.0
-EXECUTABLE_INFO=$(otool -fv "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" | grep "Fat headers")
-if [ -z "$EXECUTABLE_INFO" ]; then
-	if [ $BUILD_DYLIB -eq 1 ]; then
-		$BIN_DIR/g++ -dynamiclib -arch ${ARCHS} -miphoneos-version-min=5.1.1 -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS
-	fi
-	$BIN_DIR/g++ -dynamiclib -arch ${ARCHS} -miphoneos-version-min=5.1.1 -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS
+FAT_INFO=$(otool -fv "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" | grep "Fat headers")
 
-	# Success
-	exit 0
+if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
+	# We set the minimum iOS or simulator version
+    if [ $BUILD_DYLIB -eq 1 ]; then
+        MIN_OS_VERSION="-mios-simulator-version-min=5.1.1"
+    else
+        MIN_OS_VERSION="-miphoneos-version-min=5.1.1"
+    fi
+
+    ARCHS="-arch ${ARCHS// / -arch }"
+
+	if [ $BUILD_DYLIB -eq 1 ]; then
+		$BIN_DIR/g++ -stdlib=libc++ -dynamiclib ${ARCHS} $MIN_OS_VERSION -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS
+	fi
+
+	if [ $? -ne 0 ]; then
+		exit $?
+	fi
+
+	$BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS ${ARCHS} $MIN_OS_VERSION -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS
+
+	if [ $? -ne 0 ]; then
+		exit $?
+	else
+		# Success
+		exit 0
+	fi
 fi
 
 # Only executed if the binaries have a FAT header, and we need an architecture-specific
@@ -70,20 +89,20 @@ do
     fi
 
 	if [ $BUILD_DYLIB -eq 1 ]; then
-		OUTPUT=$($BIN_DIR/g++ -dynamiclib -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${DYLIB_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS)
-		if [ -n "$OUTPUT" ]; then
+		OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -dynamiclib -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${DYLIB_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS)
+		if [ $? -ne 0 ]; then
 			echo "Linking ""${DYLIB_FILE}""failed:"
 			echo $OUTPUT
-			exit -1
+			exit $?
 		fi
 	fi
 
-    OUTPUT=$($BIN_DIR/g++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS)
+    OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS)
 
-	if [ -n "$OUTPUT" ]; then
+	if [ $? -ne 0 ]; then
 		echo "Linking ""${LCEXT_FILE}""failed:"
 		echo $OUTPUT
-		exit -1
+		exit $?
 	fi
 
     LCEXT_FILE_LIST+=" ${LCEXT_FILE}"
