@@ -1133,6 +1133,13 @@
 			remoteGlobalIDString = 4DEE29F50FDE41BE0009423C;
 			remoteInfo = kernel;
 		};
+		4D536D8D1AA6142200551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D6F070A19CC36DD00DDC6E0;
+			remoteInfo = "lc-compile";
+		};
 		4D6C797817134897000BCF78 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587FCE0B809C3600200116 /* libz.xcodeproj */;
@@ -2842,6 +2849,7 @@
 				4D587DCC0B8096B000200116 /* Sources */,
 			);
 			sourceTree = "<group>";
+			wrapsLines = 0;
 		};
 		4D587DA30B80945B00200116 /* Products */ = {
 			isa = PBXGroup;
@@ -4435,6 +4443,7 @@
 				4D79B7311A275B0000DD750C /* PBXBuildRule */,
 			);
 			dependencies = (
+				4D536D8E1AA6142200551A16 /* PBXTargetDependency */,
 				72D60322184768580022379C /* PBXTargetDependency */,
 				4D222014171D730100E7E557 /* PBXTargetDependency */,
 				4D8D355B171D4B72009D9D25 /* PBXTargetDependency */,
@@ -5944,6 +5953,11 @@
 			isa = PBXTargetDependency;
 			target = 4DEE29F50FDE41BE0009423C /* kernel */;
 			targetProxy = 4D2A579B1198634300135143 /* PBXContainerItemProxy */;
+		};
+		4D536D8E1AA6142200551A16 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "lc-compile";
+			targetProxy = 4D536D8D1AA6142200551A16 /* PBXContainerItemProxy */;
 		};
 		4D79B8FF1A3761BA00DD750C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

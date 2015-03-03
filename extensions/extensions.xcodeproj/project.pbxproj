@@ -35,11 +35,95 @@
 			outputFiles = (
 				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_NAME).c",
 			);
-			script = "\nBUILD_FOLDER=\"${SOLUTION_DIR}/_build\"\n\n\"${BUILT_PRODUCTS_DIR}/lc-compile\" --modulepath \"${BUILD_FOLDER}/modules\" --outputc \"${DERIVED_FILE_DIR}/${INPUT_FILE_NAME}.c\" \"${INPUT_FILE_PATH}\"\n\n# Only build the package and copy to the built product directory if there are icon files.\nif [ -f \"${INPUT_FILE_DIR}/support/icon.png\" ] && [ -f \"${INPUT_FILE_DIR}/support/icon@extra-high.png\" ] ; then\n\n    \"${BUILT_PRODUCTS_DIR}/lc-compile\" --modulepath \"${BUILD_FOLDER}/modules\" --output \"${INPUT_FILE_DIR}/module.lcm\" \"${INPUT_FILE_PATH}\"\n\n    TARGET_DIR=\"com.livecode.extensions.livecode.${INPUT_FILE_NAME}\"\n\n    cd \"${INPUT_FILE_DIR}\"\n    zip -r \"${TARGET_DIR}.lce\" *\n    mkdir -p \"${BUILD_FOLDER}/packaged_extensions\"\n    mv \"${INPUT_FILE_DIR}/${TARGET_DIR}.lce\" \"${BUILD_FOLDER}/packaged_extensions\"\nfi";
+			script = "\nBUILD_FOLDER=\"${BUILT_PRODUCTS_DIR}\"\n\n\"${BUILT_PRODUCTS_DIR}/lc-compile\" --modulepath \"${BUILD_FOLDER}/modules\" --outputc \"${DERIVED_FILE_DIR}/${INPUT_FILE_NAME}.c\" \"${INPUT_FILE_PATH}\"\n\n# Only build the package and copy to the built product directory if there are icon files.\nif [ -f \"${INPUT_FILE_DIR}/support/icon.png\" ] && [ -f \"${INPUT_FILE_DIR}/support/icon@extra-high.png\" ] ; then\n\n    \"${BUILT_PRODUCTS_DIR}/lc-compile\" --modulepath \"${BUILT_PRODUCTS_DIR}/modules\" --output \"${INPUT_FILE_DIR}/module.lcm\" \"${INPUT_FILE_PATH}\"\n\n    TARGET_DIR=\"com.livecode.extensions.livecode.${INPUT_FILE_NAME}\"\n\n    cd \"${INPUT_FILE_DIR}\"\n    zip -r \"${TARGET_DIR}.lce\" *\n    mkdir -p \"${BUILT_PRODUCTS_DIR}/packaged_extensions\"\n    mv \"${INPUT_FILE_DIR}/${TARGET_DIR}.lce\" \"${BUILT_PRODUCTS_DIR}/packaged_extensions\"\nfi";
 		};
 /* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
+		4D536D6E1AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DEE29F60FDE41BE0009423C;
+			remoteInfo = kernel;
+		};
+		4D536D701AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D1F9D17171C67B00091C6CB;
+			remoteInfo = "kernel-server";
+		};
+		4D536D721AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D221A9E171D58A700E7E557;
+			remoteInfo = "kernel-development";
+		};
+		4D536D741AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D221AF6171D5EC500E7E557;
+			remoteInfo = "kernel-standalone";
+		};
+		4D536D761AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D1F9C2E171C64320091C6CB;
+			remoteInfo = "security-community";
+		};
+		4D536D781AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D587DA20B80945B00200116;
+			remoteInfo = "LiveCode-Community";
+		};
+		4D536D7A1AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DE18D930B82296A0086DB92;
+			remoteInfo = "Standalone-Community";
+		};
+		4D536D7C1AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D2A57D81198634300135143;
+			remoteInfo = Installer;
+		};
+		4D536D7E1AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DB846B4192B53E800771914;
+			remoteInfo = "Server-Community";
+		};
+		4D536D801AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7699BD601A1CD51A00636397;
+			remoteInfo = "Test-Community";
+		};
+		4D536D821AA60DCB00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7699BE791A1CD51E00636397;
+			remoteInfo = "kernel-test";
+		};
+		4D536D871AA60DCF00551A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DEE29F50FDE41BE0009423C;
+			remoteInfo = kernel;
+		};
 		5DBAA15D1AA1EAF100EC8B8F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 5DBAA1561AA1EAF100EC8B8F /* lc-compile.xcodeproj */;
@@ -81,6 +165,7 @@
 		4D44E3571A139D510073FFA2 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
 		4D44E3581A139D510073FFA2 /* Global.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = "<group>"; };
 		4D44E3591A139D510073FFA2 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = "<group>"; };
+		4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = engine.xcodeproj; path = ../engine/engine.xcodeproj; sourceTree = "<group>"; };
 		5D2262261AA1E47400400628 /* canvas.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; name = canvas.lcb; path = canvas/canvas.lcb; sourceTree = "<group>"; };
 		5D22622C1AA1E48100400628 /* button.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; name = button.lcb; path = button/button.lcb; sourceTree = "<group>"; };
 		5D2262341AA1E48100400628 /* chart.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; name = chart.lcb; path = chart/chart.lcb; sourceTree = "<group>"; };
@@ -105,6 +190,7 @@
 		4D05714B19E321C00080F97B /* References */ = {
 			isa = PBXGroup;
 			children = (
+				4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */,
 				5DBAA1561AA1EAF100EC8B8F /* lc-compile.xcodeproj */,
 			);
 			name = References;
@@ -136,6 +222,24 @@
 				4D44E3591A139D510073FFA2 /* Release.xcconfig */,
 			);
 			name = Configurations;
+			sourceTree = "<group>";
+		};
+		4D536D5F1AA60DCB00551A16 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D536D6F1AA60DCB00551A16 /* libkernel.a */,
+				4D536D711AA60DCB00551A16 /* libkernel-server.a */,
+				4D536D731AA60DCB00551A16 /* libkernel-development.a */,
+				4D536D751AA60DCB00551A16 /* libkernel-standalone.a */,
+				4D536D771AA60DCB00551A16 /* libsecurity-community.a */,
+				4D536D791AA60DCB00551A16 /* LiveCode-Community.app */,
+				4D536D7B1AA60DCB00551A16 /* Standalone-Community.app */,
+				4D536D7D1AA60DCB00551A16 /* Installer.app */,
+				4D536D7F1AA60DCB00551A16 /* Server-Community */,
+				4D536D811AA60DCB00551A16 /* Test-Community.app */,
+				4D536D831AA60DCB00551A16 /* libkernel-test.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		4D79B6581A273B8100DD750C /* Extension Source */ = {
@@ -201,6 +305,7 @@
 				5D13530E1AA1FE4C00594083 /* PBXBuildRule */,
 			);
 			dependencies = (
+				4D536D881AA60DCF00551A16 /* PBXTargetDependency */,
 				5DBAA1661AA1EAF800EC8B8F /* PBXTargetDependency */,
 			);
 			name = extensions;
@@ -229,6 +334,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 4D536D5F1AA60DCB00551A16 /* Products */;
+					ProjectRef = 4D536D5E1AA60DCB00551A16 /* engine.xcodeproj */;
+				},
+				{
 					ProductGroup = 5DBAA1571AA1EAF100EC8B8F /* Products */;
 					ProjectRef = 5DBAA1561AA1EAF100EC8B8F /* lc-compile.xcodeproj */;
 				},
@@ -241,6 +350,83 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		4D536D6F1AA60DCB00551A16 /* libkernel.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libkernel.a;
+			remoteRef = 4D536D6E1AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D711AA60DCB00551A16 /* libkernel-server.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-server.a";
+			remoteRef = 4D536D701AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D731AA60DCB00551A16 /* libkernel-development.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-development.a";
+			remoteRef = 4D536D721AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D751AA60DCB00551A16 /* libkernel-standalone.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-standalone.a";
+			remoteRef = 4D536D741AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D771AA60DCB00551A16 /* libsecurity-community.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libsecurity-community.a";
+			remoteRef = 4D536D761AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D791AA60DCB00551A16 /* LiveCode-Community.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "LiveCode-Community.app";
+			remoteRef = 4D536D781AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D7B1AA60DCB00551A16 /* Standalone-Community.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "Standalone-Community.app";
+			remoteRef = 4D536D7A1AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D7D1AA60DCB00551A16 /* Installer.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = Installer.app;
+			remoteRef = 4D536D7C1AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D7F1AA60DCB00551A16 /* Server-Community */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Server-Community";
+			remoteRef = 4D536D7E1AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D811AA60DCB00551A16 /* Test-Community.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "Test-Community.app";
+			remoteRef = 4D536D801AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D536D831AA60DCB00551A16 /* libkernel-test.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-test.a";
+			remoteRef = 4D536D821AA60DCB00551A16 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		5DBAA15E1AA1EAF100EC8B8F /* lc-compile */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
@@ -298,6 +484,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4D536D881AA60DCF00551A16 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = kernel;
+			targetProxy = 4D536D871AA60DCF00551A16 /* PBXContainerItemProxy */;
+		};
 		5DBAA1661AA1EAF800EC8B8F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "lc-compile";
