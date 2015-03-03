@@ -20,6 +20,8 @@ module com.livecode.unittest.__IMPL
 
 use com.livecode.foreign
 
+foreign handler MCValueCopyDescription(in Value as any, out Description as string) as bool binds to "<builtin>"
+
 ----------------------------------------------------------------
 -- Main functions used by tests
 ----------------------------------------------------------------
@@ -39,8 +41,17 @@ public handler MCUnitPlan(in pCount as number)
 	MCUnitOutput("1.." & tNumberString)
 end handler
 
-public handler MCUnitDiagnostic(in pMessage as string)
-	MCUnitOutput("#" && pMessage)
+public handler MCUnitDiagnostic(in pMessage as any)
+	variable tCopyMessage as string
+	MCValueCopyDescription(pMessage, tCopyMessage)
+
+	variable tMessageLines as list
+	split tCopyMessage by "\n" into tMessageLines
+
+	variable tLine as string
+	repeat for each element tLine in tMessageLines
+		MCUnitOutput("#" && tLine)
+	end repeat
 end handler
 
 ----------------------------------------------------------------

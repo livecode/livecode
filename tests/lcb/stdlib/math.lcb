@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.math.tests
 
 use com.livecode.math
+use com.livecode.__INTERNAL._testlib
 
 -- Empirically-chosen epsilon for floating-point comparisons
 constant EPSILON is 0.00000000001
@@ -55,17 +56,35 @@ public handler TestPow()
 	test "pow (-ve, 0)" when (-2) ^ 0 is 1
 end handler
 
+handler TestPowDomain_Imag() as undefined
+	variable tVar
+	put (-1) ^ 0.5 into tVar
+end handler
+public handler TestPowDomain()
+	MCUnitTestHandlerThrowsBroken(TestPowDomain_Imag, "pow (imaginary)", "bug 14679")
+end handler
+
 public handler TestPowPrecedence()
 	broken test "pow vs. unary−" when -2 ^ 2 is 4 because "bug 14591"
 	broken test "pow vs. unary−" when -2 ^ 0 is 1 because "bug 14591"
 end handler
 
 public handler TestLog10()
-	test diagnostic "TODO Test log of -ve is Nan"
-	test diagnostic "TODO Test log of 0 is -Inf"
-
 	test "log10 (function, +ve)" when log10(1000) is 3
 	test "log10 (syntax, +ve)" when the log of 1000 is 3
+end handler
+
+handler TestLog10Domain_Negative() as undefined
+	variable tVar
+	put the log of -1 into tVar
+end handler
+handler TestLog10Domain_Zero() as undefined
+	variable tVar
+	put the log of 0 into tVar
+end handler
+public handler TestLog10Domain()
+	MCUnitTestHandlerThrowsBroken(TestLog10Domain_Negative, "log10 (syntax, -ve)", "bug 14678")
+	MCUnitTestHandlerThrowsBroken(TestLog10Domain_Zero, "log10 (syntax, 0)", "bug 14678")
 end handler
 
 public handler TestSin()
@@ -100,6 +119,19 @@ public handler TestArctan()
 	test "arctan2 (function)" when the binary arctangent of -1 and -1 is -3 * pi / 4
 end handler
 
+handler TestTrigonometricDomain_Arcsin() as undefined
+	variable t
+	put asin((1 + any number) / any number) into t
+end handler
+handler TestTrigonometricDomain_Arccos() as undefined
+	variable t
+	put acos((1 + any number) / any number) into t
+end handler
+public handler TestTrigonometricDomain()
+	MCUnitTestHandlerThrowsBroken(TestTrigonometricDomain_Arcsin, "arcsin (> 1)", "bug 14681")
+	MCUnitTestHandlerThrowsBroken(TestTrigonometricDomain_Arccos, "arccos (> 1)", "bug 14681")
+end handler
+
 public handler TestExp()
 	variable tExp
 	put exp(3) into tExp
@@ -116,6 +148,19 @@ public handler TestLn()
 
 	put ln(55) into tLn
 	test "ln (function) " when tLn > 4 and tLn < 4.01
+end handler
+
+handler TestLnDomain_Negative() as undefined
+	variable tVar
+	put the natural log of -1 into tVar
+end handler
+handler TestLnDomain_Zero() as undefined
+	variable tVar
+	put the natural log of 0 into tVar
+end handler
+public handler TestLnDomain()
+	MCUnitTestHandlerThrowsBroken(TestLnDomain_Negative, "ln (syntax, -ve)", "bug 14678")
+	MCUnitTestHandlerThrowsBroken(TestLnDomain_Zero, "ln (syntax, 0)", "bug 14678")
 end handler
 
 public handler TestExpLog()

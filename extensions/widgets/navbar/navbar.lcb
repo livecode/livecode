@@ -1,1 +1,528 @@
-/*Copyright (C) 2015 Runtime Revolution Ltd.This file is part of LiveCode.LiveCode is free software; you can redistribute it and/or modify it underthe terms of the GNU General Public License v3 as published by the FreeSoftware Foundation.LiveCode is distributed in the hope that it will be useful, but WITHOUT ANYWARRANTY; without even the implied warranty of MERCHANTABILITY orFITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Licensefor more details.You should have received a copy of the GNU General Public Licensealong with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */-- declaring extension as widget, followed by identifierwidget com.livecode.extensions.livecode.navbar---- adding metadata to ensure the extension displays correctly in livecodemetadata author is "Benjamin Beaumont"metadata version is "1.0.1"metadata title is "Cross Platform Navbar"---- dependancy declarationsuse com.livecode.canvasuse com.livecode.widgetuse com.livecode.engine---- property declarationsproperty theme 			get mTheme 			set setThemeproperty navitems 		get getNavItems		set setNavItemsproperty selecteditem	get mSelectedItem 	set setNavSelectedItem---- private instance variablesprivate variable mTheme as optional stringprivate variable mNavItems as listprivate variable mSelectedItem as optional integer-------------- called when the widget is createdpublic handler OnCreate() as undefined	put "ios-8" into mTheme		-- creating a list of navigation items	put the empty list into mNavItems	put [["contacts","dashboard","hospital"],["Contacts","Dashboard","Hospital"],["f006","f0e4","f0f9"],["f005","f0e4","f0f9"]] into mNavItems	--			put 1 into mSelectedItemend handler---------------------- called whenever LiveCode needs to redraw the widgetpublic handler OnPaint() as undefined	// background	variable tPath as Path	put rectangle path of my bounds into tPath	set the paint of this canvas to getPaint("background","fill")	fill tPath on this canvas		// Calculate the size of each box we're drawing into	variable tNavItemCount as integer	variable tBoxWidth as real	variable tLeft as real		put the number of elements in (element 1 of mNavItems) into tNavItemCount	put my width / tNavItemCount into tBoxWidth	put 0 into tLeft		variable tElement	variable tCount as optional integer	put 1 into tCount		variable tX as optional integer	repeat with tX from 1 up to tNavItemCount				-- Draw the text of the nav bar		put rectangle path of rectangle [tLeft,0,tLeft+tBoxWidth,my height] into tPath				set the font of this canvas to font getFontName() at size 9		if mSelectedItem is tCount then			set the paint of this canvas to getPaint("text","selected-fill")		else			set the paint of this canvas to getPaint("text","fill")		end if				variable tBoundingBox as Rectangle		put bounding box of tPath into tBoundingBox		fill text (element tX of element 2 of mNavItems) at center of rectangle [tLeft,my height * 0.65,tLeft+tBoxWidth,my height] on this canvas			-- Draw the icon text		set the font of this canvas to font "fontawesome" at size 20				if tCount is mSelectedItem then			execute script ("return numtocodepoint(0x" & (element tX of element 4 of mNavItems) & ")")		else			execute script ("return numtocodepoint(0x" & (element tX of element 3 of mNavItems) & ")")		end if				fill text the result at center of rectangle [tLeft,my height * 0.05,tLeft+tBoxWidth,my height * 0.65] on this canvas				add tBoxWidth to tLeft		add 1 to tCount			end repeat			// top line	put rectangle path of rectangle [0,0,my width,1] into tPath	set the paint of this canvas to getPaint("background","stroke")	fill tPath on this canvasend handler---------------------- this handler deals with the mouse up eventpublic handler OnMouseUp() as undefined	variable tClickLoc	execute script "return the clickloc"	put the result into tClickLoc	variable tClickPoint as list	split tClickLoc by "," into tClickPoint	variable tX as number	variable tY as number	put (element 1 of tClickPoint) parsed as number - the left of my rectangle into tX	put (element 2 of tClickPoint) parsed as number - the top of my rectangle into tY	variable tPoint as Point	put point [tX,tY] into tPoint	variable tSelected as number	put locToNavItem(tPoint) into tSelected		if tSelected > 0 then		put tSelected into mSelectedItem		redraw all		dispatch command "navigate" to my script object with ["test"]	end ifend handler---------------------- this handler sets the themepublic handler setTheme(in pThemeName as string) as undefined	put pThemeName into mTheme	redraw allend handler---------------------- this handler sets the selected nav itempublic handler setNavSelectedItem(in pSelectedItem as integer) as undefined	if pSelectedItem > 0 and pSelectedItem <= the number of elements in mNavItems then		put pSelectedItem into mSelectedItem		redraw all	end ifend handler---------------------- this handler sets the nav itemsprivate handler setNavItems(in pNavItems as string) as undefined		variable tNavItems as list	split pNavItems by newline into tNavItems		variable tNavElement	variable tListElement		variable tFinalActions as list	variable tStringToList as list	put the empty list into tFinalActions		repeat for each element tNavElement in tNavItems		put the empty list into tStringToList		split tNavElement by "," into tStringToList				repeat for each element tListElement in tStringToList			push tListElement onto back of tFinalActions		end repeat			end repeat		variable tNavCount as optional integer	variable tCount as optional integer	put the trunc of (the number of elements in tFinalActions)/4 into tNavCount		variable tNameList as list	variable tLabelList as list	variable tIconList as list	variable tSelectedIconList as list	put the empty list into tNameList	put the empty list into tLabelList	put the empty list into tIconList	put the empty list into tSelectedIconList		repeat with tCount from 1 up to tNavCount		push element (4*tCount)-3 of tFinalActions onto back of tNameList		push element (4*tCount)-2 of tFinalActions onto back of tLabelList		push element (4*tCount)-1 of tFinalActions onto back of tIconList		push element 4*tCount of tFinalActions onto back of tSelectedIconList	end repeat		put [tNameList,tLabelList,tIconList,tSelectedIconList] into mNavItems		redraw allend handler---------------------- this handler converts mNavItems in a form that can be combined for output private handler getNavItems() as string		variable tNavItems as list	put the empty list into tNavItems		variable tCount as integer	variable tMax as integer	variable tListLine as list	variable tStringLine as string	variable tItemList as list		put the number of elements in element 1 of mNavItems into tMax	put the empty string into tStringLine	put the empty list into tItemList		repeat with tCount from 1 up to tMax		put the empty list into tListLine					push element tCount of element 1 of mNavItems onto back of tListLine		push element tCount of element 2 of mNavItems onto back of tListLine		push element tCount of element 3 of mNavItems onto back of tListLine		push element tCount of element 4 of mNavItems onto back of tListLine				combine tListLine with "," into tStringLine		push tStringLine onto back of tItemList	end repeat		variable tNavItemString as string	put the empty string into tNavItemString	combine tItemList with newline into tNavItemString		return tNavItemStringend handler---------------------- this handler returns a paintpublic handler getPaint(pLocation, pType) as Paint	if pLocation is "background" then		if pType is "fill" then			return solid paint with stringToColor("246,246,247")		else if pType is "stroke" then			return solid paint with stringToColor("178,178,178")		end if	else if pLocation is "text" then		if pType is "fill" then			return solid paint with stringToColor("146,146,146")		else if pType is "selected-fill" then			return solid paint with stringToColor("0,122,255")		end if	end if		return solid paint with stringToColor("255,100,200")end handler---------------------- this handler returns a font name as a stringprivate handler getFontName() as string	if mTheme is "ios-8" then		return "Helvetica Neue"	end if			return the name of the font of this canvasend handler---------------------- this handler returns a font size as a numberprivate handler getFontSize() as number	return 11end handler---------------------- this handler adds a navitempublic handler addNavItem(in pNewItem as string) as undefined	variable tNewItem as list	split pNewItem by "," into tNewItem	variable tNameList as list	variable tLabelList as list	variable tIconList as list	variable tSelectedIconList as list	put element 1 of mNavItems into tNameList	put element 2 of mNavItems into tLabelList	put element 3 of mNavItems into tIconList	put element 4 of mNavItems into tSelectedIconList		push element 1 of tNewItem onto back of tNameList	push element 2 of tNewItem onto back of tLabelList	push element 3 of tNewItem onto back of tIconList	push element 4 of tNewItem onto back of tSelectedIconList		put [tNameList,tLabelList,tIconList,tSelectedIconList] into mNavItems	redraw allend handler---------------------- this handler removes a navitempublic handler removeNavItem(in pItem as string) as undefined		variable tItems as string	variable tItemList as list	put getNavItems() into tItems	split tItems by newline into tItemList	put the empty string into tItems		variable tItemElement	variable tCount as integer	put 1 into tCount		repeat for each element tItemElement in tItemList		if tItemElement contains pItem then			delete element tCount of tItemList		end if	add 1 to tCount	end repeat		combine tItemList with newline into tItems		setNavItems(tItems)		redraw allend handler---------------------- this handler returns the number of the icon that is being clicked private handler locToNavItem(in pLoc as Point) as integer	variable tNavItemCount as integer	put the number of elements in (element 1 of mNavItems) into tNavItemCount		variable tX as integer	//alert_point(pLoc)	repeat with tX from 1 up to tNavItemCount		if pLoc is within navItemRect(tX) then			return tX		end if	end repeat		return 0end handler---------------------- this handler returns the rectangle around the nav itemprivate handler navItemRect(in pItemCount) as Rectangle	variable tNavItemCount as integer	variable tBoxWidth as number		put the number of elements in (element 1 of mNavItems) into tNavItemCount	put my width / tNavItemCount into tBoxWidth		variable tLeft as real		if pItemCount is 1 then		put 0 into tLeft	else		put tBoxWidth * (pItemCount-1) into tLeft	end if		return rectangle [tLeft,0,tLeft+tBoxWidth,my height]end handler---------------------- this handler converts a string to an RGBA colorprivate handler stringToColor(in pString as string) as Color	variable tRed as real	variable tGreen as real	variable tBlue as real	variable tAlpha as real	variable tComponentList as list	split pString by "," into tComponentList	variable tComponentCount	put the number of elements in tComponentList into tComponentCount	if tComponentCount is not 3 and tComponentList is not 4 then		// Invalid number of components detected		throw "Invalid color"	end if	put (element 1 of tComponentList) parsed as number into tRed	put (element 2 of tComponentList) parsed as number into tGreen	put (element 3 of tComponentList) parsed as number into tBlue	if tComponentCount is 4 then		put (element 4 of tComponentList) parsed as number into tAlpha	else		put 1.0 into tAlpha	end if	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]end handler--------------------private handler alert_number(in pNumber as number) as undefined	execute script "answer" && pNumber formatted as stringend handlerprivate handler alert_point(in pPoint as Point) as undefined	variable tClickPoint as list	split pPoint by "," into tClickPoint	variable tX as number	variable tY as number		put (element 1 of tClickPoint) parsed as number - the left of my rectangle into tX	put (element 2 of tClickPoint) parsed as number - the top of my rectangle into tY	execute script "answer" && tX formatted as string & "," & tY formatted as stringend handler----------end widget
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+Module: com.livecode.extensions.livecode.headerBar
+
+Type: widget
+
+Description: This widget is a navigation bar. 
+This widget has three properties that can be set: theme; navitems and selectedItem.
+*/
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.extensions.livecode.navbar
+--
+
+-- dependancy declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata author is "Benjamin Beaumont"
+metadata version is "1.0.2"
+metadata title is "Navigation Bar"
+--
+
+-- property declarations
+property navitems 		get getNavItems		set setNavItems
+metadata navitems.editor is "com.livecode.pi.text"
+metadata navitems.default is "contacts,Contacts,f007,f007\nfavourites,Favourites,f005,f006\nmusic,Music,f001,f001\nsearch,Search,f002,f002"
+
+property selecteditem	get mSelectedItem 	set setNavSelectedItem
+metadata selecteditem.default is "1"
+--
+
+-- private instance variables
+private variable mTheme as string
+private variable mNavItems as list
+private variable mSelectedItem as integer
+private variable mItemStyle as string
+
+private variable mNavItemCount as integer
+private variable mBoxWidth as real
+private variable mLeft as real
+--
+
+----------
+-- this handler is called when the widget is saved
+public handler OnSave(out rProperties as array)
+	put the empty array into rProperties
+	
+	put mTheme into rProperties["theme"]
+	put mNavItems into rProperties["items"]
+	put mSelectedItem into rProperties["selected"]
+	put mItemStyle into rProperties["itemStyle"]
+	
+	return rProperties
+end handler
+----------
+
+----------
+-- this handler is called when the widget is loaded
+public handler OnLoad(in pProperties as array)
+	put pProperties["theme"] into mTheme
+	put pProperties["items"] into mNavItems
+	put pProperties["selected"] into mSelectedItem
+	put pProperties["itemStyle"] into mItemStyle
+end handler
+----------
+
+----------
+-- called when the widget is created
+public handler OnCreate() as undefined
+	--properties
+	put "ios-8" into mTheme
+	-- creating a list of navigation items
+	put the empty list into mNavItems
+	put [["contacts","favourites","music","search"],["Contacts","Favourites","Music","Search"],["f007","f006","f001","f002"],["f007","f005","f001","f002"]] into mNavItems
+	--
+	put 1 into mSelectedItem
+	put "icons and names" into mItemStyle
+	
+	-- initialise variables
+	put 0 into mNavItemCount
+	put 0 into mBoxWidth
+	put 0 into mLeft
+	
+	set my height to 48
+	set my width to 200
+end handler
+----------
+
+----------
+-- called whenever LiveCode needs to redraw the widget
+public handler OnPaint() as undefined
+
+	// update variables
+	put the number of elements in (element 1 of mNavItems) into mNavItemCount
+	put my width / mNavItemCount into mBoxWidth
+	put 0 into mLeft
+	
+	// background
+	set the paint of this canvas to getPaint("background","fill")
+	fill getPath("bounding box") on this canvas
+	
+	// Calculate the size of each box we're drawing into
+	variable tElement
+	variable tCount as integer
+	put 1 into tCount
+	
+	variable tX as integer
+	repeat with tX from 1 up to mNavItemCount
+	
+		if mSelectedItem is tCount then
+			set the paint of this canvas to getPaint("text","selected-fill")
+		else
+			set the paint of this canvas to getPaint("text","fill")
+		end if
+		
+		-- Draw the text of the nav bar
+		if mItemStyle is "icons and names" then
+			set the font of this canvas to getFont("label")
+			fill text (element tX of element 2 of mNavItems) at center of getRect("label") on this canvas
+		end if
+	
+		-- Draw the icon text
+		set the font of this canvas to getFont("icon")
+		if tCount is mSelectedItem then
+			execute script ("return numtocodepoint(0x" & (element tX of element 4 of mNavItems) & ")")
+		else
+			execute script ("return numtocodepoint(0x" & (element tX of element 3 of mNavItems) & ")")
+		end if
+		fill text the result at center of getRect("icon") on this canvas
+		
+		add mBoxWidth to mLeft
+		add 1 to tCount
+	end repeat
+		
+	// top line
+	set the paint of this canvas to getPaint("background","stroke")
+	fill getPath("line") on this canvas
+end handler
+----------
+
+----------
+-- this handler deals with the mouse up event
+public handler OnMouseUp() as undefined
+
+	variable tSelected as number
+	put locToNavItem(the click position) into tSelected
+	
+	if tSelected > 0 then
+		put tSelected into mSelectedItem
+		redraw all
+		
+		variable tItemLabel as string
+		put element mSelectedItem of element 2 of mNavItems into tItemLabel
+		dispatch command "navigate" to my script object with [tItemLabel]
+	end if
+end handler
+----------
+
+----------
+-- this handler converts mNavItems in a form that can be combined for output 
+private handler getNavItems() as string
+	
+	variable tNavItems as list
+	put the empty list into tNavItems
+	
+	variable tCount as integer
+	variable tListLine as list
+	variable tStringLine as string
+	variable tItemList as list
+	
+	put the empty string into tStringLine
+	put the empty list into tItemList
+	
+	repeat with tCount from 1 up to the number of elements in element 1 of mNavItems
+		put the empty list into tListLine
+			
+		push element tCount of element 1 of mNavItems onto back of tListLine
+		push element tCount of element 2 of mNavItems onto back of tListLine
+		push element tCount of element 3 of mNavItems onto back of tListLine
+		push element tCount of element 4 of mNavItems onto back of tListLine
+		
+		combine tListLine with "," into tStringLine
+		push tStringLine onto back of tItemList
+	end repeat
+	
+	variable tNavItemString as string
+	put the empty string into tNavItemString
+	combine tItemList with newline into tNavItemString
+	
+	return tNavItemString
+end handler
+----------
+
+----------
+-- this handler returns a path
+public handler getPath(in pObject as string) as Path
+	if pObject is "bounding box" then
+		return rectangle path of my bounds 
+	else if pObject is "line" then
+		return rectangle path of rectangle [0,0,my width,1]
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a rectangle
+public handler getRect(in pObject as string) as Rectangle
+	if pObject is "label" then
+		return rectangle [mLeft,my height * 0.65,mLeft+mBoxWidth,my height]
+		
+	else if pObject is "icon" then
+		if mItemStyle is "icons and names" then
+			return rectangle [mLeft,my height * 0.05,mLeft+mBoxWidth,my height * 0.65]
+		else if mItemStyle is "icons" then
+			return rectangle [mLeft, 0, mLeft+mBoxWidth, my height]
+		end if
+	
+	end if
+end handler
+----------
+		
+----------
+-- this handler returns a paint
+public handler getPaint(pLocation, pType) as Paint
+	if pLocation is "background" then
+		if pType is "fill" then
+			return solid paint with color [246/255, 246/255, 247/255]
+		else if pType is "stroke" then
+			return solid paint with color [178/255, 178/255, 178/255]
+		end if
+	else if pLocation is "text" then
+		if pType is "fill" then
+			return solid paint with color [146/255, 146/255, 146/255]
+		else if pType is "selected-fill" then
+			return solid paint with color [0, 122/255 ,1]
+		end if
+	end if
+	
+	return solid paint with color [1, 100/255, 200/255]
+end handler
+----------
+
+----------
+-- this handler returns a font
+private handler getFont(in pType as string) as Font
+	if pType is "label" then
+		if mTheme is "ios-8" then
+			return font "Helvetica Neue" at size 10
+		else
+			return the font of this canvas
+		end if
+		
+	else if pType is "icon" then
+		return font "fontawesome" at size 20
+	end if
+end handler
+----------
+
+----------
+-- this handler sets the theme
+/*
+Summary: Sets the theme of the navbar
+
+Parameters:
+pThemeName: The name of the theme.
+
+Description:
+Sets the theme of the navigation bar (currently, only "ios-8").
+*/
+public handler setTheme(in pThemeName as string) as undefined
+	put pThemeName into mTheme
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the selected nav item
+/*
+Summary: Sets the selected navigation item
+
+Parameters:
+pSelectedItem: The number of a nav item.
+
+Description:
+Selects a navigation item.
+*/
+
+public handler setNavSelectedItem(in pSelectedItem as integer) as undefined
+	if pSelectedItem > 0 and pSelectedItem <= the number of elements in mNavItems then
+		put pSelectedItem into mSelectedItem
+		redraw all
+	end if
+end handler
+----------
+
+----------
+-- this handler sets the nav item style
+/*
+Summary: Sets the style of the items on the navbar
+
+Parameters:
+pItemStyle: The name of the item style.
+
+Description:
+Sets the item style of the navigation bar ("icons" or "icons and names").
+*/
+public handler setItemStyle(in pItemStyle as string) as undefined
+	put pItemStyle into mItemStyle
+	redraw all
+end handler
+
+----------
+-- this handler sets the nav items
+/*
+Summary: Sets the navigation items
+
+Parameters:
+pNavItems: The navigation items.
+
+Description:
+Sets the navigation items from pNavItems, where pNavItems is a line delimited list of items, where each line is a comma delimited list of the 
+different components of the navigation item: name, label, icon, selected icon.
+*/
+private handler setNavItems(in pNavItems as string) as undefined
+	
+	variable tNavItems as list
+	split pNavItems by newline into tNavItems
+	
+	variable tNavElement
+	variable tListElement
+	
+	variable tFinalActions as list
+	variable tStringToList as list
+	put the empty list into tFinalActions
+	
+	repeat for each element tNavElement in tNavItems
+		put the empty list into tStringToList
+		split tNavElement by "," into tStringToList
+		
+		repeat for each element tListElement in tStringToList
+			push tListElement onto back of tFinalActions
+		end repeat
+		
+	end repeat
+	
+	variable tNavCount as integer
+	variable tCount as integer
+	put the trunc of (the number of elements in tFinalActions)/4 into tNavCount
+	
+	variable tNameList as list
+	variable tLabelList as list
+	variable tIconList as list
+	variable tSelectedIconList as list
+	put the empty list into tNameList
+	put the empty list into tLabelList
+	put the empty list into tIconList
+	put the empty list into tSelectedIconList
+	
+	repeat with tCount from 1 up to tNavCount
+		push element (4*tCount)-3 of tFinalActions onto back of tNameList
+		push element (4*tCount)-2 of tFinalActions onto back of tLabelList
+		push element (4*tCount)-1 of tFinalActions onto back of tIconList
+		push element 4*tCount of tFinalActions onto back of tSelectedIconList
+	end repeat
+	
+	put [tNameList,tLabelList,tIconList,tSelectedIconList] into mNavItems
+	
+	redraw all
+end handler
+----------
+
+----------
+-- this handler adds a navitem
+/*
+Summary: Adds a navigation item
+
+Parameters:
+pNewItem: The new navigation item.
+
+Description:
+Adds the new action to the navigation bar , where pNewItem is a comma delimited list of the components of the item:
+name, label, icon, selected icon
+Updates the navItems property to include the new items and redraws the widget.
+*/
+public handler addNavItem(in pNewItem as string) as undefined
+
+	variable tNewItem as list
+	split pNewItem by "," into tNewItem
+
+	variable tNameList as list
+	variable tLabelList as list
+	variable tIconList as list
+	variable tSelectedIconList as list
+	put element 1 of mNavItems into tNameList
+	put element 2 of mNavItems into tLabelList
+	put element 3 of mNavItems into tIconList
+	put element 4 of mNavItems into tSelectedIconList
+	
+	push element 1 of tNewItem onto back of tNameList
+	push element 2 of tNewItem onto back of tLabelList
+	push element 3 of tNewItem onto back of tIconList
+	push element 4 of tNewItem onto back of tSelectedIconList
+	
+	put [tNameList,tLabelList,tIconList,tSelectedIconList] into mNavItems
+
+	redraw all
+end handler
+----------
+
+----------
+-- this handler removes a navitem
+/*
+Summary: Removes a navigation item
+
+Parameters:
+pItem: The item to be removed.
+
+Description:
+Removes the item from the header bar, where pItem is any component of the of the item:
+name or label or icon or selected icon
+Updates the navItems property to exclude the action and redraws the widget.
+*/
+public handler removeNavItem(in pItem as string) as undefined
+	
+	variable tItems as string
+	variable tItemList as list
+	put getNavItems() into tItems
+	split tItems by newline into tItemList
+	put the empty string into tItems
+	
+	variable tItemElement
+	variable tCount as integer
+	put 1 into tCount
+	
+	repeat for each element tItemElement in tItemList
+		if tItemElement contains pItem then
+			delete element tCount of tItemList
+		end if
+	add 1 to tCount
+	end repeat
+	
+	combine tItemList with newline into tItems
+	
+	setNavItems(tItems)
+	
+	redraw all
+end handler
+----------
+
+----------
+-- this handler returns the number of the icon that is being clicked 
+private handler locToNavItem(in pLoc as Point) as integer
+	variable tNavItemCount as integer
+	put the number of elements in (element 1 of mNavItems) into tNavItemCount
+	
+	variable tX as integer
+	//alert_point(pLoc)
+	repeat with tX from 1 up to tNavItemCount
+		if pLoc is within navItemRect(tX) then
+			return tX
+		end if
+	end repeat
+	
+	return 0
+end handler
+----------
+
+----------
+-- this handler returns the rectangle around the nav item
+private handler navItemRect(in pItemCount) as Rectangle
+	variable tNavItemCount as integer
+	variable tBoxWidth as real
+	
+	put the number of elements in (element 1 of mNavItems) into tNavItemCount
+	put my width / tNavItemCount into tBoxWidth
+	
+	variable tLeft as real
+	
+	if pItemCount is 1 then
+		put 0 into tLeft
+	else
+		put tBoxWidth * (pItemCount-1) into tLeft
+	end if
+	
+	return rectangle [tLeft,0,tLeft+tBoxWidth,my height]
+end handler
+----------
+
+----------
+private handler alert_number(in pNumber as number) as undefined
+	execute script "answer" && pNumber formatted as string
+end handler
+
+private handler alert_point(in pPoint as Point) as undefined
+	variable tClickPoint as list
+	split pPoint by "," into tClickPoint
+
+	variable tX as number
+	variable tY as number
+	
+	put (element 1 of tClickPoint) parsed as number - the left of my rectangle into tX
+	put (element 2 of tClickPoint) parsed as number - the top of my rectangle into tY
+
+	execute script "answer" && tX formatted as string & "," & tY formatted as string
+end handler
+----------
+
+end widget

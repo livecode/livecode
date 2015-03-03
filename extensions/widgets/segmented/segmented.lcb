@@ -15,14 +15,14 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+/*
+Description: This widget is a segmented control.
+A segmented control is a horizontal control that is made up of multiple segments, where each segment functions as a discrete button.
+This widget has three properties that can be set: theme; labels; selectedSegment and fontSize.
+*/
+
 -- declaring extension as widget, followed by identifier
 widget com.livecode.extensions.livecode.segmentedControl
---
-
--- adding metadata to ensure the extension displays correctly in livecode
-metadata title is "Segmented Control"
-metadata author is "Georgia Hutchings"
-metadata version is "1.0.1"
 --
 
 -- dependency declarations
@@ -31,57 +31,75 @@ use com.livecode.widget
 use com.livecode.engine
 --
 
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Segmented Control"
+metadata author is "Georgia Hutchings"
+metadata version is "1.0.3"
+--
+
 -- property declarations
-property theme				get mTheme				set setTheme
-property labels				get mLabels				set setLabels
+property labels				get getLabels			set setLabels
+metadata labels.default is "One,Two,Three"
+
 property selectedSegment	get mSelected			set setSelectedSegment
+metadata selectedSegment.default is "1"
+
+property fontSize			get mFontSize			set setFontSize
+metadata fontSize.editor is "com.livecode.pi.enum"
+metadata fontSize.options is "8,9,10,11,12,14,16,18,20"
+metadata fontSize.default is ""
 --
 
 -- private instance variables
-private variable mTheme as string
-private variable mLabels as list
-private variable mSelected as optional integer
-private variable mNumSegments as optional integer
+private variable mTheme 		as string
+private variable mLabels 		as list
+private variable mSelected 		as integer
+private variable mFontSize 		as string
+private variable mWidth 		as real
+private variable mLeft 			as real
+private variable mRadius 		as real
+--
 
-private variable mColorWhite as Color
-private variable mColorMacBlue as Color
-private variable mWidth as number
-private variable mLeft as number
-private variable mRadius as number
+-- constants
+constant kWhite is [1,1,1]
+constant kMaxFontSize is 20
+constant kMinFontSize is 8
 --
 
 ----------
 -- this handler is called when the widget is saved
-public handler OnSave(out rData as array)
-	put the empty array into rData
+public handler OnSave(out rProperties as array)
+	put the empty array into rProperties
 	
-	put mTheme into rData["theme"]
-	put mLabels into rData["labels"]
-	put mSelected into rData["selected"]
+	put mTheme into rProperties["theme"]
+	put mLabels into rProperties["labels"]
+	put mSelected into rProperties["selected"]
+	put mFontSize into rProperties["fontSize"]
 	
-	return rData
+	return rProperties
 end handler
 ----------
 
 ----------
 -- this handler is called when the widget is loaded
-public handler OnLoad(in pData as array)
-	put pData["theme"] into mTheme
-	put pData["labels"] into mLabels
-	put pData["selected"] into mSelected
+public handler OnLoad(in pProperties as array)
+	put pProperties["theme"] into mTheme
+	put pProperties["labels"] into mLabels
+	put pProperties["selected"] into mSelected
+	put pProperties["fontSize"] into mFontSize
 end handler
 ----------
 
 ----------
 -- this handler is called when the widget is created
 public handler OnCreate()
+	-- properties
 	put "ios-8" into mTheme
-	put ["Title", "Title", "Title"] into mLabels
+	put ["One", "Two", "Three"] into mLabels
 	put 1 into mSelected
-	put the number of elements in mLabels into mNumSegments
+	put the empty string into mFontSize
 	
-	put color [1.0, 1.0, 1.0] into mColorWhite
-	put color [0.0, 128/255, 1.0] into mColorMacBlue
+	-- variables
 	put 0 into mWidth
 	put 0 into mLeft
 	put (the trunc of my height)/5 into mRadius
@@ -91,34 +109,33 @@ end handler
 ----------
 -- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
-	
+
 	-- setting the width and left variables
 	updateVariables()
 	
 	-- draw the perimeter of the control
 	set the stroke width of this canvas to 1
 	set the paint of this canvas to getPaint("lines")
-	stroke getPath("border") on this canvas
+	stroke getPath("border", 0) on this canvas
 	--
 	
 	-- draw the lines to separate the segments
+	set the antialias of this canvas to false
 	set the stroke width of this canvas to 1
 	variable tX as optional integer
-	variable tLinePath as Path
-	repeat with tX from 1 up to mNumSegments-1
-		put line path from getTopPoint(tX) to getBottomPoint(tX) into tLinePath
-		stroke tLinePath on this canvas
+	repeat with tX from 1 up to the number of elements in mLabels
+		stroke getPath("line",tX) on this canvas
 	end repeat
+	set the antialias of this canvas to true
 	--
 	
 	-- fill in the background of the selected segment
 	variable tBackgroundPath as Path
 	set the paint of this canvas to getPaint("background")
 	
-	if mSelected is 1 or mSelected is mNumSegments then
+	if mSelected is 1 or mSelected is the number of elements in mLabels then
 		put rounded rectangle path of getRect(mSelected) with radius mRadius into tBackgroundPath
-		fill getRectPath(mSelected) on this canvas
-	
+		fill getPath("rectangle", mSelected) on this canvas
 	else
 		put rectangle path of getRect(mSelected) into tBackgroundPath
 	end if
@@ -127,25 +144,20 @@ public handler OnPaint()
 	--
 	
 	-- fill in the label text
-	set the font of this canvas to font getFontName() at size getFontSize()
+	set the font of this canvas to getFont()
 	
-	variable tY as optional integer
-	variable tY_string as string
-	variable tLabelRect as Rectangle
+	variable tY as integer
 	variable tLabelText as string
 	
-	repeat with tY from 1 up to mNumSegments
-		put tY formatted as string into tY_string
-		
+	repeat with tY from 1 up to the number of elements in mLabels
 		if tY is mSelected then
 			set the paint of this canvas to getPaint("selected label")
 		else 
 			set the paint of this canvas to getPaint("lines")
 		end if
 		
-		put getRect(tY) into tLabelRect
 		put element tY of mLabels into tLabelText
-		fill text tLabelText at center of tLabelRect on this canvas
+		fill text tLabelText at center of getRect(tY) on this canvas
 	end repeat
 	--
 	
@@ -155,58 +167,45 @@ end handler
 ----------
 -- the following handlers deal with mouse events
 public handler OnMouseUp()
-	if getClickLoc() is not within getRect(mSelected) then
+	if the click position is not within getRect(mSelected) then
 	
-		variable tX as optional integer
-		repeat with tX from 1 up to mNumSegments
-			if getClickLoc() is within getRect(tX) then
+		variable tX as integer
+		repeat with tX from 1 up to the number of elements in mLabels
+			if the click position is within getRect(tX) then
 				put tX into mSelected
 			end if 
 		end repeat
 	
 		redraw all
-		dispatch command "mouseUp" to my script object
+		
+		variable tLabel as string
+		put element mSelected of mLabels into tLabel
+		dispatch command "mouseUp" to my script object with [tLabel]
 		
 	end if
 end handler
 ----------
 
 ----------
--- this handler sets the theme
-public handler setTheme(in pString as string) as undefined
-	put pString into mTheme
-	redraw all
-end handler
-----------
-
-----------
--- this handler sets the list of segment labels
-public handler setLabels(in pString as string) as undefined
-	split pString by "," into mLabels
-	put 1 into mSelected
-	redraw all
-end handler
-----------
-
-----------
--- this handler sets the selected segment
-public handler setSelectedSegment(in pSelected as optional integer) as undefined
-	put pSelected into mSelected
-	redraw all
+-- this handler gets the labels
+private handler getLabels() as string
+	variable tLabels as string
+	combine mLabels with "," into tLabels
+	return tLabels
 end handler
 ----------
 
 ----------
 -- this handler returns a paint
-private handler getPaint(in pString as string) as Paint
-	if pString is "lines" then 
-		return solid paint with mColorMacBlue
+private handler getPaint(in pObject as string) as Paint
+	if pObject is "lines" then 
+		return solid paint with color [51/255, 153/255, 1]
 	
-	else if pString is "selected label" then
-		return solid paint with mColorWhite
+	else if pObject is "selected label" then
+		return solid paint with color kWhite
 		
-	else if pString is "background" then
-		return solid paint with mColorMacBlue
+	else if pObject is "background" then
+		return solid paint with color [51/255, 153/255, 1]
 		
 	end if 
 end handler
@@ -214,91 +213,148 @@ end handler
 
 ----------
 -- this handler returns a path
-private handler getPath(in pString as string) as Path
-	if pString is "border" then
+private handler getPath(in pShape as string, in pSegment as integer) as Path
+	if pShape is "border" then
 		return rounded rectangle path of rectangle [0.5, 0.5, (the trunc of my width)-0.5, (the trunc of my height)-0.5] with radius mRadius
+		
+	else if pShape is "rectangle" then
+		if pSegment is 1 then
+			return rectangle path of rectangle [(the trunc of mLeft+0.5*mWidth)+0.5, 0.5, (the trunc of mLeft+mWidth), (the trunc of my height)-0.5]
+		else
+			variable tSegment as integer
+			put pSegment-1 into tSegment
+			return rectangle path of rectangle [(the trunc of mLeft+tSegment*mWidth)+0.5, 0.5, (the trunc of mLeft+(tSegment+0.5)*mWidth), (the trunc of my height)-0.5]
+		end if
+		
+	else if pShape is "line" then
+		return line path from point [(the trunc of mLeft+pSegment*mWidth)+0.5, 0.5] to point [(the trunc of mLeft+pSegment*mWidth)+0.5, (the trunc of my height)-0.5]
+	
 	end if
 end handler
 ----------
 
 ----------
--- this handler returns a rectangle path
-private handler getRectPath(in pInt as integer) as Path
-	if pInt is 1 then
-		return rectangle path of rectangle [(the trunc of mLeft+0.5*mWidth)+0.5, 0.5, (the trunc of mLeft+mWidth), (the trunc of my height)-0.5]
-	else
-		variable tInt as integer
-		put pInt-1 into tInt
-		return rectangle path of rectangle [(the trunc of mLeft+tInt*mWidth)+0.5, 0.5, (the trunc of mLeft+(tInt+0.5)*mWidth), (the trunc of my height)-0.5]
-	end if
-end handler
-----------
-
-----------
--- this handler returns a font name as a string
-private handler getFontName() as string
+-- this handler returns a font
+private handler getFont() as Font
+	
 	if mTheme is "ios-8" then
-		return "Helvetica Neue"
-	else
+	
+		if mFontSize is the empty string then
+		
+			variable tSize as number
+			
+			if mWidth/5 > kMaxFontSize then
+				put kMaxFontSize into tSize
+			else if mWidth/5 < kMinFontSize then
+				put kMinFontSize into tSize
+			else
+				put mWidth/5 into tSize
+			end if
+		
+			if tSize > (my height)/1.5 then
+				put (my height)/1.5 into tSize
+			end if
+			
+		else
+			put (mFontSize parsed as number) into tSize
+			
+		end if
+		
+		return font "Helvetica Neue" at size tSize
+	
+	else 
 		return the font of this canvas
+		
 	end if
-end handler
-----------
-
-----------
--- this handler returns the font size
-private handler getFontSize() as number
-	return (my height)/2
+	
 end handler
 ----------
 
 ----------
 -- this handler returns a rectangle 
-private handler getRect(in pInt as optional integer) as Rectangle
-	return rectangle [(the trunc of mLeft +(pInt-1)*mWidth)+0.5, 0.5, (the trunc of mLeft +pInt*mWidth)+0.5, (the trunc of my height)+0.5]
+private handler getRect(in pSegment as integer) as Rectangle
+	return rectangle [(the trunc of mLeft +(pSegment-1)*mWidth)+0.5, 0.5, (the trunc of mLeft +pSegment*mWidth)+0.5, (the trunc of my height)+0.5]
 end handler
 ----------
 
 ----------
--- the following handlers return the top/bottom point on a line
-private handler getTopPoint(in pInt as optional integer) as Point
-	return point [(the trunc of mLeft+pInt*mWidth)+0.5, 0.5]
-end handler
+-- this handler sets the theme
+/*
+Summary: Sets the theme of the segmented control.
 
-private handler getBottomPoint(in pInt as optional integer) as Point
-	return point [(the trunc of mLeft+pInt*mWidth)+0.5, (the trunc of my height)-0.5]
+Parameters:
+pTheme: The name of the theme.
+
+Description:
+Sets the theme property of the segmented control (currently, only "ios-8").
+*/
+public handler setTheme(in pTheme as string) as undefined
+	put pTheme into mTheme
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the list of segment labels
+/*
+Summary: Sets the titles of the segments.
+
+Parameters:
+pLabels: The titles of the of the segments.
+
+Description:
+Sets the labels property.
+Sets the number and titles of the segments from pString, where pString is a list of segment titles.
+*/
+public handler setLabels(in pLabels as string) as undefined
+	split pLabels by "," into mLabels
+	put 1 into mSelected
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the selected segment
+/*
+Summary: Sets the selected segment.
+
+Parameters:
+pSelected: The number of the selected segment.
+
+Description:
+Sets the selectedSegment property.
+Selects the segment of number pSelected.
+*/
+public handler setSelectedSegment(in pSelected as integer) as undefined
+	put pSelected into mSelected
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the selected segment
+/*
+Summary: Sets the font size.
+
+Parameters:
+pFontSize: The font size.
+
+Description:
+Sets the fontSize property.
+Sets the size of the font of the labels.
+*/
+public handler setFontSize(in pFontSize as string) as undefined
+	put pFontSize into mFontSize
+	redraw all
 end handler
 ----------
 
 ----------
 -- this handler updates the value of private instance variables
 public handler updateVariables() as undefined
-	put the number of elements in mLabels into mNumSegments
-	put (my width)/mNumSegments into mWidth
-	put (my width)/2 - mNumSegments*mWidth/2 into mLeft
+	put (my width)/the number of elements in mLabels into mWidth
+	put (my width)/2 - the number of elements in mLabels*mWidth/2 into mLeft
 	put (the trunc of my height)/5 into mRadius
-end handler
-----------
-
-----------
--- this handler returns the click loc as a point
-private handler getClickLoc() as Point
-	variable tClickLoc
-	execute script "return the clickloc"
-	put the result into tClickLoc
-	
-	variable tClickPoint as list
-	split tClickLoc by "," into tClickPoint
-	
-	variable tX as number
-	variable tY as number
-	put (element 1 of tClickPoint) parsed as number - the left of my rectangle into tX
-	put (element 2 of tClickPoint) parsed as number - the top of my rectangle into tY
-
-	variable tPoint as Point
-	put point [tX,tY] into tPoint
-	
-	return tPoint
 end handler
 ----------
 

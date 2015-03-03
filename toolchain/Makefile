@@ -414,7 +414,7 @@ ifeq ($(STAGE),4)
 	for f in $(COMPILE_bootstrap_check_exes); \
 	    do strip -s -o $$f-strip $$f ; \
 	done
-	@if ! cmp $(COMPILE_bootstrap_check_exes); then \
+	@if ! cmp $(addsuffix -strip,$(COMPILE_bootstrap_check_exes)); then \
 	    echo; \
 	    echo "ERROR: Stage 4 output does not match stage 3."; \
 	    echo "ERROR: There may be a bootstrapping problem."; \

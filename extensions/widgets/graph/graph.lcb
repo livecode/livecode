@@ -1,1 +1,701 @@
-/*Copyright (C) 2015 Runtime Revolution Ltd.This file is part of LiveCode.LiveCode is free software; you can redistribute it and/or modify it underthe terms of the GNU General Public License v3 as published by the FreeSoftware Foundation.LiveCode is distributed in the hope that it will be useful, but WITHOUT ANYWARRANTY; without even the implied warranty of MERCHANTABILITY orFITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Licensefor more details.You should have received a copy of the GNU General Public Licensealong with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */-- declaring the extension as a widget, followed by identifierwidget com.livecode.extensions.livecode.linegraph---- adding metadata to ensure the extension displays correctly in LiveCodemetadata author is "Benjamin Beaumont"metadata version is "1.0.1"metadata title is "Cross Platform Line Graph"---- dependency declarationsuse com.livecode.canvasuse com.livecode.widgetuse com.livecode.engine---- property declarationsproperty graphData get getData set setDataproperty graphColors get getColors set setColorsproperty graphXLines get mGridHShow set setXLinesVisibility---- private instance variablesprivate variable mData as listprivate variable mGridHShow as booleanprivate variable mGridVShow as booleanprivate variable mLegendShow as booleanprivate variable mLabelXShow as booleanprivate variable mLabelYShow as booleanprivate variable mVerticesShow as booleanprivate variable mMax as numberprivate variable mMin as numberprivate variable mVPointCount as integerprivate variable mHPointCount as integerprivate variable mGridHWidth as realprivate variable mGridVWidth as realprivate variable mLegendWidth as realprivate variable mLabelXWidth as realprivate variable mLabelYHeight as realprivate variable mGridRect as Rectangleprivate variable mColors as listprivate variable mPadding as real// Stores the numerical increment of the steps in the Y axisprivate variable mYIncrement as real// Pathsprivate variable mBackgroundGridPath as Pathprivate variable mBackgroundAxisPath as Path-------------- this handler is called when the widget is createdpublic handler OnCreate() as undefined	put [["mon","tue","web","thu","fri","sat","sun"],[1000,720,889,800,1000,964,1000],[300,340,400,360,301,400,undefined],[0,123,80,10,234,200,0]] into mData	initialiseConstants()end handler---------------------- this handler is called whenever LiveCode needs to redraw the widgetpublic handler OnPaint() as undefined	if mLabelYShow is true then		variable tLeft as real		put drawYLabels() into tLeft		updateGridRect(rectangle [tLeft+mPadding,the top of mGridRect,the right of mGridRect,the bottom of mGridRect])	end if		if mLabelXShow is true then		variable tBottom as real		//put drawXLabels() into tBottom	end if		if mLegendShow is true then		drawLegend()	end if		drawGraph()end handler---------------------- this handler sets the graphData propertypublic handler setData(in pData as string) as undefined	//log "trying to set data"	//log pData	variable tData as list	variable tNewData as list	put the empty list into tNewData	split pData by newline into tData		variable tCount as number 	variable tGraphLineData as string	variable tSplitGraphLineData as list		// Count the longer data points	variable tMax as integer	put 0 into tMax	repeat for each element tGraphLineData in tData		split tGraphLineData by "," into tSplitGraphLineData		if the number of elements in tSplitGraphLineData > tMax then			put the number of elements in tSplitGraphLineData into tMax		end if	end repeat		repeat with tCount from 1 up to tMax		push the empty list onto tNewData	end repeat		repeat for each element tGraphLineData in tData		split tGraphLineData by "," into tSplitGraphLineData		repeat with tCount from 1 up to tMax			if the number of elements in tSplitGraphLineData >= tCount then				log element tCount of tSplitGraphLineData				if tCount is 1 then					push element tCount of tSplitGraphLineData onto element 1 of tNewData				else					parse element tCount of tSplitGraphLineData as number								if the result is defined then						push the result onto element tCount of tNewData					else						push 0 onto element tCount of tNewData					end if				end if			else				log "undefined"				push undefined onto element tCount of tNewData				log "undefined pushed"			end if		end repeat	end repeat		put tNewData into mData	initialiseConstants()	log "redrawing"	redraw allend handler---------------------- this handler sets the graphColors propertypublic handler setColors(in tColors as string) as string	variable tStringColorList as list	variable tColorList as list	put the empty list into tColorList	split tColors by newline into tStringColorList		variable tColor as string	repeat for each element tColor in tStringColorList		push stringToColor(tColor) onto back of tColorList	end repeat	put tColorList into mColors	redraw allend handler---------------------- the following handlers set whether the horizontal and vertical grid lines are shownpublic handler setShowHGrid(in pState as boolean) as undefined	//put pState into mShowHGridend handlerpublic handler setShowVGrid(in pState as boolean) as undefined	//put pState into mShowVGridend handler---------------------- this handler sets whether the x gird lines are visiblepublic handler setXLinesVisibility(in pShowXGridLines as boolean) as undefined	--log "asdfasdF"		put pShowXGridLines into mGridHShow	updateConstants()	redraw allend handler---------------------- this handler gets the graphColors property, returning the graphColors as a list of colorspublic handler getColors() as string	variable tColors as string	variable tColor as Color	variable tColorStringList as list	put the empty list into tColorStringList	repeat for each element tColor in mColors		push colorToString(tColor) onto back of tColorStringList	end repeat	combine tColorStringList with newline into tColors	return tColorsend handler---------------------- this handler gets the graphData property, returning a stringpublic handler getData() as string	// Convert mData in a form that can be combined for output	variable tData as list	put the empty list into tData		variable tCount as integer	variable tCount2 as integer	variable tMax as integer	variable tLineData as list	put the empty list into tLineData	put the number of elements in element 1 of mData into tMax		//log "outputting data"		repeat with tCount from 1 up to the number of elements in mData		put element tCount of mData into tLineData		repeat with tCount2 from 1 up to tMax			if tCount is 1 then				push the empty list onto back of tData				push element tCount2 of tLineData onto element tCount2 of tData				log (the number of elements in tData) formatted as string			else				if the number of elements in tLineData >= tCount2 then					if element tCount2 of tLineData is defined then						log (element tCount2 of tLineData) formatted as string						variable tString as string						put stripZeros((element tCount2 of tLineData) formatted as string) into tString						log tString						push tString onto back of element tCount2 of tData					else						//log "empty element"						push "" onto back of element tCount2 of tData					end if				else					//log "blank element"					push "" onto back of element tCount2 of tData				end if				end if		end repeat	end repeat		// Flatten second level list	variable tFinalList as list	variable tFlatList as string	put the empty list into tFinalList	put the empty string into tFlatList		repeat with tCount from 1 up to the number of elements in tData		combine element tCount of tData with "," into tFlatList		push tFlatList onto tFinalList	end repeat		// Combine the list for final output	variable tReturnString as string	combine tFinalList with newline into tReturnString	log tReturnString	return tReturnStringend handler---------------------- this handler returns a paintpublic handler getPaint(pLocation, pType) as Paint	if pLocation is "grid" then		if pType is "fill" then			return solid paint with stringToColor("248,248,248")		else if pType is "stroke" then			return solid paint with stringToColor("0,0,0,0.1")		end if	else if pLocation is "axis" and pType is "stroke" then		return solid paint with stringToColor("0,0,0,1")	end if		return solid paint with stringToColor("255,100,200")end handler---------------------- this handler returns a font name as a stringprivate handler getFontName() as string	return the name of the font of this canvasend handler---------------------- this handler returns a font sizeprivate handler getFontSize() as number	return 11end handler---------------------- this handler initialises the constantsprivate handler initialiseConstants() as undefined	put true into mGridHShow	put true into mGridVShow	put true into mLegendShow	put true into mLabelXShow	put true into mLabelYShow	put true into mVerticesShow		variable tMax as number	 	variable tMin as number		variable tCount as integer	put 0 into mMax	put 1000 into mMin	repeat with tCount from 2 up to the number of elements in mData		put listMax(element tCount of mData) into tMax		if tMax > mMax then			put tMax into mMax		end if				put listMax(element tCount of mData) into tMin		if tMin < mMin then			put tMin into mMin		end if	end repeat	put the number of elements in (element 1 of mData) -1 into mHPointCount	put 5 into mVPointCount	put [stringToColor("255,0,155"),stringToColor("155,100,255"),stringToColor("100,255,100")] into mColors		put mMax / mVPointCount into mYIncrement		updateConstants()end handler---------------------- this handler updates the constantsprivate handler updateConstants() as undefined	put my height * 0.02 into mPadding	if mPadding < 6 then 		put 6 into mPadding	end if		updateGridRect(rectangle [0,mPadding,my width-mPadding,my height-mPadding])end handler---------------------- this handler updates the grid rectangle private handler updateGridRect(in tRect as Rectangle) as undefined	put tRect into mGridRect	put the height of mGridRect / mVPointCount into mGridVWidth	put the width of mGridRect / mHPointCount into mGridHWidthend handler---------------------- this handler is called when the geometry of the widget is changedpublic handler onGeometryChanged() as undefined	updateConstants()end handler---------------------- the following handlers draw the x and y labels on the graphprivate handler drawXLabels() as real	save state of this canvas	translate this canvas by [100,100]	rotate this canvas by 90		fill text "hello" at point [0,0] on this canvas		/*save state of this canvas			variable tNumber as real	variable tString as string	variable tTextBounds as Rectangle	variable tMaxWidth as real	put 0 into tMaxWidth		// Work out the max width first		variable tLabels as list	put element 1 of mData into tLabels		variable tLabel as string	repeat for each element tLabel in tLabels		measure tLabel on this canvas		put the result into tTextBounds		if the width of tTextBounds > tMaxWidth then			put the width of tTextBounds into tMaxWidth		end if	end repeat		// Draw the text	variable tCount as integer	variable tPos as real	variable tRect as Rectangle	put 1 into tCount	repeat for each element tLabel in tLabels				put 0 - (((mHPointCount)-tCount) * mGridHWidth) into tPos		put rectangle [0-tMaxWidth,tPos+20,0,tPos-20] into tRect		fill text tLabel at left of tRect on this canvas		log "-------" 		log (0-tMaxWidth) formatted as string		log (tPos+20) formatted as string		log "0"		log (tPos-20) formatted as string		add 1 to tCount	end repeat	*/		restore state of this canvas		return 0end handlerprivate handler drawYLabels() as real	set the font of this canvas to font getFontName() at size 10	set the paint of this canvas to getPaint("axis","stroke")		variable tNumber as real	variable tString as string	variable tTextBounds as Rectangle	variable tMaxWidth as real	put 0 into tMaxWidth		// Work out the max width first	variable tCount as integer	repeat with tCount from 0 up to mVPointCount 		put mYIncrement * tCount into tNumber		put tNumber formatted as string into tString		put char 1 to -8 of tString into tString				measure tString on this canvas		put the result into tTextBounds		if the width of tTextBounds > tMaxWidth then			put the width of tTextBounds into tMaxWidth		end if	end repeat		// Draw the text	repeat with tCount from 0 up to mVPointCount 		put mYIncrement * tCount into tNumber		put tNumber formatted as string into tString		put char 1 to -8 of tString into tString		//fill text tString at point [0,the top of mGridRect + (((mVPointCount)-tCount) * mGridVWidth)] on this canvas		variable tY as real		put the top of mGridRect + (((mVPointCount)-tCount) * mGridVWidth) into tY		fill text tString at right of rectangle [0,tY-20,tMaxWidth,tY+20] on this canvas	end repeat		return tMaxWidthend handler---------------------- this handler draws the graph legendprivate handler drawLegend() as undefinedend handler---------------------- this handler draws the graphprivate handler drawGraph() as undefined	put gridPath() into mBackgroundGridPath	put axisPath() into mBackgroundAxisPath			variable tWidth as real	variable tHeight as real	put the width of mGridRect into tWidth	put the height of mGridRect into tHeight		// Draw grid lines	set the paint of this canvas to getPaint("grid","stroke")	set the antialias of this canvas to false	set the stroke width of this canvas to 0	stroke mBackgroundGridPath on this canvas		// Draw the graph lines	set the antialias of this canvas to true	set the stroke width of this canvas to 1	variable tDataPoints as list	variable tCount2 as integer	variable tColour as Color		variable tPath as Path	variable tPathVertices as Path	variable tPoint as Point		variable tCount as integer	repeat with tCount from 2 up to the number of elements in mData		put the empty path into tPath		put the empty path into tPathVertices		put element tCount of mData into tDataPoints		if the number of elements in mColors >= tCount-1 then			put element tCount-1 of mColors into tColour		else			put stringToColor("0,0,0") into tColour		end if		set the paint of this canvas to solid paint with tColour		repeat with tCount2 from 1 up to the number of elements in tDataPoints			if element tCount2 of tDataPoints is defined then				if tCount2 is 1 then					put point [the left of mGridRect + ((tCount2-1) * mGridHWidth),the top of mGridRect + (tHeight - (tHeight * (element tCount2 of tDataPoints / mMax)))] into tPoint					move to tPoint on tPath				else					put point [the left of mGridRect + ((tCount2-1) * mGridHWidth),the top of mGridRect + (tHeight - (tHeight * (element tCount2 of tDataPoints / mMax)))] into tPoint					line to tPoint on tPath				end if							// Draw vertices				if mVerticesShow is true then					add circle path centered at tPoint with radius 3 to tPathVertices					//add rectangle path of rectangle [element 1 of tPoint - 3,element 2 of tPoint - 3,element 1 of tPoint + 3,element 2 of tPoint + 3] to tPathVertices				end if			end if		end repeat		stroke tPath on this canvas		fill tPathVertices on this canvas	end repeat		// Draw Axis lines	set the antialias of this canvas to false	set the stroke width of this canvas to 1	set the paint of this canvas to getPaint("axis","stroke")	stroke mBackgroundAxisPath on this canvasend handler---------------------- this handler returns the graph rectangleprivate handler GraphRect() as Rectangle	return rectangle [0,0,my width,my height]end handler---------------------- this handler converts a string of numbers to an RGBA colorprivate handler stringToColor(in pString as string) as Color	variable tRed as real	variable tGreen as real	variable tBlue as real	variable tAlpha as real	variable tComponentList as list	split pString by "," into tComponentList	variable tComponentCount	put the number of elements in tComponentList into tComponentCount	if tComponentCount is not 3 and tComponentCount is not 4 then		// Invalid number of components detected		throw "Invalid color"	end if	put (element 1 of tComponentList) parsed as number into tRed	put (element 2 of tComponentList) parsed as number into tGreen	put (element 3 of tComponentList) parsed as number into tBlue	if tComponentCount is 4 then		put (element 4 of tComponentList) parsed as number into tAlpha	else		put 1.0 into tAlpha	end if	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]end handler---------------------- this handler converts an RGBA color to a stringprivate handler colorToString(in pColor as Color) as string	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of (the green of pColor) * 255) formatted as string) & "," & stripZeros((the rounded of (the blue of pColor) * 255) formatted as string) & "," & stripZeros((the rounded of (the alpha of pColor) * 255) formatted as string)end handler---------------------- this handler draws the grid lines on the graphprivate handler gridPath() as Path	variable tPath	variable tCount	put the empty path into tPath		// Create the path for the horizontal grid	if mGridHShow is true then		repeat with tCount from 1 up to mVPointCount			move to point [the left of mGridRect,the top of mGridRect + (mGridVWidth * tCount-1)] on tPath			line to point [the right of mGridRect,the top of mGridRect + (mGridVWidth * tCount-1)] on tPath		end repeat	end if		// Create the path for the vertical grid	if mGridVShow is true then		repeat with tCount from 1 up to mHPointCount			move to point [the left of mGridRect + (mGridHWidth * tCount-1),the top of mGridRect] on tPath			line to point [the left of mGridRect + (mGridHWidth * tCount-1),the bottom of mGridRect] on tPath		end repeat	end if		return tPathend handler---------------------- this handler draws the graph axesprivate handler axisPath() as Path	variable tPath	put the empty path into tPath		move to point [the left of mGridRect + 0.5,the top of mGridRect] on tPath	line to point [the left of mGridRect + 0.5,the bottom of mGridRect] on tPath	move to point [the left of mGridRect,the bottom of mGridRect-0.5] on tPath	line to point [the right of mGridRect,the bottom of mGridRect-0.5] on tPath		return tPathend handler----------// UTILITY FUNCTIONS------------ this handler strips the zeros when a integer is formatted as a stringprivate handler stripZeros(in tString as string) as string	if tString contains "." then		variable tCount as integer		repeat while ((the last char of tString) is in ".0")			if the last char of tString is "." then				delete the last char of tString				exit repeat			else				delete the last char of tString			end if		end repeat	end if	return tStringend handler---------------------- the following handlers return the maximum/minimum number from a listprivate handler listMax(in tList as list) as number	variable tMax as number	put 0 into tMax		variable tElement as optional any	repeat for each element tElement in tList		if tElement is a number then			if tElement > tMax then				put tElement into tMax			end if		end if	end repeat		return tMaxend handlerprivate handler listMin(in tList as list) as number	variable tMin as optional number	put undefined into tMin		variable tElement as optional any	repeat for each element tElement in tList		if tElement is a number then			if tElement < tMin then				put tElement into tMin			end if		end if	end repeat		return tMinend handler----------end widget
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+-- declaring the extension as a widget, followed by identifier
+widget com.livecode.extensions.livecode.linegraph
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- adding metadata to ensure the extension displays correctly in LiveCode
+metadata author is "Benjamin Beaumont"
+metadata version is "1.0.1"
+metadata title is "Line Graph"
+--
+
+-- property declarations
+property graphData get getData set setData
+metadata graphData.editor is "com.livecode.pi.text"
+metadata graphData.default is "mon,1000,300,0\ntue,720,340,123\nweb,889,400,80\nthu,800,360,10\nfri,1000,301,234\nsat,964,400,200\nsun,1000,500,0"
+
+property graphColors get getColors set setColors
+metadata graphColors.editor is "com.livecode.pi.text"
+metadata graphColors.default is "255,0,155,255\n155,100,255,255\n100,255,100,255"
+
+property graphXLines get mGridHShow set setXLinesVisibility
+metadata graphXLines.default is "true"
+
+property graphYLines get mGridVShow set setYLinesVisibility
+metadata graphYLines.default is "true"
+--
+
+-- private instance variables
+private variable mData as list
+
+private variable mGridHShow as boolean
+private variable mGridVShow as boolean
+private variable mLegendShow as boolean
+private variable mLabelXShow as boolean
+private variable mLabelYShow as boolean
+private variable mVerticesShow as boolean
+
+private variable mMax as number
+private variable mMin as number
+private variable mVPointCount as integer
+private variable mHPointCount as integer
+private variable mGridHWidth as real
+private variable mGridVWidth as real
+private variable mLegendWidth as real
+private variable mLabelXWidth as real
+private variable mLabelYHeight as real
+private variable mGridRect as Rectangle
+private variable mColors as list
+private variable mPadding as real
+
+// Stores the numerical increment of the steps in the Y axis
+private variable mYIncrement as real
+
+// Paths
+private variable mBackgroundGridPath as Path
+private variable mBackgroundAxisPath as Path
+--
+
+----------
+-- this handler is called when the widget is created
+public handler OnCreate() as undefined
+	put [["mon","tue","web","thu","fri","sat","sun"],[1000,720,889,800,1000,964,1000],[300,340,400,360,301,400,undefined],[0,123,80,10,234,200,0]] into mData
+	put [stringToColor("255,0,155"),stringToColor("155,100,255"),stringToColor("100,255,100")] into mColors
+	put true into mGridHShow
+	put true into mGridVShow
+	put true into mLegendShow
+	put true into mLabelXShow
+	put true into mLabelYShow
+	put true into mVerticesShow
+	initialiseConstants()
+end handler
+----------
+
+----------
+-- this handler is called whenever LiveCode needs to redraw the widget
+public handler OnPaint() as undefined
+	if mLabelYShow is true then
+		variable tLeft as real
+		put drawYLabels() into tLeft
+		updateGridRect(rectangle [tLeft+mPadding,the top of mGridRect,the right of mGridRect,the bottom of mGridRect])
+	end if
+	
+	if mLabelXShow is true then
+		variable tBottom as real
+		//put drawXLabels() into tBottom
+	end if
+	
+	if mLegendShow is true then
+		drawLegend()
+	end if
+	
+	drawGraph()
+end handler
+----------
+
+----------
+-- this handler sets the graphData property
+public handler setData(in pData as string) as undefined
+	//log "trying to set data"
+	//log pData
+	variable tData as list
+	variable tNewData as list
+	put the empty list into tNewData
+
+	split pData by newline into tData
+	
+	variable tCount as number 
+	variable tGraphLineData as string
+	variable tSplitGraphLineData as list
+	
+	// Count the longer data points
+	variable tMax as integer
+	put 0 into tMax
+	repeat for each element tGraphLineData in tData
+		split tGraphLineData by "," into tSplitGraphLineData
+		if the number of elements in tSplitGraphLineData > tMax then
+			put the number of elements in tSplitGraphLineData into tMax
+		end if
+	end repeat
+	
+	repeat with tCount from 1 up to tMax
+		push the empty list onto tNewData
+	end repeat
+	
+	repeat for each element tGraphLineData in tData
+		split tGraphLineData by "," into tSplitGraphLineData
+		repeat with tCount from 1 up to tMax
+			if the number of elements in tSplitGraphLineData >= tCount then
+				log element tCount of tSplitGraphLineData
+				if tCount is 1 then
+					push element tCount of tSplitGraphLineData onto element 1 of tNewData
+				else
+					parse element tCount of tSplitGraphLineData as number
+			
+					if the result is defined then
+						push the result onto element tCount of tNewData
+					else
+						push 0 onto element tCount of tNewData
+					end if
+				end if
+			else
+				log "undefined"
+				push undefined onto element tCount of tNewData
+				log "undefined pushed"
+			end if
+		end repeat
+	end repeat
+	
+	put tNewData into mData
+	initialiseConstants()
+	log "redrawing"
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the graphColors property
+public handler setColors(in tColors as string) as undefined
+	if tColors is empty then
+		put the empty list into mColors
+	else
+		variable tStringColorList as list
+		variable tColorList as list
+		put the empty list into tColorList
+		split tColors by newline into tStringColorList
+	
+		variable tColor as string
+		repeat for each element tColor in tStringColorList
+			push stringToColor(tColor) onto back of tColorList
+		end repeat
+		put tColorList into mColors
+	end if	
+	redraw all
+end handler
+----------
+
+----------
+-- the following handlers set whether the horizontal and vertical grid lines are shown
+public handler setShowHGrid(in pState as boolean) as undefined
+	//put pState into mShowHGrid
+end handler
+
+public handler setShowVGrid(in pState as boolean) as undefined
+	//put pState into mShowVGrid
+end handler
+----------
+
+----------
+-- this handler sets whether the x gird lines are visible
+public handler setXLinesVisibility(in pShowXGridLines as boolean) as undefined	
+	put pShowXGridLines into mGridHShow
+	updateConstants()
+	redraw all
+end handler
+
+public handler setYLinesVisibility(in pShowYGridLines as boolean) as undefined
+	put pShowYGridLines into mGridVShow
+	updateConstants()
+	redraw all
+end handler
+----------
+
+----------
+-- this handler gets the graphColors property, returning the graphColors as a list of colors
+public handler getColors() as string
+	variable tColors as string
+	variable tColor as Color
+	variable tColorStringList as list
+	put the empty list into tColorStringList
+	repeat for each element tColor in mColors
+		push colorToString(tColor) onto back of tColorStringList
+	end repeat
+	combine tColorStringList with newline into tColors
+	return tColors
+end handler
+----------
+
+----------
+-- this handler gets the graphData property, returning a string
+public handler getData() as string
+	// Convert mData in a form that can be combined for output
+	variable tData as list
+	put the empty list into tData
+	
+	variable tCount as integer
+	variable tCount2 as integer
+	variable tMax as integer
+	variable tLineData as list
+	put the empty list into tLineData
+	put the number of elements in element 1 of mData into tMax
+	
+	//log "outputting data"
+	
+	repeat with tCount from 1 up to the number of elements in mData
+		put element tCount of mData into tLineData
+		repeat with tCount2 from 1 up to tMax
+			if tCount is 1 then
+				push the empty list onto back of tData
+				push element tCount2 of tLineData onto element tCount2 of tData
+				log (the number of elements in tData) formatted as string
+			else
+				if the number of elements in tLineData >= tCount2 then
+					if element tCount2 of tLineData is defined then
+						log (element tCount2 of tLineData) formatted as string
+						variable tString as string
+						put stripZeros((element tCount2 of tLineData) formatted as string) into tString
+						log tString
+						push tString onto back of element tCount2 of tData
+					else
+						//log "empty element"
+						push "" onto back of element tCount2 of tData
+					end if
+				else
+					//log "blank element"
+					push "" onto back of element tCount2 of tData
+				end if	
+			end if
+		end repeat
+	end repeat
+	
+	// Flatten second level list
+	variable tFinalList as list
+	variable tFlatList as string
+	put the empty list into tFinalList
+	put the empty string into tFlatList
+	
+	repeat with tCount from 1 up to the number of elements in tData
+		combine element tCount of tData with "," into tFlatList
+		push tFlatList onto tFinalList
+	end repeat
+	
+	// Combine the list for final output
+	variable tReturnString as string
+	combine tFinalList with newline into tReturnString
+	log tReturnString
+	return tReturnString
+end handler
+----------
+
+----------
+-- this handler returns a paint
+public handler getPaint(pLocation, pType) as Paint
+	if pLocation is "grid" then
+		if pType is "fill" then
+			return solid paint with stringToColor("248,248,248")
+		else if pType is "stroke" then
+			return solid paint with stringToColor("0,0,0,50")
+		end if
+	else if pLocation is "axis" and pType is "stroke" then
+		return solid paint with stringToColor("0,0,0,150")
+	end if
+	
+	return solid paint with stringToColor("255,100,200")
+end handler
+----------
+
+----------
+-- this handler returns a font name as a string
+private handler getFontName() as string
+	return the name of the font of this canvas
+end handler
+----------
+
+----------
+-- this handler returns a font size
+private handler getFontSize() as number
+	return 11
+end handler
+----------
+
+----------
+-- this handler initialises the constants
+private handler initialiseConstants() as undefined
+	
+	variable tMax as number	 
+	variable tMin as number	
+	variable tCount as integer
+	put 0 into mMax
+	put 1000 into mMin
+	repeat with tCount from 2 up to the number of elements in mData
+		put listMax(element tCount of mData) into tMax
+		if tMax > mMax then
+			put tMax into mMax
+		end if
+		
+		put listMax(element tCount of mData) into tMin
+		if tMin < mMin then
+			put tMin into mMin
+		end if
+	end repeat
+	put the number of elements in (element 1 of mData) -1 into mHPointCount
+	put 5 into mVPointCount
+	
+	put mMax / mVPointCount into mYIncrement
+	
+	updateConstants()
+end handler
+----------
+
+----------
+-- this handler updates the constants
+private handler updateConstants() as undefined
+	put my height * 0.02 into mPadding
+	if mPadding < 6 then 
+		put 6 into mPadding
+	end if
+	
+	updateGridRect(rectangle [0,mPadding,my width-mPadding,my height-mPadding])
+end handler
+----------
+
+----------
+-- this handler updates the grid rectangle 
+private handler updateGridRect(in tRect as Rectangle) as undefined
+	put tRect into mGridRect
+	put the height of mGridRect / mVPointCount into mGridVWidth
+	put the width of mGridRect / mHPointCount into mGridHWidth
+end handler
+----------
+
+----------
+-- this handler is called when the geometry of the widget is changed
+public handler onGeometryChanged() as undefined
+	updateConstants()
+end handler
+----------
+
+----------
+-- the following handlers draw the x and y labels on the graph
+private handler drawXLabels() as real
+	save state of this canvas
+	translate this canvas by [100,100]
+	rotate this canvas by 90
+	
+	fill text "hello" at point [0,0] on this canvas
+	
+	/*save state of this canvas
+	
+	
+	variable tNumber as real
+	variable tString as string
+	variable tTextBounds as Rectangle
+	variable tMaxWidth as real
+	put 0 into tMaxWidth
+	
+	// Work out the max width first
+	
+	variable tLabels as list
+	put element 1 of mData into tLabels
+	
+	variable tLabel as string
+	repeat for each element tLabel in tLabels
+		measure tLabel on this canvas
+		put the result into tTextBounds
+		if the width of tTextBounds > tMaxWidth then
+			put the width of tTextBounds into tMaxWidth
+		end if
+	end repeat
+	
+	// Draw the text
+	variable tCount as integer
+	variable tPos as real
+	variable tRect as Rectangle
+	put 1 into tCount
+	repeat for each element tLabel in tLabels
+		
+		put 0 - (((mHPointCount)-tCount) * mGridHWidth) into tPos
+		put rectangle [0-tMaxWidth,tPos+20,0,tPos-20] into tRect
+		fill text tLabel at left of tRect on this canvas
+		log "-------" 
+		log (0-tMaxWidth) formatted as string
+		log (tPos+20) formatted as string
+		log "0"
+		log (tPos-20) formatted as string
+		add 1 to tCount
+	end repeat
+	*/
+	
+	restore state of this canvas
+	
+	return 0
+end handler
+
+private handler drawYLabels() as real
+	set the font of this canvas to font getFontName() at size 10
+	set the paint of this canvas to getPaint("axis","stroke")
+	
+	variable tNumber as real
+	variable tString as string
+	variable tTextBounds as Rectangle
+	variable tMaxWidth as real
+	put 0 into tMaxWidth
+	
+	// Work out the max width first
+	variable tCount as integer
+	repeat with tCount from 0 up to mVPointCount 
+		put mYIncrement * tCount into tNumber
+		put tNumber formatted as string into tString
+		put char 1 to -8 of tString into tString
+		
+		measure tString on this canvas
+		put the result into tTextBounds
+		if the width of tTextBounds > tMaxWidth then
+			put the width of tTextBounds into tMaxWidth
+		end if
+	end repeat
+	
+	// Draw the text
+	repeat with tCount from 0 up to mVPointCount 
+		put mYIncrement * tCount into tNumber
+		put tNumber formatted as string into tString
+		put char 1 to -8 of tString into tString
+		//fill text tString at point [0,the top of mGridRect + (((mVPointCount)-tCount) * mGridVWidth)] on this canvas
+		variable tY as real
+		put the top of mGridRect + (((mVPointCount)-tCount) * mGridVWidth) into tY
+		fill text tString at right of rectangle [0,tY-20,tMaxWidth,tY+20] on this canvas
+	end repeat
+	
+	return tMaxWidth
+end handler
+----------
+
+----------
+-- this handler draws the graph legend
+private handler drawLegend() as undefined
+end handler
+----------
+
+----------
+-- this handler draws the graph
+private handler drawGraph() as undefined
+	put gridPath() into mBackgroundGridPath
+	put axisPath() into mBackgroundAxisPath
+		
+	variable tWidth as real
+	variable tHeight as real
+	put the width of mGridRect into tWidth
+	put the height of mGridRect into tHeight
+	
+	// Draw grid lines
+	set the paint of this canvas to getPaint("grid","stroke")
+	set the antialias of this canvas to false
+	set the stroke width of this canvas to 0
+	stroke mBackgroundGridPath on this canvas
+	
+	// Draw the graph lines
+	set the antialias of this canvas to true
+	set the stroke width of this canvas to 1
+	variable tDataPoints as list
+	variable tCount2 as integer
+	variable tColour as Color
+	
+	variable tPath as Path
+	variable tPathVertices as Path
+	variable tPoint as Point
+	
+	variable tCount as integer
+	repeat with tCount from 2 up to the number of elements in mData
+		put the empty path into tPath
+		put the empty path into tPathVertices
+		put element tCount of mData into tDataPoints
+		if the number of elements in mColors >= tCount-1 then
+			put element tCount-1 of mColors into tColour
+		else
+			put stringToColor("0,0,0") into tColour
+		end if
+		set the paint of this canvas to solid paint with tColour
+		repeat with tCount2 from 1 up to the number of elements in tDataPoints
+			if element tCount2 of tDataPoints is defined then
+				if tCount2 is 1 then
+					put point [the left of mGridRect + ((tCount2-1) * mGridHWidth),the top of mGridRect + (tHeight - (tHeight * (element tCount2 of tDataPoints / mMax)))] into tPoint
+					move to tPoint on tPath
+				else
+					put point [the left of mGridRect + ((tCount2-1) * mGridHWidth),the top of mGridRect + (tHeight - (tHeight * (element tCount2 of tDataPoints / mMax)))] into tPoint
+					line to tPoint on tPath
+				end if
+			
+				// Draw vertices
+				if mVerticesShow is true then
+					add circle path centered at tPoint with radius 3 to tPathVertices
+					//add rectangle path of rectangle [element 1 of tPoint - 3,element 2 of tPoint - 3,element 1 of tPoint + 3,element 2 of tPoint + 3] to tPathVertices
+				end if
+			end if
+		end repeat
+		stroke tPath on this canvas
+		fill tPathVertices on this canvas
+	end repeat
+	
+	// Draw Axis lines
+	set the antialias of this canvas to false
+	set the stroke width of this canvas to 1
+	set the paint of this canvas to getPaint("axis","stroke")
+	stroke mBackgroundAxisPath on this canvas
+end handler
+----------
+
+----------
+-- this handler returns the graph rectangle
+private handler GraphRect() as Rectangle
+	return rectangle [0,0,my width,my height]
+end handler
+----------
+
+----------
+-- this handler converts a string of numbers to an RGBA color
+private handler stringToColor(in pString as string) as Color
+	variable tRed as real
+	variable tGreen as real
+	variable tBlue as real
+	variable tAlpha as real
+
+	variable tComponentList as list
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 255 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+----------
+
+----------
+-- this handler converts an RGBA color to a string
+private handler colorToString(in pColor as Color) as string
+	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of (the green of pColor) * 255) formatted as string) & "," & stripZeros((the rounded of (the blue of pColor) * 255) formatted as string) & "," & stripZeros((the rounded of (the alpha of pColor) * 255) formatted as string)
+end handler
+----------
+
+----------
+-- this handler draws the grid lines on the graph
+private handler gridPath() as Path
+	variable tPath
+	variable tCount
+	put the empty path into tPath
+	
+	// Create the path for the horizontal grid
+	if mGridHShow is true then
+		repeat with tCount from 1 up to mVPointCount
+			move to point [the left of mGridRect,the top of mGridRect + (mGridVWidth * tCount-1)] on tPath
+			line to point [the right of mGridRect,the top of mGridRect + (mGridVWidth * tCount-1)] on tPath
+		end repeat
+	end if
+	
+	// Create the path for the vertical grid
+	if mGridVShow is true then
+		repeat with tCount from 1 up to mHPointCount
+			move to point [the left of mGridRect + (mGridHWidth * tCount-1),the top of mGridRect] on tPath
+			line to point [the left of mGridRect + (mGridHWidth * tCount-1),the bottom of mGridRect] on tPath
+		end repeat
+	end if
+	
+	return tPath
+end handler
+----------
+
+----------
+-- this handler draws the graph axes
+private handler axisPath() as Path
+	variable tPath
+	put the empty path into tPath
+	
+	move to point [the left of mGridRect + 0.5,the top of mGridRect] on tPath
+	line to point [the left of mGridRect + 0.5,the bottom of mGridRect] on tPath
+	move to point [the left of mGridRect,the bottom of mGridRect-0.5] on tPath
+	line to point [the right of mGridRect,the bottom of mGridRect-0.5] on tPath
+	
+	return tPath
+end handler
+----------
+
+// UTILITY FUNCTIONS
+----------
+-- this handler strips the zeros when a integer is formatted as a string
+private handler stripZeros(in tString as string) as string
+	if tString contains "." then
+		variable tCount as integer
+		repeat while ((the last char of tString) is in ".0")
+			if the last char of tString is "." then
+				delete the last char of tString
+				exit repeat
+			else
+				delete the last char of tString
+			end if
+		end repeat
+	end if
+	return tString
+end handler
+----------
+
+----------
+-- the following handlers return the maximum/minimum number from a list
+private handler listMax(in tList as list) as number
+	variable tMax as number
+	put 0 into tMax
+	
+	variable tElement as optional any
+	repeat for each element tElement in tList
+		if tElement is a number then
+			if tElement > tMax then
+				put tElement into tMax
+			end if
+		end if
+	end repeat
+	
+	return tMax
+end handler
+
+private handler listMin(in tList as list) as number
+	variable tMin as optional number
+	put undefined into tMin
+	
+	variable tElement as optional any
+	repeat for each element tElement in tList
+		if tElement is a number then
+			if tElement < tMin then
+				put tElement into tMin
+			end if
+		end if
+	end repeat
+	
+	return tMin
+end handler
+----------
+
+end widget

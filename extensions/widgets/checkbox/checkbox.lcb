@@ -1,1 +1,342 @@
-/*Copyright (C) 2015 Runtime Revolution Ltd.This file is part of LiveCode.LiveCode is free software; you can redistribute it and/or modify it underthe terms of the GNU General Public License v3 as published by the FreeSoftware Foundation.LiveCode is distributed in the hope that it will be useful, but WITHOUT ANYWARRANTY; without even the implied warranty of MERCHANTABILITY orFITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Licensefor more details.You should have received a copy of the GNU General Public Licensealong with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */-- declaring extension as widget, followed by identifierwidget com.livecode.extensions.livecode.checkBox---- adding metadata to ensure the extension displays correctly in livecodemetadata title is "Check Box"metadata author is "Georgia Hutchings"metadata version is "1.0.3"---- dependancy declarationsuse com.livecode.canvasuse com.livecode.widgetuse com.livecode.engine---- property declarationsproperty theme				get mTheme			set setThemeproperty checked			get mChecked		set setChecked---- private instance variablesprivate variable mTheme as stringprivate variable mChecked as booleanprivate variable mState as stringprivate variable mTransparent as Colorprivate variable mColorWhite as Colorprivate variable mColorBlack as Colorprivate variable mColorLightGrey as Colorprivate variable mColorDarkGrey as Colorprivate variable mColorMacGreen as Color-------------- called when the widget is createdpublic handler OnCreate()	put "ios-8" into mTheme	put false into mChecked	put "not animating" into mState		put color [1.0, 1.0, 1.0, 0.0] into mTransparent	put color [1.0, 1.0, 1.0] into mColorWhite	put color [0.0, 0.0, 0.0] into mColorBlack	put color [224/255, 224/255, 224/255] into mColorLightGrey	put color [96/255, 96/255, 96/255] into mColorDarkGrey	put color [0.0, 204/255, 0.0] into mColorMacGreenend handler---------------------- called whenever livecode needs to redraw the widgetpublic handler OnPaint()		-- draw the check box when animating and not animating	set the stroke width of this canvas to 2	set the paint of this canvas to getPaint("border")	stroke getPath("box") on this canvas	set the paint of this canvas to getPaint("background")	fill getPath("box") on this canvas	--		-- when the state is "not animating"	if mState is "not animating" then				-- draw the circle 		set the paint of this canvas to getPaint("circle")				if mChecked is true then			fill getPath("right circle") on this canvas		else			fill getPath("left circle") on this canvas		end if			set the paint of this canvas to solid paint with mColorDarkGrey		set the stroke width of this canvas to 0.5		if mChecked is true then			stroke getPath("right circle") on this canvas		else			stroke getPath("left circle") on this canvas		end if		--		-- when the state is "animating"	else if mState is "animating" then		set the stroke width of this canvas to (my width/2)*0.01				if mChecked is false then					set the paint of this canvas to solid paint with mColorDarkGrey			stroke getPath("left rect") on this canvas			stroke getPath("ellipse") on this canvas			stroke getPath("left circle") on this canvas						set the paint of this canvas to solid paint with mColorWhite			fill getPath("left rect") on this canvas			fill getPath("ellipse") on this canvas			fill getPath("left circle") on this canvas			else if mChecked is true then					set the paint of this canvas to solid paint with mColorDarkGrey			stroke getPath("right rect") on this canvas			stroke getPath("ellipse") on this canvas			stroke getPath("right circle") on this canvas				set the paint of this canvas to solid paint with mColorWhite			fill getPath("right rect") on this canvas			fill getPath("ellipse") on this canvas			fill getPath("right circle") on this canvas				end if			end if	--	end handler--------------------public handler OnMouseDown()	if getClickLoc() is within getRect("bounding box") then		put "animating" into mState		redraw all	end if	dispatch command "mouseDown" to my script objectend handler--------------------public handler OnMouseUp()	if getClickLoc() is within getRect("bounding box") then		setChecked(not(mChecked))		put "not animating" into mState		redraw all	end if	dispatch command "mouseUp" to my script objectend handler---------------------- sets the theme of the widgetpublic handler setTheme(in pTheme as string) as undefined	put pTheme into mTheme	redraw allend handler---------------------- sets whether the box is checkedpublic handler setChecked(in pChecked as boolean) as undefined	put pChecked into mChecked	redraw allend handler---------------------- this handler returns a pathprivate handler getPath(in pString as string) as Path	if pString is "box" then		return rounded rectangle path of rectangle [(my width)/2 - (my height)/2, (my height)/4, (my width)/2 + (my height)/2, 3*(my height)/4] with radius (my height)/4	else if pString is "left circle" then		return circle path centered at point [(my width)/2 - (my height)/4, (my height)/2] with radius (my height)/4	else if pString is "right circle" then		return circle path centered at point [(my width)/2 + (my height)/4, (my height)/2] with radius (my height)/4	else if pString is "ellipse" then		return ellipse path centered at point [(my width)/2, (my height)/2] with radii [(my height)/8, (my height)/4]	else if pString is "left rect" then		return rectangle path of rectangle [(my width)/2 - (my height)/4, (my height)/4, (my width)/2, 3*(my height)/4]	else if pString is "right rect" then		return rectangle path of rectangle [(my width)/2, (my height)/4, (my width)/2 + (my height)/4, 3*(my height)/4]	end ifend handler---------------------- this handler returns a rectangleprivate handler getRect(in pString as string) as Rectangle	if pString is "bounding box" then		return rectangle [(my width)/2 - 3*(my height)/4, (my height)/4, (my width)/2 + 3*(my height)/4, 3*(my height)/4]	end ifend handler---------------------- this handler returns a paintprivate handler getPaint(in pString as string) as Paint	if pString is "border" then		if mChecked is false then			return solid paint with mColorLightGrey		else			return solid paint with mColorMacGreen		end if			else if pString is "background" then		if mChecked is true then			return solid paint with mColorMacGreen						else if mChecked is false then			if mState is "not animating" then				return solid paint with mColorWhite			else 				return solid paint with mColorLightGrey			end if					end if			else if pString is "circle" then		return solid paint with mColorWhite			end ifend handler---------------------- this handler returns the click loc as a pointpublic handler getClickLoc() as Point	variable tClickLoc	execute script "return the clickloc"	put the result into tClickLoc		variable tClickPoint as list	split tClickLoc by "," into tClickPoint		variable tX as number	variable tY as number	put (element 1 of tClickPoint) parsed as number - the left of my rectangle into tX	put (element 2 of tClickPoint) parsed as number - the top of my rectangle into tY	variable tPoint as Point	put point [tX,tY] into tPoint		return tPointend handler----------end widget
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+
+/* 
+Module: com.livecode.extensions.livecode.checkBox
+
+Type: widget
+
+Description: This widget is a check box. 
+It has three properties that can be set: theme, label and checked.
+*/
+ 
+
+-- declaring the extension as a widget, followed by the identifier
+widget com.livecode.extensions.livecode.checkBox
+--
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata author is "Georgia Hutchings"
+metadata version is "1.0.0"
+metadata title is "Check Box"
+--
+
+-- dependancy declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- property declarations
+property theme 			get mTheme 		set setTheme
+property label 			get mLabel 		set setLabel
+property checked		get mIsChecked 	set setChecked
+--
+
+-- private instance variables
+private variable mTheme as string
+private variable mLabel as string
+private variable mIsChecked as boolean
+
+private variable mState as string
+--
+
+-- constants
+constant kPadding is 10
+constant kWidth is 12
+
+constant kWhite is [1,1,1]
+constant kBlack is [0,0,0]
+
+constant kFontSize is 12
+constant kIconSize is 10
+--
+
+----------
+-- this handler is called when the widget is saved
+public handler OnSave(out rProperties as array)
+	put the empty array into rProperties
+	
+	put mTheme into rProperties["theme"]
+	put mLabel into rProperties["label"]
+	put mIsChecked into rProperties["checked"]
+	
+	return rProperties
+end handler
+----------
+
+----------
+-- this handler is called when the widget is loaded
+public handler OnLoad(in pProperties as array)
+	put pProperties["theme"] into mTheme
+	put pProperties["label"] into mLabel
+	put pProperties["checked"] into mIsChecked
+end handler
+----------
+
+----------
+-- called when the widget is created
+public handler OnCreate()
+	put "windows-" into mTheme
+	put "Check Box" into mLabel
+	put false into mIsChecked
+	put "" into mState
+end handler
+----------
+
+----------
+-- called whenever livecode needs to redraw the widget
+public handler OnPaint()
+	
+	-- stroke the box first if macos
+	if mTheme contains "macos" then
+		set the stroke width of this canvas to 1
+		set the paint of this canvas to getPaint("border")
+		stroke getPath("checkbox") on this canvas
+	end if
+	--
+	
+	-- draw the box and fill with paint
+	set the paint of this canvas to getPaint("checkbox")
+	fill getPath("checkbox") on this canvas
+	--
+	
+	-- stroke the box now if windows
+	if mTheme contains "windows" then
+		set the stroke width of this canvas to 2
+		set the paint of this canvas to getPaint("border")
+		stroke getPath("checkbox") on this canvas
+	end if
+	
+	-- if the box is checked, fill check icon in the box
+	if mIsChecked is true then
+		set the font of this canvas to getFont("icon")
+		set the paint of this canvas to getPaint("icon")
+		execute script ("return numtocodepoint(0xf00c)")
+		fill text the result at center of getRect("checkbox") on this canvas
+	end if
+	--
+	
+	-- draw and fill the label text
+	set the font of this canvas to getFont("label")
+	set the paint of this canvas to getPaint("label")
+	fill text mLabel at left of getRect("label") on this canvas
+	--
+	
+end handler
+----------
+
+----------
+-- the following handlers deal with mouse events
+public handler OnMouseDown()
+	put "pressed" into mState
+	redraw all
+end handler
+--
+public handler OnMouseUp()
+	put "" into mState
+	setChecked(not(mIsChecked))
+	redraw all
+	dispatch command "mouseUp" to my script object with [mLabel]
+end handler
+----------
+
+----------
+-- this handler returns a path
+private handler getPath(in pString as string) as Path
+	if pString is "checkbox" then
+		if mTheme contains "macos" then
+			return rounded rectangle path of rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2] with radius 2
+		else 
+			return rectangle path of rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2]
+		end if
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a rectangle
+private handler getRect(in pObject as string) as Rectangle
+	if pObject is "checkbox" then
+		return rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2]
+
+	else if pObject is "label" then
+		return rectangle [2*kPadding+kWidth,  my height/2 - kWidth/2, my width - kPadding, my height/2 + kWidth/2]
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a paint
+private handler getPaint(in pObject as string) as Paint
+
+	if pObject is "border" then
+		if mTheme is "macos-yosemite" and mIsChecked is true then
+			return solid paint with color [51/255, 153/255, 1]
+		else if mTheme is "windows-8" then
+			return solid paint with color [160/255, 160/255, 160/255]
+		else
+			return solid paint with color kBlack
+		end if
+		
+	else if pObject is "checkbox" then
+		
+		if mTheme is "macos-yosemite" then
+	
+			if mIsChecked is true then
+				return solid paint with color [51/255,153/255,1]
+			else if mIsChecked is false then
+				return solid paint with color kWhite
+			end if
+			
+		else if mTheme is "macos-10.0" then
+			
+			variable tStop1
+			variable tStop2
+			variable tStop3
+			variable tColor1 as Color
+			variable tColor2 as Color
+			variable tColor3 as Color
+			variable tPaint as Paint
+			
+			if mIsChecked is false then
+				put color [1, 1, 1] into tColor1
+				put color [224/255, 224/255, 224/255, 0.25] into tColor2
+				put color [192/255, 192/255, 192/255, 0.75] into tColor3
+				
+			else if mIsChecked is true then
+			
+				if mState is "pressed" then
+					put color [0/255, 102/255, 255/255, 0.3] into tColor1
+					put color [0/255, 102/255, 255/255, 0.75] into tColor2
+					put color [0/255, 102/255, 255/255, 0.3] into tColor3
+				else
+					put color [102/255, 178/255, 1.0, 0.05] into tColor1
+					put color [102/255, 178/255, 1.0, 0.85] into tColor2
+					put color [102/255, 178/255, 1.0, 0.05] into tColor3
+				end if
+				
+			end if
+			
+			-- create a new gradient paint
+			put gradient stop at 0.25 with tColor1 into tStop1
+			put gradient stop at 0.5 with tColor2 into tStop2
+			put gradient stop at 0.75 with tColor3 into tStop3
+						
+			put linear gradient with ramp [tStop1, tStop2, tStop3] into tPaint
+			scale tPaint by [my height, my width]
+			rotate tPaint by 90
+			return tPaint
+		
+		else if mTheme is "windows-8" then
+			return solid paint with color kWhite
+			
+		end if
+		
+	else if pObject is "icon" then
+		if mTheme is "macos-yosemite" then
+			return solid paint with color kWhite
+		else
+			return solid paint with color kBlack
+		end if
+	
+	else if pObject is "label" then
+		
+		if mTheme is "macos-yosemite" then
+			return solid paint with color [32/255, 32/255, 32/255]
+		else if mTheme is "macos-10.0" then
+			return solid paint with color kBlack
+		else if mTheme is "windows-8" then
+			return solid paint with color [96/255, 96/255, 96/255]
+		end if
+		
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a font
+private handler getFont(in pObject as string) as Font
+	if pObject is "icon" then
+		return font "fontawesome" at size kIconSize
+		
+	else if pObject is "label" then
+		if mTheme is "macos-10.0" then
+			return font "Lucida Grande" at size kFontSize-1
+		else if mTheme is "macos-yosemite" then
+			return font "Helvetica Neue" at size kFontSize
+		else if mTheme is "windows-8" then
+			return font "Segoe WP" at size kFontSize
+		end if 
+		
+	end if
+end handler
+----------
+
+----------
+-- sets the theme of the widget
+/*
+Summary: Sets the theme of the check box
+
+Parameters:
+pTheme: The name of the theme.
+
+Description:
+Sets the theme property of the button to either "macos-10", "macos-yosemite" or "windows-8".
+*/
+public handler setTheme(in pTheme as string) as undefined
+	put pTheme into mTheme
+	redraw all
+end handler
+----------
+
+----------
+-- sets the label of the widget
+/*
+Summary: Sets the label of the check box
+
+Parameters:
+pLabel: The text of the label.
+
+Description:
+Sets the label property of the check box to any string.
+*/
+public handler setLabel(in pLabel as string) as undefined
+	put pLabel into mLabel
+	redraw all
+end handler
+----------
+
+----------
+-- sets whether the box is checked
+/*
+Summary: Sets whether the check box is checked or not of the check box
+
+Parameters:
+pIsChecked: The state of the check box.
+
+Description:
+Sets the property checked of the check box. If true, the box is checked and if false, the box is unchecked.
+*/
+public handler setChecked(in pIsChecked as boolean) as undefined
+	put pIsChecked into mIsChecked
+	redraw all
+end handler
+----------
+
+end widget

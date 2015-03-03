@@ -146,7 +146,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR MAC
 //
 
-#if defined(__GNUC__) && defined(__APPLE__) && !defined(TARGET_OS_IPHONE)
+#if defined(__GNUC__) && defined(__APPLE__) && !TARGET_OS_IPHONE
 
 // Compiler
 #define __GCC__ 1
@@ -227,7 +227,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR IOS
 //
 
-#if defined(__GNUC__) && defined(__APPLE__) && defined(TARGET_OS_IPHONE)
+#if defined(__GNUC__) && defined(__APPLE__) && TARGET_OS_IPHONE
 
 // Compiler
 #define __GCC__ 1
@@ -365,6 +365,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	define __HAVE_STDINT_H__
 #	define __STDC_LIMIT_MACROS
 #	include <stdint.h>
+#   include <stddef.h>
 #endif
 
 #if !defined(__HAVE_STDINT_H__)
@@ -600,7 +601,21 @@ typedef const struct __CFData *CFDataRef;
 //  POINTER TYPES
 //
 
-#define nil 0
+#if defined(__cplusplus) /* C++ */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil uintptr_t(0)
+#	endif
+
+#else /* C */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil ((void*)0)
+#	endif
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2519,6 +2534,7 @@ MC_DLLEXPORT void *MCHandlerGetContext(MCHandlerRef handler);
 MC_DLLEXPORT const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef handler);
     
 MC_DLLEXPORT bool MCHandlerInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
