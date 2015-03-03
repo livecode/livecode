@@ -258,6 +258,14 @@ static bool __int_hash(void *value, hash_t& r_hash)
     return true;
 }
 
+static bool
+__uint_hash(void *value,
+            hash_t & r_hash)
+{
+	r_hash = MCHashUInteger(*(uinteger_t *) value);
+	return true;
+}
+
 static bool __float_hash(void *value, hash_t& r_hash)
 {
     r_hash = MCHashDouble(*(float *)value);
@@ -438,7 +446,7 @@ bool __MCForeignValueInitialize(void)
     d . move = __numeric_copy<uinteger_t>;
     d . copy = __numeric_copy<uinteger_t>;
     d . equal = __numeric_equal<uinteger_t>;
-    d . hash = __int_hash;
+    d . hash = __uint_hash;
     d . doimport = __uint_import;
     d . doexport = __uint_export;
     d . describe = __uint_describe;
