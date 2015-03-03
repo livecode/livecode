@@ -209,7 +209,7 @@ The unary plus operator is a no-op on the predefined numeric types.
 Tags: Math
 */
 
-syntax PlusUnaryOperator is prefix operator with precedence 1
+syntax PlusUnaryOperator is prefix operator with precedence 0
     "+" <Operand: Expression>
 begin
     MCArithmeticEvalPlusNumber(Operand, output)
@@ -228,7 +228,7 @@ Example:
 Tags: Math
 */
 
-syntax MinusUnaryOperator is prefix operator with precedence 1
+syntax MinusUnaryOperator is prefix operator with precedence 0
     "-" <Operand: Expression>
 begin
     MCArithmeticEvalMinusNumber(Operand, output)
