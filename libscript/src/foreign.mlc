@@ -22,6 +22,7 @@ public foreign type int binds to "kMCIntTypeInfo"
 public foreign type float binds to "kMCFloatTypeInfo"
 public foreign type double binds to "kMCDoubleTypeInfo"
 public foreign type pointer binds to "kMCPointerTypeInfo"
+public foreign type UIntSize binds to "kMCSizeTypeInfo"
 
 public foreign type index binds to "kMCIntTypeInfo"
 public foreign type uindex binds to "kMCUIntTypeInfo"
