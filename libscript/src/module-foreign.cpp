@@ -76,9 +76,10 @@ static bool __cstring_copy(void *from, void *to)
 static bool __cstring_equal(void *left, void *right, bool& r_equal)
 {
     if (*(void **)left == nil || *(void **)right == nil)
-        return left == right;
-    
-    return strcmp(*(char **)left, *(char **)right) == 0;
+		r_equal = (left == right);
+	else
+		r_equal = strcmp(*(char **)left, *(char **)right) == 0;
+	return true;
 }
 
 static bool __cstring_hash(void *value, hash_t& r_hash)
