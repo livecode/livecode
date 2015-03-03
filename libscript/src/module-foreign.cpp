@@ -25,31 +25,34 @@
 extern "C"
 {
     MC_DLLEXPORT MCTypeInfoRef kMCNativeCStringTypeInfo;
+	MC_DLLEXPORT MCTypeInfoRef kMCWStringTypeInfo;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __cstring_initialize(void *contents)
+static bool __cbuffer_initialize(void *contents)
 {
     *(void **)contents = nil;
     return true;
 }
 
-static void __cstring_finalize(void *contents)
+static void __cbuffer_finalize(void *contents)
 {
     free(*(void **)contents);
 }
 
-static bool __cstring_defined(void *contents)
+static bool __cbuffer_defined(void *contents)
 {
     return *(void **)contents != nil;
 }
 
-static bool __cstring_move(void *from, void *to)
+static bool __cbuffer_move(void *from, void *to)
 {
     *(void **)to = *(void **)from;
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 static bool __cstring_copy(void *from, void *to)
 {
@@ -121,6 +124,120 @@ static bool __nativecstring_export(MCValueRef value, bool release, void *content
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Compute length excluding trailing nul */
+static size_t
+__wstring_len (const unichar_t *value)
+{
+	uindex_t len;
+	for (len = 0; value[len] != 0; ++len);
+	return len;
+}
+
+static bool
+__wstring_copy (void *from,
+                void *to)
+{
+	if (nil == *(void **) from)
+	{
+		*(void **)to = nil;
+		return true;
+	}
+
+	const unichar_t *t_old_string = *(unichar_t **) from;
+
+	/* Allocate enough space for string + trailing nul */
+	size_t t_length;
+	t_length = sizeof (unichar_t) * (1 + __wstring_len (t_old_string));
+
+	unichar_t *t_new_string;
+	if (!MCMemoryNewArray (t_length, t_new_string))
+		return false;
+
+	MCMemoryCopy (t_new_string, t_old_string, t_length);
+
+	*(unichar_t **)to = t_new_string;
+
+	return true;
+}
+
+static bool
+__wstring_equal (void *left,
+                 void *right,
+                 bool & r_equal)
+{
+	if (nil == *(void **) left || nil == *(void **) right)
+		return left == right;
+
+	const unichar_t *t_left = *(unichar_t **) left;
+	const unichar_t *t_right = *(unichar_t **) right;
+
+	size_t i = 0;
+	while (true)
+	{
+		if (0 == t_left[i] && 0 == t_right[i])
+			break;
+		if (t_left[i] != t_right[i])
+			return false;
+		++i;
+	}
+	return true;
+}
+
+static bool
+__wstring_hash (void *value,
+                hash_t & r_hash)
+{
+	if (nil == *(void **)value)
+	{
+		r_hash = 0;
+		return true;
+	}
+
+	const unichar_t *t_value = *(unichar_t **) value;
+	r_hash = MCHashBytes (t_value, __wstring_len (t_value) * sizeof(unichar_t));
+	return true;
+}
+
+static bool
+__wstring_import (void *contents,
+                  bool release,
+                  MCValueRef & r_value)
+{
+	if (release)
+		return MCStringCreateWithWStringAndRelease (*(unichar_t **) contents,
+		                                            (MCStringRef &) r_value);
+	else
+		return MCStringCreateWithWString(*(const unichar_t **) contents,
+		                                 (MCStringRef &) r_value);
+}
+
+static bool
+__wstring_export (MCValueRef value,
+                  bool release,
+                  void *contents)
+{
+	/* Reject strings that contain nul characters; we can't convert
+	 * them to nul-terminated wide character strings without data
+	 * loss. */
+	uindex_t t_ignored;
+	if (MCStringFirstIndexOfChar ((MCStringRef) value, 0, 0,
+	                              kMCStringOptionCompareExact, t_ignored))
+		return false;
+
+	unichar_t *t_wstring_value;
+	if (!MCStringConvertToWString ((MCStringRef) value, t_wstring_value))
+		return false;
+
+	if (release)
+		MCValueRelease (value);
+
+	*(unichar_t **)contents = t_wstring_value;
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc, MCTypeInfoRef& r_typeinfo)
 {
     MCAutoStringRef t_name_string;
@@ -146,10 +263,10 @@ bool MCForeignModuleInitialize(void)
     p = kMCForeignPrimitiveTypePointer;
     d . layout = &p;
     d . layout_size = 1;
-    d . initialize = __cstring_initialize;
-    d . finalize = __cstring_finalize;
-    d . defined = __cstring_defined;
-    d . move = __cstring_move;
+    d . initialize = __cbuffer_initialize;
+    d . finalize = __cbuffer_finalize;
+    d . defined = __cbuffer_defined;
+    d . move = __cbuffer_move;
     d . copy = __cstring_copy;
     d . equal = __cstring_equal;
     d . hash = __cstring_hash;
@@ -157,13 +274,32 @@ bool MCForeignModuleInitialize(void)
     d . doexport = __nativecstring_export;
     if (!__build_typeinfo("com.livecode.foreign.NativeCString", &d, kMCNativeCStringTypeInfo))
         return false;
-    
+
+	d . size = sizeof(unichar_t *);
+	d . basetype = kMCNullTypeInfo;
+	d . bridgetype = kMCStringTypeInfo;
+	p = kMCForeignPrimitiveTypePointer;
+	d . layout = &p;
+	d . layout_size = 1;
+	d . initialize = __cbuffer_initialize;
+	d . finalize = __cbuffer_finalize;
+	d . defined = __cbuffer_defined;
+	d . move = __cbuffer_move;
+	d . copy = __wstring_copy;
+	d . equal = __wstring_equal;
+	d . hash = __wstring_hash;
+	d . doimport = __wstring_import;
+	d . doexport = __wstring_export;
+	if (!__build_typeinfo("com.livecode.foreign.WString", &d, kMCWStringTypeInfo))
+		return false;
+
     return true;
 }
 
 void MCForeignModuleFinalize(void)
 {
     MCValueRelease(kMCNativeCStringTypeInfo);
+	MCValueRelease(kMCWStringTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

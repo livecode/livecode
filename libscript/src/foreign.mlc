@@ -27,5 +27,6 @@ public foreign type index binds to "kMCIntTypeInfo"
 public foreign type uindex binds to "kMCUIntTypeInfo"
 
 public foreign type NativeCString binds to "kMCNativeCStringTypeInfo"
+public foreign type WString binds to "kMCWStringTypeInfo"
 
 end module
