@@ -12,6 +12,7 @@ SOURCES += \
 	module-bitwise.cpp \
 	module-byte.cpp \
 	module-char.cpp \
+	module-codeunit.cpp \
 	module-date.cpp \
 	module-encoding.cpp \
 	module-file.cpp \
