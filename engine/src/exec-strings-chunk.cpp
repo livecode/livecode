@@ -175,9 +175,9 @@ void MCStringsGetExtentsByOrdinalInRange(MCExecContext& ctxt, Chunk_term p_chunk
 void MCStringsGetExtentsByRangeInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCValueRef p_string, MCRange *p_range, uinteger_t& r_first, uinteger_t& r_chunk_count)
 {
     if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
-        MCChunkGetExtentsOfByteChunkByRangeInRange((MCDataRef)p_string, p_range, p_first, p_last, r_first, r_chunk_count);
+        MCChunkGetExtentsOfByteChunkByRangeInRange((MCDataRef)p_string, p_range, p_first, p_last, false, false, false, r_first, r_chunk_count);
     else if (p_chunk_type == CT_CODEUNIT)
-        MCChunkGetExtentsOfCodeunitChunkByRangeInRange((MCStringRef)p_string, p_range, p_first, p_last, r_first, r_chunk_count);
+        MCChunkGetExtentsOfCodeunitChunkByRangeInRange((MCStringRef)p_string, p_range, p_first, p_last, false, false, false, r_first, r_chunk_count);
     else
     {
         MCChunkCountState t_state;
@@ -185,7 +185,7 @@ void MCStringsGetExtentsByRangeInRange(MCExecContext& ctxt, Chunk_term p_chunk_t
         t_state . chunk = p_chunk_type;
         t_state . ctxt = &ctxt;
         t_state . range = p_range;
-        MCChunkGetExtentsByRangeInRange(p_first, p_last, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
+        MCChunkGetExtentsByRangeInRange(false, false, false, p_first, p_last, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
     }
 }
 
@@ -193,9 +193,9 @@ void MCStringsGetExtentsByRangeInRange(MCExecContext& ctxt, Chunk_term p_chunk_t
 void MCStringsGetExtentsByExpressionInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, MCStringRef p_string, MCRange *p_range, uinteger_t& r_first, uinteger_t& r_chunk_count)
 {
     if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
-        MCChunkGetExtentsOfByteChunkByExpressionInRange((MCDataRef)p_string, p_range, p_first, r_first, r_chunk_count);
+        MCChunkGetExtentsOfByteChunkByExpressionInRange((MCDataRef)p_string, p_range, p_first, false, false, false, r_first, r_chunk_count);
     else if (p_chunk_type == CT_CODEUNIT)
-        MCChunkGetExtentsOfCodeunitChunkByExpressionInRange((MCStringRef)p_string, p_range, p_first, r_first, r_chunk_count);
+        MCChunkGetExtentsOfCodeunitChunkByExpressionInRange((MCStringRef)p_string, p_range, p_first, false, false, false, r_first, r_chunk_count);
     else
     {
         MCChunkCountState t_state;
@@ -203,7 +203,7 @@ void MCStringsGetExtentsByExpressionInRange(MCExecContext& ctxt, Chunk_term p_ch
         t_state . chunk = p_chunk_type;
         t_state . ctxt = &ctxt;
         t_state . range = p_range;
-        MCChunkGetExtentsByExpressionInRange(p_first, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
+        MCChunkGetExtentsByExpressionInRange(false, false, false, p_first, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
     }
 }
 

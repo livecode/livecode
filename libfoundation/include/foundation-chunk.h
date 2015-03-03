@@ -49,28 +49,24 @@ uinteger_t MCChunkCountCodepointChunkCallback(void *context);
 
 uindex_t MCChunkCountChunkChunksInRange(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCRange *p_range);
 
-bool MCChunkEnsureExtentsByRangeInRange(bool p_strict, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
-bool MCChunkEnsureExtentsByExpressionInRange(bool p_strict, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsByRangeInRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfByteChunkByRangeInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsByExpressionInRange(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfByteChunkByExpressionInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfByteChunkByRangeInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfCodeunitChunkByRangeInRange(MCStringRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(MCStringRef p_data, MCRange *p_range, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfByteChunkByExpressionInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfGraphemeChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfGraphemeChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfCodeunitChunkByRangeInRange(MCStringRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(MCStringRef p_data, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfElementChunkByRangeInRange(MCProperListRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfElementChunkByExpressionInRange(MCProperListRef p_string, MCRange *p_range, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
 
-bool MCChunkGetExtentsOfGraphemeChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count);
-bool MCChunkGetExtentsOfGraphemeChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, bool p_strict, uindex_t& r_first, uindex_t& r_chunk_count);
-
-void MCChunkGetExtentsOfElementChunkByRangeInRange(MCProperListRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfElementChunkByExpressionInRange(MCProperListRef p_string, MCRange *p_range, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
-
-void MCChunkGetExtentsOfChunkChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
-void MCChunkGetExtentsOfChunkChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfChunkChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsOfChunkChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
 
 bool MCChunkIsAmongTheChunksOfRange(MCStringRef p_chunk, MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCRange p_range);
 

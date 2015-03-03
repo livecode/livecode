@@ -218,7 +218,7 @@ public handler TestRange()
 
 	MCUnitTestHandlerThrows(TestRange_Zero, "range (zero)")
 	MCUnitTestHandlerThrows(TestRange_After, "range (after)")
-	MCUnitTestHandlerThrowsBroken(TestRange_Before, "range (before)", "bug 14704")
+	MCUnitTestHandlerThrows(TestRange_Before, "range (before)")
 end handler
 
 handler TestDeleteSingle_Zero()
@@ -291,7 +291,7 @@ public handler TestDeleteRange()
 	test "delete range (-ve)" when t is ["x", []]
 
 	MCUnitTestHandlerThrows(TestDeleteRange_Zero, "delete range (zero)")
-	MCUnitTestHandlerThrowsBroken(TestDeleteRange_Before, "delete range (before)", "bug 14719")
+	MCUnitTestHandlerThrows(TestDeleteRange_Before, "delete range (before)")
 	MCUnitTestHandlerThrows(TestDeleteRange_After, "delete range (after)")
 end handler
 
@@ -321,6 +321,18 @@ public handler TestSplice()
 	test "splice (+ve, empty)" when t is empty
 end handler
 
+handler TestSpliceBefore_Zero()
+	variable t
+	put [1] into t
+	splice t before element 0 of t
+end handler
+
+handler TestSpliceAfter_Limit()
+	variable t
+	put [1] into t
+	splice t after element 2 of t
+end handler
+
 public handler TestSpliceBefore()
 	variable t
 	variable tTemplate
@@ -333,6 +345,8 @@ public handler TestSpliceBefore()
 	put tTemplate into t
 	splice the empty list before element 2 of t
 	test "splice before (empty)" when t is tTemplate
+	
+	MCUnitTestHandlerThrows(TestSpliceBefore_Zero, "splice before (zero)")
 end handler
 
 public handler TestSpliceAfter()
@@ -347,6 +361,8 @@ public handler TestSpliceAfter()
 	put tTemplate into t
 	splice the empty list after element 2 of t
 	test "splice after (empty)" when t is tTemplate
+	
+	MCUnitTestHandlerThrows(TestSpliceAfter_Limit, "splice after (limit)")
 end handler
 
 public handler TestRepeatElement()

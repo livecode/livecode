@@ -263,7 +263,7 @@ public handler TestDeleteRange()
 	test "delete range (+ve)" when t is "wz"
 
 	MCUnitTestHandlerThrows(TestDeleteRange_Zero, "delete range (0)")
-	MCUnitTestHandlerThrowsBroken(TestDeleteRange_Before, "delete range (before)", "bug 14701")
+	MCUnitTestHandlerThrows(TestDeleteRange_Before, "delete range (before)")
 	MCUnitTestHandlerThrows(TestDeleteRange_After, "delete range (after)")
 	MCUnitTestHandlerThrows(TestDeleteRange_Reverse, "delete range (reverse)")
 end handler
@@ -328,19 +328,46 @@ public handler TestOffsetAfter()
 	-- "after X" where X does not map to a valid coordinate should
 	-- wrap to the ends of the string (i.e. if X > L then treat X
 	-- as L, and if X < -L then treat X as 0).
-	test "offset after (single, invalid +ve)" when the offset of "x" after 3 in "x" is 0
-	test "offset after (single, invalid -ve)" when the offset of "x" after -3 in "x" is 1
-	test "first offset after (single, invalid +ve)" when the first offset of "x" after 3 in "x" is 0
-	test "first offset after (single, invalid -ve)" when the first offset of "x" after -3 in "x" is 1
-	test "last offset after (single, invalid +ve)" when the last offset of "x" after 3 in "x" is 0
-	skip test "last offset after (single, invalid -ve)" because "bug 14677"
-	--test "last offset after (single, invalid -ve)" when the last offset of "x" after -3 in "x" is 1
+
+	MCUnitTestHandlerThrows(TestOffsetAfter_SingleInvalidPositive, "offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestOffsetAfter_SingleInvalidNegative, "offset after (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidPositive, "first offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidNegative, "first offset after (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidPositive, "last offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidNegative, "last offset after (single, invalid -ve)")
+	
+	--
 
 	-- "chars" variants
 	test "offset after chars (single, +ve)" when the offset of chars "x" after 1 in "x.xx." is 2
 	test "first offset after chars (single, +ve)" when the first offset of chars "x" after 1 in "x.xx." is 2
 	test "last offset after chars (single, +ve)" when the last offset of chars "x" after 1 in "x.xx." is 3
 end handler
+
+handler TestOffsetAfter_SingleInvalidPositive()
+	get the offset of "x" after 3 in "x"
+end handler
+
+handler TestOffsetAfter_SingleInvalidNegative()
+	get the offset of "x" after -3 in "x"
+end handler
+
+handler TestFirstOffsetAfter_SingleInvalidPositive()
+	get the first offset of "x" after 3 in "x"
+end handler
+
+handler TestFirstOffsetAfter_SingleInvalidNegative()
+	get the first offset of "x" after -3 in "x"
+end handler
+
+handler TestLastOffsetAfter_SingleInvalidPositive()
+	get the last offset of "x" after 3 in "x"
+end handler
+
+handler TestLastOffsetAfter_SingleInvalidNegative()
+	get the last offset of "x" after -3 in "x"
+end handler
+
 
 public handler TestOffsetAfterZero()
 	-- "offset of _ after 0 in _" should be equivalent to "offset of _ in _"
