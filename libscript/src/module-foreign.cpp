@@ -58,15 +58,17 @@ static bool __cstring_copy(void *from, void *to)
         *(void **)to = nil;
         return true;
     }
+
+    const char *t_old_string = *(char **) from;
     
     size_t t_length;
-    t_length = strlen(*(char **)from) + 1;
+    t_length = strlen(t_old_string) + 1;
     
     char *t_new_string;
     if (!MCMemoryNewArray(t_length, t_new_string))
         return false;
     
-    MCMemoryCopy(t_new_string, from, t_length);
+    MCMemoryCopy(t_new_string, t_old_string, t_length);
     
     *(char **)to = t_new_string;
     
