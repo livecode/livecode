@@ -1518,11 +1518,20 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				DWORD t_readsize;
 				t_readsize = MCU_min(t_remaining, 0x00400000);
 				
+				// SN-2015-03-03: [[ Bug 14612 ]] Be more careful with the
+				//  error returned by ReadFile - if no error occurred...
+				//  ... the previous error will remain set (possibly not 0)
+				DWORD t_old_error, t_read_error;
+				t_old_error = GetLastError();
+				SetLastError(0);
 				t_read_success = ReadFile(m_handle, (LPVOID)((char*)sptr + t_offset), t_readsize, &nread, NULL);
+				t_read_error = GetLastError();
+				SetLastError(t_old_error);
+
 				t_offset += nread;
 				if (!t_read_success)
 				{
-					MCS_seterrno(GetLastError());
+					MCS_seterrno(t_read_error);
 					r_read = t_offset;
 					return false;
 				}
@@ -1530,7 +1539,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				// SN-2014-08-11: [[ Bug 13145 ]] If ReadFile can't read more, but no error is triggered, we should stop here,
 				//  but return true. The new imageLoader reads buffer by buffer, and doesn't expect and error when reading the
 				//  the last buffer (which might ask for more than remaining in the file).
-				if (nread == 0 && GetLastError() == 0)
+				if (nread == 0 && t_read_error == 0)
 				{
 					r_read = t_offset;
 					m_is_eof = true;
