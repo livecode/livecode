@@ -94,7 +94,7 @@ Tags: Binary
 */
 
 syntax ByteOffset is prefix operator with precedence 1
-    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
 end syntax
@@ -116,7 +116,7 @@ Tags: Binary
 */
 
 syntax ByteOffsetAfter is prefix operator with precedence 1
-	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
 	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
@@ -138,7 +138,7 @@ Tags: Binary
 */
 
 syntax ByteOffsetBefore is prefix operator with precedence 1
-    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" "bytes" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
