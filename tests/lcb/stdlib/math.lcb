@@ -46,7 +46,7 @@ public handler TestRound()
 end handler
 
 public handler TestPow()
-	test "pow (-ve, -ve)" when -2 ^ -2 is -0.25
+	test "pow (-ve, -ve)" when -2 ^ -2 is 0.25
 	test "pow (-ve, +ve)" when (-2) ^ 2 is 4
 	test "pow (-ve, +ve)" when -2 ^ 3 is -8
 	test "pow (+ve, -ve)" when 2 ^ -2 is 0.25
@@ -65,8 +65,8 @@ public handler TestPowDomain()
 end handler
 
 public handler TestPowPrecedence()
-	broken test "pow vs. unary−" when -2 ^ 2 is 4 because "bug 14591"
-	broken test "pow vs. unary−" when -2 ^ 0 is 1 because "bug 14591"
+	test "pow vs. unary−" when -2 ^ 2 is 4
+	test "pow vs. unary−" when -2 ^ 0 is 1
 end handler
 
 public handler TestLog10()
