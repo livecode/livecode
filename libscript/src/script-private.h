@@ -382,6 +382,8 @@ struct MCScriptModule: public MCScriptObject
     // After a module has been validated and had its dependencies resolved, this
     // var is true - not pickled
     bool is_usable : 1;
+    // During the check for usability, this var is true - not pickled
+    bool is_in_usable_check : 1;
     
     // (computed) The number of slots needed by an instance - not pickled
     uindex_t slot_count;
