@@ -294,6 +294,11 @@ public handler TestOffset()
 	test "first offset (single, same)" when the first offset of "x" in "x" is 1
 	-- bug 14677
 	test "last offset (single, same)" when the last offset of "x" in "x" is 1
+
+	test "offset (empty)" when the offset of "" in "x" is 0
+	test "first offset (empty)" when the first offset of "" in "x" is 0
+	test "last offset (empty)" when the last offset of "" in "x" is 0
+	test "offset (empty, empty)" when the offset of "" in "" is 0
 end handler
 
 handler TestOffsetAfter_Before()
