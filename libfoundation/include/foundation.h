@@ -1110,7 +1110,9 @@ extern "C" {
 //   value - recompute on unserialization of the object.
 
 // Return a hash for the given integer.
-MC_DLLEXPORT hash_t MCHashInteger(integer_t i);
+MC_DLLEXPORT hash_t MCHashInteger(integer_t);
+MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
+MC_DLLEXPORT hash_t MCHashUSize(size_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.

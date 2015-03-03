@@ -205,14 +205,44 @@ void MCMemoryDeleteArray(void *p_array)
 
 #define HASHFACTOR 2654435761U
 
+/* Templates for hashing arbitrary-sized integers */
+template <typename T>
+static inline hash_t
+MCHashUInt(T i)
+{
+	hash_t h = 0;
+	for (unsigned int o = 0; o < sizeof(T); o += sizeof(hash_t))
+		h += HASHFACTOR * (hash_t) (i >> (o << 3));
+	return h;
+}
+
+template <typename T>
+static inline hash_t
+MCHashInt(T i)
+{
+	return MCHashUInt((i >= 0) ? i : (-i));
+}
+
 hash_t MCHashInteger(integer_t i)
 {
-	return ((i > 0) ? (hash_t)i : (hash_t)(-i)) * HASHFACTOR;
+	return MCHashInt (i);
+}
+
+hash_t
+MCHashUInteger (uinteger_t i)
+{
+	return MCHashUInt(i);
+}
+
+hash_t
+MCHashUSize (size_t i)
+{
+	return MCHashUInt (i);
 }
 
 hash_t MCHashPointer(void *p)
 {
-    return MCHashInteger((intptr_t)p);
+	return MCHashUInt((uintptr_t) p);
 }
 
 hash_t MCHashDouble(double d)
