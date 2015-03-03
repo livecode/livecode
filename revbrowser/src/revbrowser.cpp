@@ -1839,12 +1839,16 @@ void revBrowserInstances(char *p_arguments[], int p_argument_count, char **r_res
 //  SHUTDOWN
 //
 
-#ifndef _WINDOWS
 extern "C"
 {
+#ifdef _WINDOWS
+	void __declspec(dllexport) shutdownXtable(void);
+#else
 	void shutdownXtable(void) __attribute__((visibility("default")));
+#endif
 }
 
+void MCCefFinalise(void);
 void shutdownXtable(void)
 {
 	for(;;)
@@ -1855,8 +1859,9 @@ void shutdownXtable(void)
 			break;
 		s_browsers . Delete(t_browser);
 	}
+
+	MCCefFinalise();
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //
