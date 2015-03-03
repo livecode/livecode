@@ -1350,6 +1350,7 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
 
 //////////
 
