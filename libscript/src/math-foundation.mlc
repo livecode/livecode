@@ -22,18 +22,18 @@ module com.livecode.mathfoundation
 
 use com.livecode.foreign
 
-public foreign handler MCMathFoundationExecRoundRealToNearest(inout Target as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationExecRoundRealToNearest(inout Target as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathFoundationExecRoundNumberToNearest(inout Target as number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathFoundationEvalRoundedRealToNearest(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalRoundedRealToNearest(in Target as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathFoundationEvalRoundedNumberToNearest(in Target as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathFoundationEvalFloorReal(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalFloorReal(in Target as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathFoundationEvalFloorNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationEvalCeilingReal(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalCeilingReal(in Target as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathFoundationEvalCeilingNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathFoundationEvalPi(out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalPi(out Value as CDouble) as undefined binds to "<builtin>"
 --
 
 //public constant pi = 3.14159265358979323846

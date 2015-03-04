@@ -349,7 +349,7 @@ use com.livecode.engine
 // ---------- Widget commands ---------- //
 
 public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecScheduleTimerIn(in pTime as double) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecCancelTimer() as undefined binds to "<builtin>"
 public foreign handler MCWidgetEvalInEditMode(out rInEditMode as bool) as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecDispatch(in pIsFunction as bool, in pMessage as string) as any binds to "<builtin>"
