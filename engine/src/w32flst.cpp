@@ -342,7 +342,10 @@ int CALLBACK fontnames_FontFamProc(const LOGFONTW * lpelf,
 		return False;
 
 	// SN-2015-03-02: [[ Bug 14661 ]] Skip names that 
-	//  we have already added to the array
+	//  we have already added to the array, comparing
+	//  full name to full name. That avoid to skip
+	//  "Segoe UI" if "Segoe UI Light" has already been 
+	//  loaded, like it was with MCStringContains
 	MCValueRef t_value;
 	if (MCArrayFetchValue(t_fontlist->array, true, *t_name, t_value))
 		return True;
