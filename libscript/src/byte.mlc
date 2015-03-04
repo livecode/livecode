@@ -54,7 +54,7 @@ public foreign handler MCByteExecDeleteByteRangeOf(in Start as LCIndex, in Finis
 public foreign handler MCByteExecDeleteLastByteOf(inout Target as data) as undefined binds to "<builtin>"
 public foreign handler MCByteExecDeleteFirstByteOf(inout Target as data) as undefined binds to "<builtin>"
 
-public foreign handler MCDataExecRandomBytes(in Count as uindex, out Value as data) as undefined binds to "<builtin>"
+public foreign handler MCDataExecRandomBytes(in Count as LCUIndex, out Value as data) as undefined binds to "<builtin>"
 
 --
 
