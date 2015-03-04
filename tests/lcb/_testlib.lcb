@@ -20,7 +20,7 @@ end handler
 
 foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional list, out Result as optional any) as optional any binds to "<builtin>"
 
-handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as string, in pBroken as boolean, in pReason as string) as undefined
+handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as string, in pBroken as Boolean, in pReason as string) as undefined
 
 	variable tHandler as Thunk
 	put pHandler into tHandler
@@ -32,7 +32,7 @@ handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as strin
 	put [] into tArgList
 	put MCHandlerTryToInvokeWithList(tHandler, tArgList, tResult) into tMaybeError
 
-	variable tHasError as boolean
+	variable tHasError as Boolean
 	put tMaybeError is defined into tHasError
 
 	if tHasError then

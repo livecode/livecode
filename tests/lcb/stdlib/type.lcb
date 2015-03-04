@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.type.tests
 
 public handler TestDefined()
-	variable t as optional boolean
+	variable t as optional Boolean
 
 	test "is undefined" when t is undefined
 	test "is not defined" when t is not defined

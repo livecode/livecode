@@ -98,9 +98,9 @@ Summary: Sent when the widget visibility changed.
 Parameters:
 isVisible(bool): Whether the widget is now visible or not.
 Example:
-	private variable mAnimate as boolean
+	private variable mAnimate as Boolean
 	
-	public handler OnVisibilityChanged(in pVisible as boolean)
+	public handler OnVisibilityChanged(in pVisible as Boolean)
 		put pVisible into mAnimate
 	end handler
 	

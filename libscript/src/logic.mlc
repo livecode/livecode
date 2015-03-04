@@ -29,9 +29,9 @@ public foreign handler MCLogicEvalIsEqualTo(in Left as CBool, in Right as CBool,
 public foreign handler MCLogicEvalIsNotEqualTo(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
 
 public foreign handler MCLogicEvalBoolFormattedAsString(in Target as CBool, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalStringParsedAsBool(in Target as string, out Value as optional boolean) as undefined binds to "<builtin>"
+public foreign handler MCLogicEvalStringParsedAsBool(in Target as string, out Value as optional Boolean) as undefined binds to "<builtin>"
 public foreign handler MCLogicExecFormatBoolAsString(in Target as CBool) as string binds to "<builtin>"
-public foreign handler MCLogicExecParseStringAsBool(in Target as string) as optional boolean binds to "<builtin>"
+public foreign handler MCLogicExecParseStringAsBool(in Target as string) as optional Boolean binds to "<builtin>"
 
 --
 
@@ -192,12 +192,12 @@ Returns:	true or false
 
 Example:
 	variable tString as string
-	variable tBool as optional boolean
+	variable tBool as optional Boolean
 	put "false" into tString
 	put tString parsed as boolean into tBool -- tBool contains false
 	
 Example:
-	variable tBool as optional boolean
+	variable tBool as optional Boolean
 	put "flase" parsed as boolean into tBool -- tBool is not defined
 
 Description:
@@ -220,13 +220,13 @@ Returns:	true or false
 
 Example:
 	variable tString as string
-	variable tBool as optional boolean
+	variable tBool as optional Boolean
 	combine ["f", "a", "l", "s" "e"] with "" into tString
 	put tString parsed as boolean into tBool -- tBool contains false
 
 Example:
 	variable tResult as string
-	parse "sdfsdf" as boolean
+	parse "sdfsdf" as Boolean
 	if the result is not defined then
 		put "not a valid boolean" into tResult
 	end if

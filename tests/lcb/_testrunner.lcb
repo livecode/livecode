@@ -164,7 +164,7 @@ end handler
 -- FIXME Currently, this is implemented by redirecting the lc-run's
 -- output into a temporary file, then reading the file in.  It would
 -- be much better to use a pipe instead, if possible.
-handler GetModuleHandlers(in pModulePath as string, out rHandlerNames as list) as boolean
+handler GetModuleHandlers(in pModulePath as string, out rHandlerNames as list) as Boolean
 	variable tTempPath as string
 	put GetModuleTempPath(pModulePath) into tTempPath
 
@@ -195,7 +195,7 @@ end handler
 --
 -- FIXME We may want to capture the stderr output into the log at some
 -- point.
-handler GetTestOutput(in pModulePath as string, in pHandlerName as string, out rOutput as string) as boolean
+handler GetTestOutput(in pModulePath as string, in pHandlerName as string, out rOutput as string) as Boolean
 
 	variable tTempPath as string
 	put GetModuleTempPath(pModulePath) into tTempPath
@@ -221,7 +221,7 @@ end handler
 
 ----------------------------------------------------------------
 -- Check whether a handler should be considered as a test
-handler IsTestHandler(in pHandlerName as string) as boolean
+handler IsTestHandler(in pHandlerName as string) as Boolean
 	if 1 is the first offset of "Test" in pHandlerName then
 		return true
 	else
@@ -236,11 +236,11 @@ end handler
 -- "PASS", "XPASS", "FAIL", "XFAIL", "SKIP", or "" (if the output
 -- contained no test results).
 handler GetTestStatus(in pOutput as string) as string
-	variable tFail as boolean
-	variable tXFail as boolean
-	variable tXPass as boolean
-	variable tPass as boolean
-	variable tSkipped as boolean
+	variable tFail as Boolean
+	variable tXFail as Boolean
+	variable tXPass as Boolean
+	variable tPass as Boolean
+	variable tSkipped as Boolean
 	put false into tFail
 	put false into tXFail
 	put false into tXPass
@@ -252,9 +252,9 @@ handler GetTestStatus(in pOutput as string) as string
 
 	variable tLine as string
 	repeat for each element tLine in tOutputLines
-		variable tOkay as boolean
-		variable tTodo as boolean
-		variable tSkip as boolean
+		variable tOkay as Boolean
+		variable tTodo as Boolean
+		variable tSkip as Boolean
 
 		-- Check whether the line starts with "not ok"
 		if 1 is the first offset of "not ok" in tLine then
@@ -505,7 +505,7 @@ public handler SummarizeTests()
 
 		-- Keep track of whether the log is interesting enough
 		-- to store in the summary file.
-		variable tIsInteresting as boolean
+		variable tIsInteresting as Boolean
 		put false into tIsInteresting
 
 		-- Analyze each log line

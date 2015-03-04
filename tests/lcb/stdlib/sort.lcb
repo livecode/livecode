@@ -68,7 +68,7 @@ handler RandomStringList() as list
 	return tList
 end handler
 
-handler IsSorted(in pList as list, in pDescending as boolean) as boolean
+handler IsSorted(in pList as list, in pDescending as Boolean) as Boolean
 	if pList is empty then
 		return true
 	end if

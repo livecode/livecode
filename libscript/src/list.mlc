@@ -87,7 +87,7 @@ Example:
 	put the empty list into tVar
 	push "first element" onto tVar
 	
-	variable tResult as boolean
+	variable tResult as Boolean
 	if the head of tVar is "first element" then
 		put "success" into tResult
 	end if
@@ -246,7 +246,7 @@ Example:
 	variable tList as list
 	put [ "a", "b", "c", "d" ] into tList
 	
-	variable tIsIn as boolean
+	variable tIsIn as Boolean
 	put "a" is in tList into tIsIn -- tIsIn contains true
 
 Description:
@@ -272,7 +272,7 @@ Example:
 	variable tList as list
 	put [ "a", "b", "c", "d" ] into tList
 	
-	variable tContains as boolean
+	variable tContains as Boolean
 	
 	// put tList contains tList[1] into tContains -- error: tList[1] is not a list 
 	
@@ -305,7 +305,7 @@ Example:
 	variable tVar as list
 	put [1, 2, 3, 4, 5] into tVar
 	
-	variable tBegins as boolean
+	variable tBegins as Boolean
 	// put tList begins with tList[1] into tBegins -- error: tList[1] is not a list 
 	
 	put tList begins with [1, 2] into tBegins -- tBegins is true
@@ -335,7 +335,7 @@ Example:
 	variable tVar as list
 	put [1, 2, 3, 4, 5] into tVar
 	
-	variable tEnds as boolean
+	variable tEnds as Boolean
 	// put tList ends with tList[5] into tEnds -- error: tList[5] is not a list 
 	
 	put tList ends with element 1 to 5 of tList into tEnds -- tEnds is true
@@ -368,7 +368,7 @@ Returns: 	Returns true if <Left> is identical to <Right>.
 Example:
 	variable tList as list
 	put ["a", "b", "c"] into tList
-	variable tIs as boolean
+	variable tIs as Boolean
 	
 	put tList is ["A", "b", "c"] into tIs -- tIs is false
 	put tList is element 1 to -1 of tList into tIs -- tIs is true
@@ -398,7 +398,7 @@ Returns: 	Returns true if <Left> is not identical to <Right>.
 Example:
 	variable tList as list
 	put ["a", "b", "c"] into tList
-	variable tIsNot as boolean
+	variable tIsNot as Boolean
 	
 	put tList is not ["A", "b", "c"] into tIsNot -- tIs is true
 	

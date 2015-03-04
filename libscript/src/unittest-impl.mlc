@@ -58,7 +58,7 @@ end handler
 -- Helper functions for outputting test results
 ----------------------------------------------------------------
 
-public handler MCUnitOutputTest(in pCondition as boolean, in pDescription as string, in pDirective as string, in pReason as string)
+public handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as string, in pDirective as string, in pReason as string)
 	variable tMessage as string
 
 	if pCondition then
