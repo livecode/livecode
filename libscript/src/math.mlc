@@ -55,30 +55,30 @@ public foreign handler MCMathEvalAtanNumber(in Operand as Number, out Value as N
 public foreign handler MCMathEvalAtan2Real(in yCoord as CDouble, in xCoord as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalAtan2Number(in yCoord as Number, in xCoord as Number, out Value as Number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathEvalAbsInteger(in Operand as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAbsInteger(in Operand as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalAbsReal(in Operand as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalAbsNumber(in Operand as Number, out Value as Number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathEvalTruncInteger(in Operand as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTruncInteger(in Operand as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalTruncReal(in Operand as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalTruncNumber(in Operand as Number, out Value as Number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathEvalMinInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMinInteger(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMinReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMinNumber(in Left as Number, in Right as Number, out Value as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCMathEvalMinList(in ValueList as List, out Value as Number) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMaxList(in ValueList as List, out Value as Number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathEvalMaxInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxInteger(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMaxReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMaxNumber(in Left as Number, in Right as Number, out Value as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCMathEvalRandomReal(out Value as CDouble) as undefined binds to "<builtin>"
 
-public foreign handler MCMathEvalConvertBase(in Operand as String, in Source as LCInteger, in Target as LCInteger, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCMathEvalConvertToBase10(in Operand as String, in Source as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
-public foreign handler MCMathEvalConvertFromBase10(in Operand as LCInteger, in Target as LCInteger, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertBase(in Operand as String, in Source as LCInt, in Target as LCInt, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertToBase10(in Operand as String, in Source as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertFromBase10(in Operand as LCInt, in Target as LCInt, out Value as String) as undefined binds to "<builtin>"
 
 --
 

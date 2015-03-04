@@ -22,12 +22,12 @@ module com.livecode.bitwise
 
 use com.livecode.foreign
 
-public foreign handler MCBitwiseEvalBitwiseAnd(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseOr(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseNot(in Operand as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseXor(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseAnd(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseOr(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseNot(in Operand as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseXor(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 
-public foreign handler MCBitwiseEvalBitwiseShift(in Target as LCInteger, in IsRight as CBool, in Shift as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShift(in Target as LCInt, in IsRight as CBool, in Shift as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 
 --
 
