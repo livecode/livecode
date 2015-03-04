@@ -906,7 +906,11 @@ void MCWidget::OnAttach()
     if (m_native_layer)
         m_native_layer->OnAttach();
     
+    // OnAttach handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnAttach"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnDetach()
@@ -914,18 +918,28 @@ void MCWidget::OnDetach()
     if (m_native_layer)
         m_native_layer->OnDetach();
     
+    // OnAttach handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnDetach"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
     if (m_native_layer)
         m_native_layer->OnPaint(p_dc, p_rect);
-
+    
+    // Re-entering into the draw chain is distinctly unwise, so no script access
+    // for OnPaint() handlers.
+    MCEngineScriptObjectPreventAccess();
+    
     uintptr_t t_cookie;
     MCCanvasPush(((MCGraphicsContext*)p_dc)->getgcontextref(), t_cookie);
     CallHandler(MCNAME("OnPaint"), nil, 0);
     MCCanvasPop(t_cookie);
+    
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
@@ -961,12 +975,16 @@ void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
 {
     fprintf(stderr, "MCWidget::OnHitTest\n");
     r_hit = maskrect(p_intersect);
+    
+    // In theory this handler shouldn't allow script access.
 }
 
 void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
 {
     fprintf(stderr, "MCWidget::OnBoundsTest\n");
     r_hit = maskrect(p_intersect);
+    
+    // In theory this handler shouldn't allow script access.
 }
 
 void MCWidget::OnSave(MCValueRef& r_array)
@@ -976,7 +994,12 @@ void MCWidget::OnSave(MCValueRef& r_array)
     MCAutoValueRefArray t_params;
     t_params.New(1);
     t_params[0] = nil;
+    
+    // OnSave handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnSave"), t_params.Ptr(), t_params.Size());
+    MCEngineScriptObjectAllowAccess();
 
     r_array = t_params[0];
     t_params[0] = nil;
@@ -990,17 +1013,29 @@ void MCWidget::OnLoad(MCValueRef p_array)
     t_params.New(1);
     t_params[0] = MCValueRetain(p_array);
     
+    // OnLoad handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnLoad"), t_params.Ptr(), t_params.Size());
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnCreate()
 {
+    // OnCreate handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnCreate"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnDestroy()
 {
+    // OnCreate handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnDestroy"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnParentPropChanged()
@@ -1013,10 +1048,14 @@ void MCWidget::OnToolChanged(Tool p_new_tool)
     if (m_native_layer)
         m_native_layer->OnToolChanged(p_new_tool);
     
+    // When the tool changes we don't want to allow script access to ensure
+    // no re-entrancy issues occur.
+    MCEngineScriptObjectPreventAccess();
     if (p_new_tool == T_BROWSE)
         CallHandler(MCNAME("OnStopEditing"), nil, 0);
     else if (p_new_tool != T_BROWSE)
         CallHandler(MCNAME("OnStartEditing"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
     
     if (p_new_tool == T_BROWSE && m_timer_deferred)
     {
