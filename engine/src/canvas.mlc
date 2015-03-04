@@ -2176,7 +2176,7 @@ end syntax
 public foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as UInt32) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as UInt32) as undefined binds to "<builtin>"
 // TODO - add support for metadata
-//public foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as array) as undefined binds to "<builtin>"
+//public foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as Array) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
 // TODO - add image frame index property?
 
@@ -2795,7 +2795,7 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as LCInteger, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as LCInteger, in pProperties as Array, out rEffect as Effect) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new effect.

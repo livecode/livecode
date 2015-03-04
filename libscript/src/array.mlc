@@ -22,25 +22,25 @@ module com.livecode.array
 
 use com.livecode.foreign
 
-public foreign handler MCArrayEvalKeysOf(in Target as array, out Value as List) as undefined binds to "<builtin>"
-public foreign handler MCArrayEvalElementsOf(in Target as array, out Value as List) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalKeysOf(in Target as Array, out Value as List) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalElementsOf(in Target as Array, out Value as List) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as String, in IsNot as CBool, in Target as array, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as String, in IsNot as CBool, in Target as Array, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as CBool, in Target as array, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as CBool, in Target as Array, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayEvalNumberOfElementsIn(in Target as array, out Count as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalNumberOfElementsIn(in Target as Array, out Count as LCUIndex) as undefined binds to "<builtin>"
 
 // Case insensitive map access / storage
-public foreign handler MCArrayFetchElementOfCaseless(in Target as array, in Key as String, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, inout Target as array, in Key as String) as undefined binds to "<builtin>"
+public foreign handler MCArrayFetchElementOfCaseless(in Target as Array, in Key as String, out Value as optional any) as undefined binds to "<builtin>"
+public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, inout Target as Array, in Key as String) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayEvalEmpty(out Value as array) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalEmpty(out Value as Array) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as array) as CBool binds to "<builtin>"
-public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as String, in Container as array) as CBool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as Array) as CBool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as String, in Container as Array) as CBool binds to "<builtin>"
 
-public foreign handler MCArrayDeleteElementOfCaseless(inout Target as array, in Key as String) as undefined binds to "<builtin>"
+public foreign handler MCArrayDeleteElementOfCaseless(inout Target as Array, in Key as String) as undefined binds to "<builtin>"
 
 --
 
@@ -51,7 +51,7 @@ Target:         An expression which evaluates to an array.
 Returns: 	A list whose elements are the keys of <Target>. 
 
 Example:
-	variable tArray as array
+	variable tArray as Array
 	put the empty array into tArray
 	put "value1" into tArray["key1"]
 	put "value2" into tArray["key2"]
@@ -86,7 +86,7 @@ Target:         An expression which evaluates to an array.
 Returns: 	A list whose elements are the elements of <Target>. 
 
 Example:
-	variable tArray as array
+	variable tArray as Array
 	put the empty array into tArray
 	put 1 into tArray["key1"]
 	put 2 into tArray["key2"]
@@ -119,7 +119,7 @@ Summary:        Returns the number of elements in <Target>
 Target:         An expression which evaluates to an array.
 
 Example:
-	variable tArray as array
+	variable tArray as Array
 	put the empty array into tArray
 	put 1 into tArray["key1"]
 	put 2 into tArray["key2"]
@@ -150,7 +150,7 @@ Target:         An expression which evaluates to an array.
 Returns: 	Returns true if <Needle> can be found among the keys of <Target>.
 
 Example:
-	variable tArray as array
+	variable tArray as Array
 	put "value" into tArray["key"]
 	
 	variable tIsAmong as Boolean
@@ -185,7 +185,7 @@ Target:         An expression which evaluates to an array.
 Returns: 	Returns true if <Needle> can be found among the elements of <Target>.
 
 Example:
-	variable tArray as array
+	variable tArray as Array
 	put "value" into tArray["key"]
 	
 	variable tIsAmong as Boolean
@@ -215,7 +215,7 @@ Index: 				An expression which evaluates to a string.
 Target:				An expression which evaluates to an array.
 
 Example:			
-	variable tArray as array
+	variable tArray as Array
 	put the empty array into tArray
 	put "value" into tArray["key"]
 	
@@ -244,7 +244,7 @@ Index: 				An expression which evaluates to a string.
 Target:				An expression which evaluates to an array.
 
 Example:			
-	variable tArray as array
+	variable tArray as Array
 	put the empty array into tArray
 	put "value" into tArray["key"]
 
@@ -269,7 +269,7 @@ end syntax
 Summary: 		Designates the array with no elements.
 
 Example:
-	variable tVar as array
+	variable tVar as Array
 	variable tCount as Number
 	put the empty array into tVar
 	put the number of elements in tVar into tCount -- tCount is 0
@@ -293,7 +293,7 @@ Summary:        Repeat over the elements of an array.
 Iterand:        Any variable of appropriate type.
 
 Example:
-    variable tArray as array
+    variable tArray as Array
     put the empty array into tArray
     put 1 into tArray["key1"]
     put 2 into tArray["key2"]
@@ -328,7 +328,7 @@ Summary:        Repeat over the keys of an array.
 Iterand:        A string container.
 
 Example:
-    variable tArray as array
+    variable tArray as Array
     put the empty array into tArray
     put 1 into tArray["abc"]
     put 2 into tArray["def"]
