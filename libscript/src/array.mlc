@@ -29,7 +29,7 @@ public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as string, 
 
 public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayEvalNumberOfElementsIn(in Target as array, out Count as index) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalNumberOfElementsIn(in Target as array, out Count as LCUIndex) as undefined binds to "<builtin>"
 
 // Case insensitive map access / storage
 public foreign handler MCArrayFetchElementOfCaseless(in Target as array, in Key as string, out Value as optional any) as undefined binds to "<builtin>"

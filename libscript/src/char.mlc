@@ -22,21 +22,21 @@ module com.livecode.char
 
 use com.livecode.foreign
 
-public foreign handler MCCharFetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCharFetchCharRangeOf(in Start as index, in Finish as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchCharOf(in Index as LCIndex, in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreCharOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchCharRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreCharRangeOf(in Value as string, in Start as LCIndex, in Finish as LCIndex, inout Target as string) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalNumberOfCharsIn(in Target as string, out Count as LCIndex) as undefined binds to "<builtin>"
 
 public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as string, in Target as string, out Value as bool) as undefined binds to "<builtin>"
 
-public foreign handler MCCharStoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreBeforeCharOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreAfterCharOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalOffsetOfChars(in IsLast as bool, in Needle as string, in Target as string, out Offset as index) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as bool, in Needle as string, in Before as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as bool, in Needle as string, in After as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfChars(in IsLast as bool, in Needle as string, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as bool, in Needle as string, in Before as LCIndex, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as bool, in Needle as string, in After as LCIndex, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
 
 public foreign handler MCCharEvalContains(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
 public foreign handler MCCharEvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
@@ -52,8 +52,8 @@ public foreign handler MCCharStoreFirstCharOf(in Value as string, inout Target a
 public foreign handler MCCharFetchLastCharOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
 public foreign handler MCCharStoreLastCharOf(in Value as string, inout Target as string) as undefined binds to "<builtin>"
 
-public foreign handler MCCharExecDeleteCharOf(in Index as index, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCharExecDeleteCharRangeOf(in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteCharOf(in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteCharRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as string) as undefined binds to "<builtin>"
 
 public foreign handler MCCharExecDeleteLastCharOf(inout Target as string) as undefined binds to "<builtin>"
 public foreign handler MCCharExecDeleteFirstCharOf(inout Target as string) as undefined binds to "<builtin>"

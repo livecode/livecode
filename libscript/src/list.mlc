@@ -28,7 +28,7 @@ public foreign handler MCListEvalTailOf(in Target as list, out Value as optional
 public foreign handler MCListExecPushSingleElementOnto(in Value as optional any, in IsFront as bool, inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCListExecPopElement(in IsFront as bool, inout Source as list) as optional any binds to "<builtin>"
 
-public foreign handler MCListEvalNumberOfElementsIn(in Target as list, out Count as index) as undefined binds to "<builtin>"
+public foreign handler MCListEvalNumberOfElementsIn(in Target as list, out Count as LCUIndex) as undefined binds to "<builtin>"
 
 public foreign handler MCListEvalIsAmongTheElementsOf(in Needle as optional any, in Target as list, out Result as bool) as undefined binds to "<builtin>"
 public foreign handler MCListEvalContainsElements(in Target as list, in Needle as list, out Result as bool) as undefined binds to "<builtin>"
@@ -68,8 +68,8 @@ public foreign handler MCListStoreFirstElementOf(in Value as optional any, inout
 public foreign handler MCListFetchLastElementOf(in Target as list, out Value as optional any) as undefined binds to "<builtin>"
 public foreign handler MCListStoreLastElementOf(in Value as optional any, inout Target as list) as undefined binds to "<builtin>"
 
-public foreign handler MCListExecDeleteElementOf(in Index as index, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListExecDeleteElementRangeOf(in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteElementOf(in Index as LCIndex, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteElementRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as list) as undefined binds to "<builtin>"
 
 public foreign handler MCListExecDeleteFirstElementOf(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCListExecDeleteLastElementOf(inout Target as list) as undefined binds to "<builtin>"
