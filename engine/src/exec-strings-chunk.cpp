@@ -84,7 +84,7 @@ void MCStringsCountChunksInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, M
     t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
     
     MCTextChunkIterator *tci;
-    tci = MCStringsTextChunkIteratorCreate(ctxt, p_string, p_chunk_type);
+    tci = MCStringsTextChunkIteratorCreateWithRange(ctxt, p_string, p_range, p_chunk_type);
     
     r_count = tci -> CountChunks();
     
@@ -1176,7 +1176,19 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreate(MCExecContext& ctxt, MCStr
         return tci;
     }
     
-    return MCChunkCreateTextChunkIterator(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
+    return MCChunkCreateTextChunkIterator(p_text, nil, MCChunkTypeFromChunkTerm(p_chunk_type), p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
+}
+
+MCTextChunkIterator *MCStringsTextChunkIteratorCreateWithRange(MCExecContext& ctxt, MCStringRef p_text, MCRange p_range, Chunk_term p_chunk_type)
+{
+    if (p_chunk_type == CT_TOKEN)
+    {
+        MCTextChunkIterator *tci;
+        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_range);
+        return tci;
+    }
+    
+    return MCChunkCreateTextChunkIterator(p_text, &p_range, MCChunkTypeFromChunkTerm(p_chunk_type), p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
 }
 
 bool MCStringsTextChunkIteratorNext(MCExecContext& ctxt, MCTextChunkIterator *tci)

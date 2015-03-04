@@ -869,7 +869,7 @@ bool MCTextChunkIterator_Word::Next()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCChunkType p_chunk_type, MCStringRef p_delimiter, MCStringOptions p_options)
+MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_delimiter, MCStringOptions p_options)
 {
     if (p_chunk_type == kMCChunkTypeCharacter && (MCStringIsNative(p_text) || (MCStringIsSimple(p_text) && MCStringIsUncombined(p_text))))
         p_chunk_type = kMCChunkTypeCodeunit;
@@ -881,23 +881,44 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCChunkT
         case kMCChunkTypeCharacter:
         case kMCChunkTypeSentence:
         case kMCChunkTypeTrueWord:
-            t_iterator = new MCTextChunkIterator_ICU(p_text, p_chunk_type);
+            if (p_range != nil)
+                t_iterator = new MCTextChunkIterator_ICU(p_text, p_chunk_type, *p_range);
+            else
+                t_iterator = new MCTextChunkIterator_ICU(p_text, p_chunk_type);
             break;
         case kMCChunkTypeLine:
         case kMCChunkTypeItem:
-            t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, p_delimiter);
+            if (p_range != nil)
+                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, p_delimiter, *p_range);
+            else
+                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, p_delimiter);
+            break;
+
             break;
         case kMCChunkTypeParagraph:
-            t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"));
+            if (p_range != nil)
+                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"), *p_range);
+            else
+                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"));
+            break;
             break;
         case kMCChunkTypeWord:
-            t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_delimiter);
+            if (p_range != nil)
+                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_delimiter, *p_range);
+            else
+                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_delimiter);
             break;
         case kMCChunkTypeCodepoint:
-            t_iterator = new MCTextChunkIterator_Codepoint(p_text, p_chunk_type);
+            if (p_range != nil)
+                t_iterator = new MCTextChunkIterator_Codepoint(p_text, p_chunk_type, *p_range);
+            else
+                t_iterator = new MCTextChunkIterator_Codepoint(p_text, p_chunk_type);
             break;
         case kMCChunkTypeCodeunit:
-            t_iterator = new MCTextChunkIterator_Codeunit(p_text, p_chunk_type);
+            if (p_range != nil)
+                t_iterator = new MCTextChunkIterator_Codeunit(p_text, p_chunk_type, *p_range);
+            else
+                t_iterator = new MCTextChunkIterator_Codeunit(p_text, p_chunk_type);
             break;
         default:
             MCAssert(false);
