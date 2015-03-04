@@ -4226,8 +4226,10 @@ bool MCChunk::getsetprop(MCExecContext &ctxt, Properties which, MCNameRef index,
             t_success = t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
         else
             t_success = t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
-        MCValueRelease(t_obj_chunk . mark . text);
-        return t_success;
+        
+        // AL-2015-03-04: [[ Bug 14737 ]] Ensure property listener is signalled.
+        if (!t_success)
+            ctxt . Throw();
     }
     else
     {
