@@ -30,6 +30,7 @@ extern "C"
     extern builtin_module_descriptor __com_livecode_bitwise_module_info;
     extern builtin_module_descriptor __com_livecode_byte_module_info;
     extern builtin_module_descriptor __com_livecode_char_module_info;
+    extern builtin_module_descriptor __com_livecode_codeunit_module_info;
     extern builtin_module_descriptor __com_livecode_date_module_info;
     extern builtin_module_descriptor __com_livecode_encoding_module_info;
     extern builtin_module_descriptor __com_livecode_file_module_info;
@@ -59,6 +60,7 @@ extern "C"
         &__com_livecode_bitwise_module_info,
         &__com_livecode_byte_module_info,
         &__com_livecode_char_module_info,
+        &__com_livecode_codeunit_module_info,
         &__com_livecode_date_module_info,
         //&__com_livecode_encoding_module_info,
         &__com_livecode_file_module_info,
@@ -87,6 +89,7 @@ extern "C"
     extern void (*MCBitwiseEvalBitwiseAnd)();
     extern void (*MCByteEvalNumberOfBytesIn)();
     extern void (*MCCharEvalNumberOfCharsIn)();
+    extern void (*MCCodeunitEvalNumberOfCodeunitsIn)();
     extern void (*MCDateExecGetLocalTime)();
     extern void (*MCFileExecGetContents)();
     extern void (*MCListEvalHeadOf)();
@@ -111,6 +114,7 @@ extern "C"
         &MCBitwiseEvalBitwiseAnd,
         &MCByteEvalNumberOfBytesIn,
         &MCCharEvalNumberOfCharsIn,
+        &MCCodeunitEvalNumberOfCodeunitsIn,
         &MCDateExecGetLocalTime,
         &MCFileExecGetContents,
         &MCListEvalHeadOf,

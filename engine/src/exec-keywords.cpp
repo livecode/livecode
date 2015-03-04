@@ -436,35 +436,35 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             switch (each)
             {
                 case FU_LINE:
-                    tci = new MCTextChunkIterator(CT_LINE, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_LINE);
                     break;
                 case FU_PARAGRAPH:
-                    tci = new MCTextChunkIterator(CT_PARAGRAPH, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_PARAGRAPH);
                     break;
                 case FU_SENTENCE:
-                    tci = new MCTextChunkIterator(CT_SENTENCE, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_SENTENCE);
                     break;
                 case FU_ITEM:
-                    tci = new MCTextChunkIterator(CT_ITEM, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_ITEM);
                     break;
                 case FU_WORD:
-                    tci = new MCTextChunkIterator(CT_WORD, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_WORD);
                     break;
                 case FU_TRUEWORD:
-                    tci = new MCTextChunkIterator(CT_TRUEWORD, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_TRUEWORD);
                     break;
                 case FU_TOKEN:
-                    tci = new MCTextChunkIterator(CT_TOKEN, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_TOKEN);
                     break;
                 case FU_CODEPOINT:
-                    tci = new MCTextChunkIterator(CT_CODEPOINT, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CODEPOINT);
                     break;
                 case FU_CODEUNIT:
-                    tci = new MCTextChunkIterator(CT_CODEUNIT, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CODEUNIT);
                     break;
                 case FU_CHARACTER:
                 default:
-                    tci = new MCTextChunkIterator(CT_CHARACTER, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CHARACTER);
                     break;
             } 
         }
@@ -541,16 +541,16 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     
                 default:
                 {
-                    t_found = tci -> next(ctxt);
-                    endnext = tci -> isexhausted();
-
+                    t_found = MCStringsTextChunkIteratorNext(ctxt, tci);
+                    endnext = tci -> IsExhausted();
+                    
                     if (!t_found)
                     {
                         t_unit = kMCEmptyString;
                         done = true;
                     }
                     else
-                        tci -> copystring(&t_unit);
+                        tci -> CopyString(&t_unit);
                 }
             }
             // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already

@@ -12,6 +12,7 @@ binary.mlc
 bitwise.mlc
 byte.mlc
 char.mlc
+codeunit.mlc
 date.mlc
 file.mlc
 list.mlc
