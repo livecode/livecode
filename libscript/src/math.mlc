@@ -67,8 +67,8 @@ public foreign handler MCMathEvalMinInteger(in Left as LCInteger, in Right as LC
 public foreign handler MCMathEvalMinReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMinNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler MCMathEvalMinList(in List as list, out Value as number) as undefined binds to "<builtin>"
-public foreign handler MCMathEvalMaxList(in List as list, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMinList(in ValueList as list, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxList(in ValueList as list, out Value as number) as undefined binds to "<builtin>"
 
 public foreign handler MCMathEvalMaxInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCMathEvalMaxReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
@@ -516,9 +516,9 @@ Tags: Math
 */
 
 syntax MinListOperator is prefix operator with precedence 5
-    "the" "minimum" "value" "of" <List: Expression>
+    "the" "minimum" "value" "of" <ValueList: Expression>
 begin
-    MCMathEvalMinList(List, output)
+    MCMathEvalMinList(ValueList, output)
 end syntax
 
 /*
@@ -534,9 +534,9 @@ Tags: Math
 */
 
 syntax MaxListOperator is prefix operator with precedence 5
-    "the" "maximum" "value" "of" <List: Expression>
+    "the" "maximum" "value" "of" <ValueList: Expression>
 begin
-    MCMathEvalMaxList(List, output)
+    MCMathEvalMaxList(ValueList, output)
 end syntax
 
 --

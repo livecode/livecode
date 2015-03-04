@@ -373,10 +373,10 @@ end logChanged
 */
 
 syntax Log is statement
-    "log" <String: Expression> [ "with" <Arguments: Expression> ]
+    "log" <Message: Expression> [ "with" <Arguments: Expression> ]
 begin
-    MCEngineExecLog(String)
-    MCEngineExecLogWithValues(String, Arguments)
+    MCEngineExecLog(Message)
+    MCEngineExecLogWithValues(Message, Arguments)
 end syntax
 
 end module

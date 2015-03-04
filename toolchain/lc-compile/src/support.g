@@ -292,6 +292,7 @@
     Error_ConstantsMustBeSimple
     Error_NonHandlerTypeVariablesCannotBeCalled
     Warning_MetadataClausesShouldComeAfterUseClauses
+    Warning_DeprecatedTypeName
 
 
 --------------------------------------------------------------------------------
@@ -637,5 +638,6 @@
 'action' Error_ConstantsMustBeSimple(Position: POS)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
+'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 
 --------------------------------------------------------------------------------

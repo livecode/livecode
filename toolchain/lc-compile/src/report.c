@@ -97,6 +97,17 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
     s_error_count += 1;
 }
 
+static void _WarningS(long p_position, const char *p_message, const char *p_string)
+{
+    long t_row, t_column;
+    GetColumnOfPosition(p_position, &t_column);
+    GetRowOfPosition(p_position, &t_row);
+    _PrintPosition(p_position);
+    fprintf(stderr, "warning: ");
+    fprintf(stderr, p_message, p_string);
+    fprintf(stderr, "\n");
+}
+
 static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
 {
     const char *t_string;
@@ -187,10 +198,13 @@ DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expr
 
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
+#define DEFINE_WARNING_S(Name, Message) \
+	void Warning_##Name(long p_position, const char *p_string) { _WarningS(p_position, Message, p_string); }
 
 DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses should come after use clauses")
 DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
+DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
 
 ////////////////////////////////////////////////////////////////////////////////
 
