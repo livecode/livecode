@@ -27,7 +27,7 @@ public handler TestUnarySigns()
 end handler
 
 public handler TestAdd()
-	variable tInt as integer
+	variable tInt as Integer
 	put 10 into tInt
 
 	add 2 to tInt
@@ -54,7 +54,7 @@ public handler TestAdd()
 end handler
 
 public handler TestSubtract()
-	variable tInt as integer
+	variable tInt as Integer
 	put 10 into tInt
 
 	subtract 2 from tInt
@@ -81,7 +81,7 @@ public handler TestSubtract()
 end handler
 
 public handler TestMultiply()
-	variable tInt as integer
+	variable tInt as Integer
 	put 10 into tInt
 
 	multiply tInt by 2
@@ -102,7 +102,7 @@ public handler TestMultiply()
 end handler
 
 public handler TestDivide()
-	variable tInt as integer
+	variable tInt as Integer
 	put 10 into tInt
 
 	divide tInt by 2
