@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation-auto.h>
 
 #include <time.h>
+#include <sys/time.h>
 
 /* Windows doesn't have localtime_r(), but it does have an equivalent
  * function with the arguments in the opposite order! */
@@ -27,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 extern "C" MC_DLLEXPORT void
-MCDateExecGetLocalTime (MCProperListRef & r_datetime)
+MCDateExecGetLocalDate (MCProperListRef & r_datetime)
 {
 	struct tm t_timeinfo;
 	time_t t_now;
@@ -48,5 +49,15 @@ MCDateExecGetLocalTime (MCProperListRef & r_datetime)
 	const MCValueRef t_elements[] = {*t_year, *t_month, *t_day,
 	                                 *t_hour, *t_minute, *t_second};
 
-	/* UNCHECKED */ MCProperListCreate (t_elements, 6, r_datetime);
+	if (!MCProperListCreate (t_elements, 6, r_datetime))
+        return;
+}
+
+extern "C" MC_DLLEXPORT void
+MCDateExecGetUniversalTime (double& r_time)
+{
+    struct timeval tv;
+    
+    gettimeofday(&tv, NULL);
+    r_time = tv.tv_sec + (double)tv.tv_usec / 1000000.0;
 }
