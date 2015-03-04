@@ -76,9 +76,9 @@ public foreign handler MCMathEvalMaxNumber(in Left as number, in Right as number
 
 public foreign handler MCMathEvalRandomReal(out Value as CDouble) as undefined binds to "<builtin>"
 
-public foreign handler MCMathEvalConvertBase(in Operand as string, in Source as LCInteger, in Target as LCInteger, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCMathEvalConvertToBase10(in Operand as string, in Source as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
-public foreign handler MCMathEvalConvertFromBase10(in Operand as LCInteger, in Target as LCInteger, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertBase(in Operand as String, in Source as LCInteger, in Target as LCInteger, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertToBase10(in Operand as String, in Source as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertFromBase10(in Operand as LCInteger, in Target as LCInteger, out Value as String) as undefined binds to "<builtin>"
 
 --
 

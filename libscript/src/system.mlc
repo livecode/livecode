@@ -28,7 +28,7 @@ use com.livecode.foreign
 -- Platform identification
 ----------------------------------------------------------------
 
-public foreign handler MCSystemExecGetOperatingSystem(out Platform as string) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetOperatingSystem(out Platform as String) as undefined binds to "<builtin>"
 
 /*
 Summary:	The operating system
@@ -98,7 +98,7 @@ end syntax
 -- Command-line information
 ----------------------------------------------------------------
 
-public foreign handler MCSystemExecGetCommandName (out CommandName as string) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetCommandName (out CommandName as String) as undefined binds to "<builtin>"
 public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as list) as undefined binds to "<builtin>"
 
 /*
@@ -107,7 +107,7 @@ Summary:	The command name
 Example:
 	-- Program that only succeeds if it's run as the "true"
 	-- command.
-	variable tCommand as string
+	variable tCommand as String
 	put the command name into tCommand
 	if tCommand ends with "true" then
 		quit with status 0
@@ -131,7 +131,7 @@ Summary:	The command arguments
 Example:
 	-- Program that only succeeds if it's run as the "true"
 	-- command.
-	variable tCommand as string
+	variable tCommand as String
 	put the command name into tCommand
 	if tCommand ends with "true" then
 		quit with status 0

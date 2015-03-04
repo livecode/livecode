@@ -20,8 +20,8 @@ This library consists of the operations for performing complex type conversion i
 
 module com.livecode.typeconvert
 
-public foreign handler MCTypeConvertExecSplitStringByDelimiter(in Target as string, in Delimiter as string) as list binds to "<builtin>"
-public foreign handler MCTypeConvertExecCombineListWithDelimiter(in Target as list, in Delimiter as string) as string binds to "<builtin>"
+public foreign handler MCTypeConvertExecSplitStringByDelimiter(in Target as String, in Delimiter as String) as list binds to "<builtin>"
+public foreign handler MCTypeConvertExecCombineListWithDelimiter(in Target as list, in Delimiter as String) as String binds to "<builtin>"
 
 --
 
@@ -35,7 +35,7 @@ Delimiter:      An expression that evaluates to a string.
 The result: 	The list of strings.
 
 Example:
-	variable tVar as string
+	variable tVar as String
     put "first,second,third,fourth,fifth" into tVar
     variable tSplit as list
     split tVar by ","
@@ -67,7 +67,7 @@ Example:
 	variable tDigits as list
 	put [1,2,3,4,5,6,7,8,9] into tDigits
 	
-	variable tString as string
+	variable tString as String
     combine tDigits with "|" 
     put the result into tString // tString contains "1|2|3|4|5|6|7|8|9"
             

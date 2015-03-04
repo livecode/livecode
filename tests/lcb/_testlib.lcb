@@ -8,11 +8,11 @@ use com.livecode.foreign
 
 public handler type Thunk() as optional any
 
-public handler MCUnitTestHandlerThrows(in pHandler as any, in pDescription as string) as undefined
+public handler MCUnitTestHandlerThrows(in pHandler as any, in pDescription as String) as undefined
 	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, false, "")
 end handler
 
-public handler MCUnitTestHandlerThrowsBroken(in pHandler as any, in pDescription as string, in pReason as string) as undefined
+public handler MCUnitTestHandlerThrowsBroken(in pHandler as any, in pDescription as String, in pReason as String) as undefined
 	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, true, pReason)
 end handler
 
@@ -20,7 +20,7 @@ end handler
 
 foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional list, out Result as optional any) as optional any binds to "<builtin>"
 
-handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as string, in pBroken as Boolean, in pReason as string) as undefined
+handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as String, in pBroken as Boolean, in pReason as String) as undefined
 
 	variable tHandler as Thunk
 	put pHandler into tHandler

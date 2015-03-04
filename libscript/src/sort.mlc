@@ -98,7 +98,7 @@ Example:
 	end repeat
 		
     sort tTestList in ascending text order
-    variable tString as string
+    variable tString as String
     combine tTestList with "" into tString -- tString is "aegilops"
 
 Description:

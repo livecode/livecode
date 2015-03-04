@@ -22,39 +22,39 @@ module com.livecode.codeunit
 
 use com.livecode.foreign
 
-public foreign handler MCCodeunitFetchCodeunitOf(in Index as LCIndex, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreCodeunitOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitFetchCodeunitRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreCodeunitRangeOf(in Value as string, in Start as LCIndex, in Finish as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitFetchCodeunitOf(in Index as LCIndex, in Target as String, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitStoreCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitFetchCodeunitRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as String, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitStoreCodeunitRangeOf(in Value as String, in Start as LCIndex, in Finish as LCIndex, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalNumberOfCodeunitsIn(in Target as string, out Count as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalNumberOfCodeunitsIn(in Target as String, out Count as LCUIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalIsAmongTheCodeunitsOf(in Needle as string, in Target as string, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalIsAmongTheCodeunitsOf(in Needle as String, in Target as String, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitStoreBeforeCodeunitOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreAfterCodeunitOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitStoreBeforeCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitStoreAfterCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalOffsetOfCodeunits(in IsLast as CBool, in Needle as string, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitEvalOffsetOfCodeunitsBefore(in IsLast as CBool, in Needle as string, in Before as LCIndex, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitEvalOffsetOfCodeunitsAfter(in IsFirst as CBool, in Needle as string, in After as LCIndex, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalOffsetOfCodeunits(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalOffsetOfCodeunitsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalOffsetOfCodeunitsAfter(in IsFirst as CBool, in Needle as String, in After as LCIndex, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalContains(in Source as string, in Needle as string, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitEvalBeginsWith(in Source as string, in Prefix as string, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitEvalEndsWith(in Source as string, in Suffix as string, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalContains(in Source as String, in Needle as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitRepeatForEachCodeunit(inout Iterator as optional Pointer, out Iterand as string, in Container as string) as CBool binds to "<builtin>"
+public foreign handler MCCodeunitRepeatForEachCodeunit(inout Iterator as optional Pointer, out Iterand as String, in Container as String) as CBool binds to "<builtin>"
 
-public foreign handler MCCodeunitFetchFirstCodeunitOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreFirstCodeunitOf(in Value as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitFetchFirstCodeunitOf(in Target as String, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitStoreFirstCodeunitOf(in Value as String, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitFetchLastCodeunitOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreLastCodeunitOf(in Value as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitFetchLastCodeunitOf(in Target as String, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitStoreLastCodeunitOf(in Value as String, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitExecDeleteCodeunitOf(in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitExecDeleteCodeunitRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitExecDeleteCodeunitOf(in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitExecDeleteCodeunitRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCodeunitExecDeleteLastCodeunitOf(inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitExecDeleteFirstCodeunitOf(inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitExecDeleteLastCodeunitOf(inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitExecDeleteFirstCodeunitOf(inout Target as String) as undefined binds to "<builtin>"
 
 --
 
@@ -68,11 +68,11 @@ Returns:			The number of codeunits in <Target>.
 Example: 			
 
 	variable tVar as number
-	variable tSource as string
+	variable tSource as String
 	put "hello" into tString
 	put the number of codeunits in tString into tVar
 	
-	variable tString as string
+	variable tString as String
 	put the empty string into tString	
 	repeat tVar times
 		put "a" after tString
@@ -150,10 +150,10 @@ Summary:            Designates the first codeunit in <Target>.
 Target:				An expression which evaluates to a string.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "codeunit" into tVar
 	
-	variable tFirst as string
+	variable tFirst as String
 	put the last codeunit of tVar into tFirst -- tFirst contains "c"
 
 Description:
@@ -177,10 +177,10 @@ Summary:            Designates the last codeunit in <Target>.
 Target:				An expression which evaluates to a string.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "codeunit" into tVar
 	
-	variable tLast as string
+	variable tLast as String
 	put the last codeunit of tVar into tLast -- tLast contains "r"
 
 Description:
@@ -207,7 +207,7 @@ Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				A string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "thorough" into tVar
 	delete codeunit 3 of tVar -- tVar contains "through"
 
@@ -234,7 +234,7 @@ Finish:             An expression which evaluates to a valid integer index of <T
 Target:             A string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "surround" into tVar
 	delete codeunit 2 to 4 of tVar -- tVar contains "sound"
 
@@ -258,7 +258,7 @@ Summary:            Deletes the first codeunit in <Target>.
 Target:				A string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "seven" into tVar
 	delete the first codeunit of tVar -- tVar contains "even"
 
@@ -282,7 +282,7 @@ Summary:            Deletes the last codeunit in <Target>.
 Target:				A string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "deadliness" into tVar
 	delete the last codeunit of tVar -- tVar contains "deadlines"
 
@@ -338,11 +338,11 @@ Example:
 
 Example:
 	variable tVar as number
-	variable tFilePath as string
+	variable tFilePath as String
 	put "/Users/user/Documents/file.txt" into tFilePath
 	put the last offset of "/" in tFilePath into tVar
 	
-	variable tFileName as string
+	variable tFileName as String
 	put codeunit 1 to tVar of tFilePath into tFileName -- tVar contains "file.txt"
 
 Description:
@@ -396,8 +396,8 @@ Returns: 	Returns the offset of <Needle> before <Before> in <Target>.
 Example:
 	variable tVar as number
 	variable tLastDot as number
-	variable tAddress as string
-	variable tTLD as string
+	variable tAddress as String
+	variable tTLD as String
 	put "http://www.livecode.com/index.html" into tAddress
 	put the last offset of "." in tAddress into tLastDot
 	put the offset of "." before tLastDot in tAddress into tVar
@@ -422,11 +422,11 @@ Summary:        Repeat over the codeunits of a string
 Iterand:        A string container.
 
 Example:
-	variable tString as string
+	variable tString as String
 	put "stressed" into tString
 	
-	variable tReversed as string
-	variable tCodeunit as string
+	variable tReversed as String
+	variable tCodeunit as String
 	put "" into tReversed
 	repeat for each codeunit tCodeunit in tString
 		put tCodeunit before tReversed

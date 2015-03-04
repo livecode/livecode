@@ -400,7 +400,7 @@ end syntax
 
 public foreign handler MCCanvasColorMakeRGBA(in pRed as CanvasFloat, in pGreen as CanvasFloat, in pBlue as CanvasFloat, in pAlpha as CanvasFloat, out rColor as Color) as undefined binds to "<builtin>"
 public foreign handler MCCanvasColorMakeWithList(in pColor as list, out rColor as Color) as undefined binds to "<builtin>"
-//public foreign handler MCCanvasColorMakeWithString(in pList as string, out rColor as Color)
+//public foreign handler MCCanvasColorMakeWithString(in pList as String, out rColor as Color)
 
 /*
 Summary:	Creates a new color value.
@@ -1591,8 +1591,8 @@ public foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRa
 public foreign handler MCCanvasGradientSetRamp(in pRamp as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
 // public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as int, in pEnd as int, out rStops as list) as undefined binds to "<builtin>"
 // public foreign handler MCCanvasGradientSetStops(in pStart as int, in pEnd as int, in rStops as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetTypeAsString(in pType as string, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetTypeAsString(in pType as String, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetRepeat(in pRepeat as LCInteger, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetWrap(in pGradient as Gradient, out rWrap as CBool) as undefined binds to "<builtin>"
@@ -2075,8 +2075,8 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasImageMakeWithPath(in pPath as string, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as string, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPath(in pPath as String, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as String, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInteger, in pHeight as LCInteger, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as list, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
@@ -2296,7 +2296,7 @@ public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rec
 // Constructors
 
 public foreign handler MCCanvasPathMakeEmpty(out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as string, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as String, out rPath as Path) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new empty path.
@@ -2493,7 +2493,7 @@ end syntax
 public foreign handler MCCanvasPathGetSubpaths(in pStart as LCInteger, in pEnd as LCInteger, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathGetSubpath(in pIndex as LCInteger, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathGetBoundingBox(in pPath as Path, out rRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as String) as undefined binds to "<builtin>"
 
 /*
 Summary:	The subpaths of a path.
@@ -2830,16 +2830,16 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasEffectGetTypeAsString(in pEffect as Effect, out rType as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetTypeAsString(in pEffect as Effect, out rType as String) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectGetColor(in pEffect as Effect, out rColor as Color) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectSetColor(in pColor as Color, inout xEffect as Effect) as undefined binds to "<builtin>"
-public foreign handler MCCanvasEffectGetBlendModeAsString(in pEffect as Effect, out rBlendMode as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasEffectSetBlendModeAsString(in pBlendMode as string, inout xEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetBlendModeAsString(in pEffect as Effect, out rBlendMode as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetBlendModeAsString(in pBlendMode as String, inout xEffect as Effect) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectGetOpacity(in pEffect as Effect, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectSetOpacity(in pOpacity as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
 
-//MCCanvasEffectGetFilterAsString(in pEffect as Effect, out rFilter as string) as undefined binds to "<builtin>"
-//MCCanvasEffectSetFilterAsString(in pFilter as string, inout xEffect as Effect) as undefined binds to "<builtin>"
+//MCCanvasEffectGetFilterAsString(in pEffect as Effect, out rFilter as String) as undefined binds to "<builtin>"
+//MCCanvasEffectSetFilterAsString(in pFilter as String, inout xEffect as Effect) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectGetSize(in pEffect as Effect, out rSize as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectSetSize(in pSize as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectGetSpread(in pEffect as Effect, out rSpread as CanvasFloat) as undefined binds to "<builtin>"
@@ -3023,9 +3023,9 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasFontMake(in pName as string, out rFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontMakeWithStyle(in pName as string, in pBold as CBool, in pItalic as CBool, out rFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontMakeWithSize(in pName as string, in pBold as CBool, in pItalic as CBool, in pSize as LCInteger, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMake(in pName as String, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMakeWithStyle(in pName as String, in pBold as CBool, in pItalic as CBool, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMakeWithSize(in pName as String, in pBold as CBool, in pItalic as CBool, in pSize as LCInteger, out rFont as Font) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new instance of the named font.
@@ -3114,8 +3114,8 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasFontGetName(in pFont as Font, out rName as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontSetName(in pName as string, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetName(in pFont as Font, out rName as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetName(in pName as String, inout xFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontGetBold(in pFont as Font, out rBold as CBool) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontSetBold(in pBold as CBool, inout xFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontGetItalic(in pFont as Font, out rItalic as CBool) as undefined binds to "<builtin>"
@@ -3211,7 +3211,7 @@ end syntax
 
 // Operations
 
-public foreign handler MCCanvasFontMeasureText(in pText as string, in pFont as Font, out pRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureText(in pText as String, in pFont as Font, out pRect as Rectangle) as undefined binds to "<builtin>"
 
 /*
 Summary:	Measure text when drawn with a font.
@@ -3252,26 +3252,26 @@ end syntax
 
 public foreign handler MCCanvasGetPaint(in pCanvas as Canvas, out rPaint as Paint) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetPaint(in pPaint as Paint, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetFillRuleAsString(in pCanvas as Canvas, out rFillRule as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetFillRuleAsString(in pFillRule as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetFillRuleAsString(in pCanvas as Canvas, out rFillRule as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetFillRuleAsString(in pFillRule as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetAntialias(in pCanvas as Canvas, out rAntialias as CBool) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetAntialias(in pAntialias as CBool, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetOpacity(in pCanvas as Canvas, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetOpacity(in pOpacity as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetBlendModeAsString(in pCanvas as Canvas, out rBlendMode as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetBlendModeAsString(in pBlendMode as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetBlendModeAsString(in pCanvas as Canvas, out rBlendMode as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetBlendModeAsString(in pBlendMode as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetStippled(in pCanvas as Canvas, out rStippled as CBool) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetStippled(in pStippled as CBool, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetImageResizeQualityAsString(in pCanvas as Canvas, out rQuality as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetImageResizeQualityAsString(in pQuality as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetImageResizeQualityAsString(in pCanvas as Canvas, out rQuality as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetImageResizeQualityAsString(in pQuality as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetStrokeWidth(in pCanvas as Canvas, out rStrokeWidth as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetStrokeWidth(in pStrokeWidth as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetFont(in pCanvas as Canvas, out rFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetFont(in pFont as Font, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetJoinStyleAsString(in pCanvas as Canvas, out rJoinStyle as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetJoinStyleAsString(in pJoinStyle as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetCapStyleAsString(in pCanvas as Canvas, out rCapStyle as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetCapStyleAsString(in pCapStyle as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetJoinStyleAsString(in pCanvas as Canvas, out rJoinStyle as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetJoinStyleAsString(in pJoinStyle as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetCapStyleAsString(in pCanvas as Canvas, out rCapStyle as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetCapStyleAsString(in pCapStyle as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetMiterLimit(in pCanvas as Canvas, out rLimit as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetMiterLimit(in pLimit as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetDashes(in pCanvas as Canvas, out rDashes as list) as undefined binds to "<builtin>"
@@ -3610,9 +3610,9 @@ public foreign handler MCCanvasLineTo(in pPoint as Point, in pCanvas as Canvas) 
 public foreign handler MCCanvasCurveThroughPoint(in pThrough as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasClosePath(in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFillText(in pText as string, in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFillTextAligned(in pText as string, in pAlignment as LCInteger, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasMeasureText(in pText as string, in pCanvas as Canvas) as Rectangle binds to "<builtin>"
+public foreign handler MCCanvasFillText(in pText as String, in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFillTextAligned(in pText as String, in pAlignment as LCInteger, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasMeasureText(in pText as String, in pCanvas as Canvas) as Rectangle binds to "<builtin>"
 
 /*
 Summary:	Apply a transform to a canvas.

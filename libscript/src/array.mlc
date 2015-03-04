@@ -25,22 +25,22 @@ use com.livecode.foreign
 public foreign handler MCArrayEvalKeysOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
 public foreign handler MCArrayEvalElementsOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as string, in IsNot as CBool, in Target as array, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as String, in IsNot as CBool, in Target as array, out Result as CBool) as undefined binds to "<builtin>"
 
 public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as CBool, in Target as array, out Result as CBool) as undefined binds to "<builtin>"
 
 public foreign handler MCArrayEvalNumberOfElementsIn(in Target as array, out Count as LCUIndex) as undefined binds to "<builtin>"
 
 // Case insensitive map access / storage
-public foreign handler MCArrayFetchElementOfCaseless(in Target as array, in Key as string, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, inout Target as array, in Key as string) as undefined binds to "<builtin>"
+public foreign handler MCArrayFetchElementOfCaseless(in Target as array, in Key as String, out Value as optional any) as undefined binds to "<builtin>"
+public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, inout Target as array, in Key as String) as undefined binds to "<builtin>"
 
 public foreign handler MCArrayEvalEmpty(out Value as array) as undefined binds to "<builtin>"
 
 public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as array) as CBool binds to "<builtin>"
-public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as string, in Container as array) as CBool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as String, in Container as array) as CBool binds to "<builtin>"
 
-public foreign handler MCArrayDeleteElementOfCaseless(inout Target as array, in Key as string) as undefined binds to "<builtin>"
+public foreign handler MCArrayDeleteElementOfCaseless(inout Target as array, in Key as String) as undefined binds to "<builtin>"
 
 --
 
@@ -61,7 +61,7 @@ Example:
 	put the keys of tArray into tKeys
 	sort tKeys in ascending order
 	
-	variable tKeysString as string
+	variable tKeysString as String
 	combine tKeys with "," into tKeysString 
 	// tKeysString is "key1,key2,key3"
 
@@ -219,7 +219,7 @@ Example:
 	put the empty array into tArray
 	put "value" into tArray["key"]
 	
-	variable tVar as string
+	variable tVar as String
 	put tArray["key"] into tVar -- tVar contains "value"
 
 Description:     
@@ -334,10 +334,10 @@ Example:
     put 2 into tArray["def"]
     put 3 into tArray["ghi"]
 
-	variable tString as string
+	variable tString as String
 	put "" into tString
     
-    variable tKey as string
+    variable tKey as String
     repeat for each key tKey in tArray
         put tKey after tString
     end repeat

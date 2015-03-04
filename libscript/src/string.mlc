@@ -23,35 +23,35 @@ module com.livecode.string
 
 use com.livecode.foreign
 
-public foreign handler MCStringExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCStringExecPutStringAfter(in Source as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCStringExecPutStringBefore(in Source as String, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCStringExecPutStringAfter(in Source as String, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCStringExecReplace(in Pattern as string, in Replacement as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCStringExecReplace(in Pattern as String, in Replacement as String, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalConcatenate(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalConcatenateWithSpace(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalConcatenate(in Left as String, in Right as String, out Result as String) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalConcatenateWithSpace(in Left as String, in Right as String, out Result as String) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalLowercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalUppercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalLowercaseOf(in Source as String, out Result as String) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalUppercaseOf(in Source as String, out Result as String) as undefined binds to "<builtin>"
 
 // The following all need some notion of context 
-public foreign handler MCStringEvalBeginsWith(in Source as string, in Prefix as string, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalEndsWith(in Source as string, in Suffix as string, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalOffset(in Needle as string, in Source as string, out Result as LCIndex) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalOffsetAfter(in Needle as string, in After as LCIndex, in Source as string, out Result as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalOffset(in Needle as String, in Source as String, out Result as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalOffsetAfter(in Needle as String, in After as LCIndex, in Source as String, out Result as LCIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalLastOffset(in Needle as string, in Source as string, out Result as LCIndex) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalLastOffsetBefore(in Needle as string, in Before as LCIndex, in Source as string, out Result as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalLastOffset(in Needle as String, in Source as String, out Result as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalLastOffsetBefore(in Needle as String, in Before as LCIndex, in Source as String, out Result as LCIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalContainsChars(in Source as string, in Needle as string, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalContainsChars(in Source as String, in Needle as String, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalIsEqualTo(in Left as string, in Right as string, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsNotEqualTo(in Left as string, in Right as string, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsLessThan(in Left as string, in Right as string, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsGreaterThan(in Left as string, in Right as string, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsEqualTo(in Left as String, in Right as String, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsNotEqualTo(in Left as String, in Right as String, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsLessThan(in Left as String, in Right as String, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsGreaterThan(in Left as String, in Right as String, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalEmpty(out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalEmpty(out Value as String) as undefined binds to "<builtin>"
 
 --
 
@@ -62,7 +62,7 @@ Source: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "" into tVar
 	put "abc" before tVar -- tVar contains "abc"
 	put "lpha" before char 2 of tVar
@@ -87,7 +87,7 @@ Source: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "" into tVar
 	put "rent" after tVar -- tVar contains "rent"
 	put "placeme" after char 2 of tVar -- tVar contains "replacement"
@@ -114,7 +114,7 @@ Target: 			An expression which evaluates to a string container.
 Replacement: 		An expression which evaluates to a string.
 
 Example:	
-	variable tString as string
+	variable tString as String
 	put "purple" into tString
 	replace "p" with "t" in tString -- tString is "turtle"
 	
@@ -141,7 +141,7 @@ Right: 				An expression which evaluates to a string.
 Returns:			The result of concatenating <Left> and <Right>.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "car" & "pet" into tVar -- tVar contains "carpet"
 
 Description:
@@ -165,7 +165,7 @@ Right: 				An expression which evaluates to a string.
 Returns:			The result of concatenating <Left> and <Right> with a space between.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "This" && "is" && "a" && "sentence." into tVar -- tVar contains "This is a sentence."
 
 Description:
@@ -312,7 +312,7 @@ end syntax
 Summary: 		Designates the string of length zero.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	variable tCount as number
 	put the empty string into tVar
 	put the number of chars in tVar into tCount -- tCount is 0

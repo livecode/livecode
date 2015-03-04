@@ -22,41 +22,41 @@ module com.livecode.char
 
 use com.livecode.foreign
 
-public foreign handler MCCharFetchCharOf(in Index as LCIndex, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreCharOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCharFetchCharRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreCharRangeOf(in Value as string, in Start as LCIndex, in Finish as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchCharOf(in Index as LCIndex, in Target as String, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreCharOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchCharRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as String, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreCharRangeOf(in Value as String, in Start as LCIndex, in Finish as LCIndex, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalNumberOfCharsIn(in Target as string, out Count as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalNumberOfCharsIn(in Target as String, out Count as LCIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as string, in Target as string, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as String, in Target as String, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCCharStoreBeforeCharOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreAfterCharOf(in Value as string, in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreBeforeCharOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreAfterCharOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalOffsetOfChars(in IsLast as CBool, in Needle as string, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as CBool, in Needle as string, in Before as LCIndex, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as CBool, in Needle as string, in After as LCIndex, in Target as string, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfChars(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as CBool, in Needle as String, in After as LCIndex, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalContains(in Source as string, in Needle as string, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalBeginsWith(in Source as string, in Prefix as string, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalEndsWith(in Source as string, in Suffix as string, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalContains(in Source as String, in Needle as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCCharEvalNewlineCharacter(out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalNewlineCharacter(out Value as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCharRepeatForEachChar(inout Iterator as optional Pointer, out Iterand as string, in Container as string) as CBool binds to "<builtin>"
+public foreign handler MCCharRepeatForEachChar(inout Iterator as optional Pointer, out Iterand as String, in Container as String) as CBool binds to "<builtin>"
 
-public foreign handler MCCharFetchFirstCharOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreFirstCharOf(in Value as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchFirstCharOf(in Target as String, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreFirstCharOf(in Value as String, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCharFetchLastCharOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreLastCharOf(in Value as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchLastCharOf(in Target as String, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreLastCharOf(in Value as String, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCharExecDeleteCharOf(in Index as LCIndex, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCharExecDeleteCharRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteCharOf(in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteCharRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as String) as undefined binds to "<builtin>"
 
-public foreign handler MCCharExecDeleteLastCharOf(inout Target as string) as undefined binds to "<builtin>"
-public foreign handler MCCharExecDeleteFirstCharOf(inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteLastCharOf(inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteFirstCharOf(inout Target as String) as undefined binds to "<builtin>"
 
 --
 
@@ -70,11 +70,11 @@ Returns:			The number of chars in <Target>.
 Example: 			
 
 	variable tVar as number
-	variable tSource as string
+	variable tSource as String
 	put "hello" into tString
 	put the number of chars in tString into tVar
 	
-	variable tString as string
+	variable tString as String
 	put the empty string into tString	
 	repeat tVar times
 		put "a" after tString
@@ -152,10 +152,10 @@ Summary:            Designates the first char in <Target>.
 Target:				An expression which evaluates to a string.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "char" into tVar
 	
-	variable tFirst as string
+	variable tFirst as String
 	put the last char of tVar into tFirst -- tFirst contains "c"
 
 Description:
@@ -179,10 +179,10 @@ Summary:            Designates the last char in <Target>.
 Target:				An expression which evaluates to a string.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "char" into tVar
 	
-	variable tLast as string
+	variable tLast as String
 	put the last char of tVar into tLast -- tLast contains "r"
 
 Description:
@@ -209,7 +209,7 @@ Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				A string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "thorough" into tVar
 	delete char 3 of tVar -- tVar contains "through"
 
@@ -236,7 +236,7 @@ Finish:             An expression which evaluates to a valid integer index of <T
 Target:             A string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "surround" into tVar
 	delete char 2 to 4 of tVar -- tVar contains "sound"
 
@@ -260,7 +260,7 @@ Summary:            Deletes the first char in <Target>.
 Target:				A string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "seven" into tVar
 	delete the first char of tVar -- tVar contains "even"
 
@@ -284,7 +284,7 @@ Summary:            Deletes the last char in <Target>.
 Target:				A string container.
 
 Example:
-	variable tVar as string
+	variable tVar as String
 	put "deadliness" into tVar
 	delete the last char of tVar -- tVar contains "deadlines"
 
@@ -340,11 +340,11 @@ Example:
 
 Example:
 	variable tVar as number
-	variable tFilePath as string
+	variable tFilePath as String
 	put "/Users/user/Documents/file.txt" into tFilePath
 	put the last offset of "/" in tFilePath into tVar
 	
-	variable tFileName as string
+	variable tFileName as String
 	put char 1 to tVar of tFilePath into tFileName -- tVar contains "file.txt"
 
 Description:
@@ -398,8 +398,8 @@ Returns: 	Returns the offset of <Needle> before <Before> in <Target>.
 Example:
 	variable tVar as number
 	variable tLastDot as number
-	variable tAddress as string
-	variable tTLD as string
+	variable tAddress as String
+	variable tTLD as String
 	put "http://www.livecode.com/index.html" into tAddress
 	put the last offset of "." in tAddress into tLastDot
 	put the offset of "." before tLastDot in tAddress into tVar
@@ -449,8 +449,8 @@ Source: 			An expression which evaluates to a string.
 Returns: 	Returns true if <Source> begins with <Prefix>.
 
 Example:
-	variable tVar as string
-	variable tResult as string
+	variable tVar as String
+	variable tResult as String
 	put "abcde" into tVar
 	if tVar begins with "abc" then
 		put "success" into tResult
@@ -478,8 +478,8 @@ Source: 			An expression which evaluates to a string.
 Returns: 	Returns true if <Source> ends with <Suffix>.
 
 Example:
-	variable tVar as string
-	variable tResult as string
+	variable tVar as String
+	variable tResult as String
 	put "abcde" into tVar
 	if tVar ends with "cde" then
 		put "success" into tResult
@@ -510,7 +510,7 @@ Example:
 	push "line 2" onto tList
 	push "line 3" onto tList
 	
-	variable tLines as string
+	variable tLines as String
 	combine tList with newline into tLines -- tLines has 3 lines
 
 Description:
@@ -530,11 +530,11 @@ Summary:        Repeat over the chars of a string
 Iterand:        A string container.
 
 Example:
-	variable tString as string
+	variable tString as String
 	put "stressed" into tString
 	
-	variable tReversed as string
-	variable tChar as string
+	variable tReversed as String
+	variable tChar as String
 	put "" into tReversed
 	repeat for each char tChar in tString
 		put tChar before tReversed

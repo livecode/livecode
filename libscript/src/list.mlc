@@ -121,7 +121,7 @@ Example:
 	push "first element" onto tVar
 	push "last element" onto tVar
 	
-	variable tResult as string
+	variable tResult as String
 	if the tail of tVar is "last element" then
 		put "success" into tResult
 	end if
@@ -156,7 +156,7 @@ Example:
 	push "something" onto tVar
 	push "something else" onto front of tVar
 	
-	variable tResult as string
+	variable tResult as String
 	if tVar[1] is "something else" then
 		put "success" into tResult
 	end if
@@ -185,7 +185,7 @@ Example:
 	push "something" onto tVar
 	push "something else" onto tVar
 	
-	variable tPopped as string
+	variable tPopped as String
 	pop tVar into tPopped -- tPopped contains "something else"
 	
 Example:
