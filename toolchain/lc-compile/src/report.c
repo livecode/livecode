@@ -168,7 +168,7 @@ DEFINE_ERROR(IterateSyntaxMethodArgumentsDontConform, "Iterate syntax method arg
 
 DEFINE_ERROR(HandlersBoundToSyntaxMustBePublic, "Handlers bound to syntax rules must be public")
 
-DEFINE_ERROR(IterateSyntaxMethodMustReturnBoolean, "Iterate syntax methods must return bool or boolean")
+DEFINE_ERROR(IterateSyntaxMethodMustReturnBoolean, "Iterate syntax methods must return boolean or CBool")
 DEFINE_ERROR(PhraseSyntaxMethodMustReturnAValue, "Phrase syntax methods must return a value")
 
 DEFINE_ERROR(NonAssignableExpressionUsedForOutContext, "Non-container expression used for out context")
