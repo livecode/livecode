@@ -41,7 +41,7 @@ end handler
 -- Wrapper for "system" library function
 ----------------------------------------------------------------
 
-foreign handler __system(in Command as NativeCString) as CInt binds to "system"
+foreign handler __system(in Command as ZStringNative) as CInt binds to "system"
 
 handler Shell(in pCommand as string) as number
 	variable tExitStatus as number
