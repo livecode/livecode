@@ -16,16 +16,57 @@
 
 module com.livecode.foreign
 
-public foreign type bool binds to "kMCBoolTypeInfo"
-public foreign type uint binds to "kMCUIntTypeInfo"
-public foreign type int binds to "kMCIntTypeInfo"
-public foreign type float binds to "kMCFloatTypeInfo"
-public foreign type double binds to "kMCDoubleTypeInfo"
-public foreign type pointer binds to "kMCPointerTypeInfo"
+----------------------------------------------------------------
+-- Universal types
+----------------------------------------------------------------
 
-public foreign type index binds to "kMCIntTypeInfo"
-public foreign type uindex binds to "kMCUIntTypeInfo"
+public foreign type Pointer binds to "kMCPointerTypeInfo"
 
-public foreign type NativeCString binds to "kMCNativeCStringTypeInfo"
+public foreign type UInt32 binds to "kMCUIntTypeInfo"
+public foreign type Int32 binds to "kMCIntTypeInfo"
+
+public foreign type Float32 binds to "kMCFloatTypeInfo"
+public foreign type Float64 binds to "kMCDoubleTypeInfo"
+
+----------------------------------------------------------------
+-- C types
+----------------------------------------------------------------
+
+public foreign type CBool binds to "kMCBoolTypeInfo"
+public type CInt is Int32
+public type CUint is UInt32
+public type CFloat is Float32
+public type CDouble is Float64
+
+----------------------------------------------------------------
+-- LiveCode engine types
+----------------------------------------------------------------
+
+public type LCIndex is Int32
+public type LCUIndex is UInt32
+public type LCInteger is Int32
+public type LCUInteger is UInt32
+
+----------------------------------------------------------------
+-- Nul-terminated string pointer types
+----------------------------------------------------------------
+
+public foreign type ZStringNative binds to "kMCNativeCStringTypeInfo"
+
+----------------------------------------------------------------
+-- Deprecated
+----------------------------------------------------------------
+
+public type bool is CBool
+public type uint is UInt32
+public type int is Int32
+public type float is Float32
+public type double is Float64
+public type pointer is Pointer
+
+public type index is LCIndex
+public type uindex is LCUIndex
+
+public type NativeCString is ZStringNative
 
 end module
