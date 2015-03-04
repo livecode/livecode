@@ -3004,7 +3004,12 @@ void* MCU_loadmodule(const char *p_module)
 //  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
 void MCU_unloadmodule(void *p_module)
 {
+    // SN-2015-03-04: [[ Broken module unloading ]] NSAddImage, used on Mac in
+    //  MCU_loadmodule, does not need any unloading of the module -
+    //  but the other platforms do.
+#if !defined(_MACOSX) && !defined(_MAC_SERVER)
     MCS_unloadmodule((MCSysModuleHandle)p_module);
+#endif
 }
 
 // SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
