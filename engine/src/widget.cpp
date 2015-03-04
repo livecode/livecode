@@ -1536,7 +1536,8 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCValueRef MCEngineDoDispatchToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
+extern MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
+extern void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
 
 extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
 {
@@ -1546,11 +1547,11 @@ extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script
         return;
     }
     
-    if (!MCScriptObjectCreate(MCwidgetobject, 0, r_script_object))
+    if (!MCEngineScriptObjectCreate(MCwidgetobject, 0, r_script_object))
         return;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatch(bool p_is_function, MCStringRef p_message)
+extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSend(bool p_is_function, MCStringRef p_message)
 {
     if (MCwidgetobject == nil)
     {
@@ -1558,10 +1559,10 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatch(bool p_is_function, MCSt
         return nil;
     }
     
-    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, MCwidgetobject, kMCEmptyProperList);
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCwidgetobject, kMCEmptyProperList);
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatchWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
+extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
 {
     if (MCwidgetobject == nil)
     {
@@ -1569,7 +1570,29 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatchWithArguments(bool p_is_f
         return nil;
     }
     
-    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, MCwidgetobject, p_arguments);
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCwidgetobject, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetExecPost(MCStringRef p_message)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCEngineDoPostToObjectWithArguments(p_message, MCwidgetobject, kMCEmptyProperList);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCEngineDoPostToObjectWithArguments(p_message, MCwidgetobject, p_arguments);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
