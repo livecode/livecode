@@ -95,7 +95,7 @@ some special foreign types are required.
 
 * `LCIndex`, `LCUIndex`: Indices (e.g. into lists or strings)
 
-* `LCInteger`, `LCUInteger`: Integers
+* `LCInt`, `LCUInt`: Integers
 
 ## String buffers
 
