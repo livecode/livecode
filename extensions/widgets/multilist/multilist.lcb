@@ -156,7 +156,7 @@ public handler OnPaint()
 				put kPadding+kIconMargin into mMargin
 				set the paint of this canvas to getPaint("icon")
 				set the font of this canvas to getFont("icon")
-				execute script ("return numtocodepoint(0x" &  element 2 of tElement2 & ")")
+                get the char with code ((element 2 of tElement2) converted from base 16)
 				fill text the result at center of getRect("icon",tY) on this canvas
 				
 			else
@@ -171,8 +171,7 @@ public handler OnPaint()
 				if element 5 of tElement2 is "checked" then
 					set the paint of this canvas to getPaint("icon")
 					set the font of this canvas to getFont("icon")
-					execute script ("return numtocodepoint(0xf00c)")
-					fill text the result at left of tLabelRect on this canvas
+					fill text "\u{f00c}" at left of tLabelRect on this canvas
 				end if
 				
 				add -kIconMargin to the width of tLabelRect
@@ -188,8 +187,7 @@ public handler OnPaint()
 				add (-kPadding) to the x of tLabelRect
 				set the paint of this canvas to getPaint("lines")
 				set the font of this canvas to getFont("icon")
-				execute script ("return numtocodepoint(0xf054)")
-				fill text the result at right of tLabelRect on this canvas
+				fill text "\u{f054}" at right of tLabelRect on this canvas
 				
 			end if
 			
@@ -256,7 +254,7 @@ public handler OnMouseDown()
 end handler	
 ----------
 public handler OnMouseUp()
-	dispatch command "rowSelected" to my script object with [element 1 of element mSelectedRow of mListArray]
+	post "rowSelected" with [element 1 of element mSelectedRow of mListArray]
 	put false into mPressed
 	put 0 into mSelectedRow
 	redraw all

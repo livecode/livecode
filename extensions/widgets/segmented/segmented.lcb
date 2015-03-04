@@ -180,7 +180,7 @@ public handler OnMouseUp()
 		
 		variable tLabel as string
 		put element mSelected of mLabels into tLabel
-		dispatch command "mouseUp" to my script object with [tLabel]
+		post "mouseUp" with [tLabel]
 		
 	end if
 end handler
