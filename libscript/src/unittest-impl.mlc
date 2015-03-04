@@ -82,10 +82,10 @@ public handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as Str
 	MCUnitOutput(tMessage)
 end handler
 
-foreign handler MCStringEncode(in Source as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as data) as CBool binds to "<builtin>"
+foreign handler MCStringEncode(in Source as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) as CBool binds to "<builtin>"
 
 public handler MCUnitOutput(in pMessage as String)
-	variable tEncoded as data
+	variable tEncoded as Data
 
 	if the last char of pMessage is not "\n" then
 		put "\n" after pMessage

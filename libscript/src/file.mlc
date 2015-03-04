@@ -23,8 +23,8 @@ module com.livecode.file
 
 --
 
-public foreign handler MCFileExecGetContents(in File as String, out Contents as data) as undefined binds to "<builtin>"
-public foreign handler MCFileExecSetContents(in Contents as data, in File as String) as undefined binds to "<builtin>"
+public foreign handler MCFileExecGetContents(in File as String, out Contents as Data) as undefined binds to "<builtin>"
+public foreign handler MCFileExecSetContents(in Contents as Data, in File as String) as undefined binds to "<builtin>"
 
 /*
 Summary:	The data stored in a file.

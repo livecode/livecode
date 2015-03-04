@@ -2077,9 +2077,9 @@ end syntax
 
 public foreign handler MCCanvasImageMakeWithPath(in pPath as String, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as String, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInteger, in pHeight as LCInteger, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as List, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithData(in pData as Data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInteger, in pHeight as LCInteger, in pPixels as Data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as List, in pPixels as Data, out rImage as Image) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new image.
@@ -2177,7 +2177,7 @@ public foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as U
 public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as UInt32) as undefined binds to "<builtin>"
 // TODO - add support for metadata
 //public foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as Array) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as Data) as undefined binds to "<builtin>"
 // TODO - add image frame index property?
 
 /*
@@ -4087,7 +4087,7 @@ end syntax
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasNewCanvasWithSize(in pSize as List, out rCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as data) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as Data) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as LCUInteger) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out rWidth as LCUInteger) as undefined binds to "<builtin>"
 

@@ -22,39 +22,39 @@ module com.livecode.byte
 
 use com.livecode.foreign
 
-public foreign handler MCByteEvalNumberOfBytesIn(in Target as data, out Count as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalNumberOfBytesIn(in Target as Data, out Count as LCUIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCByteEvalOffsetOfBytes(in IsLast as CBool, in Needle as data, in Target as data, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as CBool, in Needle as data, in Before as LCUIndex, in Target as data, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalOffsetOfBytesAfter(in IsFirst as CBool, in Needle as data, in After as LCUIndex, in Target as data, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytes(in IsLast as CBool, in Needle as Data, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as CBool, in Needle as Data, in Before as LCUIndex, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytesAfter(in IsFirst as CBool, in Needle as Data, in After as LCUIndex, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as Data, in Target as Data, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCByteEvalContainsBytes(in Target as data, in Needle as data, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalIsInBytes(in Needle as data, in Target as data, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalBeginsWithBytes(in Target as data, in Needle as data, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalEndsWithBytes(in Target as data, in Needle as data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalContainsBytes(in Target as Data, in Needle as Data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalIsInBytes(in Needle as Data, in Target as Data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalBeginsWithBytes(in Target as Data, in Needle as Data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalEndsWithBytes(in Target as Data, in Needle as Data, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCByteFetchByteOf(in Index as LCIndex, in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler MCByteStoreByteOf(in Value as data, in Index as LCIndex, inout Target as data) as undefined binds to "<builtin>"
-public foreign handler MCByteFetchByteRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler MCByteStoreByteRangeOf(in Value as data, in Start as LCIndex, in Finish as LCIndex, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchByteOf(in Index as LCIndex, in Target as Data, out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreByteOf(in Value as Data, in Index as LCIndex, inout Target as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchByteRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as Data, out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreByteRangeOf(in Value as Data, in Start as LCIndex, in Finish as LCIndex, inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteRepeatForEachByte(inout Iterator as optional Pointer, out Iterand as data, in Container as data) as CBool binds to "<builtin>"
+public foreign handler MCByteRepeatForEachByte(inout Iterator as optional Pointer, out Iterand as Data, in Container as Data) as CBool binds to "<builtin>"
 
-public foreign handler MCByteFetchFirstByteOf(in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler MCByteStoreFirstByteOf(in Value as data, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchFirstByteOf(in Target as Data, out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreFirstByteOf(in Value as Data, inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteFetchLastByteOf(in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler MCByteStoreLastByteOf(in Value as data, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchLastByteOf(in Target as Data, out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreLastByteOf(in Value as Data, inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteExecDeleteByteOf(in Index as LCIndex, inout Target as data) as undefined binds to "<builtin>"
-public foreign handler MCByteExecDeleteByteRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteByteOf(in Index as LCIndex, inout Target as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteByteRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteExecDeleteLastByteOf(inout Target as data) as undefined binds to "<builtin>"
-public foreign handler MCByteExecDeleteFirstByteOf(inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteLastByteOf(inout Target as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteFirstByteOf(inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCDataExecRandomBytes(in Count as LCUIndex, out Value as data) as undefined binds to "<builtin>"
+public foreign handler MCDataExecRandomBytes(in Count as LCUIndex, out Value as Data) as undefined binds to "<builtin>"
 
 --
 
