@@ -191,7 +191,7 @@ Example:
 Example:
 	variable tList as list
 	put [1,2,3] into tList
-	variable tNum as number
+	variable tNum as Number
 	pop front of tList into tNum -- tNum is 1, tList is [2,3]
 
 Description:
@@ -218,7 +218,7 @@ Returns:			The number of elements in the list <Target>.
 Example:
 	variable tVar as list
 	put [1,2,3,4,5] into tVar
-	variable tNum as number
+	variable tNum as Number
 	put the number of elements in tVar into tNum -- tNum is 5
 	
 Description:
@@ -428,7 +428,7 @@ Example:
 	put [1,2,3] into tVar
 	put "A" into element 1 of tVar -- tVar is ["A",2,3]
 	
-	variable tNum as number
+	variable tNum as Number
 	put element 2 of tVar into tNum -- tNum is 2
 
 Description:     
@@ -458,7 +458,7 @@ Example:
 	put [1,2,3] into tVar
 	put "A" into tVar[1] -- tVar is ["A",2,3]
 	
-	variable tNum as number
+	variable tNum as Number
 	put tVar[2] into tNum -- tNum is 2
 
 Description:     
@@ -645,7 +645,7 @@ Example:
 	variable tVar as list
 	put the empty list into tVar
 	
-	variable tCount as number
+	variable tCount as Number
 	put 1 into tCount
 	repeat 3 times
 		push tCount onto tVar
@@ -688,7 +688,7 @@ Example:
 	variable tVar as list
 	put the empty list into tVar
 	
-	variable tCount as number
+	variable tCount as Number
 	put 1 into tCount
 	repeat 3 times
 		push tCount onto tVar
@@ -728,7 +728,7 @@ Example:
 	variable tVar as list
 	put the empty list into tVar
 	
-	variable tCount as number
+	variable tCount as Number
 	put 2 into tCount
 	repeat 3 times
 		push tCount onto tVar
@@ -769,7 +769,7 @@ Example:
 	variable tVar as list
 	put the empty list into tVar
 	
-	variable tCount as number
+	variable tCount as Number
 	put 2 into tCount
 	repeat 3 times
 		push tCount onto tVar
@@ -807,7 +807,7 @@ Summary: 		Designates the list of length zero.
 
 Example:
 	variable tVar as list
-	variable tCount as number
+	variable tCount as Number
 	put the empty list into tVar
 	put the number of elements in tVar into tCount -- tCount is 0
 	

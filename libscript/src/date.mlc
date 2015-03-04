@@ -31,7 +31,7 @@ Example:
 	variable tDateTime as list
 	put the local time into tDateTime
 
-	variable tDayOfMonth as number
+	variable tDayOfMonth as Number
 	put tDateTime[3] into tDayOfMonth
 
 Description:

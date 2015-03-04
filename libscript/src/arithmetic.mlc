@@ -26,68 +26,68 @@ use com.livecode.foreign
 
 public foreign handler MCArithmeticExecAddIntegerToInteger(in Value as LCInteger, inout Target as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecAddRealToReal(in Value as CDouble, inout Target as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecAddNumberToNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecAddNumberToNumber(in Value as Number, inout Target as Number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecSubtractIntegerFromInteger(in Value as LCInteger, inout Target as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecSubtractRealFromReal(in Value as CDouble, inout Target as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecSubtractNumberFromNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecSubtractNumberFromNumber(in Value as Number, inout Target as Number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecMultiplyIntegerByInteger(inout Target as LCInteger, in Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecMultiplyRealByReal(inout Target as CDouble, in Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecMultiplyNumberByNumber(inout Target as number, in Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecMultiplyNumberByNumber(inout Target as Number, in Value as Number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecDivideIntegerByInteger(inout Target as LCInteger, in Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecDivideRealByReal(inout Target as CDouble, in Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecDivideNumberByNumber(inout Target as number, in Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecDivideNumberByNumber(inout Target as Number, in Value as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalPlusInteger(in Operand as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalPlusReal(in Operand as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalPlusNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalPlusNumber(in Operand as Number, out Value as Number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalMinusInteger(in Operand as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalMinusReal(in Operand as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalMinusNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalMinusNumber(in Operand as Number, out Value as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalIntegerPlusInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealPlusReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberPlusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberPlusNumber(in Left as Number, in Right as Number, out Value as Number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerMinusInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealMinusReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberMinusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberMinusNumber(in Left as Number, in Right as Number, out Value as Number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerTimesInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealTimesReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberTimesNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberTimesNumber(in Left as Number, in Right as Number, out Value as Number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerOverInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealOverReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberOverNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberOverNumber(in Left as Number, in Right as Number, out Value as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalIntegerModInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealModReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberModNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberModNumber(in Left as Number, in Right as Number, out Value as Number) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerWrapInteger(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealWrapReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberWrapNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberWrapNumber(in Left as Number, in Right as Number, out Value as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalIntegerIsGreaterThanInteger(in Left as LCInteger, in Right as LCInteger, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealIsGreaterThanReal(in Left as CDouble, in Right as CDouble, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberIsGreaterThanNumber(in Left as number, in Right as number, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberIsGreaterThanNumber(in Left as Number, in Right as Number, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerIsGreaterThanOrEqualToInteger(in Left as LCInteger, in Right as LCInteger, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealIsGreaterThanOrEqualToReal(in Left as CDouble, in Right as CDouble, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(in Left as number, in Right as number, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(in Left as Number, in Right as Number, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerIsLessThanInteger(in Left as LCInteger, in Right as LCInteger, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealIsLessThanReal(in Left as CDouble, in Right as CDouble, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberIsLessThanNumber(in Left as number, in Right as number, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberIsLessThanNumber(in Left as Number, in Right as Number, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalIntegerIsLessThanOrEqualToInteger(in Left as LCInteger, in Right as LCInteger, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalRealIsLessThanOrEqualToReal(in Left as CDouble, in Right as CDouble, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNumberIsLessThanOrEqualToNumber(in Left as number, in Right as number, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberIsLessThanOrEqualToNumber(in Left as Number, in Right as Number, out Value as CBool) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalEqualToInteger(in Left as LCInteger, in Right as LCInteger, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalEqualToReal(in Left as CDouble, in Right as CDouble, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalEqualToNumber(in Left as number, in Right as number, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalEqualToNumber(in Left as Number, in Right as Number, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalNotEqualToInteger(in Left as LCInteger, in Right as LCInteger, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalNotEqualToReal(in Left as CDouble, in Right as CDouble, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalNotEqualToNumber(in Left as number, in Right as number, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNotEqualToNumber(in Left as Number, in Right as Number, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCArithmeticEvalNumberFormattedAsString(in Target as number, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticEvalStringParsedAsNumber(in Target as String, out Value as optional number) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecFormatNumberAsString(in Target as number) as String binds to "<builtin>"
-public foreign handler MCArithmeticExecParseStringAsNumber(in Target as String) as optional number binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberFormattedAsString(in Target as Number, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalStringParsedAsNumber(in Target as String, out Value as optional Number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecFormatNumberAsString(in Target as Number) as String binds to "<builtin>"
+public foreign handler MCArithmeticExecParseStringAsNumber(in Target as String) as optional Number binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalListOfStringParsedAsListOfNumber(in Target as list, out Value as optional list) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecParseListOfStringAsListOfNumber(in Target as list) as optional list binds to "<builtin>"
@@ -100,7 +100,7 @@ Target:     An expression that evaluates to a numeric container.
 Value:      An expression that evaluates to a number.   
 
 Example:
-    variable tVar as number
+    variable tVar as Number
     put 2 into tVar
     add 10 to tVar -- tVar contains 12
 
@@ -149,7 +149,7 @@ Target:     An expression that evaluates to a numeric variable.
 Value:      An expression that evaluates to a number.   
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 2 into tVar
 	multiply tVar by 2 -- tVar contains 4
 
@@ -200,7 +200,7 @@ Operand:    An expression that evaluates to a number.
 Returns: 	The result of evaluating <Operand>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put +5 into tVar -- tVar contains 5
 
 Description: 
@@ -222,7 +222,7 @@ Operand:    An expression that evaluates to a number.
 Returns: 	The negated result of evaluating <Operand>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put -(5 + 4) into tVar -- tVar contains -9
 
 Tags: Math
@@ -244,7 +244,7 @@ Right:      An expression that evaluates to a number.
 Returns: 	The result of adding the numbers <Left> and <Right>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 5 + 4 + 3 into tVar -- tVar contains 12
 
 Tags: Math
@@ -264,7 +264,7 @@ Right:      An expression that evaluates to a number.
 Returns: 	The result of subtracting the number <Right> from <Left>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 5 - 3 - 1 into tVar -- tVar contains 1
 	
 Tags: Math
@@ -284,7 +284,7 @@ Right:      An expression that evaluates to a number.
 Returns: 	The result of multiplying the numbers <Left> and <Right>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 3 * 5 into tVar -- tVar contains 15
 	
 Tags: Math
@@ -305,7 +305,7 @@ Right:      An expression that evaluates to a number.
 Returns: 	The result of dividing the number <Left> by <Right>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 3 / 5 into tVar -- tVar contains 0.6
 	
 Tags: Math
@@ -327,7 +327,7 @@ Right:      An expression that evaluates to a number.
 Returns: <Left> mod <Right>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 4^((7 - 1)/2) mod 7 into tVar -- tVar contains 1
 	
 Description:
@@ -350,11 +350,11 @@ Returns:		If x >= 0, then x wrap y returns ((x-1) mod abs(y)) + 1.
 			If x < 0, then x wrap y returns -((x-1) mod abs(y)) + 1.
 			
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 5 wrap 3 into tVar -- tVar contains 2
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put -3 wrap 3 into tVar -- tVar contains -3
 
 Description:
@@ -509,7 +509,7 @@ Returns:	<Operand> formatted as a string.
 
 Example:
 	variable tString as String
-	variable tNum as number
+	variable tNum as Number
 	put 5 into tNum
 	put tNum formatted as string into tString -- tString contains "5"
 
@@ -531,7 +531,7 @@ Operand:	An expression that evaluates to a number.
 The result:	<Operand> formatted as a string.
 
 Example:
-	variable tNum as number
+	variable tNum as Number
 	put 5 into tNum
 	format tNum as string -- the result contains "5"
 
@@ -554,12 +554,12 @@ Returns:	<Operand> parsed as a number, or undefined.
 
 Example:
 	variable tString as String
-	variable tNum as optional number
+	variable tNum as optional Number
 	put "5.6" into tString
 	put tString parsed as number into tNum -- tNum contains 5.6
 
 Example:
-	variable tNum as optional number
+	variable tNum as optional Number
 	put "aaaa" parsed as number into tNum
 	
 	if tNum is not defined then
@@ -588,12 +588,12 @@ The result:	<Operand> parsed as a number, or undefined.
 Example:
 	variable tString as String
 	put "5.6" into tString
-	parse tString as number -- the result is 5.6
+	parse tString as Number -- the result is 5.6
 
 Example:
 	variable tResult as String
-	variable tNum as optional number
-	parse "aaaa" as number
+	variable tNum as optional Number
+	parse "aaaa" as Number
 	
 	if the result is not defined then
 		put "unable to parse string" into tResult
@@ -626,7 +626,7 @@ Example:
 	variable tList as list
 	put ["1", "b", "3"] parsed as list of number into tList
 	
-	variable tElt as number
+	variable tElt as Number
 	repeat with tElt from 1 up to the number of elements in tList
 		if tList[tElt] is not defined then
 			put 0 into element tElt of tList

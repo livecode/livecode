@@ -189,7 +189,7 @@ Summary: 		Designates data of length 0.
 
 Example:
 	variable tVar as data
-	variable tCount as number
+	variable tCount as Number
 	put the empty data into tVar
 	put the number of bytes in tVar into tCount -- tCount is 0
 	

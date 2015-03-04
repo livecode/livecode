@@ -125,7 +125,7 @@ Example:
 	put 2 into tArray["key2"]
 	put 3 into tArray["key3"]
 	
-	variable tVar as number
+	variable tVar as Number
 	put the number of elements in tArray into tVar -- tVar contains 3
 	
 Description:
@@ -270,7 +270,7 @@ Summary: 		Designates the array with no elements.
 
 Example:
 	variable tVar as array
-	variable tCount as number
+	variable tCount as Number
 	put the empty array into tVar
 	put the number of elements in tVar into tCount -- tCount is 0
 	
@@ -299,7 +299,7 @@ Example:
     put 2 into tArray["key2"]
     put 3 into tArray["key3"]
 
-	variable tSum as number
+	variable tSum as Number
 	put 0 into tSum
     
     variable tElement

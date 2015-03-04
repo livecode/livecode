@@ -23,15 +23,15 @@ module com.livecode.mathfoundation
 use com.livecode.foreign
 
 public foreign handler MCMathFoundationExecRoundRealToNearest(inout Target as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationExecRoundNumberToNearest(inout Target as number) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationExecRoundNumberToNearest(inout Target as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCMathFoundationEvalRoundedRealToNearest(in Target as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationEvalRoundedNumberToNearest(in Target as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalRoundedNumberToNearest(in Target as Number, out Value as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCMathFoundationEvalFloorReal(in Target as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationEvalFloorNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalFloorNumber(in Target as Number, out Value as Number) as undefined binds to "<builtin>"
 public foreign handler MCMathFoundationEvalCeilingReal(in Target as CDouble, out Value as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationEvalCeilingNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalCeilingNumber(in Target as Number, out Value as Number) as undefined binds to "<builtin>"
 
 public foreign handler MCMathFoundationEvalPi(out Value as CDouble) as undefined binds to "<builtin>"
 --
@@ -42,7 +42,7 @@ public foreign handler MCMathFoundationEvalPi(out Value as CDouble) as undefined
 Summary: The constant pi
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put the cos of pi into tVar -- tVar contains -1
 
 Description:
@@ -64,7 +64,7 @@ Summary:    Rounds <Target> to the nearest integer.
 Target:     An expression that evaluates to a numeric container.
 
 Example:
-	variable tNum as number
+	variable tNum as Number
 	put -5.5 into tNum
 	round tNum -- tNum contains -6
 	
@@ -87,8 +87,8 @@ Target:     An expression that evaluates to a number.
 Returns:		The rounded value of <Target>
 
 Example:
-	variable tNum as number
-	variable tRounded as number
+	variable tNum as Number
+	variable tRounded as Number
 	put -5.5 into tNum
 	put the rounded of tNum into tRounded -- tRounded contains -6
 
@@ -113,8 +113,8 @@ Target:     An expression that evaluates to a number.
 Returns: 	The floor of <Target>
 
 Example:
-	variable tNum as number
-	variable tFloor as number
+	variable tNum as Number
+	variable tFloor as Number
 	put -5.5 into tNum
 	put the floor of tNum into tFloor -- tFloor contains -6
 
@@ -138,8 +138,8 @@ Target:     An expression that evaluates to a number.
 Returns: 	The ceiling of <Target>
 
 Example:
-	variable tNum as number
-	variable tCeiling as number
+	variable tNum as Number
+	variable tCeiling as Number
 	put -5.5 into tNum
 	put the ceiling of tNum into tCeiling -- tCeiling contains -5
 

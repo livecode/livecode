@@ -67,7 +67,7 @@ Returns:			The number of codeunits in <Target>.
 
 Example: 			
 
-	variable tVar as number
+	variable tVar as Number
 	variable tSource as String
 	put "hello" into tString
 	put the number of codeunits in tString into tVar
@@ -333,11 +333,11 @@ Target: 			An expression which evaluates to a string.
 Returns: 	Returns the offset of <Needle> in <Target>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put the first offset of codeunits "art" in "cartoon" into tVar -- tVar contains 2
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	variable tFilePath as String
 	put "/Users/user/Documents/file.txt" into tFilePath
 	put the last offset of "/" in tFilePath into tVar
@@ -368,7 +368,7 @@ After:              An expression which evaluates to a valid integer index of Ta
 Returns: 	Returns the offset of <Needle> after <After> in <Target>.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put the offset of codeunits "nse" after 4 in "nonsense" into tVar -- tVar contains 2
 	
 Description:
@@ -394,8 +394,8 @@ Before:              An expression which evaluates to a valid integer index of T
 Returns: 	Returns the offset of <Needle> before <Before> in <Target>.
 
 Example:
-	variable tVar as number
-	variable tLastDot as number
+	variable tVar as Number
+	variable tLastDot as Number
 	variable tAddress as String
 	variable tTLD as String
 	put "http://www.livecode.com/index.html" into tAddress

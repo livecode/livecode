@@ -313,7 +313,7 @@ Summary: 		Designates the string of length zero.
 
 Example:
 	variable tVar as String
-	variable tCount as number
+	variable tCount as Number
 	put the empty string into tVar
 	put the number of chars in tVar into tCount -- tCount is 0
 	

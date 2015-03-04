@@ -26,7 +26,7 @@ foreign handler MCValueCopyDescription(in Value as any, out Description as Strin
 -- Main functions used by tests
 ----------------------------------------------------------------
 
-public handler MCUnitPlan(in pCount as number)
+public handler MCUnitPlan(in pCount as Number)
 	variable tNumberString as String
 	put pCount formatted as string into tNumberString
 

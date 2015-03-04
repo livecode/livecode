@@ -23,7 +23,7 @@ use com.livecode.system
 use com.livecode.unittest
 
 -- Workaround string formatting issues
-handler FormatInt(in pNumber as number) as String
+handler FormatInt(in pNumber as Number) as String
 	variable tNumberString
 
 	put pNumber formatted as string into tNumberString
@@ -43,8 +43,8 @@ end handler
 
 foreign handler __system(in Command as ZStringNative) as CInt binds to "system"
 
-handler Shell(in pCommand as String) as number
-	variable tExitStatus as number
+handler Shell(in pCommand as String) as Number
+	variable tExitStatus as Number
 	put __system(pCommand) into tExitStatus
 
 	if tExitStatus is in [0, -1] then
@@ -147,7 +147,7 @@ handler GetModulePrettyPath(in pModulePath as String) as String
 		delete char 1 to (the number of chars in tPrefix) of pModulePath
 	end if
 
-	variable tLen as number
+	variable tLen as Number
 	put the number of chars in pModulePath into tLen
 	if (tLen-3) is the last offset of ".lcm" in pModulePath then
 		delete char (tLen-3) to tLen of pModulePath
@@ -206,7 +206,7 @@ handler GetTestOutput(in pModulePath as String, in pHandlerName as String, out r
 	-- Put something helpful into the output
 	put "###" && GetModulePrettyPath(pModulePath) && pHandlerName && "\n\n" into rOutput
 
-	variable tExitStatus as number
+	variable tExitStatus as Number
 	put Shell(tCommand) into tExitStatus
 	if tExitStatus is not 0 then
 		put "not ok -" && pHandlerName && "#" && "Handler exited with status" && FormatInt(tExitStatus) & "\n" after rOutput
@@ -404,11 +404,11 @@ end handler
 ----------------------------------------------------------------
 -- Print a pretty summary of the test results
 --
-handler PrintTestSummary(in tPass as number, in tXPass as number, in tXFail as number, in tFail as number, in tSkip as number)
+handler PrintTestSummary(in tPass as Number, in tXPass as Number, in tXFail as Number, in tFail as Number, in tSkip as Number)
 
 	variable tSummaryString as String
 
-	variable tTotal as number
+	variable tTotal as Number
 	put tPass + tFail + tXPass + tXFail + tSkip into tTotal
 
 	--
@@ -475,11 +475,11 @@ public handler SummarizeTests()
 
 	put the empty string into tSummaryLog
 
-	variable tPassCount as number
-	variable tFailCount as number
-	variable tXPassCount as number
-	variable tXFailCount as number
-	variable tSkipCount as number
+	variable tPassCount as Number
+	variable tFailCount as Number
+	variable tXPassCount as Number
+	variable tXFailCount as Number
+	variable tSkipCount as Number
 
 	put 0 into tPassCount
 	put 0 into tFailCount
