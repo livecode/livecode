@@ -41,7 +41,7 @@ end handler
 -- Wrapper for "system" library function
 ----------------------------------------------------------------
 
-foreign handler __system(in Command as NativeCString) as int binds to "system"
+foreign handler __system(in Command as NativeCString) as CInt binds to "system"
 
 handler Shell(in pCommand as string) as number
 	variable tExitStatus as number
@@ -66,8 +66,8 @@ end handler
 -- FIXME this should use proper LiveCode builder syntax for string
 -- encoding/decoding.
 
-foreign handler MCStringEncode(in String as string, in Encoding as int, in IsExternalRep as bool, out Encoded as data) as bool binds to "<builtin>"
-foreign handler MCStringDecode(in Encoded as data, in Encoding as int, in IsExternalRep as bool, out String as string) as bool binds to "<builtin>"
+foreign handler MCStringEncode(in String as string, in Encoding as CInt, in IsExternalRep as bool, out Encoded as data) as bool binds to "<builtin>"
+foreign handler MCStringDecode(in Encoded as data, in Encoding as CInt, in IsExternalRep as bool, out String as string) as bool binds to "<builtin>"
 
 handler EncodeUTF8(in pString as string) as data
 	variable tEncoded as data

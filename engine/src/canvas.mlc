@@ -1504,7 +1504,7 @@ end syntax
 
 // Gradient
 
-public foreign handler MCCanvasGradientEvaluateType(in pType as int, out rType as int) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientEvaluateType(in pType as LCInteger, out rType as LCInteger) as undefined binds to "<builtin>"
 
 syntax GradientType is phrase
 	( "linear" <mType=0> | "radial" <mType=1> | "conical" <mType=2> | "diamond" <mType=3> | "spiral" <mType=4> | "xy" <mType=5> | "sqrtxy" <mType=6> )
@@ -1515,7 +1515,7 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasGradientStopMake(in pOffset as CanvasFloat, in pColor as Color, out rStop as GradientStop) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientMakeWithRamp(in pType as int, in pRamp as list, out rGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientMakeWithRamp(in pType as LCInteger, in pRamp as list, out rGradient as Gradient) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new gradient stop.
@@ -1593,8 +1593,8 @@ public foreign handler MCCanvasGradientSetRamp(in pRamp as list, inout xGradient
 // public foreign handler MCCanvasGradientSetStops(in pStart as int, in pEnd as int, in rStops as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as string) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetTypeAsString(in pType as string, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as int) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetRepeat(in pRepeat as int, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetRepeat(in pRepeat as LCInteger, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetWrap(in pGradient as Gradient, out rWrap as bool) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetWrap(in pWrap as bool, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetMirror(in pGradient as Gradient, out rMirror as bool) as undefined binds to "<builtin>"
@@ -2078,7 +2078,7 @@ end syntax
 public foreign handler MCCanvasImageMakeWithPath(in pPath as string, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as string, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithPixels(in pWidth as int, in pHeight as int, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInteger, in pHeight as LCInteger, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as list, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 
 /*
@@ -2490,8 +2490,8 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasPathGetSubpaths(in pStart as int, in pEnd as int, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathGetSubpath(in pIndex as int, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathGetSubpaths(in pStart as LCInteger, in pEnd as LCInteger, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathGetSubpath(in pIndex as LCInteger, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathGetBoundingBox(in pPath as Path, out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as string) as undefined binds to "<builtin>"
 
@@ -2785,7 +2785,7 @@ end syntax
 
 // Graphic Effect
 
-public foreign handler MCCanvasEffectEvaluateType(in pType as int, out rType as int) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectEvaluateType(in pType as LCInteger, out rType as LCInteger) as undefined binds to "<builtin>"
 
 syntax EffectType is phrase
 	( "color" "overlay" <mType=0> | "inner" "shadow" <mType=1> | "outer" "shadow" <mType=2> | "inner" "glow" <mType=3> | "outer" "glow" <mType=4> )
@@ -2795,7 +2795,7 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as int, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as LCInteger, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new effect.
@@ -3025,7 +3025,7 @@ end syntax
 
 public foreign handler MCCanvasFontMake(in pName as string, out rFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontMakeWithStyle(in pName as string, in pBold as bool, in pItalic as bool, out rFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontMakeWithSize(in pName as string, in pBold as bool, in pItalic as bool, in pSize as int, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMakeWithSize(in pName as string, in pBold as bool, in pItalic as bool, in pSize as LCInteger, out rFont as Font) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new instance of the named font.
@@ -3120,8 +3120,8 @@ public foreign handler MCCanvasFontGetBold(in pFont as Font, out rBold as bool) 
 public foreign handler MCCanvasFontSetBold(in pBold as bool, inout xFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontGetItalic(in pFont as Font, out rItalic as bool) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFontSetItalic(in pItalic as bool, inout xFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontGetSize(in pFont as Font, out rSize as int) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontSetSize(in pSize as int, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetSize(in pFont as Font, out rSize as LCUInteger) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetSize(in pSize as LCUInteger, inout xFont as Font) as undefined binds to "<builtin>"
 
 /*
 Summary:	The name of a font.
@@ -3240,7 +3240,7 @@ end syntax
 
 // Canvas
 
-public foreign handler MCCanvasAlignmentEvaluate(in pHAlign as int, pVAlign as int, out rAlign as int) as undefined binds to "<builtin>"
+public foreign handler MCCanvasAlignmentEvaluate(in pHAlign as LCInteger, pVAlign as LCInteger, out rAlign as LCInteger) as undefined binds to "<builtin>"
 
 syntax CanvasTextAlignment is phrase
 	( "top left" <mHAlign=-1> <mVAlign=-1> | "top" <mHAlign=0> <mVAlign=-1> | "top right" <mHAlign=1> <mVAlign=-1> | "left" <mHAlign=-1> <mVAlign=0> | "center" <mHAlign=0> <mVAlign=0> | "right" <mHAlign=1> <mVAlign=0> | "bottom left" <mHAlign=-1> <mVAlign=1> | "bottom" <mHAlign=0> <mVAlign=1> | "bottom right" <mHAlign=1> <mVAlign=1> )
@@ -3611,7 +3611,7 @@ public foreign handler MCCanvasCurveThroughPoint(in pThrough as Point, in pTo as
 public foreign handler MCCanvasCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasClosePath(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasFillText(in pText as string, in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFillTextAligned(in pText as string, in pAlignment as int, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFillTextAligned(in pText as string, in pAlignment as LCInteger, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasMeasureText(in pText as string, in pCanvas as Canvas) as Rectangle binds to "<builtin>"
 
 /*

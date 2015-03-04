@@ -82,7 +82,7 @@ public handler MCUnitOutputTest(in pCondition as boolean, in pDescription as str
 	MCUnitOutput(tMessage)
 end handler
 
-foreign handler MCStringEncode(in String as string, in Encoding as int, in IsExternalRep as bool, out Encoded as data) as bool binds to "<builtin>"
+foreign handler MCStringEncode(in String as string, in Encoding as CInt, in IsExternalRep as bool, out Encoded as data) as bool binds to "<builtin>"
 
 public handler MCUnitOutput(in pMessage as string)
 	variable tEncoded as data

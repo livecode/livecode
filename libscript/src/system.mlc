@@ -60,7 +60,7 @@ end syntax
 -- Exit / Quit
 ----------------------------------------------------------------
 
-foreign handler __exit(in ExitStatus as int) as undefined binds to "exit"
+foreign handler __exit(in ExitStatus as CInt) as undefined binds to "exit"
 
 public handler MCSystemExecQuit() as undefined
 	__exit(0)
