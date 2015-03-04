@@ -457,10 +457,10 @@ public foreign handler MCWidgetGetScriptObject(out rObject as ScriptObject) as u
 public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetFrame(out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetBounds(out rRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetWidth(out rWidth as real) as undefined binds to "<builtin>"
-public foreign handler MCWidgetSetWidth(in pWidth as real) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetHeight(out rHeight as real) as undefined binds to "<builtin>"
-public foreign handler MCWidgetSetHeight(in pHeight as real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetWidth(out rWidth as Real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetSetWidth(in pWidth as Real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetHeight(out rHeight as Real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetSetHeight(in pHeight as Real) as undefined binds to "<builtin>"
 
 /* 
 Summary:	Returns the widget script object.

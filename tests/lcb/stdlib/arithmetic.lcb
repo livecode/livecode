@@ -38,7 +38,7 @@ public handler TestAdd()
 	test diagnostic "Expecting an error"
 	broken test "add (syntax, int+real)" when tInt = 13 because "bug 14592"
 
-	variable tReal as real
+	variable tReal as Real
 	put 10 into tReal
 	add 1.9 to tReal
 
@@ -65,7 +65,7 @@ public handler TestSubtract()
 	test diagnostic "Expecting an error"
 	broken test "subtract (syntax, int-real)" when tInt = 6 because "bug 14592"
 
-	variable tReal as real
+	variable tReal as Real
 	put 10 into tReal
 	subtract 1.9 from tReal
 
@@ -88,7 +88,7 @@ public handler TestMultiply()
 	test "multiply (syntax, int)" when tInt = 20
 	test "multiply (operator, int)" when tInt * 2 = 40
 
-	variable tReal as real
+	variable tReal as Real
 	put 10 into tReal
 	multiply tReal by -0.5
 	test "multiply (syntax, real)" when tReal = -5
@@ -113,7 +113,7 @@ public handler TestDivide()
 	test diagnostic "Expecting floor"
 	broken test "divide (syntax, int)" when tInt = 2 because "bug 14592"
 
-	variable tReal as real
+	variable tReal as Real
 	put 10 into tReal
 	divide tReal by -0.5
 	test "divide (syntax, real)" when tReal = -20
