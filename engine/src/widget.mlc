@@ -68,6 +68,9 @@ Example:
 		fill tFacePath on this canvas
 	end handler
 Description:
+Handle the <OnPaint> message to draw the widget when it needs updated.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 References: RedrawAll(statement)
 
 
@@ -114,6 +117,8 @@ Syntax: OnSave
 Summary: Sent when the widget is saved.
 Description:
 Handler the OnSave message to execute code when a stack containing the widget is saved.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnLoad
 Type: message
@@ -121,6 +126,8 @@ Syntax: OnLoad
 Summary: Sent when the widget is loaded.	
 Description:
 Handler the OnSave message to execute code when a stack containing the widget is loaded, for example setting default values of instance variables.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnCreate
 Type: message
@@ -136,6 +143,8 @@ Example:
 	end handler
 Description:
 Handle the OnCreate message to have the widget perform an action when it is created, for example setting default values of instance variables.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnDestroy
 Type: message
@@ -150,6 +159,8 @@ Syntax: OnParentPropertyChanged
 Summary: Sent when a property of the widget parent is changed.
 Description:
 Handle the <OnParentPropertyChanged> message when a widget property depends on the properties of a parent object.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnStopEditing
 Type: message
@@ -157,6 +168,8 @@ Syntax: OnStopEditing
 Summary: Sent when the browse tool is selected.
 Description:
 Handle the <OnStopEditing> message to perform an action when the browse tool is selected.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnStartEditing
 Type: message
@@ -164,6 +177,8 @@ Syntax: OnStartEditing
 Summary: Sent when the pointer tool is selected.
 Description:
 Handle the <OnStartEditing> message to perform an action when the edit tool is selected.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnLayerChanged
 Type: message
