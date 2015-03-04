@@ -22,13 +22,13 @@ LiveCode programs.
 
 module com.livecode.date
 
-public foreign handler MCDateExecGetLocalTime(out DateTime as list) as undefined binds to "<builtin>"
+public foreign handler MCDateExecGetLocalTime(out DateTime as List) as undefined binds to "<builtin>"
 
 /*
 Summary:	The local time
 
 Example:
-	variable tDateTime as list
+	variable tDateTime as List
 	put the local time into tDateTime
 
 	variable tDayOfMonth as Number

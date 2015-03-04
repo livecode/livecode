@@ -45,7 +45,7 @@ public handler MCUnitDiagnostic(in pMessage as any)
 	variable tCopyMessage as String
 	MCValueCopyDescription(pMessage, tCopyMessage)
 
-	variable tMessageLines as list
+	variable tMessageLines as List
 	split tCopyMessage by "\n" into tMessageLines
 
 	variable tLine as String

@@ -23,7 +23,7 @@ use com.livecode.sort
 -- Utilities
 ----------------------------------------------------------------
 
-handler RandomNumericList() as list
+handler RandomNumericList() as List
 	variable tList
 	put [] into tList
 
@@ -36,7 +36,7 @@ handler RandomNumericList() as list
 end handler
 
 -- Create a list containing 100 random strings of 1-10 characters
-handler RandomStringList() as list
+handler RandomStringList() as List
 	variable tDict
 	-- TODO allow generation of *any* codepoint
 	put "abcdefghijklmnopqrstuvwxyz01234567890!£$%^^&*(){}[]?+/=@'<,>.~#|\\�\u{0}-_" into tDict
@@ -68,7 +68,7 @@ handler RandomStringList() as list
 	return tList
 end handler
 
-handler IsSorted(in pList as list, in pDescending as Boolean) as Boolean
+handler IsSorted(in pList as List, in pDescending as Boolean) as Boolean
 	if pList is empty then
 		return true
 	end if

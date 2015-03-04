@@ -22,57 +22,57 @@ module com.livecode.list
 
 use com.livecode.foreign
 
-public foreign handler MCListEvalHeadOf(in Target as list, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCListEvalTailOf(in Target as list, out Value as optional any) as undefined binds to "<builtin>"
+public foreign handler MCListEvalHeadOf(in Target as List, out Value as optional any) as undefined binds to "<builtin>"
+public foreign handler MCListEvalTailOf(in Target as List, out Value as optional any) as undefined binds to "<builtin>"
 
-public foreign handler MCListExecPushSingleElementOnto(in Value as optional any, in IsFront as CBool, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListExecPopElement(in IsFront as CBool, inout Source as list) as optional any binds to "<builtin>"
+public foreign handler MCListExecPushSingleElementOnto(in Value as optional any, in IsFront as CBool, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListExecPopElement(in IsFront as CBool, inout Source as List) as optional any binds to "<builtin>"
 
-public foreign handler MCListEvalNumberOfElementsIn(in Target as list, out Count as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalNumberOfElementsIn(in Target as List, out Count as LCUIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCListEvalIsAmongTheElementsOf(in Needle as optional any, in Target as list, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCListEvalContainsElements(in Target as list, in Needle as list, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIsAmongTheElementsOf(in Needle as optional any, in Target as List, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalContainsElements(in Target as List, in Needle as List, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCListEvalBeginsWith(in Source as list, in Prefix as list, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCListEvalEndsWith(in Source as list, in Suffix as list, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalBeginsWith(in Source as List, in Prefix as List, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalEndsWith(in Source as List, in Suffix as List, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCListEvalIsEqualTo(in Left as list, in Right as list, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCListEvalIsNotEqualTo(in Left as list, in Right as list, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIsEqualTo(in Left as List, in Right as List, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIsNotEqualTo(in Left as List, in Right as List, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCListFetchElementOf(in Index as LCIndex, in Target as list, out Value as any) as undefined binds to "<builtin>"
-public foreign handler MCListStoreElementOf(in Value as any, in Index as LCIndex, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListFetchElementRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as list, out Value as list) as undefined binds to "<builtin>"
-public foreign handler MCListStoreElementRangeOf(in Value as optional any, in Start as LCIndex, in Finish as LCIndex, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListFetchElementOf(in Index as LCIndex, in Target as List, out Value as any) as undefined binds to "<builtin>"
+public foreign handler MCListStoreElementOf(in Value as any, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListFetchElementRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as List, out Value as List) as undefined binds to "<builtin>"
+public foreign handler MCListStoreElementRangeOf(in Value as optional any, in Start as LCIndex, in Finish as LCIndex, inout Target as List) as undefined binds to "<builtin>"
 
-public foreign handler MCListFetchIndexOf(in Target as list, in Index as LCIndex, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCListStoreIndexOf(in Value as optional any, inout Target as list, in Index as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCListFetchIndexOf(in Target as List, in Index as LCIndex, out Value as optional any) as undefined binds to "<builtin>"
+public foreign handler MCListStoreIndexOf(in Value as optional any, inout Target as List, in Index as LCIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCListStoreBeforeElementOf(in Value as optional any, in Index as LCIndex, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListStoreAfterElementOf(in Value as optional any, in Index as LCIndex, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListStoreBeforeElementOf(in Value as optional any, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListStoreAfterElementOf(in Value as optional any, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
 
-public foreign handler MCListSpliceIntoElementRangeOf(in Source as list, in Start as LCIndex, in Finish as LCIndex, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListSpliceIntoElementOf(in Source as list, in Index as LCIndex, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListSpliceBeforeElementOf(in Source as list, in Index as LCIndex, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListSpliceAfterElementOf(in Source as list, in Index as LCIndex, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceIntoElementRangeOf(in Source as List, in Start as LCIndex, in Finish as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceIntoElementOf(in Source as List, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceBeforeElementOf(in Source as List, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceAfterElementOf(in Source as List, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
 
-public foreign handler MCListSpliceBefore(in Source as list, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListSpliceAfter(in Source as list, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceBefore(in Source as List, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceAfter(in Source as List, inout Target as List) as undefined binds to "<builtin>"
 
-public foreign handler MCListEvalEmpty(out Value as list) as undefined binds to "<builtin>"
+public foreign handler MCListEvalEmpty(out Value as List) as undefined binds to "<builtin>"
 
-public foreign handler MCListRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as list) as CBool binds to "<builtin>"
+public foreign handler MCListRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as List) as CBool binds to "<builtin>"
 
-public foreign handler MCListFetchFirstElementOf(in Target as list, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCListStoreFirstElementOf(in Value as optional any, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListFetchFirstElementOf(in Target as List, out Value as optional any) as undefined binds to "<builtin>"
+public foreign handler MCListStoreFirstElementOf(in Value as optional any, inout Target as List) as undefined binds to "<builtin>"
 
-public foreign handler MCListFetchLastElementOf(in Target as list, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCListStoreLastElementOf(in Value as optional any, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListFetchLastElementOf(in Target as List, out Value as optional any) as undefined binds to "<builtin>"
+public foreign handler MCListStoreLastElementOf(in Value as optional any, inout Target as List) as undefined binds to "<builtin>"
 
-public foreign handler MCListExecDeleteElementOf(in Index as LCIndex, inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListExecDeleteElementRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteElementOf(in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteElementRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as List) as undefined binds to "<builtin>"
 
-public foreign handler MCListExecDeleteFirstElementOf(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCListExecDeleteLastElementOf(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteFirstElementOf(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteLastElementOf(inout Target as List) as undefined binds to "<builtin>"
 
 --
 
@@ -83,7 +83,7 @@ Target:         An expression which evaluates to a list.
 Returns:			The first element of <Target>
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	push "first element" onto tVar
 	
@@ -116,7 +116,7 @@ Target:         An expression which evaluates to a list.
 Returns:			The last element of <Target>
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	push "first element" onto tVar
 	push "last element" onto tVar
@@ -151,7 +151,7 @@ Value:          Any expression.
 Target:         An expression which evaluates to a list.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	push "something" onto tVar
 	push "something else" onto front of tVar
@@ -180,7 +180,7 @@ Source:         An expression which evaluates to a list.
 Target:         An expression which evaluates to a container.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	push "something" onto tVar
 	push "something else" onto tVar
@@ -189,7 +189,7 @@ Example:
 	pop tVar into tPopped -- tPopped contains "something else"
 	
 Example:
-	variable tList as list
+	variable tList as List
 	put [1,2,3] into tList
 	variable tNum as Number
 	pop front of tList into tNum -- tNum is 1, tList is [2,3]
@@ -216,7 +216,7 @@ Target:         An expression which evaluates to a list.
 Returns:			The number of elements in the list <Target>.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put [1,2,3,4,5] into tVar
 	variable tNum as Number
 	put the number of elements in tVar into tNum -- tNum is 5
@@ -243,7 +243,7 @@ Target:         An expression which evaluates to a list.
 Returns: 	Returns true if <Needle> can be found among the elements of <Target>.
 
 Example:
-	variable tList as list
+	variable tList as List
 	put [ "a", "b", "c", "d" ] into tList
 	
 	variable tIsIn as Boolean
@@ -269,7 +269,7 @@ Target:         An expression which evaluates to a list.
 Returns: 	Returns true if <Target> contains <Needle>.
 
 Example:
-	variable tList as list
+	variable tList as List
 	put [ "a", "b", "c", "d" ] into tList
 	
 	variable tContains as Boolean
@@ -302,7 +302,7 @@ Source: 			An expression which evaluates to a list.
 Returns: 	 Returns true if <Source> begins with <Prefix>.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put [1, 2, 3, 4, 5] into tVar
 	
 	variable tBegins as Boolean
@@ -332,7 +332,7 @@ Source: 			An expression which evaluates to a list.
 Returns: 	Returns true if <Source> ends with <Suffix>.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put [1, 2, 3, 4, 5] into tVar
 	
 	variable tEnds as Boolean
@@ -366,7 +366,7 @@ Right:      An expression which evaluates to a list.
 Returns: 	Returns true if <Left> is identical to <Right>.
 
 Example:
-	variable tList as list
+	variable tList as List
 	put ["a", "b", "c"] into tList
 	variable tIs as Boolean
 	
@@ -396,7 +396,7 @@ Right:      An expression which evaluates to a list.
 Returns: 	Returns true if <Left> is not identical to <Right>.
 
 Example:
-	variable tList as list
+	variable tList as List
 	put ["a", "b", "c"] into tList
 	variable tIsNot as Boolean
 	
@@ -424,7 +424,7 @@ Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to a list.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put [1,2,3] into tVar
 	put "A" into element 1 of tVar -- tVar is ["A",2,3]
 	
@@ -454,7 +454,7 @@ Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to a list.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put [1,2,3] into tVar
 	put "A" into tVar[1] -- tVar is ["A",2,3]
 	
@@ -485,7 +485,7 @@ Finish:             An expression which evaluates to a valid integer index of <T
 Target:             An expression which evaluates to a list.
 
 Example:
-	variable tList as list
+	variable tList as List
 	put [1,2,3] into tList
 	
 	put tList into element 1 to 2 of tList -- tList is [[1,2,3],3]
@@ -642,7 +642,7 @@ Finish:             An expression which evaluates to a valid integer index of <T
 Target:             An expression which evaluates to a list.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	
 	variable tCount as Number
@@ -651,7 +651,7 @@ Example:
 		push tCount onto tVar
 	end repeat
 	
-	variable tVar2 as list
+	variable tVar2 as List
 	push "these" onto tVar2
 	push "are" onto tVar2
 	push "unwanted" onto tVar2
@@ -685,7 +685,7 @@ Index:              An expression which evaluates to a valid integer index of <T
 Target:             An expression which evaluates to a list.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	
 	variable tCount as Number
@@ -694,7 +694,7 @@ Example:
 		push tCount onto tVar
 	end repeat
 	
-	variable tVar2 as list
+	variable tVar2 as List
 	push "this is unwanted" onto tVar2
 	push 4 onto tVar2
 	
@@ -725,7 +725,7 @@ Index:              An expression which evaluates to a valid integer index of <T
 Target:             An expression which evaluates to a list.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	
 	variable tCount as Number
@@ -734,7 +734,7 @@ Example:
 		push tCount onto tVar
 	end repeat
 	
-	variable tVar2 as list
+	variable tVar2 as List
 	push 1 onto tVar2
 	push 5 onto tVar2
 	
@@ -766,7 +766,7 @@ Index:              An expression which evaluates to a valid integer index of <T
 Target:             An expression which evaluates to a list.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	
 	variable tCount as Number
@@ -775,7 +775,7 @@ Example:
 		push tCount onto tVar
 	end repeat
 	
-	variable tVar2 as list
+	variable tVar2 as List
 	push 1 onto tVar2
 	push 5 onto tVar2
 	
@@ -806,7 +806,7 @@ end syntax
 Summary: 		Designates the list of length zero.
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	variable tCount as Number
 	put the empty list into tVar
 	put the number of elements in tVar into tCount -- tCount is 0
@@ -829,10 +829,10 @@ Summary:        Repeat over the elements of a list
 Iterand:        Any variable of appropriate type.
 
 Example:
-    variable tList as list
+    variable tList as List
     put [1, 1, 2, 3, 5, 8, 13] into tList
 
-    variable tRelist as list
+    variable tRelist as List
     variable tElement as any
     put the empty list into tRelist
 

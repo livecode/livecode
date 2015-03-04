@@ -22,8 +22,8 @@ module com.livecode.array
 
 use com.livecode.foreign
 
-public foreign handler MCArrayEvalKeysOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
-public foreign handler MCArrayEvalElementsOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalKeysOf(in Target as array, out Value as List) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalElementsOf(in Target as array, out Value as List) as undefined binds to "<builtin>"
 
 public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as String, in IsNot as CBool, in Target as array, out Result as CBool) as undefined binds to "<builtin>"
 
@@ -57,7 +57,7 @@ Example:
 	put "value2" into tArray["key2"]
 	put "value3" into tArray["key3"]
 	
-	variable tKeys as list
+	variable tKeys as List
 	put the keys of tArray into tKeys
 	sort tKeys in ascending order
 	
@@ -92,7 +92,7 @@ Example:
 	put 2 into tArray["key2"]
 	put 3 into tArray["key3"]
 	
-	variable tElements as list
+	variable tElements as List
 	put the elements of tArray into tElements
 	sort tElements in ascending numeric order
 	

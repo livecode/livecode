@@ -20,17 +20,17 @@ This library consists of the sorting operations provided by the standard library
 
 module com.livecode.sort
 
-public foreign handler MCSortExecSortListAscending(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCSortExecSortListDescending(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscending(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescending(inout Target as List) as undefined binds to "<builtin>"
 
-public foreign handler MCSortExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCSortExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCSortExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCSortExecSortListAscendingDateTime(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCSortExecSortListDescendingText(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCSortExecSortListDescendingBinary(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCSortExecSortListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-public foreign handler MCSortExecSortListDescendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingText(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingBinary(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingNumeric(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingDateTime(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingText(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingBinary(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingNumeric(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingDateTime(inout Target as List) as undefined binds to "<builtin>"
 
 --
 
@@ -40,7 +40,7 @@ Summary:        Sorts <Target> in ascending order.
 Target:         An expression that evaluates to a list.
 
 Example:
-    variable tTestList as list
+    variable tTestList as List
 	put [4,3,1,5,2] into tTestList
 	
     sort tTestList -- tTestList is [1,2,3,4,5]
@@ -64,7 +64,7 @@ Summary:        Sorts <Target> in descending text order.
 Target:         An expression that evaluates to a list of strings.
 
 Example:
-   	variable tTestList as list
+   	variable tTestList as List
 	put ["a", "b", "c"] into tTestList
 	
     sort tTestList in descending order -- tTestList is ["c", "b", "a"]
@@ -90,7 +90,7 @@ Summary:        Sorts <Target> in ascending text order.
 Target:         An expression that evaluates to a list of strings.
 
 Example:
-    variable tTestList as list
+    variable tTestList as List
 	
 	variable tChar
 	repeat for each char tChar in "spoilage"
@@ -120,7 +120,7 @@ Summary:        Sorts <Target> in descending text order.
 Target:         An expression that evaluates to a list of strings.
 
 Example:
-    variable tTestList as list
+    variable tTestList as List
     put the empty list into tTestList
 
     push "abcd" onto tTestList
@@ -187,7 +187,7 @@ Summary:        Sorts <Target> in ascending numeric order.
 Target:         An expression that evaluates to a list of numbers.
 
 Example:
-    variable tTestList as list
+    variable tTestList as List
     put [3,4,5,1,2] into tTestList
 
     sort tTestList in ascending numeric order -- tTestList is [1,2,3,4,5]
@@ -211,7 +211,7 @@ Summary:        Sorts <Target> in descending numeric order.
 Target:         An expression that evaluates to a list of numbers.
 
 Example:
-    variable tTestList as list
+    variable tTestList as List
     put [3,4,5,1,2] into tTestList
 
     sort tTestList in descending numeric order -- tTestList is [5,4,3,2,1]

@@ -89,8 +89,8 @@ public foreign handler MCArithmeticEvalStringParsedAsNumber(in Target as String,
 public foreign handler MCArithmeticExecFormatNumberAsString(in Target as Number) as String binds to "<builtin>"
 public foreign handler MCArithmeticExecParseStringAsNumber(in Target as String) as optional Number binds to "<builtin>"
 
-public foreign handler MCArithmeticEvalListOfStringParsedAsListOfNumber(in Target as list, out Value as optional list) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecParseListOfStringAsListOfNumber(in Target as list) as optional list binds to "<builtin>"
+public foreign handler MCArithmeticEvalListOfStringParsedAsListOfNumber(in Target as List, out Value as optional List) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecParseListOfStringAsListOfNumber(in Target as List) as optional List binds to "<builtin>"
 
 --
 
@@ -617,13 +617,13 @@ Operand:	An expression that evaluates to a list of strings.
 Returns:	<Operand> parsed as a list of numbers.
 
 Example:
-	variable tListOfString as list
-	variable tListOfNum as list
+	variable tListOfString as List
+	variable tListOfNum as List
 	split "1,2,3,4" by "," into tListOfString
 	put tListOfString parsed as list of number into tNum -- tListOfNum contains [ 1, 2, 3, 4 ]
 
 Example: 
-	variable tList as list
+	variable tList as List
 	put ["1", "b", "3"] parsed as list of number into tList
 	
 	variable tElt as Number
@@ -655,8 +655,8 @@ Operand:	An expression that evaluates to a list of strings.
 The result:	<Operand> parsed as a list of numbers.
 
 Example:
-	variable tListOfString as list
-	variable tListOfNum as list
+	variable tListOfString as List
+	variable tListOfNum as List
 	split "1,2,3,4" by "," into tListOfString
 	parse tListOfString as list of number -- the result contains [ 1, 2, 3, 4 ]
 

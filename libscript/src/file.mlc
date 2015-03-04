@@ -70,7 +70,7 @@ end syntax
 
 public foreign handler MCFileExecCreateDirectory(in Directory as String) as undefined binds to "<builtin>"
 public foreign handler MCFileExecDeleteDirectory(in Directory as String) as undefined binds to "<builtin>"
-public foreign handler MCFileExecGetDirectoryEntries(in Directory as String, out Entrise as list) as undefined binds to "<builtin>"
+public foreign handler MCFileExecGetDirectoryEntries(in Directory as String, out Entrise as List) as undefined binds to "<builtin>"
 
 /*
 Summary:	Create a named directory.

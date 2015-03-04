@@ -164,7 +164,7 @@ end handler
 -- FIXME Currently, this is implemented by redirecting the lc-run's
 -- output into a temporary file, then reading the file in.  It would
 -- be much better to use a pipe instead, if possible.
-handler GetModuleHandlers(in pModulePath as String, out rHandlerNames as list) as Boolean
+handler GetModuleHandlers(in pModulePath as String, out rHandlerNames as List) as Boolean
 	variable tTempPath as String
 	put GetModuleTempPath(pModulePath) into tTempPath
 
@@ -247,7 +247,7 @@ handler GetTestStatus(in pOutput as String) as String
 	put false into tPass
 	put false into tSkipped
 
-	variable tOutputLines as list
+	variable tOutputLines as List
 	split pOutput by "\n" into tOutputLines
 
 	variable tLine as String
@@ -265,7 +265,7 @@ handler GetTestStatus(in pOutput as String) as String
 			next repeat -- no test on this line
 		end if
 
-		variable tLineElements as list
+		variable tLineElements as List
 		split tLine by "#" into tLineElements
 
 		-- Check for a diagnostic mode (TODO or SKIP)
@@ -358,7 +358,7 @@ public handler RunModuleTests()
 
 	---------- Get a list of handlers
 
-	variable tHandlers as list
+	variable tHandlers as List
 	if not GetModuleHandlers(tModulePath, tHandlers) then
 		PrintError(tModulePath & ": Failed to list handlers")
 	end if
@@ -451,7 +451,7 @@ end handler
 public handler SummarizeTests()
 
 	---------- Analyze arguments
-	variable tLogPaths as list
+	variable tLogPaths as List
 	variable tSummaryLogPath as String
 
 	-- Get summary log filename
@@ -500,7 +500,7 @@ public handler SummarizeTests()
 		put DecodeUTF8(the contents of file tLogFilePath) into tLog
 
 		-- Split into lines
-		variable tLogLines as list
+		variable tLogLines as List
 		split tLog by "\n" into tLogLines
 
 		-- Keep track of whether the log is interesting enough

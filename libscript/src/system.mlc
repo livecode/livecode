@@ -99,7 +99,7 @@ end syntax
 ----------------------------------------------------------------
 
 public foreign handler MCSystemExecGetCommandName (out CommandName as String) as undefined binds to "<builtin>"
-public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as list) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as List) as undefined binds to "<builtin>"
 
 /*
 Summary:	The command name

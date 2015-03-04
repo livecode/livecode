@@ -353,7 +353,7 @@ public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) as undef
 public foreign handler MCWidgetExecCancelTimer() as undefined binds to "<builtin>"
 public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecDispatch(in pIsFunction as CBool, in pMessage as String) as any binds to "<builtin>"
-public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional list) as any binds to "<builtin>"
+public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) as any binds to "<builtin>"
 
 /* 
 Summary:	Redraws the widget.
@@ -544,7 +544,7 @@ end syntax
 public foreign handler MCWidgetGetMousePosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInteger, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as list) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) as undefined binds to "<builtin>"
 
 /* 
 Summary:		Determines the location of the mouse pointer.

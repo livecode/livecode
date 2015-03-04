@@ -70,7 +70,7 @@ public foreign type Canvas binds to "kMCCanvasTypeInfo"
 // Constructors
 
 public foreign handler MCCanvasRectangleMakeWithLTRB(in pLeft as CanvasFloat, in pTop as CanvasFloat, in pRight as CanvasFloat, in pBottom as CanvasFloat, out rRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCCanvasRectangleMakeWithList(in pRect as list, out rRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCCanvasRectangleMakeWithList(in pRect as List, out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRectangleGetLeft(in pRect as Rectangle, out rLeft as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRectangleSetLeft(in pLeft as CanvasFloat, inout xRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRectangleGetTop(in pRect as Rectangle, out rTop as CanvasFloat) as undefined binds to "<builtin>"
@@ -311,7 +311,7 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasPointMake(in pX as CanvasFloat, in pY as CanvasFloat, out rPoint as Point) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPointMakeWithList(in pPoint as list, out rPoint as Point) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPointMakeWithList(in pPoint as List, out rPoint as Point) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPointGetX(in pPoint as Point, out rX as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPointSetX(in pX as CanvasFloat, inout xPoint as Point) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPointGetY(in pPoint as Point, out rY as CanvasFloat) as undefined binds to "<builtin>"
@@ -399,7 +399,7 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasColorMakeRGBA(in pRed as CanvasFloat, in pGreen as CanvasFloat, in pBlue as CanvasFloat, in pAlpha as CanvasFloat, out rColor as Color) as undefined binds to "<builtin>"
-public foreign handler MCCanvasColorMakeWithList(in pColor as list, out rColor as Color) as undefined binds to "<builtin>"
+public foreign handler MCCanvasColorMakeWithList(in pColor as List, out rColor as Color) as undefined binds to "<builtin>"
 //public foreign handler MCCanvasColorMakeWithString(in pList as String, out rColor as Color)
 
 /*
@@ -573,14 +573,14 @@ end syntax
 
 public foreign handler MCCanvasTransformMakeIdentity(out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeScale(in pScaleX as CanvasFloat, in pScaleY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformMakeScaleWithList(in pScale as list, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeScaleWithList(in pScale as List, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeSkew(in pSkewX as CanvasFloat, in pSkewY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformMakeSkewWithList(in pSkew as list, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeSkewWithList(in pSkew as List, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeRotation(in pRotation as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeTranslation(in pX as CanvasFloat, in pY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformMakeTranslationWithList(in pTranslation as list, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeTranslationWithList(in pTranslation as List, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeWithMatrixValues(in pA as CanvasFloat, in pB as CanvasFloat, in pC as CanvasFloat, in pD as CanvasFloat, in pTX as CanvasFloat, in pTY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformMakeWithMatrixAsList(in pMatrix as list, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeWithMatrixAsList(in pMatrix as List, out rTransform as Transform) as undefined binds to "<builtin>"
 
 /*
 Summary:	The identity transform.
@@ -715,16 +715,16 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasTransformGetScaleAsList(in pTransform as Transform, out rScale as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetScaleAsList(in pScaleX as list, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetScaleAsList(in pTransform as Transform, out rScale as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetScaleAsList(in pScaleX as List, inout xTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformGetRotation(in pTransform as Transform, out rRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformSetRotation(in pRotation as CanvasFloat, inout xTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformGetSkewAsList(in pTransform as Transform, out rSkew as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetSkewAsList(in pSkew as list, inout xTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformGetTranslationAsList(in pTransform as Transform, out rTranslation as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetTranslationAsList(in pTranslation as list, inout xTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformGetMatrixAsList(in pTransform as Transform, out rMatrix as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetMatrixAsList(in pMatrix as list, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetSkewAsList(in pTransform as Transform, out rSkew as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetSkewAsList(in pSkew as List, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetTranslationAsList(in pTransform as Transform, out rTranslation as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetTranslationAsList(in pTranslation as List, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetMatrixAsList(in pTransform as Transform, out rMatrix as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetMatrixAsList(in pMatrix as List, inout xTransform as Transform) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasTransformGetInverse(in pTransform as Transform, out rInverse as Transform) as undefined binds to "<builtin>"
 
@@ -910,12 +910,12 @@ end syntax
 
 public foreign handler MCCanvasTransformConcat(inout xTransformA as Transform, in pTransformB as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformScale(inout xTransform as Transform, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformScaleWithList(inout xTransform as Transform, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformScaleWithList(inout xTransform as Transform, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformSkew(inout xTransform as Transform, in pSkewX as CanvasFloat, in pSkewY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSkewWithList(inout xTransform as Transform, in pSkew as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSkewWithList(inout xTransform as Transform, in pSkew as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformRotate(inout xTransform as Transform, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformTranslate(inout xTransform as Transform, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformTranslateWithList(inout xTransform as Transform, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformTranslateWithList(inout xTransform as Transform, in pTranslation as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMultiply(in pTransformA as Transform, in pTransformB as Transform, out rTransform as Transform) as undefined binds to "<builtin>"
 
 /*
@@ -1174,10 +1174,10 @@ end syntax
 public foreign handler MCCanvasPatternMakeWithImage(in pImage as Image, out rPattern as Pattern) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithTransformedImage(in pImage as Image, in pTransform as Transform, out rPattern as Pattern) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithScaledImage(in pImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPatternMakeWithImageScaledWithList(in pImage as Image, in pScale as list, out rPattern as Pattern) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPatternMakeWithImageScaledWithList(in pImage as Image, in pScale as List, out rPattern as Pattern) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithRotatedImage(in pImage as Image, in pRotation as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithTranslatedImage(in pImage as Image, in pX as CanvasFloat, in pY as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPatternMakeWithImageTranslatedWithList(in pImage as Image, in pTranslation as list, out rPattern as Pattern) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPatternMakeWithImageTranslatedWithList(in pImage as Image, in pTranslation as List, out rPattern as Pattern) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new pattern paint.
@@ -1390,10 +1390,10 @@ end syntax
 
 public foreign handler MCCanvasPatternTransform(inout xPattern as Pattern, in pTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternScale(inout xPattern as Pattern, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPatternScaleWithList(inout xPattern as Pattern, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPatternScaleWithList(inout xPattern as Pattern, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternRotate(inout xPattern as Pattern, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternTranslate(inout xPattern as Pattern, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPatternTranslateWithList(inout xPattern as Pattern, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPatternTranslateWithList(inout xPattern as Pattern, in pTranslation as List) as undefined binds to "<builtin>"
 
 /*
 Summary:		Apply a transform to a pattern.
@@ -1515,7 +1515,7 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasGradientStopMake(in pOffset as CanvasFloat, in pColor as Color, out rStop as GradientStop) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientMakeWithRamp(in pType as LCInteger, in pRamp as list, out rGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientMakeWithRamp(in pType as LCInteger, in pRamp as List, out rGradient as Gradient) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new gradient stop.
@@ -1587,10 +1587,10 @@ public foreign handler MCCanvasGradientStopSetOffset(in pOffset as CanvasFloat, 
 public foreign handler MCCanvasGradientStopGetColor(in pStop as GradientStop, out rColor as Color) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientStopSetColor(in pColor as Color, inout xStop as GradientStop) as undefined binds to "<builtin>"
 
-public foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRamp as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetRamp(in pRamp as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
-// public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as int, in pEnd as int, out rStops as list) as undefined binds to "<builtin>"
-// public foreign handler MCCanvasGradientSetStops(in pStart as int, in pEnd as int, in rStops as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRamp as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetRamp(in pRamp as List, inout xGradient as Gradient) as undefined binds to "<builtin>"
+// public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as int, in pEnd as int, out rStops as List) as undefined binds to "<builtin>"
+// public foreign handler MCCanvasGradientSetStops(in pStart as int, in pEnd as int, in rStops as List, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as String) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetTypeAsString(in pType as String, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as LCInteger) as undefined binds to "<builtin>"
@@ -1938,10 +1938,10 @@ public foreign handler MCCanvasGradientAddStop(in pStop as GradientStop, inout x
 
 public foreign handler MCCanvasGradientTransform(inout xGradient as Gradient, in pTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientScale(inout xGradient as Gradient, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientScaleWithList(inout xGradient as Gradient, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientScaleWithList(inout xGradient as Gradient, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientRotate(inout xGradient as Gradient, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientTranslate(inout xGradient as Gradient, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientTranslateWithList(inout xGradient as Gradient, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientTranslateWithList(inout xGradient as Gradient, in pTranslation as List) as undefined binds to "<builtin>"
 
 /*
 Summary:	Add a new stop to the ramp of a gradient paint.
@@ -2079,7 +2079,7 @@ public foreign handler MCCanvasImageMakeWithPath(in pPath as String, out rImage 
 public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as String, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as Image) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInteger, in pHeight as LCInteger, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as list, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as List, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new image.
@@ -2344,13 +2344,13 @@ end syntax
 
 public foreign handler MCCanvasPathMakeWithRoundedRectangle(in pRect as Rectangle, in pRadius as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithRoundedRectangleWithRadii(in pRect as Rectangle, in pRadiusX as CanvasFloat, in pRadiusY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(in pRect as Rectangle, in pRadii as list, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(in pRect as Rectangle, in pRadii as List, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithRectangle(in pRect as Rectangle, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithEllipse(in pCenter as Point, in pRadiusX as CanvasFloat, in pRadiusY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithCircle(in pCenter as Point, in pRadius as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithEllipseWithRadiiAsList(in pCenter as Point, in pRadii as list, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithEllipseWithRadiiAsList(in pCenter as Point, in pRadii as List, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithLine(in pStart as Point, in pEnd as Point, out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithPoints(in pClose as CBool, in pPoints as list, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithPoints(in pClose as CBool, in pPoints as List, out rPath as Path) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new path.
@@ -2566,10 +2566,10 @@ end syntax
 
 public foreign handler MCCanvasPathTransform(inout xPath as Path, in pTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathScale(inout xPath as Path, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathScaleWithList(inout xPath as Path, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathScaleWithList(inout xPath as Path, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathRotate(inout xPath as Path, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathTranslate(inout xPath as Path, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathTranslateWithList(inout xPath as Path, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathTranslateWithList(inout xPath as Path, in pTranslation as List) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasPathAddPath(in pSource as Path, inout xDest as Path) as undefined binds to "<builtin>"
 
@@ -3274,8 +3274,8 @@ public foreign handler MCCanvasGetCapStyleAsString(in pCanvas as Canvas, out rCa
 public foreign handler MCCanvasSetCapStyleAsString(in pCapStyle as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetMiterLimit(in pCanvas as Canvas, out rLimit as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetMiterLimit(in pLimit as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetDashes(in pCanvas as Canvas, out rDashes as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetDashes(in pDashes as list, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetDashes(in pCanvas as Canvas, out rDashes as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetDashes(in pDashes as List, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetDashPhase(in pCanvas as Canvas, out rPhase as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetDashPhase(in pPhase as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 
@@ -3586,10 +3586,10 @@ end syntax
 
 public foreign handler MCCanvasTransform(in pCanvas as Canvas, in pTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasScale(in pCanvas as Canvas, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasScaleWithList(in pCanvas as Canvas, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasScaleWithList(in pCanvas as Canvas, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRotate(in pCanvas as Canvas, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTranslate(in pCanvas as Canvas, in pX as CanvasFloat,in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTranslateWithList(in pCanvas as Canvas, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTranslateWithList(in pCanvas as Canvas, in pTranslation as List) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasSaveState(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRestoreState(in pCanvas as Canvas) as undefined binds to "<builtin>"
@@ -4086,7 +4086,7 @@ end syntax
 
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasNewCanvasWithSize(in pSize as list, out rCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasNewCanvasWithSize(in pSize as List, out rCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as data) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as LCUInteger) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out rWidth as LCUInteger) as undefined binds to "<builtin>"

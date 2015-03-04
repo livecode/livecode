@@ -18,14 +18,14 @@ end handler
 
 ----------------------------------------------------------------
 
-foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional list, out Result as optional any) as optional any binds to "<builtin>"
+foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional List, out Result as optional any) as optional any binds to "<builtin>"
 
 handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as String, in pBroken as Boolean, in pReason as String) as undefined
 
 	variable tHandler as Thunk
 	put pHandler into tHandler
 
-	variable tArgList as optional list
+	variable tArgList as optional List
 	variable tResult as optional any
 	variable tMaybeError as optional any
 
