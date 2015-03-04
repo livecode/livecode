@@ -44,7 +44,7 @@ public foreign handler MCCharEvalEndsWith(in Source as string, in Suffix as stri
 
 public foreign handler MCCharEvalNewlineCharacter(out Value as string) as undefined binds to "<builtin>"
 
-public foreign handler MCCharRepeatForEachChar(inout Iterator as optional pointer, out Iterand as string, in Container as string) as bool binds to "<builtin>"
+public foreign handler MCCharRepeatForEachChar(inout Iterator as optional Pointer, out Iterand as string, in Container as string) as bool binds to "<builtin>"
 
 public foreign handler MCCharFetchFirstCharOf(in Target as string, out Value as string) as undefined binds to "<builtin>"
 public foreign handler MCCharStoreFirstCharOf(in Value as string, inout Target as string) as undefined binds to "<builtin>"

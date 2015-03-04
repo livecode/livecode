@@ -37,8 +37,8 @@ public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, i
 
 public foreign handler MCArrayEvalEmpty(out Value as array) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional pointer, out Iterand as optional any, in Container as array) as bool binds to "<builtin>"
-public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional pointer, out Iterand as string, in Container as array) as bool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as array) as bool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as string, in Container as array) as bool binds to "<builtin>"
 
 public foreign handler MCArrayDeleteElementOfCaseless(inout Target as array, in Key as string) as undefined binds to "<builtin>"
 

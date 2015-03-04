@@ -60,7 +60,7 @@ public foreign handler MCListSpliceAfter(in Source as list, inout Target as list
 
 public foreign handler MCListEvalEmpty(out Value as list) as undefined binds to "<builtin>"
 
-public foreign handler MCListRepeatForEachElement(inout Iterator as optional pointer, out Iterand as optional any, in Container as list) as bool binds to "<builtin>"
+public foreign handler MCListRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as list) as bool binds to "<builtin>"
 
 public foreign handler MCListFetchFirstElementOf(in Target as list, out Value as optional any) as undefined binds to "<builtin>"
 public foreign handler MCListStoreFirstElementOf(in Value as optional any, inout Target as list) as undefined binds to "<builtin>"

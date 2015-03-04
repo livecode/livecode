@@ -40,7 +40,7 @@ public foreign handler MCByteStoreByteOf(in Value as data, in Index as index, in
 public foreign handler MCByteFetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
 public foreign handler MCByteStoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteRepeatForEachByte(inout Iterator as optional pointer, out Iterand as data, in Container as data) as bool binds to "<builtin>"
+public foreign handler MCByteRepeatForEachByte(inout Iterator as optional Pointer, out Iterand as data, in Container as data) as bool binds to "<builtin>"
 
 public foreign handler MCByteFetchFirstByteOf(in Target as data, out Value as data) as undefined binds to "<builtin>"
 public foreign handler MCByteStoreFirstByteOf(in Value as data, inout Target as data) as undefined binds to "<builtin>"
