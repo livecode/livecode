@@ -74,6 +74,8 @@ Example:
 Description:
 Use the <ResolveScriptObject|resolve script object> statement to obtain a <ScriptObject> in LiveCode Builder, in order to interact with it.
 
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 */
 
 syntax ResolveScriptObject is statement
@@ -153,6 +155,9 @@ Description:
 Use to fetch properties of a script object. 
 
 >*Note:* An error is thrown if the script object does not exist.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 */
 
 syntax GetPropertyOfScriptObject is statement
@@ -180,6 +185,9 @@ Description:
 Use to set properties of a script object. 
 
 >*Note:* An error is thrown if the script object does not exist.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 */
 
 syntax SetPropertyOfScriptObject is statement
@@ -337,7 +345,10 @@ Example:
 	end handler
 
 Description:
-Determines if a dispatched message was handled by any script objects in the message path.
+Executes the given piece of LiveCode script in the context of the current script
+object.
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 */
 
 syntax ExecuteScript is statement

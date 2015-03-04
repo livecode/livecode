@@ -58,7 +58,7 @@ static bool s_last_message_was_handled = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCScriptObjectCreate(MCObject *p_object, uint32_t p_part_id, MCScriptObjectRef& r_script_object)
+bool MCEngineScriptObjectCreate(MCObject *p_object, uint32_t p_part_id, MCScriptObjectRef& r_script_object)
 {
     MCScriptObjectRef t_script_object;
     if (!MCValueCreateCustom(kMCEngineScriptObjectTypeInfo, sizeof(__MCScriptObjectImpl), t_script_object))
@@ -89,10 +89,38 @@ bool MCEngineThrowScripObjectDoesNotExistError(void)
 	return false;
 }
 
+bool MCEngineThrowNoScriptContextError(void)
+{
+    MCErrorCreateAndThrow(kMCEngineScriptObjectNoContextErrorTypeInfo, nil);
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static uint32_t s_script_object_access_lock_count;
+
+bool MCEngineScriptObjectAccessIsAllowed(void)
+{
+    return s_script_object_access_lock_count == 0;
+}
+
+void MCEngineScriptObjectPreventAccess(void)
+{
+    s_script_object_access_lock_count += 1;
+}
+
+void MCEngineScriptObjectAllowAccess(void)
+{
+    s_script_object_access_lock_count -= 1;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_object_id)
 {
+    if (!MCEngineScriptObjectAccessIsAllowed())
+        return nil;
+    
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
     
 	// Create a script point with the value we are taking the id from.
@@ -130,7 +158,7 @@ extern "C" MC_DLLEXPORT MCScriptObjectRef MCEngineExecResolveScriptObject(MCStri
     
     // Now build our script object.
     MCScriptObjectRef t_script_object;
-    if (!MCScriptObjectCreate(t_object, t_part_id, t_script_object))
+    if (!MCEngineScriptObjectCreate(t_object, t_part_id, t_script_object))
         return nil;
     
     return t_script_object;
@@ -138,6 +166,8 @@ extern "C" MC_DLLEXPORT MCScriptObjectRef MCEngineExecResolveScriptObject(MCStri
 
 extern "C" MC_DLLEXPORT void MCEngineEvalScriptObjectExists(MCScriptObjectRef p_object, bool& r_exists)
 {
+    // This method does't require any script interaction so it always allowed.
+    
     __MCScriptObjectImpl *t_script_object_imp;
     t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
     
@@ -149,6 +179,8 @@ extern "C" MC_DLLEXPORT void MCEngineEvalScriptObjectExists(MCScriptObjectRef p_
 
 extern "C" MC_DLLEXPORT void MCEngineEvalScriptObjectDoesNotExist(MCScriptObjectRef p_object, bool& r_not_exists)
 {
+    // This method does't require any script interaction so it always allowed.
+    
     bool t_exists;
     MCEngineEvalScriptObjectExists(p_object, t_exists);
     r_not_exists = !t_exists;
@@ -187,6 +219,9 @@ static inline bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, 
 
 extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object)
 {
+    if (!MCEngineScriptObjectAccessIsAllowed())
+        return nil;
+    
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
@@ -227,6 +262,9 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStrin
 
 extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef p_value)
 {
+    if (!MCEngineScriptObjectAccessIsAllowed())
+        return;
+    
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
@@ -274,6 +312,8 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
 
 extern "C" MC_DLLEXPORT void MCEngineEvalOwnerOfScriptObject(MCScriptObjectRef p_object, MCScriptObjectRef &r_owner)
 {
+    // This method does't require any script interaction so it always allowed.
+    
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
@@ -285,7 +325,7 @@ extern "C" MC_DLLEXPORT void MCEngineEvalOwnerOfScriptObject(MCScriptObjectRef p
 	else
 		t_owner = t_object->getparent();
 	
-	MCScriptObjectCreate(t_owner, t_part_id, r_owner);
+	MCEngineScriptObjectCreate(t_owner, t_part_id, r_owner);
 }
 
 struct MCScriptObjectChildControlsVisitor : public MCObjectVisitor
@@ -299,7 +339,7 @@ struct MCScriptObjectChildControlsVisitor : public MCObjectVisitor
 	{
 		MCAutoValueRefBase<MCScriptObjectRef> t_object_ref;
 		
-		return MCScriptObjectCreate(p_object, 0, &t_object_ref) && MCProperListPushElementOntoBack(m_list, *t_object_ref);
+		return MCEngineScriptObjectCreate(p_object, 0, &t_object_ref) && MCProperListPushElementOntoBack(m_list, *t_object_ref);
 	}
 	
 	virtual bool OnStyledText(MCStyledText *p_text)
@@ -313,6 +353,8 @@ struct MCScriptObjectChildControlsVisitor : public MCObjectVisitor
 
 extern "C" MC_DLLEXPORT void MCEngineEvalChildrenOfScriptObject(MCScriptObjectRef p_object, MCProperListRef &r_controls)
 {
+    // This method does't require any script interaction so it always allowed.
+    
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
@@ -422,6 +464,9 @@ extern "C" MC_DLLEXPORT void MCEngineEvalMessageWasNotHandled(bool& r_not_handle
 
 extern "C" MC_DLLEXPORT MCValueRef MCEngineExecExecuteScript(MCStringRef p_script)
 {
+    if (!MCEngineScriptObjectAccessIsAllowed())
+        return nil;
+    
     MCStack *t_stack;
     t_stack = MCdefaultstackptr;
     if (t_stack == nil)
@@ -590,6 +635,7 @@ extern "C" MC_DLLEXPORT void MCEngineExecLogWithValues(MCStringRef p_message, MC
 ////////////////////////////////////////////////////////////////////////////////
 
 MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
+MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -598,11 +644,16 @@ bool MCEngineModuleInitialize(void)
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.engine.ScriptObjectDoesNotExistError"), MCNAME("engine"), MCSTR("object does not exist"), kMCEngineScriptObjectDoesNotExistErrorTypeInfo))
 		return false;
 	
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.engine.ScriptObjectNoContextError"), MCNAME("engine"), MCSTR("script access not allowed"), kMCEngineScriptObjectNoContextErrorTypeInfo))
+		return false;
+	
 	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.engine.ScriptObject"), kMCNullTypeInfo, &kMCScriptObjectCustomValueCallbacks, kMCEngineScriptObjectTypeInfo))
 		return false;
 	
 	if (!MCStringCreateMutable(0, s_log_buffer))
 		return false;
+    
+    s_script_object_access_lock_count = 0;
     
     return true;
 }
