@@ -81,6 +81,7 @@ MCWidget::MCWidget(void)
     m_instance = nil;
     m_native_layer = nil;
     m_rep = nil;
+    m_timer_deferred = false;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
@@ -90,6 +91,7 @@ MCWidget::MCWidget(const MCWidget& p_other) :
     m_instance = nil;
     m_native_layer = nil;
     m_rep = nil;
+    m_timer_deferred = false;
 }
 
 MCWidget::~MCWidget(void)
@@ -327,7 +329,10 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
     if (p_message == MCM_internal)
     {
-        OnTimer();
+        if (getstack() -> gettool(this) == T_BROWSE)
+            OnTimer();
+        else
+            m_timer_deferred = true;
     }
     else
     {
@@ -1012,6 +1017,12 @@ void MCWidget::OnToolChanged(Tool p_new_tool)
         CallHandler(MCNAME("OnStopEditing"), nil, 0);
     else if (p_new_tool != T_BROWSE)
         CallHandler(MCNAME("OnStartEditing"), nil, 0);
+    
+    if (p_new_tool == T_BROWSE && m_timer_deferred)
+    {
+        m_timer_deferred = false;
+        MCscreen -> addtimer(this, MCM_internal, 0);
+    }
     
     fprintf(stderr, "MCWidget::OnToolChanged\n");
 }
