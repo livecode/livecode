@@ -20,7 +20,7 @@ module com.livecode.unittest.__IMPL
 
 use com.livecode.foreign
 
-foreign handler MCValueCopyDescription(in Value as any, out Description as string) as bool binds to "<builtin>"
+foreign handler MCValueCopyDescription(in Value as any, out Description as string) as CBool binds to "<builtin>"
 
 ----------------------------------------------------------------
 -- Main functions used by tests
@@ -82,7 +82,7 @@ public handler MCUnitOutputTest(in pCondition as boolean, in pDescription as str
 	MCUnitOutput(tMessage)
 end handler
 
-foreign handler MCStringEncode(in String as string, in Encoding as CInt, in IsExternalRep as bool, out Encoded as data) as bool binds to "<builtin>"
+foreign handler MCStringEncode(in String as string, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as data) as CBool binds to "<builtin>"
 
 public handler MCUnitOutput(in pMessage as string)
 	variable tEncoded as data

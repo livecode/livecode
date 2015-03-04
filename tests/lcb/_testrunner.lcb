@@ -66,8 +66,8 @@ end handler
 -- FIXME this should use proper LiveCode builder syntax for string
 -- encoding/decoding.
 
-foreign handler MCStringEncode(in String as string, in Encoding as CInt, in IsExternalRep as bool, out Encoded as data) as bool binds to "<builtin>"
-foreign handler MCStringDecode(in Encoded as data, in Encoding as CInt, in IsExternalRep as bool, out String as string) as bool binds to "<builtin>"
+foreign handler MCStringEncode(in String as string, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as data) as CBool binds to "<builtin>"
+foreign handler MCStringDecode(in Encoded as data, in Encoding as CInt, in IsExternalRep as CBool, out String as string) as CBool binds to "<builtin>"
 
 handler EncodeUTF8(in pString as string) as data
 	variable tEncoded as data

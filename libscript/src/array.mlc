@@ -25,9 +25,9 @@ use com.livecode.foreign
 public foreign handler MCArrayEvalKeysOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
 public foreign handler MCArrayEvalElementsOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as string, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as string, in IsNot as CBool, in Target as array, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as CBool, in Target as array, out Result as CBool) as undefined binds to "<builtin>"
 
 public foreign handler MCArrayEvalNumberOfElementsIn(in Target as array, out Count as LCUIndex) as undefined binds to "<builtin>"
 
@@ -37,8 +37,8 @@ public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, i
 
 public foreign handler MCArrayEvalEmpty(out Value as array) as undefined binds to "<builtin>"
 
-public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as array) as bool binds to "<builtin>"
-public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as string, in Container as array) as bool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as array) as CBool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as string, in Container as array) as CBool binds to "<builtin>"
 
 public foreign handler MCArrayDeleteElementOfCaseless(inout Target as array, in Key as string) as undefined binds to "<builtin>"
 

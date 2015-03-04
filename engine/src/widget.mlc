@@ -98,9 +98,9 @@ Summary: Sent when the widget visibility changed.
 Parameters:
 isVisible(bool): Whether the widget is now visible or not.
 Example:
-	private variable mAnimate as bool
+	private variable mAnimate as boolean
 	
-	public handler OnVisibilityChanged(in pVisible as bool)
+	public handler OnVisibilityChanged(in pVisible as boolean)
 		put pVisible into mAnimate
 	end handler
 	
@@ -351,9 +351,9 @@ use com.livecode.engine
 public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecCancelTimer() as undefined binds to "<builtin>"
-public foreign handler MCWidgetEvalInEditMode(out rInEditMode as bool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecDispatch(in pIsFunction as bool, in pMessage as string) as any binds to "<builtin>"
-public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as bool, in pMessage as string, in pArguments as optional list) as any binds to "<builtin>"
+public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecDispatch(in pIsFunction as CBool, in pMessage as string) as any binds to "<builtin>"
+public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as CBool, in pMessage as string, in pArguments as optional list) as any binds to "<builtin>"
 
 /* 
 Summary:	Redraws the widget.
@@ -541,10 +541,10 @@ end syntax
 
 //foreign type PressedState binds to "kMCPressedState"
 
-public foreign handler MCWidgetGetMousePosition(in pCurrent as bool, out rLocation as Point) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetClickPosition(in pCurrent as bool, out rLocation as Point) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetMousePosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInteger, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetModifierKeys(in pCurrent as bool, out rKeys as list) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as list) as undefined binds to "<builtin>"
 
 /* 
 Summary:		Determines the location of the mouse pointer.
@@ -618,8 +618,8 @@ end syntax
 
 // ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
 
-public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as bool, out rPressed as bool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as bool, out rNotPressed as bool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rPressed as CBool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rNotPressed as CBool) as undefined binds to "<builtin>"
 
 syntax IsPressed is postfix operator with precedence 5
   <mState: Expression> "is" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
@@ -636,8 +636,8 @@ end syntax
 
 // ---------- Syntactic sugar for points and rects ---------- //
 
-public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as bool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as bool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as CBool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as CBool) as undefined binds to "<builtin>"
 
 /* 
 Summary:	Determines whether a point is within a rectangle.

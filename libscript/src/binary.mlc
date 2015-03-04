@@ -27,12 +27,12 @@ public foreign handler MCBinaryExecPutBytesAfter(in Source as data, inout Target
 
 public foreign handler MCBinaryEvalConcatenateBytes(in Left as data, in Right as data, out Result as data) as undefined binds to "<builtin>"
 
-public foreign handler MCBinaryEvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalContainsBytes(in Target as data, in Needle as data, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCBinaryEvalIsEqualTo(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCBinaryEvalIsNotEqualTo(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCBinaryEvalIsLessThan(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCBinaryEvalIsGreaterThan(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalIsEqualTo(in Left as data, in Right as data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalIsNotEqualTo(in Left as data, in Right as data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalIsLessThan(in Left as data, in Right as data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalIsGreaterThan(in Left as data, in Right as data, out Value as CBool) as undefined binds to "<builtin>"
 
 public foreign handler MCBinaryEvalEmpty(out Value as data) as undefined binds to "<builtin>"
 --

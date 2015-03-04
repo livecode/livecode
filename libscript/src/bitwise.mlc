@@ -27,7 +27,7 @@ public foreign handler MCBitwiseEvalBitwiseOr(in Left as LCInteger, in Right as 
 public foreign handler MCBitwiseEvalBitwiseNot(in Operand as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 public foreign handler MCBitwiseEvalBitwiseXor(in Left as LCInteger, in Right as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 
-public foreign handler MCBitwiseEvalBitwiseShift(in Target as LCInteger, in IsRight as bool, in Shift as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShift(in Target as LCInteger, in IsRight as CBool, in Shift as LCInteger, out Value as LCInteger) as undefined binds to "<builtin>"
 
 --
 

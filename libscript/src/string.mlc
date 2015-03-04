@@ -35,8 +35,8 @@ public foreign handler MCStringEvalLowercaseOf(in Source as string, out Result a
 public foreign handler MCStringEvalUppercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
 
 // The following all need some notion of context 
-public foreign handler MCStringEvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalBeginsWith(in Source as string, in Prefix as string, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalEndsWith(in Source as string, in Suffix as string, out Result as CBool) as undefined binds to "<builtin>"
 
 public foreign handler MCStringEvalOffset(in Needle as string, in Source as string, out Result as LCIndex) as undefined binds to "<builtin>"
 public foreign handler MCStringEvalOffsetAfter(in Needle as string, in After as LCIndex, in Source as string, out Result as LCIndex) as undefined binds to "<builtin>"
@@ -44,12 +44,12 @@ public foreign handler MCStringEvalOffsetAfter(in Needle as string, in After as 
 public foreign handler MCStringEvalLastOffset(in Needle as string, in Source as string, out Result as LCIndex) as undefined binds to "<builtin>"
 public foreign handler MCStringEvalLastOffsetBefore(in Needle as string, in Before as LCIndex, in Source as string, out Result as LCIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalContainsChars(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalContainsChars(in Source as string, in Needle as string, out Result as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalIsEqualTo(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsNotEqualTo(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsLessThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsGreaterThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsEqualTo(in Left as string, in Right as string, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsNotEqualTo(in Left as string, in Right as string, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsLessThan(in Left as string, in Right as string, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsGreaterThan(in Left as string, in Right as string, out Value as CBool) as undefined binds to "<builtin>"
 
 public foreign handler MCStringEvalEmpty(out Value as string) as undefined binds to "<builtin>"
 
