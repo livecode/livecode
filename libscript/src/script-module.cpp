@@ -492,22 +492,28 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
     // If the module has already been ensured as usable, we are done.
     if (self -> is_usable)
         return true;
+
+	/* If the module is already marked as being checked for usability,
+	 * then there must be a cyclic module dependency. */
+	if (self -> is_in_usable_check)
+		return false;
+	self -> is_in_usable_check = true;
     
     // First ensure we can resolve all its external dependencies.
     for(uindex_t i = 0; i < self -> dependency_count; i++)
     {
         MCScriptModuleRef t_module;
         if (!MCScriptLookupModule(self -> dependencies[i] . name, t_module))
-            return false;
+			goto error_cleanup;
         
         // A used module must not be a widget.
         if (t_module -> module_kind == kMCScriptModuleKindWidget)
-            return false;
+			goto error_cleanup;
         
         // A used module must be usable - do this before resolving imports so
         // chained imports work.
         if (!MCScriptEnsureModuleIsUsable(t_module))
-            return false;
+			goto error_cleanup;
         
         // Check all the imported definitions from the module, and compute indicies.
         for(uindex_t t_import = 0; t_import < self -> imported_definition_count; t_import++)
@@ -519,7 +525,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             
             MCScriptDefinition *t_def;
             if (!MCScriptLookupDefinitionInModule(t_module, t_import_def -> name, t_def))
-                return false;
+				goto error_cleanup;
             
             MCScriptModuleRef t_mod;
             if (t_def -> kind == kMCScriptDefinitionKindExternal)
@@ -536,7 +542,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             {
                 if (t_import_def -> kind != kMCScriptDefinitionKindHandler ||
                     t_def -> kind != kMCScriptDefinitionKindForeignHandler)
-                    return false;
+					goto error_cleanup;
             }
             
             // Check that signatures match.
@@ -547,7 +553,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
         
         // Now create the instance we need.
         if (!MCScriptCreateInstanceOfModule(t_module, self -> dependencies[i] . instance))
-            return false;
+			goto error_cleanup;
     }
 
     // Now build all the typeinfo's
@@ -581,12 +587,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     {
                         MCAutoStringRef t_name_string;
                         if (!MCStringFormat(&t_name_string, "%@.%@", self -> name, t_public_name))
-                            return false;
+								goto error_cleanup;
                         
                         MCNewAutoNameRef t_name;
                         if (!MCNameCreate(*t_name_string, &t_name))
-                            return false;
-                        
+								goto error_cleanup;
                         // If the target type is an alias, named type or optional type then
                         // we just create an alias. Otherwise it must be a record, foreign,
                         // handler type - this means it must be named.
@@ -597,21 +602,21 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                             MCTypeInfoIsOptional(t_target_type))
                         {
                             if (!MCAliasTypeInfoCreate(*t_name, t_target_type, &t_typeinfo))
-                                return false;
+								goto error_cleanup;
                         }
                         else
                         {
                             if (!MCNamedTypeInfoCreate(*t_name, &t_typeinfo))
-                                return false;
+								goto error_cleanup;
                             
                             if (!MCNamedTypeInfoBind(*t_typeinfo, t_target_type))
-                                return false;
+								goto error_cleanup;
                         }
                     }
                     else
                     {
                         if (!MCAliasTypeInfoCreate(kMCEmptyName, self -> types[t_type_def -> type] -> typeinfo, &t_typeinfo))
-                            return false;
+							goto error_cleanup;
                     }
                 }
                 else if (t_def -> kind == kMCScriptDefinitionKindExternal)
@@ -627,7 +632,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> resolved_definition) -> type] -> typeinfo;
                 }
                 else
-                    return false;
+					goto error_cleanup;
             }
             break;
             case kMCScriptTypeKindOptional:
@@ -635,7 +640,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 MCScriptOptionalType *t_type;
                 t_type = static_cast<MCScriptOptionalType *>(self -> types[i]);
                 if (!MCOptionalTypeInfoCreate(self -> types[t_type -> type] -> typeinfo, &t_typeinfo))
-                    return false;
+					goto error_cleanup;
             }
             break;
             case kMCScriptTypeKindForeign:
@@ -652,7 +657,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 if (t_symbol == nil)
                 {
                     MCLog("Unable to resolve foreign type '%@'", t_type -> binding);
-                    return false;
+					goto error_cleanup;
                 }
                 
                 t_typeinfo = MCValueRetain(*(MCTypeInfoRef *)t_symbol);
@@ -670,11 +675,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_field . name = t_type -> fields[i] . name;
                     t_field . type = self -> types[t_type -> fields[i] . type] -> typeinfo;
                     if (!t_fields . Push(t_field))
-                        return false;
+						goto error_cleanup;
                 }
                 
                 if (!MCRecordTypeInfoCreate(t_fields . Ptr(), t_type -> field_count, self -> types[t_type -> base_type] -> typeinfo, &t_typeinfo))
-                    return false;
+					goto error_cleanup;
             }
             break;
             case kMCScriptTypeKindHandler:
@@ -689,11 +694,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[i] . mode;
                     t_parameter . type = self -> types[t_type -> parameters[i] . type] -> typeinfo;
                     if (!t_parameters . Push(t_parameter))
-                        return false;
+						goto error_cleanup;
                 }
                 
                 if (!MCHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
-                    return false;
+					goto error_cleanup;
             }
             break;
         }
@@ -703,13 +708,18 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
     
     // First validate the module - if this fails we do nothing more.
     if (!MCScriptValidateModule(self))
-        return false;
+		goto error_cleanup;
     
     // Now bind all the public types.
     
     self -> is_usable = true;
+	self -> is_in_usable_check = false;
     
     return true;
+
+ error_cleanup:
+	self -> is_in_usable_check = false;
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

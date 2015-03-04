@@ -20,11 +20,23 @@
 
 extern "C" MC_DLLEXPORT void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
 {
+	if (MCProperListIsEmpty (p_target))
+	{
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
+		return;
+	}
+
     r_output = MCValueRetain(MCProperListFetchHead(p_target));
 }
 
 extern "C" MC_DLLEXPORT void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
 {
+	if (MCProperListIsEmpty (p_target))
+	{
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
+		return;
+	}
+
     r_output = MCValueRetain(MCProperListFetchTail(p_target));
 }
 
@@ -59,6 +71,13 @@ extern "C" MC_DLLEXPORT MCValueRef MCListExecPopElement(bool p_is_front, MCPrope
 {
     MCAutoProperListRef t_mutable_list;
     MCAutoValueRef t_result;
+
+    if (MCProperListIsEmpty (x_source))
+	{
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("pop from empty list"), nil);
+		return nil;
+	}
+
     if (!MCProperListMutableCopy(x_source, &t_mutable_list))
         return NULL;
     

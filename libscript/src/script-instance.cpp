@@ -1294,47 +1294,48 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             {
                 // The target type is not foreign - t_argument will be a valueref ptr.
                 
+                // If the source value is foreign and it has an import method then
+                // we map to the high-level type. Otherwise, we just pass through the
+                // foriegn value direct.
                 if (MCTypeInfoIsForeign(t_source . type))
                 {
-                    // The source type is foreign - so the target must be the bridge
-                    // type. Thus we must import the value.
                     const MCForeignTypeDescriptor *t_src_descriptor;
                     t_src_descriptor = MCForeignTypeInfoGetDescriptor(t_source . type);
                     
-                    if (!t_src_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_argument))
-                        break;
+                    if (t_src_descriptor -> doimport != nil)
+                    {
+                        if (!t_src_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_value))
+                            break;
                     
-                    // Need to release the argument.
-                    t_arg_new[t_arg_index] = true;
+                        // Need to release the argument.
+                        t_arg_new[t_arg_index] = true;
+                    }
+                }
+                
+                // We now have a compatible valueref in t_value.
+                    
+                if (t_modes[t_arg_index] == kMCHandlerTypeFieldModeIn)
+                {
+                    // For in mode, we just use it direct - but change to nil if
+                    // kMCNull.
+                    if (t_value != kMCNull)
+                        t_argument = t_value;
+                    else
+                        t_argument = nil;
+                
+                    // Nothing to free.
+                    t_arg_new[t_arg_index] = false;
                 }
                 else
                 {
-                    // The source type is not foreign - so the source and target are
-                    // compatible valuerefs.
-                    
-                    if (t_modes[t_arg_index] == kMCHandlerTypeFieldModeIn)
-                    {
-                        // For in mode, we just use it direct - but change to nil if
-                        // kMCNull.
-                        if (t_value != kMCNull)
-                            t_argument = t_value;
-                        else
-                            t_argument = nil;
-                    
-                        // Nothing to free.
-                        t_arg_new[t_arg_index] = false;
-                    }
+                    // For inout mode, we must copy.
+                    if (t_value != kMCNull)
+                        t_argument = MCValueRetain(t_value);
                     else
-                    {
-                        // For inout mode, we must copy.
-                        if (t_value != kMCNull)
-                            t_argument = MCValueRetain(t_value);
-                        else
-                            t_argument = nil;
-                        
-                        // Need to release the argument
-                        t_arg_new[t_arg_index] = true;
-                    }
+                        t_argument = nil;
+                    
+                    // Need to release the argument
+                    t_arg_new[t_arg_index] = true;
                 }
             }
         }

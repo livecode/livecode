@@ -269,8 +269,13 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos)
 {
 	uint2 i;
-
-	if (MCtrace && (MCtraceuntil == MAXUINT2 || MCnexecutioncontexts == MCtraceuntil))
+    
+    // MW-2015-03-03: [[ Bug 13110 ]] If this is an internal handler as a result of do
+    //   then *don't* debug it.
+    if (ctxt . GetHandler() -> getname() == MCM_message)
+        return;
+	
+    if (MCtrace && (MCtraceuntil == MAXUINT2 || MCnexecutioncontexts == MCtraceuntil))
 	{
 		MCtraceuntil = MAXUINT2;
 		MCB_prepmessage(ctxt, MCM_trace, line, pos, 0);
@@ -286,8 +291,8 @@ void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos)
 				MCParentScriptUse *t_parentscript;
 				t_parentscript = ctxt . GetParentScript();
 				if ((t_parentscript == NULL && MCbreakpoints[i].object == ctxt.GetObject()) ||
-				    (t_parentscript != NULL && MCbreakpoints[i].object == t_parentscript -> GetParent() -> GetObject()))
-				MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0, MCbreakpoints[i].info);
+					(t_parentscript != NULL && MCbreakpoints[i].object == t_parentscript -> GetParent() -> GetObject()))
+                    MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0, MCbreakpoints[i].info);
 			}
 	}
 }

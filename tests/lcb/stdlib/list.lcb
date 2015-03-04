@@ -53,8 +53,7 @@ public handler TestHead()
 	test "head" when the head of t is "x"
 	test "first" when the first element of t is "x"
 
-	skip test "head (empty)" because "bug 14702"
-	--MCUnitTestHandlerThrows(TestHead_Empty, "head (empty)")
+	MCUnitTestHandlerThrows(TestHead_Empty, "head (empty)")
 	MCUnitTestHandlerThrows(TestHead_FirstEmpty, "first (empty)")
 end handler
 
@@ -70,8 +69,7 @@ public handler TestTail()
 	test "tail" when the tail of t
 	test "last" when the last element of t
 
-	skip test "tail (empty)" because "bug 14702"
-	--MCUnitTestHandlerThrows(TestTail_Empty, "tail (empty)")
+	MCUnitTestHandlerThrows(TestTail_Empty, "tail (empty)")
 	MCUnitTestHandlerThrows(TestTail_LastEmpty, "last (empty)")
 end handler
 
@@ -126,10 +124,9 @@ public handler TestPop()
 	pop tList
 	test "pop (no output)" when tList is empty
 
-	skip test "pop (empty)" because "bug 14703"
-	--MCUnitTestHandlerThrows(TestPop_Empty, "pop (empty)")
-	--MCUnitTestHandlerThrows(TestPop_FrontEmpty, "pop front (empty)")
-	--MCUnitTestHandlerThrows(TestPop_BackEmpty, "pop back (empty)")
+	MCUnitTestHandlerThrows(TestPop_Empty, "pop (empty)")
+	MCUnitTestHandlerThrows(TestPop_FrontEmpty, "pop front (empty)")
+	MCUnitTestHandlerThrows(TestPop_BackEmpty, "pop back (empty)")
 end handler
 
 public handler TestCount()
