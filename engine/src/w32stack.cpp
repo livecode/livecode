@@ -84,6 +84,20 @@ static inline MCRectangle MCRectangleFromWin32RECT(const RECT &p_rect)
 	return MCRectangleMake(p_rect.left, p_rect.top, p_rect.right - p_rect.left, p_rect.bottom - p_rect.top);
 }
 
+static bool MCWin32GetBitmapSize(HBITMAP p_bitmap, uint32_t &r_width, uint32_t &r_height)
+{
+	if (p_bitmap == NULL)
+		return false;
+
+	BITMAP t_bitmap_struct;
+	GetObjectA(p_bitmap, sizeof(BITMAP), &t_bitmap_struct);
+
+	r_width = t_bitmap_struct.bmWidth;
+	r_height = MCAbs(t_bitmap_struct.bmHeight);
+
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStack *MCStack::findstackd(Window w)
@@ -199,7 +213,7 @@ void MCStack::getstyle(uint32_t &wstyle, uint32_t &exstyle)
 			wstyle |= WS_THICKFRAME;
 	}
 
-	if (m_window_shape != NULL && !m_window_shape -> is_sharp)
+	if (!isopaque() || (m_window_shape != NULL && !m_window_shape -> is_sharp))
 	{
 		wstyle &= ~(WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX | WS_SYSMENU | WS_THICKFRAME);
 		exstyle &= ~(WS_EX_CLIENTEDGE | WS_EX_DLGMODALFRAME | WS_EX_STATICEDGE | WS_EX_WINDOWEDGE);
@@ -239,7 +253,7 @@ void MCStack::setopacity(uint1 p_level)
 	if (MCmajorosversion < 0x0500)
 		return;
 
-	if (m_window_shape != NULL && !m_window_shape -> is_sharp)
+	if (!isopaque() || m_window_shape != NULL && !m_window_shape -> is_sharp)
 		composite();
 	else if (window != NULL)
 	{
@@ -630,6 +644,8 @@ void MCStack::stop_externals()
 	}
 
 	destroywindowshape();
+	release_window_buffer();
+
 	MClockmessages = oldlock;
 
 	unloadexternals();
@@ -688,8 +704,10 @@ class MCWindowsStackSurface: public MCStackSurface
 	HBITMAP m_bitmap;
 	MCGRaster m_raster;
 
+	bool m_is_opaque;
+
 public:
-	MCWindowsStackSurface(MCGRaster *p_mask, MCGRegionRef p_region, HDC p_dc)
+	MCWindowsStackSurface(MCGRaster *p_mask, MCGRegionRef p_region, HDC p_dc, bool p_is_opaque)
 	{
 		m_region = p_region;
 		m_dc = p_dc;
@@ -697,6 +715,8 @@ public:
 		m_mask = p_mask;
 
 		m_bitmap = nil;
+
+		m_is_opaque = p_is_opaque;
 	}
 
 	bool Lock(void)
@@ -839,7 +859,7 @@ public:
         r_raster . width = t_actual_area . size . width ;
         r_raster . height = t_actual_area . size . height;
         r_raster . stride = m_raster . stride;
-        r_raster . format = kMCGRasterFormat_xRGB;
+		r_raster . format = m_is_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
 		r_raster . pixels = (uint8_t*)m_raster . pixels + (t_actual_area . origin . y - t_bounds . origin.y) * m_raster . stride + (t_actual_area . origin . x - t_bounds . origin . x) * sizeof(uint32_t);
 
 		r_locked_area = t_actual_area;
@@ -898,6 +918,7 @@ class MCWindowsLayeredStackSurface: public MCStackSurface
 	MCGRegionRef m_redraw_region;
 
 	bool m_locked;
+	bool m_is_opaque;
 
 public:
 	MCWindowsLayeredStackSurface(MCGRaster p_raster, const MCGIntegerPoint &p_raster_offset, MCGRaster *p_mask)
@@ -939,7 +960,8 @@ public:
 		if (p_update)
 		{
 			void *t_src_ptr, *t_dst_ptr;
-			MCGRasterApplyAlpha(m_raster, *m_mask, MCGIntegerPointMake(-m_raster_offset.x, -m_raster_offset.y));
+			if (m_mask != nil)
+				MCGRasterApplyAlpha(m_raster, *m_mask, MCGIntegerPointMake(-m_raster_offset.x, -m_raster_offset.y));
 		}
 	}
 
@@ -996,7 +1018,7 @@ public:
         r_raster . width = t_actual_area . size . width ;
         r_raster . height = t_actual_area . size . height;
         r_raster . stride = m_raster . stride;
-        r_raster . format = kMCGRasterFormat_xRGB;
+        r_raster . format = m_raster . format;
 		r_raster . pixels = (uint8_t*) m_raster . pixels + (t_actual_area . origin . y - m_raster_offset.y) * m_raster . stride + (t_actual_area . origin . x - m_raster_offset.x) * sizeof(uint32_t);
 
 		r_locked_area = t_actual_area;
@@ -1080,7 +1102,7 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 		t_surface_region = t_scaled_region;
 	}
 
-	if (m_window_shape == nil || m_window_shape -> is_sharp)
+	if (isopaque() && (m_window_shape == nil || m_window_shape -> is_sharp))
 	{
 		HRGN t_hrgn;
 		/* UNCHECKED */ MCWin32MCGRegionToHRGN(t_surface_region, t_hrgn);
@@ -1095,38 +1117,31 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 	{
 		MCGIntegerRectangle t_region_bounds = MCGRegionGetBounds(t_surface_region);
 
-		t_region_bounds = MCGIntegerRectangleIntersection(t_region_bounds, MCGIntegerRectangleMake(0, 0, m_window_shape->width, m_window_shape->height));
+		/* UNCHECKED */ configure_window_buffer();
 
-		HBITMAP t_bitmap = nil;
-		void *t_bits = nil;
+		HBITMAP t_bitmap;
+		t_bitmap = (HBITMAP)m_window_buffer;
 
-		if (m_window_shape -> handle == nil)
-		{
-			if (!create_temporary_dib(((MCScreenDC*)MCscreen)->getdsthdc(), m_window_shape->width, m_window_shape->height, t_bitmap, t_bits))
-				return;
+		BITMAP t_bitmap_struct;
+		GetObjectA(t_bitmap, sizeof(BITMAP), &t_bitmap_struct);
 
-			m_window_shape -> handle = t_bitmap;
-		}
-		else
-		{
-			t_bitmap = (HBITMAP)m_window_shape -> handle;
-
-			BITMAP t_bitmap_struct;
-			GetObjectA(t_bitmap, sizeof(BITMAP), &t_bitmap_struct);
-			t_bits = t_bitmap_struct.bmBits;
-		}
+		t_region_bounds = MCGIntegerRectangleIntersection(t_region_bounds, MCGIntegerRectangleMake(0, 0, t_bitmap_struct.bmWidth, t_bitmap_struct.bmHeight));
 
 		MCGRaster t_raster;
 		t_raster.width = t_region_bounds.size.width;
 		t_raster.height = t_region_bounds.size.height;
-		t_raster.stride = m_window_shape->width * sizeof(uint32_t);
-		t_raster.pixels = ((uint8_t*)t_bits) + t_region_bounds.origin.y * t_raster.stride + t_region_bounds.origin.x * sizeof(uint32_t);
-		t_raster.format = kMCGRasterFormat_xRGB;
+		t_raster.stride = t_bitmap_struct.bmWidthBytes;
+		t_raster.pixels = ((uint8_t*)t_bitmap_struct.bmBits) + t_region_bounds.origin.y * t_raster.stride + t_region_bounds.origin.x * sizeof(uint32_t);
+		t_raster.format = isopaque() ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
+
+		MCGRaster *t_mask_ptr;
+		t_mask_ptr = nil;
 
 		MCGRaster t_mask;
-		/* UNCHECKED */ MCWin32GetWindowShapeAlphaMask(m_window_shape, t_mask);
+		if (m_window_shape != nil && MCWin32GetWindowShapeAlphaMask(m_window_shape, t_mask))
+			t_mask_ptr = &t_mask;
 
-		MCWindowsLayeredStackSurface t_surface(t_raster, t_region_bounds.origin, &t_mask);
+		MCWindowsLayeredStackSurface t_surface(t_raster, t_region_bounds.origin, t_mask_ptr);
 
 		if (t_surface.Lock())
 		{
@@ -1177,7 +1192,7 @@ void MCStack::onpaint(void)
 	else
 		t_mask_ptr = nil;
 
-	MCWindowsStackSurface t_surface(t_mask_ptr, t_update_region, t_paint . hdc);
+	MCWindowsStackSurface t_surface(t_mask_ptr, t_update_region, t_paint . hdc, isopaque());
 
 	if (t_surface.Lock())
 	{
@@ -1196,7 +1211,7 @@ void MCStack::onpaint(void)
 
 void MCStack::composite(void)
 {
-	if (m_window_shape == nil || m_window_shape -> is_sharp || m_window_shape -> handle == nil)
+	if (m_window_buffer == nil)
 		return;
 
 	POINT t_offset;
@@ -1208,22 +1223,25 @@ void MCStack::composite(void)
 
 	HGDIOBJ t_old_dst;
 	HBITMAP t_bitmap;
-	t_bitmap = (HBITMAP)m_window_shape -> handle;
+	t_bitmap = (HBITMAP)m_window_buffer;
 	t_old_dst = SelectObject(t_dst_dc, t_bitmap);
 
 	MCRectangle t_device_stack_rect;
 	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
 	t_device_stack_rect = MCscreen->logicaltoscreenrect(rect);
 
+	uint32_t t_width, t_height;
+	/* UNCHECKED */ MCWin32GetBitmapSize(t_bitmap, t_width, t_height);
+
 	MCRectangle t_device_shape_rect;
-	t_device_shape_rect = MCRectangleMake(0, 0, m_window_shape->width, m_window_shape->height);
+	t_device_shape_rect = MCRectangleMake(0, 0, t_width, t_height);
 
 	t_offset . x = 0;
 	t_offset . y = 0;
 	t_location . x = t_device_stack_rect . x;
 	t_location . y = t_device_stack_rect . y;
-	t_size . cx = t_device_shape_rect . width;;
-	t_size . cy = t_device_shape_rect . height;
+	t_size . cx = t_width;;
+	t_size . cy = t_height;
 
 	BLENDFUNCTION t_blend;
 	t_blend . BlendOp = AC_SRC_OVER;
@@ -1234,6 +1252,66 @@ void MCStack::composite(void)
 	UpdateLayeredWindow((HWND)window -> handle . window, t_dst_dc, &t_location, &t_size, t_dst_dc, &t_offset, 0, &t_blend, ULW_ALPHA);
 
 	SelectObject(t_dst_dc, t_old_dst);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStack::configure_window_buffer()
+{
+	bool t_need_buffer;
+	t_need_buffer = false;
+
+	uint32_t t_width, t_height;
+
+	if (!isopaque())
+	{
+		t_need_buffer = true;
+		t_width = rect.width;
+		t_height = rect.height;
+	}
+	else if (m_window_shape != nil && !m_window_shape->is_sharp)
+	{
+		t_need_buffer = true;
+		t_width = m_window_shape->width;
+		t_height = m_window_shape->height;
+	}
+	else
+		t_need_buffer = false;
+
+	if (!t_need_buffer)
+	{
+		release_window_buffer();
+		return true;
+	}
+
+	if (m_window_buffer != nil)
+	{
+		uint32_t t_buffer_width, t_buffer_height;
+		if (MCWin32GetBitmapSize((HBITMAP)m_window_buffer, t_buffer_width, t_buffer_height) &&
+			t_buffer_width == t_width && t_buffer_height == t_height)
+			return true;
+
+		release_window_buffer();
+	}
+
+	HBITMAP t_bitmap;
+	t_bitmap = nil;
+	void *t_bits = nil;
+
+	if (!create_temporary_dib(((MCScreenDC*)MCscreen)->getdsthdc(), t_width, t_height, t_bitmap, t_bits))
+		return false;
+
+	m_window_buffer = (MCSysBitmapHandle)t_bitmap;
+	return true;
+}
+
+void MCStack::release_window_buffer()
+{
+	if (m_window_buffer == NULL)
+		return;
+
+	DeleteObject((HBITMAP)m_window_buffer);
+	m_window_buffer = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

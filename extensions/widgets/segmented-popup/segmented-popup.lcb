@@ -43,9 +43,10 @@ private variable mTheme as string
 private variable mLabels as list
 private variable mSelected as optional integer
 private variable mNumSegments as optional integer
+private variable mHover as optional integer
 
-private variable mColorWhite as Color
-private variable mColorMacBlue as Color
+private variable mPaintWhite as Paint
+private variable mPaintMacBlue as Paint
 private variable mWidth as number
 private variable mLeft as number
 private variable mRadius as number
@@ -81,8 +82,8 @@ public handler OnCreate()
 	put 1 into mSelected
 	put the number of elements in mLabels into mNumSegments
 	
-	put color [1.0, 1.0, 1.0] into mColorWhite
-	put color [0.0, 128/255, 1.0] into mColorMacBlue
+	put solid paint with color [1.0, 1.0, 1.0] into mPaintWhite
+	put solid paint with color [0.0, 128/255, 1.0] into mPaintMacBlue
 	put 0 into mWidth
 	put 0 into mLeft
 	put (the trunc of my height)/5 into mRadius
@@ -118,15 +119,17 @@ public handler OnPaint()
 	variable tBackgroundPath as Path
 	set the paint of this canvas to getPaint("selected background")
 	
-	if mSelected is 1 or mSelected is mNumSegments then
-		put rounded rectangle path of getRect(mSelected) with radius mRadius into tBackgroundPath
-		fill getRectPath(mSelected) on this canvas
-	
-	else
-		put rectangle path of getRect(mSelected) into tBackgroundPath
+	if mHover is defined then
+		if mHover is 1 or mHover is mNumSegments then
+			put rounded rectangle path of getRect(mHover) with radius mRadius into tBackgroundPath
+			fill getRectPath(mHover) on this canvas
+		
+		else
+			put rectangle path of getRect(mHover) into tBackgroundPath
+		end if
+		
+		fill tBackgroundPath on this canvas
 	end if
-	
-	fill tBackgroundPath on this canvas
 	--
 	
 	-- fill in the label text
@@ -140,7 +143,7 @@ public handler OnPaint()
 	repeat with tY from 1 up to mNumSegments
 		put tY formatted as string into tY_string
 		
-		if tY is mSelected then
+		if mHover is defined and tY is mHover then
 			set the paint of this canvas to getPaint("selected label")
 		else 
 			set the paint of this canvas to getPaint("lines")
@@ -176,24 +179,49 @@ public handler getPreferredSize() as list
 end handler
 
 ----------
+private handler getSegmentForPoint(in pPoint as Point) as optional integer
+	variable i as integer
+	repeat with i from 1 up to mNumSegments
+		if pPoint is within getRect(i) then
+			return i
+		end if
+	end repeat
+end handler
+----------
+
+private handler optionalIsEqual(in pLeft as optional any, in pRight as optional any) as boolean
+	if pLeft is not defined and pRight is not defined then
+		return true
+	else if pLeft is defined and pRight is defined then
+		return pLeft is pRight
+	else
+		return false
+	end if
+end handler
+
+----------
 -- the following handlers deal with mouse events
+
+public handler OnMouseMove()
+	variable tHover as optional integer
+	put getSegmentForPoint(the mouse position) into tHover
+	
+	if not optionalIsEqual(tHover, mHover) then
+		put tHover into mHover
+		redraw all
+	end if
+end handler
+
 public handler OnMouseUp()
-	if the click position is not within getRect(mSelected) then
-	
-		variable tX as optional integer
-		repeat with tX from 1 up to mNumSegments
-			if the click position is within getRect(tX) then
-				put tX into mSelected
-			end if 
-		end repeat
-	
+	if mHover is defined then
+		put mHover into mSelected
 		redraw all
 	end if
 	
-	dispatch command "mouseUp" to my script object
-	
-	if currently popped up then
-		if mSelected is 3 then
+	if not currently popped up then
+		dispatch command "mouseUp" to my script object
+	else
+		if mSelected is not defined or element mSelected of mLabels is "Cancel" then
 			close popup
 		else
 			close popup returning element mSelected of mLabels
@@ -231,16 +259,16 @@ end handler
 -- this handler returns a paint
 private handler getPaint(in pString as string) as Paint
 	if pString is "lines" then 
-		return solid paint with mColorMacBlue
+		return mPaintMacBlue
 	
 	else if pString is "selected label" then
-		return solid paint with mColorWhite
+		return mPaintWhite
 	
 	else if pString is "background" then
-		return solid paint with mColorWhite
+		return mPaintWhite
 		
 	else if pString is "selected background" then
-		return solid paint with mColorMacBlue
+		return mPaintMacBlue
 		
 	end if 
 end handler
