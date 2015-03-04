@@ -1881,7 +1881,8 @@ NSString* MCIPhoneGetDeviceModelName(void)
                                            @"iPod 3rd Gen",         @"iPod3,1",
 										   @"iPod 4th Gen",         @"iPod4,1",
                                            @"iPod 5th Gen",         @"iPod5,1",
-                                           nil];
+                                           // PM-2015-03-03: [[ Bug 14689 ]] Cast to NSString* to prevent EXC_BAD_ACCESS when in release mode and run in 64bit device/sim
+                                           (NSString *)nil];
 										   
 	
 	NSString *t_device_name = [commonNamesDictionary objectForKey: t_machine_name];
