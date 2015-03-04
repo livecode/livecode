@@ -20,14 +20,14 @@ module com.livecode.unittest.__IMPL
 
 use com.livecode.foreign
 
-foreign handler MCValueCopyDescription(in Value as any, out Description as string) as bool binds to "<builtin>"
+foreign handler MCValueCopyDescription(in Value as any, out Description as String) as CBool binds to "<builtin>"
 
 ----------------------------------------------------------------
 -- Main functions used by tests
 ----------------------------------------------------------------
 
-public handler MCUnitPlan(in pCount as number)
-	variable tNumberString as string
+public handler MCUnitPlan(in pCount as Number)
+	variable tNumberString as String
 	put pCount formatted as string into tNumberString
 
 	-- We have to do a bit of a dance to format strings correctly
@@ -42,13 +42,13 @@ public handler MCUnitPlan(in pCount as number)
 end handler
 
 public handler MCUnitDiagnostic(in pMessage as any)
-	variable tCopyMessage as string
+	variable tCopyMessage as String
 	MCValueCopyDescription(pMessage, tCopyMessage)
 
-	variable tMessageLines as list
+	variable tMessageLines as List
 	split tCopyMessage by "\n" into tMessageLines
 
-	variable tLine as string
+	variable tLine as String
 	repeat for each element tLine in tMessageLines
 		MCUnitOutput("#" && tLine)
 	end repeat
@@ -58,8 +58,8 @@ end handler
 -- Helper functions for outputting test results
 ----------------------------------------------------------------
 
-public handler MCUnitOutputTest(in pCondition as boolean, in pDescription as string, in pDirective as string, in pReason as string)
-	variable tMessage as string
+public handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as String, in pDirective as String, in pReason as String)
+	variable tMessage as String
 
 	if pCondition then
 		put "ok" into tMessage
@@ -82,10 +82,10 @@ public handler MCUnitOutputTest(in pCondition as boolean, in pDescription as str
 	MCUnitOutput(tMessage)
 end handler
 
-foreign handler MCStringEncode(in String as string, in Encoding as int, in IsExternalRep as bool, out Encoded as data) as bool binds to "<builtin>"
+foreign handler MCStringEncode(in Source as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) as CBool binds to "<builtin>"
 
-public handler MCUnitOutput(in pMessage as string)
-	variable tEncoded as data
+public handler MCUnitOutput(in pMessage as String)
+	variable tEncoded as Data
 
 	if the last char of pMessage is not "\n" then
 		put "\n" after pMessage
