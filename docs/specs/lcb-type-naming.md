@@ -8,6 +8,9 @@ These types require a consistent naming convention, in order to
 clearly indicate where the types come from and what they are intended
 to be used for.
 
+Some of the types listed in this document will not be available
+immediately; however, they may be implemented in the future.
+
 ## Mixed-case naming
 
 The current Builder compiler cannot recognise any symbol that is also
@@ -41,10 +44,19 @@ platform prefix.
 * `Int<BITS>`: An signed integer represented using the specified
   number of bits (e.g. `Int8`).
 
-* `UIntSize`: An unsigned integer representing a memory extent
-  (e.g. the length of a buffer).  This is used whenever a number
-  that's proportional to the size of memory is required.  On most
-  platforms, its size will be equal to the size of a pointer.
+* `IntSize`, `UIntSize`: An (unsigned) integer representing a memory
+  extent (e.g. the length of a buffer).  This is used whenever a
+  number that's proportional to the size of memory is required.  On
+  most platforms, its size will be equal to the size of a `Pointer`.
+
+* `IntPointer`, `UIntPointer`: An (unsigned) integer with the same
+  number of bits as a `Pointer`.
+
+* `Float<BITS>`: A IEEE-754 binary floating point value represented
+  using the specified number of bits (e.g. `Float32`).
+
+* `Float<BITS>Dec`: A decimal floating point value represented using
+  the specified number of bits (e.g. `Float32Dec`).
 
 ## LiveCode Core types
 
@@ -91,6 +103,9 @@ Many applications require nul-terminated string buffers.
 
 * `ZStringNative`: Nul-terminated string buffer containing compact
   character data with 8 bits per character.
+
+* `ZStringUTF8`: Nul-terminated string buffer containing UTF-8
+  character data.
 
 * `ZStringUTF16`: Nul-terminated string buffer containing UTF-16
   character data.
