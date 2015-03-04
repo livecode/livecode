@@ -2173,8 +2173,8 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as uint) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as uint) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as UInt32) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as UInt32) as undefined binds to "<builtin>"
 // TODO - add support for metadata
 //public foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as array) as undefined binds to "<builtin>"
 public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
@@ -4088,8 +4088,8 @@ public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) as undefined bi
 public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasNewCanvasWithSize(in pSize as list, out rCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as data) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as uint) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out rWidth as uint) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as LCUInteger) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out rWidth as LCUInteger) as undefined binds to "<builtin>"
 
 /*
 Summary:	The canvas used when drawing a widget.

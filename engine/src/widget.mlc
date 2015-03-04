@@ -543,7 +543,7 @@ end syntax
 
 public foreign handler MCWidgetGetMousePosition(in pCurrent as bool, out rLocation as Point) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetClickPosition(in pCurrent as bool, out rLocation as Point) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetMouseButtonState(in pIndex as uint, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInteger, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetModifierKeys(in pCurrent as bool, out rKeys as list) as undefined binds to "<builtin>"
 
 /* 
