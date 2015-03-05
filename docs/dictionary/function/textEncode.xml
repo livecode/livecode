@@ -81,7 +81,7 @@
       </option>
       <option>
         <item>Native</item>
-        <description>ISO-8859-1 on Minux, MacRoman on OS X, CP1252 on Windows</description>
+        <description>ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows</description>
       </option>
       <option>
         <item>UTF-16</item>

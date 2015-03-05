@@ -118,11 +118,16 @@ MC_PICKLE_BEGIN_RECORD(MCScriptTypeDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptConstantDefinition)
-    MC_PICKLE_VALUEREF(value)
+    MC_PICKLE_UINDEX(value)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptVariableDefinition)
     MC_PICKLE_UINDEX(type)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptContextVariableDefinition)
+    MC_PICKLE_UINDEX(type)
+    MC_PICKLE_UINDEX(default_value)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
@@ -131,6 +136,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
     MC_PICKLE_ARRAY_OF_NAMEREF(local_names, local_name_count)
     MC_PICKLE_UINDEX(start_address)
     MC_PICKLE_UINDEX(finish_address)
+    MC_PICKLE_INTENUM(MCScriptHandlerScope, scope)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptForeignHandlerDefinition)
@@ -167,6 +173,7 @@ MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindEvent, MCScriptEventDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindSyntax, MCScriptSyntaxDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindDefinitionGroup, MCScriptDefinitionGroupDefinition)
+    MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindContextVariable, MCScriptContextVariableDefinition)
 MC_PICKLE_END_VARIANT()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptModule)
@@ -191,6 +198,8 @@ MC_PICKLE_END_RECORD()
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCScriptModule *s_modules = nil;
+static MCScriptModule **s_context_slot_owners = nil;
+static uindex_t s_context_slot_count;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -214,6 +223,11 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
             MCMemoryDelete(t_def -> function_cif);
         }
     
+    // Remove ourselves from the context slot owners list.
+    for(uindex_t i = 0; i < s_context_slot_count; i++)
+        if (s_context_slot_owners[i] == self)
+            s_context_slot_owners[i] = nil;
+    
     // Remove ourselves from the global module list.
     if (s_modules == self)
         s_modules = self -> next_module;
@@ -236,6 +250,30 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             MCScriptVariableDefinition *t_variable;
             t_variable = static_cast<MCScriptVariableDefinition *>(self -> definitions[i]);
             t_variable -> slot_index = self -> slot_count++;
+        }
+        else if (self -> definitions[i] -> kind == kMCScriptDefinitionKindContextVariable)
+        {
+            MCScriptContextVariableDefinition *t_variable;
+            t_variable = static_cast<MCScriptContextVariableDefinition *>(self -> definitions[i]);
+            
+            uindex_t t_index;
+            t_index = UINDEX_MAX;
+            for(uindex_t i = 0; i < s_context_slot_count; i++)
+                if (s_context_slot_owners[i] == nil)
+                {
+                    t_index = i;
+                    break;
+                }
+
+            if (t_index == UINDEX_MAX)
+            {
+                if (!MCMemoryResizeArray(s_context_slot_count + 1, s_context_slot_owners, s_context_slot_count))
+                    return false;
+                
+                t_index = s_context_slot_count - 1;
+            }
+            
+            s_context_slot_owners[t_index] = self;
         }
         else if (self -> definitions[i] -> kind == kMCScriptDefinitionKindHandler)
         {
@@ -355,6 +393,8 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             t_handler -> slot_count = MCHandlerTypeInfoGetParameterCount(t_signature) + t_handler -> local_type_count + t_temporary_count;
         }
     
+    // If the module has context
+    
     return true;
 }
 
@@ -369,6 +409,9 @@ MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef self)
 
 void MCScriptReleaseModule(MCScriptModuleRef self)
 {
+	if (nil == self)
+		return;
+
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
     
     MCScriptReleaseObject(self);
@@ -449,17 +492,28 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
     // If the module has already been ensured as usable, we are done.
     if (self -> is_usable)
         return true;
+
+	/* If the module is already marked as being checked for usability,
+	 * then there must be a cyclic module dependency. */
+	if (self -> is_in_usable_check)
+		return false;
+	self -> is_in_usable_check = true;
     
     // First ensure we can resolve all its external dependencies.
     for(uindex_t i = 0; i < self -> dependency_count; i++)
     {
         MCScriptModuleRef t_module;
         if (!MCScriptLookupModule(self -> dependencies[i] . name, t_module))
-            return false;
+			goto error_cleanup;
         
         // A used module must not be a widget.
         if (t_module -> module_kind == kMCScriptModuleKindWidget)
-            return false;
+			goto error_cleanup;
+        
+        // A used module must be usable - do this before resolving imports so
+        // chained imports work.
+        if (!MCScriptEnsureModuleIsUsable(t_module))
+			goto error_cleanup;
         
         // Check all the imported definitions from the module, and compute indicies.
         for(uindex_t t_import = 0; t_import < self -> imported_definition_count; t_import++)
@@ -471,27 +525,35 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             
             MCScriptDefinition *t_def;
             if (!MCScriptLookupDefinitionInModule(t_module, t_import_def -> name, t_def))
-                return false;
+				goto error_cleanup;
+            
+            MCScriptModuleRef t_mod;
+            if (t_def -> kind == kMCScriptDefinitionKindExternal)
+            {
+                MCScriptExternalDefinition *t_ext_def;
+                t_ext_def = static_cast<MCScriptExternalDefinition *>(t_def);
+                t_mod = t_module -> imported_definitions[t_ext_def -> index] . resolved_module;
+                t_def = t_module -> imported_definitions[t_ext_def -> index] . resolved_definition;
+            }
+            else
+                t_mod = t_module;
             
             if (t_def -> kind != t_import_def -> kind)
             {
                 if (t_import_def -> kind != kMCScriptDefinitionKindHandler ||
                     t_def -> kind != kMCScriptDefinitionKindForeignHandler)
-                    return false;
+					goto error_cleanup;
             }
             
             // Check that signatures match.
             
-            t_import_def -> definition = t_def;
+            t_import_def -> resolved_definition = t_def;
+            t_import_def -> resolved_module = t_mod;
         }
-        
-        // A used module must be usable.
-        if (!MCScriptEnsureModuleIsUsable(t_module))
-            return false;
         
         // Now create the instance we need.
         if (!MCScriptCreateInstanceOfModule(t_module, self -> dependencies[i] . instance))
-            return false;
+			goto error_cleanup;
     }
 
     // Now build all the typeinfo's
@@ -525,12 +587,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     {
                         MCAutoStringRef t_name_string;
                         if (!MCStringFormat(&t_name_string, "%@.%@", self -> name, t_public_name))
-                            return false;
+								goto error_cleanup;
                         
                         MCNewAutoNameRef t_name;
                         if (!MCNameCreate(*t_name_string, &t_name))
-                            return false;
-                        
+								goto error_cleanup;
                         // If the target type is an alias, named type or optional type then
                         // we just create an alias. Otherwise it must be a record, foreign,
                         // handler type - this means it must be named.
@@ -541,21 +602,21 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                             MCTypeInfoIsOptional(t_target_type))
                         {
                             if (!MCAliasTypeInfoCreate(*t_name, t_target_type, &t_typeinfo))
-                                return false;
+								goto error_cleanup;
                         }
                         else
                         {
                             if (!MCNamedTypeInfoCreate(*t_name, &t_typeinfo))
-                                return false;
+								goto error_cleanup;
                             
                             if (!MCNamedTypeInfoBind(*t_typeinfo, t_target_type))
-                                return false;
+								goto error_cleanup;
                         }
                     }
                     else
                     {
                         if (!MCAliasTypeInfoCreate(kMCEmptyName, self -> types[t_type_def -> type] -> typeinfo, &t_typeinfo))
-                            return false;
+							goto error_cleanup;
                     }
                 }
                 else if (t_def -> kind == kMCScriptDefinitionKindExternal)
@@ -567,11 +628,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_import = &self -> imported_definitions[t_ext_def -> index];
                     
                     MCScriptModuleRef t_module;
-                    t_module = self -> dependencies[t_import -> module] . instance -> module;
-                    t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> definition) -> type] -> typeinfo;
+                    t_module = t_import -> resolved_module;
+                    t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> resolved_definition) -> type] -> typeinfo;
                 }
                 else
-                    return false;
+					goto error_cleanup;
             }
             break;
             case kMCScriptTypeKindOptional:
@@ -579,7 +640,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 MCScriptOptionalType *t_type;
                 t_type = static_cast<MCScriptOptionalType *>(self -> types[i]);
                 if (!MCOptionalTypeInfoCreate(self -> types[t_type -> type] -> typeinfo, &t_typeinfo))
-                    return false;
+					goto error_cleanup;
             }
             break;
             case kMCScriptTypeKindForeign:
@@ -596,7 +657,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 if (t_symbol == nil)
                 {
                     MCLog("Unable to resolve foreign type '%@'", t_type -> binding);
-                    return false;
+					goto error_cleanup;
                 }
                 
                 t_typeinfo = MCValueRetain(*(MCTypeInfoRef *)t_symbol);
@@ -614,11 +675,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_field . name = t_type -> fields[i] . name;
                     t_field . type = self -> types[t_type -> fields[i] . type] -> typeinfo;
                     if (!t_fields . Push(t_field))
-                        return false;
+						goto error_cleanup;
                 }
                 
                 if (!MCRecordTypeInfoCreate(t_fields . Ptr(), t_type -> field_count, self -> types[t_type -> base_type] -> typeinfo, &t_typeinfo))
-                    return false;
+					goto error_cleanup;
             }
             break;
             case kMCScriptTypeKindHandler:
@@ -633,11 +694,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[i] . mode;
                     t_parameter . type = self -> types[t_type -> parameters[i] . type] -> typeinfo;
                     if (!t_parameters . Push(t_parameter))
-                        return false;
+						goto error_cleanup;
                 }
                 
                 if (!MCHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
-                    return false;
+					goto error_cleanup;
             }
             break;
         }
@@ -647,13 +708,18 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
     
     // First validate the module - if this fails we do nothing more.
     if (!MCScriptValidateModule(self))
-        return false;
+		goto error_cleanup;
     
     // Now bind all the public types.
     
     self -> is_usable = true;
+	self -> is_in_usable_check = false;
     
     return true;
+
+ error_cleanup:
+	self -> is_in_usable_check = false;
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -944,6 +1010,13 @@ MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef self, uindex
     return kMCEmptyName;
 }
 
+MCNameRef MCScriptGetNameOfContextVariableInModule(MCScriptModuleRef self, uindex_t p_index)
+{
+    if (self -> definition_name_count > 0)
+        return self -> definition_names[p_index];
+    return kMCEmptyName;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static int s_current_indent = 0;
@@ -1072,9 +1145,33 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                 switch(t_type -> kind)
                 {
                     case kMCScriptTypeKindForeign:
+                    {
                         __writeln(stream, "foreign type %@", t_def_name);
+                    }
+                    break;
+                    case kMCScriptTypeKindHandler:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "handler type %@%@", t_def_name, *t_sig);
+                    }
+                    break;
+                    case kMCScriptTypeKindRecord:
+                        // TODO - Records not yet supported
                         break;
+                    default:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "type %@ is %@", t_def_name, *t_sig);
+                    }
+                    break;
                 }
+            }
+            break;
+            case kMCScriptDefinitionKindConstant:
+            {
+                __writeln(stream, "constant %@", t_def_name);
             }
             break;
             case kMCScriptDefinitionKindVariable:

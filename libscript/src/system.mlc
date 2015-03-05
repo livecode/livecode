@@ -22,11 +22,13 @@ LiveCode programs.
 
 module com.livecode.system
 
+use com.livecode.foreign
+
 ----------------------------------------------------------------
 -- Platform identification
 ----------------------------------------------------------------
 
-public foreign handler MCSystemExecGetOperatingSystem(out Platform as string) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetOperatingSystem(out Platform as String) as undefined binds to "<builtin>"
 
 /*
 Summary:	The operating system
@@ -58,13 +60,13 @@ end syntax
 -- Exit / Quit
 ----------------------------------------------------------------
 
-foreign handler __exit(in ExitStatus as int) as undefined binds to "exit"
+foreign handler __exit(in ExitStatus as CInt) as undefined binds to "exit"
 
 public handler MCSystemExecQuit() as undefined
 	__exit(0)
 end handler
 
-public handler MCSystemExecQuitWithStatus(in Status as number)
+public handler MCSystemExecQuitWithStatus(in Status as Number)
 	__exit(Status)
 end handler
 
@@ -96,8 +98,8 @@ end syntax
 -- Command-line information
 ----------------------------------------------------------------
 
-public foreign handler MCSystemExecGetCommandName (out CommandName as string) as undefined binds to "<builtin>"
-public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as list) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetCommandName (out CommandName as String) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as List) as undefined binds to "<builtin>"
 
 /*
 Summary:	The command name
@@ -105,7 +107,7 @@ Summary:	The command name
 Example:
 	-- Program that only succeeds if it's run as the "true"
 	-- command.
-	variable tCommand as string
+	variable tCommand as String
 	put the command name into tCommand
 	if tCommand ends with "true" then
 		quit with status 0
@@ -129,7 +131,7 @@ Summary:	The command arguments
 Example:
 	-- Program that only succeeds if it's run as the "true"
 	-- command.
-	variable tCommand as string
+	variable tCommand as String
 	put the command name into tCommand
 	if tCommand ends with "true" then
 		quit with status 0

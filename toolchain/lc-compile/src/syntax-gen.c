@@ -70,6 +70,7 @@ struct SyntaxNode
         struct
         {
             NameRef token;
+            int reserved;
         } keyword;
         struct
         {
@@ -332,7 +333,10 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
         case kSyntaxNodeKindIntegerMark:
         case kSyntaxNodeKindRealMark:
         case kSyntaxNodeKindStringMark:
+            if (p_left -> boolean_mark . index != p_right -> boolean_mark . index)
+                return 0;
             break;
+            
         case kSyntaxNodeKindConcatenate:
 		{
             int i;
@@ -519,13 +523,7 @@ static void JoinSyntaxNodes(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
     
     if (p_right -> concatenate . is_nullable == 1)
         p_left -> concatenate . is_nullable = 1;
-    
-    /*int t_new_count;
-     t_new_count = p_left -> concatenate . operand_count + p_right -> concatenate . operand_count;
-     p_left -> concatenate . operands = (SyntaxNodeRef *)Reallocate(p_left -> concatenate . operands, t_new_count * sizeof(SyntaxNodeRef));
-     for(int i = 0; i < p_right -> concatenate . operand_count; i++)
-     p_left -> concatenate . operands[p_left -> concatenate . operand_count++] = p_right -> concatenate . operands[i];
-     p_right -> concatenate . operand_count = 0;*/
+
     FreeSyntaxNode(p_right);
 }
 
@@ -845,6 +843,20 @@ void PushKeywordSyntaxGrammar(const char *p_keyword)
     MakeSyntaxNode(&t_node);
     t_node -> kind = kSyntaxNodeKindKeyword;
     t_node -> keyword . token = t_name;
+    t_node -> keyword . reserved = 1;
+    PushSyntaxNode(t_node);
+}
+
+void PushUnreservedKeywordSyntaxGrammar(const char *p_keyword)
+{
+    NameRef t_name;
+	SyntaxNodeRef t_node;
+    
+    MakeNameLiteral(p_keyword, &t_name);
+    MakeSyntaxNode(&t_node);
+    t_node -> kind = kSyntaxNodeKindKeyword;
+    t_node -> keyword . token = t_name;
+    t_node -> keyword . reserved = 0;
     PushSyntaxNode(t_node);
 }
 
@@ -1038,6 +1050,45 @@ void PushInOutMarkArgumentSyntaxMapping(long p_index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void ListSyntaxNodeUnreservedKeywords(SyntaxNodeRef p_node, NameRef** x_tokens, long *x_token_count)
+{
+    switch(p_node -> kind)
+    {
+        case kSyntaxNodeKindEmpty:
+            break;
+        case kSyntaxNodeKindKeyword:
+        {
+            if (!p_node -> keyword . reserved)
+            {
+                *x_tokens = Reallocate(*x_tokens, sizeof((*x_tokens)[0]) * (*x_token_count + 1));
+                (*x_tokens)[*x_token_count] = p_node -> keyword . token;
+                (*x_token_count) += 1;
+            }
+        }
+        break;
+        case kSyntaxNodeKindDescent:
+        break;
+        case kSyntaxNodeKindBooleanMark:
+        case kSyntaxNodeKindIntegerMark:
+        case kSyntaxNodeKindStringMark:
+        case kSyntaxNodeKindRealMark:
+            break;
+        case kSyntaxNodeKindConcatenate:
+        case kSyntaxNodeKindAlternate:
+		{
+            int i;
+            for(i = 0; i < p_node -> alternate . operand_count; i++)
+                ListSyntaxNodeUnreservedKeywords(p_node -> alternate . operands[i], x_tokens, x_token_count);
+            break;
+		}
+        case kSyntaxNodeKindRepeat:
+            if (p_node -> repeat . delimiter != NULL)
+                ListSyntaxNodeUnreservedKeywords(p_node -> repeat . delimiter, x_tokens, x_token_count);
+            ListSyntaxNodeUnreservedKeywords(p_node -> repeat . element, x_tokens, x_token_count);
+            break;
+    }
+}
+
 static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, long *x_next_mark, long *x_mapping)
 {
     if (p_node -> kind == kSyntaxNodeKindAlternate)
@@ -1065,12 +1116,8 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
                 continue;
             }
             
-            x_mapping[t_other_child -> boolean_mark . index] = *x_next_mark;
-            t_other_child -> boolean_mark . index = *x_next_mark;
-            AppendSyntaxNode(p_node, t_other_child);
-            *x_next_mark += 1;
-            
-            p_other_node -> concatenate . operands[i] = NULL;
+            assert(IsMarkSyntaxNode(t_child));
+            assert(t_child -> boolean_mark . index == t_other_child -> boolean_mark . index);
         }
     }
     else if (p_node -> kind == kSyntaxNodeKindRepeat)
@@ -1079,17 +1126,8 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
     }
     else if (p_node -> kind == kSyntaxNodeKindDescent)
     {
-        if (p_other_node -> descent . index != -1)
-        {
-            if (p_node -> descent . index == -1)
-            {
-                p_node -> descent . index = *x_next_mark;
-                x_mapping[p_other_node -> descent . index] = *x_next_mark;
-                (*x_next_mark) += 1;
-            }
-            else
-                x_mapping[p_other_node -> descent . index] = p_node -> descent . index;
-        }
+        assert(p_other_node -> descent . index != -1);
+        assert(p_other_node -> descent . index == p_node -> descent . index);
     }
 }
 
@@ -1105,7 +1143,6 @@ static void MergeSyntaxRule(SyntaxRuleRef p_rule, SyntaxRuleRef p_other_rule)
     
     MergeSyntaxNodes(p_rule -> expr, p_other_rule -> expr, &t_rule_mark_count, t_mark_mapping);
     
-    // Need to process this against the method mappings.
     p_other_rule -> mapping = t_mark_mapping;
 }
 
@@ -1658,6 +1695,37 @@ static void GenerateInvokeLists(void)
 }
 #endif
 
+static void GenerateTokenList(void)
+{
+    NameRef *t_tokens;
+    long t_token_count;
+	SyntaxRuleGroupRef t_group;
+    int i;
+    t_tokens = NULL;
+    t_token_count = 0;
+    for(t_group = s_groups; t_group != NULL; t_group = t_group -> next)
+        ListSyntaxNodeUnreservedKeywords(t_group -> rules -> expr, &t_tokens, &t_token_count);
+    
+    fprintf(s_output, "'nonterm' CustomKeywords(-> STRING)\n");
+    if (t_token_count != 0)
+    {
+        for(i = 0; i < t_token_count; i++)
+        {
+            const char *t_string;
+            GetStringOfNameLiteral(t_tokens[i], &t_string);
+            fprintf(s_output, "  'rule' CustomKeywords(-> String):\n");
+            fprintf(s_output, "    \"%s\"\n", t_string);
+            fprintf(s_output, "    where(\"%s\" -> String)\n", t_string);
+        }
+    }
+    else
+    {
+        fprintf(s_output, "  'rule' CustomKeywords(-> String):\n");
+        fprintf(s_output, "    \"THISCANNEVERHAPPENORATLEASTWEHOPESO\"\n");
+        fprintf(s_output, "    where(\"THISCANNEVERHAPPENORATLEASTWEHOPESO\" -> String)\n");
+    }
+}
+
 extern void DumpSyntaxRules(void);
 void GenerateSyntaxRules(void)
 {
@@ -1730,6 +1798,7 @@ void GenerateSyntaxRules(void)
     GenerateUmbrellaSyntaxRule("CustomPostfixOperators", kSyntaxRuleKindPostfixOperator, kSyntaxRuleKindPostfixOperator);
     
     GenerateInvokeLists();
+    GenerateTokenList();
 
     DumpSyntaxRules();
 }
@@ -1746,7 +1815,9 @@ void DumpSyntaxRules(void)
 		
 		for (t_rule = t_group -> rules; t_rule != NULL; t_rule = t_rule -> next)
         {
-            printf("[%d] ", t_gindex);
+            const char *t_name;
+            GetStringOfNameLiteral(t_rule -> name, &t_name);
+            printf("[%d] ", t_gindex, t_name);
             PrintSyntaxNode(t_rule -> expr);
             printf("\n");
         }

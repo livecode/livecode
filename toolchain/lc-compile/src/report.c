@@ -76,8 +76,14 @@ static void _PrintPosition(long p_position)
 static void _Error(long p_position, const char *p_message)
 {
     _PrintPosition(p_position);
-    fprintf(stderr, "%s\n", p_message);
+    fprintf(stderr, "error: %s\n", p_message);
     s_error_count += 1;
+}
+
+static void _Warning(long p_position, const char *p_message)
+{
+    _PrintPosition(p_position);
+    fprintf(stderr, "warning: %s\n", p_message);
 }
 
 static void _ErrorS(long p_position, const char *p_message, const char *p_string)
@@ -89,6 +95,17 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
     fprintf(stderr, p_message, p_string);
     fprintf(stderr, "\n");
     s_error_count += 1;
+}
+
+static void _WarningS(long p_position, const char *p_message, const char *p_string)
+{
+    long t_row, t_column;
+    GetColumnOfPosition(p_position, &t_column);
+    GetRowOfPosition(p_position, &t_row);
+    _PrintPosition(p_position);
+    fprintf(stderr, "warning: ");
+    fprintf(stderr, p_message, p_string);
+    fprintf(stderr, "\n");
 }
 
 static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
@@ -135,6 +152,7 @@ DEFINE_ERROR_I(SyntaxMarkVariableAlreadyDefinedWithDifferentType, "Mark variable
 DEFINE_ERROR_I(NotBoundToAHandler, "'%s' is not a handler")
 DEFINE_ERROR_I(NotBoundToAVariable, "'%s' is not a variable")
 DEFINE_ERROR_I(NotBoundToAVariableOrHandler, "'%s' is not a variable or handler")
+DEFINE_ERROR_I(NotBoundToAConstantOrVariableOrHandler, "'%s' is not a constant, a variable nor a handler")
 DEFINE_ERROR_I(NotBoundToAPhrase, "'%s' is not a syntax phrase")
 DEFINE_ERROR_I(NotBoundToASyntaxMark, "'%s' is not a mark variable")
 DEFINE_ERROR_I(NotBoundToASyntaxRule, "'%s' is not a syntax rule")
@@ -161,7 +179,7 @@ DEFINE_ERROR(IterateSyntaxMethodArgumentsDontConform, "Iterate syntax method arg
 
 DEFINE_ERROR(HandlersBoundToSyntaxMustBePublic, "Handlers bound to syntax rules must be public")
 
-DEFINE_ERROR(IterateSyntaxMethodMustReturnBoolean, "Iterate syntax methods must return bool or boolean")
+DEFINE_ERROR(IterateSyntaxMethodMustReturnBoolean, "Iterate syntax methods must return boolean or CBool")
 DEFINE_ERROR(PhraseSyntaxMethodMustReturnAValue, "Phrase syntax methods must return a value")
 
 DEFINE_ERROR(NonAssignableExpressionUsedForOutContext, "Non-container expression used for out context")
@@ -172,8 +190,21 @@ DEFINE_ERROR(VariableMustHaveHighLevelType, "Inappropriate type for variable")
 DEFINE_ERROR(ParameterMustHaveHighLevelType, "Inappropriate type for parameter")
 
 DEFINE_ERROR_I(CannotAssignToHandlerId, "'%s' is a handler id and cannot be assigned to")
+DEFINE_ERROR_I(CannotAssignToConstantId, "'%s' is a constant id and cannot be assigned to")
 
 DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler type to be called")
+
+DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expression")
+
+#define DEFINE_WARNING(Name, Message) \
+    void Warning_##Name(long p_position) { _Warning(p_position, Message); }
+#define DEFINE_WARNING_S(Name, Message) \
+	void Warning_##Name(long p_position, const char *p_string) { _WarningS(p_position, Message, p_string); }
+
+DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses should come after use clauses")
+DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
+DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
+DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
 
 ////////////////////////////////////////////////////////////////////////////////
 

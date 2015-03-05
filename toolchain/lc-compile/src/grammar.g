@@ -132,34 +132,33 @@
 
 'nonterm' Module(-> MODULE)
 
-    'rule' Module(-> module(Position, module, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, module, Name, Imports, Definitions)):
         OptionalSeparator
         "module" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, widget, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, widget, Name, Imports, sequence(PreImportDefs, Definitions))):
         OptionalSeparator
         "widget" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
+        PreImportMetadata(-> PreImportDefs)
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "widget" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, library, Name, Metadata, Imports, Definitions)):
+    'rule' Module(-> module(Position, library, Name, Imports, sequence(PreImportDefs, Definitions))):
         OptionalSeparator
         "library" @(-> Position) Identifier(-> Name) Separator
-        Metadata(-> Metadata)
+        PreImportMetadata(-> PreImportDefs)
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "library" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, import, Name, nil, Imports, Definitions)):
+    'rule' Module(-> module(Position, import, Name, Imports, Definitions)):
         OptionalSeparator
         "import" "module" @(-> Position) Identifier(-> Name) Separator
         Imports(-> Imports)
@@ -181,7 +180,19 @@
     'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
         "foreign" @(-> Position) "type" Identifier(-> Id)
     
-    'rule' ImportDefinition(-> handler(Position, public, Id, Signature, nil, nil)):
+    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, Signature))):
+        "handler" @(-> Position) "type" Identifier(-> Id) Signature(-> Signature)
+        
+    'rule' ImportDefinition(-> type(Position, public, Id, Type)):
+        "type" @(-> Position) Identifier(-> Id) "is" Type(-> Type)
+
+    'rule' ImportDefinition(-> constant(Position, public, Id, nil)):
+        "constant" @(-> Position) Identifier(-> Id)
+
+    'rule' ImportDefinition(-> variable(Position, public, Id, Type)):
+        "variable" @(-> Position) Identifier(-> Id) "as" Type(-> Type)
+
+    'rule' ImportDefinition(-> handler(Position, public, Id, normal, Signature, nil, nil)):
         "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
     'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
@@ -191,15 +202,22 @@
 -- Metadata Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' Metadata(-> METADATA)
+'nonterm' PreImportMetadata(-> DEFINITION)
 
-    'rule' Metadata(-> metadata(Position, Key, Value, Next)):
-        "metadata" @(-> Position) NAME_LITERAL(-> Key) "is" STRING_LITERAL(-> Value) Separator
-        Metadata(-> Next)
+    'rule' PreImportMetadata(-> sequence(Left, Right)):
+        Metadata(-> Left) Separator
+        PreImportMetadata(-> Right)
+        where(Left -> metadata(Position, _, _))
+        Warning_MetadataClausesShouldComeAfterUseClauses(Position)
+
+    'rule' PreImportMetadata(-> nil):
+        -- do nothing
+
+'nonterm' Metadata(-> DEFINITION)
+
+    'rule' Metadata(-> metadata(Position, Key, Value)):
+        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" STRING_LITERAL(-> Value)
         
-    'rule' Metadata(-> nil):
-        -- empty
-
 --------------------------------------------------------------------------------
 -- Import Syntax
 --------------------------------------------------------------------------------
@@ -248,6 +266,9 @@
         
 'nonterm' Definition(-> DEFINITION)
 
+    'rule' Definition(-> Metadata):
+        Metadata(-> Metadata)
+        
     'rule' Definition(-> Constant):
         ConstantDefinition(-> Constant)
         
@@ -274,7 +295,7 @@
 'nonterm' ConstantDefinition(-> DEFINITION)
 
     'rule' ConstantDefinition(-> constant(Position, Access, Name, Value)):
-        Access(-> Access) "constant" @(-> Position) Identifier(-> Name) "is" ConstantTermExpression(-> Value)
+        Access(-> Access) "constant" @(-> Position) Identifier(-> Name) "is" Expression(-> Value)
 
 'nonterm' Access(-> ACCESS)
 
@@ -296,6 +317,9 @@
 
     'rule' VariableDefinition(-> variable(Position, Access, Name, Type)):
         Access(-> Access) "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
+
+    'rule' VariableDefinition(-> contextvariable(Position, Access, Name, Type, Default)):
+        Access(-> Access) "context" @(-> Position) "variable" Identifier(-> Name) OptionalTypeClause(-> Type) "default" Expression(-> Default)
         
 'nonterm' OptionalTypeClause(-> TYPE)
 
@@ -315,10 +339,6 @@
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
         Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
 
-    'rule' TypeDefinition(-> type(Position, Access, Name, opaque(Position, Base, Fields))):
-        Access(-> Access) "opaque" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
-            TypeFields(-> Fields)
-        "end" "type"
         
     'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
         Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
@@ -398,12 +418,16 @@
 
 'nonterm' HandlerDefinition(-> DEFINITION)
 
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, normal, Signature, nil, Body)):
         Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
         
-    --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, context, Signature, nil, Body)):
+        Access(-> Access) "context" @(-> Position) "handler" Identifier(-> Name) Signature(-> Signature) Separator
+            Statements(-> Body)
+        "end" "handler"
+            --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
     --    Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
     --        Definitions(-> Definitions)
     --    "begin"
@@ -546,58 +570,56 @@
     'rule' Type(-> optional(Position, Base)):
         "optional" @(-> Position) Type(-> Base)
 
-    'rule' Type(-> pointer(Position)):
-        "pointer" @(-> Position)
-
-    'rule' Type(-> bool(Position)):
-        "bool" @(-> Position)
-
-    'rule' Type(-> int(Position)):
-        "int" @(-> Position)
-    
-    'rule' Type(-> uint(Position)):
-        "uint" @(-> Position)
-
-    'rule' Type(-> int(Position)):
-        "index" @(-> Position)
-    
-    'rule' Type(-> uint(Position)):
-        "uindex" @(-> Position)
-
-    'rule' Type(-> float(Position)):
-        "float" @(-> Position)
-
-    'rule' Type(-> double(Position)):
-        "double" @(-> Position)
-
-    --
-
     'rule' Type(-> any(Position)):
         "any" @(-> Position)
 
     'rule' Type(-> boolean(Position)):
+        "Boolean" @(-> Position)
+    'rule' Type(-> boolean(Position)):
         "boolean" @(-> Position)
+        Warning_DeprecatedTypeName(Position, "Boolean")
 
     'rule' Type(-> integer(Position)):
+        "Integer" @(-> Position)
+    'rule' Type(-> integer(Position)):
         "integer" @(-> Position)
+        Warning_DeprecatedTypeName(Position, "Integer")
 
     'rule' Type(-> real(Position)):
+        "Real" @(-> Position)
+    'rule' Type(-> real(Position)):
         "real" @(-> Position)
+        Warning_DeprecatedTypeName(Position, "Real")
 
     'rule' Type(-> number(Position)):
+        "Number" @(-> Position)
+    'rule' Type(-> number(Position)):
         "number" @(-> Position)
+        Warning_DeprecatedTypeName(Position, "Number")
 
     'rule' Type(-> string(Position)):
+        "String" @(-> Position)
+    'rule' Type(-> string(Position)):
         "string" @(-> Position)
+        Warning_DeprecatedTypeName(Position, "String")
 
     'rule' Type(-> data(Position)):
+        "Data" @(-> Position)
+    'rule' Type(-> data(Position)):
         "data" @(-> Position)
+        Warning_DeprecatedTypeName(Position, "Data")
 
     'rule' Type(-> array(Position)):
+        "Array" @(-> Position)
+    'rule' Type(-> array(Position)):
         "array" @(-> Position)
+        Warning_DeprecatedTypeName(Position, "Array")
 
     'rule' Type(-> list(Position, ElementType)):
+        "List" @(-> Position) OptionalElementType(-> ElementType)
+    'rule' Type(-> list(Position, ElementType)):
         "list" @(-> Position) OptionalElementType(-> ElementType)
+        Warning_DeprecatedTypeName(Position, "List")
 
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)
@@ -622,7 +644,7 @@
         
     'rule' Statements(-> nil):
         -- empty
-        
+
 'nonterm' Statement(-> STATEMENT)
 
     'rule' Statement(-> variable(Position, Name, Type)):
@@ -702,6 +724,9 @@
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+
+    'rule' Statement(-> postfixinto(Position, Statement, Target)):
+        CustomStatements(-> Statement) "into" @(-> Position) Expression(-> Target)
 
     'rule' Statement(-> Statement):
         CustomStatements(-> Statement)
@@ -867,6 +892,14 @@
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
 
+/*'nonterm' ConstantTermExpressionList(-> EXPRESSIONLIST)
+
+    'rule' ConstantTermExpressionList(-> expressionlist(Head, Tail)):
+        ConstantTermExpression(-> Head) "," ConstantTermExpressionList(-> Tail)
+        
+    'rule' ConstantTermExpressionList(-> expressionlist(Tail, nil)):
+        ConstantTermExpression(-> Tail)*/
+
 'nonterm' ConstantTermExpression(-> EXPRESSION)
 
     'rule' ConstantTermExpression(-> undefined(Position)):
@@ -886,6 +919,12 @@
 
     'rule' ConstantTermExpression(-> string(Position, Value)):
         StringLiteral(-> Value) @(-> Position)
+        
+/*    'rule' ConstantTermExpression(-> list(Position, Value)):
+        "[" @(-> Position) ConstantTermExpressionList(-> Value) "]"
+        
+    'rule' ConstantTermExpression(-> list(Position, nil)):
+        "[" @(-> Position) "]"*/
 
 ----------
 
@@ -948,6 +987,9 @@
         
     'rule' AtomicSyntax(-> keyword(Position, Value)):
         STRING_LITERAL(-> Value) @(-> Position)
+
+    'rule' AtomicSyntax(-> unreservedkeyword(Position, Value)):
+        STRING_LITERAL(-> Value) @(-> Position) "!"
         
     'rule' AtomicSyntax(-> rule(Position, Name)):
         "<" @(-> Position) Identifier(-> Name) ">"
@@ -1052,6 +1094,13 @@
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier
+        
+    'rule' Identifier(-> Id):
+        CustomKeywords(-> String) @(-> Position)
+        MakeNameLiteral(String -> Identifier)
+        Id::ID
+        Id'Position <- Position
+        Id'Name <- Identifier
 
 'nonterm' StringyIdentifier(-> ID)
 
@@ -1100,11 +1149,20 @@
     'rule' StringLiteral(-> Value):
         STRING_LITERAL(-> EscapedValue) @(-> Position)
         (|
-            UnescapeStringLiteral(EscapedValue -> Value)
+            UnescapeStringLiteral(Position, EscapedValue -> Value)
         ||
             Error_MalformedEscapedString(Position, EscapedValue)
             where(EscapedValue -> Value)
         |)
+
+'nonterm' StringOrNameLiteral(-> STRING)
+
+    'rule' StringOrNameLiteral(-> String):
+        StringLiteral(-> String)
+        
+    'rule' StringOrNameLiteral(-> String):
+        NAME_LITERAL(-> Name)
+        GetStringOfNameLiteral(Name -> String)
 
 'token' NAME_LITERAL (-> NAME)
 'token' INTEGER_LITERAL (-> INT)
@@ -1142,6 +1200,11 @@
 'nonterm' CustomIterators(-> EXPRESSION)
     'rule' CustomIterators(-> nil):
         "THISCANNEVERHAPPEN"
+'nonterm' CustomKeywords(-> STRING)
+    'rule' CustomKeywords(-> String):
+        "THISCANNEVERHAPPEN"
+        where("THISCANNEVERHAPPEN" -> String)
+
 
 
 

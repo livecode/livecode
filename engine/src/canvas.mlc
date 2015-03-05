@@ -20,7 +20,9 @@ This module specifies the syntax definitions and bindings for canvas drawing ope
 
 module com.livecode.canvas
 
-public type CanvasFloat is float
+use com.livecode.foreign
+
+public type CanvasFloat is CFloat
 
 // Point
 public foreign type Point binds to "kMCCanvasPointTypeInfo"
@@ -68,7 +70,7 @@ public foreign type Canvas binds to "kMCCanvasTypeInfo"
 // Constructors
 
 public foreign handler MCCanvasRectangleMakeWithLTRB(in pLeft as CanvasFloat, in pTop as CanvasFloat, in pRight as CanvasFloat, in pBottom as CanvasFloat, out rRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCCanvasRectangleMakeWithList(in pRect as list, out rRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCCanvasRectangleMakeWithList(in pRect as List, out rRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRectangleGetLeft(in pRect as Rectangle, out rLeft as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRectangleSetLeft(in pLeft as CanvasFloat, inout xRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRectangleGetTop(in pRect as Rectangle, out rTop as CanvasFloat) as undefined binds to "<builtin>"
@@ -90,6 +92,7 @@ mRect:		An expression which evaluates to a list of 4 numbers, the left, top, rig
 Returns:	A new rectange with the given edges.
 
 Example:
+	// Initialize tRect to a rectangle value with origin at point 50,50 and size 100x50
 	variable tRect
 	put rectangle [50, 50, 150, 100] into tRect
 
@@ -113,10 +116,15 @@ The location along the x-axis of the left edge of the rectangle.
 >*Note:* Setting the left of a rectangle will reposition it without altering the width or height.
 
 Example:
+	variable tRect
+	put rectangle [50,100,150,200] into tRect
+
+	// Store the left edge of the rectangle in a variable
 	variable tLeft
 	put the left of tRect into tLeft
-	subtract 10 from tLeft
-	set the left of tRect to tLeft
+
+	// Move the rectangle horizontally to a new position.
+	set the left of tRect to 20
 
 Tags:		Canvas
 */
@@ -146,10 +154,15 @@ The location along the y-axis of the top edge of the rectangle.
 >*Note:* Setting the top of a rectangle will reposition it without altering the width or height.
 
 Example:
+	variable tRect
+	put rectangle [50,100,150,200] into tRect
+
+	// Store the top edge of the rectangle in a variable
 	variable tTop
 	put the top of tRect into tTop
-	subtract 10 from tTop
-	set the top of tRect to tTop
+
+	// Move the rectangle vertically to a new position.
+	set the top of tRect to 120
 
 Tags:		Canvas
 */
@@ -179,10 +192,15 @@ The location along the x-axis of the right edge of the rectangle.
 >*Note:* Setting the right of a rectangle will reposition it without altering the width or height.
 
 Example:
+	variable tRect
+	put rectangle [50,100,150,200] into tRect
+
+	// Store the right edge of the rectangle in a variable
 	variable tRight
 	put the right of tRect into tRight
-	add 10 to tRight
-	set the right of tRect to tRight
+
+	// Move the rectangle horizontally to a new position.
+	set the right of tRect to (tRight + 10)
 
 Tags:		Canvas
 */
@@ -205,10 +223,15 @@ The location along the y-axis of the bottom edge of the rectangle.
 >*Note:* Setting the bottom of a rectangle will reposition it without altering the width or height.
 
 Example:
+	variable tRect
+	put rectangle [50,100,150,200] into tRect
+
+	// Store the bottom edge of the rectangle in a variable
 	variable tBottom
 	put the bottom of tRect into tBottom
-	add 10 to tBottom
-	set the bottom of tRect to tBottom
+
+	// Move the rectangle vertically to a new position.
+	set the bottom of tRect to (tBottom + 10)
 
 Tags:		Canvas
 */
@@ -231,10 +254,15 @@ The width of the rectangle.
 >*Note:* Setting the width of a rectangle will resize it without moving the left edge, expanding or contracting from the right.
 
 Example:
+	variable tRect
+	put rectangle [50,100,150,200] into tRect
+
+	// Store the width of the rectangle in a variable
 	variable tWidth
 	put the width of tRect into tWidth
-	add 10 to tWidth
-	set the width of tRect to tWidth
+
+	// Increase the width of the rectangle
+	set the width of tRect to (tWidth + 10)
 
 Tags:		Canvas
 */
@@ -257,10 +285,15 @@ The height of the rectangle.
 >*Note:* Setting the height of a rectangle will resize it without moving the top edge, expanding or contracting from the bottom.
 
 Example:
+	variable tRect
+	put rectangle [50,100,150,200] into tRect
+
+	// Store the height of the rectangle in a variable
 	variable tHeight
 	put the height of tRect into tHeight
-	add 10 to tHeight
-	set the height of tRect to tHeight
+
+	// Increase the height of the rectangle
+	set the height of tRect to (tHeight + 10)
 
 Tags:		Canvas
 */
@@ -278,7 +311,7 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasPointMake(in pX as CanvasFloat, in pY as CanvasFloat, out rPoint as Point) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPointMakeWithList(in pPoint as list, out rPoint as Point) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPointMakeWithList(in pPoint as List, out rPoint as Point) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPointGetX(in pPoint as Point, out rX as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPointSetX(in pX as CanvasFloat, inout xPoint as Point) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPointGetY(in pPoint as Point, out rY as CanvasFloat) as undefined binds to "<builtin>"
@@ -312,10 +345,15 @@ mPoint:		An expression which evaluates to a point.
 Description:	The x coordinate of <mPoint>.
 
 Example:
+	variable tPoint
+	put point [50, 100] into tPoint
+
+	// Store the x-coordinate of the point in a variable
 	variable tX
 	put the x of tPoint into tX
-	add 10 to tX
-	set the x of tPoint to tX
+
+	// Move the point 10 units to the right
+	set the x of tPoint to (tX + 10)
 
 Tags:	Canvas
 */
@@ -335,10 +373,15 @@ mPoint:		An expression which evaluates to a point.
 Description:	The y coordinate of <mPoint>.
 
 Example:
+	variable tPoint
+	put point [50, 100] into tPoint
+
+	// Store the y-coordinate of the point in a variable
 	variable tY
 	put the y of tPoint into tY
-	add 10 to tY
-	set the y of tPoint to tY
+
+	// Move the point 10 units downward.
+	set the y of tPoint to (tY + 10)
 
 Tags:	Canvas
 */
@@ -356,8 +399,8 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasColorMakeRGBA(in pRed as CanvasFloat, in pGreen as CanvasFloat, in pBlue as CanvasFloat, in pAlpha as CanvasFloat, out rColor as Color) as undefined binds to "<builtin>"
-public foreign handler MCCanvasColorMakeWithList(in pColor as list, out rColor as Color) as undefined binds to "<builtin>"
-//public foreign handler MCCanvasColorMakeWithString(in pList as string, out rColor as Color)
+public foreign handler MCCanvasColorMakeWithList(in pColor as List, out rColor as Color) as undefined binds to "<builtin>"
+//public foreign handler MCCanvasColorMakeWithString(in pList as String, out rColor as Color)
 
 /*
 Summary:	Creates a new color value.
@@ -373,6 +416,7 @@ Example:
 	variable tColor
 	// Set tColor to opaque red
 	put color [1.0, 0.0, 0.0] into tColor
+
 	// Set tColor to partially transparent cyan
 	put color [0.0, 1.0, 1.0, 0.75] into tColor
 
@@ -409,9 +453,13 @@ The red component of <mColor>
 >*Note:* The component value denotes the intensity of that component, expressed as a real number between 0 and 1.
 
 Example:
-	variable tRed
+	variable tColor
+	put color [0.75, 1.0, 0.5] into tColor
+
 	// Store the old red value
+	variable tRed
 	put the red of tColor into tRed
+
 	// Invert the intensity of the red color component
 	set the red of tColor to 1.0 - tRed
 
@@ -436,9 +484,13 @@ The green component of <mColor>
 >*Note:* The component value denotes the intensity of that component, expressed as a real number between 0 and 1.
 
 Example:
-	variable tGreen
+	variable tColor
+	put color [0.75, 1.0, 0.5] into tColor
+
 	// Store the old green value
+	variable tGreen
 	put the green of tColor into tGreen
+
 	// Remove any green component from the color
 	set the green of tColor to 0
 
@@ -463,9 +515,13 @@ The blue component of <mColor>
 >*Note:* The component value denotes the intensity of that component, expressed as a real number between 0 and 1.
 
 Example:
-	variable tBlue
+	variable tColor
+	put color [0.75, 1.0, 0.5] into tColor
+
 	// Store the old blue value
+	variable tBlue
 	put the blue of tColor into tBlue
+
 	// Set the blue component of the color to full intensity
 	set the blue of tColor to 1
 
@@ -490,9 +546,13 @@ The alpha component of <mColor>
 >*Note:* The alpha value represents the opacity of the color, expressed as a real number between 0 (fully transparent) and 1 (fully opaque).
 
 Example:
-	variable tAlpha
+	variable tColor
+	put color [0.75, 1.0, 0.5] into tColor
+
 	// Store the old alpha value
+	variable tAlpha
 	put the alpha of tColor into tAlpha
+
 	// Make the color semi-transparent
 	set the alpha of tColor to 0.5
 
@@ -513,12 +573,14 @@ end syntax
 
 public foreign handler MCCanvasTransformMakeIdentity(out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeScale(in pScaleX as CanvasFloat, in pScaleY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformMakeScaleWithList(in pScale as list, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeScaleWithList(in pScale as List, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeSkew(in pSkewX as CanvasFloat, in pSkewY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeSkewWithList(in pSkew as List, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeRotation(in pRotation as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeTranslation(in pX as CanvasFloat, in pY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformMakeTranslationWithList(in pTranslation as list, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeTranslationWithList(in pTranslation as List, out rTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeWithMatrixValues(in pA as CanvasFloat, in pB as CanvasFloat, in pC as CanvasFloat, in pD as CanvasFloat, in pTX as CanvasFloat, in pTY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformMakeWithMatrixAsList(in pMatrix as list, out rTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMakeWithMatrixAsList(in pMatrix as List, out rTransform as Transform) as undefined binds to "<builtin>"
 
 /*
 Summary:	The identity transform.
@@ -531,7 +593,6 @@ The identity transform represents a coordinate transformation where the set of c
 Example:
 	variable tTransform
 	put the identity transform into tTransform
-
 
 Tags: Canvas
 */
@@ -550,9 +611,10 @@ mScale:		An expression which evaluates to a list of 1 or 2 numbers, the x-axis s
 Returns:	A new scale transform.
 
 Example:
-	variable tTransform
 	// Create x2 uniformly scaling transform
-	put transform with scale 2 into tTransform
+	variable tTransform
+	put transform with scale [2] into tTransform
+
 	// Create transform which only scales in the direction of the x axis
 	put transform with scale [ 2, 1 ] into tTransform
 
@@ -566,6 +628,27 @@ begin
 end syntax
 
 /*
+Summary:	Creates a new skewing transform value.
+
+mScale:		An expression which evaluates to a list of 2 numbers, the x-axis skew and y-axis skew.
+
+Returns:	A new skew transform.
+
+Example:
+	// Create skew transform
+	variable tTransform
+	put transform with skew [1,0] into tTransform
+
+Tags: Canvas
+*/
+
+syntax TransformMakeSkew is prefix operator with precedence 4
+	"transform" "with" "skew" <mSkew: Expression>
+begin
+	MCCanvasTransformMakeSkewWithList(mSkew, output)
+end syntax
+
+/*
 Summary:	Creates a new rotation transform value.
 
 mRotation:	An expression which evaluates to a number, the number of degrees of the rotation.
@@ -573,8 +656,8 @@ mRotation:	An expression which evaluates to a number, the number of degrees of t
 Returns:	A new rotation transform.
 
 Example:
-	variable tTransform
 	// Create 30 degree rotation transform
+	variable tTransform
 	put transform with rotation by 30 into tTransform
 
 Tags: Canvas
@@ -594,8 +677,8 @@ mTranslation:	An expression which evaluates to a list of 2 numbers, the x and y 
 Returns:	A new translation transform.
 
 Example:
-	variable tTransform
 	// Create translation transform to offset coordinates by 50,100
+	variable tTransform
 	put transform with translation [50,100] into tTransform
 
 Tags: Canvas
@@ -632,16 +715,16 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasTransformGetScaleAsList(in pTransform as Transform, out rScale as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetScaleAsList(in pScaleX as list, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetScaleAsList(in pTransform as Transform, out rScale as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetScaleAsList(in pScaleX as List, inout xTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformGetRotation(in pTransform as Transform, out rRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformSetRotation(in pRotation as CanvasFloat, inout xTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformGetSkewAsList(in pTransform as Transform, out rSkew as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetSkewAsList(in pSkew as list, inout xTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformGetTranslationAsList(in pTransform as Transform, out rTranslation as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetTranslationAsList(in pTranslation as list, inout xTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformGetMatrixAsList(in pTransform as Transform, out rMatrix as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformSetMatrixAsList(in pMatrix as list, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetSkewAsList(in pTransform as Transform, out rSkew as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetSkewAsList(in pSkew as List, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetTranslationAsList(in pTransform as Transform, out rTranslation as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetTranslationAsList(in pTranslation as List, inout xTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformGetMatrixAsList(in pTransform as Transform, out rMatrix as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSetMatrixAsList(in pMatrix as List, inout xTransform as Transform) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasTransformGetInverse(in pTransform as Transform, out rInverse as Transform) as undefined binds to "<builtin>"
 
@@ -653,11 +736,15 @@ mTransform:		An expression which evaluates to a transform.
 Description:	The scale of <mTransform> as a list of 2 numbers (the x and y scales)
 
 Example:
-	variable tScale
+	variable tTransform
+	put transform with matrix [0, 2, -2, 0, 50, 100] into tTransform
+
 	// Store the old scale component
+	variable tScale
 	put the scale of tTransform into tScale
+
 	// Modify the scale by adding 1 to the x scale value
-	set the scale of tTransform to [item 1 of tScale + 1, item 2 of tScale]
+	set the scale of tTransform to [element 1 of tScale + 1, element 2 of tScale]
 
 Tags: Canvas
 */
@@ -677,9 +764,13 @@ mTransform:		An expression which evaluates to a transform.
 Description:	The rotation of <mTransform> as a number of degrees.
 
 Example:
-	variable tRotation
+	variable tTransform
+	put transform with matrix [0, 2, -2, 0, 50, 100] into tTransform
+
 	// Store the old rotation component
+	variable tRotation
 	put the rotation of tTransform into tRotation
+
 	// Double the rotation
 	set the rotation of tTransform to tRotation * 2
 
@@ -701,9 +792,13 @@ mTransform:		An expression which evaluates to a transform.
 Description:	The skew of <mTransform> as a list of 2 numbers (the x and y skew values).
 
 Example:
-	variable tSkew
+	variable tTransform
+	put transform with matrix [0, 2, -2, 0, 50, 100] into tTransform
+
 	// Store the old skew component
+	variable tSkew
 	put the skew of tTransform into tSkew
+
 	// Remove the skew
 	set the skew of tTransform to [0,0]
 
@@ -725,11 +820,15 @@ mTransform:		An expression which evaluates to a transform.
 Description:	The translation of <mTransform> as a list of 2 numbers (the x and y offset values).
 
 Example:
-	variable tTranslation
+	variable tTransform
+	put transform with matrix [0, 2, -2, 0, 50, 100] into tTransform
+
 	// Store the old translation component
+	variable tTranslation
 	put the translation of tTransform into tTranslation
+
 	// Adjust the offset of the transformation
-	set the translation of tTransform to [item 1 of tTranslation + tLeft, item 2 of tTranslation + tTop]
+	set the translation of tTransform to [element 1 of tTranslation + 5, element 2 of tTranslation + 5]
 
 Tags: Canvas
 */
@@ -750,7 +849,7 @@ Description:	The matrix values of <mTransform> as a list of 6 numbers.
 
 Example:
 	variable tTransform
-	put transform with translation by [20,50] into tTransform
+	put transform with translation [20,50] into tTransform
 
 	// Get the current transform matrix
 	variable tMatrix
@@ -768,7 +867,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformPropertyMatrix is prefix operator with precedence 4
+syntax TransformPropertyMatrixAsList is prefix operator with precedence 4
 	"the" "matrix" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetMatrixAsList(mTransform, output)
@@ -786,9 +885,13 @@ The inverse of <mTransform>
 >*Note:* The inverse of a transform matrix is the transform that reverses the effect of the original. Combining a transform with its inverse will produce the identity transform.
 
 Example:
-	variable tInverse
+	variable tTransform
+	put transform with matrix [0,2,-2,0,50,100] into tTransform
+
 	// Get the inverse of the current transform
+	variable tInverse
 	put the inverse of tTransform into tInverse
+
 	// Combine the transform with its inverse to produce the identity transform
 	concat tTransform with tInverse
 
@@ -807,10 +910,13 @@ end syntax
 
 public foreign handler MCCanvasTransformConcat(inout xTransformA as Transform, in pTransformB as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformScale(inout xTransform as Transform, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformScaleWithList(inout xTransform as Transform, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformScaleWithList(inout xTransform as Transform, in pScale as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSkew(inout xTransform as Transform, in pSkewX as CanvasFloat, in pSkewY as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformSkewWithList(inout xTransform as Transform, in pSkew as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformRotate(inout xTransform as Transform, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTransformTranslate(inout xTransform as Transform, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTransformTranslateWithList(inout xTransform as Transform, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformTranslateWithList(inout xTransform as Transform, in pTranslation as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransformMultiply(in pTransformA as Transform, in pTransformB as Transform, out rTransform as Transform) as undefined binds to "<builtin>"
 
 /*
 Summary:		Concatenate transform a with transform b.
@@ -819,21 +925,24 @@ mTransformA:	An expression which evaluates to a transform.
 mTransformB:	An expression which evaluates to a transform.
 
 Description:
-Concatenating transforms modifies the original transform to produce a single transform that is the equivalent of applying the original transform followed by the other. Changing the order of concatenation will result in a transform with different effects.
+Concatenating transforms modifies the original transform to produce a single transform that is the equivalent of applying the new transform followed by the original. Changing the order of concatenation will result in a transform with different effects.
 
 Example:
-	variable tTransform
-	variable tScale
-	variable tRotation
 	// Create a new scaling transform
+	variable tScale
 	put transform with scale [5,10] into tScale
+
 	// Create a new rotation transform
+	variable tRotation
 	put transform with rotation by 30 into tRotation
-	// Create a transform representing a scale followed by a rotation
+
+	variable tTransform
+
+	// Create a transform representing a rotation followed by a scale
 	put tScale into tTransform
 	concat tTransform with tRotation
 
-	// Create a transform representing a rotation followed by a scale
+	// Create a transform representing a scale followed by a rotation
 	put tRotation into tTransform
 	concat tTransform with tScale
 
@@ -853,14 +962,18 @@ mTransform:		An expression which evaluates to a transform.
 mScale:			An expression which evaluates to a list of 1 or 2 numbers, the x-axis scale and y-axis scale, or the uniform scale when only a single value is given.
 
 Description:
-Apply the given scale to <mTransform>
+	Apply the given scale to <mTransform>. This is equivalent to concatenating <mTransform> with a new scale transform.
 
 Example:
-	variable tTransform
 	// Create a new transform
+	variable tTransform
 	put the identity transform into tTransform
+
+	// Apply a uniform scale to the transform
+	scale tTransform by [0.5]
+
 	// Apply a non-uniform scale to the transform
-	scale tTransform by [2, 3]
+	scale tTransform by [2.2, 3]
 
 Tags: Canvas
 */
@@ -872,18 +985,44 @@ begin
 end syntax
 
 /*
+Summary:		Apply a skew to a transform.
+
+mTransform:		An expression which evaluates to a transform.
+mSkew:			An expression which evaluates to a list of 2 numbers, the x-axis skew and y-axis skew.
+
+Description:
+	Apply the given skew to <mTransform>
+
+Example:
+	variable tTransform
+	// Create a new transform
+	put the identity transform into tTransform
+	// Apply a skew to the transform
+	skew tTransform by [1, 0]
+
+Tags: Canvas
+*/
+
+syntax TransformOperationSkew is statement
+	"skew" <mTransform: Expression> "by" <mSkew: Expression>
+begin
+	MCCanvasTransformSkewWithList(mTransform, mSkew)
+end syntax
+
+/*
 Summary:		Apply a rotation to a transform.
 
 mTransform:		An expression which evaluates to a transform.
 mRotation:		An expression which evaluates to a number of degrees.
 
 Description:
-Apply a rotation by <mRotation> degrees to <mTransform>
+	Apply a rotation by <mRotation> degrees to <mTransform>. This is equivalent to concatenating <mTransform> with a new rotation transform.
 
 Example:
-	variable tTransform
 	// Create a new transform
+	variable tTransform
 	put the identity transform into tTransform
+
 	// Rotate the transform by 90 degrees
 	rotate tTransform by 90
 
@@ -903,12 +1042,16 @@ mTransform:		An expression which evaluates to a transform.
 mTranslation:	An expression which evaluates to a list of 2 numbers, the x and y offsets of the translation.
 
 Description:
-Apply a translation to <mTransform>
+	Apply a translation to <mTransform>. This is equivalent to concatenating <mTransform> with a new translation transform.
 
 Example:
-	variable tTransform
 	// Create a new transform
+	variable tTransform
 	put the identity transform into tTransform
+
+	variable tRect
+	put rectangle [10, 20, 110, 170] into tRect
+
 	// Translate the transform to the top-left of tRect
 	translate tTransform by [the left of tRect, the top of tRect]
 
@@ -921,7 +1064,43 @@ begin
     MCCanvasTransformTranslateWithList(mTransform, mTranslation)
 end syntax
 
-// TODO - add SkewTransform?
+/*
+Summary:		Multiply two transforms together.
+
+Left:		An expression which evaluates to a transform.
+Right:		An expression which evaluates to a transform.
+
+Description:
+	Returns the transform created by concatentating <Left> with <Right>
+
+Example:
+	// Create a rotation transform
+	variable tRotate
+	put transform with rotation by 45 into tRotate
+
+	// Create a scale transform
+	variable tScale
+	put transform with scale [2,3] into tScale
+
+	// Create a translation transform
+	variable tTranslate
+	put transform with translation [50,100] into tTranslate
+
+	// Combine transforms by multiplying them together
+	variable tTransform
+	put tTranslate * tRotate * tScale into tTransform
+
+Note:
+	The order of the arguments is important when multiplying transforms. <Left> * <Right> can result in a different transform from <Right> * <Left> (in mathematical terms, transform multiplication is non-commutative).
+
+Tags: Canvas
+*/
+
+syntax TransformOperationMultiply is left binary operator with precedence 3
+	<Left: Expression> "*" <Right: Expression>
+begin
+	MCCanvasTransformMultiply(Left, Right, output)
+end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
 // Solid Paint
@@ -936,8 +1115,8 @@ mColor:		An expression which evaluates to a color.
 Returns:	A new paint using <mColor>.
 
 Example:
-	variable tPaint
 	// Create a new green paint
+	variable tPaint
 	put solid paint with color [0,1,0] into tPaint
 
 Tags: Canvas
@@ -966,9 +1145,14 @@ mPaint:		An expression which evaluates to a solid paint.
 Description:	The color of <mPaint>.
 
 Example:
-	variable tColor
+	// Create a new green paint
+	variable tPaint
+	put solid paint with color [0,1,0] into tPaint
+
 	// Store the old color of tPaint
+	variable tColor
 	put the color of tPaint into tColor
+
 	// Set the color of tPaint to blue
 	set the color of tPaint to color [0,0,1]
 
@@ -990,10 +1174,10 @@ end syntax
 public foreign handler MCCanvasPatternMakeWithImage(in pImage as Image, out rPattern as Pattern) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithTransformedImage(in pImage as Image, in pTransform as Transform, out rPattern as Pattern) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithScaledImage(in pImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPatternMakeWithImageScaledWithList(in pImage as Image, in pScale as list, out rPattern as Pattern) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPatternMakeWithImageScaledWithList(in pImage as Image, in pScale as List, out rPattern as Pattern) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithRotatedImage(in pImage as Image, in pRotation as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithTranslatedImage(in pImage as Image, in pX as CanvasFloat, in pY as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPatternMakeWithImageTranslatedWithList(in pImage as Image, in pTranslation as list, out rPattern as Pattern) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPatternMakeWithImageTranslatedWithList(in pImage as Image, in pTranslation as List, out rPattern as Pattern) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new pattern paint.
@@ -1003,8 +1187,12 @@ mImage:		An expression which evaluates to an image.
 Returns:	A new pattern paint based on <mImage>.
 
 Example:
+	// Load the pattern image.
+	variable tImage
+	put image from file "images/backgroundpattern.png" into tImage
+
+	// Create a new pattern based on the image
 	variable tPaint
-	// Create a new pattern based on tImage
 	put pattern with tImage into tPaint
 
 Tags: Canvas
@@ -1021,22 +1209,21 @@ Summary:	Creates a new transformed pattern paint.
 
 mImage:		An expression which evaluates to an image.
 mTransform:	An expression which evaluates to a transform.
-mScale:		An expression which evaluates to a list of 1 or 2 numbers, the x-axis scale and y-axis scale, or the uniform scale when only a single value is given.
-mRotation:		An expression which evaluates to a number of degrees.
-mTranslation:	An expression which evaluates to a list of 2 numbers, the x and y offsets of the translation.
 
 Returns:	A new pattern paint based on <mImage> with the specified transform applied.
 
 Example:
-	variable tPaint
+	// Load the pattern image.
+	variable tImage
+	put image from file "images/backgroundpattern.png" into tImage
+
+	// Set up the pattern transform
+	variable tTransform
+	put transform from matrix [0,2,-2,0,0,0] into tTransform
+
 	// Create a new pattern paint, applying a transform to the image
+	variable tPaint
 	put pattern with tImage transformed by tTransform into tPaint
-	// Create a new pattern paint, rotating the image through 90 degrees
-	put pattern with tImage rotated by 90 into tPaint
-	// Create a new pattern paint, scaling the image to half size
-	put pattern with tImage scaled by [0.5] into tPaint
-	// Create a new pattern paint, offsetting the image to the top-left of tRect
-	put pattern with tImage translated by [the left of tRect, the top of tRect] into tPaint
 
 Tags: Canvas
 */
@@ -1047,17 +1234,79 @@ begin
     MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
 end syntax
 
+/*
+Summary:	Creates a new scaled pattern paint.
+
+mImage:		An expression which evaluates to an image.
+mScale:		An expression which evaluates to a list of 1 or 2 numbers, the x-axis scale and y-axis scale, or the uniform scale when only a single value is given.
+
+Returns:	A new pattern paint based on <mImage> with the specified scale applied.
+
+Example:
+	// Load the pattern image.
+	variable tImage
+	put image from file "images/backgroundpattern.png" into tImage
+
+	// Create a new pattern paint, scaling the image to half size
+	variable tPaint
+	put pattern with tImage scaled by [0.5] into tPaint
+
+Tags: Canvas
+*/
+
 syntax PatternMakeScaledBy is prefix operator with precedence 4
     "pattern" "with" <mImage: Expression> "scaled" "by" <mScale: Expression>
 begin
 	MCCanvasPatternMakeWithImageScaledWithList(mImage, mScale, output)
 end syntax
 
+/*
+Summary:	Creates a new translated pattern paint.
+
+mImage:		An expression which evaluates to an image.
+mTranslation:	An expression which evaluates to a list of 2 numbers, the x and y offsets of the translation.
+
+Returns:	A new pattern paint based on <mImage> with the specified translation applied.
+
+Example:
+	// Load the pattern image.
+	variable tImage
+	put image from file "images/backgroundpattern.png" into tImage
+
+	// Create a new pattern paint, offsetting the image to the top-left of tRect
+	variable tPaint
+	variable tRect
+	put rectangle [20, 50, 120, 100] into tRect
+	put pattern with tImage translated by [the left of tRect, the top of tRect] into tPaint
+
+Tags: Canvas
+*/
+
 syntax PatternMakeTranslatedBy is prefix operator with precedence 4
     "pattern" "with" <mImage: Expression> "translated" "by" <mTranslation: Expression>
 begin
 	MCCanvasPatternMakeWithImageTranslatedWithList(mImage, mTranslation, output)
 end syntax
+
+/*
+Summary:	Creates a new rotated pattern paint.
+
+mImage:		An expression which evaluates to an image.
+mRotation:		An expression which evaluates to a number of degrees.
+
+Returns:	A new pattern paint based on <mImage> with the specified rotation applied.
+
+Example:
+	// Load the pattern image.
+	variable tImage
+	put image from file "images/backgroundpattern.png" into tImage
+
+	// Create a new pattern paint, rotating the image through 90 degrees
+	variable tPaint
+	put pattern with tImage rotated by 90 into tPaint
+
+Tags: Canvas
+*/
 
 syntax PatternMakeRotatedBy is prefix operator with precedence 4
     "pattern" "with" <mImage: Expression> "rotated" "by" <mRotation: Expression>
@@ -1082,11 +1331,16 @@ mPattern:		An expression which evaluates to a pattern.
 Description:	The image of <mPattern>.
 
 Example:
-	variable tImage
+	// Create a new pattern based on an image file
+	variable tPattern
+	put pattern with image from file "images/patternframe1.png" into tPattern
+
 	// Store the old image of tPattern
+	variable tImage
 	put the image of tPattern into tImage
+
 	// Set the pattern to draw the next image
-	set the image of tPattern to tNextImage
+	set the image of tPattern to image from file "images/patternframe2.png"
 
 Tags:	Canvas
 */
@@ -1106,11 +1360,17 @@ mPattern:		An expression which evaluates to a pattern.
 Description:	The transform of <mPattern>.
 
 Example:
-	variable tTransform
+	// Create a new pattern paint from a scaled-down image file
+	variable tPattern
+	put pattern with image from file "images/pattern.png" scaled by [0.5] into tPattern
+
 	// Get the current transform
+	variable tTransform
 	put the transform of tPattern into tTransform
+
 	// Modify the transform by rotation
 	rotate tTransform by tDegrees
+
 	// Set the pattern to the modified transform
 	set the transform of tPattern to tTransform
 
@@ -1130,10 +1390,10 @@ end syntax
 
 public foreign handler MCCanvasPatternTransform(inout xPattern as Pattern, in pTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternScale(inout xPattern as Pattern, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPatternScaleWithList(inout xPattern as Pattern, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPatternScaleWithList(inout xPattern as Pattern, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternRotate(inout xPattern as Pattern, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPatternTranslate(inout xPattern as Pattern, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPatternTranslateWithList(inout xPattern as Pattern, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPatternTranslateWithList(inout xPattern as Pattern, in pTranslation as List) as undefined binds to "<builtin>"
 
 /*
 Summary:		Apply a transform to a pattern.
@@ -1145,8 +1405,12 @@ Description:
 Modifies the transform of <mPattern> by concatentation with <mTransform>
 
 Example:
-	// Apply transform tTransform to the pattern.
-	transform tPattern by tTransform
+	// Create a new pattern paint from an image file
+	variable tPattern
+	put pattern with image from file "images/pattern.png" into tPattern
+
+	// Apply transform to the pattern.
+	transform tPattern by transform with matrix [0,2,-2,0,5,10]
 
 Tags: Canvas
 */
@@ -1167,6 +1431,10 @@ Description:
 Scales the transform of <mPattern> by <mScale>
 
 Example:
+	// Create a new pattern paint from an image file
+	variable tPattern
+	put pattern with image from file "images/pattern.png" into tPattern
+
 	// Scale the pattern to twice the current width
 	scale tPattern by [2,1]
 
@@ -1189,6 +1457,10 @@ Description:
 Rotates the transform of <mPattern> by <mRotation>
 
 Example:
+	// Create a new pattern paint from an image file
+	variable tPattern
+	put pattern with image from file "images/pattern.png" into tPattern
+
 	// Rotate the pattern through 30 degrees
 	rotate tPattern by 30
 
@@ -1211,6 +1483,10 @@ Description:
 translates the transform of <mPattern> by <mTranslation>
 
 Example:
+	// Create a new pattern paint from an image file
+	variable tPattern
+	put pattern with image from file "images/pattern.png" into tPattern
+
 	// Translate the pattern 20 units to the left.
 	translate tPattern by [-20,0]
 
@@ -1228,7 +1504,7 @@ end syntax
 
 // Gradient
 
-public foreign handler MCCanvasGradientEvaluateType(in pType as int, out rType as int) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientEvaluateType(in pType as LCInt, out rType as LCInt) as undefined binds to "<builtin>"
 
 syntax GradientType is phrase
 	( "linear" <mType=0> | "radial" <mType=1> | "conical" <mType=2> | "diamond" <mType=3> | "spiral" <mType=4> | "xy" <mType=5> | "sqrtxy" <mType=6> )
@@ -1239,7 +1515,7 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasGradientStopMake(in pOffset as CanvasFloat, in pColor as Color, out rStop as GradientStop) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientMakeWithRamp(in pType as int, in pRamp as list, out rGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientMakeWithRamp(in pType as LCInt, in pRamp as List, out rGradient as Gradient) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new gradient stop.
@@ -1250,15 +1526,18 @@ mColor:		An expression which evaluates to a color.
 Returns:	A new gradient stop.
 
 Example:
-	// Array to temporarily hold gradient stops
-	variable tStops
-	put the empty array into tStops
+	// List to hold gradient stops
+	variable tRamp
+	put the empty list into tRamp
+
 	// First gradient stop is red at position 0
-	put gradient stop at 0 with color [1,0,0] into tStops[1]
+	push gradient stop at 0 with color [1,0,0] onto tRamp
+
 	// Second stop is half-transparent green at position 0.5
-	put gradient stop at 0.5 with color [0,1,0,0.5] into tStops[2]
+	push gradient stop at 0.5 with color [0,1,0,0.5] onto tRamp
+
 	// Third stop is blue at position 1
-	put gradient stop at 1 with color [0,0,1] into tStops[3]
+	push gradient stop at 1 with color [0,0,1] onto tRamp
 
 Tags: Canvas
 */
@@ -1277,16 +1556,18 @@ mRamp:		An expression which evaluates to a list of gradient stops.
 Returns:	A new gradient paint.
 
 Example:
-	// Array to temporarily hold gradient stops
-	variable tStops
-	put the empty array into tStops
+	// List to hold gradient stops
+	variable tRamp
+	put the empty list into tRamp
+
 	// Set up gradient stops
-	put gradient stop at 0 with color [1,0,0] into tStops[1]
-	put gradient stop at 0.5 with color [0,1,0,0.5] into tStops[2]
-	put gradient stop at 1 with color [0,0,1] into tStops[3]
+	push gradient stop at 0 with color [1,0,0] onto tRamp
+	push gradient stop at 0.5 with color [0,1,0,0.5] onto tRamp
+	push gradient stop at 1 with color [0,0,1] onto tRamp
 
 	// Create new gradient paint
-	put linear gradient with ramp [tStops[1], tStops[2], tStops[3]] into tGradient
+	variable tGradient
+	put linear gradient with ramp tRamp into tGradient
 
 Tags: Canvas
 */
@@ -1306,18 +1587,18 @@ public foreign handler MCCanvasGradientStopSetOffset(in pOffset as CanvasFloat, 
 public foreign handler MCCanvasGradientStopGetColor(in pStop as GradientStop, out rColor as Color) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientStopSetColor(in pColor as Color, inout xStop as GradientStop) as undefined binds to "<builtin>"
 
-public foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRamp as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetRamp(in pRamp as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
-// public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as int, in pEnd as int, out rStops as list) as undefined binds to "<builtin>"
-// public foreign handler MCCanvasGradientSetStops(in pStart as int, in pEnd as int, in rStops as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetTypeAsString(in pType as string, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as int) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetRepeat(in pRepeat as int, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetWrap(in pGradient as Gradient, out rWrap as bool) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetWrap(in pWrap as bool, inout xGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientGetMirror(in pGradient as Gradient, out rMirror as bool) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetMirror(in pMirror as bool, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRamp as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetRamp(in pRamp as List, inout xGradient as Gradient) as undefined binds to "<builtin>"
+// public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as int, in pEnd as int, out rStops as List) as undefined binds to "<builtin>"
+// public foreign handler MCCanvasGradientSetStops(in pStart as int, in pEnd as int, in rStops as List, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetTypeAsString(in pType as String, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetRepeat(in pRepeat as LCInt, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetWrap(in pGradient as Gradient, out rWrap as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetWrap(in pWrap as CBool, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetMirror(in pGradient as Gradient, out rMirror as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetMirror(in pMirror as CBool, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetFrom(in pGradient as Gradient, out rFrom as Point) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetFrom(in pFrom as Point, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetTo(in pGradient as Gradient, out rTo as Point) as undefined binds to "<builtin>"
@@ -1335,8 +1616,13 @@ mStop:		An expression which evaluates to a gradient stop.
 Description:	The offset of <mStop>.
 
 Example:
+	variable tStop
+	put gradient stop at 0 with color [1,1,1] into tStop
+
 	// Get the offset of a stop
+	variable tOffset
 	put the offset of tStop into tOffset
+
 	// Move the stop to a new offset
 	set the offset of tStop to 0.75
 
@@ -1358,8 +1644,13 @@ mStop:		An expression which evaluates to a gradient stop.
 Description:	The color of <mStop>.
 
 Example:
+	variable tStop
+	put gradient stop at 0 with color [1,1,1] into tStop
+
 	// Get the color of a stop
+	variable tColor
 	put the color of tStop into tColor
+
 	// Set the stop color to red
 	set the color of tStop to color [1,0,0]
 
@@ -1381,10 +1672,17 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The ramp of <mGradient>. The ramp is a list of gradient stops that describes the color transitions along the length of the gradient
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Get the gradient ramp
+	variable tRamp
 	put the ramp of tGradient into tRamp
+
 	// Change the color of the first stop
 	set the color of element 1 of tRamp to color [1,0,0]
+
 	// Set the new gradient ramp
 	set the ramp of tGradient to tRamp
 
@@ -1406,8 +1704,14 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The type of <mGradient> as a string. This can be one of "linear", "radial", "conical", "diamond", "spiral", "xy", "sqrtxy".
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Store the old gradient type
+	variable tType
 	put the type of tGradient into tType
+
 	// Change the gradient type to radial
 	set the type of tGradient to "radial"
 
@@ -1429,8 +1733,14 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The repeat count of <mGradient> as a number. This determines how many times the ramp is repeated over the length of the gradient.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Store the old gradient repeat count
+	variable tRepeat
 	put the repeat of tGradient into tRepeat
+
 	// Make the gradient repeat 3 times
 	set the repeat of tGradient to 3
 
@@ -1452,7 +1762,12 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The wrap of <mGradient> as a boolean. If wrap is true then the gradient ramp will be repeated continually outside the defined extent of the gradient.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Toggle the wrapping of a gradient
+	variable tWrap
 	put the wrap of tGradient into tWrap
 	set the wrap of tGradient to not tWrap
 
@@ -1474,7 +1789,12 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The mirror of <mGradient> as a boolean. If mirror is true then the ramp will be reversed on each repeat.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Toggle the mirroring of a gradient
+	variable tMirror
 	put the mirror of tGradient into tMirror
 	set the mirror of tGradient to not tMirror
 
@@ -1496,6 +1816,13 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The from point of <mGradient> as a point. Defines the starting point from which to begin drawing the gradient.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
+	variable tRect
+	put rectangle [ 20, 10, 120, 60 ] into tRect
+
 	// Set the start point of the gradient to the center of tRect
 	set the from of tGradient to point [(the left of tRect + the right of tRect) / 2, (the top of tRect + the bottom of tRect) / 2]
 
@@ -1517,6 +1844,13 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The to point of <mGradient> as a point. Defines the end point when drawing the gradient.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
+	variable tRect
+	put rectangle [ 20, 10, 120, 60 ] into tRect
+
 	// Set the end point of the gradient to the right of tRect
 	set the from of tGradient to point [the right of tRect, (the top of tRect + the bottom of tRect) / 2]
 
@@ -1538,6 +1872,13 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The via point of <mGradient> as a point. This is used to skew and scale the gradient when drawing.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
+	variable tRect
+	put rectangle [ 20, 10, 120, 60 ] into tRect
+
 	// Set the via of the gradient to the bottom of tRect
 	set the via of tGradient to point [(the left of tRect + the right of tRect) / 2, the bottom of tRect]
 
@@ -1559,13 +1900,23 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	The transform of <mGradient> as a transform. This can be used to scale, position, and skew the gradient instead of setting the from, to, and via points.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put radial gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
+	variable tRect
+	put rectangle [ 20, 10, 120, 60 ] into tRect
+
 	// Use the transform property to make the radial gradient spread out from the center of tRect
 	variable tTransform
 	put the identity transform into tTransform
-	// Scale out to the right & bottom of tRect
-	scale tTransform by [the width of tRect / 2, the height of tRect / 2]
+
 	// Offset transform to the center of tRect
 	translate tTransform by [(the left of tRect + the right of tRect) / 2, (the top of tRect + the bottom of tRect) / 2]
+
+	// Scale out to the right & bottom of tRect
+	scale tTransform by [the width of tRect / 2, the height of tRect / 2]
+
 	// Set the gradient transform
 	set the transform of tGradient to tTransform
 
@@ -1587,10 +1938,10 @@ public foreign handler MCCanvasGradientAddStop(in pStop as GradientStop, inout x
 
 public foreign handler MCCanvasGradientTransform(inout xGradient as Gradient, in pTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientScale(inout xGradient as Gradient, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientScaleWithList(inout xGradient as Gradient, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientScaleWithList(inout xGradient as Gradient, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientRotate(inout xGradient as Gradient, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientTranslate(inout xGradient as Gradient, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientTranslateWithList(inout xGradient as Gradient, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientTranslateWithList(inout xGradient as Gradient, in pTranslation as List) as undefined binds to "<builtin>"
 
 /*
 Summary:	Add a new stop to the ramp of a gradient paint.
@@ -1601,6 +1952,10 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	Appends the stop to the ramp of <mGradient>. The offset of the new gradient should not be before the offset of the last stop.
 
 Example:
+	// Create new gradient paint with empty ramp
+	variable tGradient
+	put linear gradient with ramp [] into tGradient
+
 	// Add stops to the gradient
 	add gradient stop at 0 with color [0,0,0] to tGradient
 	add gradient stop at 1 with color [1,1,1] to tGradient
@@ -1623,6 +1978,10 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	Concatenates the transform of <mGradient> with <mTransform>.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Scale the gradient with a transform
 	transform tGradient by transform with scale [2,2]
 
@@ -1644,6 +2003,10 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	Scales the transform of <mGradient> by <mScale>.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Scale the gradient
 	scale tGradient by [2,2]
 
@@ -1665,6 +2028,10 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	Rotates the transform of <mGradient> by <mRotation> degrees.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Rotate the gradient
 	rotate tGradient by 45
 
@@ -1686,6 +2053,10 @@ mGradient:		An expression which evaluates to a gradient.
 Description:	Translates the transform of <mGradient> by <mTranslation>.
 
 Example:
+	// Create new gradient paint
+	variable tGradient
+	put linear gradient with ramp [gradient stop at 0 with color [0,0,0], gradient stop at 1 with color [1,1,1]] into tGradient
+
 	// Translate the gradient
 	translate tGradient by [50,100]
 
@@ -1704,24 +2075,23 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasImageMakeWithPath(in pPath as string, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithPixels(in pWidth as int, in pHeight as int, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as list, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPath(in pPath as String, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as String, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithData(in pData as Data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInt, in pHeight as LCInt, in pPixels as Data, out rImage as Image) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as List, in pPixels as Data, out rImage as Image) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new image.
 
 mPath:		An expression which evaluates to a string.
-mData:	An expression which evaluates to binary data
 
-Returns:	A new image decoded from the file or data provided.
+Returns:	A new image loaded from the file path provided.
 
 Example:
 	// Load image from a file path
-	put image from file tPath into tImage
-	// Load image from a block of data
-	put image from data tData into tImage
+	variable tImage
+	put image from file "images/logo.png" into tImage
 
 Tags: Canvas
 */
@@ -1731,6 +2101,45 @@ syntax ImageMakeFromFile is prefix operator with precedence 4
 begin
 	MCCanvasImageMakeWithPath(mPath, output)
 end syntax
+
+/*
+Summary:	Creates a new image.
+
+mResource:		An expression which evaluates to a string.
+
+Returns:	A new image decoded from the named module resource file.
+
+Example:
+	// Load image from a bundled resource file
+	variable tImage
+	put image from resource file "images/logo.png" into tImage
+
+Tags: Canvas
+*/
+
+syntax ImageMakeFromResourceFile is prefix operator with precedence 4
+	"image" "from" "resource" "file" <mResource: Expression>
+begin
+	MCCanvasImageMakeWithResourceFile(mResource, output)
+end syntax
+
+/*
+Summary:	Creates a new image.
+
+mData:	An expression which evaluates to binary data
+
+Returns:	A new image decoded from the data provided.
+
+Example:
+	// Load image from a block of data
+	variable tData
+	put the contents of file "images/logo.png" into tData
+
+	variable tImage
+	put image from data tData into tImage
+
+Tags: Canvas
+*/
 
 syntax ImageMakeFromData is prefix operator with precedence 4
 	"image" "from" "data" <mData: Expression>
@@ -1764,11 +2173,11 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as uint) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as uint) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as UInt32) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as UInt32) as undefined binds to "<builtin>"
 // TODO - add support for metadata
-//public foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as array) as undefined binds to "<builtin>"
-public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
+//public foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as Array) as undefined binds to "<builtin>"
+public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as Data) as undefined binds to "<builtin>"
 // TODO - add image frame index property?
 
 /*
@@ -1887,7 +2296,7 @@ public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rec
 // Constructors
 
 public foreign handler MCCanvasPathMakeEmpty(out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as string, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as String, out rPath as Path) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new empty path.
@@ -1935,13 +2344,13 @@ end syntax
 
 public foreign handler MCCanvasPathMakeWithRoundedRectangle(in pRect as Rectangle, in pRadius as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithRoundedRectangleWithRadii(in pRect as Rectangle, in pRadiusX as CanvasFloat, in pRadiusY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(in pRect as Rectangle, in pRadii as list, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(in pRect as Rectangle, in pRadii as List, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithRectangle(in pRect as Rectangle, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithEllipse(in pCenter as Point, in pRadiusX as CanvasFloat, in pRadiusY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithCircle(in pCenter as Point, in pRadius as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithEllipseWithRadiiAsList(in pCenter as Point, in pRadii as list, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithEllipseWithRadiiAsList(in pCenter as Point, in pRadii as List, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithLine(in pStart as Point, in pEnd as Point, out rPath as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathMakeWithPoints(in pClose as bool, in pPoints as list, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithPoints(in pClose as CBool, in pPoints as List, out rPath as Path) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new path.
@@ -2081,10 +2490,10 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasPathGetSubpaths(in pStart as int, in pEnd as int, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathGetSubpath(in pIndex as int, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathGetSubpaths(in pStart as LCInt, in pEnd as LCInt, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathGetSubpath(in pIndex as LCInt, in pPath as Path, out rSubpaths as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathGetBoundingBox(in pPath as Path, out rRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as String) as undefined binds to "<builtin>"
 
 /*
 Summary:	The subpaths of a path.
@@ -2157,10 +2566,10 @@ end syntax
 
 public foreign handler MCCanvasPathTransform(inout xPath as Path, in pTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathScale(inout xPath as Path, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathScaleWithList(inout xPath as Path, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathScaleWithList(inout xPath as Path, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathRotate(inout xPath as Path, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathTranslate(inout xPath as Path, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasPathTranslateWithList(inout xPath as Path, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathTranslateWithList(inout xPath as Path, in pTranslation as List) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasPathAddPath(in pSource as Path, inout xDest as Path) as undefined binds to "<builtin>"
 
@@ -2376,7 +2785,7 @@ end syntax
 
 // Graphic Effect
 
-public foreign handler MCCanvasEffectEvaluateType(in pType as int, out rType as int) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectEvaluateType(in pType as LCInt, out rType as LCInt) as undefined binds to "<builtin>"
 
 syntax EffectType is phrase
 	( "color" "overlay" <mType=0> | "inner" "shadow" <mType=1> | "outer" "shadow" <mType=2> | "inner" "glow" <mType=3> | "outer" "glow" <mType=4> )
@@ -2386,7 +2795,7 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as int, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as LCInt, in pProperties as Array, out rEffect as Effect) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new effect.
@@ -2421,16 +2830,16 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasEffectGetTypeAsString(in pEffect as Effect, out rType as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetTypeAsString(in pEffect as Effect, out rType as String) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectGetColor(in pEffect as Effect, out rColor as Color) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectSetColor(in pColor as Color, inout xEffect as Effect) as undefined binds to "<builtin>"
-public foreign handler MCCanvasEffectGetBlendModeAsString(in pEffect as Effect, out rBlendMode as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasEffectSetBlendModeAsString(in pBlendMode as string, inout xEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetBlendModeAsString(in pEffect as Effect, out rBlendMode as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetBlendModeAsString(in pBlendMode as String, inout xEffect as Effect) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectGetOpacity(in pEffect as Effect, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectSetOpacity(in pOpacity as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
 
-//MCCanvasEffectGetFilterAsString(in pEffect as Effect, out rFilter as string) as undefined binds to "<builtin>"
-//MCCanvasEffectSetFilterAsString(in pFilter as string, inout xEffect as Effect) as undefined binds to "<builtin>"
+//MCCanvasEffectGetFilterAsString(in pEffect as Effect, out rFilter as String) as undefined binds to "<builtin>"
+//MCCanvasEffectSetFilterAsString(in pFilter as String, inout xEffect as Effect) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectGetSize(in pEffect as Effect, out rSize as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectSetSize(in pSize as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEffectGetSpread(in pEffect as Effect, out rSpread as CanvasFloat) as undefined binds to "<builtin>"
@@ -2614,9 +3023,9 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasFontMake(in pName as string, out rFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontMakeWithStyle(in pName as string, in pBold as bool, in pItalic as bool, out rFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontMakeWithSize(in pName as string, in pBold as bool, in pItalic as bool, in pSize as int, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMake(in pName as String, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMakeWithStyle(in pName as String, in pBold as CBool, in pItalic as CBool, out rFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMakeWithSize(in pName as String, in pBold as CBool, in pItalic as CBool, in pSize as LCInt, out rFont as Font) as undefined binds to "<builtin>"
 
 /*
 Summary:	Creates a new instance of the named font.
@@ -2705,14 +3114,14 @@ end syntax
 
 // Properties
 
-public foreign handler MCCanvasFontGetName(in pFont as Font, out rName as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontSetName(in pName as string, inout xFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontGetBold(in pFont as Font, out rBold as bool) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontSetBold(in pBold as bool, inout xFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontGetItalic(in pFont as Font, out rItalic as bool) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontSetItalic(in pItalic as bool, inout xFont as Font) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontGetSize(in pFont as Font, out rSize as int) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFontSetSize(in pSize as int, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetName(in pFont as Font, out rName as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetName(in pName as String, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetBold(in pFont as Font, out rBold as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetBold(in pBold as CBool, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetItalic(in pFont as Font, out rItalic as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetItalic(in pItalic as CBool, inout xFont as Font) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontGetSize(in pFont as Font, out rSize as LCUInt) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontSetSize(in pSize as LCUInt, inout xFont as Font) as undefined binds to "<builtin>"
 
 /*
 Summary:	The name of a font.
@@ -2802,7 +3211,7 @@ end syntax
 
 // Operations
 
-public foreign handler MCCanvasFontMeasureText(in pText as string, in pFont as Font, out pRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureText(in pText as String, in pFont as Font, out pRect as Rectangle) as undefined binds to "<builtin>"
 
 /*
 Summary:	Measure text when drawn with a font.
@@ -2831,7 +3240,7 @@ end syntax
 
 // Canvas
 
-public foreign handler MCCanvasAlignmentEvaluate(in pHAlign as int, pVAlign as int, out rAlign as int) as undefined binds to "<builtin>"
+public foreign handler MCCanvasAlignmentEvaluate(in pHAlign as LCInt, pVAlign as LCInt, out rAlign as LCInt) as undefined binds to "<builtin>"
 
 syntax CanvasTextAlignment is phrase
 	( "top left" <mHAlign=-1> <mVAlign=-1> | "top" <mHAlign=0> <mVAlign=-1> | "top right" <mHAlign=1> <mVAlign=-1> | "left" <mHAlign=-1> <mVAlign=0> | "center" <mHAlign=0> <mVAlign=0> | "right" <mHAlign=1> <mVAlign=0> | "bottom left" <mHAlign=-1> <mVAlign=1> | "bottom" <mHAlign=0> <mVAlign=1> | "bottom right" <mHAlign=1> <mVAlign=1> )
@@ -2843,30 +3252,30 @@ end syntax
 
 public foreign handler MCCanvasGetPaint(in pCanvas as Canvas, out rPaint as Paint) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetPaint(in pPaint as Paint, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetFillRuleAsString(in pCanvas as Canvas, out rFillRule as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetFillRuleAsString(in pFillRule as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetAntialias(in pCanvas as Canvas, out rAntialias as bool) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetAntialias(in pAntialias as bool, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetFillRuleAsString(in pCanvas as Canvas, out rFillRule as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetFillRuleAsString(in pFillRule as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetAntialias(in pCanvas as Canvas, out rAntialias as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetAntialias(in pAntialias as CBool, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetOpacity(in pCanvas as Canvas, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetOpacity(in pOpacity as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetBlendModeAsString(in pCanvas as Canvas, out rBlendMode as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetBlendModeAsString(in pBlendMode as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetStippled(in pCanvas as Canvas, out rStippled as bool) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetStippled(in pStippled as bool, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetImageResizeQualityAsString(in pCanvas as Canvas, out rQuality as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetImageResizeQualityAsString(in pQuality as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetBlendModeAsString(in pCanvas as Canvas, out rBlendMode as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetBlendModeAsString(in pBlendMode as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetStippled(in pCanvas as Canvas, out rStippled as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetStippled(in pStippled as CBool, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetImageResizeQualityAsString(in pCanvas as Canvas, out rQuality as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetImageResizeQualityAsString(in pQuality as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetStrokeWidth(in pCanvas as Canvas, out rStrokeWidth as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetStrokeWidth(in pStrokeWidth as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetFont(in pCanvas as Canvas, out rFont as Font) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetFont(in pFont as Font, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetJoinStyleAsString(in pCanvas as Canvas, out rJoinStyle as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetJoinStyleAsString(in pJoinStyle as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetCapStyleAsString(in pCanvas as Canvas, out rCapStyle as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetCapStyleAsString(in pCapStyle as string, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetJoinStyleAsString(in pCanvas as Canvas, out rJoinStyle as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetJoinStyleAsString(in pJoinStyle as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetCapStyleAsString(in pCanvas as Canvas, out rCapStyle as String) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetCapStyleAsString(in pCapStyle as String, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetMiterLimit(in pCanvas as Canvas, out rLimit as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetMiterLimit(in pLimit as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetDashes(in pCanvas as Canvas, out rDashes as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasSetDashes(in pDashes as list, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetDashes(in pCanvas as Canvas, out rDashes as List) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSetDashes(in pDashes as List, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGetDashPhase(in pCanvas as Canvas, out rPhase as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasSetDashPhase(in pPhase as CanvasFloat, in pCanvas as Canvas) as undefined binds to "<builtin>"
 
@@ -3177,10 +3586,10 @@ end syntax
 
 public foreign handler MCCanvasTransform(in pCanvas as Canvas, in pTransform as Transform) as undefined binds to "<builtin>"
 public foreign handler MCCanvasScale(in pCanvas as Canvas, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasScaleWithList(in pCanvas as Canvas, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasScaleWithList(in pCanvas as Canvas, in pScale as List) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRotate(in pCanvas as Canvas, in pRotation as CanvasFloat) as undefined binds to "<builtin>"
 public foreign handler MCCanvasTranslate(in pCanvas as Canvas, in pX as CanvasFloat,in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasTranslateWithList(in pCanvas as Canvas, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTranslateWithList(in pCanvas as Canvas, in pTranslation as List) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasSaveState(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRestoreState(in pCanvas as Canvas) as undefined binds to "<builtin>"
@@ -3201,9 +3610,9 @@ public foreign handler MCCanvasLineTo(in pPoint as Point, in pCanvas as Canvas) 
 public foreign handler MCCanvasCurveThroughPoint(in pThrough as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasClosePath(in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFillText(in pText as string, in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasFillTextAligned(in pText as string, in pAlignment as int, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasMeasureText(in pText as string, in pCanvas as Canvas) as Rectangle binds to "<builtin>"
+public foreign handler MCCanvasFillText(in pText as String, in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFillTextAligned(in pText as String, in pAlignment as LCInt, in pRect as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasMeasureText(in pText as String, in pCanvas as Canvas) as Rectangle binds to "<builtin>"
 
 /*
 Summary:	Apply a transform to a canvas.
@@ -3677,10 +4086,10 @@ end syntax
 
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasNewCanvasWithSize(in pSize as list, out rCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as data) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as uint) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out rWidth as uint) as undefined binds to "<builtin>"
+public foreign handler MCCanvasNewCanvasWithSize(in pSize as List, out rCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as Data) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as LCUInt) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out rWidth as LCUInt) as undefined binds to "<builtin>"
 
 /*
 Summary:	The canvas used when drawing a widget.

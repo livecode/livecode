@@ -376,7 +376,11 @@ IO_stat MCDispatch::startup(void)
 
 		send_relaunch();
         MCNewAutoNameRef t_name;
-        ctxt . ConvertToName(t_valueref, &t_name);
+        if(!ctxt . ConvertToName(t_valueref, &t_name))
+        {
+            ctxt . Throw();
+            return IO_ERROR;
+        }
 
 		sptr = findstackname(*t_name);
         if (t_valueref != nil)
@@ -2186,6 +2190,8 @@ void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStrin
 #ifdef FEATURE_PROPERTY_LISTENER
     // MM-2012-09-05: [[ Property Listener ]]
     MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
+    // AL-2015-03-04: [[ Bug 14737 ]] Don't reset the count of listeners to zero.
+    return;
 #endif			
     r_count = 0;
 }
@@ -2193,6 +2199,8 @@ void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r
 {
 #ifdef FEATURE_PROPERTY_LISTENER
     r_time = MCpropertylistenerthrottletime;
+    // AL-2015-03-04: [[ Bug 14737 ]] Don't reset the returned throttle time to 0.
+    return;
 #endif			
     r_time = 0;
 }

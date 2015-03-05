@@ -25,6 +25,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	include <windows.h>
 #endif
 
+extern bool MCModulesInitialize(void);
+extern void MCModulesFinalize(void);
+
 /* Possible exit statuses used by lc-run */
 enum {
 	kMCRunExitStatusSuccess = 0,
@@ -37,11 +40,12 @@ struct MCRunConfiguration
 {
 	MCStringRef m_filename;
 	MCNameRef m_handler;
+	MCProperListRef m_load_filenames;
 	bool m_list_handlers;
 };
 
 static void MCRunUsage (int p_exit_status) ATTRIBUTE_NORETURN;
-static void MCRunStartupError (void) ATTRIBUTE_NORETURN;
+static void MCRunStartupError (MCStringRef p_stage) ATTRIBUTE_NORETURN;
 static void MCRunHandlerError (void) ATTRIBUTE_NORETURN;
 static void MCRunBadOptionError (MCStringRef p_arg) ATTRIBUTE_NORETURN;
 static void MCRunBadOptionArgError (MCStringRef p_option, MCStringRef p_optarg) ATTRIBUTE_NORETURN;
@@ -59,11 +63,12 @@ MCRunUsage (int p_exit_status)
 	fprintf (stderr,
 "Usage: lc-run [OPTIONS] [--] LCMFILE [ARGS ...]\n"
 "\n"
-"Run a compiled Modular Livecode bytecode file.\n"
+"Run a compiled Livecode Builder bytecode file.\n"
 "\n"
 "Options:\n"
+"  -l, --load LCMLIB    Load an additional bytecode file.\n"
 "  -H, --handler NAME   Specify name of handler to run.\n"
-"  --list-handlers      List possible entry points in LCMFILE and exit.\n"
+"      --list-handlers  List possible entry points in LCMFILE and exit.\n"
 "  -h, --help           Print this message.\n"
 "  --                   Treat next argument as bytecode filename.\n"
 "\n"
@@ -77,7 +82,7 @@ MCRunUsage (int p_exit_status)
 /* Print an error message if an error occurs while starting the
  * LiveCode runtime */
 static void
-MCRunStartupError (void)
+MCRunStartupError (MCStringRef p_stage)
 {
 	MCAutoStringRef t_message, t_reason;
 	MCErrorRef t_error;
@@ -87,7 +92,8 @@ MCRunStartupError (void)
 	else
 		/* UNCHECKED */ MCStringCopy (MCSTR("Unknown error"), &t_reason);
 
-	/* UNCHECKED */ MCStringFormat (&t_message, "ERROR: %@\n", *t_reason);
+	/* UNCHECKED */ MCStringFormat (&t_message, "ERROR[%@]: %@\n",
+	                                p_stage, *t_reason);
 
 	MCRunPrintMessage (stderr, *t_message);
 	exit (kMCRunExitStatusStartup);
@@ -244,6 +250,21 @@ MCRunParseCommandLine (int argc,
 				continue;
 			}
 
+			if (MC_RUN_STRING_EQUAL (t_arg, "--load") ||
+			    MC_RUN_STRING_EQUAL (t_arg, "-l"))
+			{
+				if (NULL == t_argopt)
+					MCRunBadOptionArgError (t_arg, t_argopt);
+
+				++t_arg_idx; /* Consume option argument */
+
+				/* Add to load list */
+				if (!MCProperListPushElementOntoFront (x_config.m_load_filenames,
+				                                       t_argopt))
+					return false;
+				continue;
+			}
+
 			if (MC_RUN_STRING_EQUAL (t_arg, "--list-handlers"))
 			{
 				x_config.m_list_handlers = true;
@@ -323,6 +344,36 @@ MCRunLoadModule (MCStringRef p_filename,
 	if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
 		return false;
 
+	r_module = MCScriptRetainModule (*t_module);
+	return true;
+}
+
+static bool
+MCRunLoadModules (MCStringRef p_filename,
+                  MCProperListRef p_load_filenames,
+                  MCScriptModuleRef & r_module)
+{
+	/* Load main module */
+	MCAutoScriptModuleRef t_module;
+	if (!MCRunLoadModule (p_filename, &t_module))
+		return false;
+
+	/* Load other modules */
+	MCAutoScriptModuleRefArray t_load_modules;
+	uindex_t t_num_load = MCProperListGetLength (p_load_filenames);
+
+	if (!t_load_modules.New(t_num_load))
+		return false;
+
+	for (uindex_t i = 0; i < t_num_load; ++i)
+	{
+		MCValueRef t_element;
+		t_element = MCProperListFetchElementAtIndex (p_load_filenames, i);
+		if (!MCRunLoadModule ((MCStringRef) t_element, t_load_modules[i]))
+			return false;
+	}
+
+	/* Check main module is usable */
 	if (!MCScriptEnsureModuleIsUsable (*t_module))
 		return false;
 
@@ -383,24 +434,29 @@ main (int argc,
 	MCInitialize();
 	MCSInitialize();
 	MCScriptInitialize();
+	MCModulesInitialize();
 
 	/* Defaults */
 	MCRunConfiguration t_config;
 	t_config.m_filename = MCValueRetain (kMCEmptyString);
 	t_config.m_handler = MCValueRetain (MCNAME("main"));
 	t_config.m_list_handlers = false;
+	if (!MCProperListCreateMutable (t_config.m_load_filenames))
+		MCRunStartupError(MCSTR("Initialization"));
 
 	/* ---------- Process command-line arguments */
 	if (!MCRunParseCommandLine (argc, argv, t_config))
-		MCRunStartupError();
+		MCRunStartupError(MCSTR("Command Line"));
 
 	/* ---------- Start VM */
 	MCAutoScriptModuleRef t_module;
 	MCAutoScriptInstanceRef t_instance;
 	MCAutoValueRef t_ignored_retval;
 
-	if (!MCRunLoadModule (t_config.m_filename, &t_module))
-		MCRunStartupError();
+	if (!MCRunLoadModules (t_config.m_filename,
+	                       t_config.m_load_filenames,
+	                       &t_module))
+		MCRunStartupError (MCSTR("Load Modules"));
 
 	if (t_config.m_list_handlers)
 	{
@@ -410,7 +466,7 @@ main (int argc,
 	else
 	{
 		if (!MCScriptCreateInstanceOfModule (*t_module, &t_instance))
-			MCRunStartupError();
+			MCRunStartupError(MCSTR("Create Instance"));
 
 		if (!MCScriptCallHandlerOfInstance(*t_instance,
 		                                   t_config.m_handler,
@@ -419,6 +475,7 @@ main (int argc,
 			MCRunHandlerError();
 	}
 
+	MCModulesFinalize();
 	MCScriptFinalize();
 	MCSFinalize();
 	MCFinalize();

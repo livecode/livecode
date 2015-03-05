@@ -80,7 +80,7 @@ public:
 	MCBlock(const MCBlock &bref);
 	~MCBlock();
 
-	bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
+	bool visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor);
 
 	// MCBlock functions
 	void copy(MCBlock *bptr);

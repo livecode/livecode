@@ -393,8 +393,11 @@ void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
             return;
         }
     }
-    
-    MCStringCopy(*t_string, r_string);
+
+    if (*t_string == nil)
+        r_string = MCValueRetain(kMCEmptyString);
+    else
+        MCStringCopy(*t_string, r_string);
 }
 
 //////////
@@ -573,7 +576,17 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_s
         {
             if (p_recursive && MCValueIsArray(t_dst_value) && MCValueIsArray(t_src_value))
             {
-                MCArraysExecUnionRecursive(ctxt, (MCArrayRef)t_dst_value, (MCArrayRef)t_src_value);
+                // AL-2015-02-23: [[ Bug 14658 ]] Ensure recursive set operations are
+                //  performed on mutable copies of sub-arrays.
+                MCAutoArrayRef t_dst_subarray;
+                if (!MCArrayMutableCopy((MCArrayRef)t_dst_value, &t_dst_subarray))
+                    return;
+                
+                MCArraysExecUnionRecursive(ctxt, *t_dst_subarray, (MCArrayRef)t_src_value);
+                
+                if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, *t_dst_subarray))
+                    return;
+                
                 if (ctxt . HasError())
                     return;
             }
@@ -604,7 +617,17 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef
         {
             if (p_recursive && MCValueIsArray(t_dst_value) && MCValueIsArray(t_src_value))
             {
-                MCArraysExecIntersectRecursive(ctxt, (MCArrayRef)t_dst_value, (MCArrayRef)t_src_value);
+                // AL-2015-02-23: [[ Bug 14658 ]] Ensure recursive set operations are
+                //  performed on mutable copies of sub-arrays.
+                MCAutoArrayRef t_dst_subarray;
+                if (!MCArrayMutableCopy((MCArrayRef)t_dst_value, &t_dst_subarray))
+                    return;
+                
+                MCArraysExecIntersectRecursive(ctxt, *t_dst_subarray, (MCArrayRef)t_src_value);
+                
+                if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, *t_dst_subarray))
+                    return;
+                
                 if (ctxt . HasError())
                     return;
             }

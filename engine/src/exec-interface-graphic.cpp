@@ -898,7 +898,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
             get_points_for_roundrect(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
             
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         case F_G_RECTANGLE:
@@ -907,7 +907,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
             fakepoints = new MCPoint[nfakepoints];
             get_points_for_rect(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         case F_REGULAR:
@@ -916,7 +916,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
             fakepoints = new MCPoint[nsides];
             get_points_for_regular_polygon(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         // MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
@@ -926,7 +926,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
             nfakepoints = 0;
             get_points_for_oval(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         default:
@@ -954,7 +954,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
             get_points_for_roundrect(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         case F_G_RECTANGLE:
@@ -964,7 +964,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
             get_points_for_rect(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         case F_REGULAR:
@@ -974,7 +974,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
             get_points_for_regular_polygon(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         // MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
@@ -985,7 +985,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
             get_points_for_oval(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         default:
@@ -1043,7 +1043,10 @@ MCExecEnumTypeInfo *kMCInterfaceGradientFillQualityTypeInfo = &_kMCInterfaceGrad
 
 void MCGraphic::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color)
 {
-    if (color . name != nil && (!MCStringIsEmpty(color . name)) && m_stroke_gradient != nil)
+    // PM-2015-21-01: When the graphic has a strokegradient, make sure we can set a fore color of the form "rrr,ggg,bbb" (where color.name == nil)
+    bool t_has_color;
+    t_has_color = &color . color != NULL;
+    if (t_has_color && m_stroke_gradient != nil)
     {
         MCGradientFillFree(m_stroke_gradient);
         m_stroke_gradient = nil;
@@ -1053,10 +1056,14 @@ void MCGraphic::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& c
 
 void MCGraphic::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color)
 {
-    if (color . name != nil && (!MCStringIsEmpty(color . name)) && m_stroke_gradient != nil)
+    // PM-2015-21-01: [[ Bug 14399 ]] Remove fillgradient when setting the bg color of a graphic
+    // Also make sure we can set a bg color of the form "rrr,ggg,bbb" (where color.name == nil)
+    bool t_has_color;
+    t_has_color = &color . color != NULL;
+    if (t_has_color && m_fill_gradient != nil)
     {
-        MCGradientFillFree(m_stroke_gradient);
-        m_stroke_gradient = nil;
+        MCGradientFillFree(m_fill_gradient);
+        m_fill_gradient = nil;
     }
     MCObject::SetBackColor(ctxt, color);
 }
@@ -1073,10 +1080,11 @@ void MCGraphic::SetForePattern(MCExecContext& ctxt, uinteger_t* pattern)
 
 void MCGraphic::SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern)
 {
-    if (m_stroke_gradient != nil)
+    // PM-2015-21-01: [[ Bug 14399 ]] Remove fillgradient when setting the bg pattern of a graphic
+    if (m_fill_gradient != nil)
     {
-        MCGradientFillFree(m_stroke_gradient);
-        m_stroke_gradient = nil;
+        MCGradientFillFree(m_fill_gradient);
+        m_fill_gradient = nil;
     }
     MCObject::SetBackPattern(ctxt, pattern);
 }

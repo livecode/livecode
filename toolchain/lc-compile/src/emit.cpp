@@ -40,8 +40,11 @@ extern "C" void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_t
 extern "C" void EmitExportedDefinition(long index);
 extern "C" void EmitDefinitionIndex(long& r_index);
 extern "C" void EmitTypeDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitConstantDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_const_index);
 extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitContextVariableDefinition(long index, PositionRef position, NameRef name, long type_index, long default_index);
 extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitBeginContextHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitEndHandlerDefinition(void);
 extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
 extern "C" void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index);
@@ -119,12 +122,16 @@ extern "C" void EmitBeginIndirectInvoke(long handlerreg, long contextreg, long r
 extern "C" void EmitContinueInvoke(long reg);
 extern "C" void EmitEndInvoke(void);
 extern "C" void EmitAssign(long dst, long src);
-extern "C" void EmitAssignUndefined(long reg);
-extern "C" void EmitAssignTrue(long reg);
-extern "C" void EmitAssignFalse(long reg);
-extern "C" void EmitAssignInteger(long reg, long value);
-extern "C" void EmitAssignReal(long reg, long value);
-extern "C" void EmitAssignString(long reg, long value);
+extern "C" void EmitAssignConstant(long dst, long constidx);
+extern "C" void EmitUndefinedConstant(long *idx);
+extern "C" void EmitTrueConstant(long *idx);
+extern "C" void EmitFalseConstant(long *idx);
+extern "C" void EmitIntegerConstant(long value, long *idx);
+extern "C" void EmitRealConstant(long value, long *idx);
+extern "C" void EmitStringConstant(long value, long *idx);
+extern "C" void EmitBeginListConstant(void);
+extern "C" void EmitContinueListConstant(long idx);
+extern "C" void EmitEndListConstant(long *idx);
 extern "C" void EmitBeginAssignList(long reg);
 extern "C" void EmitContinueAssignList(long reg);
 extern "C" void EmitEndAssignList(void);
@@ -421,11 +428,25 @@ void EmitTypeDefinition(long p_index, PositionRef p_position, NameRef p_name, lo
     MCLog("[Emit] TypeDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
 
+void EmitConstantDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_const_index)
+{
+    MCScriptAddConstantToModule(s_builder, to_mcnameref(p_name), p_const_index, p_index);
+    
+    MCLog("[Emit] ConstantDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_const_index);
+}
+
 void EmitVariableDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
     MCScriptAddVariableToModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
     
     MCLog("[Emit] VariableDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
+}
+
+void EmitContextVariableDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_default_index)
+{
+    MCScriptAddContextVariableToModule(s_builder, to_mcnameref(p_name), p_type_index, p_default_index, p_index);
+    
+    MCLog("[Emit] ContextVariableDefinition(%ld, %@, %ld, %ld)", p_index, to_mcnameref(p_name), p_type_index, p_default_index);
 }
 
 void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_binding)
@@ -484,9 +505,16 @@ void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, l
 
 void EmitBeginHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
-    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
+    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeNormal, to_mcnameref(p_name), p_type_index, p_index);
     
     MCLog("[Emit] BeginHandlerDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
+}
+
+void EmitBeginContextHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+{
+    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeContext, to_mcnameref(p_name), p_type_index, p_index);
+    
+    MCLog("[Emit] BeginContextHandlerDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
 
 void EmitEndHandlerDefinition(void)
@@ -719,7 +747,7 @@ void EmitOptionalType(long base_index, long& r_new_index)
 
 void EmitPointerType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("pointer", r_new_index))
+    if (!define_builtin_typeinfo("Pointer", r_new_index))
         return;
     
     MCLog("[Emit] PointerType(-> %ld)", r_new_index);
@@ -727,7 +755,7 @@ void EmitPointerType(long& r_new_index)
 
 void EmitBoolType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("bool", r_new_index))
+    if (!define_builtin_typeinfo("CBool", r_new_index))
         return;
     
     MCLog("[Emit] BoolType(-> %ld)", r_new_index);
@@ -735,7 +763,7 @@ void EmitBoolType(long& r_new_index)
 
 void EmitIntType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("int", r_new_index))
+    if (!define_builtin_typeinfo("CInt", r_new_index))
         return;
     
     MCLog("[Emit] IntType(-> %ld)", r_new_index);
@@ -743,7 +771,7 @@ void EmitIntType(long& r_new_index)
 
 void EmitUIntType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("uint", r_new_index))
+    if (!define_builtin_typeinfo("CUint", r_new_index))
         return;
     
     MCLog("[Emit] UIntType(-> %ld)", r_new_index);
@@ -751,7 +779,7 @@ void EmitUIntType(long& r_new_index)
 
 void EmitFloatType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("float", r_new_index))
+    if (!define_builtin_typeinfo("CFloat", r_new_index))
         return;
     
     MCLog("[Emit] FloatType(-> %ld)", r_new_index);
@@ -759,7 +787,7 @@ void EmitFloatType(long& r_new_index)
 
 void EmitDoubleType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("double", r_new_index))
+    if (!define_builtin_typeinfo("CDouble", r_new_index))
         return;
     
     MCLog("[Emit] DoubleType(-> %ld)", r_new_index);
@@ -775,7 +803,7 @@ void EmitAnyType(long& r_new_index)
 
 void EmitBooleanType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("boolean", r_new_index))
+    if (!define_builtin_typeinfo("Boolean", r_new_index))
         return;
     
     MCLog("[Emit] BooleanType(-> %ld)", r_new_index);
@@ -783,7 +811,7 @@ void EmitBooleanType(long& r_new_index)
 
 void EmitIntegerType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("number", r_new_index))
+    if (!define_builtin_typeinfo("Number", r_new_index))
         return;
     
     MCLog("[Emit] IntegerType(-> %ld)", r_new_index);
@@ -792,7 +820,7 @@ void EmitIntegerType(long& r_new_index)
 void EmitRealType(long& r_new_index)
 {
     // TODO: Real / Integer types.
-    if (!define_builtin_typeinfo("number", r_new_index))
+    if (!define_builtin_typeinfo("Number", r_new_index))
         return;
     
     MCLog("[Emit] RealType(-> %ld)", r_new_index);
@@ -800,7 +828,7 @@ void EmitRealType(long& r_new_index)
 
 void EmitNumberType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("number", r_new_index))
+    if (!define_builtin_typeinfo("Number", r_new_index))
         return;
     
     MCLog("[Emit] NumberType(-> %ld)", r_new_index);
@@ -808,7 +836,7 @@ void EmitNumberType(long& r_new_index)
 
 void EmitStringType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("string", r_new_index))
+    if (!define_builtin_typeinfo("String", r_new_index))
         return;
     
     MCLog("[Emit] StringType(-> %ld)", r_new_index);
@@ -816,7 +844,7 @@ void EmitStringType(long& r_new_index)
 
 void EmitDataType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("data", r_new_index))
+    if (!define_builtin_typeinfo("Data", r_new_index))
         return;
     
     MCLog("[Emit] DataType(-> %ld)", r_new_index);
@@ -824,7 +852,7 @@ void EmitDataType(long& r_new_index)
 
 void EmitArrayType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("array", r_new_index))
+    if (!define_builtin_typeinfo("Array", r_new_index))
         return;
     
     MCLog("[Emit] ArrayType(-> %ld)", r_new_index);
@@ -832,7 +860,7 @@ void EmitArrayType(long& r_new_index)
 
 void EmitListType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("list", r_new_index))
+    if (!define_builtin_typeinfo("List", r_new_index))
         return;
     
     MCLog("[Emit] ListType(-> %ld)", r_new_index);
@@ -1068,46 +1096,64 @@ void EmitEndInvoke(void)
 
 //////////
 
-void EmitAssignUndefined(long reg)
+void EmitUndefinedConstant(long *idx)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCNull);
-    MCLog("[Emit] AssignUndefined(%ld)", reg);
+    MCScriptAddValueToModule(s_builder, kMCNull, (uindex_t&)*idx);
+    MCLog("[Emit] UndefinedConstant(-> %ld)", *idx);
 }
 
-void EmitAssignTrue(long reg)
+void EmitTrueConstant(long *idx)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCTrue);
-    MCLog("[Emit] AssignUndefined(%ld)", reg);
+    MCScriptAddValueToModule(s_builder, kMCTrue, (uindex_t&)*idx);
+    MCLog("[Emit] TrueConstant(-> %ld)", *idx);
 }
 
-void EmitAssignFalse(long reg)
+void EmitFalseConstant(long *idx)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCFalse);
-    MCLog("[Emit] AssignUndefined(%ld)", reg);
+    MCScriptAddValueToModule(s_builder, kMCFalse, (uindex_t&)*idx);
+    MCLog("[Emit] FalseConstant(%ld)", *idx);
 }
 
-void EmitAssignInteger(long reg, long value)
+void EmitIntegerConstant(long value, long *idx)
 {
     MCAutoNumberRef t_number;
     MCNumberCreateWithInteger(value, &t_number);
-    MCScriptEmitAssignConstantInModule(s_builder, reg, *t_number);
-    MCLog("[Emit] AssignInteger(%ld, %ld)", reg, value);
+    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
+    MCLog("[Emit] IntegerConstant(%ld -> %ld)", value, *idx);
 }
 
-void EmitAssignReal(long reg, long value)
+void EmitRealConstant(long value, long *idx)
 {
     MCAutoNumberRef t_number;
     MCNumberCreateWithReal(*(double *)value, &t_number);
-    MCScriptEmitAssignConstantInModule(s_builder, reg, *t_number);
-    MCLog("[Emit] AssignReal(%ld, %lf)", reg, *(double *)value);
+    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
+    MCLog("[Emit] RealConstant(%lf -> %ld)", *(double *)value, *idx);
 }
 
-void EmitAssignString(long reg, long value)
+void EmitStringConstant(long value, long *idx)
 {
     MCAutoStringRef t_string;
     MCStringCreateWithBytes((const byte_t *)value, strlen((const char *)value), kMCStringEncodingUTF8, false, &t_string);
-    MCScriptEmitAssignConstantInModule(s_builder, reg, *t_string);
-    MCLog("[Emit] AssignString(%ld, \"%s\")", reg, (const char *)value);
+    MCScriptAddValueToModule(s_builder, *t_string, (uindex_t&)*idx);
+    MCLog("[Emit] StringConstant(\"%s\" -> %ld)", (const char *)value, *idx);
+}
+
+void EmitBeginListConstant(void)
+{
+    MCScriptBeginListValueInModule(s_builder);
+    MCLog("[Emit] BeginListConstant()", 0);
+}
+
+void EmitContinueListConstant(long idx)
+{
+    MCScriptContinueListValueInModule(s_builder, idx);
+    MCLog("[Emit] ContinueListConstant(%ld)", idx);
+}
+
+void EmitEndListConstant(long *idx)
+{
+    MCScriptEndListValueInModule(s_builder, (uindex_t&)*idx);
+    MCLog("[Emit] EndListConstant(-> %ld)", *idx);
 }
 
 void EmitBeginAssignList(long reg)
@@ -1134,12 +1180,18 @@ void EmitAssign(long dst, long src)
     MCLog("[Emit] Assign(%ld, %ld)", dst, src);
 }
 
+void EmitAssignConstant(long dst, long idx)
+{
+    MCScriptEmitAssignConstantInModule(s_builder, dst, idx);
+    MCLog("[Emit] AssignConstant(%ld, %ld)", dst, idx);
+}
+
 /////////
 
 void EmitFetch(long reg, long var, long level)
 {
     MCScriptEmitFetchInModule(s_builder, reg, var, level);
-    MCLog("[Emit] Fetch(%ld, %ld, $ld)", reg, var, level);
+    MCLog("[Emit] Fetch(%ld, %ld, %ld)", reg, var, level);
 }
 
 void EmitStore(long reg, long var, long level)

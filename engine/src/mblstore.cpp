@@ -74,10 +74,23 @@ static struct {const char *name; MCPurchaseState state;} s_purchase_states[] =
     {"unverified", kMCPurchaseStateUnverified},
 };
 
-// we maintain here a list of known pending purchases
+// we maintain here a list of known pending purchases, and a list of completed purchases
 static MCPurchase *s_purchases = nil;
+static MCListRef s_completed_purchases = nil;
 static uint32_t s_last_purchase_id = 1;
 static uint32_t s_id = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+// SN-2015-02-24: [[ Merg 6.7.4-rc-1 ]] Add a function to clean the completed
+//  purchase list
+void MCPurchaseClearPurchaseList()
+{
+    MCValueRelease(s_completed_purchases);
+    s_completed_purchases = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
 {
@@ -141,14 +154,14 @@ bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string)
 }
 
 bool MCPurchaseList(MCStringRef& r_string)
-{   
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-        MCListAppendFormat(*t_list,"%@", t_purchase -> prod_id); // we want a list of product IDs
-	
-	return MCListCopyAsString(*t_list, r_string);
+{
+    if (s_completed_purchases != NULL)
+        return MCListCopyAsString(s_completed_purchases, r_string);
+    else
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
 }
 
 bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);
@@ -347,6 +360,13 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 	MCEventQueuePostCustom(t_event);
 }
 
+void MCPurchaseCompleteListUpdate(MCPurchase *p_purchase)
+{
+    if (s_completed_purchases == NULL)
+        /* UNCHECKED */ MCListCreateMutable('\n', s_completed_purchases);
+
+    MCListAppend(s_completed_purchases, p_purchase -> prod_id);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

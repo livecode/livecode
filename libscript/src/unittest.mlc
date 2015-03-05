@@ -53,10 +53,9 @@ Protocol) format.
 
 module com.livecode.unittest
 
-public foreign handler MCUnitPlan(in Count as number) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitPlan"
-public foreign handler MCUnitDiagnostic(in Message as string) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitDiagnostic"
-
-foreign handler MCUnitOutputTest(in Condition as boolean, in Description as string, in Directive as string, in Reason as string) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitOutputTest"
+public foreign handler MCUnitPlan(in pCount as Number) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitPlan"
+public foreign handler MCUnitDiagnostic(in pMessage as String) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitDiagnostic"
+foreign handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as String, in pDirective as String, in pReason as String) as undefined binds to "lcb:com.livecode.unittest.__IMPL.MCUnitOutputTest"
 
 ----------------------------------------------------------------
 -- Test syntax
@@ -82,7 +81,7 @@ begin
 	MCUnitTest(Condition)
 end syntax
 
-public handler MCUnitTest(in pCondition as boolean)
+public handler MCUnitTest(in pCondition as Boolean)
 	MCUnitOutputTest(pCondition, "", "", "")
 end handler
 
@@ -92,7 +91,7 @@ begin
 	MCUnitTestDescription(Description, Condition)
 end syntax
 
-public handler MCUnitTestDescription(in pDescription as string, in pCondition as boolean)
+public handler MCUnitTestDescription(in pDescription as String, in pCondition as Boolean)
 	MCUnitOutputTest(pCondition, pDescription, "", "")
 end handler
 
@@ -114,7 +113,7 @@ begin
 	MCUnitTestSkipDescription(Description)
 end syntax
 
-public handler MCUnitTestSkipDescription(in pDescription as string)
+public handler MCUnitTestSkipDescription(in pDescription as String)
 	MCUnitOutputTest(true, pDescription, "SKIP", "")
 end handler
 
@@ -124,7 +123,7 @@ begin
 	MCUnitTestSkipReason(Reason)
 end syntax
 
-public handler MCUnitTestSkipReason(in pReason as string)
+public handler MCUnitTestSkipReason(in pReason as String)
 	MCUnitOutputTest(true, "", "SKIP", pReason)
 end handler
 
@@ -134,7 +133,7 @@ begin
 	MCUnitTestSkipDescriptionAndReason(Description, Reason)
 end syntax
 
-public handler MCUnitTestSkipDescriptionAndReason(in pDescription as string, in pReason as string)
+public handler MCUnitTestSkipDescriptionAndReason(in pDescription as String, in pReason as String)
 	MCUnitOutputTest(true, pDescription, "SKIP", pReason)
 end handler
 
@@ -146,7 +145,7 @@ begin
 	MCUnitTestFails(Condition)
 end syntax
 
-public handler MCUnitTestFails(in pCondition as boolean)
+public handler MCUnitTestFails(in pCondition as Boolean)
 	MCUnitOutputTest(pCondition, "", "TODO", "")
 end handler
 
@@ -156,7 +155,7 @@ begin
 	MCUnitTestFailsDescription(Description, Condition)
 end syntax
 
-public handler MCUnitTestFailsDescription(in pDescription as string, in pCondition as boolean)
+public handler MCUnitTestFailsDescription(in pDescription as String, in pCondition as Boolean)
 	MCUnitOutputTest(pCondition, pDescription, "TODO", "")
 end handler
 
@@ -166,7 +165,7 @@ begin
 	MCUnitTestFailsReason(Condition, Reason)
 end syntax
 
-public handler MCUnitTestFailsReason(in pCondition as boolean, in pReason as string)
+public handler MCUnitTestFailsReason(in pCondition as Boolean, in pReason as String)
 	MCUnitOutputTest(pCondition, "", "TODO", pReason)
 end handler
 
@@ -176,7 +175,7 @@ begin
 	MCUnitTestFailsDescriptionAndReason(Description, Condition, Reason)
 end syntax
 
-public handler MCUnitTestFailsDescriptionAndReason(in pDescription as string, in pCondition as boolean, in pReason as string)
+public handler MCUnitTestFailsDescriptionAndReason(in pDescription as String, in pCondition as Boolean, in pReason as String)
 	MCUnitOutputTest(pCondition, pDescription, "TODO", pReason)
 end handler
 

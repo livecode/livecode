@@ -139,6 +139,8 @@ bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict);
 bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep);
 void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density);
 
+bool MCImageGetFileRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep);
+
 class MCMutableImageRep : public MCImageRep
 {
 public:

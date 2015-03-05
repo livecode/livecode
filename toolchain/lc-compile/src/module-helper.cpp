@@ -24,12 +24,14 @@ extern "C"
 {
     
 struct builtin_module_descriptor {};
+extern builtin_module_descriptor __com_livecode_foreign_module_info;
 extern builtin_module_descriptor __com_livecode_arithmetic_module_info;
 extern builtin_module_descriptor __com_livecode_array_module_info;
 extern builtin_module_descriptor __com_livecode_binary_module_info;
 extern builtin_module_descriptor __com_livecode_bitwise_module_info;
 extern builtin_module_descriptor __com_livecode_byte_module_info;
 extern builtin_module_descriptor __com_livecode_char_module_info;
+extern builtin_module_descriptor __com_livecode_codeunit_module_info;
 extern builtin_module_descriptor __com_livecode_date_module_info;
 extern builtin_module_descriptor __com_livecode_encoding_module_info;
 extern builtin_module_descriptor __com_livecode_file_module_info;
@@ -47,15 +49,18 @@ extern builtin_module_descriptor __com_livecode_system_module_info;
 extern builtin_module_descriptor __com_livecode_type_module_info;
 extern builtin_module_descriptor __com_livecode_typeconvert_module_info;
 extern builtin_module_descriptor __com_livecode_unittest_module_info;
+extern builtin_module_descriptor __com_livecode_unittest___IMPL_module_info;
 
 builtin_module_descriptor* g_builtin_modules[] =
 {
+    &__com_livecode_foreign_module_info,
     &__com_livecode_arithmetic_module_info,
     &__com_livecode_array_module_info,
     &__com_livecode_binary_module_info,
     &__com_livecode_bitwise_module_info,
     &__com_livecode_byte_module_info,
     &__com_livecode_char_module_info,
+    &__com_livecode_codeunit_module_info,
     &__com_livecode_date_module_info,
     //&__com_livecode_encoding_module_info,
     &__com_livecode_file_module_info,
@@ -73,6 +78,7 @@ builtin_module_descriptor* g_builtin_modules[] =
     &__com_livecode_type_module_info,
     &__com_livecode_typeconvert_module_info,
     &__com_livecode_unittest_module_info,
+    &__com_livecode_unittest___IMPL_module_info,
 };
 
 unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);
@@ -83,6 +89,7 @@ extern void (*MCBinaryEvalConcatenateBytes)();
 extern void (*MCBitwiseEvalBitwiseAnd)();
 extern void (*MCByteEvalNumberOfBytesIn)();
 extern void (*MCCharEvalNumberOfCharsIn)();
+extern void (*MCCodeunitEvalNumberOfCodeunitsIn)();
 extern void (*MCDateExecGetLocalTime)();
 extern void (*MCFileExecGetContents)();
 extern void (*MCListEvalHeadOf)();
@@ -105,6 +112,7 @@ void *g_builtin_ptrs[] =
     &MCBitwiseEvalBitwiseAnd,
     &MCByteEvalNumberOfBytesIn,
     &MCCharEvalNumberOfCharsIn,
+    &MCCodeunitEvalNumberOfCodeunitsIn,
     &MCDateExecGetLocalTime,
     &MCFileExecGetContents,
     &MCListEvalHeadOf,
@@ -118,5 +126,19 @@ void *g_builtin_ptrs[] =
     &MCTypeEvalIsEmpty,
     &MCTypeConvertExecSplitStringByDelimiter
 };
-    
+
+}
+
+extern bool MCForeignModuleInitialize(void);
+bool MCModulesInitialize(void)
+{
+    if (!MCForeignModuleInitialize())
+        return false;
+    return true;
+}
+
+extern void MCForeignModuleFinalize(void);
+void MCModulesFinalize(void)
+{
+    MCForeignModuleFinalize();
 }

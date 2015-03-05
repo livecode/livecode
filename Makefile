@@ -185,6 +185,23 @@ revandroid: libexternalv1
 	$(MAKE) -C ./revmobile revandroid
 
 ###############################################################################
+# revBrowser Targets
+
+.PHONY: revbrowser libcef libcefwrapper revbrowser-cefprocess
+
+libcef:
+	$(MAKE) -C ./thirdparty/libcef libcef
+
+libcefwrapper:
+	$(MAKE) -C ./thirdparty/libcef libcefwrapper
+
+revbrowser-cefprocess: libcef libcefwrapper
+	$(MAKE) -C ./revbrowser revbrowser-cefprocess
+	
+revbrowser: libcore libexternal libcef libcefwrapper libexternalv1 revbrowser-cefprocess
+	$(MAKE) -C ./revbrowser revbrowser
+
+###############################################################################
 # MLC Targets
 
 .PHONY: lc-compile lc-bootstrap-compile lc-compile-clean
@@ -215,11 +232,29 @@ lc-test: libstdscript libfoundation
 	$(MAKE) -C ./toolchain lc-test
 
 ########## Tests
+lcb-check: lc-compile lc-run
+	$(MAKE) -C ./tests/lcb
 lc-run-check: lc-compile lc-run
 	$(MAKE) -C ./tests/lc-run check
 lc-test-check: lc-compile lc-test
 	$(MAKE) -C ./toolchain lc-test-check
-.PHONY: lc-run-check lc-test-check
+.PHONY: lcb-check lc-run-check lc-test-check
+
+
+###############################################################################
+# Server Targets
+
+.PHONY: server-all server-install
+
+server-all: server
+server-all: server-revzip
+server-all: server-revxml
+server-all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
+server-all: lc-run lc-test
+
+server-install: server-all
+	$(MAKE) -C ./engine -f Makefile.server server-install
+
 
 ###############################################################################
 # All Targets
@@ -227,12 +262,13 @@ lc-test-check: lc-compile lc-test
 .PHONY: all bootstrap thirdparty clean
 .DEFAULT_GOAL := all
 
-all: revzip server-revzip
-all: revxml server-revxml
+all: revzip
+all: revxml
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
-all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
+all: revbrowser
+all: server-all
 all: lc-run lc-test
 
 bootstrap: lc-bootstrap-compile
@@ -241,9 +277,9 @@ thirdparty: libffi libz libjpeg libpcre libpng libgif libopenssl libskia
 thirdparty: libcairopdf libpq libmysql libsqlite libiodbc libxml libxslt
 thirdparty: libzip
 
-check: lc-run-check lc-test-check
+check: lc-run-check lc-test-check lcb-check
 
 clean:
-	-rm -rf _build/linux _cache/linux
+	-rm -rf _build/linux _cache/linux _tests
 	-rm -rf `find . -type d -name _mlc`
 clean: lc-compile-clean

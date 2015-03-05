@@ -150,6 +150,14 @@
 		4DF42ABF0B0488ED003F2D95 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42AC20B0488ED003F2D95 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libexternal.xcodeproj; path = ../libexternal/libexternal.xcodeproj; sourceTree = SOURCE_ROOT; };
+		729D0FD11A77A8E600B0CA0F /* cefbrowser_lnx.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = cefbrowser_lnx.cpp; path = src/cefbrowser_lnx.cpp; sourceTree = "<group>"; };
+		729D0FD21A77A8E600B0CA0F /* cefprocess_lnx.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = cefprocess_lnx.cpp; path = src/cefprocess_lnx.cpp; sourceTree = "<group>"; };
+		729D0FD31A77A8E600B0CA0F /* cefshared_lnx.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = cefshared_lnx.cpp; path = src/cefshared_lnx.cpp; sourceTree = "<group>"; };
+		729D0FD41A77A8F500B0CA0F /* lnxbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = lnxbrowser.cpp; path = src/lnxbrowser.cpp; sourceTree = "<group>"; };
+		729D0FD51A77A8F500B0CA0F /* revbrowser.rc */ = {isa = PBXFileReference; lastKnownFileType = text; name = revbrowser.rc; path = src/revbrowser.rc; sourceTree = "<group>"; };
+		729D0FD61A77A8F500B0CA0F /* revbrowser.rc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = revbrowser.rc.h; path = src/revbrowser.rc.h; sourceTree = "<group>"; };
+		729D0FD71A77A8F500B0CA0F /* signal_restore_posix.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = signal_restore_posix.cpp; path = src/signal_restore_posix.cpp; sourceTree = "<group>"; };
+		729D0FD81A77A8F500B0CA0F /* signal_restore_posix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = signal_restore_posix.h; path = src/signal_restore_posix.h; sourceTree = "<group>"; };
 		769568ED1823D0E700779255 /* libcore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcore.a; path = ../_build/mac/Debug/libcore.a; sourceTree = "<group>"; };
 		E832B19618D9C20D00083DF8 /* libcef.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcef.xcodeproj; path = ../thirdparty/libcef/libcef.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E857DDA819081FA9002714D6 /* WebAuthenticationPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebAuthenticationPanel.h; path = src/WebAuthenticationPanel.h; sourceTree = "<group>"; };
@@ -252,6 +260,11 @@
 				4D03BBDB0BC2423D00026EA7 /* osxbrowser.cpp */,
 				4D03BB390BC17A0500026EA7 /* revbrowser.h */,
 				4DF42AB90B0488E2003F2D95 /* revbrowser.cpp */,
+				729D0FD41A77A8F500B0CA0F /* lnxbrowser.cpp */,
+				729D0FD51A77A8F500B0CA0F /* revbrowser.rc */,
+				729D0FD61A77A8F500B0CA0F /* revbrowser.rc.h */,
+				729D0FD71A77A8F500B0CA0F /* signal_restore_posix.cpp */,
+				729D0FD81A77A8F500B0CA0F /* signal_restore_posix.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -302,6 +315,9 @@
 		E8D3736618CDDAA3005C1182 /* CEF */ = {
 			isa = PBXGroup;
 			children = (
+				729D0FD11A77A8E600B0CA0F /* cefbrowser_lnx.cpp */,
+				729D0FD21A77A8E600B0CA0F /* cefprocess_lnx.cpp */,
+				729D0FD31A77A8E600B0CA0F /* cefshared_lnx.cpp */,
 				E857DDA819081FA9002714D6 /* WebAuthenticationPanel.h */,
 				E857DDA919081FAA002714D6 /* WebAuthenticationPanel.m */,
 				E857DDAA19081FAA002714D6 /* com_runrev_livecode_WebAuthenticationPanel.nib */,

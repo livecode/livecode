@@ -5,12 +5,14 @@
 # be included in the bootstrap phase (so it can't contain any syntax
 # definitions).
 #
+foreign.mlc
 arithmetic.mlc
 array.mlc
 binary.mlc
 bitwise.mlc
 byte.mlc
 char.mlc
+codeunit.mlc
 date.mlc
 file.mlc
 list.mlc

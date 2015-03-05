@@ -23,12 +23,14 @@ extern "C"
 {
     
     struct builtin_module_descriptor {};
+    extern builtin_module_descriptor __com_livecode_foreign_module_info;
     extern builtin_module_descriptor __com_livecode_arithmetic_module_info;
     extern builtin_module_descriptor __com_livecode_array_module_info;
     extern builtin_module_descriptor __com_livecode_binary_module_info;
     extern builtin_module_descriptor __com_livecode_bitwise_module_info;
     extern builtin_module_descriptor __com_livecode_byte_module_info;
     extern builtin_module_descriptor __com_livecode_char_module_info;
+    extern builtin_module_descriptor __com_livecode_codeunit_module_info;
     extern builtin_module_descriptor __com_livecode_date_module_info;
     extern builtin_module_descriptor __com_livecode_encoding_module_info;
     extern builtin_module_descriptor __com_livecode_file_module_info;
@@ -51,12 +53,14 @@ extern "C"
     
     builtin_module_descriptor* g_builtin_modules[] =
     {
+        &__com_livecode_foreign_module_info,
         &__com_livecode_arithmetic_module_info,
         &__com_livecode_array_module_info,
         &__com_livecode_binary_module_info,
         &__com_livecode_bitwise_module_info,
         &__com_livecode_byte_module_info,
         &__com_livecode_char_module_info,
+        &__com_livecode_codeunit_module_info,
         &__com_livecode_date_module_info,
         //&__com_livecode_encoding_module_info,
         &__com_livecode_file_module_info,
@@ -85,6 +89,7 @@ extern "C"
     extern void (*MCBitwiseEvalBitwiseAnd)();
     extern void (*MCByteEvalNumberOfBytesIn)();
     extern void (*MCCharEvalNumberOfCharsIn)();
+    extern void (*MCCodeunitEvalNumberOfCodeunitsIn)();
     extern void (*MCDateExecGetLocalTime)();
     extern void (*MCFileExecGetContents)();
     extern void (*MCListEvalHeadOf)();
@@ -109,6 +114,7 @@ extern "C"
         &MCBitwiseEvalBitwiseAnd,
         &MCByteEvalNumberOfBytesIn,
         &MCCharEvalNumberOfCharsIn,
+        &MCCodeunitEvalNumberOfCodeunitsIn,
         &MCDateExecGetLocalTime,
         &MCFileExecGetContents,
         &MCListEvalHeadOf,
@@ -127,10 +133,13 @@ extern "C"
     
 }
 
+extern bool MCForeignModuleInitialize(void);
 extern bool MCCanvasModuleInitialize(void);
 extern bool MCEngineModuleInitialize(void);
 bool MCModulesInitialize(void)
 {
+    if (!MCForeignModuleInitialize())
+        return false;
     if (!MCCanvasModuleInitialize())
         return false;
     if (!MCEngineModuleInitialize())
@@ -138,10 +147,12 @@ bool MCModulesInitialize(void)
     return true;
 }
 
+extern void MCForeignModuleFinalize(void);
 extern void MCCanvasModuleFinalize(void);
 extern void MCEngineModuleFinalize(void);
 void MCModulesFinalize(void)
 {
     MCEngineModuleFinalize();
     MCCanvasModuleFinalize();
+    MCForeignModuleFinalize();
 }

@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "foundation-private.h"
 
@@ -241,7 +242,10 @@ bool __MCListIsEqualTo(__MCList *list, __MCList *other_list)
 
 bool __MCListCopyDescription(__MCList *self, MCStringRef& r_string)
 {
-	return false;
+	MCAutoStringRef t_self_string;
+	if (!MCListCopyAsString (self, &t_self_string))
+		return false;
+	return MCValueCopyDescription(*t_self_string, r_string);
 }
 
 bool __MCListImmutableCopy(__MCList *self, bool p_release, __MCList*& r_immutable_value)

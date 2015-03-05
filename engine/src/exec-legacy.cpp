@@ -449,6 +449,7 @@ void MCLegacyExecImport(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_s
 		MCEPS *eptr = new MCEPS;
 		if (!eptr->import(p_filename, t_stream))
 		{
+            delete eptr;
 			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
 			return;
 		}

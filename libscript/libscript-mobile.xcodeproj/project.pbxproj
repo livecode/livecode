@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D7060D81A80D00600415A88 /* module-foreign.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7060D71A80D00600415A88 /* module-foreign.cpp */; };
 		720166341A420EE8002B53F9 /* module-arithmetic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166161A420EE8002B53F9 /* module-arithmetic.cpp */; };
 		720166351A420EE8002B53F9 /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166171A420EE8002B53F9 /* module-array.cpp */; };
 		720166361A420EE8002B53F9 /* module-binary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720166181A420EE8002B53F9 /* module-binary.cpp */; };
@@ -52,6 +53,7 @@
 		7286368D1A6D7359001D1FBF /* date.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363A1A6D71E2001D1FBF /* date.mlc */; };
 		7286368E1A6D7359001D1FBF /* stream.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363E1A6D71E2001D1FBF /* stream.mlc */; };
 		7286368F1A6D7359001D1FBF /* system.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7286363F1A6D71E2001D1FBF /* system.mlc */; };
+		729D112F1A9CE52700B0CA0F /* foreign.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D7060D61A80CFFB00415A88 /* foreign.mlc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -81,6 +83,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4D7060D61A80CFFB00415A88 /* foreign.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = foreign.mlc; path = src/foreign.mlc; sourceTree = "<group>"; };
+		4D7060D71A80D00600415A88 /* module-foreign.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-foreign.cpp"; path = "src/module-foreign.cpp"; sourceTree = "<group>"; };
 		720165E41A420DFE002B53F9 /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = "<group>"; };
 		720165E51A420DFE002B53F9 /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = "<group>"; };
 		720165E61A420DFE002B53F9 /* Global Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Global Mobile.xcconfig"; path = "../rules/Global Mobile.xcconfig"; sourceTree = "<group>"; };
@@ -211,6 +215,7 @@
 				7201661B1A420EE8002B53F9 /* module-char.cpp */,
 				7201661C1A420EE8002B53F9 /* module-encoding.cpp */,
 				7201661D1A420EE8002B53F9 /* module-file.cpp */,
+				4D7060D71A80D00600415A88 /* module-foreign.cpp */,
 				7201661E1A420EE8002B53F9 /* module-list.cpp */,
 				7201661F1A420EE8002B53F9 /* module-logic.cpp */,
 				720166201A420EE8002B53F9 /* module-map.cpp */,
@@ -228,6 +233,7 @@
 		728636771A6D72F7001D1FBF /* MLC */ = {
 			isa = PBXGroup;
 			children = (
+				4D7060D61A80CFFB00415A88 /* foreign.mlc */,
 				720166071A420EE8002B53F9 /* arithmetic.mlc */,
 				720166081A420EE8002B53F9 /* array.mlc */,
 				720166091A420EE8002B53F9 /* binary.mlc */,
@@ -307,6 +313,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				729D112F1A9CE52700B0CA0F /* foreign.mlc in Sources */,
 				728636781A6D7359001D1FBF /* arithmetic.mlc in Sources */,
 				728636791A6D7359001D1FBF /* array.mlc in Sources */,
 				7286367A1A6D7359001D1FBF /* binary.mlc in Sources */,
@@ -327,6 +334,7 @@
 				7286368E1A6D7359001D1FBF /* stream.mlc in Sources */,
 				7286368F1A6D7359001D1FBF /* system.mlc in Sources */,
 				720166361A420EE8002B53F9 /* module-binary.cpp in Sources */,
+				4D7060D81A80D00600415A88 /* module-foreign.cpp in Sources */,
 				728636411A6D71E2001D1FBF /* module-stream.cpp in Sources */,
 				728636401A6D71E2001D1FBF /* module-date.cpp in Sources */,
 				720166401A420EE8002B53F9 /* module-math.cpp in Sources */,

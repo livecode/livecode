@@ -1,4 +1,21 @@
 /*
+Copyright (C) 2014-2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
 This module specifies the syntax definitions and bindings for file i/o operations in modular LiveCode.
 */
 
@@ -6,8 +23,8 @@ module com.livecode.file
 
 --
 
-public foreign handler MCFileExecGetContents(in File as string, out Contents as data) as undefined binds to "<builtin>"
-public foreign handler MCFileExecSetContents(in Contents as data, in File as string) as undefined binds to "<builtin>"
+public foreign handler MCFileExecGetContents(in File as String, out Contents as Data) as undefined binds to "<builtin>"
+public foreign handler MCFileExecSetContents(in Contents as Data, in File as String) as undefined binds to "<builtin>"
 
 /*
 Summary:	The data stored in a file.
@@ -31,7 +48,7 @@ end syntax
 
 --
 
-public foreign handler MCFileExecDeleteFile(in File as string) as undefined binds to "<builtin>"
+public foreign handler MCFileExecDeleteFile(in File as String) as undefined binds to "<builtin>"
 
 /*
 Summary:	Delete a file from the filesystem.
@@ -51,9 +68,9 @@ end syntax
 
 --
 
-public foreign handler MCFileExecCreateDirectory(in Directory as string) as undefined binds to "<builtin>"
-public foreign handler MCFileExecDeleteDirectory(in Directory as string) as undefined binds to "<builtin>"
-public foreign handler MCFileExecGetDirectoryEntries(in Directory as string, out Entrise as list) as undefined binds to "<builtin>"
+public foreign handler MCFileExecCreateDirectory(in Directory as String) as undefined binds to "<builtin>"
+public foreign handler MCFileExecDeleteDirectory(in Directory as String) as undefined binds to "<builtin>"
+public foreign handler MCFileExecGetDirectoryEntries(in Directory as String, out Entrise as List) as undefined binds to "<builtin>"
 
 /*
 Summary:	Create a named directory.

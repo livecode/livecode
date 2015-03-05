@@ -966,15 +966,25 @@ bool MCConvertStyledTextToStyledTextArray(MCDataRef p_string, MCArrayRef &r_arra
 	t_object = MCObject::unpickle(p_string, MCtemplatefield -> getstack());
 	if (t_object != NULL)
 	{
+        bool t_success;
+        t_success = true;
 		MCParagraph *t_paragraphs;
         MCAutoArrayRef t_array;
 		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
 		
 		if (t_paragraphs != NULL)
-			MCtemplatefield -> exportasstyledtext(t_paragraphs, 0, INT32_MAX, false, false, &t_array);
+        {
+            // SN-2015-01-19: [[ Bug 14378 ]] Actually sets the return value.
+			if (MCtemplatefield -> exportasstyledtext(t_paragraphs, 0, INT32_MAX, false, false, &t_array))
+                t_success = MCArrayCopy(*t_array, r_array);
+            else
+                t_success = false;
+        }
+        else
+            t_success = false;
 		
 		delete t_object;
-        return true;
+        return t_success;
 	}
     
 	return false;

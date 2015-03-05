@@ -132,9 +132,10 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
-    // We require that source is concrete - this means that it must be a named
-    // type.
-    MCAssert(MCTypeInfoIsNamed(source));
+    // We require that source is concrete for all but handler types (as handlers
+    // have unnamed typeinfos which we need to compare with potentially named
+    // handler type typeinfos).
+    MCAssert(MCTypeInfoIsNamed(source) || MCTypeInfoIsHandler(source) || MCTypeInfoIsOptional(source));
     
     // Resolve the source type.
     MCResolvedTypeInfo t_resolved_source;
@@ -811,6 +812,62 @@ MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef unresolved_self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCNamedErrorTypeInfoCreate(MCNameRef p_name, MCNameRef p_domain, MCStringRef p_message, MCTypeInfoRef &r_typeinfo)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCErrorTypeInfoCreate(p_domain, p_message, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_typeinfo = MCValueRetain(*t_named_type);
+	
+	return true;
+}
+
+bool MCNamedCustomTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef base, const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCCustomTypeInfoCreate(base, callbacks, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_typeinfo = MCValueRetain(*t_named_type);
+	
+	return true;
+}
+
+bool MCNamedForeignTypeInfoCreate(MCNameRef p_name, const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo)
+{
+	MCAutoTypeInfoRef t_type, t_named_type;
+	
+	if (!MCForeignTypeInfoCreate(p_descriptor, &t_type))
+		return false;
+	
+	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
+		return false;
+	
+	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
+		return false;
+	
+	r_typeinfo = MCValueRetain(*t_named_type);
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCCustomTypeInfoCreate(MCTypeInfoRef p_base, const MCValueCustomCallbacks *p_callbacks, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
@@ -958,7 +1015,7 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     else if (t_code == kMCValueTypeCodeError)
     {
         t_hash = MCHashBytesStream(t_hash, &self -> error . domain, sizeof(self -> error . domain));
-        t_hash = MCHashBytesStream(t_hash, self -> error . message, sizeof(self -> error . message));
+        t_hash = MCHashBytesStream(t_hash, &self -> error . message, sizeof(self -> error . message));
     }
     else if (t_code == kMCValueTypeCodeCustom)
     {
@@ -1037,7 +1094,25 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
 
 bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
 {
-    return false;
+	MCAutoStringRef tOptionalPart;
+	if (MCTypeInfoIsOptional (self))
+		tOptionalPart = MCSTR("optional ");
+	else
+		tOptionalPart = kMCEmptyString;
+
+	MCAutoStringRef tNamePart;
+	if (MCTypeInfoIsNamed (self))
+	{
+		tNamePart = MCNameGetString (MCNamedTypeInfoGetName (self));
+	}
+	else
+	{
+		if (!MCStringFormat (&tNamePart, "unnamed[%p]", self))
+			return false;
+	}
+
+	return MCStringFormat (r_description, "<type: %@%@>",
+	                       *tOptionalPart, *tNamePart);
 }
 
 static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)

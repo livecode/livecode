@@ -98,7 +98,8 @@ static MCExecEnumTypeElementInfo _kMCMiscStatusBarStyleElementInfo[] =
 {
     { "default", kMCMiscStatusBarStyleDefault},
     { "translucent", kMCMiscStatusBarStyleTranslucent},
-    { "opaque", kMCMiscStatusBarStyleOpaque}
+    { "opaque", kMCMiscStatusBarStyleOpaque},
+    { "solid", kMCMiscStatusBarStyleSolid}
 };
 
 static MCExecEnumTypeInfo _kMCMiscStatusBarStyleTypeInfo =

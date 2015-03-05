@@ -45,3 +45,9 @@ MCStreamExecGetStandardOutput (MCStreamRef & r_stream)
 {
 	MCSStreamGetStandardOutput (r_stream);
 }
+
+extern "C" MC_DLLEXPORT void
+MCStreamExecGetStandardError (MCStreamRef & r_stream)
+{
+	MCSStreamGetStandardError (r_stream);
+}

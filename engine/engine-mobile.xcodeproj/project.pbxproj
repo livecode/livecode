@@ -279,6 +279,8 @@
 		729D10541A79580800B0CA0F /* canvas.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 729D102D1A7954B200B0CA0F /* canvas.mlc */; };
 		729D10551A79580800B0CA0F /* engine.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 729D102E1A7954B200B0CA0F /* engine.mlc */; };
 		729D10561A79580800B0CA0F /* widget.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 729D102F1A7954B200B0CA0F /* widget.mlc */; };
+		729D11341A9CE5D400B0CA0F /* filepath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 729D11301A9CE5D400B0CA0F /* filepath.cpp */; };
+		729D11351A9CE5D400B0CA0F /* module-resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 729D11321A9CE5D400B0CA0F /* module-resources.cpp */; };
 		72CC34B418A9378800BEC655 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3451858840300BA6A23 /* exec-keywords.cpp */; };
 		72CC34B518A9379200BEC655 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */; };
 		72CE28951993D7C10003BAE0 /* imageloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E89DBC50198A6F410009651B /* imageloader.cpp */; };
@@ -1014,6 +1016,10 @@
 		729D102D1A7954B200B0CA0F /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = src/canvas.mlc; sourceTree = "<group>"; };
 		729D102E1A7954B200B0CA0F /* engine.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = engine.mlc; path = src/engine.mlc; sourceTree = "<group>"; };
 		729D102F1A7954B200B0CA0F /* widget.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = widget.mlc; path = src/widget.mlc; sourceTree = "<group>"; };
+		729D11301A9CE5D400B0CA0F /* filepath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = filepath.cpp; path = src/filepath.cpp; sourceTree = "<group>"; };
+		729D11311A9CE5D400B0CA0F /* filepath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filepath.h; path = src/filepath.h; sourceTree = "<group>"; };
+		729D11321A9CE5D400B0CA0F /* module-resources.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-resources.cpp"; path = "src/module-resources.cpp"; sourceTree = "<group>"; };
+		729D11331A9CE5D400B0CA0F /* module-resources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "module-resources.h"; path = "src/module-resources.h"; sourceTree = "<group>"; };
 		72FFE3451858840300BA6A23 /* exec-keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-keywords.cpp"; path = "src/exec-keywords.cpp"; sourceTree = "<group>"; };
 		72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
 		7607CF601769BB4C00ADB512 /* exec-interface-aclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-aclip.cpp"; path = "src/exec-interface-aclip.cpp"; sourceTree = "<group>"; };
@@ -2010,6 +2016,10 @@
 		E84BE35C170C96D500807CF6 /* Core - Misc */ = {
 			isa = PBXGroup;
 			children = (
+				729D11301A9CE5D400B0CA0F /* filepath.cpp */,
+				729D11311A9CE5D400B0CA0F /* filepath.h */,
+				729D11321A9CE5D400B0CA0F /* module-resources.cpp */,
+				729D11331A9CE5D400B0CA0F /* module-resources.h */,
 				4DBF5B281802E635009CAB2E /* socket_resolve.cpp */,
 				4DD3DE051040ACE300CAC7EF /* debug.cpp */,
 				4DD3DE041040ACE300CAC7EF /* debug.h */,
@@ -2396,7 +2406,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"";
+			shellScript = "# SN-2015-02-19: [[ Bug 14625 ]] Only copy revsecurity.dylib fo rthe simulator\nif [ \"${SDK_NAME:0:8}\" != \"iphoneos\" ]; then\n    cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"\nfi";
 		};
 		729D0F9B1A6FEA3000B0CA0F /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2535,6 +2545,7 @@
 				4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */,
 				4DABCDF115ECD4700085E214 /* mbliphone.mm in Sources */,
 				4DABCDF215ECD4700085E214 /* mbliphoneactivityindicator.mm in Sources */,
+				729D11351A9CE5D400B0CA0F /* module-resources.cpp in Sources */,
 				4D222096171D777400E7E557 /* mbliphoneapp.mm in Sources */,
 				4DABCE7A15ECD62C0085E214 /* mbliphoneappview.mm in Sources */,
 				4DABCDF515ECD4970085E214 /* mbliphonebrowser.mm in Sources */,
@@ -2609,6 +2620,7 @@
 				4DABCE3915ECD4B50085E214 /* printer.cpp in Sources */,
 				4DABCE3A15ECD4B50085E214 /* property.cpp in Sources */,
 				4DABCE3C15ECD4B50085E214 /* redraw.cpp in Sources */,
+				729D11341A9CE5D400B0CA0F /* filepath.cpp in Sources */,
 				4DABCE3D15ECD4B50085E214 /* regex.cpp in Sources */,
 				4C8544E8199E10DB00A568B6 /* coretextlayout.mm in Sources */,
 				4DABCE3E15ECD4B50085E214 /* rtf.cpp in Sources */,

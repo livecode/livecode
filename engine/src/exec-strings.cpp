@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "chunk.h"
 #include "date.h"
 
+#include "foundation-chunk.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, ToLower, 2)
@@ -1458,8 +1460,11 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 {
 	if (MCStringsConcatenate(p_left, p_right, r_result))
 		return;
-
-	ctxt.Throw();
+    
+    // SN-2015-01-13: [[ Bug 14354 ]] To reproduce the previous behaviour, we want to abort
+    // any loop if in case of a memory error.
+    ctxt . LegacyThrow(EE_NO_MEMORY);
+    MCabortscript = True;
 }
 
 bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
@@ -1475,23 +1480,32 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p
 	if (MCDataConcatenate(p_left, p_right, r_result))
 		return;
     
-	ctxt.Throw();
+    // SN-2015-01-13: [[ Bug 14354 ]] To reproduce the previous behaviour, we want to abort
+    // any loop if in case of a memory error.
+    ctxt . LegacyThrow(EE_NO_MEMORY);
+    MCabortscript = True;
 }
 
 void MCStringsEvalConcatenateWithSpace(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
 	if (MCStringsConcatenateWithChar(p_left, p_right, ' ', r_result))
 		return;
-
-	ctxt.Throw();
+    
+    // SN-2015-01-13: [[ Bug 14354 ]] To reproduce the previous behaviour, we want to abort
+    // any loop if in case of a memory error.
+    ctxt . LegacyThrow(EE_NO_MEMORY);
+    MCabortscript = True;
 }
 
 void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
 	if (MCStringsConcatenateWithChar(p_left, p_right, ',', r_result))
-		return;
-
-	ctxt.Throw();
+        return;
+    
+    // SN-2015-01-13: [[ Bug 14354 ]] To reproduce the previous behaviour, we want to abort
+    // any loop if in case of a memory error.
+    ctxt . LegacyThrow(EE_NO_MEMORY);
+    MCabortscript = True;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1584,12 +1598,18 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
 
 bool MCStringsEvalIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_text, Chunk_term p_chunk_type)
 {
+    MCChunkType t_type;
+    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
+    
     MCTextChunkIterator *tci;
-    tci = new MCTextChunkIterator(p_chunk_type, p_text);
+    tci = MCStringsTextChunkIteratorCreate(ctxt, p_text, p_chunk_type);
+
     bool t_result;
-    t_result = tci -> isamong(ctxt, p_chunk);
+    t_result = tci -> IsAmong(p_chunk);
+    
     delete tci;
     return t_result;
+
 }
 
 void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
@@ -1722,9 +1742,14 @@ void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, M
 
 uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, Chunk_term p_chunk_type)
 {
+    MCChunkType t_type;
+    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
+    
     MCTextChunkIterator *tci;
-    tci = new MCTextChunkIterator(p_chunk_type, p_string);
-    uindex_t t_offset = tci -> chunkoffset(ctxt, p_chunk, p_start_offset);
+    tci = MCStringsTextChunkIteratorCreate(ctxt, p_string, p_chunk_type);
+    
+    uindex_t t_offset = tci -> ChunkOffset(p_chunk, p_start_offset, nil, ctxt . GetWholeMatches());
+    
     delete tci;
     return t_offset;
 }
