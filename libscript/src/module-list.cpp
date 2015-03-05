@@ -503,6 +503,30 @@ MCListEvalIndexOfElementAfter (bool p_is_last,
 	                                 r_output);
 }
 
+extern "C" MC_DLLEXPORT void
+MCListEvalIndexOfElementBefore (bool p_is_last,
+                               MCValueRef p_needle,
+                               index_t p_before,
+                               MCProperListRef p_haystack,
+                               uindex_t & r_output)
+{
+	uindex_t t_start, t_count;
+	if (p_before == 0)
+	{
+		t_start = UINDEX_MAX;
+	} else if (!MCChunkGetExtentsOfElementChunkByExpressionInRange (p_haystack,
+	                nil, p_before, true, false, true, t_start, t_count))
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason",
+		                       MCSTR("chunk index out of range"), nil);
+		return;
+	}
+
+	MCListEvalIndexOfElementInRange (p_is_last, p_needle, p_haystack,
+	                                 MCRangeMake(0, t_start),
+	                                 r_output);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST

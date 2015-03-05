@@ -76,6 +76,7 @@ public foreign handler MCListExecDeleteLastElementOf(inout Target as List) as un
 
 public foreign handler MCListEvalIndexOfElement(in IsLast as CBool, in Needle as any, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 public foreign handler MCListEvalIndexOfElementAfter(in IsLast as CBool, in Needle as any, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIndexOfElementBefore(in IsLast as CBool, in Needle as any, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 
 --
 
@@ -926,6 +927,41 @@ syntax ListIndexAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementAfter(IsLast, Needle, After, Haystack, output)
+end syntax
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
+
+Needle:	An expression which evaluates to any value.
+Before:	An expression which evaluates to a valid index in Target.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index in <Haystack>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b"]
+	put the index of "b" before 2 in tVar into tOffset
+	--tOffset contains 0
+
+	put the first index of "b" before 5 in tVar into tOffset
+	--tOffset contains 2
+
+Description:
+Use `the index of… before` to find where particular elements occur
+within a list.  <Haystack> is scanned for an element that is equal to
+<Needle>, stopping before the position <Before>, and the position of
+the element found is returned.  If no element of <Haystack> is equal
+to <Needle>, the return value is 0.  If neither "first" nor "last" is
+specified, the last matching element is found.
+
+Tags: Lists
+*/
+syntax ListIndexBefore is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalIndexOfElementBefore(IsLast, Needle, Before, Haystack, output)
 end syntax
 
 end module

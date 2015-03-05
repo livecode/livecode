@@ -377,6 +377,8 @@ public handler TestRepeatElement()
 end handler
 
 ----------------------------------------------------------------
+-- Finding indices
+----------------------------------------------------------------
 
 public handler TestIndex()
 	variable t
@@ -391,6 +393,8 @@ public handler TestIndex()
 
 	test "index (empty)" when the index of 1 in [] is 0
 end handler
+
+----------------------------------------------------------------
 
 handler TestIndexAfter_InvalidPositive()
 	return the index of true after 2 in [true]
@@ -463,6 +467,82 @@ public handler TestIndexAfterZero()
 
 	put the last index of true in t into tNoAfter
 	test "last index after (+ve, 0)" when the last index of true after 0 in t is tNoAfter
+end handler
+
+----------------------------------------------------------------
+
+handler TestIndexBefore_InvalidPositive()
+	return the index of true before 3 in [true]
+end handler
+handler TestIndexBefore_InvalidNegative()
+	return the index of true before -2 in [true]
+end handler
+handler TestFirstIndexBefore_InvalidPositive()
+	return the first index of true before 3 in [true]
+end handler
+handler TestFirstIndexBefore_InvalidNegative()
+	return the first index of true before -2 in [true]
+end handler
+handler TestLastIndexBefore_InvalidPositive()
+	return the last index of true before 3 in [true]
+end handler
+handler TestLastIndexBefore_InvalidNegative()
+	return the last index of true before -2 in [true]
+end handler
+public handler TestIndexBefore()
+	variable t
+	put [false, true, true, false, true] into t
+
+	test "index before (+ve)" when the index of true before 4 in t is 3
+	test "index before (-ve)" when the index of true before -2 in t is 3
+	test "index before (+ve, limit)" when the index of true before 6 in t is 5
+	test "index before (+ve, missing)" when the index of true before 2 in t is 0
+	test "index before (-ve, missing)" when the index of true before -4 in t is 0
+
+	MCUnitTestHandlerThrows(TestIndexBefore_InvalidPositive, "index before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestIndexBefore_InvalidNegative, "index before (-ve, invalid)")
+end handler
+public handler TestFirstIndexBefore()
+	variable t
+	put [false, true, true, false, true] into t
+
+	test "first index before (+ve)" when the first index of true before 4 in t is 2
+	test "first index before (-ve)" when the first index of true before -2 in t is 2
+	test "first index before (+ve, limit)" when the first index of true before 6 in t is 2
+	test "first index before (+ve, missing)" when the first index of true before 2 in t is 0
+	test "first index before (-ve, missing)" when the first index of true before -4 in t is 0
+
+	MCUnitTestHandlerThrows(TestFirstIndexBefore_InvalidPositive, "first index before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestFirstIndexBefore_InvalidNegative, "first index before (-ve, invalid)")
+end handler
+public handler TestLastIndexBefore()
+	variable t
+	put [false, true, true, false, true] into t
+
+	test "last index before (+ve)" when the last index of true before 4 in t is 3
+	test "last index before (-ve)" when the last index of true before -2 in t is 3
+	test "last index before (+ve, limit)" when the last index of true before 6 in t is 5
+	test "last index before (+ve, missing)" when the last index of true before 2 in t is 0
+	test "last index before (-ve, missing)" when the last index of true before -4 in t is 0
+
+	MCUnitTestHandlerThrows(TestLastIndexBefore_InvalidPositive, "last index before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestLastIndexBefore_InvalidNegative, "last index before (-ve, invalid)")
+end handler
+public handler TestIndexBeforeZero()
+	-- "index of _ before 0 in _" should be equivalent to
+	-- "last index of _ in _"
+	variable t
+	put [false, true, true, false, true] into t
+	variable tNoBefore
+
+	put the last index of true in t into tNoBefore
+	test "index before (+ve, 0)" when the index of true before 0 in t is tNoBefore
+
+	put the first index of true in t into tNoBefore
+	test "first index before (+ve, 0)" when the first index of true before 0 in t is tNoBefore
+
+	put the last index of true in t into tNoBefore
+	test "last index before (+ve, 0)" when the last index of true before 0 in t is tNoBefore
 end handler
 
 end module
