@@ -42,22 +42,22 @@ use com.livecode.engine
 --
 
 -- property declarations
-property actions				get getActions		set setActions
-metadata actions.editor is "com.livecode.pi.text"
-metadata actions.default is "Title"
-metadata actions.default is "new,f067"
+property actions					get getActions			set setActions
+metadata actions.editor 			is "com.livecode.pi.text"
+metadata actions.default 			is "Title"
+metadata actions.default 			is "new,f067"
 
-property enableBackButton		get mBackIsEnabled	set setEnableBack
-metadata enableBackButton.default is "true"
+property enableBackButton			get mBackIsEnabled		set setEnableBack
+metadata enableBackButton.default 	is "true"
 
-property label					get mLabel			set setLabel
-metadata label.default is "Title"
+property label						get mLabel				set setLabel
+metadata label.default 				is "Title"
 
 
 property actionStyle			get mActionStyle	set setActionStyle
-metadata actionStyle.editor is "com.livecode.pi.enum"
-metadata actionStyle.options is "icons,names"
-metadata actionStyle.default is "icons"
+metadata actionStyle.editor 	is "com.livecode.pi.enum"
+metadata actionStyle.options 	is "icons,names"
+metadata actionStyle.default 	is "icons"
 --
 
 -- private instance variables
@@ -192,7 +192,10 @@ public handler OnPaint()
 		
 		if mActionStyle is "icons" then
 			set the font of this canvas to getFont("icon")
-			execute script ("return numtocodepoint(0x" & (element tX of element 2 of mActions) & ")")
+			variable tIcon as string
+			put element tX of element 2 of mActions into tIcon
+			replace " " with "" in tIcon
+			execute script ("return numtocodepoint(0x" & tIcon & ")")
 			fill text the result at center of getRect("action icon") on this canvas
 			
 			updateRight()

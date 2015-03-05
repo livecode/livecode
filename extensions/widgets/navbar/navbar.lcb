@@ -142,9 +142,15 @@ public handler OnPaint() as undefined
 		-- Draw the icon text
 		set the font of this canvas to getFont("icon")
 		if tCount is mSelectedItem then
-			execute script ("return numtocodepoint(0x" & (element tX of element 4 of mNavItems) & ")")
+			variable tSelectedIcon as string
+			put element tX of element 4 of mNavItems into tSelectedIcon
+			replace " " with "" in tSelectedIcon
+			execute script ("return numtocodepoint(0x" & tSelectedIcon & ")")
 		else
-			execute script ("return numtocodepoint(0x" & (element tX of element 3 of mNavItems) & ")")
+			variable tIcon as string
+			put element tX of element 3 of mNavItems into tIcon
+			replace " " with "" in tIcon
+			execute script ("return numtocodepoint(0x" & tIcon & ")")
 		end if
 		fill text the result at center of getRect("icon") on this canvas
 		
