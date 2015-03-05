@@ -747,7 +747,7 @@ void EmitOptionalType(long base_index, long& r_new_index)
 
 void EmitPointerType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("pointer", r_new_index))
+    if (!define_builtin_typeinfo("Pointer", r_new_index))
         return;
     
     MCLog("[Emit] PointerType(-> %ld)", r_new_index);
@@ -755,7 +755,7 @@ void EmitPointerType(long& r_new_index)
 
 void EmitBoolType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("bool", r_new_index))
+    if (!define_builtin_typeinfo("CBool", r_new_index))
         return;
     
     MCLog("[Emit] BoolType(-> %ld)", r_new_index);
@@ -763,7 +763,7 @@ void EmitBoolType(long& r_new_index)
 
 void EmitIntType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("int", r_new_index))
+    if (!define_builtin_typeinfo("CInt", r_new_index))
         return;
     
     MCLog("[Emit] IntType(-> %ld)", r_new_index);
@@ -771,7 +771,7 @@ void EmitIntType(long& r_new_index)
 
 void EmitUIntType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("uint", r_new_index))
+    if (!define_builtin_typeinfo("CUint", r_new_index))
         return;
     
     MCLog("[Emit] UIntType(-> %ld)", r_new_index);
@@ -779,7 +779,7 @@ void EmitUIntType(long& r_new_index)
 
 void EmitFloatType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("float", r_new_index))
+    if (!define_builtin_typeinfo("CFloat", r_new_index))
         return;
     
     MCLog("[Emit] FloatType(-> %ld)", r_new_index);
@@ -787,7 +787,7 @@ void EmitFloatType(long& r_new_index)
 
 void EmitDoubleType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("double", r_new_index))
+    if (!define_builtin_typeinfo("CDouble", r_new_index))
         return;
     
     MCLog("[Emit] DoubleType(-> %ld)", r_new_index);
@@ -803,7 +803,7 @@ void EmitAnyType(long& r_new_index)
 
 void EmitBooleanType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("boolean", r_new_index))
+    if (!define_builtin_typeinfo("Boolean", r_new_index))
         return;
     
     MCLog("[Emit] BooleanType(-> %ld)", r_new_index);
@@ -811,7 +811,7 @@ void EmitBooleanType(long& r_new_index)
 
 void EmitIntegerType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("number", r_new_index))
+    if (!define_builtin_typeinfo("Number", r_new_index))
         return;
     
     MCLog("[Emit] IntegerType(-> %ld)", r_new_index);
@@ -820,7 +820,7 @@ void EmitIntegerType(long& r_new_index)
 void EmitRealType(long& r_new_index)
 {
     // TODO: Real / Integer types.
-    if (!define_builtin_typeinfo("number", r_new_index))
+    if (!define_builtin_typeinfo("Number", r_new_index))
         return;
     
     MCLog("[Emit] RealType(-> %ld)", r_new_index);
@@ -828,7 +828,7 @@ void EmitRealType(long& r_new_index)
 
 void EmitNumberType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("number", r_new_index))
+    if (!define_builtin_typeinfo("Number", r_new_index))
         return;
     
     MCLog("[Emit] NumberType(-> %ld)", r_new_index);
@@ -836,7 +836,7 @@ void EmitNumberType(long& r_new_index)
 
 void EmitStringType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("string", r_new_index))
+    if (!define_builtin_typeinfo("String", r_new_index))
         return;
     
     MCLog("[Emit] StringType(-> %ld)", r_new_index);
@@ -844,7 +844,7 @@ void EmitStringType(long& r_new_index)
 
 void EmitDataType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("data", r_new_index))
+    if (!define_builtin_typeinfo("Data", r_new_index))
         return;
     
     MCLog("[Emit] DataType(-> %ld)", r_new_index);
@@ -852,7 +852,7 @@ void EmitDataType(long& r_new_index)
 
 void EmitArrayType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("array", r_new_index))
+    if (!define_builtin_typeinfo("Array", r_new_index))
         return;
     
     MCLog("[Emit] ArrayType(-> %ld)", r_new_index);
@@ -860,7 +860,7 @@ void EmitArrayType(long& r_new_index)
 
 void EmitListType(long& r_new_index)
 {
-    if (!define_builtin_typeinfo("list", r_new_index))
+    if (!define_builtin_typeinfo("List", r_new_index))
         return;
     
     MCLog("[Emit] ListType(-> %ld)", r_new_index);

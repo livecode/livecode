@@ -109,7 +109,7 @@ extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunits(bool p_is_last, MCS
     MCCodeunitEvalOffsetOfCodeunitsInRange(p_is_last, p_needle, p_target, MCRangeMake(0, UINDEX_MAX), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsAfter(bool p_is_last, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsAfter(bool p_is_last, MCStringRef p_needle, index_t p_after, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(p_target, nil, p_after, true, true, false, t_start, t_count))
@@ -121,7 +121,7 @@ extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsAfter(bool p_is_last
     MCCodeunitEvalOffsetOfCodeunitsInRange(p_is_last, p_needle, p_target, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsBefore(bool p_is_first, MCStringRef p_needle, uindex_t p_before, MCStringRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsBefore(bool p_is_first, MCStringRef p_needle, index_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(p_target, nil, p_before, true, false, true, t_start, t_count))
@@ -146,11 +146,6 @@ extern "C" MC_DLLEXPORT void MCCodeunitEvalBeginsWith(MCStringRef p_source, MCSt
 extern "C" MC_DLLEXPORT void MCCodeunitEvalEndsWith(MCStringRef p_source, MCStringRef p_suffix, bool& r_result)
 {
     r_result = MCStringEndsWith(p_source, p_suffix, kMCStringOptionCompareExact);
-}
-
-extern "C" MC_DLLEXPORT void MCCodeunitEvalNewlineCodeunitacter(MCStringRef& r_output)
-{
-    MCStringFormat(r_output, "\n");
 }
 
 extern "C" MC_DLLEXPORT void MCCodeunitFetchFirstCodeunitOf(MCStringRef p_target, MCStringRef& r_output)

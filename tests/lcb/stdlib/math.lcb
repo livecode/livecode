@@ -34,7 +34,7 @@ public handler TestCeil()
 end handler
 
 public handler TestRound()
-	variable tNum as number
+	variable tNum as Number
 	put 5.1 into tNum
 	round tNum
 	test "Round (in-place)" when tNum is 5

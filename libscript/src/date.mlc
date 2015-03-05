@@ -24,17 +24,17 @@ module com.livecode.date
 
 use com.livecode.foreign
 
-public foreign handler MCDateExecGetLocalDate(out rDateTime as list) as undefined binds to "<builtin>"
-public foreign handler MCDateExecGetUniversalTime(out rSeconds as double) as undefined binds to "<builtin>"
+public foreign handler MCDateExecGetLocalDate(out rDateTime as List) as undefined binds to "<builtin>"
+public foreign handler MCDateExecGetUniversalTime(out rSeconds as CDouble) as undefined binds to "<builtin>"
 
 /*
 Summary:	The local gregorian date
 
 Example:
-	variable tDateTime as list
+	variable tDateTime as List
 	put the local time into tDateTime
 
-	variable tDayOfMonth as number
+	variable tDayOfMonth as Number
 	put tDateTime[3] into tDayOfMonth
 
 Description:
