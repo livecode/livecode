@@ -2191,16 +2191,17 @@ void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStrin
     // MM-2012-09-05: [[ Property Listener ]]
     MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
     // AL-2015-03-04: [[ Bug 14737 ]] Don't reset the count of listeners to zero.
-    return;
-#endif			
+#else
     r_count = 0;
+#endif
+    
 }
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER
     r_time = MCpropertylistenerthrottletime;
     // AL-2015-03-04: [[ Bug 14737 ]] Don't reset the returned throttle time to 0.
-    return;
-#endif			
+#else
     r_time = 0;
+#endif
 }
