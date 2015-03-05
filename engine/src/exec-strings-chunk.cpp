@@ -76,13 +76,19 @@ void MCStringsCountChunksInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, M
     
     if (p_chunk_type == CT_CODEUNIT)
     {
-        r_count = MCU_min(MCStringGetLength(p_string), p_range . length) - p_range . offset;
+        // AL-2015-03-03: [[ Bug 14744 ]] Fix incorrect codeunit count calculation
+        r_count = MCU_min(MCStringGetLength(p_string) - p_range . offset, p_range . length);
         return;
     }
     
+    MCChunkType t_type;
+    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
+    
     MCTextChunkIterator *tci;
-    tci = new MCTextChunkIterator(p_chunk_type, p_string, p_range);
-    r_count = tci -> countchunks(ctxt);
+    tci = MCStringsTextChunkIteratorCreate(ctxt, p_string, p_chunk_type);
+    
+    r_count = tci -> CountChunks();
+    
     delete tci;
     return;
 }
@@ -107,36 +113,7 @@ uinteger_t MCStringsCountChunkCallback(void *context)
 
 void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_spaces, uindex_t& x_offset)
 {
-    uindex_t t_space_offset;
-    uindex_t t_length = MCStringGetLength(p_string);
-    uindex_t t_end_quote_offset = t_length;
-    uindex_t t_end_line_offset = t_length;
-    
-    if (MCStringGetCharAtIndex(p_string, x_offset) == '"')
-    {
-        // then bump the offset up to the next quotation mark + 1, or the beginning of the next line
-        // if neither of these are present then set offset to string length.
-        MCStringFirstIndexOfChar(p_string, '"', x_offset + 1, kMCCompareExact, t_end_quote_offset);
-        MCStringFirstIndexOf(p_string, ctxt . GetLineDelimiter(), x_offset + 1, kMCCompareExact, t_end_line_offset);
-        
-        if (t_end_quote_offset < t_end_line_offset)
-            x_offset = t_end_quote_offset + 1;
-        else if (t_end_line_offset < t_end_quote_offset)
-            x_offset = t_end_line_offset + MCStringGetLength(ctxt . GetLineDelimiter());
-        else
-            x_offset = t_length;
-    }
-    else
-    {
-        while (!MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, x_offset)) && x_offset < t_length)
-            x_offset++;
-    }
-    
-    if (p_skip_spaces)
-    {
-        while (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, x_offset)) && x_offset < t_length)
-            x_offset++;
-    }
+    MCChunkSkipWord(p_string, ctxt . GetLineDelimiter(), ctxt . GetStringComparisonType(), p_skip_spaces, x_offset);
 }
 
 // AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a given range, to prevent substring copying in text chunk resolution.
@@ -199,9 +176,9 @@ void MCStringsGetExtentsByOrdinalInRange(MCExecContext& ctxt, Chunk_term p_chunk
 void MCStringsGetExtentsByRangeInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCValueRef p_string, MCRange *p_range, uinteger_t& r_first, uinteger_t& r_chunk_count)
 {
     if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
-        MCChunkGetExtentsOfByteChunkByRangeInRange((MCDataRef)p_string, p_range, p_first, p_last, r_first, r_chunk_count);
+        MCChunkGetExtentsOfByteChunkByRangeInRange((MCDataRef)p_string, p_range, p_first, p_last, false, false, false, r_first, r_chunk_count);
     else if (p_chunk_type == CT_CODEUNIT)
-        MCChunkGetExtentsOfCodeunitChunkByRangeInRange((MCStringRef)p_string, p_range, p_first, p_last, r_first, r_chunk_count);
+        MCChunkGetExtentsOfCodeunitChunkByRangeInRange((MCStringRef)p_string, p_range, p_first, p_last, false, false, false, r_first, r_chunk_count);
     else
     {
         MCChunkCountState t_state;
@@ -209,7 +186,7 @@ void MCStringsGetExtentsByRangeInRange(MCExecContext& ctxt, Chunk_term p_chunk_t
         t_state . chunk = p_chunk_type;
         t_state . ctxt = &ctxt;
         t_state . range = p_range;
-        MCChunkGetExtentsByRangeInRange(p_first, p_last, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
+        MCChunkGetExtentsByRangeInRange(false, false, false, p_first, p_last, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
     }
 }
 
@@ -217,9 +194,9 @@ void MCStringsGetExtentsByRangeInRange(MCExecContext& ctxt, Chunk_term p_chunk_t
 void MCStringsGetExtentsByExpressionInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, MCStringRef p_string, MCRange *p_range, uinteger_t& r_first, uinteger_t& r_chunk_count)
 {
     if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
-        MCChunkGetExtentsOfByteChunkByExpressionInRange((MCDataRef)p_string, p_range, p_first, r_first, r_chunk_count);
+        MCChunkGetExtentsOfByteChunkByExpressionInRange((MCDataRef)p_string, p_range, p_first, false, false, false, r_first, r_chunk_count);
     else if (p_chunk_type == CT_CODEUNIT)
-        MCChunkGetExtentsOfCodeunitChunkByExpressionInRange((MCStringRef)p_string, p_range, p_first, r_first, r_chunk_count);
+        MCChunkGetExtentsOfCodeunitChunkByExpressionInRange((MCStringRef)p_string, p_range, p_first, false, false, false, r_first, r_chunk_count);
     else
     {
         MCChunkCountState t_state;
@@ -227,7 +204,7 @@ void MCStringsGetExtentsByExpressionInRange(MCExecContext& ctxt, Chunk_term p_ch
         t_state . chunk = p_chunk_type;
         t_state . ctxt = &ctxt;
         t_state . range = p_range;
-        MCChunkGetExtentsByExpressionInRange(p_first, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
+        MCChunkGetExtentsByExpressionInRange(false, false, false, p_first, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
     }
 }
 
@@ -1150,3 +1127,74 @@ void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
     x_mark . start = t_cu_range . offset + t_first;
     x_mark . finish = x_mark . start + t_chunk_count;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type) : MCTextChunkIterator(p_text, p_chunk_type)
+{
+    m_sp = new MCScriptPoint(p_text);
+}
+
+MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction) : MCTextChunkIterator(p_text, p_chunk_type, p_restriction)
+{
+    MCAutoStringRef t_substring;
+    MCStringCopySubstring(m_text, p_restriction, &t_substring);
+    MCValueAssign(m_text, *t_substring);
+    m_sp = new MCScriptPoint(m_text);
+}
+
+MCTextChunkIterator_Tokenized::~MCTextChunkIterator_Tokenized()
+{
+    delete m_sp;
+}
+
+bool MCTextChunkIterator_Tokenized::Next()
+{
+    MCerrorlock++;
+    
+    bool t_found = true;
+    uint2 t_pos;
+    Parse_stat ps = m_sp -> nexttoken();
+    if (ps == PS_ERROR || ps == PS_EOF)
+        t_found = false;
+    
+    if (t_found)
+    {
+        m_range . offset = m_sp -> getindex();
+        m_range . length = MCStringGetLength(m_sp -> gettoken_stringref());
+    }
+    
+    return t_found;
+}
+
+
+MCTextChunkIterator *MCStringsTextChunkIteratorCreate(MCExecContext& ctxt, MCStringRef p_text, Chunk_term p_chunk_type)
+{
+    if (p_chunk_type == CT_TOKEN)
+    {
+        MCTextChunkIterator *tci;
+        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type));
+        return tci;
+    }
+    
+    return MCChunkCreateTextChunkIterator(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
+}
+
+bool MCStringsTextChunkIteratorNext(MCExecContext& ctxt, MCTextChunkIterator *tci)
+{
+    tci -> SetOptions(ctxt . GetStringComparisonType());
+    
+    MCChunkType t_type;
+    t_type = tci -> GetType();
+    
+    if (t_type == kMCChunkTypeLine || t_type == kMCChunkTypeItem)
+    {
+        MCStringRef t_delimiter;
+        t_delimiter = t_type == kMCChunkTypeLine ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter();
+        reinterpret_cast<MCTextChunkIterator_Delimited *>(tci) -> SetDelimiter(t_delimiter);
+    }
+    
+    return tci -> Next();
+}
+
+////////////////////////////////////////////////////////////////////////////////

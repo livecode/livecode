@@ -924,7 +924,7 @@
         ||
             where(Type -> named(_, Id))
             Id'Name -> Name
-            IsNameEqualToString(Name, "bool")
+            IsNameEqualToString(Name, "CBool")
         ||
             Error_IterateSyntaxMethodMustReturnBoolean(Position)
         |)

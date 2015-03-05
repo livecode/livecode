@@ -22,12 +22,12 @@ module com.livecode.bitwise
 
 use com.livecode.foreign
 
-public foreign handler MCBitwiseEvalBitwiseAnd(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseOr(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseNot(in Operand as int, out Value as int) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseXor(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseAnd(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseOr(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseNot(in Operand as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseXor(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 
-public foreign handler MCBitwiseEvalBitwiseShift(in Target as int, in IsRight as bool, in Shift as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShift(in Target as LCInt, in IsRight as CBool, in Shift as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 
 --
 
@@ -40,7 +40,7 @@ Right:          An expression which evaluates to an integer.
 Returns: 	The integer whose binary representation is the result of the bitwise AND operation.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 3 bitwise and 6 into tVar -- tVar contains 2
 	
 Description:
@@ -66,7 +66,7 @@ Returns: 	The integer whose binary representation is the result of the bitwise O
                 
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 3 bitwise or 6 into tVar -- tVar contains 7
 	
 Description:
@@ -90,7 +90,7 @@ Right:          An expression which evaluates to an integer.
 Returns: 	The integer whose binary representation is the result of the bitwise XOR operation.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put 3 bitwise xor 6 into tVar -- tVar contains 5
 	
 Description:
@@ -113,7 +113,7 @@ Operand:        An expression which evaluates to an integer.
 Returns: 	The integer whose binary representation is the result of the bitwise NOT operation.
 
 Example:
-	variable tVar as number
+	variable tVar as Number
 	put bitwise not -5 into tVar -- tVar contains 4
 
 Description:
