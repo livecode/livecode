@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "foundation-private.h"
 
@@ -42,6 +43,39 @@ bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callb
 bool MCHandlerInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
     return self -> callbacks -> invoke(MCHandlerGetContext(self), p_arguments, p_argument_count, r_value);
+}
+
+MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef self, MCProperListRef& x_arguments, MCValueRef& r_value)
+{
+    MCAutoValueRefArray t_args;
+    MCAutoProperListRef t_out_args;
+    
+    if (!t_args . New(MCProperListGetLength(x_arguments)))
+        goto error_exit;
+    
+    for(uindex_t i = 0; i < MCProperListGetLength(x_arguments); i++)
+        t_args[i] = MCValueRetain(MCProperListFetchElementAtIndex(x_arguments, i));
+    
+    if (!MCHandlerInvoke(self, t_args . Ptr(), t_args . Size(), r_value))
+        goto error_exit;
+    
+    if (!t_args . TakeAsProperList(Out(t_out_args)))
+        goto error_exit;
+    
+    MCValueAssign(x_arguments, t_out_args . Take());
+    
+    return nil;
+    
+error_exit:
+    MCValueRelease(x_arguments);
+    x_arguments = nil;
+    r_value = nil;
+    
+    MCErrorRef t_error;
+    if (!MCErrorCatch(t_error))
+        return nil;
+    
+    return t_error;
 }
 
 void *MCHandlerGetContext(MCHandlerRef self)

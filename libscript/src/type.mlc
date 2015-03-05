@@ -22,16 +22,16 @@ module com.livecode.type
 
 use com.livecode.foreign
 
-public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsNotDefined(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsABoolean(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsANumber(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsAString(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsAData(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsAnArray(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsAList(in Target as optional any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotDefined(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsABoolean(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsANumber(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAString(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAData(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAnArray(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsAList(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
 
 /*
 Summary:    Determines whether <Target> is empty or not.
@@ -89,6 +89,29 @@ syntax IsNotDefined is postfix operator with precedence 7
 	<Target: Expression> "is not" "defined"
 begin
 	MCTypeEvalIsNotDefined(Target, output)
+end syntax
+
+/*
+Summary:	Determines whether <Target> is defined or not.
+
+Target:	Any expression
+Output:	Returns false if the given expression <Target> is defined, and true otherwise
+*/
+syntax IsUndefined is postfix operator with precedence 7
+	<Target: Expression> "is undefined"
+begin
+	MCTypeEvalIsNotDefined(Target, output)
+end syntax
+
+/*
+Summary:	Determines whether <Target> is defined or not.
+Target:	Any expression
+Output:	Returns true if the given expression <Target> is defined, and false otherwise.
+*/
+syntax IsNotUndefined is postfix operator with precedence 7
+	<Target: Expression> "is not undefined"
+begin
+	MCTypeEvalIsDefined(Target, output)
 end syntax
 
 --

@@ -89,6 +89,7 @@ void *MCU_loadmodule(const char *p_source)
             free(t_module_path);
         }
     }
+    return (void *)t_module;
 }
 
 void MCU_unloadmodule(void *p_module)
