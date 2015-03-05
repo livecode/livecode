@@ -53,8 +53,8 @@ public foreign handler MCStringEvalIsGreaterThan(in Left as String, in Right as 
 
 public foreign handler MCStringEvalEmpty(out Value as String) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalCodeOfChar(in pChar as string, out pCode as uint) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalCharWithCode(in pCode as uint, out pChar as string) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalCodeOfChar(in pChar as String, out pCode as LCUInt) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalCharWithCode(in pCode as LCUInt, out pChar as String) as undefined binds to "<builtin>"
 
 --
 
