@@ -498,7 +498,7 @@ public handler testBitwise(inout xResults as List)
 	put bitwise not 5 into tVar
 	testLog("Bitwise", "BitwiseNot", tVar is - 6, xResults)
 
-	put 7 shifted by 2 bitwise into tVar 
+	put 7 shifted left by 2 bitwise into tVar 
 	testLog("Bitwise", "BitwiseShift", tVar is 28, xResults)
 	
 end handler
