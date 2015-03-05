@@ -73,13 +73,16 @@ private variable mGeometryIsChanged	as boolean
 private variable mNumSegments		as integer
 private variable mLeft				as real
 
-private variable mPerimeter			as Rectangle
+--private variable mPerimeter			as Rectangle
+private variable mPerimeter			as Path
+private variable mRadius			as real
+
 private variable mLines				as list			-- list of line paths
 --
 
 -- constants
-constant kIconSize is 16
-constant kTextSize is 13
+--constant kIconSize is 16
+--constant kTextSize is 13
 --
 
 ----------
@@ -143,8 +146,13 @@ public handler OnCreate()
 	put true into mGeometryIsChanged
 	put (the number of elements in mSegmentNames) into mNumSegments
 	put 0 into mLeft
-	put rectangle [0,0,0,0] into mPerimeter
+	
+	--put rectangle [0,0,0,0] into mPerimeter
+	put the empty path into mPerimeter
+	
 	put the empty list into mLines
+	
+	put 0 into mRadius
 	--
 	
 end handler
@@ -154,13 +162,14 @@ end handler
 -- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	
-	drawSegments()
-	
 	if mGeometryIsChanged then
 		-- update mPerimeter and mLines variables if the geometry has changed
+		put (the trunc of my height)/5 into mRadius
 		updatePerimeter()
 		updateLines()
 	end if
+	
+	drawSegments()
 	
 	-- draw the lines to separate the segments
 	set the antialias of this canvas to false
@@ -178,7 +187,8 @@ public handler OnPaint()
 	-- draw the perimeter of the control
 	set the paint of this canvas to fetchPaint("lines")
 	set the stroke width of this canvas to 1
-	stroke rectangle path of mPerimeter on this canvas
+	--stroke rectangle path of mPerimeter on this canvas
+	stroke mPerimeter on this canvas
 	--
 	
 	put false into mGeometryIsChanged
@@ -281,7 +291,17 @@ private handler drawSegments() as undefined
 	
 			-- fill in the background of the selected segment(s)
 			set the paint of this canvas to fetchPaint("lines")
-			fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] on this canvas
+			if tX = 1 then
+				fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
+				fill rectangle path of rectangle [mLeft+tWidth, 0, mLeft+tWidth*0.8, my height] on this canvas
+				
+			else if tX = mNumSegments then
+				fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
+				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth*0.25, my height] on this canvas
+				
+			else
+				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] on this canvas
+			end if
 			--
 			
 			-- draw the label(s) in the selected segment(s)
@@ -349,7 +369,8 @@ private handler updatePerimeter() as undefined
 	 	add fetchWidth(tX) to tRight
 	end repeat
 	
-	put rectangle [0.5, 0.5, (the trunc of tRight) + 0.5, (the trunc of my height) - 0.5] into mPerimeter
+	--put rectangle [0.5, 0.5, (the trunc of tRight) + 0.5, (the trunc of my height) - 0.5] into mPerimeter
+	put rounded rectangle path of rectangle [0.5, 0.5, (the trunc of tRight) + 0.5, (the trunc of my height) - 0.5] with radius mRadius into mPerimeter
 end handler
 ----------
 
@@ -417,9 +438,11 @@ private handler fetchWidth(in pSegment as integer) as real
 	else
 	
 		if mSegmentDisplay is "icon" then
-			put kIconSize into tWidth
+			--put kIconSize into tWidth
+			put 16 into tWidth
 		else
-			put (the number of chars in element pSegment of mSegmentLabels)*(kTextSize/3)*2 into tWidth
+			--put (the number of chars in element pSegment of mSegmentLabels)*(kTextSize/3)*2 into tWidth
+			put (the number of chars in element pSegment of mSegmentLabels)*(13/3)*2 into tWidth
 		end if
 		
 		if tWidth < (element pSegment of mSegmentMinWidth) then
