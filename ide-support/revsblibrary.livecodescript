@@ -883,6 +883,7 @@ end revSBResaveScriptOnlyStackAsProperStackFile
 # AL-2015-02-02: [[ Scriptify IDE ]] As we remove buttons from revLIbrary, we'll need to add to
 # this function to return the 'common' name of each of the libraries.
 function revSBScriptLibraryNameFromStackName pStack
+   # AL-2015-03-05: [[ Bug 14813 ]] Internet and Printing are the only script library naming exceptions
    switch pStack
       case "revLibUrl"
          return "Internet"
@@ -903,20 +904,14 @@ function revSBScriptLibraryNameFromStackName pStack
 end revSBScriptLibraryNameFromStackName
 
 function revSBStackNameFromScriptLibraryName pLib
+   # AL-2015-03-05: [[ Bug 14813 ]] Internet and Printing are the only script library naming exceptions
    switch pLib
       case "Internet"
          return "revLibUrl"
       case "Printing"
          return "revPrintLibrary"
-      case "Geometry"
-      case "Animation"
-      case "XMLRPC"
-      case "WidgetTracker"
-      case "Database"
-      case "Table"
-         return "rev" & pLib & "Library"
       default
-         return empty
+         return "rev" & pLib & "Library"
    end switch
    return pLib
 end revSBStackNameFromScriptLibraryName

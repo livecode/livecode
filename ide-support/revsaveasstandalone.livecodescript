@@ -71,26 +71,26 @@ on initialiseLibrary
    end if
    # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] The library autodetection uses various patterns to find library handlers being used.
    # Geometry
-   put "cRevGeometry" into sPatternsA["revGeometryLibrary"]["Property"]
+   put "cRevGeometry" into sPatternsA["Geometry"]["Property"]
    
    # Animation
-   put "cRevAnimation" into sPatternsA["revAnimationLibrary"]["Property"]
+   put "cRevAnimation" into sPatternsA["Animation"]["Property"]
    
    # Table
-   put "cRevTable" into sPatternsA["revTableLibrary"]["Property"]
+   put "cRevTable" into sPatternsA["Table"]["Property"]
    
    # Database
-   put "cRevDatabase" into sPatternsA["revDatabaseLibrary"]["Property"]
-   put "revDatabase,revdb_" into sPatternsA["revDatabaseLibrary"]["Root"]
-   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["revDatabaseLibrary"]["Script"]
+   put "cRevDatabase" into sPatternsA["Database"]["Property"]
+   put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
+   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
    
    # Internet
-   put "libUrl" into sPatternsA["revLibUrl"]["Root"]
-   put "cachedURL,cachedURLs,ftp,http,https,SSL & Encryption,load,post,resetAll,URL,URLStatus" into sPatternsA["revLibUrl"]["Script"]
+   put "libUrl" into sPatternsA["Internet"]["Root"]
+   put "cachedURL,cachedURLs,ftp,http,https,SSL & Encryption,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
    
    # XML
-   put "revXML" into sPatternsA["revXMLRPCLibrary"]["Root"]
-   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["revXMLRPCLibrary"]["Script"]
+   put "revXML" into sPatternsA["XMLRPC"]["Root"]
+   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XMLRPC"]["Script"]
    
    # Speech
    put "revIsSpeaking,revSetSpeechPitch,revSetSpeechSpeed,revSetSpeechVoice,revSpeak,revSpeechVoices,revStopSpeech,revUnloadSpeech" into sPatternsA["Speech"]["Script"]
@@ -102,7 +102,7 @@ on initialiseLibrary
    put "secure,encrypt,decrypt,cipherNames,randomBytes" into sPatternsA["SSL & Encryption"]["Script"]
    
    # Printing
-   put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["revPrintLibrary"]["Script"]
+   put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["Printing"]["Script"]
    
    # Browser
    put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
@@ -847,7 +847,7 @@ end revOutputDirectories
 # to the stack being built. Will remove any existing group called revLibraries from card 1 of the stack.
 private command revCopyScriptLibraries pStack, pPlatform
    # AL-2015-02-03: [[ Scriptify IDE ]] Ensure revCommonLibrary is always included in a standalone
-   revAddLibrary "revCommonLibrary"
+   revAddLibrary "Common"
    
    -- data grid
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
@@ -855,11 +855,11 @@ private command revCopyScriptLibraries pStack, pPlatform
    end if
    
    if sStandaloneSettingsA["databaseDrivers"] = "" then 
-      revAddLibrary "revDatabaseLibrary"
+      revAddLibrary "Database"
    end if
    
    if sStandaloneSettingsA["includeProfiles"] = "" then 
-      revAddLibrary "revProfilesLibrary"
+      revAddLibrary "Profiles"
    end if
    
    /*
@@ -1758,7 +1758,7 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    end if
    
    # AL-2015-02-06: [[ SB Inclusions ]] Ensure revDatabaseLibrary stack is included
-   put return & "revDatabaseLibrary" after sStandaloneSettingsA["scriptLibraries"]
+   put return & "Database" after sStandaloneSettingsA["scriptLibraries"]
    
    local tDBLibPath
    put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
@@ -2147,9 +2147,12 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions to the deploy parameters
    repeat for each line tLibrary in sStandaloneSettingsA["scriptLibraries"]
-      if there is a stack tLibrary then
-         put return & the effective filename of stack tLibrary after sStandaloneSettingsA["auxiliary_stackfiles"]
-         put return & "revInternal__LoadLibrary" && tLibrary after sStandaloneSettingsA["startup_script"]
+      # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
+      local tLibraryStack
+      put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
+      if there is a stack tLibraryStack then
+         put return & the effective filename of stack tLibraryStack after sStandaloneSettingsA["auxiliary_stackfiles"]
+         put return & "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
       end if
    end repeat
    if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then
