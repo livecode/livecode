@@ -441,6 +441,46 @@ extern "C" MC_DLLEXPORT void MCListEvalIsNotEqualTo(MCProperListRef p_left, MCPr
     r_output = !MCProperListIsEqualTo(p_left, p_right);
 }
 
+////////////////////////////////////////////////////////////////
+
+static void
+MCListEvalIndexOfElementInRange (bool p_is_last,
+                                 MCValueRef p_needle,
+                                 MCProperListRef p_haystack,
+                                 MCRange p_range,
+                                 uindex_t & r_output)
+{
+	if (MCProperListIsEmpty (p_haystack))
+	{
+		r_output = 0;
+		return;
+	}
+
+	uindex_t t_offset = 0;
+	bool t_found = false;
+	if (!p_is_last)
+		t_found = MCProperListFirstIndexOfElementInRange (p_haystack, p_needle,
+		                                                  p_range, t_offset);
+	else
+		t_found = MCProperListLastIndexOfElementInRange (p_haystack, p_needle,
+		                                                 p_range, t_offset);
+
+	if (t_found)
+		r_output = t_offset + 1;
+	else
+		r_output = 0;
+}
+
+extern "C" MC_DLLEXPORT void
+MCListEvalIndexOfElement (bool p_is_last,
+                          MCValueRef p_needle,
+                          MCProperListRef p_haystack,
+                          uindex_t & r_output)
+{
+	MCRange t_range = MCRangeMake (0, UINDEX_MAX);
+	MCListEvalIndexOfElementInRange (p_is_last, p_needle, p_haystack, t_range, r_output);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST

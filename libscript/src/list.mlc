@@ -74,6 +74,8 @@ public foreign handler MCListExecDeleteElementRangeOf(in Start as LCIndex, in Fi
 public foreign handler MCListExecDeleteFirstElementOf(inout Target as List) as undefined binds to "<builtin>"
 public foreign handler MCListExecDeleteLastElementOf(inout Target as List) as undefined binds to "<builtin>"
 
+public foreign handler MCListEvalIndexOfElement(in IsLast as CBool, in Needle as any, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -853,6 +855,42 @@ syntax RepeatForEachElementInList is iterator
     "element" <Iterand: Expression>
 begin
     MCListRepeatForEachElement(iterator, Iterand, container)
+end syntax
+
+----------------------------------------------------------------
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within <Haystack>
+
+Needle:	An expression which evaluates to any value.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index from the start of <Haystack>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b"]
+	put the index of "b" in tVar into tOffset
+	-- tOffset contains 2
+
+	put the last index of "b" in tVar into tOffset
+	-- tOffset contains 5
+
+Description:
+Use `the index of` to find where particular elements occur within a
+list.  <Haystack> is scanned for an element that is equal to <Needle>,
+and the position of the element found is returned.  If neither the
+"first index" nor "last index" are specified, the index of the first
+element found is returned.  If no element of <Haystack> is equal to
+<Needle>, the return value is 0.
+
+Tags: Lists
+*/
+syntax ListIndex is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalIndexOfElement(IsLast, Needle, Haystack, output)
 end syntax
 
 end module

@@ -376,4 +376,20 @@ public handler TestRepeatElement()
 	test "repeat element (count)" when tCount is 4
 end handler
 
+----------------------------------------------------------------
+
+public handler TestIndex()
+	variable t
+	put ["x", 1, true, [], []] into t
+
+	test "index" when the index of 1 in t is 2
+	test "index (list)" when the index of [] in t is 4
+	test "index (missing)" when the index of false in t is 0
+
+	test "first index" when the first index of [] in t is 4
+	test "last index" when the last index of [] in t is 5
+
+	test "index (empty)" when the index of 1 in [] is 0
+end handler
+
 end module
