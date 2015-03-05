@@ -371,51 +371,52 @@ end folderNameMakeLegal
 
 private function revStandalonePlatformDetails pPlatform
    local tDetailsA
-  switch
+   -- SN-2015-03-04: [[ IDE Restructure ]] Externals folder contains the externals,
+   --  and Support contains support libraries (revpdfprinter and revsecurity):
+   --  they should have their own keys in the details array.
+   local tArchFolder
+   switch
       case pPlatform contains "MacOSX"
          -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
          -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-         if not revEnvironmentIsInstalled() then
-            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
-         else
-            put revEnvironmentRuntimePath() & "/Mac OS X/x86-32/Support" into tDetailsA["externals_folder"]
-         end if
+         put "Mac OS X/x86-32" into tArchFolder
          put ".bundle" into tDetailsA["loadable_extension"]
          put ".dylib" into tDetailsA["shared_extension"]
          put "MacOSX" into  tDetailsA["platform"]
          put "x86-32" into tDetailsA["architecture"]
          break
       case pPlatform = "Windows"
-         -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-         if not revEnvironmentIsInstalled() then
-            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
-         else
-            put revEnvironmentRuntimePath() &  "/Windows/x86-32/Support" into tDetailsA["externals_folder"]
-         end if
+         put "Windows/x86-32" into tArchFolder
          put ".dll" into tDetailsA["loadable_extension"]
          put "Windows" into tDetailsA["platform"]
          put "x86-32" into tDetailsA["architecture"]
          break
       default
          if pPlatform is "Linux" then
-            put revEnvironmentRuntimePath() &  "/Linux/x86-32/Support" into tDetailsA["externals_folder"]
+            put "Linux/x86-32" into tArchFolder
             put "x86-32" into tDetailsA["architecture"]
          else if pPlatform is "Linux x64" then
             -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
-            put revEnvironmentRuntimePath() & "/Linux/x86-64/Support" into tDetailsA["externals_folder"]
+            put "Linux/x86-64" into tArchFolder
             put "x86-64" into tDetailsA["architecture"]
          else -- if pPlatform is "Linux armv6-hf" then
             -- FG-2014-08-19: [[ RPi ]] Compute the correct path for 64-bit Linux
-            put revEnvironmentRuntimePath() & "/Linux/armv6-hf/Support" into tDetailsA["externals_folder"]
+            put "Linux/armv6-hf" into tArchFolder
             put "armv6-hf" into tDetailsA["architecture"]
-         end if
-         -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-         if not revEnvironmentIsInstalled() then
-            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
          end if
          put ".so" into tDetailsA["loadable_extension"]
          put "Linux" into tDetailsA["platform"]
    end switch
+
+   -- SN-2015-03-04: [[ CloneAndRun ]] Refactor the setting of externals / support location
+   if revEnvironmentIsInstalled() then
+      put revEnvironmentRuntimePath() & slash & tArchFolder into tRuntimeFolder
+      put tRuntimeFolder & slash & "Support" into tDetailsA["support_folder"]
+      put tRuntimeFolder & slash & "Externals" into tDetailsA["externals_folder"]
+   else
+      put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
+      put revEnvironmentBinariesPath() into tDetailsA["support_folder"]
+   end if
    return tDetailsA
 end revStandalonePlatformDetails
 
@@ -1763,10 +1764,9 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    local tDBLibPath
    put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
    
-   local tExternalsFolder, tExtension, tSharedExtension, tPlatform, tArch
+   local tExtension, tSharedExtension, tPlatform, tArch
    local tDetailsA
    put revStandalonePlatformDetails(pPlatform) into tDetailsA
-   put tDetailsA["externals_folder"] into tExternalsFolder
    put tDetailsA["loadable_extension"] into tExtension
    if tDetailsA["shared_extension"] is not empty then
       put tDetailsA["shared_extension"] into tSharedExtension
@@ -1932,10 +1932,11 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    put item 1 to -2 of pStandalonePath into tCurrentLocation
    set the itemDel to ","
    
-   local tExternalsFolder, tExtension, tSharedExtension, tPlatform, tArch
+   local tSupportFolder, tExtension, tSharedExtension, tPlatform, tArch
    local tDetailsA
    put revStandalonePlatformDetails(pPlatform) into tDetailsA
-   put tDetailsA["externals_folder"] into tExternalsFolder
+   -- SN-2015-03-04: [[ IDE Restructure ]] revpdfprinter and revsecurity are in the support folder
+   put tDetailsA["support_folder"] into tSupportFolder
    put tDetailsA["loadable_extension"] into tExtension
    if tDetailsA["shared_extension"] is not empty then
       put tDetailsA["shared_extension"] into tSharedExtension
@@ -1948,7 +1949,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    
    # OK-2010-04-26: Bug 8539 - PDF Printer not included
    if sStandaloneSettingsA["pdfPrinter"] then
-      revCopyModule tPlatform, "revpdfprinter", "revpdfprinter" & tExtension, tExternalsFolder, tCurrentLocation, "", tPlatform is "MacOSX"
+      revCopyModule tPlatform, "revpdfprinter", "revpdfprinter" & tExtension, tSupportFolder, tCurrentLocation, "", tPlatform is "MacOSX"
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", Support, revpdfprinter" & tExtension && the result & ": required for PDF printing."
       else
@@ -1958,7 +1959,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    
    -- MM-2014-01-29: [[ OpenSSL ]] We now build our own version of OpenSSL. 
    if "SSL & Encryption" is among the lines of sStandaloneSettingsA["scriptLibraries"] then
-      revCopyModule tPlatform, "revsecurity", "revsecurity" & tSharedExtension, tExternalsFolder, tCurrentLocation, "", false
+      revCopyModule tPlatform, "revsecurity", "revsecurity" & tSharedExtension, tSupportFolder, tCurrentLocation, "", false
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", Support, revsecurity" & tSharedExtension && the result & ": required for SSL."
       else
