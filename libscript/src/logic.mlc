@@ -22,16 +22,16 @@ module com.livecode.logic
 
 use com.livecode.foreign
 
-//foreign handler MCLogicEvalAnd(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
-//foreign handler MCLogicEvalOr(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalNot(in Operand as bool, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalIsEqualTo(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalIsNotEqualTo(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
+//foreign handler MCLogicEvalAnd(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
+//foreign handler MCLogicEvalOr(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCLogicEvalNot(in Operand as CBool, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCLogicEvalIsEqualTo(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCLogicEvalIsNotEqualTo(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCLogicEvalBoolFormattedAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalStringParsedAsBool(in Target as string, out Value as optional boolean) as undefined binds to "<builtin>"
-public foreign handler MCLogicExecFormatBoolAsString(in Target as bool) as string binds to "<builtin>"
-public foreign handler MCLogicExecParseStringAsBool(in Target as string) as optional boolean binds to "<builtin>"
+public foreign handler MCLogicEvalBoolFormattedAsString(in Target as CBool, out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCLogicEvalStringParsedAsBool(in Target as String, out Value as optional Boolean) as undefined binds to "<builtin>"
+public foreign handler MCLogicExecFormatBoolAsString(in Target as CBool) as String binds to "<builtin>"
+public foreign handler MCLogicExecParseStringAsBool(in Target as String) as optional Boolean binds to "<builtin>"
 
 --
 
@@ -145,7 +145,7 @@ Operand:	An expression that evaluates to a boolean value.
 Returns:	"true" or "false"
 
 Example:
-	variable tString as string
+	variable tString as String
 	variable tBool as boolean
 	put (false is not not true) is false into tBool
 	put tBool formatted as string into tString -- tString contains "true"
@@ -168,8 +168,8 @@ Operand:	An expression that evaluates to a boolean value.
 The result:	"true" or "false"
 
 Example:
-	variable tVar as string
-	parse 1 = 0 as string
+	variable tVar as String
+	parse 1 = 0 as String
 	put the result into tVar
 	put "e" into char 3 of tVar -- tVar is "tree"
 
@@ -191,13 +191,13 @@ Operand:	An expression that evaluates to a string.
 Returns:	true or false
 
 Example:
-	variable tString as string
-	variable tBool as optional boolean
+	variable tString as String
+	variable tBool as optional Boolean
 	put "false" into tString
 	put tString parsed as boolean into tBool -- tBool contains false
 	
 Example:
-	variable tBool as optional boolean
+	variable tBool as optional Boolean
 	put "flase" parsed as boolean into tBool -- tBool is not defined
 
 Description:
@@ -219,14 +219,14 @@ Operand:	An expression that evaluates to a string.
 Returns:	true or false
 
 Example:
-	variable tString as string
-	variable tBool as optional boolean
+	variable tString as String
+	variable tBool as optional Boolean
 	combine ["f", "a", "l", "s" "e"] with "" into tString
 	put tString parsed as boolean into tBool -- tBool contains false
 
 Example:
-	variable tResult as string
-	parse "sdfsdf" as boolean
+	variable tResult as String
+	parse "sdfsdf" as Boolean
 	if the result is not defined then
 		put "not a valid boolean" into tResult
 	end if

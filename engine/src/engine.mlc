@@ -40,19 +40,19 @@ use com.livecode.foreign
 public foreign type ScriptObject binds to "kMCEngineScriptObjectTypeInfo"
 
 public foreign handler MCEngineExecResolveScriptObject(in pObjectId) as ScriptObject binds to "<builtin>"
-public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as bool) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as bool) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as string, in pObject as ScriptObject) as any binds to "<builtin>"
-public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as string, in pObject as ScriptObject, in pValue as any) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as CBool) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as CBool) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject) as any binds to "<builtin>"
+public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, in pValue as any) as undefined binds to "<builtin>"
 public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as list) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecDispatchToScriptObject(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject) as any binds to "<builtin>"
-public foreign handler MCEngineExecDispatchToScriptObjectWithArguments(in pIsFunction as bool, in pMessage as string, in pTarget as ScriptObject, in pArguments as optional list) as any binds to "<builtin>"
-public foreign handler MCEngineEvalMessageWasHandled(out pHandled as bool) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as bool) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecExecuteScript(in pScript as string) as any binds to "<builtin>"
-public foreign handler MCEngineExecLog(in pFormat as string) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecLogWithValues(in pFormat as string, in pValues as list) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as List) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecDispatchToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) as any binds to "<builtin>"
+public foreign handler MCEngineExecDispatchToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) as any binds to "<builtin>"
+public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) as undefined binds to "<builtin>"
+public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScript(in pScript as String) as any binds to "<builtin>"
+public foreign handler MCEngineExecLog(in pFormat as String) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecLogWithValues(in pFormat as String, in pValues as List) as undefined binds to "<builtin>"
 
 /*
 Summary:	Resolves a string to a script object.
@@ -144,7 +144,7 @@ Object:		An expression that evaluates to a <ScriptObject>.
 The result:	The value of the property.
 
 Example:
-	public handler myScript() as string
+	public handler myScript() as String
 		get property "script" of my script object
 		return the result
 	end handler
@@ -194,7 +194,7 @@ Object:		An expression that evaluates to a <ScriptObject>.
 The result:	The <ScriptObject> that is the owner of <Object>.
 
 Example:
-	public handler MyName() as string
+	public handler MyName() as String
 		get property "short name" of my script object
 		return the result
 	end handler
@@ -222,7 +222,7 @@ Object:		An expression that evaluates to a <ScriptObject>
 The result:	A list of <ScriptObject>s that are contained within <Object>.
 
 Example:
-	public handler GetSiblings(in pObject as ScriptObject) as list
+	public handler GetSiblings(in pObject as ScriptObject) as List
 		// Return the sibling objects of an object
 		return the children of the owner of pObject
 	end handler
@@ -328,7 +328,7 @@ Script: 	The script to execute.
 
 Example:
 	public handler SnapshotMe() as undefined
-		variable tVar as string
+		variable tVar as String
 		get property "number" of my script object
 		put the result formatted as string into tVar
 
@@ -352,7 +352,7 @@ String:		The string to log.
 Arguments:	A list of arguments.
 
 Example:
-	variable tList as list
+	variable tList as List
 	get property "name" of my script object
 	push the result onto tList
 	
@@ -373,10 +373,10 @@ end logChanged
 */
 
 syntax Log is statement
-    "log" <String: Expression> [ "with" <Arguments: Expression> ]
+    "log" <Message: Expression> [ "with" <Arguments: Expression> ]
 begin
-    MCEngineExecLog(String)
-    MCEngineExecLogWithValues(String, Arguments)
+    MCEngineExecLog(Message)
+    MCEngineExecLogWithValues(Message, Arguments)
 end syntax
 
 end module

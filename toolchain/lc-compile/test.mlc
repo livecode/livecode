@@ -24,11 +24,11 @@ use com.livecode.system
 use com.livecode.date
 
 public handler Test()
-    variable tResults as list
+    variable tResults as List
     put the empty list into tResults
     	testFile(tResults)
 
-    variable tDelimiter as string
+    variable tDelimiter as String
     put newline into tDelimiter
 	
 
@@ -110,16 +110,16 @@ Summary: Summarises the results of a test into a string
 Parameters:
 pResults: The list of test results
 */
-public handler testSummary(in pResults as list)
-    variable tSuccessCount as integer
-    variable tFailureCount as integer
-    variable tSummaryItems as list
+public handler testSummary(in pResults as List)
+    variable tSuccessCount as Integer
+    variable tFailureCount as Integer
+    variable tSummaryItems as List
 
     put 0 into tSuccessCount
     put 0 into tFailureCount
     put the empty list into tSummaryItems
 
-    variable tReport as string
+    variable tReport as String
     repeat for each element tReport in pResults
         if tReport begins with "SUCCESS" then
             add 1 to tSuccessCount
@@ -131,7 +131,7 @@ public handler testSummary(in pResults as list)
 
     push tFailureCount converted to base 10 && "TESTS FAILED (" & tSuccessCount converted to base 10 && "PASSED)" onto tSummaryItems
 
-    variable tSummaryString as string
+    variable tSummaryString as String
     combine tSummaryItems with newline
     put the result into tSummaryString
 
@@ -152,8 +152,8 @@ Pushes either the string "SUCCESS : <pModule>_<pTest>" or the string "FAILURE : 
 depending on the value of <pResult>
 
 */
-public handler testLog(in pModule as string, in pTest as string, in pResult as boolean, inout xResults as list)
-    variable tStringResult as string
+public handler testLog(in pModule as String, in pTest as String, in pResult as Boolean, inout xResults as List)
+    variable tStringResult as String
     if pResult then
         put "SUCCESS" into tStringResult
     else
@@ -163,31 +163,31 @@ public handler testLog(in pModule as string, in pTest as string, in pResult as b
     push tStringResult && ":" && pModule & "_" & pTest onto xResults
 end handler
 
-public handler boolWithSideEffect(in tResult as boolean, inout tVar as string) as boolean
+public handler boolWithSideEffect(in tResult as Boolean, inout tVar as String) as Boolean
 	put "a" into tVar
 	return tResult
 end handler
 
-public handler testParseAndFormat(inout xResults as list)
+public handler testParseAndFormat(inout xResults as List)
 
 	// some formatting tests will fail until we have
 	// context vars (number format) and distinct reals/ints
 	
 	testLog("Arithmetic", "StringParsedAsNumber", "1.5" parsed as number is 1.5, xResults)
 
-	variable tInt as integer
+	variable tInt as Integer
 	put 3 into tInt
 	testLog("Arithmetic", "NumberFormattedAsString", tInt formatted as string is "3", xResults)
 
-	variable tVar as optional number
+	variable tVar as optional Number
 	put "dfsdf" parsed as number into tVar
 
 	testLog("Arithmetic", "StringParsedAsNumberFail", tVar is not defined, xResults)
 	
-	variable tList as list
+	variable tList as List
 	put ["1", "b", "3"] parsed as list of number into tList
 	
-	variable tElt as number
+	variable tElt as Number
 	repeat with tElt from 1 up to the number of elements in tList
 		if tList[tElt] is not defined then
 			put 0 into element tElt of tList
@@ -209,12 +209,12 @@ public handler testParseAndFormat(inout xResults as list)
 	
 end handler
 
-public handler testType(inout xResults as list)
+public handler testType(inout xResults as List)
 
     variable tVar
     testLog("Type", "IsNotDefined", tVar is not defined, xResults)
 
-    variable tString as string
+    variable tString as String
     put "" into tString
     testLog("Type", "IsDefined", tString is defined, xResults)
     testLog("Type", "IsEmpty", tString is empty, xResults)
@@ -224,15 +224,15 @@ public handler testType(inout xResults as list)
 
 end handler
 
-public handler testPrecedence(inout xResults as list)
+public handler testPrecedence(inout xResults as List)
 
     testLog("Precedence", "Tan,Over,LessThan", the tangent of pi / 4 < 0.00000000001, xResults)
 
 end handler
 
-public handler testMathFoundation(inout xResults as list)
+public handler testMathFoundation(inout xResults as List)
 
-	variable tNum as number
+	variable tNum as Number
 	put -5.5 into tNum
 	
 	testLog("MathFoundation", "FloorNum", the floor of tNum is -6, xResults)
@@ -247,7 +247,7 @@ public handler testMathFoundation(inout xResults as list)
 
 end handler
 
-public handler testMath(inout xResults as list)
+public handler testMath(inout xResults as List)
 
 	testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
 	testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
@@ -297,8 +297,8 @@ public handler testMath(inout xResults as list)
 	
 	testLog("Math", "RandomMatch", tNum is not any number, xResults)
 
-	variable tLeft as integer
-	variable tRight as integer
+	variable tLeft as Integer
+	variable tRight as Integer
 	
 	put 4 into tLeft
 	put 5 into tRight
@@ -327,11 +327,11 @@ public handler testMath(inout xResults as list)
 
 end handler
 
-public handler testTypeConvert(inout xResults as list)
-	variable tString as string
+public handler testTypeConvert(inout xResults as List)
+	variable tString as String
 	put "a,b,c,d,e" into tString
 	
-	variable tList as list
+	variable tList as List
 	split tString by ","
     put the result into tList
 	
@@ -344,13 +344,13 @@ public handler testTypeConvert(inout xResults as list)
 	
 end handler
 
-public handler testRepeat(inout xResults as list)
+public handler testRepeat(inout xResults as List)
 
-	variable tString as string
+	variable tString as String
 	put "abcdefghijklmno" into tString
 	
-	variable tRestring as string
-	variable tChar as string
+	variable tRestring as String
+	variable tChar as String
 	put "" into tRestring
 	repeat for each char tChar in tString
 		put tChar after tRestring
@@ -358,10 +358,10 @@ public handler testRepeat(inout xResults as list)
 	
 	testLog("Repeat", "RepeatChar", tString is tRestring, xResults)
 	
-	variable tList as list
+	variable tList as List
 	put [1, 1, 2, 3, 5, 8, 13] into tList
 	
-	variable tRelist as list
+	variable tRelist as List
 	variable tElement as any
 	put the empty list into tRelist
 	repeat for each element tElement in tList
@@ -372,8 +372,8 @@ public handler testRepeat(inout xResults as list)
 
 end handler
 
-public handler testString(inout xResults as list)
-	variable tString as string
+public handler testString(inout xResults as List)
+	variable tString as String
 	put the empty string into tString
 	
 	testLog("String", "EmptyString", tString is "", xResults)
@@ -402,8 +402,8 @@ public handler testString(inout xResults as list)
 
 end handler
 
-public handler testArray(inout xResults as list)
-	variable tArray as array
+public handler testArray(inout xResults as List)
+	variable tArray as Array
 	put the empty array into tArray
 	
 	put "value1" into tArray["key1"]
@@ -412,12 +412,12 @@ public handler testArray(inout xResults as list)
 	
 	testLog("Array", "CountElementsOf", the number of elements in tArray is 3, xResults)
 	
-	variable tKeys as list
+	variable tKeys as List
 	put the keys of tArray into tKeys
 	
 	testLog("Array", "KeysOfCount", the number of elements in tKeys is 3, xResults)
 
-	variable tKeysString as string
+	variable tKeysString as String
 	combine tKeys with ","
     put the result into tKeysString
 	
@@ -425,7 +425,7 @@ public handler testArray(inout xResults as list)
 	testLog("Array", "KeysOf2", tKeysString contains "key2", xResults)
 	testLog("Array", "KeysOf3", tKeysString contains "key3", xResults)
 		
-	variable tElements as list
+	variable tElements as List
 	put the elements of tArray into tElements
 	
 	testLog("Array", "ElementssOfCount", the number of elements in tElements is 3, xResults)
@@ -439,16 +439,16 @@ public handler testArray(inout xResults as list)
 	
 	testLog("Array", "SingletonElementOf", tArray["key1"] is "value1", xResults)
 
-    variable tNewArray as array
+    variable tNewArray as Array
     put the empty array into tNewArray
     put 1 into tNewArray["abc"]
     put 2 into tNewArray["def"]
     put 3 into tNewArray["ghi"]
 
-	variable tString as string
+	variable tString as String
 	put "" into tString
 	
-	variable tKey as string
+	variable tKey as String
     repeat for each key tKey in tNewArray
         put tKey after tString
     end repeat
@@ -457,7 +457,7 @@ public handler testArray(inout xResults as list)
     testLog("Array", "RepeatForEachKey2", tString contains "def", xResults)
     testLog("Array", "RepeatForEachKey3", tString contains "ghi", xResults)
 
-	variable tSum as number
+	variable tSum as Number
 	put 0 into tSum
 	
 	variable tElement
@@ -467,7 +467,7 @@ public handler testArray(inout xResults as list)
     
     testLog("Array", "RepeatForEachElement", tSum is 6, xResults)
 
-	variable tTest as array
+	variable tTest as Array
 	put the empty array into tTest
 	put "value" into tTest["key"]
 
@@ -475,7 +475,7 @@ public handler testArray(inout xResults as list)
 	
 	testLog("Array", "DeleteElement", the number of elements in tTest is 0, xResults)
 	
-	variable tArrayWithUndefined as array
+	variable tArrayWithUndefined as Array
 	put the empty array into tArrayWithUndefined
 	put undefined into tArrayWithUndefined["a"]
 	variable tUndefined
@@ -483,8 +483,8 @@ public handler testArray(inout xResults as list)
 	testLog("Array", "UndefinedElement", tUndefined is not defined, xResults)
 end handler
 
-public handler testBitwise(inout xResults as list)
-	variable tVar as integer
+public handler testBitwise(inout xResults as List)
+	variable tVar as Integer
 	
 	put 3 bitwise and 6 into tVar
 	testLog("Bitwise", "BitwiseAnd", tVar is 2, xResults)
@@ -503,7 +503,7 @@ public handler testBitwise(inout xResults as list)
 	
 end handler
 
-public handler testLogic(inout xResults as list)
+public handler testLogic(inout xResults as List)
 
     testLog("Logic", "Not", not false, xResults)
     testLog("Logic", "Not", not not true, xResults)
@@ -528,8 +528,8 @@ public handler testLogic(inout xResults as list)
 
 end handler
 
-public handler testLogicStructural(inout xResults as list)
-    variable tString as string
+public handler testLogicStructural(inout xResults as List)
+    variable tString as String
     put the empty string into tString
     if (false and boolWithSideEffect(true, tString)) then
     	testLog("Logic", "And", false, xResults)
@@ -547,7 +547,7 @@ public handler testLogicStructural(inout xResults as list)
     
     testLog("Logic", "AndShortCut", tString is "a", xResults)
     
-    variable tString2 as string
+    variable tString2 as String
     put the empty string into tString2
     if (true or boolWithSideEffect(false, tString2)) then
     	testLog("Logic", "Or", true, xResults)
@@ -566,8 +566,8 @@ public handler testLogicStructural(inout xResults as list)
     testLog("Logic", "OrShortCut", tString2 is "a", xResults)	
 end handler
 
-public handler testChar(inout xResults as list)
-	variable tString as string
+public handler testChar(inout xResults as List)
+	variable tString as String
 	put "abcde" into tString
 	
 	testLog("Char", "CountCharsOf", the number of chars in tString is 5, xResults)
@@ -599,7 +599,7 @@ public handler testChar(inout xResults as list)
 	testLog("Char", "EndsWithEmpty", tString ends with "", xResults)
 	testLog("Char", "EndsWith", tString ends with "bcde", xResults)
 
-	variable tOffset as integer
+	variable tOffset as Integer
 	put the first offset of "abcde" in tString into tOffset
 	
 	testLog("Char", "CharOffset", tOffset is 1, xResults)
@@ -614,9 +614,9 @@ public handler testChar(inout xResults as list)
 	put the first offset of chars "abcde" after 11 in tString into tOffset
 	testLog("Char", "CharOffsetAfter", tOffset is 0, xResults)
 	
-	variable tLastDot as integer
-	variable tAddress as string
-	variable tTLD as string
+	variable tLastDot as Integer
+	variable tAddress as String
+	variable tTLD as String
 	put "http://www.livecode.com/index.html" into tAddress
 	put the last offset of "." in tAddress into tLastDot
 	put the offset of "." before tLastDot in tAddress into tOffset
@@ -624,10 +624,10 @@ public handler testChar(inout xResults as list)
 	
 	testLog("Char", "CharOffsetBefore", tTLD is "com", xResults)
 	
-	variable tVar as string
+	variable tVar as String
 	put "123" into tVar
 	
-	variable tCount as integer
+	variable tCount as Integer
 	put the number of chars in tVar into tCount
 	subtract 1 from tCount
 	
@@ -638,7 +638,7 @@ public handler testChar(inout xResults as list)
 	
 	testLog("Char", "CharExample", tVar is "1,2,3", xResults)
 
-    variable tTest as string
+    variable tTest as String
     put "abc" into tTest
 
     put "X" into char 1 of tTest
@@ -669,10 +669,10 @@ public handler testChar(inout xResults as list)
 
 end handler
 
-public handler testArithmetic(inout xResults as list)
+public handler testArithmetic(inout xResults as List)
 
-	variable tInt as number
-	variable tReal as number
+	variable tInt as Number
+	variable tReal as Number
 	variable tNumber
 	
 	put 10 into tInt
@@ -711,14 +711,14 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
 	testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)
 	
-	variable tLeft as integer
-	variable tRight as integer
+	variable tLeft as Integer
+	variable tRight as Integer
 	
 	put 10 into tLeft
 	put 2 into tRight
 	
-	variable tLeftReal as number
-	variable tRightReal as number
+	variable tLeftReal as Number
+	variable tRightReal as Number
 	
 	put 10 into tLeftReal
 	put 2 into tRightReal
@@ -739,7 +739,7 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "DivideReal", tLeftReal / tRightReal is 5, xResults)
 	testLog("Arithmetic", "DivideNum", 10 / 2 is 5, xResults)
 	
-	variable tOne as integer
+	variable tOne as Integer
 	put 1 into tOne
 	
 	testLog("Arithmetic", "ModInt", tLeft mod (tRight + tOne) is 1, xResults)
@@ -777,11 +777,11 @@ public handler testArithmetic(inout xResults as list)
 	
 end handler
 
-public handler testList(inout xResults as list)
-    variable tTestList as list
+public handler testList(inout xResults as List)
+    variable tTestList as List
     put the empty list into tTestList
 
-	variable tCount as integer
+	variable tCount as Integer
 	put the number of elements in tTestList into tCount
 	testLog("List", "EmptyList", tCount is 0, xResults)
 
@@ -794,7 +794,7 @@ public handler testList(inout xResults as list)
    	testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
 	testLog("List", "TailOf", the tail of tTestList is 1, xResults)
 
-	variable tNewList as list
+	variable tNewList as List
 	put [1,2,3] into tNewList
 	push 0 onto front of tNewList
 	testLog("List", "PushOntoListFront", tNewList[1] is 0, xResults)
@@ -814,7 +814,7 @@ public handler testList(inout xResults as list)
 	testLog("List", "Begins", tTestList begins with [tTestList[1], tTestList[2]], xResults)
 	testLog("List", "Ends", tTestList ends with element 3 to -1 of tTestList, xResults)
 
-    variable tSubList as list
+    variable tSubList as List
     put element -2 to -1 of tTestList into tSubList
 
 	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
@@ -823,13 +823,13 @@ public handler testList(inout xResults as list)
     testLog("List", "IsIn", "abcd" is in ["abcd", "efgh"], xResults)
     testLog("List", "IsNotIn", not "dsf" is in ["abcd", "efgh"], xResults)
 
-    variable tString as string
+    variable tString as String
     pop front of tSubList into tString
 
     testLog("List", "PopList1", tString is "abcd", xResults)
     testLog("List", "PopList2", the number of elements in tSubList is 1, xResults)
 
-	variable tElt as number
+	variable tElt as Number
 	pop front of tNewList into tElt
 	testLog("List", "PopFromFront", tElt is 0, xResults)
 	pop back of tNewList into tElt
@@ -844,7 +844,7 @@ public handler testList(inout xResults as list)
 	put "ZZZZ" into tTestList[1]
 	testLog("List", "SingletonElement", tTestList[1] is "ZZZZ", xResults)
 
-	variable tList as list
+	variable tList as List
 	put [1,2,3] into tList
 	
 	splice tList into element 1 to 3 of tList
@@ -855,12 +855,12 @@ public handler testList(inout xResults as list)
 	splice tList before element 1 of tList
 	testLog("List", "SpliceBefore", tList is [1,2,2,3,1,2,2,3], xResults)
 	
-	variable tAnotherList as list
+	variable tAnotherList as List
 	put [1,2,3] into tAnotherList	
 	put tAnotherList into element 1 to 2 of tAnotherList 
 	testLog("List", "ElementRangeOf3", element -2 of tAnotherList is [1,2,3], xResults)
 
-    variable tTest as list
+    variable tTest as List
     put [1,2,3] into tTest
 
     put "X" into element 1 of tTest
@@ -889,7 +889,7 @@ public handler testList(inout xResults as list)
 	delete the first element of tTest
 	testLog("List", "DeleteFirstElement", tTest[1] is 2, xResults)	
 
-	variable tListWithUndefined as list
+	variable tListWithUndefined as List
 	put the empty list into tListWithUndefined
 	push undefined onto tListWithUndefined
 	variable tUndefined
@@ -898,8 +898,8 @@ public handler testList(inout xResults as list)
 	
 end handler
 
-public handler testSort(inout xResults as list)
-    variable tNumericList as list
+public handler testSort(inout xResults as List)
+    variable tNumericList as List
 	put [4,3,5,1,2] into tNumericList
     
     sort tNumericList in descending numeric order
@@ -910,7 +910,7 @@ public handler testSort(inout xResults as list)
     
     testLog("Sort", "AscendingNumeric", tNumericList is [1,2,3,4,5], xResults)
 
-	variable tStringList as list
+	variable tStringList as List
 	put ["a", "c", "b"] into tStringList
 
     sort tStringList in ascending text order
@@ -931,9 +931,9 @@ public handler testSort(inout xResults as list)
         
 end handler
 
-public handler testData(inout xResults as list)
+public handler testData(inout xResults as List)
 /*
-    variable tTest as string
+    variable tTest as String
     put "abc" into tTest
 
     put "X" into char 1 of tTest
@@ -964,21 +964,21 @@ public handler testData(inout xResults as list)
 */
 end handler
 
-public handler testFile(inout xResults as list)
-	variable tData as data
+public handler testFile(inout xResults as List)
+	variable tData as Data
 	put the contents of file "/dev/null" into tData
 	testLog("File", "GetEmptyContents", tData is empty, xResults)
 end handler
 
-public handler testStream(inout xResults as list)
+public handler testStream(inout xResults as List)
 
 end handler
 
-public handler testSystem(inout xResults as list)
+public handler testSystem(inout xResults as List)
 	testLog("System", "OperatingSystemNonEmpty", the operating system is not empty, xResults)
 end handler
 
-public handler testDate(inout xResults as list)
+public handler testDate(inout xResults as List)
 testLog("Date", "LocalTimeListLength", the number of elements in the local time is 6, xResults)
 end handler
 
