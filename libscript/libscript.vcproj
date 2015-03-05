@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="libscript"
 	ProjectGUID="{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}"
+	RootNamespace="libscript"
 	>
 	<Platforms>
 		<Platform
@@ -132,6 +133,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\module-array.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-binary.cpp"
 				>
 			</File>
@@ -148,11 +153,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\module-codeunit.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-date.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-encoding.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\module-file.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-foreign.cpp"
 				>
 			</File>
 			<File
@@ -180,7 +197,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\module-stream.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-string.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-system.cpp"
 				>
 			</File>
 			<File
