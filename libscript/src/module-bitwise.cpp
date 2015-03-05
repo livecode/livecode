@@ -49,6 +49,10 @@ extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseShift(integer_t p_operand, bool
 		p_is_right = !p_is_right;
 	}
 
+	/* Shifting integer_t by more than 31 bits is undefined */
+	integer_t t_max_shift = (sizeof(integer_t) << 3) - 1;
+	p_shift = MCMin (p_shift, t_max_shift);
+
 	if (p_is_right)
 		r_output = p_operand >> p_shift;
 	else
