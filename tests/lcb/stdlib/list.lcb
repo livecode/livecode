@@ -392,4 +392,77 @@ public handler TestIndex()
 	test "index (empty)" when the index of 1 in [] is 0
 end handler
 
+handler TestIndexAfter_InvalidPositive()
+	return the index of true after 2 in [true]
+end handler
+handler TestIndexAfter_InvalidNegative()
+	return the index of true after -3 in [true]
+end handler
+handler TestFirstIndexAfter_InvalidPositive()
+	return the first index of true after 2 in [true]
+end handler
+handler TestFirstIndexAfter_InvalidNegative()
+	return the first index of true after -3 in [true]
+end handler
+handler TestLastIndexAfter_InvalidPositive()
+	return the last index of true after 2 in [true]
+end handler
+handler TestLastIndexAfter_InvalidNegative()
+	return the last index of true after -3 in [true]
+end handler
+public handler TestIndexAfter()
+	variable t
+	put [true, false, true, true, false] into t
+
+	test "index after (+ve)" when the index of true after 1 in t is 2
+	test "index after (-ve)" when the index of true after -5 in t is 2
+	test "index after (-ve, limit)" when the index of true after -6 in t is 1
+	test "index after (+ve, missing)" when the index of true after 4 in t is 0
+	test "index after (-ve, missing)" when the index of true after -2 in t is 0
+
+	MCUnitTestHandlerThrows(TestIndexAfter_InvalidPositive, "index after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestIndexAfter_InvalidNegative, "index after (-ve, invalid)")
+end handler
+public handler TestFirstIndexAfter()
+	variable t
+	put [true, false, true, true, false] into t
+
+	test "first index after (+ve)" when the first index of true after 1 in t is 2
+	test "first index after (-ve)" when the first index of true after -5 in t is 2
+	test "first index after (-ve, limit)" when the first index of true after -6 in t is 1
+	test "first index after (+ve, missing)" when the first index of true after 4 in t is 0
+	test "first index after (-ve, missing)" when the first index of true after -2 in t is 0
+
+	MCUnitTestHandlerThrows(TestFirstIndexAfter_InvalidPositive, "first index after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestFirstIndexAfter_InvalidNegative, "first index after (-ve, invalid)")
+end handler
+public handler TestLastIndexAfter()
+	variable t
+	put [true, false, true, true, false] into t
+
+	test "last index after (+ve)" when the last index of true after 1 in t is 3
+	test "last index after (-ve)" when the last index of true after -5 in t is 3
+	test "last index after (-ve, limit)" when the last index of true after -6 in t is 4
+	test "last index after (+ve, missing)" when the last index of true after 4 in t is 0
+	test "last index after (-ve, missing)" when the last index of true after -2 in t is 0
+
+	MCUnitTestHandlerThrows(TestLastIndexAfter_InvalidPositive, "last index after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestLastIndexAfter_InvalidNegative, "last index after (-ve, invalid)")
+end handler
+public handler TestIndexAfterZero()
+	-- "index of _ after 0 in _" should be equivalent to "index of _ in _"
+	variable t
+	put [true, false, true, true, false] into t
+	variable tNoAfter
+
+	put the index of true in t into tNoAfter
+	test "index after (+ve, 0)" when the index of true after 0 in t is tNoAfter
+
+	put the first index of true in t into tNoAfter
+	test "first index after (+ve, 0)" when the first index of true after 0 in t is tNoAfter
+
+	put the last index of true in t into tNoAfter
+	test "last index after (+ve, 0)" when the last index of true after 0 in t is tNoAfter
+end handler
+
 end module

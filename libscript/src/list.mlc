@@ -75,6 +75,7 @@ public foreign handler MCListExecDeleteFirstElementOf(inout Target as List) as u
 public foreign handler MCListExecDeleteLastElementOf(inout Target as List) as undefined binds to "<builtin>"
 
 public foreign handler MCListEvalIndexOfElement(in IsLast as CBool, in Needle as any, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIndexOfElementAfter(in IsLast as CBool, in Needle as any, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 
 --
 
@@ -891,6 +892,40 @@ syntax ListIndex is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElement(IsLast, Needle, Haystack, output)
+end syntax
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within the tail of <Haystack>
+
+Needle:	An expression which evaluates to any value.
+After:		An expression which evaluates to a valid index in Target.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index in <Haystack> relative to <After>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b"]
+	put the index of "b" after 1 in tVar into tOffset
+	--tOffset contains 1
+
+	put the last index of "b" after 2 in tVar into tOffset
+	--tOffset contains 3
+
+Description:
+Use `the index of… after` to find where particular elements occur
+within a list.  Starting from but not including the position <After>,
+<Haystack> is scanned for an element that is equal to <Needle>, and
+the position relative to <After> of the element found is returned.  If
+no element of <Haystack> is equal to <Needle>, the return value is 0.
+
+Tags: Lists
+*/
+syntax ListIndexAfter is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalIndexOfElementAfter(IsLast, Needle, After, Haystack, output)
 end syntax
 
 end module
