@@ -301,16 +301,6 @@ public handler TestOffset()
 	test "offset (empty, empty)" when the offset of "" in "" is 0
 end handler
 
-handler TestOffsetAfter_Before()
-	variable t
-	put the offset of "x" after -2 in "x" into t
-	test diagnostic t
-end handler
-handler TestOffsetAfter_After()
-	variable t
-	put the offset of "x" after 2 in "x" into t
-	test diagnostic t
-end handler
 public handler TestOffsetAfter()
 	-- Only test single-character needles for now
 	test "offset after (single, +ve)" when the offset of "x" after 1 in "x.xx." is 2
@@ -336,7 +326,7 @@ public handler TestOffsetAfter()
 end handler
 
 handler TestOffsetAfter_SingleInvalidPositive()
-	get the offset of "x" after 3 in "x"
+	get the offset of "x" after 2 in "x"
 end handler
 
 handler TestOffsetAfter_SingleInvalidNegative()
@@ -344,7 +334,7 @@ handler TestOffsetAfter_SingleInvalidNegative()
 end handler
 
 handler TestFirstOffsetAfter_SingleInvalidPositive()
-	get the first offset of "x" after 3 in "x"
+	get the first offset of "x" after 2 in "x"
 end handler
 
 handler TestFirstOffsetAfter_SingleInvalidNegative()
@@ -352,7 +342,7 @@ handler TestFirstOffsetAfter_SingleInvalidNegative()
 end handler
 
 handler TestLastOffsetAfter_SingleInvalidPositive()
-	get the last offset of "x" after 3 in "x"
+	get the last offset of "x" after 2 in "x"
 end handler
 
 handler TestLastOffsetAfter_SingleInvalidNegative()
