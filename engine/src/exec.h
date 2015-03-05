@@ -2332,6 +2332,7 @@ void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_sp
 class MCTextChunkIterator;
 
 MCTextChunkIterator *MCStringsTextChunkIteratorCreate(MCExecContext& ctxt, MCStringRef p_text, Chunk_term p_chunk_type);
+MCTextChunkIterator *MCStringsTextChunkIteratorCreateWithRange(MCExecContext& ctxt, MCStringRef p_text, MCRange p_range, Chunk_term p_chunk_type);
 bool MCStringsTextChunkIteratorNext(MCExecContext& ctxt, MCTextChunkIterator *tci);
 
 ///////////
