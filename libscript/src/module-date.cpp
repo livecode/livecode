@@ -19,7 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation-auto.h>
 
 #include <time.h>
-#include <sys/time.h>
+
+#ifndef _WINDOWS
+#  include <sys/time.h>
+#else
+#  include <windows.h>
+#endif
 
 /* Windows doesn't have localtime_r(), but it does have an equivalent
  * function with the arguments in the opposite order! */
@@ -56,8 +61,23 @@ MCDateExecGetLocalDate (MCProperListRef & r_datetime)
 extern "C" MC_DLLEXPORT void
 MCDateExecGetUniversalTime (double& r_time)
 {
+#ifndef _WINDOWS
     struct timeval tv;
     
     gettimeofday(&tv, NULL);
     r_time = tv.tv_sec + (double)tv.tv_usec / 1000000.0;
+#else
+	SYSTEMTIME t_localtime;
+	FILETIME t_filetime;
+	GetLocalTime(&t_localtime);
+	SystemTimeToFileTime(&t_localtime, &t_filetime);
+
+	// The Win32 filetime counts 100ns intervals since 1st Jan 1601
+	uint64_t t_time_win32;
+	double t_time_unix;
+	t_time_win32 = (uint64_t(t_filetime.dwHighDateTime) << 32) | t_filetime.dwLowDateTime;
+	t_time_unix = (double(t_time_win32) / 10000000.0) - 11644473600.0;
+
+	r_time = t_time_unix;
+#endif
 }
