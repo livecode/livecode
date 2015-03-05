@@ -294,9 +294,6 @@ public handler TestOffset()
 	test "first offset (single, same)" when the first offset of "x" in "x" is 1
 	-- bug 14677
 	test "last offset (single, same)" when the last offset of "x" in "x" is 1
-
-	-- "chars" variant
-	test "offset chars (single)" when the first offset of chars "x" in ".xx." is 2
 end handler
 
 handler TestOffsetAfter_Before()
@@ -331,11 +328,6 @@ public handler TestOffsetAfter()
 	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidNegative, "first offset after (single, invalid -ve)")
 	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidPositive, "last offset after (single, invalid +ve)")
 	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidNegative, "last offset after (single, invalid -ve)")
-
-	-- "chars" variants
-	test "offset after chars (single, +ve)" when the offset of chars "x" after 1 in "x.xx." is 2
-	test "first offset after chars (single, +ve)" when the first offset of chars "x" after 1 in "x.xx." is 2
-	test "last offset after chars (single, +ve)" when the last offset of chars "x" after 1 in "x.xx." is 3
 end handler
 
 handler TestOffsetAfter_SingleInvalidPositive()

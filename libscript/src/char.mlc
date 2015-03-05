@@ -336,7 +336,7 @@ Returns: 	Returns the offset of <Needle> in <Target>.
 
 Example:
 	variable tVar as Number
-	put the first offset of chars "art" in "cartoon" into tVar -- tVar contains 2
+	put the first offset of "art" in "cartoon" into tVar -- tVar contains 2
 
 Example:
 	variable tVar as Number
@@ -354,7 +354,7 @@ Tags: Strings
 */
 
 syntax CharOffset is prefix operator with precedence 1
-    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" ["chars"] <Needle: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
 end syntax
@@ -371,7 +371,7 @@ Returns: 	Returns the offset of <Needle> after <After> in <Target>.
 
 Example:
 	variable tVar as Number
-	put the offset of chars "nse" after 4 in "nonsense" into tVar -- tVar contains 2
+	put the offset of "nse" after 4 in "nonsense" into tVar -- tVar contains 2
 	
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of the substring of <Target> beginning at char <After> + 1, and the first (respectively last) occurrence of <Needle> in the substring. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in the given substring of <Target>, then the output is 0.
@@ -380,7 +380,7 @@ Tags: Strings
 */
 
 syntax CharOffsetAfter is prefix operator with precedence 1
-    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" ["chars"] <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
 end syntax
@@ -412,7 +412,7 @@ Tags: Strings
 */
 
 syntax CharOffsetBefore is prefix operator with precedence 1
-    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" ["chars"] <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax
