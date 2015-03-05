@@ -2875,6 +2875,8 @@ MC_DLLEXPORT bool MCProperListRemoveElement(MCProperListRef list, uindex_t p_ind
 MC_DLLEXPORT bool MCProperListRemoveElements(MCProperListRef list, uindex_t p_start, uindex_t p_finish);
 
 MC_DLLEXPORT bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
+MC_DLLEXPORT bool MCProperListFirstIndexOfElementInRange(MCProperListRef list, MCValueRef p_needle, MCRange p_range, uindex_t& r_offset);
+
 MC_DLLEXPORT bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
 
 MC_DLLEXPORT bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);

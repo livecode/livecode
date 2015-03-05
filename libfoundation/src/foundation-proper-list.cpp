@@ -428,19 +428,34 @@ bool MCProperListCopySublist(MCProperListRef self, MCRange p_range, MCProperList
 
 bool MCProperListFirstIndexOfElement(MCProperListRef self, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset)
 {
-    if (MCProperListIsIndirect(self))
-        self = self -> contents;
-    
-    for (uindex_t t_offset = p_after; t_offset < self -> length; t_offset++)
-    {
-        if (MCValueIsEqualTo(p_needle, self -> list[t_offset]))
-        {
-            r_offset = t_offset;
-            return true;
-        }
-    }
-    
-    return false;
+	return MCProperListFirstIndexOfElementInRange(self, p_needle,
+	            MCRangeMake(p_after, UINDEX_MAX), r_offset);
+}
+
+bool
+MCProperListFirstIndexOfElementInRange (MCProperListRef self,
+                                        MCValueRef p_needle,
+                                        MCRange p_range,
+                                        uindex_t & r_offset)
+{
+	if (MCProperListIsIndirect (self))
+		self = self->contents;
+
+	__MCProperListClampRange (self, p_range);
+
+	for (uindex_t t_offset = 0; /* Relative to start of range */
+	     t_offset < p_range.length;
+	     ++t_offset)
+	{
+		uindex_t t_index = p_range.offset + t_offset;
+		if (MCValueIsEqualTo(p_needle, self->list[t_index]))
+		{
+			r_offset = t_offset;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool MCProperListFirstIndexOfList(MCProperListRef self, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset)
