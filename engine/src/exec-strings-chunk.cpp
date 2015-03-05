@@ -449,17 +449,16 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                 MCStringsSkipWord(ctxt, p_string, true, t_offset);
             }
             
-            r_start = t_offset;
+            // AL-2015-03-05: [[ Bug 14812 ]] Make sure t_offset doesn't overrun t_length
+            r_start = MCMin(t_offset, t_length);
             
             while (p_count-- && t_offset < t_length)
             {
                 MCStringsSkipWord(ctxt, p_string, p_count != 0, t_offset);
             }
             
-            if (t_offset > t_length)
-                t_offset = t_length;
-            
-            r_end = t_offset;
+            // AL-2015-03-05: [[ Bug 14812 ]] Make sure t_offset doesn't overrun t_length
+            r_end = MCMin(t_offset, t_length);
             
             if (p_whole_chunk && !p_further_chunks)
             {
