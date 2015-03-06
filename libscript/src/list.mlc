@@ -80,6 +80,7 @@ public foreign handler MCListEvalIndexOfElementBefore(in IsLast as CBool, in Nee
 
 public foreign handler MCListEvalOffsetOfList(in IsLast as CBool, in Needle as List, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 public foreign handler MCListEvalOffsetOfListAfter(in IsLast as CBool, in Needle as List, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalOffsetOfListBefore(in IsLast as CBool, in Needle as List, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 
 --
 
@@ -1041,6 +1042,43 @@ syntax ListOffsetAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListAfter(IsLast, Needle, After, Haystack, output)
+end syntax
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
+
+Needle:	An expression which evaluates to List.
+Before:	An expression which evaluates to a valid index in Target.
+Target:	An expression which evaluates to a List.
+
+Returns:	Returns the index in <Haystack>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b","c"]
+	put the offset of ["b","c"] before 5 in tVar into tOffset
+	--tOffset contains 2
+
+	put the first offset of ["b","c"] before 6 in tVar into tOffset
+	--tOffset contains 2
+
+Description:
+
+Use `the offset of… before` to find where a particular sub-list occurs
+within a list.  <Haystack> is scanned for a sequence of elements that
+are equal to the elements of <Needle>, stopping before the position
+<Before>, and the position of the start of the sequence found is
+returned.  If no sub-list of <Haystack> before the position <Before>
+is equal to <Needle>, the return value is 0.  If neither "first" nor
+"last" is specified, the last matching subsequence is found.
+
+Tags: Lists
+*/
+syntax ListOffsetBefore is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalOffsetOfListBefore(IsLast, Needle, Before, Haystack, output)
 end syntax
 
 end module
