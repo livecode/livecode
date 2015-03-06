@@ -358,6 +358,11 @@ syntax CharOffset is prefix operator with precedence 1
 begin
     MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
 end syntax
+syntax CharIndex is prefix operator with precedence 1
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
+end syntax
 
 /*
 
@@ -381,6 +386,11 @@ Tags: Strings
 
 syntax CharOffsetAfter is prefix operator with precedence 1
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
+end syntax
+syntax CharIndexAfter is prefix operator with precedence 1
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
 end syntax
@@ -413,6 +423,11 @@ Tags: Strings
 
 syntax CharOffsetBefore is prefix operator with precedence 1
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
+end syntax
+syntax CharIndexBefore is prefix operator with precedence 1
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax

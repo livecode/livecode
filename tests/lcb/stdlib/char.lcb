@@ -299,6 +299,9 @@ public handler TestOffset()
 	test "first offset (empty)" when the first offset of "" in "x" is 0
 	test "last offset (empty)" when the last offset of "" in "x" is 0
 	test "offset (empty, empty)" when the offset of "" in "" is 0
+
+	-- For chars, "index" is synonymous with "offset"
+	test "index" when the index of "x" in ".xx." is 2
 end handler
 
 public handler TestOffsetAfter()
@@ -323,6 +326,9 @@ public handler TestOffsetAfter()
 	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidNegative, "first offset after (single, invalid -ve)")
 	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidPositive, "last offset after (single, invalid +ve)")
 	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidNegative, "last offset after (single, invalid -ve)")
+
+	-- For chars, "index" is synonymous with "offset"
+	test "index after" when the index of "x" after 2 in ".xx." is 1
 end handler
 
 handler TestOffsetAfter_SingleInvalidPositive()
