@@ -29,6 +29,8 @@ MCTypeInfoRef kMCDoubleTypeInfo;
 MCTypeInfoRef kMCPointerTypeInfo;
 MCTypeInfoRef kMCSizeTypeInfo;
 
+MCTypeInfoRef kMCForeignImportErrorTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignValueRef& r_value)
@@ -303,8 +305,16 @@ __size_import (void *contents,
                MCValueRef & r_value)
 {
 	size_t t_value = *(size_t *) contents;
+
 	if (t_value > UINTEGER_MAX)
+	{
+		MCErrorCreateAndThrow (kMCForeignImportErrorTypeInfo,
+		                       "type", kMCSizeTypeInfo,
+		                       "reason", "too large for Number representation",
+		                       nil);
 		return false;
+	}
+
 	return MCNumberCreateWithUnsignedInteger((uinteger_t) t_value,
 	                                         (MCNumberRef &) r_value);
 }
@@ -565,6 +575,11 @@ bool __MCForeignValueInitialize(void)
 	if (!__build_typeinfo("__builtin__.size", &d, kMCSizeTypeInfo))
 		return false;
 
+	/* ---------- */
+
+	if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeImportError"), MCNAME("runtime"), MCSTR("error importing foreign '%{type}' value: %{reason}"), kMCForeignImportErrorTypeInfo))
+		return false;
+
     return true;
 }
 
@@ -577,6 +592,8 @@ void __MCForeignValueFinalize(void)
     MCValueRelease(kMCDoubleTypeInfo);
     MCValueRelease(kMCPointerTypeInfo);
 	MCValueRelease(kMCSizeTypeInfo);
+
+	MCValueRelease (kMCForeignImportErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
