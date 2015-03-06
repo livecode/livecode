@@ -2040,11 +2040,14 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       put revExternalPath(tExternalName, tPlatform, tArch) into tExternalPath
       
       -- SN-2015-03-06: [[ DBDriverInclusion ]] In case Database drivers were
-      -- included, then the revdb external has been copied beforehand.
+      -- included, then the revdb external has been copied.
       -- No issue to copy over it on Windows / Linux, but copying a folder (revdb.bundle)
       -- will fail on Mac.
-      if item -1 of tExternalPath contains "revdb" and \
-            (there is a folder tExternalPath or there is a file tExternalPath) then
+      local tSourceExternal
+      put item -1 of tExternalPath into tSourceExternal
+      if tSourceExternal contains "revdb" and \
+            (there is a folder (tCurrentLocation & "/Externals/" &  tSourceExternal) \
+            or there is a file (tCurrentLocation & "/Externals/" & tSourceExternal)) then
          next repeat
       end if
       
