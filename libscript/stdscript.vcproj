@@ -327,6 +327,14 @@
 					RelativePath=".\src\type.mlc"
 					>
 				</File>
+				<File
+					RelativePath=".\src\unittest-impl.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\unittest.mlc"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="generated"
@@ -409,6 +417,14 @@
 				</File>
 				<File
 					RelativePath="..\engine\generated\type.c"
+					>
+				</File>
+				<File
+					RelativePath=".\src\_mlc\unittest-impl.c"
+					>
+				</File>
+				<File
+					RelativePath=".\src\_mlc\unittest.c"
 					>
 				</File>
 			</Filter>
