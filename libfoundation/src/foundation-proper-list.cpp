@@ -542,6 +542,66 @@ MCProperListFirstOffsetOfListInRange (MCProperListRef self,
 	return false;
 }
 
+bool
+MCProperListLastOffsetOfListInRange (MCProperListRef self,
+                                     MCProperListRef p_needle,
+                                     MCRange p_range,
+                                     uindex_t & r_offset)
+{
+	if (MCProperListIsIndirect (p_needle))
+		p_needle = p_needle->contents;
+
+	/* Empty lists are never found */
+	if (0 == p_needle->length)
+		return false;
+
+	if (MCProperListIsIndirect (self))
+		self = self->contents;
+
+	__MCProperListClampRange (self, p_range);
+
+	/* If the range is too short to contain the needle, the needle clearly
+	 * can't be found. */
+	if (p_range.length < p_needle->length)
+		return false;
+
+	/* Search algorithm: look backward along the range for the first
+	 * occurrence of the first element of the needle, then work
+	 * forward along the needle to see if the lists match. */
+
+	/* t_roffset is the reverse offset of the first index in a
+	 * possible match, relative to the last element in the range
+	 * (i.e. t_roffset = 0 for the last element). */
+	for (uindex_t t_roffset = p_needle->length - 1;
+	     t_roffset <= p_range.length;
+	     ++t_roffset)
+	{
+		/* Offset of first element in the match, relative to start of
+		 * range (i.e. t_offset = 0 for the first element) */
+		uindex_t t_offset = p_range.length - t_roffset - 1;
+
+		bool t_match = true;
+
+		/* Correlate the two lists at this offset */
+		for (uindex_t t_needle_index = 0; /* Relative to start of needle */
+		     t_needle_index < p_needle->length && t_match;
+		     ++t_needle_index)
+		{
+			uindex_t t_self_index = p_range.offset + t_offset + t_needle_index;
+
+			t_match = MCValueIsEqualTo (p_needle->list[t_needle_index],
+			                            self->list[t_self_index]);
+		}
+
+		if (t_match)
+		{
+			r_offset = t_offset;
+			return true;
+		}
+	}
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCProperListIterate(MCProperListRef self, uintptr_t& x_iterator, MCValueRef& r_element)
