@@ -217,6 +217,25 @@ MCDataExecRandomBytes (uindex_t p_count, MCDataRef & r_data)
 	/* UNCHECKED */ MCSRandomData (p_count, r_data);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void
+MCByteEvalByteWithCode (uinteger_t p_value,
+                        MCDataRef & r_data)
+{
+	if (p_value > BYTE_MAX)
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo,
+		                       "reason", MCSTR("overflow in byte operation"),
+		                       nil);
+		return;
+	}
+
+	const byte_t t_byte = p_value;
+
+	MCDataCreateWithBytes (&t_byte, 1, r_data);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST
