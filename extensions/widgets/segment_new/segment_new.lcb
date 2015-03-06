@@ -40,7 +40,7 @@ use com.livecode.engine
 property segmentStyle 		get mStyle				set setStyle
 property multiSelect		get mMultiSelect		set setMultiSelect		
 
-property segementNames		get getSegmentNames		set setSegmentNames
+property segmentNames		get getSegmentNames		set setSegmentNames
 property segmentLabels		get getSegmentLabels	set setSegmentLabels
 property segmentIcons		get getSegmentIcons		set setSegmentIcons	
 property selectedIcons		get getSelectedIcons	set setSelectedIcons
@@ -174,6 +174,8 @@ end handler
 -- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	
+	put (the number of elements in mSegmentNames) into mNumSegments 
+	
 	if mGeometryIsChanged then
 		-- update mPerimeter and mLines variables if the geometry has changed
 		put (the trunc of my height)/5 into mRadius
@@ -199,7 +201,6 @@ public handler OnPaint()
 	-- draw the perimeter of the control
 	set the paint of this canvas to fetchPaint("lines")
 	set the stroke width of this canvas to 1
-	--stroke rectangle path of mPerimeter on this canvas
 	stroke mPerimeter on this canvas
 	--
 	
@@ -306,12 +307,12 @@ private handler drawSegments() as undefined
 			if tX = 1 then
 				-- rounded rectangle segment
 				fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
-				fill rectangle path of rectangle [mLeft+tWidth, 0, mLeft+tWidth*0.8, my height] on this canvas
+				fill rectangle path of rectangle [mLeft+tWidth, 0, mLeft+tWidth*0.5, my height] on this canvas
 				
 			else if tX = mNumSegments then
 				-- rounded rectangle segment
 				fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
-				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth*0.25, my height] on this canvas
+				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth*0.5, my height] on this canvas
 				
 			else
 				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] on this canvas
@@ -353,10 +354,12 @@ end handler
 ----------
 -- this handler updates the mLines variable, a list of line paths that separate the segments
 private handler updateLines() as undefined
-
+	
 	variable tX as Integer
 	variable tWidth as Real
 	variable tLeft as Real
+	
+	put the empty list into mLines
 	
 	put 0 into tLeft
 	
@@ -656,7 +659,7 @@ Sets the segmentIcons property of the control; sets the icons of each segment in
 */
 private handler setSegmentIcons(in pIcons as String) as undefined
 	replace " " with "" in pIcons
-	split pIcons by "," into mSegmentLabels
+	split pIcons by "," into mSegmentIcons
 	put true into mGeometryIsChanged
 	redraw all
 end handler
