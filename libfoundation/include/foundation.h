@@ -821,6 +821,47 @@ inline MCRange MCRangeMake(uindex_t p_offset, uindex_t p_length)
 	return t_range;
 }
 
+inline MCRange MCRangeMakeMinMax(uindex_t p_min, uindex_t p_max)
+{
+	if (p_min > p_max)
+		return MCRangeMake(p_max, 0);
+	return MCRangeMake(p_min, p_max - p_min);
+}
+
+inline MCRange MCRangeSetMinimum(const MCRange &p_range, uindex_t p_min)
+{
+	return MCRangeMakeMinMax(p_min, p_range.offset + p_range.length);
+}
+
+inline MCRange MCRangeSetMaximum(const MCRange &p_range, uindex_t p_max)
+{
+	return MCRangeMakeMinMax(p_range.offset, p_max);
+}
+
+inline MCRange MCRangeIncrementOffset(const MCRange &p_range, uindex_t p_increment)
+{
+	return MCRangeSetMinimum(p_range, p_range.offset + p_increment);
+}
+
+inline bool MCRangeIsEqual(const MCRange &p_left, const MCRange &p_right)
+{
+	return p_left.offset == p_right.offset && p_left.length == p_right.length;
+}
+
+inline bool MCRangeIsEmpty(const MCRange &p_range)
+{
+	return p_range.length == 0;
+}
+
+inline MCRange MCRangeIntersection(const MCRange &p_left, const MCRange &p_right)
+{
+	uindex_t t_start, t_end;
+	t_start = MCMax(p_left.offset, p_right.offset);
+	t_end = MCMin(p_left.offset + p_left.length, p_right.offset + p_right.length);
+	
+	return MCRangeMakeMinMax(t_start, t_end);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
