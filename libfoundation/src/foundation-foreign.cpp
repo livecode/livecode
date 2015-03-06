@@ -30,6 +30,7 @@ MCTypeInfoRef kMCPointerTypeInfo;
 MCTypeInfoRef kMCSizeTypeInfo;
 
 MCTypeInfoRef kMCForeignImportErrorTypeInfo;
+MCTypeInfoRef kMCForeignExportErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -337,13 +338,34 @@ static bool __int_export(MCValueRef value, bool release, void *contents)
     return true;
 }
 
-template <typename T> static bool
-__uint_export(MCValueRef value, bool release, void *contents)
+template <typename T>
+static bool
+__uint_export (MCValueRef value,
+               bool release,
+               void *contents,
+               MCTypeInfoRef typeinfo)
 {
+	/* Unsigned values can't be negative */
+	if (0 > MCNumberFetchAsReal ((MCNumberRef) value))
+	{
+		MCErrorCreateAndThrow (kMCForeignExportErrorTypeInfo,
+		                       "type", typeinfo,
+		                       "reason", MCSTR("cannot store negative value in unsigned integer"),
+		                       nil);
+		return false;
+	}
+
     *(T *)contents = MCNumberFetchAsUnsignedInteger((MCNumberRef)value);
+
     if (release)
         MCValueRelease(value);
     return true;
+}
+
+static bool
+__uint_export(MCValueRef value, bool release, void *contents)
+{
+	return __uint_export<uinteger_t>(value, release, contents, kMCUIntTypeInfo);
 }
 
 static bool __float_export(MCValueRef value, bool release, void *contents)
@@ -360,6 +382,12 @@ static bool __double_export(MCValueRef value, bool release, void *contents)
     if (release)
         MCValueRelease(value);
     return true;
+}
+
+static bool
+__size_export(MCValueRef value, bool release, void *contents)
+{
+	return __uint_export<size_t>(value, release, contents, kMCSizeTypeInfo);
 }
 
 static bool
@@ -488,7 +516,7 @@ bool __MCForeignValueInitialize(void)
     d . equal = __numeric_equal<uinteger_t>;
     d . hash = __uint_hash;
     d . doimport = __uint_import;
-    d . doexport = __uint_export<uinteger_t>;
+    d . doexport = __uint_export;
     d . describe = __uint_describe;
     if (!__build_typeinfo("__builtin__.uint", &d, kMCUIntTypeInfo))
         return false;
@@ -570,7 +598,7 @@ bool __MCForeignValueInitialize(void)
 	d . equal = __numeric_equal<size_t>;
 	d . hash = __size_hash;
 	d . doimport = __size_import;
-	d . doexport = __uint_export<size_t>;
+	d . doexport = __size_export;
 	d . describe = __size_describe;
 	if (!__build_typeinfo("__builtin__.size", &d, kMCSizeTypeInfo))
 		return false;
@@ -578,6 +606,8 @@ bool __MCForeignValueInitialize(void)
 	/* ---------- */
 
 	if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeImportError"), MCNAME("runtime"), MCSTR("error importing foreign '%{type}' value: %{reason}"), kMCForeignImportErrorTypeInfo))
+		return false;
+	if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeExportError"), MCNAME("runtime"), MCSTR("error exporting foreign '%{type}' value: %{reason}"), kMCForeignExportErrorTypeInfo))
 		return false;
 
     return true;
@@ -594,6 +624,7 @@ void __MCForeignValueFinalize(void)
 	MCValueRelease(kMCSizeTypeInfo);
 
 	MCValueRelease (kMCForeignImportErrorTypeInfo);
+	MCValueRelease (kMCForeignExportErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
