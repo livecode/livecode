@@ -133,6 +133,9 @@ static bool __nativecstring_import(void *contents, bool release, MCValueRef& r_v
 
 static bool __nativecstring_export(MCValueRef value, bool release, void *contents)
 {
+	if (!MCForeignEvalStringNonNull ((MCStringRef) value))
+		return false;
+
     char *t_cstring_value;
     if (!MCStringConvertToCString((MCStringRef)value, t_cstring_value))
         return false;
