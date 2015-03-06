@@ -79,6 +79,7 @@ public foreign handler MCListEvalIndexOfElementAfter(in IsLast as CBool, in Need
 public foreign handler MCListEvalIndexOfElementBefore(in IsLast as CBool, in Needle as any, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 
 public foreign handler MCListEvalOffsetOfList(in IsLast as CBool, in Needle as List, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalOffsetOfListAfter(in IsLast as CBool, in Needle as List, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 
 --
 
@@ -991,7 +992,7 @@ Use `the offset of` to find where a particular sub-list occurs within
 a list.  <Haystack> is scanned for a sequence of elements that are
 equal to the elements of <Needle>, and the position of the start of
 the sequence found is returned.  If neither the "first offset" nor
-"last offset" are specified, the index of the first matching seb-list
+"last offset" are specified, the index of the first matching sub-list
 found is returned.  If no sub-list of <Haystack> is equal to <Needle>,
 the return value is 0.
 
@@ -1001,6 +1002,45 @@ syntax ListOffset is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfList(IsLast, Needle, Haystack, output)
+end syntax
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within the tail of <Haystack>
+
+Needle:	An expression which evaluates to any list.
+After:		An expression which evaluates to a valid index in Target.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index in <Haystack> relative to <After>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b", "c"]
+	put the offset of ["b","c"] after 1 in tVar into tOffset
+	--tOffset contains 1
+
+	put the last offset of ["b","c"] after 1 in tVar into tOffset
+	--tOffset contains 4
+
+Description:
+
+Use `the offset of… after` to find where a particular sub-list occurs
+within a list.  Starting from but not including the position <After>,
+<Haystack> is scanned for an sequence of elements that are equal to
+the elements of <Needle>, and the position relative to <After> of the
+start of the sequence found is returned.  If neither the "first
+offset" nor "last offset" are specified, the position of the first
+matching sub-list found is returned.  If no sub-list of <Haystack>
+starting after the position <After> is equal to <Needle>, the return
+value is 0.
+
+Tags: Lists
+*/
+syntax ListOffsetAfter is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalOffsetOfListAfter(IsLast, Needle, After, Haystack, output)
 end syntax
 
 end module

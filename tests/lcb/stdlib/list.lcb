@@ -564,5 +564,80 @@ public handler TestOffset()
 	test "offset (empty)" when the offset of [] in t is 0
 end handler
 
+----------------------------------------------------------------
+
+handler TestOffsetAfter_InvalidPositive()
+	return the offset of [true] after 2 in [true]
+end handler
+handler TestOffsetAfter_InvalidNegative()
+	return the offset of [true] after -3 in [true]
+end handler
+handler TestFirstOffsetAfter_InvalidPositive()
+	return the first offset of [true] after 2 in [true]
+end handler
+handler TestFirstOffsetAfter_InvalidNegative()
+	return the first offset of [true] after -3 in [true]
+end handler
+handler TestLastOffsetAfter_InvalidPositive()
+	return the last offset of [true] after 2 in [true]
+end handler
+handler TestLastOffsetAfter_InvalidNegative()
+	return the last offset of [true] after -3 in [true]
+end handler
+public handler TestOffsetAfter()
+	variable t
+	put [true, false, true, true, false] into t
+
+	test "offset after (+ve)" when the offset of [true,false] after 1 in t is 3
+	test "offset after (-ve)" when the offset of [true,false] after -5 in t is 3
+	test "offset after (-ve, limit)" when the offset of [true,false] after -6 in t is 1
+	test "offset after (+ve, missing)" when the offset of [false,true] after 2 in t is 0
+	test "offset after (-ve, missing)" when the offset of [false,true] after -4 in t is 0
+
+	MCUnitTestHandlerThrows(TestOffsetAfter_InvalidPositive, "offset after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestOffsetAfter_InvalidNegative, "offset after (-ve, invalid)")
+end handler
+public handler TestFirstOffsetAfter()
+	variable t
+	put [true, false, true, true, false] into t
+
+	test "first offset after (+ve)" when the first offset of [true,false] after 1 in t is 3
+	test "first offset after (-ve)" when the first offset of [true,false] after -5 in t is 3
+	test "first offset after (-ve, limit)" when the first offset of [true,false] after -6 in t is 1
+	test "first offset after (+ve, missing)" when the first offset of [false,true] after 2 in t is 0
+	test "first offset after (-ve, missing)" when the first offset of [false,true] after -4 in t is 0
+
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_InvalidPositive, "first offset after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_InvalidNegative, "first offset after (-ve, invalid)")
+end handler
+public handler TestLastOffsetAfter()
+	variable t
+	put [true, false, true, true, false] into t
+
+	test "last offset after (+ve)" when the last offset of [true] after 1 in t is 3
+	test "last offset after (-ve)" when the last offset of [true] after -5 in t is 3
+	test "last offset after (-ve, limit)" when the last offset of [true] after -6 in t is 4
+	test "last offset after (+ve, missing)" when the last offset of [true] after 4 in t is 0
+	test "last offset after (-ve, missing)" when the last offset of [true] after -2 in t is 0
+
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_InvalidPositive, "last offset after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_InvalidNegative, "last offset after (-ve, invalid)")
+end handler
+public handler TestOffsetAfterZero()
+	-- "offset of _ after 0 in _" should be equivalent to "offset of _ in _"
+	variable t
+	put [true, false, true, true, false] into t
+	variable tNoAfter
+
+	put the offset of [true,false] in t into tNoAfter
+	test "offset after (+ve, 0)" when the offset of [true,false] after 0 in t is tNoAfter
+
+	put the first offset of [true,false] in t into tNoAfter
+	test "first offset after (+ve, 0)" when the first offset of [true,false] after 0 in t is tNoAfter
+
+	put the last offset of [true,false] in t into tNoAfter
+	test "last offset after (+ve, 0)" when the last offset of [true,false] after 0 in t is tNoAfter
+end handler
+
 
 end module

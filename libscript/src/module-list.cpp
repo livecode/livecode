@@ -567,6 +567,28 @@ MCListEvalOffsetOfList (bool p_is_last,
 	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack, t_range, r_output);
 }
 
+extern "C" MC_DLLEXPORT void
+MCListEvalOffsetOfListAfter (bool p_is_last,
+                             MCProperListRef p_needle,
+                             index_t p_after,
+                             MCProperListRef p_haystack,
+                             uindex_t & r_output)
+{
+	uindex_t t_start, t_count;
+	if (!MCChunkGetExtentsOfElementChunkByExpressionInRange (p_haystack, nil,
+	        p_after, true, true, false, t_start, t_count) &&
+	    p_after != 0)
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason",
+		                       MCSTR("chunk index out of range"), nil);
+		return;
+	}
+
+	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack,
+	                               MCRangeMake(t_start + t_count, UINDEX_MAX),
+	                               r_output);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST
