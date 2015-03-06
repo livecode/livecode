@@ -460,7 +460,6 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
             // We start off with no new value - we only create a new array if one
             // of the elements changes.
             MCAutoArrayRef t_mutated_value;
-            t_mutated_value = nil;
             
             MCNameRef t_key;
             MCValueRef t_element;
@@ -662,7 +661,6 @@ static bool __script_ensure_names_are_strings(MCValueRef p_input, MCValueRef& r_
     if (MCValueGetTypeCode(p_input) == kMCValueTypeCodeArray)
     {
         MCAutoArrayRef t_mutated_input;
-        t_mutated_input = nil;
         
         MCNameRef t_key;
         MCValueRef t_element;
