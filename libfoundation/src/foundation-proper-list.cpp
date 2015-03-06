@@ -482,7 +482,7 @@ MCProperListLastIndexOfElementInRange (MCProperListRef self,
 	return false;
 }
 
-bool MCProperListFirstIndexOfList(MCProperListRef self, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset)
+bool MCProperListFirstOffsetOfList(MCProperListRef self, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset)
 {
     if (MCProperListIsIndirect(p_needle))
         p_needle = p_needle -> contents;

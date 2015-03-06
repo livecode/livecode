@@ -118,7 +118,7 @@ extern "C" MC_DLLEXPORT void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle,
 extern "C" MC_DLLEXPORT void MCListEvalContainsElements(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
 {
     uindex_t t_dummy;
-    r_output = MCProperListFirstIndexOfList(p_target, p_needle, 0, t_dummy);
+    r_output = MCProperListFirstOffsetOfList(p_target, p_needle, 0, t_dummy);
 }
 
 extern "C" MC_DLLEXPORT void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)

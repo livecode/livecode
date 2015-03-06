@@ -2879,7 +2879,7 @@ MC_DLLEXPORT bool MCProperListFirstIndexOfElementInRange(MCProperListRef list, M
 
 MC_DLLEXPORT bool MCProperListLastIndexOfElementInRange(MCProperListRef list, MCValueRef p_needle, MCRange p_range, uindex_t & r_offset);
 
-MC_DLLEXPORT bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
+MC_DLLEXPORT bool MCProperListFirstOffsetOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
 
 MC_DLLEXPORT bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 
