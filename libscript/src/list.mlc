@@ -78,6 +78,8 @@ public foreign handler MCListEvalIndexOfElement(in IsLast as CBool, in Needle as
 public foreign handler MCListEvalIndexOfElementAfter(in IsLast as CBool, in Needle as any, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 public foreign handler MCListEvalIndexOfElementBefore(in IsLast as CBool, in Needle as any, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 
+public foreign handler MCListEvalOffsetOfList(in IsLast as CBool, in Needle as List, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -962,6 +964,43 @@ syntax ListIndexBefore is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementBefore(IsLast, Needle, Before, Haystack, output)
+end syntax
+
+----------------------------------------------------------------
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within <Haystack>
+
+Needle:	An expression which evaluates to a list.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index from the start of <Haystack>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b", "c"]
+	put the offset of ["b","c"] in tVar into tOffset
+	-- tOffset contains 2
+
+	put the last offset of ["b", "c"] in tVar into tOffset
+	-- tOffset contains 5
+
+Description:
+Use `the offset of` to find where a particular sub-list occurs within
+a list.  <Haystack> is scanned for a sequence of elements that are
+equal to the elements of <Needle>, and the position of the start of
+the sequence found is returned.  If neither the "first offset" nor
+"last offset" are specified, the index of the first matching seb-list
+found is returned.  If no sub-list of <Haystack> is equal to <Needle>,
+the return value is 0.
+
+Tags: Lists
+*/
+syntax ListOffset is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalOffsetOfList(IsLast, Needle, Haystack, output)
 end syntax
 
 end module

@@ -545,4 +545,24 @@ public handler TestIndexBeforeZero()
 	test "last index before (+ve, 0)" when the last index of true before 0 in t is tNoBefore
 end handler
 
+----------------------------------------------------------------
+-- Finding subsequence offsets
+----------------------------------------------------------------
+
+public handler TestOffset()
+	variable t
+	put ["x", 1, true, [], []] into t
+
+	test "offset" when the offset of [1, true] in t is 2
+	test "offset (missing)" when the offset of [true, 1] in t is 0
+	test "offset (missing, overlap start)" when the offset of [false, "x"] in t is 0
+	test "offset (missing, overlap end)" when the offset of [[], [], false] in t is 0
+
+	test "first offset" when the first offset of [[]] in t is 4
+	test "last offset" when the last offset of [[]] in t is 5
+
+	test "offset (empty)" when the offset of [] in t is 0
+end handler
+
+
 end module

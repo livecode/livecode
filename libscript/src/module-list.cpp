@@ -527,6 +527,46 @@ MCListEvalIndexOfElementBefore (bool p_is_last,
 	                                 r_output);
 }
 
+////////////////////////////////////////////////////////////////
+
+static void
+MCListEvalOffsetOfListInRange (bool p_is_last,
+                               MCProperListRef p_needle,
+                               MCProperListRef p_haystack,
+                               MCRange p_range,
+                               uindex_t & r_output)
+{
+	if (MCProperListIsEmpty (p_haystack))
+	{
+		r_output = 0;
+		return;
+	}
+
+	uindex_t t_offset = 0;
+	bool t_found = false;
+	if (!p_is_last)
+		t_found = MCProperListFirstOffsetOfListInRange (p_haystack, p_needle,
+		                                                p_range, t_offset);
+	else
+		t_found = MCProperListLastOffsetOfListInRange (p_haystack, p_needle,
+		                                               p_range, t_offset);
+
+	if (t_found)
+		r_output = t_offset + 1;
+	else
+		r_output = 0;
+}
+
+extern "C" MC_DLLEXPORT void
+MCListEvalOffsetOfList (bool p_is_last,
+                        MCProperListRef p_needle,
+                        MCProperListRef p_haystack,
+                        uindex_t & r_output)
+{
+	MCRange t_range = MCRangeMake (0, UINDEX_MAX);
+	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack, t_range, r_output);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST
