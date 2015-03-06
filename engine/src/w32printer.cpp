@@ -190,7 +190,12 @@ static DEVMODEW *WindowsGetPrinterInfo(MCStringRef p_printer_name, DEVMODEW *p_i
 			t_success = false;
 	}
 
+	// SN-2015-03-05: [[ Bug 14160 ]] Ensure that the value returned
+	//  has been initialised (otherwise, we are at the risk a non-nil
+	//  value is returned, and MCWindowsPrinter::DoInitialise will not
+	//  return false.
 	DEVMODEW *t_devmode;
+	t_devmode = NULL;
 	if (t_success)
 	{
 		// NOTE: the memory required for the DEVMODE buffer can be bigger than
