@@ -118,7 +118,8 @@ Example:
 	put bitwise not -5 into tVar -- tVar contains 4
 
 Description:
-Bitwise not returns the complement of <Operand> as a signed 32-bit integer, thus is equivalent to -(x + 1).
+Bitwise not returns the complement of <Operand> as a signed two's
+complement integer, i.e. equivalent to -(x + 1).
 
 Tags: Bitwise operations
 */
