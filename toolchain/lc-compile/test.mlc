@@ -979,7 +979,8 @@ public handler testSystem(inout xResults as List)
 end handler
 
 public handler testDate(inout xResults as List)
-testLog("Date", "LocalTimeListLength", the number of elements in the local time is 6, xResults)
+    testLog("Date", "LocalDateListLength", the number of elements in the local date is 6, xResults)
+    testLog("Date", "UniversalTimeIsAPositiveNumber", the universal time > 0, xResults)
 end handler
 
 end module

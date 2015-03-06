@@ -142,9 +142,9 @@ public handler OnPaint() as undefined
 		-- Draw the icon text
 		set the font of this canvas to getFont("icon")
 		if tCount is mSelectedItem then
-			execute script ("return numtocodepoint(0x" & (element tX of element 4 of mNavItems) & ")")
+            get the char with code ((element tX of element 4 of mNavItems) converted from base 16)
 		else
-			execute script ("return numtocodepoint(0x" & (element tX of element 3 of mNavItems) & ")")
+            get the char with code ((element tX of element 4 of mNavItems) converted from base 16)
 		end if
 		fill text the result at center of getRect("icon") on this canvas
 		
@@ -171,7 +171,7 @@ public handler OnMouseUp() as undefined
 		
 		variable tItemLabel as string
 		put element mSelectedItem of element 2 of mNavItems into tItemLabel
-		dispatch command "navigate" to my script object with [tItemLabel]
+		post "navigate" with [tItemLabel]
 	end if
 end handler
 ----------

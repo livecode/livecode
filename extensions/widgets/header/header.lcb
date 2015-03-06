@@ -164,8 +164,7 @@ public handler OnPaint()
 		end if
 	
 		set the font of this canvas to getFont("icon")
-		execute script ("return numtocodepoint(0xf053)")
-		fill text the result at center of getRect("back button icon") on this canvas
+		fill text "\u{f053}" at center of getRect("back button icon") on this canvas
 	
 		set the font of this canvas to getFont("label")
 		fill text "Back" at left of getRect("back button label") on this canvas
@@ -192,7 +191,9 @@ public handler OnPaint()
 		
 		if mActionStyle is "icons" then
 			set the font of this canvas to getFont("icon")
-			execute script ("return numtocodepoint(0x" & (element tX of element 2 of mActions) & ")")
+            
+            get (element tX of element 2 of mActions) converted from base 16
+            get the char with code the result
 			fill text the result at center of getRect("action icon") on this canvas
 			
 			updateRight()
@@ -253,14 +254,14 @@ public handler OnMouseUp()
 			if tActionCount is tSelectedUp-1 then
 				variable tLabel as string
 				put element tX of (element 1 of mActions) into tLabel
-				dispatch command "headerAction" to my script object with [tLabel]
+				post "headerAction" with [tLabel]
 			end if
 				
 			add 1 to tActionCount
 		end repeat
 		
 	else if tSelectedUp = 1 then
-		dispatch command "backAction" to my script object
+		post "backAction"
 	end if
 	
 end handler

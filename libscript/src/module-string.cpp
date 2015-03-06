@@ -114,6 +114,49 @@ extern "C" MC_DLLEXPORT void MCStringEvalIsGreaterThan(MCStringRef p_left, MCStr
     r_result = MCStringCompareTo(p_left, p_right, kMCStringOptionCompareExact) > 0;
 }
 
+extern "C" MC_DLLEXPORT void MCStringEvalCodeOfChar(MCStringRef p_string, uinteger_t& r_code)
+{
+    uindex_t t_length;
+    t_length = MCStringGetLength(p_string);
+    if (t_length == 0 || t_length > 2)
+        goto notacodepoint_exit;
+    
+    codepoint_t t_code;
+    t_code = MCStringGetCodepointAtIndex(p_string, 0);
+    if (t_length > 1 &&
+        t_code < 65536)
+        goto notacodepoint_exit;
+    
+    r_code = t_code;
+    
+    return;
+    
+notacodepoint_exit:
+    MCErrorThrowGeneric(MCSTR("not a single code character"));
+}
+
+extern "C" MC_DLLEXPORT void MCStringEvalCharWithCode(uinteger_t p_code, MCStringRef& r_string)
+{
+    if (p_code >= 1 << 21)
+    {
+        MCErrorThrowGeneric(MCSTR("code out of range"));
+        return;
+    }
+    
+    if (p_code >= 1 << 16)
+    {
+        unichar_t t_codeunits[2];
+        t_codeunits[0] =  unichar_t((p_code - 0x10000) >> 10) + 0xD800;
+        t_codeunits[1] = unichar_t((p_code - 0x10000) & 0x3FF) + 0xDC00;
+        MCStringCreateWithChars(t_codeunits, 2, r_string);
+        return;
+    }
+    
+    unichar_t t_codeunit;
+    t_codeunit = (unichar_t)p_code;
+    MCStringCreateWithChars(&t_codeunit, 1, r_string);
+}
+
 extern "C" MC_DLLEXPORT void MCStringEvalEmpty(MCStringRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyString);
