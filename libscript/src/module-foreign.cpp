@@ -239,12 +239,7 @@ __wstring_export (MCValueRef value,
                   bool release,
                   void *contents)
 {
-	/* Reject strings that contain nul characters; we can't convert
-	 * them to nul-terminated wide character strings without data
-	 * loss. */
-	uindex_t t_ignored;
-	if (MCStringFirstIndexOfChar ((MCStringRef) value, 0, 0,
-	                              kMCStringOptionCompareExact, t_ignored))
+	if (!MCForeignEvalStringNonNull ((MCStringRef) value))
 		return false;
 
 	unichar_t *t_wstring_value;
