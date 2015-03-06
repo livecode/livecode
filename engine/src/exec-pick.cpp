@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblsyntax.h"
 #include "exec.h"
 
+#include "foundation-chunk.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDate, 5)
@@ -391,13 +393,15 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
     {
         // No access to the line/item delimiter set in the handler from the mobile-specific functions/commands
         // so following the old engine default values for them
-        case kMCItems:
+        case kMCChunkTypeItem:
             t_delimiter = ',';
             break;
-        case kMCWords:
-        case kMCLines:
+        case kMCChunkTypeWord:
+        case kMCChunkTypeLine:
             t_delimiter = '\n';
             break;
+        default:
+            MCUnreachable();
     }
     uindex_t t_old_offset = 0;
     uindex_t t_new_offset = 0;

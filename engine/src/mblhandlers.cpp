@@ -37,6 +37,8 @@
 #include "mblcontrol.h"
 #include "mblstore.h"
 
+#include "foundation-chunk.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -5558,7 +5560,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 	}
     
 	// call MCSystemPick to process the pick wheel
-	MCDialogExecPickOptionByIndex(t_ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
+	MCDialogExecPickOptionByIndex(t_ctxt, kMCChunkTypeLine, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
     
 	
 	if (t_success)
@@ -5656,7 +5658,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
         
 	// call the Exec method to process the pick wheel
     // The function sets the result itself.
-	MCPickExecPickOptionByIndex(ctxt, (int)kMCLines, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(),t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, MCtargetptr->getrect());
+	MCPickExecPickOptionByIndex(ctxt, kMCChunkTypeLine, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(),t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, MCtargetptr->getrect());
     
     // Free memory
     for (uindex_t i = 0; i < t_option_lists . Size(); i++)
