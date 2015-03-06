@@ -320,8 +320,6 @@ private handler drawSegments() as undefined
 			
 			-- draw the label(s) in the selected segment(s)
 			if mSegmentDisplay is "icon" then
-				--execute script ("return numtocodepoint(" & element tX of mSelectedIcons & ")")
-				--put the result into tLabel
 				get the char with code ((element tX of mSelectedIcons) converted from base 16) 
 				put the result into tLabel
 			else
@@ -335,7 +333,6 @@ private handler drawSegments() as undefined
 			
 			-- draw the label(s) in the non-selected segment(s)
 			if mSegmentDisplay is "icon" then
-				--execute script ("return numtocodepoint(" & element tX of mSegmentIcons & ")")
 				get the char with code ((element tX of mSegmentIcons) converted from base 16) 
 				put the result into tLabel
 			else
