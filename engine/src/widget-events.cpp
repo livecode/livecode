@@ -539,7 +539,7 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
     // Send a mouse release event if the widget handles it
     bool t_accepted;
     t_accepted = false;
-    if (p_widget->handlesMouseRelease())
+    if (p_widget->handlesMouseCancel())
     {
         p_widget->OnMouseCancel(p_which);
         t_accepted = true;

@@ -220,10 +220,11 @@ Syntax: OnMouseMove
 Summary: Sent when the mouse pointer moves within the widget's rect.
 
 
-Name: OnMouseRelease
+Name: OnMouseCancel
 Type: message
-Syntax: OnMouseRelease
-Summary: Sent when the mouse button is released outside of the widget's rect.
+Syntax: OnMouseCancel
+Summary: Sent when something happens which should cause the previous mouse down
+action to be considered cancelled. For example, opening a popup during OnMouseDown.
 
 
 Name: OnMouseDown
@@ -235,7 +236,8 @@ Summary: Sent when the mouse button is pushed within the widget's rect.
 Name: OnMouseUp
 Type: message
 Syntax: OnMouseUp
-Summary: Sent when the mouse button is released within the widget's rect.
+Summary: Sent when the mouse button is released regardless of whether the pointer
+is within the widget's rect or not.
 
 
 Name: OnMouseScroll
