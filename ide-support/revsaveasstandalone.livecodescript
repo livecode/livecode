@@ -2188,7 +2188,7 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    
    // AL-2015-02-27: Include fontawesome in every standalone
    local  tTargetFontPath
-   if the platform begins with "MacOS" then
+   if tPlatformDetailsA["platform"] begins with "MacOS" then
       put "specialfolderpath(" & quote & "engine" & quote & ") & slash & " & quote & ".." & quote & " & slash & Resources & slash & _MacOS & slash & fontawesome.ttf" into tTargetFontPath
    else
       put "specialfolderpath(" & quote & "engine" & quote & ") & slash & fontawesome.ttf" into tTargetFontPath
