@@ -484,46 +484,62 @@ MCProperListLastIndexOfElementInRange (MCProperListRef self,
 
 bool MCProperListFirstOffsetOfList(MCProperListRef self, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset)
 {
-    if (MCProperListIsIndirect(p_needle))
-        p_needle = p_needle -> contents;
-    
-    if (p_needle -> length == 0)
-        return false;
-    
-    if (MCProperListIsIndirect(self))
-        self = self -> contents;
-    
-    uindex_t t_offset, t_new_offset;
-    t_offset = p_after;
-    
-    bool t_match;
-    t_match = false;
-    
-    while (!t_match && MCProperListFirstIndexOfElement(self, p_needle -> list[0], t_offset, t_new_offset))
-    {
-        t_match = true;
+	return MCProperListFirstOffsetOfListInRange (self, p_needle,
+	            MCRangeMake (p_after, UINDEX_MAX), r_offset);
+}
 
-		if (p_needle->length > self->length - t_new_offset)
+bool
+MCProperListFirstOffsetOfListInRange (MCProperListRef self,
+                                      MCProperListRef p_needle,
+                                      MCRange p_range,
+                                      uindex_t & r_offset)
+{
+	if (MCProperListIsIndirect(p_needle))
+		p_needle = p_needle->contents;
+
+	/* Empty lists are never found */
+	if (0 == p_needle->length)
+		return false;
+
+	if (MCProperListIsIndirect(self))
+		self = self->contents;
+
+	__MCProperListClampRange (self, p_range);
+
+	/* If the range is too short to contain the needle, the needle
+	 * clearly can't be found. */
+	if (p_range.length < p_needle->length)
+		return false;
+
+	/* Search algorithm: look forward along the range for the first
+	 * occurrence of the *last* element of the needle, then work
+	 * backward along the needle to see if the lists match. */
+
+	for (uindex_t t_offset = 0; /* Relative to start of range */
+	     t_offset <= p_range.length - p_needle->length;
+	     ++t_offset)
+	{
+		bool t_match = true;
+
+		/* Correlate the two lists at this offset */
+		for (uindex_t t_needle_rindex = 0; /* Relative to *end* of needle */
+		     t_needle_rindex < p_needle->length && t_match;
+		     ++t_needle_rindex)
 		{
-			t_match = false;
-			break;
+			uindex_t t_needle_index = p_needle->length - t_needle_rindex - 1;
+			uindex_t t_self_index = p_range.offset + t_offset + t_needle_index;
+
+			t_match = MCValueIsEqualTo (p_needle->list[t_needle_index],
+			                            self->list[t_self_index]);
 		}
 
-        for (uindex_t i = 1; i < p_needle -> length; i++)
-        {
-            if (!MCValueIsEqualTo(p_needle -> list[i], self -> list[t_new_offset + i]))
-            {
-                t_match = false;
-                break;
-            }
-        }
-        t_offset = t_new_offset + 1;
-    }
-  
-    if (t_match)
-        r_offset = t_new_offset;
-    
-    return t_match;
+		if (t_match)
+		{
+			r_offset = t_offset;
+			return true;
+		}
+	}
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
