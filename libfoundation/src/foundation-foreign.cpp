@@ -310,7 +310,7 @@ __size_import (void *contents,
 	{
 		MCErrorCreateAndThrow (kMCForeignImportErrorTypeInfo,
 		                       "type", kMCSizeTypeInfo,
-		                       "reason", "too large for Number representation",
+		                       "reason", MCSTR("too large for Number representation"),
 		                       nil);
 		return false;
 	}
