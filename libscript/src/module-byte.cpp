@@ -236,6 +236,19 @@ MCByteEvalByteWithCode (uinteger_t p_value,
 	MCDataCreateWithBytes (&t_byte, 1, r_data);
 }
 
+extern "C" MC_DLLEXPORT void
+MCByteEvalCodeOfByte (MCDataRef p_data,
+                      uinteger_t & r_value)
+{
+	if (1 != MCDataGetLength (p_data))
+	{
+		MCErrorThrowGeneric(MCSTR("not a single byte"));
+		return;
+	}
+
+	r_value = MCDataGetByteAtIndex (p_data, 0);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST

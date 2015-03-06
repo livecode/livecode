@@ -35,4 +35,22 @@ public handler TestByteWithCode()
 	MCUnitTestHandlerThrows(TestByteWithCode_Overflow, "code->byte (overflow)")
 end handler
 
+handler TestCodeOfByte_Long()
+	variable t
+	put the byte with code 0 into t
+	put t after t
+	return the code of t
+end handler
+handler TestCodeOfByte_Empty()
+	variable t
+	put the empty data into t
+	return the code of t
+end handler
+public handler TestCodeOfByte()
+	test "byte->code" when the code of (the byte with code 1) is 1
+
+	MCUnitTestHandlerThrows(TestCodeOfByte_Long, "byte->code (multibyte)")
+	MCUnitTestHandlerThrows(TestCodeOfByte_Empty, "byte->code (empty)")
+end handler
+
 end module
