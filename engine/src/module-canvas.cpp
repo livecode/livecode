@@ -5070,7 +5070,7 @@ void MCCanvasStroke(MCCanvasRef p_canvas)
 	MCGContextEnd(t_canvas->context);
 }
 
-void MCCanvasClipToRect(MCCanvasRectangleRef &p_rect, MCCanvasRef p_canvas)
+void MCCanvasClipToRect(MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
