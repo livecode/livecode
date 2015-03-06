@@ -572,6 +572,8 @@ end syntax
 
 public foreign handler MCWidgetGetMousePosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) as undefined binds to "<builtin>"
+
 public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) as undefined binds to "<builtin>"
 
@@ -625,6 +627,27 @@ syntax TheClickLocation is expression
   "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "position"
 begin
     MCWidgetGetClickPosition(IsCurrent, output)
+end syntax
+
+/*
+Summary:        Determines the mouse button which started the mouse click.
+
+Returns:        The index of the mouse button which started the mouse click.
+
+Example:
+    variable tButton as integer
+    put the click button into tButton
+    
+    if tButton is 1 then
+        // do primary button action
+    else
+        // do secondary button action
+    end if
+*/
+syntax TheClickButton is expression
+    "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "button"
+begin
+    MCWidgetGetClickButton(IsCurrent, output)
 end syntax
 
 syntax MouseButtonName is phrase

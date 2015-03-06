@@ -1753,6 +1753,23 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT void MCWidgetGetClickButton(bool p_current, unsigned int& r_button)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    // TODO: Implement asynchronous version.
+    if (!p_current)
+        MCwidgeteventmanager -> GetSynchronousClickButton(r_button);
+    else
+        MCErrorThrowGeneric(MCSTR("'the current click button' is not implemented yet"));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef struct __MCPressedState* MCPressedStateRef;
 MCTypeInfoRef kMCPressedState;
 

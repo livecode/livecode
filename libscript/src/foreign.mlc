@@ -36,7 +36,7 @@ public foreign type Float64 binds to "kMCDoubleTypeInfo"
 
 public foreign type CBool binds to "kMCBoolTypeInfo"
 public type CInt is Int32
-public type CUint is UInt32
+public type CUInt is UInt32
 public type CFloat is Float32
 public type CDouble is Float64
 
