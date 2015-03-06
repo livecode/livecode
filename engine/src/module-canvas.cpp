@@ -575,10 +575,10 @@ static bool __MCCanvasRectangleDescribe(MCValueRef p_value, MCStringRef &r_desc)
 	MCCanvasRectangleGetMCGRectangle (static_cast<MCCanvasRectangleRef>(p_value), t_rectangle);
 
 	return MCStringFormat (r_desc, "<rectangle (%g, %g) - (%g, %g)>",
-	                       t_rectangle.origin.x,
-	                       t_rectangle.origin.y,
-	                       t_rectangle.origin.x + t_rectangle.size.width,
-	                       t_rectangle.origin.y + t_rectangle.size.height);
+	                       double(t_rectangle.origin.x),
+	                       double(t_rectangle.origin.y),
+	                       double(t_rectangle.origin.x + t_rectangle.size.width),
+	                       double(t_rectangle.origin.y + t_rectangle.size.height));
 }
 
 bool MCCanvasRectangleCreateWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rectangle)
@@ -793,7 +793,8 @@ static bool __MCCanvasPointDescribe(MCValueRef p_value, MCStringRef &r_desc)
 	MCGPoint t_point;
 	MCCanvasPointGetMCGPoint (static_cast<MCCanvasPointRef>(p_value), t_point);
 
-	return MCStringFormat (r_desc, "(%g, %g)", t_point.x, t_point.y);
+	return MCStringFormat (r_desc, "(%g, %g)",
+	                       double(t_point.x), double(t_point.y));
 }
 
 bool MCCanvasPointCreateWithMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &r_point)
@@ -951,15 +952,15 @@ static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
 
 	if (1 <= MCCanvasColorGetAlpha (t_color)) /* Opaque case */
 		return MCStringFormat (r_desc, "<color: %g, %g, %g>",
-		                       MCCanvasColorGetRed (t_color),
-		                       MCCanvasColorGetGreen (t_color),
-		                       MCCanvasColorGetBlue (t_color));
+		                       double(MCCanvasColorGetRed (t_color)),
+		                       double(MCCanvasColorGetGreen (t_color)),
+		                       double(MCCanvasColorGetBlue (t_color)));
 	else
 		return MCStringFormat (r_desc, "<color: %g, %g, %g, %g>",
-		                       MCCanvasColorGetRed (t_color),
-		                       MCCanvasColorGetGreen (t_color),
-		                       MCCanvasColorGetBlue (t_color),
-		                       MCCanvasColorGetAlpha (t_color));
+		                       double(MCCanvasColorGetRed (t_color)),
+		                       double(MCCanvasColorGetGreen (t_color)),
+		                       double(MCCanvasColorGetBlue (t_color)),
+		                       double(MCCanvasColorGetAlpha (t_color)));
 }
 
 //////////
