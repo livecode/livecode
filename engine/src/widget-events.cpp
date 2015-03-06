@@ -73,6 +73,7 @@ MCWidgetEventManager::MCWidgetEventManager() :
   m_modifiers(0),
   m_keystring(nil),
   m_mouse_focus(nil),
+  m_mouse_grab(nil),
   m_keyboard_focus(nil),
   m_doubleclick_time(MCdoubletime),
   m_doubleclick_distance(MCdoubledelta),
@@ -194,8 +195,14 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
             mouseLeave(p_widget);
         }
         
+        if (m_mouse_grab == p_widget)
+        {
+            mouseMove(p_widget, p_x, p_y);
+            return true;
+        }
+            
         // This is not the widget you were looking for
-        return False;
+        return false;
     }
     
     // Has the focus state for this widget changed?
@@ -418,6 +425,9 @@ void MCWidgetEventManager::mouseLeave(MCWidget* p_widget)
 
 bool MCWidgetEventManager::mouseDown(MCWidget* p_widget, uinteger_t p_which)
 {
+    if (m_mouse_buttons == 0)
+        m_mouse_grab = p_widget;
+    
     // Mouse button is down
     m_mouse_buttons |= (1 << p_which);
     
@@ -452,6 +462,9 @@ bool MCWidgetEventManager::mouseUp(MCWidget* p_widget, uinteger_t p_which)
 {
     // Mouse button is no longer down
     m_mouse_buttons &= ~(1 << p_which);
+    
+    if (m_mouse_buttons == 0)
+        m_mouse_grab = nil;
     
     if (!widgetIsInRunMode(p_widget))
         return false;
