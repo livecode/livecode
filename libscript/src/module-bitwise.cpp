@@ -33,26 +33,45 @@ extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseXor(integer_t p_left, integer_t
 
 extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseNot(integer_t p_operand, integer_t& r_output)
 {
-    r_output = ~((int32_t)p_operand);
+    r_output = ~p_operand;
 }
 
-extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseShift(integer_t p_operand, bool p_is_right, integer_t p_shift, integer_t& r_output)
+/* Compute the maximum shift possible in C for a given operand. */
+template <typename T>
+static inline void
+MCBitwiseEvalBitwiseShiftCount (T p_operand, uinteger_t & p_shift)
 {
-	/* Ensure that the shift amount is always positive */
-	if (p_shift < 0)
-	{
-		/* Overflow check (why would anyone do this?) */
-		if (INTEGER_MIN == p_shift)
-			++p_shift;
+	/* Maximum shift count for which the C operator is defined */
+	uinteger_t t_max_shift = (sizeof(T) << 3) - 1;
+	p_shift = MCMin (p_shift, t_max_shift);
+}
 
-		p_shift = -p_shift;
-		p_is_right = !p_is_right;
+extern "C" MC_DLLEXPORT void
+MCBitwiseEvalBitwiseShiftRight (integer_t p_operand,
+                                uinteger_t p_shift,
+                                integer_t & r_output)
+{
+	MCBitwiseEvalBitwiseShiftCount (p_operand, p_shift);
+	r_output = p_operand >> p_shift;
+}
+
+extern "C" MC_DLLEXPORT void
+MCBitwiseEvalBitwiseShiftLeft (integer_t p_operand,
+                               uinteger_t p_shift,
+                               integer_t& r_output)
+{
+	MCBitwiseEvalBitwiseShiftCount (p_operand, p_shift);
+	integer_t t_shifted = p_operand << p_shift;
+
+	/* Overflow check */
+	if (p_operand != t_shifted >> p_shift)
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason",
+		                       MCSTR("overflow in bitwise operation"), nil);
+		return;
 	}
 
-	if (p_is_right)
-		r_output = p_operand >> p_shift;
-	else
-		r_output = p_operand << p_shift;
+	r_output = t_shifted;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

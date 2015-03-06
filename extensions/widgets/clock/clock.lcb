@@ -176,31 +176,35 @@ end handler
 ----------
 -- this handler returns the amount of time as a list of three numbers: [hours, minutes, seconds]
 handler getTimeComponents() as list
-	-- use 'execute script' to fetch the time using scripting language code
-	execute script "convert the long time to dateItems; return item 4 to -2 of it;"
-		
-	variable tTimeComponents as list
-	split the result by "," into tTimeComponents
-	put tTimeComponents parsed as list of number into tTimeComponents
+	-- Fetch the local date.
+    -- This a list in the form [day, month, year, hours,minutes,seconds]
+    variable tDate as list
+    put the local date into tDate
 	
+    -- We only want the time, so delete the first 3 elements.
+    delete element 1 to 3 of tDate
+
+    -- Adjust for the timezone.
 	variable tHour as number
-	put (element 1 of tTimeComponents) + mTimeZone into tHour
+    put element 1 of tDate into tHour
+    put (tHour + mTimeZone) mod 24 into tHour
 	
+    -- Compute whether it is 'day' or 'night'
 	if tHour > kStartDay and tHour < kEndDay then
 		put true into mIsDay
 	else
 		put false into mIsDay
 	end if
-	
-	put tHour into element 1 of tTimeComponents
-	return tTimeComponents
+
+    put tHour into element 1 of tDate
+
+	return tDate
 end handler
 
 -- this handler returns the amount of time until the seconds change
 handler computeNextTimer() as number
-	-- use the 'execute script' command
-	execute script "return 1 - (the long seconds - round(the long seconds - 0.5))"
-	return the result
+    get the universal time
+    return 1 - (the result - the floor of the result)
 end handler
 ----------
 

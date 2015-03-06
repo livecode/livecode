@@ -1110,7 +1110,9 @@ extern "C" {
 //   value - recompute on unserialization of the object.
 
 // Return a hash for the given integer.
-MC_DLLEXPORT hash_t MCHashInteger(integer_t i);
+MC_DLLEXPORT hash_t MCHashInteger(integer_t);
+MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
+MC_DLLEXPORT hash_t MCHashUSize(size_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.
@@ -1348,6 +1350,7 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
 
 //////////
 
@@ -1623,6 +1626,8 @@ MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
 MC_DLLEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
 MC_DLLEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
 MC_DLLEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
+
+MC_DLLEXPORT bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t &r_chars_used, MCNumberRef &r_number);
 
 MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
 MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);

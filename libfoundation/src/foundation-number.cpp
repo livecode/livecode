@@ -117,6 +117,59 @@ compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 	return 0;
 }
 
+bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p_full_string, uindex_t &r_length_used, MCNumberRef &r_number)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_end;
+	t_end = nil;
+	
+	MCNumberRef t_number;
+	t_number = nil;
+	
+	if (p_length > 2 &&
+		p_string[0] == '0' &&
+		(p_string[1] == 'x' || p_string[1] == 'X'))
+	{
+		uinteger_t t_uinteger;
+		t_uinteger = strtoul(p_string + 2, &t_end, 16);
+		
+		// SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
+		t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != p_string + 2));
+		if (t_success)
+			t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, t_number);
+	}
+	else
+	{
+		// SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
+		uinteger_t t_uinteger;
+		t_uinteger = strtoul(p_string, &t_end, 10);
+		
+		// SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
+		t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != p_string));
+		if (t_success)
+			t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, t_number);
+		else
+		{
+			real64_t t_real;
+			t_real = strtod(p_string, &t_end);
+			
+			t_success = (errno != ERANGE) && (t_end != p_string);
+			if (t_success)
+				t_success = MCNumberCreateWithReal(t_real, t_number);
+		}
+	}
+	
+	if (t_success)
+	{
+		r_number = t_number;
+		r_length_used = t_end - p_string;
+	}
+	
+	return t_success;
+}
+
 bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number)
 {
     uindex_t length = MCStringGetLength(p_string);
@@ -127,40 +180,17 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
         char_count = length - offset;
     
     if (!MCStringIsNative(p_string))
-        return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string) + offset, MCStringGetLength(p_string), r_number);
+        return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string) + offset, char_count, r_number);
 
     bool t_success;
     t_success = false;
 
-    const char* t_chars = (const char*)MCStringGetNativeCharPtr(p_string) + offset;
-    
-    if (char_count > 2 &&
-            t_chars[0] == '0' &&
-            (t_chars[1] == 'x' || t_chars[1] == 'X'))
-        t_success = MCNumberCreateWithInteger(strtoul(t_chars + 2, nil, 16), r_number);
-    else
-    {
-        char *t_end;
-        // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
-        uinteger_t t_uinteger;
-        t_uinteger = strtoul(t_chars, &t_end, 10);
-        
-        // AL-2014-07-31: [[ Bug 12936 ]] Check the right number of chars has been consumed
-        // SN-2014-10-06: [[ Bug 13594 ]] Also check that no error was encountered
-        if (errno != ERANGE && t_end - t_chars == char_count)
-            t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, r_number);
-        else
-        {
-            real64_t t_real;
-            t_real = strtod(t_chars, &t_end);
-            
-            // AL-2014-07-31: [[ Bug 12936 ]] Check the right number of chars has been consumed
-            if (t_end - t_chars == char_count)
-                t_success = MCNumberCreateWithReal(t_real, r_number);
-        }
-    }
-
-    return t_success;
+	uindex_t t_length_used;
+	t_length_used = 0;
+	
+	t_success = __MCNumberParseNativeString((const char*)MCStringGetNativeCharPtr(p_string) + offset, char_count, true, t_length_used, r_number);
+	
+	return t_success;
 }
 
 bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
@@ -179,29 +209,52 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 
 	bool t_success;
 	t_success = false;
-	if (p_char_count >= 2 && t_native_chars[0] == '0' && (t_native_chars[1] == 'x' || t_native_chars[1] == 'X'))
-		t_success = MCNumberCreateWithInteger(strtoul(t_native_chars + 2, nil, 16), r_number);
-	else
-	{
-		char *t_end;
-		integer_t t_integer;
-		t_integer = strtoul(t_native_chars, &t_end, 10);
-
-        // SN-2014-10-07: [[ Bug 13594 ]] Check that strtoul did not fail.
-		if (errno != ERANGE && *t_end == '\0')
-			t_success = MCNumberCreateWithInteger(t_integer, r_number);
-		else
-		{
-			real64_t t_real;
-			t_real = strtod(t_native_chars, &t_end);
-
-			if (*t_end == '\0')
-				t_success = MCNumberCreateWithReal(t_real, r_number);
-		}
-	}
+	
+	uindex_t t_length_used;
+	t_length_used = 0;
+	
+	t_success = __MCNumberParseNativeString(t_native_chars, p_char_count, true, t_length_used, r_number);
 
 	MCMemoryDeleteArray(t_native_chars);
 
+	return t_success;
+}
+
+bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t &r_chars_used, MCNumberRef &r_number)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_buffer;
+	t_buffer = nil;
+	
+	const char *t_native_string;
+	t_native_string = nil;
+	
+	uindex_t t_length;
+	t_length = MCStringGetLength(p_string);
+	
+	if (offset > t_length)
+		offset = t_length;
+	
+	if (MCStringIsNative(p_string))
+		t_native_string = (const char*)MCStringGetNativeCharPtr(p_string) + offset;
+	else
+	{
+		t_success = MCMemoryNewArray(t_length - offset + 1, t_buffer);
+		
+		uindex_t t_native_char_count;
+		if (t_success)
+			t_success = MCUnicodeCharsMapToNative(MCStringGetCharPtr(p_string) + offset, t_length - offset, (char_t*)t_buffer, t_native_char_count, '?');
+
+		t_native_string = t_buffer;
+	}
+	
+	if (t_success)
+		t_success = __MCNumberParseNativeString(t_native_string, t_length - offset, false, r_chars_used, r_number);
+	
+	MCMemoryDeleteArray(t_buffer);
+	
 	return t_success;
 }
 

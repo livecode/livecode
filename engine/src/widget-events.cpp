@@ -361,6 +361,11 @@ void MCWidgetEventManager::GetSynchronousClickPosition(coord_t& r_x, coord_t& r_
     r_y = m_click_y;
 }
 
+void MCWidgetEventManager::GetSynchronousClickButton(unsigned int& r_button) const
+{
+    r_button = m_click_button;
+}
+
 void MCWidgetEventManager::GetAsynchronousMousePosition(coord_t& r_x, coord_t& r_y) const
 {
     r_x = MCmousex;

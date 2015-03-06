@@ -333,7 +333,10 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
         case kSyntaxNodeKindIntegerMark:
         case kSyntaxNodeKindRealMark:
         case kSyntaxNodeKindStringMark:
+            if (p_left -> boolean_mark . index != p_right -> boolean_mark . index)
+                return 0;
             break;
+            
         case kSyntaxNodeKindConcatenate:
 		{
             int i;
@@ -520,13 +523,7 @@ static void JoinSyntaxNodes(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
     
     if (p_right -> concatenate . is_nullable == 1)
         p_left -> concatenate . is_nullable = 1;
-    
-    /*int t_new_count;
-     t_new_count = p_left -> concatenate . operand_count + p_right -> concatenate . operand_count;
-     p_left -> concatenate . operands = (SyntaxNodeRef *)Reallocate(p_left -> concatenate . operands, t_new_count * sizeof(SyntaxNodeRef));
-     for(int i = 0; i < p_right -> concatenate . operand_count; i++)
-     p_left -> concatenate . operands[p_left -> concatenate . operand_count++] = p_right -> concatenate . operands[i];
-     p_right -> concatenate . operand_count = 0;*/
+
     FreeSyntaxNode(p_right);
 }
 
@@ -1119,12 +1116,8 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
                 continue;
             }
             
-            x_mapping[t_other_child -> boolean_mark . index] = *x_next_mark;
-            t_other_child -> boolean_mark . index = *x_next_mark;
-            AppendSyntaxNode(p_node, t_other_child);
-            *x_next_mark += 1;
-            
-            p_other_node -> concatenate . operands[i] = NULL;
+            assert(IsMarkSyntaxNode(t_child));
+            assert(t_child -> boolean_mark . index == t_other_child -> boolean_mark . index);
         }
     }
     else if (p_node -> kind == kSyntaxNodeKindRepeat)
@@ -1133,17 +1126,8 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
     }
     else if (p_node -> kind == kSyntaxNodeKindDescent)
     {
-        if (p_other_node -> descent . index != -1)
-        {
-            if (p_node -> descent . index == -1)
-            {
-                p_node -> descent . index = *x_next_mark;
-                x_mapping[p_other_node -> descent . index] = *x_next_mark;
-                (*x_next_mark) += 1;
-            }
-            else
-                x_mapping[p_other_node -> descent . index] = p_node -> descent . index;
-        }
+        assert(p_other_node -> descent . index != -1);
+        assert(p_other_node -> descent . index == p_node -> descent . index);
     }
 }
 
@@ -1159,7 +1143,6 @@ static void MergeSyntaxRule(SyntaxRuleRef p_rule, SyntaxRuleRef p_other_rule)
     
     MergeSyntaxNodes(p_rule -> expr, p_other_rule -> expr, &t_rule_mark_count, t_mark_mapping);
     
-    // Need to process this against the method mappings.
     p_other_rule -> mapping = t_mark_mapping;
 }
 
@@ -1832,6 +1815,8 @@ void DumpSyntaxRules(void)
 		
 		for (t_rule = t_group -> rules; t_rule != NULL; t_rule = t_rule -> next)
         {
+            const char *t_name;
+            GetStringOfNameLiteral(t_rule -> name, &t_name);
             printf("[%d] ", t_gindex);
             PrintSyntaxNode(t_rule -> expr);
             printf("\n");
