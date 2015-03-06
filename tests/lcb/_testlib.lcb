@@ -1,0 +1,49 @@
+module com.livecode.__INTERNAL._testlib
+
+use com.livecode.foreign
+
+----------------------------------------------------------------
+-- **EXPERIMENTAL** Helper functions for testing error states
+----------------------------------------------------------------
+
+public handler type Thunk() as optional any
+
+public handler MCUnitTestHandlerThrows(in pHandler as any, in pDescription as String) as undefined
+	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, false, "")
+end handler
+
+public handler MCUnitTestHandlerThrowsBroken(in pHandler as any, in pDescription as String, in pReason as String) as undefined
+	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, true, pReason)
+end handler
+
+----------------------------------------------------------------
+
+foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional List, out Result as optional any) as optional any binds to "<builtin>"
+
+handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as String, in pBroken as Boolean, in pReason as String) as undefined
+
+	variable tHandler as Thunk
+	put pHandler into tHandler
+
+	variable tArgList as optional List
+	variable tResult as optional any
+	variable tMaybeError as optional any
+
+	put [] into tArgList
+	put MCHandlerTryToInvokeWithList(tHandler, tArgList, tResult) into tMaybeError
+
+	variable tHasError as Boolean
+	put tMaybeError is defined into tHasError
+
+	if tHasError then
+		test diagnostic tMaybeError
+	end if
+	if pBroken then
+		broken test pDescription when tHasError because pReason
+	else
+		test pDescription when tHasError
+	end if
+
+end handler
+
+end module

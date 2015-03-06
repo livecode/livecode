@@ -414,6 +414,9 @@ __MCSStreamGetStandardStream (FILE *p_cstream,
 	if (NULL == x_static_stream ||
 	    p_cstream != __MCSStdioStreamGetCStream (x_static_stream))
 	{
+		/* Always disable buffering */
+		setvbuf (p_cstream, NULL, _IONBF, 0);
+
 		MCValueRelease (x_static_stream);
 		if (!__MCSStreamCreateWithStdio (p_cstream, x_static_stream))
 			return false;

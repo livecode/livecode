@@ -348,7 +348,9 @@ MCValueRef MCProperListFetchHead(MCProperListRef self)
 {
     if (MCProperListIsIndirect(self))
         self = self -> contents;
-    
+
+	MCAssert (self->length > 0);
+
     return self -> list[0];
 }
 
@@ -356,7 +358,9 @@ MCValueRef MCProperListFetchTail(MCProperListRef self)
 {
     if (MCProperListIsIndirect(self))
         self = self -> contents;
-    
+
+	MCAssert (self->length > 0);
+
     return self -> list[self -> length - 1];
 }
 
@@ -378,7 +382,9 @@ bool MCProperListPopBack(MCProperListRef self, MCValueRef& r_value)
     if (__MCProperListIsIndirect(self))
         if (!__MCProperListResolveIndirect(self))
             return false;
-    
+
+	MCAssert (self -> length > 0);
+
     MCValueRef t_value;
     t_value = self -> list[self -> length - 1];
     
@@ -396,7 +402,9 @@ bool MCProperListPopFront(MCProperListRef self, MCValueRef& r_value)
     if (__MCProperListIsIndirect(self))
         if (!__MCProperListResolveIndirect(self))
             return false;
-    
+
+	MCAssert (self -> length > 0);
+
     MCValueRef t_value;
     t_value = self -> list[0];
     

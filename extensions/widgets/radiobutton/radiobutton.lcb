@@ -141,7 +141,7 @@ public handler OnMouseUp()
 		put "checked" into mState
 	end if
 	redraw all
-	dispatch "buttonChecked" to my script object with [mLabelText]
+	post "buttonChecked" with [mLabelText]
 end handler
 ----------
 

@@ -1624,6 +1624,8 @@ MC_DLLEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
 MC_DLLEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
 MC_DLLEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
 
+MC_DLLEXPORT bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t &r_chars_used, MCNumberRef &r_number);
+
 MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
 MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
@@ -2534,6 +2536,7 @@ MC_DLLEXPORT void *MCHandlerGetContext(MCHandlerRef handler);
 MC_DLLEXPORT const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef handler);
     
 MC_DLLEXPORT bool MCHandlerInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
