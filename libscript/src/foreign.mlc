@@ -25,6 +25,8 @@ public foreign type Pointer binds to "kMCPointerTypeInfo"
 public foreign type UInt32 binds to "kMCUIntTypeInfo"
 public foreign type Int32 binds to "kMCIntTypeInfo"
 
+public foreign type UIntSize binds to "kMCSizeTypeInfo"
+
 public foreign type Float32 binds to "kMCFloatTypeInfo"
 public foreign type Float64 binds to "kMCDoubleTypeInfo"
 
