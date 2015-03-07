@@ -56,6 +56,9 @@ public foreign handler MCByteExecDeleteFirstByteOf(inout Target as Data) as unde
 
 public foreign handler MCDataExecRandomBytes(in Count as LCUIndex, out Value as Data) as undefined binds to "<builtin>"
 
+public foreign handler MCByteEvalByteWithCode(in Value as LCUInt, out Result as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalCodeOfByte(in Target as Data, out Result as LCUInt) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -427,6 +430,41 @@ begin
 	MCDataExecRandomBytes(Count, output)
 end syntax
 
---
+----------------------------------------------------------------
+-- Conversion between bytes and numbers
+----------------------------------------------------------------
+
+/*
+Summary:	Create a 1-byte data value from a number
+
+Value:		The value for the new data value
+
+Description:
+Returns a byte of binary data, created using the given value.  The
+<Value> must be between 0 and 255 (inclusive).
+
+Tags: Binary
+*/
+syntax ByteWithCode is prefix operator with precedence 2
+	"the" "byte" "with" "code" <Value: Expression>
+begin
+	MCByteEvalByteWithCode(Value, output)
+end syntax
+
+/*
+Summary:	Get the numeric value of a single byte.
+
+Target:	A 1-byte binary data value.
+
+Description:
+Returns the numeric representation of a single byte of binary data.
+
+Tags: Binary
+*/
+syntax CodeOfByte is prefix operator with precedence 2
+	"the" "code" "of" <Target: Expression>
+begin
+	MCByteEvalCodeOfByte(Target, output)
+end syntax
 
 end module

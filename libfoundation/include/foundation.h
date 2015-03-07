@@ -571,6 +571,7 @@ typedef unsigned char char_t;
 
 // The 'byte_t' type is used to hold a char in a binary string (native).
 typedef uint8_t byte_t;
+#define BYTE_MAX UINT8_MAX
 
 // The 'codepoint_t' type is used to hold a single Unicode codepoint (20-bit
 // value).
