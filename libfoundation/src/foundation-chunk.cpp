@@ -748,7 +748,7 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
         }
             break;
         default:
-            break;
+            MCUnreachable();
     }
     
     if (break_iterator != nil)
@@ -801,7 +801,7 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
             }
         }
         default:
-            break;
+            MCUnreachable();
     }
     
     if (break_iterator != nil)
