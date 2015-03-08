@@ -32,6 +32,7 @@ SCRIPT_SRC_FILES = \
 	src/module-bitwise.cpp \
 	src/module-byte.cpp \
 	src/module-char.cpp \
+	src/module-codeunit.cpp \
 	src/module-date.cpp \
 	src/module-encoding.cpp \
 	src/module-foreign.cpp \
@@ -53,6 +54,7 @@ SCRIPT_SRC_FILES = \
 	$(DERIVED_SRC)/bitwise.mlc.c \
 	$(DERIVED_SRC)/byte.mlc.c \
 	$(DERIVED_SRC)/char.mlc.c \
+	$(DERIVED_SRC)/codeunit.mlc.c \
 	$(DERIVED_SRC)/date.mlc.c \
 	$(DERIVED_SRC)/file.mlc.c \
 	$(DERIVED_SRC)/foreign.mlc.c \

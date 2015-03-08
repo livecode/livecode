@@ -127,8 +127,7 @@ public handler OnPaint()
 	if mIsChecked is true then
 		set the font of this canvas to getFont("icon")
 		set the paint of this canvas to getPaint("icon")
-		execute script ("return numtocodepoint(0xf00c)")
-		fill text the result at center of getRect("checkbox") on this canvas
+		fill text "\u{f00c}" at center of getRect("checkbox") on this canvas
 	end if
 	--
 	
@@ -152,7 +151,8 @@ public handler OnMouseUp()
 	put "" into mState
 	setChecked(not(mIsChecked))
 	redraw all
-	dispatch command "mouseUp" to my script object with [mLabel]
+    
+	post "mouseUp" with [mLabel]
 end handler
 ----------
 

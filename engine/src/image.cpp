@@ -257,7 +257,7 @@ void MCImage::close()
 Boolean MCImage::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	
 	mx = x;
@@ -1489,7 +1489,8 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 bool MCImage::lockshape(MCObjectShape& r_shape)
 {
 	// Make sure we consider the case where only the image bits are rendered.
-	if (getflag(F_SHOW_BORDER) || getstate(CS_KFOCUSED) && (extraflags & EF_NO_FOCUS_BORDER) == 0 ||
+	if (getflag(F_SHOW_BORDER) ||
+	    (getstate(CS_KFOCUSED) && (extraflags & EF_NO_FOCUS_BORDER) == 0) ||
 		getcompression() == F_PICT || m_rep == nil)
 	{
 		r_shape . type = kMCObjectShapeComplex;
@@ -1883,10 +1884,12 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (MCstackfileversion < 2700)
 	{
 		if (ink == GXblendSrcOver)
+		{
 			if (blendlevel != 50)
 				ink = (100 - blendlevel) | 0x80;
 			else
 				ink = GXblend;
+		}
 	}
 //----
 

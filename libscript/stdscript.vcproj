@@ -165,6 +165,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\module-codeunit.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-date.cpp"
 				>
 			</File>
@@ -256,6 +260,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\codeunit.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\date.mlc"
 					>
 				</File>
@@ -319,96 +327,104 @@
 					RelativePath=".\src\type.mlc"
 					>
 				</File>
+				<File
+					RelativePath=".\src\unittest-impl.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\unittest.mlc"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="generated"
 				>
 				<File
-					RelativePath=".\generated\arithmetic.c"
+					RelativePath="..\engine\generated\arithmetic.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\array.c"
+					RelativePath="..\engine\generated\array.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\binary.c"
+					RelativePath="..\engine\generated\binary.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\bitwise.c"
+					RelativePath="..\engine\generated\bitwise.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\byte.c"
+					RelativePath="..\engine\generated\byte.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\char.c"
+					RelativePath="..\engine\generated\char.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\date.c"
+					RelativePath="..\engine\generated\codeunit.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\file.c"
+					RelativePath="..\engine\generated\date.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\foreign.c"
+					RelativePath="..\engine\generated\file.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\item.c"
+					RelativePath="..\engine\generated\foreign.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\line.c"
+					RelativePath="..\engine\generated\list.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\list.c"
+					RelativePath="..\engine\generated\logic.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\logic.c"
+					RelativePath="..\engine\generated\math-foundation.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\math-foundation.c"
+					RelativePath="..\engine\generated\math.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\math.c"
+					RelativePath="..\engine\generated\sort.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\segmentchunk.c"
+					RelativePath="..\engine\generated\stream.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\sort.c"
+					RelativePath="..\engine\generated\string.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\stream.c"
+					RelativePath="..\engine\generated\system.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\string.c"
+					RelativePath="..\engine\generated\type-convert.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\system.c"
+					RelativePath="..\engine\generated\type.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\type-convert.c"
+					RelativePath=".\src\_mlc\unittest-impl.c"
 					>
 				</File>
 				<File
-					RelativePath=".\generated\type.c"
+					RelativePath=".\src\_mlc\unittest.c"
 					>
 				</File>
 			</Filter>

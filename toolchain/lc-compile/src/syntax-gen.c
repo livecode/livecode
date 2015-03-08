@@ -1817,7 +1817,7 @@ void DumpSyntaxRules(void)
         {
             const char *t_name;
             GetStringOfNameLiteral(t_rule -> name, &t_name);
-            printf("[%d] ", t_gindex, t_name);
+            printf("[%d] ", t_gindex);
             PrintSyntaxNode(t_rule -> expr);
             printf("\n");
         }

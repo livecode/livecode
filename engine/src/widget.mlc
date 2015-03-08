@@ -68,6 +68,9 @@ Example:
 		fill tFacePath on this canvas
 	end handler
 Description:
+Handle the <OnPaint> message to draw the widget when it needs updated.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 References: RedrawAll(statement)
 
 
@@ -114,6 +117,8 @@ Syntax: OnSave
 Summary: Sent when the widget is saved.
 Description:
 Handler the OnSave message to execute code when a stack containing the widget is saved.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnLoad
 Type: message
@@ -121,6 +126,8 @@ Syntax: OnLoad
 Summary: Sent when the widget is loaded.	
 Description:
 Handler the OnSave message to execute code when a stack containing the widget is loaded, for example setting default values of instance variables.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnCreate
 Type: message
@@ -136,6 +143,8 @@ Example:
 	end handler
 Description:
 Handle the OnCreate message to have the widget perform an action when it is created, for example setting default values of instance variables.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnDestroy
 Type: message
@@ -150,6 +159,8 @@ Syntax: OnParentPropertyChanged
 Summary: Sent when a property of the widget parent is changed.
 Description:
 Handle the <OnParentPropertyChanged> message when a widget property depends on the properties of a parent object.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnStopEditing
 Type: message
@@ -157,6 +168,8 @@ Syntax: OnStopEditing
 Summary: Sent when the browse tool is selected.
 Description:
 Handle the <OnStopEditing> message to perform an action when the browse tool is selected.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnStartEditing
 Type: message
@@ -164,6 +177,8 @@ Syntax: OnStartEditing
 Summary: Sent when the pointer tool is selected.
 Description:
 Handle the <OnStartEditing> message to perform an action when the edit tool is selected.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
 
 Name: OnLayerChanged
 Type: message
@@ -182,7 +197,9 @@ Example:
 	end handler
 Description:
 Handle the <OnTimer> message to perform an action at a scheduled time.
-
+>*Note:* OnTimer messages are only sent whilst in browse tool mode. If a timer is
+delivered whilst in pointer tool mode it will be deferred until browser tool mode is
+re-entered.
 References: ScheduleTimerIn(statement)
 
 Name: OnMouseEnter
@@ -352,8 +369,10 @@ public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) as undefined binds to "<builtin>"
 public foreign handler MCWidgetExecCancelTimer() as undefined binds to "<builtin>"
 public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecDispatch(in pIsFunction as CBool, in pMessage as String) as any binds to "<builtin>"
-public foreign handler MCWidgetExecDispatchWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) as any binds to "<builtin>"
+public foreign handler MCWidgetExecSend(in pIsFunction as CBool, in pMessage as String) as any binds to "<builtin>"
+public foreign handler MCWidgetExecSendWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) as any binds to "<builtin>"
+public foreign handler MCWidgetExecPost(in pMessage as String) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecPostWithArguments(in pMessage as String, in pArguments as optional List) as undefined binds to "<builtin>"
 
 /* 
 Summary:	Redraws the widget.
@@ -440,16 +459,26 @@ begin
 end syntax
 
 /* 
-Summary:	Dispatches a message to the widget script object.
+Summary:	Sends a message to the widget script object.
 */	
 
-syntax Dispatch is statement
-    "dispatch" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
+syntax Send is statement
+    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
 begin
-    MCWidgetExecDispatch(IsFunction, Message)
-    MCWidgetExecDispatchWithArguments(IsFunction, Message, Arguments)
+    MCWidgetExecSend(IsFunction, Message)
+    MCWidgetExecSendWithArguments(IsFunction, Message, Arguments)
 end syntax
 
+/* 
+Summary:	Posts a message to the widget script object.
+*/	
+
+syntax Post is statement
+    "post"<Message: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCWidgetExecPost(Message)
+    MCWidgetExecPostWithArguments(Message, Arguments)
+end syntax
 
 // ---------- External properties of widgets ---------- //
 
@@ -543,6 +572,8 @@ end syntax
 
 public foreign handler MCWidgetGetMousePosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) as undefined binds to "<builtin>"
+
 public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) as undefined binds to "<builtin>"
 
@@ -596,6 +627,27 @@ syntax TheClickLocation is expression
   "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "position"
 begin
     MCWidgetGetClickPosition(IsCurrent, output)
+end syntax
+
+/*
+Summary:        Determines the mouse button which started the mouse click.
+
+Returns:        The index of the mouse button which started the mouse click.
+
+Example:
+    variable tButton as integer
+    put the click button into tButton
+    
+    if tButton is 1 then
+        // do primary button action
+    else
+        // do secondary button action
+    end if
+*/
+syntax TheClickButton is expression
+    "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "button"
+begin
+    MCWidgetGetClickButton(IsCurrent, output)
 end syntax
 
 syntax MouseButtonName is phrase
