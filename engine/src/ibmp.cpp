@@ -823,6 +823,8 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 	if (t_success)
 		x_bytes_read += t_src_stride * p_bitmap->height;
 
+	MCMemoryDeleteArray (t_src_buffer);
+
 	return t_success;
 }
 
