@@ -927,11 +927,13 @@ no element of <Haystack> is equal to <Needle>, the return value is 0.
 
 Tags: Lists
 */
+/* bug 14846
 syntax ListIndexAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementAfter(IsLast, Needle, After, Haystack, output)
 end syntax
+*/
 
 /*
 Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
@@ -962,12 +964,13 @@ specified, the last matching element is found.
 
 Tags: Lists
 */
+/* bug 14846
 syntax ListIndexBefore is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementBefore(IsLast, Needle, Before, Haystack, output)
 end syntax
-
+*/
 ----------------------------------------------------------------
 
 /*
@@ -1038,11 +1041,13 @@ value is 0.
 
 Tags: Lists
 */
+/* bug 14846
 syntax ListOffsetAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListAfter(IsLast, Needle, After, Haystack, output)
 end syntax
+*/
 
 /*
 Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
@@ -1075,10 +1080,12 @@ is equal to <Needle>, the return value is 0.  If neither "first" nor
 
 Tags: Lists
 */
+/* bug 14846
 syntax ListOffsetBefore is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListBefore(IsLast, Needle, Before, Haystack, output)
 end syntax
+*/
 
 end module

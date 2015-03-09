@@ -396,6 +396,7 @@ end handler
 
 ----------------------------------------------------------------
 
+/* bug 14846
 handler TestIndexAfter_InvalidPositive()
 	return the index of true after 2 in [true]
 end handler
@@ -468,9 +469,11 @@ public handler TestIndexAfterZero()
 	put the last index of true in t into tNoAfter
 	test "last index after (+ve, 0)" when the last index of true after 0 in t is tNoAfter
 end handler
+*/
 
 ----------------------------------------------------------------
 
+/* bug 14846
 handler TestIndexBefore_InvalidPositive()
 	return the index of true before 3 in [true]
 end handler
@@ -544,6 +547,7 @@ public handler TestIndexBeforeZero()
 	put the last index of true in t into tNoBefore
 	test "last index before (+ve, 0)" when the last index of true before 0 in t is tNoBefore
 end handler
+*/
 
 ----------------------------------------------------------------
 -- Finding subsequence offsets
@@ -566,6 +570,7 @@ end handler
 
 ----------------------------------------------------------------
 
+/* bug 14846
 handler TestOffsetAfter_InvalidPositive()
 	return the offset of [true] after 2 in [true]
 end handler
@@ -638,9 +643,11 @@ public handler TestOffsetAfterZero()
 	put the last offset of [true,false] in t into tNoAfter
 	test "last offset after (+ve, 0)" when the last offset of [true,false] after 0 in t is tNoAfter
 end handler
+*/
 
 ----------------------------------------------------------------
 
+/* bug 14846
 handler TestOffsetBefore_InvalidPositive()
 	return the offset of [true] before 3 in [true]
 end handler
@@ -713,6 +720,6 @@ public handler TestOffsetBeforeZero()
 	put the last offset of [true,false] in t into tNoBefore
 	test "last offset before (+ve, 0)" when the last offset of [true,false] before 0 in t is tNoBefore
 end handler
-
+*/
 
 end module
