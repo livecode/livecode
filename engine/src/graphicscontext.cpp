@@ -1207,6 +1207,8 @@ void MCGraphicsContext::fillpath(MCPath *path, bool p_evenodd)
 		MCGContextFill(m_gcontext);	
 		MCGContextRestore(m_gcontext);
 	}
+
+	MCGPathRelease(t_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
