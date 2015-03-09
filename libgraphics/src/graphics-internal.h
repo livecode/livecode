@@ -368,6 +368,8 @@ inline SkPath::FillType MCGFillRuleToSkFillType(MCGFillRule p_rule)
 			return SkPath::kWinding_FillType;
 		case kMCGFillRuleEvenOdd:
 			return SkPath::kEvenOdd_FillType;
+		default:
+			MCUnreachable();
 	}
 }
 
