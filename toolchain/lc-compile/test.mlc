@@ -606,7 +606,8 @@ public handler testChar(inout xResults as List)
 	
 	put the first offset of "abcdef" in tString into tOffset
 	testLog("Char", "CharOffset", tOffset is 0, xResults)
-	
+
+	/* bug 14846
 	put the offset of "abcde" after 1 in tString into tOffset
 	
 	testLog("Char", "CharOffsetAfter", tOffset is 5, xResults)
@@ -623,7 +624,8 @@ public handler testChar(inout xResults as List)
 	put char tOffset + 1 to tOffset + 3 of tAddress into tTLD
 	
 	testLog("Char", "CharOffsetBefore", tTLD is "com", xResults)
-	
+	*/
+
 	variable tVar as String
 	put "123" into tVar
 	

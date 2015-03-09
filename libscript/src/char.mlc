@@ -384,6 +384,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of chars 
 Tags: Strings
 */
 
+/* bug 14846
 syntax CharOffsetAfter is prefix operator with precedence 1
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
@@ -394,6 +395,7 @@ syntax CharIndexAfter is prefix operator with precedence 1
 begin
     MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
 end syntax
+*/
 
 /*
 
@@ -421,6 +423,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of chars 
 Tags: Strings
 */
 
+/* bug 14846
 syntax CharOffsetBefore is prefix operator with precedence 1
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
@@ -431,7 +434,7 @@ syntax CharIndexBefore is prefix operator with precedence 1
 begin
     MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax
-
+*/
 
 /*
 Summary:            Determines whether <Source> contains <Needle>.

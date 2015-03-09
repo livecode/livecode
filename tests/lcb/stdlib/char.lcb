@@ -304,6 +304,7 @@ public handler TestOffset()
 	test "index" when the index of "x" in ".xx." is 2
 end handler
 
+/* bug 14846
 public handler TestOffsetAfter()
 	-- Only test single-character needles for now
 	test "offset after (single, +ve)" when the offset of "x" after 1 in "x.xx." is 2
@@ -372,6 +373,7 @@ public handler TestOffsetAfterZero()
 	put the last offset of "x" in "x" into tNoAfter
 	test "the last offset after (single, 0, same)" when the last offset of "x" after 0 in "x" is tNoAfter
 end handler
+*/
 
 public handler TestBeginsWith()
 	test "begins with" when "xx." begins with "xx"
