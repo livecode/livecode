@@ -1943,10 +1943,10 @@ bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 	}
 	else
     {
-		MCCStringFree(t_name);
         r_name = MCValueRetain(kMCEmptyString);
     }
 
+	MCCStringFree(t_name);
 	return t_success;
 }
 
