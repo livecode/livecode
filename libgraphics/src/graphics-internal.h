@@ -288,7 +288,9 @@ inline SkPaint::Join MCGJoinStyleToSkJoinStyle(MCGJoinStyle p_style)
 		case kMCGJoinStyleRound:
 			return SkPaint::kRound_Join;
 		case kMCGJoinStyleMiter:
-			return SkPaint::kMiter_Join;			
+			return SkPaint::kMiter_Join;
+		default:
+			MCUnreachable();
 	}
 }
 
