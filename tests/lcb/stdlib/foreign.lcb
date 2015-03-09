@@ -40,8 +40,8 @@ public handler TestZStringUTF16()
 	variable tInternal as String
 
 	-- Test round-trip bridging
-	put "�" into tUTF16
-	test "ZStringUTF16 (round-trip)" when tUTF16 is "�"
+	put "\u{fffd}" into tUTF16
+	test "ZStringUTF16 (round-trip)" when tUTF16 is "\u{fffd}"
 
 	-- bug 14826
 	-- Check that strings containing embedded nuls can't be
