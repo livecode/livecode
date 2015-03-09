@@ -559,11 +559,34 @@ end syntax
 
 ----------------------------------------------------------------
 
+/*
+Summary:	Get the numeric value of a single char
+
+Target:	A string containing one character
+
+Description:
+Returns the Unicode codepoint index of a single character.
+
+Tags: Strings
+*/
+
 syntax CodeOfChar is prefix operator with precedence 2
     "the" "code" "of" <Target: Expression>
 begin
     MCStringEvalCodeOfChar(Target, output)
 end syntax
+
+/*
+Summary:	Create a 1-char string from a number
+
+Value:		A Unicode codepoint index
+
+Description:
+Returns a string containing one Unicode character created using the
+given value.
+
+Tags: Strings
+*/
 
 syntax CharWithCode is prefix operator with precedence 2
     "the" "char" "with" "code" <Index: Expression>
