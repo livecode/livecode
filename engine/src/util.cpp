@@ -49,7 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
 
-static MCPoint qa_points[QA_NPOINTS];
+static MCPoint qa_points[QA_NPOINTS + 1];
 
 extern int UTF8ToUnicode(const char * lpSrcStr, int cchSrc, uint16_t * lpDestStr, int cchDest);
 extern int UnicodeToUTF8(const uint16_t *lpSrcStr, int cchSrc, char *lpDestStr, int cchDest);
