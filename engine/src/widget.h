@@ -89,7 +89,7 @@ public:
     ////////// Functions used by the event manager for event processing
     bool handlesMouseDown() const;
     bool handlesMouseUp() const;
-    bool handlesMouseRelease() const;
+    bool handlesMouseCancel() const;
     bool handlesKeyPress() const;
     bool handlesActionKeyPress() const;
     bool handlesTouches() const;

@@ -807,13 +807,13 @@ bool MCWidget::handlesMouseUp() const
     return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseUp"), t_signature);
 }
 
-bool MCWidget::handlesMouseRelease() const
+bool MCWidget::handlesMouseCancel() const
 {
     if (m_instance == nil)
         return false;
     
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseRelease"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseCancel"), t_signature);
 }
 
 bool MCWidget::handlesKeyPress() const

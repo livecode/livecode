@@ -90,6 +90,7 @@ private:
     uinteger_t  m_modifiers;
     MCStringRef m_keystring;
     MCWidget*   m_mouse_focus;
+    MCWidget*   m_mouse_grab;
     MCWidget*   m_keyboard_focus;
     
     // Parameters for controlling double-click time and position deltas
