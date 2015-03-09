@@ -800,6 +800,7 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
                 m_breaks . Push(t_range);
             }
         }
+        break;
         default:
             MCUnreachable();
     }
