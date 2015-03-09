@@ -370,7 +370,10 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 
 	// If we are 'requiring' and the script is already loaded, we are done.
 	if (t_file -> script != NULL && p_require)
+	{
+		delete t_file;
 		return true;
+	}
 	
 	// If the file isn't open yet, open it
 	if (t_file -> script == NULL)
