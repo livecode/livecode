@@ -1812,6 +1812,10 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
       if tPlatform is "Linux" and tDriver is "Oracle" then
          revStandaloneAddWarning "Linux, Oracle is not currently supported on this platform"
          next repeat
+      else if tDriver is "Oracle" and line 3 of the revlicenseinfo is "Community" then
+         -- SN-2015-03-06: [[ DBDriverInclusion ]] Under community, the Oracle database
+         -- is not visible, and should simply be ignored as it will fail.
+         next repeat
       end if
       
       put revDBDriverPath(tDriver, tPlatform, tArch) into tDriverPath
@@ -2034,6 +2038,18 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       
       -- get the path to the external
       put revExternalPath(tExternalName, tPlatform, tArch) into tExternalPath
+      
+      -- SN-2015-03-06: [[ DBDriverInclusion ]] In case Database drivers were
+      -- included, then the revdb external has been copied.
+      -- No issue to copy over it on Windows / Linux, but copying a folder (revdb.bundle)
+      -- will fail on Mac.
+      local tSourceExternal
+      put item -1 of tExternalPath into tSourceExternal
+      if tSourceExternal contains "revdb" and \
+            (there is a folder (tCurrentLocation & "/Externals/" &  tSourceExternal) \
+            or there is a file (tCurrentLocation & "/Externals/" & tSourceExternal)) then
+         next repeat
+      end if
       
       revCopyModule tPlatform, tExternalName, item -1 of tExternalPath, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
       if the result is not empty then
