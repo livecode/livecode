@@ -493,8 +493,7 @@ bool MCSessionCloseSession(MCSession *p_session, bool p_update)
 		if (t_success)
 			MCSessionRefreshExpireTime(t_index_session);
 
-		if (t_success)
-			t_success = MCSessionCloseIndex(t_index, true);
+		MCSessionCloseIndex(t_index, true);
 	}
 	if (p_session->filehandle != NULL)
 	{
