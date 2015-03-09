@@ -385,14 +385,15 @@ void XML_NewDocument(char *args[], int nargs, char **retstring,
 	*pass = False;
 	*error = False;
 	char *result = NULL;
-	CXMLDocument *newdoc = new CXMLDocument;
-	if (nargs < 2){
 
+	if (nargs < 2){
 
 		*error = True;
 		result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 	}
 	else{
+		CXMLDocument *newdoc = new CXMLDocument;
+
 		Bool wellformed = util_strnicmp(args[1],"TRUE",4) == 0;
 		
 		Bool buildtree = True;
