@@ -622,7 +622,10 @@ static void PrintSyntaxNode(SyntaxNodeRef p_node)
             {
                 if (i > 0)
                     printf(".");
-                PrintSyntaxNode(p_node -> concatenate . operands[i]);
+				if (NULL != p_node -> concatenate . operands[i])
+					PrintSyntaxNode(p_node -> concatenate . operands[i]);
+				else
+					printf("<removed>");
             }
             printf(")");
 			break;

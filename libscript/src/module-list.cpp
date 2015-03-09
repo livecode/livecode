@@ -118,7 +118,7 @@ extern "C" MC_DLLEXPORT void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle,
 extern "C" MC_DLLEXPORT void MCListEvalContainsElements(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
 {
     uindex_t t_dummy;
-    r_output = MCProperListFirstIndexOfList(p_target, p_needle, 0, t_dummy);
+    r_output = MCProperListFirstOffsetOfList(p_target, p_needle, 0, t_dummy);
 }
 
 extern "C" MC_DLLEXPORT void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
@@ -439,6 +439,178 @@ extern "C" MC_DLLEXPORT void MCListEvalIsEqualTo(MCProperListRef p_left, MCPrope
 extern "C" MC_DLLEXPORT void MCListEvalIsNotEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
 {
     r_output = !MCProperListIsEqualTo(p_left, p_right);
+}
+
+////////////////////////////////////////////////////////////////
+
+static void
+MCListEvalIndexOfElementInRange (bool p_is_last,
+                                 MCValueRef p_needle,
+                                 MCProperListRef p_haystack,
+                                 MCRange p_range,
+                                 uindex_t & r_output)
+{
+	if (MCProperListIsEmpty (p_haystack))
+	{
+		r_output = 0;
+		return;
+	}
+
+	uindex_t t_offset = 0;
+	bool t_found = false;
+	if (!p_is_last)
+		t_found = MCProperListFirstIndexOfElementInRange (p_haystack, p_needle,
+		                                                  p_range, t_offset);
+	else
+		t_found = MCProperListLastIndexOfElementInRange (p_haystack, p_needle,
+		                                                 p_range, t_offset);
+
+	if (t_found)
+		r_output = t_offset + 1;
+	else
+		r_output = 0;
+}
+
+extern "C" MC_DLLEXPORT void
+MCListEvalIndexOfElement (bool p_is_last,
+                          MCValueRef p_needle,
+                          MCProperListRef p_haystack,
+                          uindex_t & r_output)
+{
+	MCRange t_range = MCRangeMake (0, UINDEX_MAX);
+	MCListEvalIndexOfElementInRange (p_is_last, p_needle, p_haystack, t_range, r_output);
+}
+
+extern "C" MC_DLLEXPORT void
+MCListEvalIndexOfElementAfter (bool p_is_last,
+                               MCValueRef p_needle,
+                               index_t p_after,
+                               MCProperListRef p_haystack,
+                               uindex_t & r_output)
+{
+	uindex_t t_start, t_count;
+	if (!MCChunkGetExtentsOfElementChunkByExpressionInRange (p_haystack, nil,
+	        p_after, true, true, false, t_start, t_count) &&
+	    p_after != 0)
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason",
+		                       MCSTR("chunk index out of range"), nil);
+		return;
+	}
+
+	MCListEvalIndexOfElementInRange (p_is_last, p_needle, p_haystack,
+	                                 MCRangeMake(t_start + t_count, UINDEX_MAX),
+	                                 r_output);
+}
+
+extern "C" MC_DLLEXPORT void
+MCListEvalIndexOfElementBefore (bool p_is_last,
+                               MCValueRef p_needle,
+                               index_t p_before,
+                               MCProperListRef p_haystack,
+                               uindex_t & r_output)
+{
+	uindex_t t_start, t_count;
+	if (p_before == 0)
+	{
+		t_start = UINDEX_MAX;
+	} else if (!MCChunkGetExtentsOfElementChunkByExpressionInRange (p_haystack,
+	                nil, p_before, true, false, true, t_start, t_count))
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason",
+		                       MCSTR("chunk index out of range"), nil);
+		return;
+	}
+
+	MCListEvalIndexOfElementInRange (p_is_last, p_needle, p_haystack,
+	                                 MCRangeMake(0, t_start),
+	                                 r_output);
+}
+
+////////////////////////////////////////////////////////////////
+
+static void
+MCListEvalOffsetOfListInRange (bool p_is_last,
+                               MCProperListRef p_needle,
+                               MCProperListRef p_haystack,
+                               MCRange p_range,
+                               uindex_t & r_output)
+{
+	if (MCProperListIsEmpty (p_haystack))
+	{
+		r_output = 0;
+		return;
+	}
+
+	uindex_t t_offset = 0;
+	bool t_found = false;
+	if (!p_is_last)
+		t_found = MCProperListFirstOffsetOfListInRange (p_haystack, p_needle,
+		                                                p_range, t_offset);
+	else
+		t_found = MCProperListLastOffsetOfListInRange (p_haystack, p_needle,
+		                                               p_range, t_offset);
+
+	if (t_found)
+		r_output = t_offset + 1;
+	else
+		r_output = 0;
+}
+
+extern "C" MC_DLLEXPORT void
+MCListEvalOffsetOfList (bool p_is_last,
+                        MCProperListRef p_needle,
+                        MCProperListRef p_haystack,
+                        uindex_t & r_output)
+{
+	MCRange t_range = MCRangeMake (0, UINDEX_MAX);
+	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack, t_range, r_output);
+}
+
+extern "C" MC_DLLEXPORT void
+MCListEvalOffsetOfListAfter (bool p_is_last,
+                             MCProperListRef p_needle,
+                             index_t p_after,
+                             MCProperListRef p_haystack,
+                             uindex_t & r_output)
+{
+	uindex_t t_start, t_count;
+	if (!MCChunkGetExtentsOfElementChunkByExpressionInRange (p_haystack, nil,
+	        p_after, true, true, false, t_start, t_count) &&
+	    p_after != 0)
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason",
+		                       MCSTR("chunk index out of range"), nil);
+		return;
+	}
+
+	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack,
+	                               MCRangeMake(t_start + t_count, UINDEX_MAX),
+	                               r_output);
+}
+
+extern "C" MC_DLLEXPORT void
+MCListEvalOffsetOfListBefore (bool p_is_last,
+                              MCProperListRef p_needle,
+                              index_t p_before,
+                              MCProperListRef p_haystack,
+                              uindex_t & r_output)
+{
+	uindex_t t_start, t_count;
+	if (p_before == 0)
+	{
+		t_start = UINDEX_MAX;
+	} else if (!MCChunkGetExtentsOfElementChunkByExpressionInRange (p_haystack,
+	                nil, p_before, true, false, true, t_start, t_count))
+	{
+		MCErrorCreateAndThrow (kMCGenericErrorTypeInfo, "reason",
+		                       MCSTR("chunk index out of range"), nil);
+		return;
+	}
+
+	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack,
+	                               MCRangeMake(0, t_start),
+	                               r_output);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

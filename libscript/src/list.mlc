@@ -74,6 +74,14 @@ public foreign handler MCListExecDeleteElementRangeOf(in Start as LCIndex, in Fi
 public foreign handler MCListExecDeleteFirstElementOf(inout Target as List) as undefined binds to "<builtin>"
 public foreign handler MCListExecDeleteLastElementOf(inout Target as List) as undefined binds to "<builtin>"
 
+public foreign handler MCListEvalIndexOfElement(in IsLast as CBool, in Needle as any, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIndexOfElementAfter(in IsLast as CBool, in Needle as any, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIndexOfElementBefore(in IsLast as CBool, in Needle as any, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+
+public foreign handler MCListEvalOffsetOfList(in IsLast as CBool, in Needle as List, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalOffsetOfListAfter(in IsLast as CBool, in Needle as List, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalOffsetOfListBefore(in IsLast as CBool, in Needle as List, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -854,5 +862,230 @@ syntax RepeatForEachElementInList is iterator
 begin
     MCListRepeatForEachElement(iterator, Iterand, container)
 end syntax
+
+----------------------------------------------------------------
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within <Haystack>
+
+Needle:	An expression which evaluates to any value.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index from the start of <Haystack>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b"]
+	put the index of "b" in tVar into tOffset
+	-- tOffset contains 2
+
+	put the last index of "b" in tVar into tOffset
+	-- tOffset contains 5
+
+Description:
+Use `the index of` to find where particular elements occur within a
+list.  <Haystack> is scanned for an element that is equal to <Needle>,
+and the position of the element found is returned.  If neither the
+"first index" nor "last index" are specified, the index of the first
+element found is returned.  If no element of <Haystack> is equal to
+<Needle>, the return value is 0.
+
+Tags: Lists
+*/
+syntax ListIndex is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalIndexOfElement(IsLast, Needle, Haystack, output)
+end syntax
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within the tail of <Haystack>
+
+Needle:	An expression which evaluates to any value.
+After:		An expression which evaluates to a valid index in Target.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index in <Haystack> relative to <After>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b"]
+	put the index of "b" after 1 in tVar into tOffset
+	--tOffset contains 1
+
+	put the last index of "b" after 2 in tVar into tOffset
+	--tOffset contains 3
+
+Description:
+Use `the index of… after` to find where particular elements occur
+within a list.  Starting from but not including the position <After>,
+<Haystack> is scanned for an element that is equal to <Needle>, and
+the position relative to <After> of the element found is returned.  If
+no element of <Haystack> is equal to <Needle>, the return value is 0.
+
+Tags: Lists
+*/
+/* bug 14846
+syntax ListIndexAfter is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalIndexOfElementAfter(IsLast, Needle, After, Haystack, output)
+end syntax
+*/
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
+
+Needle:	An expression which evaluates to any value.
+Before:	An expression which evaluates to a valid index in Target.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index in <Haystack>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b"]
+	put the index of "b" before 2 in tVar into tOffset
+	--tOffset contains 0
+
+	put the first index of "b" before 5 in tVar into tOffset
+	--tOffset contains 2
+
+Description:
+Use `the index of… before` to find where particular elements occur
+within a list.  <Haystack> is scanned for an element that is equal to
+<Needle>, stopping before the position <Before>, and the position of
+the element found is returned.  If no element of <Haystack> is equal
+to <Needle>, the return value is 0.  If neither "first" nor "last" is
+specified, the last matching element is found.
+
+Tags: Lists
+*/
+/* bug 14846
+syntax ListIndexBefore is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalIndexOfElementBefore(IsLast, Needle, Before, Haystack, output)
+end syntax
+*/
+----------------------------------------------------------------
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within <Haystack>
+
+Needle:	An expression which evaluates to a list.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index from the start of <Haystack>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b", "c"]
+	put the offset of ["b","c"] in tVar into tOffset
+	-- tOffset contains 2
+
+	put the last offset of ["b", "c"] in tVar into tOffset
+	-- tOffset contains 5
+
+Description:
+Use `the offset of` to find where a particular sub-list occurs within
+a list.  <Haystack> is scanned for a sequence of elements that are
+equal to the elements of <Needle>, and the position of the start of
+the sequence found is returned.  If neither the "first offset" nor
+"last offset" are specified, the index of the first matching sub-list
+found is returned.  If no sub-list of <Haystack> is equal to <Needle>,
+the return value is 0.
+
+Tags: Lists
+*/
+syntax ListOffset is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalOffsetOfList(IsLast, Needle, Haystack, output)
+end syntax
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within the tail of <Haystack>
+
+Needle:	An expression which evaluates to any list.
+After:		An expression which evaluates to a valid index in Target.
+Target:	An expression which evaluates to a list.
+
+Returns:	Returns the index in <Haystack> relative to <After>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b", "c"]
+	put the offset of ["b","c"] after 1 in tVar into tOffset
+	--tOffset contains 1
+
+	put the last offset of ["b","c"] after 1 in tVar into tOffset
+	--tOffset contains 4
+
+Description:
+
+Use `the offset of… after` to find where a particular sub-list occurs
+within a list.  Starting from but not including the position <After>,
+<Haystack> is scanned for an sequence of elements that are equal to
+the elements of <Needle>, and the position relative to <After> of the
+start of the sequence found is returned.  If neither the "first
+offset" nor "last offset" are specified, the position of the first
+matching sub-list found is returned.  If no sub-list of <Haystack>
+starting after the position <After> is equal to <Needle>, the return
+value is 0.
+
+Tags: Lists
+*/
+/* bug 14846
+syntax ListOffsetAfter is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalOffsetOfListAfter(IsLast, Needle, After, Haystack, output)
+end syntax
+*/
+
+/*
+Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
+
+Needle:	An expression which evaluates to List.
+Before:	An expression which evaluates to a valid index in Target.
+Target:	An expression which evaluates to a List.
+
+Returns:	Returns the index in <Haystack>.
+
+Example:
+	variable tVar as List
+	variable tOffset as Number
+	put ["a", "b", "c", "d", "b","c"]
+	put the offset of ["b","c"] before 5 in tVar into tOffset
+	--tOffset contains 2
+
+	put the first offset of ["b","c"] before 6 in tVar into tOffset
+	--tOffset contains 2
+
+Description:
+
+Use `the offset of… before` to find where a particular sub-list occurs
+within a list.  <Haystack> is scanned for a sequence of elements that
+are equal to the elements of <Needle>, stopping before the position
+<Before>, and the position of the start of the sequence found is
+returned.  If no sub-list of <Haystack> before the position <Before>
+is equal to <Needle>, the return value is 0.  If neither "first" nor
+"last" is specified, the last matching subsequence is found.
+
+Tags: Lists
+*/
+/* bug 14846
+syntax ListOffsetBefore is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
+begin
+	MCListEvalOffsetOfListBefore(IsLast, Needle, Before, Haystack, output)
+end syntax
+*/
 
 end module
