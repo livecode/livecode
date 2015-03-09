@@ -755,7 +755,7 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
             {
                 memcpy(t_format, t_format_start_ptr, t_format_size);
 				t_format[t_format_size] = '\0';
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 				t_success = MCNativeCharsFormatV(t_string, t_size, t_format, p_args);
 #else
                 va_list t_args;
