@@ -143,7 +143,7 @@ bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p
 		
 		// MM-2014-04-16: [[ Bug 11964 ]] MCGContextMeasurePlatformText prototype updated to take scale. Pass identity.
 		MCGFloat t_this_width;
-		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 2, t_gfont, MCGAffineTransformMakeIdentity());
+		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 1, t_gfont, MCGAffineTransformMakeIdentity());
 		if (t_this_width == 0.0 ||
 			(i != 0 && t_this_width != t_last_width))
 		{
