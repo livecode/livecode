@@ -403,6 +403,8 @@ inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_conf
 		return kMCGRasterFormat_A;
 	case SkBitmap::kARGB_8888_Config:
 		return p_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
+	default:
+		MCUnreachable();
 	}
 }
 
