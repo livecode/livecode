@@ -196,6 +196,9 @@ DEFINE_ERROR(NonHandlerTypeVariablesCannotBeCalled, "Variables must have handler
 
 DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expression")
 
+DEFINE_ERROR_I(HandlerNotSuitableForPropertyGetter, "'%s' has inappropriate signature to be a property getter")
+DEFINE_ERROR_I(HandlerNotSuitableForPropertySetter, "'%s' has inappropriate signature to be a property setter")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_S(Name, Message) \

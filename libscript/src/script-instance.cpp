@@ -171,8 +171,7 @@ bool MCHandlerTypeInfoConformsToPropertyGetter(MCTypeInfoRef typeinfo)
 bool MCHandlerTypeInfoConformsToPropertySetter(MCTypeInfoRef typeinfo)
 {
     return MCHandlerTypeInfoGetParameterCount(typeinfo) == 1 &&
-            MCHandlerTypeInfoGetParameterMode(typeinfo, 0) == kMCHandlerTypeFieldModeIn &&
-            MCHandlerTypeInfoGetReturnType(typeinfo) == kMCNullTypeInfo;
+            MCHandlerTypeInfoGetParameterMode(typeinfo, 0) == kMCHandlerTypeFieldModeIn;
 }
 
 ///////////
