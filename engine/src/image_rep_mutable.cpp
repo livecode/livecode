@@ -1201,7 +1201,7 @@ void MCMutableImageRep::bucket_fill(MCImageBitmap *p_src, uint4 scolor, MCGRaste
 		}
 	}
 	while (pstacktop);
-	delete pstack;
+	delete[] pstack;
 }
 
 void MCMutableImageRep::drawbucket()
