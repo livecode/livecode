@@ -408,4 +408,39 @@ public handler TestRepeatChar()
 	test "repeatchar (count)" when tCount is 3
 end handler
 
+----------------------------------------------------------------
+
+handler TestCharWithCode_Negative()
+	return the char with code -1
+end handler
+public handler TestCharWithCode()
+	variable t
+
+	put the char with code 120 into t
+	test "code->byte" when t is "x"
+
+	put the char with code 8594 into t
+	test "code->byte (BMP)" when t is "\u{2192}"
+
+	put the char with code 119070 into t
+	test "code->byte (SMP)" when t is "\u{1d11e}"
+
+	MCUnitTestHandlerThrows(TestCharWithCode_Negative, "code->byte (-ve)")
+end handler
+
+handler TestCodeOfChar_Long()
+	return the code of "xx"
+end handler
+handler TestCodeOfChar_Empty()
+	return the code of ""
+end handler
+public handler TestCodeOfChar()
+	test "char->code" when the code of "x" is 120
+	test "char->code (BMP)" when the code of "\u{2192}" is 8594
+	test "char->code (SMP)" when the code of "\u{1d11e}" is 119070
+
+	MCUnitTestHandlerThrows(TestCodeOfChar_Long, "char->code (multibyte)")
+	MCUnitTestHandlerThrows(TestCodeOfChar_Empty, "char->code (empty)")
+end handler
+
 end module
