@@ -437,7 +437,7 @@ void MCPolygonEditTool::drawhandles(MCDC *dc)
 				dc->fillarc(rects[i], 0, 360);
 		}
 		dc->setquality(QUALITY_DEFAULT);
-		delete rects;
+		delete[] rects;
 	}
 }
 
