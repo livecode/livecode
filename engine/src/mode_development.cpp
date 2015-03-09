@@ -165,7 +165,7 @@ MCPropertyInfo MCProperty::kModeProperties[] =
 	DEFINE_RW_PROPERTY(P_REV_CRASH_REPORT_SETTINGS, Array, Mode, RevCrashReportSettings)
     DEFINE_RO_PROPERTY(P_REV_MESSAGE_BOX_LAST_OBJECT, String, Mode, RevMessageBoxLastObject)
     DEFINE_RW_PROPERTY(P_REV_MESSAGE_BOX_REDIRECT, String, Mode, RevMessageBoxRedirect)
-	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
+	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, Mode, RevLicenseInfoByKey)
     DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
     DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, Mode, RevLicenseLimits)
     DEFINE_RO_PROPERTY(P_REV_OBJECT_LISTENERS, LinesOfString, Mode, RevObjectListeners)
@@ -2169,17 +2169,18 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     ctxt . Throw();
 }
 
-void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_info)
+// MW-2015-03-09: [[ Bug 14139 ]] Fixed licensing issue with thirdparties
+void MCModeGetRevLicenseInfoByKey(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef& r_info)
 {
     MCValueRef t_value;
     if (MClicenseparameters . addons == nil ||
         !MCArrayFetchValue(MClicenseparameters . addons, ctxt . GetCaseSensitive(), p_key, t_value))
         {
-            r_info = MCValueRetain(kMCEmptyString);
+            r_info = MCValueRetain(kMCEmptyArray);
             return;
         }
     
-    if (ctxt . ConvertToString(t_value, r_info))
+    if (ctxt . ConvertToArray(t_value, r_info))
         return;
     
     ctxt . Throw();
