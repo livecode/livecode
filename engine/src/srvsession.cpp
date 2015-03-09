@@ -685,11 +685,11 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 	// php calculates session ids by hashing a string composed of REMOTE_ADDR, time in seconds & milliseconds, and a random value
 
 	MCAutoStringRef t_remote_addr_string;
-	char *t_remote_addr;
+	const char *t_remote_addr;
 	t_remote_addr = NULL;
 
 	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
-		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
+		t_remote_addr = MCStringGetCString(*t_remote_addr_string);
 		
 	time_t t_time;
 	time(&t_time);
