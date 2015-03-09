@@ -120,6 +120,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 Tags: Binary
 */
 
+/* bug 14846
 syntax ByteOffsetAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
@@ -130,6 +131,7 @@ syntax ByteIndexAfter is prefix operator with precedence 1
 begin
 	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
+*/
 
 /*
 
@@ -147,6 +149,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 Tags: Binary
 */
 
+/* bug 14846
 syntax ByteOffsetBefore is prefix operator with precedence 1
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
@@ -157,6 +160,7 @@ syntax ByteIndexBefore is prefix operator with precedence 1
 begin
     MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
+*/
 
 /*
 Summary:            Determines whether <Needle> is in <Target>.
