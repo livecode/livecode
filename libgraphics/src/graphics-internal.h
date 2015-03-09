@@ -318,6 +318,8 @@ inline SkPaint::Cap MCGCapStyleToSkCapStyle(MCGCapStyle p_style)
 			return SkPaint::kRound_Cap;
 		case kMCGCapStyleSquare:
 			return SkPaint::kSquare_Cap;
+		default:
+			MCUnreachable();
 	}
 }
 
