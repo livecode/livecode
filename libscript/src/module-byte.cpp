@@ -72,13 +72,13 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesInRange(MCDataRef p_needle, 
             t_found = MCDataLastIndexOf(p_target, p_needle, p_range, t_offset);
         
         if (t_found)
-            t_offset++;
+            t_offset += p_range.offset + 1;
     }
     
     r_output = t_offset;
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytes(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytes(bool p_is_last, MCDataRef p_needle, MCDataRef p_target, uindex_t& r_output)
 {
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, p_is_last, MCRangeMake(0, UINDEX_MAX), r_output);
 }

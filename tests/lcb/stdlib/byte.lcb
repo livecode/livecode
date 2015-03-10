@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 module com.livecode.byte.tests
 
+use com.livecode.foreign
 use com.livecode.__INTERNAL._testlib
 
 public handler TestEmpty()
@@ -59,6 +60,64 @@ public handler TestCodeOfByte()
 
 	MCUnitTestHandlerThrows(TestCodeOfByte_Long, "byte->code (multibyte)")
 	MCUnitTestHandlerThrows(TestCodeOfByte_Empty, "byte->code (empty)")
+end handler
+
+----------------------------------------------------------------
+-- Finding subsequence offsets
+----------------------------------------------------------------
+
+public handler TestOffset()
+	variable N as Data
+	variable H as Data
+
+	-- Only test single-byte needles for now
+	put EncodeUTF8("x") into N
+	put EncodeUTF8(".xx.") into H
+
+	test "offset (single)" when the offset of N in H is 2
+	test "first offset (single)" when the first offset of N in H is 2
+	test "last offset (single)" when the last offset of N in H is 3
+
+	put EncodeUTF8("xx") into N
+	put EncodeUTF8(".x.x.") into H
+
+	test "offset (missing)" when the offset of N in H is 0
+
+	put EncodeUTF8("x") into N
+	put EncodeUTF8("x") into H
+	test "offset (single, same)" when the offset of N in H is 1
+	test "first offset (single, same)" when the first offset of N in H is 1
+	test "last offset (single, same)" when the last offset of N in H is 1
+
+	put the empty data into N
+	put EncodeUTF8("x") into H
+	test "offset (empty)" when the offset of N in H is 0
+	test "first offset (empty)" when the first offset of N in H is 0
+	test "last offset (empty)" when the last offset of N in H is 0
+	test "offset (empty, empty)" when the offset of N in the empty data is 0
+
+	-- For bytes, "index" is synonymous with "offset"
+	put EncodeUTF8("x") into N
+	put EncodeUTF8(".xx.") into H
+	test "index" when the index of N in H is 2
+end handler
+
+----------------------------------------------------------------
+-- Helper functions
+----------------------------------------------------------------
+
+constant kEncodingIndexUTF8 is 4
+
+foreign handler MCStringEncode(in Unencoded as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) as CBool binds to "<builtin>"
+
+handler EncodeUTF8(in pString as String) as Data
+	variable tEncoded as Data
+	variable tStatus as Boolean
+	MCStringEncode(pString, kEncodingIndexUTF8, false, tEncoded)
+	if tEncoded is empty then
+		return the empty data
+	end if
+	return tEncoded
 end handler
 
 end module
