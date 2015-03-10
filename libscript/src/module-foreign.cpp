@@ -28,6 +28,29 @@ extern "C"
 	MC_DLLEXPORT MCTypeInfoRef kMCWStringTypeInfo;
 }
 
+MCTypeInfoRef kMCForeignZStringNullErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Reject strings that contain nul characters; we can't convert
+ * them to nul-terminated wide character strings without data
+ * loss. */
+static bool
+MCForeignEvalStringNonNull (MCStringRef t_string)
+{
+	/* Reject strings that contain nul characters; we can't convert
+	 * them to nul-terminated wide character strings without data
+	 * loss. */
+	uindex_t t_ignored;
+	if (MCStringFirstIndexOfChar (t_string, 0, 0,
+	                              kMCStringOptionCompareExact, t_ignored))
+	{
+		MCErrorCreateAndThrow (kMCForeignZStringNullErrorTypeInfo, nil);
+		return false;
+	}
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool __cbuffer_initialize(void *contents)
@@ -110,6 +133,9 @@ static bool __nativecstring_import(void *contents, bool release, MCValueRef& r_v
 
 static bool __nativecstring_export(MCValueRef value, bool release, void *contents)
 {
+	if (!MCForeignEvalStringNonNull ((MCStringRef) value))
+		return false;
+
     char *t_cstring_value;
     if (!MCStringConvertToCString((MCStringRef)value, t_cstring_value))
         return false;
@@ -216,12 +242,7 @@ __wstring_export (MCValueRef value,
                   bool release,
                   void *contents)
 {
-	/* Reject strings that contain nul characters; we can't convert
-	 * them to nul-terminated wide character strings without data
-	 * loss. */
-	uindex_t t_ignored;
-	if (MCStringFirstIndexOfChar ((MCStringRef) value, 0, 0,
-	                              kMCStringOptionCompareExact, t_ignored))
+	if (!MCForeignEvalStringNonNull ((MCStringRef) value))
 		return false;
 
 	unichar_t *t_wstring_value;
@@ -293,6 +314,11 @@ bool MCForeignModuleInitialize(void)
 	if (!__build_typeinfo("com.livecode.foreign.WString", &d, kMCWStringTypeInfo))
 		return false;
 
+	/* ---------- */
+
+	if (!MCNamedErrorTypeInfoCreate (MCNAME("com.livecode.foreign.NullInZStringError"), MCNAME("foreign"), MCSTR("cannot export char U+0000 in nul-terminated string buffer"), kMCForeignZStringNullErrorTypeInfo))
+		return false;
+
     return true;
 }
 
@@ -300,6 +326,8 @@ void MCForeignModuleFinalize(void)
 {
     MCValueRelease(kMCNativeCStringTypeInfo);
 	MCValueRelease(kMCWStringTypeInfo);
+
+	MCValueRelease(kMCForeignZStringNullErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

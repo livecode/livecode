@@ -53,9 +53,6 @@ public foreign handler MCStringEvalIsGreaterThan(in Left as String, in Right as 
 
 public foreign handler MCStringEvalEmpty(out Value as String) as undefined binds to "<builtin>"
 
-public foreign handler MCStringEvalCodeOfChar(in pChar as String, out pCode as LCUInt) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalCharWithCode(in pCode as LCUInt, out pChar as String) as undefined binds to "<builtin>"
-
 --
 
 /*
@@ -306,20 +303,6 @@ syntax StringIsGreaterThanString is neutral binary operator with precedence 5
     <Left: Expression> ">" <Right: Expression>
 begin
     MCStringEvalIsGreaterThan(Left, Right, output)
-end syntax
-
---
-
-syntax CodeOfChar is prefix operator with precedence 2
-    "the" "code" "of" <Target: Expression>
-begin
-    MCStringEvalCodeOfChar(Target, output)
-end syntax
-
-syntax CharWithCode is prefix operator with precedence 2
-    "the" "char" "with" "code" <Index: Expression>
-begin
-    MCStringEvalCharWithCode(Index, output)
 end syntax
 
 --

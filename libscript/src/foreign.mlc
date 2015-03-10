@@ -67,9 +67,6 @@ public type float is Float32
 public type double is Float64
 public type pointer is Pointer
 
-public type index is LCIndex
-public type uindex is LCUIndex
-
 public type NativeCString is ZStringNative
 
 end module
