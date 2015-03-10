@@ -2669,7 +2669,7 @@ bool MCStringLastIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, MC
 				if (p_options == kMCStringOptionCompareCaseless ||
 				    p_options == kMCStringOptionCompareFolded)
 				{
-					t_prefix_length ==
+					t_prefix_length =
 						MCNativeCharsSharedPrefixCaseless (t_haystack,
 						                                   t_haystack_len,
 						                                   t_needle,

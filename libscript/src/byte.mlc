@@ -56,6 +56,9 @@ public foreign handler MCByteExecDeleteFirstByteOf(inout Target as Data) as unde
 
 public foreign handler MCDataExecRandomBytes(in Count as LCUIndex, out Value as Data) as undefined binds to "<builtin>"
 
+public foreign handler MCByteEvalByteWithCode(in Value as LCUInt, out Result as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalCodeOfByte(in Target as Data, out Result as LCUInt) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -94,7 +97,12 @@ Tags: Binary
 */
 
 syntax ByteOffset is prefix operator with precedence 1
-    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Target: Expression>
+begin
+    MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
+end syntax
+syntax ByteIndex is prefix operator with precedence 1
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
 end syntax
@@ -115,11 +123,18 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 Tags: Binary
 */
 
+/* bug 14846
 syntax ByteOffsetAfter is prefix operator with precedence 1
-	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
 	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
+syntax ByteIndexAfter is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
+end syntax
+*/
 
 /*
 
@@ -137,11 +152,18 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 Tags: Binary
 */
 
+/* bug 14846
 syntax ByteOffsetBefore is prefix operator with precedence 1
-    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" "bytes" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
+syntax ByteIndexBefore is prefix operator with precedence 1
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+begin
+    MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
+end syntax
+*/
 
 /*
 Summary:            Determines whether <Needle> is in <Target>.
@@ -427,6 +449,41 @@ begin
 	MCDataExecRandomBytes(Count, output)
 end syntax
 
---
+----------------------------------------------------------------
+-- Conversion between bytes and numbers
+----------------------------------------------------------------
+
+/*
+Summary:	Create a 1-byte data value from a number
+
+Value:		The value for the new data value
+
+Description:
+Returns a byte of binary data, created using the given value.  The
+<Value> must be between 0 and 255 (inclusive).
+
+Tags: Binary
+*/
+syntax ByteWithCode is prefix operator with precedence 2
+	"the" "byte" "with" "code" <Value: Expression>
+begin
+	MCByteEvalByteWithCode(Value, output)
+end syntax
+
+/*
+Summary:	Get the numeric value of a single byte.
+
+Target:	A 1-byte binary data value.
+
+Description:
+Returns the numeric representation of a single byte of binary data.
+
+Tags: Binary
+*/
+syntax CodeOfByte is prefix operator with precedence 2
+	"the" "code" "of" <Target: Expression>
+begin
+	MCByteEvalCodeOfByte(Target, output)
+end syntax
 
 end module

@@ -1069,6 +1069,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 				if (tocount == CT_MARKED)
 					sp.skip_token(SP_FACTOR, TT_CLASS, CT_CARD);
 				if (sp.next(type) != PS_NORMAL)
+				{
 					if (tocount < CT_LINE)
 					{
 						target = new MCChunk(False);
@@ -1080,8 +1081,9 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 						(PE_PROPERTY_MISSINGOFORIN, sp);
 						return PS_ERROR;
 					}
+				}
 				if (sp.lookup(SP_FACTOR, te) != PS_NORMAL
-				        || te->type != TT_OF && te->type != TT_IN)
+				    || (te->type != TT_OF && te->type != TT_IN))
 				{
 					if (tocount < CT_LINE)
 					{

@@ -58,6 +58,9 @@ public foreign handler MCCharExecDeleteCharRangeOf(in Start as LCIndex, in Finis
 public foreign handler MCCharExecDeleteLastCharOf(inout Target as String) as undefined binds to "<builtin>"
 public foreign handler MCCharExecDeleteFirstCharOf(inout Target as String) as undefined binds to "<builtin>"
 
+public foreign handler MCStringEvalCodeOfChar(in pChar as String, out pCode as LCUInt) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalCharWithCode(in pCode as LCUInt, out pChar as String) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -336,7 +339,7 @@ Returns: 	Returns the offset of <Needle> in <Target>.
 
 Example:
 	variable tVar as Number
-	put the first offset of chars "art" in "cartoon" into tVar -- tVar contains 2
+	put the first offset of "art" in "cartoon" into tVar -- tVar contains 2
 
 Example:
 	variable tVar as Number
@@ -354,7 +357,12 @@ Tags: Strings
 */
 
 syntax CharOffset is prefix operator with precedence 1
-    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" ["chars"] <Needle: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
+end syntax
+syntax CharIndex is prefix operator with precedence 1
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
 end syntax
@@ -371,7 +379,7 @@ Returns: 	Returns the offset of <Needle> after <After> in <Target>.
 
 Example:
 	variable tVar as Number
-	put the offset of chars "nse" after 4 in "nonsense" into tVar -- tVar contains 2
+	put the offset of "nse" after 4 in "nonsense" into tVar -- tVar contains 2
 	
 Description:
 The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of the substring of <Target> beginning at char <After> + 1, and the first (respectively last) occurrence of <Needle> in the substring. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in the given substring of <Target>, then the output is 0.
@@ -379,11 +387,18 @@ The first (respectively last) offset of <Needle> in <Target> is number of chars 
 Tags: Strings
 */
 
+/* bug 14846
 syntax CharOffsetAfter is prefix operator with precedence 1
-    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" ["chars"] <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
 end syntax
+syntax CharIndexAfter is prefix operator with precedence 1
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
+end syntax
+*/
 
 /*
 
@@ -411,12 +426,18 @@ The first (respectively last) offset of <Needle> in <Target> is number of chars 
 Tags: Strings
 */
 
+/* bug 14846
 syntax CharOffsetBefore is prefix operator with precedence 1
-    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" ["chars"] <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax
-
+syntax CharIndexBefore is prefix operator with precedence 1
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
+end syntax
+*/
 
 /*
 Summary:            Determines whether <Source> contains <Needle>.
@@ -552,6 +573,43 @@ syntax RepeatForEachChar is iterator
     "char" <Iterand: Expression>
 begin
     MCCharRepeatForEachChar(iterator, Iterand, container)
+end syntax
+
+----------------------------------------------------------------
+
+/*
+Summary:	Get the numeric value of a single char
+
+Target:	A string containing one character
+
+Description:
+Returns the Unicode codepoint index of a single character.
+
+Tags: Strings
+*/
+
+syntax CodeOfChar is prefix operator with precedence 2
+    "the" "code" "of" <Target: Expression>
+begin
+    MCStringEvalCodeOfChar(Target, output)
+end syntax
+
+/*
+Summary:	Create a 1-char string from a number
+
+Value:		A Unicode codepoint index
+
+Description:
+Returns a string containing one Unicode character created using the
+given value.
+
+Tags: Strings
+*/
+
+syntax CharWithCode is prefix operator with precedence 2
+    "the" "char" "with" "code" <Index: Expression>
+begin
+    MCStringEvalCharWithCode(Index, output)
 end syntax
 
 end module

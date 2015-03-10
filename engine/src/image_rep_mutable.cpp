@@ -240,11 +240,12 @@ Boolean MCMutableImageRep::image_mfocus(int2 x, int2 y)
 	}
 
 	if (state & CS_OWN_SELECTION)
+	{
 		if (m_owner->getstack() -> gettool(m_owner) == T_SELECT)
 			return True;
 		else
 			endsel();
-			
+	}
 	return False;
 }
 
@@ -258,9 +259,9 @@ Boolean MCMutableImageRep::image_mdown(uint2 which)
 	case Button1:
 		if (state & CS_DRAW)
 		{
-			if (mx == points[0].x && my == points[0].y
-			        || which == Button1 && erasing
-			        || which == Button3 && !erasing)
+			if ((mx == points[0].x && my == points[0].y)
+			    || (which == Button1 && erasing)
+			    || (which == Button3 && !erasing))
 			{
 				if (mx == points[0].x && my == points[0].y)
 					points[polypoints++] = points[0];
@@ -303,7 +304,7 @@ Boolean MCMutableImageRep::image_mdown(uint2 which)
 
 Boolean MCMutableImageRep::image_doubledown(uint2 which)
 {
-	if (state & CS_DRAW && (which == Button1 || which == Button3 && erasing)
+	if (state & CS_DRAW && (which == Button1 || (which == Button3 && erasing))
 	        && m_owner->getstack() -> gettool(m_owner) == T_POLYGON)
 		return True;
 	return False;
@@ -311,7 +312,7 @@ Boolean MCMutableImageRep::image_doubledown(uint2 which)
 
 Boolean MCMutableImageRep::image_doubleup(uint2 which)
 {
-	if (state & CS_DRAW && (which == Button1 || which == Button3 && erasing)
+	if (state & CS_DRAW && (which == Button1 || (which == Button3 && erasing))
 	        && m_owner->getstack() -> gettool(m_owner) == T_POLYGON)
 	{
 		enddraw();
@@ -627,16 +628,22 @@ void MCMutableImageRep::continuedraw()
 			int2 oldx = startx;
 			int2 oldy = starty;
 			if (MCmodifierstate & MS_SHIFT)
+			{
 				if (MCU_abs(oldx - mx) > MCU_abs(oldy - my))
+				{
 					if (oldx > mx)
 						mx = oldx - MCU_abs(my - oldy);
 					else
 						mx = oldx + MCU_abs(my - oldy);
+				}
 				else
+				{
 					if (oldy > my)
 						my = oldy - MCU_abs(mx - oldx);
 					else
 						my = oldy + MCU_abs(mx - oldx);
+				}
+			}
 			if (MCcentered)
 			{
 				oldx -= mx - oldx;
@@ -783,6 +790,7 @@ MCRectangle MCMutableImageRep::continuerub(Boolean line)
 	MCU_snap(my);
 	MCRectangle brect = newrect;
 	if (MCmodifierstate & MS_SHIFT)
+	{
 		if (line)
 		{
 			real8 dx = (real8)(mx - oldx);
@@ -796,16 +804,23 @@ MCRectangle MCMutableImageRep::continuerub(Boolean line)
 			newrect = MCU_compute_rect(oldx, oldy, mx, my);
 		}
 		else
+		{
 			if (MCU_abs(oldx - mx) > MCU_abs(oldy - my))
+			{
 				if (oldx > mx)
 					mx = oldx - MCU_abs(my - oldy);
 				else
 					mx = oldx + MCU_abs(my - oldy);
+			}
 			else
+			{
 				if (oldy > my)
 					my = oldy - MCU_abs(mx - oldx);
 				else
 					my = oldy + MCU_abs(mx - oldx);
+			}
+		}
+	}
 	if (MCcentered)
 	{
 		oldx -= mx - oldx;
@@ -875,8 +890,8 @@ void MCMutableImageRep::battson(MCContext *p_context, uint2 depth)
 {
 	if (erasing)
 		p_context->setforeground(fixmaskcolor(MCzerocolor));
-	else
-		if (depth != 1)
+	else if (depth != 1)
+	{
 			if (MCbrushpattern == nil)
 			{
 				p_context->setforeground(MCbrushcolor);
@@ -884,6 +899,7 @@ void MCMutableImageRep::battson(MCContext *p_context, uint2 depth)
 			}
 			else
 				p_context->setfillstyle(FillTiled, MCbrushpattern, 0, 0);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

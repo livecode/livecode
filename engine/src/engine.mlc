@@ -46,8 +46,10 @@ public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as Str
 public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, in pValue as any) as undefined binds to "<builtin>"
 public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) as undefined binds to "<builtin>"
 public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as List) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecDispatchToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) as any binds to "<builtin>"
-public foreign handler MCEngineExecDispatchToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) as any binds to "<builtin>"
+public foreign handler MCEngineExecSendToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) as any binds to "<builtin>"
+public foreign handler MCEngineExecSendToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) as any binds to "<builtin>"
+public foreign handler MCEngineExecPostToScriptObject(in pMessage as String, in pTarget as ScriptObject) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) as undefined binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) as undefined binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) as undefined binds to "<builtin>"
 public foreign handler MCEngineExecExecuteScript(in pScript as String) as any binds to "<builtin>"
@@ -74,6 +76,8 @@ Example:
 Description:
 Use the <ResolveScriptObject|resolve script object> statement to obtain a <ScriptObject> in LiveCode Builder, in order to interact with it.
 
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 */
 
 syntax ResolveScriptObject is statement
@@ -153,6 +157,9 @@ Description:
 Use to fetch properties of a script object. 
 
 >*Note:* An error is thrown if the script object does not exist.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 */
 
 syntax GetPropertyOfScriptObject is statement
@@ -180,6 +187,9 @@ Description:
 Use to set properties of a script object. 
 
 >*Note:* An error is thrown if the script object does not exist.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 */
 
 syntax SetPropertyOfScriptObject is statement
@@ -248,7 +258,7 @@ begin
 end syntax
 
 /*
-Summary: 	Dispatch a message to a script object.
+Summary: 	Send a message to a script object.
 Message: 	The message to dispatch.
 Object:		The script object to dispatch the message to.
 Arguments:	A list of arguments for the message.
@@ -258,7 +268,7 @@ The result:	The result of the message dispatch
 Example:
 	public handler OnMouseUp() as undefined
 		// Send a message to the script so it can handle it.
-		dispatch "buttonClicked" to my script object
+		send "buttonClicked" to my script object
 	end handler
 	
 Example:
@@ -267,16 +277,49 @@ Example:
 	variable tObject as ScriptObject
 	resolve script object "this stack"
 	put the result into tObject
-	dispatch function "myScriptFunction" to tObject with [ 2, 3, 4 ]
+	send function "myScriptFunction" to tObject with [ 2, 3, 4 ]
 	
 	// the result contains the return value of 'myScriptFunction'
-*/
+    
+Description:
+Sends a message to the given script object and waits for it to finish so that it
+can return a value.
 
-syntax DispatchToScriptObject is statement
-    "dispatch" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
+After a send, 'the message was handled' predicate can be used to determine if the
+message passed through the message path untouched.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
+*/
+syntax SendToScriptObject is statement
+    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
 begin
-    MCEngineExecDispatchToScriptObject(IsFunction, Message, Object)
-    MCEngineExecDispatchToScriptObjectWithArguments(IsFunction, Message, Object, Arguments)
+    MCEngineExecSendToScriptObject(IsFunction, Message, Object)
+    MCEngineExecSendToScriptObjectWithArguments(IsFunction, Message, Object, Arguments)
+end syntax
+
+/*
+Summary: 	Post a message to a script object.
+Message: 	The message to dispatch.
+Object:		The script object to dispatch the message to.
+Arguments:	A list of arguments for the message.
+
+Example:
+	public handler OnMouseUp() as undefined
+		// Send a message to the script so it can handle it.
+		post "buttonClicked" to my script object
+	end handler
+    
+Description:
+Post a message to the given script object and returns immediately. Posting a message
+will cause the message to be sent at the next wait point (usually when the current
+event has finished being handled).
+*/
+syntax PostToScriptObject is statement
+    "post" <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCEngineExecPostToScriptObject(Message, Object)
+    MCEngineExecPostToScriptObjectWithArguments(Message, Object, Arguments)
 end syntax
 
 /*
@@ -337,7 +380,10 @@ Example:
 	end handler
 
 Description:
-Determines if a dispatched message was handled by any script objects in the message path.
+Executes the given piece of LiveCode script in the context of the current script
+object.
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 */
 
 syntax ExecuteScript is statement

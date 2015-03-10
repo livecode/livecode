@@ -209,10 +209,6 @@ bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, 
         if (p_first < -1 || (!p_boundary_start && p_first == -1))
             return false;
         
-        // If there are no chunks in this range, the range was invalid
-        if (t_chunk_count == 0)
-            return false;
-        
         if (!t_counted)
             t_count = p_callback(p_context);
         
@@ -375,7 +371,7 @@ bool MCChunkOffsetOfChunkInRange(MCStringRef p_string, MCStringRef p_needle, MCS
 bool MCChunkApplyInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, MCChunkApplyCallback p_callback, void *context)
 {
     MCRange t_range;
-    t_range = MCRangeMake(p_range != nil ? p_range -> offset : p_range -> length, 0);
+    t_range = MCRangeMake(p_range != nil ? p_range -> offset : 0, 0);
     
     bool t_first;
     t_first = true;
@@ -425,16 +421,18 @@ void MCChunkSkipWord(MCStringRef p_string, MCStringRef p_line_delimiter, MCStrin
     {
         // then bump the offset up to the next quotation mark + 1, or the beginning of the next line
         // if neither of these are present then set offset to string length.
-        MCStringFirstIndexOfChar(p_string, '"', x_offset + 1, kMCStringOptionCompareExact, t_end_quote_offset);
-        MCStringFirstIndexOf(p_string, p_line_delimiter, x_offset + 1, p_options, t_end_line_offset);
+        if (!MCStringFirstIndexOfChar(p_string, '"', x_offset + 1, kMCStringOptionCompareExact, t_end_quote_offset))
+            t_end_quote_offset = t_length;
+        if (!MCStringFirstIndexOf(p_string, p_line_delimiter, x_offset + 1, p_options, t_end_line_offset))
+            t_end_line_offset = t_length;
         
         if (t_end_quote_offset < t_end_line_offset)
             x_offset = t_end_quote_offset + 1;
-            else if (t_end_line_offset < t_end_quote_offset)
-                x_offset = t_end_line_offset + MCStringGetLength(p_line_delimiter);
-                else
-                    x_offset = t_length;
-                    }
+        else if (t_end_line_offset < t_end_quote_offset)
+            x_offset = t_end_line_offset + MCStringGetLength(p_line_delimiter);
+        else
+            x_offset = t_length;
+    }
     else
     {
         while (!MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, x_offset)) && x_offset < t_length)
@@ -458,6 +456,7 @@ MCTextChunkIterator::MCTextChunkIterator(MCStringRef p_text, MCChunkType p_chunk
     m_range = MCRangeMake(0, 0);
     // AL-2014-10-24: [[ Bug 13783 ]] Set exhausted to true if the string is immediately exhausted
     m_exhausted = MCStringIsEmpty(p_text);
+    m_options = kMCStringOptionCompareCaseless;
 }
 
 // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
@@ -469,6 +468,7 @@ MCTextChunkIterator::MCTextChunkIterator(MCStringRef p_text, MCChunkType p_chunk
     m_range = MCRangeMake(p_restriction . offset, 0);
     // AL-2014-10-24: [[ Bug 13783 ]] Set exhausted to true if the string is immediately exhausted
     m_exhausted = (p_restriction . length == 0 || p_restriction . offset>= MCStringGetLength(m_text));
+    m_options = kMCStringOptionCompareCaseless;
 }
 
 MCTextChunkIterator::~MCTextChunkIterator()
@@ -709,6 +709,7 @@ uindex_t MCTextChunkIterator_Delimited::ChunkOffset(MCStringRef p_needle, uindex
 
 MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType p_chunk_type) : MCTextChunkIterator(p_text, p_chunk_type)
 {
+    m_break_position = 0;
     MCBreakIteratorRef break_iterator;
     break_iterator = nil;
     
@@ -747,7 +748,7 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
         }
             break;
         default:
-            break;
+            MCUnreachable();
     }
     
     if (break_iterator != nil)
@@ -756,6 +757,7 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
 
 MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction) : MCTextChunkIterator(p_text, p_chunk_type, p_restriction)
 {
+    m_break_position = 0;
     MCBreakIteratorRef break_iterator;
     break_iterator = nil;
     
@@ -780,6 +782,7 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
                 m_breaks . Push(t_range);
             }
         }
+            break;
         case kMCChunkTypeTrueWord:
         {
             MCAutoStringRef t_substring;
@@ -797,7 +800,13 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
                 m_breaks . Push(t_range);
             }
         }
+        break;
+        default:
+            MCUnreachable();
     }
+    
+    if (break_iterator != nil)
+        MCLocaleBreakIteratorRelease(break_iterator);
     
 }
 MCTextChunkIterator_ICU::~MCTextChunkIterator_ICU()

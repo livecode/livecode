@@ -571,6 +571,7 @@ typedef unsigned char char_t;
 
 // The 'byte_t' type is used to hold a char in a binary string (native).
 typedef uint8_t byte_t;
+#define BYTE_MAX UINT8_MAX
 
 // The 'codepoint_t' type is used to hold a single Unicode codepoint (20-bit
 // value).
@@ -835,6 +836,47 @@ inline MCRange MCRangeMake(uindex_t p_offset, uindex_t p_length)
 	t_range . offset = p_offset;
 	t_range . length = p_length;
 	return t_range;
+}
+
+inline MCRange MCRangeMakeMinMax(uindex_t p_min, uindex_t p_max)
+{
+	if (p_min > p_max)
+		return MCRangeMake(p_max, 0);
+	return MCRangeMake(p_min, p_max - p_min);
+}
+
+inline MCRange MCRangeSetMinimum(const MCRange &p_range, uindex_t p_min)
+{
+	return MCRangeMakeMinMax(p_min, p_range.offset + p_range.length);
+}
+
+inline MCRange MCRangeSetMaximum(const MCRange &p_range, uindex_t p_max)
+{
+	return MCRangeMakeMinMax(p_range.offset, p_max);
+}
+
+inline MCRange MCRangeIncrementOffset(const MCRange &p_range, uindex_t p_increment)
+{
+	return MCRangeSetMinimum(p_range, p_range.offset + p_increment);
+}
+
+inline bool MCRangeIsEqual(const MCRange &p_left, const MCRange &p_right)
+{
+	return p_left.offset == p_right.offset && p_left.length == p_right.length;
+}
+
+inline bool MCRangeIsEmpty(const MCRange &p_range)
+{
+	return p_range.length == 0;
+}
+
+inline MCRange MCRangeIntersection(const MCRange &p_left, const MCRange &p_right)
+{
+	uindex_t t_start, t_end;
+	t_start = MCMax(p_left.offset, p_right.offset);
+	t_end = MCMin(p_left.offset + p_left.length, p_right.offset + p_right.length);
+	
+	return MCRangeMakeMinMax(t_start, t_end);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1111,7 +1153,9 @@ extern "C" {
 //   value - recompute on unserialization of the object.
 
 // Return a hash for the given integer.
-MC_DLLEXPORT hash_t MCHashInteger(integer_t i);
+MC_DLLEXPORT hash_t MCHashInteger(integer_t);
+MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
+MC_DLLEXPORT hash_t MCHashUSize(size_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.
@@ -1349,6 +1393,7 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
 
 //////////
 
@@ -2878,7 +2923,13 @@ MC_DLLEXPORT bool MCProperListRemoveElement(MCProperListRef list, uindex_t p_ind
 MC_DLLEXPORT bool MCProperListRemoveElements(MCProperListRef list, uindex_t p_start, uindex_t p_finish);
 
 MC_DLLEXPORT bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
-MC_DLLEXPORT bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
+MC_DLLEXPORT bool MCProperListFirstIndexOfElementInRange(MCProperListRef list, MCValueRef p_needle, MCRange p_range, uindex_t& r_offset);
+
+MC_DLLEXPORT bool MCProperListLastIndexOfElementInRange(MCProperListRef list, MCValueRef p_needle, MCRange p_range, uindex_t & r_offset);
+
+MC_DLLEXPORT bool MCProperListFirstOffsetOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
+MC_DLLEXPORT bool MCProperListFirstOffsetOfListInRange(MCProperListRef list, MCProperListRef p_needle, MCRange p_range, uindex_t & r_offset);
+MC_DLLEXPORT bool MCProperListLastOffsetOfListInRange(MCProperListRef list, MCProperListRef p_needle, MCRange p_range, uindex_t & r_offset);
 
 MC_DLLEXPORT bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 

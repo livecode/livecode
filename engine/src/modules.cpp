@@ -90,7 +90,7 @@ extern "C"
     extern void (*MCByteEvalNumberOfBytesIn)();
     extern void (*MCCharEvalNumberOfCharsIn)();
     extern void (*MCCodeunitEvalNumberOfCodeunitsIn)();
-    extern void (*MCDateExecGetLocalTime)();
+    extern void (*MCDateExecGetLocalDate)();
     extern void (*MCFileExecGetContents)();
     extern void (*MCListEvalHeadOf)();
     extern void (*MCLogicEvalNot)();
@@ -115,7 +115,7 @@ extern "C"
         &MCByteEvalNumberOfBytesIn,
         &MCCharEvalNumberOfCharsIn,
         &MCCodeunitEvalNumberOfCodeunitsIn,
-        &MCDateExecGetLocalTime,
+        &MCDateExecGetLocalDate,
         &MCFileExecGetContents,
         &MCListEvalHeadOf,
         &MCLogicEvalNot,

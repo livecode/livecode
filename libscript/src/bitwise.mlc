@@ -27,7 +27,8 @@ public foreign handler MCBitwiseEvalBitwiseOr(in Left as LCInt, in Right as LCIn
 public foreign handler MCBitwiseEvalBitwiseNot(in Operand as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 public foreign handler MCBitwiseEvalBitwiseXor(in Left as LCInt, in Right as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
 
-public foreign handler MCBitwiseEvalBitwiseShift(in Target as LCInt, in IsRight as CBool, in Shift as LCInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShiftLeft(in Target as LCInt, in Shift as LCUInt, out Value as LCInt) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShiftRight(in Target as LCInt, in Shift as LCUInt, out Value as LCInt) as undefined binds to "<builtin>"
 
 --
 
@@ -117,7 +118,8 @@ Example:
 	put bitwise not -5 into tVar -- tVar contains 4
 
 Description:
-Bitwise not returns the complement of <Operand> as a signed 32-bit integer, thus is equivalent to -(x + 1).
+Bitwise not returns the complement of <Operand> as a signed two's
+complement integer, i.e. equivalent to -(x + 1).
 
 Tags: Bitwise operations
 */
@@ -131,27 +133,53 @@ end syntax
 --
 
 /*
-Summary:       Shifts the bits of <Operand> left or right.
+Summary:	Shifts the bits of <Operand> left.
 
 Operand:        An expression which evaluates to an integer.
 Shift:          An expression which evaluates to an integer.
 
-Returns: 	The result of bit-shifting <Operand> by <Shift> places.
+Returns:	The result of bit-shifting <Operand> left by <Shift> places.
 
 Example:
 	variable tVar
-	put 7 shifted by 2 bitwise into tVar -- tVar contains 28
+	put 7 shifted left by 2 bitwise into tVar -- tVar contains 28
 
 Description:
-Shifts the bits of <Operand> left or right. If neither direction is specified, then shifts left. Shifting the bits of <Operand> left by x is equivalent to multiplying by 2^x. Shifting by a negative value is equivalent to shifting by its absolute value in the opposite direction.
+Shifts the bits of <Operand> left. Shifting the bits of <Operand> left
+by x is equivalent to multiplying by 2^x.
 
 Tags: Bitwise operations
 */
 
-syntax BitwiseShift is postfix operator with precedence 1
-    <Operand: Expression> "shifted" ("left" <IsRight=false> | "right" <IsRight=true> | <IsRight=false>) "by" <Shift: Expression> "bitwise"
+syntax BitwiseShiftLeft is postfix operator with precedence 1
+    <Operand: Expression> "shifted" "left" "by" <Shift: Expression> "bitwise"
 begin
-    MCBitwiseEvalBitwiseShift(Operand, IsRight, Shift, output)
+    MCBitwiseEvalBitwiseShiftLeft(Operand, Shift, output)
+end syntax
+
+/*
+Summary:	Shifts the bits of <Operand> right.
+
+Operand:        An expression which evaluates to an integer.
+Shift:          An expression which evaluates to an integer.
+
+Returns:	The result of bit-shifting <Operand> right by <Shift> places.
+
+Example:
+	variable tVar
+	put 7 shifted right by 2 bitwise into tVar -- tVar contains 1
+
+Description:
+Shifts the bits of <Operand> right. Shifting the bits of <Operand>
+right by x is equivalent to dividing by 2^x (rounding down)
+
+Tags: Bitwise operations
+*/
+
+syntax BitwiseShiftRight is postfix operator with precedence 1
+    <Operand: Expression> "shifted" "right" "by" <Shift: Expression> "bitwise"
+begin
+    MCBitwiseEvalBitwiseShiftRight(Operand, Shift, output)
 end syntax
 
 --

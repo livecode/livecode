@@ -2632,7 +2632,7 @@ Tags:	Canvas
 */
 
 syntax PathPropertyBoundingBox is prefix operator with precedence 4
-	"bounding" "box" "of" <mPath: Expression>
+	"the" "bounding" "box" "of" <mPath: Expression>
 begin
 	MCCanvasPathGetBoundingBox(mPath, output)
 end syntax
