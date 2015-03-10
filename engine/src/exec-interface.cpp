@@ -2757,8 +2757,21 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 	p_target->setmenumode(WM_POPUP);
 	if (p_target->findmenu())
 	{
-		if (MCbuttonstate)
-			MCtargetptr -> mup(0, false);
+		// IM-2015-03-10: [[ Bug 14851 ]] Send mouseup release for each depressed button.
+		uint16_t t_state;
+		t_state = MCbuttonstate;
+		
+		uint16_t t_which;
+		t_which = 1;
+		
+		while (t_state)
+		{
+			if (t_state & 0x1)
+				MCtargetptr -> mup(t_which, true);
+			t_state >>= 1;
+			t_which += 1;
+		}
+		
 		p_target->openmenu(True);
 	}
 }
