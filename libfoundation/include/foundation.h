@@ -2631,6 +2631,9 @@ MC_DLLEXPORT bool MCErrorThrowOutOfMemory(void);
 // Throw a generic runtime error (one that hasn't had a class made for it yet).
 // The message argument is optional (nil if no message).
 MC_DLLEXPORT bool MCErrorThrowGeneric(MCStringRef message);
+    
+// Throw a generic runtime error with formatted message.
+MC_DLLEXPORT bool MCErrorThrowGenericWithMessage(MCStringRef message, ...);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

@@ -332,6 +332,19 @@ bool MCErrorThrowGeneric(MCStringRef p_reason)
     return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", p_reason, nil);
 }
 
+bool MCErrorThrowGenericWithMessage(MCStringRef p_message, ...)
+{
+    va_list t_args;
+    va_start(t_args, p_message);
+    
+    bool t_success;
+    t_success = MCErrorCreateAndThrowWithMessageV(kMCGenericErrorTypeInfo, p_message, t_args);
+    
+    va_end(t_args);
+    
+    return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void __MCErrorDestroy(__MCError *self)
