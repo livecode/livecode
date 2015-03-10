@@ -262,7 +262,7 @@ EmitEndModuleGetByteCodeBuffer (MCAutoByteArray & r_bytecode)
 	                            t_bytecode,
 	                            t_bytecode_len);
 
-	MCAssert (t_bytecode_len <= UINDEX_SIZE);
+	MCAssert (t_bytecode_len <= UINDEX_MAX);
 	r_bytecode.Give ((byte_t *) t_bytecode, t_bytecode_len);
 
 	return true;
@@ -380,7 +380,7 @@ EmitEndModuleGetInterfaceBuffer (const byte_t *p_bytecode,
 	                                t_interface, t_interface_len))
 		goto error_cleanup;
 
-	MCAssert (t_interface_len <= UINDEX_SIZE);
+	MCAssert (t_interface_len <= UINDEX_MAX);
 	r_interface.Give ((byte_t *) t_interface, t_interface_len);
 
 	return true;
