@@ -396,7 +396,6 @@ end handler
 
 ----------------------------------------------------------------
 
-/* bug 14846
 handler TestIndexAfter_InvalidPositive()
 	return the index of true after 2 in [true]
 end handler
@@ -419,8 +418,8 @@ public handler TestIndexAfter()
 	variable t
 	put [true, false, true, true, false] into t
 
-	test "index after (+ve)" when the index of true after 1 in t is 2
-	test "index after (-ve)" when the index of true after -5 in t is 2
+	test "index after (+ve)" when the index of true after 1 in t is 3
+	test "index after (-ve)" when the index of true after -5 in t is 3
 	test "index after (-ve, limit)" when the index of true after -6 in t is 1
 	test "index after (+ve, missing)" when the index of true after 4 in t is 0
 	test "index after (-ve, missing)" when the index of true after -2 in t is 0
@@ -432,8 +431,8 @@ public handler TestFirstIndexAfter()
 	variable t
 	put [true, false, true, true, false] into t
 
-	test "first index after (+ve)" when the first index of true after 1 in t is 2
-	test "first index after (-ve)" when the first index of true after -5 in t is 2
+	test "first index after (+ve)" when the first index of true after 1 in t is 3
+	test "first index after (-ve)" when the first index of true after -5 in t is 3
 	test "first index after (-ve, limit)" when the first index of true after -6 in t is 1
 	test "first index after (+ve, missing)" when the first index of true after 4 in t is 0
 	test "first index after (-ve, missing)" when the first index of true after -2 in t is 0
@@ -445,8 +444,8 @@ public handler TestLastIndexAfter()
 	variable t
 	put [true, false, true, true, false] into t
 
-	test "last index after (+ve)" when the last index of true after 1 in t is 3
-	test "last index after (-ve)" when the last index of true after -5 in t is 3
+	test "last index after (+ve)" when the last index of true after 1 in t is 4
+	test "last index after (-ve)" when the last index of true after -5 in t is 4
 	test "last index after (-ve, limit)" when the last index of true after -6 in t is 4
 	test "last index after (+ve, missing)" when the last index of true after 4 in t is 0
 	test "last index after (-ve, missing)" when the last index of true after -2 in t is 0
@@ -469,11 +468,9 @@ public handler TestIndexAfterZero()
 	put the last index of true in t into tNoAfter
 	test "last index after (+ve, 0)" when the last index of true after 0 in t is tNoAfter
 end handler
-*/
 
 ----------------------------------------------------------------
 
-/* bug 14846
 handler TestIndexBefore_InvalidPositive()
 	return the index of true before 3 in [true]
 end handler
@@ -547,7 +544,6 @@ public handler TestIndexBeforeZero()
 	put the last index of true in t into tNoBefore
 	test "last index before (+ve, 0)" when the last index of true before 0 in t is tNoBefore
 end handler
-*/
 
 ----------------------------------------------------------------
 -- Finding subsequence offsets

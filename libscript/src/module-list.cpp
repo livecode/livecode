@@ -466,7 +466,7 @@ MCListEvalIndexOfElementInRange (bool p_is_last,
 		                                                 p_range, t_offset);
 
 	if (t_found)
-		r_output = t_offset + 1;
+		r_output = t_offset + p_range.offset + 1;
 	else
 		r_output = 0;
 }

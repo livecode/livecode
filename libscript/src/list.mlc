@@ -913,27 +913,25 @@ Example:
 	variable tOffset as Number
 	put ["a", "b", "c", "d", "b"]
 	put the index of "b" after 1 in tVar into tOffset
-	--tOffset contains 1
+	--tOffset contains 2
 
 	put the last index of "b" after 2 in tVar into tOffset
-	--tOffset contains 3
+	--tOffset contains 5
 
 Description:
 Use `the index of… after` to find where particular elements occur
 within a list.  Starting from but not including the position <After>,
 <Haystack> is scanned for an element that is equal to <Needle>, and
-the position relative to <After> of the element found is returned.  If
-no element of <Haystack> is equal to <Needle>, the return value is 0.
+the position of the element found is returned.  If no element of
+<Haystack> is equal to <Needle>, the return value is 0.
 
 Tags: Lists
 */
-/* bug 14846
 syntax ListIndexAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementAfter(IsLast, Needle, After, Haystack, output)
 end syntax
-*/
 
 /*
 Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
@@ -964,13 +962,12 @@ specified, the last matching element is found.
 
 Tags: Lists
 */
-/* bug 14846
 syntax ListIndexBefore is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementBefore(IsLast, Needle, Before, Haystack, output)
 end syntax
-*/
+
 ----------------------------------------------------------------
 
 /*
