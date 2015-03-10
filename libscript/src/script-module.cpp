@@ -462,7 +462,7 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     
     // If this fails, then it is a potentially a LiveCode module, but in a format
     // we do not support.
-    if (t_header[2] != (kMCScriptCurrentModuleVersion & 0xFF) ||
+    if (t_header[2] != ((kMCScriptCurrentModuleVersion >> 0) & 0xFF) ||
         t_header[3] != ((kMCScriptCurrentModuleVersion >> 8) & 0xFF))
         return MCErrorThrowGeneric(MCSTR("module format not supported"));
     

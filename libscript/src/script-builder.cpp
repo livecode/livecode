@@ -148,8 +148,8 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
         byte_t t_header[4];
         t_header[0] = 'L';
         t_header[1] = 'C';
-        t_header[2] = ((kMCScriptCurrentModuleVersion & 0xFF) >> 0);
-        t_header[3] = ((kMCScriptCurrentModuleVersion & 0xFF) >> 8);
+        t_header[2] = ((kMCScriptCurrentModuleVersion >> 0) & 0xFF);
+        t_header[3] = ((kMCScriptCurrentModuleVersion >> 8) & 0xFF);
         
         t_success = MCStreamWrite(p_stream, t_header, 4) &&
                     MCScriptWriteRawModule(p_stream, &self -> module);
