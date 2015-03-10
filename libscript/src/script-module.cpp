@@ -425,12 +425,18 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     if (!MCStreamRead(stream, t_header, 4))
         return false;
     
+    // If this fails, then it definitely isn't a LiveCode module.
     if (t_header[0] != 'L' ||
-        t_header[1] != 'C' ||
-        t_header[2] != (kMCScriptCurrentModuleVersion & 0xFF) ||
-        t_header[3] != ((kMCScriptCurrentModuleVersion >> 8) & 0xFF))
-        return false;
+        t_header[1] != 'C')
+        return MCErrorThrowGeneric(MCSTR("not a module"));
     
+    // If this fails, then it is a potentially a LiveCode module, but in a format
+    // we do not support.
+    if (t_header[2] != (kMCScriptCurrentModuleVersion & 0xFF) ||
+        t_header[3] != ((kMCScriptCurrentModuleVersion >> 8) & 0xFF))
+        return MCErrorThrowGeneric(MCSTR("module format not supported"));
+    
+    // If this fails then we've run out of memory (oh well - not much to be done!).
     MCScriptModule *t_module;
     if (!MCScriptCreateObject(kMCScriptObjectKindModule, sizeof(MCScriptModule), (MCScriptObject*&)t_module))
         return false;
@@ -439,6 +445,12 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     if (!MCPickleRead(stream, kMCScriptModulePickleInfo, t_module))
     {
         MCScriptDestroyObject(t_module);
+        
+        // If there is a pending error then its out of memory, otherwise report
+        // that we haven't been able to unpickle.
+        if (!MCErrorIsPending())
+            return MCErrorThrowGeneric(MCSTR("error reading module"));
+        
         return false;
     }
     
@@ -447,7 +459,7 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
         if (MCNameIsEqualTo(t_other_module -> name, t_module -> name))
         {
             MCScriptDestroyObject(t_module);
-            return false;
+            return MCErrorThrowGeneric(MCSTR("module with that name already loaded"));
         }
     
     // Link our module into the global module list.
