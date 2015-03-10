@@ -120,7 +120,7 @@ public handler OnCreate()
 	-- properties
 	put true into mBackIsEnabled
 	put "Title" into mLabel
-	put "ios-8" into mTheme
+	put "" into mTheme
 	put "icons" into mActionStyle
 	
 	-- variables
@@ -426,6 +426,26 @@ of the different components of the action: name, icon, command
 */
 public handler setActions(in pActions as string) as undefined
 
+	variable tActionLines as list
+	split pActions by newline into tActionLines
+
+	variable tLabelList as list
+	variable tIconList as list
+	put the empty list into tLabelList
+	put the empty list into tIconList
+
+	variable tActionElement as string
+	repeat for each element tActionElement in tActionLines
+		variable tItems as list
+		split tActionElement by "," into tItems
+
+		push element 1 of tItems onto back of tLabelList
+		push element 2 of tItems onto back of tIconList
+	end repeat
+
+	put [tLabelList, tIconList] into mActions
+
+/*
 	variable tActions as list
 	split pActions by newline into tActions
 
@@ -465,7 +485,7 @@ public handler setActions(in pActions as string) as undefined
 	combine tLabelList with "," into tTestLabel
 
 	put [tLabelList,tIconList] into mActions
-	
+*/	
 	redraw all
 end handler
 ----------
