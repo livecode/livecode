@@ -103,6 +103,176 @@ public handler TestOffset()
 end handler
 
 ----------------------------------------------------------------
+
+public handler TestOffsetAfter()
+	variable N as Data
+	variable H as Data
+
+	-- Only test single-byte needles for now
+	put EncodeUTF8("x") into N
+	put EncodeUTF8("x.xx.") into H
+	test "offset after (single, +ve)" when the offset of N after 1 in H is 3
+	test "first offset after (single, +ve)" when the first offset of N after 1 in H is 3
+	test "last offset after (single, +ve)" when the last offset of N after 1 in H is 4
+	test "offset after (single, -ve)" when the offset of N after -5 in H is 3
+	test "first offset after (single, -ve)" when the first offset of N after -5 in H is 3
+	test "last offset after (single, -ve)" when the last offset of N after -5 in H is 4
+
+	-- For bytes, "index" is synonymous with "offset"
+	test "index after" when the index of N after 1 in H is 3
+
+	put EncodeUTF8("x") into N
+	put EncodeUTF8("x..") into H
+	test "offset after (single, missing, +ve)" when the offset of N after 1 in H is 0
+	test "first offset after (single, missing, +ve)" when the first offset of N after 1 in H is 0
+	test "last offset after (single, missing, +ve)" when the last offset of N after 1 in H is 0
+	test "offset after (single, missing, -ve)" when the offset of N after -3 in H is 0
+	test "first offset after (single, missing, -ve)" when the first offset of N after -3 in H is 0
+	test "last offset after (single, missing, -ve)" when the last offset of N after -3 in H is 0
+
+	MCUnitTestHandlerThrows(TestOffsetAfter_SingleInvalidPositive, "offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestOffsetAfter_SingleInvalidNegative, "offset after (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidPositive, "first offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidNegative, "first offset after (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidPositive, "last offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidNegative, "last offset after (single, invalid -ve)")
+end handler
+
+handler TestOffsetAfter_SingleInvalidPositive()
+	get the offset of the byte with code 0 after 2 in the byte with code 0
+end handler
+
+handler TestOffsetAfter_SingleInvalidNegative()
+	get the offset of the byte with code 0 after -3 in the byte with code 0
+end handler
+
+handler TestFirstOffsetAfter_SingleInvalidPositive()
+	get the first offset of the byte with code 0 after 2 in the byte with code 0
+end handler
+
+handler TestFirstOffsetAfter_SingleInvalidNegative()
+	get the first offset of the byte with code 0 after -3 in the byte with code 0
+end handler
+
+handler TestLastOffsetAfter_SingleInvalidPositive()
+	get the last offset of the byte with code 0 after 2 in the byte with code 0
+end handler
+
+handler TestLastOffsetAfter_SingleInvalidNegative()
+	get the last offset of the byte with code 0 after -3 in the byte with code 0
+end handler
+
+public handler TestOffsetAfterZero()
+	variable N as Data
+	variable H as Data
+
+	put EncodeUTF8("x") into N
+	put EncodeUTF8("x") into H
+
+	-- "offset of _ after 0 in _" should be equivalent to "offset of _ in _"
+	variable tNoAfter
+	put the offset of N in H into tNoAfter
+	test "offset after (single, 0)" when the offset of N after 0 in H is tNoAfter
+
+	put the first offset of N in H into tNoAfter
+	test "first offset after (single, 0)" when the first offset of N after 0 in H is tNoAfter
+
+	put the last offset of N in H into tNoAfter
+	test "the last offset after (single, 0, same)" when the last offset of N after 0 in H is tNoAfter
+
+	put EncodeUTF8("x") into N
+	put EncodeUTF8(".x.") into H
+	put the last offset of N in H into tNoAfter
+	test "last offset after (single, 0)" when the last offset of N after 0 in H is tNoAfter
+
+end handler
+
+----------------------------------------------------------------
+
+public handler TestOffsetBefore()
+	variable N as Data
+	variable H as Data
+
+	-- Only test single-byte needles for now
+	put EncodeUTF8("x") into N
+	put EncodeUTF8("x.xx.") into H
+	test "offset before (single, +ve)" when the offset of N before 4 in H is 3
+	test "first offset before (single, +ve)" when the first offset of N before 4 in H is 1
+	test "last offset before (single, +ve)" when the last offset of N before 4 in H is 3
+	test "offset before (single, -ve)" when the offset of N before -2 in H is 3
+	test "first offset before (single, -ve)" when the first offset of N before -2 in H is 1
+	test "last offset before (single, -ve)" when the last offset of N before -2 in H is 3
+
+	-- For bytes, "index" is synonymous with "offset"
+	test "index before" when the index of N before 4 in H is 3
+
+	put EncodeUTF8("x") into N
+	put EncodeUTF8("x..") into H
+	test "offset before (single, missing, +ve)" when the offset of N before 1 in H is 0
+	test "first offset before (single, missing, +ve)" when the first offset of N before 1 in H is 0
+	test "last offset before (single, missing, +ve)" when the last offset of N before 1 in H is 0
+	test "offset before (single, missing, -ve)" when the offset of N before -3 in H is 0
+	test "first offset before (single, missing, -ve)" when the first offset of N before -3 in H is 0
+	test "last offset before (single, missing, -ve)" when the last offset of N before -3 in H is 0
+
+	MCUnitTestHandlerThrows(TestOffsetBefore_SingleInvalidPositive, "offset before (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestOffsetBefore_SingleInvalidNegative, "offset before (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetBefore_SingleInvalidPositive, "first offset before (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetBefore_SingleInvalidNegative, "first offset before (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetBefore_SingleInvalidPositive, "last offset before (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetBefore_SingleInvalidNegative, "last offset before (single, invalid -ve)")
+end handler
+
+handler TestOffsetBefore_SingleInvalidPositive()
+	get the offset of the byte with code 0 before 3 in the byte with code 0
+end handler
+
+handler TestOffsetBefore_SingleInvalidNegative()
+	get the offset of the byte with code 0 before -2 in the byte with code 0
+end handler
+
+handler TestFirstOffsetBefore_SingleInvalidPositive()
+	get the first offset of the byte with code 0 before 3 in the byte with code 0
+end handler
+
+handler TestFirstOffsetBefore_SingleInvalidNegative()
+	get the first offset of the byte with code 0 before -2 in the byte with code 0
+end handler
+
+handler TestLastOffsetBefore_SingleInvalidPositive()
+	get the last offset of the byte with code 0 before 3 in the byte with code 0
+end handler
+
+handler TestLastOffsetBefore_SingleInvalidNegative()
+	get the last offset of the byte with code 0 before -2 in the byte with code 0
+end handler
+
+public handler TestOffsetBeforeZero()
+	variable N as Data
+	variable H as Data
+
+	put EncodeUTF8("x") into N
+	put EncodeUTF8("x") into H
+
+	-- "offset of _ before 0 in _" should be equivalent to "last offset of _ in _"
+	variable tNoBefore
+	put the last offset of N in H into tNoBefore
+	test "offset before (single, 0)" when the offset of N before 0 in H is tNoBefore
+return
+	put the first offset of N in H into tNoBefore
+	test "first offset before (single, 0)" when the first offset of N before 0 in H is tNoBefore
+
+	put the last offset of N in H into tNoBefore
+	test "the last offset before (single, 0, same)" when the last offset of N before 0 in H is tNoBefore
+
+	put EncodeUTF8("x") into N
+	put EncodeUTF8(".x.") into H
+	put the last offset of N in H into tNoBefore
+	test "last offset before (single, 0)" when the last offset of N before 0 in H is tNoBefore
+
+end handler
+
+----------------------------------------------------------------
 -- Helper functions
 ----------------------------------------------------------------
 

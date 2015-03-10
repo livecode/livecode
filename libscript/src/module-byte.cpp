@@ -83,7 +83,7 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytes(bool p_is_last, MCDataRef p
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, p_is_last, MCRangeMake(0, UINDEX_MAX), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MCDataRef p_target, uindex_t p_after, bool p_is_last, uindex_t& r_output)
+extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesAfter(bool p_is_last, MCDataRef p_needle, index_t p_after, MCDataRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfByteChunkByExpressionInRange(p_target, nil, p_after, true, true, false, t_start, t_count))
@@ -95,10 +95,14 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MC
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, p_is_last, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesBefore(MCDataRef p_needle, MCDataRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
+extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesBefore(bool p_is_first, MCDataRef p_needle, index_t p_before, MCDataRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    if (!MCChunkGetExtentsOfByteChunkByExpressionInRange(p_target, nil, p_before, true, false, true, t_start, t_count))
+	if (0 == p_before)
+	{
+		t_start = UINDEX_MAX;
+	}
+	else if (!MCChunkGetExtentsOfByteChunkByExpressionInRange(p_target, nil, p_before, true, false, true, t_start, t_count))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
