@@ -1019,32 +1019,29 @@ Example:
 	variable tOffset as Number
 	put ["a", "b", "c", "d", "b", "c"]
 	put the offset of ["b","c"] after 1 in tVar into tOffset
-	--tOffset contains 1
+	--tOffset contains 2
 
 	put the last offset of ["b","c"] after 1 in tVar into tOffset
-	--tOffset contains 4
+	--tOffset contains 5
 
 Description:
 
 Use `the offset of… after` to find where a particular sub-list occurs
 within a list.  Starting from but not including the position <After>,
 <Haystack> is scanned for an sequence of elements that are equal to
-the elements of <Needle>, and the position relative to <After> of the
-start of the sequence found is returned.  If neither the "first
-offset" nor "last offset" are specified, the position of the first
-matching sub-list found is returned.  If no sub-list of <Haystack>
-starting after the position <After> is equal to <Needle>, the return
-value is 0.
+the elements of <Needle>, and the position of the start of the
+sequence found is returned.  If neither the "first offset" nor "last
+offset" are specified, the position of the first matching sub-list
+found is returned.  If no sub-list of <Haystack> starting after the
+position <After> is equal to <Needle>, the return value is 0.
 
 Tags: Lists
 */
-/* bug 14846
 syntax ListOffsetAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListAfter(IsLast, Needle, After, Haystack, output)
 end syntax
-*/
 
 /*
 Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
@@ -1077,12 +1074,10 @@ is equal to <Needle>, the return value is 0.  If neither "first" nor
 
 Tags: Lists
 */
-/* bug 14846
 syntax ListOffsetBefore is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListBefore(IsLast, Needle, Before, Haystack, output)
 end syntax
-*/
 
 end module
