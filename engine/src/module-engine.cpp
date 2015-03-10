@@ -630,8 +630,12 @@ extern "C" MC_DLLEXPORT void MCEngineExecLog(MCStringRef p_message)
         if (!MCStringAppendChar(s_log_buffer, '\n'))
             return;
     }
-    
-    if (!MCStringAppend(s_log_buffer, p_message))
+
+    MCAutoStringRef t_message_desc;
+    if (!MCValueCopyDescription(p_message, &t_message_desc))
+        return;
+
+    if (!MCStringAppend(s_log_buffer, *t_message_desc))
         return;
     
     if (s_log_update_pending)
