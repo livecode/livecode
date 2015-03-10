@@ -621,6 +621,21 @@ inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)
 	return t_point;
 }
 
+inline MCGPoint MCGPointTranslate(const MCGPoint &p_point, MCGFloat p_dx, MCGFloat p_dy)
+{
+	return MCGPointMake(p_point.x + p_dx, p_point.y + p_dy);
+}
+
+inline MCGPoint MCGPointScale(const MCGPoint &p_point, MCGFloat p_h_scale, MCGFloat p_v_scale)
+{
+	return MCGPointMake(p_point.x * p_h_scale, p_point.y * p_v_scale);
+}
+
+inline MCGPoint MCGPointScale(const MCGPoint &p_point, MCGFloat p_scale)
+{
+	return MCGPointScale(p_point, p_scale, p_scale);
+}
+
 inline MCGSize MCGSizeMake(MCGFloat p_w, MCGFloat p_h)
 {
 	MCGSize t_size;
@@ -775,6 +790,7 @@ void MCGPathSimplify(MCGPathRef path, MCGPathRef& r_simple_path);
 
 bool MCGPathTransform(MCGPathRef path, const MCGAffineTransform &p_transform);
 
+bool MCGPathGetLastPoint(MCGPathRef self, MCGPoint &r_last);
 bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
 
 typedef bool (*MCGPathIterateCallback)(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count);
