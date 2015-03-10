@@ -15,9 +15,17 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-module com.livecode.foreign.tests
+module com.livecode.byte.tests
 
 use com.livecode.__INTERNAL._testlib
+
+public handler TestEmpty()
+	test "empty" when the number of bytes in the empty data is 0
+end handler
+
+----------------------------------------------------------------
+-- Integer conversion
+----------------------------------------------------------------
 
 handler TestByteWithCode_Negative()
 	return the byte with code -1
