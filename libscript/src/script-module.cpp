@@ -427,8 +427,8 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     
     if (t_header[0] != 'L' ||
         t_header[1] != 'C' ||
-        t_header[2] != 0x00 ||
-        t_header[3] != 0x00)
+        t_header[2] != (kMCScriptCurrentModuleVersion & 0xFF) ||
+        t_header[3] != ((kMCScriptCurrentModuleVersion >> 8) & 0xFF))
         return false;
     
     MCScriptModule *t_module;
