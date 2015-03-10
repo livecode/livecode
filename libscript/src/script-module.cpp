@@ -203,6 +203,31 @@ static uindex_t s_context_slot_count;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCStringRef __MCScriptDefinitionKindToString(MCScriptDefinitionKind p_kind)
+{
+    switch(p_kind)
+    {
+        case kMCScriptDefinitionKindNone: return MCSTR("unknown");
+        case kMCScriptDefinitionKindExternal: return MCSTR("external");
+        case kMCScriptDefinitionKindType: return MCSTR("type");
+        case kMCScriptDefinitionKindConstant: return MCSTR("constant");
+        case kMCScriptDefinitionKindVariable: return MCSTR("variable");
+        case kMCScriptDefinitionKindHandler: return MCSTR("handler");
+        case kMCScriptDefinitionKindForeignHandler: return MCSTR("handler");
+        case kMCScriptDefinitionKindProperty: return MCSTR("property");
+        case kMCScriptDefinitionKindEvent: return MCSTR("event");
+        case kMCScriptDefinitionKindSyntax: return MCSTR("syntax");
+        case kMCScriptDefinitionKindDefinitionGroup: return MCSTR("group");
+        case kMCScriptDefinitionKindContextVariable: return MCSTR("context variable");
+        default:
+            return MCSTR("unknown");
+    }
+    
+    return kMCEmptyString;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCScriptDestroyModule(MCScriptModuleRef self)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
@@ -268,7 +293,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             if (t_index == UINDEX_MAX)
             {
                 if (!MCMemoryResizeArray(s_context_slot_count + 1, s_context_slot_owners, s_context_slot_count))
-                    return false;
+                    return false; // oom
                 
                 t_index = s_context_slot_count - 1;
             }
@@ -301,7 +326,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpJump:
                         // jump <offset>
                         if (t_arity != 1)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         // check resolved address is within handler
                         break;
@@ -310,7 +335,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         // jumpiftrue <register>, <offset>
                         // jumpiffalse <register>, <offset>
                         if (t_arity != 2)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         // check resolved address is within handler
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
@@ -318,7 +343,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpAssignConstant:
                         // assignconst <dst>, <index>
                         if (t_arity != 2)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         // check index argument is within value pool range
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
@@ -326,7 +351,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpAssign:
                         // assign <dst>, <src>
                         if (t_arity != 2)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         t_temporary_count = MCMax(t_temporary_count, t_operands[1] + 1);
@@ -335,7 +360,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         // return
                         // return <value>
                         if (t_arity != 0 && t_arity != 1)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         if (t_arity == 1)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
@@ -343,7 +368,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpInvoke:
                         // invoke <index>, <result>, [ <arg_1>, ..., <arg_n> ]
                         if (t_arity < 2)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         // check index operand is within definition range
                         // check definition[index] is handler or definition group
@@ -354,7 +379,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpInvokeIndirect:
                         // invoke *<src>, <result>, [ <arg_1>, ..., <arg_n> ]
                         if (t_arity < 2)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
@@ -364,7 +389,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         // fetch <dst>, <index>
                         // store <src>, <index>
                         if (t_arity != 2)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         // check definition[index] is variable or handler
                         // check level is appropriate.
@@ -373,7 +398,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpAssignList:
                         // assignlist <dst>, [ <elem_1>, ..., <elem_n> ]
                         if (t_arity < 1)
-                            return false;
+                            goto invalid_bytecode_error;
                         
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
@@ -385,7 +410,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             
             // If we didn't reach the limit, the bytecode is malformed.
             if (t_bytecode != t_bytecode_limit)
-                return false;
+                goto invalid_bytecode_error;
             
             // The total number of slots we need is params (inc result) + temps.
             MCTypeInfoRef t_signature;
@@ -396,6 +421,11 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
     // If the module has context
     
     return true;
+    
+invalid_bytecode_error:
+    return MCErrorThrowGenericWithMessage(MCSTR("%{name} is not valid - malformed bytecode"),
+                                          "name", self -> name,
+                                          nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -508,7 +538,8 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 	/* If the module is already marked as being checked for usability,
 	 * then there must be a cyclic module dependency. */
 	if (self -> is_in_usable_check)
-		return false;
+		return MCErrorThrowGeneric(MCSTR("cyclic module dependency"));
+    
 	self -> is_in_usable_check = true;
     
     // First ensure we can resolve all its external dependencies.
@@ -516,11 +547,23 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
     {
         MCScriptModuleRef t_module;
         if (!MCScriptLookupModule(self -> dependencies[i] . name, t_module))
+        {
+            MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - dependent module not found %{dependency}"),
+                                           "name", self -> name,
+                                           "dependency", self -> dependencies[i] . name,
+                                           nil);
 			goto error_cleanup;
+        }
         
         // A used module must not be a widget.
         if (t_module -> module_kind == kMCScriptModuleKindWidget)
+        {
+            MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - depends on widget module %{dependency}"),
+                                           "name", self -> name,
+                                           "dependency", self -> dependencies[i] . name,
+                                           nil);
 			goto error_cleanup;
+        }
         
         // A used module must be usable - do this before resolving imports so
         // chained imports work.
@@ -537,7 +580,14 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             
             MCScriptDefinition *t_def;
             if (!MCScriptLookupDefinitionInModule(t_module, t_import_def -> name, t_def))
+            {
+                MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - %{dependency}.%{definition} not found"),
+                                               "name", self -> name,
+                                               "dependency", self -> dependencies[i] . name,
+                                               "definition", t_import_def -> name,
+                                               nil);
 				goto error_cleanup;
+            }
             
             MCScriptModuleRef t_mod;
             if (t_def -> kind == kMCScriptDefinitionKindExternal)
@@ -554,7 +604,16 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             {
                 if (t_import_def -> kind != kMCScriptDefinitionKindHandler ||
                     t_def -> kind != kMCScriptDefinitionKindForeignHandler)
-					goto error_cleanup;
+                {
+                    MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - %{dependency}.%{definition} expected to be %{expected}, but is %{actual}"),
+                                                         "name", self -> name,
+                                                         "dependency", self -> dependencies[i] . name,
+                                                         "definition", t_import_def -> name,
+                                                         "expected", __MCScriptDefinitionKindToString(t_import_def -> kind),
+                                                         "actual", __MCScriptDefinitionKindToString(t_def -> kind),
+                                                         nil);
+                    goto error_cleanup;
+                }
             }
             
             // Check that signatures match.
@@ -563,7 +622,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             t_import_def -> resolved_module = t_mod;
         }
         
-        // Now create the instance we need.
+        // Now create the instance we need - if this fails its due to out of memory.
         if (!MCScriptCreateInstanceOfModule(t_module, self -> dependencies[i] . instance))
 			goto error_cleanup;
     }
@@ -599,11 +658,12 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     {
                         MCAutoStringRef t_name_string;
                         if (!MCStringFormat(&t_name_string, "%@.%@", self -> name, t_public_name))
-								goto error_cleanup;
+                            goto error_cleanup; // oom
                         
                         MCNewAutoNameRef t_name;
                         if (!MCNameCreate(*t_name_string, &t_name))
-								goto error_cleanup;
+								goto error_cleanup; // oom
+                        
                         // If the target type is an alias, named type or optional type then
                         // we just create an alias. Otherwise it must be a record, foreign,
                         // handler type - this means it must be named.
@@ -614,21 +674,21 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                             MCTypeInfoIsOptional(t_target_type))
                         {
                             if (!MCAliasTypeInfoCreate(*t_name, t_target_type, &t_typeinfo))
-								goto error_cleanup;
+								goto error_cleanup; // oom
                         }
                         else
                         {
                             if (!MCNamedTypeInfoCreate(*t_name, &t_typeinfo))
-								goto error_cleanup;
+								goto error_cleanup; // oom
                             
                             if (!MCNamedTypeInfoBind(*t_typeinfo, t_target_type))
-								goto error_cleanup;
+								goto error_cleanup; // oom
                         }
                     }
                     else
                     {
                         if (!MCAliasTypeInfoCreate(kMCEmptyName, self -> types[t_type_def -> type] -> typeinfo, &t_typeinfo))
-							goto error_cleanup;
+							goto error_cleanup; // oom
                     }
                 }
                 else if (t_def -> kind == kMCScriptDefinitionKindExternal)
@@ -652,7 +712,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 MCScriptOptionalType *t_type;
                 t_type = static_cast<MCScriptOptionalType *>(self -> types[i]);
                 if (!MCOptionalTypeInfoCreate(self -> types[t_type -> type] -> typeinfo, &t_typeinfo))
-					goto error_cleanup;
+					goto error_cleanup; // oom
             }
             break;
             case kMCScriptTypeKindForeign:
@@ -668,7 +728,9 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 #endif
                 if (t_symbol == nil)
                 {
-                    MCLog("Unable to resolve foreign type '%@'", t_type -> binding);
+                    MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - unable to resolve foreign type '%{type}'"),
+                                                   "type", t_type -> binding,
+                                                   nil);
 					goto error_cleanup;
                 }
                 
@@ -687,11 +749,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     t_field . name = t_type -> fields[i] . name;
                     t_field . type = self -> types[t_type -> fields[i] . type] -> typeinfo;
                     if (!t_fields . Push(t_field))
-						goto error_cleanup;
+						goto error_cleanup; // oom
                 }
                 
                 if (!MCRecordTypeInfoCreate(t_fields . Ptr(), t_type -> field_count, self -> types[t_type -> base_type] -> typeinfo, &t_typeinfo))
-					goto error_cleanup;
+					goto error_cleanup; // oom
             }
             break;
             case kMCScriptTypeKindHandler:
@@ -710,7 +772,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 }
                 
                 if (!MCHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
-					goto error_cleanup;
+					goto error_cleanup; // oom
             }
             break;
         }
