@@ -17,6 +17,7 @@
 #include "foundation.h"
 #include "foundation-auto.h"
 #include "script.h"
+#include "script-auto.h"
 
 #include "report.h"
 #include "literal.h"
@@ -26,6 +27,8 @@
 
 extern "C" int OutputFileAsC;
 int OutputFileAsC = 0;
+extern "C" int OutputFileAsBytecode;
+int OutputFileAsBytecode = 0;
 
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
 extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);
@@ -243,112 +246,233 @@ void EmitBeginLibraryModule(NameRef p_name, long& r_index)
     "#  define MODULE_SECTION __attribute__((section(\"__modules\"))) __attribute__((used)) \n" \
     "#endif \n"
 
-void EmitEndModule(void)
-{
-    MCLog("[Emit] EndModule()", 0);
-    
-    MCStreamRef t_stream;
-    MCMemoryOutputStreamCreate(t_stream);
-    
-    bool t_success;
-    t_success = MCScriptEndModule(s_builder, t_stream);
-    
-    void *t_buffer;
-    size_t t_size;
-    t_buffer = NULL;
-    MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
-    MCValueRelease(t_stream);
-    
-    if (t_success)
-    {
-        MCLog("Generated module file of size %ld\n", t_size);
-        FILE *t_output;
-        t_output = OpenOutputFile();
-        
-        const char *t_module_string;
-        GetStringOfNameLiteral(s_module_name, &t_module_string);
-        if (OutputFileAsC)
-        {
-            char *t_modified_string;
-            t_modified_string = strdup(t_module_string);
-            for(int i = 0; t_modified_string[i] != '\0'; i++)
-                if (t_modified_string[i] == '.')
-                    t_modified_string[i] = '_';
-            
-            fprintf(t_output, "static unsigned char module_data[] = {");
-            for(size_t i = 0; i < t_size; i++)
-            {
-                if ((i % 16) == 0)
-                    fprintf(t_output, "\n");
-                fprintf(t_output, "0x%02x, ", ((unsigned char *)t_buffer)[i]);
-            }
-            fprintf(t_output, "};\n");
-            
-            const char *t_name;
-            GetStringOfNameLiteral(s_module_name, &t_name);
-            fprintf(t_output, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_string, t_name);
-            
-            free(t_modified_string);
-        }
-        else if (t_output != NULL)
-        {
-            fwrite(t_buffer, 1, t_size, t_output);
-        }
-        
-        if (t_output != NULL)
-            fclose(t_output);
-        
-        bool t_success;
-        t_success = true;
-        
-        MCStreamRef t_stream;
-        t_stream = nil;
-        if (t_success)
-            t_success = MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
-        
-        MCScriptModuleRef t_module;
-        t_module = nil;
-        if (t_success)
-            t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
-        
-        if (t_stream != nil)
-            MCValueRelease(t_stream);
-        
-        MCStreamRef t_output_stream;
-        t_output_stream = nil;
-        if (t_success)
-            t_success = MCMemoryOutputStreamCreate(t_output_stream);
-        
-        if (t_success)
-            t_success = MCScriptWriteInterfaceOfModule(t_module, t_output_stream);
-        
-        if (t_module != nil)
-            MCScriptReleaseModule(t_module);
-        
-        void *t_inf_buffer;
-        size_t t_inf_size;
-        t_inf_buffer = nil;
-        t_inf_size = 0;
-        if (t_success)
-            t_success = MCMemoryOutputStreamFinish(t_output_stream, t_inf_buffer, t_inf_size);
-        
-        if (t_output_stream != nil)
-            MCValueRelease(t_output_stream);
-        
-        FILE *t_import;
-        t_import = OpenImportedModuleFile(t_module_string);
-        if (t_import != NULL)
-        {
-            fwrite(t_inf_buffer, 1, t_inf_size, t_import);
-            fclose(t_import);
-        }
-        
-        free(t_inf_buffer);
-    }
 
-    free(t_buffer);
-    
-    MCFinalize();
+static bool
+EmitEndModuleGetByteCodeBuffer (MCAutoByteArray & r_bytecode)
+{
+	MCAutoValueRefBase<MCStreamRef> t_stream;
+	MCMemoryOutputStreamCreate (&t_stream);
+
+	if (!MCScriptEndModule (s_builder, *t_stream))
+		goto error_cleanup;
+
+	void *t_bytecode;
+	size_t t_bytecode_len;
+	MCMemoryOutputStreamFinish (*t_stream,
+	                            t_bytecode,
+	                            t_bytecode_len);
+
+	MCAssert (t_bytecode_len <= UINDEX_MAX);
+	r_bytecode.Give ((byte_t *) t_bytecode, t_bytecode_len);
+
+	return true;
+
+ error_cleanup:
+	Error_CouldNotGenerateBytecode();
+	return false;
+}
+
+static bool
+EmitEndModuleOutputBytecode (const byte_t *p_bytecode,
+                             size_t p_bytecode_len)
+{
+	const char *t_filename = nil;
+	FILE *t_file = OpenOutputFile (&t_filename);
+
+	if (nil == t_file)
+		goto error_cleanup;
+
+	size_t t_written;
+	t_written = fwrite (p_bytecode, sizeof(byte_t), p_bytecode_len, t_file);
+
+	if (t_written != p_bytecode_len)
+		goto error_cleanup;
+
+	fflush (t_file);
+	fclose (t_file);
+
+	return true;
+
+ error_cleanup:
+	if (nil != t_file)
+		fclose (t_file);
+	Error_CouldNotWriteOutputFile (t_filename);
+	return false;
+}
+
+static bool
+EmitEndModuleOutputC (const char *p_module_name,
+                      const byte_t *p_bytecode,
+                      size_t p_bytecode_len)
+{
+	char *t_modified_name = nil;
+	const char *t_filename = nil;
+	FILE *t_file = nil;
+
+	t_file = OpenOutputFile (&t_filename);
+	if (nil == t_file)
+		goto error_cleanup;
+
+	t_modified_name = strdup(p_module_name);
+	if (nil == t_modified_name)
+		goto error_cleanup;
+
+	for(int i = 0; t_modified_name[i] != '\0'; i++)
+		if (t_modified_name[i] == '.')
+			t_modified_name[i] = '_';
+
+	if (0 > fprintf(t_file, "static unsigned char module_data[] = {"))
+		goto error_cleanup;
+
+	for(size_t i = 0; i < p_bytecode_len; i++)
+	{
+		if ((i % 16) == 0)
+			if (0 > fprintf(t_file, "\n"))
+				goto error_cleanup;
+
+		if (0 > fprintf(t_file, "0x%02x, ", ((unsigned char *)p_bytecode)[i]))
+			goto error_cleanup;
+	}
+	if (0 > fprintf(t_file, "};\n"))
+		goto error_cleanup;
+
+	if (0 > fprintf(t_file, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_name, p_module_name))
+		goto error_cleanup;
+
+	free(t_modified_name);
+	fflush (t_file);
+	fclose (t_file);
+	return true;
+
+ error_cleanup:
+	free (t_modified_name);
+	if (nil != t_file)
+		fclose (t_file);
+	Error_CouldNotWriteOutputFile (t_filename);
+	return false;
+}
+
+static bool
+EmitEndModuleGetInterfaceBuffer (const byte_t *p_bytecode,
+                                 const size_t p_bytecode_len,
+                                 MCAutoByteArray & r_interface)
+{
+	MCAutoValueRefBase<MCStreamRef> t_stream;
+	MCAutoScriptModuleRef t_module;
+	MCAutoValueRefBase<MCStreamRef> t_output_stream;
+
+	void *t_interface = nil;
+	size_t t_interface_len = 0;
+
+	if (!MCMemoryInputStreamCreate(p_bytecode, p_bytecode_len, &t_stream))
+		goto error_cleanup;
+
+	if (!MCScriptCreateModuleFromStream(*t_stream, &t_module))
+		goto error_cleanup;
+
+	if (!MCMemoryOutputStreamCreate(&t_output_stream))
+		goto error_cleanup;
+
+	if (!MCScriptWriteInterfaceOfModule(*t_module, *t_output_stream))
+		goto error_cleanup;
+
+	if (!MCMemoryOutputStreamFinish(*t_output_stream,
+	                                t_interface, t_interface_len))
+		goto error_cleanup;
+
+	MCAssert (t_interface_len <= UINDEX_MAX);
+	r_interface.Give ((byte_t *) t_interface, t_interface_len);
+
+	return true;
+
+ error_cleanup:
+	Error_CouldNotGenerateInterface();
+	return false;
+}
+
+static bool
+EmitEndModuleOutputInterface (const char *p_module_name,
+                              const byte_t *p_interface,
+                              size_t p_interface_len)
+{
+	char *t_filename = nil;
+	FILE *t_import = nil;
+	t_import = OpenImportedModuleFile(p_module_name, &t_filename);
+	if (nil == t_import)
+		goto error_cleanup;
+
+	size_t t_written;
+	t_written = fwrite (p_interface, sizeof(byte_t), p_interface_len, t_import);
+	if (t_written != p_interface_len)
+		goto error_cleanup;
+
+	fflush (t_import);
+	fclose (t_import);
+	free (t_filename);
+
+	return true;
+
+ error_cleanup:
+	if (nil != t_import)
+		fclose (t_import);
+	Error_CouldNotWriteInterfaceFile(t_filename);
+	free (t_filename);
+	return false;
+}
+
+void
+EmitEndModule (void)
+{
+	const char *t_module_string = nil;
+
+	MCAutoByteArray t_bytecode;
+	const byte_t *t_bytecode_buf = nil;
+	size_t t_bytecode_len = 0;
+
+	MCAutoByteArray t_interface;
+	const byte_t *t_interface_buf = nil;
+	size_t t_interface_len = 0;
+
+	MCLog("[Emit] EndModule()", 0);
+
+	GetStringOfNameLiteral(s_module_name, &t_module_string);
+	MCAssert (nil != t_module_string);
+
+	/* ---------- 1. Get bytecode */
+
+	if (!EmitEndModuleGetByteCodeBuffer (t_bytecode))
+		goto cleanup;
+
+	t_bytecode_buf = t_bytecode.Bytes();
+	t_bytecode_len = t_bytecode.ByteCount();
+
+	/* ---------- 2. Output module contents */
+	if (OutputFileAsC)
+	{
+		if (!EmitEndModuleOutputC (t_module_string,
+		                           t_bytecode_buf, t_bytecode_len))
+			goto cleanup;
+	}
+	else if (OutputFileAsBytecode)
+	{
+		if (!EmitEndModuleOutputBytecode (t_bytecode_buf, t_bytecode_len))
+			goto cleanup;
+	}
+
+	/* ---------- 3. Output module interface */
+	if (!EmitEndModuleGetInterfaceBuffer (t_bytecode_buf, t_bytecode_len,
+	                                      t_interface))
+		goto cleanup;
+
+	t_interface_buf = t_interface.Bytes();
+	t_interface_len = t_interface.ByteCount();
+
+	if (!EmitEndModuleOutputInterface (t_module_string,
+	                                   t_interface_buf, t_interface_len))
+		goto cleanup;
+
+ cleanup:
+	MCFinalize ();
 }
 
 void EmitModuleDependency(NameRef p_name, long& r_index)
