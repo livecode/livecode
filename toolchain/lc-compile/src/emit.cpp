@@ -26,6 +26,8 @@
 
 extern "C" int OutputFileAsC;
 int OutputFileAsC = 0;
+extern "C" int OutputFileAsBytecode;
+int OutputFileAsBytecode = 0;
 
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
 extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);
