@@ -265,7 +265,7 @@ void EmitEndModule(void)
     {
         MCLog("Generated module file of size %ld\n", t_size);
         FILE *t_output;
-        t_output = OpenOutputFile();
+        t_output = OpenOutputFile(NULL);
         
         const char *t_module_string;
         GetStringOfNameLiteral(s_module_name, &t_module_string);
@@ -338,7 +338,7 @@ void EmitEndModule(void)
             MCValueRelease(t_output_stream);
         
         FILE *t_import;
-        t_import = OpenImportedModuleFile(t_module_string);
+        t_import = OpenImportedModuleFile(t_module_string, NULL);
         if (t_import != NULL)
         {
             fwrite(t_inf_buffer, 1, t_inf_size, t_import);
