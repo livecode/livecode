@@ -167,12 +167,12 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 		MCImageBitmap *t_bitmap = nil;
 		/* UNCHECKED */static_cast<MCMutableImageRep*>(iref.m_rep)->copy_selection(t_bitmap);
 		setbitmap(t_bitmap, 1.0);
-		MCImageFreeBitmap(t_bitmap);
 		if (static_cast<MCMutableImageRep*>(iref.m_rep)->has_selection())
 		{
 			xhot = t_bitmap->width >> 1;
 			yhot = t_bitmap->height >> 1;
 		}
+		MCImageFreeBitmap(t_bitmap);
 	}
 	else
 	{

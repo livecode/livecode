@@ -2638,8 +2638,8 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	}
 	if (t != tb)
 	{
-		delete t;
-		delete b;
+		delete[] t;
+		delete[] b;
 	}
 }
 

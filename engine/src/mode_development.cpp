@@ -302,13 +302,12 @@ IO_stat MCDispatch::startup(void)
 	else
 		*enginedir = '\0';
 
-	MCDataRef t_decompressed;
-	MCDataRef t_compressed;
-	/* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
-	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
-	MCValueRelease(t_compressed);
+	MCAutoDataRef t_decompressed;
+	MCAutoDataRef t_compressed;
+	/* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, &t_compressed);
+	/* UNCHECKED */ MCFiltersDecompress(*t_compressed, &t_decompressed);
     
-    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
+    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(*t_decompressed), MCDataGetLength(*t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);
@@ -317,8 +316,7 @@ IO_stat MCDispatch::startup(void)
 
 	MCS_close(stream);
 
-	/* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
-	MCValueRelease(t_decompressed);
+	/* FRAGILE */ memset((void *)MCDataGetBytePtr(*t_decompressed), 0, MCDataGetLength(*t_decompressed));
 
 	// Temporary fix to make sure environment stack doesn't get lost behind everything.
 #if defined(_MACOSX)

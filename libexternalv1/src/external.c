@@ -339,7 +339,7 @@ const char *MCErrorToString(MCError p_error)
 		"no default stack"
 	};
 
-	if (p_error < 32768)
+	if (p_error < sizeof(s_engine_strings)/sizeof(*s_engine_strings))
 		return s_engine_strings[p_error];
 
 	return "variable already bound";

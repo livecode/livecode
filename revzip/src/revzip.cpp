@@ -1440,9 +1440,10 @@ void revZipCancel(char *p_arguments[], int p_argument_count, char **r_result, Bo
 		t_result = strdup("ziperr,illegal arguments");
 		t_error = True;
 	}
-
-	if (!s_operation_in_progress)
+	else if (!s_operation_in_progress)
+	{
 		t_result = strdup("ziperr,no current operation");
+	}
 
 	if (t_result == NULL)
 		s_operation_cancelled = true;
