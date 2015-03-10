@@ -13,6 +13,8 @@
 			buildPhases = (
 			);
 			dependencies = (
+				7203EFFF1AAA179A0027B4AD /* PBXTargetDependency */,
+				7203EFFD1AAA17950027B4AD /* PBXTargetDependency */,
 				7249F9F7196571C300D4D0DC /* PBXTargetDependency */,
 				E8DAE479171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE47B171428B100B96A87 /* PBXTargetDependency */,
@@ -234,20 +236,6 @@
 			remoteGlobalIDString = 4D9BF4FE171447CB00B32D29;
 			remoteInfo = "server-dbodbc";
 		};
-		7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 4DB846B3192B53E800771914;
-			remoteInfo = "Server-Community";
-		};
-		7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4DB846B4192B53E800771914;
-			remoteInfo = "Server-Community";
-		};
 		4DCACF3A197927FA0065D0A2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */;
@@ -261,6 +249,76 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4D6758FD0A79F9A400FA96D2;
 			remoteInfo = revvideograbber;
+		};
+		7203EFEA1AAA178E0027B4AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7699BD601A1CD51A00636397;
+			remoteInfo = "Test-Community";
+		};
+		7203EFEC1AAA178E0027B4AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7699BE791A1CD51E00636397;
+			remoteInfo = "kernel-test";
+		};
+		7203EFF21AAA178E0027B4AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D6F070B19CC36DD00DDC6E0;
+			remoteInfo = "lc-compile";
+		};
+		7203EFF41AAA178E0027B4AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D21B66B19E43BE100B64BEF;
+			remoteInfo = "lc-bootstrap-compile";
+		};
+		7203EFF61AAA178E0027B4AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D44E4E01A24D6610073FFA2;
+			remoteInfo = "lc-test";
+		};
+		7203EFF81AAA178E0027B4AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C72BED781A838B0D009B3CEB;
+			remoteInfo = "lc-run";
+		};
+		7203EFFC1AAA17950027B4AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C72BED771A838B0D009B3CEB;
+			remoteInfo = "lc-run";
+		};
+		7203EFFE1AAA179A0027B4AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D6F070A19CC36DD00DDC6E0;
+			remoteInfo = "lc-compile";
+		};
+		7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DB846B3192B53E800771914;
+			remoteInfo = "Server-Community";
+		};
+		7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DB846B4192B53E800771914;
+			remoteInfo = "Server-Community";
 		};
 		E8D3735D18CDDA40005C1182 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -448,6 +506,7 @@
 
 /* Begin PBXFileReference section */
 		4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revvideograbber.xcodeproj; path = revvideograbber/revvideograbber.xcodeproj; sourceTree = "<group>"; };
+		7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "lc-compile.xcodeproj"; path = "toolchain/lc-compile/lc-compile.xcodeproj"; sourceTree = "<group>"; };
 		E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = engine.xcodeproj; path = engine/engine.xcodeproj; sourceTree = "<group>"; };
 		E8DAE3F41714275B00B96A87 /* revbrowser.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revbrowser.xcodeproj; path = revbrowser/revbrowser.xcodeproj; sourceTree = "<group>"; };
 		E8DAE4151714277D00B96A87 /* revdb.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revdb.xcodeproj; path = engine/../revdb/revdb.xcodeproj; sourceTree = "<group>"; };
@@ -489,6 +548,17 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		7203EFDF1AAA178E0027B4AD /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7203EFF31AAA178E0027B4AD /* lc-compile */,
+				7203EFF51AAA178E0027B4AD /* lc-bootstrap-compile */,
+				7203EFF71AAA178E0027B4AD /* lc-test */,
+				7203EFF91AAA178E0027B4AD /* lc-run */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		E8DAE3D31714259A00B96A87 = {
 			isa = PBXGroup;
 			children = (
@@ -500,6 +570,7 @@
 		E8DAE3DA1714270E00B96A87 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */,
 				4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */,
 				E8DAE451171427BA00B96A87 /* revzip.xcodeproj */,
 				E8DAE448171427B400B96A87 /* revxml.xcodeproj */,
@@ -527,6 +598,8 @@
 				E8DAE3ED1714271D00B96A87 /* Standalone-Community.app */,
 				E8DAE3EF1714271D00B96A87 /* Installer.app */,
 				7249FA00196571C400D4D0DC /* Server-Community */,
+				7203EFEB1AAA178E0027B4AD /* Test-Community.app */,
+				7203EFED1AAA178E0027B4AD /* libkernel-test.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -630,6 +703,10 @@
 				{
 					ProductGroup = E8DAE3DC1714271C00B96A87 /* Products */;
 					ProjectRef = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+				},
+				{
+					ProductGroup = 7203EFDF1AAA178E0027B4AD /* Products */;
+					ProjectRef = 7203EFDE1AAA178E0027B4AD /* lc-compile.xcodeproj */;
 				},
 				{
 					ProductGroup = E8DAE41F1714279E00B96A87 /* Products */;
@@ -785,17 +862,60 @@
 			remoteRef = 4D9BF505171447E900B32D29 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		7249FA00196571C400D4D0DC /* Server-Community */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = "Server-Community";
-			remoteRef = 7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */;
-		};
 		4DCACF3B197927FA0065D0A2 /* revvideograbber.bundle */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
 			path = revvideograbber.bundle;
 			remoteRef = 4DCACF3A197927FA0065D0A2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7203EFEB1AAA178E0027B4AD /* Test-Community.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "Test-Community.app";
+			remoteRef = 7203EFEA1AAA178E0027B4AD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7203EFED1AAA178E0027B4AD /* libkernel-test.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-test.a";
+			remoteRef = 7203EFEC1AAA178E0027B4AD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7203EFF31AAA178E0027B4AD /* lc-compile */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-compile";
+			remoteRef = 7203EFF21AAA178E0027B4AD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7203EFF51AAA178E0027B4AD /* lc-bootstrap-compile */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-bootstrap-compile";
+			remoteRef = 7203EFF41AAA178E0027B4AD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7203EFF71AAA178E0027B4AD /* lc-test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-test";
+			remoteRef = 7203EFF61AAA178E0027B4AD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7203EFF91AAA178E0027B4AD /* lc-run */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "lc-run";
+			remoteRef = 7203EFF81AAA178E0027B4AD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7249FA00196571C400D4D0DC /* Server-Community */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Server-Community";
+			remoteRef = 7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		E8D3735E18CDDA40005C1182 /* revbrowser-cefprocess.app */ = {
@@ -966,15 +1086,25 @@
 			name = "server-revxml";
 			targetProxy = 4D9BF4BF1714474E00B32D29 /* PBXContainerItemProxy */;
 		};
-		7249F9F7196571C300D4D0DC /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "Server-Community";
-			targetProxy = 7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */;
-		};
 		4DF1BF8F197932DD00E4AC49 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = revvideograbber;
 			targetProxy = 4DF1BF8E197932DD00E4AC49 /* PBXContainerItemProxy */;
+		};
+		7203EFFD1AAA17950027B4AD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "lc-run";
+			targetProxy = 7203EFFC1AAA17950027B4AD /* PBXContainerItemProxy */;
+		};
+		7203EFFF1AAA179A0027B4AD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "lc-compile";
+			targetProxy = 7203EFFE1AAA179A0027B4AD /* PBXContainerItemProxy */;
+		};
+		7249F9F7196571C300D4D0DC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Server-Community";
+			targetProxy = 7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */;
 		};
 		E8DAE479171428B100B96A87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

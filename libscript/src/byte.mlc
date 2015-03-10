@@ -22,39 +22,42 @@ module com.livecode.byte
 
 use com.livecode.foreign
 
-public foreign handler MCByteEvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalNumberOfBytesIn(in Target as Data, out Count as LCUIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCByteEvalOffsetOfBytes(in IsLast as bool, in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as bool, in Needle as data, in Before as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalOffsetOfBytesAfter(in IsFirst as bool, in Needle as data, in After as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytes(in IsLast as CBool, in Needle as Data, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as CBool, in Needle as Data, in Before as LCUIndex, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytesAfter(in IsFirst as CBool, in Needle as Data, in After as LCUIndex, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
 
-public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as Data, in Target as Data, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCByteEvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalIsInBytes(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalBeginsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalEndsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalContainsBytes(in Target as Data, in Needle as Data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalIsInBytes(in Needle as Data, in Target as Data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalBeginsWithBytes(in Target as Data, in Needle as Data, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalEndsWithBytes(in Target as Data, in Needle as Data, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCByteFetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler MCByteStoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
-public foreign handler MCByteFetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler MCByteStoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchByteOf(in Index as LCIndex, in Target as Data, out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreByteOf(in Value as Data, in Index as LCIndex, inout Target as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchByteRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as Data, out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreByteRangeOf(in Value as Data, in Start as LCIndex, in Finish as LCIndex, inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteRepeatForEachByte(inout Iterator as optional pointer, out Iterand as data, in Container as data) as bool binds to "<builtin>"
+public foreign handler MCByteRepeatForEachByte(inout Iterator as optional Pointer, out Iterand as Data, in Container as Data) as CBool binds to "<builtin>"
 
-public foreign handler MCByteFetchFirstByteOf(in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler MCByteStoreFirstByteOf(in Value as data, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchFirstByteOf(in Target as Data, out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreFirstByteOf(in Value as Data, inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteFetchLastByteOf(in Target as data, out Value as data) as undefined binds to "<builtin>"
-public foreign handler MCByteStoreLastByteOf(in Value as data, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteFetchLastByteOf(in Target as Data, out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteStoreLastByteOf(in Value as Data, inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteExecDeleteByteOf(in Index as index, inout Target as data) as undefined binds to "<builtin>"
-public foreign handler MCByteExecDeleteByteRangeOf(in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteByteOf(in Index as LCIndex, inout Target as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteByteRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCByteExecDeleteLastByteOf(inout Target as data) as undefined binds to "<builtin>"
-public foreign handler MCByteExecDeleteFirstByteOf(inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteLastByteOf(inout Target as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteExecDeleteFirstByteOf(inout Target as Data) as undefined binds to "<builtin>"
 
-public foreign handler MCDataExecRandomBytes(in Count as uindex, out Value as data) as undefined binds to "<builtin>"
+public foreign handler MCDataExecRandomBytes(in Count as LCUIndex, out Value as Data) as undefined binds to "<builtin>"
+
+public foreign handler MCByteEvalByteWithCode(in Value as LCUInt, out Result as Data) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalCodeOfByte(in Target as Data, out Result as LCUInt) as undefined binds to "<builtin>"
 
 --
 
@@ -94,7 +97,12 @@ Tags: Binary
 */
 
 syntax ByteOffset is prefix operator with precedence 1
-    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Target: Expression>
+begin
+    MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
+end syntax
+syntax ByteIndex is prefix operator with precedence 1
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
 end syntax
@@ -115,11 +123,18 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 Tags: Binary
 */
 
+/* bug 14846
 syntax ByteOffsetAfter is prefix operator with precedence 1
-	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
 	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
+syntax ByteIndexAfter is prefix operator with precedence 1
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
+end syntax
+*/
 
 /*
 
@@ -137,11 +152,18 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 Tags: Binary
 */
 
+/* bug 14846
 syntax ByteOffsetBefore is prefix operator with precedence 1
-    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" "bytes" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
+syntax ByteIndexBefore is prefix operator with precedence 1
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+begin
+    MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
+end syntax
+*/
 
 /*
 Summary:            Determines whether <Needle> is in <Target>.
@@ -427,6 +449,41 @@ begin
 	MCDataExecRandomBytes(Count, output)
 end syntax
 
---
+----------------------------------------------------------------
+-- Conversion between bytes and numbers
+----------------------------------------------------------------
+
+/*
+Summary:	Create a 1-byte data value from a number
+
+Value:		The value for the new data value
+
+Description:
+Returns a byte of binary data, created using the given value.  The
+<Value> must be between 0 and 255 (inclusive).
+
+Tags: Binary
+*/
+syntax ByteWithCode is prefix operator with precedence 2
+	"the" "byte" "with" "code" <Value: Expression>
+begin
+	MCByteEvalByteWithCode(Value, output)
+end syntax
+
+/*
+Summary:	Get the numeric value of a single byte.
+
+Target:	A 1-byte binary data value.
+
+Description:
+Returns the numeric representation of a single byte of binary data.
+
+Tags: Binary
+*/
+syntax CodeOfByte is prefix operator with precedence 2
+	"the" "code" "of" <Target: Expression>
+begin
+	MCByteEvalCodeOfByte(Target, output)
+end syntax
 
 end module

@@ -89,7 +89,7 @@ public:
     ////////// Functions used by the event manager for event processing
     bool handlesMouseDown() const;
     bool handlesMouseUp() const;
-    bool handlesMouseRelease() const;
+    bool handlesMouseCancel() const;
     bool handlesKeyPress() const;
     bool handlesActionKeyPress() const;
     bool handlesTouches() const;
@@ -225,6 +225,10 @@ private:
     
     // The native layer(s) belonging to this widget
     MCNativeLayer* m_native_layer;
+    
+    // If this is true then the widget has scheduled a timer message, but it triggered
+    // during edit mode.
+    bool m_timer_deferred : 1;
     
     // Implemented by the platform-specific native layers: creates a new layer
     MCNativeLayer* createNativeLayer();

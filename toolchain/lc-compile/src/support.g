@@ -291,7 +291,10 @@
     Error_CannotAssignToConstantId
     Error_ConstantsMustBeSimple
     Error_NonHandlerTypeVariablesCannotBeCalled
+    Error_HandlerNotSuitableForPropertyGetter
+    Error_HandlerNotSuitableForPropertySetter
     Warning_MetadataClausesShouldComeAfterUseClauses
+    Warning_DeprecatedTypeName
 
 
 --------------------------------------------------------------------------------
@@ -636,6 +639,10 @@
 
 'action' Error_ConstantsMustBeSimple(Position: POS)
 
+'action' Error_HandlerNotSuitableForPropertyGetter(Position: POS, Identifier: NAME)
+'action' Error_HandlerNotSuitableForPropertySetter(Position: POS, Identifier: NAME)
+
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
+'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 
 --------------------------------------------------------------------------------

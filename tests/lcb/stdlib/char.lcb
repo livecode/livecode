@@ -263,7 +263,7 @@ public handler TestDeleteRange()
 	test "delete range (+ve)" when t is "wz"
 
 	MCUnitTestHandlerThrows(TestDeleteRange_Zero, "delete range (0)")
-	MCUnitTestHandlerThrowsBroken(TestDeleteRange_Before, "delete range (before)", "bug 14701")
+	MCUnitTestHandlerThrows(TestDeleteRange_Before, "delete range (before)")
 	MCUnitTestHandlerThrows(TestDeleteRange_After, "delete range (after)")
 	MCUnitTestHandlerThrows(TestDeleteRange_Reverse, "delete range (reverse)")
 end handler
@@ -292,23 +292,19 @@ public handler TestOffset()
 
 	test "offset (single, same)" when the offset of "x" in "x" is 1
 	test "first offset (single, same)" when the first offset of "x" in "x" is 1
-	skip test "last offset (single, same)" because "bug 14677"
-	--test "last offset (single, same)" when the last offset of "x" in "x" is 1
+	-- bug 14677
+	test "last offset (single, same)" when the last offset of "x" in "x" is 1
 
-	-- "chars" variant
-	test "offset chars (single)" when the first offset of chars "x" in ".xx." is 2
+	test "offset (empty)" when the offset of "" in "x" is 0
+	test "first offset (empty)" when the first offset of "" in "x" is 0
+	test "last offset (empty)" when the last offset of "" in "x" is 0
+	test "offset (empty, empty)" when the offset of "" in "" is 0
+
+	-- For chars, "index" is synonymous with "offset"
+	test "index" when the index of "x" in ".xx." is 2
 end handler
 
-handler TestOffsetAfter_Before()
-	variable t
-	put the offset of "x" after -2 in "x" into t
-	test diagnostic t
-end handler
-handler TestOffsetAfter_After()
-	variable t
-	put the offset of "x" after 2 in "x" into t
-	test diagnostic t
-end handler
+/* bug 14846
 public handler TestOffsetAfter()
 	-- Only test single-character needles for now
 	test "offset after (single, +ve)" when the offset of "x" after 1 in "x.xx." is 2
@@ -325,22 +321,41 @@ public handler TestOffsetAfter()
 	test "first offset after (single, missing, -ve)" when the first offset of "x" after -3 in "x.." is 0
 	test "last offset after (single, missing, -ve)" when the last offset of "x" after -3 in "x.." is 0
 
-	-- "after X" where X does not map to a valid coordinate should
-	-- wrap to the ends of the string (i.e. if X > L then treat X
-	-- as L, and if X < -L then treat X as 0).
-	test "offset after (single, invalid +ve)" when the offset of "x" after 3 in "x" is 0
-	test "offset after (single, invalid -ve)" when the offset of "x" after -3 in "x" is 1
-	test "first offset after (single, invalid +ve)" when the first offset of "x" after 3 in "x" is 0
-	test "first offset after (single, invalid -ve)" when the first offset of "x" after -3 in "x" is 1
-	test "last offset after (single, invalid +ve)" when the last offset of "x" after 3 in "x" is 0
-	skip test "last offset after (single, invalid -ve)" because "bug 14677"
-	--test "last offset after (single, invalid -ve)" when the last offset of "x" after -3 in "x" is 1
+	MCUnitTestHandlerThrows(TestOffsetAfter_SingleInvalidPositive, "offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestOffsetAfter_SingleInvalidNegative, "offset after (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidPositive, "first offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidNegative, "first offset after (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidPositive, "last offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidNegative, "last offset after (single, invalid -ve)")
 
-	-- "chars" variants
-	test "offset after chars (single, +ve)" when the offset of chars "x" after 1 in "x.xx." is 2
-	test "first offset after chars (single, +ve)" when the first offset of chars "x" after 1 in "x.xx." is 2
-	test "last offset after chars (single, +ve)" when the last offset of chars "x" after 1 in "x.xx." is 3
+	-- For chars, "index" is synonymous with "offset"
+	test "index after" when the index of "x" after 2 in ".xx." is 1
 end handler
+
+handler TestOffsetAfter_SingleInvalidPositive()
+	get the offset of "x" after 2 in "x"
+end handler
+
+handler TestOffsetAfter_SingleInvalidNegative()
+	get the offset of "x" after -3 in "x"
+end handler
+
+handler TestFirstOffsetAfter_SingleInvalidPositive()
+	get the first offset of "x" after 2 in "x"
+end handler
+
+handler TestFirstOffsetAfter_SingleInvalidNegative()
+	get the first offset of "x" after -3 in "x"
+end handler
+
+handler TestLastOffsetAfter_SingleInvalidPositive()
+	get the last offset of "x" after 2 in "x"
+end handler
+
+handler TestLastOffsetAfter_SingleInvalidNegative()
+	get the last offset of "x" after -3 in "x"
+end handler
+
 
 public handler TestOffsetAfterZero()
 	-- "offset of _ after 0 in _" should be equivalent to "offset of _ in _"
@@ -354,10 +369,11 @@ public handler TestOffsetAfterZero()
 	put the last offset of "x" in ".x." into tNoAfter
 	test "last offset after (single, 0)" when the last offset of "x" after 0 in ".x." is tNoAfter
 
-	skip test "last offset after (single, 0, same)" because "bug 14677"
-	--put the last offset of "x" in "x" into tNoAfter
-	--test "the last offset after (single, 0, same)" when the last offset of "x" after 0 in "x" is tNoAfter
+	-- bug 14677
+	put the last offset of "x" in "x" into tNoAfter
+	test "the last offset after (single, 0, same)" when the last offset of "x" after 0 in "x" is tNoAfter
 end handler
+*/
 
 public handler TestBeginsWith()
 	test "begins with" when "xx." begins with "xx"
@@ -385,6 +401,41 @@ public handler TestRepeatChar()
 	end repeat
 
 	test "repeatchar (count)" when tCount is 3
+end handler
+
+----------------------------------------------------------------
+
+handler TestCharWithCode_Negative()
+	return the char with code -1
+end handler
+public handler TestCharWithCode()
+	variable t
+
+	put the char with code 120 into t
+	test "code->byte" when t is "x"
+
+	put the char with code 8594 into t
+	test "code->byte (BMP)" when t is "\u{2192}"
+
+	put the char with code 119070 into t
+	test "code->byte (SMP)" when t is "\u{1d11e}"
+
+	MCUnitTestHandlerThrows(TestCharWithCode_Negative, "code->byte (-ve)")
+end handler
+
+handler TestCodeOfChar_Long()
+	return the code of "xx"
+end handler
+handler TestCodeOfChar_Empty()
+	return the code of ""
+end handler
+public handler TestCodeOfChar()
+	test "char->code" when the code of "x" is 120
+	test "char->code (BMP)" when the code of "\u{2192}" is 8594
+	test "char->code (SMP)" when the code of "\u{1d11e}" is 119070
+
+	MCUnitTestHandlerThrows(TestCodeOfChar_Long, "char->code (multibyte)")
+	MCUnitTestHandlerThrows(TestCodeOfChar_Empty, "char->code (empty)")
 end handler
 
 end module

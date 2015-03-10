@@ -48,7 +48,7 @@ bool MCRecordCreate(MCTypeInfoRef p_typeinfo, const MCValueRef *p_values, uindex
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
-    uindex_t t_offset;
+    uindex_t t_offset = 0;
     if (!__check_conformance(t_resolved_typeinfo, p_values, p_value_count, t_offset))
         return false;
     

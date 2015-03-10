@@ -84,6 +84,7 @@ MCWidget::MCWidget(void)
     m_instance = nil;
     m_native_layer = nil;
     m_rep = nil;
+    m_timer_deferred = false;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
@@ -93,6 +94,7 @@ MCWidget::MCWidget(const MCWidget& p_other) :
     m_instance = nil;
     m_native_layer = nil;
     m_rep = nil;
+    m_timer_deferred = false;
 }
 
 MCWidget::~MCWidget(void)
@@ -330,7 +332,10 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
     if (p_message == MCM_internal)
     {
-        OnTimer();
+        if (getstack() -> gettool(this) == T_BROWSE)
+            OnTimer();
+        else
+            m_timer_deferred = true;
     }
     else
     {
@@ -805,13 +810,13 @@ bool MCWidget::handlesMouseUp() const
     return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseUp"), t_signature);
 }
 
-bool MCWidget::handlesMouseRelease() const
+bool MCWidget::handlesMouseCancel() const
 {
     if (m_instance == nil)
         return false;
     
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseRelease"), t_signature);
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseCancel"), t_signature);
 }
 
 bool MCWidget::handlesKeyPress() const
@@ -904,7 +909,11 @@ void MCWidget::OnAttach()
     if (m_native_layer)
         m_native_layer->OnAttach();
     
+    // OnAttach handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnAttach"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnDetach()
@@ -912,18 +921,28 @@ void MCWidget::OnDetach()
     if (m_native_layer)
         m_native_layer->OnDetach();
     
+    // OnAttach handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnDetach"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
     if (m_native_layer)
         m_native_layer->OnPaint(p_dc, p_rect);
-
+    
+    // Re-entering into the draw chain is distinctly unwise, so no script access
+    // for OnPaint() handlers.
+    MCEngineScriptObjectPreventAccess();
+    
     uintptr_t t_cookie;
     MCCanvasPush(((MCGraphicsContext*)p_dc)->getgcontextref(), t_cookie);
     CallHandler(MCNAME("OnPaint"), nil, 0);
     MCCanvasPop(t_cookie);
+    
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
@@ -959,12 +978,16 @@ void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
 {
     fprintf(stderr, "MCWidget::OnHitTest\n");
     r_hit = maskrect(p_intersect);
+    
+    // In theory this handler shouldn't allow script access.
 }
 
 void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
 {
     fprintf(stderr, "MCWidget::OnBoundsTest\n");
     r_hit = maskrect(p_intersect);
+    
+    // In theory this handler shouldn't allow script access.
 }
 
 void MCWidget::OnSave(MCValueRef& r_array)
@@ -974,7 +997,12 @@ void MCWidget::OnSave(MCValueRef& r_array)
     MCAutoValueRefArray t_params;
     t_params.New(1);
     t_params[0] = nil;
+    
+    // OnSave handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnSave"), t_params.Ptr(), t_params.Size());
+    MCEngineScriptObjectAllowAccess();
 
     r_array = t_params[0];
     t_params[0] = nil;
@@ -988,17 +1016,29 @@ void MCWidget::OnLoad(MCValueRef p_array)
     t_params.New(1);
     t_params[0] = MCValueRetain(p_array);
     
+    // OnLoad handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnLoad"), t_params.Ptr(), t_params.Size());
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnCreate()
 {
+    // OnCreate handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnCreate"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnDestroy()
 {
+    // OnCreate handlers mustn't mutate the world, or cause re-entrancy so no
+    // script access is allowed.
+    MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnDestroy"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
 }
 
 void MCWidget::OnParentPropChanged()
@@ -1011,10 +1051,20 @@ void MCWidget::OnToolChanged(Tool p_new_tool)
     if (m_native_layer)
         m_native_layer->OnToolChanged(p_new_tool);
     
+    // When the tool changes we don't want to allow script access to ensure
+    // no re-entrancy issues occur.
+    MCEngineScriptObjectPreventAccess();
     if (p_new_tool == T_BROWSE)
         CallHandler(MCNAME("OnStopEditing"), nil, 0);
     else if (p_new_tool != T_BROWSE)
         CallHandler(MCNAME("OnStartEditing"), nil, 0);
+    MCEngineScriptObjectAllowAccess();
+    
+    if (p_new_tool == T_BROWSE && m_timer_deferred)
+    {
+        m_timer_deferred = false;
+        MCscreen -> addtimer(this, MCM_internal, 0);
+    }
     
     fprintf(stderr, "MCWidget::OnToolChanged\n");
 }
@@ -1686,7 +1736,8 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCValueRef MCEngineDoDispatchToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
+extern MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
+extern void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
 
 extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
 {
@@ -1696,11 +1747,11 @@ extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script
         return;
     }
     
-    if (!MCScriptObjectCreate(MCwidgetobject, 0, r_script_object))
+    if (!MCEngineScriptObjectCreate(MCwidgetobject, 0, r_script_object))
         return;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatch(bool p_is_function, MCStringRef p_message)
+extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSend(bool p_is_function, MCStringRef p_message)
 {
     if (MCwidgetobject == nil)
     {
@@ -1708,10 +1759,10 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatch(bool p_is_function, MCSt
         return nil;
     }
     
-    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, MCwidgetobject, kMCEmptyProperList);
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCwidgetobject, kMCEmptyProperList);
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatchWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
+extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
 {
     if (MCwidgetobject == nil)
     {
@@ -1719,7 +1770,29 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecDispatchWithArguments(bool p_is_f
         return nil;
     }
     
-    return MCEngineDoDispatchToObjectWithArguments(p_is_function, p_message, MCwidgetobject, p_arguments);
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCwidgetobject, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetExecPost(MCStringRef p_message)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCEngineDoPostToObjectWithArguments(p_message, MCwidgetobject, kMCEmptyProperList);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCEngineDoPostToObjectWithArguments(p_message, MCwidgetobject, p_arguments);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1876,6 +1949,23 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
     MCGPoint t_gpoint;
     t_gpoint = MCGPointMake(t_x, t_y);
     /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void MCWidgetGetClickButton(bool p_current, unsigned int& r_button)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    // TODO: Implement asynchronous version.
+    if (!p_current)
+        MCwidgeteventmanager -> GetSynchronousClickButton(r_button);
+    else
+        MCErrorThrowGeneric(MCSTR("'the current click button' is not implemented yet"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

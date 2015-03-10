@@ -39,7 +39,10 @@ static MCScriptModuleRef load_module(const char *p_filename)
     FILE *t_file;
     t_file = NULL;
     if (t_success)
+	{
         t_file = fopen(p_filename, "rb");
+		t_success = (NULL != t_file);
+	}
     
     if (t_success)
         t_success = fseek(t_file, 0, SEEK_END) != -1;

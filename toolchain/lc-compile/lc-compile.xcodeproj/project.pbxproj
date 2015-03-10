@@ -922,6 +922,7 @@
 				"$(SRCROOT)/../../engine/src/engine.mlc",
 				"$(SRCROOT)/../../libscript/src/stream.mlc",
 				"$(SRCROOT)/../../libscript/src/system.mlc",
+				"$(SRCROOT)/../../libscript/src/codeunit.mlc",
 				"$(SRCROOT)/../../libscript/src/foreign.mlc",
 				"$(SRCROOT)/../../libscript/libstdscript-modules.list",
 				"$(SRCROOT)/../../libscript/src/unittest.mlc",

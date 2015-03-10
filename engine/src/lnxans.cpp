@@ -381,13 +381,19 @@ void add_dialog_filters(GtkWidget *dialog, MCStringRef *p_types, uint4 p_type_co
 		{
             MCAutoStringRefAsSysString t_type_str;
             t_type_str.Lock(p_types[a]);
-            char *t_filter_name, *t_filter_masks;
-            t_filter_name = get_filter_name(*t_type_str);
-            t_filter_masks = get_filter_masks(*t_type_str);
 
-            // [[ bug 11268 ]] - Ensure there is a filter alongside with the name
+			char *t_filter_name;
+            t_filter_name = get_filter_name(*t_type_str);
+			if (t_filter_name == nil)
+				continue;
+
+			char * t_filter_masks;
+            t_filter_masks = get_filter_masks(*t_type_str);
             if (t_filter_masks == nil)
+			{
+				free (t_filter_name);
                 continue;
+			}
 
 			filter = gtk_file_filter_new();
 			gtk_file_filter_set_name(filter, t_filter_name);
@@ -414,8 +420,8 @@ void add_dialog_filters(GtkWidget *dialog, MCStringRef *p_types, uint4 p_type_co
 
 			gtk_file_chooser_add_filter ( GTK_FILE_CHOOSER ( dialog ) , filter ) ;
 
-			delete t_filter_name;
-			delete t_filter_masks;
+			free (t_filter_name);
+			free (t_filter_masks);
 		}
 	}
 		

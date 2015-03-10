@@ -81,10 +81,10 @@
         |)
 
     'rule' CheckBindings(DEFINITION'property(Position, _, _, Getter, OptionalSetter)):
-        /* BD2 */ CheckBindingIsVariableOrHandlerId(Getter)
+        /* BD2 */ CheckBindingIsVariableOrGetHandlerId(Getter)
         [|
             where(OptionalSetter -> id(Setter))
-            /* BD2 */ CheckBindingIsVariableOrHandlerId(Setter)
+            /* BD2 */ CheckBindingIsVariableOrSetHandlerId(Setter)
         |]
 
     --
@@ -306,7 +306,40 @@
                 Error_NonHandlerTypeVariablesCannotBeCalled(Position)
             |)
         |]
-            
+
+'action' CheckBindingIsVariableOrGetHandlerId(ID)
+
+    'rule' CheckBindingIsVariableOrGetHandlerId(Id):
+        QuerySymbolId(Id -> Info)
+        Info'Kind -> handler
+        Info'Type -> handler(_, Signature)
+        (|
+            where(Signature -> signature(nil, _))
+        ||
+            Id'Name -> Name
+            Id'Position -> Position
+            Error_HandlerNotSuitableForPropertyGetter(Position, Name)
+        |)
+
+    'rule' CheckBindingIsVariableOrGetHandlerId(Id):
+        CheckBindingIsVariableOrHandlerId(Id)
+
+'action' CheckBindingIsVariableOrSetHandlerId(ID)
+
+    'rule' CheckBindingIsVariableOrSetHandlerId(Id):
+        QuerySymbolId(Id -> Info)
+        Info'Kind -> handler
+        Info'Type -> handler(_, Signature)
+        (|
+            where(Signature -> signature(parameterlist(parameter(_, in, _, _), nil), _))
+        ||
+            Id'Name -> Name
+            Id'Position -> Position
+            Error_HandlerNotSuitableForPropertySetter(Position, Name)
+        |)
+
+    'rule' CheckBindingIsVariableOrSetHandlerId(Id):
+        CheckBindingIsVariableOrHandlerId(Id)
 
 'action' CheckBindingIsSyntaxRuleOfExpressionType(ID)
 
@@ -924,7 +957,7 @@
         ||
             where(Type -> named(_, Id))
             Id'Name -> Name
-            IsNameEqualToString(Name, "bool")
+            IsNameEqualToString(Name, "CBool")
         ||
             Error_IterateSyntaxMethodMustReturnBoolean(Position)
         |)

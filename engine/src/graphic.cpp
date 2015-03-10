@@ -233,7 +233,7 @@ const char *MCGraphic::gettypestring()
 Boolean MCGraphic::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE))
+	    || (flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE)))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
 	        && getstyleint(flags) != F_G_RECTANGLE)
@@ -1620,7 +1620,7 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 {
 	real8 dx = p2.x - p1.x;
 	real8 dy = p2.y - p1.y;
-	if (arrowsize == 0 || dx == 0.0 && dy == 0.0)
+	if (arrowsize == 0 || (dx == 0.0 && dy == 0.0))
 		return;
 	MCPoint pts[3];
 	real8 angle = atan2(dy, dx);
@@ -1993,7 +1993,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		
 		// MW-2009-06-10: [[ Bitmap Effects ]]
 		if (m_bitmap_effects == NULL)
-			dc -> begin(dc -> gettype() == CONTEXT_TYPE_PRINTER && (m_fill_gradient != NULL) || (m_stroke_gradient != NULL));
+			dc -> begin((dc -> gettype() == CONTEXT_TYPE_PRINTER && (m_fill_gradient != NULL)) || (m_stroke_gradient != NULL));
 		else
 		{
 			if (!dc -> begin_with_effects(m_bitmap_effects, rect))

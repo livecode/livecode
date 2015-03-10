@@ -132,6 +132,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lc-compile", "toolchain\lc-
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stdscript", "libscript\stdscript.vcproj", "{56CD2637-6005-4DD6-9ADF-F85C7774BB88}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lc-run", "toolchain\lc-run.vcproj", "{0A590F2C-D520-4C97-849C-6A12A8955B36}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -346,6 +348,10 @@ Global
 		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Debug|Win32.Build.0 = Debug|Win32
 		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Release|Win32.ActiveCfg = Release|Win32
 		{56CD2637-6005-4DD6-9ADF-F85C7774BB88}.Release|Win32.Build.0 = Release|Win32
+		{0A590F2C-D520-4C97-849C-6A12A8955B36}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0A590F2C-D520-4C97-849C-6A12A8955B36}.Debug|Win32.Build.0 = Debug|Win32
+		{0A590F2C-D520-4C97-849C-6A12A8955B36}.Release|Win32.ActiveCfg = Release|Win32
+		{0A590F2C-D520-4C97-849C-6A12A8955B36}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

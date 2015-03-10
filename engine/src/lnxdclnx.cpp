@@ -872,7 +872,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     {
                         // Get the data in the requested form
                         MCAutoDataRef t_data;
-                        if (t_store->Fetch(new MCMIMEtype(dpy, t_event->selection.target), &t_data, 0, NULL, NULL, t_event->selection.time))
+                        MCMIMEtype t_mimetype(dpy, t_event->selection.target);
+                        if (t_store->Fetch(&t_mimetype, &t_data, 0, NULL, NULL, t_event->selection.time))
                         {
                             // Transfer the data to the requestor via the
                             // property that it specified

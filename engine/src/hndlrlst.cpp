@@ -243,10 +243,12 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 	{
 		MCExecContext *ctxtptr = MCexecutioncontexts[MCdebugcontext];
 		if (ctxtptr->GetHandlerList() != this)
+		{
 			if (ctxtptr->GetHandler()->findvar(p_name, dptr) != PS_NORMAL)
 				return ctxtptr->GetHandlerList()->findvar(p_name, false, dptr);
 			else
 				return PS_NORMAL;
+		}
 	}
 
 	return PS_NO_MATCH;

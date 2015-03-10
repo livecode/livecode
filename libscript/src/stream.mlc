@@ -69,7 +69,7 @@ end syntax
 
 --
 
-public foreign handler MCStreamExecWriteToStream(in Buffer as data, in Destination as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecWriteToStream(in Buffer as Data, in Destination as Stream) as undefined binds to "<builtin>"
 
 /*
 Summary:	Write data to a stream.

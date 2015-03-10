@@ -207,7 +207,7 @@ Boolean MCScrollbar::mfocus(int2 x, int2 y)
 {
 	// MW-2007-09-18: [[ Bug 1650 ]] Disabled state linked to thumb size
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || issbdisabled() && getstack()->gettool(this) == T_BROWSE)
+	    || (issbdisabled() && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_SCROLL)
 	{
@@ -954,6 +954,7 @@ MCRectangle MCScrollbar::compute_bar()
 	MCRectangle brect = rect;
 	if (flags & F_SHOW_VALUE && (MClook == LF_MOTIF
 	                             || getstyleint(flags) == F_VERTICAL))
+	{
 		if (getstyleint(flags) == F_VERTICAL)
 			brect.width = barsize;
 		else
@@ -961,6 +962,7 @@ MCRectangle MCScrollbar::compute_bar()
 			brect.y += brect.height - barsize;
 			brect.height = barsize;
 		}
+	}
 	return brect;
 }
 
@@ -985,13 +987,15 @@ MCRectangle MCScrollbar::compute_thumb(real8 pos)
 		real8 range = endvalue - startvalue;
 		if (flags & F_SHOW_BORDER && (MClook == LF_MOTIF || !(flags & F_SCALE)
 		                              || getstyleint(flags) == F_VERTICAL))
+		{
 			if (IsMacEmulatedLF())
 				trect = MCU_reduce_rect(trect, 1);
 			else
 				trect = MCU_reduce_rect(trect, borderwidth);
+		}
 		if (getstyleint(flags) == F_VERTICAL)
 		{
-			if (flags & F_SCALE || thumbsize != 0 && rect.height > rect.width * 3)
+			if (flags & F_SCALE || (thumbsize != 0 && rect.height > rect.width * 3))
 			{
 				thumb.x = trect.x;
 				thumb.width = trect.width;
@@ -1048,7 +1052,7 @@ MCRectangle MCScrollbar::compute_thumb(real8 pos)
 		}
 		else
 		{ // horizontal
-			if (flags & F_SCALE || thumbsize != 0 && rect.width > rect.height * 3)
+			if (flags & F_SCALE || (thumbsize != 0 && rect.width > rect.height * 3))
 			{
 				thumb.y = trect.y;
 				thumb.height = trect.height;
