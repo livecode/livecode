@@ -2017,6 +2017,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             break;
             
         case kMCPropertyTypeLinesOfPoint:
+        case kMCPropertyTypeLegacyPoints:
         {
             MCPoint* t_value;
             uindex_t t_count;
@@ -2866,6 +2867,25 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, MCExecValue))prop -> setter)(ctxt, mark, p_value);
         }
             break;
+            
+        case kMCPropertyTypeLegacyPoints:
+        {
+            MCAutoStringRef t_input;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
+            if (!ctxt . HasError())
+            {
+                MCPoint *t_value;
+                uindex_t t_count;
+                t_value = nil;
+                t_count = 0;
+                MCU_parsepoints(t_value, t_count, *t_input);
+                
+                ((void(*)(MCExecContext&, void *, uindex_t, MCPoint*))prop -> setter)(ctxt, mark, t_count, t_value);
+                
+                MCMemoryDeleteArray(t_value);
+            }
+        }
+        break;
             
         default:
             ctxt . Unimplemented();
