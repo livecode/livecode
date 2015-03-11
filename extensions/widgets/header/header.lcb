@@ -32,7 +32,6 @@ widget com.livecode.extensions.livecode.headerBar
 metadata title is "Header Bar"
 metadata author is "Georgia Hutchings"
 metadata version is "1.0.7"
---metadata "style.type" is "enum(icons,names)"
 --
 
 -- dependency declarations
@@ -43,21 +42,20 @@ use com.livecode.engine
 
 -- property declarations
 property actions				get getActions		set setActions
-metadata actions.editor is "com.livecode.pi.text"
-metadata actions.default is "Title"
-metadata actions.default is "new,f067"
-
 property enableBackButton		get mBackIsEnabled	set setEnableBack
-metadata enableBackButton.default is "true"
-
 property label					get mLabel			set setLabel
-metadata label.default is "Title"
-
-
 property actionStyle			get mActionStyle	set setActionStyle
-metadata actionStyle.editor is "com.livecode.pi.enum"
-metadata actionStyle.options is "icons,names"
-metadata actionStyle.default is "icons"
+--
+
+-- property metadata
+metadata actions.editor 			is "com.livecode.pi.text"
+metadata actions.default 			is "new,f067"
+metadata enableBackButton.default 	is "true"
+metadata label.default 				is "Title"
+
+metadata actionStyle.editor 		is "com.livecode.pi.enum"
+metadata actionStyle.options 		is "icons,names"
+metadata actionStyle.default 		is "icons"
 --
 
 -- private instance variables
@@ -172,44 +170,46 @@ public handler OnPaint()
 	--
 
 	-- draw the actions
-	variable tX as integer
-	variable tActionsCount as integer
-	variable tCount as integer
+	if mActions is not the empty list then
+		variable tX as integer
+		variable tActionsCount as integer
+		variable tCount as integer
 	
-	put the number of elements in (element 1 of mActions) into tActionsCount
-	put 1 into tCount
-	put my width into mRight
-	put 0 into mLetterCount
+		put the number of elements in (element 1 of mActions) into tActionsCount
+		put 1 into tCount
+		put my width into mRight
+		put 0 into mLetterCount
 	
-	repeat with tX from 1 up to tActionsCount
+		repeat with tX from 1 up to tActionsCount
 	
-		if tCount+1 is mSelectedIcon then
-			set the paint of this canvas to getPaint("selected action")
-		else 
-			set the paint of this canvas to getPaint("actions")
-		end if
+			if tCount+1 is mSelectedIcon then
+				set the paint of this canvas to getPaint("selected action")
+			else 
+				set the paint of this canvas to getPaint("actions")
+			end if
 		
-		if mActionStyle is "icons" then
-			set the font of this canvas to getFont("icon")
+			if mActionStyle is "icons" then
+				set the font of this canvas to getFont("icon")
             
-            get (element tX of element 2 of mActions) converted from base 16
-            get the char with code the result
-			fill text the result at center of getRect("action icon") on this canvas
+            	get (element tX of element 2 of mActions) converted from base 16
+            	get the char with code the result
+				fill text the result at center of getRect("action icon") on this canvas
 			
-			updateRight()
+				updateRight()
 			
-		else if mActionStyle is "names" then
-			put the number of chars in element tX of element 1 of mActions into mLetterCount
-			add 2 to mLetterCount
-			set the font of this canvas to getFont("label")
-			fill text (element tX of element 1 of mActions) at center of getRect("action name") on this canvas
+			else if mActionStyle is "names" then
+				put the number of chars in element tX of element 1 of mActions into mLetterCount
+				add 2 to mLetterCount
+				set the font of this canvas to getFont("label")
+				fill text (element tX of element 1 of mActions) at center of getRect("action name") on this canvas
 			
-			updateRight()
+				updateRight()
 
-		end if
+			end if
 		
-		add 1 to tCount
-	end repeat
+			add 1 to tCount
+		end repeat
+	end if
 	--
 	
 end handler
@@ -425,47 +425,53 @@ Sets the actions of the header bar from pActions, where pActions is a line delim
 of the different components of the action: name, icon, command
 */
 public handler setActions(in pActions as string) as undefined
-
-	variable tActions as list
-	split pActions by newline into tActions
-
-	variable tActionElement
-	variable tListElement
 	
-	variable tFinalActions as list
-	variable tStringToList as list
-	put the empty list into tFinalActions
+	if pActions is the empty string then
+		put the empty list into mActions
 	
-	repeat for each element tActionElement in tActions
-		put the empty list into tStringToList
-		split tActionElement by "," into tStringToList
+	else
+
+		variable tActions as list
+		split pActions by newline into tActions
+
+		variable tActionElement
+		variable tListElement
+	
+		variable tFinalActions as list
+		variable tStringToList as list
+		put the empty list into tFinalActions
+	
+		repeat for each element tActionElement in tActions
+			put the empty list into tStringToList
+			split tActionElement by "," into tStringToList
 		
-		repeat for each element tListElement in tStringToList
-			push tListElement onto back of tFinalActions
+			repeat for each element tListElement in tStringToList
+				push tListElement onto back of tFinalActions
+			end repeat
+		
 		end repeat
 		
-	end repeat
-		
-	variable tActionCount as integer
-	variable tCount as integer
-	put the trunc of (the number of elements in tFinalActions)/3 into tActionCount
-	log tActionCount
+		variable tActionCount as integer
+		variable tCount as integer
+		put the trunc of (the number of elements in tFinalActions)/3 into tActionCount
+		log tActionCount
 	
-	variable tLabelList as list
-	variable tIconList as list
-	put the empty list into tLabelList
-	put the empty list into tIconList
+		variable tLabelList as list
+		variable tIconList as list
+		put the empty list into tLabelList
+		put the empty list into tIconList
 	
-	repeat with tCount from 1 up to tActionCount
-		push element (3*tCount)-2 of tFinalActions onto back of tLabelList
-		push element (3*tCount)-1 of tFinalActions onto back of tIconList
-	end repeat
+		repeat with tCount from 1 up to tActionCount
+			push element (3*tCount)-2 of tFinalActions onto back of tLabelList
+			push element (3*tCount)-1 of tFinalActions onto back of tIconList
+		end repeat
 	
-	variable tTestLabel as string
-	combine tLabelList with "," into tTestLabel
+		variable tTestLabel as string
+		combine tLabelList with "," into tTestLabel
 
-	put [tLabelList,tIconList] into mActions
-	
+		put [tLabelList,tIconList] into mActions
+		
+	end if
 	redraw all
 end handler
 ----------

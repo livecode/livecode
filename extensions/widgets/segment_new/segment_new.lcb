@@ -173,10 +173,11 @@ end handler
 ----------
 -- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
-	
-	put (the number of elements in mSegmentNames) into mNumSegments 
+
+	put (the number of elements in mSegmentNames) into mNumSegments
 	
 	if mGeometryIsChanged then
+		updateProperties()	
 		-- update mPerimeter and mLines variables if the geometry has changed
 		put (the trunc of my height)/5 into mRadius
 		updatePerimeter()
@@ -387,6 +388,54 @@ private handler updatePerimeter() as undefined
 	end repeat
 	
 	put rounded rectangle path of rectangle [0.5, 0.5, (the trunc of tRight) + 0.5, (the trunc of my height) - 0.5] with radius mRadius into mPerimeter
+end handler
+----------
+
+----------
+-- this handler updates the properties if they do not have the correct number of items
+private handler updateProperties() as undefined
+	variable tX as Integer
+	
+	if (the number of elements in mSegmentLabels) < mNumSegments then
+		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentLabels))
+			push "Title" onto back of mSegmentLabels
+		end repeat
+	else if (the number of elements in mSegmentLabels) > mNumSegments then
+		repeat with tX from 1 up to (the number of elements in mSegmentLabels)-mNumSegments
+			delete element (tX + mNumSegments) of mSegmentLabels
+		end repeat
+	end if
+		
+	if (the number of elements in mSegmentIcons) < mNumSegments then
+		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentIcons))
+			push "f10c" onto back of mSegmentIcons
+		end repeat
+	else if (the number of elements in mSegmentIcons) > mNumSegments then
+		repeat with tX from 1 up to (the number of elements in mSegmentIcons)-mNumSegments
+			delete element (tX + mNumSegments) of mSegmentIcons
+		end repeat
+	end if
+	
+	if (the number of elements in mSelectedIcons) < mNumSegments then
+		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSelectedIcons))
+			push "f111" onto back of mSelectedIcons
+		end repeat
+	else if (the number of elements in mSelectedIcons) > mNumSegments then
+		repeat with tX from 1 up to (the number of elements in mSelectedIcons)-mNumSegments
+			delete element (tX + mNumSegments) of mSelectedIcons
+		end repeat
+	end if
+	
+	if (the number of elements in mSegmentMinWidth) < mNumSegments then
+		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentMinWidth))
+			push 30 onto back of mSegmentMinWidth
+		end repeat
+	else if (the number of elements in mSegmentMinWidth) > mNumSegments then
+		repeat with tX from 1 up to (the number of elements in mSegmentMinWidth)-mNumSegments
+			delete element (tX + mNumSegments) of mSegmentMinWidth
+		end repeat
+	end if
+	
 end handler
 ----------
 
@@ -622,7 +671,6 @@ Sets the segmentNames property of the control; sets the names of each segment in
 */
 private handler setSegmentNames(in pNames as String) as undefined
 	split pNames by "," into mSegmentNames
-	put 1 into mSelectedSegments
 	put true into mGeometryIsChanged
 	redraw all
 end handler
