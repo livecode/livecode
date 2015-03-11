@@ -257,7 +257,7 @@ MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_proper
 extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
-        return;
+        return nil;
     
 	MCObject *t_object;
 	uint32_t t_part_id;
