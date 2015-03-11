@@ -41,15 +41,14 @@ use com.livecode.engine
 --
 
 -- property declarations
-property theme				get mTheme
-property numSelections		get mNumSelections		set setNumSelections
-property selected			get mSelected			set setSelected
+property totalOptions		get mNumSelections		set setNumSelections
+property selectedOption		get mSelected			set setSelected
+
 --
 
 -- private instance variables
-private variable mTheme				as string
-private variable mNumSelections		as integer
-private variable mSelected			as integer
+private variable mNumSelections		as Integer
+private variable mSelected			as Integer
 --
 
 ----------
@@ -57,7 +56,6 @@ private variable mSelected			as integer
 public handler OnSave(out rProperties as array)
 	put the empty array into rProperties
 	
-	put mTheme into rProperties["theme"]
 	put mNumSelections into rProperties["numSelections"]
 	put mSelected into rProperties["selected"]
 	
@@ -68,7 +66,6 @@ end handler
 ----------
 -- this handler is called when the widget is loaded
 public handler OnLoad(in pProperties as array)
-	put pProperties["theme"] into mTheme
 	put pProperties["numSelections"] into mNumSelections
 	put pProperties["selected"] into mSelected
 end handler
@@ -78,9 +75,8 @@ end handler
 ----------
 -- called when the widget is created
 public handler OnCreate()
-	put "ios-8" into mTheme
 	put 5 into mNumSelections
-	put 0 into mSelected
+	put 1 into mSelected
 end handler
 ----------
 
@@ -176,11 +172,6 @@ end handler
 ----------
 -- this handler returns the font name 
 private handler getFontName() as string
-
-	if mTheme is "ios-8" then
-		return "Helvetica Neue"
-	end if
-	
 	return the name of the font of this canvas
 end handler
 ----------
@@ -220,7 +211,7 @@ Description:
 Sets the numSelections property.
 Sets the number of options available in the selector.
 */
-public handler setNumSelections(in pSelections as integer) as undefined
+public handler setNumSelections(in pSelections as Integer) as undefined
 	put pSelections into mNumSelections
 	redraw all
 end handler
@@ -238,7 +229,7 @@ Description:
 Sets the selected property.
 Sets the selected option to selection number pNumber.
 */
-public handler setSelected(in pSelected as integer) as undefined
+public handler setSelected(in pSelected as Integer) as undefined
 	put pSelected into mSelected
 	redraw all
 end handler
