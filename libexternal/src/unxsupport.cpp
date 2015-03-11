@@ -35,14 +35,15 @@ char *string_to_utf8(const char *p_string)
 		unsigned int v;
 		v = ((unsigned char *)p_string)[i];
 
-		if (v < 128)
+        if (v < 128)
 			t_utf8_string[j++] = v;
 		else
 		{
-			t_utf8_string[j++] = 0xC0 | (v >> 5);
-			t_utf8_string[j++] = 0x80 | (v & 63);
+            // SN-2015-03-11: [[ Bug 14413 ]] Do the expected shift
+            t_utf8_string[j++] = (0xC0 | (v >> 6));
+            t_utf8_string[j++] = (0x80 | (v & 63));
 		}
-	}
+    }
 
 	t_utf8_string[j] = '\0';
 
@@ -57,20 +58,21 @@ char *string_from_utf8(const char* p_utf8_string)
 	int i, j, t_error;
 	t_error = 0;
 
-	for (i = 0, j = 0; p_string[i] != '\0' && !t_error;)
+    for (i = 0, j = 0; p_utf8_string[i] != '\0' && !t_error;)
 	{
 		unsigned char t_first_char;
-		t_first_char = ((unsigned char *)p_utf8_string)[i++];
+        t_first_char = ((unsigned char *)p_utf8_string)[i++];
 
 		if (t_first_char < 128)
 			t_iso_string[j++] = t_first_char;
-		else if (p_string[i] != '\0')
+        else if (p_utf8_string[i] != '\0')
 		{
-			unsigned char t_second_char;
+            unsigned char t_second_char;
 			t_second_char = p_utf8_string[i++];
 
-			t_iso_string[j++] = ((t_first_char & 0xBF) << 5)
-								| ((t_second_char & 0x63); 
+            // SN-2015-03-11: [[ Bug 14413 ]] Take the 6 right bit of the first char.
+            t_iso_string[j++] = ((t_first_char & 0x3F) << 6)
+                                | (t_second_char & 0x63);
 		}
 		else
 			t_error = true;
