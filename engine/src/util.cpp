@@ -1528,12 +1528,15 @@ void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 
 Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
 {
+    // This method will parse as much as it can from the string, so we need to
+    // nativize first.
+    
 	Boolean allvalid = True;
 	uint2 npoints = 0;
 	uint4 l = MCStringGetLength(data);
-    char *t_data;
-    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
-	const char *sptr = t_data;
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
+	const char *sptr = *t_data;
 	while (l)
 	{
 		Boolean done1, done2;
@@ -1570,10 +1573,16 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 
 Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
-    char *t_data;
-    /* UNCHECKED */ MCStringConvertToCString(data, t_data);
-	const char *sptr = t_data;
-	uint4 l = MCStringGetLength(data);
+    // This method returns False if it can't parse the point - which will happen
+    // if the string isn't native.
+    if (!MCStringCanBeNative(data))
+        return false;
+    
+    const char *sptr;
+    uint4 l;
+    l = MCStringGetLength(data);
+    sptr = (const char *)MCStringGetNativeCharPtr(data);
+    
 	Boolean done1, done2;
 	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
 	int2 i1= (int2)(MCU_strtol(sptr, l, ',', done1, True));
