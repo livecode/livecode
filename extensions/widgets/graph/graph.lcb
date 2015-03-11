@@ -26,7 +26,7 @@ use com.livecode.engine
 --
 
 -- adding metadata to ensure the extension displays correctly in LiveCode
-metadata author is "Benjamin Beaumont"
+metadata author is "LiveCode"
 metadata version is "1.0.1"
 metadata title is "Line Graph"
 --
