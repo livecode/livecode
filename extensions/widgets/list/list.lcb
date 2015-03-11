@@ -22,7 +22,7 @@ widget com.livecode.extensions.livecode.list
 -- adding metadata to ensure the extension displays correctly in LiveCode
 metadata author is "LiveCode"
 metadata version is "1.0.1"
-metadata title is "iOS List"
+metadata title is "List"
 --
 
 -- dependency declarations
@@ -62,8 +62,8 @@ public handler OnCreate() as undefined
 	repeat 100 times
 		put "contacts" into tArray["name"]
 		put "Contacts" into tArray["label"]
-		put "0xf005" into tArray["icon"]
-		put "0xf005" into tArray["icon-selected"]
+		put "f005" into tArray["icon"]
+		put "f005" into tArray["icon-selected"]
 		push tArray onto back of mListData
 		put the empty array into tArray
 	
@@ -76,8 +76,8 @@ public handler OnCreate() as undefined
 		put "hospital" into tArray["name"]
 		put "Hospital" into tArray["label"]
 		put "hint" into tArray["hint"]
-		put "0xf0f9" into tArray["icon"]
-		put "0xf0f9" into tArray["icon-selected"]
+		put "f0f9" into tArray["icon"]
+		put "f0f9" into tArray["icon-selected"]
 		push tArray onto back of mListData
 		put the empty array into tArray
 	end repeat
@@ -166,7 +166,10 @@ public handler OnPaint() as undefined
 			else
 				set the paint of this canvas to getPaint("icon","fill")
 			end if
-            get the char with code (tListItem["icon"] converted from base 16)
+			
+			variable tIconCodePoint as String
+			put tListItem["icon"] into tIconCodePoint
+            get the char with code (tIconCodePoint converted from base 16)
 			fill text the result at left of rectangle [mMargin,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
 			put mMargin+25 into tLeft
 		end if
