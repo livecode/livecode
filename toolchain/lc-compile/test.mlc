@@ -498,7 +498,7 @@ public handler testBitwise(inout xResults as List)
 	put bitwise not 5 into tVar
 	testLog("Bitwise", "BitwiseNot", tVar is - 6, xResults)
 
-	put 7 shifted by 2 bitwise into tVar 
+	put 7 shifted left by 2 bitwise into tVar 
 	testLog("Bitwise", "BitwiseShift", tVar is 28, xResults)
 	
 end handler
@@ -606,12 +606,13 @@ public handler testChar(inout xResults as List)
 	
 	put the first offset of "abcdef" in tString into tOffset
 	testLog("Char", "CharOffset", tOffset is 0, xResults)
-	
-	put the offset of chars "abcde" after 1 in tString into tOffset
+
+	/* bug 14846
+	put the offset of "abcde" after 1 in tString into tOffset
 	
 	testLog("Char", "CharOffsetAfter", tOffset is 5, xResults)
 	
-	put the first offset of chars "abcde" after 11 in tString into tOffset
+	put the first offset of "abcde" after 11 in tString into tOffset
 	testLog("Char", "CharOffsetAfter", tOffset is 0, xResults)
 	
 	variable tLastDot as Integer
@@ -623,7 +624,8 @@ public handler testChar(inout xResults as List)
 	put char tOffset + 1 to tOffset + 3 of tAddress into tTLD
 	
 	testLog("Char", "CharOffsetBefore", tTLD is "com", xResults)
-	
+	*/
+
 	variable tVar as String
 	put "123" into tVar
 	
@@ -979,7 +981,8 @@ public handler testSystem(inout xResults as List)
 end handler
 
 public handler testDate(inout xResults as List)
-testLog("Date", "LocalTimeListLength", the number of elements in the local time is 6, xResults)
+    testLog("Date", "LocalDateListLength", the number of elements in the local date is 6, xResults)
+    testLog("Date", "UniversalTimeIsAPositiveNumber", the universal time > 0, xResults)
 end handler
 
 end module

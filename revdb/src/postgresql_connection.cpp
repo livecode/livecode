@@ -70,9 +70,7 @@ Bool DBConnection_POSTGRESQL::connect(char **args, int numargs)
 	// will only be null if there was not enough memory to allocate it.
 	if (dbconn == NULL)
 	{
-		char *t_error_message;
-		t_error_message = strdup("revdb,insufficient memory to connect to database");
-		errorMessageSet(t_error_message);
+		errorMessageSet("revdb,insufficient memory to connect to database");
 		return false;
 	}
 

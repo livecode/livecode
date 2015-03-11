@@ -101,6 +101,7 @@ void bootstrap_main(int argc, char *argv[])
 }
 
 extern int OutputFileAsC;
+extern int OutputFileAsBytecode;
 
 /* Print some sort of helpful message if the user doesn't pass sane arguments */
 static void
@@ -151,12 +152,15 @@ static void full_main(int argc, char *argv[])
             if (0 == strcmp(opt, "--output") && optarg)
             {
                 SetOutputFile(argv[++argi]);
+                OutputFileAsBytecode = 1;
+                OutputFileAsC = 0;
                 continue;
             }
             if (0 == strcmp(opt, "--outputc") && optarg)
             {
                 SetOutputFile(argv[++argi]);
                 OutputFileAsC = 1;
+                OutputFileAsBytecode = 0;
                 continue;
             }
             if (0 == strcmp(opt, "--manifest") && optarg)

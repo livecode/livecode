@@ -773,7 +773,7 @@ void X_clear_globals(void)
 	MCwatchcursor = False;
 	MClockcursor = False;
 	MCcursor = nil;
-	MCcursorid = nil;
+	MCcursorid = 0;
 	MCdefaultcursor = nil;
 	MCdefaultcursorid = 0;
 	MCbusycount = 0;

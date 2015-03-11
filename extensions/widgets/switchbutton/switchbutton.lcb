@@ -168,7 +168,8 @@ public handler OnMouseUp()
 		put "not animating" into mState
 		redraw all
 	end if
-	dispatch command "mouseUp" to my script object with [mIsChecked]
+
+	post "mouseUp" with [mIsChecked]
 end handler
 ----------
 

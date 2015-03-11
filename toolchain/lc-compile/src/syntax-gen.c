@@ -622,7 +622,10 @@ static void PrintSyntaxNode(SyntaxNodeRef p_node)
             {
                 if (i > 0)
                     printf(".");
-                PrintSyntaxNode(p_node -> concatenate . operands[i]);
+				if (NULL != p_node -> concatenate . operands[i])
+					PrintSyntaxNode(p_node -> concatenate . operands[i]);
+				else
+					printf("<removed>");
             }
             printf(")");
 			break;
@@ -1734,7 +1737,7 @@ void GenerateSyntaxRules(void)
 	int t_index;
 	SyntaxRuleGroupRef t_group;
 
-    t_output = OpenOutputFile();
+    t_output = OpenOutputFile(NULL);
     
     if (t_output != NULL)
         s_output = t_output;
@@ -1817,7 +1820,7 @@ void DumpSyntaxRules(void)
         {
             const char *t_name;
             GetStringOfNameLiteral(t_rule -> name, &t_name);
-            printf("[%d] ", t_gindex, t_name);
+            printf("[%d] ", t_gindex);
             PrintSyntaxNode(t_rule -> expr);
             printf("\n");
         }

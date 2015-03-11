@@ -1189,6 +1189,8 @@ void MCGraphicsContext::drawpath(MCPath *path)
 		MCGContextAddPath(m_gcontext, t_path);
 		MCGContextStroke(m_gcontext);
 	}
+
+	MCGPathRelease (t_path);
 }
 
 void MCGraphicsContext::fillpath(MCPath *path, bool p_evenodd)
@@ -1205,6 +1207,8 @@ void MCGraphicsContext::fillpath(MCPath *path, bool p_evenodd)
 		MCGContextFill(m_gcontext);	
 		MCGContextRestore(m_gcontext);
 	}
+
+	MCGPathRelease(t_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

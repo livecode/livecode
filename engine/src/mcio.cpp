@@ -155,9 +155,9 @@ real8 IO_cleansockets(real8 ctime)
 		{
 			MCSocket *s = MCsockets[i++];
 			if (!s->waiting && !s->accepting
-			        && (!s->connected && ctime > s->timeout
-			            || s->wevents != NULL && ctime > s->wevents->timeout
-			            || s->revents != NULL && ctime > s->revents->timeout))
+			    && ((!s->connected && ctime > s->timeout)
+			        || (s->wevents != NULL && ctime > s->wevents->timeout)
+			        || (s->revents != NULL && ctime > s->revents->timeout)))
 			{
 				if (!s->connected)
 					s->timeout = ctime  + MCsockettimeout;

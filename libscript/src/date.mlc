@@ -22,10 +22,13 @@ LiveCode programs.
 
 module com.livecode.date
 
-public foreign handler MCDateExecGetLocalTime(out DateTime as List) as undefined binds to "<builtin>"
+use com.livecode.foreign
+
+public foreign handler MCDateExecGetLocalDate(out rDateTime as List) as undefined binds to "<builtin>"
+public foreign handler MCDateExecGetUniversalTime(out rSeconds as CDouble) as undefined binds to "<builtin>"
 
 /*
-Summary:	The local time
+Summary:	The local gregorian date
 
 Example:
 	variable tDateTime as List
@@ -47,10 +50,28 @@ elements of the list are:
 
 Tags: Date and time
 */
-syntax LocalTime is expression
-	"the" "local" "time"
+syntax LocalDate is expression
+	"the" "local" "date"
 begin
-	MCDateExecGetLocalTime(output)
+	MCDateExecGetLocalDate(output)
+end syntax
+
+/*Summary:	The seconds
+
+Example:
+	variable tTime as real
+	put the universal time into tTime
+
+Description:
+Returns the current universal time relative to the start of the UNIX epoch - 1st
+January 1970 in seconds.
+
+Tags: Date and time
+*/
+syntax UniversalTime is expression
+    "the" "universal" "time"
+begin
+    MCDateExecGetUniversalTime(output)
 end syntax
 
 --

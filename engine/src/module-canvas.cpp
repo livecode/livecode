@@ -30,6 +30,60 @@ extern MCWidget *MCwidgetobject;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// SVG Path Parsing
+
+enum MCSVGPathCommand
+{
+	kMCSVGPathMoveTo,
+	kMCSVGPathRelativeMoveTo,
+	kMCSVGPathClose,
+	kMCSVGPathRelativeClose,
+	kMCSVGPathLineTo,
+	kMCSVGPathRelativeLineTo,
+	kMCSVGPathHorizontalLineTo,
+	kMCSVGPathRelativeHorizontalLineTo,
+	kMCSVGPathVerticalLineTo,
+	kMCSVGPathRelativeVerticalLineTo,
+	kMCSVGPathCurveTo,
+	kMCSVGPathRelativeCurveTo,
+	kMCSVGPathShorthandCurveTo,
+	kMCSVGPathRelativeShorthandCurveTo,
+	kMCSVGPathQuadraticCurveTo,
+	kMCSVGPathRelativeQuadraticCurveTo,
+	kMCSVGPathShorthandQuadraticCurveTo,
+	kMCSVGPathRelativeShorthandQuadraticCurveTo,
+	kMCSVGPathEllipticalCurveTo,
+	kMCSVGPathRelativeEllipticalCurveTo,
+};
+
+#define kMCSVGPathCommandCount (kMCSVGPathRelativeEllipticalCurveTo + 1)
+
+typedef bool (*MCSVGParseCallback)(void *p_context, MCSVGPathCommand p_command, float32_t *p_args, uint32_t p_arg_count);
+
+bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_context);
+
+inline bool MCSVGPathCommandIsCubic(MCSVGPathCommand p_command)
+{
+	return p_command == kMCSVGPathCurveTo || p_command == kMCSVGPathRelativeCurveTo || p_command == kMCSVGPathShorthandCurveTo || p_command == kMCSVGPathRelativeShorthandCurveTo;
+}
+
+inline bool MCSVGPathCommandIsQuadratic(MCSVGPathCommand p_command)
+{
+	return p_command == kMCSVGPathQuadraticCurveTo || p_command == kMCSVGPathRelativeQuadraticCurveTo || p_command == kMCSVGPathShorthandQuadraticCurveTo || p_command == kMCSVGPathRelativeShorthandQuadraticCurveTo;
+}
+
+inline bool MCSVGPathCommandIsRelative(MCSVGPathCommand p_command)
+{
+	// Odd numbered commands are relative
+	return (p_command & 1) != 0;
+}
+
+//////////
+
+bool MCGPathGetSVGData(MCGPathRef p_path, MCStringRef &r_string);
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Useful stuff
 
 bool MCMemoryAllocateArray(uint32_t p_size, uint32_t p_count, void *&r_array)
@@ -287,6 +341,16 @@ bool MCProperListToArrayOfFloat(MCProperListRef p_list, uindex_t &r_count, float
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline MCGPoint MCGPointRelativeToAbsolute(const MCGPoint &origin, const MCGPoint &point)
+{
+	return MCGPointMake(origin.x + point.x, origin.y + point.y);
+}
+
+inline MCGPoint MCGPointReflect(const MCGPoint &origin, const MCGPoint &point)
+{
+	return MCGPointMake(origin.x - (point.x - origin.x), origin.y - (point.y - origin.y));
+}
+
 inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_transform)
 {
 	return MCMax(MCAbs(p_transform.a) + MCAbs(p_transform.c), MCAbs(p_transform.d) + MCAbs(p_transform.b));
@@ -398,6 +462,7 @@ MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
 MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
+MCTypeInfoRef kMCCanvasSVGPathParseErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -422,8 +487,6 @@ bool MCCanvasFillRuleFromString(MCStringRef p_string, MCGFillRule &r_fill_rule);
 bool MCCanvasFillRuleToString(MCGFillRule p_fill_rule, MCStringRef &r_string);
 bool MCCanvasImageFilterFromString(MCStringRef p_string, MCGImageFilter &r_filter);
 bool MCCanvasImageFilterToString(MCGImageFilter p_filter, MCStringRef &r_string);
-bool MCCanvasPathCommandToString(MCGPathCommand p_command, MCStringRef &r_string);
-bool MCCanvasPathCommandFromString(MCStringRef p_string, MCGPathCommand &r_command);
 bool MCCanvasJoinStyleToString(MCGJoinStyle p_style, MCStringRef &r_string);
 bool MCCanvasJoinStyleFromString(MCStringRef p_string, MCGJoinStyle &r_style);
 bool MCCanvasCapStyleToString(MCGCapStyle p_style, MCStringRef &r_string);
@@ -443,7 +506,6 @@ static MCNameRef s_effect_property_map[_MCCanvasEffectPropertyCount];
 static MCNameRef s_gradient_type_map[kMCGGradientFunctionCount];
 static MCNameRef s_canvas_fillrule_map[kMCGFillRuleCount];
 static MCNameRef s_image_filter_map[kMCGImageFilterCount];
-static MCNameRef s_path_command_map[kMCGPathCommandCount];
 static MCNameRef s_join_style_map[kMCGJoinStyleCount];
 static MCNameRef s_cap_style_map[kMCGCapStyleCount];
 
@@ -519,10 +581,10 @@ static bool __MCCanvasRectangleDescribe(MCValueRef p_value, MCStringRef &r_desc)
 	MCCanvasRectangleGetMCGRectangle (static_cast<MCCanvasRectangleRef>(p_value), t_rectangle);
 
 	return MCStringFormat (r_desc, "<rectangle (%g, %g) - (%g, %g)>",
-	                       t_rectangle.origin.x,
-	                       t_rectangle.origin.y,
-	                       t_rectangle.origin.x + t_rectangle.size.width,
-	                       t_rectangle.origin.y + t_rectangle.size.height);
+	                       double(t_rectangle.origin.x),
+	                       double(t_rectangle.origin.y),
+	                       double(t_rectangle.origin.x + t_rectangle.size.width),
+	                       double(t_rectangle.origin.y + t_rectangle.size.height));
 }
 
 bool MCCanvasRectangleCreateWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rectangle)
@@ -737,7 +799,8 @@ static bool __MCCanvasPointDescribe(MCValueRef p_value, MCStringRef &r_desc)
 	MCGPoint t_point;
 	MCCanvasPointGetMCGPoint (static_cast<MCCanvasPointRef>(p_value), t_point);
 
-	return MCStringFormat (r_desc, "(%g, %g)", t_point.x, t_point.y);
+	return MCStringFormat (r_desc, "(%g, %g)",
+	                       double(t_point.x), double(t_point.y));
 }
 
 bool MCCanvasPointCreateWithMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &r_point)
@@ -895,15 +958,15 @@ static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
 
 	if (1 <= MCCanvasColorGetAlpha (t_color)) /* Opaque case */
 		return MCStringFormat (r_desc, "<color: %g, %g, %g>",
-		                       MCCanvasColorGetRed (t_color),
-		                       MCCanvasColorGetGreen (t_color),
-		                       MCCanvasColorGetBlue (t_color));
+		                       double(MCCanvasColorGetRed (t_color)),
+		                       double(MCCanvasColorGetGreen (t_color)),
+		                       double(MCCanvasColorGetBlue (t_color)));
 	else
 		return MCStringFormat (r_desc, "<color: %g, %g, %g, %g>",
-		                       MCCanvasColorGetRed (t_color),
-		                       MCCanvasColorGetGreen (t_color),
-		                       MCCanvasColorGetBlue (t_color),
-		                       MCCanvasColorGetAlpha (t_color));
+		                       double(MCCanvasColorGetRed (t_color)),
+		                       double(MCCanvasColorGetGreen (t_color)),
+		                       double(MCCanvasColorGetBlue (t_color)),
+		                       double(MCCanvasColorGetAlpha (t_color)));
 }
 
 //////////
@@ -2918,9 +2981,6 @@ bool MCProperListToRadii(MCProperListRef p_list, MCGPoint &r_radii)
 	return t_success;
 }
 
-bool MCCanvasPathParseInstructions(MCStringRef p_instructions, MCGPathIterateCallback p_callback, void *p_context);
-bool MCCanvasPathUnparseInstructions(MCCanvasPathRef &p_path, MCStringRef &r_string);
-
 // Constructors
 
 void MCCanvasPathMakeEmpty(MCCanvasPathRef &r_path)
@@ -2928,41 +2988,162 @@ void MCCanvasPathMakeEmpty(MCCanvasPathRef &r_path)
 	r_path = MCValueRetain(kMCCanvasEmptyPath);
 }
 
-bool MCCanvasPathMakeWithInstructionsCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
+struct MCCanvasPathSVGParseContext
 {
-	MCGPathRef t_path;
-	t_path = static_cast<MCGPathRef>(p_context);
+	MCGPathRef path;
+	MCGPoint first_point;
+	MCGPoint last_point;
+	MCGPoint last_control;
+	MCSVGPathCommand last_command;
+};
+
+bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, float32_t *p_params, uindex_t p_param_count)
+{
+	MCCanvasPathSVGParseContext *t_context;
+	t_context = static_cast<MCCanvasPathSVGParseContext*>(p_context);
+	
+	MCGPoint t_origin;
+	if (MCSVGPathCommandIsRelative(p_command))
+		t_origin = t_context->last_point;
+	else
+		t_origin = MCGPointMake(0, 0);
 	
 	switch (p_command)
 	{
-		case kMCGPathCommandMoveTo:
-			MCGPathMoveTo(t_path, p_points[0]);
+		case kMCSVGPathMoveTo:
+		case kMCSVGPathRelativeMoveTo:
+		{
+			MCGPoint t_point;
+			t_point = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[0], p_params[1]));
+			MCGPathMoveTo(t_context->path, t_point);
+			t_context->last_point = t_context->first_point = t_point;
+			break;
+		}
+			
+		case kMCSVGPathClose:
+		case kMCSVGPathRelativeClose:
+			MCGPathCloseSubpath(t_context->path);
+			t_context->last_point = t_context->first_point;
 			break;
 			
-		case kMCGPathCommandLineTo:
-			MCGPathLineTo(t_path, p_points[0]);
+		case kMCSVGPathLineTo:
+		case kMCSVGPathRelativeLineTo:
+		{
+			MCGPoint t_point;
+			t_point = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[0], p_params[1]));
+			MCGPathLineTo(t_context->path, t_point);
+			t_context->last_point = t_point;
 			break;
+		}
 			
-		case kMCGPathCommandQuadCurveTo:
-			MCGPathQuadraticTo(t_path, p_points[0], p_points[1]);
+		case kMCSVGPathHorizontalLineTo:
+		case kMCSVGPathRelativeHorizontalLineTo:
+		{
+			MCGPoint t_point;
+			t_point = t_context->last_point;
+			t_point.x = t_origin.x + p_params[0];
+			MCGPathLineTo(t_context->path, t_point);
+			t_context->last_point = t_point;
 			break;
+		}
 			
-		case kMCGPathCommandCubicCurveTo:
-			MCGPathCubicTo(t_path, p_points[0], p_points[1], p_points[2]);
+		case kMCSVGPathVerticalLineTo:
+		case kMCSVGPathRelativeVerticalLineTo:
+		{
+			MCGPoint t_point;
+			t_point = t_context->last_point;
+			t_point.y = t_origin.y + p_params[0];
+			MCGPathLineTo(t_context->path, t_point);
+			t_context->last_point = t_point;
 			break;
+		}
 			
-		case kMCGPathCommandCloseSubpath:
-			MCGPathCloseSubpath(t_path);
-			break;
+		case kMCSVGPathCurveTo:
+		case kMCSVGPathRelativeCurveTo:
+		{
+			MCGPoint t_point[3];
+			t_point[0] = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[0], p_params[1]));
+			t_point[1] = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[2], p_params[3]));
+			t_point[2] = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[4], p_params[5]));
 			
-		case kMCGPathCommandEnd:
+			MCGPathCubicTo(t_context->path, t_point[0], t_point[1], t_point[2]);
+			t_context->last_point = t_point[2];
+			t_context->last_control = t_point[1];
 			break;
+		}
+			
+		case kMCSVGPathShorthandCurveTo:
+		case kMCSVGPathRelativeShorthandCurveTo:
+		{
+			MCGPoint t_point[3];
+			t_point[1] = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[0], p_params[1]));
+			t_point[2] = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[2], p_params[3]));
+			if (MCSVGPathCommandIsCubic(t_context->last_command))
+				t_point[0] = MCGPointReflect(t_context->last_point, t_context->last_control);
+			else
+				t_point[0] = t_point[1];
+			
+			MCGPathCubicTo(t_context->path, t_point[0], t_point[1], t_point[2]);
+			t_context->last_point = t_point[2];
+			t_context->last_control = t_point[1];
+			break;
+		}
+			
+		case kMCSVGPathQuadraticCurveTo:
+		case kMCSVGPathRelativeQuadraticCurveTo:
+		{
+			MCGPoint t_point[2];
+			t_point[0] = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[0], p_params[1]));
+			t_point[1] = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[2], p_params[3]));
+
+			MCGPathQuadraticTo(t_context->path, t_point[0], t_point[1]);
+			t_context->last_point = t_point[1];
+			t_context->last_control = t_point[0];
+			break;
+		}
+			
+		case kMCSVGPathShorthandQuadraticCurveTo:
+		case kMCSVGPathRelativeShorthandQuadraticCurveTo:
+		{
+			MCGPoint t_point[2];
+			t_point[1] = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[0], p_params[1]));
+			if (MCSVGPathCommandIsQuadratic(t_context->last_command))
+				t_point[0] = MCGPointReflect(t_context->last_point, t_context->last_control);
+			else
+				t_point[0] = t_point[1];
+			
+			MCGPathQuadraticTo(t_context->path, t_point[0], t_point[1]);
+			t_context->last_point = t_point[1];
+			t_context->last_control = t_point[0];
+			break;
+		}
+			
+		case kMCSVGPathEllipticalCurveTo:
+		case kMCSVGPathRelativeEllipticalCurveTo:
+		{
+			MCCanvasFloat t_rx, t_ry;
+			MCCanvasFloat t_xrotation;
+			bool t_large_arc, t_sweep;
+			MCGPoint t_point;
+			t_rx = p_params[0]; t_ry = p_params[1];
+			t_xrotation = p_params[2];
+			t_large_arc = p_params[3] != 0;
+			t_sweep = p_params[4] != 0;
+			t_point = MCGPointRelativeToAbsolute(t_origin, MCGPointMake(p_params[5], p_params[6]));
+			
+			MCGPathArcTo(t_context->path, MCGSizeMake(t_rx, t_ry), t_xrotation, t_large_arc, t_sweep, t_point);
+			t_context->last_point = t_point;
+			break;
+		}
 			
 		default:
-			MCAssert(false);
+			MCUnreachable();
+			break;
 	}
 	
-	return MCGPathIsValid(t_path);
+	t_context->last_command = p_command;
+	
+	return MCGPathIsValid(t_context->path);
 }
 
 void MCCanvasPathMakeWithMCGPath(MCGPathRef p_path, MCCanvasPathRef &r_path)
@@ -2983,7 +3164,12 @@ void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanv
 		t_success = MCGPathCreateMutable(t_path);
 	
 	if (t_success)
-		t_success = MCCanvasPathParseInstructions(p_instructions, MCCanvasPathMakeWithInstructionsCallback, t_path);
+	{
+		MCCanvasPathSVGParseContext t_context;
+		t_context.path = t_path;
+		t_context.first_point = t_context.last_point = MCGPointMake(0, 0);
+		t_success = MCSVGParse(p_instructions, MCCanvasPathSVGParseCallback, &t_context);
+	}
 	
 	if (t_success)
 		MCCanvasPathMakeWithMCGPath(t_path, r_path);
@@ -3151,6 +3337,96 @@ void MCCanvasPathMakeWithPoints(bool p_close, MCProperListRef p_points, MCCanvas
 	MCMemoryDeleteArray(t_points);
 }
 
+static void MCCanvasPathMakeWithArcWithRadii(const MCGPoint &p_center, MCGFloat p_radius_x, MCGFloat p_radius_y, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (!MCGPathCreateMutable(t_path))
+		return;
+	
+	MCGPathAddArc(t_path, p_center, MCGSizeMake(p_radius_x, p_radius_y), 0, p_start_angle, p_end_angle);
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	
+	MCGPathRelease(t_path);
+}
+
+void MCCanvasPathMakeWithArcWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCCanvasPathMakeWithArcWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
+}
+
+void MCCanvasPathMakeWithArcWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPoint t_radii;
+	if (!MCProperListToRadii(p_radii, t_radii))
+		return;
+	
+	MCCanvasPathMakeWithArcWithRadii(*MCCanvasPointGet(p_center), t_radii.x, t_radii.y, p_start_angle, p_end_angle, r_path);
+}
+
+static void MCCanvasPathMakeWithSectorWithRadii(const MCGPoint &p_center, MCGFloat p_radius_x, MCGFloat p_radius_y, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (!MCGPathCreateMutable(t_path))
+		return;
+	
+	MCGPathAddArc(t_path, p_center, MCGSizeMake(p_radius_x, p_radius_y), 0, p_start_angle, p_end_angle);
+	MCGPathLineTo(t_path, p_center);
+	MCGPathCloseSubpath(t_path);
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	
+	MCGPathRelease(t_path);
+}
+
+void MCCanvasPathMakeWithSectorWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCCanvasPathMakeWithSectorWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
+}
+
+void MCCanvasPathMakeWithSectorWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPoint t_radii;
+	if (!MCProperListToRadii(p_radii, t_radii))
+		return;
+	
+	MCCanvasPathMakeWithSectorWithRadii(*MCCanvasPointGet(p_center), t_radii.x, t_radii.y, p_start_angle, p_end_angle, r_path);
+}
+
+static void MCCanvasPathMakeWithSegmentWithRadii(const MCGPoint &p_center, MCGFloat p_radius_x, MCGFloat p_radius_y, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (!MCGPathCreateMutable(t_path))
+		return;
+	
+	MCGPathAddArc(t_path, p_center, MCGSizeMake(p_radius_x, p_radius_y), 0, p_start_angle, p_end_angle);
+	MCGPathCloseSubpath(t_path);
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	
+	MCGPathRelease(t_path);
+}
+
+void MCCanvasPathMakeWithSegmentWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCCanvasPathMakeWithSegmentWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
+}
+
+void MCCanvasPathMakeWithSegmentWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPoint t_radii;
+	if (!MCProperListToRadii(p_radii, t_radii))
+		return;
+	
+	MCCanvasPathMakeWithSegmentWithRadii(*MCCanvasPointGet(p_center), t_radii.x, t_radii.y, p_start_angle, p_end_angle, r_path);
+}
+
 // Properties
 
 void MCCanvasPathSetMCGPath(MCGPathRef p_path, MCCanvasPathRef &x_path)
@@ -3189,11 +3465,9 @@ void MCCanvasPathGetBoundingBox(MCCanvasPathRef p_path, MCCanvasRectangleRef &r_
 
 void MCCanvasPathGetInstructionsAsString(MCCanvasPathRef p_path, MCStringRef &r_instruction_string)
 {
-	MCStringRef t_instruction_string;
-	t_instruction_string = nil;
-	if (MCCanvasPathUnparseInstructions(p_path, t_instruction_string))
-		r_instruction_string = MCValueRetain(t_instruction_string);
-	MCValueRelease(t_instruction_string);
+	MCAutoStringRef t_instruction_string;
+	if (MCGPathGetSVGData(MCCanvasPathGetMCGPath(p_path), &t_instruction_string))
+		r_instruction_string = MCValueRetain(*t_instruction_string);
 }
 
 // Operations
@@ -3414,183 +3688,6 @@ void MCCanvasPathClosePath(MCCanvasPathRef &x_path)
 		MCCanvasPathSetMCGPath(t_path, x_path);
 	
 	MCGPathRelease(t_path);
-}
-
-//////////
-
-bool MCCanvasPathUnparseInstructionsCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
-{
-	MCStringRef t_string;
-	t_string = static_cast<MCStringRef>(p_context);
-	
-	MCStringRef t_command_string;
-	t_command_string = nil;
-	
-	bool t_success;
-	t_success = true;
-	
-	if (t_success)
-		t_success = MCCanvasPathCommandToString(p_command, t_command_string);
-	
-	if (t_success)
-		t_success = MCStringAppend(t_string, t_command_string);
-	
-	for (uint32_t i = 0; t_success && i < p_point_count; i++)
-		t_success = MCStringAppendFormat(t_string, " %f,%f", p_points[i].x, p_points[i].y);
-	
-	if (t_success)
-		t_success = MCStringAppendChar(t_string, '\n');
-	
-	return t_success;
-}
-
-bool MCCanvasPathUnparseInstructions(MCCanvasPathRef &p_path, MCStringRef &r_string)
-{
-	MCGPathRef t_path;
-	t_path = MCCanvasPathGetMCGPath(p_path);
-	
-	if (MCGPathIsEmpty(t_path))
-		return MCStringCopy(kMCEmptyString, r_string);
-	
-	bool t_success;
-	t_success = true;
-	
-	MCStringRef t_string;
-	t_string = nil;
-	
-	if (t_success)
-		t_success = MCStringCreateMutable(0, t_string);
-	
-	if (t_success)
-		t_success = MCGPathIterate(t_path, MCCanvasPathUnparseInstructionsCallback, t_string);
-	
-	if (t_success)
-		t_success = MCStringCopyAndRelease(t_string, r_string);
-	
-	if (!t_success)
-		MCValueRelease(t_string);
-	
-	return t_success;
-}
-
-bool MCCanvasPathParseInstructions(MCStringRef p_instructions, MCGPathIterateCallback p_callback, void *p_context)
-{
-	bool t_success;
-	t_success = true;
-	
-	if (MCStringIsEmpty(p_instructions))
-	{
-		t_success = p_callback(p_context, kMCGPathCommandEnd, nil, 0);
-		return t_success;
-	}
-	
-	MCProperListRef t_lines;
-	t_lines = nil;
-
-	MCGPathCommand t_command;
-	t_command = kMCGPathCommandEnd;
-	
-	MCGPoint t_points[3];
-	uint32_t t_point_count;
-	t_point_count = 0;
-	
-	bool t_ended;
-	t_ended = false;
-
-	if (t_success)
-		t_success = MCStringSplitByDelimiter(p_instructions, kMCLineEndString, kMCStringOptionCompareExact, t_lines);
-	
-	for (uint32_t i = 0; t_success && i < MCProperListGetLength(t_lines); i++)
-	{
-		MCStringRef t_line;
-		t_line = (MCStringRef)MCProperListFetchElementAtIndex(t_lines, i);
-		
-		if (MCStringIsEmpty(t_line))
-			continue;
-		
-		if (t_ended)
-			// TODO - throw error - instruction after end
-			t_success = false;
-		
-		MCProperListRef t_components;
-		t_components = nil;
-		
-		if (t_success)
-			t_success = MCStringSplitByDelimiter(t_line, MCSTR(" "), kMCStringOptionCompareExact, t_components);
-		
-		if (t_success)
-		{
-			MCStringRef t_command_string;
-			t_command_string = (MCStringRef)MCProperListFetchElementAtIndex(t_components, 0);
-			t_success = MCCanvasPathCommandFromString(t_command_string, t_command);
-			// TODO - throw path parse error
-		}
-		
-		if (t_success)
-		{
-			switch (t_command)
-			{
-				case kMCGPathCommandMoveTo:
-					t_point_count = 1;
-					t_success = MCProperListGetLength(t_components) == 2 &&
-					MCGPointParse((MCStringRef)MCProperListFetchElementAtIndex(t_components, 1), t_points[0]);
-					// TODO - throw parse error
-					break;
-					
-				case kMCGPathCommandLineTo:
-					t_point_count = 1;
-					t_success = MCProperListGetLength(t_components) == 2 &&
-					MCGPointParse((MCStringRef)MCProperListFetchElementAtIndex(t_components, 1), t_points[0]);
-					// TODO - throw parse error
-					break;
-					
-				case kMCGPathCommandQuadCurveTo:
-					t_point_count = 2;
-					t_success = MCProperListGetLength(t_components) == 3 &&
-					MCGPointParse((MCStringRef)MCProperListFetchElementAtIndex(t_components, 1), t_points[0]) &&
-					MCGPointParse((MCStringRef)MCProperListFetchElementAtIndex(t_components, 2), t_points[1]);
-					// TODO - throw parse error
-					break;
-					
-				case kMCGPathCommandCubicCurveTo:
-					t_point_count = 3;
-					t_success = MCProperListGetLength(t_components) == 4 &&
-					MCGPointParse((MCStringRef)MCProperListFetchElementAtIndex(t_components, 1), t_points[0]) &&
-					MCGPointParse((MCStringRef)MCProperListFetchElementAtIndex(t_components, 2), t_points[1]) &&
-					MCGPointParse((MCStringRef)MCProperListFetchElementAtIndex(t_components, 3), t_points[2]);
-					// TODO - throw parse error
-					break;
-					
-				case kMCGPathCommandCloseSubpath:
-					t_point_count = 0;
-					t_success = MCProperListGetLength(t_components) == 1;
-					// TODO - throw parse error
-					break;
-					
-				case kMCGPathCommandEnd:
-					t_point_count = 0;
-					t_success = MCProperListGetLength(t_components) == 1;
-					t_ended = true;
-					// TODO - throw parse error
-					break;
-					
-				default:
-					MCAssert(false);
-			}
-		}
-		
-		MCValueRelease(t_components);
-		
-		if (t_success)
-			t_success = p_callback(p_context, t_command, t_points, t_point_count);
-	}
-	
-	MCValueRelease(t_lines);
-
-	if (t_success && !t_ended)
-		t_success = p_callback(p_context, kMCGPathCommandEnd, nil, 0);
-	
-	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5097,7 +5194,7 @@ void MCCanvasStroke(MCCanvasRef p_canvas)
 	MCGContextEnd(t_canvas->context);
 }
 
-void MCCanvasClipToRect(MCCanvasRectangleRef &p_rect, MCCanvasRef p_canvas)
+void MCCanvasClipToRect(MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -5694,6 +5791,10 @@ bool MCCanvasErrorsInitialize()
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.PathPointListFormatError"), MCNAME("canvas"), MCSTR("Invalid value in list of points."), kMCCanvasPathPointListFormatErrorTypeInfo))
 		return false;
 	
+	kMCCanvasSVGPathParseErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.SVGPathParseError"), MCNAME("canvas"), MCSTR("Unable to parse path data: \"%{reason}\" at position %{position}"), kMCCanvasSVGPathParseErrorTypeInfo))
+		return false;
+	
 	return true;
 }
 
@@ -5717,6 +5818,8 @@ void MCCanvasErrorsFinalize()
 	MCValueRelease(kMCCanvasGradientStopRangeErrorTypeInfo);
 	MCValueRelease(kMCCanvasGradientStopOrderErrorTypeInfo);
 	MCValueRelease(kMCCanvasGradientTypeErrorTypeInfo);
+
+	MCValueRelease(kMCCanvasSVGPathParseErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5828,14 +5931,6 @@ bool MCCanvasStringsInitialize()
 	s_image_filter_map[kMCGImageFilterMedium] = MCNAME("medium");
 	s_image_filter_map[kMCGImageFilterHigh] = MCNAME("high");
 	
-	// TODO - confirm these command names
-	s_path_command_map[kMCGPathCommandMoveTo] = MCNAME("move");
-	s_path_command_map[kMCGPathCommandLineTo] = MCNAME("line");
-	s_path_command_map[kMCGPathCommandQuadCurveTo] = MCNAME("quad");
-	s_path_command_map[kMCGPathCommandCubicCurveTo] = MCNAME("cubic");
-	s_path_command_map[kMCGPathCommandCloseSubpath] = MCNAME("close");
-	s_path_command_map[kMCGPathCommandEnd] = MCNAME("end");
-	
 	s_join_style_map[kMCGJoinStyleBevel] = MCNAME("bevel");
 	s_join_style_map[kMCGJoinStyleMiter] = MCNAME("miter");
 	s_join_style_map[kMCGJoinStyleRound] = MCNAME("round");
@@ -5870,9 +5965,6 @@ void MCCanvasStringsFinalize()
 		
 	for (uint32_t i = 0; i < kMCGImageFilterCount; i++)
 		MCValueRelease(s_image_filter_map[i]);
-	
-	for (uint32_t i = 0; i < kMCGPathCommandCount; i++)
-		MCValueRelease(s_path_command_map[i]);
 	
 	for (uint32_t i = 0; i < kMCGJoinStyleCount; i++)
 		MCValueRelease(s_join_style_map);
@@ -5959,16 +6051,6 @@ bool MCCanvasImageFilterFromString(MCStringRef p_string, MCGImageFilter &r_filte
 	return _mcenumfromstring<MCGImageFilter, kMCGImageFilterCount>(s_image_filter_map, p_string, r_filter);
 }
 
-bool MCCanvasPathCommandToString(MCGPathCommand p_command, MCStringRef &r_string)
-{
-	return _mcenumtostring<MCGPathCommand, kMCGPathCommandCount>(s_path_command_map, p_command, r_string);
-}
-
-bool MCCanvasPathCommandFromString(MCStringRef p_string, MCGPathCommand &r_command)
-{
-	return _mcenumfromstring<MCGPathCommand, kMCGPathCommandCount>(s_path_command_map, p_string, r_command);
-}
-
 bool MCCanvasJoinStyleToString(MCGJoinStyle p_style, MCStringRef &r_string)
 {
 	return _mcenumtostring<MCGJoinStyle, kMCGJoinStyleCount>(s_join_style_map, p_style, r_string);
@@ -5987,6 +6069,375 @@ bool MCCanvasCapStyleToString(MCGCapStyle p_style, MCStringRef &r_string)
 bool MCCanvasCapStyleFromString(MCStringRef p_string, MCGCapStyle &r_style)
 {
 	return _mcenumfromstring<MCGCapStyle, kMCGCapStyleCount>(s_cap_style_map, p_string, r_style);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCSVGThrowPathParseError(uint32_t p_char_position, MCStringRef p_error)
+{
+	MCAutoNumberRef t_number;
+	if (!MCNumberCreateWithUnsignedInteger(p_char_position + 1, &t_number))
+		return false;
+	
+	return MCErrorCreateAndThrow(kMCCanvasSVGPathParseErrorTypeInfo,
+								 "position", *t_number,
+								 "reason", p_error,
+								 nil);
+}
+
+struct MCSVGPathCommandMap
+{
+	char letter;
+	MCSVGPathCommand command;
+};
+
+static MCSVGPathCommandMap s_svg_command_map[] = {
+	{'M', kMCSVGPathMoveTo},
+	{'m', kMCSVGPathRelativeMoveTo},
+	{'Z', kMCSVGPathClose},
+	{'z', kMCSVGPathRelativeClose},
+	{'L', kMCSVGPathLineTo},
+	{'l', kMCSVGPathRelativeLineTo},
+	{'H', kMCSVGPathHorizontalLineTo},
+	{'h', kMCSVGPathRelativeHorizontalLineTo},
+	{'V', kMCSVGPathVerticalLineTo},
+	{'v', kMCSVGPathRelativeVerticalLineTo},
+	{'C', kMCSVGPathCurveTo},
+	{'c', kMCSVGPathRelativeCurveTo},
+	{'S', kMCSVGPathShorthandCurveTo},
+	{'s', kMCSVGPathRelativeShorthandCurveTo},
+	{'Q', kMCSVGPathQuadraticCurveTo},
+	{'q', kMCSVGPathRelativeQuadraticCurveTo},
+	{'T', kMCSVGPathShorthandQuadraticCurveTo},
+	{'t', kMCSVGPathRelativeShorthandQuadraticCurveTo},
+	{'A', kMCSVGPathEllipticalCurveTo},
+	{'a', kMCSVGPathRelativeEllipticalCurveTo},
+};
+
+bool MCSVGLookupPathCommand(char p_char, MCSVGPathCommand &r_command)
+{
+	for (uint32_t i = 0; i < kMCSVGPathCommandCount; i++)
+		if (p_char == s_svg_command_map[i].letter)
+		{
+			r_command = s_svg_command_map[i].command;
+			return true;
+		}
+	
+	return false;
+}
+
+bool MCSVGParsePathCommand(const char *p_string, MCRange &x_range, MCSVGPathCommand &r_command)
+{
+	if (MCRangeIsEmpty(x_range))
+		return false;
+	
+	if (!MCSVGLookupPathCommand(p_string[x_range.offset], r_command))
+		return false;
+	
+	x_range = MCRangeIncrementOffset(x_range, 1);
+	return true;
+}
+
+bool MCSVGTryToParseRangeAsReal(const char *p_string, const MCRange &p_range, MCRange *r_out_range, real64_t &r_real)
+{
+	const char *t_start;
+	t_start = p_string + p_range.offset;
+	
+	char *t_end;
+	t_end = nil;
+	
+	real64_t t_real;
+	t_real = strtod(t_start, &t_end);
+	
+	if ((errno == ERANGE) || (r_out_range == nil && t_end - t_start != p_range.length) || t_end == (p_string + p_range.offset))
+		return false;
+	
+	r_real = t_real;
+	if (r_out_range != nil)
+		*r_out_range = MCRangeMake(p_range.offset, t_end - t_start);
+	
+	return true;
+}
+
+bool MCSVGParseReal(const char *p_string, MCRange &x_range, real64_t &r_real)
+{
+	real64_t t_real;
+	MCRange t_used;
+	
+	if (!MCSVGTryToParseRangeAsReal(p_string, x_range, &t_used, r_real))
+		return false;
+	
+	uindex_t t_next;
+	t_next = t_used.offset + t_used.length;
+	
+	x_range = MCRangeSetMinimum(x_range, t_used.offset + t_used.length);
+	
+	return true;
+}
+
+bool MCSVGIsWhiteSpace(char p_char)
+{
+	return p_char == ' ' || p_char == '\t' || p_char == '\r' || p_char == '\n';
+}
+
+void MCSVGSkipWhitespace(const char *p_string, MCRange &x_range)
+{
+	while (!MCRangeIsEmpty(x_range) && MCSVGIsWhiteSpace(p_string[x_range.offset]))
+		x_range = MCRangeIncrementOffset(x_range, 1);
+}
+
+void MCSVGSkipComma(const char *p_string, MCRange &x_range)
+{
+	if (!MCRangeIsEmpty(x_range) && p_string[x_range.offset] == ',')
+		x_range = MCRangeIncrementOffset(x_range, 1);
+}
+
+bool MCSVGConsumeWSPCommaWSP(const char *p_string, MCRange &x_range)
+{
+	MCRange t_range;
+	t_range = x_range;
+	
+	MCSVGSkipWhitespace(p_string, x_range);
+	MCSVGSkipComma(p_string, x_range);
+	MCSVGSkipWhitespace(p_string, x_range);
+	
+	return !MCRangeIsEqual(x_range, t_range);
+}
+
+bool MCSVGParseParams(const char *p_string, MCRange &x_range, MCSVGPathCommand p_command, float32_t r_params[7], uindex_t &r_param_count)
+{
+	uindex_t t_param_count;
+	MCRange t_range;
+	t_range = x_range;
+	
+	switch (p_command)
+	{
+		case kMCSVGPathMoveTo:
+		case kMCSVGPathRelativeMoveTo:
+			t_param_count = 2;
+			break;
+			
+		case kMCSVGPathClose:
+		case kMCSVGPathRelativeClose:
+			t_param_count = 0;
+			break;
+			
+		case kMCSVGPathLineTo:
+		case kMCSVGPathRelativeLineTo:
+			t_param_count = 2;
+			break;
+			
+		case kMCSVGPathHorizontalLineTo:
+		case kMCSVGPathRelativeHorizontalLineTo:
+			t_param_count = 1;
+			break;
+			
+		case kMCSVGPathVerticalLineTo:
+		case kMCSVGPathRelativeVerticalLineTo:
+			t_param_count = 1;
+			break;
+			
+		case kMCSVGPathCurveTo:
+		case kMCSVGPathRelativeCurveTo:
+			t_param_count = 6;
+			break;
+			
+		case kMCSVGPathShorthandCurveTo:
+		case kMCSVGPathRelativeShorthandCurveTo:
+			t_param_count = 4;
+			break;
+			
+		case kMCSVGPathQuadraticCurveTo:
+		case kMCSVGPathRelativeQuadraticCurveTo:
+			t_param_count = 4;
+			break;
+			
+		case kMCSVGPathShorthandQuadraticCurveTo:
+		case kMCSVGPathRelativeShorthandQuadraticCurveTo:
+			t_param_count = 2;
+			break;
+			
+		case kMCSVGPathEllipticalCurveTo:
+		case kMCSVGPathRelativeEllipticalCurveTo:
+			t_param_count = 7;
+			break;
+			
+		default:
+			MCUnreachable();
+			break;
+	}
+	
+	for (uint32_t i = 0; i < t_param_count; i++)
+	{
+		real64_t t_real;
+		MCAutoNumberRef t_number;
+		if (!MCSVGParseReal(p_string, t_range, t_real))
+			return MCSVGThrowPathParseError(t_range.offset, MCSTR("Expected number value"));
+		
+		MCSVGConsumeWSPCommaWSP(p_string, t_range);
+		
+		r_params[i] = t_real;
+	}
+	
+	r_param_count = t_param_count;
+	x_range = t_range;
+	
+	return true;
+}
+
+bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_context)
+{
+	if (!MCStringCanBeNative(p_string))
+		return MCSVGThrowPathParseError(0, MCSTR("String must contain ascii characters only"));
+	
+	MCSVGPathCommand t_command;
+	float32_t t_params[7];
+	uindex_t t_param_count;
+	
+	bool t_success;
+	t_success = true;
+	
+	bool t_first_command;
+	t_first_command = true;
+	
+	const char *t_native_string;
+	uindex_t t_length;
+	t_native_string = (const char*)MCStringGetNativeCharPtrAndLength(p_string, t_length);
+	
+	MCRange t_range;
+	t_range = MCRangeMake(0, t_length);
+	
+	while (t_success && !MCRangeIsEmpty(t_range))
+	{
+		bool t_have_command;
+		t_have_command = MCSVGParsePathCommand(t_native_string, t_range, t_command);
+		if (t_have_command)
+			MCSVGSkipWhitespace(t_native_string, t_range);
+		
+		if (t_first_command && !(t_have_command && (t_command == kMCSVGPathMoveTo || t_command == kMCSVGPathRelativeMoveTo)))
+			return MCSVGThrowPathParseError(t_range.offset, MCSTR("Path must begin with moveto command"));
+
+		t_first_command = false;
+		
+		// switch to lineto after moveto
+		if (!t_have_command && t_command == kMCSVGPathMoveTo)
+			t_command = kMCSVGPathLineTo;
+		if (!t_have_command && t_command == kMCSVGPathRelativeMoveTo)
+			t_command = kMCSVGPathRelativeLineTo;
+		
+		t_success = MCSVGParseParams(t_native_string, t_range, t_command, t_params, t_param_count);
+		
+		if (t_success)
+			t_success = p_callback(p_context, t_command, t_params, t_param_count);
+	}
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCSVGAppendValueToString(MCStringRef p_string, bool p_need_separator, float32_t p_value)
+{
+	// negative values don't need a separator due to the leading minus sign.
+	if (p_need_separator && p_value >= 0)
+		return MCStringAppendFormat(p_string, " %f", p_value);
+	else
+		return MCStringAppendFormat(p_string, "%f", p_value);
+}
+
+struct MCGPathToSVGDataContext
+{
+	MCStringRef string;
+	MCGPathCommand last_command;
+};
+
+bool MCGPathToSVGDataCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
+{
+	MCGPathToSVGDataContext *t_context;
+	t_context = static_cast<MCGPathToSVGDataContext*>(p_context);
+	
+	bool t_success;
+	t_success = true;
+	
+	bool t_repeat_command;
+	t_repeat_command = p_command == t_context->last_command;
+	
+	if (!t_repeat_command)
+	{
+		char t_command;
+		switch (p_command)
+		{
+			case kMCGPathCommandMoveTo:
+				t_command = 'M';
+				break;
+				
+			case kMCGPathCommandLineTo:
+				t_command = 'L';
+				break;
+				
+			case kMCGPathCommandQuadCurveTo:
+				t_command = 'Q';
+				break;
+				
+			case kMCGPathCommandCubicCurveTo:
+				t_command = 'C';
+				break;
+				
+			case kMCGPathCommandCloseSubpath:
+				t_command = 'Z';
+				break;
+				
+			case kMCGPathCommandEnd:
+				return true;
+				
+			default:
+				MCUnreachable();
+				break;
+		}
+		
+		t_success = MCStringAppendNativeChar(t_context->string, t_command);
+		t_context->last_command = p_command;
+	}
+	
+	for (uint32_t i = 0; t_success && i < p_point_count; i++)
+	{
+		t_success = MCSVGAppendValueToString(t_context->string, t_repeat_command || i != 0, p_points[i].x) &&
+			MCSVGAppendValueToString(t_context->string, true, p_points[i].y);
+	}
+	
+	return t_success;
+}
+
+bool MCGPathGetSVGData(MCGPathRef p_path, MCStringRef &r_string)
+{
+	if (MCGPathIsEmpty(p_path))
+		return MCStringCopy(kMCEmptyString, r_string);
+	
+	bool t_success;
+	t_success = true;
+	
+	MCStringRef t_string;
+	t_string = nil;
+	
+	if (t_success)
+		t_success = MCStringCreateMutable(0, t_string);
+	
+	if (t_success)
+	{
+		MCGPathToSVGDataContext t_context;
+		t_context.string = t_string;
+		t_context.last_command = kMCGPathCommandEnd;
+		
+		t_success = MCGPathIterate(p_path, MCGPathToSVGDataCallback, &t_context);
+	}
+	
+	if (t_success)
+		t_success = MCStringCopyAndRelease(t_string, r_string);
+	
+	if (!t_success)
+		MCValueRelease(t_string);
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

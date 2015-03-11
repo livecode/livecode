@@ -90,7 +90,7 @@ extern void (*MCBitwiseEvalBitwiseAnd)();
 extern void (*MCByteEvalNumberOfBytesIn)();
 extern void (*MCCharEvalNumberOfCharsIn)();
 extern void (*MCCodeunitEvalNumberOfCodeunitsIn)();
-extern void (*MCDateExecGetLocalTime)();
+extern void (*MCDateExecGetLocalDate)();
 extern void (*MCFileExecGetContents)();
 extern void (*MCListEvalHeadOf)();
 extern void (*MCLogicEvalNot)();
@@ -113,7 +113,7 @@ void *g_builtin_ptrs[] =
     &MCByteEvalNumberOfBytesIn,
     &MCCharEvalNumberOfCharsIn,
     &MCCodeunitEvalNumberOfCodeunitsIn,
-    &MCDateExecGetLocalTime,
+    &MCDateExecGetLocalDate,
     &MCFileExecGetContents,
     &MCListEvalHeadOf,
     &MCLogicEvalNot,

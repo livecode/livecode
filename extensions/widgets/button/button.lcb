@@ -118,13 +118,15 @@ end handler
 public handler OnMouseDown() as undefined
 	put "pressed" into mState
 	redraw all
-	dispatch command "mouseDown" to my script object
+
+	post "mouseDown"
 end handler
 --
 public handler OnMouseUp() as undefined
 	put "none" into mState
 	redraw all
-	dispatch command "mouseUp" to my script object
+    
+    post "mouseUp"
 end handler
 --
 public handler OnMouseEnter() as undefined

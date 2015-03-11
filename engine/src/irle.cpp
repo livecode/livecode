@@ -131,7 +131,7 @@ bool rle_run_encode(const uint1 *sptr, uint4 ssize, uint1 *&dptr, uint4 &dsize)
 
 bool rle_plane_encode(const uint8_t *sptr, uindex_t p_stride, uindex_t p_height, uint1 *&dptr, uint4 &dsize)
 {
-	uint2 newbpl = p_stride + 3 & 0xFFFFFFFC;
+	uint2 newbpl = (p_stride + 3) & 0xFFFFFFFC;
 	if (newbpl == p_stride)
 		return rle_run_encode(sptr, p_stride * p_height, dptr, dsize);
 	else
@@ -218,7 +218,7 @@ bool rle_plane_decode(uint1 *sptr, uint4 ssize, uindex_t p_stride, uindex_t p_he
 	if (p_stride * p_height > p_dsize)
 		return false;
 
-	uint2 newbpl = p_stride + 3 & 0xFFFFFFFC;
+	uint2 newbpl = (p_stride + 3) & 0xFFFFFFFC;
 	if (newbpl == p_stride)
 		return rle_run_decode(sptr, ssize, p_dptr, p_dsize);
 	else

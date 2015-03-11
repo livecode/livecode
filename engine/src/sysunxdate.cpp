@@ -218,19 +218,19 @@ static void cache_locale(void)
 	s_datetime_locale -> date_formats[1] = MCSTR("%a, %b %#d, %#Y");
 	s_datetime_locale -> date_formats[2] = MCSTR("%A, %B %#d, %#Y");
 
-    MCStringRef t_time_ampm;
+    MCAutoStringRef t_time_ampm;
     t_time_ampm = query_locale(T_FMT_AMPM);
     
     // AL-2014-01-16: [[ Bug 11672 ]] If the locale doesn't use AM/PM, then always use 24-hour time.
-    if (MCStringIsEmpty(t_time_ampm))
+    if (MCStringIsEmpty(*t_time_ampm))
     {
         s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");
         s_datetime_locale -> time24_formats[1] = MCSTR("!%H:%M:%S");
     }
     else
     {
-        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(t_time_ampm), '!');
-        s_datetime_locale -> time_formats[1] = swap_time_tokens(t_time_ampm);
+        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(*t_time_ampm), '!');
+        s_datetime_locale -> time_formats[1] = swap_time_tokens(*t_time_ampm);
     }
     
 	s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");

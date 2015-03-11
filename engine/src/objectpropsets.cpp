@@ -605,6 +605,8 @@ IO_stat MCObject::loadarraypropsets_legacy(MCObjectInputStream& p_stream)
 	// Note that props is always non-empty if we get here since we will have already loaded the
 	// root custom properties.
 	MCObjectPropertySet *t_prop;
+
+	MCAssert (nil != props);
 	t_prop = props;
 
 	uint32_t t_index;
@@ -631,8 +633,7 @@ IO_stat MCObject::loadarraypropsets_legacy(MCObjectInputStream& p_stream)
 
 				MCObjectPropertySet *t_new_prop;
 				/* UNCHEKED */ MCObjectPropertySet::createwithname(kMCEmptyName, t_new_prop);
-				if (t_prop != NULL)
-					t_prop -> setnext(t_new_prop);
+				t_prop -> setnext(t_new_prop);
 
 				t_prop = t_new_prop;
 				t_index += 1;

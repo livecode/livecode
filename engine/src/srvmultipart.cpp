@@ -950,6 +950,7 @@ bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_hand
 	}
 	else
 	{
+		MCMemoryDelete (t_list_item);
 		MCS_close(t_file_handle);
 	}
 	

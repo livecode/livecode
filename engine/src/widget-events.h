@@ -71,6 +71,7 @@ public:
     // Returns the synchronous mouse/click coordinates
     void GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
     void GetSynchronousClickPosition(coord_t& r_x, coord_t& r_y) const;
+    void GetSynchronousClickButton(unsigned int& r_button) const;
     
     // Returns the asynchronous ("current") mouse/click coordinates
     void GetAsynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
@@ -89,6 +90,7 @@ private:
     uinteger_t  m_modifiers;
     MCStringRef m_keystring;
     MCWidget*   m_mouse_focus;
+    MCWidget*   m_mouse_grab;
     MCWidget*   m_keyboard_focus;
     
     // Parameters for controlling double-click time and position deltas

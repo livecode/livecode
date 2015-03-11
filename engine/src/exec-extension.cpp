@@ -160,8 +160,11 @@ bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef
 
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
 {
+    ctxt . SetTheResultToEmpty();
+    
     MCAutoStringRef t_resolved_filename;
-    /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
+    if (!MCS_resolvepath(p_filename, &t_resolved_filename))
+        return;
     
     MCAutoDataRef t_data;
     if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
@@ -177,7 +180,11 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     MCScriptModuleRef t_module;
     if (!MCScriptCreateModuleFromStream(t_stream, t_module))
     {
-        ctxt . SetTheResultToStaticCString("failed to load module");
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(Out(t_error)))
+            ctxt . SetTheResultToValue(MCErrorGetMessage(In(t_error)));
+        else
+            ctxt . SetTheResultToStaticCString("failed to load module");
         MCValueRelease(t_stream);
         return;
     }
@@ -189,6 +196,7 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
 		MCEngineAddResourcePathForModule(t_module, p_resource_path);
     
     MCScriptReleaseModule(t_module);
+    
     
     return;
 }
@@ -460,7 +468,6 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
             // We start off with no new value - we only create a new array if one
             // of the elements changes.
             MCAutoArrayRef t_mutated_value;
-            t_mutated_value = nil;
             
             MCNameRef t_key;
             MCValueRef t_element;
@@ -662,7 +669,6 @@ static bool __script_ensure_names_are_strings(MCValueRef p_input, MCValueRef& r_
     if (MCValueGetTypeCode(p_input) == kMCValueTypeCodeArray)
     {
         MCAutoArrayRef t_mutated_input;
-        t_mutated_input = nil;
         
         MCNameRef t_key;
         MCValueRef t_element;

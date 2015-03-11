@@ -302,13 +302,12 @@ IO_stat MCDispatch::startup(void)
 	else
 		*enginedir = '\0';
 
-	MCDataRef t_decompressed;
-	MCDataRef t_compressed;
-	/* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
-	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
-	MCValueRelease(t_compressed);
+	MCAutoDataRef t_decompressed;
+	MCAutoDataRef t_compressed;
+	/* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, &t_compressed);
+	/* UNCHECKED */ MCFiltersDecompress(*t_compressed, &t_decompressed);
     
-    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
+    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(*t_decompressed), MCDataGetLength(*t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);
@@ -317,8 +316,7 @@ IO_stat MCDispatch::startup(void)
 
 	MCS_close(stream);
 
-	/* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
-	MCValueRelease(t_decompressed);
+	/* FRAGILE */ memset((void *)MCDataGetBytePtr(*t_decompressed), 0, MCDataGetLength(*t_decompressed));
 
 	// Temporary fix to make sure environment stack doesn't get lost behind everything.
 #if defined(_MACOSX)
@@ -2191,16 +2189,17 @@ void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStrin
     // MM-2012-09-05: [[ Property Listener ]]
     MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
     // AL-2015-03-04: [[ Bug 14737 ]] Don't reset the count of listeners to zero.
-    return;
-#endif			
+#else
     r_count = 0;
+#endif
+    
 }
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER
     r_time = MCpropertylistenerthrottletime;
     // AL-2015-03-04: [[ Bug 14737 ]] Don't reset the returned throttle time to 0.
-    return;
-#endif			
+#else
     r_time = 0;
+#endif
 }
