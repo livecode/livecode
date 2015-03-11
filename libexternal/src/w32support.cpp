@@ -36,6 +36,29 @@ char *string_to_utf8(const char *p_native_path)
 	return t_utf8_path;
 }
 
+char *string_from_utf8(const char *p_utf8_string)
+{
+	int t_length;
+	// Make sure that the length includes the NULL terminating char
+	t_length = strlen(p_utf8_string) + 1;
+
+	WCHAR *t_utf16_path;
+	t_utf16_path = (WCHAR *)malloc(sizeof(WCHAR) * t_length);
+	MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, p_utf8_string, t_length, t_utf16_path, t_length);
+
+	int t_native_length;
+	t_native_length = WideCharToMultiByte(CP_ACP, 0, t_utf16_path, t_length, NULL, 0, NULL, NULL);
+
+	char *t_native_string;
+	t_native_string = (char *)malloc(t_native_length);
+
+	WideCharToMultiByte(CP_ACP, 0, t_utf16_path, t_length, t_native_string, t_native_length, NULL, NULL);
+
+	free(t_utf16_path);
+
+	return t_native_string;
+}
+
 char *os_path_to_native_utf8(const char *p_path)
 {
 	char *t_native_path;
@@ -118,4 +141,37 @@ char *os_path_resolve(const char *p_native_path)
 	char *cstr = strclone(p_native_path);
 	cstr = os_path_to_native(cstr);
 	return cstr;
+}
+
+
+// SN-2015-03-10:[[ Bug 14413 ]] Added UTF-8 conversion functions
+
+// Parameters:
+//  p_utf8_string : pointer to UTF-8 encoded string.
+// Returns:
+//  a pointer to the native-encoded string. Must be freed by the caller
+// Semantics:
+//  Converts a UTF-8 encoded srting into a Native string
+char *ConvertCStringFromUTF8ToNative(const char* p_utf8_path, int *r_success)
+{
+	char *t_native_string;
+	t_native_string = string_from_utf8(p_utf8_path);
+
+	*r_success = t_native_string != NULL;
+	return t_native_string;
+}
+
+// Parameters:
+//  p_native_string : pointer to native-encoded string.
+// Returns:
+//  a pointer to the UTF-8 encoded string. Must be freed by the caller
+// Semantics:
+//  Converts a native srting into a UTF-8 encoded string
+char *ConvertCStringFromNativeToUTF8(const char* p_native_string, int *r_success)
+{
+	char *t_utf8_string;
+	t_utf8_string = string_to_utf8(p_native_string);
+
+	*r_success = t_utf8_string != NULL;
+	return t_utf8_string;
 }
