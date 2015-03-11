@@ -30,7 +30,7 @@ widget com.livecode.extensions.livecode.headerBar
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "Header Bar"
-metadata author is "Georgia Hutchings"
+metadata author is "LiveCode"
 metadata version is "1.0.7"
 --
 
