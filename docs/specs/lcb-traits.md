@@ -97,27 +97,63 @@ implementing the trait for a specific storage type.
 ### Defining traits
 
     public trait type CanFormatAsString
-        method type FormatAsString(in me) as string
+        in method type FormatAsString() as string
     end type
 
-A trait definition is a block containing a list of zero or more `method type`
-declarations.  `method type` declarations take the same form as existing
-`handler type` declarations.
+    public trait type CanParseFromString
+        handler type ParseFromString(in pString as String) as MyType
+    end handler
 
-Two additional symbols are defined within a trait definition:
+A trait definition is a block containing a list of one or more
+`method type` or `handler type` declarations.
 
-1. `MyType` is always equivalent to the type of the value that the method is
-   being called for.
-2. `me` must always be the first parameter a `method` definition or
-   `method type` declaration; it is equivalent to writing `me as MyType`.  The
-   `me` parameter must always be `in` or `inout`.
+An additional symbol, `MyType`, is defined within a trait definition.
+It is always equivalent to the concrete type for which the trait is
+implemented.
+
+#### Trait methods
+
+    public trait type AtomicArithmeticOps
+        inout method type AtomicIncrement() as MyType
+        inout method type AtomicDecrement() as MyType
+    end type
+
+A trait body may contain `method type` declarations.  `method type`
+declarations are similar to `handler type` declarations.
+
+Methods take an implicit argument named `me` of type `MyType`.  This
+is the value for which the method is being called.
+
+The `method type` declaration may have an `in` or `inout` qualifier
+that controls the mutability of the `me` special argument.  If neither
+`in` nor `inout` are specified, `me` is immutable.
+
+Methods may only be invoked for values of concrete types for which the
+trait is implemented.
+
+#### Trait handlers
+
+A trait body may contain `handler type` declarations.  These are
+procedures that are never invoked for a value.  For example, they may
+be used for construction.
+
+Trait handlers must always fulfil the **Relevance Rule**.
+
+#### Relevance rule
+
+The **Relevance Rule** is required to ensure that implementations of a
+trait handler are always distinct.
+
+Trait handler prototypes must therefore mention `MyType`.  This means
+that the prototype must either return `MyType`, or accept a `MyType`
+parameter.
 
 ### Implementing traits
 
     public implementation of CanFormatAsString for T
-        method FormatAsString(in me) as string
+        method FormatAsString() as string
             variable tFormatted as string
-            -- Format me parameter
+            -- Format implicit "me" parameter
             return tFormatted
         end method
     end implementation
@@ -174,7 +210,7 @@ calls trait methods.  Consider the following partially-typed module:
     end handler
 
 Coupled with another module that contains a call:
-`LeakInstanceOfT().FormatAsString()`.  Requiring any implementation of a
+`LeakInstanceOfT():FormatAsString()`.  Requiring any implementation of a
 `public` trait to also be `public` allows this behaviour to be intuitively
 correct.
 
@@ -182,16 +218,19 @@ It may be possible to relax this rule if each module has a different list of
 trait implementations attached to the `T` type.  However, the rule simplifies
 things to start off with!
 
-### Method calls
+### Trait method calls
 
     public handler MCStringEvalFormatAsString(in pValue as CanFormatAsString,
-                                              out rFormatted as string)
-        pValue.FormatAsString() into rFormatted
+                                              out rFormatted as String)
+        pValue:FormatAsString() into rFormatted
     end handler
 
-Selecting an appropriate method implementation for a value is a type of
-namespace operation.  Currently, `.` is used for module-based namespace
-disambiguation.  It is therefore logical to reuse it for method calls.
+The `.` character is reserved for namespace qualification in Builder.
+Method invocation is subtly different because unlike a namespace
+qualification the result cannot be determined entirely statically.
+It's also important to be able to distinguish between calling a method
+on a type object and calling a handler of a type object. The `:`
+character is therefore used for method invocation syntax.
 
     syntax FormattedAsString is postfix operator with precedence 1
         <Operand: Expression> "formatted" "as" "string"
@@ -202,30 +241,130 @@ disambiguation.  It is therefore logical to reuse it for method calls.
 Handler-based `syntax` definitions can be used to provide type-generic syntax
 by using trait types.  Methods do not need to directly used in `syntax` blocks.
 
-### Derived traits
+### Trait handler calls
 
-    public trait type Circle derived from Shape
-        method type Radius(in me) as number
+    public handler MCLogicEvalStringParsedAsBool(in pValue as String,
+                                                 out rParsed as Boolean)
+        put Boolean.ParseFromString(pValue) into rParsed
+    end handler
+
+Trait handler calls are pure namespace operations, and use the `.`
+character.
+
+In the absence of generic functions, trait handlers are most useful as
+a convenience mnemonic for frequently-used constructors.
+
+    syntax StringParsedAsBoolean is postfix operator with precedence 1
+        <Operand: Expression> "parsed" "as" "boolean"
+    begin
+        MCLogicEvalStringParsedAsBool(Operand, output)
+    end syntax
+
+Trait handlers do not need to be directly used in `syntax` blocks.
+
+## Trait type conversion
+
+In general, explicit casting from one type to another is performed
+using the same syntax as for type, parameter and variable
+declarations: `as U`, where `U` is the target type.
+
+### Concrete to trait cast in expression context
+
+    trait type U
+        method type Func()
     end type
+    implementation of U for Number
+        method Func()
+        end method
+    end implementation
 
-One trait can be derived from other traits.  A derived trait inherits all of
-the `method type` declarations.
+    handler DoFunc(in pParam as U)
+        U:Func()
+    end handler
 
-    public trait type Circle derived from (Shape, CanBeEqual)
-        method type Radius(in me) as number
-        method type Centre(in me) as Point
+    public handler main()
+        DoFunc(5)
+    end handler
+
+Implementation-based implicit type conversion occurs wherever
+necessary and unambiguous.
+
+In this case, `DoFunc` requires an parameter of type `U`.  The
+parameter supplied is of type `Number`.  Since `U` is implemented for
+`Number`, the `Number` can be passed to `DoFunc` without an explicit
+type cast.
+
+    trait type U
+        method type Func() as Number
     end type
+    implementation of U for Number
+        method Func()
+            return me + 1
+        end method
+    end implementation
 
-When declaring a derived trait, the **Uniqueness Rule** must be observed.
+    trait type V
+        method type Func() as Number
+    end type
+    implementation of V for Number
+        method Func()
+            return me - 1
+        end method
+    end implementation
 
-#### Uniqueness rule
+    public handler main() as Number
+        return (5 as U):Func() -- returns 6
+    end handler
 
-For a trait `A` and its supertraits `B, ..., k`, no pair of methods declared in
-`A, B, ..., k` may have the same name but a different prototype.
+It is possible for a concrete type to have multiple implementations in
+scope with conflicting method names, leading to ambiguity.  If so, an
+explicit instance cast is required to remove the ambiguity.
 
-This may be relaxed if support for polymorphic dispatch is added to Builder.
+In this case, both the `U` and `V` traits declare a `Func()` method,
+and both are implemented for `Number`.  It is therefore an error to
+invoke `5:Func()` directly; an explicit instance cast to either `U` or
+`V` is required.
 
-## Further work
+### Concrete to trait cast in type expression context
+
+    trait type U
+        handler type Func() as MyType
+    end type
+    implementation of U for Number
+        handler Func()
+            return 1
+        end handler
+    end implementation
+
+    trait type V
+        handler type Func() as MyType
+    end type
+    implementation of V for Number
+        handler Func()
+            return -1
+        end handler
+    end implementation
+
+    public handler main() as Number
+        return (Number as U).Func() -- returns 1
+    end handler
+
+It is possible for a concrete type to have multiple implementations in
+scope with conflicting handler names, leading to ambiguity.  If so, an
+explicit type cast is required to remove the ambiguity.
+
+In this case, both the `U` and `V` traits declare a `Func()` handler,
+and both are implemented for `Number`.  It's therefore an error to
+invoke `Number.Func()` directly; an explicit type cast to either `U`
+or `V` is required.
+
+## Conclusions
+
+Traits provide a reasonably straightforward and clean way to provide extensible
+standard library syntax without the need for generic handlers and (mostly)
+preserving the ability to perform compile-time type checking.
+
+## Appendices
 
 ### Parameterized types
 
@@ -235,7 +374,7 @@ formatting polymorphic compound types such as `list`.  Consider the following
 naïve approach:
 
     public implementation of CanFormatAsString for list
-        method FormatAsString(in me) as string
+        method FormatAsString() as string
             variable tString as string
             put "(" into tString
 
@@ -263,14 +402,6 @@ Similar arguments apply for the `array` type.
 To get full generality and type safety of the `formatted as string` trait
 Builder therefore also needs type specialization (e.g. `list of
 CanFormatAsString`).
-
-## Conclusions
-
-Traits provide a reasonably straightforward and clean way to provide extensible
-standard library syntax without the need for generic handlers and (mostly)
-preserving the ability to perform compile-time type checking.
-
-## Appendices
 
 ### Trait implementations vs. versioning
 
@@ -327,7 +458,7 @@ partially-typed code.
         variable tVar as any
         put pIn into tVar
 
-        tVar.f()
+        tVar:f()
     end handler
 
 If `U` is the only trait in this module and its dependency modules that defines
