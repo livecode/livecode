@@ -89,14 +89,14 @@ MCPropertyInfo MCGraphic::kProperties[] =
     DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_FILL, MCGraphic, GradientFill)
     DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_STROKE, MCGraphic, GradientStroke)
     
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LegacyPoints, MCGraphic, MarkerPoints)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
     // AL-2014-09-23: [[ Bug 13521 ]] Mark non-effective versions of properties as such
-    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LegacyPoints, MCGraphic, Points)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LegacyPoints, MCGraphic, RelativePoints)
     // SN-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
-    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LegacyPoints, MCGraphic, Points)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LegacyPoints, MCGraphic, RelativePoints)
 };
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =
