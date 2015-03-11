@@ -37,7 +37,7 @@ use com.livecode.engine
 --
 
 -- property declarations
-property day 			get mIsDay			set setDay
+property day 			get mIsDay
 property timeZone		get mTimeZone		set setTimeZone
 --
 
@@ -61,7 +61,6 @@ constant kRed is [1,0,0]
 public handler OnSave(out rProperties as array)
 	put the empty array into rProperties
 	
-	put mIsDay into rProperties["day"]
 	put mTimeZone into rProperties["timeZone"]
 	
 	return rProperties
@@ -71,7 +70,6 @@ end handler
 ----------
 -- this handler is called when the widget is loaded
 public handler OnLoad(in pProperties as array)
-	put pProperties["day"] into mIsDay
 	put pProperties["timeZone"] into mTimeZone
 end handler
 ----------
@@ -79,7 +77,6 @@ end handler
 ----------
 -- called when widget is created
 public handler OnCreate()
-	put false into mIsDay
 	put 0 into mTimeZone
 	put getTimeComponents() into mCurrentTime
 	put 12 into mFontSize
@@ -308,24 +305,6 @@ private handler getStrokeWidth(in pHand as string) as real
 		return (my width/2)*0.015
 		
 	end if
-end handler
-----------
-
-----------
--- this handler sets whether it is day or not
-/*
-Summary: Sets whether it is day or night
-
-Parameters:
-pIsDay: The time of day.
-
-Description:
-Sets the day property of the clock.
-If pDay is true, then the theme of the clock is set to day and if false, the theme of the clock is set to night.
-*/
-public handler setDay(in pIsDay as boolean) as undefined
-	put pIsDay into mIsDay
-	redraw all
 end handler
 ----------
 
