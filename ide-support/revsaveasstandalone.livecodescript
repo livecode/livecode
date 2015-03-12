@@ -2168,7 +2168,8 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       local tLibraryStack
       put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
       if there is a stack tLibraryStack then
-         put return & the effective filename of stack tLibraryStack after sStandaloneSettingsA["auxiliary_stackfiles"]
+         if sStandaloneSettings["auxiliary_stackfiles"] is not empty then put return after sStandaloneSettings["auxiliary_stackfiles"]
+         put the effective filename of stack tLibraryStack after sStandaloneSettings["auxiliary_stackfiles"]
          put return & "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
       end if
    end repeat
