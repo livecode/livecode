@@ -16,14 +16,34 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-Module: com.livecode.extensions.livecode.headerBar
+This widget is a navigation bar.
 
-Type: widget
+Name: navitems
+Type: property
+Syntax: set the navitems of <widget> to <pNavItems>
+Syntax: get the navitems of <widget>
+Summary: Sets the navigation items
 
-Description: This widget is a navigation bar. 
-This widget has three properties that can be set: theme; navitems and selectedItem.
+Parameters:
+pNavItems: The navigation items.
+
+Description:
+Sets the navigation items from pNavItems, where pNavItems is a line delimited list of items, where each line is a comma delimited list of the
+different components of the navigation item: name, label, icon, selected icon.
+
+Name: selecteditem
+Type: property
+Syntax: set the selecteditem of <widget> to <pSelectedItem>
+Syntax: get the selecteditem of <widget>
+
+Summary: Sets the selected navigation item
+
+Parameters:
+pSelectedItem: The number of a nav item.
+
+Description:
+Selects a navigation item.
 */
-
 -- declaring extension as widget, followed by identifier
 widget com.livecode.extensions.livecode.navbar
 --
@@ -50,19 +70,17 @@ metadata selecteditem.default is "1"
 --
 
 -- private instance variables
-private variable mTheme as string
-private variable mNavItems as list
-private variable mSelectedItem as integer
-private variable mItemStyle as string
+private variable mTheme as String
+private variable mNavItems as List
+private variable mSelectedItem as Integer
+private variable mItemStyle as String
 
-private variable mNavItemCount as integer
-private variable mBoxWidth as real
-private variable mLeft as real
+private variable mNavItemCount as Integer
+private variable mBoxWidth as Real
+private variable mLeft as Real
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mTheme into rProperties["theme"]
@@ -72,20 +90,14 @@ public handler OnSave(out rProperties as array)
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
+public handler OnLoad(in pProperties as Array)
 	put pProperties["theme"] into mTheme
 	put pProperties["items"] into mNavItems
 	put pProperties["selected"] into mSelectedItem
 	put pProperties["itemStyle"] into mItemStyle
 end handler
-----------
 
-----------
--- called when the widget is created
 public handler OnCreate() as undefined
 	--properties
 	put "ios-8" into mTheme
@@ -104,10 +116,7 @@ public handler OnCreate() as undefined
 	set my height to 48
 	set my width to 200
 end handler
-----------
 
-----------
--- called whenever LiveCode needs to redraw the widget
 public handler OnPaint() as undefined
 
 	// update variables
@@ -121,10 +130,10 @@ public handler OnPaint() as undefined
 	
 	// Calculate the size of each box we're drawing into
 	variable tElement
-	variable tCount as integer
+	variable tCount as Integer
 	put 1 into tCount
 	
-	variable tX as integer
+	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
 	
 		if mSelectedItem is tCount then
@@ -156,20 +165,17 @@ public handler OnPaint() as undefined
 	set the paint of this canvas to getPaint("background","stroke")
 	fill getPath("line") on this canvas
 end handler
-----------
 
-----------
--- this handler deals with the mouse up event
 public handler OnMouseUp() as undefined
 
-	variable tSelected as number
+	variable tSelected as Number
 	put locToNavItem(the click position) into tSelected
 	
 	if tSelected > 0 then
 		put tSelected into mSelectedItem
 		redraw all
 		
-		variable tItemLabel as string
+		variable tItemLabel as String
 		put element mSelectedItem of element 2 of mNavItems into tItemLabel
 		post "navigate" with [tItemLabel]
 	end if
@@ -178,15 +184,15 @@ end handler
 
 ----------
 -- this handler converts mNavItems in a form that can be combined for output 
-private handler getNavItems() as string
+private handler getNavItems() as String
 	
-	variable tNavItems as list
+	variable tNavItems as List
 	put the empty list into tNavItems
 	
-	variable tCount as integer
-	variable tListLine as list
-	variable tStringLine as string
-	variable tItemList as list
+	variable tCount as Integer
+	variable tListLine as List
+	variable tStringLine as String
+	variable tItemList as List
 	
 	put the empty string into tStringLine
 	put the empty list into tItemList
@@ -203,28 +209,22 @@ private handler getNavItems() as string
 		push tStringLine onto back of tItemList
 	end repeat
 	
-	variable tNavItemString as string
+	variable tNavItemString as String
 	put the empty string into tNavItemString
 	combine tItemList with newline into tNavItemString
 	
 	return tNavItemString
 end handler
-----------
 
-----------
--- this handler returns a path
-public handler getPath(in pObject as string) as Path
+public handler getPath(in pObject as String) as Path
 	if pObject is "bounding box" then
 		return rectangle path of my bounds 
 	else if pObject is "line" then
 		return rectangle path of rectangle [0,0,my width,1]
 	end if
 end handler
-----------
 
-----------
--- this handler returns a rectangle
-public handler getRect(in pObject as string) as Rectangle
+public handler getRect(in pObject as String) as Rectangle
 	if pObject is "label" then
 		return rectangle [mLeft,my height * 0.65,mLeft+mBoxWidth,my height]
 		
@@ -237,10 +237,7 @@ public handler getRect(in pObject as string) as Rectangle
 	
 	end if
 end handler
-----------
-		
-----------
--- this handler returns a paint
+
 public handler getPaint(pLocation, pType) as Paint
 	if pLocation is "background" then
 		if pType is "fill" then
@@ -258,11 +255,8 @@ public handler getPaint(pLocation, pType) as Paint
 	
 	return solid paint with color [1, 100/255, 200/255]
 end handler
-----------
 
-----------
--- this handler returns a font
-private handler getFont(in pType as string) as Font
+private handler getFont(in pType as String) as Font
 	if pType is "label" then
 		if mTheme is "ios-8" then
 			return font "Helvetica Neue" at size 10
@@ -274,83 +268,34 @@ private handler getFont(in pType as string) as Font
 		return font "fontawesome" at size 20
 	end if
 end handler
-----------
 
-----------
--- this handler sets the theme
-/*
-Summary: Sets the theme of the navbar
-
-Parameters:
-pThemeName: The name of the theme.
-
-Description:
-Sets the theme of the navigation bar (currently, only "ios-8").
-*/
-public handler setTheme(in pThemeName as string) as undefined
+public handler setTheme(in pThemeName as String) as undefined
 	put pThemeName into mTheme
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the selected nav item
-/*
-Summary: Sets the selected navigation item
-
-Parameters:
-pSelectedItem: The number of a nav item.
-
-Description:
-Selects a navigation item.
-*/
-
-public handler setNavSelectedItem(in pSelectedItem as integer) as undefined
+public handler setNavSelectedItem(in pSelectedItem as Integer) as undefined
 	if pSelectedItem > 0 and pSelectedItem <= the number of elements in mNavItems then
 		put pSelectedItem into mSelectedItem
 		redraw all
 	end if
 end handler
-----------
 
-----------
--- this handler sets the nav item style
-/*
-Summary: Sets the style of the items on the navbar
-
-Parameters:
-pItemStyle: The name of the item style.
-
-Description:
-Sets the item style of the navigation bar ("icons" or "icons and names").
-*/
-public handler setItemStyle(in pItemStyle as string) as undefined
+public handler setItemStyle(in pItemStyle as String) as undefined
 	put pItemStyle into mItemStyle
 	redraw all
 end handler
 
-----------
--- this handler sets the nav items
-/*
-Summary: Sets the navigation items
-
-Parameters:
-pNavItems: The navigation items.
-
-Description:
-Sets the navigation items from pNavItems, where pNavItems is a line delimited list of items, where each line is a comma delimited list of the 
-different components of the navigation item: name, label, icon, selected icon.
-*/
-private handler setNavItems(in pNavItems as string) as undefined
+private handler setNavItems(in pNavItems as String) as undefined
 	
-	variable tNavItems as list
+	variable tNavItems as List
 	split pNavItems by newline into tNavItems
 	
 	variable tNavElement
 	variable tListElement
 	
-	variable tFinalActions as list
-	variable tStringToList as list
+	variable tFinalActions as List
+	variable tStringToList as List
 	put the empty list into tFinalActions
 	
 	repeat for each element tNavElement in tNavItems
@@ -363,14 +308,14 @@ private handler setNavItems(in pNavItems as string) as undefined
 		
 	end repeat
 	
-	variable tNavCount as integer
-	variable tCount as integer
+	variable tNavCount as Integer
+	variable tCount as Integer
 	put the trunc of (the number of elements in tFinalActions)/4 into tNavCount
 	
-	variable tNameList as list
-	variable tLabelList as list
-	variable tIconList as list
-	variable tSelectedIconList as list
+	variable tNameList as List
+	variable tLabelList as List
+	variable tIconList as List
+	variable tSelectedIconList as List
 	put the empty list into tNameList
 	put the empty list into tLabelList
 	put the empty list into tIconList
@@ -387,30 +332,16 @@ private handler setNavItems(in pNavItems as string) as undefined
 	
 	redraw all
 end handler
-----------
 
-----------
--- this handler adds a navitem
-/*
-Summary: Adds a navigation item
+public handler addNavItem(in pNewItem as String) as undefined
 
-Parameters:
-pNewItem: The new navigation item.
-
-Description:
-Adds the new action to the navigation bar , where pNewItem is a comma delimited list of the components of the item:
-name, label, icon, selected icon
-Updates the navItems property to include the new items and redraws the widget.
-*/
-public handler addNavItem(in pNewItem as string) as undefined
-
-	variable tNewItem as list
+	variable tNewItem as List
 	split pNewItem by "," into tNewItem
 
-	variable tNameList as list
-	variable tLabelList as list
-	variable tIconList as list
-	variable tSelectedIconList as list
+	variable tNameList as List
+	variable tLabelList as List
+	variable tIconList as List
+	variable tSelectedIconList as List
 	put element 1 of mNavItems into tNameList
 	put element 2 of mNavItems into tLabelList
 	put element 3 of mNavItems into tIconList
@@ -425,31 +356,17 @@ public handler addNavItem(in pNewItem as string) as undefined
 
 	redraw all
 end handler
-----------
 
-----------
--- this handler removes a navitem
-/*
-Summary: Removes a navigation item
-
-Parameters:
-pItem: The item to be removed.
-
-Description:
-Removes the item from the header bar, where pItem is any component of the of the item:
-name or label or icon or selected icon
-Updates the navItems property to exclude the action and redraws the widget.
-*/
-public handler removeNavItem(in pItem as string) as undefined
+public handler removeNavItem(in pItem as String) as undefined
 	
-	variable tItems as string
-	variable tItemList as list
+	variable tItems as String
+	variable tItemList as List
 	put getNavItems() into tItems
 	split tItems by newline into tItemList
 	put the empty string into tItems
 	
 	variable tItemElement
-	variable tCount as integer
+	variable tCount as Integer
 	put 1 into tCount
 	
 	repeat for each element tItemElement in tItemList
@@ -465,15 +382,12 @@ public handler removeNavItem(in pItem as string) as undefined
 	
 	redraw all
 end handler
-----------
 
-----------
--- this handler returns the number of the icon that is being clicked 
-private handler locToNavItem(in pLoc as Point) as integer
-	variable tNavItemCount as integer
+private handler locToNavItem(in pLoc as Point) as Integer
+	variable tNavItemCount as Integer
 	put the number of elements in (element 1 of mNavItems) into tNavItemCount
 	
-	variable tX as integer
+	variable tX as Integer
 	//alert_point(pLoc)
 	repeat with tX from 1 up to tNavItemCount
 		if pLoc is within navItemRect(tX) then
@@ -483,18 +397,15 @@ private handler locToNavItem(in pLoc as Point) as integer
 	
 	return 0
 end handler
-----------
 
-----------
--- this handler returns the rectangle around the nav item
 private handler navItemRect(in pItemCount) as Rectangle
-	variable tNavItemCount as integer
-	variable tBoxWidth as real
+	variable tNavItemCount as Integer
+	variable tBoxWidth as Real
 	
 	put the number of elements in (element 1 of mNavItems) into tNavItemCount
 	put my width / tNavItemCount into tBoxWidth
 	
-	variable tLeft as real
+	variable tLeft as Real
 	
 	if pItemCount is 1 then
 		put 0 into tLeft
@@ -504,25 +415,22 @@ private handler navItemRect(in pItemCount) as Rectangle
 	
 	return rectangle [tLeft,0,tLeft+tBoxWidth,my height]
 end handler
-----------
 
-----------
-private handler alert_number(in pNumber as number) as undefined
+private handler alert_number(in pNumber as Number) as undefined
 	execute script "answer" && pNumber formatted as string
 end handler
 
 private handler alert_point(in pPoint as Point) as undefined
-	variable tClickPoint as list
+	variable tClickPoint as List
 	split pPoint by "," into tClickPoint
 
-	variable tX as number
-	variable tY as number
+	variable tX as Number
+	variable tY as Number
 	
 	put (element 1 of tClickPoint) parsed as number - the left of my rectangle into tX
 	put (element 2 of tClickPoint) parsed as number - the top of my rectangle into tY
 
 	execute script "answer" && tX formatted as string & "," & tY formatted as string
 end handler
-----------
 
 end widget

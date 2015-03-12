@@ -16,12 +16,18 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-Module: com.livecode.extension.livecode.switchButton
+A switch button, consisting of two mutually exclusive choices or states.
 
-Type: widget
+Name: checked
+Type: property
+Syntax: set the checked of <widget> to <pIsChecked>
+Syntax: get the checked of <widget>
+Summary: The checked state of the switch button.
 
-Description: This widget is a switch button, it consists of two mutually exclusive choices or states. 
-This widget has two properties that can be set: theme and checked.
+pIsChecked (boolean): The state of the button.
+
+Description:
+The checked property determines whether the switch button displays as on (true) or off (false).
 */
 
 -- declaring extension as widget, followed by identifier
@@ -34,13 +40,11 @@ use com.livecode.widget
 use com.livecode.engine
 --
 
--- adding metadata to ensure the extension displays correctly in livecode
+-- metadata
 metadata title is "Switch Button"
 metadata author is "LiveCode"
 metadata version is "1.0.3"
 --
-
-
 
 -- property declarations
 property checked			get mIsChecked		set setChecked
@@ -48,42 +52,27 @@ metadata checked.default is "false"
 --
 
 -- private instance variables
-private variable mTheme as string
-private variable mIsChecked as boolean
-private variable mState as string
+private variable mIsChecked as Boolean
+private variable mState as String
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
-	
-	put mTheme into rProperties["theme"]
+
 	put mIsChecked into rProperties["checked"]
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
-	put pProperties["theme"] into mTheme
+public handler OnLoad(in pProperties as Array)
 	put pProperties["checked"] into mIsChecked
 end handler
-----------
 
-----------
--- called when the widget is created
 public handler OnCreate()
-	put "ios-8" into mTheme
 	put false into mIsChecked
 	put "not animating" into mState
 end handler
-----------
 
-----------
--- called whenever livecode needs to redraw the widget
 public handler OnPaint()
 
 	-- draw the check box when animating and not animating
@@ -150,18 +139,14 @@ public handler OnPaint()
 	--
 	
 end handler
-----------
 
-----------
 public handler OnMouseDown()
 	if the click position is within getRect("bounding box") then
 		put "animating" into mState
 		redraw all
 	end if
 end handler
-----------
 
-----------
 public handler OnMouseUp()
 	if the click position is within getRect("bounding box") then
 		setChecked(not(mIsChecked))
@@ -171,11 +156,8 @@ public handler OnMouseUp()
 
 	post "mouseUp" with [mIsChecked]
 end handler
-----------
 
-----------
--- this handler returns a path
-private handler getPath(in pShape as string) as Path
+private handler getPath(in pShape as String) as Path
 	if pShape is "box" then
 		return rounded rectangle path of rectangle [(my width)/2 - (my height)/2, (my height)/4, (my width)/2 + (my height)/2, 3*(my height)/4] with radius (my height)/4
 	else if pShape is "left circle" then
@@ -190,20 +172,14 @@ private handler getPath(in pShape as string) as Path
 		return rectangle path of rectangle [(my width)/2, (my height)/4, (my width)/2 + (my height)/4, 3*(my height)/4]
 	end if
 end handler
-----------
 
-----------
--- this handler returns a rectangle
-private handler getRect(in pObject as string) as Rectangle
+private handler getRect(in pObject as String) as Rectangle
 	if pObject is "bounding box" then
 		return rectangle [(my width)/2 - 3*(my height)/4, (my height)/4, (my width)/2 + 3*(my height)/4, 3*(my height)/4]
 	end if
 end handler
-----------
 
-----------
--- this handler returns a paint
-private handler getPaint(in pObject as string) as Paint
+private handler getPaint(in pObject as String) as Paint
 
 	if pObject is "border" then
 		if mIsChecked is false then
@@ -230,41 +206,11 @@ private handler getPaint(in pObject as string) as Paint
 		
 	end if
 end handler
-----------
 
-----------
--- sets the theme of the widget
-/*
-Summary: Sets the theme of the switch button.
-
-Parameters:
-pTheme: The name of the theme.
-
-Description:
-Sets the theme property of the switch button (currently, only "ios-8").
-*/
-public handler setTheme(in pTheme as string) as undefined
-	put pTheme into mTheme
-	redraw all
-end handler
-----------
-
-----------
--- sets whether the box is checked
-/*
-Summary: Sets the whether the switch button is checked.
-
-Parameters:
-pIsChecked: The state of the button.
-
-Description:
-Sets the checked property of the switch button.
-Sets whether the switch button is true ("on") or false ("off").
-*/
-public handler setChecked(in pIsChecked as boolean) as undefined
+public handler setChecked(in pIsChecked as Boolean) as undefined
 	put pIsChecked into mIsChecked
 	redraw all
 end handler
-----------
+
 
 end widget
