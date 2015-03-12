@@ -100,15 +100,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       else
          
          -- MM-2014-10-21: [[ iOS 8.1 Support ]] Use iOS 8.1 SDK for armv7 builds on 10.9.
-         --
-         get revIDEDeployIOSGetDeviceSDK("8.1")           
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") then
-            throw "performing iOS device builds requires the iOS 8.1 SDK platform to be installed (available with XCode 6.1)"
+         -- SN-2015-03-12: [[ Bug 14866 ]] Use iOS 8.2 for armv7 builds from 10.9
+         get revIDEDeployIOSGetDeviceSDK("8.2")
+         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.2.sdk") then
+            throw "performing iOS device builds requires the iOS 8.2 SDK platform to be installed (available with XCode 6.2)"
          end if                  
          put it into tSDKs["arm"]["root path"]
          put it & "/usr/bin" into tSDKs["arm"]["tools path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") into tSDKs["arm"]["sdk path"]
-         put "8_1" into tSDKs["arm"]["suffix"]
+         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.2.sdk") into tSDKs["arm"]["sdk path"]
+         put "8_2" into tSDKs["arm"]["suffix"]
          put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
          
       end if
