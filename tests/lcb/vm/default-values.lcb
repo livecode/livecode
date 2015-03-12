@@ -1,0 +1,35 @@
+module __VMTEST.default_values
+
+public handler TestDefaultValueOfBoolean()
+	variable tBoolean as Boolean
+	test "default value (boolean)" when tBoolean is false
+end handler
+
+public handler TestDefaultValueOfNumber()
+	variable tNumber as Number
+	test "default value (number)" when tNumber is 0.0
+end handler
+
+public handler TestDefaultValueOfString()
+	variable tString as String
+	test "default value (string)" when tString is ""
+end handler
+
+public handler TestDefaultValueOfData()
+	variable tData as Data
+	test "default value (boolean)" when tData is the empty data
+end handler
+
+public handler TestDefaultValueOfArray()
+	variable tArray as Array
+
+	-- We don't have array equality yet, so check the number of elements
+	test "default value (array)" when the number of elements in tArray is 0
+end handler
+
+public handler TestDefaultValueOfOptional()
+	variable tOptional as optional any
+	test "default value (optional)" when tOptional is undefined
+end handler
+
+end module
