@@ -41,6 +41,9 @@
         -- Check the syntax definitions are all correct.
         CheckSyntaxDefinitions(Module)
 
+        -- Check that suitable identifiers are used in definitions
+        CheckIdentifiers(Module)
+
 --------------------------------------------------------------------------------
 
 -- At this point all identifiers either have a defined meaning, or are defined
@@ -1591,6 +1594,83 @@
     'rule' IsHighLevelType(data(_)):
     'rule' IsHighLevelType(array(_)):
     'rule' IsHighLevelType(list(_, _)):
+
+--------------------------------------------------------------------------------
+
+-- Emit warnings if there are any potential problems with the
+-- identifiers that are declared in the module.  In particular, warn
+-- if there are any possible ambiguities with syntax keywords.
+
+-- This sweep only covers the places where identifiers are defined.
+-- This prevents warnings from being emitted everywhere that an
+-- identifier is used.  It also prevents warnings about identifiers
+-- defined in a different module, which the author of the current
+-- module might not be able to do anything about.
+
+'sweep' CheckIdentifiers(ANY)
+
+    'rule' CheckIdentifiers(MODULE'module(_, _, Id, Imports, Definitions)):
+        CheckIdIsSuitableForDefinition(Id)
+        CheckIdentifiers(Imports)
+        CheckIdentifiers(Definitions)
+
+    --
+
+    'rule' CheckIdentifiers(DEFINITION'type(_, _, Id, Type)):
+        CheckIdIsSuitableForDefinition(Id)
+        CheckIdentifiers(Type)
+
+    'rule' CheckIdentifiers(DEFINITION'constant(_, _, Id, Value)):
+        CheckIdIsSuitableForDefinition(Id)
+        CheckIdentifiers(Value)
+
+    'rule' CheckIdentifiers(DEFINITION'variable(_, _, Id, _)):
+        CheckIdIsSuitableForDefinition(Id)
+
+    'rule' CheckIdentifiers(DEFINITION'contextvariable(_, _, Id, Type, _)):
+        CheckIdIsSuitableForDefinition(Id)
+        CheckIdentifiers(Type)
+
+    'rule' CheckIdentifiers(DEFINITION'handler(_, _, Id, _, Signature, Definitions, Body)):
+        CheckIdIsSuitableForDefinition(Id)
+        CheckIdentifiers(Signature)
+        CheckIdentifiers(Definitions)
+        CheckIdentifiers(Body)
+
+    'rule' CheckIdentifiers(DEFINITION'foreignhandler(_, _, Id, Signature, _)):
+        CheckIdIsSuitableForDefinition(Id)
+        CheckIdentifiers(Signature)
+
+    'rule' CheckIdentifiers(DEFINITION'property(_, _, Id, _, _)):
+        CheckIdIsSuitableForDefinition(Id)
+
+    'rule' CheckIdentifiers(DEFINITION'event(_, _, Id, Signature)):
+        CheckIdIsSuitableForDefinition(Id)
+        CheckIdentifiers(Signature)
+
+    'rule' CheckIdentifiers(DEFINITION'syntax(_, _, Id, _, _, _)):
+        CheckIdIsSuitableForDefinition(Id)
+
+    --
+
+    'rule' CheckIdentifiers(PARAMETER'parameter(_, _, Id, _)):
+        CheckIdIsSuitableForDefinition(Id)
+
+    --
+
+    'rule' CheckIdentifiers(STATEMENT'variable(_, Id, _)):
+        CheckIdIsSuitableForDefinition(Id)
+
+'action' CheckIdIsSuitableForDefinition(ID)
+
+    'rule' CheckIdIsSuitableForDefinition(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        (|
+            IsNameSuitableForDefinition(Name)
+        ||
+            Warning_UnsuitableNameForDefinition(Position, Name)
+        |)
 
 --------------------------------------------------------------------------------
 

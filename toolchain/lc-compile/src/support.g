@@ -43,6 +43,8 @@
     IsNameEqualToString
     IsStringEqualToString
 
+    IsNameSuitableForDefinition
+
     InitializeScopes
     FinalizeScopes
     DumpScopes
@@ -295,6 +297,7 @@
     Error_HandlerNotSuitableForPropertySetter
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
+    Warning_UnsuitableNameForDefinition
 
 
 --------------------------------------------------------------------------------
@@ -333,6 +336,8 @@
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
 'condition' IsStringEqualToString(STRING, STRING)
+
+'condition' IsNameSuitableForDefinition(NAME)
 
 --------------------------------------------------------------------------------
 
@@ -644,5 +649,6 @@
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
+'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
 
 --------------------------------------------------------------------------------
