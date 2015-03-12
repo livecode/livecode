@@ -36,6 +36,9 @@ enum {
 	kMCRunExitStatusUncaughtError = 126,
 };
 
+/* Possible entry point handler names. The first is the default. */
+const char *kMCRunHandlerNames[] = { "Main", "main", nil };
+
 struct MCRunConfiguration
 {
 	MCStringRef m_filename;
@@ -421,6 +424,51 @@ MCRunListHandlers (MCScriptModuleRef p_module)
 	return true;
 }
 
+static bool
+MCRunGetHandlerName (MCScriptModuleRef p_module,
+                     MCNameRef p_config_name,
+                     MCNameRef & r_name)
+{
+	MCNameRef t_main_name = nil;
+	if (!MCNameIsEmpty (p_config_name))
+	{
+		t_main_name = p_config_name;
+	}
+	else
+	{
+		MCAutoProperListRef t_handler_list; /* List of MCNameRef */
+
+		if (!MCScriptCopyHandlersOfModule (p_module, &t_handler_list))
+			return false;
+
+		for (size_t i = 0; nil != kMCRunHandlerNames[i]; ++i)
+		{
+			MCNameRef t_name = MCNAME(kMCRunHandlerNames[i]);
+
+			uindex_t t_ignored;
+			if (!MCProperListFirstIndexOfElement (*t_handler_list, t_name,
+			                                      0, t_ignored))
+				continue;
+
+			if (i > 0)
+			{
+				MCAutoStringRef t_message;
+				if (!MCStringFormat (&t_message, "WARNING: Deprecated default handler '%s' (use '-H %s')\n", kMCRunHandlerNames[i], kMCRunHandlerNames[i]))
+					return false;
+				MCRunPrintMessage (stderr, *t_message);
+			}
+
+			t_main_name = t_name;
+			break;
+		}
+
+		if (nil == t_main_name)
+			t_main_name = MCNAME(kMCRunHandlerNames[0]);
+	}
+
+	r_name = MCValueRetain (t_main_name);
+	return true;
+}
 
 /* ----------------------------------------------------------------
  * Main program
@@ -439,7 +487,7 @@ main (int argc,
 	/* Defaults */
 	MCRunConfiguration t_config;
 	t_config.m_filename = MCValueRetain (kMCEmptyString);
-	t_config.m_handler = MCValueRetain (MCNAME("main"));
+	t_config.m_handler = MCValueRetain (kMCEmptyName);
 	t_config.m_list_handlers = false;
 	if (!MCProperListCreateMutable (t_config.m_load_filenames))
 		MCRunStartupError(MCSTR("Initialization"));
@@ -465,11 +513,15 @@ main (int argc,
 	}
 	else
 	{
+		MCNewAutoNameRef t_handler;
+		if (!MCRunGetHandlerName (*t_module, t_config.m_handler, &t_handler))
+		    MCRunStartupError (MCSTR("Handler"));
+
 		if (!MCScriptCreateInstanceOfModule (*t_module, &t_instance))
 			MCRunStartupError(MCSTR("Create Instance"));
 
 		if (!MCScriptCallHandlerOfInstance(*t_instance,
-		                                   t_config.m_handler,
+		                                   *t_handler,
 		                                   NULL, 0,
 		                                   &t_ignored_retval))
 			MCRunHandlerError();
