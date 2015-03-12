@@ -56,12 +56,12 @@ public handler TestPow()
 	test "pow (-ve, 0)" when (-2) ^ 0 is 1
 end handler
 
-handler TestPowDomain_Imag() as undefined
-	variable tVar
-	put (-1) ^ 0.5 into tVar
+handler TestPowDomain_Imag()
+	return (-1) ^ 0.5
 end handler
 public handler TestPowDomain()
-	MCUnitTestHandlerThrowsBroken(TestPowDomain_Imag, "pow (imaginary)", "bug 14679")
+	-- bug 14679
+	MCUnitTestHandlerThrows(TestPowDomain_Imag, "pow (imaginary)")
 end handler
 
 public handler TestPowPrecedence()

@@ -19,21 +19,28 @@
 #include <foundation-system.h>
 
 #include <float.h>
+#include <errno.h>
 
 // Older versions of MSVC don't supply "trunc"
 #ifdef _WIN32
 double trunc(double f) { return f < 0 ? ceil(f) : floor(f); }
 #endif
 
+////////////////////////////////////////////////////////////////
+
+MCTypeInfoRef kMCMathDomainErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////
+
 extern "C" MC_DLLEXPORT void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output)
 {
-    if (p_right == 0)
-    {
-        r_output = 1.0;
-        return;
-    }
-
+	errno = 0;
     r_output = pow(p_left, p_right);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
@@ -411,6 +418,23 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertBase(MCStringRef p_operand, intege
     // If t_error is false then we failed because of a memory error, so no need to throw
     if (t_error)
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("integer overflow, or invalid character in source"), nil);
+}
+
+////////////////////////////////////////////////////////////////
+
+bool
+MCMathModuleInitialize (void)
+{
+	if (!MCNamedErrorTypeInfoCreate (MCNAME("com.livecode.math.DomainError"), MCNAME("math"), MCSTR("mathematical function domain error"), kMCMathDomainErrorTypeInfo))
+		return false;
+
+	return true;
+}
+
+void
+MCMathModuleFinalize (void)
+{
+	MCValueRelease (kMCMathDomainErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
