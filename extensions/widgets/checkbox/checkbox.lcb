@@ -75,7 +75,7 @@ public handler OnLoad(in pProperties as Array)
 end handler
 
 public handler OnCreate()
-	put "windows-" into mTheme
+	put "windows-8" into mTheme
 	put "Check Box" into mLabel
 	put false into mIsChecked
 	put "" into mState
@@ -234,6 +234,8 @@ private handler getPaint(in pObject as String) as Paint
 		end if
 		
 	end if
+	
+	return solid paint with color [0, 0, 0]
 end handler
 
 private handler getFont(in pObject as String) as Font
@@ -248,8 +250,9 @@ private handler getFont(in pObject as String) as Font
 		else if mTheme is "windows-8" then
 			return font "Segoe WP" at size kFontSize
 		end if 
-		
 	end if
+	
+	return font (the name of the font of this canvas)
 end handler
 
 public handler setTheme(in pTheme as String) as undefined
