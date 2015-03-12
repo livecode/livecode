@@ -160,7 +160,7 @@ public handler OnPaint()
     put getPath("hour hand") into tHourHand
     
     translate this canvas by [(my width)/2, (my height)/2]
-    rotate this canvas by 30*(element 1 of mCurrentTime)
+    rotate this canvas by 30*((element 1 of mCurrentTime) + (1/12 * (element 2 of mCurrentTime/60))) --mikey added fractional hour
     stroke tHourHand on this canvas
     restore state of this canvas
     --
