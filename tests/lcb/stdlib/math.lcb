@@ -121,17 +121,15 @@ public handler TestArctan()
 	test "arctan2 (function)" when the binary arctangent of -1 and -1 is -3 * pi / 4
 end handler
 
-handler TestTrigonometricDomain_Arcsin() as undefined
-	variable t
-	put asin((1 + any number) / any number) into t
+handler TestTrigonometricDomain_Arcsin()
+	return asin((1 + any number) / any number)
 end handler
 handler TestTrigonometricDomain_Arccos() as undefined
-	variable t
-	put acos((1 + any number) / any number) into t
+	return acos((1 + any number) / any number)
 end handler
 public handler TestTrigonometricDomain()
-	MCUnitTestHandlerThrowsBroken(TestTrigonometricDomain_Arcsin, "arcsin (> 1)", "bug 14681")
-	MCUnitTestHandlerThrowsBroken(TestTrigonometricDomain_Arccos, "arccos (> 1)", "bug 14681")
+	MCUnitTestHandlerThrows(TestTrigonometricDomain_Arcsin, "arcsin (> 1)")
+	MCUnitTestHandlerThrows(TestTrigonometricDomain_Arccos, "arccos (> 1)")
 end handler
 
 public handler TestExp()

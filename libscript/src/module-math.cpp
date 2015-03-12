@@ -172,7 +172,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumber
 
 extern "C" MC_DLLEXPORT void MCMathEvalAsinReal(double p_operand, double& r_output)
 {
+	errno = 0;
     r_output = asin(p_operand);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -189,7 +195,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumbe
 
 extern "C" MC_DLLEXPORT void MCMathEvalAcosReal(double p_operand, double& r_output)
 {
+	errno = 0;
     r_output = acos(p_operand);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalAcosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
