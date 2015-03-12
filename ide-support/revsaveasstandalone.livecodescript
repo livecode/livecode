@@ -2173,8 +2173,12 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       end if
    end repeat
    if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then
-      put the effective filename of stack "revInitialisationLibrary" before sStandaloneSettingsA["auxiliary_stackfiles"]
-      put "insert the script of stack revInitialisationLibrary into back" before sStandaloneSettingsA["startup_script"]
+      local tRevInitialisationLibrary
+      put the effective filename of stack "revInitialisationLibrary" into tRevInitialisationLibrary
+      if tRevInitialisationLibrary is not among the lines of sStandaloneSettingsA["auxiliary_stackfiles"] then
+         put tRevInitialisationLibrary & cr before sStandaloneSettingsA["auxiliary_stackfiles"]
+         put "insert the script of stack revInitialisationLibrary into back" & cr before sStandaloneSettingsA["startup_script"]
+      end if
       repeat for each line tStackFile in sStandaloneSettingsA["auxiliary_stackfiles"]
          local tTempStackFile
          put the tempname into tTempStackFile
