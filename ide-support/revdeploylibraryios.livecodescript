@@ -46,7 +46,7 @@ function deployListTargets
    
    -- SN-2015-02-18: [[ ARM64 ]] We dropped support for 
    --  iOS Simulators < 5.1
-   put "5.1,6.1,7.1,8.1" into tAvailableSimulators
+   put "5.1,6.1,7.1,8.2" into tAvailableSimulators
    
    repeat for each key tKey in sDeploySimulators
       if tKey is among the items of tAvailableSimulators then
@@ -302,7 +302,7 @@ command deployUpdateSDKs
       set the folder to tSDK & "/Platforms/iPhoneSimulator.platform/Developer/SDKs"
       if the result is empty then
          -- Include each simulator that isn't < 5.1 in the array, and ignore any
-         -- above 8.1 as that's the upper limit on supported versions for the
+         -- above 8.2 as that's the upper limit on supported versions for the
          -- current release.
          repeat for each line tSim in (the folders & return & the files)
             get char 16 to -5 of tSim
@@ -314,9 +314,12 @@ command deployUpdateSDKs
             end if
             
             -- MW-2012-03-21: Allow anything up to and including 8.1 support.
-            if it > "8.1" then
-               next repeat
-            end if
+            -- SN-2015-03-12: [[ Bug 14866 ]] We don't want to have an upper limit anymore.
+            --  If the new Xcode version brings compilation error, that will anyway be
+            --  part of a fix, but we want to keep any transition, first possible
+            --if it > "8.1" then
+               --next repeat
+            --end if
             
             if tSimulators[it] is not empty then
                next repeat
@@ -332,7 +335,7 @@ command deployUpdateSDKs
       if the result is empty then
          repeat for each line tDevSDK in (the folders & return & the files)
             get char 9 to -5 of tDevSDK
-            if it is not among the words of "5.1 6.0 6.1 7.0 7.1 8.0 8.1" then
+            if it is not among the words of "5.1 6.0 6.1 7.0 7.1 8.0 8.1 8.2" then
                next repeat
             end if
             if tDeviceSDKs[it] is not empty then
@@ -352,6 +355,47 @@ command deployUpdateSDKs
    revIDEDeployTargetsChanged
 end deployUpdateSDKs
 
+-- SN-2015-03-12: [[ Bug 14866 ]] Move the command updateSDKs from
+-- card "Mobile" of stack "revpreferencesgui" here, to make any update
+-- after a new Xcode release more convenient
+-- MM-2013-10-08: We now only build for Arm v7, reducing the SDKs users now require.
+function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
+   local tSDKStatus, tValid
+   put empty into tSDKStatus   
+   put true into tValid
+   
+   get revIDEDeployIOSGetSDKVersions()
+   
+   -- PM-2015-02-06: [[ Bug 14422 ]] Removed OSX 10.6 and iOS 5.0 support
+   if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
+      if "6.1" is not among the lines of it then
+         put false into tValid
+         put "In order to perfom device builds, you must have the iOS 6.1 SDK configured." & return & "The iOS 6.1 SDK comes with XCode 4.6." into tSDKStatus
+      end if
+   else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
+      if "7.1" is not among the lines of it then
+         put false into tValid
+         put "In order to perfom device builds, you must have either the iOS 7.1 SDK configured." & return & "The iOS 7.1 SDK comes with XCode 5.1." into tSDKStatus
+      end if
+   else
+      -- SN-2015-03-12: [[ Bug 14866 ]] iOS SDK 8.2 is now the valid SDK
+      if "8.2" is not among the lines of it then
+         put false into tValid
+         put "In order to perfom device builds, you must have either the iOS 8.2 SDK configured." & return & "The iOS 8.2 SDK comes with XCode 6.2." into tSDKStatus
+      end if
+   end if
+   
+   if it is empty then
+      get "(none)"
+   else
+      replace return with comma & space in it
+   end if
+   
+   put it into rAvailableSDKs
+   put tSDKStatus into rSDKStatus
+   
+   return tValid
+end deployCheckLatestSDKIsInstalled
 
 -- Invoked to get the list of simulators available
 function deployGetSimulatorVersions
@@ -451,27 +495,20 @@ function deployIsValidSDK pSDK
    if pSDK is empty then
       return false
    end if
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.1.sdk") then
-      return true
-   end if
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator6.0.sdk") then
-      return true
-   end if
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator6.1.sdk") then
-      return true
-   end if   
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator7.0.sdk") then
-      return true
-   end if   
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator7.1.sdk") then
-      return true
-   end if
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk") then
-      return true
-   end if   
-   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.1.sdk") then
-      return true
-   end if   
+   
+   local tOldFolder, tSDKVersion
+   put the defaultfolder into tOldFolder
+   set the defaultfolder to pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs"
+   
+   put the files & LF & the folders into tSDKList
+   
+   // We accept any SDK having an iPhone simulator >= 5.1
+   repeat for each line tSDK in tSDKList
+      if matchtext(tSDK, "iPhoneSimulator([0-9]\.[0-9]).sdk", tSDKVersion) and \
+            tSDKVersion > 5.1 then
+         return true
+      end if
+   end repeat
    
    -- Otherwise it must be invalid
    return false
