@@ -184,9 +184,13 @@ public handler TestMinBinary()
 	test "min (function)" when min(4, 5) is 4
 end handler
 
+handler TestMinList_Empty()
+	return the minimum value of []
+end handler
 public handler TestMinList()
 	test "min (list)" when the minimum value of [2, 1, 3] is 1
-	skip test "min (empty list)" because "Can't test for errors"
+
+	MCUnitTestHandlerThrows(TestMinList_Empty, "min (empty list)")
 end handler
 
 public handler TestMaxBinary()
@@ -194,9 +198,13 @@ public handler TestMaxBinary()
 	test "max (function)" when max(4, 5) is 5
 end handler
 
+handler TestMaxList_Empty()
+	return the maximum value of []
+end handler
 public handler TestMaxList()
 	test "max (list)" when the maximum value of [2, 1, 3] is 3
-	skip test "max (empty list)" because "Can't test for errors"
+
+	MCUnitTestHandlerThrows(TestMaxList_Empty, "max (empty list)")
 end handler
 
 public handler TestBaseConvertFrom()
