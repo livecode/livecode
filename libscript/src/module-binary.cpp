@@ -73,7 +73,7 @@ extern "C" MC_DLLEXPORT void MCBinaryEvalIsGreaterThan(MCDataRef p_left, MCDataR
     r_result = MCDataCompareTo(p_left, p_right) > 0;
 }
 
-extern "C" MC_DLLEXPORT void MCDataEvalEmpty(MCDataRef& r_output)
+extern "C" MC_DLLEXPORT void MCBinaryEvalEmpty(MCDataRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyData);
 }
