@@ -455,6 +455,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkArrayGetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef&)
 #define MCPropertyThunkArraySetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef)
 #define MCPropertyThunkArrayGetString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCStringRef&)
+#define MCPropertyThunkArrayGetArray(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCArrayRef&)
 #define MCPropertyThunkArrayGetAny(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCValueRef&)
 #define MCPropertyThunkArraySetAny(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCValueRef)
 
