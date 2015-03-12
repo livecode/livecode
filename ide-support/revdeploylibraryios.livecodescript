@@ -375,13 +375,13 @@ function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
    else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
       if "7.1" is not among the lines of it then
          put false into tValid
-         put "In order to perfom device builds, you must have either the iOS 7.1 SDK configured." & return & "The iOS 7.1 SDK comes with XCode 5.1." into tSDKStatus
+         put "In order to perfom device builds, you must have the iOS 7.1 SDK configured." & return & "The iOS 7.1 SDK comes with XCode 5.1." into tSDKStatus
       end if
    else
       -- SN-2015-03-12: [[ Bug 14866 ]] iOS SDK 8.2 is now the valid SDK
       if "8.2" is not among the lines of it then
          put false into tValid
-         put "In order to perfom device builds, you must have either the iOS 8.2 SDK configured." & return & "The iOS 8.2 SDK comes with XCode 6.2." into tSDKStatus
+         put "In order to perfom device builds, you must have the iOS 8.2 SDK configured." & return & "The iOS 8.2 SDK comes with XCode 6.2." into tSDKStatus
       end if
    end if
    
