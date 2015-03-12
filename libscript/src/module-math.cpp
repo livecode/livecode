@@ -58,7 +58,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left,
 
 extern "C" MC_DLLEXPORT void MCMathEvalBase10LogReal(double p_operand, double& r_output)
 {
+	errno = 0;
     r_output = log10(p_operand);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -75,7 +81,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MC
 
 extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogReal(double p_operand, double& r_output)
 {
+	errno = 0;
     r_output = log(p_operand);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, MCNumberRef& r_output)

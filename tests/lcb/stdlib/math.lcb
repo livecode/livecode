@@ -83,7 +83,9 @@ handler TestLog10Domain_Zero() as undefined
 	put the log of 0 into tVar
 end handler
 public handler TestLog10Domain()
-	MCUnitTestHandlerThrowsBroken(TestLog10Domain_Negative, "log10 (syntax, -ve)", "bug 14678")
+	-- bug 14678
+	MCUnitTestHandlerThrows(TestLog10Domain_Negative, "log10 (syntax, -ve)")
+
 	MCUnitTestHandlerThrowsBroken(TestLog10Domain_Zero, "log10 (syntax, 0)", "bug 14678")
 end handler
 
@@ -159,7 +161,8 @@ handler TestLnDomain_Zero() as undefined
 	put the natural log of 0 into tVar
 end handler
 public handler TestLnDomain()
-	MCUnitTestHandlerThrowsBroken(TestLnDomain_Negative, "ln (syntax, -ve)", "bug 14678")
+	-- bug 14678
+	MCUnitTestHandlerThrows(TestLnDomain_Negative, "ln (syntax, -ve)")
 	MCUnitTestHandlerThrowsBroken(TestLnDomain_Zero, "ln (syntax, 0)", "bug 14678")
 end handler
 
