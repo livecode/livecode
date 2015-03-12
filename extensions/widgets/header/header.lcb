@@ -118,7 +118,7 @@ public handler OnCreate()
 	-- properties
 	put true into mBackIsEnabled
 	put "Title" into mLabel
-	put "ios-8" into mTheme
+	put "" into mTheme
 	put "icons" into mActionStyle
 	
 	-- variables
@@ -424,54 +424,30 @@ Description:
 Sets the actions of the header bar from pActions, where pActions is a line delimited list of the actions, where each line is a comma delimited list 
 of the different components of the action: name, icon, command
 */
-public handler setActions(in pActions as string) as undefined
-	
+public handler setActions(in pActions as string) as undefined	
 	if pActions is the empty string then
 		put the empty list into mActions
-	
 	else
+		variable tLabels as list
+		variable tIcons as list
+		put the empty list into tLabels
+		put the empty list into tIcons
 
-		variable tActions as list
-		split pActions by newline into tActions
+		variable tActionLines as list
+		variable tAction as string
+		split pActions by newline into tActionLines
 
-		variable tActionElement
-		variable tListElement
-	
-		variable tFinalActions as list
-		variable tStringToList as list
-		put the empty list into tFinalActions
-	
-		repeat for each element tActionElement in tActions
-			put the empty list into tStringToList
-			split tActionElement by "," into tStringToList
-		
-			repeat for each element tListElement in tStringToList
-				push tListElement onto back of tFinalActions
-			end repeat
-		
+		repeat for each element tAction in tActionLines
+			variable tActionItems as list
+			split tAction by "," into tActionItems
+
+			push element 1 of tActionItems onto back of tLabels
+			push element 2 of tActionItems onto back of tIcons
 		end repeat
-		
-		variable tActionCount as integer
-		variable tCount as integer
-		put the trunc of (the number of elements in tFinalActions)/3 into tActionCount
-		log tActionCount
-	
-		variable tLabelList as list
-		variable tIconList as list
-		put the empty list into tLabelList
-		put the empty list into tIconList
-	
-		repeat with tCount from 1 up to tActionCount
-			push element (3*tCount)-2 of tFinalActions onto back of tLabelList
-			push element (3*tCount)-1 of tFinalActions onto back of tIconList
-		end repeat
-	
-		variable tTestLabel as string
-		combine tLabelList with "," into tTestLabel
 
-		put [tLabelList,tIconList] into mActions
-		
+		put [tLabels, tIcons] into mActions
 	end if
+
 	redraw all
 end handler
 ----------
