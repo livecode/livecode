@@ -401,8 +401,9 @@ void MCStack::realize()
 		window->handle.window = 0; // protect against creation callbacks
 
 		// MW-2011-02-15: [[ Bug 9396 ]] Tooltips should have a shadow on Windows.
+		// IM-2015-03-12: [[ WidgetPopup ]] Disable dropshadow for non-opaque stacks.
 		Boolean isxpmenu = (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE || mode == WM_TOOLTIP) \
-		                   && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN);
+		                   && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN) && isopaque();
 
 		// MW-2012-09-07: [[ Bug 10368 ]] If the 'no-shadow' bit is set, then we don't
 		//   want to use the menu class.
