@@ -15,32 +15,23 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-
-/* 
-Module: com.livecode.extensions.livecode.checkBox
-
-Type: widget
-
-Description: This widget is a check box. 
-It has three properties that can be set: theme, label and checked.
+/*
 */
- 
+
 
 -- declaring the extension as a widget, followed by the identifier
 widget com.livecode.extensions.livecode.checkBox
---
-
--- adding metadata to ensure the extension displays correctly in livecode
-metadata author is "LiveCode"
-metadata version is "1.0.0"
-metadata title is "Check Box"
 --
 
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
---
+
+-- metadata
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "Check Box"
 
 -- property declarations
 property theme 			get mTheme 		set setTheme
@@ -49,11 +40,11 @@ property checked		get mIsChecked 	set setChecked
 --
 
 -- private instance variables
-private variable mTheme as string
-private variable mLabel as string
-private variable mIsChecked as boolean
+private variable mTheme as String
+private variable mLabel as String
+private variable mIsChecked as Boolean
 
-private variable mState as string
+private variable mState as String
 --
 
 -- constants
@@ -67,9 +58,7 @@ constant kFontSize is 12
 constant kIconSize is 10
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mTheme into rProperties["theme"]
@@ -78,29 +67,20 @@ public handler OnSave(out rProperties as array)
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
+public handler OnLoad(in pProperties as Array)
 	put pProperties["theme"] into mTheme
 	put pProperties["label"] into mLabel
 	put pProperties["checked"] into mIsChecked
 end handler
-----------
 
-----------
--- called when the widget is created
 public handler OnCreate()
 	put "windows-" into mTheme
 	put "Check Box" into mLabel
 	put false into mIsChecked
 	put "" into mState
 end handler
-----------
 
-----------
--- called whenever livecode needs to redraw the widget
 public handler OnPaint()
 	
 	-- stroke the box first if macos
@@ -138,10 +118,7 @@ public handler OnPaint()
 	--
 	
 end handler
-----------
 
-----------
--- the following handlers deal with mouse events
 public handler OnMouseDown()
 	put "pressed" into mState
 	redraw all
@@ -154,11 +131,8 @@ public handler OnMouseUp()
     
 	post "mouseUp" with [mLabel]
 end handler
-----------
 
-----------
--- this handler returns a path
-private handler getPath(in pString as string) as Path
+private handler getPath(in pString as String) as Path
 	if pString is "checkbox" then
 		if mTheme contains "macos" then
 			return rounded rectangle path of rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2] with radius 2
@@ -167,11 +141,8 @@ private handler getPath(in pString as string) as Path
 		end if
 	end if
 end handler
-----------
 
-----------
--- this handler returns a rectangle
-private handler getRect(in pObject as string) as Rectangle
+private handler getRect(in pObject as String) as Rectangle
 	if pObject is "checkbox" then
 		return rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2]
 
@@ -179,11 +150,8 @@ private handler getRect(in pObject as string) as Rectangle
 		return rectangle [2*kPadding+kWidth,  my height/2 - kWidth/2, my width - kPadding, my height/2 + kWidth/2]
 	end if
 end handler
-----------
 
-----------
--- this handler returns a paint
-private handler getPaint(in pObject as string) as Paint
+private handler getPaint(in pObject as String) as Paint
 
 	if pObject is "border" then
 		if mTheme is "macos-yosemite" and mIsChecked is true then
@@ -267,11 +235,8 @@ private handler getPaint(in pObject as string) as Paint
 		
 	end if
 end handler
-----------
 
-----------
--- this handler returns a font
-private handler getFont(in pObject as string) as Font
+private handler getFont(in pObject as String) as Font
 	if pObject is "icon" then
 		return font "fontawesome" at size kIconSize
 		
@@ -286,57 +251,20 @@ private handler getFont(in pObject as string) as Font
 		
 	end if
 end handler
-----------
 
-----------
--- sets the theme of the widget
-/*
-Summary: Sets the theme of the check box
-
-Parameters:
-pTheme: The name of the theme.
-
-Description:
-Sets the theme property of the button to either "macos-10", "macos-yosemite" or "windows-8".
-*/
-public handler setTheme(in pTheme as string) as undefined
+public handler setTheme(in pTheme as String) as undefined
 	put pTheme into mTheme
 	redraw all
 end handler
-----------
 
-----------
--- sets the label of the widget
-/*
-Summary: Sets the label of the check box
-
-Parameters:
-pLabel: The text of the label.
-
-Description:
-Sets the label property of the check box to any string.
-*/
-public handler setLabel(in pLabel as string) as undefined
+public handler setLabel(in pLabel as String) as undefined
 	put pLabel into mLabel
 	redraw all
 end handler
-----------
 
-----------
--- sets whether the box is checked
-/*
-Summary: Sets whether the check box is checked or not of the check box
-
-Parameters:
-pIsChecked: The state of the check box.
-
-Description:
-Sets the property checked of the check box. If true, the box is checked and if false, the box is unchecked.
-*/
-public handler setChecked(in pIsChecked as boolean) as undefined
+public handler setChecked(in pIsChecked as Boolean) as undefined
 	put pIsChecked into mIsChecked
 	redraw all
 end handler
-----------
 
 end widget
