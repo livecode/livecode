@@ -575,51 +575,27 @@
 
     'rule' Type(-> boolean(Position)):
         "Boolean" @(-> Position)
-    'rule' Type(-> boolean(Position)):
-        "boolean" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Boolean")
 
     'rule' Type(-> integer(Position)):
         "Integer" @(-> Position)
-    'rule' Type(-> integer(Position)):
-        "integer" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Integer")
 
     'rule' Type(-> real(Position)):
         "Real" @(-> Position)
-    'rule' Type(-> real(Position)):
-        "real" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Real")
 
     'rule' Type(-> number(Position)):
         "Number" @(-> Position)
-    'rule' Type(-> number(Position)):
-        "number" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Number")
 
     'rule' Type(-> string(Position)):
         "String" @(-> Position)
-    'rule' Type(-> string(Position)):
-        "string" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "String")
 
     'rule' Type(-> data(Position)):
         "Data" @(-> Position)
-    'rule' Type(-> data(Position)):
-        "data" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Data")
 
     'rule' Type(-> array(Position)):
         "Array" @(-> Position)
-    'rule' Type(-> array(Position)):
-        "array" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Array")
 
     'rule' Type(-> list(Position, ElementType)):
         "List" @(-> Position) OptionalElementType(-> ElementType)
-    'rule' Type(-> list(Position, ElementType)):
-        "list" @(-> Position) OptionalElementType(-> ElementType)
-        Warning_DeprecatedTypeName(Position, "List")
 
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)
