@@ -1421,6 +1421,9 @@ MC_DLLEXPORT bool MCTypeInfoIsForeign(MCTypeInfoRef typeinfo);
 // Returns true if the typeinfo is of custom type.
 MC_DLLEXPORT bool MCTypeInfoIsCustom(MCTypeInfoRef typeinfo);
 
+// Returns the default value for the given type if it has one, otherwise nil.
+MC_DLLEXPORT MCValueRef MCTypeInfoGetDefault(MCTypeInfoRef typeinfo);
+    
 // Typeinfo's form a chain with elements in the chain potentially providing critical
 // information about the specified type. This structure describes the represented
 // type, after a typeinfo chain has been suitably processed.
