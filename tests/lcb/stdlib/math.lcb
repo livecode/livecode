@@ -120,12 +120,12 @@ public handler TestArctan()
 end handler
 
 handler TestTrigonometricDomain_Arcsin() as undefined
-	variable t
-	put asin((1 + any number) / any number) into t
+	variable tNum
+	put asin((1 + any number) / any number) into tNum
 end handler
 handler TestTrigonometricDomain_Arccos() as undefined
-	variable t
-	put acos((1 + any number) / any number) into t
+	variable tNum
+	put acos((1 + any number) / any number) into tNum
 end handler
 public handler TestTrigonometricDomain()
 	MCUnitTestHandlerThrowsBroken(TestTrigonometricDomain_Arcsin, "arcsin (> 1)", "bug 14681")
