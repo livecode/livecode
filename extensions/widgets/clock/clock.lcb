@@ -16,18 +16,37 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-Description: This widget consists of an analogue clock. 
-This widget has two properties that can be set: day and timeZone.
+This widget consists of an analogue clock. The clock has day and night style displays which
+are used depending on the time. The period interpreted as day by the clock is controlled by
+a pair of constants kStartDay and kEndDay, currently set at 6 and 20 respectively. Thus the
+clock will display in night style between the hours of 8pm and 6am. The only settable property
+implemented by this clock widget is the timeZone, an integer which adjusts the time displayed
+relative to universal time (UTC).
+
+Name: timeZone
+Type: property
+Syntax: set the timeZone of <widget> to <pTimeZone>
+Syntax: get the timeZone of <widget>
+
+Summary: The time zone of the clock widget.
+
+pTimeZone (integer): An integer representing the timeZone in which to calculate the time.
+
+Example:
+// Make the clocks display the correct time in Japan and Panama respectively
+set the timeZone of widget "Japan Clock" to 9
+set the timeZone of widget "Panama Clock" to -5
+
+Description:
+The <timeZone> property determines what time is displayed on the clock. If the <timeZone> is 0, the clock will display
+the universal time (UTC).
+
+*>Note:* The timeZone is restricted to being an integer.
+
 */
 
 -- declaring extension as widget, followed by identifier
 widget com.livecode.extensions.livecode.clock
---
-
--- adding metadata to ensure the extension displays correctly in livecode
-metadata title is "Clock"
-metadata author is "LiveCode"
-metadata version is "1.0.3"
 --
 
 -- dependency declarations
@@ -36,16 +55,24 @@ use com.livecode.widget
 use com.livecode.engine
 --
 
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Clock"
+metadata author is "LiveCode"
+metadata version is "1.0.3"
+
+metadata timeZone.default is "0"
+--
+
 -- property declarations
 property day 			get mIsDay
 property timeZone		get mTimeZone		set setTimeZone
 --
 
 -- private instance variables
-private variable mIsDay			as boolean
-private variable mTimeZone		as number
-private variable mCurrentTime 	as list
-private variable mFontSize 		as real
+private variable mIsDay			as Boolean
+private variable mTimeZone		as Number
+private variable mCurrentTime 	as List
+private variable mFontSize 		as Real
 --
 
 -- constants
@@ -56,25 +83,18 @@ constant kBlack is [0,0,0]
 constant kRed is [1,0,0]
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mTimeZone into rProperties["timeZone"]
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
+public handler OnLoad(in pProperties as Array)
 	put pProperties["timeZone"] into mTimeZone
 end handler
-----------
 
-----------
 -- called when widget is created
 public handler OnCreate()
 	put 0 into mTimeZone
@@ -82,9 +102,7 @@ public handler OnCreate()
 	put 12 into mFontSize
 	schedule timer in computeNextTimer() seconds
 end handler
-----------
 
-----------
 -- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	
@@ -102,9 +120,9 @@ public handler OnPaint()
     set the paint of this canvas to getPaint("numbers")
    	set the font of this canvas to font "Helvetica-Light" at size mFontSize
    	
-   	variable tX as integer
-   	variable tX_string as string
-   	variable tLabel as string
+   	variable tX as Integer
+   	variable tX_string as String
+   	variable tLabel as String
    	
    	repeat with tX from 1 up to 12
    		put tX formatted as string into tX_string
@@ -168,21 +186,18 @@ public handler OnPaint()
     --
     
 end handler
-----------
 
-----------
--- this handler returns the amount of time as a list of three numbers: [hours, minutes, seconds]
-handler getTimeComponents() as list
+handler getTimeComponents() as List
 	-- Fetch the local date.
     -- This a list in the form [day, month, year, hours,minutes,seconds]
-    variable tDate as list
+    variable tDate as List
     put the local date into tDate
 	
     -- We only want the time, so delete the first 3 elements.
     delete element 1 to 3 of tDate
 
     -- Adjust for the timezone.
-	variable tHour as number
+	variable tHour as Number
     put element 1 of tDate into tHour
     put (tHour + mTimeZone) mod 24 into tHour
 	
@@ -198,26 +213,19 @@ handler getTimeComponents() as list
 	return tDate
 end handler
 
--- this handler returns the amount of time until the seconds change
-handler computeNextTimer() as number
+handler computeNextTimer() as Number
     get the universal time
     return 1 - (the result - the floor of the result)
 end handler
-----------
 
-----------
--- this handler is called when the timer scheduled with 'schedule timer' fires
 public handler OnTimer()
 	-- the seconds have changed so fetch the new time
 	put getTimeComponents() into mCurrentTime
 	redraw all
 	schedule timer in computeNextTimer() seconds
 end handler
-----------
 
-----------
--- this handler returns the paint 
-private handler getPaint(in pObject as string) as Paint
+private handler getPaint(in pObject as String) as Paint
 
 	if pObject is "clock face" then
 		if mIsDay is true then
@@ -238,11 +246,8 @@ private handler getPaint(in pObject as string) as Paint
 		
 	end if
 end handler
-----------
 
-----------
--- this handler returns a path
-private handler getPath(in pString as string) as Path
+private handler getPath(in pString as String) as Path
 
 	if pString is "clock face" then
 		put (my width)/10 into mFontSize
@@ -262,11 +267,8 @@ private handler getPath(in pString as string) as Path
 	
 	end if
 end handler
-----------
 
-----------
--- this handler returns a point
-private handler getPoint(in pString as string) as Point
+private handler getPoint(in pString as String) as Point
 	if pString is "1" then
 		return point [(my width)/2+0.35*(my width)/2, (my height)/2-0.65*(my width)/2]
 	else if pString is "2" then
@@ -293,11 +295,8 @@ private handler getPoint(in pString as string) as Point
 		return point [(my width)/2-mFontSize/2, (my height)/2-0.75*(my width)/2]
 	end if
 end handler
-----------
 
-----------
--- this handler returns stroke widths for the clock hands
-private handler getStrokeWidth(in pHand as string) as real
+private handler getStrokeWidth(in pHand as String) as Real
 	if pHand is "minute hand" or pHand is "hour hand" then
 		return (my width/2)*0.03
 		
@@ -306,23 +305,10 @@ private handler getStrokeWidth(in pHand as string) as real
 		
 	end if
 end handler
-----------
 
-----------
--- this handler sets the time zone
-/*
-Summary: Sets the timezone 
-
-Parameters:
-pTimeZone: The timezone.
-
-Description:
-Sets the timezone property of the clock.
-*/
-public handler setTimeZone(in pTimeZone as number) as undefined
+public handler setTimeZone(in pTimeZone as Number) as undefined
 	put pTimeZone into mTimeZone
 	redraw all
 end handler
-----------
 
 end widget
