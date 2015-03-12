@@ -2351,6 +2351,13 @@ public foreign handler MCCanvasPathMakeWithCircle(in pCenter as Point, in pRadiu
 public foreign handler MCCanvasPathMakeWithEllipseWithRadiiAsList(in pCenter as Point, in pRadii as List, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithLine(in pStart as Point, in pEnd as Point, out rPath as Path) as undefined binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithPoints(in pClose as CBool, in pPoints as List, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithArcWithRadius(in pCenter as Point, in pRadius as CanvasFloat, in pStartAngle as CanvasFloat, in pEndAngle as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithArcWithRadiiAsList(in pCenter as Point, in pRadii as List, in pStartAngle as CanvasFloat, in pEndAngle as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithSectorWithRadius(in pCenter as Point, in pRadius as CanvasFloat, in pStartAngle as CanvasFloat, in pEndAngle as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithSectorWithRadiiAsList(in pCenter as Point, in pRadii as List, in pStartAngle as CanvasFloat, in pEndAngle as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithSegmentWithRadius(in pCenter as Point, in pRadius as CanvasFloat, in pStartAngle as CanvasFloat, in pEndAngle as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+public foreign handler MCCanvasPathMakeWithSegmentWithRadiiAsList(in pCenter as Point, in pRadii as List, in pStartAngle as CanvasFloat, in pEndAngle as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+
 
 /*
 Summary:	Creates a new path.
@@ -2484,6 +2491,96 @@ syntax PathMakeWithPoints is prefix operator with precedence 4
 	( "polygon" <mClosed=true> | "polyline" <mClosed=false> ) "path" "with" "points" <mPoints: Expression>
 begin
 	MCCanvasPathMakeWithPoints(mClosed, mPoints, output)
+end syntax
+
+
+/*
+Summary:	Creates a new path.
+
+mCenter:	An expression which evaluates to a point.
+mRadius:	An expression which evaluates to a number.
+mRadii:		An expression which evaluates to a list of numbers.
+mStartAngle:	An expression which evaluates to a number.
+mEndAngle:	An expression which evaluates to a number.
+Returns:	A new arc path.
+
+Example:
+	// Create an elliptical arc path
+	variable tPath
+	put arc path centered at point [100,100] with radii [100,75] from 0 to 270 into tPath
+
+Example:
+	// Create a circular arc path
+	variable tPath
+	put arc path centered at point [100,100] with radius 100 from 0 to 270 into tPath
+
+Tags: Canvas
+*/
+syntax PathMakeWithArc is prefix operator with precedence 4
+	"arc" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
+begin
+	MCCanvasPathMakeWithArcWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
+	MCCanvasPathMakeWithArcWithRadiiAsList(mCenter, mRadii, mStartAngle, mEndAngle, output)
+end syntax
+
+
+/*
+Summary:	Creates a new path.
+
+mCenter:	An expression which evaluates to a point.
+mRadius:	An expression which evaluates to a number.
+mRadii:		An expression which evaluates to a list of numbers.
+mStartAngle:	An expression which evaluates to a number.
+mEndAngle:	An expression which evaluates to a number.
+Returns:	A new sector path.
+
+Example:
+	// Create an elliptical sector path
+	variable tPath
+	put sector path centered at point [100,100] with radii [100,75] from 0 to 270 into tPath
+
+Example:
+	// Create a circular sector path
+	variable tPath
+	put sector path centered at point [100,100] with radius 100 from 0 to 270 into tPath
+
+Tags: Canvas
+*/
+syntax PathMakeWithSector is prefix operator with precedence 4
+	"sector" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
+begin
+	MCCanvasPathMakeWithSectorWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
+	MCCanvasPathMakeWithSectorWithRadiiAsList(mCenter, mRadii, mStartAngle, mEndAngle, output)
+end syntax
+
+
+/*
+Summary:	Creates a new path.
+
+mCenter:	An expression which evaluates to a point.
+mRadius:	An expression which evaluates to a number.
+mRadii:		An expression which evaluates to a list of numbers.
+mStartAngle:	An expression which evaluates to a number.
+mEndAngle:	An expression which evaluates to a number.
+Returns:	A new segment path.
+
+Example:
+	// Create an elliptical segment path
+	variable tPath
+	put segment path centered at point [100,100] with radii [100,75] from 0 to 270 into tPath
+
+Example:
+	// Create a circular segment path
+	variable tPath
+	put segment path centered at point [100,100] with radius 100 from 0 to 270 into tPath
+
+Tags: Canvas
+*/
+syntax PathMakeWithSegment is prefix operator with precedence 4
+	"segment" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
+begin
+	MCCanvasPathMakeWithSegmentWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
+	MCCanvasPathMakeWithSegmentWithRadiiAsList(mCenter, mRadii, mStartAngle, mEndAngle, output)
 end syntax
 
 //////////

@@ -160,8 +160,11 @@ bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef
 
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
 {
+    ctxt . SetTheResultToEmpty();
+    
     MCAutoStringRef t_resolved_filename;
-    /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
+    if (!MCS_resolvepath(p_filename, &t_resolved_filename))
+        return;
     
     MCAutoDataRef t_data;
     if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
@@ -177,7 +180,11 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     MCScriptModuleRef t_module;
     if (!MCScriptCreateModuleFromStream(t_stream, t_module))
     {
-        ctxt . SetTheResultToStaticCString("failed to load module");
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(Out(t_error)))
+            ctxt . SetTheResultToValue(MCErrorGetMessage(In(t_error)));
+        else
+            ctxt . SetTheResultToStaticCString("failed to load module");
         MCValueRelease(t_stream);
         return;
     }
@@ -189,6 +196,7 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
 		MCEngineAddResourcePathForModule(t_module, p_resource_path);
     
     MCScriptReleaseModule(t_module);
+    
     
     return;
 }

@@ -144,7 +144,9 @@ int AddImportedModuleFile(const char *p_name)
     return 1;
 }
 
-FILE *OpenImportedModuleFile(const char *p_name)
+FILE *
+OpenImportedModuleFile (const char *p_name,
+                        char **r_filename)
 {
     char t_path[4096];
     FILE *t_file;
@@ -154,7 +156,12 @@ FILE *OpenImportedModuleFile(const char *p_name)
 
     // Use the first modulepath to write the interface file into.
     sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
-    
+
+	if (NULL != r_filename)
+	{
+		*r_filename = strdup(t_path); /* FIXME should be strndup */
+	}
+
     t_file = fopen(t_path, "w");
     
     return t_file;
@@ -303,10 +310,16 @@ void SetTemplateFile(const char *p_output)
     s_template_file = p_output;
 }
 
-FILE *OpenOutputFile(void)
+FILE *OpenOutputFile(const char **r_filename)
 {
     if (s_output_file == NULL)
         return NULL;
+
+	if (NULL != r_filename)
+	{
+		*r_filename = s_output_file;
+	}
+
     return fopen(s_output_file, "wb");
 }
 

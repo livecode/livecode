@@ -288,7 +288,9 @@ inline SkPaint::Join MCGJoinStyleToSkJoinStyle(MCGJoinStyle p_style)
 		case kMCGJoinStyleRound:
 			return SkPaint::kRound_Join;
 		case kMCGJoinStyleMiter:
-			return SkPaint::kMiter_Join;			
+			return SkPaint::kMiter_Join;
+		default:
+			MCUnreachable();
 	}
 }
 
@@ -316,6 +318,8 @@ inline SkPaint::Cap MCGCapStyleToSkCapStyle(MCGCapStyle p_style)
 			return SkPaint::kRound_Cap;
 		case kMCGCapStyleSquare:
 			return SkPaint::kSquare_Cap;
+		default:
+			MCUnreachable();
 	}
 }
 
@@ -364,6 +368,8 @@ inline SkPath::FillType MCGFillRuleToSkFillType(MCGFillRule p_rule)
 			return SkPath::kWinding_FillType;
 		case kMCGFillRuleEvenOdd:
 			return SkPath::kEvenOdd_FillType;
+		default:
+			MCUnreachable();
 	}
 }
 
@@ -403,6 +409,8 @@ inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_conf
 		return kMCGRasterFormat_A;
 	case SkBitmap::kARGB_8888_Config:
 		return p_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
+	default:
+		MCUnreachable();
 	}
 }
 
