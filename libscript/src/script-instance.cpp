@@ -599,8 +599,32 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
         return false;
     }
     
+    MCTypeInfoRef t_signature;
+    t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
+    
+    uindex_t t_param_count;
+    t_param_count = MCHandlerTypeInfoGetParameterCount(t_signature);
+    
     for(uindex_t i = 0; i < p_handler -> slot_count; i++)
-        self -> slots[i] = MCValueRetain(kMCNull);
+    {
+        MCTypeInfoRef t_slot_type;
+        if (i < t_param_count)
+            t_slot_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
+        else if (i < t_param_count + p_handler -> local_type_count)
+            t_slot_type = p_instance -> module -> types[p_handler -> local_types[i - t_param_count]] -> typeinfo;
+        else
+            t_slot_type = nil;
+        
+        MCValueRef t_default;
+        t_default = nil;
+        if (t_slot_type != nil)
+            t_default = MCTypeInfoGetDefault(t_slot_type);
+        
+        if (t_default == nil)
+            t_default = kMCNull;
+        
+        self -> slots[i] = MCValueRetain(t_default);
+    }
     
     self -> caller = p_caller;
     self -> instance = MCScriptRetainInstance(p_instance);
