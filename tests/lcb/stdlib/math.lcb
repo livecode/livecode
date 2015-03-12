@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.math.tests
 
 use com.livecode.math
+use com.livecode.foreign
 use com.livecode.__INTERNAL._testlib
 
 -- Empirically-chosen epsilon for floating-point comparisons
@@ -198,9 +199,14 @@ public handler TestMaxList()
 	skip test "max (empty list)" because "Can't test for errors"
 end handler
 
+handler TestBaseConvert_InvalidFormat() as LCUInt
+	return "0xf004" converted from base 16 -- bug 14889
+end handler
 public handler TestBaseConvertFrom()
 	test "convert from hex" when "6A" converted from base 16 is 106
 	test "convert from binary" when "1001010" converted from base 2 is 74
+
+	MCUnitTestHandlerThrows(TestBaseConvert_InvalidFormat, "convert from hex (0x)")
 end handler
 
 public handler TestBaseConvertTo()

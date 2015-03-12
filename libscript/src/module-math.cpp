@@ -361,7 +361,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertToBase10(MCStringRef p_operand, in
     
     bool t_negative;
     uinteger_t t_result;
-    bool t_error;
+    bool t_error = false;
     if (MCMathConvertToBase10(p_operand, p_source_base, t_negative, t_result, t_error))
     {
         if ((t_negative && t_result > INTEGER_MAX) || (!t_negative && t_result > abs(INTEGER_MIN)))
@@ -369,6 +369,10 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertToBase10(MCStringRef p_operand, in
         else
             r_output = t_negative ? -t_result : t_result;
     }
+	else if (t_error)
+	{
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("integer overflow, or invalid character in source"), nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalConvertFromBase10(integer_t p_operand, integer_t p_dest_base, MCStringRef& r_output)
