@@ -16,45 +16,39 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-Module: com.livecode.extensions.livecode.multiList
-
-Type: widget
-
-Description: This widget is a list, can be single or multiple lists or list items.
+This widget is a list, can be single or multiple lists or list items.
 This widget has one property that can be set: listArray.
 */
 
 -- declaring the extension as a widget, followed by identifier
-widget com.livecode.extensions.livecode.multiList
---
-
--- adding metadata to ensure the extension displays correctly in livecode
-metadata title is "iOS Multi List"
-metadata author is "LiveCode"
-metadata version is "1.0.0"
+widget community.livecode.livecode.multiList
 --
 
 -- dependency declarations 
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
---
+
+-- metadata
+metadata title is "iOS Multi List"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
 
 -- property declarations
 property listArray			get mListArray			set setListArray
 --
 
 -- private instance variables
-private variable mListArray as array
-private variable mNumItems as list
+private variable mListArray as Array
+private variable mNumItems as List
 
-private variable mBottom as real
-private variable mMargin as real
-private variable mRowRectList as list
-private variable mPressed as boolean
-private variable mSelectedRow as optional integer
-private variable mTopView as real
-private variable mShowScroll as boolean
+private variable mBottom as Real
+private variable mMargin as Real
+private variable mRowRectList as List
+private variable mPressed as Boolean
+private variable mSelectedRow as optional Integer
+private variable mTopView as Real
+private variable mShowScroll as Boolean
 --
 
 -- constants
@@ -67,12 +61,10 @@ constant kWhite is [1,1,1]
 constant kBlack is [0,0,0]
 --
 
-----------
--- this handler is called when the widget is created
 public handler OnCreate()
 	
 	-- properties
-	variable tItemArray as array
+	variable tItemArray as Array
 	put the empty array into mListArray
 	put the empty array into tItemArray
 	
@@ -108,19 +100,16 @@ public handler OnCreate()
 	put false into mShowScroll
 	
 end handler
-----------
 
-----------
--- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	
 	put the empty list into mRowRectList
 	put 0 into mBottom
 	
-	variable tKeys as list
+	variable tKeys as List
 	put the keys of mListArray into tKeys
 	
-	variable tX as optional integer
+	variable tX as optional Integer
 	put 0 into tX
 	
 	variable tElement1
@@ -138,10 +127,10 @@ public handler OnPaint()
 		set the stroke width of this canvas to 1
 		stroke getHLine(0,my width,mTopView+mBottom+kHeight-0.5) on this canvas
 		
-		variable tArray as array
+		variable tArray as Array
 		put mListArray[tElement1] into tArray
 		
-		variable tY as optional integer
+		variable tY as optional Integer
 		put 0 into tY
 		
 		variable tLabelRect as Rectangle
@@ -229,20 +218,14 @@ public handler OnPaint()
 	end if
 	
 end handler
-----------
 
-----------
--- this handler is called when the widget is resized and/or moved
 public handler OnGeometryChanged()
 	put 0 into mTopView
 end handler
-----------
 
-----------
--- the following handlers deal with mouse events
 public handler OnMouseDown()
 			
-	variable tZ as integer
+	variable tZ as Integer
 	repeat with tZ from 1 up to (the number of elements in mRowRectList)
 		if the click position is within rectangle (element tZ of mRowRectList) then
 			put true into mPressed
@@ -252,15 +235,15 @@ public handler OnMouseDown()
 	end repeat
 	
 end handler	
-----------
+
 public handler OnMouseUp()
 	post "rowSelected" with [element 1 of element mSelectedRow of mListArray]
 	put false into mPressed
 	put 0 into mSelectedRow
 	redraw all
 end handler
-----------
-public handler OnMouseScroll(in pDeltaX as real, in pDeltaY as real)
+
+public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real)
 
 	if my height < mBottom then
 		add pDeltaY to mTopView
@@ -274,38 +257,23 @@ public handler OnMouseScroll(in pDeltaX as real, in pDeltaY as real)
 		redraw all
 	end if
 end handler
-----------
+
 public handler OnMouseEnter()
 	put true into mShowScroll
 	redraw all
 end handler
-----------
+
 public handler OnMouseLeave()
 	put false into mShowScroll
 	redraw all
 end handler
-----------	
 
-----------
--- this handler sets the list array
-/*
-Summary: Sets the list data
-
-Parameters:
-pArray: The array of list data.
-
-Description:
-Sets the list items.
-*/
-public handler setListArray(in pArray as array) as undefined
+public handler setListArray(in pArray as Array) as undefined
 	put pArray into mListArray
 	redraw all
 end handler
-----------
 
-----------
--- this handler returns a paint
-public handler getPaint(in pString as string) as Paint
+public handler getPaint(in pString as String) as Paint
 	if pString is "title" or pString is "hint" then
 		return solid paint with color [96/255, 96/255, 96/255]
 		
@@ -329,11 +297,8 @@ public handler getPaint(in pString as string) as Paint
 		
 	end if
 end handler
-----------
 
-----------
--- this handler returns a rectangle
-private handler getRect(in pString as string, in pInt as integer) as Rectangle
+private handler getRect(in pString as String, in pInt as Integer) as Rectangle
 
 	if pString is "title" then
 		return rectangle [kPadding, mTopView+mBottom, my width, mTopView+mBottom+kHeight]
@@ -349,8 +314,8 @@ private handler getRect(in pString as string, in pInt as integer) as Rectangle
 		
 	else if pString is "scrollbar" then
 	
-		variable tScrollPad as real
-		variable tTopScroll as real
+		variable tScrollPad as Real
+		variable tTopScroll as Real
 		
 		put 0.3*kPadding into tScrollPad
 		put mTopView*(my height/(mBottom+kHeight)) into tTopScroll
@@ -359,11 +324,8 @@ private handler getRect(in pString as string, in pInt as integer) as Rectangle
 	end if
 	
 end handler
-----------
 
-----------
--- this handler returns a font
-private handler getFont(in pString as string) as Font
+private handler getFont(in pString as String) as Font
 	if pString is "title" then
 		return font "Helvetica Neue" at size 11
 		
@@ -375,13 +337,9 @@ private handler getFont(in pString as string) as Font
 		
 	end if
 end handler
-----------
 
-----------
--- this handler returns a horizontal line path
-private handler getHLine(in pLeft as real, in pRight as real, in pHeight as real) as Path
+private handler getHLine(in pLeft as Real, in pRight as Real, in pHeight as Real) as Path
 	return line path from point [pLeft, pHeight] to point [pRight, pHeight]
 end handler
-----------
 
 end widget

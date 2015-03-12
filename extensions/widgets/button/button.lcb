@@ -19,22 +19,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 This widget is a push button that dispatches mouse events to its script object.
 This widget has three properties that can be set: theme; buttonStyle and label.
 */
- 
+
 -- declaring the extension as a widget, followed by the identifier
 widget com.livecode.extensions.livecode.button
---
-
--- adding metadata to ensure the extension displays correctly in livecode
-metadata author is "LiveCode"
-metadata version is "1.0.2"
-metadata title is "Cross Platform Button"
 --
 
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
---
+
+-- metadata
+metadata author is "LiveCode"
+metadata version is "1.0.2"
+metadata title is "Cross Platform Button"
 
 -- property declarations
 property theme 			get mTheme 		set setTheme
@@ -56,9 +54,7 @@ constant kWhite is [1,1,1]
 constant kBlack is [0,0,0]
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mTheme into rProperties["theme"]
@@ -67,29 +63,20 @@ public handler OnSave(out rProperties as array)
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
+public handler OnLoad(in pProperties as Array)
 	put pProperties["theme"] into mTheme
 	put pProperties["buttonstyle"] into mStyle
 	put pProperties["label"] into mLabel
 end handler
-----------
 
-----------
--- this handler is called when the widget is created
 public handler OnCreate() as undefined
 	put "ios-8" into mTheme
 	put "Button" into mLabel
 	put "default" into mStyle
 	put "none" into mState
 end handler
-----------
 
-----------
--- this handler is called whenever the widget is drawn
 public handler OnPaint() as undefined
 	
 	// Draw the shadow
@@ -111,10 +98,7 @@ public handler OnPaint() as undefined
 	set the paint of this canvas to getPaint_TextFill()
 	fill text mLabel at center of my bounds on this canvas
 end handler
-----------
 
-----------
--- the following handlers are for mouse actions
 public handler OnMouseDown() as undefined
 	put "pressed" into mState
 	redraw all
@@ -140,18 +124,12 @@ public handler OnMouseLeave() as undefined
 		redraw all
 	end if
 end handler
-----------
 
-----------
--- this handler returns the stroke width
-private handler getStrokeWidth() as integer
+private handler getStrokeWidth() as Integer
 	return 1
 end handler
-----------
 
-----------
--- this handler returns the corner radius
-private handler getCornerRadius() as integer
+private handler getCornerRadius() as Integer
 	if mTheme is "ios-8" then
 		return 9
 	else if mTheme is "macos-10.10" then
@@ -160,22 +138,16 @@ private handler getCornerRadius() as integer
 	
 	return 10
 end handler
-----------
 
-----------
--- this handler returns a font name as a string
-private handler getFontName() as string
+private handler getFontName() as String
 	if mTheme is "ios-8" then
 		return "Helvetica Neue"
 	end if	
 	
 	return the name of the font of this canvas
 end handler
-----------
 
-----------
--- this handler returns the font size
-private handler getFontSize() as integer
+private handler getFontSize() as Integer
 	if mTheme is "ios-8" then
 	 	if my height >= kMaxHeight then
 			return 42 
@@ -188,10 +160,7 @@ private handler getFontSize() as integer
 	
 	return 11
 end handler
-----------
 
-----------
--- this handler returns a paint for the background fill
 private handler getPaint_BackgroundFill() as Paint
 	if mTheme is "ios-8" then
 		if mState is "pressed" then	
@@ -201,7 +170,7 @@ private handler getPaint_BackgroundFill() as Paint
 		end if
 	
 	else if mTheme is "macos-10.10" then
-		variable tStops as list
+		variable tStops as List
 		if mStyle is "default" and mState is "pressed" then
 			put [ gradient stop at 0.0 with color [76/255,150/255,252/255], gradient stop at 1.0 with color [16/255,103/255,227/255] ] into tStops
 		else if mStyle is "default" then
@@ -224,15 +193,12 @@ private handler getPaint_BackgroundFill() as Paint
 	
 	return solid paint with color kWhite
 end handler
-----------
 
-----------
--- this handler returns a paint for the background stroke
 private handler getPaint_BackgroundStrokeFill() as Paint
 	if mTheme is "ios-8" then
 		return solid paint with color kWhite
 	else if mTheme is "macos-10.10" then
-		variable tStops as list
+		variable tStops as List
 		if mStyle is "default" and mState is "pressed" then
 			put [ gradient stop at 0.0 with color [40/255,125/255,253/255], gradient stop at 1.0 with color [8/255,63/255,220/255] ] into tStops
 		else if mStyle is "default" then
@@ -255,10 +221,7 @@ private handler getPaint_BackgroundStrokeFill() as Paint
 	
 	return solid paint with color kWhite
 end handler
-----------
 
-----------
--- this handler returns a paint for the text
 private handler getPaint_TextFill() as Paint
 	if mTheme is "ios-8" then
 		return solid paint with color [51/255,153/255,1]
@@ -275,63 +238,22 @@ private handler getPaint_TextFill() as Paint
 	
 	return solid paint with color kBlack
 end handler
-----------
 
-----------
--- this handler sets the theme of the button
-
-/*
-Summary: Sets the theme of the button
-
-Parameters:
-pThemeName: The name of the theme.
-
-Description:
-Sets the theme property of the button to either "macos-10" or "ios-8".
-*/
-
-public handler setTheme(in pThemeName as string) as undefined
+public handler setTheme(in pThemeName as String) as undefined
 	put pThemeName into mTheme
 	redraw all
 end handler
-----------
 
-/*
-Summary: Sets the label of the button
-
-Parameters: 
-pLabel: The text of the label.
-
-Description:
-Sets the text of the label property to any string.
-*/
-
-----------
--- this handler sets the label of the button
-private handler setLabel(in pLabel as string) as undefined
+private handler setLabel(in pLabel as String) as undefined
 	put pLabel into mLabel
 	redraw all
 end handler
-----------
 
-/*
-Summary: Sets the style of the button
-
-Parameters:
-pStyle: The name of the style.
-
-Description:
-Sets the style property of the button to either "standard" or "default".
-*/
-
-----------
--- this handler sets the style of the button
-private handler setStyle(in pStyle as string) as undefined
+private handler setStyle(in pStyle as String) as undefined
 	if pStyle is in ["standard","default"] then
 		put pStyle into mStyle
 		redraw all
 	end if
 end handler
-----------
 
 end widget
