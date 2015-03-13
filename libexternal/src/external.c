@@ -911,7 +911,7 @@ void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolv
 ////////////////////////////////////////////////////////////////////////////////
 // V4: UTF-8 <-> native string conversion
 
-char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success)
+const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success)
 {
     char *t_result;
     
@@ -926,7 +926,7 @@ char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success)
     return t_result;
 }
 
-char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success)
+const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success)
 {
     char *t_result;
     

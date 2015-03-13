@@ -1737,6 +1737,8 @@ static char *convert_from_native_to_utf8(const char *arg1, const char *arg2,
     }
     
     *retval = xresSucc;
+	// Return a string owned by the engine, to avoid the release issue
+	MCExternalAddAllocatedString(MCexternalallocpool, t_utf8_string);
     return t_utf8_string;
 }
 
@@ -1755,6 +1757,8 @@ static char *convert_to_native_from_utf8(const char *arg1, const char *arg2,
     }
     
     *retval = xresSucc;
+	// Return a string owned by the engine, to avoid the release issue
+	MCExternalAddAllocatedString(MCexternalallocpool, t_native_string);
     return t_native_string;
 }
 

@@ -1279,19 +1279,19 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 			}
 			else
 			{
-				char *t_converted_name;
-                int t_success;
-
 				// SN-2015-03-10: [[ Bug 14413 ]] We convert the string to UTF-8
 				//  in case it was natively encoded, as revZipEnumerateItems is
 				//  meant to return a UTF-8 encoded string.
+				const char *t_converted_name;
+                int t_success;
+
 				if (t_stat.bitflags && ZIP_UTF8_FLAG)
 				{
                     t_success = EXTERNAL_SUCCESS;
-					t_converted_name = strdup(t_stat.name);
+					t_converted_name = t_stat.name;
 				}
 				else
-                    t_converted_name = ConvertCStringFromNativeToUTF8(t_stat.name, &t_success);
+					t_converted_name = ConvertCStringFromNativeToUTF8(t_stat.name, &t_success);
 
                 if (t_success == EXTERNAL_SUCCESS)
 				{
@@ -1304,9 +1304,6 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 					t_error  = True;
 					break;
 				}
-
-				// Free the allocated memory.
-				free(t_converted_name);
 			}
 		}
 		
