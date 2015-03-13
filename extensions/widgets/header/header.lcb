@@ -425,7 +425,6 @@ public handler setLabel(in pLabel as String) as undefined
 	redraw all
 end handler
 
-<<<<<<< HEAD
 ----------
 -- this handler sets the list of actions
 public handler setActions(in pActions as String) as undefined
