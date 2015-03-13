@@ -22,25 +22,25 @@ module com.livecode.array
 
 use com.livecode.foreign
 
-public foreign handler MCArrayEvalKeysOf(in Target as Array, out Value as List) as undefined binds to "<builtin>"
-public foreign handler MCArrayEvalElementsOf(in Target as Array, out Value as List) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalKeysOf(in Target as Array, out Value as List) returns nothing binds to "<builtin>"
+public foreign handler MCArrayEvalElementsOf(in Target as Array, out Value as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as String, in IsNot as CBool, in Target as Array, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as String, in IsNot as CBool, in Target as Array, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as CBool, in Target as Array, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as CBool, in Target as Array, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCArrayEvalNumberOfElementsIn(in Target as Array, out Count as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalNumberOfElementsIn(in Target as Array, out Count as LCUIndex) returns nothing binds to "<builtin>"
 
 // Case insensitive map access / storage
-public foreign handler MCArrayFetchElementOfCaseless(in Target as Array, in Key as String, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, inout Target as Array, in Key as String) as undefined binds to "<builtin>"
+public foreign handler MCArrayFetchElementOfCaseless(in Target as Array, in Key as String, out Value as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, inout Target as Array, in Key as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCArrayEvalEmpty(out Value as Array) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalEmpty(out Value as Array) returns nothing binds to "<builtin>"
 
-public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as Array) as CBool binds to "<builtin>"
-public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as String, in Container as Array) as CBool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as Array) returns CBool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as String, in Container as Array) returns CBool binds to "<builtin>"
 
-public foreign handler MCArrayDeleteElementOfCaseless(inout Target as Array, in Key as String) as undefined binds to "<builtin>"
+public foreign handler MCArrayDeleteElementOfCaseless(inout Target as Array, in Key as String) returns nothing binds to "<builtin>"
 
 --
 
