@@ -495,6 +495,8 @@
         -- Check method conformance for the class.
         /* S7 */ CheckSyntaxMethods(Class, Methods)
 
+        -- Check keywords have appropriate form
+        CheckSyntaxKeywords(Syntax)
         
 -- Mark variables can only be defined once for each possible path through a
 -- syntax rule. For example:
@@ -1065,6 +1067,24 @@
 
     'rule' CheckSyntaxMethodArgumentMode(Position, Type, Mode):
         print(Type)
+
+----------
+
+'sweep' CheckSyntaxKeywords(ANY)
+
+    'rule' CheckSyntaxKeywords(SYNTAX'keyword(Position, Value)):
+        (|
+            IsStringSuitableForKeyword(Value)
+        ||
+            Error_UnsuitableStringForKeyword(Position, Value)
+        |)
+
+    'rule' CheckSyntaxKeywords(SYNTAX'unreservedkeyword(Position, Value)):
+        (|
+            IsStringSuitableForKeyword(Value)
+        ||
+            Error_UnsuitableStringForKeyword(Position, Value)
+        |)
 
 ----------
 

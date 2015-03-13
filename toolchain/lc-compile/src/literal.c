@@ -498,4 +498,24 @@ IsNameSuitableForDefinition (NameRef p_id)
 	return 0;
 }
 
+/* Keywords mustn't conflict with valid identifiers.  Ensure this by
+ * forbidding keywords from containing any of the characters
+ * [A-Z0-9_.] */
+int
+IsStringSuitableForKeyword (const char *p_keyword)
+{
+	size_t i;
+
+	for (i = 0; p_keyword[i] != '\0'; ++i)
+	{
+		if ((p_keyword[i] == '.') ||
+		    (p_keyword[i] == '_') ||
+		    (p_keyword[i] >= 'A' && p_keyword[i] <= 'Z') ||
+		    (p_keyword[i] >= '0' && p_keyword[i] <= '9'))
+			return 0;
+	}
+
+	return 1;
+}
+
 ////////////////////////////////////////////////////////////////////////////////

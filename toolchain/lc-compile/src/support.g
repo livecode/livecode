@@ -44,6 +44,7 @@
     IsStringEqualToString
 
     IsNameSuitableForDefinition
+    IsStringSuitableForKeyword
 
     InitializeScopes
     FinalizeScopes
@@ -295,6 +296,7 @@
     Error_NonHandlerTypeVariablesCannotBeCalled
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
+    Error_UnsuitableStringForKeyword
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
@@ -338,6 +340,7 @@
 'condition' IsStringEqualToString(STRING, STRING)
 
 'condition' IsNameSuitableForDefinition(NAME)
+'condition' IsStringSuitableForKeyword(STRING)
 
 --------------------------------------------------------------------------------
 
@@ -646,6 +649,8 @@
 
 'action' Error_HandlerNotSuitableForPropertyGetter(Position: POS, Identifier: NAME)
 'action' Error_HandlerNotSuitableForPropertySetter(Position: POS, Identifier: NAME)
+
+'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)

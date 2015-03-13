@@ -230,6 +230,8 @@ DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expr
 DEFINE_ERROR_I(HandlerNotSuitableForPropertyGetter, "'%s' has inappropriate signature to be a property getter")
 DEFINE_ERROR_I(HandlerNotSuitableForPropertySetter, "'%s' has inappropriate signature to be a property setter")
 
+DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with identifiers")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_I(Name, Message) \
