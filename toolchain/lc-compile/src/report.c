@@ -246,6 +246,9 @@ DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses shoul
 DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
+DEFINE_WARNING(UsingAsForHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns <Type>'")
+DEFINE_WARNING(UsingAsUndefinedForVoidHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns nothing'")
+DEFINE_WARNING(UndefinedTypeDeprecated, "Deprecated: 'undefined' should not be used as a type")
 
 ////////////////////////////////////////////////////////////////////////////////
 
