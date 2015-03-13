@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +52,19 @@ void Fatal_InternalInconsistency(const char *p_message)
 {
     fprintf(stderr, "*** INTERNAL INCONSISTENCY (%s) ***\n", p_message);
     exit(1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Error_Bootstrap(const char *p_format, ...)
+{
+    va_list t_args;
+    va_start(t_args, p_format);
+    fprintf(stderr, "error: ");
+    vfprintf(stderr, p_format, t_args);
+    fprintf(stderr, "\n");
+    va_end(t_args);
+    s_error_count += 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
