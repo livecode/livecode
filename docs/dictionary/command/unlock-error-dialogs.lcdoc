@@ -1,0 +1,26 @@
+Name: unlock error dialogs
+
+Type: command
+
+Syntax: unlock error dialogs
+
+Summary: Sets the <lockErrorDialogs> <property> to false, allowing the error window to be displayed when an <execution error> occurs.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+unlock error dialogs
+
+Example:
+if the platform is not "Windows" then unlock error dialogs
+
+Description:
+Use the <unlock error dialogs> <command> to allow LiveCode to display the standard error window when an <execution error> occurs.
+
+The <unlock error dialogs> command sets the <lockErrorDialogs> <property> to false. When all pending <handler|handlers> are finished <execute|executing>, the <lockErrorDialogs> <property> is set to false automatically.
+
+References: allowInterrupts (property), lockErrorDialogs (property), errorDialog (message), lock error dialogs (command), unlock messages (command), unlock screen (command), property (glossary), handler (glossary), command (glossary), execute (glossary), execution error (glossary)

@@ -1,0 +1,29 @@
+Name: XBrowser_Init
+
+Type: command
+
+Syntax: XBrowser_Init <username>, <password> 
+
+Summary: Is included for backwards compatibility and does nothing.
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+XBrowser_Init "myUsername", "myPassword"
+
+Parameters:
+username: 
+password: 
+
+Description:
+The <XBrowser_Init> command is included for backwards compatibility with altBrowser 2.x and 1.x. The command is no longer needed and calling it has no affect.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: revBrowserOpen (function), revBrowserOpen function (function)

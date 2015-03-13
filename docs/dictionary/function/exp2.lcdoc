@@ -1,0 +1,35 @@
+Name: exp2
+
+Type: function
+
+Syntax: the exp2 of <number> 
+
+Syntax: exp2(<number>)
+
+Summary: <return|Returns> the <binary> exponential of a number.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+exp2(8) -- returns 256
+
+Example:
+exp2(the screenDepth) -- returns number of colors available
+
+Parameters:
+number: A real number, or an expression that evaluates to a number.
+
+Returns: The <exp2> function <return|returns> a positive number.
+
+Description:
+Use the <exp2> function to obtain a power of 2.
+
+The expression exp2(number) is equal to 2^number.
+
+References: exp (function), binary (glossary), return (glossary)
+
+Tags: math

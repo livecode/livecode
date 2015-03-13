@@ -1,0 +1,64 @@
+Name: strokeGradient
+
+Type: property
+
+Syntax: set the strokeGradient [of graphic] to <propertiesArray> 
+
+Summary: Specifies the gradient to use to fill the border lines of the graphic object.
+
+Associations: graphic
+
+Introduced: 3.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the strokeGradient of graphic "Circle 1" of me to myArray
+
+Example:
+set the strokeGradient["type"] of graphic "Rectangle 1" of me to "linear"
+
+Example:
+set the strokeGradient["ramp"] of graphic "Poly 1" of me to 0.2,5,45,126,255 & return & 0.8,230,5,32,255
+
+Description:
+The stroke gradient is an array style property, each key of the array controls a different gradient parameter that will affect its final appearance.  The easiest way to adjust these properties is by using the gradient card of the property inspector which has full control over each parameter. The stroke gradient will be observed in the border lines of the shape.  The allowed keys are as follows:
+
+strokeGradient["type"]
+ The type of gradient, can take the values, "linear", "radial", "conical", "spiral", "diamond", "xy", "sqrtxy"
+
+strokeGradient["ramp"]
+    A return delimited list of gradient  stops (see below) that define the layout of the of the gradient.
+
+strokeGradient["from"]
+    A coordinate specifying the starting point of the gradient
+
+strokeGradient["to"]
+ A coordinate specifying the end point of the gradient
+
+strokeGradient["via"]
+     A coordinate specifying the intermediate point of the gradient (affects scaling and shearing of the gradient)
+
+strokeGradient["quality"]        
+ The quality can be set to normal or good (higher detail but slower).  This property is normal by default.
+
+strokeGradient["repeat"]
+ A number between 1 and 255 that specifies the number of times the gradient      ramp is repeated between 
+        the start and end points. This property is 1 by default.
+
+strokeGradient["mirror"]      
+ A boolean value specifying whether alternating repetitions of the ramp are reversed.  This property 
+     is false by default.
+
+strokeGradient["wrap"]
+     A boolean value specifying whether the ramp is repeated to fill the entire graphic a object.  
+   This property is false by default.
+
+A gradient stop is a comma is a comma delimited list of numbers that specify the following values:
+    position - number between 0 and 1
+    red, green, blue - numbers between 0 and 255
+    alpha - number between 0 (transparent) and 255 (opaque), if omitted it is assumed to be 255.
+
+References: opaque (property), antialiased (property)

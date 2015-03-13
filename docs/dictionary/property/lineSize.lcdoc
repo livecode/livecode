@@ -1,0 +1,40 @@
+Name: lineSize
+
+Type: property
+
+Syntax: set the lineSize [of <graphic>] to <widthInPixels> 
+
+Summary: Specifies the thickness of lines and the borders of shapes drawn with the <paint tool|paint tools>.
+
+Synonyms: penHeight,penWidth
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the lineSize to 3 -- 3-pixels lines will be used in paint tools
+
+Example:
+set the lineSize of graphic "Rectangular Border" to 9
+
+Value:
+The <lineSize> of a <graphic(keyword)> is an <integer> between zero and 32767.
+By default, the <lineSize> of newly created <graphic(object)|graphics> is set to 1.
+
+Description:
+Use the <lineSize> <property> to set the thickness of the line used for line, curve, and <polygon> shapes, and the outline used with the oval, rectangle, and roundRect shapes.
+
+If the <lineSize> <property> is set to zero, the lines in the <graphic> disappear.
+
+The global setting of the <lineSize> <property> <control|controls> the <appearance> of shapes drawn with the <paint tool|paint tools>. Once a paint shape is drawn, its <appearance> cannot be changed by changing the <global> <lineSize> <property>.
+
+>*Warning:*  Setting the <lineSize> of a <graphic> to a value greater than the height or width of the <stack window> may cause problems on <Unix|Unix systems>, and looks strange on any <platform>.
+
+References: brushColor (property), multiple (property), arrowSize (property), roundEnds (property), markerLineSize (property), integer (keyword), polygon (keyword), graphic (keyword), global (command), choose (command), control (object), graphic (object), property (glossary), paint tool (glossary), appearance (glossary), Unix (glossary), stack window (glossary), platform (function)
+
+Tags: ui

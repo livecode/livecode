@@ -1,0 +1,26 @@
+Name: libURLFollowHttpRedirects
+
+Type: command
+
+Syntax: libURLFollowHttpRedirects &lt;true|false&gt;
+
+Summary: Set this to true if you want libURL GET requests to follow HTTP redirects and GET the page that it is redirected to.
+
+Introduced: 1.1.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: network
+
+Example:
+libURLFollowHttpRedirects (the cFollowRedirects of me)
+
+The result: When set to true (the default), libURL will respond to 301, 302, and 307 responses by trying to get the url listed in the Location header IF the original request was a GET (i.e not a post). It will respond to 303 responses by trying to GET the redirected url whatever the original request method. When set to false, no attempt is made to get the redirected url and the result will return "error" followed by the status code and message (e.g. error 302 found).
+
+Description:
+
+(This is different from previous behavior whereby libURL always attempted to GET 301 and 302 redirects whatever the original request method, but didn't handle other responses.)
+
+References: libURLDownloadToFile (command), libURLLastHTTPHeaders (function)

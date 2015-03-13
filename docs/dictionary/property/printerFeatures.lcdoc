@@ -1,0 +1,39 @@
+Name: printerFeatures
+
+Type: property
+
+Syntax: get the printerFeatures
+
+Summary: Reports a list of features that the current printer supports.
+
+Introduced: 2.9
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: printing
+
+Example:
+if "color" is among the items of the printerFeatures then
+  set the enabled of button "Color" of group "Print Settings" of me to true
+end if
+
+Value:
+The <printerFeatures> returns a comma-separated list containing zero or more of the following features.
+ - collate: the printCollate property will have an effect (if not present it means the printer cannot collate multiple copies automatically).
+
+ - copies: the printCopies property will have an effect (if not present it means the printer will only print one copy).
+
+ - color: the printColors property will have an effect (if not present, it means the printer will only print in monochrome).
+
+ - duplex: the printDuplex property will have an effect (if not present, it means the printer cannot print double-sided).
+
+Description:
+Use the <printerFeatures> property to find out which printing features are supported by the currently selected printer.
+
+The <printerFeatures> property is read-only and cannot be set.
+
+References: answer printer (command), printDuplex (property)
+
+Tags: printing

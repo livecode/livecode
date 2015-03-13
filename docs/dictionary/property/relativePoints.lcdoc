@@ -1,0 +1,38 @@
+Name: relativePoints
+
+Type: property
+
+Syntax: set the [effective] relativePoints of <graphic> to <vertexList> 
+
+Summary: Specifies where the vertexes of a curve or irregular polygon graphic are located, relative to the graphic's rectangle.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the relativePoints of graphic "Arrows" to field "Endpoints"
+
+Example:
+put the effective relativePoints of graphic "myRectangle"
+
+Value: The <relativePoints> of a graphic is a list of points (two integers separated by a comma), one per line.
+
+Description:
+Use the <relativePoints> property to find the shape of a curve or irregular polygon graphic, or to reshape the graphic.
+
+Each point consists of the horizontal distance in pixels from the left edge of the graphic to the vertex, a comma, and the vertical distance in pixels from the top edge of the graphic to the vertex. (The points property is the same list, but measured from the top left of the stack window rather than the top left of the graphic.)
+
+The first line in the list is the location of the graphic's starting point. A blank line in the relativePoints indicates that the previous and next vertexes are not connected by a line--that is, the polygon or curve is broken into two (or more) pieces.
+
+If the style property of the graphic is not polygon or curve, the setting of its relativePoints property has no effect.
+
+6.7: The effective points and effective relativePoints of a graphic return a polygonal representation of the shape even for shapes not defined by points. In particular, you can get the effective points of rectangle, round-rectangle and regular polygon graphics. (ovals are not yet supported).
+
+References: markerPoints (property), dashes (property), points (property), startArrow (property), editMode (property), endArrow (property)
+
+Tags: ui

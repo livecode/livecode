@@ -1,0 +1,32 @@
+Name: playSelection
+
+Type: property
+
+Syntax: set the playSelection of <player> to {true | false}
+
+Summary: Specifies whether a <player> plays back its entire movie or sound, or only the <selected> portion.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the playSelection of player "Scan" to true
+
+Value (bool):The <playSelection> of a <player> is true or false.
+By default, the <playSelection> <property> of a newly created <player> is set to false.
+
+Description:
+Use the <playSelection> <property> to play a <selected> portion of a movie or sound.
+
+If the <playSelection> <property> is set to true, the <play> <command> only plays the section between the <startTime> and <endTime>.
+
+If the <playSelection> is false, the <play> <command> plays the entire movie or sound, even if a smaller portion has been <selected>.
+
+References: endTime (property), showSelection (property), startTime (property), selected (property), player (keyword), play (command), property (glossary), command (glossary)
+
+Tags: multimedia

@@ -1,0 +1,41 @@
+Name: securityPermissions
+
+Type: property
+
+Syntax: set the securityPermissions to {<permissionList> | empty}
+
+Summary: Disables the <application|application's> ability to access selected <files>, functionality and run programs.
+
+Introduced: 6.1.3
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the securityPermissions to "disk,registryRead,privacy,external"
+
+Example:
+set the securityPermissions to empty
+
+Description:
+Use the global <securityPermissions> <property> to lock down certain access functionality in situations where security is required, for example, for a kiosk application or <web server>.
+
+By default, the <securityPermissions> <property> is set to include and enable all of the values. Setting <securityPermissions> to <empty> is the same as setting <secureMode> <property> to true
+Supported comma delimited values for <permissionList> are:
+  * disk - accessing files
+  * network - using sockets and url commands
+  * process - running external processes such as shell and open process
+  * registryRead - reading from the system registry (windows only)
+  * registryWrite - writing to the system registry (windows only)
+  * printing - access to the system printer
+  * privacy - taking snapshots of the screen and recording sounds
+  * applescript - receiving apple events
+  * doalternate - use of the 'do ... as ...' alternate language execution feature
+  * external - loading externals 
+
+Once <securityPermissions> is set, the security permissions can only be reduced and not increased.
+
+References: securityCategories (property), secureMode (property), empty (constant), launch (command), files (function), property (glossary), application (glossary), web server (glossary)
+
+Tags: file system

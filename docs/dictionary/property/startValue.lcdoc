@@ -1,0 +1,31 @@
+Name: startValue
+
+Type: property
+
+Syntax: set the startValue of <scrollbar> to <number> 
+
+Summary: Specifies the <value> corresponding to a <scrollbar|scrollbar's> start position.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the startValue of scrollbar "Progress" to 1
+
+Value:
+The <startValue> of a <scrollbar(keyword)> is an <integer> between zero and 65535.
+By default, the <startValue> <property> of newly created <scrollbar(object)|scrollbars> is set to zero.
+
+Description:
+Use the <startValue> and <endValue> <properties> to set the scale of the <scrollbar>.
+
+The <startValue> is the <value> of the <thumbPosition> when the <scrollbar thumb> is all the way to the top (for a vertical <scrollbar>) or left (for a horizontal <scrollbar>).
+
+References: endValue (property), properties (property), thumbSize (property), thumbPosition (property), scrollbarLineInc (message), scrollbarBeginning (message), scrollbarFactor (constant), scrollbar (keyword), integer (keyword), value (function), scrollbar (object), scrollbar thumb (glossary), property (glossary)
+
+Tags: ui

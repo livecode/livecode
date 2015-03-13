@@ -1,0 +1,27 @@
+Name: currentPage
+
+Type: property
+
+Syntax: set the currentPage of <EPS> to <pageNumber> 
+
+Summary: Specifies the page being displayed in a multi-page <EPS|EPS object>.
+
+Introduced: 1.0
+
+OS: linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the currentPage of EPS 6 to (1 + the currentPage of EPS 6)
+
+Value: The <currentPage> of an <EPS|EPS object> is an <integer> between 1 and the <EPS> object's <pageCount>.
+
+Description:
+Use the <currentPage> <property> to switch between the pages of an <EPS|EPS object>.
+
+This property is supported only on Unix systems with Display PostScript installed.
+
+References: pageCount (property), integer (keyword), EPS (object), EPS (glossary), property (glossary)
+
+Tags: multimedia

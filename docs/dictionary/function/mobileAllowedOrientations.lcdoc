@@ -1,0 +1,33 @@
+Name: mobileAllowedOrientations
+
+Type: function
+
+Syntax: mobileAllowedOrientations()
+
+Summary: Returns a list of the currently allowed orientations.
+
+Synonyms: iphoneAllowedOrientations
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put mobileAllowedOrientations() into theAllowedOrientations
+
+Returns (enum): The <mobileAllowedOrientations> function returns a comma delimited list including at least one of:
+- portrait
+- portrait upside down 
+- landscape left 
+- landscape right
+
+Description:
+Use the <mobileAllowedOrientations> function to find a list of the currently allowed orientations.
+
+The <mobileAllowedOrientations> function returns a comma delimited list of the orientations the application supports.
+
+>*Note:* Due to the limitation of the Android operating system, landscape left and portrait upside-down are only supported on Android 2.3 and later.
+
+References: mobileSetAllowedOrientations (command), mobileLockOrientation (command), mobileUnlockOrientation (command), mobileDeviceOrientation (function), mobileOrientation (function), orientationChanged (message)

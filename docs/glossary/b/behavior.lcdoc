@@ -1,0 +1,12 @@
+Name: behavior
+
+Synonyms: feel,behavior
+
+Type: glossary
+
+Description:
+The way things on the screen act when the user interacts with them by typing, clicking, dragging, and so on. Part of the look and feel of a <user interface>, along with <appearance>.
+
+References: appearance (glossary), user interface (glossary)
+
+Tags: ui

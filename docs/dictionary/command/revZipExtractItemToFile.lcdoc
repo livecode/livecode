@@ -1,0 +1,30 @@
+Name: revZipExtractItemToFile
+
+Type: command
+
+Syntax: revZipExtractItemToFile <archivePath>, <itemName>, <fileName> 
+
+Summary: Extracts an item from a zip archive and places the item in a file.
+
+Introduced: 2.7.3
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+revZipExtractItemToFile tArchive, "myZippedItem", "myFolder/myFile.txt"
+
+Parameters:
+archivePath: The absolute path to the archive to extract from.
+itemName: The name of the item to extract.
+fileName: The absolute path to the file to place the extracted data in. If the revZipExtractItemToFile command encounters an error then the result will be set to an error code beginning with "ziperr", otherwise the result will be empty.
+
+Description:
+Use the <revZipExtractItemToFile> command to place an item in zip archive into a file on disk. The archive must first have been opened using the <revZipOpenArchive (command)>command.
+
+References: revZipExtractItemToVariable (command), revZipOpenArchive (command)
+
+Tags: text processing

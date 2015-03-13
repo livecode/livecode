@@ -1,0 +1,12 @@
+Name: Aqua
+
+Synonyms: Aqua
+
+Type: glossary
+
+Description:
+The "lickable" <look and feel> designed for <OS X>. When the <lookAndFeel> <property> is set to "Appearance Manager", a LiveCode <application> displays the Aqua appearance when running on <OS X>.
+
+References: lookAndFeel (property), property (glossary), application (glossary), look and feel (glossary), OS X (glossary)
+
+Tags: ui

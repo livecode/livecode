@@ -1,0 +1,36 @@
+Name: populationStandardDeviation
+
+Type: function
+
+Syntax: populationStandardDeviation(<numbersList>)
+
+Summary: <return|Returns> the population standard deviation of a list of numbers.
+
+Synonyms: popStdDev
+
+Introduced: 6.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+populationStandardDeviation(8,10,12) -- returns 1.632993
+
+Example:
+put populationStandardDeviation(studentScores) into field "Population Standard Deviation"
+
+Parameters:
+numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+
+Returns: The <populationStandardDeviation> function <return|returns> a number.
+
+Description:
+Use the <populationStandardDeviation> <function> to analyze the amount of spread in a list of numbers.
+
+The <populationStandardDeviation> <function> was added in version 6.1 to complement the <standardDeviation> <function>.
+The population standard deviation is a measure of how widely distributed the numbers in the <numbersList> are.
+
+References: function (control_st), median (function), standardDeviation (function), sum (function), averageDeviation (function), average (function), return (glossary)
+
+Tags: math

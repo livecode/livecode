@@ -1,0 +1,10 @@
+Name: block comment
+
+Synonyms: block comment,block-commented,block-commenting,block-comment
+
+Type: glossary
+
+Description:
+A <comment> that spans multiple lines.
+
+References: comment (glossary)

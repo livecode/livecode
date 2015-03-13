@@ -1,0 +1,39 @@
+Name: currentTimeChanged
+
+Type: message
+
+Syntax: currentTimeChanged <newTime> 
+
+Summary: Sent to a <player> when the user switches to another <frame>.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on currentTimeChanged theInterval -- display the time in a field
+  put theInterval into field "Time Code"
+end currentTimeChanged
+
+Parameters:
+newTime: The number of the interval where the player is after the change.
+
+Description:
+Handle the <currentTimeChanged> message if you want to do something when the user changes the current time in a <player>.
+
+The user can change the current time by clicking in the controller bar or by using the arrow keys when the player is the active (focused) control.
+
+The number of intervals per second is specified by the player's timeScale <property>. The total number of intervals is given in the <player(object)|player's> <duration> <property>.
+
+The actual process of changing the player's current time is not triggered by the <currentTimeChanged> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the user from changing the <player(object)|player's> current time manually.
+
+Changes:
+The newTime parameter was introduced in version 2.0. In previous versions, the currentTimeChanged message did not have a parameter.
+
+References: callbacks (property), duration (property), player (keyword), playStarted (message), playPaused (message), selectionChanged (message), player (object), property (glossary), player (glossary), message (glossary), frame (glossary), trap (glossary), pass (control_st)
+
+Tags: multimedia

@@ -1,0 +1,23 @@
+Name: segments
+
+Type: keyword
+
+Syntax: segments
+
+Summary: Used with the n <umber> <function to count the number of segment chunks in a container.>
+
+Synonyms: words
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put "one two three" into tText
+put the number of segments in tText -- returns 3
+
+References: segment (keyword), umber (function), function to count the number of segment chunks in a container. (control_st)
+
+Tags: database

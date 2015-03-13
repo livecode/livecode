@@ -1,0 +1,23 @@
+Name: seven
+
+Type: constant
+
+Syntax: seven
+
+Summary: Equivalent to the number 7.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+subtract seven from dayOfWeek
+
+Description:
+Use the <seven> <constant> when it is easier to read than the numeral 7<a/>.
+
+References: constant (command), cross (constant), seventh (keyword)
+
+Tags: math

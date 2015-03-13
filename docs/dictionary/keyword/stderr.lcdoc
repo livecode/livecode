@@ -1,0 +1,34 @@
+Name: stderr
+
+Type: keyword
+
+Syntax: stderr
+
+Summary: Used with the <write to file> <command> to designate the <standard error> location.
+
+Introduced: 1.0
+
+OS: mac,linux
+
+Platforms: desktop,server,web
+
+Example:
+write field 3 to stderr
+
+Description:
+Use the <stderr> <keyword> to write error messages to the <standard error> location, usually the screen or console window.
+
+On Unix systems, error messages from a program are normally displayed on the console, but can be redirected to go to another device, process, or file. This redirection is done on the command line when the program is started up.
+
+On a server, <stderr> is used as the target for default error messages if 'the <errorMode> ' is <stderr> and the default error handler is triggered. 
+
+When you use the <write to file> <command> with the <stderr> <keyword>, LiveCode writes data to the <standard error> location.
+
+Support for using <stderr> on Server was added in version 4.6.3.
+
+Changes:
+Support for using <stderr> on <OS X|OS X systems> was added in version 2.0.
+
+References: stdin (keyword), stdout (keyword), errorMode (property), write to file (command), keyword (glossary), command (glossary), OS X (glossary), standard error (glossary)
+
+Tags: file system

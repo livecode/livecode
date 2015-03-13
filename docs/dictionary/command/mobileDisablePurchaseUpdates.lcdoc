@@ -1,0 +1,25 @@
+Name: mobileDisablePurchaseUpdates
+
+Type: command
+
+Syntax: mobileDisablePurchaseUpdates
+
+Summary: Disables the receipt of purchaseStateUpdate messages.
+
+Introduced: 5.0.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+if tMonitorPurchases is false then
+   mobileDisablePurchaseUpdates
+end if
+
+Description:
+Use the <mobileDisablePurchaseUpdates> command to disable the receipt of <purchaseStateUpdate> messages.
+
+Throughout the purchase process the App Store sends <purchaseStateUpdate> messages to your app which report any changes in the status of active purchases. The <mobileDisablePurchaseUpdates> command disables the receipt of <purchaseStateUpdate> messages.
+
+References: mobilePurchaseSet (command), mobilePurchaseVerify (command), mobileRestorePurchases (command), iphoneRequestProductDetails (command), mobilePurchaseSendRequest (command), mobilePurchaseConfirmDelivery (command), mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command), mobilePurchaseState (function), mobilePurchaseError (function), mobileCanMakePurchase (function), mobilePurchaseGet (function), mobilePurchases (function), purchaseStateUpdate (message)

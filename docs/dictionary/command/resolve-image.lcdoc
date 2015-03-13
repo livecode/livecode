@@ -1,0 +1,26 @@
+Name: resolve image
+
+Type: command
+
+Syntax: resolve image [id] <id or name> relative to <object reference>
+
+Summary: Resolves a short id or name of an image relative to an object to find the long id of the image that will use as an icon or pattern on the object.
+
+Introduced: 6.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+resolve image id 1007 relative to button "Cancel"
+
+Description:
+This command resolves a short id or name of an image as would be used for
+  an icon and sets it to the long ID of the image according to the documented
+  rules for resolving icons.
+  
+it is set empty if the command fails to resolve the image which means it's
+  not on any stack in memory.
+
+References: icon (property)

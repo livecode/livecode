@@ -1,0 +1,12 @@
+Name: trap
+
+Synonyms: trap,trapped,trapping
+
+Type: glossary
+
+Description:
+To stop a <message> from proceeding further along the <message path>.
+
+References: message (glossary), message path (glossary)
+
+Tags: objects

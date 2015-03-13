@@ -1,0 +1,35 @@
+Name: iphoneClearTouches
+
+Type: command
+
+Syntax: iphoneClearTouches
+
+Summary: Remove all pending touch interactions from the event queue.
+
+Introduced: 4.6
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneClearTouches
+
+Description:
+Use <iphoneClearTouches> to remove all pending touch interactions from the event queue.
+
+As interaction events (touch and mouse messages) are queued, it is possible for such messages to accumulate when they aren't needed. In particular, when executing 'waits', 'moves' or during card transitions. To handle this case, the <iphoneClearTouches> command has been added. At the point of calling, all pending touch interactions  are removed from the event queue.
+
+<iphoneClearTouches> also cancels any existing mouse or touch sequences, meaning that you (and the engine) will not receive a mouseUp, mouseRelease, touchEnd or touchCancel message for any current interactions.
+
+A good example of when this command might be useful is when playing an instructional sound:
+
+on tellUserInstructions
+   play specialFolderPath("engine") & slash & "Instruction_1.mp3"
+   wait until the sound is "done"
+   iphoneClearTouches
+end tellUserInstructions
+
+Here, if the <iphoneClearTouches> call was not made, any touch events the user created while the sound was playing would be queued and then be delivered immediately afterwards potentially causing unwanted effects.
+
+References: touchStart (message), touchEnd (message), touchMove (message), touchRelease (message)
