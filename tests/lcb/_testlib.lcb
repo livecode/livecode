@@ -6,21 +6,21 @@ use com.livecode.foreign
 -- **EXPERIMENTAL** Helper functions for testing error states
 ----------------------------------------------------------------
 
-public handler type Thunk() as optional any
+public handler type Thunk() returns optional any
 
-public handler MCUnitTestHandlerThrows(in pHandler as any, in pDescription as String) as undefined
+public handler MCUnitTestHandlerThrows(in pHandler as any, in pDescription as String) returns nothing
 	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, false, "")
 end handler
 
-public handler MCUnitTestHandlerThrowsBroken(in pHandler as any, in pDescription as String, in pReason as String) as undefined
+public handler MCUnitTestHandlerThrowsBroken(in pHandler as any, in pDescription as String, in pReason as String) returns nothing
 	MCUnitTestHandlerThrowsImpl(pHandler, pDescription, true, pReason)
 end handler
 
 ----------------------------------------------------------------
 
-foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional List, out Result as optional any) as optional any binds to "<builtin>"
+foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional List, out Result as optional any) returns optional any binds to "<builtin>"
 
-handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as String, in pBroken as Boolean, in pReason as String) as undefined
+handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as String, in pBroken as Boolean, in pReason as String) returns nothing
 
 	variable tHandler as Thunk
 	put pHandler into tHandler
