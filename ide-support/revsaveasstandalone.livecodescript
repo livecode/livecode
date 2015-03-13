@@ -2052,7 +2052,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          next repeat
       end if
       
-      revCopyModule tPlatform, tExternalName, item -1 of tExternalPath, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
+      revCopyModule tPlatform, item -1 of tExternalPath, item -1 of tExternalPath, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tExternalPath & quote
          next repeat
@@ -2061,7 +2061,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
             put "BNDL????" into URL ("binfile:" & (tCurrentLocation & slash & "Externals/" & (item -1 of tExternalPath) & "/Contents/PkgInfo"))
          end if
       end if
-      revAddExternal tExternalName
+      revAddExternal item -1 of tExternalPath
    end repeat
    
    
