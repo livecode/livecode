@@ -19,21 +19,28 @@
 #include <foundation-system.h>
 
 #include <float.h>
+#include <errno.h>
 
 // Older versions of MSVC don't supply "trunc"
 #ifdef _WIN32
 double trunc(double f) { return f < 0 ? ceil(f) : floor(f); }
 #endif
 
+////////////////////////////////////////////////////////////////
+
+MCTypeInfoRef kMCMathDomainErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////
+
 extern "C" MC_DLLEXPORT void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output)
 {
-    if (p_right == 0)
-    {
-        r_output = 1.0;
-        return;
-    }
-
+	errno = 0;
     r_output = pow(p_left, p_right);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
@@ -51,7 +58,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left,
 
 extern "C" MC_DLLEXPORT void MCMathEvalBase10LogReal(double p_operand, double& r_output)
 {
+	errno = 0;
     r_output = log10(p_operand);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -68,7 +81,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MC
 
 extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogReal(double p_operand, double& r_output)
 {
+	errno = 0;
     r_output = log(p_operand);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -153,7 +172,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumber
 
 extern "C" MC_DLLEXPORT void MCMathEvalAsinReal(double p_operand, double& r_output)
 {
+	errno = 0;
     r_output = asin(p_operand);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -170,7 +195,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumbe
 
 extern "C" MC_DLLEXPORT void MCMathEvalAcosReal(double p_operand, double& r_output)
 {
+	errno = 0;
     r_output = acos(p_operand);
+
+	if (errno == EDOM)
+	{
+		MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalAcosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -415,6 +446,23 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertBase(MCStringRef p_operand, intege
     // If t_error is false then we failed because of a memory error, so no need to throw
     if (t_error)
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("integer overflow, or invalid character in source"), nil);
+}
+
+////////////////////////////////////////////////////////////////
+
+bool
+MCMathModuleInitialize (void)
+{
+	if (!MCNamedErrorTypeInfoCreate (MCNAME("com.livecode.math.DomainError"), MCNAME("math"), MCSTR("mathematical function domain error"), kMCMathDomainErrorTypeInfo))
+		return false;
+
+	return true;
+}
+
+void
+MCMathModuleFinalize (void)
+{
+	MCValueRelease (kMCMathDomainErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
