@@ -1718,6 +1718,7 @@
 		4D140F9215A5A82300191B5E /* Utils.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Utils.java; sourceTree = "<group>"; };
 		4D17F4351042877000C49A3B /* externalv0.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = externalv0.cpp; path = src/externalv0.cpp; sourceTree = "<group>"; };
 		4D17F4361042877000C49A3B /* externalv1.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = externalv1.cpp; path = src/externalv1.cpp; sourceTree = "<group>"; };
+		4D1A70261AB2E19E00A30F69 /* tests */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tests; path = ../tests; sourceTree = "<group>"; };
 		4D1B954810A2CA8B0039C679 /* eventqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eventqueue.h; path = src/eventqueue.h; sourceTree = "<group>"; };
 		4D1F9C2E171C64320091C6CB /* libsecurity-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libsecurity-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D1F9D17171C67B00091C6CB /* libkernel-server.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libkernel-server.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1957,22 +1958,6 @@
 		4D67BB23164A76090092CF4C /* exec-ide.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-ide.cpp"; path = "src/exec-ide.cpp"; sourceTree = "<group>"; };
 		4D67BBB8164AB2C50092CF4C /* exec-printing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-printing.cpp"; path = "src/exec-printing.cpp"; sourceTree = "<group>"; };
 		4D6A00EE10C578C600FA48D2 /* customprinter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = customprinter.cpp; path = src/customprinter.cpp; sourceTree = "<group>"; };
-		4D6C26DB1647D781007C96B7 /* files */ = {isa = PBXFileReference; lastKnownFileType = folder; name = files; path = "exec-tests/files"; sourceTree = "<group>"; };
-		4D6C26F11647D781007C96B7 /* strings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = strings; path = "exec-tests/strings"; sourceTree = "<group>"; };
-		4D6C270E1647D781007C96B7 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = folder; name = pasteboard; path = "exec-tests/pasteboard"; sourceTree = "<group>"; };
-		4D6C27131647D781007C96B7 /* graphics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = graphics; path = "exec-tests/graphics"; sourceTree = "<group>"; };
-		4D6C27191647D782007C96B7 /* arrays */ = {isa = PBXFileReference; lastKnownFileType = folder; name = arrays; path = "exec-tests/arrays"; sourceTree = "<group>"; };
-		4D6C271F1647D782007C96B7 /* security */ = {isa = PBXFileReference; lastKnownFileType = folder; name = security; path = "exec-tests/security"; sourceTree = "<group>"; };
-		4D6C27241647D782007C96B7 /* network */ = {isa = PBXFileReference; lastKnownFileType = folder; name = network; path = "exec-tests/network"; sourceTree = "<group>"; };
-		4D6C272F1647D782007C96B7 /* math */ = {isa = PBXFileReference; lastKnownFileType = folder; name = math; path = "exec-tests/math"; sourceTree = "<group>"; };
-		4D6C275E1647D782007C96B7 /* logic */ = {isa = PBXFileReference; lastKnownFileType = folder; name = logic; path = "exec-tests/logic"; sourceTree = "<group>"; };
-		4D6C276A1647D782007C96B7 /* filters */ = {isa = PBXFileReference; lastKnownFileType = folder; name = filters; path = "exec-tests/filters"; sourceTree = "<group>"; };
-		4D6C277A1647D782007C96B7 /* datetime */ = {isa = PBXFileReference; lastKnownFileType = folder; name = datetime; path = "exec-tests/datetime"; sourceTree = "<group>"; };
-		4D6C27851647D782007C96B7 /* text */ = {isa = PBXFileReference; lastKnownFileType = folder; name = text; path = "exec-tests/text"; sourceTree = "<group>"; };
-		4D6C278B1647D782007C96B7 /* multimedia */ = {isa = PBXFileReference; lastKnownFileType = folder; name = multimedia; path = "exec-tests/multimedia"; sourceTree = "<group>"; };
-		4D6C27921647D782007C96B7 /* legacy */ = {isa = PBXFileReference; lastKnownFileType = folder; name = legacy; path = "exec-tests/legacy"; sourceTree = "<group>"; };
-		4D6C279D1647D782007C96B7 /* interface */ = {isa = PBXFileReference; lastKnownFileType = folder; name = interface; path = "exec-tests/interface"; sourceTree = "<group>"; };
-		4D6C27D31647D782007C96B7 /* engine */ = {isa = PBXFileReference; lastKnownFileType = folder; name = engine; path = "exec-tests/engine"; sourceTree = "<group>"; };
 		4D6C27FB1647D942007C96B7 /* exec-graphics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-graphics.cpp"; path = "src/exec-graphics.cpp"; sourceTree = "<group>"; };
 		4D6C27FC1647D942007C96B7 /* exec-security.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-security.cpp"; path = "src/exec-security.cpp"; sourceTree = "<group>"; };
 		4D6ED4F30E4B3B8800BDFDE4 /* objectstream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectstream.cpp; path = src/objectstream.cpp; sourceTree = "<group>"; };
@@ -2023,7 +2008,7 @@
 		4D77411A1226B930001C9150 /* lnxtransfer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxtransfer.h; path = src/lnxtransfer.h; sourceTree = "<group>"; };
 		4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-keywords.cpp"; path = "src/exec-keywords.cpp"; sourceTree = "<group>"; };
 		4D79B72E1A275AA500DD750C /* module-canvas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-canvas.cpp"; path = "src/module-canvas.cpp"; sourceTree = "<group>"; };
-		4D79B7301A275ADE00DD750C /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = src/canvas.mlc; sourceTree = "<group>"; };
+		4D79B7301A275ADE00DD750C /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; name = canvas.mlc; path = src/canvas.mlc; sourceTree = "<group>"; };
 		4D79B8981A3604F200DD750C /* sysunxthreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxthreads.cpp; path = src/sysunxthreads.cpp; sourceTree = "<group>"; };
 		4D79B89A1A36054900DD750C /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
 		4D79B89C1A36057400DD750C /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
@@ -2980,22 +2965,7 @@
 		4D6C26DA1647D765007C96B7 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				4D6C26DB1647D781007C96B7 /* files */,
-				4D6C26F11647D781007C96B7 /* strings */,
-				4D6C270E1647D781007C96B7 /* pasteboard */,
-				4D6C27131647D781007C96B7 /* graphics */,
-				4D6C27191647D782007C96B7 /* arrays */,
-				4D6C271F1647D782007C96B7 /* security */,
-				4D6C27241647D782007C96B7 /* network */,
-				4D6C272F1647D782007C96B7 /* math */,
-				4D6C275E1647D782007C96B7 /* logic */,
-				4D6C276A1647D782007C96B7 /* filters */,
-				4D6C277A1647D782007C96B7 /* datetime */,
-				4D6C27851647D782007C96B7 /* text */,
-				4D6C278B1647D782007C96B7 /* multimedia */,
-				4D6C27921647D782007C96B7 /* legacy */,
-				4D6C279D1647D782007C96B7 /* interface */,
-				4D6C27D31647D782007C96B7 /* engine */,
+				4D1A70261AB2E19E00A30F69 /* tests */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -5001,7 +4971,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "LC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-compile\"\n\nTEST_DIR=\"${SOLUTION_DIR}/_tests/lcb\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\n\ncd \"${SRCROOT}/../tests/lcb\"\n\n# Prepare test working dir, removing old logs and LCM files\nmkdir -p \"${TEST_DIR}\"\nrm -rf \"${TEST_DIR}/*\"\n\nlcb2lcm() {\n    echo \"$1\" | sed -e 's:\\.lcb$:.lcm:' | sed -e \"s:^.:${TEST_DIR}:\"\n}\nalias escape_space=\"sed -e's: :\\\\ :g'\"\n\n# Create any needed subdirectories in the working dir\nfind . -name '*.lcb' | escape_space | xargs -n1 dirname | uniq | sed -e \"s:^\\.:${TEST_DIR}:\" | xargs -n1 mkdir -p\n\n# Compile .lcb files to .lcm\ncompile () {\n    while read; do\n        lcb=\"${REPLY}\"\n        lcm=$(lcb2lcm \"${lcb}\")\n        \"${LC_COMPILE}\" \\\n            --modulepath \"${TEST_DIR}\" \\\n            --modulepath \"${MODULE_DIR}\" \\\n            --output \"${lcm}\" \"${lcb}\" || exit $?\n    done\n}\nfind . -name '*.lcb' | compile || exit $?";
+			shellScript = "LC_COMPILE=\"${BUILT_PRODUCTS_DIR}/lc-compile\"\n\nTEST_DIR=\"${SOLUTION_DIR}/_tests/lcb\"\nMODULE_DIR=\"${BUILT_PRODUCTS_DIR}/modules\"\n\ncd \"${SRCROOT}/../tests/lcb\"\n\n# Prepare test working dir, removing old logs and LCM files\nmkdir -p \"${TEST_DIR}\"\nrm -rf \"${TEST_DIR}/*\"\n\nlcb2lcm() {\n    echo \"$1\" | sed -e 's:\\.lcb$:.lcm:' | sed -e \"s:^.:${TEST_DIR}:\"\n}\nalias escape_space=\"sed -e's: :\\\\ :g'\"\n\n# Create any needed subdirectories in the working dir\nfind . -name '*.lcb' | escape_space | xargs -n1 dirname | uniq | sed -e \"s:^\\.:${TEST_DIR}:\" | xargs -n1 mkdir -p\n\n# Compile .lcb files to .lcm\ncompile () {\n    while read; do\n        lcb=\"${REPLY}\"\n        lcm=$(lcb2lcm \"${lcb}\")\n        \"${LC_COMPILE}\" \\\n            --modulepath \"${TEST_DIR}\" \\\n            --modulepath \"${MODULE_DIR}\" \\\n        --output \"${lcm}\" \"`pwd`/${lcb}\" || exit $?\n    done\n}\nfind . -name '*.lcb' | compile || exit $?";
 		};
 		C7C542301A8B695A003E8DB3 /* LCB Unit Tests [Run] */ = {
 			isa = PBXShellScriptBuildPhase;
