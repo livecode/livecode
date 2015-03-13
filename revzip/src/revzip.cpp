@@ -1287,7 +1287,7 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 				//  meant to return a UTF-8 encoded string.
 				if (t_stat.bitflags && ZIP_UTF8_FLAG)
 				{
-					t_success = 1;
+                    t_success = EXTERNAL_SUCCESS;
 					t_converted_name = strdup(t_stat.name);
 				}
 				else
