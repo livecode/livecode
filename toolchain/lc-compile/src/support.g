@@ -40,6 +40,8 @@
     UnescapeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
+    IsNameEqualToName
+    IsNameNotEqualToName
     IsNameEqualToString
     IsStringEqualToString
 
@@ -333,6 +335,8 @@
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
 'condition' IsStringEqualToString(STRING, STRING)
+'condition' IsNameEqualToName(NAME, NAME)
+'condition' IsNameNotEqualToName(NAME, NAME)
 
 --------------------------------------------------------------------------------
 
