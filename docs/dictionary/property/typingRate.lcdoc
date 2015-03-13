@@ -1,0 +1,25 @@
+Name: typingRate
+
+Type: property
+
+Syntax: set the typingRate to <milliseconds> 
+
+Summary: Specifies a delay between <characters> entered by the <type> <command>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the typingRate to 1000 -- 1 character per second
+
+Value:
+The <typingRate> is an <integer> between zero and 65535.
+By default, the <typingRate> is 100 (one-tenth of a second).
+
+Description:
+Use the <typingRate> <property> to make the <type> <command> operate faster or more slowly.
+
+References: blinkRate (property), characters (keyword), integer (keyword), type (command), command (glossary), property (glossary)

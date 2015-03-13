@@ -1,0 +1,47 @@
+Name: revXMLSetAttribute
+
+Type: command
+
+Syntax: revXMLSetAttribute <treeID>, <node>, <attributeName>, <newValue> 
+
+Summary: Creates an <attribute> of a <node>, or sets the value of an existing <attribute>.
+
+Introduced: 2.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+revXMLSetAttribute 6,"/Vegetable/Tree/Cedar","height","tall"
+
+Example:
+revXMLSetAttribute thisTree,currNode,myString,field "Data"
+
+Parameters:
+treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
+node: The path to the node whose attribute will be set.
+attributeName (string): 
+newValue (string): 
+
+The result: If the <revXMLSetAttribute> <command> encounters an error, the <result> is set to an error message beginning with "xmlerr".
+
+Description:
+Use the <revXMLSetAttribute> <command> to create and change <attribute|attributes>.
+
+If the <attributeName> is not already an <attribute> of the <node>, a new <attribute> with the specified name and value is created.
+
+If the attribute already exists, its value is set to the <newValue>.
+
+>*Tip:*  To put <Unicode> text into an <attribute>, first use the <uniDecode> function to encode the text as UTF-8:
+
+  revXMLSetAttribute myTree,the nodeName of me, \
+     uniDecode(the unicodeText of it,"UTF8")
+
+>*Important:*  The <revXMLSetAttribute> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on hte General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+
+References: revXMLAppend (command), revXMLAttributes (function), result (function), uniDecode (function), Unicode (glossary), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), attribute (glossary), command (glossary), XML library (library), Revolution custom library (library)
+
+Tags: text processing

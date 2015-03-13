@@ -1,0 +1,10 @@
+Name: TCP
+
+Synonyms: TCP,TCPIP,TCP/IP
+
+Type: glossary
+
+Description:
+Transmission Control Protocol. Used to establish a connection between two systems that are both connected to the Internet.
+
+Tags: networking

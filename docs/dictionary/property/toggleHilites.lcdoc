@@ -1,0 +1,34 @@
+Name: toggleHilites
+
+Type: property
+
+Syntax: set the toggleHilites of <field> to {true | false}
+
+Summary: Specifies whether clicking a <selected> line in a <list field> deselects that line.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the toggleHilites of field "Movies" to true
+
+Value (bool):The <toggleHilites> of a <field(keyword)> is true or false.
+By default, the <toggleHilites> <property> of newly created <field(object)|fields> is set to false.
+
+Description:
+Use the <toggleHilites> <property> to control the <behavior> of <list field|list fields>.
+
+If a field's <toggleHilites> <property> is set to true, clicking a <selected> line deselects the line. If the <toggleHilites> is false, clicking a <selected> line does nothing.
+
+If the field's <listBehavior> <property> is false, the setting of the <toggleHilites> <property> has no effect.
+
+>*Important:*  Setting the <toggleHilites> to true automatically sets the <field|field's> <noncontiguousHilites> and <multipleLines> <properties> to true. (However, setting the <toggleHilites> to false does not set these <properties> back to false.) To set the <toggleHilites> to true and the <noncontiguousHilites> or <multipleLines> to false, be sure to set the <toggleHilites> first, then set the other <properties> to false.
+
+References: multipleLines (property), toggleHilites (property), properties (property), listBehavior (property), selected (property), noncontiguousHilites (property), threeDHilite (property), hilitedLine (property), field (keyword), field (object), property (glossary), behavior (glossary), list field (glossary)
+
+Tags: ui

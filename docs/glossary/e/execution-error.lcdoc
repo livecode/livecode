@@ -1,0 +1,12 @@
+Name: execution error
+
+Synonyms: runtime error,run-time error,execution error
+
+Type: glossary
+
+Description:
+A problem or mistake in a <handler> that appears when the <handler> is <execute|executed>. 
+ 
+Also, the text LiveCode displays when it encounters an execution error.
+
+References: execute (glossary), handler (glossary)

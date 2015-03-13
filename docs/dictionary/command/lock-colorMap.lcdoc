@@ -1,0 +1,30 @@
+Name: lock colorMap
+
+Type: command
+
+Syntax: lock colorMap
+
+Summary: Sets the <lockColorMap> <property> to true, preventing the screen from being <redraw|redrawn> when the <color table> is changed.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+lock colorMap
+
+Example:
+if the platform is "MacOS" then lock colorMap
+
+Description:
+Use the <lock colorMap> <command> to prevent screen flashing when <image|images> and movies appear on a screen set to 256 or fewer colors.
+
+The <lock colorMap> <command> sets the <lockColorMap> <property> to true.
+
+When all pending handlers are finished executing, the <lockColorMap> <property> is set back to false, <undo|undoing> the <lock colorMap> <command|command's> action.
+
+References: lockColorMap (property), unlock colorMap (command), lock cursor (command), lock screen (command), image (object), property (glossary), redraw (glossary), undo (glossary), command (glossary), color table (glossary)
+
+Tags: ui

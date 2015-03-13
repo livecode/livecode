@@ -1,0 +1,14 @@
+Name: property
+
+Synonyms: properties,property
+
+Type: glossary
+
+Description:
+An attribute of an <object>, or a <global> attribute of the LiveCode environment. 
+ 
+An <object|object's> <property|properties> consist of its <built-in property|built-in properties>, plus any <custom property|custom properties> you have specified for that <object>.
+
+References: property (glossary), custom property (glossary), built-in property (glossary), global (glossary), object (object)
+
+Tags: properties

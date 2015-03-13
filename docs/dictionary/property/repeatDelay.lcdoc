@@ -1,0 +1,29 @@
+Name: repeatDelay
+
+Type: property
+
+Syntax: set the repeatDelay to <milliseconds> 
+
+Summary: Specifies how long a <scrollbar> or <field> waits between the click in the <scrollbar> and the time the <scrollbar> movement begins to repeat.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the repeatDelay to 10
+
+Value:
+The <repeatDelay> is a <non-negative> <integer>.
+By default, the <repeatDelay> <property> is set to 5 <milliseconds>.
+
+Description:
+Use the <repeatDelay> <property> to control the responsiveness of <scrollbar(object)|scrollbars>.
+
+When the user clicks in a scrollbar, a <mouseDown> message is sent to the <scrollbar(keyword)>. If the <mouse button> is still being held down after the time specified by the <repeatDelay> <property>, the <scrollbar(object)|scrollbar's> movement begins repeating.
+
+References: scrollbar (keyword), field (keyword), integer (keyword), mouseDown (message), mouseStillDown (message), scrollbar (object), property (glossary), mouse button (glossary), non-negative (glossary), milliseconds (function)
+
+Tags: ui

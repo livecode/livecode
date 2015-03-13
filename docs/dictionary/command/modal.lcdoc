@@ -1,0 +1,41 @@
+Name: modal
+
+Type: command
+
+Syntax: modal <stack> 
+
+Summary: Opens a <stack> as a <modal dialog box>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+modal stack "Custom Answer Dialog"
+
+Example:
+modal stack x of stacksToPresent
+
+Parameters:
+stack: Any stack reference.
+
+Description:
+Use the <modal> <command> to display a <stack> as a custom <modal dialog box>.
+
+The <modal> <command> opens the <stack> centered over the <defaultStack>, regardless of the <stack|stack's> <rectangle> and <location> <properties>.
+
+While a modal dialog box is open, other windows cannot be edited or brought to the front. Because of this, you should use modal dialog boxes only when a stack must obtain feedback from the user before it can continue.  This can be problematic if no means of dismissing the stack is provided. To remedy this situation select "stack mode" -&gt; "Toplevel" from the stack's context menu.  The context menu can be accessed by using, Shift-Control-Right--Click on Windows or Shift-Command-Right-Click/Command-Control-Shift-Click on Mac.
+
+If the stack is already open, the <modal> <command> closes the <stack> and reopens it as a <modal dialog box>, so <closeStack> and <openStack>, <closeCard> and <openCard>, and (if applicable) <closeBackground> and <openBackground> <message|messages> are sent to the <current card> as a result of <execute|executing> this <command>. Use the <lock messages> <command> before <execute|executing> <modal> if you want to prevent the close <message|messages> from being sent; the open <message|messages> are sent regardless of the setting of the <lockMessages> <property>.
+
+If the stack is already displayed as a modal dialog box, the <modal> <command> does not close and reopen it.
+
+The <modal> <command> pauses the running <handler> until the <modal dialog box> is dismissed (usually by clicking a button in the <modal dialog box>). To <return> information to the <handler> about which <button(keyword)> was clicked, in the <button(object)|button's> <script>, set a <global|global variable> or <custom property>. After the <dialog box> is dismissed, the <handler> can query this <variable> or <property> and act accordingly.
+
+Modal dialog boxes cannot be resized or edited. To edit a modal dialog box, use the topLevel <command> to display it in an <editable window>. The <Browse tool> is used in <modal dialog box|modal dialog boxes>, regardless of the current setting of the <tool> <property>.
+
+References: defaultStack (property), script (property), properties (property), lockMessages (property), tool (function), openCard (message), closeStack (message), closeCard (message), closeBackground (message), openStack (message), openBackground (message), return (constant), stack (object), button (object), variable (glossary), editable window (glossary), property (glossary), dialog box (glossary), location (glossary), execute (glossary), modal dialog box (glossary), command (glossary), global (glossary), Browse tool (glossary), custom property (glossary), message (glossary), current card (glossary), handler (glossary), lock messages (command), ask (command), ask file with type (command), modeless (command), rectangle (keyword), button (keyword)
+
+Tags: windowing

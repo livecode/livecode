@@ -1,0 +1,14 @@
+Name: absolute file path
+
+Synonyms: absolute file path,absolute path,full path,full pathname
+
+Type: glossary
+
+Description:
+The full name and location of a <file>, beginning with the disk the <file> is on, including the names of all <folder|folders> that contain the <file> in nested order, and finally the file name itself. 
+ 
+An absolute file path is always the same, regardless of which <folder> is the current <current folder|default folder>.
+
+References: current folder (glossary), file (glossary), folder (glossary)
+
+Tags: file system

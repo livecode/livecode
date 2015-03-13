@@ -1,0 +1,29 @@
+Name: iphoneIdentifierForVendor
+
+Type: function
+
+Syntax: iphoneIdentifierForVendor()
+
+Summary: Returns a unique identifier for device. The identifier is the same for all apps that come from the same vendor running of the same device.
+
+Introduced: 6.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+put iphoneIdentifierForVendor() into tSystemID
+
+Returns (string): 
+
+Description:
+Use the <iphoneIdentifierForVendor> function to find a unique idetifier for a vendor/device combination.
+
+The identifier is the same for all apps that come from the same vendor running on the same device. A different value is returned for apps on the same device that come from different vendors, and for apps on different devices regardless of vendor.
+
+The identifier will remain the same whilst apps from the vendor remain installed on the device. If all apps from the vendor are removed from the device and reinstalled, the value of the identifier will change.
+
+>*Note:* Only available on devices running iOS 6.0 and later.
+
+References: iphoneApplicationIdentifier (function)

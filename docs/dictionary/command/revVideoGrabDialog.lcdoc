@@ -1,0 +1,52 @@
+Name: revVideoGrabDialog
+
+Type: command
+
+Syntax: revVideoGrabDialog [<settingsType>]
+
+Summary: Displays a dialog box for configuring <QuickTime> or <VFW|Video for Windows> <video capture>.
+
+Introduced: 2.0
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: disk,privacy
+
+Example:
+revVideoGrabDialog
+
+Example:
+revVideoGrabDialog "format"
+
+Example:
+revVideoGrabDialog the label of button "Dialog Type"
+
+Parameters:
+settingsType: One of the following:
+compression: Settings for compression when recording video
+format: Video format, dimensions, and image depth
+display: Appearance of previewed video in the video grabber
+source: Video input channels and hue, contrast, and saturation settings
+video: Pops up the QT video compression choice dialog for the videograbber
+audio: Pops up the QT audio compression choice dialog for the videograbber
+
+>*Note:* Some video camera drivers don't support some settingsTypes.
+
+Description:
+Use the <revVideoGrabDialog> <command> to specify settings for use with the <video grabber>. 
+
+You must use the revInitializeVideoGrabber <command> to open the <video grabber> before you can use the <revVideoGrabDialog> <command>. 
+
+If you specified "QT" as the video method when you executed the revInitializeVideoGrabber <command>, do not specify a <settingsType>. <QuickTime> video recording settings are found in a single <dialog box>, which you display with the following <statement> :
+
+  revVideoGrabDialog
+
+If you specified "VFW", use the <settingsType> <parameter> to specify which <dialog box> you want to show. 
+
+>*Important:*  The <revVideoGrabDialog> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+
+References: revVideoGrabSettings (command), command (glossary), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), statement (glossary), standalone application (glossary), parameter (glossary), video grabber (glossary), dialog box (glossary), Video library (library), Revolution custom library (library)
+
+Tags: multimedia

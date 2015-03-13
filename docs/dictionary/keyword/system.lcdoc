@@ -1,0 +1,29 @@
+Name: system
+
+Type: keyword
+
+Syntax: system
+
+Summary: Specifies that the <date> and <time> <function|functions> should be formatted in accordance with the user's system preferences.
+
+Introduced: 1.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+put the system date && the system time into field "Clock"
+
+Description:
+Use the <system> <keyword> to correctly format dates and times that will be viewed by the user (for example, dates and times that are displayed in a <field>).
+
+The <system> <format> is set by the Date & Time control panel (on <Mac OS|Mac OS systems>), the Date control panel (on <Windows|Windows systems>), or the LANG environment variable (on <Unix|Unix systems>).
+
+You can use the <system> keyword in combination with the <long>, <abbreviated>, or <short> <keyword|keywords>.
+
+>*Note:* The <system> <keyword> is implemented internally as a <property> and appears in the <propertyNames>. However, it cannot be used as a <property> in an <expression>, nor with the <set> <command>.
+
+References: long (keyword), field (keyword), short (keyword), abbreviated (keyword), convert (command), set (command), time (function), dateFormat (function), format (function), date (function), propertyNames (function), property (glossary), command (glossary), Windows (glossary), keyword (glossary), Mac OS (glossary), function (glossary), Unix (glossary), expression (glossary)
+
+Tags: math

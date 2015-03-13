@@ -1,0 +1,23 @@
+Name: nine
+
+Type: constant
+
+Syntax: nine
+
+Summary: Equivalent to the number 9.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+if offset(it,pathName) &gt; nine then put true into longFldr
+
+Description:
+Use the <nine> <constant> when it is easier to read than the numeral 9<a/>.
+
+References: iBeam (constant), constant (command)
+
+Tags: math

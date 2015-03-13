@@ -1,0 +1,32 @@
+Name: stop using
+
+Type: command
+
+Syntax: stop using <stack> 
+
+Summary: Removes a <stack> from the <message path> that was placed in it with the <start using> <command>.
+
+Synonyms: release library
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+stop using stack "project1"
+
+Parameters:
+stack: Any stack reference.
+
+Description:
+Use the <stop using> <command> to remove a <stack|stack's> <script(property)> from the <message path>.
+
+You can stop using a stack only if it has previously been inserted in the message path with the <start using> command. The <stop using> <command> does not affect the <current stack>, which is normally in the <message path>, or <script(glossary)|scripts> that were placed in the <message path> with the <insert script> <command>.
+
+When you stop using a stack, the <releaseStack> <message> is sent to the <stack>.
+
+References: script (property), releaseStack (message), remove script (command), start using (command), insert script (command), stack (object), current stack (glossary), message (glossary), command (glossary), script (glossary), message path (glossary)
+
+Tags: objects

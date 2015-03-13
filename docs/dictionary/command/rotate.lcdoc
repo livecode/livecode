@@ -1,0 +1,48 @@
+Name: rotate
+
+Type: command
+
+Syntax: rotate [<image>] by <numberOfDegrees> 
+
+Summary: Rotates an <image> through the specified angle.
+
+Introduced: 1.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web,mobile
+
+Example:
+rotate image 1 by 90
+
+Example:
+rotate image "picture" by -10
+
+Parameters:
+image: Any image reference.
+numberOfDegrees: A number, or an expression that evaluates to a number.
+
+Description:
+Use the <rotate> <command> to turn an <image(keyword)>.
+
+The entire content of the specified image is selected with the Select paint tool, then rotated. If you don't specify an <image>, the portion currently selected with the Select <paint tool> is rotated.
+
+If the <numberOfDegrees> is positive, the image rotates counterclockwise. If the <numberOfDegrees> is negative, the image rotates clockwise.
+
+If the rotated image extends beyond the boundaries of the original image, and the image's lockLocation <property> is set to false, the <image(keyword)> expands to accommodate the rotated contents. If the <lockLocation> is true, the rotated <image(keyword)> is cropped to fit within the <image(object)|image's> <rectangle>.
+
+The current setting of the <resizeQuality property> is used to determine whether to apply filtering to the rotation operation. If set to normal no filtering is used; if set to good or best a bilinear filter is used which significantly reduces the distortion that will naturally occur when an image is rotated.
+
+The rotation operation does not have an inverse. Since some amount of distortion is unavoidable when rotating an image by an amount that is not a multiple of 90 degrees, rotating an image clockwise, then counterclockwise by the same amount does not completely restore the original image.
+
+To rotate an image in a reversible way, or to do repeated rotations without progressive distortion of the image, set its angle <property> instead of using the <rotate> <command>. Unlike the <rotate> <command>, the <angle> <property> affects only the screen display of the <image(keyword)>, not the actual picture data in it, so setting it repeatedly does not introduce distortion.
+
+ >*Note:*Rotating an image using good or best <resizeQuality> might cause the mask to be promoted to an alpha channel.
+
+>*Note:* As rotate is an image editing operation, the target image needs to be on the currently visible card of an open stack to function.
+
+>*Important:* The rotate <command> cannot be used on a <referenced control|referenced image>. Doing so will cause an <execution error>. To turn a <referenced control|referenced image>, set the <image(object)|image's><angle (property)> <property> instead.
+
+References: image (keyword), rectangle (keyword), resizeQuality (property), angle (property), lockLocation (property), resizeQuality property (property), choose (command), crop (command), revRotatePoly (command), image (object), property (glossary), referenced control (glossary), paint tool (glossary), command (glossary), execution error (glossary)
+
+Tags: ui

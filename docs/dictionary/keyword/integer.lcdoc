@@ -1,0 +1,33 @@
+Name: integer
+
+Type: keyword
+
+Syntax: integer
+
+Summary: Used with the <is a> and <is not a> <operator|operators> to check whether a value is an <integer>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+if field "Number to Order" is not an integer then beep
+
+Description:
+Use the <integer> <keyword> to find out whether a value is a number that doesn't have a fractional part.
+
+If the value contains digits (and an optional minus sign) and no other characters, it is an integer.
+
+If the value is an expression, it is evaluated and LiveCode checks whether the final value is an integer. For example, the value of the expression "22 - 3" is 19 (which is an integer), so the following expression evaluates to true:
+
+  22 - 3 is an integer
+
+However, the expression
+  "22 - 3" is an integer
+evaluates to false, because the double quotes prevent the expression "22 - 3" from being evaluated.
+
+References: is a (operator), is not a (operator), operator (glossary), keyword (glossary), integer (keyword)
+
+Tags: properties

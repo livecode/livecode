@@ -1,0 +1,34 @@
+Name: palindromeFrames
+
+Type: property
+
+Syntax: set the palindromeFrames of <image> to {true | false}
+
+Summary: Specifies that a looping <animated GIF> plays forward and backward.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the palindromeFrames of image "Construction" to true
+
+Value (bool):The <palindromeFrames> of an <image(keyword)> is true or false.
+By default, the <palindromeFrames> <property> of newly created <image(object)|images> is set to false.
+
+Description:
+Use the <palindromeFrames> <property> to change the way an <animated GIF> <image> repeats itself.
+
+An animated GIF image can be set to loop over and over, instead of playing the animation once and then stopping. If the <palindromeFrames> <property> is set to true, the <image> plays forward, then plays backward from the end, then plays forward again, and so on.
+
+If the <palindromeFrames> is false, the <image> plays from the beginning to the end, then skips back to the beginning to start the next loop.
+
+If the contents of the image is not an animated GIF, or the image's repeatCount is zero, the setting of the <palindromeFrames> <property> has no effect.
+
+References: currentFrame (property), image (keyword), image (object), property (glossary), animated GIF (glossary)
+
+Tags: multimedia

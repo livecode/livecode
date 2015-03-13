@@ -1,0 +1,28 @@
+Name: orientationChanged
+
+Type: message
+
+Syntax: orientationChanged
+
+Summary: Sent to the current card of the defaultStack when the device detects a change in its position relative to the ground.
+
+Introduced: 4.5.2
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on orientationChanged
+   put mobileDeviceOrientation() into theOrientation
+   updateInteface theOrientation -- update the interface to fit the new orientation
+end orientationChanged
+
+Description:
+Handle the <orientationChanged> message if you want to update the position of objects or perform other tasks when the orientation of the device changes.
+
+The <orientationChanged> message is sent to the current card of the defaultStack when the device detects a change in its position relative to the ground. You can use the <mobileDeviceOrientation> function to find out the current orientation.
+
+The <orientationChanged> message is sent before any automatic interface rotation takes place thus changes to the orientation lock state and allowed set can be made at this point and still have an effect. If you wish to perform an action after the interface has been rotated, then either do so on receipt of <resizeStack>, or by using a <send in 0 milliseconds(command)> command.
+
+References: mobileSetAllowedOrientations (command), mobileLockOrientation (command), mobileUnlockOrientation (command), mobileAllowedOrientations (function), mobileDeviceOrientation (function), mobileOrientation (function), resizeStack (message)

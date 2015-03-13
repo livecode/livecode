@@ -1,0 +1,38 @@
+Name: answer printer
+
+Type: command
+
+Syntax: answer printer [as sheet]
+
+Summary: Displays the appropriate printer selection dialog for the platform.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Security: printing
+
+Example:
+answer printer
+
+Example:
+if the commandKey is down then
+  answer printer
+end if
+
+The result: >*Note:* If the user clicks the cancel button of the answer printer dialog, then "cancel" is put into the result.
+
+Description:
+Use the <answer printer> <command> to select a printer and set standard printing options for later printing.
+
+The <answer printer> <command> displays a <dialog box> where the user can set certain print-related <properties>. 
+
+If the <systemPrintSelector property> is false or the system does not support native print dialogs a stack named "Printer Dialog" will be used. If the <systemPrintSelector property> is true then a dialog will be displayed by the operating system, in this case the exact options are determined by the printer driver and the operating system.
+
+If the user does not cancel the dialog, upon return the printer setting properties will be updated to reflect their choices.
+
+References: reset printing (command), answer page setup (command), print (command), revPrintText (command), revPrintField (command), open printing (command), answer (command), revShowPrintDialog (command), printerFeatures (property), printCopies (property), printPaperOrientation (property), printerSettings (property), properties (property), printPaperSize (property), systemPrintSelector property (property), availablePrinters (property), printerOutput (property), printPaperScale (property), systemPrintSelector (property), printRotated (property), printPaperRectangle (property), printRectangle (property), printMargins (property), printRanges (property), printerName (property), formatForPrinting (property), command (glossary), dialog box (glossary)
+
+Tags: printing

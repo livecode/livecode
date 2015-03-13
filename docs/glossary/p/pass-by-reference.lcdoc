@@ -1,0 +1,14 @@
+Name: pass by reference
+
+Synonyms: pass by reference,passed by reference,passing by reference,passes by reference,pass-by-reference,call by reference,called by reference,calling by reference,calls by reference,call-by-reference
+
+Type: glossary
+
+Description:
+A way of using <parameter|parameters> where you pass a <local variable> to the <call|called> <handler>, and changing the <parameter> within the <call|called> <handler> also changes the <variable> in the <call|calling> <handler>. 
+ 
+You specify that a <parameter> is to be passed by reference by preceding its name with the <@> character in the called <handler|handler's> first line.
+
+References: handler (glossary), parameter (glossary), variable (glossary), local variable (glossary), @ (glossary), call (glossary)
+
+Tags: properties

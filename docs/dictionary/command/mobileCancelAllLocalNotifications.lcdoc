@@ -1,0 +1,25 @@
+Name: mobileCancelAllLocalNotifications
+
+Type: command
+
+Syntax: mobileCancelAllLocalNotifications
+
+Summary: Cancel all scheduled Local Notifications.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileCancelAllLocalNotifications
+
+Description:
+Use the <mobileCancelAllLocalNotifications> <command> to cancel all Local Notification with the operating system from within a <stack on iOS or Android>. 
+
+This command cancels all Local Notifications with the iOS operating sytem.
+
+References: mobileCreateLocalNotification (command), mobileCancelLocalNotification (command), command (glossary), stack on iOS or Android (object)
+
+Tags: networking

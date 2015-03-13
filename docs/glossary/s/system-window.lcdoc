@@ -1,0 +1,14 @@
+Name: system window
+
+Synonyms: system window,systemwide window,system palette,systemwide palette
+
+Type: glossary
+
+Description:
+A <palette> that floats above all other windows (in all running applications) on the system. 
+ 
+Unlike an ordinary <palette>, a system window is always available regardless of which application is active.
+
+References: palette (glossary)
+
+Tags: ui

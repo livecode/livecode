@@ -1,0 +1,51 @@
+Name: union
+
+Type: command
+
+Syntax: union <array> with <testArray> [<recursively>]
+
+Summary: Combines two arrays.
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+union monthlyPayments with quarterlyPayments
+
+Example:
+put "green" into tArray1["color"]
+put "left" into tArray1["align"]
+
+put "blue" into tArray2["color"]
+put "100" into tArray2["width"]
+
+union tArray1 with tArray2
+
+# RESULT
+# tArray1[&ldquo;colour&rdquo;] = &ldquo;green&rdquo;
+# tArray1[&ldquo;align&rdquo;] = &ldquo;left&rdquo;
+# tArray1[&ldquo;width&rdquo;] = &ldquo;100&rdquo;
+
+# tArray2[&ldquo;colour&rdquo;] = &ldquo;blue&rdquo;
+# tArray2[&ldquo;width&rdquo;] = &ldquo;100&rdquo;
+
+Parameters:
+array (array): 
+testArray (array): 
+recursively: The recursively adverb indicates that the union should recurse through nested arrays.
+
+Description:
+Use the <union> <command> to combine two <array|arrays>, eliminating duplicate elements.
+
+The <union> <command> combines the <array> and <testArray>. Each <key> of the <array> is checked to see whether there is already an <element(keyword)> with that <key> in the <testArray>. If there is, that <element(keyword)> of the <array> is unchanged. If not, the corresponding <element(keyword)> of the <testArray> is placed in the <array>.
+
+After the <union> <command> is <execute|executed>, the <keys> of the <array> consists of the logical union of the <keys> of the original <array> and the keys of the <testArray>.
+
+The content of individual elements of the <testArray> does not affect the final result. Only which <element(glossary)|elements> exist in the <testArray>, not their content, controls which <element(glossary)|elements> of the <testArray> are placed in the <array>. If the <array> and <testArray> have the same set of <keys> but different content in each <element(keyword)>, the <union> <command> does not change the value of the <array>.
+
+References: element (keyword), + (operator), add (command), intersect (command), keys (function), element (glossary), key (glossary), command (glossary), array (glossary), execute (glossary)
+
+Tags: properties

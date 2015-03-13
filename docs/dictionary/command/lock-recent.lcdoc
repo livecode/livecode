@@ -1,0 +1,30 @@
+Name: lock recent
+
+Type: command
+
+Syntax: lock recent
+
+Summary: Sets the <lockRecent> <property> to true, preventing <card|cards> from being added to the <recent cards|recent cards list>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+lock recent
+
+Example:
+if not the hilite of button "Advanced" then lock recent
+
+Description:
+Use the <lock recent> command to move among <card(object)|cards> without disturbing the <recent cards|recent cards list>.
+
+When either the user or a handler navigates to a card, that card is placed on the recent cards list, and the user can return to it with the go <command> or the "Go Recent" item in the View <menu>. If a <handler> visits a <card(keyword)> that is not normally seen by the user, you can use the <lock recent> <command> to prevent the user from inadvertently going to that <card(keyword)> later.
+
+The <lock recent> <command> sets the <lockRecent> <property> to true. When all pending <handler|handlers> are finished <execute|executing>, the <lockRecent> <property> is set back to false.
+
+References: lockRecent (property), card (keyword), menu (keyword), lock messages (command), unlock recent (command), card (object), property (glossary), handler (glossary), recent cards (glossary), command (glossary), execute (glossary)
+
+Tags: navigation

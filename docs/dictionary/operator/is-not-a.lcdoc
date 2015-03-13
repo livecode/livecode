@@ -1,0 +1,58 @@
+Name: is not a
+
+Type: operator
+
+Syntax: <value> is not a[n] {boolean | integer | number | point | rect| date | color | ASCII string}
+
+Summary: <evaluate|Evaluates> to true if a <value> is not of the specified type, false otherwise.
+
+Synonyms: is not an
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+22 is not a number
+
+Example:
+CJ22 is not a number
+
+Example:
+numToChar(128) is not an ASCII string -- evaluates to true
+
+Parameters:
+value: Any source of value.
+
+Description:
+Use the <is not a> <operator> to <validate> data to make sure it's not the wrong type. 
+
+This operator is useful for checking whether the user has entered data correctly, and for checking parameters before sending them to a handler to avoid a script error caused by feeding data of one type to an operator or function that requires a different type. 
+
+A <value> is a:
+
+* boolean or logical if it is one of the two constants true or false
+
+* integer if it consists of digits (with an optional minus sign)
+
+* number if it consists of digits, optional leading minus sign, optional decimal point, and optional "E" or "e" (scientific notation)
+
+* point if it consists of two numbers separated by a comma
+
+* rect if it consists of four numbers separated by commas
+
+* date if it is in one of the formats produced by the date or <time> functions
+
+* color if it is a valid color reference
+
+* ASCII string if it does not contain any characters greater than charToNum(127)
+
+All the types other than boolean can also include leading or trailing white space characters. 
+
+The <is not a> <operator> is the logical inverse of the <is a> <operator>. When one is true, the other is false.
+
+References: point (keyword), integer (keyword), is a (operator), value (function), time (function), evaluate (glossary), operator (glossary), validate (glossary)
+
+Tags: math

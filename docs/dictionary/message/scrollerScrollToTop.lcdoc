@@ -1,0 +1,27 @@
+Name: scrollerScrollToTop
+
+Type: message
+
+Syntax: scrollerScrollToTop
+
+Summary: Sent when a scroller is scrolled to the top by touching the status bar.
+
+Introduced: 4.5.3
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+on scrollerScrollToTop
+   put "Scrolled to top" into field "scroller status"
+end scrollerScrollToTop
+
+Description:
+The <scrollerScrollToTop> message is sent when a UIScrollView scroller control is scrolled to the top when you touch the status bar.
+
+Handle the <scrollerScrollToTop> message if you want to move LiveCode controls, make changes to the interface or set the appropriate scroll properties of groups and fields to get a native scrolling effect.
+
+The <scrollerScrollToTop> message is sent to the object containing the script that created the UIScrollView scroller control.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), scrollerEndDecelerate (message), scrollerBeginDecelerate (message), scrollerBeginDrag (message), scrollerEndDrag (message), scrollerDidScroll (message)

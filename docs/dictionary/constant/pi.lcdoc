@@ -1,0 +1,25 @@
+Name: pi
+
+Type: constant
+
+Syntax: pi
+
+Summary: Equal to the ratio of a circle's circumference to its diameter.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get tan((firstAngle * pi) + secondAngle)
+
+Description:
+Use the <pi> <constant> in trigonometric <expression|expressions> where writing out "pi" makes the expression more readable and understandable.
+
+The <pi> <constant> is equal to 3.14159265358979323846.
+
+References: constant (command), acos (function), sin (function), cos (function), tan (function), asin (function), atan2 (function), atan (function), expression (glossary)
+
+Tags: math

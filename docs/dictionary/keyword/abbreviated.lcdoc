@@ -1,0 +1,48 @@
+Name: abbreviated
+
+Type: keyword
+
+Syntax: abbreviated
+
+Summary: Specifies a <format> for the <date> and <time> <function|functions>, the <convert> <command>, and the <name>, <ID>, and <owner> <properties>.
+
+Synonyms: abbr,abbrev
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the abbreviated date
+
+Example:
+put (the abbreviated name of this card) & return after cardsList
+
+Description:
+Use the <abbreviated> <keyword> to obtain a date, time, name, or ID with a moderate amount of detail.
+
+In general, an <abbreviated> form is longer than the <short> form, but shorter than the <long> form.
+
+If the useSystemDate <property> is set to false, an abbreviated <date> looks like this:
+  Thu, Jan 27, 2000
+
+If the useSystemDate is true, the abbreviated <date> is formatted according to the system settings.
+
+If the useSystemDate <property> is set to false, an abbreviated <time> looks like this:
+  11:22 AM
+
+If the useSystemDate is true, the abbreviated <time> is formatted according to the system settings.
+An abbreviated object <name> consists of the <object type>, followed by the name in quotes. For example, an abbreviated <card> name looks like this: card "This Card"
+
+An abbreviated object <ID> looks like this: field ID 2238
+
+>*Note:* The <abbreviated> <keyword> is implemented internally as a <property>, and appears in the <propertyNames>. However, it cannot be used as a <property> in an <expression>, nor with the <set command>.
+
+Changes:
+The form the abbreviated owner was introduced in version 2.0. In previous versions, the form of the owner property could not be specified and reported only the abbreviated owner.
+
+References: owner (property), properties (property), name (property), ID (property), card (keyword), short (keyword), long (keyword), set command (command), convert (command), time (function), dateFormat (function), format (function), date (function), propertyNames (function), keyword (glossary), property (glossary), command (glossary), function (glossary), object type (glossary), expression (glossary)
+
+Tags: math

@@ -1,0 +1,33 @@
+Name: debugDo
+
+Type: command
+
+Syntax: debugDo <statementList> 
+
+Summary: <execute|Executes> a list of <statement|statements> with additional <debug|debugging> information when in the <debugger>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+debugDo "beep"
+
+Example:
+debugDo commandsList
+
+Parameters:
+statementList: A LiveCode statement, a container with one or more statements, or a string that evaluates to a statement.
+
+Description:
+The <debugDo> <command> is used by LiveCode's <message box> and <debugger>.
+
+Normally, you should use the <do> <command>; consider using <debugDo> only if you are writing a debugger or similar utility, or if you need to <debug> the <statement|statement list> sent by a <do> command.
+
+When the debugger is active, you can use <debugDo>  to access <local variable|local variables> using the <message box>. If you enter a <debugDo> <statement> into the <message box>, and the <statement> refers to a <local variable>, the <variable|variable's> <value> is the current <value> in the <handler> that the <debugger> is <execute|executing>. This capability is useful if you want to track the current <value> of a <variable> in a <handler> you're <debug|debugging>.
+
+>*Important:*  The details of this <command> may change in future releases.
+
+References: traceReturn (property), traceStack (property), traceDelay (property), message box (keyword), send (command), do (command), value (function), variable (glossary), handler (glossary), execute (glossary), statement (glossary), local variable (glossary), debugger (glossary), debug (glossary), command (glossary)

@@ -1,0 +1,32 @@
+Name: hand
+
+Type: constant
+
+Syntax: hand
+
+Summary: Equivalent to the number 28.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the cursor to hand
+
+Returns: The <hand> constant returns the number 28.
+
+Description:
+Use the <hand> constant to set the cursor to a pointing hand shape.
+
+The following two statements are equivalent:
+
+set the cursor to hand
+set the cursor to 8
+
+However, the first is easier to read and understand in LiveCode.
+
+>*Important:*  If you use the hand cursor or other standard cursors in your application, you must include it when you create your standalone. Make sure the "Cursors" option on the Inclusions section on the General screen of the Standalone Application Settings window is checked.
+
+Tags: ui

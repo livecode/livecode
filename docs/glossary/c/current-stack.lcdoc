@@ -1,0 +1,14 @@
+Name: current stack
+
+Synonyms: current stack
+
+Type: glossary
+
+Description:
+The <stack> that's being worked on, usually the <active window>. The current stack is specified by the <defaultStack> <property>. 
+ 
+Also, the <stack> that contains the <object> whose <script> is currently <execute|executing>.
+
+References: property (glossary), defaultStack (glossary), script (glossary), active window (glossary), execute (glossary), stack (object), object (object)
+
+Tags: windowing
