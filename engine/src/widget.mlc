@@ -492,6 +492,7 @@ public foreign handler MCWidgetGetWidth(out rWidth as Real) as undefined binds t
 public foreign handler MCWidgetSetWidth(in pWidth as Real) as undefined binds to "<builtin>"
 public foreign handler MCWidgetGetHeight(out rHeight as Real) as undefined binds to "<builtin>"
 public foreign handler MCWidgetSetHeight(in pHeight as Real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetFont(out rFont as Font) as undefined binds to "<builtin>"
 
 /* 
 Summary:	Returns the widget script object.
@@ -567,6 +568,20 @@ begin
     MCWidgetSetHeight(input)
 end syntax
 
+/*
+Summary:    Returns the font of the widget.
+
+Returns:    The font of the widget
+
+Description:
+Use to return a font which reflects the current (effective) settings of the
+widget's textFont, textSize and textStyle properties.
+*/
+syntax MyFont is expression
+    "my" "font"
+begin
+    MCWidgetGetFont(output)
+end syntax
 
 // ---------- Synchronous and asynchronous ("current") event information ---------- //
 

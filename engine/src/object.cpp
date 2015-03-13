@@ -4760,6 +4760,30 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font)
 	return t_changed;
 }
 
+bool MCObject::copyfont(MCFontRef& r_font)
+{
+    bool t_need_unmap;
+    t_need_unmap = false;
+    if (m_font == nil)
+    {
+        mapfont();
+        t_need_unmap = true;
+    }
+    
+    MCFontRef t_font;
+    t_font = m_font;
+    
+    if (t_need_unmap)
+        unmapfont();
+    
+    if (t_font == nil)
+        return false;
+    
+    r_font = MCFontRetain(t_font);
+    
+    return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // MW-2012-02-17: [[ LogFonts ]] Copy the font attrs from the other object - this
