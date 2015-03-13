@@ -63,7 +63,9 @@ extern MCExecContext *MCECptr;
 // IM-2014-03-06: [[ revBrowserCEF ]] Add revision number to v0 external interface
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Bump revision number after unicode update
 // AL-2015-02-06: [[ SB Inclusions ]] Increment revision number of v0 external interface
-#define EXTERNAL_INTERFACE_VERSION 3
+// SN-2015-03-12: [[ Bug 14413 ]] Increment revision number, for the addition of
+//  UTF-8 <-> native string functions.
+#define EXTERNAL_INTERFACE_VERSION 4
 
 typedef struct _Xternal
 {
@@ -1718,6 +1720,46 @@ static char *resolve_symbol_in_module(const char *arg1, const char *arg2,
     return nil;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//  V4: UTF-8 <-> Native string conversion
+// arg1 contains the string to convert, for both of the functions.
+static char *convert_from_native_to_utf8(const char *arg1, const char *arg2,
+                           const char *arg3, int *retval)
+{
+    MCAutoStringRef t_input;
+    char* t_utf8_string;
+    if (arg1 == NULL
+            || !MCStringCreateWithNativeChars((char_t*)arg1, strlen(arg1), &t_input)
+            || !MCStringConvertToUTF8String(*t_input, t_utf8_string))
+    {
+        *retval = xresFail;
+        return nil;
+    }
+    
+    *retval = xresSucc;
+    return t_utf8_string;
+}
+
+static char *convert_to_native_from_utf8(const char *arg1, const char *arg2,
+                                         const char *arg3, int *retval)
+{
+    MCAutoStringRef t_input;
+    char *t_native_string;
+    
+    if (arg1 == NULL
+            || !MCStringCreateWithBytes((byte_t*)arg1, strlen(arg1), kMCStringEncodingUTF8, false, &t_input)
+            || !MCStringConvertToCString(*t_input, t_native_string))
+    {
+        *retval = xresFail;
+        return nil;
+    }
+    
+    *retval = xresSucc;
+    return t_native_string;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // IM-2014-03-06: [[ revBrowserCEF ]] Add externals extension to the callback list
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Add externals extension to handle UTF8-encoded parameters
 // AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
@@ -1787,6 +1829,9 @@ XCB MCcbs[] =
     /* V3 */ load_module,
     /* V3 */ unload_module,
     /* V3 */ resolve_symbol_in_module,
+    
+    /* V4 */ convert_from_native_to_utf8,
+    /* V4 */ convert_to_native_from_utf8,
     
 	NULL
 };

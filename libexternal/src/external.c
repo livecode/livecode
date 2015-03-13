@@ -74,6 +74,10 @@ enum
     /* V3 */ OPERATION_LOAD_MODULE,
     /* V3 */ OPERATION_UNLOAD_MODULE,
     /* V3 */ OPERATION_RESOLVE_SYMBOL_IN_MODULE,
+    
+    // SN-2015-03-12: [[ Bug 14413 ]] Add new UTF-8 <-> native conversion functions
+    /* V4 */ OPERATION_CONVERT_FROM_NATIVE_TO_UTF8,
+    /* V4 */ OPERATION_CONVERT_TO_NATIVE_FROM_UTF8,
 };
 
 enum
@@ -905,6 +909,37 @@ void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolv
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// V4: UTF-8 <-> native string conversion
+
+char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success)
+{
+    char *t_result;
+    
+    if (s_external_interface_version < 4)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    t_result = (s_operations[OPERATION_CONVERT_FROM_NATIVE_TO_UTF8])(p_native, NULL, NULL, r_success);
+    
+    return t_result;
+}
+
+char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success)
+{
+    char *t_result;
+    
+    if (s_external_interface_version < 4)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+    
+    t_result = (s_operations[OPERATION_CONVERT_TO_NATIVE_FROM_UTF8])(p_utf8, NULL, NULL, r_success);
+    
+    return t_result;
+}
 
 #ifdef TARGET_SUBPLATFORM_IPHONE
 struct LibExport
