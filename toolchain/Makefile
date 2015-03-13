@@ -319,7 +319,8 @@ $(COMPILE_stagedir)/stamp-gentle: $(COMPILE_gentle_inputs)
 	@cd $(COMPILE_srcdir) && \
 	for gfile in $(subst $(COMPILE_srcdir),.,$(COMPILE_gentle_inputs)); do \
 	    gbase=`basename $$gfile` && \
-	    if [ ! -f $(COMPILE_stagesubdir)/$$gbase ]; then \
+	    if [ ! -f $(COMPILE_stagesubdir)/$$gbase ] || \
+	       [ $$gfile -nt $(COMPILE_stagesubdir)/$$gbase ]; then \
 	        echo "cp $$gfile $(COMPILE_stagesubdir)" $(_PRINT_RULE); \
 	        cp $$gfile $(COMPILE_stagesubdir) || exit $$? ; \
 	    fi; \
