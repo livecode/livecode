@@ -49,23 +49,4 @@ char *os_path_from_native(const char *p_native_path);
 //   Resolves a native path into an absolute path, e.g. by expanding "~" etc.
 char *os_path_resolve(const char *p_native_path);
 
-
-// SN-2015-03-10:[[ Bug 14413 ]] Added UTF-8 conversion functions
-
-// Parameters:
-//  p_utf8_string : pointer to UTF-8 encoded string.
-// Returns:
-//  a pointer to the native-encoded string. Must be freed by the caller
-// Semantics:
-//  Converts a UTF-8 encoded srting into a Native string
-char *ConvertCStringFromUTF8ToNative(const char* p_utf8_path, int *r_success);
-
-// Parameters:
-//  p_native_string : pointer to native-encoded string.
-// Returns:
-//  a pointer to the UTF-8 encoded string. Must be freed by the caller
-// Semantics:
-//  Converts a native srting into a UTF-8 encoded string
-char *ConvertCStringFromNativeToUTF8(const char* p_native_string, int *r_success);
-
 #endif
