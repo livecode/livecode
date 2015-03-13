@@ -3040,11 +3040,8 @@ bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, f
 		case kMCSVGPathRelativeHorizontalLineTo:
 		{
 			MCGPoint t_point;
-			t_point = t_origin;
-			if (MCSVGPathCommandIsRelative(p_command))
-				t_point.x += p_params[0];
-			else
-				t_point.x = p_params[0];
+			t_point = t_context->last_point;
+			t_point.x = t_origin.x + p_params[0];
 			MCGPathLineTo(t_context->path, t_point);
 			t_context->last_point = t_point;
 			break;
@@ -3054,11 +3051,8 @@ bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, f
 		case kMCSVGPathRelativeVerticalLineTo:
 		{
 			MCGPoint t_point;
-			t_point = t_origin;
-			if (MCSVGPathCommandIsRelative(p_command))
-				t_point.y += p_params[0];
-			else
-				t_point.y = p_params[0];
+			t_point = t_context->last_point;
+			t_point.y = t_origin.y + p_params[0];
 			MCGPathLineTo(t_context->path, t_point);
 			t_context->last_point = t_point;
 			break;
