@@ -1,0 +1,349 @@
+-- declaring extension as widget, followed by identifier
+widget com.livecode.extensions.devore.svgIcon
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "SVG Icon"
+metadata author is "Trevor DeVore / Benjamin Beaumont"
+metadata version is "1.0.1"
+
+private variable mState        as String
+private variable mColor        as Color
+private variable mHiliteColor  as Color
+private variable mPresets    	as List
+private variable  mPath    		as String
+private variable mHilited      as Boolean
+private variable mToggleHilite as Boolean
+private variable mMaintainAspectRatio as Boolean
+property iconColor            get getColor          set setColor
+metadata iconColor.editor is "com.livecode.pi.color"
+property iconHiliteColor      get getHiliteColor    set setHiliteColor
+metadata iconHiliteColor.editor is "com.livecode.pi.color"
+property iconPathPreset            get getPathPreset           set setPathPreset
+metadata iconPathPreset.editor is "com.livecode.pi.enum"
+metadata iconPathPreset.options is "Star,Facebook,Camera,Chart,Bank"
+metadata iconPathPreset.default is "Star"
+property iconPath       get mPath           set setPath
+metadata iconPath.editor is "com.livecode.pi.text"
+property isHilited            get mHilited          set setIsHilited
+property toggleHilite         get mToggleHilite     set mToggleHilite
+property maintainAspectRatio  get mMaintainAspectRatio  set setMaintainAspectRatio
+--
+
+----------
+-- called when widget is created
+public handler OnCreate()
+	put "up" into mState
+	put "M1186 579l257 250l-356 52l-66 10l-30 60l-159 322v-963l59 -31l318 -168l-60 355l-12 66zM1638 841l-363 -354l86 -500q5 -33 -6 -51.5t-34 -18.5q-17 0 -40 12l-449 236l-449 -236q-23 -12 -40 -12q-23 0 -34 18.5t-6 51.5l86 500l-364 354q-32 32 -23 59.5t54 34.5 l502 73l225 455q20 41 49 41q28 0 49 -41l225 -455l502 -73q45 -7 54 -34.5t-24 -59.5z" into mPath
+	put color [0,0,0] into mColor
+	put stringToColor("255,0,100") into mHiliteColor
+	
+	put false into mHilited
+	put false into mToggleHilite
+	put true into mMaintainAspectRatio
+	
+	variable tArray as Array
+	put the empty array into tArray
+	put the empty list into mPresets
+	
+	put "Star" into tArray["name"]
+	put "M1186 579l257 250l-356 52l-66 10l-30 60l-159 322v-963l59 -31l318 -168l-60 355l-12 66zM1638 841l-363 -354l86 -500q5 -33 -6 -51.5t-34 -18.5q-17 0 -40 12l-449 236l-449 -236q-23 -12 -40 -12q-23 0 -34 18.5t-6 51.5l86 500l-364 354q-32 32 -23 59.5t54 34.5 l502 73l225 455q20 41 49 41q28 0 49 -41l225 -455l502 -73q45 -7 54 -34.5t-24 -59.5z" into tArray["path"]
+	push tArray onto mPresets
+	
+	put "Facebook" into tArray["name"]
+	put "M959 1524v-264h-157q-86 0 -116 -36t-30 -108v-189h293l-39 -296h-254v-759h-306v759h-255v296h255v218q0 186 104 288.5t277 102.5q147 0 228 -12z" into tArray["path"]
+	push tArray onto mPresets
+	
+	put "Camera" into tArray["name"]
+	put "M960 864q119 0 203.5 -84.5t84.5 -203.5t-84.5 -203.5t-203.5 -84.5t-203.5 84.5t-84.5 203.5t84.5 203.5t203.5 84.5zM1664 1280q106 0 181 -75t75 -181v-896q0 -106 -75 -181t-181 -75h-1408q-106 0 -181 75t-75 181v896q0 106 75 181t181 75h224l51 136 q19 49 69.5 84.5t103.5 35.5h512q53 0 103.5 -35.5t69.5 -84.5l51 -136h224zM960 128q185 0 316.5 131.5t131.5 316.5t-131.5 316.5t-316.5 131.5t-316.5 -131.5t-131.5 -316.5t131.5 -316.5t316.5 -131.5z" into tArray["path"]
+	push tArray onto mPresets
+	
+	put "Chart" into tArray["name"]
+	put "M2048 0v-128h-2048v1536h128v-1408h1920zM1664 1024l256 -896h-1664v576l448 576l576 -576z" into tArray["path"]
+	push tArray onto mPresets
+	
+	put "Bank" into tArray["name"]
+	put "M960 1536l960 -384v-128h-128q0 -26 -20.5 -45t-48.5 -19h-1526q-28 0 -48.5 19t-20.5 45h-128v128zM256 896h256v-768h128v768h256v-768h128v768h256v-768h128v768h256v-768h59q28 0 48.5 -19t20.5 -45v-64h-1664v64q0 26 20.5 45t48.5 19h59v768zM1851 -64 q28 0 48.5 -19t20.5 -45v-128h-1920v128q0 26 20.5 45t48.5 19h1782z" into tArray["path"]
+	push tArray onto mPresets
+	
+	end handler
+----------
+
+----------
+-- this handler is called when the widget is saved
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	
+	put mPath into rProperties["svg path"]
+	put colorToString(mColor, true) into rProperties["color"]
+	put colorToString(mHiliteColor, true) into rProperties["hilite color"]
+	put mHilited into rProperties["hilited"]
+	put mToggleHilite into rProperties["toggle hilite"]
+	put mMaintainAspectRatio into rProperties["maintain aspect ratio"]
+	
+	return rProperties
+end handler
+----------
+
+----------
+-- this handler is called when the widget is loaded
+public handler OnLoad(in pProperties as Array)
+	put pProperties["svg path"] into mPath
+	put stringToColor(pProperties["color"]) into mColor
+	put stringToColor(pProperties["hilite color"]) into mHiliteColor
+	put pProperties["hilited"] into mHilited
+	put pProperties["toggle hilite"] into mToggleHilite
+	put pProperties["maintain aspect ratio"] into mMaintainAspectRatio
+end handler
+----------
+
+----------
+-- the following handlers deal with mouse events
+public handler OnMouseUp()		
+  if the current mouse position is within my bounds then
+  	if mToggleHilite then
+	  	put not mHilited into mHilited
+  	end if
+		post "mouseUp" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
+	end if
+  put "up" into mState
+	redraw all
+end handler
+
+
+public handler OnMouseCancel()
+	put "up" into mState
+	redraw all
+end handler
+
+
+public handler OnMouseDown()
+	put "down" into mState
+	redraw all
+	
+	post "mouseDown" to my script object with [FormatInt(the click button)]
+end handler
+----------
+
+
+public handler setIsHilited(in pBoolean as Boolean)
+	put pBoolean into mHilited
+	redraw all
+end handler
+
+
+public handler setMaintainAspectRatio(in pBoolean as Boolean)
+	put pBoolean into mMaintainAspectRatio
+	redraw all
+end handler
+
+
+public handler setPath(in pPath as String) as undefined
+	put pPath into mPath
+	redraw all
+end handler
+
+
+public handler setColor(in pColor as String) as undefined
+	put stringToColor(pColor) into mColor
+	redraw all
+end handler
+
+
+public handler getColor() as String
+	return colorToString(mColor, false)
+end handler
+
+
+public handler setHiliteColor(in pColor as String) as undefined
+	put stringToColor(pColor) into mHiliteColor
+	redraw all
+end handler
+
+
+public handler getHiliteColor() as String
+	return colorToString(mHiliteColor, false)
+end handler
+
+public handler setPathPreset(in pPresetName as String) as undefined
+	variable tElement
+	repeat for each element tElement in mPresets
+		if tElement["name"] is pPresetName then
+			put tElement["path"] into mPath
+			redraw all
+			exit repeat
+		end if
+	end repeat
+end handler
+
+public handler getPathPreset() as String
+	variable tElement
+	repeat for each element tElement in mPresets
+		if tElement["path"] is mPath then
+			return tElement["name"]
+		end if
+	end repeat
+	return ""
+end handler
+
+
+----------
+-- called whenever LiveCode needs to redraw the widget
+public handler OnPaint()
+	variable tPath as Path
+	put path mPath into tPath
+	
+	variable tBounds
+	put the bounding box of tPath into tBounds
+	
+	// set origin of bounds to 0,0
+	translate tPath by [- the x of tBounds, - the y of tBounds]
+	// flip vertically
+	scale tPath by [1,-1]
+	translate tPath by [0, the height of tBounds]
+		
+	// scale to fit within widget and maintain aspect ratio
+	if mMaintainAspectRatio then
+	
+		// Prepare values for matrix transformation
+		variable isLarger as Boolean
+		variable sx as Number
+		variable sy as Number
+		
+		put false into isLarger
+		put my width / the width of tBounds into sx
+		put my height / the height of tBounds into sy
+		
+		if sx > sy then
+			put true into isLarger
+			put sy into sx
+		else
+			put sx into sy
+		end if
+		
+		variable tx as Number
+		variable ty as Number
+		
+		put the left of my bounds - (the left of tBounds*sx) into tx
+		put the top of my bounds - (the top of tBounds*sy) into ty
+		
+		variable diff as Number
+		
+		if isLarger then
+			put my width - (the width of tBounds*sy) into diff
+		else
+			put my height - (the height of tBounds*sy) into diff
+		end if
+		
+		// align center
+		divide diff by 2
+		
+		if isLarger then
+			add diff to tx
+		else
+			add diff to ty
+		end if
+		
+		// create transformation matrix and apply
+		variable tTransform as Transform
+		put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
+		transform tPath by tTransform
+		
+	else
+		scale tPath by [my width / the width of tBounds, my height / the height of tBounds]
+	end if
+	
+	if mState is "up" and mHilited is false then
+		set the paint of this canvas to solid paint with mColor
+	else
+		set the paint of this canvas to solid paint with mHiliteColor
+	end if
+	
+	fill tPath on this canvas
+end handler
+
+
+private handler stripZeros(in tString as String) as String
+	if tString contains "." then
+		variable tCount as Integer
+		repeat while ((the last char of tString) is in ".0")
+			if the last char of tString is "." then
+				delete the last char of tString
+				exit repeat
+			else
+				delete the last char of tString
+			end if
+		end repeat
+	end if
+	return tString
+end handler
+
+private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) as String
+	variable tColor as String
+	
+	put stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) \
+					& "," & stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) \
+					& "," & stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) into tColor
+	
+	if pIncludeAlpha then
+		put "," & stripZeros((the rounded of (the alpha of pColor) * 255) formatted as string) after tColor
+	end if
+	
+	return tColor
+end handler
+
+private handler stringToColor(in pString as String) as Color
+	if the number of chars in pString is 0 then
+		return ""
+		end if
+
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 1.0 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+end handler
+
+
+-- Needed until dp-2
+handler FormatInt(in pNumber as Number) as String
+	variable tNumberString as String
+
+	put pNumber formatted as string into tNumberString
+
+	if "." is in tNumberString then
+		variable tDotOffset
+		put the first offset of "." in tNumberString into tDotOffset
+		delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
+	end if
+
+	return tNumberString
+end handler
+
+end widget

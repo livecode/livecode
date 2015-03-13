@@ -34,7 +34,7 @@ public foreign handler MCBinaryEvalIsNotEqualTo(in Left as Data, in Right as Dat
 public foreign handler MCBinaryEvalIsLessThan(in Left as Data, in Right as Data, out Value as CBool) as undefined binds to "<builtin>"
 public foreign handler MCBinaryEvalIsGreaterThan(in Left as Data, in Right as Data, out Value as CBool) as undefined binds to "<builtin>"
 
-public foreign handler MCBinaryEvalEmpty(out Value as Data) as undefined binds to "<builtin>"
+public foreign handler MCDataEvalEmpty(out Value as Data) as undefined binds to "<builtin>"
 --
 
 /*
@@ -203,7 +203,7 @@ Tags: Binary
 syntax EmptyData is expression
 	"the" "empty" "data"
 begin
-	MCBinaryEvalEmpty(output)
+	MCDataEvalEmpty(output)
 end syntax
 
 end module

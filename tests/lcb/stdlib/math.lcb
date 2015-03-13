@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.math.tests
 
 use com.livecode.math
+use com.livecode.foreign
 use com.livecode.__INTERNAL._testlib
 
 -- Empirically-chosen epsilon for floating-point comparisons
@@ -56,12 +57,12 @@ public handler TestPow()
 	test "pow (-ve, 0)" when (-2) ^ 0 is 1
 end handler
 
-handler TestPowDomain_Imag() as undefined
-	variable tVar
-	put (-1) ^ 0.5 into tVar
+handler TestPowDomain_Imag()
+	return (-1) ^ 0.5
 end handler
 public handler TestPowDomain()
-	MCUnitTestHandlerThrowsBroken(TestPowDomain_Imag, "pow (imaginary)", "bug 14679")
+	-- bug 14679
+	MCUnitTestHandlerThrows(TestPowDomain_Imag, "pow (imaginary)")
 end handler
 
 public handler TestPowPrecedence()
@@ -83,7 +84,9 @@ handler TestLog10Domain_Zero() as undefined
 	put the log of 0 into tVar
 end handler
 public handler TestLog10Domain()
-	MCUnitTestHandlerThrowsBroken(TestLog10Domain_Negative, "log10 (syntax, -ve)", "bug 14678")
+	-- bug 14678
+	MCUnitTestHandlerThrows(TestLog10Domain_Negative, "log10 (syntax, -ve)")
+
 	MCUnitTestHandlerThrowsBroken(TestLog10Domain_Zero, "log10 (syntax, 0)", "bug 14678")
 end handler
 
@@ -119,17 +122,15 @@ public handler TestArctan()
 	test "arctan2 (function)" when the binary arctangent of -1 and -1 is -3 * pi / 4
 end handler
 
-handler TestTrigonometricDomain_Arcsin() as undefined
-	variable tNum
-	put asin((1 + any number) / any number) into tNum
+handler TestTrigonometricDomain_Arcsin()
+	return asin((1 + any number) / any number)
 end handler
 handler TestTrigonometricDomain_Arccos() as undefined
-	variable tNum
-	put acos((1 + any number) / any number) into tNum
+	return acos((1 + any number) / any number)
 end handler
 public handler TestTrigonometricDomain()
-	MCUnitTestHandlerThrowsBroken(TestTrigonometricDomain_Arcsin, "arcsin (> 1)", "bug 14681")
-	MCUnitTestHandlerThrowsBroken(TestTrigonometricDomain_Arccos, "arccos (> 1)", "bug 14681")
+	MCUnitTestHandlerThrows(TestTrigonometricDomain_Arcsin, "arcsin (> 1)")
+	MCUnitTestHandlerThrows(TestTrigonometricDomain_Arccos, "arccos (> 1)")
 end handler
 
 public handler TestExp()
@@ -159,7 +160,8 @@ handler TestLnDomain_Zero() as undefined
 	put the natural log of 0 into tVar
 end handler
 public handler TestLnDomain()
-	MCUnitTestHandlerThrowsBroken(TestLnDomain_Negative, "ln (syntax, -ve)", "bug 14678")
+	-- bug 14678
+	MCUnitTestHandlerThrows(TestLnDomain_Negative, "ln (syntax, -ve)")
 	MCUnitTestHandlerThrowsBroken(TestLnDomain_Zero, "ln (syntax, 0)", "bug 14678")
 end handler
 
@@ -183,9 +185,13 @@ public handler TestMinBinary()
 	test "min (function)" when min(4, 5) is 4
 end handler
 
+handler TestMinList_Empty()
+	return the minimum value of []
+end handler
 public handler TestMinList()
 	test "min (list)" when the minimum value of [2, 1, 3] is 1
-	skip test "min (empty list)" because "Can't test for errors"
+
+	MCUnitTestHandlerThrows(TestMinList_Empty, "min (empty list)")
 end handler
 
 public handler TestMaxBinary()
@@ -193,14 +199,23 @@ public handler TestMaxBinary()
 	test "max (function)" when max(4, 5) is 5
 end handler
 
+handler TestMaxList_Empty()
+	return the maximum value of []
+end handler
 public handler TestMaxList()
 	test "max (list)" when the maximum value of [2, 1, 3] is 3
-	skip test "max (empty list)" because "Can't test for errors"
+
+	MCUnitTestHandlerThrows(TestMaxList_Empty, "max (empty list)")
 end handler
 
+handler TestBaseConvert_InvalidFormat() as LCUInt
+	return "0xf004" converted from base 16 -- bug 14889
+end handler
 public handler TestBaseConvertFrom()
 	test "convert from hex" when "6A" converted from base 16 is 106
 	test "convert from binary" when "1001010" converted from base 2 is 74
+
+	MCUnitTestHandlerThrows(TestBaseConvert_InvalidFormat, "convert from hex (0x)")
 end handler
 
 public handler TestBaseConvertTo()

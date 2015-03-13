@@ -15,29 +15,19 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
-Module: com.livecode.extensions.livecode.radioButton
-
-Type: widget
-
-Description: This widget is a radio button. 
-This widget has three properties that can be set: buttonChecked; theme and label.
-*/
-
 -- declaring extension as widget, followed by identifier
 widget com.livecode.extensions.livecode.radioButton
 --
-
--- adding metadata to ensure extension displays correctly in livecode
-metadata title is "Radio Button"
-metadata author is "LiveCode"
-metadata version is "1.0.2"
----
 
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 ---
+
+-- metadata
+metadata title is "Radio Button"
+metadata author is "LiveCode"
+metadata version is "1.0.2"
 
 -- property declarations
 property checked			get mIsChecked				set setChecked
@@ -46,11 +36,11 @@ property label				get mLabelText				set setLabelText
 ---
 
 -- private instance variables
-private variable mIsChecked	as boolean
-private variable mTheme as string
-private variable mLabelText as string
+private variable mIsChecked	as Boolean
+private variable mTheme as String
+private variable mLabelText as String
 
-private variable mState as string
+private variable mState as String
 --
 
 -- constants
@@ -59,9 +49,7 @@ constant kWhite is [1,1,1]
 constant kBlack is [0,0,0]
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mIsChecked into rProperties["checked"]
@@ -74,15 +62,12 @@ end handler
 
 ----------
 -- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
+public handler OnLoad(in pProperties as Array)
 	put pProperties["theme"] into mTheme
 	put pProperties["checked"] into mIsChecked
 	put pProperties["label"] into mLabelText
 end handler
-----------
 
-----------
--- called when the widget is created
 public handler OnCreate()
 	-- properties
 	put false into mIsChecked
@@ -92,10 +77,7 @@ public handler OnCreate()
 	-- variables
 	put "unchecked" into mState
 end handler
-----------
 
-----------	
--- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 
 	-- draw the outer circle and fill with paint
@@ -121,10 +103,7 @@ public handler OnPaint()
 	--
 	
 end handler
-----------
 
-----------
--- called when the widget is pressed
 public handler OnMouseDown()
 	if mIsChecked is true then
 		put "pressed and checked" into mState
@@ -132,10 +111,7 @@ public handler OnMouseDown()
 	setChecked(not(mIsChecked))
 	redraw all
 end handler
-----------
 
-----------
--- called when the widget is no longer pressed
 public handler OnMouseUp()
 	if mState is "pressed and checked" then
 		put "checked" into mState
@@ -143,16 +119,13 @@ public handler OnMouseUp()
 	redraw all
 	post "buttonChecked" with [mLabelText]
 end handler
-----------
 
-----------
--- this handler returns a path
-private handler getPath(in pObject as string) as Path
+private handler getPath(in pObject as String) as Path
 	if pObject is "outer circle" then
 		return circle path centered at point [10, my height/2] with radius 7.5
 		
 	else if pObject is "inner circle" then
-		variable tRadius as real 
+		variable tRadius as Real 
 		
 		if mIsChecked is true then
 			if mTheme is "windows-8" then
@@ -168,22 +141,16 @@ private handler getPath(in pObject as string) as Path
 		return circle path centered at point [10, my height/2] with radius tRadius
 	end if
 end handler
-----------
 
-----------
--- this handler returns a stroke width
-private handler getStroke() as number
+private handler getStroke() as Number
 	if mTheme contains "macos" then
 		return 1.0
 	else if mTheme is "windows-8" then
 		return 1.5
 	end if
 end handler
-----------
 
-----------
--- this handler returns a paint
-private handler getPaint(in pObject as string) as Paint
+private handler getPaint(in pObject as String) as Paint
 	if pObject is "outer circle" then
 		variable tStop1
 		variable tStop2
@@ -279,10 +246,7 @@ private handler getPaint(in pObject as string) as Paint
 		
 	end if
 end handler
-----------
 
-----------
--- this handler returns a font
 private handler getFont() as Font
 	if mTheme is "macos-yosemite" then
 		return font "Helvetica Neue" at size 12
@@ -292,69 +256,29 @@ private handler getFont() as Font
 		return font "Segoe WP" at size 12
 	end if
 end handler
-----------
 
-----------
--- this handler returns a rectangle in which the label will be filled
 private handler getLabelRect() as Rectangle
 	variable tLabelRect as Rectangle
 	put my bounds into tLabelRect
 	add 22 to the x of tLabelRect
 	return tLabelRect
 end handler
-----------
 
-----------
--- this handler sets mButtonChecked to true/false if it is checked/unchecked
-/*
-Summary: Sets whether the radio button is checked or not.
-
-Parameters:
-pIsChecked: The state of the radio button.
-
-Description:
-Sets the checked property of the progress bar to either "macos-10", "macos-yosemite" or "windows-8".
-*/
-private handler setChecked(in pIsChecked as boolean) as undefined
+private handler setChecked(in pIsChecked as Boolean) as undefined
 	-- once a radio button is checked, can only be unchecked if another radio button is checked
 	if pIsChecked is true then 
 		put true into mIsChecked
 	end if
 end handler
-----------
 
-----------
--- this handler sets the theme of the widget
-/*
-Summary: Sets the theme of the radio button.
-
-Parameters:
-pTheme: The name of the theme.
-
-Description:
-Sets the theme property of the radio button to either "macos-10", "macos-yosemite" or "windows-8".
-*/
-public handler setTheme(in pTheme as string) as undefined
+public handler setTheme(in pTheme as String) as undefined
 	put pTheme into mTheme
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the label of the button
-/*
-Summary: Sets the label of the radio button.
-
-Parameters:
-pLabel: The label of the radio button.
-
-Description:
-Sets the label property of the radio button to either "macos-10", "macos-yosemite" or "windows-8".
-*/
-public handler setLabelText(in pLabel as string) as undefined
+public handler setLabelText(in pLabel as String) as undefined
 	put pLabel into mLabelText
 	redraw all
 end handler
-----------
 
 end widget

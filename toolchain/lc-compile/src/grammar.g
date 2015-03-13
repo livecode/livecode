@@ -63,7 +63,11 @@
             ErrorsDidOccur()
         ||
             GenerateSyntaxForModules(Modules)
-            GenerateSyntaxRules()
+            (|
+                ErrorsDidOccur()
+            ||
+                GenerateSyntaxRules()
+            |)
         |)
 
 'action' BindModules(MODULELIST, MODULELIST)
