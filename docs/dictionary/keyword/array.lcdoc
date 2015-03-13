@@ -1,0 +1,27 @@
+Name: array
+
+Type: keyword
+
+Syntax: array
+
+Summary: Used with the '<is a>' and '<is not a>' operators to check whether a value is an array.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put "apple" into tArray[1]
+put "carrot" into tArray[1]
+put tArray is an array -- Evaluates to true
+
+Returns: The <array> keyword returns true if the variable is an array. False, if the variable is not an array.
+
+Description:
+Use the <array> keyword to find out whether a value is an array.
+
+References: is a (operator), is not a (operator)
+
+Tags: properties

@@ -1,0 +1,35 @@
+Name: visited
+
+Type: property
+
+Syntax: set the visited of <button> to {true | false}
+
+Syntax: set the visited of <chunk> of <field> to {true | false}
+
+Summary: Specifies whether a <button> or <grouped text> has been clicked during the current session.
+
+Associations: button
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the visited of button "Start Here" to false
+
+Example:
+if the visited of the clickChunk then go back
+
+Value (bool):The <visited> of a <button> or <chunk> is true or false.
+By default, the <visited> of a <button> or <chunk> is set to false when the <stack> opens.
+
+Description:
+Use the <visited> <property> to determine whether the user has previously used a function or traversed a link.
+
+The <visited> <property> is automatically reset to false when the <stack> is closed (and purged from memory).
+
+References: visitedIcon (property), linkVisitedColor (property), button (keyword), stack (object), property (glossary), chunk (glossary), grouped text (glossary)
+
+Tags: navigation

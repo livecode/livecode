@@ -1,0 +1,32 @@
+Name: recursionLimit
+
+Type: property
+
+Syntax: set the recursionLimit to stackSizeInBytes
+
+Summary: Specifies how many levels deep a recursive function is allowed to go.
+
+Introduced: 2.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the recursionLimit to 20
+
+Value:
+The recursionLimit is a positive integer.
+By default, the recursionLimit property is set to 400000.
+
+Description:
+Use the recursionLimit property to quickly find possible recursion bugs or to extend the ability to use deeply recursive routines.
+
+The stackSizeInBytes specifies the CPU call stack size. ("Stack" in this sense has nothing to do with LiveCode stack objects; it refers to a type of data structure used by the processor.)
+
+The relationship between the <recursionLimit> and the number of levels of nesting permitted for a recursive call depends on a number of factors, including the processor type and the number of parameters passed during each function call. This means that the same recursionLimit value may allow a different maximum level of nesting, depending on the platform.
+
+Recursion may be used deliberately, especially in processing large data sets. To allow deeper levels of recursion than usual, increase the <recursionLimit>.
+
+Recursion may also occur accidentally. In this case, the recursion is usually infinite--that is, the function will keep recursing until it reaches the limit and causes an execution error. To track down such problems more quickly, reduce the recursionLimit. The lower the limit, the more quickly a buggy routine will cause an execution error.
+>*Note:* On Windows, as of version 4.5.1, the recursionLimit property is bounded by the stackLimit. Attempts to set the recursionLimit greater than the stackLimit will see it downwardly adjusted to the maximum current size allowed.

@@ -1,0 +1,29 @@
+Name: iphoneRemoteControlEnabled
+
+Type: function
+
+Syntax: iphoneRemoteControlEnabled
+
+Summary: Queries the current state of remote control access.
+
+Introduced: 6.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+get iphoneRemoteControlEnabled()
+
+Returns: Returns true is access to the remote control feature is enabled, false if not.
+
+Description:
+Use the <iphoneRemoteControlEnabled> funtion to find out if access to the remote control is enabled.
+
+The remote control feature on iOS allows access to the audio controls both on an external device and also on the device itself when in lock screen (via double-tapping on the Home button).
+
+Use the iphoneRemoteControlEnabled function to find out if this feature is enabled.
+
+>*Note:* This functionality is only available on iOS 5.x and above.
+
+References: iphoneSetRemoteControlDisplay (command), iphoneDisableRemoteControl (command), iphoneSetAudioCategory (command), remoteControlReceived (message)

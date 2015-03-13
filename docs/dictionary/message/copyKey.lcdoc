@@ -1,0 +1,32 @@
+Name: copyKey
+
+Type: message
+
+Syntax: copyKey
+
+Summary: Sent when the user presses the <key combination> equivalent to the Copy <menu item>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on copyKey
+  if the selection is empty then beep -- nothing to copy
+  pass copyKey
+end copyKey
+
+Description:
+Handle the <copyKey> <message> if you want to change the normal copying process, or prevent use of the Copy <key combination> without changing the menu.
+
+The LiveCode development environment traps the <copyKey> <message>, unless "Suspend LiveCode UI" is turned on in the Development menu. This means that the <copyKey> <message> is not received by a <stack> if it's running in the <development environment>.
+
+The <copyKey> <message> is sent when the user presses Command-C (on <Mac OS|Mac OS systems>), Control-C (on <Windows|Windows systems>), Control-Insert (on <Unix|Unix systems>), or the keyboard Copy key.
+
+The message is sent to the active (focused) control, or to the current card if no control is focused.
+
+References: pasteKey (message), cutKey (message), undoKey (message), copy (command), stack (object), menu item (glossary), key combination (glossary), Windows (glossary), development environment (glossary), message (glossary), Mac OS (glossary), Unix (glossary)
+
+Tags: ui

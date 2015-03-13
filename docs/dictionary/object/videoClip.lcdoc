@@ -1,0 +1,36 @@
+Name: videoClip
+
+Type: object
+
+Syntax: videoClip
+
+Summary: An <object type> that contains movie data.
+
+Synonyms: vc
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+play videoClip "Spartacus"
+
+Example:
+delete videoClip ID 2485
+
+Description:
+Use the <videoClip> <object type> to display a movie that is stored in the <stack>, rather than in another file.
+
+Unlike a player, a video clip contains the movie that it displays. This increases the memory required by your stack, because the movie data is loaded into memory whenever the stack file is open. However, it prevents the movie from being accidentally separated from the stack file and lost.
+
+Video clips can be in QuickTime, AVI, or MPEG format.
+
+A video clip is contained in a stack. Video clips cannot contain other objects. (A video clip is not a control, since it has no user interface and cannot be owned by a card.)
+
+To play a videoClip, use the syntax "play videoClip &lt;filename_of_videoclip&gt;".
+To pause a videoClip, use the syntax "play pause videoClip &lt;filename_of_videoclip&gt;".
+To stop a videoClip, use the syntax "play stop videoClip &lt;filename_of_videoclip&gt;".
+
+References: videoClipPlayer (property), templateVideoClip (keyword), stack (object), object type (glossary)

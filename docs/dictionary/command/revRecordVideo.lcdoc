@@ -1,0 +1,46 @@
+Name: revRecordVideo
+
+Type: command
+
+Syntax: revRecordVideo <filePath> 
+
+Summary: Records video from a video camera to a file.
+
+Introduced: 2.0
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: disk,privacy
+
+Example:
+revRecordVideo "/Disk/Folder/file.mov"
+
+Example:
+revRecordVideo "mymovie.avi"
+
+Example:
+revRecordVideo theFileName
+
+Parameters:
+filePath: The name and location of the file that will hold the recorded video data. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
+
+Description:
+Use the <revRecordVideo> <command> to record a <movie> file.
+
+You must use the <revInitializeVideoGrabber> <command> to open the <video grabber> before you can use the <revRecordVideo> <command>.
+
+If you specified "QT" as the video method when you executed the <revInitializeVideoGrabber> <command>, the recorded video is stored in <QuickTime> <format>. If you specified "VFW", the recorded video is stored in <AVI> <format>.
+
+If the video grabber was already recording video to a file, executing the <revRecordVideo> <command> again stops that recording and starts a new one.
+
+>*Important:*  If you are using <QuickTime> for video capture, <execute> the <revVideoGrabIdle> <command> periodically while previewing or recording video. Not doing so may cause the video in the <video grabber> to stutter or display strange screen artifacts
+
+To stop recording the video input, use the <revStopRecordingVideo> <command>.
+
+>*Important:*  The <revRecordVideo> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+
+References: revVideoGrabIdle (command), revPreviewVideo (command), revInitializeVideoGrabber (command), revStopRecordingVideo (command), revVideoFrameImage (command), format (function), movie (function), execute (glossary), AVI (glossary), Standalone Application Settings (glossary), QuickTime (glossary), standalone application (glossary), video grabber (glossary), command (glossary), Video library (library), Revolution custom library (library)
+
+Tags: multimedia

@@ -1,0 +1,45 @@
+Name: replace
+
+Type: command
+
+Syntax: replace <oldString> with <newString> in <container> 
+
+Summary: Replaces text in a <container> with other text.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+replace "A" with "N" in thisVariable -- changes all As to Ns
+
+Example:
+replace return with empty in field 1 -- runs lines together
+
+Example:
+replace somethingOld with "\" in it
+
+Example:
+replace ".com" with somethingNew in URL "file:stuff.txt"
+
+Parameters:
+oldString (string): Any expression that evaluates to a string, and specifies the text to replace.
+newString (string): Any expression that evaluates to a string, and specifies the text to replace the oldString with.
+container: A field, button, or variable, or the message box.
+
+Description:
+Use the <replace> <command> to replace all instances of one <string> with another <string>.
+
+The <replace> <command> is faster than the <replaceText> <function>, but does not support <regular expression|regular expressions>: you can replace only an exact <string> of text.
+
+>*Important:*  You can use the <replace> <command> on a <field(keyword)>, but doing so removes any formatting (fonts, styles, colors, and sizes) in the field. To work around this limitation, use the <field(object)|field's> <htmlText> property as the source for replacement instead of using the <field(keyword)> itself as the source:
+
+  get the htmlText of field "Stuff"
+  replace "old" with "new" in it
+  set the htmlText of field "Stuff" to it
+
+References: HTMLText (property), field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control_st)
+
+Tags: text processing

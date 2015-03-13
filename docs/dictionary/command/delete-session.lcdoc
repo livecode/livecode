@@ -1,0 +1,23 @@
+Name: delete session
+
+Type: command
+
+Syntax: delete session
+
+Summary: Ends the current session and deletes it from the server.
+
+Introduced: 5.0
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+delete session
+
+Description:
+Use the <delete session> command to end the current session, expiring the session cookie and discarding any values contained in the $_SESSION variable.
+
+References: stop session (command), start session (command), sessionSavePath (property), sessionLifetime (property), sessionId (property), sessionName (property)
+
+Tags: multimedia

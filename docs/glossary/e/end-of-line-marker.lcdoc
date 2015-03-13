@@ -1,0 +1,14 @@
+Name: end-of-line marker
+
+Synonyms: end-of-line marker,end of line marker,end-of-line,end-of-line,end-of-line,end-of-line,end of line,end of line,end of line,end of line,line end,line ending
+
+Type: glossary
+
+Description:
+The <character> or <character|characters> used to mark the end of a line in a <text file>. 
+ 
+Different operating systems use different <character|characters> to mark the end of a line: <Mac OS> and <OS X> use a return character (<ASCII> 13), <Unix|Unix systems> use a linefeed character (<ASCII> 10), and <Windows|Windows systems> use a return followed by a linefeed.
+
+References: ASCII (glossary), OS X (glossary), text file (glossary), character (glossary), Windows (glossary), Mac OS (glossary), Unix (glossary)
+
+Tags: text processing

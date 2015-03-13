@@ -1,0 +1,20 @@
+Name: printTextStyle
+
+Type: property
+
+Syntax: set the printTextStyle to {plain | <stylesList>}
+
+Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+
+Introduced: 1.0
+
+Platforms: desktop,server,web
+
+Security: printing
+
+Description:
+In HyperCard, the <printTextStyle> <property> specifies the styles of printed text. In LiveCode, only <card(object)|cards> can be printed, and the style of text on the <card(keyword)> is determined by the <textStyle> <property> of <object|objects> that display text..
+
+By default, the value of <printTextStyle> is plain. A handler can set the <property>, but the new setting has no effect.
+
+References: card (keyword), textStyle (property), fontStyles (function), property (glossary), Revolution (glossary), HyperCard (glossary), card (object), object (object)

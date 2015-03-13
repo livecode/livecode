@@ -1,0 +1,12 @@
+Name: decode
+
+Synonyms: decoding,decoded,decode
+
+Type: glossary
+
+Description:
+To translate <encode|encoded> data back to its original <format>.
+
+References: format (glossary), encode (glossary)
+
+Tags: text processing

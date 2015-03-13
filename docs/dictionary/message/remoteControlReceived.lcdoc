@@ -1,0 +1,41 @@
+Name: remoteControlReceived
+
+Type: function
+
+Syntax: remoteControlReceived <eventType> 
+
+Summary: Sent when the remote control is enabled and a remote control operation occurs.
+
+Introduced: 6.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+on remoteControlReceived pEventType
+    put pEventType & return after field "log"
+end remoteControlReceived
+
+Parameters:
+eventType (enum): A string describing the event type which occured. One of
+- "pause"
+- "stop"
+- "toggle play pause"
+- "next track"
+- "previous track"
+- "begin seeking forward"
+- "begin seeking backward"
+- "end seeking forward"
+- "end seeking backward"
+
+Description:
+Handle the <remoteControlReceived> message if you want to perform an action when a remote control event occurs.
+
+The remote control feature on iOS allows access to the audio controls both on an external device and also on the device itself when in lock screen (via double-tapping on the Home button).
+
+When the remote control is enabled and a remote control event occurs the <remoteControlReceived> message is send to the current card.
+
+>*Note:* This functionality is only available on iOS 5.x and above.
+
+References: iphoneDisableRemoteControl (command), iphoneSetAudioCategory (command), iphoneEnableRemoteControl (command), iphoneSetRemoteControlDisplay (command), iphoneRemoteControlEnabled (function)

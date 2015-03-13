@@ -1,0 +1,12 @@
+Name: parent node
+
+Synonyms: parent node
+
+Type: glossary
+
+Description:
+The node above a node in an <XML tree>. A <node|node's> parent node corresponds to the element that encloses the <node>.
+
+References: XML tree (glossary), node (glossary)
+
+Tags: text processing

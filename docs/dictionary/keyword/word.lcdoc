@@ -1,0 +1,27 @@
+Name: word
+
+Type: keyword
+
+Syntax: word
+
+Summary: Designates a space-<delimit|delimited> or <quoted> <string> as part of a <chunk expression>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get last word of the long name of this stack
+
+Description:
+Use the <word> <keyword> to refer to one or more <words> in a <container>.
+
+A word is delimited by one or more spaces, tabs, or returns, or enclosed by double quotes. A single word can contain multiple characters and multiple items, but not multiple lines.
+
+>*Note:* <Words(keyword)> are <delimit|delimited> by <double quote|double quotes> ("), but not by curved quotes (""). LiveCode does not treat curved quotes as quotes.
+
+References: character (keyword), item (keyword), words (keyword), line (keyword), string (keyword), token (keyword), keyword (glossary), double quote (glossary), quoted (glossary), delimit (glossary), chunk expression (glossary), container (glossary)
+
+Tags: text processing

@@ -1,0 +1,42 @@
+Name: mouseRelease
+
+Type: message
+
+Syntax: mouseRelease <mouseButtonNumber> 
+
+Summary: Sent when the user releases the mouse outside the <control> that was clicked.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on mouseRelease theButton
+  if theButton is 1 then send "mouseUp" to the target
+  else pass mouseRelease
+end mouseRelease
+
+Parameters:
+mouseButtonNumber (enum): The mouseButtonNumber specifies which mouse button was pressed:
+-  1 is the mouse button on Mac OS systems and the left button on Windows and Unix systems.
+-  2 is the middle button on Unix systems.
+-  3 is the right button on Windows and Unix systems and Control-click on Mac OS systems.
+
+Description:
+Handle the <mouseRelease> <message> to perform an action when the user releases the <mouse button> after clicking and then dragging outside the <control>.
+
+The <mouseRelease> <message> is sent to the <control> that was originally clicked, or to the <card> if no <control> was under the <mouse pointer>.
+
+The <mouseRelease> <message> is sent only when the <Browse tool> is being used.
+
+If an unlocked field is clicked with mouse button 1 or 2, no <mouseRelease> <message> is sent.
+
+If the control is a field with its listBehavior <property> set to true, the <mouseRelease> <message> is sent when the <mouse button> is released and the mouse is not over a text line in the <field>, even if the mouse is still over the <field>.
+
+If the mouse is released while it's still within the control that was clicked, a mouseUp <message> is sent instead of <mouseRelease>.
+
+References: control (keyword), dragEnd (message), mouseStillDown (message), property (glossary), mouse button (glossary), Browse tool (glossary), message (glossary), card (glossary), field (glossary), mouse pointer (glossary)
+
+Tags: ui

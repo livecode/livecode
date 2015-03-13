@@ -215,13 +215,13 @@ The type specification for the variable is optional, if it is not specified the 
 ## Handlers
 
     HandlerDefinition
-      : 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'as' <ReturnType: Type> ] SEPARATOR
+      : 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' ( <ReturnType: Type> | 'nothing' ) ] SEPARATOR
           { Statement }
         'end' 'handler'
 
 Handler definitions are used to define functions which can be called from LiveCode Builder code, invoked as a result of events triggering in a widget module, or called from LiveCode Script if public and inside a library module.
 
-There is no distinction between handlers which return a value and ones which do not, apart from the return type. Handlers can be called either in expression context, or in statement context. If a handler which returns no value (its return type is *undefined*) is called in expression context then its value is *undefined*.
+There is no distinction between handlers which return a value and ones which do not, apart from the return type. Handlers can be called either in expression context, or in statement context. If a handler which returns no value (it is specified as *returns nothing*) is called in expression context then its value is *undefined*.
 
 	ParameterList
 	  : { Parameter , ',' }
@@ -237,7 +237,7 @@ An out parameter means that no value is copied from the caller (the parameter va
 
 > **Note:** It is a checked runtime error to return from a handler without ensuring all non-optional 'out' parameters have been assigned a value.
 
-An inout parameter means that the value from the caller is coped to the parameter variable in the callee handler on entry, and copied back out again on exit.
+An inout parameter means that the value from the caller is copied to the parameter variable in the callee handler on entry, and copied back out again on exit.
 
 The type of parameter is optional, if no type is specified it is taken to be *optional any* meaning it can be of any type.
 
@@ -246,7 +246,7 @@ The type of parameter is optional, if no type is specified it is taken to be *op
 ## Foreign Handlers
 
     ForeignHandlerDefinition
-      : 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'as' <ReturnType: Type> ] 'binds' 'to' <Binding: String>
+      : 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' ( <ReturnType: Type> | 'nothing' ) ] 'binds' 'to' <Binding: String>
 
     ForeignType
       : Type

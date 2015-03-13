@@ -1,0 +1,31 @@
+Name: moveControl
+
+Type: message
+
+Syntax: moveControl
+
+Summary: Sent to a <control> that the user moved with the <Pointer tool>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on moveControl -- in a button script
+-- move the same-named field to be below the moved button:
+  set the topLeft of field (the short name of the target) \
+     to the bottomLeft of the target
+end moveControl
+
+Description:
+Handle the <moveControl> <message> if you want to respond to the user's movement of a <control>. For example, you can create a <moveControl> <handler> that responds to movement of a <button(keyword)> by moving <field|fields> out of the <button(object)|button's> way.
+
+The <moveControl> <message> is sent only if the user moved the <control>. This message is not sent when a <handler> moves the <control> by changing its <location>, <rectangle>, or other <properties>.
+
+The <moveControl> <message> is sent after the movement is finished. This means that you cannot prevent a <control> from being moved by <trap|trapping> this <message>.
+
+References: control (keyword), button (keyword), properties (property), location (property), moveStack (message), revCacheGeometry (command), field (object), button (object), trap (glossary), handler (glossary), message (glossary), Pointer tool (glossary), rectangle (glossary), control (glossary)
+
+Tags: ui

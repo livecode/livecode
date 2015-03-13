@@ -1,0 +1,14 @@
+Name: alphanumeric character
+
+Synonyms: alphanumeric character,alphanumeric,alpha-numeric
+
+Type: glossary
+
+Description:
+A <character> that is either a letter (A-Z or a-z) or a digit (0-9). 
+ 
+Punctuation marks and <whitespace> characters are not alphanumeric characters.
+
+References: character (glossary), whitespace (glossary)
+
+Tags: text processing

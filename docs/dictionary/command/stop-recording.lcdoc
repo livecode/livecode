@@ -1,0 +1,27 @@
+Name: stop recording
+
+Type: command
+
+Syntax: stop recording
+
+Summary: Stops the current sound recording.
+
+Introduced: 1.1
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+if the mouse is down then stop recording
+
+Description:
+Use the <stop recording> <command> to halt a recording being made. For example, you can use the <stop recording> <command> in the <script> of a <button>, to let the user click to stop recording sound.
+
+The <stop recording> <command> stops a recording started with the <record sound> <command>.
+
+The <stop recording> <command> sets the <recording> <property> to false.
+
+References: script (property), recording (property), button (keyword), revStopRecordingVideo (command), record sound (command), stop (command), command (glossary), property (glossary)
+
+Tags: multimedia

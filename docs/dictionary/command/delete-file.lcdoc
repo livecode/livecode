@@ -1,0 +1,43 @@
+Name: delete file
+
+Type: command
+
+Syntax: delete file <pathname> 
+
+Summary: Removes a <file> from the user's system.
+
+Synonyms: clear file
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+delete file "/tmp/handlers.txt"
+
+Example:
+delete file "My Test.rev"
+
+Parameters:
+pathName: Specifies the name and location of the file. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
+
+The result: If the file do not exist, is a folder, or for some other reason cannot be deleted, the result is set to "Can't delete that file.".
+
+Description:
+Use the <delete file> <command> to clean up by removing a <file> you created.
+
+This command can also be used to remove files your stack did not create. Of course, a stack should not remove files and folders it did not create without obtaining explicit confirmation from the user.
+
+>*Warning:* This <command> cannot be undone, so be very certain before you use it. The <delete file> <command> removes the file completely from the user's system. It does not place the file in the Trash or Recycle Bin.
+
+>*Note:* iOS imposes strict controls over what you can and cannot access. Each application in iOS is stored in its own 'sandbox' folder (referred to as the home folder). An application is free to read and write files within this folder and its descendants, but it is not allowed to access anything outside of the 'sandbox'.
+
+>*Note:* An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax.
+
+References: revDeleteFolder (command), close file (command), delete URL (command), delete (command), file (keyword), command (glossary)
+
+Tags: file system

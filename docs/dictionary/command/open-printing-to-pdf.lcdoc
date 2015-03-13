@@ -1,0 +1,55 @@
+Name: open printing to pdf
+
+Type: command
+
+Syntax: open printing to pdf <filename> [ with options <optionArray> ]
+
+Summary: Starts a print loop that outputs directly to pdf rather that the currently configured printer.
+
+Introduced: 4.5
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,web,mobile
+
+Example:
+open printing to pdf "mypdf.pdf"
+
+Example:
+open printing to pdf "help.pdf" with options tOptionArray
+
+Parameters:
+filename: The path to the PDF file to be created.
+optionArray (array): An optional array allowing entries to be added to the resulting PDF's Documemt Information Dictionary.
+
+The result: if the result is "Cancel" then exit printSomeCards. The options array which can be optionally specified when opening a print loop for pdf allows you to add entries to the resulting PDF's Document Information Dictionary.
+
+Description:
+Use the <open printing to pdf> <command> to print multiple cards directly to a pdf file.
+
+ The open printing to pdf command starts a print loop that outputs directly to a PDF file rather that the currently configured printer. 
+ 
+The following handler prints cards that have been collected in a global variable:
+
+  on printSomeCards
+    global cardsToPrint
+    open printing to pdf "test.pdf"
+    repeat with x = 1 to the number of lines of cardsToPrint
+      print card (line x of cardsToPrint)
+    end repeat
+    close printing -- send group of cards to printer
+  end printSomeCards
+
+>*Note:* It is not necessary to set the <formatForPrinting> option on stacks which are being printed to PDF.
+
+The following keys are supported:
+Title, Author, Subject, Keywords, Creator, Producer
+Their values can be any string.
+
+>*Important:* The implementation of pdf printing resides in a dynamic library called revpdfprinter. The standalone builder will automatically include this in the appropriate place when building standalones.
+
+Any custom code that deals with standalones which use this feature must make sure that the revpdfprinter library resides next to the engine executable.
+
+References: answer page setup (command), cancel printing (command), revBrowserPrint (command), open printing (command), print bookmark (command), print anchor (command), close printing (command), answer printer (command), print link (command), printTitle (property), printRowsFirst (property), formatForPrinting (property), command (glossary)
+
+Tags: printing

@@ -1,0 +1,33 @@
+Name: recordRate
+
+Type: property
+
+Syntax: set the recordRate to <kSamplesPerSecond> 
+
+Summary: Specifies how often the sound input should be read during sound recording.
+
+Introduced: 2.0
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+set the recordRate to 48 -- sample at 48 kHz
+
+Value:
+The <recordRate> is a non-negative number.
+By default, the <recordRate> <property> is 22.05.
+
+The result: The <kSamplesPerSecond> is the number of thousands of times per second the sound is sampled. The higher this number, the higher the quality of the resulting sound, and the larger the resulting <file>. For best sound quality, the higher recordRates should be used when the sound input is of high quality--for example, when recording from a CD--and when music is being recorded. (44.1 kHz is "CD-quality".) In general, you can use lower recordRates for spoken words than for music without compromising sound quality.
+
+Description:
+Use the <recordRate> <property> to trade off between sound quality and disk space when you record a sound.
+
+The <recordRate> <property> determines the sound sampling rate when you use the <record sound> <command> to record sound to a file.
+
+The possible recordRates depend on the system's capabilities.
+
+>*Note:* The <answer record> <command> sets the <recordRate> <property> according to what the user chose in the <answer record> <dialog box>.
+
+References: recordSampleSize (property), file (keyword), answer record (command), record sound (command), property (glossary), command (glossary), dialog box (glossary)

@@ -1,0 +1,14 @@
+Name: pass
+
+Synonyms: pass,passed,passing
+
+Type: glossary
+
+Description:
+To relinquish a <message> to the next <object> in the <message path>. 
+ 
+Also, to send data from one <handler> to another; to share data between <handler|handlers>.
+
+References: message (glossary), handler (glossary), message path (glossary), object (object)
+
+Tags: objects

@@ -1,0 +1,37 @@
+Name: tokenOffset
+
+Type: function
+
+Syntax: tokenOffset(<stringToFind>, <stringToSearch> [, <tokensToSkip>])
+
+Summary: Returns the number of tokens between the beginning of a value and an occurrence of a specified string.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+tokenOffset(tToken, tSampleText)
+
+Example:
+tokenOffset("it's", "Tomorrow it's going to rain") -- returns 2
+
+Parameters:
+stringToFind (string): 
+stringToSearch (string): 
+tokensToSkip: The tokensToSkip is a non-negative integer. If you don't specify how many tokensToSkip, the tokenOffset function does not skip any tokens.
+
+Returns: The <tokenOffset> function returns a non-negative integer.
+
+Description:
+Use the <tokenOffset> function to find which sentence a string occurs in.
+
+The value returned by the <tokenOffset> function is the number of the token where the <stringToFind> appears in <stringToSearch>. If the <stringToFind> is not in <stringToSearch>, the <tokenOffset> function returns zero. If the <stringToFind> is more than one token, the <tokenOffset> function always returns zero, even if the <stringToFind> appears in the <stringToSearch>.
+
+If you specify how many tokensToSkip, the <tokenOffset> function skips the specified number of sentences in the <stringToSearch>. The value returned is relative to this starting point instead of the beginning of the <stringToSearch>.
+
+References: wholeMatches (property), wordOffset (function), paragraphOffset (function), sentenceOffset (function), byteOffset (function), truewordOffset (function), codeunitOffset (function), codepointOffset (function), offset (function)
+
+Tags: text processing

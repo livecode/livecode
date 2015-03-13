@@ -1,0 +1,36 @@
+Name: mobileStartTrackingSensor
+
+Type: command
+
+Syntax: mobileStartTrackingSensor <sensor>, [<loosely>]
+
+Summary: Starts listening for readings from the named sensor.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileStartTrackingSensor "location"
+
+Example:
+mobileStartTrackingSensor "heading",true
+
+Parameters:
+sensor (enum): The name of the sensor you wish to start using
+- "location": starts tracking the location of the device
+- "heading": starts tracking the heading of the device
+- "acceleration": enables the accelerometer on the device
+- "rotation rate": starts tracking the rotation of the device
+loosely (enum): How accurate the readings from sensors should be. The default value is false
+- "true": readings are determined without using accurate(but power consuming) sources such as GPS.
+- "false": readings are determined using accurate(but power consuming) sources such as GPS.
+
+Description:
+Use the <mobileStartTrackingSensor> command to start listening for readings from a sensor.
+
+The <mobileStartTrackingSensor> command starts listening for readings from the named sensor.
+
+References: mobileStopTrackingSensor (command), mobileCanTrackHeading (function), mobileCanTrackLocation (function), mobileCurrentHeading (function), mobileSensorReading (function), mobileCurrentLocation (function), headingChanged (message), accelerationChanged (message), locationChanged (message), rotationRateChanged (message), trackingError (message)

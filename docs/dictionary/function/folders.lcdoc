@@ -1,0 +1,65 @@
+Name: folders
+
+Type: function
+
+Syntax: the [detailed | long] folders
+
+Syntax: folders()
+
+Summary: Returns a list of the <folders> in the current <defaultFolder>.
+
+Synonyms: directories
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+set the defaultFolder to line x of the folders
+
+Example:
+put the detailed folders into folderList
+
+Returns:
+The <folders> <function> returns a list of <folder> names, one per <line>. 
+The detailed <folders> form returns a list of folders, one file per line. Each line contains the following attributes, separated by commas. (Several attributes are used only for compatibility with the <files> <function> and do not have any meaning for <folders>.)
+* The folder's name
+* The folder's size in bytes (always zero)
+* The folder's resource fork size in bytes (always zero)
+* The folder's creation date in seconds (Mac OS, OS X, and Windows systems only)
+* The folder's modification date in seconds
+* The folder's last-accessed date in seconds (Unix and Windows systems only)
+* The folder's last-backup date in seconds (Mac OS and OS X systems only)
+* The folder's owner (Unix systems only)
+* The folder's group owner (Unix systems only)
+* The folder's access permissions
+* The folder's creator and file type (always "????????") (Mac OS and OS X only)
+Any attribute that is not supported on the current system is reported as "0" (zero).
+
+Description:
+Use the <folders> <function> to obtain a list of <folders> to display for the user, or to perform an action on each <folder> in the <current folder>.
+
+Files in the <defaultFolder> are not included. To get a list of <folders>, use the <files> <function>. 
+
+The names of aliases (on Mac OS systems), symbolic links (on Unix systems), and shortcuts (on Windows systems) are included in the value returned by the <folders> if they link to a <folder>. If they link to a <file>, they are not included. 
+
+This function lists only the folders on the top level of the <defaultFolder>.  To get a list of <subfolder|subfolders> within a <folder>, set the <defaultFolder> to that <folder> and then use the <folders> <function> again.
+
+When listed in the detailed <folders> form, each folder's name is URL-encoded. To obtain the name in plain text, use the <URLDecode> <function>. If the detailed modifier is not used, the folder name is not encoded.
+
+The access permissions returned in the detailed <files> form consist of three octal digits. The form is the same as that used for the <umask> <command>.
+
+>*Important:* The list returned by the <folders> contain a ".." entry representing the link to the parent folder. Care must be taken to filter this entry out when performing recursive operations to prevent infinite loops.
+
+>*Note:* For efficiency reasons, the <folders> function returns a list in the order provided by the operating system which can differ between platforms and even file systems. If you require an ordered list use the sort command explicitly afterwards.
+
+Changes:
+The detailed <folders> form was introduced in version 1.1. In previous versions, the <folders> <function> provided only a list of <folder> names.
+
+References: defaultFolder (property), umask (property), file (keyword), line (keyword), revDeleteFolder (command), folders (function), files (function), volumes (function), URLDecode (function), subfolder (glossary), command (glossary), current folder (glossary), folder (glossary), function (control_st)
+
+Tags: file system

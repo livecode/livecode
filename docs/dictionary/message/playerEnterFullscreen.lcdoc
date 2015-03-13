@@ -1,0 +1,25 @@
+Name: playerEnterFullscreen
+
+Type: message
+
+Syntax: playerEnterFullscreen
+
+Summary: Sent when the player has entered full screen mode.
+
+Introduced: 4.6
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+on playerEnterFullscreen
+    answer "The player has entered full screen mode" with "Okay"
+end playerEnterFullscreen
+
+Description:
+Handle the <playerEnterFullscreen> message when the player has entered full screen play mode. 
+
+You can use <mobileControlGet> to test if fullscreen mode has been entered.
+
+References: playerFinished (message), playerError (message), playerLeaveFullscreen (message), playerProgressChanged (message), playerStopped (message), playerPropertyAvailable (message), playerMovieChanged (message), mobileControlGet (function)

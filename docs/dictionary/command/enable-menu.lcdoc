@@ -1,0 +1,45 @@
+Name: enable menu
+
+Type: command
+
+Syntax: enable [menuItem <itemNumber> of] menu {<menuName> | <menuNumber>}
+
+Syntax: enable menuItem <itemNumber> of <button> 
+
+Summary: Enables a <menu> or <menu item> so that it can be chosen by the user.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+enable menu 2
+
+Example:
+enable menuItem 3 of menu "Text" -- menu in menu bar
+
+Example:
+enable menuItem 4 of button "Edit"
+
+Parameters:
+itemNumber: The number of a menu item, from top to bottom of the menu. The first menu item is numbered 1. (Horizontal lines count.)
+menuName: The name of a menu in the current menu bar.
+menuNumber: The number of a menu, from left to right.
+button: Any button.
+
+Description:
+Use the <enable menu> <command> to enable a <menu> or <menu item> so it can be chosen.
+
+If a menuItem is specified, only that <menu item> is enabled; otherwise, the entire <menu> is enabled.
+
+When used to enable an entire menu at once, the <enable menu> <command> applies only to <menus> in the current <menu bar>. To disable a <menu> associated with a <button>, use the <enable> <command>.
+
+On Mac OS systems, the Apple menu does not have a number and cannot be enabled or disabled. Menu numbering starts with the menu to the right of the Apple menu.
+
+Since a LiveCode menu bar is implemented as a group of buttons (one button per menu, with the menu items as lines in the button's text <property>), you can indicate a <menu> by specifying its <button>. <Disabled> <menu item|menu items> have an open parenthesis ( at the beginning of the line for that menu item. When used to <enable> a <menu item>, the <enable menu> <command> removes the open parenthesis from the beginning of the specified line.
+
+References: enabled (property), disabled (property), menu (keyword), button (keyword), enable (command), doMenu (command), menus (function), property (glossary), command (glossary), menu item (glossary), menu bar (glossary)
+
+Tags: menus

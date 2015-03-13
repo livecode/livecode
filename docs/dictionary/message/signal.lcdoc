@@ -1,0 +1,37 @@
+Name: signal
+
+Type: message
+
+Syntax: signal <sigNumber> 
+
+Summary: Sent to the <current card> when another <process> sends a kill signal to the <application>.
+
+Associations: card
+
+Introduced: 1.0
+
+OS: mac,linux
+
+Platforms: desktop,server,web
+
+Security: process
+
+Example:
+on signal -- let the user know:
+  answer warning "Ack! I've been killed by another application!"
+end signal
+
+Parameters:
+sigNumber: The number of the Unix kill signal (1 for SIGUSR1, 2 for SIGUSR2) that was sent to the application.
+
+Description:
+Handle the <signal> message to perform cleanup before an external <process> causes the <application> to <exit>.
+
+The user can execute the Unix "kill" command to send a kill signal to the application. Other processes can use a Unix system call to send a kill signal.
+
+Only signal 1 (SIGUSR1) and signal 2 (SIGUSR2) are supported. Other signals sent to the application do not cause the <signal> <message> to be sent.
+
+Changes:
+Support for the signal message on OS X systems was added in version 2.0.
+
+References: kill (command), application (glossary), current card (glossary), message (glossary), process (glossary), exit (control_st)
