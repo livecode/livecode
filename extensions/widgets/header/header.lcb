@@ -161,7 +161,7 @@ public handler OnCreate()
 	-- properties
 	put true into mBackIsEnabled
 	put "Title" into mLabel
-	put "ios-8" into mTheme
+	put "" into mTheme
 	put "icons" into mActionStyle
 	
 	-- variables
@@ -425,70 +425,39 @@ public handler setLabel(in pLabel as String) as undefined
 	redraw all
 end handler
 
+<<<<<<< HEAD
+----------
+-- this handler sets the list of actions
 public handler setActions(in pActions as String) as undefined
-	
 	if pActions is the empty string then
 		put the empty list into mActions
-	
 	else
+		variable tLabels as list
+		variable tIcons as list
+		put the empty list into tLabels
+		put the empty list into tIcons
 
-		variable tActions as List
-		split pActions by newline into tActions
+		variable tActionLines as list
+		variable tAction as string
+		split pActions by newline into tActionLines
 
-		variable tActionElement
-		variable tListElement
-	
-		variable tFinalActions as List
-		variable tStringToList as List
-		put the empty list into tFinalActions
-	
-		repeat for each element tActionElement in tActions
-			put the empty list into tStringToList
-			split tActionElement by "," into tStringToList
-		
-			repeat for each element tListElement in tStringToList
-				push tListElement onto back of tFinalActions
-			end repeat
-		
+		repeat for each element tAction in tActionLines
+			variable tActionItems as list
+			split tAction by "," into tActionItems
+
+			push element 1 of tActionItems onto back of tLabels
+			push element 2 of tActionItems onto back of tIcons
 		end repeat
-		
-		variable tActionCount as Integer
-		variable tCount as Integer
-		put the trunc of (the number of elements in tFinalActions)/3 into tActionCount
-		log tActionCount
-	
-		variable tLabelList as List
-		variable tIconList as List
-		put the empty list into tLabelList
-		put the empty list into tIconList
-	
-		repeat with tCount from 1 up to tActionCount
-			push element (3*tCount)-2 of tFinalActions onto back of tLabelList
-			push element (3*tCount)-1 of tFinalActions onto back of tIconList
-		end repeat
-	
-		variable tTestLabel as String
-		combine tLabelList with "," into tTestLabel
 
-		put [tLabelList,tIconList] into mActions
-		
+		put [tLabels, tIcons] into mActions
 	end if
+
 	redraw all
 end handler
 ----------
 
 ----------
 -- this handler sets whether the back button is enabled or not
-/*
-Summary: Sets whether the back button is enabled
-
-Parameters:
-pIsEnabled: The state of the back button.
-
-Description:
-If pEnable is true, then the back button is visible and enabled. If pEnable is false, then the back button is invisible and disabled.
-*/
-
 public handler setEnableBack(in pIsEnabled as Boolean) as undefined
 	put pIsEnabled into mBackIsEnabled
 	redraw all
@@ -497,16 +466,6 @@ end handler
 
 ----------
 -- this handler sets the theme of the widget
-/*
-Summary: Sets the theme of the header bar
-
-Parameters:
-pTheme: The name of the theme.
-
-Description:
-Sets the theme of the widget (currently, only "ios-8").
-*/
-
 public handler setTheme(in pTheme as String) as undefined
 	put pTheme into mTheme
 	redraw all
@@ -515,15 +474,6 @@ end handler
 
 ----------
 -- this handler sets the action style of the header bar
-/*
-Summary: Sets the style of the action label 
-
-Parameters:
-pStyle: The style of the action label.
-
-Description:
-Sets the style of the action labels to either "names" or "icons".
-*/
 public handler setActionStyle(in pStyle as String) as undefined
 	put pStyle into mActionStyle
 	redraw all
@@ -578,17 +528,6 @@ end handler
 
 ----------
 -- this handler adds an action
-/*
-Summary: Adds an action
-
-Parameters:
-pNewAction: The new action.
-
-Description:
-Adds the new action to the header bar , where pNewAction is a comma delimited list of the components of the action:
-name, icon
-Updates the actions property to include the new action and redraws the widget.
-*/
 public handler addAction(in pNewAction as String) as undefined
 	
 	variable tNewAction as List
@@ -611,17 +550,6 @@ end handler
 
 ----------
 -- this handler removes an action
-/*
-Summary: Removes an action
-
-Parameters:
-pAction: The action to be removed.
-
-Description:
-Removes the action from the header bar, where pAction is any component of the of the action:
-name or icon
-Updates the actions property to exclude the action and redraws the widget.
-*/
 public handler removeAction(in pAction as String) as undefined
 
 	variable tActions as String
