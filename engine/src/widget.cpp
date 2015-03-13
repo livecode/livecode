@@ -420,10 +420,10 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
              case P_FOCUS_PATTERN:
              case P_PATTERNS:
              case P_TEXT_HEIGHT:
-             case P_TEXT_ALIGN:
-             case P_TEXT_FONT:
-             case P_TEXT_SIZE:
-             case P_TEXT_STYLE:*/
+             case P_TEXT_ALIGN:*/
+        case P_TEXT_FONT:
+        case P_TEXT_SIZE:
+        case P_TEXT_STYLE:
 		case P_LOCK_LOCATION:
 		case P_VISIBLE:
 		case P_INVISIBLE:
@@ -523,10 +523,10 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
              case P_FOCUS_PATTERN:
              case P_PATTERNS:
              case P_TEXT_HEIGHT:
-             case P_TEXT_ALIGN:
+             case P_TEXT_ALIGN:*/
              case P_TEXT_FONT:
              case P_TEXT_SIZE:
-             case P_TEXT_STYLE:*/
+             case P_TEXT_STYLE:
 		case P_LOCK_LOCATION:
 		case P_VISIBLE:
 		case P_INVISIBLE:
@@ -1699,6 +1699,22 @@ extern "C" MC_DLLEXPORT void MCWidgetSetHeight(MCNumberRef p_height)
     MCRectangle t_rect = MCwidgetobject->getrect();
     t_rect.height = MCNumberFetchAsReal(p_height);
     MCwidgetobject->setrect(t_rect);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetFont(MCCanvasFontRef& r_canvas_font)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    MCAutoCustomPointer<struct MCFont, MCFontRelease> t_font;
+    if (!MCwidgetobject -> copyfont(&t_font))
+        return;
+    
+    if (!MCCanvasFontCreateWithMCFont(*t_font, r_canvas_font))
+        return;
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
