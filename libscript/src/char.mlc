@@ -22,44 +22,44 @@ module com.livecode.char
 
 use com.livecode.foreign
 
-public foreign handler MCCharFetchCharOf(in Index as LCIndex, in Target as String, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreCharOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCCharFetchCharRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as String, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreCharRangeOf(in Value as String, in Start as LCIndex, in Finish as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchCharOf(in Index as LCIndex, in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharFetchCharRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreCharRangeOf(in Value as String, in Start as LCIndex, in Finish as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharEvalNumberOfCharsIn(in Target as String, out Count as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalNumberOfCharsIn(in Target as String, out Count as LCIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as String, in Target as String, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as String, in Target as String, out Value as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharStoreBeforeCharOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreAfterCharOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreBeforeCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreAfterCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharEvalOffsetOfChars(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as CBool, in Needle as String, in After as LCIndex, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfChars(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as CBool, in Needle as String, in After as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharEvalContains(in Source as String, in Needle as String, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCCharEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalContains(in Source as String, in Needle as String, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCCharEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCCharEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharEvalNewlineCharacter(out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalNewlineCharacter(out Value as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharRepeatForEachChar(inout Iterator as optional Pointer, out Iterand as String, in Container as String) as CBool binds to "<builtin>"
+public foreign handler MCCharRepeatForEachChar(inout Iterator as optional Pointer, out Iterand as String, in Container as String) returns CBool binds to "<builtin>"
 
-public foreign handler MCCharFetchFirstCharOf(in Target as String, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreFirstCharOf(in Value as String, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchFirstCharOf(in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreFirstCharOf(in Value as String, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharFetchLastCharOf(in Target as String, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCCharStoreLastCharOf(in Value as String, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchLastCharOf(in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreLastCharOf(in Value as String, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharExecDeleteCharOf(in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCCharExecDeleteCharRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteCharOf(in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharExecDeleteCharRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCharExecDeleteLastCharOf(inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCCharExecDeleteFirstCharOf(inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCharExecDeleteLastCharOf(inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharExecDeleteFirstCharOf(inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringEvalCodeOfChar(in pChar as String, out pCode as LCUInt) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalCharWithCode(in pCode as LCUInt, out pChar as String) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalCodeOfChar(in pChar as String, out pCode as LCUInt) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalCharWithCode(in pCode as LCUInt, out pChar as String) returns nothing binds to "<builtin>"
 
 --
 

@@ -300,7 +300,9 @@
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
-
+    Warning_UsingAsForHandlerReturnTypeDeprecated
+    Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated
+    Warning_UndefinedTypeDeprecated
 
 --------------------------------------------------------------------------------
 
@@ -655,5 +657,8 @@
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
+'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)
+'action' Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated(Position: POS)
+'action' Warning_UndefinedTypeDeprecated(Position: POS)
 
 --------------------------------------------------------------------------------

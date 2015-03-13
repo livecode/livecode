@@ -278,9 +278,9 @@ end handler
 
 constant kEncodingIndexUTF8 is 4
 
-foreign handler MCStringEncode(in Unencoded as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) as CBool binds to "<builtin>"
+foreign handler MCStringEncode(in Unencoded as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) returns CBool binds to "<builtin>"
 
-handler EncodeUTF8(in pString as String) as Data
+handler EncodeUTF8(in pString as String) returns Data
 	variable tEncoded as Data
 	variable tStatus as Boolean
 	MCStringEncode(pString, kEncodingIndexUTF8, false, tEncoded)

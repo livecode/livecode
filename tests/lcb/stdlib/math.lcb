@@ -75,11 +75,11 @@ public handler TestLog10()
 	test "log10 (syntax, +ve)" when the log of 1000 is 3
 end handler
 
-handler TestLog10Domain_Negative() as undefined
+handler TestLog10Domain_Negative() returns nothing
 	variable tVar
 	put the log of -1 into tVar
 end handler
-handler TestLog10Domain_Zero() as undefined
+handler TestLog10Domain_Zero() returns nothing
 	variable tVar
 	put the log of 0 into tVar
 end handler
@@ -125,7 +125,7 @@ end handler
 handler TestTrigonometricDomain_Arcsin()
 	return asin((1 + any number) / any number)
 end handler
-handler TestTrigonometricDomain_Arccos() as undefined
+handler TestTrigonometricDomain_Arccos()
 	return acos((1 + any number) / any number)
 end handler
 public handler TestTrigonometricDomain()
@@ -151,11 +151,11 @@ public handler TestLn()
 	test "ln (function) " when tLn > 4 and tLn < 4.01
 end handler
 
-handler TestLnDomain_Negative() as undefined
+handler TestLnDomain_Negative() returns nothing
 	variable tVar
 	put the natural log of -1 into tVar
 end handler
-handler TestLnDomain_Zero() as undefined
+handler TestLnDomain_Zero() returns nothing
 	variable tVar
 	put the natural log of 0 into tVar
 end handler
@@ -208,7 +208,7 @@ public handler TestMaxList()
 	MCUnitTestHandlerThrows(TestMaxList_Empty, "max (empty list)")
 end handler
 
-handler TestBaseConvert_InvalidFormat() as LCUInt
+handler TestBaseConvert_InvalidFormat() returns LCUInt
 	return "0xf004" converted from base 16 -- bug 14889
 end handler
 public handler TestBaseConvertFrom()
