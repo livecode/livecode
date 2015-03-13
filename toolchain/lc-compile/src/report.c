@@ -55,10 +55,34 @@ void Fatal_InternalInconsistency(const char *p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Error_CouldNotGenerateBytecode (void)
+{
+	fprintf(stderr, "error: Could not generate interface\n");
+	++s_error_count;
+}
+
 void Error_CouldNotOpenInputFile(const char *p_file)
 {
-    fprintf(stderr, "Could not open input file '%s'\n", p_file);
+    fprintf(stderr, "error: Could not open input file '%s'\n", p_file);
     s_error_count += 1;
+}
+
+void Error_CouldNotWriteOutputFile(const char *p_file)
+{
+	fprintf(stderr, "error: Could not write output file '%s'\n", p_file);
+	++s_error_count;
+}
+
+void Error_CouldNotGenerateInterface (void)
+{
+	fprintf(stderr, "error: Could not generate interface\n");
+	++s_error_count;
+}
+
+void Error_CouldNotWriteInterfaceFile(const char *p_file)
+{
+	fprintf(stderr, "error: Could not write interface file '%s'\n", p_file);
+	++s_error_count;
 }
 
 static void _PrintPosition(long p_position)

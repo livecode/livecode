@@ -3343,6 +3343,96 @@ void MCCanvasPathMakeWithPoints(bool p_close, MCProperListRef p_points, MCCanvas
 	MCMemoryDeleteArray(t_points);
 }
 
+static void MCCanvasPathMakeWithArcWithRadii(const MCGPoint &p_center, MCGFloat p_radius_x, MCGFloat p_radius_y, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (!MCGPathCreateMutable(t_path))
+		return;
+	
+	MCGPathAddArc(t_path, p_center, MCGSizeMake(p_radius_x, p_radius_y), 0, p_start_angle, p_end_angle);
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	
+	MCGPathRelease(t_path);
+}
+
+void MCCanvasPathMakeWithArcWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCCanvasPathMakeWithArcWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
+}
+
+void MCCanvasPathMakeWithArcWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPoint t_radii;
+	if (!MCProperListToRadii(p_radii, t_radii))
+		return;
+	
+	MCCanvasPathMakeWithArcWithRadii(*MCCanvasPointGet(p_center), t_radii.x, t_radii.y, p_start_angle, p_end_angle, r_path);
+}
+
+static void MCCanvasPathMakeWithSectorWithRadii(const MCGPoint &p_center, MCGFloat p_radius_x, MCGFloat p_radius_y, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (!MCGPathCreateMutable(t_path))
+		return;
+	
+	MCGPathAddArc(t_path, p_center, MCGSizeMake(p_radius_x, p_radius_y), 0, p_start_angle, p_end_angle);
+	MCGPathLineTo(t_path, p_center);
+	MCGPathCloseSubpath(t_path);
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	
+	MCGPathRelease(t_path);
+}
+
+void MCCanvasPathMakeWithSectorWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCCanvasPathMakeWithSectorWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
+}
+
+void MCCanvasPathMakeWithSectorWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPoint t_radii;
+	if (!MCProperListToRadii(p_radii, t_radii))
+		return;
+	
+	MCCanvasPathMakeWithSectorWithRadii(*MCCanvasPointGet(p_center), t_radii.x, t_radii.y, p_start_angle, p_end_angle, r_path);
+}
+
+static void MCCanvasPathMakeWithSegmentWithRadii(const MCGPoint &p_center, MCGFloat p_radius_x, MCGFloat p_radius_y, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (!MCGPathCreateMutable(t_path))
+		return;
+	
+	MCGPathAddArc(t_path, p_center, MCGSizeMake(p_radius_x, p_radius_y), 0, p_start_angle, p_end_angle);
+	MCGPathCloseSubpath(t_path);
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	
+	MCGPathRelease(t_path);
+}
+
+void MCCanvasPathMakeWithSegmentWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCCanvasPathMakeWithSegmentWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
+}
+
+void MCCanvasPathMakeWithSegmentWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
+{
+	MCGPoint t_radii;
+	if (!MCProperListToRadii(p_radii, t_radii))
+		return;
+	
+	MCCanvasPathMakeWithSegmentWithRadii(*MCCanvasPointGet(p_center), t_radii.x, t_radii.y, p_start_angle, p_end_angle, r_path);
+}
+
 // Properties
 
 void MCCanvasPathSetMCGPath(MCGPathRef p_path, MCCanvasPathRef &x_path)
