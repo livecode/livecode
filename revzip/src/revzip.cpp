@@ -1280,7 +1280,7 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 			else
 			{
 				char *t_converted_name;
-				int t_success;
+                int t_success;
 
 				// SN-2015-03-10: [[ Bug 14413 ]] We convert the string to UTF-8
 				//  in case it was natively encoded, as revZipEnumerateItems is
@@ -1291,9 +1291,9 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 					t_converted_name = strdup(t_stat.name);
 				}
 				else
-					t_converted_name = ConvertCStringFromNativeToUTF8(t_stat.name, &t_success);
+                    t_converted_name = ConvertCStringFromNativeToUTF8(t_stat.name, &t_success);
 
-				if (t_success)
+                if (t_success == EXTERNAL_SUCCESS)
 				{
 					t_str_names += std::string(t_converted_name);
 					t_str_names += "\n";
