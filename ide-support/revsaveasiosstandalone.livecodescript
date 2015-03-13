@@ -133,6 +133,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put "8_0" into tSDKs["sim"]["suffix"]         
       else if pTarget contains "8.1" then
          put "8_1" into tSDKs["sim"]["suffix"]
+      else if pTarget contains "8.2" then
+         put "8_2" into tSDKs["sim"]["suffix"]
       end if
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
@@ -399,10 +401,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             -- Make a temporary file for link options and execute it
             local tLinkOptionsFile
             put tempName() into tLinkOptionsFile
-
+            
             put tempName() into tArchSpecificEngineFile
             put tLinkCommand & "-o" && quote & tArchSpecificEngineFile & quote & return into url ("binfile:" & tLinkOptionsFile)
-
+            
             local tiPhoneMinVersion
             put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tiPhoneMinVersion
             
@@ -410,14 +412,14 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
             -- SN-2015-02-19: [[ Bug 14625 ]] The minimum iOS version is bound to the architecture
             get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion[tArch] && quote & "@" & tLinkOptionsFile & quote)
-
+            
             put tArchSpecificEngineFile & space after tArchSpecificEngineList
             delete file tLinkOptionsFile
             if it is not empty or there is no file tArchSpecificEngineFile then
                throw "linking for" && tInstSet && " (" & tArch & ") failed with " & it
             end if
          end repeat
-
+         
          -- MM-2011-09-28: Create the engine for the instruction set specified in the build type setting.
          --
          put tempName() into tSDKs[tInstSet]["engine file"]
@@ -1450,7 +1452,7 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         put "8_1" into pVersion
+         put "8_2" into pVersion
       end if
       put "Device-" & pVersion into tStub
    else if pTarget contains "4.2" then
@@ -1473,6 +1475,8 @@ function revMobileRuntimeFolder pTarget, pVersion
       put "Simulator-8_0" into tStub
    else if pTarget contains "8.1" then
       put "Simulator-8_1" into tStub
+   else if pTarget contains "8.2" then
+      put "Simulator-8_2" into tStub
    end if
    
    local tUserPath, tOverridePath
