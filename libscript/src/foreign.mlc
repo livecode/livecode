@@ -65,7 +65,6 @@ public type uint is UInt32
 public type int is Int32
 public type float is Float32
 public type double is Float64
-public type pointer is Pointer
 
 public type NativeCString is ZStringNative
 
