@@ -25,8 +25,8 @@ use com.livecode.foreign
 public foreign handler MCByteEvalNumberOfBytesIn(in Target as Data, out Count as LCUIndex) as undefined binds to "<builtin>"
 
 public foreign handler MCByteEvalOffsetOfBytes(in IsLast as CBool, in Needle as Data, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as CBool, in Needle as Data, in Before as LCUIndex, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCByteEvalOffsetOfBytesAfter(in IsFirst as CBool, in Needle as Data, in After as LCUIndex, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytesBefore(in IsLast as CBool, in Needle as Data, in Before as LCIndex, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCByteEvalOffsetOfBytesAfter(in IsLast as CBool, in Needle as Data, in After as LCIndex, in Target as Data, out Offset as LCUIndex) as undefined binds to "<builtin>"
 
 public foreign handler MCByteEvalIsAmongTheBytesOf(in Needle as Data, in Target as Data, out Value as CBool) as undefined binds to "<builtin>"
 
@@ -122,8 +122,6 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 
 Tags: Binary
 */
-
-/* bug 14846
 syntax ByteOffsetAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
@@ -134,7 +132,6 @@ syntax ByteIndexAfter is prefix operator with precedence 1
 begin
 	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
-*/
 
 /*
 
@@ -151,8 +148,6 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 
 Tags: Binary
 */
-
-/* bug 14846
 syntax ByteOffsetBefore is prefix operator with precedence 1
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
@@ -163,7 +158,6 @@ syntax ByteIndexBefore is prefix operator with precedence 1
 begin
     MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
-*/
 
 /*
 Summary:            Determines whether <Needle> is in <Target>.
