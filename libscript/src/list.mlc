@@ -76,11 +76,11 @@ public foreign handler MCListExecDeleteLastElementOf(inout Target as List) as un
 
 public foreign handler MCListEvalIndexOfElement(in IsLast as CBool, in Needle as any, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 public foreign handler MCListEvalIndexOfElementAfter(in IsLast as CBool, in Needle as any, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCListEvalIndexOfElementBefore(in IsLast as CBool, in Needle as any, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIndexOfElementBefore(in IsFirst as CBool, in Needle as any, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 
 public foreign handler MCListEvalOffsetOfList(in IsLast as CBool, in Needle as List, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 public foreign handler MCListEvalOffsetOfListAfter(in IsLast as CBool, in Needle as List, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCListEvalOffsetOfListBefore(in IsLast as CBool, in Needle as List, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalOffsetOfListBefore(in IsFirst as CBool, in Needle as List, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
 
 --
 
@@ -963,9 +963,9 @@ specified, the last matching element is found.
 Tags: Lists
 */
 syntax ListIndexBefore is prefix operator with precedence 1
-	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
+	"the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
-	MCListEvalIndexOfElementBefore(IsLast, Needle, Before, Haystack, output)
+	MCListEvalIndexOfElementBefore(IsFirst, Needle, Before, Haystack, output)
 end syntax
 
 ----------------------------------------------------------------
@@ -1075,9 +1075,9 @@ is equal to <Needle>, the return value is 0.  If neither "first" nor
 Tags: Lists
 */
 syntax ListOffsetBefore is prefix operator with precedence 1
-	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
+	"the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
-	MCListEvalOffsetOfListBefore(IsLast, Needle, Before, Haystack, output)
+	MCListEvalOffsetOfListBefore(IsFirst, Needle, Before, Haystack, output)
 end syntax
 
 end module

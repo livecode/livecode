@@ -504,7 +504,7 @@ MCListEvalIndexOfElementAfter (bool p_is_last,
 }
 
 extern "C" MC_DLLEXPORT void
-MCListEvalIndexOfElementBefore (bool p_is_last,
+MCListEvalIndexOfElementBefore (bool p_is_first,
                                MCValueRef p_needle,
                                index_t p_before,
                                MCProperListRef p_haystack,
@@ -522,7 +522,7 @@ MCListEvalIndexOfElementBefore (bool p_is_last,
 		return;
 	}
 
-	MCListEvalIndexOfElementInRange (p_is_last, p_needle, p_haystack,
+	MCListEvalIndexOfElementInRange (!p_is_first, p_needle, p_haystack,
 	                                 MCRangeMake(0, t_start),
 	                                 r_output);
 }
@@ -590,7 +590,7 @@ MCListEvalOffsetOfListAfter (bool p_is_last,
 }
 
 extern "C" MC_DLLEXPORT void
-MCListEvalOffsetOfListBefore (bool p_is_last,
+MCListEvalOffsetOfListBefore (bool p_is_first,
                               MCProperListRef p_needle,
                               index_t p_before,
                               MCProperListRef p_haystack,
@@ -608,7 +608,7 @@ MCListEvalOffsetOfListBefore (bool p_is_last,
 		return;
 	}
 
-	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack,
+	MCListEvalOffsetOfListInRange (!p_is_first, p_needle, p_haystack,
 	                               MCRangeMake(0, t_start),
 	                               r_output);
 }
