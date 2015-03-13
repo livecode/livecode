@@ -1924,7 +1924,8 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    local tAppBundle, tCEFFramework, tCEFResources, tCEFDest
    // IM-2014-03-20: [[ revBrowserCEF ]] Ensure revbrowser is included if revbrowser-cef is selected
    if "Browser (CEF)"  is among the lines of tScriptLibraries and "Browser" is not among the lines of tScriptLibraries then
-      put "Browser" & cr after tScriptLibraries
+      // AL-2015-03-13: [[ Bug 14936 ]] tScriptLibraries doesn't necessarily have an empty line at the end
+      put "Browser" & cr before tScriptLibraries
    end if
    
    revStandaloneProgress "Copying externals..."
@@ -2068,7 +2069,8 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    // IM-2014-08-14: [[ LibCef2062 ]] Reorganisation of libcef framework files
    if "Browser (CEF)" is among the lines of tScriptLibraries then
       put revExternalPath("Browser", tPlatform, tArch) into tExternalPath
-      switch pPlatform
+      // AL-2015-03-13: [[ Bug 14936 ]] Switch where case takes an expression should not switch on a value
+      switch
          case pPlatform contains "MacOSX"
             put (item 1 to -3 of pStandalonePath) & "/Frameworks" into tCEFFramework
             put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
