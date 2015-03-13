@@ -208,7 +208,7 @@ public handler TestMaxList()
 	MCUnitTestHandlerThrows(TestMaxList_Empty, "max (empty list)")
 end handler
 
-handler TestBaseConvert_InvalidFormat() as LCUInt
+handler TestBaseConvert_InvalidFormat() returns LCUInt
 	return "0xf004" converted from base 16 -- bug 14889
 end handler
 public handler TestBaseConvertFrom()
