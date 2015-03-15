@@ -284,7 +284,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
       case "windows"
          -- Process the manifest appropriately
          local tManifestFile
-         get field "WindowsManifest" of card "Resources" of stack "Builder"
+         get windowsManifest()
          replace "[[Name]]" with tParams["version"]["ProductName"] in it
          replace "[[Description]]" with tParams["version"]["FileDescription"] in it
          put tTempFolder & "/manifest.xml" into tManifestFile
@@ -362,7 +362,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          
       case "macosx"
          local tPlistFile
-         put field "MacOSXPlist" of card "Resources" of stack "Builder" into tPlistFile
+         put macPList() into tPlistFile
          replace "[[BundleId]]" with "com.runrev.installer" in tPlistFile
          replace "[[BundleName]]" with "runrevinstaller" in tPlistFile
          
