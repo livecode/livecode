@@ -23,6 +23,12 @@ command errorShow pError
 end errorShow
 
 command docsBuilderRun pEdition, pVersion
+   set the itemdelimiter to "."
+   if item 1 of pVersion > 7 then
+      docsBuilderGenerateDocsNew
+      exit docsBuilderRun
+   end if
+   
    local tSourceDir, tOutputDir
    put docsBuilderGetSourceDirectory() into tSourceDir
    put docsBuilderGetOutputDirectory() & "/packaged_xml" into tOutputDir
@@ -1881,3 +1887,174 @@ private function listContainsAllItems pList, pItems
    end repeat
    return true
 end listContainsAllItems
+
+////////////////////////////////////////////////////////////////////////////////
+
+private function escape pString, pConvertLineEndings
+   replace "\" with "\\" in pString
+   replace quote with ("\" & quote) in pString
+   
+   if pConvertLineEndings is true then
+      replace (numToChar(13) & CR) with (CR & numToChar(13)) in pString
+      replace (CR & numToChar(13)) with CR in pString
+   end if
+   replace CR with "\n" in pString
+   //replace "<" with "&lt;" in pString
+   //replace ">" with "&gt;" in pString
+   replace tab with "\t" in pString
+   return (quote & pString & quote)
+end escape
+
+command docsBuilderGenerateDocsNew
+   start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
+   builderLog "report", "Building guide into" && builderGuideFolder() & slash & "distributed_guide.js"
+   docsBuilderGenerateDistributedGuide
+   builderLog "report", "Building api into" && builderAPIFolder() & slash & "distributed_api.js"
+   docsBuilderGenerateDistributedAPI   
+   builderLog "report", "Built docs"
+end docsBuilderGenerateDocsNew
+
+/*
+command errorShow pError
+   builderLog "error", pError
+   throw pError
+end errorShow
+*/
+command docsBuilderGenerateDistributedGuide
+   local tGuideFolder
+   put builderIDEDocsFolder() & slash & "guides" into tGuideFolder
+   set the defaultfolder to tGuideFolder
+   
+   local tGuideData, tGuideName
+   set the itemdelimiter to "."
+   repeat for each line tFile in the files
+      if tFile begins with "."  then next repeat
+      docsBuilderProgressUpdate "", "Building guide" && tGuideFolder & slash & tFile
+      put item 1 to -2 of tFile into tGuideName
+      get url ("binfile:" & tGuideFolder & slash & tFile)
+      if it is not empty then
+         get textDecode(it, "utf-8")
+         replace "[toc]" with empty in it
+         put tab & "{" & CR & tab & escape("guide") & ":" & escape(tGuideName) & comma & CR & tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
+      end if
+   end repeat
+   delete the last char of tGuideData
+   put textEncode(tGuideData, "utf-8") into url ("binfile:" & builderGuideFolder() & slash & "distributed_guide.js")
+end docsBuilderGenerateDistributedGuide
+
+/*
+Summary: Parses the current directory into a library array.
+
+pRootDir (string): The path to the root directory of the dictionary
+*/
+
+function docsBuilderParseDictionaryToLibraryArray pRootDir
+   if there is not a folder pRootDir then
+      return empty
+   end if
+   
+   # Get the list of canonical glossary entries
+   local tGlossaryA
+   put revDocsCollectGlossarySynonyms(pRootDir) into tGlossaryA
+   
+   local tDictionaryRoot, tGlossaryRoot
+   put pRootDir & slash & "dictionary" into tDictionaryRoot
+   put pRootDir & slash & "glossary" into tGlossaryRoot
+   
+   local tCount
+   put 1 into tCount
+   
+   local tText, tLibraryA, tParsedA
+   
+   repeat for each item tRoot in (tDictionaryRoot & "," & tGlossaryRoot)
+      set the defaultfolder to tRoot
+      repeat for each line tLine in the folders
+         if tLine is ".." then next repeat
+         docsBuilderProgressUpdate "", "Building dictionary from folder" && tRoot & slash & tLine
+         set the defaultfolder to tRoot & slash & tLine
+         get the files
+         filter it with "*.lcdoc"
+         repeat for each line tFile in it
+            wait 0 with messages
+            put textDecode(url ("binfile:" & tRoot & slash & tLine & slash & tFile), "utf-8") into tText
+            put revDocsParseDocText(tText) into tParsedA
+            put tParsedA["doc"][1] into tLibraryA[tCount]
+            add 1 to tCount
+         end repeat
+      end repeat
+   end repeat
+   return tLibraryA
+end docsBuilderParseDictionaryToLibraryArray
+
+function docsBuilderParseDictionary pLibraryName, pAuthor, pRootDir, pRecursive
+   local tLibraryA
+   if there is a folder pRootDir then
+      put pLibraryName into tLibraryA["name"]
+      put pAuthor into tLibraryA["author"]
+      put "dictionary" into tLibraryA["type"]
+      
+      put docsBuilderParseDictionaryToLibraryArray(pRootDir) into tLibraryA["doc"]
+   end if
+   
+   if tLibraryA["doc"] is not empty then
+      return tLibraryA
+   end if
+   
+   return empty
+end docsBuilderParseDictionary
+   
+end docsBuilderParseScriptDirectory
+
+command docsBuilderGenerateDistributedAPI
+   local tList, tDictionaryFolder
+   set the itemdelimiter to slash
+   put builderDocsFolder() into tDictionaryFolder
+   set the itemdelimiter to comma
+   if there is not a folder tDictionaryFolder then
+      answer "No dictionary data found at" && tDictionaryFolder
+   end if
+   put "LiveCode Script," & tDictionaryFolder & ",dictionary" into tList
+   
+   local tLibrariesA, tCount
+   put 1 into tCount
+   repeat for each line tLine in tList
+      put docsBuilderParseDictionary(item 1 of tLine, "LiveCode", item 2 of tLine, false) into tLibrariesA[tCount]
+      add 1 to tCount
+   end repeat
+   
+   local tModuleList, tModularA, tModularCount, tBlocksA, tParsedA
+   put 1 into tModularCount
+   put revDocsGetBuiltinModuleList(builderModuleInterfaceFolder(), builderRepoFolder()) into tModuleList
+   set the itemdelimiter to "."
+   repeat for each line tLine in tModuleList
+      docsBuilderProgressUpdate "", "Adding docs from" && tLine
+      if item -1 of tLine is "lcdoc" then
+         get url("file:" & tLine)
+      else
+         get revDocsGenerateDocsFileFromModular(url ("file:" & tLine))
+      end if
+      if it is not empty then
+         put it into tModularA[tModularCount]
+         add 1 to tModularCount
+      end if
+   end repeat
+   
+   put 1 into tModularCount
+   repeat for each element tElement in tModularA
+      put revDocsParseDocText(tElement) into tParsedA
+      repeat for each key tEntry in tParsedA["doc"]
+         put tParsedA["doc"][tEntry] into tLibrariesA[tCount]["doc"][tModularCount]
+         add 1 to tModularCount
+      end repeat
+      put empty into tParsedA
+   end repeat
+   put "LiveCode Builder" into tLibrariesA[tCount]["name"]
+   put "LiveCode" into tLibrariesA[tCount]["author"]
+   put "dictionary" into tLibrariesA[tCount]["type"]
+   add 1 to tCount
+   
+   local tJSON
+   put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
+   
+   put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder() & slash & "distributed_api.js")
+end docsBuilderGenerateDistributedAPI
