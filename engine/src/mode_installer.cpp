@@ -1225,6 +1225,35 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			return false;
 		}
 		break;
+            
+    	case kMCCapsuleSectionTypeStartupScript:
+        {
+            char *t_script;
+            t_script = new char[p_length];
+            if (IO_read_bytes(t_script, p_length, p_stream) != IO_NORMAL)
+            {
+                MCresult -> sets("failed to read startup script");
+                return false;
+            }
+            
+            // Execute the startup script at this point since we have loaded
+            // all stacks.
+            self -> stack -> domess(t_script);
+            
+            delete t_script;
+        }
+            break;
+			
+        case kMCCapsuleSectionTypeAuxiliaryStack:
+        {
+            MCStack *t_aux_stack;
+            if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
+            {
+                MCresult -> sets("failed to read auxillary stack");
+                return false;
+            }
+        }
+            break;
 
 	default:
 		MCresult -> sets("unrecognized section encountered");

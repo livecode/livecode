@@ -210,18 +210,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    put builderWorkspaceFolder() & "/deploy/" & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
    builderEnsureFolderForFile tOutputFileStub
    
-   -- Now configure the installer stack and ui stacks
-   local tInstallerBase, tInstaller
-   put the short name of stack (builderSystemFolder() & "/installer.rev") into tInstallerBase
-   put the short name of stack (builderSystemFolder() & "/tools_installer.rev") into tInstaller
-   
-   -- Reconfigure the substack structure
-   set the mainStack of stack "InstallerUI" of stack tInstaller to tInstallerBase
-   set the mainStack of stack "UninstallerUI" of stack tInstaller to tInstallerBase
-   if there is a stack "Resources" of stack tInstaller then
-      delete stack "Resources" of stack tInstaller
-   end if
-   set the mainStack of stack tInstaller to tInstallerBase
+   local tInstaller
+   put the short name of stack (builderSystemFolder() & "/installer.rev") into tInstaller
    
    -- Choose the apporpriate skin to use for the installer
    local tResources
@@ -230,18 +220,16 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    else
       put the short name of stack (builderCommercialResourceFolder() & "/tools_installer_resources.rev") into tResources
    end if
-   set the mainStack of stack tResources to tInstallerBase
+   set the mainStack of stack tResources to tInstaller
    
    -- Make sure the installer library knows what product it is (for logging file name)
    if pEdition is "Community" then
-      set the uProduct of stack tInstallerBase to "LiveCode Community"
       set the uProduct of stack tInstaller to "LiveCode Community"
       set the uProductTitle of stack tInstaller to "LiveCode Community" && getReadableVersion(pVersion)
       set the uProductTag of stack tInstaller to "livecodecommunity-" & pVersion
       set the uProductDetails of stack tInstaller to loadTextFile(pIdeFolder & slash & "Installer/description.txt")
       set the uProductLicense of stack tInstaller to loadTextFile(pIdeFolder & slash & "License Agreement.txt")
    else
-      set the uProduct of stack tInstallerBase to "LiveCode"
       set the uProduct of stack tInstaller to "LiveCode"
       set the uProductTitle of stack tInstaller to "LiveCode" && getReadableVersion(pVersion)
       set the uProductTag of stack tInstaller to "livecode-" & pVersion
@@ -254,14 +242,14 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    local tInstallerStackfile
    put tTempFolder & slash & "installer_stackfile.rev" into tInstallerStackfile
    builderLog "message", "Creating installer stackfile at '" & tInstallerStackfile & "'"
-   save stack tInstallerBase as tInstallerStackfile
+   save stack tInstaller as tInstallerStackfile
    if the result is not empty then
       builderLog "error", "Failed to create installer stackfile due to -" && the result
-      delete stack tInstallerBase
+      delete stack tInstaller
       throw "failure"
    end if
    builderLog "report", "Created installer stackfile at '" & tInstallerStackfile & "'"
-   delete stack tInstallerBase
+   delete stack tInstaller
    
    -- No more stack manipulations so unlock messages
    unlock messages
@@ -279,6 +267,13 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    put "©" && word -1 of the long date & ". All rights reserved worldwide." into tParams["version"]["LegalCopyright"]
    put pVersion into tParams["version"]["ProductVersion"]
    put pVersion into tParams["version"]["FileVersion"]
+   
+   # AL-2015-03-14: Use deploy parameters to include libURL scriptified stack in installer standalone
+   put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tParams["auxiliary_stackfiles"]
+   put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tParams["auxiliary_stackfiles"]
+   
+   put "insert script of stack" && quote & "revLibUrl" & quote && "into back" into tParams["startup_script"]
+   put return & "insert script of stack" && quote & "InstallerUtilities" & quote && "into back" after tParams["startup_script"]
    
    switch pPlatform
       case "windows"
