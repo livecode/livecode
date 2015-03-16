@@ -2123,7 +2123,12 @@ Boolean MCPlayer::prepare(const char *options)
 		return False;
     
 	if (m_platform_player == nil || m_should_recreate)
-		MCPlatformCreatePlayer(m_platform_player);
+    {
+        if (m_platform_player != nil)
+            MCPlatformPlayerRelease(m_platform_player);
+        MCPlatformCreatePlayer(m_platform_player);
+    }
+		
     
 	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &filename);
