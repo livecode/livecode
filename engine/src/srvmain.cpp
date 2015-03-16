@@ -406,9 +406,12 @@ bool X_init(int argc, char *argv[], char *envp[])
 			MCserverinitialscript = MCsystem -> ResolveNativePath(argv[1]);
 		else
 			MCserverinitialscript = NULL;
-		
+
+        // SN-2015-03-16: [[ Bug 14897 ]] Start to enumerate the params from 1
+        //  so that we have the script listed in the params as well (in a
+        //  bash-like way)
 		// Create the $<n> variables.
-		for(int i = 2; i < argc; ++i)
+        for(int i = 1; i < argc; ++i)
 			if (argv[i] != nil)
 			create_var(argv[i]);
 		create_var(nvars);
