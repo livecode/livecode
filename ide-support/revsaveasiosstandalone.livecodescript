@@ -511,10 +511,40 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       end if
    end if
    
-   -- SN-2015-02-16: [[ iOS Font Mapping ]] Set the font mapping list
-   if tSettings["ios,font mapping file"] is not empty then
-      put tSettings["ios,font mapping file"] into tDeploy["fontmappings"]
+   -- SN-2015-03-16: [[ iOS Font Mapping ]] Fontmapping deploy command added
+   --  We have our fontmapping list (the default fonts), and the custom ones the user
+   --  may have added
+   local tFontmapFiles,tStandardFontmapRoot
+   
+   if revEnvironmentIsInstalled() then
+      put mapFilePath(revMobileRuntimeFolder(pTarget)) into tStandardFontmapRoot
+   else
+      local tOldDel
+      put the itemdelimiter into tOldDel
+      set the itemdelimiter to slash
+      put item 1 to -4 of revEnvironmentBinariesPath() into tStandardFontmapRoot
+      put "/engine/rsrc" after tStandardFontmapRoot
+      set the itemdelimiter to tOldDel
    end if
+   
+   put tStandardFontmapRoot & slash & "fontmap",tSettings["ios,fontmappings"] after last item of tFontMapFiles
+   
+   repeat for each item tFontmapFile in tFontMapFiles
+      if there is no file tFontmapFile then
+         revStandaloneAddWarning "Could not find font mapping file" && tFontmapFile
+      else
+         local tFontMappings
+         put URL("file:" & tFontmapFile) into tFontMappings
+         -- Ensure that the list ends with a linefeed
+         if the last char of tFontMappings is not LF then
+            put LF after tFontMappings
+         end if
+         put tFontMappings after tDeploy["fontmappings"]
+      end if
+   end repeat
+   
+   -- delete the last LF
+   delete last char of tDeploy["fontmappings"]
    
    try
       _internal deploy ios tDeploy
