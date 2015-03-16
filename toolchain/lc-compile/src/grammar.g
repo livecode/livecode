@@ -212,7 +212,6 @@
         Metadata(-> Left) Separator
         PreImportMetadata(-> Right)
         where(Left -> metadata(Position, _, _))
-        Warning_MetadataClausesShouldComeAfterUseClauses(Position)
 
     'rule' PreImportMetadata(-> nil):
         -- do nothing
