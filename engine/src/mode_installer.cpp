@@ -1210,6 +1210,10 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			MCresult -> sets("failed to read project stack");
 			return false;
 		}
+            
+        // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
+        //   the startup script and such work.
+        MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
 	break;
 
 	case kMCCapsuleSectionTypeDigest:

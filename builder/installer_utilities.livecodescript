@@ -25,7 +25,7 @@ local sInstallerError
 command installerRun pPath, pRecord, pOptions, pWithoutElevation
    local tCommand
    if the environment is "installer" then
-      put the effective filename of this stack into tCommand
+      put the effective filename of stack "Installer" into tCommand
    else
       put specialFolderPath("Desktop") & "/installbackend.exe" into tCommand
    end if
@@ -49,7 +49,7 @@ command installerRun pPath, pRecord, pOptions, pWithoutElevation
    
    put empty into sInstallerError
    put tCommand && tArguments into sInstallerProcess
-   put the short name of this stack into sInstallerStack
+   put the long id of stack "InstallerUI" of stack "Installer" into sInstallerStack
    
    -- Make sure we do a log entry non-admin side. This ensures it has the correct owner on Linux.
    log "Commencing install action with:" && sInstallerProcess
@@ -67,14 +67,14 @@ command installerRun pPath, pRecord, pOptions, pWithoutElevation
       end if
       exit installerRun
    end if
-   
+
    installerMonitor
 end installerRun
 
 command installerRunUninstall pPath, pRecord, pWithoutElevation
    local tCommand
    if the environment is "installer" then
-      put the effective filename of this stack into tCommand
+      put the effective filename of stack "Installer" into tCommand
    else
       put "C:/Users/Mark/Desktop/installbackend.exe" into tCommand
    end if
@@ -88,7 +88,7 @@ command installerRunUninstall pPath, pRecord, pWithoutElevation
    
    put empty into sInstallerError
    put tCommand && tArguments into sInstallerProcess
-   put the short name of this stack into sInstallerStack
+   put the long id of stack "UninstallerUI" of stack "Installer" into sInstallerStack
    
    -- Make sure we do a log entry non-admin side. This ensures it has the correct owner on Linux.
    log "Commencing uninstall action with:" && sInstallerProcess
@@ -231,7 +231,7 @@ command runUninstallerUI
 end runUninstallerUI
 
 -- Faceless install option
-private command runFacelessInstall
+command runFacelessInstall
    put true into sIsFaceless
    
    try
@@ -243,7 +243,7 @@ private command runFacelessInstall
 end runFacelessInstall
 
 -- Faceless uninstall option
-private command runFacelessUninstall
+command runFacelessUninstall
    send "runFaceless" to stack "UninstallerUI"
 end runFacelessUninstall
 
@@ -254,7 +254,7 @@ end runFacelessUninstall
 --     -enable-* : enable the given option
 --     -disable-* : disable the given option
 -- The record and path options are mandatory.
-private command runInstallerActions
+command runInstallerActions
    log "Installer actions launched from '" & $0 & "'."
    
    try
@@ -279,7 +279,7 @@ private command runInstallerActions
    quit 0
 end runInstallerActions
 
-private command runUninstallerActions
+command runUninstallerActions
    log "Uninstaller actions launched from '" & $0 & "'."
    
    try
@@ -307,7 +307,7 @@ end runUninstallerActions
 
 ##########
 
-private function parseBooleanOptions
+function parseBooleanOptions
    local tOptions
    repeat with x = 1 to $#
       local tParam
@@ -323,7 +323,7 @@ private function parseBooleanOptions
    return tOptions
 end parseBooleanOptions
 
-private function parseStringOption pName 
+function parseStringOption pName 
    repeat with x = 1 to $#
       local tParam
       put value("$" & x) into tParam
@@ -353,7 +353,7 @@ private function parseStringOption pName
    return empty
 end parseStringOption
 
-private function ensureStringOption pName
+function ensureStringOption pName
    local tValue
    put parseStringOption(pName) into tValue
    if tValue is empty then
@@ -701,14 +701,14 @@ private command installCopyUninstaller pTarget
       -- MM - copy the uninstaller app folder
       --
       set the itemDel to slash
-      installCopyUninstallerFolder item 1 to - 4 of the effective filename of this stack, pTarget
+      installCopyUninstallerFolder item 1 to - 4 of the effective filename of stack "Installer", pTarget
       if the result is not empty then
          log "CopyUninstaller:    copying failed -" && the result
          reportError "Unable to installer uninstaller at '" & pTarget & "'."
       end if
       set the itemDel to comma
    else
-      put url ("binfile:" & the effective filename of this stack) into url ("binfile:" & installShortenPath(pTarget))
+      put url ("binfile:" & the effective filename of stack "Installer") into url ("binfile:" & installShortenPath(pTarget))
       if the result is not empty then
          log "CopyUninstaller:    copying failed -" && the result
          reportError "Unable to installer uninstaller at '" & pTarget & "'."
@@ -1263,7 +1263,7 @@ private command payloadOpen pArchive
       if the platform is "MacOS" then
          local tPayload
          set the itemDel to slash
-         put item 1 to -3 of the filename of this stack & slash & "Resources/payload" into tPayload
+         put item 1 to -3 of the filename of stack "Installer" & slash & "Resources/payload" into tPayload
          set the itemDel to comma
          do "_internal payload open tPayload"
       else
@@ -1438,14 +1438,14 @@ command log pMessage
       local tFile
       switch the platform
          case "linux"
-            put $HOME & "/.runrev/logs/" & toLower(the uProduct of stack "ToolsInstaller") & "_installer_log.txt" into tFile
+            put $HOME & "/.runrev/logs/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" into tFile
             break
          case "macos"
-            put specialFolderPath("cusr") & "/Library/Logs/RunRev/" & the uProduct of stack "ToolsInstaller" & "InstallerLog.txt"  into tFile
+            put specialFolderPath("cusr") & "/Library/Logs/RunRev/" & the uProduct of stack "Installer" & "InstallerLog.txt"  into tFile
             break
          case "win32"
             -- Make sure we put logs in the 'Local' AppData section.
-            put specialFolderPath(0x001c) & "/RunRev/Logs/" & the uProduct of stack "ToolsInstaller" & "InstallerLog.txt" into tFile
+            put specialFolderPath(0x001c) & "/RunRev/Logs/" & the uProduct of stack "Installer" & "InstallerLog.txt" into tFile
             break
       end switch
       
@@ -1470,3 +1470,57 @@ command log pMessage
       end if
    end if
 end log
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Utility functions removed from the "Tools Installer" stack.
+
+function resolveImageId pImage
+   return the id of image (pImage & ".png") of stack "Resources"
+end resolveImageId
+
+function resolveImageLongId pImage
+   return the long id of image (pImage & ".png") of stack "Resources"
+end resolveImageLongId
+
+function getInstallerType
+   return the cInstallerType of card "Resources" of stack "Resources"
+end getInstallerType
+
+command configureFonts pStack
+   switch the platform
+      case "win32"
+         if word 2 of the systemVersion >= 6  and "Segoe UI" is among the lines of the fontNames then
+            set the textFont of stack pStack to "Segoe UI"
+            set the textSize of stack pStack to 12
+         else if word 2 of the systemVersion >= 5 and "Tahoma" is among the lines of the fontNames then
+            set the textFont of stack pStack to "Tahoma"
+            set the textSize of stack pStack to 11
+         else
+            set the textFont of stack pStack to "MS Sans Serif"
+            set the textSize of stack pStack to 10
+         end if
+         break
+      case "linux"
+         set the textFont of stack pStack to "Helvetica"
+         set the textSize of stack pStack to 12
+         break
+      case "macos"
+         set the textFont of stack pStack to "Lucida Grande"
+         set the textSize of stack pStack to 11
+         break
+   end switch
+end configureFonts
+
+command setTitleField pField, pTitle, pSubTitle
+   if pSubTitle is empty then
+      set the text of pField to pTitle
+      set the textStyle of word 1 to -1 of pField to "bold"
+      set the textColor of word 1 to -1 of pField to "#444444"
+   else
+      set the text of pField to pSubTitle && "//" && pTitle
+      set the textColor of word 1 to -1 of pField to "#555555"
+      set the textStyle of word (-the number of words of pTitle) to -1 of pField to "bold"
+      set the textColor of word (-the number of words of pTitle) to -1 of pField to "#444444"
+   end if
+end setTitleField
