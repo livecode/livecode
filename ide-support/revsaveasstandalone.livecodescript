@@ -407,7 +407,8 @@ private function revStandalonePlatformDetails pPlatform
          put ".so" into tDetailsA["loadable_extension"]
          put "Linux" into tDetailsA["platform"]
    end switch
-
+   
+   local tRuntimeFolder
    -- SN-2015-03-04: [[ CloneAndRun ]] Refactor the setting of externals / support location
    if revEnvironmentIsInstalled() then
       put revEnvironmentRuntimePath() & slash & tArchFolder into tRuntimeFolder
@@ -2167,9 +2168,10 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
       local tLibraryStack
       put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
+      # AL-2014-03-16: [[ Bug 14937 ]] Use correct variable name for standalone settings
       if there is a stack tLibraryStack then
-         if sStandaloneSettings["auxiliary_stackfiles"] is not empty then put return after sStandaloneSettings["auxiliary_stackfiles"]
-         put the effective filename of stack tLibraryStack after sStandaloneSettings["auxiliary_stackfiles"]
+         if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then put return after sStandaloneSettingsA["auxiliary_stackfiles"]
+         put the effective filename of stack tLibraryStack after sStandaloneSettingsA["auxiliary_stackfiles"]
          put return & "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
       end if
    end repeat
