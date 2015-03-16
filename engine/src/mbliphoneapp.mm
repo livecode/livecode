@@ -195,6 +195,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	
 	m_status_bar_style = UIStatusBarStyleDefault;
 	m_status_bar_hidden = NO;
+    m_status_bar_solid = NO;
 	
 	m_in_autorotation = false;
 	m_prepare_status_pending = false;
@@ -310,6 +311,14 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	// Fetch the status bar state.
 	m_status_bar_style = [m_application statusBarStyle];
 	m_status_bar_hidden = [m_application isStatusBarHidden];
+    
+    // PM-2015-02-17: [[ Bug 14482 ]] Check if "solid" status bar style is selected
+    NSDictionary *t_dict;
+    t_dict = [[NSBundle mainBundle] infoDictionary];
+    NSNumber *t_status_bar_solid;
+    t_status_bar_solid = [t_dict objectForKey:@"com_livecode_StatusBarSolid"];
+    
+    m_status_bar_solid = [t_status_bar_solid boolValue];
 	
 	// Initialize our window with the main screen's bounds.
 	m_window = [[MCIPhoneWindow alloc] initWithFrame: [[UIScreen mainScreen] bounds]];
@@ -325,12 +334,18 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (t_cls)
     {
 #ifdef __IPHONE_8_0
-        // PM-2014-11-14: [[ Bug 13927 ]] From iOS 8 we have to ask for user permission for local notifications
-        if ([UIApplication instancesRespondToSelector:@selector(registerUserNotificationSettings:)])
+        // PM-2015-02-18: [[ Bug 14400 ]] Ask for permission for local notifications only if this option is selected in standalone application settings
+        NSNumber *t_uses_local_notifications;
+        t_uses_local_notifications = [t_dict objectForKey:@"com_livecode_UsesLocalNotifications"];
+        if ([t_uses_local_notifications boolValue])
         {
-            UIUserNotificationSettings *t_local_settings;
-            t_local_settings = [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound categories:nil];
-            [[UIApplication sharedApplication] registerUserNotificationSettings:t_local_settings];
+            // PM-2014-11-14: [[ Bug 13927 ]] From iOS 8 we have to ask for user permission for local notifications
+            if ([UIApplication instancesRespondToSelector:@selector(registerUserNotificationSettings:)])
+            {
+                UIUserNotificationSettings *t_local_settings;
+                t_local_settings = [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound categories:nil];
+                [[UIApplication sharedApplication] registerUserNotificationSettings:t_local_settings];
+            }
         }
 #endif
         UILocalNotification *t_notification = [p_launchOptions objectForKey: UIApplicationLaunchOptionsLocalNotificationKey];
@@ -845,6 +860,13 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	[[m_main_controller rootView] reshape];
 }
 
+// PM-2015-02-17: [[ Bug 14482 ]]
+// This method should be called before switchToStatusBarStyle
+- (void)setStatusBarSolid: (BOOL)p_is_solid
+{
+    m_status_bar_solid = p_is_solid;
+}
+
 //////////
 
 - (CGRect)fetchScreenBounds
@@ -867,8 +889,9 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	// MW-2011-10-24: [[ Bug ]] The status bar only clips the display if actually
 	//   hidden, or on iPhone with black translucent style.
     // MM-2013-09-25: [[ iOS7Support ]] The status bar is always overlaid ontop of the view, irrespective of its style.
+    // PM-2015-02-17: [[ Bug 14482 ]] If the style is "solid", do not put status bar on top of the view
 	CGFloat t_status_bar_size;
-	if (m_status_bar_hidden || MCmajorosversion >= 700 || ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
+	if (m_status_bar_hidden || (MCmajorosversion >= 700 && !m_status_bar_solid)|| ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
 		t_status_bar_size = 0.0f;
 	else
 		t_status_bar_size = 20.0f;
@@ -1843,7 +1866,8 @@ NSString* MCIPhoneGetDeviceModelName(void)
                                            @"iPod 3rd Gen",         @"iPod3,1",
 										   @"iPod 4th Gen",         @"iPod4,1",
                                            @"iPod 5th Gen",         @"iPod5,1",
-                                           nil];
+                                           // PM-2015-03-03: [[ Bug 14689 ]] Cast to NSString* to prevent EXC_BAD_ACCESS when in release mode and run in 64bit device/sim
+                                           (NSString *)nil];
 										   
 	
 	NSString *t_device_name = [commonNamesDictionary objectForKey: t_machine_name];

@@ -179,6 +179,13 @@ extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey,
 //   or platform support (if not).
 extern bool MCU_random_bytes(size_t count, void *buffer);
 
+// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading
+// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
+//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+extern "C" void* MCU_loadmodule(const char *p_module);
+extern "C" void MCU_unloadmodule(void* p_module);
+extern "C" void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol);
+
 // 
 
 struct MCInterval

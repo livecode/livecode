@@ -40,11 +40,41 @@ enum
 	// V1
 	OPERATION_ADD_RUNLOOP_ACTION,
 	OPERATION_REMOVE_RUNLOOP_ACTION,
-	OPERATION_RUNLOOP_WAIT,
+    OPERATION_RUNLOOP_WAIT,
 
 	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
 	OPERATION_STACK_TO_WINDOW_RECT,
 	OPERATION_WINDOW_TO_STACK_RECT,
+
+    // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Add externals extensions to allow utf8-encoded arguments
+    /* V2 */ OPERATION_SEND_CARD_MESSAGE_UTF8,
+    /* V2 */ OPERATION_EVAL_EXP_UTF8,
+    /* V2 */ OPERATION_GET_GLOBAL_UTF8,
+    /* V2 */ OPERATION_SET_GLOBAL_UTF8,
+    /* V2 */ OPERATION_GET_FIELD_BY_NAME_UTF8,
+    /* V2 */ OPERATION_GET_FIELD_BY_NUM_UTF8,
+    /* V2 */ OPERATION_GET_FIELD_BY_ID_UTF8,
+    /* V2 */ OPERATION_SET_FIELD_BY_NAME_UTF8,
+    /* V2 */ OPERATION_SET_FIELD_BY_NUM_UTF8,
+    /* V2 */ OPERATION_SET_FIELD_BY_ID_UTF8,
+    /* V2 */ OPERATION_SHOW_IMAGE_BY_NAME_UTF8,
+    /* V2 */ OPERATION_SHOW_IMAGE_BY_NUM_UTF8,
+    /* V2 */ OPERATION_SHOW_IMAGE_BY_ID_UTF8,
+    /* V2 */ OPERATION_GET_VARIABLE_UTF8,
+    /* V2 */ OPERATION_SET_VARIABLE_UTF8,
+    /* V2 */ OPERATION_GET_VARIABLE_EX_UTF8_TEXT,
+    /* V2 */ OPERATION_GET_VARIABLE_EX_UTF8_BINARY,
+    /* V2 */ OPERATION_SET_VARIABLE_EX_UTF8_TEXT,
+    /* V2 */ OPERATION_SET_VARIABLE_EX_UTF8_BINARY,
+    /* V2 */ OPERATION_GET_ARRAY_UTF8_TEXT,
+    /* V2 */ OPERATION_GET_ARRAY_UTF8_BINARY,
+    /* V2 */ OPERATION_SET_ARRAY_UTF8_TEXT,
+    /* V2 */ OPERATION_SET_ARRAY_UTF8_BINARY,
+    
+    // AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
+    /* V3 */ OPERATION_LOAD_MODULE,
+    /* V3 */ OPERATION_UNLOAD_MODULE,
+    /* V3 */ OPERATION_RESOLVE_SYMBOL_IN_MODULE,
 };
 
 enum
@@ -403,6 +433,58 @@ void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
+// SN-2015-02-24: [[ Broken Win Compilation ]] LoadModule is a Win32 API function...
+void LoadModuleByName(const char *p_module, void **r_handle, int *r_success)
+{
+    char *t_result;
+
+    if (s_external_interface_version < 3)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+
+    t_result = (s_operations[OPERATION_LOAD_MODULE])(p_module, (const char *)r_handle, NULL, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+void UnloadModule(void *p_handle, int *r_success)
+{
+    char *t_result;
+
+    if (s_external_interface_version < 3)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+
+    t_result = (s_operations[OPERATION_UNLOAD_MODULE])(p_handle, NULL, NULL, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolved, int *r_success)
+{
+    char *t_result;
+
+    if (s_external_interface_version < 3)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+
+    t_result = (s_operations[OPERATION_RESOLVE_SYMBOL_IN_MODULE])(p_handle, p_symbol, (const char *)r_resolved, r_success);
+    
+    if (t_result != NULL)
+        s_delete(t_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

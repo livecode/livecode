@@ -165,7 +165,7 @@ const char *MClnfmotifstring = "Motif";
 const char *MClnfwinstring = "Windows 95";
 const char *MCuntitledstring = "Untitled";
 // MW-2012-08-29: [[ Bug 10309 ]] Update 'applicationstring' to be 'LiveCode'.
-const char *MCapplicationstring = "LiveCode";
+const char *MCapplicationstring = "livecode";
 const char *MCanswernamestring = "Answer Dialog";
 const char *MCasknamestring = "Ask Dialog";
 const char *MCfsnamestring = "File Selector";
@@ -749,8 +749,6 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("playerMovieChanged", MCM_player_movie_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("playerStopped", MCM_player_stopped);
 	/* UNCHECKED */ MCNameCreateWithCString("reachabilityChanged", MCM_reachability_changed);
-    ///* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
-    ///* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataDidBecomeAvailable", MCM_protected_data_available);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataWillBecomeUnavailable", MCM_protected_data_unavailable);
 	

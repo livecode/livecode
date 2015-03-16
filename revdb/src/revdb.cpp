@@ -135,6 +135,39 @@ const char *dbtypestrings[] = {
 
 };
 
+static void *DBcallback_loadmodule(const char *p_path)
+{
+    int t_success;
+    void *t_handle;
+    LoadModuleByName(p_path, &t_handle, &t_success);
+    if (t_success == EXTERNAL_FAILURE)
+        return NULL;
+    return t_handle;
+}
+
+static void DBcallback_unloadmodule(void *p_handle)
+{
+    int t_success;
+    UnloadModule(p_handle, &t_success);
+}
+
+static void *DBcallback_resolvesymbol(void *p_handle, const char *p_symbol)
+{
+    int t_success;
+    void *t_address;
+    ResolveSymbolInModule(p_handle, p_symbol, &t_address, &t_success);
+    if (t_success == EXTERNAL_FAILURE)
+        return NULL;
+    return t_address;
+}
+
+static DBcallbacks dbcallbacks = {
+    DBcallbacks_version,
+    DBcallback_loadmodule,
+    DBcallback_unloadmodule,
+    DBcallback_resolvesymbol,
+};
+
 DATABASERECList databaselist;
 DBList connectionlist;
 
@@ -232,6 +265,45 @@ DBCursor *findcursor(int cursid)
 	return NULL;
 }
 
+// AL-2015-02-10: [[ SB Inclusions ]] Add function to load database driver using new module loading callbacks
+DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
+{
+    int t_retvalue;
+    void *t_handle;
+    t_handle = NULL;
+    LoadModuleByName(p_type, &t_handle, &t_retvalue);
+    
+    if (t_handle == NULL)
+        return NULL;
+    
+    DATABASEREC *t_result;
+    t_result = new DATABASEREC;
+#if (defined _MACOSX && !defined _MAC_SERVER)
+    t_result -> driverref = (CFBundleRef)t_handle;
+#elif (defined _WINDOWS) || defined _WINDOWS_SERVER
+    t_result -> driverref = (HINSTANCE)t_handle;
+#else
+	t_result -> driverref = t_handle;
+#endif
+    
+    void *id_counterref_ptr, *new_connectionref_ptr, *release_connectionref_ptr;
+    void *set_callbacksref_ptr;
+    id_counterref_ptr = NULL;
+    new_connectionref_ptr = NULL;
+    release_connectionref_ptr = NULL;
+    set_callbacksref_ptr = NULL;
+    
+    ResolveSymbolInModule(t_handle, "setidcounterref", &id_counterref_ptr, &t_retvalue);
+    ResolveSymbolInModule(t_handle, "newdbconnectionref", &new_connectionref_ptr, &t_retvalue);
+    ResolveSymbolInModule(t_handle, "releasedbconnectionref", &release_connectionref_ptr, &t_retvalue);
+    ResolveSymbolInModule(t_handle, "setcallbacksref", &set_callbacksref_ptr, &t_retvalue);
+    
+    t_result -> idcounterptr = (idcounterrefptr)id_counterref_ptr;
+    t_result -> newconnectionptr = (new_connectionrefptr)new_connectionref_ptr;
+    t_result -> releaseconnectionptr = (release_connectionrefptr)release_connectionref_ptr;
+    t_result -> setcallbacksptr = (set_callbacksrefptr)set_callbacksref_ptr;
+    return t_result;
+}
 
 
 DATABASEREC *LoadDatabaseDriver(const char *p_type)
@@ -239,49 +311,58 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
   DATABASEREC *t_database_rec;
 	t_database_rec = NULL;
 	
-	char t_driver_name[32];
-#ifdef TARGET_SUBPLATFORM_ANDROID
-	sprintf(t_driver_name, "libdb%s", p_type);
-	// MW-2011-10-06: [[ Bug 9789 ]] Make sure the driver library name is all lowercase.
-	strlwr(t_driver_name);
-#else
-	if (util_stringcompare(p_type, "VALENTINA", strlen(p_type)) == 0)
-		sprintf(t_driver_name, VXCMD_STRING);
-	else
-	{
-		sprintf(t_driver_name, "db%s", p_type);
-		strlwr(t_driver_name);
-	}
+#ifndef TARGET_SUBPLATFORM_ANDROID
+    // AL-2015-02-10: [[ SB Inclusions ]] Try to load database driver using new module loading callbacks
+    t_database_rec = LoadDatabaseDriverFromName(p_type);
 #endif
-	
-	char t_driver_path[PATH_MAX];
-				
-	if (revdbdriverpaths != NULL)
-	{
-		char *t_path;
-		t_path = revdbdriverpaths;
-		
-		while(t_path != NULL && *t_path != '\0')
-		{
-			char *t_next_path = strchr(t_path, '\n');
-			unsigned int t_length;
-			if (t_next_path == NULL)
-				t_length = strlen(t_path);
-			else
-				t_length = t_next_path - t_path, t_next_path += 1;
-					
-			if (t_length > 0)
-			{
-				sprintf(t_driver_path, "%.*s/%s", t_length, t_path, t_driver_name);
-				t_database_rec = DoLoadDatabaseDriver(t_driver_path);
-				if (t_database_rec != NULL)
-					break;
-			}
-			
-			t_path = t_next_path;
-		}
-	}
-
+    
+    char t_driver_name[32];
+    if (t_database_rec == NULL)
+    {
+#ifdef TARGET_SUBPLATFORM_ANDROID
+        sprintf(t_driver_name, "libdb%s", p_type);
+        // MW-2011-10-06: [[ Bug 9789 ]] Make sure the driver library name is all lowercase.
+        strlwr(t_driver_name);
+#else
+        if (util_stringcompare(p_type, "VALENTINA", strlen(p_type)) == 0)
+            sprintf(t_driver_name, VXCMD_STRING);
+        else
+        {
+            sprintf(t_driver_name, "db%s", p_type);
+            strlwr(t_driver_name);
+        }
+#endif
+    }
+    char t_driver_path[PATH_MAX];
+    
+    if (t_database_rec == NULL)
+    {
+        if (revdbdriverpaths != NULL)
+        {
+            char *t_path;
+            t_path = revdbdriverpaths;
+            
+            while(t_path != NULL && *t_path != '\0')
+            {
+                char *t_next_path = strchr(t_path, '\n');
+                unsigned int t_length;
+                if (t_next_path == NULL)
+                    t_length = strlen(t_path);
+                else
+                    t_length = t_next_path - t_path, t_next_path += 1;
+                
+                if (t_length > 0)
+                {
+                    sprintf(t_driver_path, "%.*s/%s", t_length, t_path, t_driver_name);
+                    t_database_rec = DoLoadDatabaseDriver(t_driver_path);
+                    if (t_database_rec != NULL)
+                        break;
+                }
+                
+                t_path = t_next_path;
+            }
+        }
+    }
 #ifndef _SERVER
 	if (t_database_rec == NULL && GetExternalFolder() != NULL)
 	{
@@ -326,6 +407,8 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
 		strcpy(t_database_rec -> dbname, p_type);
 		if (t_database_rec -> idcounterptr)
 			(*t_database_rec -> idcounterptr)(&idcounter);
+        if (t_database_rec -> setcallbacksptr)
+            (*t_database_rec -> setcallbacksptr)(&dbcallbacks);
 	}
 	
 	return t_database_rec;
