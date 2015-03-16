@@ -211,7 +211,6 @@
     'rule' PreImportMetadata(-> sequence(Left, Right)):
         Metadata(-> Left) Separator
         PreImportMetadata(-> Right)
-        where(Left -> metadata(Position, _, _))
 
     'rule' PreImportMetadata(-> nil):
         -- do nothing
