@@ -1,0 +1,660 @@
+
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+A widget to display array data in a tree view
+*/
+
+widget com.livecode.livecode.treeView
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "Tree View"
+
+-- property declarations
+property arrayData 		get getArrayData 		set setArrayData
+
+-- private instance variables
+private variable mData as Array
+private variable mDataList as List
+private variable mDataCount as Integer
+private variable mDataHeight as Real
+private variable mRowHeight as Real
+private variable mViewHeight as Real
+private variable mViewWidth as Real
+private variable mDataTravel as Real
+private variable mViewTopPosition as Real
+private variable mFirstDataItem as Integer
+private variable mMargin as Real
+private variable mRecalculate as Boolean
+
+// Drag related 
+private variable mDragging as Boolean
+private variable mDragStartLoc as Point
+
+// Temporary - folds and unfolds randomly
+private handler __convertArrayToList(in pArray as Array) as List
+	variable tList as List
+	put the empty list into tList
+	
+	variable tKeys as List
+	put the keys of pArray into tKeys
+	sort tKeys in ascending order
+	
+	variable tKey as String
+	variable tElement as Array
+	
+	repeat for each element tKey in tKeys
+		put the empty array into tElement
+		put tKey into tElement["key"]
+		put any number < 0.5 into tElement["folded"]
+			
+		if pArray[tKey] is an array then
+			put __convertArrayToList(pArray[tKey]) into tElement["value"]
+		else
+			put pArray[tKey] into tElement["value"]
+		end if	
+		push tElement onto tList	
+	end repeat
+	
+	return tList
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Message handlers
+--
+--------------------------------------------------------------------------------
+
+public handler OnCreate() as undefined
+	variable tArray as Array
+	put the empty array into tArray
+	put the empty list into mDataList
+	
+	variable tRandom as Real
+	variable tCount as Integer
+	variable tTopKey as String
+	put 0 into tCount
+	repeat 100 times
+		add 1 to tCount
+		put "Key" & tCount formatted as string into tTopKey
+		
+		put any number into tRandom
+		if tRandom < 0.33 then
+			put "Some Data" into tArray[tTopKey]
+		else if tRandom < 0.67 then
+			put "Some other data" into tArray[tTopKey]
+		else
+			put "Some more data" into tArray[tTopKey]
+		end if	
+		
+		-- Make sure there is some nested stuff
+		put the ceiling of (any number * 100) into tRandom
+		if tCount > tRandom then
+			variable tNewArray as Array
+			put the empty array into tNewArray
+			put tArray["Key" & tRandom formatted as string] into tNewArray["Key" & tRandom formatted as string]
+			put tNewArray into tArray[tTopKey]
+		end if
+	end repeat
+	
+	put tArray into mData
+	put __convertArrayToList(tArray) into mDataList
+	
+	put 0 into mViewTopPosition
+	
+	initialiseConstants()
+end handler
+
+public handler OnPaint() as undefined
+
+	if mRecalculate then
+		updateParameters()
+	end if
+
+	variable tTop as Real
+	variable tPath as Path
+	variable tLeft as Real
+	
+	put mDataHeight - mViewHeight into mDataTravel
+	if mDataTravel < 0 then
+		put 0 into mDataTravel
+	end if
+	if mViewTopPosition > mDataTravel then
+		put mDataTravel into mViewTopPosition
+	end if
+	
+	put 0 into tTop
+	put mViewWidth * 0.05 into mMargin
+	if mMargin > 20 then
+		put 20 into mMargin
+	else if mMargin < 5 then
+		put 5 into mMargin
+	end if
+	
+	put the height of my bounds into mViewHeight
+	put the width of my bounds into mViewWidth
+	
+	put rectangle path of my bounds into tPath
+	set the paint of this canvas to getPaint("background","fill")
+	fill tPath on this canvas	
+	
+	variable tDataItem as Array
+	put the empty array into tDataItem
+	
+	variable tx as Integer
+	put 1 into tx
+	
+	put the floor of mViewTopPosition / mRowHeight into mFirstDataItem
+	if mFirstDataItem < 1 then
+		put 1 into mFirstDataItem
+	end if
+	
+	variable tTopOffset
+	put mViewTopPosition mod mRowHeight into tTopOffset
+	subtract tTopOffset from tTop
+	
+	//log "Start Index: %@ | top offset: %@" with [mFirstListItem,tTopOffset]
+	repeat with tx from mFirstDataItem up to the number of elements in mDataList
+		put element tx of mDataList into tDataItem
+		put mMargin into tLeft
+		// Draw the background
+		
+		put rectangle path of rectangle [0,tTop,mViewWidth,tTop+mRowHeight-1] into tPath
+		set the paint of this canvas to getPaint("row","fill")
+		fill tPath on this canvas
+		
+		// Draw the separating line
+		put rectangle path of rectangle [mMargin,tTop+mRowHeight-1,mViewWidth,tTop+mRowHeight] into tPath
+		set the paint of this canvas to getPaint("row","stroke")
+		fill tPath on this canvas
+		
+		// Draw arrow
+		set the font of this canvas to font "fontawesome" at size 20
+		fill text "\u{0f105}" at right of rectangle [mViewWidth-30-mMargin,tTop,mViewWidth-mMargin,tTop+mRowHeight] on this canvas
+		
+		// Draw Label
+		set the font of this canvas to font getFontName() at size 14
+		set the paint of this canvas to getPaint("text","fill")
+		if tDataItem["value"] is a string then
+			fill text (tDataItem["key"] & ":" & tDataItem["value"]) at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
+		else
+			fill text (tDataItem["key"] & ": has sub-array") at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
+		end if
+		
+		if tTop > mViewHeight then
+			exit repeat
+		end if
+		add mRowHeight to tTop
+	end repeat
+	
+	// Draw Scrollbar
+	put rounded rectangle path of scrollbarRect() with radius 3 into tPath
+	set the paint of this canvas to getPaint("scrollbar", "fill")
+	fill tPath on this canvas	
+	
+	/*
+		We will need to keep track of the viewport data so that we can
+		perform click actions appropriately. We will need to store
+		- the relative heights of each display line
+		- the 'path' that each display line represents
+		
+		Then when we have an action (edit value, add key, delete key etc) we can
+		call the appropriate ...OnPath handler.	
+	*/
+	
+end handler
+
+public handler OnMouseDown() as undefined
+	put the mouse position into mDragStartLoc
+	
+	if mDragStartLoc is within scrollbarRect() then
+		
+		put true into mDragging
+	end if
+end handler
+
+public handler onMouseMove() as undefined
+	if mDragging is true then
+		// Get the scrollbar ratio
+		variable tScrollbarRatio as Real
+		put mViewHeight / mDataHeight into tScrollbarRatio
+		if tScrollbarRatio > 1 then
+			put 1 into tScrollbarRatio
+		end if
+	
+		// Get the scrollbar height
+		variable tScrollbarHeight as Real
+		put mViewHeight * tScrollbarRatio into tScrollbarHeight
+		if tScrollbarHeight < 25 then
+			put 25 into tScrollbarHeight
+		end if
+	
+		// Get the scrollbar position ratio
+		variable tScrollPositionRatio as Real
+		put mViewTopPosition / mDataTravel into tScrollPositionRatio
+	
+		// Get the scrollbar space
+		variable tScrollbarSpace as Real
+		variable tScrollbarSpaceTop as Real
+		put mViewHeight - tScrollbarHeight into tScrollbarSpace
+		put tScrollbarHeight / 2 into tScrollbarSpaceTop
+		
+		// Get the mouse y position within the space
+		variable sMouseY as Real
+		put the y of the mouse position into sMouseY
+		
+		variable tNewScrollbarY as Real
+		put sMouseY-tScrollbarSpaceTop into tNewScrollbarY
+		if tNewScrollbarY < tScrollbarSpaceTop then
+			put tScrollbarSpaceTop into tNewScrollbarY
+		else if tNewScrollbarY > tScrollbarSpaceTop+tScrollbarSpace then
+			put tScrollbarSpaceTop+tScrollbarSpace into tNewScrollbarY
+		end if
+		
+		// Calculate the new top position of list
+		
+		put tNewScrollbarY / tScrollbarSpace into tScrollPositionRatio
+		put mDataTravel * tScrollPositionRatio into mViewTopPosition
+	
+		redraw all
+	end if
+end handler
+
+public handler OnMouseUp() as undefined
+	if mDragging is true then
+		redraw all
+	end if
+	put false into mDragging
+end handler
+
+public handler OnMouseCancel() as undefined
+	if mDragging is true then
+		redraw all
+	end if
+	put false into mDragging
+end handler
+
+public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) as undefined
+	if pDeltaY < 0 then
+		subtract mRowHeight from mViewTopPosition
+	else
+		add mRowHeight to mViewTopPosition
+	end if
+	if mViewTopPosition < 0 then 
+		put 0 into mViewTopPosition
+	end if
+	redraw all
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Display calculations
+--
+--------------------------------------------------------------------------------
+
+private handler updateParameters() as undefined
+	put the number of elements in mDataList into mDataCount
+	put mRowHeight * mDataCount into mDataHeight
+	put the height of my bounds into mViewHeight
+	put the width of my bounds into mViewWidth
+	put mViewWidth * 0.05 into mMargin
+	if mMargin > 20 then
+		put 20 into mMargin
+	else if mMargin < 5 then
+		put 5 into mMargin
+	end if
+	put mDataHeight - mViewHeight into mDataTravel
+	if mDataTravel < 0 then
+		put 0 into mDataTravel
+	end if	
+	put false into mRecalculate
+end handler
+
+private handler initialiseConstants() as undefined
+	put true into mRecalculate
+	put 40 into mRowHeight
+	put false into mDragging
+end handler
+
+private handler scrollbarRect() as Rectangle
+	variable tScrollbarRatio as Real
+	put mViewHeight / mDataHeight into tScrollbarRatio
+	if tScrollbarRatio > 1 then
+		put 1 into tScrollbarRatio
+	end if
+	
+	variable tScrollbarHeight as Real
+	put mViewHeight * tScrollbarRatio into tScrollbarHeight
+	if tScrollbarHeight < 25 then
+		put 25 into tScrollbarHeight
+	end if
+	
+	variable tScrollPositionRatio as Real
+	put mViewTopPosition / mDataTravel into tScrollPositionRatio
+	
+	variable tScrollbarSpace as Real
+	variable tScrollbarY as Real
+	put mViewHeight - tScrollbarHeight into tScrollbarSpace
+	put tScrollbarSpace * tScrollPositionRatio into tScrollbarY
+
+	return rectangle [mViewWidth-10,tScrollbarY,mViewWidth-5,tScrollbarY+tScrollbarHeight]
+end handler
+
+private handler scrollbarHeight() as Real
+	variable tScrollbarHeight as Real
+	variable tScrollbarRatio as Real
+
+	put mViewHeight / mDataHeight into tScrollbarRatio
+	
+	if tScrollbarRatio >= 1 or tScrollbarRatio <= 0 then 
+		return mViewHeight
+	end if
+	
+	put mViewHeight * tScrollbarRatio into tScrollbarHeight
+	
+	if tScrollbarHeight < 25 then
+		return 25
+	else
+		return tScrollbarHeight
+	end if
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Utilities for widget display
+--
+--------------------------------------------------------------------------------
+
+private handler getPaint(pLocation, pType) as Paint
+	if pLocation is "background" then
+		if pType is "fill" then
+			return solid paint with stringToColor("248,248,248")
+		else if pType is "stroke" then
+			return solid paint with stringToColor("178,178,178")
+		end if
+	else if pLocation is "row" then
+		if pType is "fill" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "stroke" then
+			return solid paint with stringToColor("200,199,204")
+		end if
+	else if pLocation is "text" then
+		if pType is "fill" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "selected-fill" then
+			return solid paint with stringToColor("0,122,255")
+		end if
+	else if pLocation is "scrollbar" then
+		if pType is "fill" then
+			return solid paint with stringToColor("0,0,0,0.2")
+		end if
+	end if
+	
+	return solid paint with stringToColor("255,100,200")
+end handler
+
+private handler getFontName() as String
+	return "Helvetica Neue"
+	
+	return the name of the font of this canvas
+end handler
+
+private handler stringToColor(in pString as String) as Color
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 1.0 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Handlers for data management and array/list conversions
+--
+--------------------------------------------------------------------------------
+
+private handler setValueOfArray(in pKey as String, in pValue as any, inout xArray as Array)
+	put pValue into xArray[pKey]
+end handler
+
+// Given a 'path' of array keys as a list, and a value, create an array tArray such that
+// 	the value of tArray[element 1 of pPath][element 2 of pPath]... is pValue
+private handler convertPathToElement(in pPath as List, in pValue as any) as Array
+	variable tArray as Array
+	put the empty array into tArray
+	if the number of elements in pPath is 1 then
+		put pValue into tArray[element 1 of pPath]
+	else
+		put convertPathToElement(element 2 to -1 of pPath, pValue) into tArray[element 1 of pPath]
+	end if
+	return tArray
+end handler
+
+// Convert a list, as used by the widget to an array.
+// mData should always be the result of calling this on mDataList
+private handler convertListToArray(in pList as List) as Array
+	variable tArray as Array
+	put the empty array into tArray
+	
+	variable tElement as any
+	repeat for each element tElement in pList
+		if tElement["value"] is a list then
+			put convertListToArray(tElement["value"]) into tArray[tElement["key"]]
+		else
+			put tElement["value"] into tArray[tElement["key"]]
+		end if	
+	end repeat
+	
+	return tArray
+end handler
+
+// Return the whole stored array
+private handler getArrayData() as Array
+	return mData
+end handler
+
+// Convert an array to a list, as used by this widget. Ignoring the 'folded' parameter, 
+// mDataList should always be the result of calling this on mData
+private handler convertArrayToList(in pArray as Array, in pFolded as Boolean) as List
+	variable tList as List
+	put the empty list into tList
+	
+	variable tKeys as List
+	put the keys of pArray into tKeys
+	sort tKeys in ascending order
+	
+	variable tKey as String
+	variable tElement as Array
+	
+	repeat for each element tKey in tKeys
+		put the empty array into tElement
+		put tKey into tElement["key"]
+		put pFolded into tElement["folded"]
+			
+		if pArray[tKey] is an array then
+			put convertArrayToList(pArray[tKey], pFolded) into tElement["value"]
+		else
+			put pArray[tKey] into tElement["value"]
+		end if	
+		push tElement onto tList	
+	end repeat
+	
+	return tList
+end handler
+
+// Replace the existing data wholesale with a new array pData
+private handler setArrayData(in pData as Array) as undefined
+	put pData into mData
+	put convertArrayToList(pData, true) into mDataList	
+	put true into mRecalculate
+end handler
+
+handler type TreeApply(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
+
+private handler removeKey(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
+	delete element pListElt of xList
+	delete xArray[pArrayKey]
+end handler
+
+private handler unfoldKey(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
+	setValueOfArray("folded", false, element pListElt of xList)
+end handler
+
+private handler foldKey(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
+	setValueOfArray("folded", true, element pListElt of xList)
+end handler
+
+// Simply delete the array key on the given path
+private handler removePath(in pPath as List)
+	applyOnPath(removeKey, pPath, mDataList, mData)
+end handler
+
+// Unfold the key at the target path
+private handler unfoldPath(in pPath as List)
+	applyOnPath(unfoldKey, pPath, mDataList, mData)
+end handler
+
+// Fold the key at the target path
+private handler foldPath(in pPath as List)
+	applyOnPath(foldKey, pPath, mDataList, mData)
+end handler
+
+// Recursive implementation of performing an action on the given path. 
+// Acts on a list (in the format used by this widget) and an array simultaneously.
+// We are quite lax with checking here, since this will only be used internally 
+// 	after a delete action happens, and so the element should exist by definition.
+private handler applyOnPath(in pHandler as TreeApply, in pPath as List, inout xList as List, inout xArray as Array)
+	variable tFirstKey as String
+	put element 1 of pPath into tFirstKey
+	
+	variable tCount as Integer
+	variable tMatch as Integer
+	variable tElement
+	put 0 into tCount
+	repeat for each element tElement in xList
+		add 1 to tCount
+		if tElement["key"] is tFirstKey then
+			put tCount into tMatch
+		end if	
+	end repeat
+	
+	if tMatch is defined then
+		if the number of elements in pPath is 1 then
+			pHandler(tMatch, tFirstKey, xList, xArray)
+		else
+			__applyOnPath(pHandler, element 2 to -1 of pPath, element tMatch of xList, xArray[tFirstKey])
+		end if
+	end if
+end handler
+
+private handler __applyOnPath(in pHandler as TreeApply, in pPath as List, inout xListArray as List, inout xArray as Array)
+	applyOnPath(pHandler, pPath, xListArray["value"], xArray)
+end handler
+
+// Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
+// 	to reflect the action of putting pValue into mData[element 1 of pPath][element 2 of pPath]...
+private handler setDataOnPath(in pPath as List) as undefined
+	
+	// pPath having 1 element is an error, as that means mData is just a string rather than an array
+	if the number of elements in pPath is 1 then
+		return
+	end if
+	
+	// The last element of pPath is the actual value, the rest of it is the keys.
+	variable tActualPath as List
+	put element 1 to -2 of pPath into tActualPath
+	
+	variable tValue as String
+	put element -1 of pPath into tValue
+	
+	// Simultaneously adjust the backing list and array to reflect the added value.
+	setDataListOnPath(tActualPath, tValue, mDataList, mData)
+
+end handler
+
+// Recursive implementation of setting data on a given path. 
+// Acts on a list (in the format used by this widget) and an array simultaneously.
+private handler setDataListOnPath(in pPath as List, in pValue as any, inout xList as List, inout xArray as Array) as undefined
+
+	variable tElement as Array
+	variable tCount as Integer
+	variable tNewElement as Array
+	
+	repeat with tCount from 1 up to the number of elements in xList
+		put element tCount of xList into tElement
+		
+		// The easy case - just insert the new element
+		if tElement["key"] > element 1 of pPath then
+			put convertPathToElement(pPath, pValue) into tNewElement
+			splice convertArrayToList(tNewElement, false) before element tCount of xList
+			put tNewElement into xArray[element 1 of pPath]
+			return
+			
+		// We already have a key for the start of this path
+		else if tElement["key"] is element 1 of pPath then
+			// The new element replaces the old one if the new one is just a string...
+			if the number of elements in pPath is 1 then
+				put convertPathToElement(element 2 to -1 of pPath, pValue)into tNewElement	
+				put tNewElement into xArray[element 1 of pPath]
+				put pValue into tElement["value"]
+			// ...or if the old one was just as string.
+			else if not tElement["value"] is a list then
+				put convertPathToElement(element 2 to -1 of pPath, pValue)into tNewElement
+				put convertArrayToList(tNewElement, false) into tElement["value"]
+				put tNewElement into xArray[element 1 of pPath]
+			// Otherwise, go one step further into the path and set
+			else
+				setDataListOnPath(element 2 to -1 of pPath, pValue, tElement["value"], xArray[element 1 of pPath])
+			end if
+			return
+		end if
+	end repeat
+	
+	// If we reached the end of the list then append this to the end
+	put convertPathToElement(pPath, pValue) into tNewElement
+	splice convertArrayToList(tNewElement, false) after element -1 of xList
+	put tNewElement into xArray[element 1 of pPath]
+end handler
+
+end widget
