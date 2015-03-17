@@ -1,0 +1,33 @@
+Name: repeatCount
+
+Type: property
+
+Syntax: set the repeatCount of <image> to <numberOfCycles> 
+
+Summary: Specifies the number of times an <animated GIF> <image> repeats.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the repeatCount of image 1 to 0 -- stop looping
+
+Value: The <repeatCount> of an <image> is an <integer>.
+
+Description:
+Use the <repeatCount> <property> to specify how many times an <animated GIF> <image> should repeat when it's displayed, or to stop it from repeating.
+
+If the <repeatCount> is positive, the <image> repeats the specified number of times. If the <repeatCount> is <negative>, the <image> continues repeating indefinitely while it is being displayed.
+
+If the <repeatCount> is zero, the <image> does not repeat at all. If you set the <repeatCount> of an <animated GIF> <image> to zero while it is playing, it stops repeating immediately.
+
+If the contents of the image is not an animated GIF, the setting of the <repeatCount> <property> has no effect.
+
+References: currentFrame (property), looping (property), image (keyword), integer (keyword), property (glossary), animated GIF (glossary), negative (glossary)
+
+Tags: multimedia

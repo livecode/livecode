@@ -1,0 +1,30 @@
+Name: playerProgressChanged
+
+Type: message
+
+Syntax: playerProgressChanged
+
+Summary: Sent when the 'loadState' property has changed.
+
+Introduced: 4.6
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+on playerProgressChanged
+    answer "Check the value of the loadState" with "Okay"
+end playerProgressChanged
+
+Description:
+Handle the <playerProgressChanged> message when the loadState of the player has changed. 
+
+You should query the <loadState> to determine which of the states have changed:
+    * playable - enough data is available to start playing, but it may run out before playback finishes
+    * playthrough - enough data has been buffered for playback to continue uninterrupted
+    * stalled - buffer of data has stalled and playback may pause automatically if the player runs out of data
+
+Zero or more of these are returned in a comma delimited string value.
+
+References: playerFinished (message), playerError (message), playerLeaveFullscreen (message), playerStopped (message), playerMovieChanged (message), playerPropertyAvailable (message), playerEnterFullscreen (message), loadState (function)

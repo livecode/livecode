@@ -1,0 +1,52 @@
+Name: +
+
+Type: operator
+
+Syntax: <number1> + <number2> 
+
+Summary: Adds two numbers.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+# Adding two literals
+put 2 + 2 into fourContainer
+
+Example:
+# Adding a literal to a variable
+set the layer of field myNumber to (myNumber + 2)
+
+Example:
+# Adding two arrays
+local tArray1, tArray2, tArray3
+put 5 into tArray1["One"]
+put 10 into tArray1["Two"]
+put 6 into tArray2["One"]
+put 11 into tArray2["Two"]
+put tArray1 + tArray2 into tArray3
+put tArray3["One"] & comma & tArray3["Two"]
+# -&gt; 11,21
+
+Parameters:
+number1: The operands number1 and number2 are literal numbers, or expressions that evaluate to numbers, or arrays containing numbers.
+number2: 
+
+Description:
+Use the <+> (plus) <operator> to add two numbers, or to add two <array|arrays> containing numbers.
+
+To add a number to the contents of a container, use the add <command> instead.
+
+If either <number1> or <number2> is an <array>, each of the <array> <element(glossary)|elements> must be a number. If a number is added to an <array>, the number is added to each <element(keyword)>. If an <array> is added to an <array>, both <array|arrays> must have the same number of <element(glossary)|elements> and the same dimension, and each <element(keyword)> in one <array> is added to the corresponding <element(keyword)> of the other <array>.
+
+If an element of one array is empty, the <+> <operator> treats its contents as zero.
+
+Changes:
+The option to add arrays was introduced in version 1.1. In previous versions, only single numbers could be used with the + operator.
+
+References: element (keyword), - (operator), () (operator), union (command), sum (function), operator (glossary), array (glossary), command (glossary), element (glossary)
+
+Tags: math

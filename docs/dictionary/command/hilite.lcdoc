@@ -1,0 +1,34 @@
+Name: hilite
+
+Type: command
+
+Syntax: hilite <button> 
+
+Summary: <highlight|Highlights> a <button>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+hilite button "Overlay"
+
+Example:
+hilite button nextButtonToShow
+
+Example:
+hilite button ID (the buttonRecord of this card)
+
+Parameters:
+button: Any button reference.
+
+Description:
+Use the <hilite> <command> to draw attention to a <button(keyword)>, or to emulate the action of a <button(keyword)> when it's being pressed, or to turn on a <checkbox> or <radio button>.
+
+The <hilite> <command> sets the <button(object)|button's> <hilite> <property> to true.
+
+References: autoHilite (property), hilite (property), button (keyword), enable (command), unhilite (command), select (command), button (object), property (glossary), highlight (glossary), radio button (glossary), command (glossary), checkbox (glossary)
+
+Tags: ui

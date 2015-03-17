@@ -23,35 +23,35 @@ module com.livecode.string
 
 use com.livecode.foreign
 
-public foreign handler MCStringExecPutStringBefore(in Source as String, inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCStringExecPutStringAfter(in Source as String, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCStringExecPutStringBefore(in Source as String, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCStringExecPutStringAfter(in Source as String, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringExecReplace(in Pattern as String, in Replacement as String, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCStringExecReplace(in Pattern as String, in Replacement as String, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringEvalConcatenate(in Left as String, in Right as String, out Result as String) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalConcatenateWithSpace(in Left as String, in Right as String, out Result as String) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalConcatenate(in Left as String, in Right as String, out Result as String) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalConcatenateWithSpace(in Left as String, in Right as String, out Result as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringEvalLowercaseOf(in Source as String, out Result as String) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalUppercaseOf(in Source as String, out Result as String) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalLowercaseOf(in Source as String, out Result as String) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalUppercaseOf(in Source as String, out Result as String) returns nothing binds to "<builtin>"
 
 // The following all need some notion of context 
-public foreign handler MCStringEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringEvalOffset(in Needle as String, in Source as String, out Result as LCIndex) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalOffsetAfter(in Needle as String, in After as LCIndex, in Source as String, out Result as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalOffset(in Needle as String, in Source as String, out Result as LCIndex) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalOffsetAfter(in Needle as String, in After as LCIndex, in Source as String, out Result as LCIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringEvalLastOffset(in Needle as String, in Source as String, out Result as LCIndex) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalLastOffsetBefore(in Needle as String, in Before as LCIndex, in Source as String, out Result as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalLastOffset(in Needle as String, in Source as String, out Result as LCIndex) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalLastOffsetBefore(in Needle as String, in Before as LCIndex, in Source as String, out Result as LCIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringEvalContainsChars(in Source as String, in Needle as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalContainsChars(in Source as String, in Needle as String, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringEvalIsEqualTo(in Left as String, in Right as String, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsNotEqualTo(in Left as String, in Right as String, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsLessThan(in Left as String, in Right as String, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCStringEvalIsGreaterThan(in Left as String, in Right as String, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsEqualTo(in Left as String, in Right as String, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalIsNotEqualTo(in Left as String, in Right as String, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalIsLessThan(in Left as String, in Right as String, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalIsGreaterThan(in Left as String, in Right as String, out Value as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCStringEvalEmpty(out Value as String) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalEmpty(out Value as String) returns nothing binds to "<builtin>"
 
 --
 

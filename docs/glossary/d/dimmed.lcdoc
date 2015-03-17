@@ -1,0 +1,10 @@
+Name: dimmed
+
+Synonyms: dimmed,dim,dimming,gray out,grayed out,graying out,grays out,grayed-out
+
+Type: glossary
+
+Description:
+Displayed in a special way that indicates that the dimmed item is disabled. Usually, dimmed objects are grayed out: gray is substituted for black when drawing the button, menu item, or other disabled portion of the screen.
+
+Tags: ui

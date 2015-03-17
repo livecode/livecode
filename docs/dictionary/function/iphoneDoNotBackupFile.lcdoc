@@ -1,0 +1,35 @@
+Name: iphoneDoNotBackupFile
+
+Type: function
+
+Syntax: iphoneDoNotBackupFile( <filename> )
+
+Summary: Returns a boolean value specifying whether or not the given file has been flagged to prevent backup.
+
+Introduced: 5.5.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+get iphoneDoNotBackupFile(tMyFile)
+
+Example:
+put iphoneDoNotBackupFile(specialFolderPath("documents") & "/appointments.txt") into tAppointmentsFlagged
+
+Parameters:
+filename: The fulle path to the flagged file
+
+Returns:
+true - the file has been flagged to prevent backup to the Cloud.
+false - the file has not been flagged to prevent backup to the Cloud.
+
+Description:
+Use the <iphoneDoNotBackupFile> function to determine whether the given file has been flagged to prevent backup
+
+The <iphoneDoNotBackupFile> function determines whether or not the given file has been flagged to prevent backup to the Cloud.
+
+The <iphoneDoNotBackupFile> function retirms the value of the file's "do not backup" flag.
+
+References: iphoneSetFileDataProtection (command), iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function), protectedDataWillBecomeUnavailable (message), protectedDataDidBecomeAvailable (message)

@@ -1,0 +1,38 @@
+Name: show
+
+Type: command
+
+Syntax: show <object> [with visual [effect] <effectName> [<speed>] [to <finalImage>]]
+
+Summary: Makes an <object> visible.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+show stack "project1"
+
+Example:
+show image "picture" with visual effect barn door open
+
+Parameters:
+object: Any open stack, or any control in an open stack.
+effectName: The effectName, speed, and finalImage are described in the visual effect command. These three parameters operate the same way as they do with the visual effect command.
+speed: 
+finalImage: 
+
+Description:
+Use the <show> <command> to show invisible <object|objects>.
+
+Showing an object sets its visible <property> to true. You can also set the <showInvisibles> <property> to true to override the <visible> <property> and show all <object|objects>.
+
+You can show a card without causing a script error, but doing so has no effect.
+
+Showing a group shows all the controls in the group whose visible <property> is true.
+
+References: showPict (property), toolTip (property), imageSource (property), showInvisibles (property), visible (property), black (keyword), hide (command), answer effect (command), show groups (command), show cards (command), show taskbar (command), object (object), command (glossary), property (glossary)
+
+Tags: ui

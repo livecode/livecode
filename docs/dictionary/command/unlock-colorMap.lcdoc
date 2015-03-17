@@ -1,0 +1,30 @@
+Name: unlock colorMap
+
+Type: command
+
+Syntax: unlock colorMap
+
+Summary: Sets the <lockColorMap> <property> to false, causing the screen to be <redraw|redrawn> with the new <color table> every time the <color table> is changed.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+unlock colorMap
+
+Example:
+if the screenDepth &lt;= 4 then unlock colorMap
+
+Description:
+Use the <unlock colorMap> <command> to allow the <color table> to change to accommodate newly displayed <image|images> and movies.
+
+The <unlock colorMap> <command> sets the <lockColorMap> <property> to false.
+
+When all pending handlers are finished executing, the <lockColorMap> <property> is set to false automatically.
+
+References: lockColorMap (property), unlock screen (command), unlock cursor (command), lock colorMap (command), screenDepth (function), screenColors (function), property (glossary), redraw (glossary), command (glossary), color table (glossary), image (object)
+
+Tags: ui

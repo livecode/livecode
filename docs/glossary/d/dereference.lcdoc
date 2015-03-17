@@ -1,0 +1,14 @@
+Name: dereference
+
+Synonyms: dereference,dereferencing,dereferenced
+
+Type: glossary
+
+Description:
+To access a value that a <variable> points to. 
+ 
+For example, if a <variable> contains a <property> name, the <variable> is said to reference the <property>. Dereferencing the <variable|variable's> value means getting the value of the referenced <property>.
+
+References: property (glossary), variable (glossary)
+
+Tags: properties

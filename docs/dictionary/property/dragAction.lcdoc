@@ -1,0 +1,34 @@
+Name: dragAction
+
+Type: property
+
+Syntax: set the dragAction to {<none> | <move> | <copy> | <link>}
+
+Summary: Specifies what action will be performed upon an object when it is dragged.
+
+Introduced: 2.9
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+set the dragAction to "move"
+
+Example:
+if word 1 of the target is "button" then
+  set the dragAction to "none"
+end if
+
+Description:
+The <dragAction> property is used to indicate which action should be (or has been) performed on the data.  It can be one of :
+        none - the target application does not want the data
+        move - the target application wants to move the data
+        copy - the target application wants to copy the data
+        link - the target application wants to link the data
+
+When acting as the source application, query the <dragAction> property in the <dragEnd (message)> handler to determine what action the target application performed.
+
+When acting as the target application, set the <dragAction> property in <dragEnter>, <dragMove> or <dragLeave> to indicate what you may do with the data if it is dropped; set the <dragAction> property in the <dragDrop> handler to indicate what you did with the data.
+
+References: allowableDragActions (property), dragDrop (message), dragEnter (message), dragMove (message), dragLeave (message), dragEnd (message), dragStart (message)

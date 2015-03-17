@@ -16,29 +16,29 @@
 
 module com.livecode.encoding
 
-foreign handler EvalEncodedOfValue(in Target as any, out Value as data) as undefined binds to "<builtin>"
-foreign handler EvalDecodedOfValue(in Target as data, out Value as any) as undefined binds to "<builtin>"
+foreign handler EvalEncodedOfValue(in Target as any, out Value as data) returns nothing binds to "<builtin>"
+foreign handler EvalDecodedOfValue(in Target as data, out Value as any) returns nothing binds to "<builtin>"
 
-foreign handler ExecCompress(inout Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecompress(inout Target as data) as undefined binds to "<builtin>"
+foreign handler ExecCompress(inout Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecompress(inout Target as data) returns nothing binds to "<builtin>"
 
-foreign handler ExecEncodeUsingBase64(in Source as data, out Value as string) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingBase64(in Source as string, out Value as data) as undefined binds to "<builtin>"
+foreign handler ExecEncodeUsingBase64(in Source as data, out Value as string) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingBase64(in Source as string, out Value as data) returns nothing binds to "<builtin>"
 
-foreign handler ExecEncodeUsingBinary(in Source as data, in Format as string, out Value as string) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingBinary(in Source as string, in Format as string, out Value as data) as undefined binds to "<builtin>"
+foreign handler ExecEncodeUsingBinary(in Source as data, in Format as string, out Value as string) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingBinary(in Source as string, in Format as string, out Value as data) returns nothing binds to "<builtin>"
 
-foreign handler ExecEncodeUsingUTF8(in Source as string, out Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingUTF8(in Source as data, out Target as string) as undefined binds to "<builtin>"
-foreign handler ExecEncodeUsingUTF16(in Source as string, out Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingUTF16(in Source as data, out Target as string) as undefined binds to "<builtin>"
-foreign handler ExecEncodeUsingUTF32(in Source as string, out Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingUTF32(in Source as data, out Target as string) as undefined binds to "<builtin>"
-foreign handler ExecEncodeUsingASCII(in Source as string, out Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingASCII(in Source as data, out Target as string) as undefined binds to "<builtin>"
+foreign handler ExecEncodeUsingUTF8(in Source as string, out Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF8(in Source as data, out Target as string) returns nothing binds to "<builtin>"
+foreign handler ExecEncodeUsingUTF16(in Source as string, out Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF16(in Source as data, out Target as string) returns nothing binds to "<builtin>"
+foreign handler ExecEncodeUsingUTF32(in Source as string, out Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF32(in Source as data, out Target as string) returns nothing binds to "<builtin>"
+foreign handler ExecEncodeUsingASCII(in Source as string, out Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingASCII(in Source as data, out Target as string) returns nothing binds to "<builtin>"
 
-foreign handler EvalURLEncoded(in Target as string, out Value as string) as undefined binds to "<builtin>"
-foreign handler EvalURLDecoded(in Target as string, out Value as string) as undefined binds to "<builtin>"
+foreign handler EvalURLEncoded(in Target as string, out Value as string) returns nothing binds to "<builtin>"
+foreign handler EvalURLDecoded(in Target as string, out Value as string) returns nothing binds to "<builtin>"
 
 --
 

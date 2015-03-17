@@ -1,0 +1,28 @@
+Name: proportionalThumbs
+
+Type: property
+
+Syntax: set the proportionalThumbs to {true | false}
+
+Summary: Specifies whether the draggable <scrollbar thumb|thumbs> in <scrollbar|scrollbars> are a fixed size, or a size proportional to the amount of content shown.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the proportionalThumbs to true
+
+Value (bool):The <proportionalThumbs> is true or false.
+By default, the <proportionalThumbs> <property> is set to false on <Mac OS|Mac OS systems>, true on <Unix> and <Windows|Windows systems>.
+
+Description:
+Use the <proportionalThumbs> <property> to control the <appearance> of <scrollbar(object)|scrollbars>.
+
+If the <proportionalThumbs> is set to true, the <scrollbar thumb> is sized proportionately to the visible content of its <field>, group, or <stack>. If almost all the content is currently visible, the <scrollbar thumb|thumb> is large and fills most of the <scrollbar(keyword)>; if only a small percentage of content is visible, the <scrollbar thumb|thumb> is small.
+
+References: thumbSize (property), field (keyword), scrollbar (keyword), scrollbar (object), stack (object), property (glossary), Unix (glossary), appearance (glossary), Windows (glossary), Mac OS (glossary), scrollbar thumb (glossary)
+
+Tags: ui

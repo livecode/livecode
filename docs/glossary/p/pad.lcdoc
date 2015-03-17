@@ -1,0 +1,14 @@
+Name: pad
+
+Synonyms: padded,padding,pad
+
+Type: glossary
+
+Description:
+To add data to a <value> in order to come up to an even amount. 
+ 
+For example, if a <variable> is supposed to hold 10 <character|characters>, but the actual data is only six <character|characters>, you can pad the <variable> by adding four spaces to the end to make it the right size.
+
+References: variable (glossary), value (glossary), character (glossary)
+
+Tags: text processing

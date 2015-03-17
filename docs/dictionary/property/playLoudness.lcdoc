@@ -1,0 +1,36 @@
+Name: playLoudness
+
+Type: property
+
+Syntax: set the playLoudness [of {<audioClip> | <player>}] to <percentage> 
+
+Summary: Specifies the volume of sounds played by the play command.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the playLoudness to 100 -- maximum loudness
+
+Example:
+set the playLoudness of audioclip ID 1054 to 50
+
+Value:
+The playLoudness is an integer between zero and 100.
+By default, the playLoudness property is a number corresponding to the current system setting.
+
+Description:
+Use the playLoudness property to set the speaker volume.
+
+Setting the playLoudness to zero turns off sounds.
+
+If no audio clip, video clip, or player is specified, the setting of the playLoudness property applies to all sounds LiveCode makes, including those made with the <beep> and <play> commands.
+
+Users can manually set the playLoudness of a <player> using the slider on the left side of the <player|player's> controller bar, which is visible if the <player|player's> <showController> property is true.
+
+References: showController (property), play (command), beep (command), recordLoudness (function), player (object)
+
+Tags: multimedia

@@ -1,0 +1,25 @@
+Name: shadow
+
+Type: keyword
+
+Syntax: shadow
+
+Summary: Used with the <style> <property> to indicate a <field> or <button> with a drop shadow.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the style of field "Label" to shadow
+
+Description:
+Use the <shadow> <keyword> to create a <field> or <button> with a drop shadow.
+
+Setting a control's <style> <property> to "shadow" sets its <shadow> <property> to true.
+
+References: style (property), transparent (keyword), button (keyword), field (keyword), shadow (keyword), property (glossary), keyword (glossary)
+
+Tags: ui

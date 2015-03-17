@@ -1,0 +1,32 @@
+Name: systemFileSelector
+
+Type: property
+
+Syntax: set the systemFileSelector to {true | false}
+
+Summary: Specifies whether the <ask file>, <answer file>, and <answer folder> <command|commands> use the standard <file dialog box|file dialog boxes> built in to the current operating system, or a built-in <file dialog box>.
+
+Introduced: 1.0
+
+OS: mac,windows
+
+Platforms: desktop,server
+
+Example:
+set the systemFileSelector to false
+
+Value (bool):The <systemFileSelector> is true or false.
+By default, the <systemFileSelector> <property> is set to true.
+
+Description:
+Use the <systemFileSelector> <property> to control the <appearance> of <file dialog box|standard file dialogs> on <Mac OS>, <OS X>, or <Windows|Windows systems>, or to make a <cross-platform> application use the same <file dialog box|file dialog boxes> on all <platform(glossary)|platforms> instead of using the <platform(function)> standard.
+
+If the <systemFileSelector> <property> is set to true, the operating system's own <file dialog box|standard file dialogs> are used for selecting or naming a <file> or <folder>. If the <systemFileSelector> is false, the <application> uses its own <file dialog box|file dialog boxes>.
+
+The setting of this property affects all file dialog boxes used in LiveCode, including dialogs displayed by the <ask file>, <answer file>, and <answer folder> <command|commands>, as well as <dialog box|dialog boxes> displayed by <menu item|menu items> such as "Save" and "Open Stack".
+
+The setting of this property has no effect on Unix systems, where the application's built-in dialog box is always used even if the <systemFileSelector> is set to true.
+
+References: file (keyword), ask file (command), answer file (command), answer folder (command), platform (function), application (glossary), property (glossary), dialog box (glossary), command (glossary), platform (glossary), Windows (glossary), cross-platform (glossary), OS X (glossary), appearance (glossary), menu item (glossary), file dialog box (glossary), Mac OS (glossary), folder (glossary)
+
+Tags: file system

@@ -1,0 +1,14 @@
+Name: bitmap
+
+Synonyms: bit-map,bitmapped,bit-mapped,bitmap,raster graphics,raster
+
+Type: glossary
+
+Description:
+A picture consisting of rows and columns of <pixel|pixels>, with a color assigned to each <pixel>. 
+ 
+(If the picture is black-and-white, each pixel can be represented by one bit: 1 for black, 0 for white.)
+
+References: pixel (glossary)
+
+Tags: multimedia

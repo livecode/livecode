@@ -1,0 +1,23 @@
+Name: keyboardDeactivated
+
+Type: message
+
+Syntax: keyboardDeactivated
+
+Summary: Sent to the <current card> of the defaultStack when the keyboard is hidden
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on keyboardDeactivated
+   answer "The keyboard was deactivated" with "Okay"
+end keyboardDeactivated
+
+Description:
+Handle the <keyboardDeactivated> message to move controls or change the display layout to take account of the restricted screen area that becomes available when the keyboard is hidden.
+
+References: mobileSetKeyboardType (command), iphoneSetKeyboardReturnKey (command), keyboardActivated (message), current card (glossary)

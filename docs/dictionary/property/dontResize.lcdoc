@@ -1,0 +1,34 @@
+Name: dontResize
+
+Type: property
+
+Syntax: set the dontResize of <graphic> to {true | false}
+
+Summary: Specifies whether an irregular <polygon> <graphic> is resized when its <vertex|vertexes> are changed.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the dontResize of graphic 12 to true
+
+Value (bool):The <dontResize> of a <graphic(keyword)> is true or false.
+By default, the <dontResize> <property> of newly created <graphic(object)|graphics> is set to false.
+
+Description:
+Use the <dontResize> <property> to automatically resize and reposition a <graphic(keyword)> when you set its <points> <property>.
+
+You can reshape a graphic whose <style> <property> is set to polygon by changing its <points> or <relativePoints> <property>.
+
+If you change the graphic's <points> or <relativePoints> <property>, and the <graphic(object)|graphic's> <dontResize> <property> is set to false, the <graphic(keyword)> is resized and repositioned if necessary to accommodate the new shape.
+
+If you change the <points> or <relativePoints> and the <dontResize> is false, the <graphic(keyword)> is not resized to fit the new set of <vertex|vertexes>. This may result in parts of the shape being cut off at the boundaries of the <graphic(keyword)>.
+
+References: points (property), style (property), relativePoints (property), polygon (keyword), graphic (keyword), drag (command), graphic (object), vertex (glossary), property (glossary)
+
+Tags: ui

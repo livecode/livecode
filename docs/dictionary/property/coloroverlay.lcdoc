@@ -1,0 +1,46 @@
+Name: colorOverlay
+
+Type: property
+
+Syntax: set the colorOverlay of object to <propertiesArray> 
+
+Syntax: set the colorOverlay[<propertyName>] of object to <propertyValue> 
+
+Summary: Specifies the color overlay to use for an object.
+
+Associations: field,button,graphic,scrollbar,player,image
+
+Introduced: 4.0.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+set the colorOverlay of button "Ok" to tOverlayPropertiesArray
+
+Example:
+set the colorOverlay["color"] of me to "255,0,0"
+
+Description:
+Use the <colorOverlay> property to overlay a flat color on an object. The <colorOverlay> is an array style property, each key of the array controls a different <colorOverlay> parameter that will affect its final appearance. The easiest way to adjust these properties is by using the Graphic Effects card of the property inspector which has full control over each parameter. To control the effect by script use the following properties:
+
+colorOverlay["color"]
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The color of the overlay, in the format red,green,blue where each value is between 0 and 255.
+
+colorOverlay["blendMode"]
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How the overlay is blended with the object. This is one of the following values:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "normal" : the glow is laid directly over the object.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "multiply" : this results in a darkening effect
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "colorDodge" : this results in a lightening effect
+
+colorOverlay["opacity"]
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How opaque the overlay is. The value is between 0 (fully transparent) and 255 (fully opaque).
+
+References: innerShadow (property), innerGlow (property), dropShadow (property), outerGlow (property), blendLevel (property), ink (property)

@@ -1,0 +1,10 @@
+Name: operation
+
+Synonyms: operation
+
+Type: glossary
+
+Description:
+An action performed on one or more <value|values>.
+
+References: value (glossary)

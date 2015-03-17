@@ -1,0 +1,32 @@
+Name: editScript
+
+Type: message
+
+Syntax: editScript <objectID>, <atItems> 
+
+Summary: Sent to the <current card> when the <object|object's> <script> is opened with the <edit> <command>.
+
+Associations: card
+
+Introduced: 6.5
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on editScript theObject -- save current script before editing
+  set the oldScript of theObject to the script of theObject
+  pass editScript
+end editScript
+
+Parameters:
+objectID: The long ID property of the object whose script is about to be opened.
+atItems: The atItems parameter may be sent if the optional edit script of object at syntax is used. By convention the atItems are used to provide a line and column that a script editor should be opened at.
+
+Description:
+Handle the <editScript> <message> if you want to intercept attempts to edit a <script> via the <message box> or a <handler>.
+
+The <editScript> <message> is sent when you use the <edit> command in a <handler>. However, it is not sent when the <development environment> is active.
+
+References: script (property), message box (keyword), edit (command), object (object), handler (glossary), current card (glossary), message (glossary), command (glossary), development environment (glossary)

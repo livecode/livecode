@@ -1,0 +1,35 @@
+Name: mouseMove
+
+Type: message
+
+Syntax: mouseMove <newMouseH>, <newMouseV> 
+
+Summary: Sent when the user moves the mouse.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on mouseMove -- highlight grouped text
+  if the mouseChunk is not empty and \
+     "link" is among the items of the textStyle of the mouseChunk
+  then set the backgroundColor of the mouseChunk to "yellow"
+end mouseMove
+
+Parameters:
+newMouseH: The horizontal distance in pixels from the left edge of the stack to the mouse pointer's current location.
+newMouseV: The vertical distance in pixels from the top edge of the stack to the mouse pointer's current location.
+
+Description:
+Handle the <mouseMove> <message> if you want to perform some action (such as updating a <field>) when the user moves the mouse, or if you want to keep continuous track of the <mouse pointer|mouse pointer's> position.
+
+The <mouseMove> <message> is sent to the <control> the <mouse pointer> is over, or to the <card> if no <control> is under the <mouse pointer>. The <parameter|parameters> sent with the <mouseMove> <message> describe the <mouse pointer|mouse pointer's> current location.
+
+If the mouse button is down, the <mouseMove> <message> continues to be sent to the <object> that was clicked, even if the <mouse pointer> moves outside that <object>. However, if the <mouse button> was down at the time the <pointer> entered the <control>, no <mouseMove> <message|messages> are sent until the <mouse button> is released while the <pointer> is still in the <control>.
+
+References: card (keyword), pointer (keyword), mouseMove (message), grab (command), mouseCharChunk (function), object (object), parameter (glossary), mouse button (glossary), message (glossary), field (glossary), mouse pointer (glossary), control (glossary)
+
+Tags: ui

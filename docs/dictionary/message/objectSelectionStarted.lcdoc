@@ -1,0 +1,31 @@
+Name: objectSelectionStarted
+
+Type: message
+
+Syntax: objectSelectionStarted
+
+Summary: Sent when, in edit mode, the user drags over a control
+
+Associations: card
+
+Introduced: 6.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+on objectSelectionStarted
+   put "Started selecting" && the time
+end objectSelectionStarted
+
+Description:
+Handle the objectSelectionStarted message if you want to do something when the user starts selection controls by dragging over them.
+
+The <objectSelectionStarted> message is sent to the current card when, in edit mode, the user drags over a control.
+
+>*Note:* The <objectSelectionStarted> message is only available in the IDE.
+
+References: objectSelectionEnded (message)
+
+Tags: ui

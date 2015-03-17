@@ -1,0 +1,14 @@
+Name: home directory
+
+Synonyms: home directory,home directories,homedir,home folder
+
+Type: glossary
+
+Description:
+On <OS X> and <Unix|Unix systems>, the <folder> that belongs to a specific user. 
+ 
+A user's home directory has the same name as the user name.
+
+References: OS X (glossary), Unix (glossary), folder (glossary)
+
+Tags: file system

@@ -1,0 +1,34 @@
+Name: measureText
+
+Type: function
+
+Syntax: measureText(<text>,<object reference>,[<mode>])
+
+Summary: <return|Returns> the width, size or bounds of the text drawn with the effective font attribute of the given object.
+
+Introduced: 6.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put measureText(theText,me) into theTextWidth
+
+Example:
+put measureText(theText,me,"size") into theTextSize
+
+Example:
+put measureText(theText,me,"bounds") into theTextBounds
+
+Parameters:
+text: Any native string. For unicode strings use measureUnicodeText.
+mode: One of: 	 width - (default if not specified) - returns the width of the text size - returns the width,height of the text bounds - returns a rectangle identifying the bounds of the text in the form 0,-ascent,width,descent where ascent and descent are relative to a 0 baseline the text is drawn on.
+object reference: An expression that evaluates to an object reference.
+
+Description:
+Use the <measureText> <function> to find the dimensions of text drawn with the effective font attributes of an object.
+
+References: formattedWidth (property), formattedHeight (property), measureUnicodeText (function), return (glossary), function (control_st)
+
+Tags: ui

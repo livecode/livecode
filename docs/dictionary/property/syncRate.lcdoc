@@ -1,0 +1,29 @@
+Name: syncRate
+
+Type: property
+
+Syntax: set the syncRate to <number> 
+
+Summary: Specifies how often the display is updated during <visual effect>, <drag>, and <move> <command|commands>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the syncRate to 12
+
+Value: The <syncRate> is a positive integer.
+
+Description:
+Use the <syncRate> <property> to specify how often the screen is <redraw|redrawn>.  
+
+Decreasing the <syncRate> reduces the load on the system, but may make the display of movements and visual effects more jerky. 
+
+The default value of <syncRate> is 20.
+
+References: drag (command), visual effect (command), move (command), command (glossary), property (glossary), redraw (glossary)
+
+Tags: multimedia

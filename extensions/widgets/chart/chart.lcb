@@ -19,21 +19,122 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 This widget is a chart.
 */
 
+/*
+Summary: Sets the chart data
+
+Parameters:
+pData: The data that is plotted on the graph.
+
+Description:
+Sets the chartData property of the widget.
+Draws the chart based on pData, where pData is a line delimited list with each line containing a point on the graph.
+e.g.
+x_1, y_1
+x_2, y_2
+x_3, y_3
+draws a line graph with 3 points at (x_1, y_1), (x_2, y_2) and (x_3, y_3)
+
+To draw n lines on the graph, add n y coordinates for each x coordinate
+e.g.
+x_1, y_1a, y_1b
+x_2, y_2a, y_2b
+draws a line with with points at (x_1, y_1a), (x_2, y_2a) and line with points (x_1, y_1b), (x_2, y_2b) on the same set of axes.
+*/
+/*
+Summary: Sets the chart type
+
+Parameters:
+pType: The type of chart.
+
+Description:
+Sets the chartType property of the widget.
+The chart type can be any of the following strings : ...
+*/
+/*
+Summary: Sets the maximum value on the x axis
+
+Parameters:
+pValue: The maximum x value.
+
+Description:
+Sets the xMax property of the widget.
+Draws the x axis with a maximum value as set by pValue.
+*/
+/*
+Summary: Sets the value of the increments on the x axis.
+
+Parameters:
+pValue: The value of the increments on the x axis.
+
+Description:
+Sets the xIncrements property of the widget.
+Draws the increments on the x axis as set by pValue.
+*/
+
+/*
+Summary: Sets the visibility of the vertical grid lines
+
+Parameters:
+pIsVisible: True for visible or false for invisible.
+
+Description:
+Sets the showVGrid property of the widget.
+If pVisible is true, then the vertical grid lines are drawn.
+*/
+
+/*
+Summary: Sets the color of the chart
+
+Parameters:
+pLabels: A comma delimited list of colors.
+
+Description:
+Sets the chartColors property of the widget.
+*/
+/*
+Summary: Sets the visibility of the horizontal grid lines
+
+Parameters:
+pIsVisible: True for visible or false for invisible.
+
+Description:
+Sets the showHGrid property of the widget.
+If pVisible is true, then the horizontal grid lines are drawn.
+*/
+/*
+Summary: Sets the value of the increments on the y axis.
+
+Parameters:
+pValue: The value of the increments on the y axis.
+
+Description:
+Sets the yIncrements property of the widget.
+Draws the increments on the y axis as set by pValue.
+*/
+/*
+Summary: Sets the maximum value on the y axis
+
+Parameters:
+pValue: The maximum y value.
+
+Description:
+Sets the yMax property of the widget.
+Draws the y axis with a maximum value as set by pValue.
+*/
+
 -- declaring extension as widget, followed by identifier
 widget com.livecode.extensions.livecode.chart
---
-
--- adding metadata to ensure the extension displays correctly in livecode
-metadata title is "Chart"
-metadata author is "LiveCode"
-metadata version is "1.0.0"
 --
 
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
---
+
+-- metadata
+metadata title is "Chart"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
 
 -- property declarations
 property chartData		get getChartData	set setChartData
@@ -52,20 +153,20 @@ property chartColors	get mChartColors	set setChartColors
 --
 
 -- private instance variables
-private variable mChartData 	as list
-private variable mChartType 	as string
-private variable mXMax 			as real
-private variable mYMax 			as real
-private variable mXIncrements	as integer
-private variable mYIncrements	as integer
-private variable mShowHGrid		as boolean
-private variable mShowVGrid		as boolean
-private variable mChartColors	as list
+private variable mChartData 	as List
+private variable mChartType 	as String
+private variable mXMax 			as Real
+private variable mYMax 			as Real
+private variable mXIncrements	as Integer
+private variable mYIncrements	as Integer
+private variable mShowHGrid		as Boolean
+private variable mShowVGrid		as Boolean
+private variable mChartColors	as List
 
-private variable mRight 		as real
-private variable mBottom 		as real
-private variable mXInc 			as integer
-private variable mYInc 			as integer
+private variable mRight 		as Real
+private variable mBottom 		as Real
+private variable mXInc 			as Integer
+private variable mYInc 			as Integer
 --
 
 -- constants
@@ -73,9 +174,7 @@ constant kLeft is 20
 constant kTop is 5
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mChartData into rProperties["chartData"]
@@ -90,11 +189,8 @@ public handler OnSave(out rProperties as array)
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
+public handler OnLoad(in pProperties as Array)
 	put pProperties["chartData"] into mChartData
 	put pProperties["chartType"] into mChartType
 	put pProperties["xMax"] into mXMax
@@ -105,28 +201,22 @@ public handler OnLoad(in pProperties as array)
 	put pProperties["showYGrid"] into mShowVGrid
 	put pProperties["chartColors"] into mChartColors
 end handler
-----------
 
-----------
--- this handler is called when the widget is created
 public handler OnCreate()
 	initialiseProperties()
 	initialiseVariables()
 end handler
-----------
 
-----------
--- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	
 	set the antialias of this canvas to false
 	updateVariables()
 	
 	-- draw the increment labels and grid lines 
-	variable tX as integer
+	variable tX as Integer
 	repeat with tX from 0 up to (mXMax/mXIncrements)-1
 		
-		variable tXLabel as string
+		variable tXLabel as String
 		if element tX+1 of element 1 of mChartData is a string then
 			put element tX+1 of element 1 of mChartData into tXLabel
 		else
@@ -146,10 +236,10 @@ public handler OnPaint()
 		
 	end repeat
 	
-	variable tY as integer
+	variable tY as Integer
 	repeat with tY from 1 up to mYMax/mYIncrements
 		
-		variable tYLabel as string
+		variable tYLabel as String
 		put (mYIncrements*tY) formatted as string into tYLabel
 		set the font of this canvas to getFont("increment labels")
 		set the paint of this canvas to getPaint("increment labels")
@@ -182,23 +272,17 @@ public handler OnPaint()
 	--
 	
 end handler
-----------
 
-----------
--- this handler is called when the geometry of the widget is changed
 private handler OnGeometryChanged()
 
 end handler
-----------
 
-----------
--- this handler draws a line chart
 private handler drawLineChart() as undefined
 	
 	set the antialias of this canvas to true
 	
-	variable tN as integer
-	variable tM as integer
+	variable tN as Integer
+	variable tM as Integer
 	repeat with tN from 1 up to (the number of elements in mChartData)-1
 		
 		set the stroke width of this canvas to 2
@@ -221,8 +305,8 @@ private handler drawLineChart() as undefined
 				put tM*mXInc into tXCoord2
 			end if
 			
-			variable tYCoord1 as real
-			variable tYCoord2 as real
+			variable tYCoord1 as Real
+			variable tYCoord2 as Real
 			put 0.5+mBottom-(element tM of element tN+1 of mChartData)*(mBottom-kTop)/mYMax into tYCoord1
 			put 0.5+mBottom-(element tM+1 of element tN+1 of mChartData)*(mBottom-kTop)/mYMax into tYCoord2
 		
@@ -233,16 +317,13 @@ private handler drawLineChart() as undefined
 	
 	set the antialias of this canvas to false 
 end handler
-----------
 
-----------
--- this handler draws a scatter chart
 private handler drawScatterChart() as undefined
 	
 	set the antialias of this canvas to true
 	
-	variable tN as integer
-	variable tM as integer
+	variable tN as Integer
+	variable tM as Integer
 	repeat with tN from 1 up to (the number of elements in mChartData)-1
 		
 		set the paint of this canvas to solid paint with color (element tN of mChartColors)
@@ -256,7 +337,7 @@ private handler drawScatterChart() as undefined
 				put (tM-1)*mXInc into tXCoord
 			end if
 			
-			variable tYCoord as real
+			variable tYCoord as Real
 			put 0.5+mBottom-(element tM of element tN+1 of mChartData)*(mBottom-kTop)/mYMax into tYCoord
 			
 			fill circle path centered at point [tXCoord, tYCoord] with radius 3 on this canvas
@@ -266,23 +347,17 @@ private handler drawScatterChart() as undefined
 	
 	set the antialias of this canvas to false
 end handler
-----------
 
-----------
--- this handler draws a column chart
 private handler drawColumnChart() as undefined
 
 end handler
-----------
 
-----------
--- this handler draws a histogram 
 private handler drawHistogram() as undefined
 	
 	put false into mShowVGrid
 	
-	variable tN as integer
-	variable tM as integer
+	variable tN as Integer
+	variable tM as Integer
 	repeat with tN from 1 up to (the number of elements in mChartData)-1
 		repeat with tM from 1 up to (the number of elements in element tN of mChartData)-1
 			
@@ -301,7 +376,7 @@ private handler drawHistogram() as undefined
 				log "x data needs to be a number"
 			end if
 			
-			variable tYCoord as real
+			variable tYCoord as Real
 			put (element tM+1 of element tN+1 of mChartData)*(mBottom-kTop)/mYMax into tYCoord
 			
 			set the paint of this canvas to solid paint with color (element tN of mChartColors)
@@ -316,11 +391,8 @@ private handler drawHistogram() as undefined
 	end repeat
 
 end handler
-----------
 
-----------
--- this handler returns a path
-private handler getPath(in pObject as string) as Path
+private handler getPath(in pObject as String) as Path
 	if pObject is "x axis" then
 		return line path from point [kLeft, mBottom] to point [mRight, mBottom]
 	else if pObject is "y axis" then
@@ -329,11 +401,8 @@ private handler getPath(in pObject as string) as Path
 		return line path from point [mRight, mBottom] to point [mRight, kTop]
 	end if
 end handler
-----------
 
-----------
--- this handler returns a rectangle
-private handler getRect(in pObject as string, in pIncNum as integer) as Rectangle
+private handler getRect(in pObject as String, in pIncNum as Integer) as Rectangle
 	
 	if pObject is "x-increment label" then
 		return rectangle [kLeft+pIncNum*mXInc-2, mBottom+10, kLeft+pIncNum*mXInc+2, mBottom+20]
@@ -343,11 +412,8 @@ private handler getRect(in pObject as string, in pIncNum as integer) as Rectangl
 
 	end if
 end handler
-----------
 
-----------
--- this handler returns grid line paths
-private handler getGridLine(in pPlane as string, in pIncNum as integer) as Path
+private handler getGridLine(in pPlane as String, in pIncNum as Integer) as Path
 	
 	if pPlane is "V" then
 		return line path from point [kLeft+pIncNum*mXInc, mBottom] to point [kLeft+pIncNum*mXInc, kTop]
@@ -357,11 +423,8 @@ private handler getGridLine(in pPlane as string, in pIncNum as integer) as Path
 		
 	end if
 end handler
-----------
 
-----------
--- this handler returns a paint
-private handler getPaint(in pObject as string) as Paint
+private handler getPaint(in pObject as String) as Paint
 	if pObject is "axes" then
 		return solid paint with color [0,0,0]
 	else if pObject is "grid lines" then
@@ -370,19 +433,13 @@ private handler getPaint(in pObject as string) as Paint
 		return solid paint with color [0,0,0]
 	end if 
 end handler
-----------
 
-----------
--- this handler returns a font
-private handler getFont(in pObject as string) as Font
+private handler getFont(in pObject as String) as Font
 	if pObject is "increment labels" then
 		return font "Helvetica Neue" at size 8
 	end if 
 end handler
-----------
 
-----------
--- this handler initialises the properties
 private handler initialiseProperties() as undefined
 	put [[0,10,20,30,40,50],[0,34,56,54,32,60],[10,20,30,40,50,60],[5,15,25,35,45,55]] into mChartData
 	put "scatter" into mChartType
@@ -395,60 +452,29 @@ private handler initialiseProperties() as undefined
 	put [[1,0,0],[0,1,0],[0,0,1]] into mChartColors
 end handler
 
-----------
--- this handler initialises the constants
 private handler initialiseVariables() as undefined
 	put my width - kLeft into mRight
 	put my height - 20 into mBottom
 	put (mRight - kLeft)*(mXIncrements/mXMax) into mXInc
 	put (my height - 20)*(mYIncrements/mYMax) into mYInc
 end handler
-----------
 
-----------
--- this handler updates the constants after a resize/property change
 private handler updateVariables() as undefined
 	put my width - kLeft into mRight
 	put my height - 20 into mBottom
 	put (mRight - kLeft)*(mXIncrements/mXMax) into mXInc
 	put (my height - 20)*(mYIncrements/mYMax) into mYInc
 end handler
-----------
 
-----------
--- this handler sets the chartData property
-
-/*
-Summary: Sets the chart data
-
-Parameters:
-pData: The data that is plotted on the graph.
-
-Description:
-Sets the chartData property of the widget.
-Draws the chart based on pData, where pData is a line delimited list with each line containing a point on the graph.
-e.g.
-x_1, y_1
-x_2, y_2
-x_3, y_3
-draws a line graph with 3 points at (x_1, y_1), (x_2, y_2) and (x_3, y_3)
-
-To draw n lines on the graph, add n y coordinates for each x coordinate
-e.g.
-x_1, y_1a, y_1b
-x_2, y_2a, y_2b
-draws a line with with points at (x_1, y_1a), (x_2, y_2a) and line with points (x_1, y_1b), (x_2, y_2b) on the same set of axes.
-*/
-
-public handler setChartData(in pData as string) as undefined
+public handler setChartData(in pData as String) as undefined
 	
-	variable tPointsList as list
+	variable tPointsList as List
 	split pData by newline into tPointsList
 	
-	variable tPoint as list
+	variable tPoint as List
 	put the empty list into tPoint
 	
-	variable tList as list
+	variable tList as List
 	put the empty list into tList
 	
 	variable tElement
@@ -457,18 +483,18 @@ public handler setChartData(in pData as string) as undefined
 		push tPoint onto back of tList
 	end repeat
 	
-	variable tPointCount as integer
+	variable tPointCount as Integer
 	put the number of elements in tList into tPointCount
 	
-	variable tLineCount as integer
+	variable tLineCount as Integer
 	put the number of elements in element 1 of tList into tLineCount
 	
-	variable tFinalList as list
+	variable tFinalList as List
 	put the empty list into tFinalList
 	
-	variable tX as integer
-	variable tY as integer
-	variable tPoints as list
+	variable tX as Integer
+	variable tY as Integer
+	variable tPoints as List
 	
 	repeat with tX from 1 up to tPointCount
 		put the empty list into tPoints
@@ -484,168 +510,49 @@ public handler setChartData(in pData as string) as undefined
 
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the chartType property
-
-/*
-Summary: Sets the chart type
-
-Parameters:
-pType: The type of chart.
-
-Description:
-Sets the chartType property of the widget.
-The chart type can be any of the following strings : ...
-*/
-
-public handler setChartType(in pType as string) as undefined
+public handler setChartType(in pType as String) as undefined
 	put pType into mChartType
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the xMax property
-
-/*
-Summary: Sets the maximum value on the x axis
-
-Parameters:
-pValue: The maximum x value.
-
-Description:
-Sets the xMax property of the widget.
-Draws the x axis with a maximum value as set by pValue.
-*/
-
-public handler setXMax(in pValue as number) as undefined
+public handler setXMax(in pValue as Number) as undefined
 	put pValue into mXMax
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the xMax property
-
-/*
-Summary: Sets the maximum value on the y axis
-
-Parameters:
-pValue: The maximum y value.
-
-Description:
-Sets the yMax property of the widget.
-Draws the y axis with a maximum value as set by pValue.
-*/
-
-public handler setYMax(in pValue as number) as undefined
+public handler setYMax(in pValue as Number) as undefined
 	put pValue into mYMax
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the xIncrements property
-
-/*
-Summary: Sets the value of the increments on the x axis.
-
-Parameters:
-pValue: The value of the increments on the x axis.
-
-Description:
-Sets the xIncrements property of the widget.
-Draws the increments on the x axis as set by pValue.
-*/
-
-public handler setXIncrements(in pValue as number) as undefined
-	put pValue into mXIncrements
-	redraw all
+public handler setXIncrements(in pValue as Number) as undefined
+    put pValue into mXIncrements
+    redraw all
 end handler
-----------
 
-----------
--- this handler sets the yIncrements property
-
-/*
-Summary: Sets the value of the increments on the y axis.
-
-Parameters:
-pValue: The value of the increments on the y axis.
-
-Description:
-Sets the yIncrements property of the widget.
-Draws the increments on the y axis as set by pValue.
-*/
-
-public handler setYIncrements(in pValue as number) as undefined
+public handler setYIncrements(in pValue as Number) as undefined
 	put pValue into mYIncrements
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the showHGrid property
-
-/*
-Summary: Sets the visibility of the horizontal grid lines
-
-Parameters:
-pIsVisible: True for visible or false for invisible.
-
-Description:
-Sets the showHGrid property of the widget.
-If pVisible is true, then the horizontal grid lines are drawn.
-*/
-
-public handler setShowHGrid(in pIsVisible as boolean) as undefined
+public handler setShowHGrid(in pIsVisible as Boolean) as undefined
 	put pIsVisible into mShowHGrid
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the showVGrid property
-
-/*
-Summary: Sets the visibility of the vertical grid lines
-
-Parameters:
-pIsVisible: True for visible or false for invisible.
-
-Description:
-Sets the showVGrid property of the widget.
-If pVisible is true, then the vertical grid lines are drawn.
-*/
-
-public handler setShowVGrid(in pIsVisible as boolean) as undefined
+public handler setShowVGrid(in pIsVisible as Boolean) as undefined
 	put pIsVisible into mShowVGrid
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the chartLabels property of the widget
-
-/*
-Summary: Sets the color of the chart
-
-Parameters: 
-pLabels: A comma delimited list of colors.
-
-Description:
-Sets the chartColors property of the widget.
-*/
-
-public handler setChartColors(in pColors as string) as undefined
+public handler setChartColors(in pColors as String) as undefined
 	variable tColorList
 	split pColors by newline into tColorList
 	
 	variable tElement
-	variable tColor as list
-	variable tFinalColorList as list
+	variable tColor as List
+	variable tFinalColorList as List
 	put the empty list into tFinalColorList
 	
 	repeat for each element tElement in tColorList
@@ -657,27 +564,24 @@ public handler setChartColors(in pColors as string) as undefined
 	put tFinalColorList into mChartColors
 	redraw all
 end handler
-----------
 
-----------
--- this handler returns the chart data in a form that can be outputted
-private handler getChartData() as string
+private handler getChartData() as String
 		
-	variable tNumPoints as integer
-	variable tNumLines as integer
+	variable tNumPoints as Integer
+	variable tNumLines as Integer
 	put the number of elements in element 1 of mChartData into tNumPoints
 	put the number of elements in mChartData into tNumLines
 	
-	variable tX as integer
-	variable tY as integer
+	variable tX as Integer
+	variable tY as Integer
 	
-	variable tLineList as list
+	variable tLineList as List
 	put the empty list into tLineList
 	
 	repeat with tX from 1 up to tNumPoints
 
-		variable tPointList as list
-		variable tPoints as string
+		variable tPointList as List
+		variable tPoints as String
 		
 		put the empty list into tPointList
 		put the empty string into tPoints
@@ -691,20 +595,17 @@ private handler getChartData() as string
 	
 	end repeat
 			
-	variable tOutputString as string
+	variable tOutputString as String
 	combine tLineList with newline into tOutputString
 	
 	return tOutputString
 end handler
-----------
 
-----------
--- this handler return the chart labels in a from that can be outputted
-private handler getChartColors() as string
+private handler getChartColors() as String
 	
 	variable tElement
-	variable tChartColor as string
-	variable tColorList as list
+	variable tChartColor as String
+	variable tColorList as List
 	put the empty list into tColorList
 	
 	repeat for each element tElement in mChartColors
@@ -712,11 +613,10 @@ private handler getChartColors() as string
 		push tChartColor onto back of tColorList
 	end repeat
 	
-	variable tChartColors as string
+	variable tChartColors as String
 	combine tColorList with newline into tChartColors
 
 	return tChartColors
 end handler
-----------
 
 end widget

@@ -1,0 +1,37 @@
+Name: systemPixelScale
+
+Type: property
+
+Syntax: get the systemPixelScale
+
+Summary: Returns the default pixel scale of the system.
+
+Introduced: 6.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+set the pixelScale to the systemPixelScale -- Sets the pixelScale property to the device pixel scale
+
+Value: The <systemPixelScale> property returns the pixel scale of the system as a positive real number.
+
+Description:
+Use the <systemPixelScale> property to get the pixel scale of the operating system.
+
+Modern mobile devices have screens of varying densities. For example, the iPad and iPad retina both have a logical screen size of 1024x768 pixels. However, the iPad retina has 2048x1536 device pixels. The intention of higher density is not to provide the developer with more screen real estate to work with, but rather to make text and other assets appear crisper.
+
+LiveCode reports the <screenRect> of both iPad and iPad retina in logical pixels (1024x768). When your app runs on the iPad Retina, LiveCode renders text, graphics and image assets according to the pixelScale.
+
+The <systemPixelScale> property returns the default pixel scale of the operating system.
+
+For example:
+- iPad original returns 1
+- iPad with retina screen returns 2
+
+>*Note:*  Currently the <systemPixelScale> returns the correct value for mobile devices, returning '1' on desktop platforms.
+
+References: iphoneUseDeviceResolution (command), pixelScale (property), screenRect (function)
+
+Tags: windowing

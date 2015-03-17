@@ -1,0 +1,48 @@
+Name: angle
+
+Type: property
+
+Syntax: set the angle of {<graphic> | <image>} to <angleInDegrees> 
+
+Summary: Specifies the starting angle of an arc or the rotation angle of a <regular polygon> or <image>.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the angle of graphic "Triangle" to 180
+
+Example:
+set the angle of image ID 45902 to it
+
+Example:
+set the angle of graphic myGraphic to the angle of myGraphic + 5
+
+Value:
+The <angle> of a <graphic> or <image> is an <integer> between zero and 360.
+By default, the <angle> <property> of a newly created <graphic> or <image> is zero.
+
+Description:
+Use the <angle> <property> to create an arc shape, or to turn a <regular polygon> or <image> object.
+
+If you specify an <angleInDegrees> greater than 360, the <angle> is set to the number you specify mod 360.
+
+A regular polygon can be rotated between zero and 360. Increasing the <angleInDegrees> rotates the polygon clockwise. You can specify the <angle> of a <graphic(keyword)> that is not a <regular polygon>, but it has no effect on the <graphic(object)|graphic's> appearance.
+
+An image can be rotated between zero and 360. Increasing the <angleInDegrees> rotates the <image> counterclockwise. Unlike the <rotate> <command>, the <angle> <property> affects only the screen display of the <image>, not the actual picture data in it. Changing an <image(object)|image's> <angle> does not change the <imageData> of the <image>. Repeated changes to the <angle> <property>, unlike repeated uses of the <rotate> <command>, do not degrade the <image(object)|image's> quality. The <rotate> <command> cannot be used on a <referenced control|referenced image>, but the <angle> of a <referenced control|referenced image> can be set.
+
+By default, oval graphics display their entire arc from zero to 360, forming a complete oval. You can use the <angle> and <arcAngle> <properties> to specify a portion of the oval to be displayed. The <angle> <property> determines the starting point of the arc. Zero is at the right edge, 3 o'clock. Increasing the <angle> moves the starting point counter-clockwise around the arc. (The direction of rotation for an arc is opposite the direction of rotation for a polygon.) For example, if the <angle> is 90, the arc starts at the top edge of the graphic's rectangle, 12 o'clock.
+
+>*Note:* For an oval, the <angle> is the same as the <startAngle>. Changing one changes the other.
+
+Changes:
+The ability to set the angle of an image was introduced in version 2.0. In previous versions, the angle property applied only to graphics.
+
+References: imageData (property), properties (property), arcAngle (property), startAngle (property), image (keyword), integer (keyword), graphic (keyword), rotate (command), revRotatePoly (command), image (object), graphic (object), property (glossary), referenced control (glossary), image (glossary), command (glossary), regular polygon (glossary)
+
+Tags: ui

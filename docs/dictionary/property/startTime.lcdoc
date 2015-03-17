@@ -1,0 +1,33 @@
+Name: startTime
+
+Type: property
+
+Syntax: set the startTime of <player> to <startPoint> 
+
+Summary: Specifies the beginning of the <selected> portion of a sound or movie.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the startTime of player "Splash" to zero
+
+Value:
+The <startTime> of a <player(keyword)> is an <integer> between zero and the <player(object)|player's> <duration>.
+By default, the <startTime> <property> of newly created <player(object)|players> is set to empty.
+
+Description:
+Use the <startTime> <property> to set or get the <selection> in a player.
+
+If the <playSelection> <property> is true, only the <selected> portion plays, so you can use the <startTime> and <endTime> <properties> of the player to play whatever portion of the sound or movie you want.
+
+The <startTime> is the number of the interval where the <selection> begins. (The number of intervals per second is specified by the <player|player's> <timeScale> <property>. The total number of intervals is given in the <player|player's> <duration> property.) If there is no <selection>, the <startTime> is empty.
+
+References: looping (property), playRate (property), showSelection (property), endTime (property), playSelection (property), duration (property), selected (property), properties (property), timeScale (property), selection (keyword), integer (keyword), player (keyword), selectionChanged (message), player (object), property (glossary)
+
+Tags: multimedia

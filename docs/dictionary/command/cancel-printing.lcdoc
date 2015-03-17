@@ -1,0 +1,32 @@
+Name: cancel printing
+
+Type: command
+
+Syntax: cancel printing
+
+Summary: Cancels the current print job.
+
+Introduced: 2.9
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,web
+
+Security: printing
+
+Example:
+cancel printing
+
+Example:
+on mouseUp
+   if the short name of me is "Cancel" then
+     cancel printing
+   end if
+end mouseUp
+
+Description:
+Use the cancel printing command during a printing loop to cancel the current print job. After using this command, no print commands will have any effect until the current loop has been closed (by using <close printing>).
+
+References: close printing (command), print (command), open printing (command)
+
+Tags: printing

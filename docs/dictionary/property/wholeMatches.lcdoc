@@ -1,0 +1,38 @@
+Name: wholeMatches
+
+Type: property
+
+Syntax: set the wholeMatches to {true | false}
+
+Summary: Specifies whether the <lineOffset>, <wordOffset>, and <itemOffset> <function|functions> search only for entire <lines>, <words>, or <items>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the wholeMatches to true
+
+Value (bool):The <wholeMatches> is true or false.
+By default, the <wholeMatches> <property> is set to false.
+
+Description:
+Use the <wholeMatches> <property> to find <lines>, <words>, or <items> in a <container> only if what you're searching for matches an entire <line>, <word>, or <item>.
+
+For example, suppose line 6 of a field named "Test" is "additive". The expression
+  lineOffset("add",field "Test")
+evaluates to 6 if the wholeMatches is false, because "add" is part of the <line> "additive". If the wholeMatches is true, this <function call> <return|returns> 0 (zero), because "add" does not exactly match the <line> "additive".
+
+If the <wholeMatches> <property> is set to true, the expression
+  lineOffset(phrase, container)
+is equivalent to the expression
+  phrase is among the lines of container
+except that the first evaluates to a line number and the second evaluates to true or false. Similarly, the <wordOffset> and <itemOffset> <function|functions> operate similarly to the <is among> <operator> if the <wholeMatches> <property> is true.
+
+Since the <wholeMatches> is a <local property>, its <value> is <reset> to false when the current <handler> finishes <execute|executing>. It retains its <value> only for the current <handler>, and setting it in one <handler> does not affect its value in other <handler|handlers> it <call|calls>.
+
+References: caseSensitive (property), is among (operator), whole (keyword), item (keyword), lines (keyword), line (keyword), words (keyword), word (keyword), items (keyword), reset (command), wordOffset (function), itemOffset (function), lineOffset (function), value (function), property (glossary), return (glossary), call (glossary), handler (glossary), operator (glossary), execute (glossary), container (glossary), function call (glossary), function (glossary), local property (glossary)
+
+Tags: text processing

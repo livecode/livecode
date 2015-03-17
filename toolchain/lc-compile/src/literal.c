@@ -459,3 +459,63 @@ void DumpScopes(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+/* Check that module names contain a '.' character. */
+int
+IsNameSuitableForModule (NameRef p_id)
+{
+	const char *t_id;
+	size_t i;
+
+	GetStringOfNameLiteral (p_id, &t_id);
+
+	for (i = 0; '\0' != t_id[i]; ++i)
+	{
+		if ('.' == t_id[i])
+			return 1;
+	}
+
+	return 0;
+}
+
+/* Check that defined names *don't* match [a-z]+ (because these names
+ * are reserved for syntax keywords) */
+int
+IsNameSuitableForDefinition (NameRef p_id)
+{
+	const char *t_id;
+	size_t i;
+
+	GetStringOfNameLiteral (p_id, &t_id);
+
+	for (i = 0; '\0' != t_id[i]; ++i)
+	{
+		/* If char is not in [a-z] then string is okay */
+		if (t_id[i] < 'a' || t_id[i] > 'z')
+			return 1;
+	}
+
+	return 0;
+}
+
+/* Keywords mustn't conflict with valid identifiers.  Ensure this by
+ * forbidding keywords from containing any of the characters
+ * [A-Z0-9_.] */
+int
+IsStringSuitableForKeyword (const char *p_keyword)
+{
+	size_t i;
+
+	for (i = 0; p_keyword[i] != '\0'; ++i)
+	{
+		if ((p_keyword[i] == '.') ||
+		    (p_keyword[i] == '_') ||
+		    (p_keyword[i] >= 'A' && p_keyword[i] <= 'Z') ||
+		    (p_keyword[i] >= '0' && p_keyword[i] <= '9'))
+			return 0;
+	}
+
+	return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////

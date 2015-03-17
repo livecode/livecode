@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +52,19 @@ void Fatal_InternalInconsistency(const char *p_message)
 {
     fprintf(stderr, "*** INTERNAL INCONSISTENCY (%s) ***\n", p_message);
     exit(1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Error_Bootstrap(const char *p_format, ...)
+{
+    va_list t_args;
+    va_start(t_args, p_format);
+    fprintf(stderr, "error: ");
+    vfprintf(stderr, p_format, t_args);
+    fprintf(stderr, "\n");
+    va_end(t_args);
+    s_error_count += 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +153,13 @@ static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
     _ErrorS(p_position, p_message, t_string);
 }
 
+static void _WarningI(long p_position, const char *p_message, NameRef p_name)
+{
+	const char *t_string;
+	GetStringOfNameLiteral(p_name, &t_string);
+	_WarningS(p_position, p_message, t_string);
+}
+
 #define DEFINE_ERROR(Name, Message) \
     void Error_##Name(long p_position) { _Error(p_position, Message); }
 
@@ -223,8 +244,12 @@ DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expr
 DEFINE_ERROR_I(HandlerNotSuitableForPropertyGetter, "'%s' has inappropriate signature to be a property getter")
 DEFINE_ERROR_I(HandlerNotSuitableForPropertySetter, "'%s' has inappropriate signature to be a property setter")
 
+DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with identifiers")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
+#define DEFINE_WARNING_I(Name, Message) \
+    void Warning_##Name(long p_position, NameRef p_id) { _WarningI(p_position, Message, p_id); }
 #define DEFINE_WARNING_S(Name, Message) \
 	void Warning_##Name(long p_position, const char *p_string) { _WarningS(p_position, Message, p_string); }
 
@@ -232,6 +257,10 @@ DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses shoul
 DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
+DEFINE_WARNING_I(UnsuitableNameForDefinition, "All-lowercase name '%s' may cause future syntax error")
+DEFINE_WARNING(UsingAsForHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns <Type>'")
+DEFINE_WARNING(UsingAsUndefinedForVoidHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns nothing'")
+DEFINE_WARNING(UndefinedTypeDeprecated, "Deprecated: 'undefined' should not be used as a type")
 
 ////////////////////////////////////////////////////////////////////////////////
 
