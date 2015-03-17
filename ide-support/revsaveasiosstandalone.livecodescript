@@ -516,6 +516,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    --  may have added
    local tFontmapFiles,tStandardFontmapRoot
    
+   -- We want the repo version to be able to build iOS standalones with the fontmap
    if revEnvironmentIsInstalled() then
       put mapFilePath(revMobileRuntimeFolder(pTarget)) into tStandardFontmapRoot
    else
@@ -527,9 +528,12 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       set the itemdelimiter to tOldDel
    end if
    
-   put tStandardFontmapRoot & slash & "fontmap",tSettings["ios,fontmappings"] after last item of tFontMapFiles
+   -- We add our fontmapping, and the user one (if empty, that won't get through
+   --  the further loop.
+   put tStandardFontmapRoot & slash & "fontmap",tBaseFolder & slash & tSettings["ios,fontmappings"] after last item of tFontMapFiles
    
    repeat for each item tFontmapFile in tFontMapFiles
+      -- Alert the user if their font map has not been found on the disk
       if there is no file tFontmapFile then
          revStandaloneAddWarning "Could not find font mapping file" && tFontmapFile
       else
