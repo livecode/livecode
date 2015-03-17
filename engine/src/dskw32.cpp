@@ -1530,7 +1530,9 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				// SN-2014-08-11: [[ Bug 13145 ]] If ReadFile can't read more, but no error is triggered, we should stop here,
 				//  but return true. The new imageLoader reads buffer by buffer, and doesn't expect and error when reading the
 				//  the last buffer (which might ask for more than remaining in the file).
-				if (nread == 0 && GetLastError() == 0)
+				// IM-2015-03-17: [[ Bug 14960 ]] GetLastError is only meaningful if ReadFile fails. A return value of TRUE
+				//  with 0 bytes read is used to indicate EOF for synchronous file handles.
+				if (nread == 0)
 				{
 					r_read = t_offset;
 					m_is_eof = true;
