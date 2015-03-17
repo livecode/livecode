@@ -1523,7 +1523,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				//  ... the previous error will remain set (possibly not 0)
 				DWORD t_old_error, t_read_error;
 				t_old_error = GetLastError();
-				SetLastError(ERROR_SUCCESS);
+				SetLastError(0);
 				t_read_success = ReadFile(m_handle, (LPVOID)((char*)sptr + t_offset), t_readsize, &nread, NULL);
 				t_read_error = GetLastError();
 				SetLastError(t_old_error);
@@ -1539,7 +1539,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				// SN-2014-08-11: [[ Bug 13145 ]] If ReadFile can't read more, but no error is triggered, we should stop here,
 				//  but return true. The new imageLoader reads buffer by buffer, and doesn't expect and error when reading the
 				//  the last buffer (which might ask for more than remaining in the file).
-				if (nread == 0 && t_read_error == ERROR_SUCCESS)
+				if (nread == 0 && t_read_error == 0)
 				{
 					r_read = t_offset;
 					m_is_eof = true;
