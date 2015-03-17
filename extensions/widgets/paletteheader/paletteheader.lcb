@@ -1,0 +1,336 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+Palette header bar widget.
+*/
+
+widget community.livecode.livecode.paletteHeader
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+
+metadata title is "Palette Header"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+
+property navNames		get getNavNames			set setNavNames
+property navIcons		get getNavIcons			set setNavIcons
+property navLabels		get getNavLabels		set setNavLabels
+property showIcons		get mShowIcons			set setShowIcons
+property navSelected	get mSelectedNavItem	set setSelectedNavItem
+
+property navData		get getNavData			set setNavData
+
+property actionIcons		get getActionIcons		set setActionIcons
+property actionLabels		get getActionLabels		set setActionLabels
+property showActionIcons	get mShowActionIcons	set setShowActionIcons
+
+property actionData		get getActionData		set setActionData
+
+
+private variable mNavData 			as List
+private variable mSelectedNavItem 	as Integer
+private variable mShowIcons			as Boolean
+
+private variable mActionData		as List
+private variable mShowActionIcons	as Boolean
+
+private variable mSize 				as Real
+
+constant kBlack is [0,0,0]
+
+constant kDefaultName is "Name"
+constant kDefaultIcon is ""
+constant kDefaultLabel is ""
+
+
+public handler OnCreate()
+	
+	variable tAction as Array
+	put the empty array into tAction
+	put "new" into tAction["label"]
+	put "" into tAction["icon"]
+	
+	put [tAction] into mActionData
+	
+	variable tNav as Array
+	put the empty array into tNav
+	variable tCount
+	variable tCountString as String
+	
+	put the empty list into mNavData
+	repeat with tCount from 1 up to 5
+		put tCount formatted as string into tCountString
+		put "Name" & tCountString into tNav["name"]
+		put "Label" && tCountString into tNav["label"]
+		put "" into tNav["icon"]
+		push tNav onto mNavData
+	end repeat
+	
+	put 0 into mSelectedNavItem
+	put 10 into mSize
+end handler
+
+public handler OnPaint()
+
+	-- draw the background rectangle
+	set the paint of this canvas to getPaint("background")
+	fill getPath("background") on this canvas
+	--
+	
+	-- drawing the line at the bottom of the header bar
+	set the paint of this canvas to getPaint("line")
+	fill getPath("line") on this canvas
+	--
+	
+	-- filling in the text of the label	
+	set the font of this canvas to getFont("title")
+	set the paint of this canvas to getPaint("title")
+	
+	variable tData as Array
+	put element 1 of mNavData into tData
+	fill text tData["label"] at center of getRect("label") on this canvas
+
+end handler
+
+public handler OnMouseDown()
+
+end handler
+
+public handler OnMouseUp()
+
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Painting utilities
+--
+--------------------------------------------------------------------------------
+
+private handler getPaint(in pObject as String) as Paint
+
+	if pObject is "background" then
+		return solid paint with color [246/255, 246/255, 247/255]
+	
+	else if pObject is "line" then
+		return solid paint with color [178/255, 178/255, 178/255]
+		
+	else if pObject is "title" then
+		 return solid paint with color kBlack
+		
+	end if
+	
+end handler
+
+private handler getFont(in pType as String) as Font
+	
+	variable tFont as String
+	put the name of the font of this canvas into tFont
+	
+	if pType is "title" then 
+		return font tFont with bold style at size mSize
+	else if pType is "label" then
+		return font tFont at size mSize
+	else if pType is "icon" then
+		return font "fontawesome" at size mSize
+	end if
+
+end handler
+
+private handler getPath(in pObject as String) as Path
+	
+	if pObject is "background" then
+		return rectangle path of rectangle [0, 0, my width, my height]
+		
+	else if pObject is "line" then 
+		return rectangle path of rectangle [0,my height,my width,(my height)-1]
+		
+	end if
+end handler
+
+private handler getRect(in pObject as String) as Rectangle
+
+	variable tLabelRect as Rectangle 
+	put my bounds into tLabelRect
+	
+	if pObject is "label" then
+		return tLabelRect
+
+	end if
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Data utilities
+--
+--------------------------------------------------------------------------------
+
+private handler setValueOfArray(in pKey as String, in pValue as any, inout xArray as Array)
+	put pValue into xArray[pKey]
+end handler
+
+private handler listToArray(in pList as List) as Array
+	variable tCount
+	variable tArray
+	put the empty array into tArray
+	repeat with tCount from 1 up to the number of elements in pList
+		put element tCount of pList into tArray[tCount]
+	end repeat
+	return tArray
+end handler
+
+private handler setData(in pArray as Array, in pKeys as List, out rList as List)
+	variable tOrder as List
+	put the keys of pArray into tOrder
+	sort tOrder in ascending order
+	
+	variable tOrderKey
+	variable tKey
+	variable tElement as Array
+	variable tList as List
+	put the empty list into tList
+	
+	repeat for each element tOrderKey in tOrder
+		put the empty array into tElement	
+		repeat for each element tKey in pKeys
+			put pArray[tOrderKey][tKey] into tElement[tKey]
+		end repeat
+		push tElement onto tList
+	end repeat
+	
+	put tList into rList
+end handler
+
+private handler getDataElement(in pElementName as String, in pList as List) as String
+	variable tList
+	put the empty list into tList
+	
+	variable tElement
+	repeat for each element tElement in pList
+		push tElement[pElementName] onto tList
+	end repeat
+	
+	variable tElements
+	combine tList with "," into tElements
+	return tElements
+end handler
+
+private handler setDataElement(in pElementName as String, in pElements as String, in pDefault as any, inout xList as List) as undefined
+	variable tElements
+	split pElements by "," into tElements
+
+	variable tCount
+	put 0 into tCount
+	
+	variable tElement
+	repeat for each element tElement in xList
+		add 1 to tCount
+		if tCount > the number of elements in tElements then
+			setValueOfArray(pElementName, pDefault, element tCount of xList)
+		else
+			setValueOfArray(pElementName, element tCount of tElements, element tCount of xList)
+		end if
+	end repeat
+	redraw all	
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Nav data handling
+--
+--------------------------------------------------------------------------------
+
+private handler getNavData() as Array
+	return listToArray(mNavData)
+end handler
+
+private handler setNavData(in pNavData as Array) as undefined
+	setData(pNavData, ["name", "icon", "label"], mNavData)
+end handler
+
+private handler getNavNames() as String
+	return getDataElement("name", mNavData)
+end handler
+
+private handler setNavNames(in pNames as String)
+	setDataElement("name", pNames, kDefaultName, mNavData)
+end handler
+
+private handler getNavIcons() as String
+	return getDataElement("icon", mNavData)
+end handler
+
+private handler setNavIcons(in pIcons as String)
+	setDataElement("icon", pIcons, kDefaultIcon, mNavData)
+end handler
+
+private handler getNavLabels() as String
+	return getDataElement("label", mNavData)
+end handler
+
+private handler setNavLabels(in pLabels as String)
+	setDataElement("label", pLabels, kDefaultLabel, mNavData)
+end handler
+
+private handler setShowIcons(in pShowIcons as Boolean)
+	put pShowIcons into mShowIcons
+	redraw all
+end handler
+
+private handler setSelectedNavItem(in pItem as Integer)
+	put pItem into mSelectedNavItem
+	redraw all
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Action data handling
+--
+--------------------------------------------------------------------------------
+
+private handler getActionData() as Array
+	return listToArray(mActionData)
+end handler
+
+private handler setActionData(in pActions as Array) as undefined
+	setData(pActions, ["icon", "label"], mActionData)
+end handler
+
+public handler setShowActionIcons(in pShowIcons as Boolean) as undefined
+	put pShowIcons into mShowActionIcons
+	redraw all
+end handler
+
+private handler getActionIcons() as String
+	return getDataElement("icon", mActionData)
+end handler
+
+private handler setActionIcons(in pIcons as String)
+	setDataElement("icon", pIcons, kDefaultIcon, mActionData)
+end handler
+
+private handler getActionLabels() as String
+	return getDataElement("label", mActionData)
+end handler
+
+private handler setActionLabels(in pLabels as String)
+	setDataElement("label", pLabels, kDefaultLabel, mActionData)
+end handler
+
+end widget
