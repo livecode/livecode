@@ -53,12 +53,22 @@ private variable mShowActionIcons	as Boolean
 
 private variable mSize 				as Real
 
+private variable mTabRects			as List
+private variable mActionRects		as List
+
+private variable mRecalculate		as Boolean
+
 constant kBlack is [0,0,0]
+constant kWhite is [1,1,1]
 
 constant kDefaultName is "Name"
 constant kDefaultIcon is ""
 constant kDefaultLabel is ""
 
+constant kTabPadding is 10
+constant kActionPadding is 10
+
+constant kHeightRatio is 0.8
 
 public handler OnCreate()
 	
@@ -76,45 +86,75 @@ public handler OnCreate()
 	
 	put the empty list into mNavData
 	repeat with tCount from 1 up to 5
-		put tCount formatted as string into tCountString
-		put "Name" & tCountString into tNav["name"]
-		put "Label" && tCountString into tNav["label"]
+		put "Name" into tNav["name"]
+		put "Label" into tNav["label"]
 		put "" into tNav["icon"]
 		push tNav onto mNavData
 	end repeat
 	
-	put 0 into mSelectedNavItem
+	put 1 into mSelectedNavItem
 	put 10 into mSize
+	
+	put false into mShowIcons
+	put false into mShowActionIcons
+	
+	put true into mRecalculate
 end handler
 
 public handler OnPaint()
-
+	
+	if mRecalculate is true then
+		recalculate()
+	end if
+	
 	-- draw the background rectangle
 	set the paint of this canvas to getPaint("background")
 	fill getPath("background") on this canvas
-	--
 	
-	-- drawing the line at the bottom of the header bar
+	-- draw the line around the header bar
 	set the paint of this canvas to getPaint("line")
-	fill getPath("line") on this canvas
-	--
+	stroke getPath("line") on this canvas
 	
-	-- filling in the text of the label	
-	set the font of this canvas to getFont("title")
-	set the paint of this canvas to getPaint("title")
+	variable tCount as Integer
+	repeat with tCount from 1 up to the number of elements in mNavData
+		drawTab(tCount)
+	end repeat
 	
-	variable tData as Array
-	put element 1 of mNavData into tData
-	fill text tData["label"] at center of getRect("label") on this canvas
+	repeat with tCount from 1 up to the number of elements in mActionData
+		drawAction(tCount)
+	end repeat
 
 end handler
 
-public handler OnMouseDown()
-
+public handler OnClick(in pX, in pY, in pWhich, in pAmount)
+	variable tPoint as Point
+	put the click position into tPoint
+	
+	variable tRect as Rectangle
+	variable tCount as Integer
+	put 0 into tCount
+	repeat for each element tRect in mTabRects
+		add 1 to tCount
+		if tPoint is within tRect then
+			setSelectedNavItem(tCount)
+			exit repeat
+		end if
+	end repeat
+	
+	put 0 into tCount
+	repeat for each element tRect in mActionRects
+		add 1 to tCount
+		if tPoint is within tRect then
+			variable tAction as Array
+			put element tCount of mActionData into tAction
+			log "action" && tAction["label"] && "clicked"
+			exit repeat
+		end if
+	end repeat
 end handler
 
-public handler OnMouseUp()
-
+public handler OnGeometryChanged()
+	put true into mRecalculate
 end handler
 
 --------------------------------------------------------------------------------
@@ -123,7 +163,125 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-private handler getPaint(in pObject as String) as Paint
+private handler drawTab(in pIndex as Integer)
+	variable tRect as Rectangle
+	put element pIndex of mTabRects into tRect
+	
+	if pIndex is mSelectedNavItem then
+		variable tPath as Path
+		put rectangle path of tRect into tPath
+		set the paint of this canvas to getPaint("line")
+		stroke tPath on this canvas
+		
+		set the paint of this canvas to getPaint("selected tab")
+		close path on tPath
+		fill tPath on this canvas
+	end if
+	
+	-- filling in the text of the label	
+	set the font of this canvas to getFont("label")
+	set the paint of this canvas to getPaint("title")	
+	
+	variable tTab as Array
+	put element pIndex of mNavData into tTab
+	
+	fill text tTab["label"] at center of tRect on this canvas
+end handler
+
+private handler drawAction(in pIndex as Integer)
+	variable tRect as Rectangle
+	put element pIndex of mActionRects into tRect
+	
+	set the font of this canvas to getFont("label")
+	set the paint of this canvas to getPaint("title")	
+	
+	variable tTab as Array
+	put element pIndex of mActionData into tTab
+	fill text tTab["label"] at center of tRect on this canvas
+end handler
+
+private handler recalculate()
+	calculateTabRects()
+	calculateActionRects()
+	
+	put false into mRecalculate
+end handler
+
+private handler calculateTabRects()
+	variable tBoundary as Real
+	put kTabPadding into tBoundary
+	
+	variable tRects as List
+	put the empty list into tRects
+
+	variable tLeft as Real
+	variable tRight as Real
+	put kTabPadding into tLeft
+	
+	variable tTop as Real
+	put (1 - kHeightRatio) * my height into tTop
+	
+	variable tBottom as Real
+	put my height into tBottom
+	
+	variable tRect as Rectangle
+	variable tElement as Array
+	repeat for each element tElement in mNavData
+		variable tTextRect as Rectangle
+		if mShowIcons is false then
+			set the font of this canvas to getFont("label")
+			measure tElement["label"] on this canvas into tTextRect
+		else
+			// TODO
+		end if
+
+		put the width of tTextRect + 2 * kTabPadding + tLeft into tRight
+		put rectangle [tLeft, tTop, tRight, tBottom] into tRect
+		push tRect onto tRects
+		put tRight into tLeft
+	end repeat
+	
+	put tRects into mTabRects
+end handler
+
+private handler calculateActionRects()
+	variable tBoundary as Real
+	put kActionPadding into tBoundary
+	
+	variable tRects as List
+	put the empty list into tRects
+
+	variable tLeft as Real
+	variable tRight as Real
+	put my width - kActionPadding into tRight
+	
+	variable tTop as Real
+	put (1 - kHeightRatio) * my height into tTop
+	
+	variable tBottom as Real
+	put my height into tBottom
+	
+	variable tRect as Rectangle
+	variable tElement as Array
+	repeat for each element tElement in mActionData
+		variable tTextRect as Rectangle
+		if mShowActionIcons is false then
+			set the font of this canvas to getFont("label")
+			measure tElement["label"] on this canvas into tTextRect
+		else
+			// TODO
+		end if
+
+		put tRight - (the width of tTextRect + 2 * kActionPadding) into tLeft	
+		put rectangle [tLeft, tTop, tRight, tBottom] into tRect
+		push tRect onto tRects
+		put tLeft into tRight
+	end repeat
+	
+	put tRects into mActionRects
+end handler
+
+private handler getPaint(in pObject as String) returns Paint
 
 	if pObject is "background" then
 		return solid paint with color [246/255, 246/255, 247/255]
@@ -133,12 +291,14 @@ private handler getPaint(in pObject as String) as Paint
 		
 	else if pObject is "title" then
 		 return solid paint with color kBlack
-		
+		 
+	else if pObject is "selected tab" then
+		return solid paint with color kWhite
 	end if
 	
 end handler
 
-private handler getFont(in pType as String) as Font
+private handler getFont(in pType as String) returns Font
 	
 	variable tFont as String
 	put the name of the font of this canvas into tFont
@@ -153,18 +313,13 @@ private handler getFont(in pType as String) as Font
 
 end handler
 
-private handler getPath(in pObject as String) as Path
-	
-	if pObject is "background" then
-		return rectangle path of rectangle [0, 0, my width, my height]
-		
-	else if pObject is "line" then 
-		return rectangle path of rectangle [0,my height,my width,(my height)-1]
-		
+private handler getPath(in pObject as String) returns Path
+	if pObject is "background" or pObject is "line" then
+		return rectangle path of rectangle [0, 0, my width, my height]	
 	end if
 end handler
 
-private handler getRect(in pObject as String) as Rectangle
+private handler getRectOfTab(in pObject as String) returns Rectangle
 
 	variable tLabelRect as Rectangle 
 	put my bounds into tLabelRect
@@ -185,7 +340,7 @@ private handler setValueOfArray(in pKey as String, in pValue as any, inout xArra
 	put pValue into xArray[pKey]
 end handler
 
-private handler listToArray(in pList as List) as Array
+private handler listToArray(in pList as List) returns Array
 	variable tCount
 	variable tArray
 	put the empty array into tArray
@@ -217,7 +372,7 @@ private handler setData(in pArray as Array, in pKeys as List, out rList as List)
 	put tList into rList
 end handler
 
-private handler getDataElement(in pElementName as String, in pList as List) as String
+private handler getDataElement(in pElementName as String, in pList as List) returns String
 	variable tList
 	put the empty list into tList
 	
@@ -231,7 +386,7 @@ private handler getDataElement(in pElementName as String, in pList as List) as S
 	return tElements
 end handler
 
-private handler setDataElement(in pElementName as String, in pElements as String, in pDefault as any, inout xList as List) as undefined
+private handler setDataElement(in pElementName as String, in pElements as String, in pDefault as any, inout xList as List)
 	variable tElements
 	split pElements by "," into tElements
 
@@ -256,15 +411,15 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-private handler getNavData() as Array
+private handler getNavData() returns Array
 	return listToArray(mNavData)
 end handler
 
-private handler setNavData(in pNavData as Array) as undefined
+private handler setNavData(in pNavData as Array)
 	setData(pNavData, ["name", "icon", "label"], mNavData)
 end handler
 
-private handler getNavNames() as String
+private handler getNavNames() returns String
 	return getDataElement("name", mNavData)
 end handler
 
@@ -272,7 +427,7 @@ private handler setNavNames(in pNames as String)
 	setDataElement("name", pNames, kDefaultName, mNavData)
 end handler
 
-private handler getNavIcons() as String
+private handler getNavIcons() returns String
 	return getDataElement("icon", mNavData)
 end handler
 
@@ -280,7 +435,7 @@ private handler setNavIcons(in pIcons as String)
 	setDataElement("icon", pIcons, kDefaultIcon, mNavData)
 end handler
 
-private handler getNavLabels() as String
+private handler getNavLabels() returns String
 	return getDataElement("label", mNavData)
 end handler
 
@@ -304,20 +459,20 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-private handler getActionData() as Array
+private handler getActionData() returns Array
 	return listToArray(mActionData)
 end handler
 
-private handler setActionData(in pActions as Array) as undefined
+private handler setActionData(in pActions as Array)
 	setData(pActions, ["icon", "label"], mActionData)
 end handler
 
-public handler setShowActionIcons(in pShowIcons as Boolean) as undefined
+public handler setShowActionIcons(in pShowIcons as Boolean)
 	put pShowIcons into mShowActionIcons
 	redraw all
 end handler
 
-private handler getActionIcons() as String
+private handler getActionIcons() returns String
 	return getDataElement("icon", mActionData)
 end handler
 
@@ -325,7 +480,7 @@ private handler setActionIcons(in pIcons as String)
 	setDataElement("icon", pIcons, kDefaultIcon, mActionData)
 end handler
 
-private handler getActionLabels() as String
+private handler getActionLabels() returns String
 	return getDataElement("label", mActionData)
 end handler
 
