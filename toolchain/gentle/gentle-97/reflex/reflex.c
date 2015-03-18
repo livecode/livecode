@@ -108,12 +108,30 @@ char *modify_file(const char *in)
 	
 	if (SUBDIR == NULL)
         return strdup(in);
-    
+
     s = (char *)malloc(strlen(SUBDIR) + strlen(in) + 2);
     strcpy(s, SUBDIR);
     strcat(s, "/");
     strcat(s, in);
+    
+    fprintf(stderr, "%s is replaced by %s\n", in, s);
+    
     return s;
+}
+
+const char *map_file(const char *name)
+{
+    const char *mapped_name;
+    struct info *cur;
+    for (cur = info_list; cur; cur = cur->next) {
+        if (strcmp(name, cur->name) == 0) {
+            cur-> used = 1;
+            mapped_name = cur -> replacement;
+            fprintf(stderr, "%s is replaced by %s\n", name, mapped_name);
+            return mapped_name;
+        }
+    }
+    return name;
 }
 /* --PATCH--END-- */
 
@@ -129,7 +147,9 @@ FILE * OPEN(name)
       if (strcmp(name, cur->name) == 0) {
          F = fopen(cur->replacement, "r");
 	 if (F == NULL) err("cannot open %s\n", cur->replacement);
-	 cur-> used = 1;
+          cur-> used = 1;
+          fprintf(stderr, "%s is replaced by %s\n", name, cur -> replacement);
+          
 	 return F;
       }
    }
@@ -158,35 +178,38 @@ args(argc, argv)
 
    struct info *new;
 
-   for (i = 1; i < argc; i++) {
-/* --PATCH-- */    if (strcmp(argv[i], "-subdir") == 0)
-/* --PATCH-- */    {
-/* --PATCH-- */        if (i + 1 == argc)
-/* --PATCH-- */          err("missing parameter to subdir option","");
-/* --PATCH-- */        SUBDIR=argv[i+1];
-/* --PATCH-- */        i++;
-/* --PATCH-- */        continue;
-/* --PATCH-- */    }
-       
-      len = strlen(argv[i]);
-
-      eq = -1;
-      for (j = 0; j < len; j++) {
-	 if (argv[i][j] == '=') {
-	    eq = j;
-	    break;
-	 }
-      }
-      if (eq == -1) err("missing '=' in argument\n","");
-
-      dot = -1;
-      for (j = len-1; j > eq; j--) {
-	 if (argv[i][j] == '.') {
-	    dot = j;
-	    break;
-	 }
-      }
-      if (dot == -1) err("missing '.' in filename\n","");
+    for (i = 1; i < argc; i++) {
+        /* --PATCH-- */    if (strcmp(argv[i], "-subdir") == 0)
+        /* --PATCH-- */    {
+        /* --PATCH-- */        if (i + 1 == argc)
+        /* --PATCH-- */          err("missing parameter to subdir option","");
+        /* --PATCH-- */        SUBDIR=argv[i+1];
+        /* --PATCH-- */        i++;
+        /* --PATCH-- */        continue;
+        /* --PATCH-- */     }
+        
+        len = strlen(argv[i]);
+        
+        eq = -1;
+        for (j = 0; j < len; j++) {
+            if (argv[i][j] == '=') {
+                eq = j;
+                break;
+            }
+        }
+        
+/* --PATCH--BEGIN-- */
+/*
+        if (eq == -1) err("missing '=' in argument\n","");
+        
+        dot = -1;
+        for (j = len-1; j > eq; j--) {
+            if (argv[i][j] == '.') {
+                dot = j;
+                break;
+            }
+        }
+        if (dot == -1) err("missing '.' in filename\n","");
 
       new = (struct info *) malloc(sizeof (struct info));
       new->next = info_list;
@@ -201,7 +224,47 @@ args(argc, argv)
 
       new->replacement = (char *) malloc(len-eq-1);
       strncpy(new->replacement, argv[i]+eq+1, len-eq-1);
-      new->replacement[len-eq-1] = '\0';
+        new->replacement[len-eq-1] = '\0';
+*/
+/* --PATCH--END-- */
+        
+        char *t_name;
+        char *t_replacement;
+        
+        if (eq == -1)
+        {
+            const char *t_slash;
+            t_slash = strchr(argv[i], "/");
+            if (t_slash != NULL)
+            {
+                t_name = strdup(t_slash);
+                t_replacement = strdup(argv[i]);
+            }
+            else
+            {
+                t_name = strdup(argv[i]);
+                t_replacement = strdup(argv[i]);
+            }
+        }
+        else
+        {
+            t_name = (char *) malloc(eq+1);
+            strncpy(t_name, argv[i], eq);
+            t_name[eq] = '\0';
+            
+            t_replacement = (char *) malloc(len-eq-1);
+            strncpy(t_replacement, argv[i]+eq+1, len-eq-1);
+            t_replacement[len-eq-1] = '\0';
+        }
+        
+        new = (struct info *) malloc(sizeof (struct info));
+        new->next = info_list;
+        new->used = 0;
+        info_list = new;
+        new -> name = t_name;
+        new -> replacement = t_replacement;
+        
+        fprintf(stderr, "mapping %s to %s\n", t_name, t_replacement);
    }
 }
 
@@ -211,9 +274,9 @@ main(argc, argv)
    int argc;
    char **argv;
 {
-   args(argc, argv);
+    args(argc, argv);
 
-/* --PATCH-- */    OUTFILE = fopen(modify_file("gen.l"), "w");
+/* --PATCH-- */    OUTFILE = fopen(modify_file(map_file("gen.l")), "w");
    if (OUTFILE == NULL) {
       printf("cannot open gen.l\n");
       exit(1);
@@ -237,7 +300,7 @@ main(argc, argv)
    {
       FILE *F;
 
-/* --PATCH-- */       F = OPEN(modify_file("gen.lit"));
+/* --PATCH-- */       F = OPEN(modify_file(map_file("gen.lit")));
       if (F == NULL) {
 	 printf("cannot open gen.lit\n");
 	 exit(1);
