@@ -201,9 +201,16 @@ public handler OnPaint() returns nothing
 		// Draw arrow
 		if tDataItem["leaf"] then
 			
+
 		else
+			if tDataItem["folded"] is true then
+				put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into tPath
+			else
+				put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into tPath
+			end if
+			translate tPath by [mMargin,tTop+(mRowHeight/2)-((the height of the bounding box of tPath)/2)]
 			set the paint of this canvas to getPaint("text","fill")
-			fill text ">" at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
+			fill tPath on this canvas
 		end if
 		add tArrowWidth + mMargin to tLeft
 		
