@@ -1,4 +1,3 @@
-
 /*
 Copyright (C) 2015 Runtime Revolution Ltd.
 
@@ -48,6 +47,7 @@ private variable mFirstDataItem as Integer
 private variable mMargin as Real
 private variable mRecalculate as Boolean
 private variable mAlternateRowBackgrounds as Boolean
+private variable mIndentPixels as Integer
 
 // Drag related 
 private variable mDragging as Boolean
@@ -152,7 +152,6 @@ public handler OnPaint() returns nothing
 	end if
 	
 	put 0 into tTop
-	put 6 into mMargin
 	
 	put the height of my bounds into mViewHeight
 	put the width of my bounds into mViewWidth
@@ -171,9 +170,6 @@ public handler OnPaint() returns nothing
 	variable tTopOffset
 	put mViewTopPosition mod mRowHeight into tTopOffset
 	subtract tTopOffset from tTop
-	
-	variable tIndent as Integer
-	put 15 into tIndent
 	
 	//log "Start Index: %@ | top offset: %@" with [mFirstListItem,tTopOffset]
 
@@ -200,7 +196,7 @@ public handler OnPaint() returns nothing
 		   fill tPath on this canvas
 		end if
 		
-		put mMargin + (tDataItem["indent"] * tIndent) into tLeft
+		put mMargin + (tDataItem["indent"] * mIndentPixels) into tLeft
 		
 		// Draw arrow
 		if tDataItem["leaf"] then
@@ -317,10 +313,6 @@ public handler OnMouseCancel() returns nothing
 	put false into mDragging
 end handler
 
-public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
-	log yPosToRowNumber(the y of the click position)
-end handler
-
 public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns nothing
 	if pDeltaY < 0 then
 		subtract mRowHeight from mViewTopPosition
@@ -331,6 +323,23 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 		put 0 into mViewTopPosition
 	end if
 	redraw all
+end handler
+
+public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
+	variable tRowNumber
+	put yPosToRowNumber(the y of the click position) into tRowNumber
+	
+	log tRowNumber
+	
+	variable tData as Array
+	put the empty array into tData
+	put element tRowNumber of mDataList into tData
+	
+	if tData["folded"] is true then
+		unfoldKey(tData["path"])
+	else
+		foldKey(tData["path"])
+	end if
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
@@ -366,6 +375,8 @@ private handler initialiseConstants() returns nothing
 	put 21 into mRowHeight
 	put false into mDragging
 	put true into mAlternateRowBackgrounds
+	put 6 into mMargin
+	put 15 into mIndentPixels
 end handler
 
 private handler scrollbarRect() returns Rectangle
