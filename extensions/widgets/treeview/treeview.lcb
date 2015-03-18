@@ -302,8 +302,6 @@ end handler
 public handler OnMouseUp() returns nothing
 	if mDragging is true then
 		redraw all
-	else
-		log "asdfasdF"	
 	end if
 	put false into mDragging
 end handler
@@ -313,6 +311,10 @@ public handler OnMouseCancel() returns nothing
 		redraw all
 	end if
 	put false into mDragging
+end handler
+
+public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
+	log yPosToRowNumber(the y of the click position)
 end handler
 
 public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns nothing
@@ -325,6 +327,10 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 		put 0 into mViewTopPosition
 	end if
 	redraw all
+end handler
+
+private handler yPosToRowNumber(in pYPos as Number) returns Integer
+	return (the trunc of ((mViewTopPosition + pYPos) / mRowHeight ))+1
 end handler
 
 --------------------------------------------------------------------------------
