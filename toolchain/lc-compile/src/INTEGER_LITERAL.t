@@ -1,4 +1,4 @@
-[0-9]+ {
+0|([1-9][0-9]*) {
     yysetpos();
     if (MakeIntegerLiteral(yytext, &yylval.attr[1]) == 0)
     {

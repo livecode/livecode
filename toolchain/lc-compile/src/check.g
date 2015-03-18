@@ -317,7 +317,15 @@
         Info'Kind -> handler
         Info'Type -> handler(_, Signature)
         (|
-            where(Signature -> signature(nil, _))
+            where(Signature -> signature(nil, ReturnType))
+            (|
+                where(ReturnType -> undefined(_))
+                Id'Name -> Name
+                Id'Position -> Position
+                Error_HandlerNotSuitableForPropertyGetter(Position, Name)
+            ||
+                -- all non-void return values are fine
+            |)
         ||
             Id'Name -> Name
             Id'Position -> Position
