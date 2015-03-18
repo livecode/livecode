@@ -69,14 +69,18 @@ private handler __convertArrayToList(in pArray as Array, in pLevel as Integer) r
 		put the empty array into tElement
 		put tKey into tElement["key"]
 		put pLevel into tElement["indent"]
-		put any number < 0.5 into tElement["folded"]
-			
+		put any number < 0.5 into tElement["folded"]	
 		if pArray[tKey] is an array then
-			put __convertArrayToList(pArray[tKey], pLevel+1) into tElement["value"]
+			put false into tElement["leaf"]
+			push tElement onto tList
+			if not tElement["folded"] then
+				splice __convertArrayToList(pArray[tKey], pLevel+1) after element -1 of tList
+			end if
 		else
+			put true into tElement["leaf"]
 			put pArray[tKey] into tElement["value"]
+			push tElement onto tList
 		end if	
-		push tElement onto tList
 	end repeat
 	
 	return tList
@@ -199,7 +203,7 @@ public handler OnPaint() returns nothing
 		put mMargin + (tDataItem["indent"] * tIndent) into tLeft
 		
 		// Draw arrow
-		if tDataItem["value"] is a string then
+		if tDataItem["leaf"] then
 			
 		else
 			set the paint of this canvas to getPaint("text","fill")
@@ -215,7 +219,7 @@ public handler OnPaint() returns nothing
 		add the width of tTextBounds + mMargin to tLeft
 		
 		
-		if tDataItem["value"] is a string then
+		if tDataItem["leaf"] then
 			set the paint of this canvas to getPaint("text","fill")
 			fill text tDataItem["value"] && tDataItem["indent"] formatted as string at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
 		end if
@@ -486,10 +490,6 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-private handler setValueOfArray(in pKey as String, in pValue as any, inout xArray as Array)
-	put pValue into xArray[pKey]
-end handler
-
 // Given a 'path' of array keys as a list, and a value, create an array tArray such that
 // 	the value of tArray[element 1 of pPath][element 2 of pPath]... is pValue
 private handler convertPathToElement(in pPath as List, in pValue as any) returns Array
@@ -528,7 +528,8 @@ end handler
 
 // Convert an array to a list, as used by this widget. Ignoring the 'folded' parameter, 
 // mDataList should always be the result of calling this on mData
-private handler convertArrayToList(in pArray as Array, in pFolded as Boolean) returns List
+private handler convertArrayToList(in pArray as Array, in pFolded as Boolean, in pLevel as Integer) returns List
+
 	variable tList as List
 	put the empty list into tList
 	
@@ -542,14 +543,20 @@ private handler convertArrayToList(in pArray as Array, in pFolded as Boolean) re
 	repeat for each element tKey in tKeys
 		put the empty array into tElement
 		put tKey into tElement["key"]
+		put pLevel into tElement["indent"]
 		put pFolded into tElement["folded"]
 			
 		if pArray[tKey] is an array then
-			put convertArrayToList(pArray[tKey], pFolded) into tElement["value"]
+			put false into tElement["leaf"]
+			push tElement onto tList
+			if not pFolded then
+				splice convertArrayToList(pArray[tKey], pFolded, pLevel+1) after element -1 of tList
+			end if
 		else
+			put true into tElement["leaf"]
 			put pArray[tKey] into tElement["value"]
+			push tElement onto tList
 		end if	
-		push tElement onto tList	
 	end repeat
 	
 	return tList
@@ -558,7 +565,7 @@ end handler
 // Replace the existing data wholesale with a new array pData
 private handler setArrayData(in pData as Array) returns nothing
 	put pData into mData
-	put convertArrayToList(pData, true) into mDataList	
+	put convertArrayToList(pData, true, 0) into mDataList	
 	put true into mRecalculate
 end handler
 
@@ -570,11 +577,11 @@ private handler removeKey(in pListElt as Integer, in pArrayKey as String, inout 
 end handler
 
 private handler unfoldKey(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
-	setValueOfArray("folded", false, element pListElt of xList)
+	put false into xList[pListElt]["folded"]
 end handler
 
 private handler foldKey(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
-	setValueOfArray("folded", true, element pListElt of xList)
+	put true into xList[pListElt]["folded"]
 end handler
 
 // Simply delete the array key on the given path
@@ -664,7 +671,7 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, inout xLis
 		// The easy case - just insert the new element
 		if tElement["key"] > element 1 of pPath then
 			put convertPathToElement(pPath, pValue) into tNewElement
-			splice convertArrayToList(tNewElement, false) before element tCount of xList
+			splice convertArrayToList(tNewElement, false, 0) before element tCount of xList
 			put tNewElement into xArray[element 1 of pPath]
 			return
 			
@@ -678,7 +685,7 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, inout xLis
 			// ...or if the old one was just as string.
 			else if not tElement["value"] is a list then
 				put convertPathToElement(element 2 to -1 of pPath, pValue)into tNewElement
-				put convertArrayToList(tNewElement, false) into tElement["value"]
+				put convertArrayToList(tNewElement, false, 0) into tElement["value"]
 				put tNewElement into xArray[element 1 of pPath]
 			// Otherwise, go one step further into the path and set
 			else
@@ -690,7 +697,7 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, inout xLis
 	
 	// If we reached the end of the list then append this to the end
 	put convertPathToElement(pPath, pValue) into tNewElement
-	splice convertArrayToList(tNewElement, false) after element -1 of xList
+	splice convertArrayToList(tNewElement, false, 0) after element -1 of xList
 	put tNewElement into xArray[element 1 of pPath]
 end handler
 
