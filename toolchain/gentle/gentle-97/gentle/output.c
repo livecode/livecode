@@ -16,6 +16,8 @@
 #define FlushPos 5000
 
 
+extern const char *MapFile(const char *);
+
 static char OutBuf[OutBufSize];
 static char *OutBufPtr;
 static FILE *OutFile;

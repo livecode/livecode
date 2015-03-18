@@ -10,6 +10,7 @@
    gentle-97-v-4-1-0
 */
 
+extern const char *MapFile(const char *);
 
 static long is_defined();
 static open_next_file ();
