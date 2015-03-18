@@ -27,7 +27,7 @@ Tell(Name)
    char *Name;
 {
    Told();
-   OutFile = fopen(Name, "w");
+   OutFile = fopen(MapFile(Name), "w");
    if (OutFile == NULL) {
       char msg[200];
       sprintf(msg, "cannot open %s\n", Name);
@@ -152,7 +152,7 @@ TellFile(Name)
 /* --PATCH-- */      sprintf(buf, "%s/%s", SUBDIR, Name);
    else
       sprintf(buf, "%s", Name);
-   Tell(buf);
+   Tell(MapFile(buf));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -164,7 +164,7 @@ TellClauseFile()
    
    sprintf(name, "%s.c", SourceName());
 
-   TellFile(name);
+   TellFile(MapFile(name));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -176,7 +176,7 @@ TellSymbolFile()
    
    sprintf(name, "%s.if", SourceName());
 
-   TellFile(name);
+   TellFile(MapFile(name));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -188,7 +188,7 @@ TellXRefFile()
    
    sprintf(name, "%s.nst", SourceName());
 
-   TellFile(name);
+   TellFile(MapFile(name));
 }
 
 /*----------------------------------------------------------------------------*/

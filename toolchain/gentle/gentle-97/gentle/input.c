@@ -84,7 +84,7 @@ static FILE * open_file (unit)
    FILE * InFile;
       
    sprintf (buf, "%s.g", unit);
-   InFile = fopen (buf, "r");
+   InFile = fopen (MapFile(buf), "r");
    if (InFile == NULL) {
       char msg[200];
       sprintf(msg, "Cannot open file '%s'\n", buf);
