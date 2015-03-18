@@ -1,0 +1,45 @@
+Name: underlineLinks
+
+Type: property
+
+Syntax: set the underlineLinks to {true | false}
+
+Syntax: set the underlineLinks of <stack> to {true | false | empty}
+
+Summary: Specifies whether <grouped text> is underlined.
+
+Synonyms: showGroups
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the underlineLinks to (not the underlineLinks)
+
+Example:
+set the underlineLinks of this stack to false
+
+Example:
+set the underlineLinks of stack myStack to empty
+
+Value (bool):The <underlineLinks> is true or false. The <underlineLinks> of a <stack> is true, false, or empty.
+By default, the <underlineLinks> <property> is set to true. The <underlineLinks> <property> of a newly created <stack> is set to empty by <default>.
+
+Description:
+Use the <underlineLinks> <property> to see which text is grouped.
+
+When the <underlineLinks> <property> is false, <grouped text> looks like any other text. When the <underlineLinks> is true, <grouped text> is underlined.
+
+If the <underlineLinks> of a <stack> is empty, <grouped text> in that <stack> is underlined or not, depending on the value of the <global> <underlineLinks> <property>. If the <underlineLinks> of a <stack> is true, <grouped text> in the <stack> is underlined regardless of the <global> setting. If the <underlineLinks> of a <stack> is false, <grouped text> in the <stack> is not underlined regardless of the <global> setting.
+
+Text with its textStyle set to "link" is treated specially by the <clickText>, <clickChunk>, <mouseText>, and <mouseChunk> <function|functions>: a style run of <grouped text> is treated as a single <word>. This makes <grouped text> handy to use for <hypertext> or "clickable text" features.
+
+Changes:
+The underlineLinks synonym and the ability to apply this property to individual stacks was introduced in version 1.1. In previous versions, the synonym showGroups was used, grouped text was displayed with a heavy gray underline instead of an ordinary underline when the showGroups was true, and the showGroups was set to false by default.
+
+References: word (keyword), default (keyword), show groups (command), global (command), stack (object), property (glossary), grouped text (glossary), function (glossary), hypertext (glossary), clickChunk (function), mouseChunk (function), clickText (function), mouseText (function)
+
+Tags: ui

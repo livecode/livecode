@@ -1,0 +1,38 @@
+Name: dontWrap
+
+Type: property
+
+Syntax: set the dontWrap [of <line>] of <field> to {true | false}
+
+Summary: Specifies whether the text in a paragraph or <field> word-wraps when it reaches the field's right edge.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the dontWrap of field 1 to true
+
+Example:
+set the dontWrap of line 1 of field 1 to true
+
+Value (bool): The <dontWrap> of a field is true or false.
+
+Description:
+Use the <dontWrap> property to control whether lines of text in a field wrap or not.
+
+By default, the <dontWrap> <property> of newly created <field(object)|fields> is set to false.
+
+If a field's <dontWrap> <property> is false, the text in the <field(keyword)> wraps to the next line automatically when it reaches the right edge of the <field(keyword)>, so all the text is visible in the <field(object)|field's> width.
+
+If the <dontWrap> is true, lines that are too long to fit in the width of the <field(keyword)> disappear off the right edge of the <field(keyword)>. (The excess text is still in the <field(keyword)>--it just can't be seen.) To edit long lines in a <field(keyword)> whose <dontWrap> is true, set the field's <hScrollbar> to true to display a horizontal scrollbar.
+
+>*Note:* The <dontWrap> property is always true for any field with the <listBehavior property> set to true, setting the dontWrap to false on such a field has no affect.
+
+References: hScrollbar (property), listDepth (property), borderColor (property), tabstops (property), listBehavior (property), formattedWidth (property), textAlign (property), spaceBelow (property), rightIndent (property), firstIndent (property), formattedText (property), borderWidth (property), hgrid (property), spaceAbove (property), vgrid (property), hidden (property), backgroundColor (property), listBehavior property (property), listStyle (property), field (keyword), field (object), property (glossary)
+
+Tags: ui

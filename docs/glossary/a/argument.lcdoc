@@ -1,0 +1,10 @@
+Name: argument
+
+Synonyms: argument
+
+Type: glossary
+
+Description:
+A <value> that is <pass|passed> to an <operator>, <function> or <command>.
+
+References: pass (glossary), operator (glossary), command (glossary), function (glossary), value (glossary)

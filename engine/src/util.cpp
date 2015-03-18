@@ -54,7 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
 
-static MCPoint qa_points[QA_NPOINTS];
+static MCPoint qa_points[QA_NPOINTS + 1];
 
 static void MCU_play_message()
 {

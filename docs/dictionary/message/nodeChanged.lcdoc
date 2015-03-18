@@ -1,0 +1,34 @@
+Name: nodeChanged
+
+Type: message
+
+Syntax: nodeChanged <newNodeID> 
+
+Summary: Sent to a <player> containing a <QuickTime VR> movie when the current node is changed.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+on nodeChanged theNode -- show some text from a custom property
+  put the nodeDescription[theNode] of me into field "Description"
+end nodeChanged
+
+Parameters:
+newNodeID: The ID of the QuickTime VR node being moved to.
+
+Description:
+Handle the <nodeChanged> <message> if you want to make updates when the user navigates to a new node in a <QuickTime VR> movie.
+
+If the user navigates to another node by clicking a hot spot in the QuickTime VR movie, the <hotspotClicked> <message> is sent before the <nodeChanged> <message>.
+
+A handler can change the node by setting the player's <currentNode> <property>.
+
+References: currentNode (property), player (keyword), hotspotClicked (message), QuickTime VR (glossary), message (glossary), property (glossary)
+
+Tags: multimedia

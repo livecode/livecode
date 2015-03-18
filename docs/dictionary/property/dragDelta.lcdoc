@@ -1,0 +1,25 @@
+Name: dragDelta
+
+Type: property
+
+Syntax: set the dragDelta to <numberOfPixels> 
+
+Summary: Specifies the distance the pointer must be moved to initialise drag behaviour.
+
+Introduced: 2.9
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+set the dragDelta to 10
+
+Value:
+The <dragDelta> is an integer greater than 0. The default value is the system default.
+This specifies the number of pixels the mouse pointer must be moved after a mouse button has been pressed for a <dragStart> message to be sent to the current control.
+
+Description:
+Use the <dragDelta> property to fine-tune drag behaviour.
+
+References: dragSpeed (property), dragImageOffset (property), drag (command), dragStart (message)

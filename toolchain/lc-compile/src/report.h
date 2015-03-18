@@ -29,12 +29,18 @@ int ErrorsDidOccur(void);
 void Fatal_OutOfMemory(void);
 void Fatal_InternalInconsistency(const char *message);
 
+void Error_CouldNotGenerateBytecode(void);
+void Error_CouldNotGenerateInterface(void);
 void Error_CouldNotOpenInputFile(const char *path);
+void Error_CouldNotWriteOutputFile(const char *path);
+void Error_CouldNotWriteInterfaceFile(const char *path);
 void Error_MalformedToken(long position, const char *token);
 void Error_MalformedSyntax(long position);
     
 void Warning_EmptyUnicodeEscape(long position);
 void Warning_UnicodeEscapeTooBig(long position);
+
+void Error_Bootstrap(const char *format, ...);
     
 #ifdef __cplusplus
 }

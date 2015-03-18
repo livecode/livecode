@@ -1,0 +1,36 @@
+Name: windowID
+
+Type: property
+
+Syntax: get the windowID of <stack> 
+
+Summary: Reports the operating system's ID for a <stack window>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Example:
+put the windowID of this stack into savedID
+
+Example:
+doWindowFlash(the windowID of stack "Examples") -- an example external
+
+Value:
+The <windowID> of a <stack> is an <integer>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <windowID> <property> to pass to an <external> that needs to manipulate the window.
+
+The window ID is provided by the operating system, and is unique for each window.
+
+Some externals need to manipulate the contents of a stack window directly, and do so by referencing the ID. Such externals require you to pass the ID when you use the external.
+
+References: altID (property), imagePixmapID (property), movieControllerID (property), integer (keyword), export snapshot (command), stack (object), property (glossary), external (glossary), stack window (glossary)
+
+Tags: windowing

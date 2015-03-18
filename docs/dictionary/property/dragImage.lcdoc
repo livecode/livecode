@@ -1,0 +1,41 @@
+Name: dragImage
+
+Type: property
+
+Syntax: set the dragImage to {empty | <imageID> }
+
+Syntax: get the dragImage
+
+Summary: Reports the id of an image that should be used to represent the drag operation.
+
+Introduced: 2.9
+
+OS: mac,windows
+
+Platforms: desktop,server
+
+Example:
+on dragStart
+  set the dragImage to the id of image "Drag Image" of me
+end dragStart
+
+Description:
+The <dragImage> property specifies the id of an image used to represent a drag operation. The property is set by the source application in a <dragStart> handler.
+
+The image is only looked up after completion of the <dragStart> handler in which it is set and so the image must persist for the lifetime of the operation. Typically, a control will want to use a pre-existing image object, or create a temporary object in <dragStart> that it deletes when it receives <dragEnd>.
+
+LiveCode looks for the specified image in the following order:
+
+1) The stack of the current object's <behavior> (if applicable)
+2) The stack of the owner of the current object's <behavior> (if applicable)
+ ...
+n) The stack of the current object's stack's <behavior> (if applicable)
+A) The current object's stack
+B) The current object's stack's mainstack (if a substack)
+C) The current object's stack's mainstacks substacks
+D) The list of open stacks, in order they were loaded
+
+Changes:
+The order in which LiveCode searches for drag images was changed in version 3.5. Previously, the current stack was searched first, followed by the list of open stacks.
+
+References: behavior (property), dragImageOffset (property), dragStart (message), dragEnd (message)

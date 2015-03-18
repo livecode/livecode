@@ -1,0 +1,14 @@
+Name: bit depth
+
+Synonyms: bit depth
+
+Type: glossary
+
+Description:
+The number of <bit|bits> required to describe the color of a single <pixel>. The bit depth determines how many different colors can appear on a screen. 
+ 
+For example, a screen whose bit depth is 4 can display 2^4 (16) colors.
+
+References: pixel (glossary), bit (glossary)
+
+Tags: multimedia

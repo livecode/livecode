@@ -1,0 +1,31 @@
+Name: urlWakeUp
+
+Type: message
+
+Syntax: urlWakeUp <wakeUpString> 
+
+Summary: Sent to an application when a custom URL is selected.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on urlWakeUp pURL
+   answer pURL
+end urlWakeUp
+
+Parameters:
+wakeUpString (string): 
+urlString (string): The custom url that was used to launch the application
+
+Description:
+Handle the urlWakeUp messags if you want to perform an action when an application is started up using the custom URL scheme.
+
+Custom URLs allow an application to be woken up when a specific URL is selected on a device. For example, the url can be a home url of the application web page. 
+
+The <urlWakeUp> message is received by an application when a custom URL is used to launch the application. If the application is not running it is started and then receives the <urlWakeUp> message, if the application is already running it receives the <urlWakeUp> message so it can detect that a URL was used to attempt to launch it.
+
+References: mobileGetLaunchURL (function)

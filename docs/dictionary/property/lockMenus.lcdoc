@@ -1,0 +1,30 @@
+Name: lockMenus
+
+Type: property
+
+Syntax: set the lockMenus to {true | false}
+
+Summary: Specifies whether the <menu bar> is updated when the <button|buttons> used for the <menu bar> are changed.
+
+Introduced: 1.0
+
+OS: mac
+
+Platforms: desktop,server,web
+
+Example:
+set the lockMenus to false
+
+Value (bool):The <lockMenus> is true or false.
+By default, the <lockMenus> <property> is set to true. It is <reset> to true when all pending <handler|handlers> are finished <execute|executing>.
+
+Description:
+Use the <lockMenus> <property> to hide temporary <menu bar> changes from the user, or to "hold" changes until you've finished all of them and are ready to display the new <menu bar>.
+
+If the <lockMenus> is set to true, changes in the <menubar> <group> do not appear in the <menu bar> itself. To make these changes appear on screen, the <lockMenus> must be set to false momentarily.
+
+The setting of this property has no effect on Unix and Windows systems.
+
+References: menubar (property), lock menus (command), reset (command), group (command), button (object), property (glossary), handler (glossary), menu bar (glossary), execute (glossary)
+
+Tags: menus

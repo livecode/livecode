@@ -1,0 +1,25 @@
+Name: field
+
+Type: keyword
+
+Syntax: field
+
+Summary: Designates the Field <tool>, which is used to create new <field|fields>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose field tool
+
+Description:
+Use the <field> <keyword> to create fields.
+
+When using the Field tool, the cursor is a crosshairs. This tool is used for creating fields by clicking at one corner of the field and dragging to the opposite corner.
+
+You can set the style (and other <properties>) of the <templateField> to the <field> type you want, then draw the <field> with the Field <tool>. The <field> icons on the Tools <palette> work this way: each one sets the <style> of the <templateField>, then chooses the Field <tool> so you can create the <field>.
+
+References: properties (property), style (property), field (keyword), templateField (keyword), palette (command), choose (command), tool (function), field (object), keyword (glossary)

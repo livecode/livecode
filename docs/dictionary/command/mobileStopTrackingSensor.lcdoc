@@ -1,0 +1,30 @@
+Name: mobileStopTrackingSensor
+
+Type: command
+
+Syntax: mobileStopTrackingSensor <sensor> 
+
+Summary: Stops listening for readings from the named sensor.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileStopTrackingSensor "location"
+
+Parameters:
+sensor (enum): The name of the sensor you wish to stop using
+- "location": stops tracking the location of the device
+- "heading": stops tracking the heading of the device
+- "acceleration": disables the accelerometer on the device
+- "rotation rate": stops tracking the rotation of the device
+
+Description:
+Use the <mobileStopTrackingSensor> command to stop listening for readings from a sensor.
+
+The <mobileStopTrackingSensor> command stops listening for readings from the named sensor.
+
+References: mobileStartTrackingSensor (command), mobileCanTrackHeading (function), mobileCanTrackLocation (function), mobileCurrentHeading (function), mobileSensorReading (function), mobileCurrentLocation (function), headingChanged (message), accelerationChanged (message), locationChanged (message), rotationRateChanged (message), trackingError (message)

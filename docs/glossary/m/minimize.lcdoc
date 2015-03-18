@@ -1,0 +1,12 @@
+Name: minimize
+
+Synonyms: minimizing,minimized,minimize
+
+Type: glossary
+
+Description:
+To shrink a window to an icon.  (On <Unix|Unix systems>, the term "<iconify>" is usually used instead.)
+
+References: iconify (glossary), Unix (glossary)
+
+Tags: windowing

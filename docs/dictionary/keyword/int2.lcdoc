@@ -1,0 +1,27 @@
+Name: int2
+
+Type: keyword
+
+Syntax: int2
+
+Summary: Used with the <read from file>, <read from process>, and <read from socket> <command|commands> to signify a <chunk> of <binary file|binary data> the size of a signed 2-byte <integer>.
+
+Synonyms: int2s
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+read from process "trap" for 4 int2
+
+Description:
+Use the <int2> <keyword> to read data from a binary file.
+
+If you specify <int2> as the <chunk> type in a <read from file>, <read from process>, or <read from socket> <command>, the data is returned as a series of numbers separated by commas, one for each signed <integer> read.
+
+References: read from socket (command), read from process (command), write to driver (command), read from file (command), keyword (glossary), binary file (glossary), command (glossary), chunk (glossary), integer (keyword)
+
+Tags: text processing

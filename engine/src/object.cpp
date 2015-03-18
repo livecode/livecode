@@ -2638,8 +2638,8 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	}
 	if (t != tb)
 	{
-		delete t;
-		delete b;
+		delete[] t;
+		delete[] b;
 	}
 }
 
@@ -4758,6 +4758,30 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font)
 	MCFontRelease(t_current_font);
 
 	return t_changed;
+}
+
+bool MCObject::copyfont(MCFontRef& r_font)
+{
+    bool t_need_unmap;
+    t_need_unmap = false;
+    if (m_font == nil)
+    {
+        mapfont();
+        t_need_unmap = true;
+    }
+    
+    MCFontRef t_font;
+    t_font = m_font;
+    
+    if (t_need_unmap)
+        unmapfont();
+    
+    if (t_font == nil)
+        return false;
+    
+    r_font = MCFontRetain(t_font);
+    
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,34 @@
+Name: stackLimit
+
+Type: property
+
+Syntax: set the stackLimit to <stackSizeInBytes> 
+
+Syntax: get the [effective] stackLimit
+
+Summary: Allows a script to set (in bytes) the maximum size of the (runtime) stack the engineuses for recursive computation.
+
+Introduced: 4.5.1
+
+OS: windows
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the stackLimit to 500
+
+Example:
+get the effective stackLimit
+
+Value: The <stackLimit> is a positive integer.
+
+Description:
+Use the <stackLimit> property to set (in script) the maximum size of the (runtime) stack the engine uses for recursive computation.
+
+The <stackLimit> property allows a script to set (in bytes) the maximum size of the (runtime) stack the engine uses for recursive computation. A change in the setting will only take effect when all currently executing handlers complete, and at this time the stack size limit will be reconfigured to the given limit, or the nearest amount to it depending on available memory.
+
+The <recursionLimit> property is now bounded by the stackLimit &ndash; attempts to set the <recursionLimit> greater than the <stackLimit> will see it downwardly adjusted to the maximum current size allowed.
+
+>*Note:* The changes to the recursionLimit property and the new stackLimit property are only implemented on Windows at present.
+
+References: recursionLimit (property)

@@ -18,17 +18,17 @@ module com.livecode.item
 
 use com.livecode.foreign
 
-public foreign handler FetchItemOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler StoreItemOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler FetchItemRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
-public foreign handler StoreItemRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler FetchItemOf(in Index as index, in Target as string, out Value as string) returns nothing binds to "<builtin>"
+public foreign handler StoreItemOf(in Value as string, in Index as index, inout Target as string) returns nothing binds to "<builtin>"
+public foreign handler FetchItemRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) returns nothing binds to "<builtin>"
+public foreign handler StoreItemRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) returns nothing binds to "<builtin>"
 
-public foreign handler EvalNumberOfItemsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
+public foreign handler EvalNumberOfItemsIn(in Target as string, out Count as index) returns nothing binds to "<builtin>"
 
-public foreign handler EvalIsAmongTheItemsOf(in Needle as string, in Target as string, out Result as bool) as undefined binds to "<builtin>"
-public foreign handler EvalIsNotAmongTheItemsOf(in Needle as string, in Target as string, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsAmongTheItemsOf(in Needle as string, in Target as string, out Result as bool) returns nothing binds to "<builtin>"
+public foreign handler EvalIsNotAmongTheItemsOf(in Needle as string, in Target as string, out Result as bool) returns nothing binds to "<builtin>"
 
-public foreign handler EvalOffsetOfItemIn(in Needle as string, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler EvalOffsetOfItemIn(in Needle as string, in Target as string, out Offset as index) returns nothing binds to "<builtin>"
 
 --
 

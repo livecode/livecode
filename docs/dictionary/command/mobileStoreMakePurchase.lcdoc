@@ -1,0 +1,48 @@
+Name: mobileStoreMakePurchase
+
+Type: command
+
+Syntax: mobileStoreMakePurchase <productID>, <quantity>, <developerPayload> 
+
+Summary: Create and send a request for a new purchase.
+
+Introduced: 6.7
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileStoreMakePurchase "com.runrev.sampleapp.consumable", "1", "This belongs to me"
+
+Example:
+on buyConsumableProduct 
+   mobileStoreEnablePurchaseUpdates
+   mobileStoreSetProductType "com.runrev.sampleapp.consumable", "inapp"
+   mobileStoreMakePurchase "com.runrev.sampleapp.consumable", "1", "This belongs to me"
+end buyConsumableProduct
+
+Example:
+on buySubscriptionProduct 
+   mobileStoreEnablePurchaseUpdates
+   mobileStoreSetProductType "com.runrev.sampleapp.subscription", "subs"
+   mobileStoreMakePurchase "com.runrev.sampleapp.subscription", "1", "This belongs to me"
+end buySubscriptionProduct
+
+Parameters:
+productID: The identifier of the requested item.
+quantity: The quantity of the in-app purchase to buy.
+developerPayload (string): A string of less than 256 characters that is returned with the purchase details once the transaction is complete. It can later be used to identify a purchase response to a specific request.
+
+Description:
+Use the <mobileStoreMakePurchase> command to create and send a request for a new purchase.
+
+The command <mobileStoreMakePurchase> is used to create and send a request for a new purchase.
+
+The productID is the identifier of the in-app purchase you created and wish to buy in the vendor's App Store.
+The <quantity> is the the quantity of the in-app purchase to buy. This is used for iOS, and should be used on consumable items. For Android, you must set the <quantity> to "1". If you want to buy more than one consumable item, you have to purchase them one at a time.
+The <developerPayload> is a string that contains additional purchase information. This only is used for Android stores.
+
+>*Note:*  Before calling the mobileStoreMakePurchase command, set the product type using <mobileStoreSetProductType, and> enable receipt of the purchaseStateUpdate messages through <mobileStoreEnablePurchaseUpdates>.
+
+References: mobileStoreRestorePurchases (command), mobileStoreDisablePurchaseUpdates (command), mobileStoreEnablePurchaseUpdates (command), mobileStoreRequestProductDetails (command), mobileStoreSetProductType, and (command), mobileStoreSetProductType (command), mobileStoreConsumePurchase (command), mobileStoreConfirmPurchase (command), mobileStoreVerifyPurchase (command), mobileStoreProductProperty (function), mobileStorePurchasedProducts (function), mobileStorePurchaseError (function), mobileStoreCanMakePurchase (function), purchaseStateUpdate (message), productRequestError (message), productDetailsReceived (message)

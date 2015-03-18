@@ -1,0 +1,32 @@
+Name: raisePalettes
+
+Type: property
+
+Syntax: set the raisePalettes to {true | false}
+
+Summary: Specifies whether <palette|palettes> always float above standard windows.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+set the raisePalettes to true
+
+Value (bool):The <raisePalettes> is true or false.
+By default, the <raisePalettes> <property> is set to true.
+
+Description:
+Use the <raisePalettes> <property> to control interleaving of <palette|palettes> with other windows.
+
+If the <raisePalettes> <property> is true, <palette|palettes> float in their own layer above standard windows. In other words, all <palette|palettes> are always in front of <editable window|editable windows> and <modeless dialog box|modeless dialog boxes> if this <property> is set to true.
+
+If it is set to false, palette windows can be interleaved with standard windows.
+
+>*Important:*  Setting this <property> to true may result in window flashing on <Unix|Unix systems>.
+
+References: raiseMenus (property), activatePalettes (property), property (glossary), Unix (glossary), modeless dialog box (glossary), editable window (glossary), palette (glossary)
+
+Tags: windowing

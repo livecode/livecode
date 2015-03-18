@@ -573,7 +573,7 @@ MCProperListLastOffsetOfListInRange (MCProperListRef self,
 	 * possible match, relative to the last element in the range
 	 * (i.e. t_roffset = 0 for the last element). */
 	for (uindex_t t_roffset = p_needle->length - 1;
-	     t_roffset <= p_range.length;
+	     t_roffset < p_range.length;
 	     ++t_roffset)
 	{
 		/* Offset of first element in the match, relative to start of

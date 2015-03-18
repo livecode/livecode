@@ -1,0 +1,31 @@
+Name: white
+
+Type: keyword
+
+Syntax: white
+
+Summary: Used with the <visual effect> <command> to show a blank white screen at the end of the visual effect.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+visual effect iris open to white
+
+Description:
+Use the <white> <keyword> to transition to a blank white background in a sequence of visual effects.
+
+Visual effects can be stacked in a sequence by using several <visual effect commands(command)> in succession. If the last transition ends with showing the card image, and all except the last one shows an intermediate image (such as a solid white color), the effect is enhanced. You show a solid white color at the end of a transition by using the <white> <keyword>.
+
+This example uses a camera iris effect to transition through an intermediate blank white screen to the final image:
+
+  visual effect iris close to white -- from card to solid white
+  visual effect iris open to card   -- from white to final card
+  go card "Destination"
+
+References: black (keyword), visual effect (command), command (glossary), keyword (glossary)
+
+Tags: multimedia

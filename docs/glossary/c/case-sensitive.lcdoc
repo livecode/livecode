@@ -1,0 +1,12 @@
+Name: case-sensitive
+
+Synonyms: case-sensitivity,case sensitive,case-sensitive
+
+Type: glossary
+
+Description:
+Treating an uppercase (capitalized) letter as a different <character> than its lowercase equivalent.
+
+References: character (glossary)
+
+Tags: text processing

@@ -1,0 +1,12 @@
+Name: delimiter
+
+Synonyms: delimiter
+
+Type: glossary
+
+Description:
+The <character> that marks the start or end of a piece of data, or separates two pieces of data from each other.
+
+References: character (glossary)
+
+Tags: text processing

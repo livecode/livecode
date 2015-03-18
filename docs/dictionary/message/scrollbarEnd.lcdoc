@@ -1,0 +1,35 @@
+Name: scrollbarEnd
+
+Type: message
+
+Syntax: scrollbarEnd <end> 
+
+Summary: Sent to a <scrollbar> when the user Shift-clicks its increase arrow.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on scrollbarEnd -- use a scroll bar to navigate among cards
+  visual effect scroll up
+  go last card
+end scrollbarEnd
+
+Parameters:
+end: The new position of the scrollbar thumb. This is the same as the scrollbar's endValue property.
+
+Description:
+Handle the <scrollbarEnd> <message> if you want to respond to the use of Shift-click to move the <scrollbar thumb> directly to the end (the bottom or right) of the <scrollbar>.
+
+Dragging the scrollbar thumb to the end position, or otherwise moving it to the end, does not send a <scrollbarEnd> <message>.
+
+If the <scrollbarEnd> <message> is not handled, a <scrollbarDrag> <message> is sent in addition.
+
+References: scrollbar (keyword), scrollbarDrag (message), scrollbarLineInc (message), scrollbarBeginning (message), scrollbar thumb (glossary), message (glossary)
+
+Tags: ui

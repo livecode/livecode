@@ -1,0 +1,47 @@
+Name: replaceText
+
+Type: function
+
+Syntax: replaceText(<stringToChange>, <matchExpression>, <replacementString>)
+
+Summary: Searches for a <regular expression> and replaces the portions that match the <regular expression>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+replaceText("malformed","mal","well") -- returns "wellformed"
+
+Example:
+replaceText(field "Stats",return,comma) -- makes comma-delimited
+
+Parameters:
+stringToChange (string): 
+matchExpression: A regular expression.
+replacementString (string): 
+
+Returns: The <replaceText> function returns the changed <string>.
+
+Description:
+Use the <replaceText> function to search for and replace text that matches a particular pattern.
+
+&nbsp;
+
+The <replaceText> function replaces all the occurrences of the <matchExpression> with the <replacementString>. If more than one matching substring is found, the <replaceText> function replaces all of them.
+
+&nbsp;
+
+The <replaceText> function is not as fast as the <replace> <command>, but is more flexible because you can search for any text that matches a <regular expression>.
+
+&nbsp;
+
+The <stringToChange> and <matchExpression> are always case-sensitive, regardless of the setting of the <caseSensitive> <property>.  (If you need to make a case-insensitive comparison, use "(?i)" at the start of the <matchExpression> to make the match case-insensitive.)
+
+>*Note:* A number of characters in regular expressions have special meanings and need to be escaped with back slashes For example period (".") matches any character, so in order to replace period characters with a regular expression use "\." . For more information on regular expressions see the Perl documentation here: &lt;http://perldoc.perl.org/perlre.html&gt;
+
+&nbsp;
+
+References: caseSensitive (property), string (keyword), replace (command), filter (command), command (glossary), regular expression (glossary), property (glossary)

@@ -150,7 +150,7 @@ void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect)
 
 void MCGradientFillFree(MCGradientFill *p_gradient)
 {
-	delete p_gradient -> ramp;
+	delete[] p_gradient -> ramp;
 	delete p_gradient;
 }
 

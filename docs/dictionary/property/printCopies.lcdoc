@@ -1,0 +1,34 @@
+Name: printCopies
+
+Type: property
+
+Syntax: set the printCopies to <numberOfCopies> 
+
+Syntax: get the printCopies
+
+Summary: Reports the number of copies that the next print job will print.
+
+Introduced: 2.9
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: printing
+
+Example:
+set the printCopies to the label of button "Copies" of group "Printer Settings"
+
+Example:
+set the printCopies to 2
+
+Value: The <printCopies> property is a positive number. The default value is determined by the default setting of the current printer.
+
+Description:
+Use the <printCopies> property to specify a number of copies to print. This property will only have an affect if the <printerFeatures> contains "copies".
+
+To have an effect, this property must be set before calling <open printing>.
+
+References: open printing (command), answer printer (command), printPageNumber (property), printerFeatures (property), printCollate (property)
+
+Tags: printing

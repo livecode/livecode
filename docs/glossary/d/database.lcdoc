@@ -1,0 +1,12 @@
+Name: database
+
+Synonyms: database,SQL database
+
+Type: glossary
+
+Description:
+A structure that organizes and stores a collection of information as a set of <record|records>, with each <record> containing all the information pertaining to one subject of the database.
+
+References: record (glossary)
+
+Tags: database

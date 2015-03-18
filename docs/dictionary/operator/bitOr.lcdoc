@@ -1,0 +1,36 @@
+Name: bitOr
+
+Type: operator
+
+Syntax: <number1> bitOr <number2> 
+
+Summary: Performs a "bitwise or" <operation> on the <binary> representation of two numbers.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+1 bitOr 0 -- evaluates to 1
+
+Example:
+6 bitOr 2 -- in binary: 110 bitOr 010; evaluates to 110; converted to 6
+
+Parameters:
+number1: The number1 and number2 are numbers, or expressions that evaluate to numbers, between zero and 4,294,967,295 (2^32 - 1).
+number2: 
+
+Description:
+Use the <bitOr> <operator> to operate directly on the <bit|bits> of two numbers.
+
+To perform the <bitOr> <operation>, LiveCode first converts both <operand|operands> to their <binary> equivalent, a string of ones and zeroes. 1 is equivalent to true, and 0 is equivalent to false.
+
+For each bit of <number1>, LiveCode performs an <or> <operation> with the corresponding <bit> of <number2> to produce a result. A <bit> is 0 if the corresponding <bit|bits> of <number1> and <number2> are both 0. Otherwise, the <bit> is 1.
+
+Finally, the binary number thus created is converted back to decimal.
+
+References: or (operator), bitNot (operator), operation (glossary), operator (glossary), bit (glossary), binary (glossary), operand (glossary)
+
+Tags: math

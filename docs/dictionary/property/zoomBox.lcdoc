@@ -1,0 +1,43 @@
+Name: zoomBox
+
+Type: property
+
+Syntax: set the zoomBox of <stack> to {true | false}
+
+Summary: Shows a window's <zoom box>.
+
+Synonyms: maximizeBox
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+set the zoomBox of me to true
+
+Example:
+set the zoomBox of the templateStack to false
+
+Value (bool): The <zoomBox> <property> of a <stack> is true or false. By <default>, the <zoomBox> of a newly created <stack> is set to true.
+
+Description:
+Use the <zoomBox> property to display the zoom box or maximize box in a window's title bar.
+
+The terminology varies depending on platform. The <zoomBox> <property> determines whether the <zoom box> (Mac OS and OS X systems) or <maximize button|maximize box> (Unix and <Windows|Windows systems>) appears in a <stack window|stack window's> <title bar>.
+
+>*Note:* On <OS X|OS X systems>, if the <zoomBox> <property> is false, the <zoom box> is disabled rather than hidden.
+
+The setting of this property affects the <decorations property>, and vice versa. Setting a stack's <zoomBox> property determines whether its <decorations property> includes "maximize" (or is "default", for window styles that normally include a zoom box). Conversely, setting a stack's <decorations property> sets its <zoomBox> to true or false depending on whether the <decorations> includes "maximize" (or is "default").
+
+Setting the <zoomBox> <property> causes the <stack window> to flash briefly.
+
+Changes:
+The synonym "maximizeBox" was added in version 2.1.
+
+References: draggable (property), decorations property (property), minimizeBox (property), decorations (property), default (keyword), stack (object), property (glossary), stack window (glossary), OS X (glossary), zoom box (glossary), Windows (glossary), maximize button (glossary), title bar (glossary)
+
+Tags: windowing

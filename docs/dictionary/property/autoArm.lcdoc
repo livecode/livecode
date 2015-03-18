@@ -1,0 +1,35 @@
+Name: autoArm
+
+Type: property
+
+Syntax: set the autoArm of <button> to {true | false}
+
+Summary: Specifies whether a <button> becomes <armed> when the <mouse pointer> moves into it.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the autoArm of last button to false
+
+Example:
+set the autoArm of button "Menu Choices" to true
+
+Value (bool):The <autoArm> of a <button(keyword)> is true or false.
+By default, the <autoArm> of newly created <button(object)|buttons> is false. <menu item|Menu items> and <cascading menu> items created with the "New Control" submenu of the Object menu have their <autoArm> <property> set to true when created.
+
+Description:
+Use the <autoArm> <property> to provide visual feedback to the user about which button the <mouse pointer> is over. Usually, the <autoArm> <property> is used for <button(object)|buttons> that are part of <stack menu|stack menus>.
+
+A button whose <autoArm> <property> is set to true does not receive <mouseDown> <message|messages>.
+
+If a button's <autoArm> <property> is true, it receives <keyDown> and <keyUp> <message|messages> for keypresses that occur while the mouse is pressed and the <pointer> is over the <button(keyword)>. If the <button(object)|button's> <autoArm> is false, it does not receive key <message|messages> while being clicked.
+
+References: showHilite (property), armed (property), armFill (property), armedIcon (property), pointer (keyword), button (keyword), mouseDown (message), keyDown (message), keyUp (message), button (object), property (glossary), stack menu (glossary), mouse pointer (glossary), message (glossary), menu item (glossary), cascading menu (glossary)
+
+Tags: ui

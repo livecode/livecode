@@ -1,0 +1,12 @@
+Name: image
+
+Synonyms: image,image object
+
+Type: object
+
+Description:
+An <object> that contains a <bitmap|bitmapped> picture.
+
+References: object (object), bitmap (glossary)
+
+Tags: multimedia

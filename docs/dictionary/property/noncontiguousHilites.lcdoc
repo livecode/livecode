@@ -1,0 +1,36 @@
+Name: noncontiguousHilites
+
+Type: property
+
+Syntax: set the noncontiguousHilites of <field> to {true | false}
+
+Summary: Specifies whether the user can <select> non-adjacent <lines> of a <list field>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the noncontiguousHilites of field "Parties" to true
+
+Value (bool):The <noncontiguousHilites> of a <field(keyword)> is true or false.
+By default, the <noncontiguousHilites> <property> of newly-created <field(object)|fields> is set to false.
+
+Description:
+Use the <noncontiguousHilites> <property> to control the <behavior> of <list field|list fields>.
+
+If a list field's <noncontiguousHilites> <property> is false, the user can <select> multiple lines only if they're next to each other.
+
+If the <noncontiguousHilites> is true, the user can <select> multiple lines, wherever they occur in the <field(keyword)>. The user makes a multiple choice from a <list field> by Command-clicking the desired lines (on <Mac OS|Mac OS systems>) or Control-clicking (on <Unix> and <Windows|Windows systems>).
+
+If the field's <listBehavior> is not set to true, this <property> has no effect.
+
+>*Important:*  Setting the <toggleHilites> to true automatically sets the <field(object)|field's> <noncontiguousHilites> <property> to true. (However, setting the <toggleHilites> to false does not set the <property> back to false.) To set the <toggleHilites> to true and the <noncontiguousHilites> to false, be sure to set the <toggleHilites> first, then set the <noncontiguousHilites> to false.
+
+References: hilitedLine (property), listBehavior (property), toggleHilites (property), threeDHilite (property), multipleLines (property), field (keyword), lines (keyword), select (command), field (object), property (glossary), Unix (glossary), list field (glossary), Windows (glossary), behavior (glossary), Mac OS (glossary)
+
+Tags: ui

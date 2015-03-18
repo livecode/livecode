@@ -1,0 +1,27 @@
+Name: into
+
+Type: keyword
+
+Syntax: into
+
+Summary: Used with the <put> <command> to place a <value> in a <container>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put myVariable into field "Contents"
+
+Description:
+Use the <into> <keyword> to designate a destination <container>.
+
+If the container is a variable name, and the variable does not already exist, the <put> <command> creates it as a <local variable> and sets it to the designated <value>.
+
+If the container already exists, the <into> <keyword> replaces its former contents.
+
+References: after (keyword), put (command), value (function), keyword (glossary), command (glossary), container (glossary), local variable (glossary)
+
+Tags: properties

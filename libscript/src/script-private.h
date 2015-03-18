@@ -565,6 +565,18 @@ bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCSc
 //   byte       version[1]
 //   <pickle of module struct>
 
+// The module version will be incremented for every public release of the libscript
+// which occurs in which the module binary format changes.
+//
+// We will only aim to support module formats which have been released as final and
+// stable.
+//
+// The following constants keep track of, and should be updated to reflect the meaning
+// of each module version.
+
+#define kMCScriptModuleVersion_8_0_0_DP_1 0
+#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_8_0_0_DP_1
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

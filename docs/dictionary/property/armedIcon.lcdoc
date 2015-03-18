@@ -1,0 +1,31 @@
+Name: armedIcon
+
+Type: property
+
+Syntax: set the armedIcon of <button> to {<imageID> | <imageName>}
+
+Summary: Specifies an <image> to display in a <button> when the <mouse pointer> enters it.
+
+Associations: button
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the armedIcon of button "Trigger" to 2245
+
+Value:
+The <armedIcon> <property> is the <ID> or <name> of an <image> to use for an icon. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+By default, the <armedIcon> <property> of newly created <button|buttons> is set to zero.
+
+Description:
+Use the <armedIcon> <property> to change a <button|button's> appearance when it is <armed>. Do not use this property to create hover icon effects, instead use the hoverIcon property.
+
+If the button's <autoArm> <property> is false, the setting of the <armedIcon> <property> has no effect.
+
+References: name (property), showIcon (property), ID (property), armed (property), autoArm (property), hoverIcon (property), icon (property), image (keyword), button (keyword), button (object), property (glossary), mouse pointer (glossary), current stack (glossary), stacks (function)
+
+Tags: ui

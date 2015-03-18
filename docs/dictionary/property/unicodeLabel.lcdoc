@@ -1,0 +1,48 @@
+Name: unicodeLabel
+
+Type: property
+
+Syntax: set the unicodeLabel of object to labelString
+
+Summary: Specifies the UTF-16 string to be displayed on the specified object if its showName property is true.
+
+Associations: button,graphic
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the unicodeLabel of button 1 to tUnicodeString
+
+Example:
+get the unicodeLabel of button "Choices Popup"
+
+Example:
+set the unicodeLabel of button 1 to uniEncode("Click here")
+
+Value:
+The <unicodeLabel> of an object is a UTF-16 string.
+By default, the <unicodeLabel> property of newly created buttons, graphics and groups is set to empty.
+
+Description:
+Use the <unicodeLabel> property as a user-visible replacement for an ungainly name, or to change the visible name of an object when changing the actual name would require changing code that refers to it.
+
+Setting the <unicodeLabel> property of an object displays a UTF-16 string as a user-visible label.
+
+If a button's menuMode is either "option" or "comboBox", the button's <unicodeLabel> is the text of the currently selected menu option. Setting the <unicodeLabel> property changes the currently selected option. (To change the currently selected option while sending the appropriate message, set the button's menuHistory instead.)
+
+To create a multiple-line label for a button or graphic, place a return constant in the <unicodeLabel>.
+
+If an object's <unicodeLabel>  or label is empty, the object's name property is displayed instead. 
+
+Deprecated: In LiveCode 7.0 the language was changed to handle unicode transparently. This means that language functionality which previously aided unicode text manipulation is no longer required. This property should not be used in new code; simply set the label as normal. Assigning values other than those returned from uniEncode to this property will not produce the desired results.The following are now equivalent:
+
+set the unicodeLabel of button 1 to tText
+set the label of button 1 to textDecode(tText, "UTF16")
+
+References: label (property), encoding (property), menuHistory (property), effective (keyword)
+
+Tags: ui

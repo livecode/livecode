@@ -1,0 +1,35 @@
+Name: $_POST_RAW
+
+Type: keyword
+
+Syntax: $_POST_RAW
+
+Summary: <$_POST_RAW> is a binary string variable, formed by reading the content of stdin.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put $_POST_RAW into tPOSTData
+
+Example:
+set the itemdelimiter to "&"
+repeat for each item tVariablePair in $_POST_RAW
+   set the itemdelimiter to "="
+   put urlDecode(item 1 of tVariablePair) into tVariableKey
+   put urlDecode(item 2 of tVariablePair) into tVariableValue
+   -- do something with key and value --
+   set the itemdelimiter to "&"
+end repeat
+
+Description:
+Use the <$_POST_RAW> keyword to access the raw post data.
+
+<$_POST_RAW> is only available when running in CGI mode (Server).
+
+>*Note:* The <$_POST_RAW> keyword is useful as it provides a means to get the post data in order.
+
+References: $_POST_BINARY (keyword), $_POST (keyword), $_SERVER (keyword), $_GET_BINARY (keyword), $_GET_RAW (keyword), $_GET (keyword)

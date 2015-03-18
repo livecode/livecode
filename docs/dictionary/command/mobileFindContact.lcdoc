@@ -1,0 +1,32 @@
+Name: mobileFindContact
+
+Type: command
+
+Syntax: mobileFindContact <contactName> 
+
+Summary: Allows the user to search for a contact, based on the contact's name.
+
+Introduced: 5.5.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileFindContact "Steve"
+
+Example:
+mobileFindContact "S"
+
+Parameters:
+contactName: A name, or fragment of a name to search for in the contacts list.
+
+Returns (string):A string of comma delimited contact IDs that match the search string.
+If no contact could be found, then empty is returned.
+
+Description:
+Allows the user to find a contact in the contact list, based on a contact name comparison.
+
+Use the <mobileFindContact> command to find contacts in the contact list.
+
+References: mobilePickDate (command), mobileRemoveContact (command), mobilePickMedia (command), mobilePickContact (command), mobileShowContact (command), mobilePick (command), mobileAddContact (command), mobileCreateContact (command), mobileGetContactData (function)

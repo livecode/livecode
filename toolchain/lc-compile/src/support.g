@@ -43,6 +43,9 @@
     IsNameEqualToString
     IsStringEqualToString
 
+    IsNameSuitableForDefinition
+    IsStringSuitableForKeyword
+
     InitializeScopes
     FinalizeScopes
     DumpScopes
@@ -293,9 +296,13 @@
     Error_NonHandlerTypeVariablesCannotBeCalled
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
+    Error_UnsuitableStringForKeyword
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
-
+    Warning_UnsuitableNameForDefinition
+    Warning_UsingAsForHandlerReturnTypeDeprecated
+    Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated
+    Warning_UndefinedTypeDeprecated
 
 --------------------------------------------------------------------------------
 
@@ -333,6 +340,9 @@
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
 'condition' IsStringEqualToString(STRING, STRING)
+
+'condition' IsNameSuitableForDefinition(NAME)
+'condition' IsStringSuitableForKeyword(STRING)
 
 --------------------------------------------------------------------------------
 
@@ -642,7 +652,13 @@
 'action' Error_HandlerNotSuitableForPropertyGetter(Position: POS, Identifier: NAME)
 'action' Error_HandlerNotSuitableForPropertySetter(Position: POS, Identifier: NAME)
 
+'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
+
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
+'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
+'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)
+'action' Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated(Position: POS)
+'action' Warning_UndefinedTypeDeprecated(Position: POS)
 
 --------------------------------------------------------------------------------

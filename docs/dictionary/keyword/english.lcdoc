@@ -1,0 +1,40 @@
+Name: english
+
+Type: keyword
+
+Syntax: english
+
+Summary: Used with the <date> and <time> <function|functions> to specify a date or time in the <format> used in the United States.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the English date into field "US Formatted Date"
+
+Example:
+if the short English date is savedDate then goToList
+
+Description:
+Use the <english> <keyword> to use a date in an invariant format that is guaranteed not to change when the <stack> is moved to another system, or when users change their system preferences.
+
+You can use the <english> <keyword> in combination with the <long>, <abbreviated>, or <short> <keyword|keywords>. The <english> <keyword> must come before the <long>, <abbreviated>, or <short> <keyword>.
+
+A long English <date> looks like this: Thursday, June 22, 2000
+An abbreviated English <date> looks like this: Thu, Jan 22, 2000
+A short English <date> looks like this: 1/22/00
+
+A long English <time> looks like this: 11:22:47 AM
+An abbreviated English <time> or <short> English <time> looks like this: 11:22 AM
+
+>*Note:* The <english> <keyword> is implemented internally as a <property> and appears in the <propertyNames>. However, it cannot be used as a <property> in an <expression>, nor with the <set> <command>.
+
+Changes:
+The ability to use the short, abbreviated, or long keywords in conjunction with the english keyword was introduced in version 1.1. In previous versions, the english keyword was equivalent to the long keyword.
+
+References: abbreviated (keyword), long (keyword), short (keyword), convert (command), set (command), time (function), dateFormat (function), format (function), date (function), propertyNames (function), keyword (glossary), property (glossary), command (glossary), function (glossary), expression (glossary), stack (object)
+
+Tags: math
