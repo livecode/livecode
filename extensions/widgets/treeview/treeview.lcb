@@ -54,7 +54,7 @@ private variable mDragging as Boolean
 private variable mDragStartLoc as Point
 
 // Temporary - folds and unfolds randomly
-private handler __convertArrayToList(in pArray as Array, in pLevel as Integer) returns List
+private handler __convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
 	variable tList as List
 	put the empty list into tList
 	
@@ -70,11 +70,15 @@ private handler __convertArrayToList(in pArray as Array, in pLevel as Integer) r
 		put tKey into tElement["key"]
 		put pLevel into tElement["indent"]
 		put any number < 0.5 into tElement["folded"]	
+		variable tPath as List
+		put pPath into tPath
+		push tKey onto tPath	
+		put tPath into tElement["path"]
 		if pArray[tKey] is an array then
 			put false into tElement["leaf"]
 			push tElement onto tList
 			if not tElement["folded"] then
-				splice __convertArrayToList(pArray[tKey], pLevel+1) after element -1 of tList
+				splice __convertArrayToList(pArray[tKey], pLevel + 1, tPath) after element -1 of tList
 			end if
 		else
 			put true into tElement["leaf"]
@@ -125,8 +129,7 @@ public handler OnCreate() returns nothing
 	end repeat
 	
 	put tArray into mData
-	put __convertArrayToList(tArray,0) into mDataList
-	
+	put __convertArrayToList(tArray, 0, the empty list) into mDataList
 	
 	put 0 into mViewTopPosition
 	
@@ -159,8 +162,8 @@ public handler OnPaint() returns nothing
 	variable tDataItem as Array
 	put the empty array into tDataItem
 	
-	variable tx as Integer
-	put 1 into tx
+	variable tX as Integer
+	put 1 into tX
 	
 	put the floor of mViewTopPosition / mRowHeight into mFirstDataItem
 	if mFirstDataItem < 1 then
@@ -182,13 +185,13 @@ public handler OnPaint() returns nothing
 	put the result into tTextBounds
 	put the width of tTextBounds into tArrowWidth
 	
-	repeat with tx from mFirstDataItem up to the number of elements in mDataList
-		put element tx of mDataList into tDataItem
+	repeat with tX from mFirstDataItem up to the number of elements in mDataList
+		put element tX of mDataList into tDataItem
 		
 		// Draw Background
 		if mAlternateRowBackgrounds is true then
 		   put rectangle path of rectangle [0,tTop,mViewWidth,tTop+mRowHeight] into tPath
-		   if tx mod 2 is 1 then
+		   if tX mod 2 is 1 then
 			   set the paint of this canvas to getPaint("background","fill")
 		   else
 			   set the paint of this canvas to getPaint("background","fill_alternate")
@@ -237,16 +240,6 @@ public handler OnPaint() returns nothing
 	put rounded rectangle path of scrollbarRect() with radius 3 into tPath
 	set the paint of this canvas to getPaint("scrollbar", "fill")
 	fill tPath on this canvas	
-	
-	/*
-		We will need to keep track of the viewport data so that we can
-		perform click actions appropriately. We will need to store
-		- the relative heights of each display line
-		- the 'path' that each display line represents
-		
-		Then when we have an action (edit value, add key, delete key etc) we can
-		call the appropriate ...OnPath handler.	
-	*/
 	
 end handler
 
@@ -333,24 +326,27 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 end handler
 
 public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
-	variable tRowNumber
-	put yPosToRowNumber(the y of the click position) into tRowNumber
 	
-	log tRowNumber
+	variable tRowNumber
+	put yPosToRowNumber(the y of the current click position) into tRowNumber
 	
 	variable tData as Array
 	put the empty array into tData
+	
 	put element tRowNumber of mDataList into tData
 	
-	if tData["folded"] is true then
-		unfoldKey(tData["path"])
-	else
-		foldKey(tData["path"])
+	if tData["leaf"] is not true then
+		if tData["folded"] is true then
+			unfoldPath(tData["path"])
+		else
+			foldPath(tData["path"])
+		end if
 	end if
+
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
-	return (the trunc of ((mViewTopPosition + pYPos) / mRowHeight ))+1
+	return the trunc of (pYPos / mRowHeight) + mFirstDataItem
 end handler
 
 --------------------------------------------------------------------------------
@@ -546,7 +542,7 @@ end handler
 
 // Convert an array to a list, as used by this widget. Ignoring the 'folded' parameter, 
 // mDataList should always be the result of calling this on mData
-private handler convertArrayToList(in pArray as Array, in pFolded as Boolean, in pLevel as Integer) returns List
+private handler convertArrayToList(in pArray as Array, in pFolded as Boolean, in pLevel as Integer, in pPath as List) returns List
 
 	variable tList as List
 	put the empty list into tList
@@ -563,12 +559,16 @@ private handler convertArrayToList(in pArray as Array, in pFolded as Boolean, in
 		put tKey into tElement["key"]
 		put pLevel into tElement["indent"]
 		put pFolded into tElement["folded"]
-			
+		variable tPath as List
+		put pPath into tPath
+		push tKey onto tPath
+		put tPath into tElement["path"]	
 		if pArray[tKey] is an array then
 			put false into tElement["leaf"]
 			push tElement onto tList
 			if not pFolded then
-				splice convertArrayToList(pArray[tKey], pFolded, pLevel+1) after element -1 of tList
+				// The sublist should always be folded by default
+				splice convertArrayToList(pArray[tKey], true, pLevel + 1, tPath) after element -1 of tList
 			end if
 		else
 			put true into tElement["leaf"]
@@ -583,70 +583,88 @@ end handler
 // Replace the existing data wholesale with a new array pData
 private handler setArrayData(in pData as Array) returns nothing
 	put pData into mData
-	put convertArrayToList(pData, true, 0) into mDataList	
+	put convertArrayToList(pData, true, 0, the empty list) into mDataList	
 	put true into mRecalculate
 end handler
 
-handler type TreeApply(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
+handler type TreeApply(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 
-private handler removeKey(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
+private handler removeKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	delete element pListElt of xList
-	delete xArray[pArrayKey]
+	delete xArray[element pLevel + 1 of pPath]
 end handler
 
-private handler unfoldKey(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
+// To 'unfold', splice in the sublist
+private handler unfoldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put false into xList[pListElt]["folded"]
+	splice convertArrayToList(xArray[element pLevel + 1 of pPath], true, pLevel + 1, pPath) after element pListElt of xList	
 end handler
 
-private handler foldKey(in pListElt as Integer, in pArrayKey as String, inout xList as List, inout xArray as Array)
+// To 'fold', just delete everything in the list until the indent is the same as 'this'
+private handler foldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put true into xList[pListElt]["folded"]
+	
+	variable tIndent as Integer
+	put xList[pListElt]["indent"] into tIndent
+	
+	variable tCount as Integer
+	variable tLastSubElement as Integer
+	repeat with tCount from pListElt + 1 up to the number of elements in xList
+		if xList[tCount]["indent"] <= tIndent then
+			put tCount - 1 into tLastSubElement
+			exit repeat
+		end if
+		put tCount into tLastSubElement
+	end repeat
+	
+	delete element pListElt + 1 to tLastSubElement of xList
 end handler
 
 // Simply delete the array key on the given path
 private handler removePath(in pPath as List)
-	applyOnPath(removeKey, pPath, mDataList, mData)
+	applyOnPath(removeKey, pPath, 0, 0, mDataList, mData)
+	redraw all
 end handler
 
 // Unfold the key at the target path
 private handler unfoldPath(in pPath as List)
-	applyOnPath(unfoldKey, pPath, mDataList, mData)
+	applyOnPath(unfoldKey, pPath, 0, 0, mDataList, mData)
+	redraw all
 end handler
 
 // Fold the key at the target path
 private handler foldPath(in pPath as List)
-	applyOnPath(foldKey, pPath, mDataList, mData)
+	applyOnPath(foldKey, pPath, 0, 0, mDataList, mData)
+	redraw all
 end handler
 
 // Recursive implementation of performing an action on the given path. 
 // Acts on a list (in the format used by this widget) and an array simultaneously.
 // We are quite lax with checking here, since this will only be used internally 
 // 	after a delete action happens, and so the element should exist by definition.
-private handler applyOnPath(in pHandler as TreeApply, in pPath as List, inout xList as List, inout xArray as Array)
-	variable tFirstKey as String
-	put element 1 of pPath into tFirstKey
-	
+private handler applyOnPath(in pHandler as TreeApply, in pPath as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array)
+	variable tKey as String
+	put element pLevel + 1 of pPath into tKey
+
 	variable tCount as Integer
 	variable tMatch as Integer
 	variable tElement
-	put 0 into tCount
+	put pStart into tCount
 	repeat for each element tElement in xList
 		add 1 to tCount
-		if tElement["key"] is tFirstKey then
+		if tElement["key"] is tKey then
 			put tCount into tMatch
+			exit repeat
 		end if	
 	end repeat
 	
 	if tMatch is defined then
-		if the number of elements in pPath is 1 then
-			pHandler(tMatch, tFirstKey, xList, xArray)
+		if the number of elements in pPath is pLevel + 1 then
+			pHandler(tMatch, pPath, pLevel, xList, xArray)
 		else
-			__applyOnPath(pHandler, element 2 to -1 of pPath, element tMatch of xList, xArray[tFirstKey])
+			applyOnPath(pHandler, pPath, pLevel + 1, tMatch, xList, xArray[tKey])
 		end if
 	end if
-end handler
-
-private handler __applyOnPath(in pHandler as TreeApply, in pPath as List, inout xListArray as List, inout xArray as Array)
-	applyOnPath(pHandler, pPath, xListArray["value"], xArray)
 end handler
 
 // Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
@@ -666,7 +684,7 @@ private handler setDataOnPath(in pPath as List) returns nothing
 	put element -1 of pPath into tValue
 	
 	// Simultaneously adjust the backing list and array to reflect the added value.
-	setDataListOnPath(tActualPath, tValue, mDataList, mData)
+	setDataListOnPath(tActualPath, tValue, 0, mDataList, mData)
 
 end handler
 
@@ -677,7 +695,7 @@ end handler
 
 // Recursive implementation of setting data on a given path. 
 // Acts on a list (in the format used by this widget) and an array simultaneously.
-private handler setDataListOnPath(in pPath as List, in pValue as any, inout xList as List, inout xArray as Array) returns nothing
+private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel as Integer, inout xList as List, inout xArray as Array) returns nothing
 
 	variable tElement as Array
 	variable tCount as Integer
@@ -687,27 +705,31 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, inout xLis
 		put element tCount of xList into tElement
 		
 		// The easy case - just insert the new element
-		if tElement["key"] > element 1 of pPath then
+		if tElement["key"] > element pLevel + 1 of pPath then
+		
+			// update the backing array
 			put convertPathToElement(pPath, pValue) into tNewElement
-			splice convertArrayToList(tNewElement, false, 0) before element tCount of xList
-			put tNewElement into xArray[element 1 of pPath]
+			put tNewElement into xArray[element pLevel + 1 of pPath]
+			
+			// update the list
+			splice convertArrayToList(tNewElement, false, pLevel, pPath) before element tCount of xList
 			return
 			
 		// We already have a key for the start of this path
-		else if tElement["key"] is element 1 of pPath then
+		else if tElement["key"] is element pLevel + 1 of pPath then
 			// The new element replaces the old one if the new one is just a string...
-			if the number of elements in pPath is 1 then
-				put convertPathToElement(element 2 to -1 of pPath, pValue)into tNewElement	
-				put tNewElement into xArray[element 1 of pPath]
+			if the number of elements in pPath is pLevel + 1 then
+				put convertPathToElement(element pLevel + 2 to -1 of pPath, pValue)into tNewElement	
+				put tNewElement into xArray[element pLevel + 1 of pPath]
 				put pValue into tElement["value"]
 			// ...or if the old one was just as string.
-			else if not tElement["value"] is a list then
-				put convertPathToElement(element 2 to -1 of pPath, pValue)into tNewElement
-				put convertArrayToList(tNewElement, false, 0) into tElement["value"]
-				put tNewElement into xArray[element 1 of pPath]
+			else if tElement["leaf"] then
+				put convertPathToElement(element pLevel + 2 to -1 of pPath, pValue) into tNewElement
+				splice convertArrayToList(tNewElement, false, pLevel, pPath) after element tCount of xList 
+				put tNewElement into xArray[element pLevel + 1 of pPath]
 			// Otherwise, go one step further into the path and set
 			else
-				setDataListOnPath(element 2 to -1 of pPath, pValue, tElement["value"], xArray[element 1 of pPath])
+				setDataListOnPath(pPath, pValue, pLevel + 1, element tCount + 1 to -1 of xList, xArray[element pLevel + 1 of pPath])
 			end if
 			return
 		end if
@@ -715,7 +737,7 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, inout xLis
 	
 	// If we reached the end of the list then append this to the end
 	put convertPathToElement(pPath, pValue) into tNewElement
-	splice convertArrayToList(tNewElement, false, 0) after element -1 of xList
+	splice convertArrayToList(tNewElement, false, pLevel, pPath) after element -1 of xList
 	put tNewElement into xArray[element 1 of pPath]
 end handler
 
