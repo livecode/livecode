@@ -48,6 +48,7 @@ private variable mMargin as Real
 private variable mRecalculate as Boolean
 private variable mAlternateRowBackgrounds as Boolean
 private variable mIndentPixels as Integer
+private variable mHoverRow as Integer
 
 // Drag related 
 private variable mDragging as Boolean
@@ -129,15 +130,16 @@ public handler OnCreate() returns nothing
 	end repeat
 	
 	put tArray into mData
-	put __convertArrayToList(tArray, 0, the empty list) into mDataList
 	
+	put __convertArrayToList(tArray, 0, the empty list) into mDataList
+
+	put 0 into mHoverRow
 	put 0 into mViewTopPosition
 	
 	initialiseConstants()
 end handler
 
 public handler OnPaint() returns nothing
-
 	if mRecalculate then
 		updateParameters()
 	end if
@@ -173,28 +175,37 @@ public handler OnPaint() returns nothing
 	variable tTopOffset
 	put mViewTopPosition mod mRowHeight into tTopOffset
 	subtract tTopOffset from tTop
-	
-	//log "Start Index: %@ | top offset: %@" with [mFirstListItem,tTopOffset]
 
 	variable tTextBounds as Rectangle
 	set the font of this canvas to font getFontName() at size 12
 	
 	// Work out the width of the arrow
 	variable tArrowWidth as Number
-	measure ">" on this canvas
-	put the result into tTextBounds
-	put the width of tTextBounds into tArrowWidth
+	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into tPath
+	put the width of the bounding box of tPath into tArrowWidth
 	
+
 	repeat with tX from mFirstDataItem up to the number of elements in mDataList
 		put element tX of mDataList into tDataItem
+		
+		variable tStyle as String
+		put "" into tStyle
+		//if tDataItem["selected"] is true then 
+			//put "_selected" into tStyle
+		//end if
+		
+		if tx is mHoverRow then
+			put "_hover" into tStyle
+		end if	
 		
 		// Draw Background
 		if mAlternateRowBackgrounds is true then
 		   put rectangle path of rectangle [0,tTop,mViewWidth,tTop+mRowHeight] into tPath
+
 		   if tX mod 2 is 1 then
-			   set the paint of this canvas to getPaint("background","fill")
+			   set the paint of this canvas to getPaint("background","fill" & tStyle)
 		   else
-			   set the paint of this canvas to getPaint("background","fill_alternate")
+			   set the paint of this canvas to getPaint("background","fill_alternate" & tStyle)
 		   end if	
 		   fill tPath on this canvas
 		end if
@@ -211,14 +222,14 @@ public handler OnPaint() returns nothing
 			else
 				put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into tPath
 			end if
-			translate tPath by [mMargin,tTop+(mRowHeight/2)-((the height of the bounding box of tPath)/2)]
-			set the paint of this canvas to getPaint("text","fill")
+			translate tPath by [tLeft,tTop+(mRowHeight/2)-((the height of the bounding box of tPath)/2)]
+			set the paint of this canvas to getPaint("text","fill" & tStyle)
 			fill tPath on this canvas
 		end if
 		add tArrowWidth + mMargin to tLeft
 		
 		// Draw the key
-		set the paint of this canvas to getPaint("text","disabled")
+		set the paint of this canvas to getPaint("text","disabled" & tStyle)
 		fill text "[" & tDataItem["key"] & "]" at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
 		measure "[" & tDataItem["key"] & "]" on this canvas
 		put the result into tTextBounds
@@ -226,7 +237,7 @@ public handler OnPaint() returns nothing
 		
 		
 		if tDataItem["leaf"] then
-			set the paint of this canvas to getPaint("text","fill")
+			set the paint of this canvas to getPaint("text","fill" & tStyle)
 			fill text tDataItem["value"] && tDataItem["indent"] formatted as string at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
 		end if
 		
@@ -238,7 +249,7 @@ public handler OnPaint() returns nothing
 	
 	// Draw Scrollbar
 	put rounded rectangle path of scrollbarRect() with radius 3 into tPath
-	set the paint of this canvas to getPaint("scrollbar", "fill")
+	set the paint of this canvas to getPaint("scrollbar", "fill" & tStyle)
 	fill tPath on this canvas	
 	
 end handler
@@ -247,7 +258,6 @@ public handler OnMouseDown() returns nothing
 	put the mouse position into mDragStartLoc
 	
 	if mDragStartLoc is within scrollbarRect() then
-		
 		put true into mDragging
 	end if
 end handler
@@ -296,7 +306,15 @@ public handler onMouseMove() returns nothing
 		put mDataTravel * tScrollPositionRatio into mViewTopPosition
 	
 		redraw all
+	else
+		put yPosToRowNumber(the y of the mouse position) into mHoverRow
+		redraw all
 	end if
+end handler
+
+public handler onMouseLeave() returns nothing
+	put 0 into mHoverRow
+	redraw all
 end handler
 
 public handler OnMouseUp() returns nothing
@@ -326,7 +344,6 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 end handler
 
 public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
-	
 	variable tRowNumber
 	put yPosToRowNumber(the y of the current click position) into tRowNumber
 	
@@ -335,14 +352,22 @@ public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
 	
 	put element tRowNumber of mDataList into tData
 	
-	if tData["leaf"] is not true then
-		if tData["folded"] is true then
-			unfoldPath(tData["path"])
-		else
-			foldPath(tData["path"])
-		end if
-	end if
 
+	if tData["leaf"] is not true then
+	   //if pCount is 1 then
+		   //if tData["selected"] is true then
+			   //deselectKey(tData["path"])
+		   //else
+			   //selectKey(tData["path"])
+		   //end if
+	   //else if pCount > 1 then
+		   if tData["folded"] is true then
+			   unfoldPath(tData["path"])
+		   else
+			   foldPath(tData["path"])
+		   end if
+	   //end if
+	end if
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
@@ -435,8 +460,16 @@ private handler getPaint(pLocation, pType) returns Paint
 	if pLocation is "background" then
 		if pType is "fill" then
 			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_hover" then
+			return solid paint with stringToColor("230,230,230")
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor("255,0,0")
 		else if pType is "fill_alternate" then
 			return solid paint with stringToColor("245,245,245")
+		else if pType is "fill_alternate_selected" then
+			return solid paint with stringToColor("255,20,20")
+		else if pType is "fill_alternate_hover" then
+			return solid paint with stringToColor("210,210,210")
 		else if pType is "stroke" then
 			return solid paint with stringToColor("178,178,178")
 		end if
@@ -449,8 +482,12 @@ private handler getPaint(pLocation, pType) returns Paint
 	else if pLocation is "text" then
 		if pType is "fill" then
 			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "disabled_selected" then
+			return solid paint with stringToColor("255,255,255,150")
 		else if pType is "disabled" then
-			return solid paint with stringToColor("150,150,150")
+			return solid paint with stringToColor("0,0,0,150")
 		else if pType is "selected-fill" then
 			return solid paint with stringToColor("0,122,255")
 		end if
@@ -492,10 +529,10 @@ private handler stringToColor(in pString as String) returns Color
 	if tComponentCount is 4 then
 		put (element 4 of tComponentList) parsed as number into tAlpha
 	else
-		put 1.0 into tAlpha
+		put 255 into tAlpha
 	end if
 
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
 end handler
 
 --------------------------------------------------------------------------------
