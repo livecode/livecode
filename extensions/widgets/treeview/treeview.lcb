@@ -194,7 +194,7 @@ public handler OnPaint() returns nothing
 			//put "_selected" into tStyle
 		//end if
 		
-		if tx is mHoverRow then
+		if tX is mHoverRow then
 			put "_hover" into tStyle
 		end if	
 		
@@ -307,8 +307,12 @@ public handler onMouseMove() returns nothing
 	
 		redraw all
 	else
-		put yPosToRowNumber(the y of the mouse position) into mHoverRow
-		redraw all
+		variable tNewHoverRow
+		put yPosToRowNumber(the y of the mouse position) into tNewHoverRow
+		if mHoverRow is not tNewHoverRow then
+			put tNewHoverRow into mHoverRow
+			redraw all
+		end if
 	end if
 end handler
 
