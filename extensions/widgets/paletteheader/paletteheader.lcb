@@ -24,6 +24,7 @@ widget community.livecode.livecode.paletteHeader
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use community.livecode.livecode.fontawesomeSVGPath
 
 metadata title is "Palette Header"
 metadata author is "LiveCode"
@@ -32,7 +33,7 @@ metadata version is "1.0.0"
 property navNames		get getNavNames			set setNavNames
 property navIcons		get getNavIcons			set setNavIcons
 property navLabels		get getNavLabels		set setNavLabels
-property showIcons		get mShowIcons			set setShowIcons
+property showNavIcons	get mShowNavIcons		set setShowNavIcons
 property navSelected	get mSelectedNavItem	set setSelectedNavItem
 
 property navData		get getNavData			set setNavData
@@ -47,7 +48,7 @@ property actionData		get getActionData		set setActionData
 
 private variable mNavData 			as List
 private variable mSelectedNavItem 	as Integer
-private variable mShowIcons			as Boolean
+private variable mShowNavIcons			as Boolean
 
 private variable mActionData		as List
 private variable mShowActionIcons	as Boolean
@@ -67,7 +68,7 @@ constant kDefaultNavIcon is ""
 constant kDefaultNavLabel is "nav"
 
 constant kDefaultActionName is "Action"
-constant kDefaultActionIcon is ""
+constant kDefaultActionIcon is "lock"
 constant kDefaultActionLabel is "action"
 
 constant kTabPadding is 10
@@ -101,8 +102,8 @@ public handler OnCreate()
 	put 1 into mSelectedNavItem
 	put 10 into mSize
 	
-	put false into mShowIcons
-	put false into mShowActionIcons
+	put false into mShowNavIcons
+	put true into mShowActionIcons
 	
 	put true into mRecalculate
 end handler
@@ -170,6 +171,9 @@ end handler
 --------------------------------------------------------------------------------
 
 private handler drawTab(in pIndex as Integer)
+	variable tTab as Array
+	put element pIndex of mNavData into tTab
+		
 	variable tRect as Rectangle
 	put element pIndex of mTabRects into tRect
 	
@@ -184,26 +188,31 @@ private handler drawTab(in pIndex as Integer)
 		fill tPath on this canvas
 	end if
 	
-	-- filling in the text of the label	
-	set the font of this canvas to getFont("label")
-	set the paint of this canvas to getPaint("title")	
+	if mShowNavIcons then
+		paintIcon(fontawesomeSVGPathFromName(tTab["icon"]), tRect, false)
+	else
+		set the font of this canvas to getFont("label")
+		set the paint of this canvas to getPaint("title")	
 	
-	variable tTab as Array
-	put element pIndex of mNavData into tTab
-	
-	fill text tTab["label"] at center of tRect on this canvas
+		fill text tTab["label"] at center of tRect on this canvas
+	end if
 end handler
 
 private handler drawAction(in pIndex as Integer)
+	variable tAction as Array
+	put element pIndex of mActionData into tAction
+
 	variable tRect as Rectangle
 	put element pIndex of mActionRects into tRect
 	
-	set the font of this canvas to getFont("label")
-	set the paint of this canvas to getPaint("title")	
+	if mShowActionIcons then
+		paintIcon(fontawesomeSVGPathFromName(tAction["icon"]), tRect, false)
+	else
+		set the font of this canvas to getFont("label")
+		set the paint of this canvas to getPaint("title")	
 	
-	variable tTab as Array
-	put element pIndex of mActionData into tTab
-	fill text tTab["label"] at center of tRect on this canvas
+		fill text tAction["label"] at center of tRect on this canvas
+	end if
 end handler
 
 private handler recalculate()
@@ -233,16 +242,17 @@ private handler calculateTabRects()
 	variable tRect as Rectangle
 	variable tElement as Array
 	repeat for each element tElement in mNavData
-		variable tTextRect as Rectangle
-		if mShowIcons is false then
+		if mShowNavIcons is false then
+			variable tTextRect as Rectangle
 			set the font of this canvas to getFont("label")
 			measure tElement["label"] on this canvas into tTextRect
+			put the width of tTextRect + 2 * kTabPadding + tLeft into tRight
+			put rectangle [tLeft, tTop, tRight, tBottom] into tRect
 		else
-			// TODO
+			put tBottom / 3 + 2 * kTabPadding + tLeft into tRight
+			put rectangle [tLeft, tBottom / 3, tRight, 2 * tBottom / 3] into tRect
 		end if
-
-		put the width of tTextRect + 2 * kTabPadding + tLeft into tRight
-		put rectangle [tLeft, tTop, tRight, tBottom] into tRect
+		
 		push tRect onto tRects
 		put tRight into tLeft
 	end repeat
@@ -270,16 +280,17 @@ private handler calculateActionRects()
 	variable tRect as Rectangle
 	variable tElement as Array
 	repeat for each element tElement in mActionData
-		variable tTextRect as Rectangle
 		if mShowActionIcons is false then
+			variable tTextRect as Rectangle
 			set the font of this canvas to getFont("label")
 			measure tElement["label"] on this canvas into tTextRect
+			put tRight - (the width of tTextRect + 2 * kActionPadding) into tLeft	
+			put rectangle [tLeft, tTop, tRight, tBottom] into tRect	
 		else
-			// TODO
+			put tRight - (tBottom / 3 + 2 * kActionPadding) into tLeft	
+			put rectangle [tLeft, tBottom / 3, tRight, 2 * tBottom / 3] into tRect	
 		end if
 
-		put tRight - (the width of tTextRect + 2 * kActionPadding) into tLeft	
-		put rectangle [tLeft, tTop, tRight, tBottom] into tRect
 		push tRect onto tRects
 		put tLeft into tRight
 	end repeat
@@ -501,8 +512,8 @@ private handler setNavLabels(in pLabels as String)
 	setDataElement("label", pLabels, defaultNavArray(), mNavData)
 end handler
 
-private handler setShowIcons(in pShowIcons as Boolean)
-	put pShowIcons into mShowIcons
+private handler setShowNavIcons(in pShowIcons as Boolean)
+	put pShowIcons into mShowNavIcons
 	redraw all
 end handler
 
@@ -561,6 +572,82 @@ end handler
 
 private handler setActionLabels(in pLabels as String)
 	setDataElement("label", pLabels, defaultActionArray(), mActionData)
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		The following code is essentially duplicated from the svgpath widget.
+--		Until we have widget 'components', this code will have to be here
+--
+--------------------------------------------------------------------------------
+
+private handler measureIcon(in pPath as String) returns Rectangle
+	variable tPath as Path
+	put path pPath into tPath
+	return the bounding box of tPath
+end handler
+
+private handler paintIcon(in pPath as String, in pTargetRect as Rectangle, in pClicked as Boolean)
+	variable tPath as Path
+	put path pPath into tPath
+	
+	variable tBounds
+	put the bounding box of tPath into tBounds
+	
+	// set origin of bounds to 0,0
+	translate tPath by [- the x of tBounds, - the y of tBounds]
+	// flip vertically
+	scale tPath by [1,-1]
+	translate tPath by [0, the height of tBounds]
+		
+	// scale to fit within widget and maintain aspect ratio
+
+	// Prepare values for matrix transformation
+	variable isLarger as Boolean
+	variable sx as Number
+	variable sy as Number
+		
+	put false into isLarger
+	put the width of pTargetRect / the width of tBounds into sx
+	put the height of pTargetRect / the height of tBounds into sy
+		
+	if sx > sy then
+		put true into isLarger
+		put sy into sx
+	else
+		put sx into sy
+	end if
+		
+	variable tx as Number
+	variable ty as Number
+		
+	put the left of pTargetRect - (the left of tBounds*sx) into tx
+	put the top of pTargetRect - (the top of tBounds*sy) into ty
+		
+	variable diff as Number
+		
+	if isLarger then
+		put the width of pTargetRect - (the width of tBounds*sy) into diff
+	else
+		put the height of pTargetRect - (the height of tBounds*sy) into diff
+	end if	
+			
+	// align center
+	divide diff by 2
+		
+	if isLarger then
+		add diff to tx
+	else
+		add diff to ty
+	end if
+		
+	// create transformation matrix and apply
+	variable tTransform as Transform
+	put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
+	transform tPath by tTransform
+
+	set the paint of this canvas to solid paint with color kBlack
+	fill tPath on this canvas
 end handler
 
 end widget
