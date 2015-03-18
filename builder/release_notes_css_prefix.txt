@@ -546,9 +546,7 @@ Author URI: http://www.livecode.com/
 /***************************************************************************
  * FONTS
 ****************************************************************************/
-@font-face{ font-family: MuseoSansForDellBold; font-style: bold; font-weight: bold; src: url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-bold-webfont.eot), url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-bold-webfont.eot?#iefix) format("embedded-opentype"), url(fonts/museosansfordell-bold-webfont.woff) format("woff"), url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-bold-webfont.ttf) format("truetype"), url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-bold-webfont.svg#MuseoSansForDellBold) format("svg"); }
-
-@font-face{ font-family: MuseoSansForDell; font-style: normal; font-weight: normal; src: url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-regular-webfont.eot), url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-regular-webfont.eot?#iefix) format("embedded-opentype"), url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-regular-webfont.woff) format("woff"), url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-regular-webfont.ttf) format("truetype"), url(http://livecode.com/wp-content/themes/livecode2013/fonts/museosansfordell-regular-webfont.svg#MuseoSansForDellRegular) format("svg"); }
+@font-face{ font-family: FontAwesome; font-style: normal; font-weight: normal; src: url(http://livecode.com/wp-content/themes/omega/assets/fonts/fontawesome-webfont.eot) format("embedded-opentype"), url(http://livecode.com/wp-content/themes/omega/assets/fonts/fontawesome-webfont.woff) format("woff"), url(http://livecode.com/wp-content/themes/omega/assets/fonts/fontawesome-webfont.ttf) format("truetype"), url(http://livecode.com/wp-content/themes/omega/assets/fonts/fontawesome-webfont.svg) format("svg"); }
 
 /* ************************************************
  * BASE STYLES
@@ -556,7 +554,7 @@ Author URI: http://www.livecode.com/
 a{ text-decoration:none; color:#799327; } /* aecf36 */
 a:hover{ color:#585858}
 
-h1,h2,h3,h4{ font-family:MuseoSansForDellBold; font-style:bold; font-weight:bold}
+h1,h2,h3,h4{ font-family:FontAwesome; font-style:normal; font-weight:normal}
 h1{ font-weight:normal}
 h2{ margin:2em 0 0.5em 0; font-weight:normal}
 h3{ margin:1.5em 0 0.1em 0}
