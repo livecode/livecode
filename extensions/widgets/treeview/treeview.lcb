@@ -50,6 +50,12 @@ private variable mAlternateRowBackgrounds as Boolean
 private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
 
+private variable mArrowWidth as optional Real
+private variable mFoldedArrowPath as Path
+private variable mUnfoldedArrowPath as Path
+
+private variable mScrollbarHeight as Real
+
 // Drag related 
 private variable mDragging as Boolean
 private variable mDragStartLoc as Point
@@ -84,6 +90,16 @@ private handler __convertArrayToList(in pArray as Array, in pLevel as Integer, i
 			end if
 		else
 			put true into tElement["leaf"]
+			if pArray[tKey] is a string then
+				put pArray[tKey] into tElement["string_value"]
+			else
+				variable tString as optional String
+				format pArray[tKey] as string into tString
+				if tString is not defined then
+					put "Can't display value" into tString
+				end if
+				put tString into tElement["string_value"]
+			end if	
 			put pArray[tKey] into tElement["value"]
 			push tElement onto tList
 		end if	
@@ -142,8 +158,13 @@ public handler OnCreate() returns nothing
 end handler
 
 public handler OnPaint() returns nothing
+
+	variable tCheckTextCache
 	if mRecalculate then
+		put false into tCheckTextCache
 		updateParameters()
+	else
+		put true into tCheckTextCache
 	end if
 
 	variable tTop as Real
@@ -176,16 +197,7 @@ public handler OnPaint() returns nothing
 	
 	variable tTopOffset
 	put mViewTopPosition mod mRowHeight into tTopOffset
-	subtract tTopOffset from tTop
-
-	variable tTextBounds as Rectangle
-	set the font of this canvas to font getFontName() at size 12
-	
-	// Work out the width of the arrow
-	variable tArrowWidth as Number
-	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into tPath
-	put the width of the bounding box of tPath into tArrowWidth
-	
+	subtract tTopOffset from tTop	
 
 	repeat with tX from mFirstDataItem up to the number of elements in mDataList
 		put element tX of mDataList into tDataItem
@@ -215,44 +227,37 @@ public handler OnPaint() returns nothing
 		put mMargin + (tDataItem["indent"] * mIndentPixels) into tLeft
 		
 		// Draw arrow
-		if tDataItem["leaf"] then
-			
-
-		else
+		if not tDataItem["leaf"] then
 			if tDataItem["folded"] is true then
-				put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into tPath
+				put mFoldedArrowPath into tPath
 			else
-				put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into tPath
+				put mUnfoldedArrowPath into tPath	
 			end if
 			translate tPath by [tLeft,tTop+(mRowHeight/2)-((the height of the bounding box of tPath)/2)]
 			set the paint of this canvas to getPaint("text","fill" & tStyle)
 			fill tPath on this canvas
 		end if
-		add tArrowWidth + mMargin to tLeft
+		add mArrowWidth + mMargin to tLeft
 		
 		// Draw the key
 		set the paint of this canvas to getPaint("text","disabled" & tStyle)
 		fill text "[" & tDataItem["key"] & "]" at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
-		measure "[" & tDataItem["key"] & "]" on this canvas
-		put the result into tTextBounds
-		add the width of tTextBounds + mMargin to tLeft
 		
+		// Check the key rect cache
+		variable tTextBounds as Rectangle
+		if not tCheckTextCache or "keyRect" is not among the keys of tDataItem then
+			measure "[" & tDataItem["key"] & "]" on this canvas
+			put the result into tTextBounds
+			put tTextBounds into tDataItem["keyRect"]
+		else
+			put tDataItem["keyRect"] into tTextBounds
+		end if
+
+		add the width of tTextBounds + mMargin to tLeft
 		
 		if tDataItem["leaf"] then
 			set the paint of this canvas to getPaint("text","fill" & tStyle)
-			
-			variable tString as optional String
-			variable tData
-			put tDataItem["value"] into tData
-			if tData is a string then
-				put tData into tString
-			else
-				format tData as string into tString
-				if tString is not defined then
-					put "Can't display value" into tString
-				end if
-			end if
-			fill text tString at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
+			fill text tDataItem["string_value"] at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
 		end if
 		
 		if tTop > mViewHeight then
@@ -260,11 +265,13 @@ public handler OnPaint() returns nothing
 		end if
 		add mRowHeight to tTop
 	end repeat
-	
-	// Draw Scrollbar
-	put rounded rectangle path of scrollbarRect() with radius 3 into tPath
-	set the paint of this canvas to getPaint("scrollbar", "fill" & tStyle)
-	fill tPath on this canvas	
+
+	// Draw scrollbar if there is any need
+	if mScrollbarHeight > 0 then
+		put rounded rectangle path of scrollbarRect() with radius 3 into tPath
+		set the paint of this canvas to getPaint("scrollbar", "fill")
+		fill tPath on this canvas	
+	end if
 	
 end handler
 
@@ -277,21 +284,7 @@ public handler OnMouseDown() returns nothing
 end handler
 
 public handler onMouseMove() returns nothing
-	if mDragging is true then
-		// Get the scrollbar ratio
-		variable tScrollbarRatio as Real
-		put mViewHeight / mDataHeight into tScrollbarRatio
-		if tScrollbarRatio > 1 then
-			put 1 into tScrollbarRatio
-		end if
-	
-		// Get the scrollbar height
-		variable tScrollbarHeight as Real
-		put mViewHeight * tScrollbarRatio into tScrollbarHeight
-		if tScrollbarHeight < 25 then
-			put 25 into tScrollbarHeight
-		end if
-	
+	if mDragging is true then		
 		// Get the scrollbar position ratio
 		variable tScrollPositionRatio as Real
 		put mViewTopPosition / mDataTravel into tScrollPositionRatio
@@ -299,25 +292,23 @@ public handler onMouseMove() returns nothing
 		// Get the scrollbar space
 		variable tScrollbarSpace as Real
 		variable tScrollbarSpaceTop as Real
-		put mViewHeight - tScrollbarHeight into tScrollbarSpace
-		put tScrollbarHeight / 2 into tScrollbarSpaceTop
+		put mViewHeight - mScrollbarHeight into tScrollbarSpace
 		
-		// Get the mouse y position within the space
-		variable sMouseY as Real
-		put the y of the mouse position into sMouseY
+		// Get the mouse y position
+		variable tMouseY as Real
+		put the y of the mouse position into tMouseY
 		
-		variable tNewScrollbarY as Real
-		put sMouseY-tScrollbarSpaceTop into tNewScrollbarY
-		if tNewScrollbarY < tScrollbarSpaceTop then
-			put tScrollbarSpaceTop into tNewScrollbarY
-		else if tNewScrollbarY > tScrollbarSpaceTop+tScrollbarSpace then
-			put tScrollbarSpaceTop+tScrollbarSpace into tNewScrollbarY
+		if tMouseY < 0 then
+			put 0 into tMouseY
 		end if
 		
 		// Calculate the new top position of list
-		
-		put tNewScrollbarY / tScrollbarSpace into tScrollPositionRatio
+		put tMouseY / tScrollbarSpace into tScrollPositionRatio
 		put mDataTravel * tScrollPositionRatio into mViewTopPosition
+	
+		if mViewTopPosition < 0 then 
+			put 0 into mViewTopPosition
+		end if
 	
 		redraw all
 	else
@@ -364,7 +355,6 @@ public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
 	variable tData as Array
 	put the empty array into tData
 	
-	log tRowNumber
 	put element tRowNumber of mDataList into tData
 	
 
@@ -396,6 +386,16 @@ end handler
 --------------------------------------------------------------------------------
 
 private handler updateParameters() returns nothing
+	
+	if mArrowWidth is not defined then
+		variable tTextBounds as Rectangle
+		set the font of this canvas to font getFontName() at size 12
+	
+		// Work out the width of the arrow
+		variable tArrowWidth as Number
+		put the width of the bounding box of mFoldedArrowPath into mArrowWidth
+	end if
+
 	put the number of elements in mDataList into mDataCount
 	put mRowHeight * mDataCount into mDataHeight
 	put the height of my bounds into mViewHeight
@@ -410,10 +410,18 @@ private handler updateParameters() returns nothing
 	if mDataTravel < 0 then
 		put 0 into mDataTravel
 	end if	
+	
+	// Calculate scrollbar dimensions
+	put scrollbarHeight() into mScrollbarHeight	
+	
 	put false into mRecalculate
 end handler
 
 private handler initialiseConstants() returns nothing
+	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into mFoldedArrowPath
+
+	put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into mUnfoldedArrowPath
+
 	put true into mRecalculate
 	put 21 into mRowHeight
 	put false into mDragging
@@ -423,27 +431,15 @@ private handler initialiseConstants() returns nothing
 end handler
 
 private handler scrollbarRect() returns Rectangle
-	variable tScrollbarRatio as Real
-	put mViewHeight / mDataHeight into tScrollbarRatio
-	if tScrollbarRatio > 1 then
-		put 1 into tScrollbarRatio
-	end if
-	
-	variable tScrollbarHeight as Real
-	put mViewHeight * tScrollbarRatio into tScrollbarHeight
-	if tScrollbarHeight < 25 then
-		put 25 into tScrollbarHeight
-	end if
-	
 	variable tScrollPositionRatio as Real
 	put mViewTopPosition / mDataTravel into tScrollPositionRatio
 	
 	variable tScrollbarSpace as Real
 	variable tScrollbarY as Real
-	put mViewHeight - tScrollbarHeight into tScrollbarSpace
+	put mViewHeight - mScrollbarHeight into tScrollbarSpace
 	put tScrollbarSpace * tScrollPositionRatio into tScrollbarY
 
-	return rectangle [mViewWidth-10,tScrollbarY,mViewWidth-5,tScrollbarY+tScrollbarHeight]
+	return rectangle [mViewWidth-10,tScrollbarY,mViewWidth-5,tScrollbarY+mScrollbarHeight]
 end handler
 
 private handler scrollbarHeight() returns Real
@@ -453,7 +449,7 @@ private handler scrollbarHeight() returns Real
 	put mViewHeight / mDataHeight into tScrollbarRatio
 	
 	if tScrollbarRatio >= 1 or tScrollbarRatio <= 0 then 
-		return mViewHeight
+		return 0
 	end if
 	
 	put mViewHeight * tScrollbarRatio into tScrollbarHeight
@@ -508,7 +504,7 @@ private handler getPaint(pLocation, pType) returns Paint
 		end if
 	else if pLocation is "scrollbar" then
 		if pType is "fill" then
-			return solid paint with stringToColor("0,0,0,0.2")
+			return solid paint with stringToColor("0,0,0,50")
 		end if
 	end if
 	
@@ -608,7 +604,6 @@ private handler convertArrayToList(in pArray as Array, in pFolded as Boolean, in
 	
 	repeat for each element tKey in tKeys
 		put the empty array into tElement
-		log tKey && pLevel formatted as string
 		put tKey into tElement["key"]
 		put pLevel into tElement["indent"]
 		put pFolded into tElement["folded"]
@@ -627,6 +622,18 @@ private handler convertArrayToList(in pArray as Array, in pFolded as Boolean, in
 		else
 			put true into tElement["leaf"]
 			put pArray[tKey] into tElement["value"]
+			
+			if pArray[tKey] is a string then
+				put pArray[tKey] into tElement["string_value"]
+			else
+				variable tString as optional String
+				format pArray[tKey] as string into tString
+				if tString is not defined then
+					put "Can't display value" into tString
+				end if
+				put tString into tElement["string_value"]
+			end if	
+
 			push tElement onto tList
 		end if	
 	end repeat
@@ -639,6 +646,7 @@ private handler setArrayData(in pData as Array) returns nothing
 	put pData into mData
 	put convertArrayToList(pData, true, 0, the empty list) into mDataList	
 	put true into mRecalculate
+	redraw all
 end handler
 
 handler type NodeApply(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
