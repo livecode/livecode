@@ -373,6 +373,11 @@ void MCWidgetEventManager::GetSynchronousClickButton(unsigned int& r_button) con
     r_button = m_click_button;
 }
 
+void MCWidgetEventManager::GetSynchronousClickCount(unsigned int& r_count) const
+{
+    r_count = m_click_count;
+}
+
 void MCWidgetEventManager::GetAsynchronousMousePosition(coord_t& r_x, coord_t& r_y) const
 {
     r_x = MCmousex;
@@ -439,6 +444,21 @@ bool MCWidgetEventManager::mouseDown(MCWidget* p_widget, uinteger_t p_which)
     if (!widgetIsInRunMode(p_widget))
         return false;
     
+    // Do the position change and time since the last click make this a double
+    // (or triple or more...) click?
+    if ((MCeventtime <= m_click_time + m_doubleclick_time) &&
+        (fabsf(m_mouse_x - m_click_x) <= m_doubleclick_distance) &&
+        (fabsf(m_mouse_y - m_click_y) <= m_doubleclick_distance))
+    {
+        // Within the limits - this is a multiple-click event
+        m_click_count += 1;
+    }
+    else
+    {
+        // Outside the limits. Only a single click.
+        m_click_count = 1;
+    }
+    
     // The click position is updated regardless of what happens.
     m_click_x = m_mouse_x;
     m_click_y = m_mouse_y;
@@ -503,25 +523,11 @@ void MCWidgetEventManager::mouseClick(MCWidget* p_widget, uinteger_t p_which)
     // We only detect double-click events for button 1
     if (p_which == 1 && m_click_button == 1)
     {
-        // Do the position change and time since the last click make this a double
-        // (or triple or more...) click?
-        if (m_click_time + m_doubleclick_time <= MCeventtime
-            && fabs(m_mouse_x - m_click_x) <= m_doubleclick_distance
-            && fabs(m_mouse_y - m_click_y) <= m_doubleclick_distance)
-        {
-            // Within the limits - this is a multiple-click event
-            m_click_count++;
-        }
-        else
-        {
-            // Outside the limits. Only a single click.
-            m_click_count = 1;
-        }
         
         // Send a double click event to the widget, if appropriate. If the user
         // clicks multiple times in rapid sequence, the widget should receive
         // multiple double-clicks (one per two clicks) rather than only the one.
-        if ((m_click_count & 1) == 0            // Click count is event
+        if ((m_click_count & 1) == 0            // Click count is even
             && p_widget->wantsDoubleClicks())
         {
             p_widget->OnDoubleClick(m_mouse_x, m_mouse_y, p_which);
@@ -541,7 +547,7 @@ void MCWidgetEventManager::mouseClick(MCWidget* p_widget, uinteger_t p_which)
     else
     {
         // Not a double-click gesture; just send the click event
-        p_widget->OnClick(m_mouse_x, m_mouse_y, p_which, 1);
+        p_widget->OnClick(m_mouse_x, m_mouse_y, p_which, m_click_count);
     }
     
 }
