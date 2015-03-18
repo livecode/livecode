@@ -70,6 +70,7 @@ private handler __convertArrayToList(in pArray as Array, in pLevel as Integer, i
 		put the empty array into tElement
 		put tKey into tElement["key"]
 		put pLevel into tElement["indent"]
+		put false into tElement["selected"]
 		put any number < 0.5 into tElement["folded"]	
 		variable tPath as List
 		put pPath into tPath
@@ -101,7 +102,7 @@ public handler OnCreate() returns nothing
 	variable tArray as Array
 	put the empty array into tArray
 	put the empty list into mDataList
-	
+
 	variable tRandom as Real
 	variable tCount as Integer
 	variable tTopKey as String
@@ -128,6 +129,7 @@ public handler OnCreate() returns nothing
 			put tNewArray into tArray[tTopKey]
 		end if
 	end repeat
+
 	
 	put tArray into mData
 	
@@ -354,6 +356,7 @@ public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
 	variable tData as Array
 	put the empty array into tData
 	
+	log tRowNumber
 	put element tRowNumber of mDataList into tData
 	
 
@@ -597,9 +600,11 @@ private handler convertArrayToList(in pArray as Array, in pFolded as Boolean, in
 	
 	repeat for each element tKey in tKeys
 		put the empty array into tElement
+		log tKey && pLevel formatted as string
 		put tKey into tElement["key"]
 		put pLevel into tElement["indent"]
 		put pFolded into tElement["folded"]
+		put false into tElement["selected"]
 		variable tPath as List
 		put pPath into tPath
 		push tKey onto tPath
@@ -628,7 +633,15 @@ private handler setArrayData(in pData as Array) returns nothing
 	put true into mRecalculate
 end handler
 
-handler type TreeApply(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+handler type NodeApply(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+
+private handler unselectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	put false into xList[pListElt]["selected"]
+end handler
+
+private handler selectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	put true into xList[pListElt]["selected"]
+end handler
 
 private handler removeKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	delete element pListElt of xList
@@ -638,7 +651,7 @@ end handler
 // To 'unfold', splice in the sublist
 private handler unfoldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put false into xList[pListElt]["folded"]
-	splice convertArrayToList(xArray[element pLevel + 1 of pPath], true, pLevel + 1, pPath) after element pListElt of xList	
+	splice convertArrayToList(xArray[element pLevel + 1 of pPath], false, pLevel + 1, pPath) after element pListElt of xList	
 end handler
 
 // To 'fold', just delete everything in the list until the indent is the same as 'this'
@@ -663,36 +676,47 @@ end handler
 
 // Simply delete the array key on the given path
 private handler removePath(in pPath as List)
-	applyOnPath(removeKey, pPath, 0, 0, mDataList, mData)
+	applyToNode(removeKey, pPath, 0, 0, mDataList, mData)
 	redraw all
 end handler
 
 // Unfold the key at the target path
 private handler unfoldPath(in pPath as List)
-	applyOnPath(unfoldKey, pPath, 0, 0, mDataList, mData)
+	applyToNode(unfoldKey, pPath, 0, 0, mDataList, mData)
 	redraw all
 end handler
 
 // Fold the key at the target path
 private handler foldPath(in pPath as List)
-	applyOnPath(foldKey, pPath, 0, 0, mDataList, mData)
+	applyToNode(foldKey, pPath, 0, 0, mDataList, mData)
 	redraw all
 end handler
 
-// Recursive implementation of performing an action on the given path. 
+// Fold the key at the target path
+private handler selectPath(in pPath as List)
+	applyToNode(selectKey, pPath, 0, 0, mDataList, mData)
+	redraw all
+end handler
+
+// Fold the key at the target path
+private handler unselectPath(in pPath as List)
+	applyToNode(unselectKey, pPath, 0, 0, mDataList, mData)
+	redraw all
+end handler
+
+// Recursive implementation of performing an action to the node at the end of the given path. 
 // Acts on a list (in the format used by this widget) and an array simultaneously.
 // We are quite lax with checking here, since this will only be used internally 
 // 	after a delete action happens, and so the element should exist by definition.
-private handler applyOnPath(in pHandler as TreeApply, in pPath as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array)
+private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array)
 	variable tKey as String
-	put element pLevel + 1 of pPath into tKey
+	put element pLevel + 1 of pPathToNode into tKey
 
 	variable tCount as Integer
 	variable tMatch as Integer
-	variable tElement
-	put pStart into tCount
-	repeat for each element tElement in xList
-		add 1 to tCount
+	variable tElement as Array
+	repeat with tCount from pStart + 1 up to the number of elements in xList
+		put xList[tCount] into tElement
 		if tElement["key"] is tKey then
 			put tCount into tMatch
 			exit repeat
@@ -700,10 +724,10 @@ private handler applyOnPath(in pHandler as TreeApply, in pPath as List, in pLeve
 	end repeat
 	
 	if tMatch is defined then
-		if the number of elements in pPath is pLevel + 1 then
-			pHandler(tMatch, pPath, pLevel, xList, xArray)
+		if the number of elements in pPathToNode is pLevel + 1 then
+			pHandler(tMatch, pPathToNode, pLevel, xList, xArray)
 		else
-			applyOnPath(pHandler, pPath, pLevel + 1, tMatch, xList, xArray[tKey])
+			applyToNode(pHandler, pPathToNode, pLevel + 1, tMatch, xList, xArray[tKey])			
 		end if
 	end if
 end handler
