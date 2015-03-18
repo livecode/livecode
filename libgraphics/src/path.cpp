@@ -371,7 +371,7 @@ static void _MCGPathArcTo(MCGPathRef self, MCGPathArcBeginStyle p_begin, const M
 	if (p_sweep > 0)
 		while (p_sweep > 0)
 		{
-			t_delta = MCMin( M_PI_2 - fmodf(p_start_angle, M_PI_2), p_sweep);
+			t_delta = MCMin(p_sweep, M_PI_2);
 			p_sweep -= t_delta;
 			
 			_MCGPathAcuteArcTo(self, p_begin, p_center, p_radii, p_start_angle, t_delta, p_x_angle);
@@ -381,7 +381,7 @@ static void _MCGPathArcTo(MCGPathRef self, MCGPathArcBeginStyle p_begin, const M
 	else
 		while (p_sweep < 0)
 		{
-			t_delta = MCMin( M_PI_2 - fmodf(2 * M_PI - p_start_angle, M_PI_2), -p_sweep);
+			t_delta = MCMin(-p_sweep, M_PI_2);
 			p_sweep += t_delta;
 			
 			_MCGPathAcuteArcTo(self, p_begin, p_center, p_radii, p_start_angle, -t_delta, p_x_angle);
