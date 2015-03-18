@@ -37,6 +37,7 @@ property navSelected	get mSelectedNavItem	set setSelectedNavItem
 
 property navData		get getNavData			set setNavData
 
+property actionNames		get getActionNames		set setActionNames
 property actionIcons		get getActionIcons		set setActionIcons
 property actionLabels		get getActionLabels		set setActionLabels
 property showActionIcons	get mShowActionIcons	set setShowActionIcons
@@ -61,9 +62,13 @@ private variable mRecalculate		as Boolean
 constant kBlack is [0,0,0]
 constant kWhite is [1,1,1]
 
-constant kDefaultName is "Name"
-constant kDefaultIcon is ""
-constant kDefaultLabel is ""
+constant kDefaultNavName is "Nav"
+constant kDefaultNavIcon is ""
+constant kDefaultNavLabel is "nav"
+
+constant kDefaultActionName is "Action"
+constant kDefaultActionIcon is ""
+constant kDefaultActionLabel is "action"
 
 constant kTabPadding is 10
 constant kActionPadding is 10
@@ -74,8 +79,9 @@ public handler OnCreate()
 	
 	variable tAction as Array
 	put the empty array into tAction
-	put "new" into tAction["label"]
-	put "" into tAction["icon"]
+	put kDefaultActionName into tAction["name"]
+	put kDefaultActionLabel into tAction["label"]
+	put kDefaultActionIcon into tAction["icon"]
 	
 	put [tAction] into mActionData
 	
@@ -85,10 +91,10 @@ public handler OnCreate()
 	variable tCountString as String
 	
 	put the empty list into mNavData
-	repeat with tCount from 1 up to 5
-		put "Name" into tNav["name"]
-		put "Label" into tNav["label"]
-		put "" into tNav["icon"]
+	repeat with tCount from 1 up to 3
+		put kDefaultNavName into tNav["name"]
+		put kDefaultNavLabel into tNav["label"]
+		put kDefaultNavIcon into tNav["icon"]
 		push tNav onto mNavData
 	end repeat
 	
@@ -336,10 +342,6 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-private handler setValueOfArray(in pKey as String, in pValue as any, inout xArray as Array)
-	put pValue into xArray[pKey]
-end handler
-
 private handler listToArray(in pList as List) returns Array
 	variable tCount
 	variable tArray
@@ -370,6 +372,10 @@ private handler setData(in pArray as Array, in pKeys as List, out rList as List)
 	end repeat
 	
 	put tList into rList
+	
+	put true into mRecalculate
+	
+	redraw all	
 end handler
 
 private handler getDataElement(in pElementName as String, in pList as List) returns String
@@ -386,7 +392,7 @@ private handler getDataElement(in pElementName as String, in pList as List) retu
 	return tElements
 end handler
 
-private handler setDataElement(in pElementName as String, in pElements as String, in pDefault as any, inout xList as List)
+private handler setDataElement(in pElementName as String, in pElements as String, in pDefaultArray as Array, inout xList as List)
 	variable tElements
 	split pElements by "," into tElements
 
@@ -397,11 +403,54 @@ private handler setDataElement(in pElementName as String, in pElements as String
 	repeat for each element tElement in xList
 		add 1 to tCount
 		if tCount > the number of elements in tElements then
-			setValueOfArray(pElementName, pDefault, element tCount of xList)
+			put pDefaultArray[pElementName] into xList[tCount][pElementName]
 		else
-			setValueOfArray(pElementName, element tCount of tElements, element tCount of xList)
+			put tElements[tCount] into xList[tCount][pElementName]
 		end if
 	end repeat
+	
+	// If we there are more of the given element than there are items, generate more
+	add 1 to tCount
+	repeat with tCount from tCount up to the number of elements in tElements
+		push pDefaultArray onto xList
+		put tElements[tCount] into xList[tCount][pElementName]
+	end repeat
+	
+	put true into mRecalculate
+	
+	redraw all	
+end handler
+
+// Only the primary data element ("name" for both actions and nav) can *reduce* the number of elements in the data list.
+private handler setPrimaryDataElement(in pElementName as String, in pElements as String, in pDefaultArray as Array, inout xList as List)
+	log "setting primary"
+	variable tElements
+	split pElements by "," into tElements
+
+	variable tCount
+	put 0 into tCount
+	
+	variable tElement
+	repeat for each element tElement in tElements
+		add 1 to tCount
+		if tCount > the number of elements in xList then
+			push pDefaultArray onto xList
+		end if
+		
+		put tElement into xList[tCount][pElementName]
+	end repeat
+	
+	log tCount
+	log the number of elements in xList
+	// If we there are more items than there are primary elements, pop them off.
+	add 1 to tCount
+	repeat with tCount from tCount up to the number of elements in xList
+		log "popping"
+		pop xList
+	end repeat
+	
+	put true into mRecalculate
+	
 	redraw all	
 end handler
 
@@ -411,12 +460,21 @@ end handler
 --
 --------------------------------------------------------------------------------
 
+private handler defaultNavArray() returns Array
+	variable tArray as Array
+	put the empty array into tArray
+	put kDefaultNavName into tArray["name"]
+	put kDefaultNavLabel into tArray["label"]
+	put kDefaultNavIcon into tArray["icon"]
+	return tArray
+end handler
+
 private handler getNavData() returns Array
 	return listToArray(mNavData)
 end handler
 
 private handler setNavData(in pNavData as Array)
-	setData(pNavData, ["name", "icon", "label"], mNavData)
+	setData(pNavData, the keys of defaultNavArray(), mNavData)
 end handler
 
 private handler getNavNames() returns String
@@ -424,7 +482,7 @@ private handler getNavNames() returns String
 end handler
 
 private handler setNavNames(in pNames as String)
-	setDataElement("name", pNames, kDefaultName, mNavData)
+	setPrimaryDataElement("name", pNames, defaultNavArray(), mNavData)
 end handler
 
 private handler getNavIcons() returns String
@@ -432,7 +490,7 @@ private handler getNavIcons() returns String
 end handler
 
 private handler setNavIcons(in pIcons as String)
-	setDataElement("icon", pIcons, kDefaultIcon, mNavData)
+	setDataElement("icon", pIcons, defaultNavArray(), mNavData)
 end handler
 
 private handler getNavLabels() returns String
@@ -440,7 +498,7 @@ private handler getNavLabels() returns String
 end handler
 
 private handler setNavLabels(in pLabels as String)
-	setDataElement("label", pLabels, kDefaultLabel, mNavData)
+	setDataElement("label", pLabels, defaultNavArray(), mNavData)
 end handler
 
 private handler setShowIcons(in pShowIcons as Boolean)
@@ -459,12 +517,21 @@ end handler
 --
 --------------------------------------------------------------------------------
 
+private handler defaultActionArray() returns Array
+	variable tArray as Array
+	put the empty array into tArray
+	put kDefaultActionName into tArray["name"]
+	put kDefaultActionLabel into tArray["label"]
+	put kDefaultActionIcon into tArray["icon"]
+	return tArray
+end handler
+
 private handler getActionData() returns Array
 	return listToArray(mActionData)
 end handler
 
 private handler setActionData(in pActions as Array)
-	setData(pActions, ["icon", "label"], mActionData)
+	setData(pActions, the keys of defaultActionArray(), mActionData)
 end handler
 
 public handler setShowActionIcons(in pShowIcons as Boolean)
@@ -472,12 +539,20 @@ public handler setShowActionIcons(in pShowIcons as Boolean)
 	redraw all
 end handler
 
+private handler getActionNames() returns String
+	return getDataElement("name", mActionData)
+end handler
+
+private handler setActionNames(in pNames as String)
+	setPrimaryDataElement("name", pNames, defaultActionArray(), mActionData)
+end handler
+
 private handler getActionIcons() returns String
 	return getDataElement("icon", mActionData)
 end handler
 
 private handler setActionIcons(in pIcons as String)
-	setDataElement("icon", pIcons, kDefaultIcon, mActionData)
+	setDataElement("icon", pIcons, defaultActionArray(), mActionData)
 end handler
 
 private handler getActionLabels() returns String
@@ -485,7 +560,7 @@ private handler getActionLabels() returns String
 end handler
 
 private handler setActionLabels(in pLabels as String)
-	setDataElement("label", pLabels, kDefaultLabel, mActionData)
+	setDataElement("label", pLabels, defaultActionArray(), mActionData)
 end handler
 
 end widget
