@@ -63,8 +63,24 @@ void DefFileMapping(const char *p_map_str)
     struct FileMapping *t_mapping;
     t_mapping = (struct FileMapping *)malloc(sizeof(struct FileMapping));
     t_mapping -> next = FileMappings;
-    t_mapping -> name = strndup(p_map_str, strchr(p_map_str, '=') - p_map_str);
-    t_mapping -> replacement = strdup(strchr(p_map_str, '=') + 1);
+    
+    const char *t_equal;
+    t_equal = strchr(p_map_str, '=');
+    
+    t_mapping -> name = strndup(p_map_str, t_equal - p_map_str);
+    
+    t_equal++;
+    if (t_equal[0] == '\"')
+        t_equal++;
+    
+    t_mapping -> replacement = strdup(t_equal);
+    
+    size_t t_length;
+    t_length = strlen(t_mapping -> replacement);
+    if (t_length > 0)
+        if (t_mapping -> replacement[t_length - 1] == '\"')
+            t_mapping -> replacement[t_length - 1] = '\0';
+    
     t_mapping -> used = 0;
     FileMappings = t_mapping;
 }
@@ -73,9 +89,10 @@ const char *MapFile(const char *p_input)
 {
     struct FileMapping *t_mapping;
     for(t_mapping = FileMappings; t_mapping != NULL; t_mapping = t_mapping -> next)
+    {
         if (strcmp(t_mapping -> name, p_input) == 0)
             return t_mapping -> replacement;
-    
+    }
     return p_input;
 }
 
