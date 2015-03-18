@@ -240,7 +240,19 @@ public handler OnPaint() returns nothing
 		
 		if tDataItem["leaf"] then
 			set the paint of this canvas to getPaint("text","fill" & tStyle)
-			fill text tDataItem["value"] && tDataItem["indent"] formatted as string at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
+			
+			variable tString as optional String
+			variable tData
+			put tDataItem["value"] into tData
+			if tData is a string then
+				put tData into tString
+			else
+				format tData as string into tString
+				if tString is not defined then
+					put "Can't display value" into tString
+				end if
+			end if
+			fill text tString at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
 		end if
 		
 		if tTop > mViewHeight then
@@ -647,7 +659,7 @@ end handler
 // To 'unfold', splice in the sublist
 private handler unfoldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put false into xList[pListElt]["folded"]
-	splice convertArrayToList(xArray[element pLevel + 1 of pPath], false, pLevel + 1, pPath) after element pListElt of xList	
+	splice convertArrayToList(xArray[element pLevel + 1 of pPath], true, pLevel + 1, pPath) after element pListElt of xList	
 end handler
 
 // To 'fold', just delete everything in the list until the indent is the same as 'this'
