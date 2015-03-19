@@ -161,7 +161,6 @@ public handler OnCreate() returns nothing
 end handler
 
 public handler OnPaint() returns nothing
-
 	variable tCheckTextCache
 	if mRecalculate then
 		put false into tCheckTextCache
@@ -654,10 +653,12 @@ handler type NodeApply(in pListElt as Integer, in pPath as List, in pLevel as In
 
 private handler unselectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put false into xList[pListElt]["selected"]
+	put undefined into mSelectedElement
 end handler
 
 private handler selectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put true into xList[pListElt]["selected"]
+	put pPath into mSelectedElement
 end handler
 
 private handler removeKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
@@ -709,8 +710,13 @@ private handler foldPath(in pPath as List)
 	redraw all
 end handler
 
-// Fold the key at the target path
+// Select the key at the target path
 private handler selectPath(in pPath as List)
+	// Unselect the existing selection if applicable
+	if mSelectedElement is defined and mSelectedElement is not pPath then
+		applyToNode(unselectKey, mSelectedElement, 0, 0, mDataList, mData)
+	end if
+
 	if mSelectedElement is not defined or mSelectedElement is not pPath then
 		applyToNode(selectKey, pPath, 0, 0, mDataList, mData)
 		post "selectedElementChanged" to my script object
@@ -718,7 +724,7 @@ private handler selectPath(in pPath as List)
 	end if
 end handler
 
-// Fold the key at the target path
+// Unselect the key at the target path
 private handler unselectPath(in pPath as List)
 	if mSelectedElement is defined and mSelectedElement is pPath then
 		applyToNode(unselectKey, pPath, 0, 0, mDataList, mData)
