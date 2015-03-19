@@ -441,6 +441,9 @@ extern "C" MC_DLLEXPORT void MCCanvasPathCurveThroughPoint(MCCanvasPointRef p_th
 extern "C" MC_DLLEXPORT void MCCanvasPathCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasPathRef &x_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathClosePath(MCCanvasPathRef &x_path);
 
+extern "C" MC_DLLEXPORT void MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, bool p_largest, bool p_clockwise, MCCanvasPathRef &x_path);
+extern "C" MC_DLLEXPORT void MCCanvasPathEllipticArcToWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, MCCanvasPathRef &x_path);
+
 //////////
 
 // Effect

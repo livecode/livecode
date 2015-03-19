@@ -782,6 +782,7 @@ void MCGPathLineTo(MCGPathRef path, MCGPoint end_point);
 void MCGPathQuadraticTo(MCGPathRef path, MCGPoint control_point, MCGPoint end_point);
 void MCGPathCubicTo(MCGPathRef path, MCGPoint first_control_point, MCGPoint second_control_point, MCGPoint end_point);
 void MCGPathArcTo(MCGPathRef path, MCGSize radii, MCGFloat rotation, bool large_arc, bool sweep, MCGPoint end_point);
+void MCGPathArcToBestFit(MCGPathRef path, MCGSize p_radii, MCGFloat p_rotation, MCGPoint p_end_point);
 void MCGPathCloseSubpath(MCGPathRef path);
 
 void MCGPathThicken(MCGPathRef path, const MCGStrokeAttr& attr, MCGPathRef& r_thick_path);

@@ -3720,6 +3720,38 @@ void MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(MCCanvasPointRef p_to, MC
 	MCGPathRelease(t_path);
 }
 
+void MCCanvasPathEllipticArcToWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, MCCanvasPathRef &x_path)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (t_success)
+	{
+		MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
+		t_success = MCGPathIsValid(t_path);
+	}
+	
+	MCGPoint t_radii;
+	if (t_success)
+		t_success = MCProperListToRadii(p_radii, t_radii);
+	
+	if (t_success)
+	{
+		MCGPathArcToBestFit(t_path, MCGSizeMake(t_radii.x, t_radii.y), p_rotation, *MCCanvasPointGet(p_to));
+		t_success = MCGPathIsValid(t_path);
+	}
+	
+	if (t_success)
+		MCCanvasPathSetMCGPath(t_path, x_path);
+	
+	MCGPathRelease(t_path);
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Effect
