@@ -145,7 +145,7 @@
         Head'Name -> Id
         Head'Kind -> import
         Id'Name -> ModName
-        eq(Name, ModName)
+        IsNameEqualToName(Name, ModName)
         
     'rule' FindModuleInList(Name, modulelist(_, Rest) -> Found):
         FindModuleInList(Name, Rest -> Found)
@@ -288,6 +288,7 @@
     'rule' ComputeTypeOfConstantTermExpression(undefined(Position) -> undefined(Position)):
     'rule' ComputeTypeOfConstantTermExpression(true(Position) -> boolean(Position)):
     'rule' ComputeTypeOfConstantTermExpression(false(Position) -> boolean(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(unsignedinteger(Position, _) -> integer(Position)):
     'rule' ComputeTypeOfConstantTermExpression(integer(Position, _) -> integer(Position)):
     'rule' ComputeTypeOfConstantTermExpression(real(Position, _) -> real(Position)):
     'rule' ComputeTypeOfConstantTermExpression(string(Position, _) -> string(Position)):

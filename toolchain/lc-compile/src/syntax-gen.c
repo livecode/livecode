@@ -1389,7 +1389,10 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
                     fprintf(s_output, "EXPRESSION'%s(UndefinedPosition)", p_node -> marks[i] . value -> boolean_mark . value == 0 ? "false" : "true");
                     break;
                 case kSyntaxNodeKindIntegerMark:
-                    fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    if (p_node -> marks[i] . value -> integer_mark . value < 0)
+                        fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    else
+                        fprintf(s_output, "EXPRESSION'unsignedinteger(UndefinedPosition, %lu)", (unsigned long)p_node -> marks[i] . value -> integer_mark . value);
                     break;
                 case kSyntaxNodeKindRealMark:
                     fprintf(s_output, "EXPRESSION'real(UndefinedPosition, Mark%ldValue)", p_node -> marks[i] . index);

@@ -940,7 +940,7 @@
     'rule' ConstantTermExpression(-> false(Position)):
         "false" @(-> Position)
 
-    'rule' ConstantTermExpression(-> integer(Position, Value)):
+    'rule' ConstantTermExpression(-> unsignedinteger(Position, Value)):
         INTEGER_LITERAL(-> Value) @(-> Position)
 
     'rule' ConstantTermExpression(-> real(Position, Value)):

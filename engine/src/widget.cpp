@@ -1363,12 +1363,12 @@ void MCWidget::OnDragFinish()
 void MCWidget::OnClick(coord_t p_x, coord_t p_y, uinteger_t p_button, uinteger_t p_count)
 {
     MCAutoValueRefArray t_params;
-    t_params.New(4);
+    t_params.New(0);
     
-    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    /*MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
     MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
     MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
-    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[3]));
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[3]));*/
     
     CallHandler(MCNAME("OnClick"), t_params.Ptr(), t_params.Size());
 }
@@ -1376,11 +1376,11 @@ void MCWidget::OnClick(coord_t p_x, coord_t p_y, uinteger_t p_button, uinteger_t
 void MCWidget::OnDoubleClick(coord_t p_x, coord_t p_y, uinteger_t p_button)
 {
     MCAutoValueRefArray t_params;
-    t_params.New(3);
+    t_params.New(0);
     
-    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    /*MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
     MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
-    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));*/
     
     CallHandler(MCNAME("OnDoubleClick"), t_params.Ptr(), t_params.Size());
 }
@@ -1742,6 +1742,8 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPo
     /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPointRef& r_point)
 {
     if (MCwidgetobject == nil)
@@ -1767,8 +1769,6 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
     /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 extern "C" MC_DLLEXPORT void MCWidgetGetClickButton(bool p_current, unsigned int& r_button)
 {
     if (MCwidgetobject == nil)
@@ -1782,6 +1782,21 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickButton(bool p_current, unsigned int
         MCwidgeteventmanager -> GetSynchronousClickButton(r_button);
     else
         MCErrorThrowGeneric(MCSTR("'the current click button' is not implemented yet"));
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetClickCount(bool p_current, unsigned int& r_count)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    // TODO: Implement asynchronous version.
+    if (!p_current)
+        MCwidgeteventmanager -> GetSynchronousClickCount(r_count);
+    else
+        MCErrorThrowGeneric(MCSTR("'the current click count' is not implemented yet"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

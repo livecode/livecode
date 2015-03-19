@@ -40,6 +40,8 @@
     UnescapeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
+    IsNameEqualToName
+    IsNameNotEqualToName
     IsNameEqualToString
     IsStringEqualToString
 
@@ -210,6 +212,7 @@
     EmitTrueConstant
     EmitFalseConstant
     EmitIntegerConstant
+    EmitUnsignedIntegerConstant
     EmitRealConstant
     EmitStringConstant
     EmitBeginListConstant
@@ -331,7 +334,7 @@
 'action' InitializeLiterals()
 'action' FinalizeLiterals()
 
-'action' MakeIntegerLiteral(Token: STRING -> Literal: INT)
+'condition' MakeIntegerLiteral(Token: STRING -> Literal: INT)
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
@@ -340,6 +343,8 @@
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
 'condition' IsStringEqualToString(STRING, STRING)
+'condition' IsNameEqualToName(NAME, NAME)
+'condition' IsNameNotEqualToName(NAME, NAME)
 
 'condition' IsNameSuitableForDefinition(NAME)
 'condition' IsStringSuitableForKeyword(STRING)
@@ -550,6 +555,7 @@
 'action' EmitTrueConstant(-> ConstIndex: INT)
 'action' EmitFalseConstant(-> ConstIndex: INT)
 'action' EmitIntegerConstant(Value: INT -> ConstIndex: INT)
+'action' EmitUnsignedIntegerConstant(Value: INT -> ConstIndex: INT)
 'action' EmitRealConstant(Value: DOUBLE -> ConstIndex: INT)
 'action' EmitStringConstant(Value: STRING -> ConstIndex: INT)
 'action' EmitBeginListConstant()
