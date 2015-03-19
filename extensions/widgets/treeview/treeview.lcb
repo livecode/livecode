@@ -33,6 +33,7 @@ metadata title is "Tree View"
 property arrayData 					get getArrayData 				set setArrayData
 property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
 property selectedElement			get getSelectedElement			set setSelectedElement
+property showFrameBorder			get mFrameBorder				set setFrameBorder
 
 -- private instance variables
 private variable mData as Array
@@ -50,6 +51,7 @@ private variable mRecalculate as Boolean
 private variable mAlternateRowBackgrounds as Boolean
 private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
+private variable mFrameBorder as Boolean
 
 private variable mSelectedElement as optional List
 
@@ -156,6 +158,7 @@ public handler OnCreate() returns nothing
 
 	put 0 into mHoverRow
 	put 0 into mViewTopPosition
+	put true into mFrameBorder
 	
 	initialiseConstants()
 end handler
@@ -275,6 +278,12 @@ public handler OnPaint() returns nothing
 		fill tPath on this canvas	
 	end if
 	
+	// Draw the frame
+	if mFrameBorder is true then
+		put rectangle path of rectangle [0.5,0.5,mViewWidth-0.5,mViewHeight-0.5] into tPath
+		set the paint of this canvas to getPaint("frame","stroke")
+		stroke tPath on this canvas
+	end if
 end handler
 
 public handler OnMouseDown() returns nothing
@@ -426,12 +435,6 @@ private handler updateParameters() returns nothing
 	put mRowHeight * mDataCount into mDataHeight
 	put the height of my bounds into mViewHeight
 	put the width of my bounds into mViewWidth
-	put mViewWidth * 0.05 into mMargin
-	if mMargin > 20 then
-		put 20 into mMargin
-	else if mMargin < 5 then
-		put 5 into mMargin
-	end if
 	put mDataHeight - mViewHeight into mDataTravel
 	if mDataTravel < 0 then
 		put 0 into mDataTravel
@@ -522,9 +525,9 @@ private handler getPaint(pLocation, pType) returns Paint
 		else if pType is "disabled_hover" then
 			return solid paint with stringToColor("0,0,0,150")
 		else if pType is "disabled_selected" then
-			return solid paint with stringToColor("0,0,0,150")
+			return solid paint with stringToColor("255,255,255,150")
 		else if pType is "disabled_selected_hover" then
-			return solid paint with stringToColor("0,0,0,150")
+			return solid paint with stringToColor("255,255,255,150")
 		else if pType is "fill" then
 			return solid paint with stringToColor("0,0,0")
 		else if pType is "fill_hover" then
@@ -545,6 +548,10 @@ private handler getPaint(pLocation, pType) returns Paint
 	else if pLocation is "scrollbar" then
 		if pType is "fill" then
 			return solid paint with stringToColor("0,0,0,50")
+		end if
+	else if pLocation is "frame" then
+		if pType is "stroke" then
+			return solid paint with stringToColor("188,188,188")
 		end if
 	end if
 	
@@ -879,6 +886,10 @@ private handler setArrayData(in pData as Array) returns nothing
 	put convertArrayToList(pData, true, 0, the empty list) into mDataList	
 	put true into mRecalculate
 	redraw all
+end handler
+
+private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
+	put pFrameBorder into mFrameBorder
 end handler
 
 private handler setSelectedElement(in pElement as String)
