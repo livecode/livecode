@@ -212,7 +212,11 @@ void AddFile(const char *p_filename)
     if (t_new_file -> path == NULL)
         Fatal_OutOfMemory();
     
+#ifndef _WIN32
     t_name = strrchr(p_filename, '/');
+#else
+    t_name = strrchr(p_filename, '\\');
+#endif
     if (t_name == NULL)
         t_name = p_filename;
     else
