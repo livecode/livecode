@@ -32,6 +32,7 @@ metadata title is "Tree View"
 -- property declarations
 property arrayData 					get getArrayData 				set setArrayData
 property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
+property selectedElement			get getSelectedElement			set setSelectedElement
 
 -- private instance variables
 private variable mData as Array
@@ -49,6 +50,8 @@ private variable mRecalculate as Boolean
 private variable mAlternateRowBackgrounds as Boolean
 private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
+
+private variable mSelectedElement as optional List
 
 private variable mArrowWidth as optional Real
 private variable mFoldedArrowPath as Path
@@ -641,14 +644,6 @@ private handler convertArrayToList(in pArray as Array, in pFolded as Boolean, in
 	return tList
 end handler
 
-// Replace the existing data wholesale with a new array pData
-private handler setArrayData(in pData as Array) returns nothing
-	put pData into mData
-	put convertArrayToList(pData, true, 0, the empty list) into mDataList	
-	put true into mRecalculate
-	redraw all
-end handler
-
 handler type NodeApply(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 
 private handler unselectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
@@ -710,14 +705,20 @@ end handler
 
 // Fold the key at the target path
 private handler selectPath(in pPath as List)
-	applyToNode(selectKey, pPath, 0, 0, mDataList, mData)
-	redraw all
+	if mSelectedElement is not defined or mSelectedElement is not pPath then
+		applyToNode(selectKey, pPath, 0, 0, mDataList, mData)
+		post "selectedElementChanged" to my script object
+		redraw all
+	end if
 end handler
 
 // Fold the key at the target path
 private handler unselectPath(in pPath as List)
-	applyToNode(unselectKey, pPath, 0, 0, mDataList, mData)
-	redraw all
+	if mSelectedElement is defined and mSelectedElement is pPath then
+		applyToNode(unselectKey, pPath, 0, 0, mDataList, mData)
+		post "selectedElementChanged" to my script object
+		redraw all
+	end if
 end handler
 
 // Recursive implementation of performing an action to the node at the end of the given path. 
@@ -820,6 +821,36 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel 
 	put convertPathToElement(pPath, pValue) into tNewElement
 	splice convertArrayToList(tNewElement, false, pLevel, pPath) after element -1 of xList
 	put tNewElement into xArray[element 1 of pPath]
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Properties
+--
+--------------------------------------------------------------------------------
+
+// Replace the existing data wholesale with a new array pData
+private handler setArrayData(in pData as Array) returns nothing
+	put pData into mData
+	put convertArrayToList(pData, true, 0, the empty list) into mDataList	
+	put true into mRecalculate
+	redraw all
+end handler
+
+private handler setSelectedElement(in pElement as String)
+	variable tPath as List
+	split pElement by "," into tPath
+	selectPath(tPath)
+end handler
+
+private handler getSelectedElement() returns String
+	variable tElement as String
+	if mSelectedElement is defined then
+		combine mSelectedElement with "," into tElement
+	else
+		put the empty string into mSelectedElement
+	end if
+	return tElement
 end handler
 
 end widget
