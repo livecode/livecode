@@ -208,11 +208,11 @@ public handler OnPaint() returns nothing
 		variable tStyle as String
 		put "" into tStyle
 		if tDataItem["selected"] is true then 
-			put "_selected" into tStyle
+			put "_selected" after tStyle
 		end if
 		
 		if tX is mHoverRow then
-			put "_hover" into tStyle
+			put "_hover" after tStyle
 		end if	
 		
 		// Draw Background
