@@ -31,8 +31,7 @@ Tell(Name)
    Told();
    OutFile = fopen(MapFile(Name), "w");
    if (OutFile == NULL) {
-      char msg[200];
-      sprintf(msg, "cannot open %s\n", Name);
+      fprintf(stderr, "cannot open %s\n", Name);
       exit(1);
    }
    OutBufPtr = &OutBuf[0];
