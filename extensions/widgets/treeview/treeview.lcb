@@ -54,7 +54,7 @@ private variable mHoverRow as Integer
 private variable mFrameBorder as Boolean
 
 private variable mSelectedElement as optional List
-private variable mUnfoldedElements as optional List
+private variable mFoldState as Array
 
 private variable mArrowWidth as optional Real
 private variable mFoldedArrowPath as Path
@@ -74,41 +74,10 @@ private variable mDragStartLoc as Point
 
 public handler OnCreate() returns nothing
 	variable tArray as Array
-	put the empty array into tArray
+	put the empty array into mData
 	put the empty list into mDataList
-
-	variable tRandom as Real
-	variable tCount as Integer
-	variable tTopKey as String
-	put 0 into tCount
-	repeat 100 times
-		add 1 to tCount
-		put "Key" & tCount formatted as string into tTopKey
-		
-		put any number into tRandom
-		if tRandom < 0.33 then
-			put "Some Data" into tArray[tTopKey]
-		else if tRandom < 0.67 then
-			put "Some other data" into tArray[tTopKey]
-		else
-			put "Some more data" into tArray[tTopKey]
-		end if	
-		
-		-- Make sure there is some nested stuff
-		put the ceiling of (any number * 100) into tRandom
-		if tCount > tRandom then
-			variable tNewArray as Array
-			put the empty array into tNewArray
-			put tArray["Key" & tRandom formatted as string] into tNewArray["Key" & tRandom formatted as string]
-			put tNewArray into tArray[tTopKey]
-		end if
-	end repeat
-
+	put the empty array into mFoldState
 	
-	put tArray into mData
-	
-	put convertArrayToList(tArray, 0, the empty list) into mDataList
-
 	put 0 into mHoverRow
 	put 0 into mViewTopPosition
 	put true into mFrameBorder
@@ -552,17 +521,18 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-// Given a 'path' of array keys as a list, and a value, create an array tArray such that
-// 	the value of tArray[element 1 of pPath][element 2 of pPath]... is pValue
-private handler convertPathToElement(in pPath as List, in pValue as any) returns Array
-	variable tArray as Array
-	put the empty array into tArray
+// Given a 'path' of array keys as a list, and a value, modify xArray such that
+// 	the value of xArray[element 1 of pPath][element 2 of pPath]... is pValue
+// 	creating the keys if necessary
+private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray as Array)
 	if the number of elements in pPath is 1 then
-		put pValue into tArray[element 1 of pPath]
+		put pValue into xArray[element 1 of pPath]
 	else
-		put convertPathToElement(element 2 to -1 of pPath, pValue) into tArray[element 1 of pPath]
+		if (element 1 of pPath) is not among the keys of xArray then
+			put the empty array into xArray[element 1 of pPath]
+		end if
+		setValueOnPath(element 2 to -1 of pPath, pValue, xArray[element 1 of pPath])
 	end if
-	return tArray
 end handler
 
 // Return the whole stored array
@@ -570,9 +540,13 @@ private handler getArrayData() returns Array
 	return mData
 end handler
 
-// Convert an array to a list, as used by this widget. Ignoring the 'folded' parameter, 
-// mDataList should always be the result of calling this on mData
+// Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected
+//  parameters, mDataList should always be the result of calling this on mData
 private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
+
+	if pArray is empty then
+		return the empty list
+	end if
 
 	variable tList as List
 	put the empty list into tList
@@ -589,7 +563,7 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 		put tKey into tElement["key"]
 		put pLevel into tElement["indent"]
 		put false into tElement["selected"]
-		put true into tElement["folded"]
+		
 		variable tPath as List
 		put pPath into tPath
 		push tKey onto tPath
@@ -597,6 +571,7 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 		put tPath into tElement["path"]	
 		if pArray[tKey] is an array then
 			put false into tElement["leaf"]
+			put true into tElement["folded"]
 			push tElement onto tList
 		else
 			put true into tElement["leaf"]
@@ -637,36 +612,36 @@ private handler removeKey(in pListElt as Integer, in pPath as List, in pLevel as
 	delete xArray[element pLevel + 1 of pPath]
 end handler
 
+private handler updateFoldState(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, in pArray as Array, in pFold as Boolean)
+	// Update the fold state
+	variable tPath as List
+	put the empty list into tPath
+	variable tKey as String
+	repeat for each element tKey in pPath
+		push tKey onto tPath
+		push "array" onto tPath
+	end repeat
+	put "folded" into element -1 of tPath
+	setValueOnPath(tPath, pFold, mFoldState)
+	
+	variable tArray as Array
+	put mFoldState into tArray
+	repeat for each element tKey in element 1 to -2 of tPath
+		put tArray[tKey] into tArray
+	end repeat
+	
+	applyFoldStateKey(element pLevel + 1 of pPath, pLevel, pListElt - 1, tArray, pArray[element pLevel + 1 of pPath], xList)
+end handler
 // To 'unfold', splice in the sublist
 private handler unfoldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
-	put false into xList[pListElt]["folded"]
-	splice convertArrayToList(xArray[element pLevel + 1 of pPath], pLevel + 1, pPath) after element pListElt of xList	
+	updateFoldState(pListElt, pPath, pLevel, xList, xArray, false)
 end handler
 
 // To 'fold', just delete everything in the list until the indent is the same as 'this'
 private handler foldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
-	put true into xList[pListElt]["folded"]
-	
-	variable tIndent as Integer
-	put xList[pListElt]["indent"] into tIndent
-	
-	variable tCount as Integer
-	variable tLastSubElement as Integer
-	repeat with tCount from pListElt + 1 up to the number of elements in xList
-		if xList[tCount]["indent"] <= tIndent then
-			put tCount - 1 into tLastSubElement
-			exit repeat
-		end if
-		put tCount into tLastSubElement
-	end repeat
-	
-	delete element pListElt + 1 to tLastSubElement of xList
-	
-	// Remove from unfolded list
-	variable tIndex as Integer
-	put the index of pPath in mUnfoldedElements into tIndex
-	delete element tIndex of mUnfoldedElements
+	updateFoldState(pListElt, pPath, pLevel, xList, xArray, true)
 end handler
+
 
 // Simply delete the array key on the given path
 private handler removePath(in pPath as List)
@@ -676,21 +651,13 @@ end handler
 
 // Unfold the key at the target path
 private handler unfoldPath(in pPath as List)
-	applyToNode(unfoldKey, pPath, 0, 0, mDataList, mData)
-	
-	// Add to unfolded list
-	if mUnfoldedElements is defined then
-		push pPath onto mUnfoldedElements
-	else
-		put [pPath] into mUnfoldedElements
-	end if
-	
+	applyToNode(unfoldKey, pPath, 0, 0, mDataList, mData)		
 	redraw all
 end handler
 
 // Fold the key at the target path
 private handler foldPath(in pPath as List)
-	applyToNode(foldKey, pPath, 0, 0, mDataList, mData)
+	applyToNode(foldKey, pPath, 0, 0, mDataList, mData)	
 	redraw all
 end handler
 
@@ -727,23 +694,75 @@ private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in
 	put element pLevel + 1 of pPathToNode into tKey
 
 	variable tCount as Integer
-	variable tMatch as Integer
 	variable tElement as Array
 	repeat with tCount from pStart + 1 up to the number of elements in xList
 		put xList[tCount] into tElement
-		if tElement["key"] is tKey then
-			put tCount into tMatch
+		if tElement["key"] is tKey and pLevel is tElement["indent"] then
+			if the number of elements in pPathToNode is pLevel + 1 then
+				pHandler(tCount, pPathToNode, pLevel, xList, xArray)
+			else
+				applyToNode(pHandler, pPathToNode, pLevel + 1, tCount, xList, xArray[tKey])			
+			end if
 			exit repeat
 		end if	
 	end repeat
-	
-	if tMatch is defined then
-		if the number of elements in pPathToNode is pLevel + 1 then
-			pHandler(tMatch, pPathToNode, pLevel, xList, xArray)
-		else
-			applyToNode(pHandler, pPathToNode, pLevel + 1, tMatch, xList, xArray[tKey])			
+end handler
+
+private handler deleteSubElements(in pStart as Integer, in pTopIndent as Integer, inout xList as List)
+	variable tLastSubElement as Integer
+	variable tFirstSubElement as Integer
+	put pStart + 1 into tFirstSubElement
+				
+	variable tSubCount
+	repeat with tSubCount from tFirstSubElement up to the number of elements in xList
+		if xList[tSubCount]["indent"] <= pTopIndent then
+			put tSubCount - 1 into tLastSubElement
+			exit repeat
 		end if
+		put tSubCount into tLastSubElement
+	end repeat
+	if tFirstSubElement <= tLastSubElement then
+		delete element tFirstSubElement to tLastSubElement of xList
 	end if
+end handler
+
+private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pStart as Integer, in pFoldState as Array, in pArray as Array, inout xList as List)
+	variable tCount as Integer
+	variable tElement as Array
+	variable tPath as List
+	// Find the key
+	repeat with tCount from pStart + 1 up to the number of elements in xList
+		put xList[tCount] into tElement
+		if tElement["key"] is pKey and pLevel is tElement["indent"] then
+			// Either splice in the below elements
+			if pFoldState["folded"] is false then
+				put false into xList[tCount]["folded"] 
+			
+				splice convertArrayToList(pArray, pLevel + 1, tElement["path"]) after element tCount of xList
+		
+				// Apply the fold state on the subelements
+				if "array" is among the keys of pFoldState then
+					applyFoldState(pLevel + 1, tCount, pFoldState["array"], pArray, xList)
+				end if
+				exit repeat
+			// or delete them
+			else
+				put true into xList[tCount]["folded"] 
+				deleteSubElements(tCount, tElement["indent"], xList)
+			end if	
+			exit repeat
+		end if	
+	end repeat	
+end handler
+
+private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pFoldState as Array, in pArray as Array, inout xList as List)
+
+	// Find the match for each key at the appropriate level, and set folded accordingly
+	variable tKey as String
+	repeat for each key tKey in pFoldState
+		applyFoldStateKey(tKey, pLevel, pStart, pFoldState[tKey], pArray[tKey], xList)
+	end repeat
+
 end handler
 
 // Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
@@ -779,6 +798,7 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel 
 	variable tElement as Array
 	variable tCount as Integer
 	variable tNewElement as Array
+	put the empty array into tNewElement
 	
 	repeat with tCount from 1 up to the number of elements in xList
 		put element tCount of xList into tElement
@@ -787,8 +807,8 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel 
 		if tElement["key"] > element pLevel + 1 of pPath then
 		
 			// update the backing array
-			put convertPathToElement(pPath, pValue) into tNewElement
-			put tNewElement into xArray[element pLevel + 1 of pPath]
+			setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
+			put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
 			
 			// update the list
 			splice convertArrayToList(tNewElement, pLevel, pPath) before element tCount of xList
@@ -798,14 +818,15 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel 
 		else if tElement["key"] is element pLevel + 1 of pPath then
 			// The new element replaces the old one if the new one is just a string...
 			if the number of elements in pPath is pLevel + 1 then
-				put convertPathToElement(element pLevel + 2 to -1 of pPath, pValue)into tNewElement	
-				put tNewElement into xArray[element pLevel + 1 of pPath]
+				put pValue into xArray[element pLevel + 1 of pPath]
 				put pValue into tElement["value"]
+				
 			// ...or if the old one was just as string.
 			else if tElement["leaf"] then
-				put convertPathToElement(element pLevel + 2 to -1 of pPath, pValue) into tNewElement
-				splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList 
+				setValueOnPath(element pLevel + 2 to -1 of pPath, pValue, tNewElement)
 				put tNewElement into xArray[element pLevel + 1 of pPath]
+				splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList 
+
 			// Otherwise, go one step further into the path and set
 			else
 				setDataListOnPath(pPath, pValue, pLevel + 1, element tCount + 1 to -1 of xList, xArray[element pLevel + 1 of pPath])
@@ -815,9 +836,9 @@ private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel 
 	end repeat
 	
 	// If we reached the end of the list then append this to the end
-	put convertPathToElement(pPath, pValue) into tNewElement
-	splice convertArrayToList(tNewElement, pLevel, pPath) after element -1 of xList
-	put tNewElement into xArray[element 1 of pPath]
+	setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
+	put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
+	splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList
 end handler
 
 --------------------------------------------------------------------------------
@@ -831,12 +852,9 @@ private handler setArrayData(in pData as Array) returns nothing
 	put pData into mData
 	put convertArrayToList(pData, 0, the empty list) into mDataList
 	
-	// Unfold unfolded *before* reapplying selection
-	if mUnfoldedElements is defined then
-		variable tPath as List
-		repeat for each element tPath in mUnfoldedElements
-			applyToNode(unfoldKey, tPath, 0, 0, mDataList, mData)
-		end repeat
+	// Unfold unfolded before reapplying selection
+	if mFoldState is not empty then
+		applyFoldState(0, 0, mFoldState, mData, mDataList)
 	end if	
 		
 	// Force reselection of previously selected path (if possible)
