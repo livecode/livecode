@@ -503,8 +503,8 @@ endif
 $(GRAMMAR_output): $(COMPILE_stagedir)/stamp-lci
 $(GRAMMAR_output): $(GRAMMAR_inputs) $(GRAMMAR_template)
 	$(MKDIR_P) $(dir $@)
-	$(LC_COMPILE) --bootstrap --template $(GRAMMAR_template) \
-	    --modulepath $(MODULE_DIR) --output $(GRAMMAR_output) $(GRAMMAR_inputs) > /dev/null
+	$(LC_COMPILE) --bootstrap --inputg $(GRAMMAR_template) \
+	    --outputi $(MODULE_DIR) --outputg $(GRAMMAR_output) $(GRAMMAR_inputs)
 
 ########## Convenience targets
 
