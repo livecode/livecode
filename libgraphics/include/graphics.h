@@ -790,7 +790,7 @@ void MCGPathSimplify(MCGPathRef path, MCGPathRef& r_simple_path);
 
 bool MCGPathTransform(MCGPathRef path, const MCGAffineTransform &p_transform);
 
-bool MCGPathGetLastPoint(MCGPathRef self, MCGPoint &r_last);
+bool MCGPathGetCurrentPoint(MCGPathRef self, MCGPoint &r_current);
 bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
 
 typedef bool (*MCGPathIterateCallback)(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count);

@@ -767,20 +767,20 @@ static void _MCGPathEllipticArc(MCGPathRef self, const MCGSize &p_radii, MCGFloa
 		return;
 	}
 	
-	MCGPoint t_last;
-	if (!MCGPathGetLastPoint(self, t_last))
-		t_last = MCGPointMake(0, 0);
+	MCGPoint t_current;
+	if (!MCGPathGetCurrentPoint(self, t_current))
+		t_current = MCGPointMake(0, 0);
 	
-	if (MCGPointIsEqual(t_last, p_end_point))
+	if (MCGPointIsEqual(t_current, p_end_point))
 		return;
 	
 	p_angle = fmodf(p_angle + 2 * M_PI, 2 * M_PI);
 	
 	MCGPoint t_mid;
-	t_mid = MCGPointGetMidPoint(t_last, p_end_point);
+	t_mid = MCGPointGetMidPoint(t_current, p_end_point);
 	
 	MCGPoint t_p;
-	t_p = MCGPointRotate(MCGPointTranslate(t_last, -t_mid.x, -t_mid.y), -p_angle);
+	t_p = MCGPointRotate(MCGPointTranslate(t_current, -t_mid.x, -t_mid.y), -p_angle);
 	
 	MCGSize t_radii;
 	t_radii = MCGSizeMake(MCAbs(p_radii.width), MCAbs(p_radii.height));
@@ -908,13 +908,13 @@ bool MCGPathGetBoundingBox(MCGPathRef self, MCGRectangle &r_bounds)
 	return true;
 }
 
-bool MCGPathGetLastPoint(MCGPathRef self, MCGPoint &r_last)
+bool MCGPathGetCurrentPoint(MCGPathRef self, MCGPoint &r_current)
 {
 	SkPoint t_point;
 	if (!self->path->getLastPt(&t_point))
 		return false;
 	
-	r_last = MCGPointFromSkPoint(t_point);
+	r_current = MCGPointFromSkPoint(t_point);
 	return true;
 }
 
