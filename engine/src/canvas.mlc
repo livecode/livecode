@@ -2675,6 +2675,7 @@ public foreign handler MCCanvasPathLineTo(in pPoint as Point, inout xPath as Pat
 public foreign handler MCCanvasPathCurveThroughPoint(in pThrough as Point, in pTo as Point, inout xPath as Path) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, inout xPath as Path) returns nothing binds to "<builtin>"
 
+public foreign handler MCCanvasPathArcTo(in pThrough as Point, in pTo as Point, in pRadius as CanvasFloat, inout xPath as Path) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathEllipticArcToWithRadiiAsList(in pTo as Point, in pRadii as List, in pRotation as CanvasFloat, inout xPath as Path) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(in pTo as Point, in pRadii as List, in pRotation as CanvasFloat, in pLargest as bool, in pClockwise as bool, inout xPath as Path) returns nothing binds to "<builtin>"
 
@@ -2750,6 +2751,42 @@ syntax PathOperationCurveThrough is statement
 begin
 	MCCanvasPathCurveThroughPoint(mThroughA, mTo, mPath)
 	MCCanvasPathCurveThroughPoints(mThroughA, mThroughB, mTo, mPath)
+end syntax
+
+
+/*
+Summary:	Adds an arc to a path.
+
+mThrough:		An expression which evaluates to a point.
+mTo:		An expression which evaluates to a point.
+mRadius:		An expression which evaluates to a number.
+mPath:		An expression which evaluates to a path.
+
+Description:	Adds an arc between the points of a circle with radius <mRadius> tangent to the lines from the current point to <mThrough>, and from <mThrough> to <mTo>.
+
+Example:
+	// Construct a path tracing out a rectangle with rounded bottom corners.
+	variable tPath
+	put the empty path into tPath
+
+	// Begin a new subpath
+	move to point [0, 0] on tPath
+
+	// Continue path with an arc to the bottom edge
+	arc through point [0, my height] to point [25, my height] with radius 25 on tPath
+
+	// Continue path with an arc to the right edge
+	arc through point [my width, my height] to point [my width, 0] with radius 25 on tPath
+
+	// Close the path with a line back to the starting point
+	close path on tPath
+
+Tags:	Canvas
+*/
+syntax PathOperationArcTo is statement
+	"arc" "through" <mThrough: Expression> "to" <mTo: Expression> "with" "radius" <mRadius: Expression> "on" <mPath: Expression>
+begin
+	MCCanvasPathArcTo(mThrough, mTo, mRadius, mPath)
 end syntax
 
 

@@ -757,6 +757,21 @@ static inline MCGPoint MCGVectorMake(const MCGPoint p_start, MCGPoint p_end)
 	return MCGPointMake(p_end.x - p_start.x, p_end.y - p_start.y);
 }
 
+static inline MCGPoint MCGVectorNormalize(const MCGPoint p_vector)
+{
+	return MCGPointScale(p_vector, 1 / MCGVectorMagnitude(p_vector));
+}
+
+static inline MCGPoint MCGVectorAdd(const MCGPoint &p_left, const MCGPoint &p_right)
+{
+	return MCGPointMake(p_left.x + p_right.x, p_left.y + p_right.y);
+}
+
+static inline MCGPoint MCGVectorScale(const MCGPoint &p_vector, MCGFloat p_scale)
+{
+	return MCGPointMake(p_vector.x * p_scale, p_vector.y * p_scale);
+}
+
 static inline MCGPoint MCGVectorRotate90(const MCGPoint &p_vector)
 {
 	return MCGPointMake(-p_vector.y, p_vector.x);
@@ -1002,6 +1017,52 @@ void MCGPathArcToBestFit(MCGPathRef self, MCGSize p_radii, MCGFloat p_rotation, 
 		_MCGPathEllipticArc(self, p_radii, p_rotation * M_PI / 180, p_end_point);
 	
 	self -> is_valid = t_success;
+}
+
+void MCGPathArcToTangent(MCGPathRef self, const MCGPoint &p_tangent, const MCGPoint &p_end, MCGFloat p_radius)
+{
+	if (!MCGPathIsValid(self))
+		return;
+	
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = self -> is_mutable;
+	
+	if (t_success)
+	{
+		MCGPoint t_start;
+		if (!MCGPathGetCurrentPoint(self, t_start))
+			t_start = MCGPointMake(0, 0);
+		
+		t_success = !MCGPointIsEqual(t_start, p_tangent) && !MCGPointIsEqual(p_tangent, p_end) && !MCGPointIsEqual(p_end, t_start);
+		
+		MCGPoint t_vec1, t_vec2;
+		t_vec1 = MCGVectorMake(p_tangent, t_start);
+		t_vec2 = MCGVectorMake(p_tangent, p_end);
+		
+		MCGFloat t_angle;
+		t_angle = MCGAngleBetweenVectors(t_vec1, t_vec2);
+		
+		MCGFloat t_dist;
+		t_dist = MCAbs(p_radius / tanf(t_angle / 2));
+		
+		MCGPoint t_start_tangent, t_end_tangent;
+		if (MCGVectorMagnitude(t_vec1) > t_dist)
+			t_start_tangent = MCGVectorAdd(p_tangent, MCGVectorScale(MCGVectorNormalize(t_vec1), t_dist));
+		else
+			t_start_tangent = t_start;
+		
+		if (MCGVectorMagnitude(t_vec2) > t_dist)
+			t_end_tangent = MCGVectorAdd(p_tangent, MCGVectorScale(MCGVectorNormalize(t_vec2), t_dist));
+		else
+			t_end_tangent = p_end;
+		
+		MCGPathLineTo(self, t_start_tangent);
+		MCGPathArcTo(self, MCGSizeMake(p_radius, p_radius), 0, false, t_angle < 0, t_end_tangent);
+		MCGPathLineTo(self, p_end);
+	}
 }
 
 void MCGPathCloseSubpath(MCGPathRef self)

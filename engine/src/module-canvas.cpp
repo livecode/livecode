@@ -3690,6 +3690,32 @@ void MCCanvasPathClosePath(MCCanvasPathRef &x_path)
 	MCGPathRelease(t_path);
 }
 
+void MCCanvasPathArcTo(MCCanvasPointRef p_tangent, MCCanvasPointRef p_to, MCCanvasFloat p_radius, MCCanvasPathRef &x_path)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (t_success)
+	{
+		MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
+		t_success = MCGPathIsValid(t_path);
+	}
+	
+	if (t_success)
+	{
+		MCGPathArcToTangent(t_path, *MCCanvasPointGet(p_tangent), *MCCanvasPointGet(p_to), p_radius);
+		t_success = MCGPathIsValid(t_path);
+	}
+	
+	if (t_success)
+		MCCanvasPathSetMCGPath(t_path, x_path);
+	
+	MCGPathRelease(t_path);
+}
+
 void MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, bool p_largest, bool p_clockwise, MCCanvasPathRef &x_path)
 {
 	bool t_success;
