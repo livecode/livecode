@@ -72,6 +72,7 @@ public:
     void GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
     void GetSynchronousClickPosition(coord_t& r_x, coord_t& r_y) const;
     void GetSynchronousClickButton(unsigned int& r_button) const;
+    void GetSynchronousClickCount(unsigned int& r_count) const;
     
     // Returns the asynchronous ("current") mouse/click coordinates
     void GetAsynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
@@ -82,7 +83,7 @@ private:
     // State of the input devices at the last point an event was received
     coord_t     m_mouse_x, m_mouse_y;
     coord_t     m_click_x, m_click_y;
-    real64_t    m_click_time;
+    uint32_t    m_click_time;
     uinteger_t  m_click_count;
     uinteger_t  m_click_button;
     uinteger_t  m_mouse_buttons;
@@ -94,7 +95,7 @@ private:
     MCWidget*   m_keyboard_focus;
     
     // Parameters for controlling double-click time and position deltas
-    real64_t    m_doubleclick_time;
+    uint32_t    m_doubleclick_time;
     coord_t     m_doubleclick_distance;
     
     // State for touch events
