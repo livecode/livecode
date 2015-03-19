@@ -848,7 +848,7 @@ private handler getSelectedElement() returns String
 	if mSelectedElement is defined then
 		combine mSelectedElement with "," into tElement
 	else
-		put the empty string into mSelectedElement
+		put the empty string into tElement
 	end if
 	return tElement
 end handler
