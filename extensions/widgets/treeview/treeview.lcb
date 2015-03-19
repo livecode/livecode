@@ -214,14 +214,14 @@ public handler OnPaint() returns nothing
 			put "_hover" after tStyle
 		end if	
 		
-		// Draw Background
+		// Draw Rows
 		if mAlternateRowBackgrounds is true then
 		   put rectangle path of rectangle [0,tTop,mViewWidth,tTop+mRowHeight] into tPath
 
 		   if tX mod 2 is 1 then
-			   set the paint of this canvas to getPaint("background","fill" & tStyle)
+			   set the paint of this canvas to getPaint("row","fill" & tStyle)
 		   else
-			   set the paint of this canvas to getPaint("background","fill_alternate" & tStyle)
+			   set the paint of this canvas to getPaint("row","fill_alternate" & tStyle)
 		   end if	
 		   fill tPath on this canvas
 		end if
@@ -478,37 +478,51 @@ end handler
 private handler getPaint(pLocation, pType) returns Paint
 	if pLocation is "background" then
 		if pType is "fill" then
-			return solid paint with stringToColor("255,255,255")
-		else if pType is "fill_hover" then
-			return solid paint with stringToColor("230,230,230")
-		else if pType is "fill_selected" then
-			return solid paint with stringToColor("255,0,0")
-		else if pType is "fill_alternate" then
-			return solid paint with stringToColor("245,245,245")
-		else if pType is "fill_alternate_selected" then
-			return solid paint with stringToColor("255,20,20")
-		else if pType is "fill_alternate_hover" then
-			return solid paint with stringToColor("210,210,210")
-		else if pType is "stroke" then
 			return solid paint with stringToColor("178,178,178")
 		end if
 	else if pLocation is "row" then
 		if pType is "fill" then
 			return solid paint with stringToColor("255,255,255")
-		else if pType is "stroke" then
-			return solid paint with stringToColor("200,199,204")
+		else if pType is "fill_hover" then
+			return solid paint with stringToColor("235,235,235")
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor("10,105,216")
+		else if pType is "fill_selected_hover" then
+			return solid paint with stringToColor("10,95,193")
+		else if pType is "fill_alternate" then
+			return solid paint with stringToColor("245,245,245")
+		else if pType is "fill_alternate_hover" then
+			return solid paint with stringToColor("230,230,230")
+		else if pType is "fill_alternate_selected" then
+			return solid paint with stringToColor("10,105,216")
+		else if pType is "fill_alternate_selected_hover" then
+			return solid paint with stringToColor("10,98,200")
 		end if
 	else if pLocation is "text" then
-		if pType is "fill" then
+		if pType is "disabled" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "disabled_hover" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "disabled_selected" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "disabled_selected_hover" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "fill" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_hover" then
 			return solid paint with stringToColor("0,0,0")
 		else if pType is "fill_selected" then
 			return solid paint with stringToColor("255,255,255")
-		else if pType is "disabled_selected" then
-			return solid paint with stringToColor("255,255,255,150")
-		else if pType is "disabled" then
-			return solid paint with stringToColor("0,0,0,150")
-		else if pType is "selected-fill" then
-			return solid paint with stringToColor("0,122,255")
+		else if pType is "fill_selected_hover" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_alternate" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_alternate_hover" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_alternate_selected" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_alternate_selected_hover" then
+			return solid paint with stringToColor("255,255,255")
 		end if
 	else if pLocation is "scrollbar" then
 		if pType is "fill" then
