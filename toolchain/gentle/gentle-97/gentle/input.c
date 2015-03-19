@@ -121,14 +121,19 @@ static open_next_file ()
 define_file (path)
    char * path;
 {
-/* --PATCH-- */    char cwd[4096];
 /* --PATCH-- */    char fullpath[4096];
-/* --PATCH-- */    getcwd(cwd, 4096);
+/* --PATCH-- */    if (path[0] != '/' && path[1] != ':')
+/* --PATCH-- */    {
+/* --PATCH-- */         char cwd[4096];
+/* --PATCH-- */         getcwd(cwd, 4096);
 #ifndef _WIN32
-/* --PATCH-- */    sprintf(fullpath, "%s/%s", cwd, path);
+/* --PATCH-- */         sprintf(fullpath, "%s/%s", cwd, path);
 #else
-/* --PATCH-- */    sprintf(fullpath, "%s\\%s", cwd, path);
+/* --PATCH-- */         sprintf(fullpath, "%s\\%s", cwd, path);
 #endif
+/* --PATCH-- */    }
+/* --PATCH-- */    else
+/* --PATCH-- */         sprintf(fullpath, "%s", path);
     
 /* --PATCH-- */   if (! is_defined(fullpath)) {
       filecount++;
