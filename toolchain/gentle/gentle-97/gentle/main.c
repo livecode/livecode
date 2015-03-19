@@ -87,10 +87,23 @@ void DefFileMapping(const char *p_map_str)
 
 const char *MapFile(const char *p_input)
 {
+    const char* t_input;
     struct FileMapping *t_mapping;
+    
+    // Only map on the basename component
+#ifndef _WIN32
+    t_input = strrchr(p_input, '/');
+#else
+    t_input = strrchr(p_input, '\\');
+#endif
+    if (t_input == NULL)
+        t_input = p_input;
+    else
+        t_input = t_input + 1;
+    
     for(t_mapping = FileMappings; t_mapping != NULL; t_mapping = t_mapping -> next)
     {
-        if (strcmp(t_mapping -> name, p_input) == 0)
+        if (strcmp(t_mapping -> name, t_input) == 0)
             return t_mapping -> replacement;
     }
     return p_input;
