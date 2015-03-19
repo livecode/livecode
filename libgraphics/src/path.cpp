@@ -918,6 +918,18 @@ bool MCGPathGetCurrentPoint(MCGPathRef self, MCGPoint &r_current)
 	return true;
 }
 
+bool MCGPathGetPreviousPoint(MCGPathRef self, MCGPoint &r_last)
+{
+	SkPoint t_point;
+	int t_count;
+	t_count = self->path->countPoints();
+	if (t_count < 2)
+		return false;
+	
+	r_last = MCGPointFromSkPoint(self->path->getPoint(t_count - 2));
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCGPathTransform(MCGPathRef self, const MCGAffineTransform &p_transform)
