@@ -319,6 +319,17 @@ extern "C" MC_DLLEXPORT void MCStringEvalCharWithCode(uinteger_t p_code, MCStrin
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool com_livecode_char_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_char_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("CHAR MODULE", test, result)

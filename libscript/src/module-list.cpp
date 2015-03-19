@@ -615,6 +615,17 @@ MCListEvalOffsetOfListBefore (bool p_is_first,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool com_livecode_list_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_list_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("LIST MODULE", test, result)

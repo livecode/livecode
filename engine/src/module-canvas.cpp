@@ -514,7 +514,7 @@ static MCNameRef s_cap_style_map[kMCGCapStyleCount];
 bool MCCanvasStringsInitialize();
 void MCCanvasStringsFinalize();
 
-bool MCCanvasModuleInitialize()
+extern "C" bool com_livecode_canvas_Initialize()
 {
 	if (!MCCanvasErrorsInitialize())
 		return false;
@@ -527,7 +527,7 @@ bool MCCanvasModuleInitialize()
     return true;
 }
 
-void MCCanvasModuleFinalize()
+extern "C" void com_livecode_canvas_Finalize()
 {
 	MCCanvasConstantsFinalize();
 	MCCanvasTypesFinalize();

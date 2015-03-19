@@ -274,7 +274,9 @@ static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc
     return true;
 }
 
-bool MCForeignModuleInitialize(void)
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_foreign_Initialize(void)
 {
     MCForeignPrimitiveType p;
     MCForeignTypeDescriptor d;
@@ -322,7 +324,7 @@ bool MCForeignModuleInitialize(void)
     return true;
 }
 
-void MCForeignModuleFinalize(void)
+extern "C" void com_livecode_foreign_Finalize(void)
 {
     MCValueRelease(kMCNativeCStringTypeInfo);
 	MCValueRelease(kMCWStringTypeInfo);

@@ -2024,7 +2024,7 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
-extern bool MCModulesInitialize();
+extern "C" bool MCModulesInitialize();
 
 MC_DLLEXPORT int main(int argc, char *argv[], char *envp[])
 {

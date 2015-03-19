@@ -87,7 +87,18 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsAList(MCValueRef p_value, bool& r_outpu
         r_output = false;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_type_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_type_Finalize (void)
+{
+}
+
+////////////////////////////////////////////////////////////////
 
 #ifdef _TEST
 extern void log(const char *module, const char *test, bool result);

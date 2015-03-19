@@ -60,3 +60,16 @@ extern "C" MC_DLLEXPORT MCStringRef MCTypeConvertExecCombineListWithDelimiter(MC
     
     return MCValueRetain(*t_string);
 }
+
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_typeconvert_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_typeconvert_Finalize (void)
+{
+}
+
+////////////////////////////////////////////////////////////////

@@ -59,3 +59,16 @@ MCFileExecGetDirectoryEntries (MCStringRef p_path,
 {
 	/* UNCHECKED */ MCSFileGetDirectoryEntries (p_path, r_entries);
 }
+
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_file_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_file_Finalize (void)
+{
+}
+
+////////////////////////////////////////////////////////////////

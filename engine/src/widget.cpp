@@ -1835,3 +1835,16 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointRef p
     MCWidgetEvalIsPointWithinRect(p_point, p_rect, t_within);
     r_not_within = !t_within;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_widget_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_widget_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////

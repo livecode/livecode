@@ -510,3 +510,16 @@ extern "C" MC_DLLEXPORT void MCArithmeticEvalListOfStringParsedAsListOfNumber(MC
 {
     r_output = MCArithmeticExecParseListOfStringAsListOfNumber(p_list_of_string);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_arithmetic_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_arithmetic_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

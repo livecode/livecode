@@ -311,15 +311,15 @@ void EmitFinish(void)
             if (__FindEmittedModule(s_ordered_modules[i], t_module))
             {
                 if (fprintf(s_output_code_file,
-                            "    extern int %s_Finalize(void);\n"
-                            "    if (!%s_Finalize())\n"
-                            "        return false;\n",
+                            "    extern int %s_Initialize(void);\n"
+                            "    if (!%s_Initialize())\n"
+                            "        return 0;\n",
                             t_module -> modified_name,
                             t_module -> modified_name) < 0)
                     goto error_cleanup;
             }
         }
-        if (fprintf(s_output_code_file, "    return true;\n}\n\n") < 0)
+        if (fprintf(s_output_code_file, "    return 1;\n}\n\n") < 0)
             goto error_cleanup;
         if (fprintf(s_output_code_file, "void MCModulesFinalize(void)\n{\n") < 0)
             goto error_cleanup;
@@ -477,7 +477,7 @@ EmitEndModuleOutputC (NameRef p_module_name,
 	if (0 > fprintf(t_file, "};\n\n"))
 		goto error_cleanup;
 
-	if (0 > fprintf(t_file, "volatile builtin_module_descriptor __%s_module_info = { \"%s\", %s_module_data, sizeof(%s_module_data) };\n\n", t_modified_name, p_module_name_string, t_modified_name, t_modified_name))
+	if (0 > fprintf(t_file, "builtin_module_descriptor __%s_module_info = { \"%s\", %s_module_data, sizeof(%s_module_data) };\n\n", t_modified_name, p_module_name_string, t_modified_name, t_modified_name))
 		goto error_cleanup;
 
     EmittedModule *t_mod;

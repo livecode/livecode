@@ -464,8 +464,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertBase(MCStringRef p_operand, intege
 
 ////////////////////////////////////////////////////////////////
 
-bool
-MCMathModuleInitialize (void)
+extern "C" bool com_livecode_math_Initialize (void)
 {
 	if (!MCNamedErrorTypeInfoCreate (MCNAME("com.livecode.math.DomainError"), MCNAME("math"), MCSTR("mathematical function domain error"), kMCMathDomainErrorTypeInfo))
 		return false;
@@ -473,8 +472,7 @@ MCMathModuleInitialize (void)
 	return true;
 }
 
-void
-MCMathModuleFinalize (void)
+extern "C" void com_livecode_math_Finalize (void)
 {
 	MCValueRelease (kMCMathDomainErrorTypeInfo);
 }
