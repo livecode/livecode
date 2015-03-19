@@ -160,6 +160,7 @@
     true(Position: POS)
     false(Position: POS)
     integer(Position: POS, Value: INT)
+    unsignedinteger(Position: POS, Value: INT)
     real(Position: POS, Value: DOUBLE)
     string(Position: POS, Value: STRING)
     slot(Position: POS, Name: ID)
