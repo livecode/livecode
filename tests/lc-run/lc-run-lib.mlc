@@ -1,7 +1,6 @@
 module com.livecode.lc_run_lib
 
--- Intentional lower-case handler name
-public handler main()
+public handler lib_main()
 	-- Do nothing
 end handler
 
