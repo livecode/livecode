@@ -605,6 +605,7 @@
     'rule' DefineModuleId(Id):
         Info::MODULEINFO
         Info'Index <- -1
+        Info'Generator <- -1
         Id'Meaning <- module(Info)
 
 'action' DefineSymbolId(ID, ID, ACCESS, SYMBOLKIND, TYPE)
@@ -612,6 +613,7 @@
     'rule' DefineSymbolId(Id, ParentId, Access, Kind, Type)
         Info::SYMBOLINFO
         Info'Index <- -1
+        Info'Generator <- -1
         Info'Parent <- ParentId
         Info'Kind <- Kind
         Info'Type <- Type

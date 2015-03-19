@@ -181,7 +181,7 @@ static FILE* s_output;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void *Allocate(size_t p_size)
+void *Allocate(size_t p_size)
 {
     void *t_ptr;
     t_ptr = calloc(1, p_size);
@@ -190,7 +190,7 @@ static void *Allocate(size_t p_size)
     return t_ptr;
 }
 
-static void *Reallocate(void *p_ptr, size_t p_new_size)
+void *Reallocate(void *p_ptr, size_t p_new_size)
 {
     void *t_new_ptr;
     t_new_ptr = realloc(p_ptr, p_new_size);
