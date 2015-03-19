@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,9 +64,22 @@ void FinalizeLiterals(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MakeIntegerLiteral(const char *p_token, long *r_literal)
+// Integer literals are actually unsigned, even though they pass through as
+// longs. Indeed, a -ve integer literal is not possible since it is prevented
+// by the token's regex.
+int MakeIntegerLiteral(const char *p_token, long *r_literal)
 {
-    *r_literal = atoi(p_token);
+    errno = 0;
+    
+    unsigned long t_value;
+    t_value = strtoul(p_token, NULL, 10);
+    
+    if (errno == ERANGE || t_value > 0xFFFFFFFFU)
+        return 0;
+    
+    *r_literal = (long)t_value;
+    
+    return 1;
 }
 
 void MakeDoubleLiteral(const char *p_token, long *r_literal)

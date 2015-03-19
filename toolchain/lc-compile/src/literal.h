@@ -26,7 +26,7 @@ typedef struct Name *NameRef;
 void InitializeLiterals(void);
 void FinalizeLiterals(void);
 
-void MakeIntegerLiteral(const char *token, long *r_literal);
+int MakeIntegerLiteral(const char *token, long *r_literal);
 void MakeDoubleLiteral(const char *token, long *r_literal);
 void MakeStringLiteral(const char *token, long *r_literal);
 void MakeNameLiteral(const char *token, NameRef *r_literal);

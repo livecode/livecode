@@ -590,6 +590,7 @@ end syntax
 public foreign handler MCWidgetGetMousePosition(in pCurrent as CBool, out rLocation as Point) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocation as Point) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
 
 public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
@@ -665,6 +666,27 @@ syntax TheClickButton is expression
     "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "button"
 begin
     MCWidgetGetClickButton(IsCurrent, output)
+end syntax
+
+/*
+Summary:        Determines the number of successive clicks within the click distance.
+
+Returns:        The number of clicks which have occured since the initial click within the standard 'click distance' from the original point.
+
+Example:
+    variable tClickCount as integer
+    put the click count into tClickCount
+    
+    if tClickCount is 1 then
+        // do single click action
+    else if tClickCount is 2 then
+        // do double click action
+    end if
+*/
+syntax TheClickCOunt is expression
+    "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "count"
+begin
+    MCWidgetGetClickCount(IsCurrent, output)
 end syntax
 
 syntax MouseButtonName is phrase
