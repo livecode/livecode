@@ -92,7 +92,7 @@
     'rule' ImportContainsCanvas(import(_, Id)):
         Id'Name -> Name
         MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
-        eq(Name, CanvasModuleName)
+        IsNameEqualToName(Name, CanvasModuleName)
 
 ----------
 
@@ -354,13 +354,13 @@
 
 'condition' IsNameInList(NAME, NAMELIST)
     'rule' IsNameInList(Id, namelist(Head, Tail)):
-        eq(Id, Head)
+        IsNameEqualToName(Id, Head)
     'rule' IsNameInList(Id, namelist(Head, Tail)):
         IsNameInList(Id, Tail)
 
 'condition' IsNameNotInList(NAME, NAMELIST)
     'rule' IsNameNotInList(Id, namelist(Head, Tail)):
-        ne(Id, Head)
+        IsNameNotEqualToName(Id, Head)
         IsNameNotInList(Id, Tail)
     'rule' IsNameNotInList(Id, nil):
         -- success

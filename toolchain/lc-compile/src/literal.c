@@ -29,6 +29,7 @@
 struct Name
 {
     NameRef next;
+    NameRef key;
     char *token;
 };
 
@@ -264,9 +265,18 @@ void MakeStringLiteral(const char *p_token, long *r_literal)
 void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_literal)
 {
     NameRef t_name;
+    NameRef t_key;
+    t_name = NULL;
+    t_key = NULL;
     for(t_name = s_names; t_name != NULL; t_name = t_name -> next)
+    {
         if (strcmp(p_token, t_name -> token) == 0)
             break;
+        
+        // We want the last name in the list which matches case-insensitively.
+        if (strcasecmp(p_token, t_name -> token) == 0)
+            t_key = t_name;
+    }
     
     if (t_name == NULL)
     {
@@ -279,6 +289,13 @@ void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_litera
             Fatal_OutOfMemory();
         memcpy(t_name -> token, p_token, p_token_length);
         t_name -> token[p_token_length] = '\0';
+        
+        // If we found a key (one which matches this case-insensitively) then
+        // that is the key of this name. Otherwise the name is its own key.
+        if (t_key != NULL)
+            t_name -> key = t_key;
+        else
+            t_name -> key = t_name;
         
         t_name -> next = s_names;
         s_names = t_name;
@@ -297,9 +314,19 @@ void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
     *r_string = ((NameRef)p_literal) -> token;
 }
 
+int IsNameEqualToName(NameRef p_left, NameRef p_right)
+{
+    return p_left == p_right || p_left -> key == p_right -> key;
+}
+
+int IsNameNotEqualToName(NameRef p_left, NameRef p_right)
+{
+    return IsNameEqualToName(p_left, p_right) == 0 ? 1 : 0;
+}
+
 int IsNameEqualToString(NameRef p_name, const char *p_string)
 {
-    return strcmp(p_name -> token, p_string) == 0;
+    return strcasecmp(p_name -> token, p_string) == 0;
 }
 
 int IsStringEqualToString(const char *p_left, const char *p_right)
@@ -338,7 +365,7 @@ static int FindNameInScope(ScopeRef p_scope, NameRef p_name, BindingRef *r_bindi
     BindingRef t_binding;
 
 	for (t_binding = p_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
-        if (t_binding -> name == p_name)
+        if (IsNameEqualToName(t_binding -> name, p_name))
         {
             *r_binding = t_binding;
             return 1;
