@@ -204,9 +204,9 @@ public handler OnPaint() returns nothing
 		
 		variable tStyle as String
 		put "" into tStyle
-		//if tDataItem["selected"] is true then 
-			//put "_selected" into tStyle
-		//end if
+		if tDataItem["selected"] is true then 
+			put "_selected" into tStyle
+		end if
 		
 		if tX is mHoverRow then
 			put "_hover" into tStyle
@@ -352,7 +352,7 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 	redraw all
 end handler
 
-public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
+public handler onClick() returns nothing
 	variable tRowNumber
 	put yPosToRowNumber(the y of the current click position) into tRowNumber
 	
@@ -362,20 +362,22 @@ public handler onClick(pXPos,pYPos,pButtonNumber,pCount) returns nothing
 	put element tRowNumber of mDataList into tData
 	
 
+	if the click count is 1 then
+		if tData["selected"] is true then
+			unselectPath(tData["path"])
+		else
+			selectPath(tData["path"])
+		end if
+	end if
+
 	if tData["leaf"] is not true then
-	   //if pCount is 1 then
-		   //if tData["selected"] is true then
-			   //deselectKey(tData["path"])
-		   //else
-			   //selectKey(tData["path"])
-		   //end if
-	   //else if pCount > 1 then
+	   if the click count > 1 then
 		   if tData["folded"] is true then
 			   unfoldPath(tData["path"])
 		   else
 			   foldPath(tData["path"])
 		   end if
-	   //end if
+	   end if
 	end if
 end handler
 
