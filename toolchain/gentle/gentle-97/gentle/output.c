@@ -147,7 +147,7 @@ nl()
 TellFile(Name)
    char *Name;
 {
-   char buf[200];
+   char buf[4096];
 
 /* --PATCH-- */   if (SUBDIR != NULL)
 /* --PATCH-- */      sprintf(buf, "%s/%s", SUBDIR, Name);
@@ -160,7 +160,7 @@ TellFile(Name)
 
 TellClauseFile()
 {
-   char name[100];
+   char name[4096];
    extern char *SourceName();
    
    sprintf(name, "%s.c", SourceName());
@@ -172,7 +172,7 @@ TellClauseFile()
 
 TellSymbolFile()
 {
-   char name[100];
+   char name[4096];
    extern char *SourceName();
    
    sprintf(name, "%s.if", SourceName());
@@ -184,7 +184,7 @@ TellSymbolFile()
 
 TellXRefFile()
 {
-   char name[100];
+   char name[4096];
    extern char *SourceName();
    
    sprintf(name, "%s.nst", SourceName());

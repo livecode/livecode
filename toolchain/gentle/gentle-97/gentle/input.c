@@ -28,9 +28,11 @@ static FillBuf ();
 
 #define MAXPATH            500
 
+#define PATHLENGTH          4096
+
 static FILE   *InFile;
-/* --PATCH-- */ static char   InFileName[1024];
-/* --PATCH-- */ static char   CurFileName[1024];
+/* --PATCH-- */ static char   InFileName[PATHLENGTH];
+/* --PATCH-- */ static char   CurFileName[PATHLENGTH];
 static long   filecount = 0;
 static long   CurFile = 0;
 static char * PATH[MAXPATH];
@@ -81,7 +83,7 @@ GetSourceName (str)
 static FILE * open_file (unit)
    char * unit;
 {
-   char buf[1000];
+   char buf[PATHLENGTH];
    FILE * InFile;
       
    sprintf (buf, "%s.g", unit);
@@ -121,11 +123,11 @@ static open_next_file ()
 define_file (path)
    char * path;
 {
-/* --PATCH-- */    char fullpath[4096];
+/* --PATCH-- */    char fullpath[PATHLENGTH];
 /* --PATCH-- */    if (path[0] != '/' && path[1] != ':')
 /* --PATCH-- */    {
-/* --PATCH-- */         char cwd[4096];
-/* --PATCH-- */         getcwd(cwd, 4096);
+/* --PATCH-- */         char cwd[PATHLENGTH];
+/* --PATCH-- */         getcwd(cwd, PATHLENGTH);
 #ifndef _WIN32
 /* --PATCH-- */         sprintf(fullpath, "%s/%s", cwd, path);
 #else
