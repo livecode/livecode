@@ -169,7 +169,6 @@
         IsNameEqualToName(Name, ModName)
         
     'rule' FindModuleInList(Name, modulelist(_, Rest) -> Found):
-        print("foo")
         FindModuleInList(Name, Rest -> Found)
 
 'action' QueryId(ID -> MEANING)
