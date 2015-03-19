@@ -436,6 +436,7 @@
     'rule' IsExpressionSimpleConstant(undefined(_)):
     'rule' IsExpressionSimpleConstant(true(_)):
     'rule' IsExpressionSimpleConstant(false(_)):
+    'rule' IsExpressionSimpleConstant(unsignedinteger(_, _)):
     'rule' IsExpressionSimpleConstant(integer(_, _)):
     'rule' IsExpressionSimpleConstant(real(_, _)):
     'rule' IsExpressionSimpleConstant(string(_, _)):
@@ -1544,6 +1545,7 @@
     'rule' GetExpressionPosition(undefined(Position) -> Position):
     'rule' GetExpressionPosition(true(Position) -> Position):
     'rule' GetExpressionPosition(false(Position) -> Position):
+    'rule' GetExpressionPosition(unsignedinteger(Position, _) -> Position):
     'rule' GetExpressionPosition(integer(Position, _) -> Position):
     'rule' GetExpressionPosition(real(Position, _) -> Position):
     'rule' GetExpressionPosition(string(Position, _) -> Position):

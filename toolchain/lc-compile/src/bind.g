@@ -288,6 +288,7 @@
     'rule' ComputeTypeOfConstantTermExpression(undefined(Position) -> undefined(Position)):
     'rule' ComputeTypeOfConstantTermExpression(true(Position) -> boolean(Position)):
     'rule' ComputeTypeOfConstantTermExpression(false(Position) -> boolean(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(unsignedinteger(Position, _) -> integer(Position)):
     'rule' ComputeTypeOfConstantTermExpression(integer(Position, _) -> integer(Position)):
     'rule' ComputeTypeOfConstantTermExpression(real(Position, _) -> real(Position)):
     'rule' ComputeTypeOfConstantTermExpression(string(Position, _) -> string(Position)):
