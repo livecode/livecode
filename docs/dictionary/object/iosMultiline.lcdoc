@@ -1,0 +1,30 @@
+Name: iosMultiline
+
+Type: object
+
+Syntax: iosMultiline
+
+Summary: A native iOS control, UITextView, which allows the editing of multiple lines of text.
+
+Introduced: 4.6.4
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+mobileControlCreate "multiline"
+
+Example:
+mobileControlCreate "multiline", "name entry"
+
+Description:
+A multi-line iOS Text Input (UITextView) control is created using a control type of "multiline". 
+
+The input control allows multiple lines of text to be edited with the 'return' key ending each line.
+
+>*Note:* For full details of what the UITextView control is capable of and a background on it, see the iOS reference document.
+
+References: mobileControlDelete (command), mobileControlDo (command), mobileControlSet (command), mobileControlCreate (command), mobileControlGet (function), mobileControlTarget (function), scrollerEndDecelerate (message), scrollerBeginDrag (message), inputBeginEditing (message), scrollerDidScroll (message), scrollerEndDrag (message), inputTextChanged (message), scrollerScrollToTop (message), inputEndEditing (message), scrollerBeginDecelerate (message)
+
+Tags: objects

@@ -1,0 +1,28 @@
+Name: inputReturnKey
+
+Type: message
+
+Syntax: inputReturnKey
+
+Summary: Sent when the return key is pressed and focus is removed from an mobile text input control.
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on inputReturnKey -- save the details when the return key is pressed, then focus on the next control
+   saveUserName
+   mobileControlDo tEmailFieldID, "focus"
+end inputReturnKey
+
+Description:
+The <inputReturnKey> message is sent when the return key is pressed and focus is removed from the mobile text input control.
+
+Handle the <inputReturnKey> message if you want to make changes to the interface or perform an action when the return key is pressed and focus is removed from an iosTextInput, androidTextInput or androidMultiline control.
+
+The <inputReturnKey> message is sent to the object containing the script that created the text input control.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), inputEndEditing (message), inputTextChanged (message), inputBeginEditing (message)

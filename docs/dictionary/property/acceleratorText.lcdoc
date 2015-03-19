@@ -1,0 +1,48 @@
+Name: acceleratorText
+
+Type: property
+
+Syntax: set the accel[erator]Text of <button> to <string> 
+
+Summary: Specifies the shortcut hint that appears at the right edge of a <button>.
+
+Synonyms: accelText
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Example:
+set the acceleratorText of button 3 to "A"
+
+Example:
+set the accelText of button "Go" to field "Shortcut Key"
+
+Example:
+set the accelText of button 9 to "option-D"
+
+Example:
+set the accelText of the mouseControl to empty -- remove acceleratorText
+
+Value:
+The <acceleratorText> of a <button> is a <string>, or an expression that evaluates to a string.
+By default, the <acceleratorText> of a newly created button is empty.
+
+Description:
+Use the <acceleratorText> <property> to provide the user with an onscreen hint about the shortcut <key combination> specified by the button's <acceleratorKey> <property>.
+
+The <acceleratorText> string appears at the right edge of the <button(keyword)>, inside the <button(object)|button's> <rightMargin>. LiveCode does not automatically make room for the <acceleratorText> <string>, so you might need to enlarge the <button(keyword)> to prevent its label from overlapping the <acceleratorText> <string>.
+
+If the button's <textAlign> <property> is set to "right", the <button(object)|button's> label overlaps the <acceleratorText> <string>, so you shouldn't set a <button(object)|button's> <acceleratorText> if it has a right-aligned label.
+
+Usually, the <string> should be the <character> in <acceleratorKey>, but you might want to include additional <characters> to hint at the <modifier key> needed.
+
+>*Note:* Nothing happens when the user presses the key specified by the <acceleratorText> <property> unless the <acceleratorKey> and <acceleratorModifiers> are set. The <acceleratorText> <property> creates a visual hint, but does not create the actual shortcut <key combination>.
+
+References: acceleratorModifiers (property), label (property), textAlign (property), acceleratorKey (property), rightMargin (property), mnemonic (property), character (keyword), characters (keyword), button (keyword), string (keyword), button (object), property (glossary), key combination (glossary), modifier key (glossary)
+
+Tags: ui

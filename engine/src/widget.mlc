@@ -367,14 +367,14 @@ use com.livecode.engine
 
 // ---------- Widget commands ---------- //
 
-public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecCancelTimer() as undefined binds to "<builtin>"
-public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecSend(in pIsFunction as CBool, in pMessage as String) as any binds to "<builtin>"
-public foreign handler MCWidgetExecSendWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) as any binds to "<builtin>"
-public foreign handler MCWidgetExecPost(in pMessage as String) as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecPostWithArguments(in pMessage as String, in pArguments as optional List) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecRedrawAll() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecCancelTimer() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecSend(in pIsFunction as CBool, in pMessage as String) returns any binds to "<builtin>"
+public foreign handler MCWidgetExecSendWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) returns any binds to "<builtin>"
+public foreign handler MCWidgetExecPost(in pMessage as String) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecPostWithArguments(in pMessage as String, in pArguments as optional List) returns nothing binds to "<builtin>"
 
 /* 
 Summary:	Redraws the widget.
@@ -484,14 +484,15 @@ end syntax
 
 // ---------- External properties of widgets ---------- //
 
-public foreign handler MCWidgetGetScriptObject(out rObject as ScriptObject) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetFrame(out rRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetBounds(out rRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetWidth(out rWidth as Real) as undefined binds to "<builtin>"
-public foreign handler MCWidgetSetWidth(in pWidth as Real) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetHeight(out rHeight as Real) as undefined binds to "<builtin>"
-public foreign handler MCWidgetSetHeight(in pHeight as Real) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetScriptObject(out rObject as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetFrame(out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetBounds(out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetWidth(out rWidth as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetWidth(in pWidth as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetHeight(out rHeight as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetHeight(in pHeight as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetFont(out rFont as Font) returns nothing binds to "<builtin>"
 
 /* 
 Summary:	Returns the widget script object.
@@ -567,17 +568,31 @@ begin
     MCWidgetSetHeight(input)
 end syntax
 
+/*
+Summary:    Returns the font of the widget.
+
+Returns:    The font of the widget
+
+Description:
+Use to return a font which reflects the current (effective) settings of the
+widget's textFont, textSize and textStyle properties.
+*/
+syntax MyFont is expression
+    "my" "font"
+begin
+    MCWidgetGetFont(output)
+end syntax
 
 // ---------- Synchronous and asynchronous ("current") event information ---------- //
 
 //foreign type PressedState binds to "kMCPressedState"
 
-public foreign handler MCWidgetGetMousePosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocation as Point) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetMousePosition(in pCurrent as CBool, out rLocation as Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocation as Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
 
-public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) as undefined binds to "<builtin>"
-public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) as undefined binds to "<builtin>"
+public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
 
 /* 
 Summary:		Determines the location of the mouse pointer.
@@ -672,8 +687,8 @@ end syntax
 
 // ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
 
-public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rPressed as CBool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rNotPressed as CBool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rPressed as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rNotPressed as CBool) returns nothing binds to "<builtin>"
 
 syntax IsPressed is postfix operator with precedence 5
   <mState: Expression> "is" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
@@ -690,8 +705,8 @@ end syntax
 
 // ---------- Syntactic sugar for points and rects ---------- //
 
-public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as CBool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as CBool) as undefined binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as CBool) returns nothing binds to "<builtin>"
 
 /* 
 Summary:	Determines whether a point is within a rectangle.

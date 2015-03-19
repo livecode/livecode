@@ -1,0 +1,31 @@
+Name: start
+
+Type: command
+
+Syntax: start <player> 
+
+Summary: <resume|Resumes> playing a paused movie or sound.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+start player "video"
+
+Example:
+start player 1
+
+Parameters:
+player: A player reference.
+
+Description:
+Use the <start> <command> to start playing the movie or sound in a <player>.
+
+The playing starts at the player's <currentTime> <property>.
+
+References: looping (property), paused (property), showSelection (property), currentTime (property), player (keyword), playStopped (message), stop (command), play (command), sound (function), movie (function), command (glossary), property (glossary), resume (glossary)
+
+Tags: multimedia

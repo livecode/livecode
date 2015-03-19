@@ -45,6 +45,9 @@
     IsNameEqualToString
     IsStringEqualToString
 
+    IsNameSuitableForDefinition
+    IsStringSuitableForKeyword
+
     InitializeScopes
     FinalizeScopes
     DumpScopes
@@ -209,6 +212,7 @@
     EmitTrueConstant
     EmitFalseConstant
     EmitIntegerConstant
+    EmitUnsignedIntegerConstant
     EmitRealConstant
     EmitStringConstant
     EmitBeginListConstant
@@ -295,9 +299,13 @@
     Error_NonHandlerTypeVariablesCannotBeCalled
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
+    Error_UnsuitableStringForKeyword
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
-
+    Warning_UnsuitableNameForDefinition
+    Warning_UsingAsForHandlerReturnTypeDeprecated
+    Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated
+    Warning_UndefinedTypeDeprecated
 
 --------------------------------------------------------------------------------
 
@@ -326,7 +334,7 @@
 'action' InitializeLiterals()
 'action' FinalizeLiterals()
 
-'action' MakeIntegerLiteral(Token: STRING -> Literal: INT)
+'condition' MakeIntegerLiteral(Token: STRING -> Literal: INT)
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
@@ -337,6 +345,9 @@
 'condition' IsStringEqualToString(STRING, STRING)
 'condition' IsNameEqualToName(NAME, NAME)
 'condition' IsNameNotEqualToName(NAME, NAME)
+
+'condition' IsNameSuitableForDefinition(NAME)
+'condition' IsStringSuitableForKeyword(STRING)
 
 --------------------------------------------------------------------------------
 
@@ -544,6 +555,7 @@
 'action' EmitTrueConstant(-> ConstIndex: INT)
 'action' EmitFalseConstant(-> ConstIndex: INT)
 'action' EmitIntegerConstant(Value: INT -> ConstIndex: INT)
+'action' EmitUnsignedIntegerConstant(Value: INT -> ConstIndex: INT)
 'action' EmitRealConstant(Value: DOUBLE -> ConstIndex: INT)
 'action' EmitStringConstant(Value: STRING -> ConstIndex: INT)
 'action' EmitBeginListConstant()
@@ -646,7 +658,13 @@
 'action' Error_HandlerNotSuitableForPropertyGetter(Position: POS, Identifier: NAME)
 'action' Error_HandlerNotSuitableForPropertySetter(Position: POS, Identifier: NAME)
 
+'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
+
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
+'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
+'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)
+'action' Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated(Position: POS)
+'action' Warning_UndefinedTypeDeprecated(Position: POS)
 
 --------------------------------------------------------------------------------

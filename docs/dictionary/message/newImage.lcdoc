@@ -1,0 +1,34 @@
+Name: newImage
+
+Type: message
+
+Syntax: newImage
+
+Summary: Sent to a new <image> right after it's created.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on newImage -- assign a file to a referenced image
+  if the text of the target is empty then -- no painted pixels
+    answer file "Please choose an image to display:"
+    set the filename of the target to it
+  end if
+end newImage
+
+Description:
+Handle the <newImage> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <image> is created.
+
+Normally, the <newImage> <message> is handled at a higher level of the <message path>, since the newly-created <image> does not yet have a <script> unless the <templateImage> contains one.
+
+The actual creation is not triggered by the <newImage> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <image> from being created.
+
+References: templateImage (keyword), image (keyword), script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), image (glossary), message (glossary), tool (glossary), message path (glossary), pass (control_st)
+
+Tags: objects

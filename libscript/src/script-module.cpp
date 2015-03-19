@@ -1181,7 +1181,10 @@ static void type_to_string(MCScriptModuleRef self, uindex_t p_type, MCStringRef&
             }
             MCAutoStringRef t_rtype;
             type_to_string(self, t_htype -> return_type, &t_rtype);
-            MCStringAppendFormat(*t_sig, ") as %@", *t_rtype);
+            if (MCStringIsEqualToCString(*t_rtype, "undefined", kMCStringOptionCompareCaseless))
+                MCStringAppendFormat(*t_sig, ") returns nothing");
+            else
+                MCStringAppendFormat(*t_sig, ") returns %@", *t_rtype);
             MCStringCopy(*t_sig, r_string);
         }
         break;

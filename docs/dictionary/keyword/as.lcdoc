@@ -1,0 +1,32 @@
+Name: as
+
+Type: keyword
+
+Syntax: as
+
+Summary: Used with the <do> <command> to specify a scripting language; used with the <export> <command> to specify the file <format> to <export> to; used with the <go> <command> to specify the mode of a <stack>; used with the <save> <command> to specify the <file> <file path|name and location>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+do field 1 as Javascript
+
+Example:
+export me to file myFile as "PNG"
+
+Example:
+go stack "Controls" as palette
+
+Example:
+save this stack as "../Backups/Current.rev"
+
+Description:
+Use the <as> <keyword> to modify the <do>, <export>, <go>, or <save> <command|commands>.
+
+Use the alternateLanguages <function> to find out which languages can be used with the <do> command on <Mac OS> and <OS X|OS X systems>.
+
+References: file (keyword), function (control_st), export (command), go (command), do (command), save (command), format (function), keyword (glossary), file path (glossary), command (glossary), Mac OS (glossary), OS X (glossary), stack (object)

@@ -1,0 +1,54 @@
+Name: reply
+
+Type: command
+
+Syntax: reply <string> [with keyword <aeKeyword>]
+
+Syntax: reply error <string> 
+
+Summary: <return|Returns> data to an application that sent LiveCode an <Apple event>.
+
+Introduced: 1.0
+
+OS: mac
+
+Platforms: desktop,server,web
+
+Example:
+reply "Connection established"
+
+Example:
+reply line thisLine of field "AE Replies"
+
+Example:
+reply "45" with keyword "errn"
+
+Example:
+reply error "Not found."
+
+Parameters:
+string (string): The string to send as Apple event data.
+aeKeyword: The Apple event keyword.
+
+Description:
+Use the <reply> <command> to interact with another application via <Apple Event|Apple events>.
+
+The <reply> <command> for inter-application communication is analogous to the <return> <control structure> for inter-handler communication.
+
+When a program responds to an Apple event, it returns several different pieces of information. Each piece corresponds to an Apple event keyword. Use the reply with aeKeyword form of this command to specify which pieces you want to reply with.
+
+The form
+  reply <string> 
+is equivalent to
+  reply <string> with keyword "----"
+
+The form
+  reply error <string> 
+is equivalent to
+  reply <string> with keyword "errs"
+
+For more information about Apple events, see Apple Computer's technical documentation, Inside Macintosh: Interapplication Communication, located at http://developer.apple.com/techpubs/mac/IAC/IAC-2.html.
+
+References: send to program (command), Apple Event (glossary), command (glossary), return (glossary), control structure (glossary), return (constant)
+
+Tags: networking

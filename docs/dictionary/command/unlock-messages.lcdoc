@@ -1,0 +1,28 @@
+Name: unlock messages
+
+Type: command
+
+Syntax: unlock messages
+
+Summary: Sets the <lockMessages> <property> to false, allowing <message|messages> to be sent when navigating between <card|cards>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+unlock messages
+
+Example:
+if the number of this card &gt; 10 then unlock messages
+
+Description:
+Use the <unlock messages> <command> to allow <message|messages> to be sent.
+
+The <unlock messages> command sets the <lockMessages> <property> to false. When all pending <handler|handlers> are finished <execute|executing>, the <lockMessages> <property> is automatically set to false.
+
+References: lockMessages (property), unlock error dialogs (command), lock messages (command), unlock recent (command), card (object), property (glossary), handler (glossary), message (glossary), command (glossary), execute (glossary)
+
+Tags: objects

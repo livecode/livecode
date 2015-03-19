@@ -6,14 +6,14 @@ handler Yes()
 	return true
 end handler
 
-handler InvokeArgument(in f as Thunk)
-	return f()
+handler InvokeArgument(in pFunc as Thunk)
+	return pFunc()
 end handler
 
 public handler TestDynamicInvokeVariable()
-	variable f as Thunk
-	put Yes into f
-	test "dynamic invoke (variable)" when f()
+	variable pFunc as Thunk
+	put Yes into pFunc
+	test "dynamic invoke (variable)" when pFunc()
 end handler
 
 public handler TestDynamicInvokeArgument()

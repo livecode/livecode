@@ -1,0 +1,33 @@
+Name: sha1Digest
+
+Type: function
+
+Syntax: the sha1Digest of <data> 
+
+Syntax: sha1Digest(<data>)
+
+Summary: Returns the SHA-1 digest of a block of data in the form of 20 (binary) bytes.
+
+Introduced: 4.6
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+the sha1Digest of tData
+
+Example:
+sha1Digest(tData)
+
+Parameters:
+data: A block of data.
+
+Returns: The <sha1Digest> function returns the SHA-1 digest of a block of data in the form of 20 (binary) bytes.
+
+Description:
+Use the <sha1Digest> function to compute the SHA-1 digest of a block of data.
+
+References: md5Digest (function)
+
+Tags: math

@@ -1,0 +1,45 @@
+Name: browserOut
+
+Type: message
+
+Syntax: browserOut <instanceId>, <elementId> 
+
+Syntax: XBrowser_Out <elementId>, <instanceId> 
+
+Summary: Sent when the mouse moves out of a named html element in a browser.
+
+Synonyms: XBrowser_Out
+
+Associations: card
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+on browserOut pInstanceId, pElementId
+  enable button "Forward" of group "Browser Controls" of me
+end browserOut
+
+Parameters:
+instanceId: The integer identifier of the browser object
+elementId: The id of the html element that the mouse was moved out of >*Note:* The browserOut message is only sent if advanced browser messages are turned on. To turn on advanced browser messages use the following command: revBrowserSet <instanceId>, "messages", "true" >*Note:* The browserOut message is supported on Windows and OS X versions 10.4 and later. On older versions of OS X, the message is not sent due to lack of system support in the underlying browser object.The id of an html element is the element's "id" attribute. For example <div id="navbar">.  As this attribute is optional in most cases, not all html elements will have an id. If the html element that the mouse is over does not have an id, then the elementId parameter will be empty. >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
+
+Description:
+The <browserOut> message is sent to the current card of a stack containing a browser object when the mouse is moved out of an html element with an "id" attribute in the browser.
+
+>*Note:* The <browserOut> message is only sent if advanced browser messages are turned on. To turn on advanced browser messages use the following command:
+
+<revBrowserSet> &lt;instanceId&gt;, "messages", "true"
+
+>*Note:* The <browserOut> message is supported on Windows and OS X versions 10.4 and later. On older versions of OS X, the message is not sent due to lack of system support in the underlying browser object.
+
+The id of an html element is the element's "id" attribute. For example &lt;div id="navbar"&gt;.  As this attribute is optional in most cases, not all html elements will have an id. If the html element that the mouse is over does not have an id, then the <elementId> parameter will be empty.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: revBrowserSet (command), browserOver (message), revBrowserOpen function (function)

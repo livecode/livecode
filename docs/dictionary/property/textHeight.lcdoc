@@ -1,0 +1,41 @@
+Name: textHeight
+
+Type: property
+
+Syntax: set the textHeight of <field> to <pixels> 
+
+Summary: Specifies the amount of space between lines of text in a <field>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get the effective textHeight of field "Results"
+
+Example:
+set the textHeight of field 1 to theLines * the textHeight of field 1
+
+Example:
+set the textHeight of field 1 to 20
+
+Value:
+The <textHeight> of a <field(keyword)> is an <integer> greater than or equal to 4.
+By default, the <textHeight> <property> of newly created <field(object)|fields> is set to 4/3 times the <textSize> of the <field(keyword)>.
+
+Description:
+Use the <textHeight> <property> to change the <appearance> of text in a <field>.
+
+The <textHeight> <property> determines how tall each line of a <field> is, and is equal to the vertical distance in <pixels> between the baseline of one line and the baseline of the next. The minimum <textHeight> is 4 <pixels>.
+
+>*Note:* If you change the field's textSize, LiveCode automatically sets the <textHeight> to trunc(4/3 * the textSize of <field>). For example, if the textSize is set to 12, the <textHeight> is set to 16 by <default>. If the textSize is set to 14, the <textHeight> is set to 18. So, if you want to change the <textHeight> and <textSize>, set the <textSize> first, then set the <textHeight>.
+
+If a field's <fixedLineHeight> <property> is false, the <textHeight> of the <field> has no effect: in this case, the text height of each line is determined by the size of the largest text in the line, and changing the <textHeight> doesn't change the spacing of lines.
+
+References: printTextHeight (property), pixels (property), fixedLineHeight (property), textSize (property), default (keyword), integer (keyword), field (keyword), effective (keyword), textHeightSum (function), property (glossary), appearance (glossary), field (object)
+
+Tags: ui

@@ -662,36 +662,48 @@ bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, ui
     return t_found;
 }
 
-
-bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
+bool
+MCDataLastIndexOf (MCDataRef self,
+                   MCDataRef p_needle,
+                   MCRange p_range,
+                   uindex_t & r_offset)
 {
-    __MCDataClampRange(p_data, t_range);
-    
-    uindex_t t_limit, t_chunk_byte_count;
-    t_chunk_byte_count = MCDataGetLength(p_chunk);
-    t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
-    
-    const byte_t *t_bytes = MCDataGetBytePtr(p_data);
-    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
-    
-    uindex_t t_offset, t_result;
-    t_result = 0;
-    
-    bool t_found;
-    t_found = false;
-    
-    while (--t_limit)
-        if (MCMemoryCompare(t_bytes + t_limit, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
-        {
-            t_result = t_limit - t_range . offset;
-            t_found = true;
-            break;
-        }
-    
-    r_index = t_result;
-    return t_found;
-}
+	const byte_t *t_needle = MCDataGetBytePtr (p_needle);
+	uindex_t t_needle_len = MCDataGetLength (p_needle);
 
+	/* Empty data is never found */
+	if (0 == t_needle_len)
+		return false;
+
+	__MCDataClampRange (self, p_range);
+
+	/* If the range is too short to contain the needle, the needle clearly
+	 * can't be found. */
+	if (p_range.length < t_needle_len)
+		return false;
+
+	const byte_t *t_haystack = MCDataGetBytePtr (self);
+	uindex_t t_haystack_len = MCDataGetLength (self);
+
+	for (uindex_t t_roffset = t_needle_len - 1;
+	     t_roffset < p_range.length;
+	     ++t_roffset)
+	{
+		/* Offset of first byte of match, relative to start of range
+		 * (i.e. t_offset = 0 for the first byte) */
+		uindex_t t_offset = p_range.length - t_roffset - 1;
+
+		uindex_t t_haystack_offset = p_range.offset + t_offset;
+
+		if (0 == MCMemoryCompare (t_haystack + t_haystack_offset, t_needle,
+		                          sizeof(byte_t) * t_needle_len))
+		{
+			r_offset = t_offset;
+			return true;
+		}
+	}
+	return false;
+}
 
 #if defined(__MAC__) || defined (__IOS__)
 bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)

@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,9 +65,22 @@ void FinalizeLiterals(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MakeIntegerLiteral(const char *p_token, long *r_literal)
+// Integer literals are actually unsigned, even though they pass through as
+// longs. Indeed, a -ve integer literal is not possible since it is prevented
+// by the token's regex.
+int MakeIntegerLiteral(const char *p_token, long *r_literal)
 {
-    *r_literal = atoi(p_token);
+    errno = 0;
+    
+    unsigned long t_value;
+    t_value = strtoul(p_token, NULL, 10);
+    
+    if (errno == ERANGE || t_value > 0xFFFFFFFFU)
+        return 0;
+    
+    *r_literal = (long)t_value;
+    
+    return 1;
 }
 
 void MakeDoubleLiteral(const char *p_token, long *r_literal)
@@ -483,6 +497,66 @@ void DumpScopes(void)
                 fprintf(stderr, "[%d] %s = %ld\n", t_depth, t_binding -> name -> token, t_binding -> meaning);
         t_depth += 1;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Check that module names contain a '.' character. */
+int
+IsNameSuitableForModule (NameRef p_id)
+{
+	const char *t_id;
+	size_t i;
+
+	GetStringOfNameLiteral (p_id, &t_id);
+
+	for (i = 0; '\0' != t_id[i]; ++i)
+	{
+		if ('.' == t_id[i])
+			return 1;
+	}
+
+	return 0;
+}
+
+/* Check that defined names *don't* match [a-z]+ (because these names
+ * are reserved for syntax keywords) */
+int
+IsNameSuitableForDefinition (NameRef p_id)
+{
+	const char *t_id;
+	size_t i;
+
+	GetStringOfNameLiteral (p_id, &t_id);
+
+	for (i = 0; '\0' != t_id[i]; ++i)
+	{
+		/* If char is not in [a-z] then string is okay */
+		if (t_id[i] < 'a' || t_id[i] > 'z')
+			return 1;
+	}
+
+	return 0;
+}
+
+/* Keywords mustn't conflict with valid identifiers.  Ensure this by
+ * forbidding keywords from containing any of the characters
+ * [A-Z0-9_.] */
+int
+IsStringSuitableForKeyword (const char *p_keyword)
+{
+	size_t i;
+
+	for (i = 0; p_keyword[i] != '\0'; ++i)
+	{
+		if ((p_keyword[i] == '.') ||
+		    (p_keyword[i] == '_') ||
+		    (p_keyword[i] >= 'A' && p_keyword[i] <= 'Z') ||
+		    (p_keyword[i] >= '0' && p_keyword[i] <= '9'))
+			return 0;
+	}
+
+	return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

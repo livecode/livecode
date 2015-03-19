@@ -1,0 +1,26 @@
+Name: down
+
+Type: constant
+
+Syntax: down
+
+Summary: Equivalent to the <string> "down".
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+wait while the mouse is down
+
+Example:
+if the altKey is down then showHelpText
+
+Description:
+Use the <down> <constant> to indicate the state of a <mouse button> or <modifier key>, or in an <arrowKey> <handler>.
+
+References: string (keyword), left (constant), up (constant), arrowKey (message), constant (command), mouse button (glossary), modifier key (glossary), handler (glossary)
+
+Tags: ui

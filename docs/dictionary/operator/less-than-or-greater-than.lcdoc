@@ -1,0 +1,36 @@
+Name: &lt;&gt;
+
+Type: operator
+
+Syntax: <value1> <> <value2> 
+
+Summary: Compares two <value|values> and <return|returns> true if they are not equal, false if they are equal.
+
+Synonyms: is not
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+3 + 2 &lt;&gt; 6
+
+Example:
+"abc" &lt;&gt; "abd"
+
+Example:
+field "Old Password" &lt;&gt; field "Password"
+
+Parameters:
+value1: The operands value1 and value2 can be numbers, literal strings of characters (delimited with double quotes), or any sources of value.
+: 
+value2: 
+
+Description:
+Use the <&lt;&gt;> (inequality) <operator> to compare two numbers or to compare two <string|strings>.
+
+When comparing strings, the  &lt;&gt; operator compares the two values character by character, using the ASCII value of each character. If the caseSensitive <property> is true, the comparison between two <string|strings> treats uppercase letters as coming before lowercase letters, so "A" &lt;&gt; "a". If the caseSensitive <property> is false, the comparison is not <case-sensitive>, so "a" is considered equivalent to "A".
+
+References: contains (operator), = (operator), &lt; (operator), &gt; (operator), property (glossary), operator (glossary), case-sensitive (glossary), value (glossary), return (glossary), string (glossary)

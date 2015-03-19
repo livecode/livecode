@@ -1,0 +1,26 @@
+Name: byteOffset
+
+Type: function
+
+Syntax: byteOffset(bytesToFind,binaryStringToSearch[,bytesToSkip])
+
+Summary: Returns the number of bytes between the first byte of a value and an occurrence of a specified binaryString.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+offset("c","abcde") -- returns 3
+
+Example:
+offset("b","abacadabra",2) -- returns 6
+
+Example:
+offset("bark","embarking") -- returns 3
+
+References: find (command), sort container (command), wordOffset (function), itemOffset (function), length (function), lineOffset (function), offset (function), begins with (operator)
+
+Tags: text processing

@@ -1,0 +1,60 @@
+Name: icon
+
+Type: property
+
+Syntax: set the icon to {<imageID> | <imageName>}
+
+Syntax: set the icon of {<button> | <stack>} to {<imageID> | <imageName>}
+
+Summary: Specifies an <image> that is displayed in a <button>, or used as the <desktop> icon of a <stack file> or application.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the icon of this stack to kStackIcon
+
+Example:
+set the icon of button "Help" to "Question Mark"
+
+Example:
+set the icon to the myAppIcon of stack "Main Settings"
+
+Parameters:
+imageID: The id of the image to use for the button or stack icon or current application's dock icon
+imageName: The short name of the image to use for the button or stack icon or current application's dock icon
+
+Value: By default, the <icon> property is set to zero (no icon). The <icon> of newly created <button|buttons> and <stacks> is set to zero (no <icon>) by <default>.
+
+Description:
+Use the <icon> <property> to change a <button(object)|button's> appearance, or to set the <icon> used for a <stack> or <application> in the <OS X> dock.
+
+LiveCode looks for the specified image in the following order:
+
+1) The stack of the object's <behavior> (if applicable)
+2) The stack of the owner of the object's <behavior> (if applicable)
+ ...
+n) The stack of the object's stack's <behavior> (if applicable)
+A) The object's stack
+B) The object's stack's mainstack (if a substack)
+C) The object's stack's mainstacks substacks
+D) The list of open stacks, in order they were loaded
+
+If a button has been clicked during the current session and its visitedIcon <property> is set, its <visitedIcon> is displayed instead of its <icon>. If the button is disabled and its <disabledIcon> <property> is set, its <disabledIcon> is displayed instead of its <icon>.
+
+>*Cross-platform note:* On <OS X|OS X systems>, a <stack's (object)> <icon> is displayed in the dock when the stack is minimized. On <Unix|Unix systems>, the <stack|stack's> <icon> is displayed on the <desktop> when the <stack> is <iconify|iconified>. Setting a <stack|stack's> <icon> <property> has no effect on <Mac OS> and <Windows|Windows systems>.
+
+>*Cross-platform note:* On OS X systems, the global <icon> property specifies the current application's <dock (glossary)> <icon>. The engine will attempt to find an image with the given id, resize it to 128x128 and then set it as the dock icon for the application. The setting of the <global> icon <property> has no effect on <Mac OS>, <Unix>, or <Windows|Windows systems>.
+>*Note:* The image is only guaranteed to persist while the application runs, although in some cases the OS does appear to cache it beyond this.
+
+The ability to specify an icon for an application or stack file on OS X systems was added in version 2.1. In previous versions, the <icon> was a <button(keyword)> and <stack> <property> but not a <global|global property>, and the <icon> of a <stack> had no effect on <OS X|OS X systems>.
+
+Changes:
+The order in which LiveCode searches for icons was changed in version 3.5. Previously, the current stack was searched first, followed by the list of open stacks.
+
+References: visitedIcon (property), hilitedIcon (property), icon (property), behavior (property), armedIcon (property), disabledIcon (property), iconifyStack (message), default (keyword), image (keyword), button (keyword), stack (object), button (object), property (glossary), OS X (glossary), global (glossary), stack file (glossary), dock (glossary), desktop (glossary), Windows (glossary), Mac OS (glossary), Unix (glossary), iconify (glossary), application (glossary), global (command), stacks (function)
+
+Tags: file system

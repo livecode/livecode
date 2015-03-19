@@ -1,0 +1,53 @@
+Name: mobileStoreConfirmPurchase
+
+Type: command
+
+Syntax: mobileStoreConfirmPurchase <productID> 
+
+Summary: Inform the store that the purchase identifier <productID> was successfully delivered.
+
+Introduced: 6.7
+
+Example:
+on purchaseStateUpdate pPurchaseID, pProductID, pState
+   switch pState
+      case "paymentReceived"
+         offerPurchasedItem pProductID
+         mobileStoreConfirmPurchase pProductID
+         mobileStoreDisablePurchaseUpdates
+         
+      case "error"
+         ...
+         mobileStoreDisablePurchaseUpdates
+         
+      case "invalidSKU"
+         ...
+         mobileStoreDisablePurchaseUpdates
+         
+      case "alreadyEntitled"
+         ...
+         mobileStoreDisablePurchaseUpdates
+         
+      case "restored"
+         offerPurchasedItem pProductID     
+         mobileStoreConfirmPurchase pProductID
+         mobileStoreDisablePurchaseUpdates
+         
+      case "cancelled"
+         ...
+         mobileStoreDisablePurchaseUpdates
+                
+   end switch
+end purchaseStateUpdate
+
+Parameters:
+productID: The identifier of the product for which you want to inform the store that it was successfully delivered.
+
+Description:
+Use the <mobileStoreConfirmPurchase> command to notify the store that a purchase was successfully delivered.
+
+The command <mobileStoreConfirmPurchase> is used to notify the store that a purchase was successfully delivered. This informs the store to stop sending In that way, the store stops sending <purchaseStateUpdate> messages.
+
+>*Note:*  This function is used for iOS, but it is a good practice to use it for any store. This command should only be called in the "paymentReceived" or "restored" state, see example. If you call <mobileStoreDisablePurchaseUpdates> without first calling mobileStoreConfirmPurchase, then you receive a <purchaseStateUpdate> message with state "paymentReceived" or "restored", the next time you call <mobileStoreEnablePurchaseUpdates>.
+
+References: mobileStoreRestorePurchases (command), mobileStoreDisablePurchaseUpdates (command), mobileStoreEnablePurchaseUpdates (command), mobileStoreRequestProductDetails (command), mobileStoreMakePurchase (command), mobileStoreSetProductType (command), mobileStoreConsumePurchase (command), mobileStoreVerifyPurchase (command), mobileStoreProductProperty (function), mobileStorePurchaseError (function), mobileStorePurchasedProducts (function), mobileStoreCanMakePurchase (function), purchaseStateUpdate (message), productRequestError (message), productDetailsReceived (message)

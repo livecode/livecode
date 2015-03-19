@@ -1,0 +1,26 @@
+Name: playerLeaveFullscreen
+
+Type: message
+
+Syntax: playerLeaveFullscreen
+
+Summary: Sent when the player has left full screen mode.
+
+Introduced: 4.6
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+on playerLeaveFullscreen
+    -- set a flag to allow updates to the screen again
+    put true into myAllowUpdates
+end playerLeaveFullscreen
+
+Description:
+Handle the <playerLeaveFullscreen> message when the player has left full screen mode.
+
+You can use the function <mobileControlGet> to determine if the player is still in fullscreen mode.
+
+References: playerMovieChanged (message), playerFinished (message), playerError (message), playerProgressChanged (message), playerStopped (message), playerPropertyAvailable (message), playerEnterFullscreen (message), mobileControlGet (function)

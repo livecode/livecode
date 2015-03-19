@@ -1,0 +1,27 @@
+Name: show groups
+
+Type: command
+
+Syntax: show groups
+
+Summary: Underlines <grouped text>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+show groups
+
+Description:
+Use the <show groups> <command> to display an underline under grouped text.
+
+Text with its textStyle set to "link"is treated specially by the <clickText>, <clickChunk>, <mouseText>, and <mouseChunk> <function|functions>: a style run of <grouped text> is treated as a single <word>. This makes <grouped text> handy to use for <hypertext> or "clickable text" features.
+
+The <show groups> <command> sets the <global> <underlineLinks> <property> to true. It does not affect the <stack> <underlineLinks> <property>, so if a <stack|stack's> <underlineLinks> is false, <show groups> does not display the underlining in that <stack>.
+
+References: underlineLinks (property), link (keyword), word (keyword), show (command), hide groups (command), show menubar (command), global (command), clickChunk (function), mouseChunk (function), clickText (function), mouseText (function), property (glossary), grouped text (glossary), command (glossary), function (glossary), hypertext (glossary), stack (object)
+
+Tags: ui

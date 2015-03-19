@@ -1,0 +1,34 @@
+Name: printRotated
+
+Type: property
+
+Syntax: set the printRotated to {true | false}
+
+Summary: Specifies whether LiveCode prints in <landscape|landscape mode> or <portrait|portrait mode>. Deprecated.
+
+Introduced: 1.0
+
+OS: ios
+
+Platforms: desktop,server,web,mobile
+
+Security: printing
+
+Example:
+set the printRotated to true
+
+Value (bool):The <printRotated> is true or false.
+By default, the <printRotated> <property> is set to false.
+
+Description:
+The <printRotated> property is deprecated as of version 2.9.  Setting the printRotated to true is equivalent to setting the printPaperOrientation to "landscape".  New applications should use printPaperOrientation in preference to printRotated.
+
+The <printRotated> <property> was used to print wide pages.
+
+If the <printRotated> <property> is set to false, printing is done in <portrait|portrait mode>--the short sides of the paper are the top and bottom of the printed page.
+
+If the <printRotated> is true, the direction of the printed output is rotated 90 <degree|degrees>, so the long sides of the paper are the top and bottom.
+
+References: answer page setup (command), answer printer (command), printRowsFirst (property), printScale (property), property (glossary), portrait (glossary), degree (glossary), landscape (glossary)
+
+Tags: printing

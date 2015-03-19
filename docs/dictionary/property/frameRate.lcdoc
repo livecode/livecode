@@ -1,0 +1,31 @@
+Name: frameRate
+
+Type: property
+
+Syntax: set the frameRate of <videoClip> to <timeDelay> 
+
+Summary: Specifies the delay between <frame|frames> when playing a <video clip>.
+
+Introduced: 1.0
+
+OS: mac,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the frameRate of videoClip 1 to 100
+
+Value:
+The <frameRate> of a <video clip> is a <non-negative> <integer>.
+By default, the <frameRate> <property> of newly created <video clip|video clips> is set to zero.
+
+Description:
+Use the <frameRate> <property> to speed up or slow down a movie.
+
+The <frameRate> is the number of <milliseconds> to wait between <frame|frames>. If the <frameRate> is zero, LiveCode uses the frame rate built into the movie.
+
+The setting of this property has no effect on Windows systems.
+
+References: dontRefresh (property), integer (keyword), prepare (command), milliseconds (function), property (glossary), frame (glossary), video clip (glossary), non-negative (glossary)
+
+Tags: multimedia

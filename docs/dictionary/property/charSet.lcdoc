@@ -1,0 +1,35 @@
+Name: charSet
+
+Type: property
+
+Syntax: get the charSet of <stack> 
+
+Summary: Indicates whether the <Mac OS|Macintosh> or <ISO 8859> <character set> was used to enter a <stack|stack's> text.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+if the charSet of this stack is "MacOS" then put "Mac" into thePlatform
+
+Value:
+The <charSet> of a <stack> is "MacOS" or "ISO".
+This property is read-only and cannot be set.
+
+Description:
+Use the <charSet> <property> to determine which <platform> the <stack> was last saved on.
+
+If the <charSet> is "MacOS", the <stack> was last saved on a <Mac OS|Mac OS system>; if the <charSet> is "ISO", the <stack> was last saved on a <Unix> or <Windows|Windows system>.
+
+When you open a stack on a Mac OS system that was last saved on a Unix or Windows system (or vice versa), the text in the stack is translated automatically to the appropriate character set. The process can take a perceptible amount of time, so it's a good idea to save a stack destined for a particular platform on that platform before delivering it to users.
+
+The <charSet> <property> is changed for all <stacks> in the same <stack file> when the <stack file> is saved, so it is not possible for two <stacks> in the same file to have a different <charSet>.
+
+References: stack (object), numToChar (function), stacks (function), platform (function), property (glossary), stack file (glossary), Windows (glossary), character set (glossary), Mac OS (glossary), Unix (glossary), ISO 8859 (glossary)
+
+Tags: text processing

@@ -1577,7 +1577,7 @@
         EmitAssignFalse(Output)
         
     'rule' GenerateExpressionInRegister(Result, Context, integer(_, Value), Output):
-        EmitAssignInteger(Output, Value)
+        EmitAssignUnsignedInteger(Output, Value)
         
     'rule' GenerateExpressionInRegister(Result, Context, real(_, Value), Output):
         EmitAssignReal(Output, Value)
@@ -1678,6 +1678,12 @@
         EmitIntegerConstant(Value -> Index)
         EmitAssignConstant(Reg, Index)
 
+'action' EmitAssignUnsignedInteger(INT, INT)
+
+    'rule' EmitAssignUnsignedInteger(Reg, Value):
+        EmitUnsignedIntegerConstant(Value -> Index)
+        EmitAssignConstant(Reg, Index)
+        
 'action' EmitAssignReal(INT, DOUBLE)
 
     'rule' EmitAssignReal(Reg, Value):

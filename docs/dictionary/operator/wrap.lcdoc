@@ -1,0 +1,39 @@
+Name: wrap
+
+Type: operator
+
+Syntax: <number> wrap <divisor> 
+
+Summary: Wrap allows the user to ensure the value of a variable stays within a specified range.
+
+Introduced: 2.9
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+repeat with x = 1 to 10
+  put item x wrap 3 of "1,2,3" & comma after tOutput
+end repeat
+-- evaluates to 1,2,3,1,2,3,1,2,3,1
+
+repeat with x=1 to 9
+    put item x wrap 2 of "1,2" & comma after tOutput
+end repeat
+--evaluates to 1,2,1,2,1,2,1,2,1
+
+Parameters:
+number: 
+divisor: 
+
+Description:
+The wrap function makes it easy to loop successively over a fixed number of items in a list.  When cycling through the items of a list, the divisor parameter specifies which item will cause the cycle to loop back to the beginning of the list. This means that any number outside this range is mapped to a number within it. 
+
+For example, if we had 5 wrap 3, the number 5 would be mapped to the number 2 as this is where the iterator would be pointing on the 5th iteration ie. 1, 2, 3, 1, 2 .  Therefore 5 wrap 3 is 2.
+
+The mathematical formula implemented by the wrap operator is:
+     x wraps y        =       ((x-1) mod abs(y)) +1 if (x &gt;= 0)
+                             =      -((x-1) mod abs(y)) +1 if(x &lt; 0)
+
+References: / (operator)

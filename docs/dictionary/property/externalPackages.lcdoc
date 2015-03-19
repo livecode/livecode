@@ -1,0 +1,27 @@
+Name: externalPackages
+
+Type: property
+
+Syntax: get the externalPackages of <stack> 
+
+Summary: Lists the available <external|external packages> for a <stack>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+put the externalPackages of stack "Main" into field "Package List"
+
+Value:
+The <externalFunctions> of a <stack> reports a list of available <external|external packages>, one per <line>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <externalPackages> <property> to find out whether a particular <external|external package> is available for use in <handler|handlers>, or to list all the available <external|external packages>.
+
+References: externalCommands (property), externalFunctions (property), destroyWindow (property), externals (property), line (keyword), stack (object), external (glossary), property (glossary), handler (glossary)

@@ -1,0 +1,14 @@
+Name: hexadecimal
+
+Synonyms: hex,hexadecimal,hexadecimal number,hexadecimal number system
+
+Type: glossary
+
+Description:
+The base-16 number system, or a number represented in base 16. The letters A-F are used as digits representing the numbers 10-15. 
+ 
+Hexadecimal numbers are often used in programming because a single hex digit represents exactly four <bit|bits>, and two hex digits represent a <byte>.
+
+References: byte (glossary), bit (glossary)
+
+Tags: math

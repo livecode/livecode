@@ -1,0 +1,16 @@
+Name: record
+
+Synonyms: record,database record,row,database row
+
+Type: glossary
+
+Description:
+A set of related values in a database; a complete segment of information, consisting of one or more database fields. 
+ 
+For example, in a database of people, each person's data is stored in a single record. 
+ 
+A record is also called a row. If a set of records is displayed in the form of a grid, each row is a single <record> and each <column> is a <database field>.
+
+References: record (glossary), database field (glossary), column (glossary)
+
+Tags: database

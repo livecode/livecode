@@ -1,0 +1,12 @@
+Name: primary key
+
+Synonyms: primary key,primary database key
+
+Type: glossary
+
+Description:
+In a <database>, a field (or combination of fields) that is different for each <record> in the <database>. The primary key is used when changing or deleting a <record>, to uniquely identify the <record>.
+
+References: database (glossary), record (glossary)
+
+Tags: database

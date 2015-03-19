@@ -1,0 +1,41 @@
+Name: windowBoundingRect
+
+Type: property
+
+Syntax: set the windowBoundingRect to <left>, <top>, <right>, <bottom> 
+
+Summary: Specifies the rectangle in which windows may open and <zoom> or <maximize>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+set the windowBoundingRect to 100,20,800,600
+
+Value:
+The <windowBoundingRect> consists of four <integer|integers> separated by commas.  By default the coordinates are in the same format as those returned by the <screenRect>. This means they are relative to the topleft of the primary monitor and may therefore be negative.  
+On <Mac OS|Mac OS systems>, the <default> <windowBoundingRect> is adjusted to leave room for the <menu bar>. On <Windows|Windows systems>, the <default> <windowBoundingRect> is adjusted to leave room for the <task bar>.
+
+Description:
+Use the <windowBoundingRect> <property> to ensure free space on the screen for toolbars or other information on the screen.
+
+When the user zooms (on Mac OS systems) or maximizes (on Unix and Windows systems) the window, its zoomed or maximized size is constrained by the <windowBoundingRect>.
+
+>*Note:* Users can drag or resize windows to extend outside the <windowBoundingRect>, and a <handler> can move or resize a window so that it's outside the <windowBoundingRect>. This <property> constrains the <default> position of windows when they open or <zoom>, but does not prevent them from being manually resized or repositioned.
+
+The <windowBoundingRect> <value> is checked against the window's position before the <preOpenStack> <message> is sent. This means that if you want a <stack> to extend outside the <windowBoundingRect>, you should set its <rectangle> <property> to the desired value in a <preOpenStack> <handler>. This ensures that the window is enlarged to the size you specify before it appears, instead of being resized when the <windowBoundingRect> is checked.
+
+The value of the <windowBoundingRect> does not affect <palette>, <modal>, or <modeless> windows. Only stacks whose <mode> <property> is 1 or 2 are affected.
+
+If a stack's formatForPrinting <property> is set to true, the <windowBoundingRect> is ignored when the <stack> is opened.
+
+The value of the <windowBoundingRect> is not updated automatically when you change the screen resolution or when you move items such as the Windows task bar. For example, if the <windowBoundingRect> is set to 0,0,640,480, it is not changed if you change the screen resolution to 1024x768. If you change the screen settings after starting up the application, make sure the value of the <windowBoundingRect> property is still appropriate.
+
+Changing the <windowBoundingRect> does not affect the position of windows that are already open.
+
+References: mode (property), maxWidth (property), zoom (property), preOpenStack (message), default (keyword), maximize (keyword), property (glossary), rectangle (glossary), handler (glossary), Windows (glossary), menu bar (glossary), message (glossary), Mac OS (glossary), integer (glossary), task bar (glossary), value (function), screenRect (function), stack (object), modeless (command), palette (command), modal (command)
+
+Tags: windowing

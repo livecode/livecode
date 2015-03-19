@@ -130,6 +130,7 @@ extern "C" void EmitUndefinedConstant(long *idx);
 extern "C" void EmitTrueConstant(long *idx);
 extern "C" void EmitFalseConstant(long *idx);
 extern "C" void EmitIntegerConstant(long value, long *idx);
+extern "C" void EmitUnsignedIntegerConstant(unsigned long value, long *idx);
 extern "C" void EmitRealConstant(long value, long *idx);
 extern "C" void EmitStringConstant(long value, long *idx);
 extern "C" void EmitBeginListConstant(void);
@@ -1244,6 +1245,14 @@ void EmitIntegerConstant(long value, long *idx)
     MCNumberCreateWithInteger(value, &t_number);
     MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
     MCLog("[Emit] IntegerConstant(%ld -> %ld)", value, *idx);
+}
+
+void EmitUnsignedIntegerConstant(unsigned long value, long *idx)
+{
+    MCAutoNumberRef t_number;
+    MCNumberCreateWithUnsignedInteger(value, &t_number);
+    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
+    MCLog("[Emit] UnsignedIntegerConstant(%lu -> %ld)", value, *idx);
 }
 
 void EmitRealConstant(long value, long *idx)

@@ -1,0 +1,52 @@
+Name: tabStops
+
+Type: property
+
+Syntax: set the tabStops [of line <lineNumber>] of <field> to <tabStopList> 
+
+Summary: Specifies the location of <tab stop|tab stops> in a <field>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the tabStops of field "Comments" to 20
+
+Example:
+set the tabStops of field 1 to 40,80,120,160,200
+
+Example:
+if the tabStops of me is empty then answer "Sorry - can't tab."
+
+Example:
+set the tabStops of line 2 to -2 of field "list" to 50
+
+Value:
+The <tabStops> of a <field(keyword)> is a list of one or more positive <integer|integers>, separated by commas.
+By default, the <tabStops> <property> of newly created <field(object)|fields> is set to empty.
+
+Description:
+Use the <tabStops> <property> to let users tab to a horizontal location within a <field(keyword)>.
+
+If the user presses the Tab key while editing a field, normally the insertion point moves to the next control whose traversalOn <property> is true. If the <tabStops> <property> is true, the user can enter tab characters in the <field(keyword)>. Each time the Tab key is pressed, the <insertion point> moves to the next <tab stop> on the current line.
+
+The <tabStops> consists of one or more <integer(glossary)|integers> separated by commas. Each <integer(keyword)> is the distance in <pixels> from the left margin of the <field(keyword)> to a <tab stop>. If a tab stop is less than the previous tab stop, the distance is measured relative to the previous tab stop. For example, if the <tabStops> is set to "20,100,30", tab stops are placed at 20, 100, and 130 <pixels> from the left margin.
+
+>*Tip:*  If you set the <field's (object)> <vGrid> <property> to true, a vertical line is drawn at each <tab stop>. Temporarily setting this <property> to true can help you get a better idea of where each <tab stop> is.
+
+If the <tabStops> does not define tabs for the entire width of the <field(keyword)>, or if the <field(object)|field's> <dontWrap> <property> is true, LiveCode creates implicit <tab stop|tab stops> across the entire <field(keyword)>. (For example, if a <field(object)|field's> <tabStops> is 10, the <field(keyword)> has a <tab stop> every 10 <pixels>.) If the <tabStops> <property> defines more than one <tab stop>, the width of the last tab column repeats for the width of the <field(keyword)>. (For example, if a <field(object)|field's> <tabStops> is 20,100,130, the width of the last tab column is 30, so additional <tab stop|tab stops> are automatically created at 160, 190, 220, and so on.)
+
+If the <tabStops> is empty, the <field(keyword)> has no <tab stop|tab stops>, and pressing the Tab key moves the <insertion point> to the next <field(keyword)>.
+
+>*Important:*  Setting the <field's (object)> <textAlign> to center or right may cause unexpected results when using <tab stop|tab stops>.
+
+>*Note:*  If the <tabGroupBehavior> property of a group containing the field is set to true, you cannot press the Tab key to go to the next tab stop. (The <tabStops> setting still controls the spacing of any tab <characters> that are pasted into the <field(keyword)> or placed in it by a <handler>.)
+
+References: leftIndent (property), borderWidth (property), autoTab (property), vgrid (property), textAlign (property), dontWrap (property), tabGroupBehavior (property), formattedText (property), spaceAbove (property), backgroundColor (property), listBehavior (property), listIndent (property), hidden (property), textSize (property), width (property), firstIndent (property), spaceBelow (property), listStyle (property), rightIndent (property), listDepth (property), hgrid (property), pixels (property), hScrollbar (property), borderColor (property), formattedWidth (property), field (keyword), integer (keyword), characters (keyword), tabKey (message), field (object), property (glossary), insertion point (glossary), tab stop (glossary), integer (glossary), handler (glossary)
+
+Tags: ui

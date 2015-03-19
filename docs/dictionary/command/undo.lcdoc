@@ -1,0 +1,36 @@
+Name: undo
+
+Type: command
+
+Syntax: undo
+
+Summary: Reverses the last user action.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+undo
+
+Description:
+The undo command undoes the last action performed by the user. Undoable actions include:
+	* Using the paint tools
+	* Deleting controls by selecting them with the Pointer tool and pressing Delete
+	* Moving controls with the Pointer tool
+	* Editing actions (such as typing, cutting, and pasting) in a field
+
+The undo command cannot be used to undo actions performed by a script. Only user actions can be undone. For example, if you use a script to change the text in a field, the undo command cannot reverse that change, but if the user edits text, you can use undo to reverse the action.
+
+If you use the undo command twice in succession, the second undo undoes the first one.
+
+The undo command is equivalent to choosing Edit menuUndo.
+Use the <undo> command to give the user an opportunity to reverse a horrible mistake.
+
+>*Important:* .</importa
+
+References: copy (command), delete (command), redo (command), undoChanged (message)
+
+Tags: ui

@@ -1,0 +1,38 @@
+Name: formatForPrinting
+
+Type: property
+
+Syntax: set the formatForPrinting of <stack> to {true | false}
+
+Summary: Specifies whether font layout is done using printer <font|fonts> or screen <font|fonts>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: windows
+
+Platforms: desktop,server,web
+
+Example:
+set the formatForPrinting of stack "Print Template" to true
+
+Value (bool):The <formatForPrinting> of a <stack> is true or false.
+By default, the <formatForPrinting> <property> of newly created <stacks> is set to false.
+
+Description:
+Use the <formatForPrinting> <property> to improve printout appearance on <Windows|Windows systems>.
+
+Windows systems may use different font versions for printing and for screen display, and the spacing of the print version may differ from the spacing of the screen version. This can result in layouts and line breaks differing between the screen display and the printed result. For the best appearance of printed cards in a stack, make sure the stack is closed (and not in memory), then set the stack's <formatForPrinting> <property> to true before opening the <stack> to print it.
+
+>*Important:*  Do not edit <field(keyword)> text in a stack whose <formatForPrinting> is true. Doing so can cause display <anomaly|anomalies>. Set the <formatForPrinting> <property> to false before you make changes to text in <field(object)|fields>.
+
+The spacing of printer font versions usually results in a difficult-to-read display when these fonts are used for screen viewing. To avoid display problems, set the <formatForPrinting> <property> to true only when printing. To let the user preview the appearance of the printed output, set the <formatForPrinting> <property> to true before opening the <stack>.
+
+>*Important:*  <font|Fonts> <inheritance|inherited> from another <stack> are not updated when you set the <formatForPrinting> of a <stack>. If the <stack> will be printed, make sure that either the <stack|stack's> <textFont> <property> is set to a <font> name (not set to empty), or all <field(object)|fields> to be printed have their own <font> rather than <inheritance|inheriting> it.
+
+If the stack's <formatForPrinting> <property> is true, the setting of the <windowBoundingRect> <property> is ignored when the <stack> is opened or <maximize|maximized>.
+
+References: pageHeights (property), textFont (property), windowBoundingRect (property), field (keyword), answer printer (command), stack (object), field (object), property (glossary), Windows (glossary), inheritance (glossary), font (glossary), maximize (glossary), anomaly (glossary), stacks (function)
+
+Tags: printing
