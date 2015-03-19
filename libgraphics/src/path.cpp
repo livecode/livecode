@@ -776,14 +776,23 @@ static void _MCGPathEllipticArc(MCGPathRef self, const MCGSize &p_radii, MCGFloa
 	
 	p_angle = fmodf(p_angle + 2 * M_PI, 2 * M_PI);
 	
+	MCGPoint t_mid;
+	t_mid = MCGPointGetMidPoint(t_last, p_end_point);
+	
 	MCGPoint t_p;
-	t_p = MCGPointRotate(MCGPointMake((t_last.x - p_end_point.x) / 2, (t_last.y - p_end_point.y) / 2), -p_angle);
+	t_p = MCGPointRotate(MCGPointTranslate(t_last, -t_mid.x, -t_mid.y), -p_angle);
 	
 	MCGSize t_radii;
 	t_radii = MCGSizeMake(MCAbs(p_radii.width), MCAbs(p_radii.height));
 	
+	MCGFloat t_rx2, t_ry2, t_x2, t_y2;
+	t_rx2 = _sqr(t_radii.width);
+	t_ry2 = _sqr(t_radii.height);
+	t_x2 = _sqr(t_p.x);
+	t_y2 = _sqr(t_p.y);
+	
 	MCGFloat t_a;
-	t_a = (_sqr(t_p.x) / _sqr(t_radii.width)) + (_sqr(t_p.y) / _sqr(t_radii.height));
+	t_a = (t_x2 / t_rx2) + (t_y2 / t_ry2);
 	
 	MCGPoint t_c;
 	
@@ -797,21 +806,12 @@ static void _MCGPathEllipticArc(MCGPathRef self, const MCGSize &p_radii, MCGFloa
 	else
 	{
 		MCGFloat t_scale;
-		MCGFloat t_rx2, t_ry2, t_x2, t_y2;
-		t_rx2 = _sqr(t_radii.width);
-		t_ry2 = _sqr(t_radii.height);
-		t_x2 = _sqr(t_p.x);
-		t_y2 = _sqr(t_p.y);
-		
 		t_scale = sqrtf((t_rx2 * t_ry2 - t_rx2 * t_y2 - t_ry2 * t_x2) / (t_rx2 * t_y2 + t_ry2 * t_x2));
 		if (p_large_arc == p_sweep)
 			t_scale *= -1;
 		
 		t_c = MCGPointMake(t_scale * t_radii.width * t_p.y / t_radii.height, t_scale * -t_radii.height * t_p.x / t_radii.width);
 	}
-	
-	MCGPoint t_mid;
-	t_mid = MCGPointGetMidPoint(t_last, p_end_point);
 	
 	MCGPoint t_center;
 	t_center = MCGPointTranslate(MCGPointRotate(t_c, p_angle), t_mid.x, t_mid.y);

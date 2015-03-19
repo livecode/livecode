@@ -2674,6 +2674,9 @@ public foreign handler MCCanvasPathMoveTo(in pPoint as Point, inout xPath as Pat
 public foreign handler MCCanvasPathLineTo(in pPoint as Point, inout xPath as Path) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathCurveThroughPoint(in pThrough as Point, in pTo as Point, inout xPath as Path) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, inout xPath as Path) returns nothing binds to "<builtin>"
+
+public foreign handler MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(in pTo as Point, in pRadii as List, in pRotation as CanvasFloat, in pLargest as bool, in pClockwise as bool, inout xPath as Path) returns nothing binds to "<builtin>"
+
 public foreign handler MCCanvasPathClosePath(inout xPath as Path) returns nothing binds to "<builtin>"
 
 /*
@@ -2747,6 +2750,42 @@ begin
 	MCCanvasPathCurveThroughPoint(mThroughA, mTo, mPath)
 	MCCanvasPathCurveThroughPoints(mThroughA, mThroughB, mTo, mPath)
 end syntax
+
+
+/*
+Summary:	Adds an arc to a path.
+
+mEnd:		An expression which evaluates to a point.
+mRadii:		An expression which evaluates to a list of numbers.
+mAngle:		An expression which evaluates to a number.
+mPath:		An expression which evaluates to a path.
+
+Description:	Adds an arc from the previous point to <mEnd> on <mPath>, following a section of an ellipse with the given radii & angle.
+  As there can be two different ellipses that match the parameters, and two potential arcs for each ellipse, the *largest*, *smallest*, *clockwise*, and *anticlockwise* options allow one arc to specified from the four potential arcs.
+
+Example:
+	variable tPath
+	put the empty path into tPath
+
+	// Begin a new subpath
+	move to point [25, 50] on tPath
+
+	// Continue path with an arc to 50,25
+	arc to point [50, 25] with radii [25, 25] rotated by 0 taking smallest clockwise route on tPath
+
+	// Begin a new subpath
+	move to point [75, 50] on tPath
+	// Continue path with a large arc to 50,75
+	arc to point [50, 75] with radii [25, 25] rotated by 0 taking largest clockwise route on tPath
+
+Tags:	Canvas
+*/
+syntax PathOperationEllipticArcToWithFlags is statement
+	"arc" "to" <mEnd: Expression> "with" "radii" <mRadii: Expression> "rotated" "by" <mAngle: Expression> "taking" ( "largest" <mLargest=true> | "smallest" <mLargest=false> ) ( "clockwise" <mClockwise=true> | "anticlockwise" <mClockwise=false> ) "route" "on" <mPath: Expression>
+begin
+	MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(mEnd, mRadii, mAngle, mLargest, mClockwise, mPath)
+end syntax
+
 
 /*
 Summary:	Closes the current subpath of a path.
