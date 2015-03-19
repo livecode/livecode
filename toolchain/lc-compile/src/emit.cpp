@@ -354,7 +354,7 @@ EmitEndModuleOutputC (const char *p_module_name,
 	if (0 > fprintf(t_file, "};\n"))
 		goto error_cleanup;
 
-	if (0 > fprintf(t_file, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", %s_module_data, sizeof(module_data) };\n\n", t_modified_name, p_module_name, t_modified_name))
+	if (0 > fprintf(t_file, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", %s_module_data, sizeof(%s_module_data) };\n\n", t_modified_name, p_module_name, t_modified_name, t_modified_name))
 		goto error_cleanup;
 
 	free(t_modified_name);
