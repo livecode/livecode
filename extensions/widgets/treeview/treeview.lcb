@@ -356,7 +356,7 @@ end handler
 
 public handler onClick() returns nothing
 	variable tRowNumber
-	put yPosToRowNumber(the y of the current click position) into tRowNumber
+	put yPosToRowNumber(the y of the click position) into tRowNumber
 	
 	variable tData as Array
 	put the empty array into tData
@@ -365,6 +365,24 @@ public handler onClick() returns nothing
 	
 
 	if the click count is 1 then
+		// Check if the arrow was clicked
+		if not tData["leaf"] then
+			variable tLeft as Real
+			put tData["indent"] * mIndentPixels into tLeft
+			
+			variable tX as Real
+			put the x of the click position into tX
+			
+			if tX > tLeft and tX < tLeft + mArrowWidth + 2 * mMargin then
+				if tData["folded"] is true then
+					unfoldPath(tData["path"])
+		   		else
+					foldPath(tData["path"])
+		   		end if
+		   		return
+		   	end if
+		end if
+		
 		if tData["selected"] is true then
 			unselectPath(tData["path"])
 		else
