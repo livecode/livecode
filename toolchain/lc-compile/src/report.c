@@ -246,6 +246,9 @@ DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expr
 DEFINE_ERROR_I(HandlerNotSuitableForPropertyGetter, "'%s' has inappropriate signature to be a property getter")
 DEFINE_ERROR_I(HandlerNotSuitableForPropertySetter, "'%s' has inappropriate signature to be a property setter")
 
+DEFINE_ERROR_I(DependentModuleNotIncludedWithInputs, "Module '%s' not found in input list")
+DEFINE_ERROR_I(InterfaceFileNameMismatch, "Module '%s' has mismatched name in interface file")
+               
 DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with identifiers")
 
 #define DEFINE_WARNING(Name, Message) \

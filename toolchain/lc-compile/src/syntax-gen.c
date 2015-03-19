@@ -1792,7 +1792,7 @@ void GenerateSyntaxRules(void)
 	int t_index;
 	SyntaxRuleGroupRef t_group;
 
-    t_output = OpenOutputFile(NULL);
+    t_output = OpenOutputGrammarFile(NULL);
     
     if (t_output != NULL)
         s_output = t_output;

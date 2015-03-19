@@ -37,30 +37,34 @@
         -- Make sure all the imported modules are bound
         BindImports(Imports, ImportedModules)
 
-        -- Step 1: Ensure all id's referencing definitions point to the definition.
-        --         and no duplicate definitions have been attempted.
-        EnterScope
+        (|
+            ErrorsDidOccur()
+        ||
+            -- Step 1: Ensure all id's referencing definitions point to the definition.
+            --         and no duplicate definitions have been attempted.
+            EnterScope
 
-        -- Import all the used modules
-        DeclareImports(Imports, ImportedModules)
-        
-        EnterScope
+            -- Import all the used modules
+            DeclareImports(Imports, ImportedModules)
+            
+            EnterScope
 
-        -- Declare the predefined ids
-        DeclarePredefinedIds
-        -- Assign the defining id to all top-level names.
-        Declare(Definitions)
-        -- Resolve all references to id's.
-        Apply(Definitions)
-        
-        LeaveScope
+            -- Declare the predefined ids
+            DeclarePredefinedIds
+            -- Assign the defining id to all top-level names.
+            Declare(Definitions)
+            -- Resolve all references to id's.
+            Apply(Definitions)
+            
+            LeaveScope
 
-        LeaveScope
-        
-        -- Step 2: Ensure all definitions have their appropriate meaning
-        Define(Name, Definitions)
-        
-        --DumpBindings(Module)
+            LeaveScope
+            
+            -- Step 2: Ensure all definitions have their appropriate meaning
+            Define(Name, Definitions)
+            
+            --DumpBindings(Module)
+        |)
 
 'action' BindImports(IMPORT, MODULELIST)
 
@@ -68,15 +72,24 @@
         BindImports(Left, Imports)
         BindImports(Right, Imports)
         
-    'rule' BindImports(import(_, Id), Imports):
+    'rule' BindImports(import(Position, Id), Imports):
         Id'Name -> Name
-        FindModuleInList(Name, Imports -> Module)
-        Module'Name -> ModuleId
         (|
-            QueryId(ModuleId -> module(Info))
+            FindModuleInList(Name, Imports -> Module)
+            Module'Name -> ModuleId
+            (|
+                QueryId(ModuleId -> module(Info))
+            ||
+                DefineModuleId(ModuleId)
+                Bind(Module, Imports)
+            |)
         ||
-            DefineModuleId(ModuleId)
-            Bind(Module, Imports)
+            (|
+                IsBootstrapCompile()
+                Error_DependentModuleNotIncludedWithInputs(Position, Name)
+            ||
+                Error_InterfaceFileNameMismatch(Position, Name)
+            |)
         |)
         
     'rule' BindImports(nil, _):
@@ -89,11 +102,20 @@
         DeclareImports(Left, Imports)
         DeclareImports(Right, Imports)
         
-    'rule' DeclareImports(import(_, Id), Imports):
+    'rule' DeclareImports(import(Position, Id), Imports):
         Id'Name -> Name
-        FindModuleInList(Name, Imports -> Module)
-        Module'Definitions -> Definitions
-        DeclareImportedDefinitions(Definitions)
+        (|
+            FindModuleInList(Name, Imports -> Module)
+            Module'Definitions -> Definitions
+            DeclareImportedDefinitions(Definitions)
+        ||
+            (|
+                IsBootstrapCompile()
+                Error_DependentModuleNotIncludedWithInputs(Position, Name)
+            ||
+                Error_InterfaceFileNameMismatch(Position, Name)
+            |)
+        |)
         
     'rule' DeclareImports(nil, _):
         -- do nothing
@@ -139,17 +161,16 @@
 
 --
 
-'action' FindModuleInList(NAME, MODULELIST -> MODULE)
+'condition' FindModuleInList(NAME, MODULELIST -> MODULE)
 
     'rule' FindModuleInList(Name, modulelist(Head, Rest) -> Head):
         Head'Name -> Id
-        Head'Kind -> import
         Id'Name -> ModName
         IsNameEqualToName(Name, ModName)
         
     'rule' FindModuleInList(Name, modulelist(_, Rest) -> Found):
+        print("foo")
         FindModuleInList(Name, Rest -> Found)
-
 
 'action' QueryId(ID -> MEANING)
 

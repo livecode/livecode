@@ -121,6 +121,8 @@
     PushOutMarkArgumentSyntaxMapping
     PushInOutMarkArgumentSyntaxMapping
 
+    EmitStart
+    EmitFinish
     EmitBeginModule
     EmitBeginLibraryModule
     EmitBeginWidgetModule
@@ -300,6 +302,8 @@
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
     Error_UnsuitableStringForKeyword
+    Error_DependentModuleNotIncludedWithInputs
+    Error_InterfaceFileNameMismatch
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
@@ -450,6 +454,9 @@
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
 --------------------------------------------------------------------------------
+
+'action' EmitStart()
+'action' EmitFinish()
 
 'action' EmitBeginModule(Name: NAME -> ModuleIndex: INT)
 'action' EmitBeginWidgetModule(Name: NAME -> ModuleIndex: INT)
@@ -659,6 +666,9 @@
 'action' Error_HandlerNotSuitableForPropertySetter(Position: POS, Identifier: NAME)
 
 'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
+
+'action' Error_DependentModuleNotIncludedWithInputs(Position: POS, Module: NAME)
+'action' Error_InterfaceFileNameMismatch(Position: POS, Module: NAME)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)

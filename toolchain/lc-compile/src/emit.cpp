@@ -30,6 +30,9 @@ int OutputFileAsC = 0;
 extern "C" int OutputFileAsBytecode;
 int OutputFileAsBytecode = 0;
 
+extern "C" void EmitStart(void);
+extern "C" void EmitFinish(void);
+
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
 extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);
 extern "C" void EmitBeginLibraryModule(NameRef name, long& r_index);
@@ -198,12 +201,31 @@ static NameRef nameref_from_mcstringref(MCStringRef p_string)
 static MCScriptModuleBuilderRef s_builder;
 static NameRef s_module_name;
 
+static FILE *s_output_code_file = NULL;
+static const char *s_output_code_filename = NULL;
+
 //////////
+
+void EmitStart(void)
+{
+    MCInitialize();
+
+    s_output_code_file = OpenOutputCodeFile(&s_output_code_filename);
+}
+
+void EmitFinish(void)
+{
+    if (s_output_code_file != NULL)
+    {
+        fclose(s_output_code_file);
+        s_output_code_file = NULL;
+    }
+    
+    MCFinalize();
+}
 
 void EmitBeginModule(NameRef p_name, long& r_index)
 {
-    MCInitialize();
-    
     MCLog("[Emit] BeginModule(%@) -> 0", to_mcnameref(p_name));
 
     s_module_name = p_name;
@@ -214,8 +236,6 @@ void EmitBeginModule(NameRef p_name, long& r_index)
 
 void EmitBeginWidgetModule(NameRef p_name, long& r_index)
 {
-    MCInitialize();
-    
     MCLog("[Emit] BeginWidgetModule(%@) -> 0", to_mcnameref(p_name));
     
     s_module_name = p_name;
@@ -226,8 +246,6 @@ void EmitBeginWidgetModule(NameRef p_name, long& r_index)
 
 void EmitBeginLibraryModule(NameRef p_name, long& r_index)
 {
-    MCInitialize();
-    
     MCLog("[Emit] BeginLibraryModule(%@) -> 0", to_mcnameref(p_name));
     
     s_module_name = p_name;
@@ -278,7 +296,7 @@ EmitEndModuleOutputBytecode (const byte_t *p_bytecode,
                              size_t p_bytecode_len)
 {
 	const char *t_filename = nil;
-	FILE *t_file = OpenOutputFile (&t_filename);
+	FILE *t_file = OpenOutputBytecodeFile (&t_filename);
 
 	if (nil == t_file)
 		goto error_cleanup;
@@ -307,10 +325,9 @@ EmitEndModuleOutputC (const char *p_module_name,
                       size_t p_bytecode_len)
 {
 	char *t_modified_name = nil;
-	const char *t_filename = nil;
 	FILE *t_file = nil;
 
-	t_file = OpenOutputFile (&t_filename);
+	t_file = s_output_code_file;
 	if (nil == t_file)
 		goto error_cleanup;
 
@@ -321,8 +338,8 @@ EmitEndModuleOutputC (const char *p_module_name,
 	for(int i = 0; t_modified_name[i] != '\0'; i++)
 		if (t_modified_name[i] == '.')
 			t_modified_name[i] = '_';
-
-	if (0 > fprintf(t_file, "static unsigned char module_data[] = {"))
+    
+	if (0 > fprintf(t_file, "static unsigned char %s_module_data[] = {", t_modified_name))
 		goto error_cleanup;
 
 	for(size_t i = 0; i < p_bytecode_len; i++)
@@ -337,19 +354,18 @@ EmitEndModuleOutputC (const char *p_module_name,
 	if (0 > fprintf(t_file, "};\n"))
 		goto error_cleanup;
 
-	if (0 > fprintf(t_file, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_name, p_module_name))
+	if (0 > fprintf(t_file, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", %s_module_data, sizeof(module_data) };\n\n", t_modified_name, p_module_name, t_modified_name))
 		goto error_cleanup;
 
 	free(t_modified_name);
 	fflush (t_file);
-	fclose (t_file);
 	return true;
 
  error_cleanup:
 	free (t_modified_name);
 	if (nil != t_file)
 		fclose (t_file);
-	Error_CouldNotWriteOutputFile (t_filename);
+	Error_CouldNotWriteOutputFile (s_output_code_filename);
 	return false;
 }
 
@@ -472,8 +488,8 @@ EmitEndModule (void)
 	                                   t_interface_buf, t_interface_len))
 		goto cleanup;
 
- cleanup:
-	MCFinalize ();
+cleanup:
+    return;
 }
 
 void EmitModuleDependency(NameRef p_name, long& r_index)

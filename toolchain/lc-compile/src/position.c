@@ -182,7 +182,9 @@ static FileRef s_files;
 static FileRef s_current_file;
 static unsigned int s_next_file_index;
 static const char *s_template_file = NULL;
-static const char *s_output_file = NULL;
+static const char *s_output_bytecode_file = NULL;
+static const char *s_output_code_file = NULL;
+static const char *s_output_grammar_file = NULL;
 static const char *s_manifest_output_file = NULL;
 
 void InitializeFiles(void)
@@ -295,9 +297,19 @@ int GetCurrentFile(FileRef *r_file)
     return 1;
 }
 
-void SetOutputFile(const char *p_output)
+void SetOutputBytecodeFile(const char *p_output)
 {
-    s_output_file = p_output;
+    s_output_bytecode_file = p_output;
+}
+
+void SetOutputGrammarFile(const char *p_output)
+{
+    s_output_grammar_file = p_output;
+}
+
+void SetOutputCodeFile(const char *p_output)
+{
+    s_output_code_file = p_output;
 }
 
 void SetManifestOutputFile(const char *p_output)
@@ -310,17 +322,43 @@ void SetTemplateFile(const char *p_output)
     s_template_file = p_output;
 }
 
-FILE *OpenOutputFile(const char **r_filename)
+FILE *OpenOutputBytecodeFile(const char **r_filename)
 {
-    if (s_output_file == NULL)
+    if (s_output_bytecode_file == NULL)
         return NULL;
 
 	if (NULL != r_filename)
 	{
-		*r_filename = s_output_file;
+		*r_filename = s_output_bytecode_file;
 	}
 
-    return fopen(s_output_file, "wb");
+    return fopen(s_output_bytecode_file, "wb");
+}
+
+FILE *OpenOutputCodeFile(const char **r_filename)
+{
+    if (s_output_code_file == NULL)
+        return NULL;
+    
+	if (NULL != r_filename)
+	{
+		*r_filename = s_output_code_file;
+	}
+    
+    return fopen(s_output_code_file, "w");
+}
+
+FILE *OpenOutputGrammarFile(const char **r_filename)
+{
+    if (s_output_grammar_file == NULL)
+        return NULL;
+    
+	if (NULL != r_filename)
+	{
+		*r_filename = s_output_grammar_file;
+	}
+    
+    return fopen(s_output_grammar_file, "w");
 }
 
 FILE *OpenManifestOutputFile(void)

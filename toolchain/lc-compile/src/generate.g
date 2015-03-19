@@ -22,6 +22,7 @@
 
 'export'
     Generate
+    GenerateModules
 
 --------------------------------------------------------------------------------
 
@@ -29,9 +30,32 @@
 
 'var' IgnoredModuleList : NAMELIST
 
+'action' GenerateModules(MODULELIST)
+
+    'rule' GenerateModules(List):
+        EmitStart()
+        GenerateForEachModule(List)
+        EmitFinish()
+    
+'action' GenerateForEachModule(MODULELIST)
+
+    'rule' GenerateForEachModule(modulelist(Head, Rest)):
+        GenerateSingleModule(Head)
+        GenerateForEachModule(Rest)
+        
+    'rule' GenerateForEachModule(nil):
+        -- do nothing
+
 'action' Generate(MODULE)
 
-    'rule' Generate(Module:module(_, Kind, Id, Imports, Definitions)):
+    'rule' Generate(Module):
+        EmitStart()
+        GenerateSingleModule(Module)
+        EmitFinish()
+
+'action' GenerateSingleModule(MODULE)
+
+    'rule' GenerateSingleModule(Module:module(_, Kind, Id, Imports, Definitions)):
         ModuleDependencyList <- nil
         
         QueryModuleId(Id -> Info)
