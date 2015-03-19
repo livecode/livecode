@@ -1576,8 +1576,11 @@
     'rule' GenerateExpressionInRegister(Result, Context, false(_), Output):
         EmitAssignFalse(Output)
         
-    'rule' GenerateExpressionInRegister(Result, Context, integer(_, Value), Output):
+    'rule' GenerateExpressionInRegister(Result, Context, unsignedinteger(_, Value), Output):
         EmitAssignUnsignedInteger(Output, Value)
+
+    'rule' GenerateExpressionInRegister(Result, Context, integer(_, Value), Output):
+        EmitAssignInteger(Output, Value)
         
     'rule' GenerateExpressionInRegister(Result, Context, real(_, Value), Output):
         EmitAssignReal(Output, Value)
@@ -1706,6 +1709,9 @@
 
     'rule' EmitConstant(false(_) -> Index):
         EmitFalseConstant(-> Index)
+
+    'rule' EmitConstant(unsignedinteger(_, IntValue) -> Index):
+        EmitUnsignedIntegerConstant(IntValue -> Index)
 
     'rule' EmitConstant(integer(_, IntValue) -> Index):
         EmitIntegerConstant(IntValue -> Index)
