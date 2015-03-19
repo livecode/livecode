@@ -132,6 +132,19 @@ bool MCDensityMappedImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 	return true;
 }
 
+bool MCDensityMappedImageRep::GetMetadata(MCImageMetadata &r_metadata)
+{
+	uindex_t t_match;
+	// IM-2014-08-01: [[ Bug 13021 ]] Make the 1.0 density source (or nearest match) the basis for the image geometry
+	if (!GetBestMatch(1.0, t_match))
+		return false;
+	
+	if (!m_sources[t_match]->GetMetadata(r_metadata))
+		return false;
+    
+	return true;
+}
+
 bool MCDensityMappedImageRep::GetFrameDuration(uindex_t p_index, uint32_t &r_duration)
 {
 	uindex_t t_match;
