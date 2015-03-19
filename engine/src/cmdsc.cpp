@@ -2479,7 +2479,7 @@ Parse_stat MCUnload::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
     
-	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION))
+	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION) == PS_NORMAL)
 		is_extension = true;
 	else
 		sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
