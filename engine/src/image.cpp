@@ -2452,7 +2452,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 
 	if (t_success)
 	{
-		t_success = MCImageGetFileRepForStackContext(p_filename, getstack(), t_rep);
+		t_success = MCImageGetRepForReferenceWithStackContext(p_filename, getstack(), t_rep);
 
 		// MM-2013-11-27: [[ Bug 11522 ]] If we can't get the image rep, make sure we still store the filename.
 		if (t_success)

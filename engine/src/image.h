@@ -138,10 +138,14 @@ bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict);
 #include "image_rep.h"
 
 // IM-2013-10-30: [[ FullscreenMode ]] Factor out image rep creation & preparation
-bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep);
-void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density);
+// Retrieve an image rep for the given file path.
+bool MCImageGetRepForFileWithStackContext(MCStringRef p_path, MCStack *p_stack, MCImageRep *&r_rep);
+// Retrieve an image rep for the given reference, which may be a file path or a url.
+bool MCImageGetRepForReferenceWithStackContext(MCStringRef p_reference, MCStack *p_stack, MCImageRep *&r_rep);
+// Retrieve an image rep for the named resource.
+bool MCImageGetRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep);
 
-bool MCImageGetFileRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep);
+void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density);
 
 class MCMutableImageRep : public MCImageRep
 {

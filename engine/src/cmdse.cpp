@@ -1912,7 +1912,7 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
 		MCImageRep *t_rep;
 		t_rep = nil;
 		
-		if (MCImageGetFileRepForStackContext(ep.getcstring(), MCdefaultstackptr, t_rep))
+		if (MCImageGetRepForReferenceWithStackContext(ep.getcstring(), MCdefaultstackptr, t_rep))
 		{
 			MCImagePrepareRepForDisplayAtDensity(t_rep, MCdefaultstackptr->getdevicescale());
 			
