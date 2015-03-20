@@ -1,5 +1,5 @@
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.devore.svgIcon
+widget community.livecode.livecode.svgpath
 --
 
 -- dependency declarations
@@ -10,7 +10,7 @@ use com.livecode.engine
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "SVG Icon"
 metadata author is "Trevor DeVore / Benjamin Beaumont"
-metadata version is "1.0.1"
+metadata version is "1.0.2"
 
 private variable mState        as String
 private variable mColor        as Color
@@ -20,6 +20,7 @@ private variable  mPath    		as String
 private variable mHilited      as Boolean
 private variable mToggleHilite as Boolean
 private variable mMaintainAspectRatio as Boolean
+private variable mFlipVertically     as Boolean // some SVG Paths need to be flipped (all font awesome SVG paths do, Illustrator SVG does not)
 property iconColor            get getColor          set setColor
 metadata iconColor.editor is "com.livecode.pi.color"
 property iconHiliteColor      get getHiliteColor    set setHiliteColor
@@ -33,6 +34,7 @@ metadata iconPath.editor is "com.livecode.pi.text"
 property isHilited            get mHilited          set setIsHilited
 property toggleHilite         get mToggleHilite     set mToggleHilite
 property maintainAspectRatio  get mMaintainAspectRatio  set setMaintainAspectRatio
+property flipVertically       get mFlipVertically       set setFlipVertically
 --
 
 ----------
@@ -46,6 +48,7 @@ public handler OnCreate()
 	put false into mHilited
 	put false into mToggleHilite
 	put true into mMaintainAspectRatio
+	put true into mFlipVertically
 	
 	variable tArray as Array
 	put the empty array into tArray
@@ -85,6 +88,7 @@ public handler OnSave(out rProperties as Array)
 	put mHilited into rProperties["hilited"]
 	put mToggleHilite into rProperties["toggle hilite"]
 	put mMaintainAspectRatio into rProperties["maintain aspect ratio"]
+	put mFlipVertically into rProperties["flip vertically"]
 	
 	return rProperties
 end handler
@@ -99,6 +103,7 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["hilited"] into mHilited
 	put pProperties["toggle hilite"] into mToggleHilite
 	put pProperties["maintain aspect ratio"] into mMaintainAspectRatio
+	put pProperties["flip vertically"] into mFlipVertically
 end handler
 ----------
 
@@ -139,6 +144,12 @@ end handler
 
 public handler setMaintainAspectRatio(in pBoolean as Boolean)
 	put pBoolean into mMaintainAspectRatio
+	redraw all
+end handler
+
+
+public handler setFlipVertically(in pBoolean as Boolean)
+	put pBoolean into mFlipVertically
 	redraw all
 end handler
 
@@ -198,66 +209,20 @@ public handler OnPaint()
 	variable tPath as Path
 	put path mPath into tPath
 	
-	variable tBounds
-	put the bounding box of tPath into tBounds
-	
-	// set origin of bounds to 0,0
-	translate tPath by [- the x of tBounds, - the y of tBounds]
-	// flip vertically
-	scale tPath by [1,-1]
-	translate tPath by [0, the height of tBounds]
+	variable tBounds	
+	if mFlipVertically then
+		scale tPath by [1,-1]
+		translate tPath by [0, the height of the bounding box of tPath]
+	end if
 		
 	// scale to fit within widget and maintain aspect ratio
 	if mMaintainAspectRatio then
-	
-		// Prepare values for matrix transformation
-		variable isLarger as Boolean
-		variable sx as Number
-		variable sy as Number
-		
-		put false into isLarger
-		put my width / the width of tBounds into sx
-		put my height / the height of tBounds into sy
-		
-		if sx > sy then
-			put true into isLarger
-			put sy into sx
-		else
-			put sx into sy
-		end if
-		
-		variable tx as Number
-		variable ty as Number
-		
-		put the left of my bounds - (the left of tBounds*sx) into tx
-		put the top of my bounds - (the top of tBounds*sy) into ty
-		
-		variable diff as Number
-		
-		if isLarger then
-			put my width - (the width of tBounds*sy) into diff
-		else
-			put my height - (the height of tBounds*sy) into diff
-		end if
-		
-		// align center
-		divide diff by 2
-		
-		if isLarger then
-			add diff to tx
-		else
-			add diff to ty
-		end if
-		
-		// create transformation matrix and apply
-		variable tTransform as Transform
-		put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
-		transform tPath by tTransform
-		
+		transform tPath by scaleAndMaintainAspectRatioTransform(the bounding box of tPath, my bounds)		
 	else
-		scale tPath by [my width / the width of tBounds, my height / the height of tBounds]
+		scale tPath by [my width / the width of the bounding box of tPath, \
+			my height / the height of the bounding box of tPath]
 	end if
-	
+		
 	if mState is "up" and mHilited is false then
 		set the paint of this canvas to solid paint with mColor
 	else
@@ -268,30 +233,64 @@ public handler OnPaint()
 end handler
 
 
-private handler stripZeros(in tString as String) as String
-	if tString contains "." then
-		variable tCount as Integer
-		repeat while ((the last char of tString) is in ".0")
-			if the last char of tString is "." then
-				delete the last char of tString
-				exit repeat
-			else
-				delete the last char of tString
-			end if
-		end repeat
+-- Translated from some Skia code
+private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle) as Transform
+	// Prepare values for matrix transformation
+	variable isLarger as Boolean
+	variable sx as Number
+	variable sy as Number
+	
+	put false into isLarger
+	put the width of pDestBounds / the width of pSrcBounds into sx
+	put the height of pDestBounds / the height of pSrcBounds into sy
+	
+	if sx > sy then
+		put true into isLarger
+		put sy into sx
+	else
+		put sx into sy
 	end if
-	return tString
+	
+	variable tx as Number
+	variable ty as Number
+	
+	put the left of pDestBounds - (the left of pSrcBounds*sx) into tx
+	put the top of pDestBounds - (the top of pSrcBounds*sy) into ty
+	
+	variable diff as Number
+	
+	if isLarger then
+		put my width - (the width of pSrcBounds*sy) into diff
+	else
+		put my height - (the height of pSrcBounds*sy) into diff
+	end if
+	
+	// align center
+	divide diff by 2
+	
+	if isLarger then
+		add diff to tx
+	else
+		add diff to ty
+	end if
+	
+	// create transformation matrix and apply
+	variable tTransform as Transform
+	put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
+	
+	return tTransform
 end handler
+
 
 private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) as String
 	variable tColor as String
 	
-	put stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) \
-					& "," & stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) \
-					& "," & stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) into tColor
+	put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
+	put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
+	put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
 	
 	if pIncludeAlpha then
-		put "," & stripZeros((the rounded of (the alpha of pColor) * 255) formatted as string) after tColor
+		put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
 	end if
 	
 	return tColor
