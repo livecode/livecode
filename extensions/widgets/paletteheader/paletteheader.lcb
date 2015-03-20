@@ -19,12 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Palette header bar widget.
 */
 
-widget community.livecode.livecode.paletteHeader
+widget com.livecode.widget.paletteHeader
 
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use community.livecode.livecode.fontawesomeSVGPath
+use com.livecode.library.fontawesomeSVGPath
 
 metadata title is "Palette Header"
 metadata author is "LiveCode"

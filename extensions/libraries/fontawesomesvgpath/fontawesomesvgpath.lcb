@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Fontawesome SVG path library
 */
 
-library community.livecode.livecode.fontawesomeSVGPath
+library com.livecode.library.fontawesomeSVGPath
 
 use com.livecode.engine
 

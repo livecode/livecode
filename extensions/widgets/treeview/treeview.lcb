@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 A widget to display array data in a tree view
 */
 
-widget com.livecode.livecode.treeView
+widget com.livecode.widget.treeView
 
 use com.livecode.canvas
 use com.livecode.widget
