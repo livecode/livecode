@@ -4060,7 +4060,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		uint32_t t_buf_size;
 		bool t_success;
 
-		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
+		t_success = MCS_closetakingbuffer_uint32(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
         MCprocesses[index].ohandle = nil;
         
         IO_cleanprocesses();
