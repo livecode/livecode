@@ -23,6 +23,8 @@
 		5D2262C31AA1E73600400628 /* selector.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 5D2262A11AA1E48100400628 /* selector.lcb */; };
 		5D2262C41AA1E73600400628 /* switchButton.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 5D2262AD1AA1E48100400628 /* switchButton.lcb */; };
 		5D2262C51AA1E73600400628 /* canvas.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 5D2262261AA1E47400400628 /* canvas.lcb */; };
+		76E74C2B1ABC32EE002977E5 /* fontawesomesvgpath.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 76E74C1B1ABC322E002977E5 /* fontawesomesvgpath.lcb */; };
+		76E74C2C1ABC32F1002977E5 /* treeview.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 76E74C071ABC31A9002977E5 /* treeview.lcb */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -185,6 +187,8 @@
 		5D2262AD1AA1E48100400628 /* switchButton.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; name = switchButton.lcb; path = switchbutton/switchButton.lcb; sourceTree = "<group>"; };
 		5D2262B21AA1E72000400628 /* libextensions.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libextensions.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DBAA1561AA1EAF100EC8B8F /* lc-compile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "lc-compile.xcodeproj"; path = "../toolchain/lc-compile/lc-compile.xcodeproj"; sourceTree = "<group>"; };
+		76E74C071ABC31A9002977E5 /* treeview.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; name = treeview.lcb; path = treeview/treeview.lcb; sourceTree = "<group>"; };
+		76E74C1B1ABC322E002977E5 /* fontawesomesvgpath.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; name = fontawesomesvgpath.lcb; path = fontawesomesvgpath/fontawesomesvgpath.lcb; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -256,6 +260,7 @@
 			isa = PBXGroup;
 			children = (
 				5D2262261AA1E47400400628 /* canvas.lcb */,
+				76E74C1B1ABC322E002977E5 /* fontawesomesvgpath.lcb */,
 			);
 			path = libraries;
 			sourceTree = "<group>";
@@ -278,6 +283,7 @@
 				5D2262961AA1E48100400628 /* segmented.lcb */,
 				5D2262A11AA1E48100400628 /* selector.lcb */,
 				5D2262AD1AA1E48100400628 /* switchButton.lcb */,
+				76E74C071ABC31A9002977E5 /* treeview.lcb */,
 			);
 			path = widgets;
 			sourceTree = "<group>";
@@ -463,6 +469,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76E74C2C1ABC32F1002977E5 /* treeview.lcb in Sources */,
+				76E74C2B1ABC32EE002977E5 /* fontawesomesvgpath.lcb in Sources */,
 				5D2262B71AA1E73600400628 /* list.lcb in Sources */,
 				5D2262B81AA1E73600400628 /* header.lcb in Sources */,
 				5D2262B91AA1E73600400628 /* graph.lcb in Sources */,
