@@ -1,0 +1,33 @@
+Name: put text
+
+Type: command
+
+Syntax: put [ unicode ] <text> 
+
+Summary: Write the (unicode) text string to stdout.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put "hello world"
+
+Example:
+put unicode uniEncode(tMyUTF8String, "UTF8")
+
+Parameters:
+text (string): A string containing the text to output. If unicode is not specified, text is considered to be in the native text encoding for the platform and is automatically converted to match the current outputTextEncoding setting. If unicode is specified, text is considered to be a binary string containing UTF-16 encoded text; similarly, this is automatically converted to match the current outputTextEncoding setting.
+
+Description:
+Use the put text command to write the (unicode) string to stdout.
+
+When converting, any characters that are encountered which are not representable in the output text encoding are output as '?'.
+
+In both cases, the internal line ending character 'LF' is transformed on output to match the setting of the <outputLineEndings> property.
+
+References: put header (command), put (command), put markup (command), put binary (command), put content (command), after (keyword), before (keyword), outputLineEndings (property)
+
+Tags: text processing

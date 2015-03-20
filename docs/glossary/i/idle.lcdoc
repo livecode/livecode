@@ -1,0 +1,10 @@
+Name: idle
+
+Synonyms: idling,idle time,idle-time,idle
+
+Type: glossary
+
+Description:
+Not doing anything. A program is idle if it is not currently <execute|executing> any <statement|statements>.
+
+References: statement (glossary), execute (glossary)

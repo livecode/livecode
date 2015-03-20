@@ -1,0 +1,12 @@
+Name: error message
+
+Synonyms: error message
+
+Type: glossary
+
+Description:
+Information about an <error> that occurred. 
+ 
+An error message may be displayed by a program or <handler>. Or, if the program or handler that had the error was called by another program or <handler>, the error message may be returned to the <caller> instead.
+
+References: error (glossary), handler (glossary), caller (glossary)

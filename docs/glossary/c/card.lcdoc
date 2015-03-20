@@ -1,0 +1,14 @@
+Name: card
+
+Synonyms: card
+
+Type: object
+
+Description:
+An <object> that can contain any combination of <button|buttons>, <field|fields>, <group|groups>, <scrollbar|scrollbars>, <image|images>, <graphic|graphics>, <player|players>, and <EPS|EPS objects>. 
+ 
+One card of a <stack> can appear at a time.
+
+References: stack (object), image (object), button (object), scrollbar (object), player (object), object (object), field (object), graphic (object), EPS (glossary), group (glossary)
+
+Tags: objects

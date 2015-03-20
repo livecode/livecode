@@ -1,0 +1,37 @@
+Name: stackFileType
+
+Type: property
+
+Syntax: set the stackFileType to <creator> & <type> 
+
+Summary: Specifies the <creator signature> and <type signature|file type> for saved <stack file|stack files>.
+
+Introduced: 1.0
+
+OS: mac
+
+Platforms: desktop,server,web
+
+Example:
+set the stackFileType to "myapSTCK"
+
+Value:
+The <stackFileType> is an eight- <character> string. The first four <characters> are the <creator signature>, and the last four are the <type signature|file type>.
+By default, the <stackFileType> is set to "RevoRSTK".
+
+Description:
+Use the <stackFileType> <property> to ensure that <stacks> that a <standalone application> creates are recognized by the operating system as belonging to the <standalone application|standalone>.
+
+When a file is saved on a Mac OS system, a 4-character file type and 4-character creator signature are saved with it. The creator signature specifies which application owns the file, and the file type is used to determine which applications (other than the owner) can work with the file.
+
+>*Note:* LiveCode's <creator signature> is 'Revo'. The file type for a <stack file> created by LiveCode is 'RSTK'.
+
+The <stackFileType> <property> is used to set the <type signature|file type> and <creator signature|creator> for <stack file|stack files> your application creates with the <save> <command>. (To specify the <type signature|file type> and <creator signature|creator> for <files> created by the <open file> <command> or by putting data into a <file>, <binfile>, or <resfile> <URL> that doesn't yet exist, use the <fileType> <property> instead.)
+
+The setting of this property has no effect on Unix and Windows systems.
+
+>*Important:*  To avoid conflicts with other applications, register any new <creator signature|creator signatures> with Apple Computer if you plan to distribute a <stack> or <standalone application> that uses this property.
+
+References: fileType (property), binfile (keyword), file (keyword), URL (keyword), characters (keyword), character (keyword), resfile (keyword), create stack (command), save (command), open file (command), stacks (function), files (function), property (glossary), stack file (glossary), creator signature (glossary), type signature (glossary), standalone application (glossary), command (glossary), stack (object)
+
+Tags: file system

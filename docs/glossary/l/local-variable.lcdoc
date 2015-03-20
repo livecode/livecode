@@ -1,0 +1,12 @@
+Name: local variable
+
+Synonyms: local variable,local
+
+Type: glossary
+
+Description:
+A <variable> that is accessible in only one <handler> and whose existence ends when the <handler> stops <execute|executing>.
+
+References: execute (glossary), handler (glossary), variable (glossary)
+
+Tags: properties

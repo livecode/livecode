@@ -1,0 +1,31 @@
+Name: is not among
+
+Type: operator
+
+Syntax: <valueToFind> is not among the {paragraphs | sentences | lines | items | words | segments | trueWords | tokens | codePoints | codeUnits | bytes} of <stringToSearch> 
+
+Summary: Evaluates to true if a chunk is not equal to any of the chunks in a string, false otherwise.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+"a" is not among the words of "human" -- evaluates to true
+
+Parameters:
+valueToFind (string): 
+stringToSearch (string): A string is an expression that evaluates to a string.
+
+Description:
+Use the <is not among> operator to find out whether a string exists as an entire word, item, or line of another string.
+
+The <valueToFind> must be a single word, item, or line (whichever chunk type you have specified). If you specify a string containing more than one chunk, the <is not among> operator evaluates to true, even if all the chunks are in the <stringToSearch>.
+
+The <is not among> operator is the logical inverse of the is among operator. When one is true, the other is false.
+
+References: is among the keys of (operator), contains (operator), is among (operator), characters (keyword)
+
+Tags: text processing

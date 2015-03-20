@@ -1,0 +1,12 @@
+Name: iteration
+
+Synonyms: iterate,iterating,iterated,iteration
+
+Type: glossary
+
+Description:
+One repetition of a repeat <loop>; once through the <loop>. 
+ 
+Also, a method of computation that works through each of a set of <value|values>.
+
+References: loop (glossary), value (glossary)

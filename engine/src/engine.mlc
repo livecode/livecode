@@ -39,22 +39,22 @@ use com.livecode.foreign
 
 public foreign type ScriptObject binds to "kMCEngineScriptObjectTypeInfo"
 
-public foreign handler MCEngineExecResolveScriptObject(in pObjectId) as ScriptObject binds to "<builtin>"
-public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as CBool) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as CBool) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject) as any binds to "<builtin>"
-public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, in pValue as any) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as List) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecSendToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) as any binds to "<builtin>"
-public foreign handler MCEngineExecSendToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) as any binds to "<builtin>"
-public foreign handler MCEngineExecPostToScriptObject(in pMessage as String, in pTarget as ScriptObject) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) as undefined binds to "<builtin>"
-public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecExecuteScript(in pScript as String) as any binds to "<builtin>"
-public foreign handler MCEngineExecLog(in pFormat as String) as undefined binds to "<builtin>"
-public foreign handler MCEngineExecLogWithValues(in pFormat as String, in pValues as List) as undefined binds to "<builtin>"
+public foreign handler MCEngineExecResolveScriptObject(in pObjectId) returns ScriptObject binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject) returns any binds to "<builtin>"
+public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, in pValue as any) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as List) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecSendToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) returns any binds to "<builtin>"
+public foreign handler MCEngineExecSendToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns any binds to "<builtin>"
+public foreign handler MCEngineExecPostToScriptObject(in pMessage as String, in pTarget as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScript(in pScript as String) returns any binds to "<builtin>"
+public foreign handler MCEngineExecLog(in pMessage as any) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecLogWithValues(in pFormat as String, in pValues as List) returns nothing binds to "<builtin>"
 
 /*
 Summary:	Resolves a string to a script object.
@@ -175,7 +175,7 @@ Object:		An expression that evaluates to a <ScriptObject>.
 Value: 		The value to set the property to.
 
 Example:
-	public handler OnMouseUp() as undefined
+	public handler OnMouseUp() returns nothing
 		set property "name" of my script object to "Clicked Widget"
 	end handler
 
@@ -209,7 +209,7 @@ Example:
 		return the result
 	end handler
 
-	public handler OnMouseUp() as undefined
+	public handler OnMouseUp() returns nothing
 		// Send a message to the widget's parent so it can handle the click
 		dispatch "widgetClicked" to the owner of my script object with [ MyName() ]
 	end handler
@@ -266,7 +266,7 @@ Arguments:	A list of arguments for the message.
 The result:	The result of the message dispatch
 
 Example:
-	public handler OnMouseUp() as undefined
+	public handler OnMouseUp() returns nothing
 		// Send a message to the script so it can handle it.
 		send "buttonClicked" to my script object
 	end handler
@@ -305,7 +305,7 @@ Object:		The script object to dispatch the message to.
 Arguments:	A list of arguments for the message.
 
 Example:
-	public handler OnMouseUp() as undefined
+	public handler OnMouseUp() returns nothing
 		// Send a message to the script so it can handle it.
 		post "buttonClicked" to my script object
 	end handler
@@ -326,7 +326,7 @@ end syntax
 Summary: 	Determines whether a message was handled
 
 Example:
-	public handler OnMouseUp() as undefined
+	public handler OnMouseUp() returns nothing
 		dispatch "buttonClicked" to my script object
 		if the message was handled then
 			return
@@ -348,7 +348,7 @@ end syntax
 Summary: 	Determines whether a message was handled
 
 Example:
-	public handler OnMouseUp() as undefined
+	public handler OnMouseUp() returns nothing
 		dispatch "buttonClicked" to my script object
 		if the message was not handled then
 			log "The message was not handled"
@@ -370,7 +370,7 @@ Summary: 	Executes some LiveCode script.
 Script: 	The script to execute.
 
 Example:
-	public handler SnapshotMe() as undefined
+	public handler SnapshotMe() returns nothing
 		variable tVar as String
 		get property "number" of my script object
 		put the result formatted as string into tVar

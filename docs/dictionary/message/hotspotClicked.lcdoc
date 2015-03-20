@@ -1,0 +1,36 @@
+Name: hotspotClicked
+
+Type: message
+
+Syntax: hotspotClicked <hotspotID> 
+
+Summary: Sent to a player containing a <QuickTime VR> movie when the user clicks one of the movie's hot spots.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+on hotSpotClicked theNode -- show a text description
+  if theNode is among the lines of the clickableNodes of me then
+    put line theNode of field "Tips" into field "Display"
+  end if
+end hotspotClicked
+
+Parameters:
+hotspotID: The ID of the QuickTime VR hot spot that was clicked.
+
+Description:
+Handle the <hotspotClicked> <message> if you want to perform some additional action when the user clicks a hot spot in a <QuickTime VR> movie.
+
+Each hot spot of a QuickTime VR movie is a clickable link, usually from one node to another. The movie author sets the hot spots during development of the movie. The user clicks a hot spot in the player to activate the link.
+
+If the user navigates to another node by clicking a hot spot in the QuickTime VR movie, a <nodeChanged> <message> is sent after the <hotspotClicked> <message>.
+
+References: hotspots (property), nodeChanged (message), QTDebugStr (message), QuickTime VR (glossary), message (glossary)
+
+Tags: multimedia

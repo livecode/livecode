@@ -1,0 +1,34 @@
+Name: link
+
+Type: keyword
+
+Syntax: link
+
+Summary: Used with the <textStyle> <property> to make a run of text in a <field> behave like a single <word> when clicked.
+
+Synonyms: group
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the textStyle of the foundChunk to link
+
+Description:
+Use the <link> <keyword> to create clickable text.
+
+Text with its <textStyle> set to "link" is treated specially by the <clickText>, <clickChunk>, <mouseText>, and <mouseChunk> <function|functions>:  a style run of <grouped text> is treated as a single <word>. This makes <grouped text> handy to use for <hypertext> or "clickable text" features.
+
+>*Note:*  Each continuous run of "link"-styled text is considered a single <grouped text|text group>, even if you <selected> part of the text and set its <textStyle> to "link", and set the <textStyle> of the other part later. It is not possible for two separate <grouped text|text groups> to exist if there are no <characters> between them.
+
+To show which text in a field is grouped, it is underlined and displayed in the color specified by the <linkColor> <property>. Use the <hide groups> <command> to hide the underline.
+
+Changes:
+The link keyword was introduced in version 1.1. In previous versions, the group synonym was used, and grouped text could be optionally displayed with a heavy gray underline.
+
+References: textStyle (property), linkHiliteColor (property), selected (property), linkColor (property), linkText (property), linkVisitedColor (property), field (keyword), word (keyword), characters (keyword), linkClicked (message), show groups (command), hide groups (command), clickChunk (function), mouseChunk (function), clickText (function), mouseText (function), property (glossary), keyword (glossary), grouped text (glossary), command (glossary), hypertext (glossary), function (glossary)
+
+Tags: ui

@@ -1,0 +1,40 @@
+Name: revPreviewVideo
+
+Type: command
+
+Syntax: revPreviewVideo
+
+Summary: Displays the video input in the <video grabber> without recording it.
+
+Introduced: 2.0
+
+OS: mac,windows
+
+Platforms: desktop,web
+
+Security: disk,privacy
+
+Example:
+revPreviewVideo
+
+Example:
+if the hilite of button "Preview Only" then revPreviewVideo
+
+Description:
+Use the <revPreviewVideo> <command> to see the image from a video camera on the screen.
+
+You must use the revInitializeVideoGrabber <command> to open the <video grabber> before you can use the <revPreviewVideo> <command>.
+
+The <revPreviewVideo> <command> shows the input from the video source in the <video grabber|video grabber window>, but does not record it. To save the video as a <file> while displaying it, use the <revRecordVideo> <command> instead.
+
+If the video grabber was already recording video to a file, the <revPreviewVideo> <command> stops the recording.
+
+>*Important:*  If you are using <QuickTime> for video capture, <execute> the <revVideoGrabIdle> <command> periodically while previewing or recording video. Otherwise, you may experience poor quality in the video capture.
+
+To stop displaying the video input, use the <revStopPreviewingVideo> <command>.
+
+>*Important:*  The <revPreviewVideo> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+
+References: file (keyword), revVideoFrameImage (command), revRecordVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), execute (glossary), Standalone Application Settings (glossary), command (glossary), video grabber (glossary), standalone application (glossary), QuickTime (glossary), Video library (library), Revolution custom library (library)
+
+Tags: multimedia

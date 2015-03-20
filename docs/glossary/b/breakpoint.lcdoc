@@ -1,0 +1,10 @@
+Name: breakpoint
+
+Synonyms: breakpoint
+
+Type: glossary
+
+Description:
+An instruction to stop <execute|execution> of a <handler> at a certain point and enter the <debugger>.
+
+References: execute (glossary), handler (glossary), debugger (glossary)

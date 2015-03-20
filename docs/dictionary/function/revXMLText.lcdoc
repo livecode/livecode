@@ -1,0 +1,42 @@
+Name: revXMLText
+
+Type: function
+
+Syntax: revXMLText(<treeID> [, <startNode>] [, <formatted>])
+
+Summary: <return|Returns> the contents of an <XML tree> as XML text.
+
+Introduced: 2.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+revXMLText(12)
+
+Example:
+revXMLText(the xmlID of this card,"/Plants/Trees")
+
+Example:
+put revXMLText(tTreeId, ,true) into URL "file:New Customers.xml"
+
+Parameters:
+treeID: The the number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
+startNode: The path to the node where you want to start. If you don't specify a startNode, the revXMLText function starts at the root node and returns the entire XML tree.
+formatted: Whether or not to produce xml with indenting and line breaks, i.e. "pretty-printed". If you don't specify a formatted value, the default is not to format the text, this will  result in the xml being output as a single block with no line breaks.
+
+Returns: The <revXMLText> function returns XML text.
+
+Description:
+Use the <revXMLText> <function> to turn an <XML tree> back into an <XML document>.
+
+If the <revXMLText> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+
+>*Important:* The <revXMLText> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+
+References: function (control_st), revXMLAppend (command), revXMLChildNames (function), revXMLAttributes (function), revXMLTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML document (glossary), XML library (library), Revolution custom library (library)
+
+Tags: text processing

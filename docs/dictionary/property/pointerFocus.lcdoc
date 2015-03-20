@@ -1,0 +1,34 @@
+Name: pointerFocus
+
+Type: property
+
+Syntax: set the pointerFocus to {true | false}
+
+Summary: Specifies whether typed text is sent to the window under the <mouse pointer> or to the frontmost window.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the pointerFocus to true
+
+Value (bool):The <pointerFocus> is true or false.
+By default, the <pointerFocus> <property> is set to true on <Mac OS>, <OS X>, and <Windows|Windows systems>, and to false on <Unix|Unix systems> that ship with <Motif>.
+
+Description:
+Use the <pointerFocus> <property> to determine how the <active window> is determined.
+
+On Unix systems, if the <pointerFocus> <property> is false, clicking inside a window makes it the <active window>. This is the recommended setup.
+
+If the <pointerFocus> <property> is true, moving the <mouse pointer> into a window makes it the <active window>. Set the <pointerFocus> to true to work around problems in some <Unix> window managers (specifically, "olwm" and "fvwm") that prevent <explicit focus|active-focus> applications such as LiveCode from operating correctly.
+
+If the application is started from a Unix command line, this property can be set to true on startup by using the -pointerfocus option.
+
+>*Cross-platform note:*  On <Mac OS>, <OS X>, and <Windows|Windows systems>, setting the <pointerFocus> <property> to false changes window activation in minor ways which are not particularly useful, and has no other effect.
+
+References: raiseMenus (property), property (glossary), OS X (glossary), explicit focus (glossary), active window (glossary), Windows (glossary), Motif (glossary), Mac OS (glossary), Unix (glossary), mouse pointer (glossary)
+
+Tags: ui

@@ -15,347 +15,741 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
-Description: This widget is a segmented control.
-A segmented control is a horizontal control that is made up of multiple segments, where each segment functions as a discrete button.
-This widget has three properties that can be set: theme; labels; selectedSegment and fontSize.
+/* A segmented control. A segmented control is a horizontal control that is made up of multiple segments, where each segment functions as a discrete button.
+
+Name: segmentStyle
+Type: property
+Syntax: set the segmentStyle of <widget> to <pStyle>
+Syntax: get the segmentStyle of <widget>
+
+Summary: The style of the control.
+
+Parameters:
+pStyle(enum): The style of the control.
+-"segment": The widget displays as a segmented control
+-"bar": The widget displays as a button bar
+
+Description:
+The style property of the control (segmented control or bar button).
+
+Name: multiSelect
+Type: property
+Syntax: set the multiSelect of <widget> to <pCanMultiSelect>
+Syntax: get the multiSelect of <widget>
+
+Summary: Whether the control can have multiple segments selected
+
+Parameters:
+pCanMultiSelect(boolean):
+
+Description:
+The multiSelect property of the control.
+
+Name: segmentNames
+Type: property
+Syntax: set the segmentNames of <widget> to <pNames>
+Syntax: get the segmentNames of <widget>
+Summary: Sets the names of the segments.
+
+Parameters:
+pNames(string): A comma-delimited list of names for the segments.
+
+Description:
+Sets the names of each segment in the control.
+
+Name: segmentLabels
+Type: property
+Syntax: set the segmentLabels of <widget> to <pLabels>
+Syntax: get the segmentLabels of <widget>
+
+Summary: Sets the labels of the segments.
+
+Parameters:
+pLabels: A comma-delimited list of labels for the segments.
+
+Description:
+Sets the labels of each segment in the control.
+
+Name: segmentIcons
+Type: property
+Syntax: set the segmentIcons of <widget> to <pIcons>
+Syntax: get the segmentIcons of <widget>
+
+Summary: Sets the icons of the segments.
+
+Parameters:
+pIcons: A comma-delimited list of codepoints, which display as fontawesome icons for the segments
+
+Description:
+Sets the icons of each segment in the control.
+
+Name: selectedIcons
+Type: property
+Syntax: set the selectedIcons of <widget> to <pSelectedIcons>
+Syntax: get the selectedIcons of <widget>
+
+Summary: Sets the selected icons of the segments.
+
+Parameters:
+pSelectedIcons: A comma-delimited list of codepoints, which display as fontawesome icons for the selected segments.
+
+Description:
+Sets the selected icons of each segment in the control.
+
+Name: segmentDisplay
+Type: property
+Syntax: set the segmentDisplay of <widget> to <pSegmentDisplay>
+Syntax: get the segmentDisplay of <widget>
+
+Summary: Sets the segment display style.
+
+Parameters:
+pSegmentDisplay(enum): The style of the segment display.
+-"icon": Show the chosen fontawesome icons
+-"label": Show the chosen labels
+
+Description:
+Sets the segment display style of the control to either icon or label.
+
+Name: segmentMinWidth
+Type: property
+Syntax: set the segmentMinWidth of <widget> to <pMinWidths>
+Syntax: get the segmentMinWidth of <widget>
+
+Summary: Sets the minimum widths of the segments.
+
+Parameters:
+pMinWidths: A comma-delimited list of numbers.
+
+Description:
+Sets the minimum width of each segment in the control.
+
+Name: selectedSegment
+Type: property
+Syntax: set the selectedSegment of <widget> to <pSelectedSegments>
+Syntax: get the selectedSegment of <widget>
+
+Summary: Sets the selected segment.
+
+Parameters:
+pSelectedSegments: A comma-delimited list of the numbers of the selected segment.
+
+Description:
+Sets the selected segments of the control.
 */
 
+
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.segmentedControl
+widget com.livecode.extensions.livecode.segmented
 --
 
 -- dependency declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
---
 
--- adding metadata to ensure the extension displays correctly in livecode
-metadata title is "Segmented Control"
-metadata author is "Georgia Hutchings"
-metadata version is "1.0.3"
---
+-- metadata
+metadata title is "Segmented"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
 
 -- property declarations
-property labels				get getLabels			set setLabels
-metadata labels.default is "One,Two,Three"
+property segmentStyle 		get mStyle				set setStyle
+property multiSelect		get mMultiSelect		set setMultiSelect		
 
-property selectedSegment	get mSelected			set setSelectedSegment
-metadata selectedSegment.default is "1"
+property segmentNames		get getSegmentNames		set setSegmentNames
+property segmentLabels		get getSegmentLabels	set setSegmentLabels
+property segmentIcons		get getSegmentIcons		set setSegmentIcons	
+property selectedIcons		get getSelectedIcons	set setSelectedIcons
 
-property fontSize			get mFontSize			set setFontSize
-metadata fontSize.editor is "com.livecode.pi.enum"
-metadata fontSize.options is "8,9,10,11,12,14,16,18,20"
-metadata fontSize.default is ""
+property segmentDisplay		get mSegmentDisplay		set setSegmentDisplay
+property segmentMinWidth	get getSegmentMinWidth	set setSegmentMinWidth
+property selectedSegment	get getSelectedSegment	set setSelectedSegment	
+--
+
+-- property metadata
+metadata segmentStyle.editor 		is "com.livecode.pi.enum"
+metadata segmentStyle.options 		is "segment,bar"
+metadata segmentStyle.default		is "segment"
+metadata multiSelect.editor			is "com.livecode.pi.boolean"
+metadata multiSelect.default		is "false"
+
+metadata segmentNames.editor		is "com.livecode.pi.string"
+metadata segmentNames.default		is "segment1,segment2,segment3"
+metadata segmentLabels.editor 		is "com.livecode.pi.string"
+metadata segmentLabels.default		is "Title,Title,Title"
+metadata segmentIcons.editor		is "com.livecode.pi.string"
+metadata segmentIcons.default		is "f036,f037,f038"
+metadata selectedIcons.editor		is "com.livecode.pi.string"
+metadata selectedIcons.default		is "f036,f037,f038"
+
+metadata segmentDisplay.editor		is "com.livecode.pi.enum"
+metadata segmentDisplay.options		is "text,icon"
+metadata segmentDisplay.default		is "text"
+metadata segmentMinWidth.editor		is "com.livecode.pi.string"
+metadata segmentMinWidth.default 	is "30,30,30"
+metadata selectedSegment.editor		is "com.livecode.pi.string"
+metadata selectedSegment.default	is "1"
 --
 
 -- private instance variables
-private variable mTheme 		as string
-private variable mLabels 		as list
-private variable mSelected 		as integer
-private variable mFontSize 		as string
-private variable mWidth 		as real
-private variable mLeft 			as real
-private variable mRadius 		as real
+--properties
+private variable mStyle				as String
+private variable mMultiSelect		as Boolean
+
+private variable mSegmentNames		as List
+private variable mSegmentLabels		as List
+private variable mSegmentIcons		as List
+private variable mSelectedIcons		as List
+
+private variable mSegmentDisplay	as String
+private variable mSegmentMinWidth	as List
+private variable mSelectedSegments	as List
+
+--variables
+private variable mGeometryIsChanged	as Boolean
+private variable mNumSegments		as Integer
+private variable mLeft				as Real
+
+private variable mPerimeter			as Path
+private variable mLines				as List			-- list of line paths
+private variable mRadius			as Real
 --
 
 -- constants
-constant kWhite is [1,1,1]
-constant kMaxFontSize is 20
-constant kMinFontSize is 8
+constant kIconSize is 16
+constant kTextSize is 13
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
-	put mTheme into rProperties["theme"]
-	put mLabels into rProperties["labels"]
-	put mSelected into rProperties["selected"]
-	put mFontSize into rProperties["fontSize"]
+	put mStyle				into rProperties["style"]
+	put mMultiSelect		into rProperties["multiSelect"]
+	put mSegmentNames		into rProperties["segmentNames"]
+	put mSegmentLabels		into rProperties["segmentLabels"]
+	put mSegmentIcons		into rProperties["segmentIcons"]
+	put mSelectedIcons		into rProperties["selectedIcons"]
+	put mSegmentDisplay		into rProperties["segmentDisplay"]
+	put mSegmentMinWidth	into rProperties["segmentMinWidth"]	
+	put mSelectedSegments	into rProperties["selectedSegment"]
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
-	put pProperties["theme"] into mTheme
-	put pProperties["labels"] into mLabels
-	put pProperties["selected"] into mSelected
-	put pProperties["fontSize"] into mFontSize
+public handler OnLoad(in pProperties as Array)
+	
+	put pProperties["style"]			into mStyle
+	put pProperties["multiSelect"]		into mMultiSelect
+	put pProperties["segmentNames"]		into mSegmentNames
+	put pProperties["segmentLabels"]	into mSegmentLabels
+	put pProperties["segmentIcons"]		into mSegmentIcons
+	put pProperties["selectedIcons"]	into mSelectedIcons
+	put pProperties["segmentDisplay"]	into mSegmentDisplay
+	put pProperties["segmentMinWidth"]	into mSegmentMinWidth
+	put pProperties["selectedSegment"]	into mSelectedSegments
+	
 end handler
-----------
 
-----------
--- this handler is called when the widget is created
 public handler OnCreate()
+	
 	-- properties
-	put "ios-8" into mTheme
-	put ["One", "Two", "Three"] into mLabels
-	put 1 into mSelected
-	put the empty string into mFontSize
+	put "segment" into mStyle
+	put false into mMultiSelect
+	
+	put ["segment1","segment2","segment3"] into mSegmentNames
+	put ["Title","Title","Title"] into mSegmentLabels
+	put ["f036","f037","f038"] into mSegmentIcons
+	put ["f036","f037","f038"] into mSelectedIcons
+	
+	put "icon" into mSegmentDisplay
+	put [30,30,30] into mSegmentMinWidth
+	put [1] into mSelectedSegments
+	--
 	
 	-- variables
-	put 0 into mWidth
+	put true into mGeometryIsChanged
+	put (the number of elements in mSegmentNames) into mNumSegments
 	put 0 into mLeft
-	put (the trunc of my height)/5 into mRadius
+	put the empty path into mPerimeter
+	put the empty list into mLines
+	put 0 into mRadius
+	--
+	
 end handler
-----------
 
-----------
--- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 
-	-- setting the width and left variables
-	updateVariables()
+	put (the number of elements in mSegmentNames) into mNumSegments
 	
-	-- draw the perimeter of the control
-	set the stroke width of this canvas to 1
-	set the paint of this canvas to getPaint("lines")
-	stroke getPath("border", 0) on this canvas
-	--
+	if mGeometryIsChanged then
+		updateProperties()	
+		-- update mPerimeter and mLines variables if the geometry has changed
+		put (the trunc of my height)/5 into mRadius
+		updatePerimeter()
+		updateLines()
+	end if
+	
+	drawSegments()
 	
 	-- draw the lines to separate the segments
 	set the antialias of this canvas to false
 	set the stroke width of this canvas to 1
-	variable tX as optional integer
-	repeat with tX from 1 up to the number of elements in mLabels
-		stroke getPath("line",tX) on this canvas
+	set the paint of this canvas to fetchPaint("lines")
+	
+	variable tLine
+	repeat for each element tLine in mLines
+		stroke tLine on this canvas
 	end repeat
+	
 	set the antialias of this canvas to true
 	--
 	
-	-- fill in the background of the selected segment
-	variable tBackgroundPath as Path
-	set the paint of this canvas to getPaint("background")
+	-- draw the perimeter of the control
+	set the paint of this canvas to fetchPaint("lines")
+	set the stroke width of this canvas to 1
+	stroke mPerimeter on this canvas
+	--
 	
-	if mSelected is 1 or mSelected is the number of elements in mLabels then
-		put rounded rectangle path of getRect(mSelected) with radius mRadius into tBackgroundPath
-		fill getPath("rectangle", mSelected) on this canvas
+	put false into mGeometryIsChanged
+end handler
+
+public handler OnGeometryChanged()
+	put true into mGeometryIsChanged
+end handler
+
+public handler OnClick(in pXLoc as Integer, in pYLoc as Integer, in pMouseButton as Integer, in pClicks as Integer)
+	
+	variable tX as Integer
+	variable tLabel as String
+	variable tSegment
+	variable tCount as Integer
+	 
+	if mMultiSelect is false then
+		-- if cannot multiselect, then need to select the clicked-on segment and deselect the currently selected segment
+		-- if the clicked-on segment is already selected, then do nothing
+	
+		if the click position is not within fetchBounds(element 1 of mSelectedSegments) then
+			repeat with tX from 1 up to mNumSegments
+			
+				if the click position is within fetchBounds(tX) then
+					
+					put the empty list into mSelectedSegments
+					push tX onto back of mSelectedSegments
+					
+					put element tX of mSegmentNames into tLabel
+					post "segmentSelected" with [tLabel]
+				end if
+				
+			end repeat	
+		end if
+		
 	else
-		put rectangle path of getRect(mSelected) into tBackgroundPath
-	end if
-	
-	fill tBackgroundPath on this canvas
-	--
-	
-	-- fill in the label text
-	set the font of this canvas to getFont()
-	
-	variable tY as integer
-	variable tLabelText as string
-	
-	repeat with tY from 1 up to the number of elements in mLabels
-		if tY is mSelected then
-			set the paint of this canvas to getPaint("selected label")
-		else 
-			set the paint of this canvas to getPaint("lines")
-		end if
+		-- if can multiselect, then select the clicked-on segment if it is unselected or unselect if its selected
+		-- cannot deselect a segment if it is the only selected segment
 		
-		put element tY of mLabels into tLabelText
-		fill text tLabelText at center of getRect(tY) on this canvas
-	end repeat
-	--
-	
-end handler
-----------
-
-----------
--- the following handlers deal with mouse events
-public handler OnMouseUp()
-	if the click position is not within getRect(mSelected) then
-	
-		variable tX as integer
-		repeat with tX from 1 up to the number of elements in mLabels
-			if the click position is within getRect(tX) then
-				put tX into mSelected
-			end if 
+		repeat with tX from 1 up to mNumSegments
+			if the click position is within fetchBounds(tX) then
+		
+				variable tIsIn
+				put tX is in mSelectedSegments into tIsIn
+		
+				if tIsIn then
+					if (the number of elements in mSelectedSegments) > 1 then
+				
+						put 1 into tCount
+						variable tElement
+						repeat for each element tElement in mSelectedSegments
+							if tElement = tX then
+								exit repeat
+							end if
+							add 1 to tCount
+						end repeat
+					
+						delete element tCount of mSelectedSegments
+						put element tX of mSegmentNames into tLabel
+						post "segmentUnselected" with [tLabel]
+						
+					end if
+				else
+					put element tX of mSegmentNames into tLabel
+					post "segmentSelected" with [tLabel]
+					push tX onto back of mSelectedSegments
+						
+				end if
+			end if
 		end repeat
-	
-		redraw all
-		
-		variable tLabel as string
-		put element mSelected of mLabels into tLabel
-		post "mouseUp" with [tLabel]
-		
 	end if
-end handler
-----------
-
-----------
--- this handler gets the labels
-private handler getLabels() as string
-	variable tLabels as string
-	combine mLabels with "," into tLabels
-	return tLabels
-end handler
-----------
-
-----------
--- this handler returns a paint
-private handler getPaint(in pObject as string) as Paint
-	if pObject is "lines" then 
-		return solid paint with color [51/255, 153/255, 1]
 	
-	else if pObject is "selected label" then
-		return solid paint with color kWhite
-		
-	else if pObject is "background" then
-		return solid paint with color [51/255, 153/255, 1]
-		
-	end if 
+	redraw all
 end handler
-----------
 
-----------
--- this handler returns a path
-private handler getPath(in pShape as string, in pSegment as integer) as Path
-	if pShape is "border" then
-		return rounded rectangle path of rectangle [0.5, 0.5, (the trunc of my width)-0.5, (the trunc of my height)-0.5] with radius mRadius
-		
-	else if pShape is "rectangle" then
-		if pSegment is 1 then
-			return rectangle path of rectangle [(the trunc of mLeft+0.5*mWidth)+0.5, 0.5, (the trunc of mLeft+mWidth), (the trunc of my height)-0.5]
-		else
-			variable tSegment as integer
-			put pSegment-1 into tSegment
-			return rectangle path of rectangle [(the trunc of mLeft+tSegment*mWidth)+0.5, 0.5, (the trunc of mLeft+(tSegment+0.5)*mWidth), (the trunc of my height)-0.5]
-		end if
-		
-	else if pShape is "line" then
-		return line path from point [(the trunc of mLeft+pSegment*mWidth)+0.5, 0.5] to point [(the trunc of mLeft+pSegment*mWidth)+0.5, (the trunc of my height)-0.5]
+private handler drawSegments() as undefined
 	
-	end if
-end handler
-----------
-
-----------
--- this handler returns a font
-private handler getFont() as Font
+	variable tX as Integer
+	variable tLabel as String
+	variable tWidth as Real
+	variable tIsIn as Boolean
 	
-	if mTheme is "ios-8" then
+	put 0 into mLeft
+	set the font of this canvas to fetchFont()
 	
-		if mFontSize is the empty string then
+	repeat with tX from 1 up to mNumSegments
+		put fetchWidth(tX) into tWidth
+		put tX is in mSelectedSegments into tIsIn
 		
-			variable tSize as number
-			
-			if mWidth/5 > kMaxFontSize then
-				put kMaxFontSize into tSize
-			else if mWidth/5 < kMinFontSize then
-				put kMinFontSize into tSize
+		if tIsIn then
+	
+			-- fill in the background of the selected segment(s)
+			set the paint of this canvas to fetchPaint("lines")
+			if tX = 1 then
+				-- rounded rectangle segment
+				fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
+				fill rectangle path of rectangle [mLeft+tWidth, 0, mLeft+tWidth*0.5, my height] on this canvas
+				
+			else if tX = mNumSegments then
+				-- rounded rectangle segment
+				fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
+				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth*0.5, my height] on this canvas
+				
 			else
-				put mWidth/5 into tSize
+				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] on this canvas
 			end if
-		
-			if tSize > (my height)/1.5 then
-				put (my height)/1.5 into tSize
+			--
+			
+			-- draw the label(s) in the selected segment(s)
+			if mSegmentDisplay is "icon" then
+				get the char with code ((element tX of mSelectedIcons) converted from base 16) 
+				put the result into tLabel
+			else
+				put (element tX of mSegmentLabels) into tLabel
 			end if
 			
+			set the paint of this canvas to fetchPaint("selected label")
+			fill text tLabel at center of fetchLabelRect(tWidth) on this canvas
+			--
 		else
-			put (mFontSize parsed as number) into tSize
+			
+			-- draw the label(s) in the non-selected segment(s)
+			if mSegmentDisplay is "icon" then
+				get the char with code ((element tX of mSegmentIcons) converted from base 16) 
+				put the result into tLabel
+			else
+				put (element tX of mSegmentLabels) into tLabel
+			end if
+			
+			set the paint of this canvas to fetchPaint("label")	
+			fill text tLabel at center of fetchLabelRect(tWidth) on this canvas
+			--
 			
 		end if
-		
-		return font "Helvetica Neue" at size tSize
+		add tWidth to mLeft
+	end repeat
 	
-	else 
-		return the font of this canvas
+end handler
+
+private handler updateLines() as undefined
+	
+	variable tX as Integer
+	variable tWidth as Real
+	variable tLeft as Real
+	
+	put the empty list into mLines
+	
+	put 0 into tLeft
+	
+	repeat with tX from 1 up to mNumSegments
+	
+		put fetchWidth(tX) into tWidth
+		add tWidth to tLeft
+		if tX < mNumSegments then
+			push line path from point [tLeft, 0] to point [tLeft, my height] onto back of mLines
+		end if
 		
+	end repeat
+end handler
+
+private handler updatePerimeter() as undefined
+	variable tRight as Real
+	variable tX as Integer
+	
+	put 0 into tRight
+	repeat with tX from 1 up to mNumSegments
+	 	add fetchWidth(tX) to tRight
+	end repeat
+	
+	put rounded rectangle path of rectangle [0.5, 0.5, (the trunc of tRight) + 0.5, (the trunc of my height) - 0.5] with radius mRadius into mPerimeter
+end handler
+
+private handler updateProperties() as undefined
+	variable tX as Integer
+	
+	if (the number of elements in mSegmentLabels) < mNumSegments then
+		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentLabels))
+			push "Title" onto back of mSegmentLabels
+		end repeat
+	else if (the number of elements in mSegmentLabels) > mNumSegments then
+		repeat with tX from 1 up to (the number of elements in mSegmentLabels)-mNumSegments
+			delete element (tX + mNumSegments) of mSegmentLabels
+		end repeat
+	end if
+		
+	if (the number of elements in mSegmentIcons) < mNumSegments then
+		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentIcons))
+			push "f10c" onto back of mSegmentIcons
+		end repeat
+	else if (the number of elements in mSegmentIcons) > mNumSegments then
+		repeat with tX from 1 up to (the number of elements in mSegmentIcons)-mNumSegments
+			delete element (tX + mNumSegments) of mSegmentIcons
+		end repeat
+	end if
+	
+	if (the number of elements in mSelectedIcons) < mNumSegments then
+		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSelectedIcons))
+			push "f111" onto back of mSelectedIcons
+		end repeat
+	else if (the number of elements in mSelectedIcons) > mNumSegments then
+		repeat with tX from 1 up to (the number of elements in mSelectedIcons)-mNumSegments
+			delete element (tX + mNumSegments) of mSelectedIcons
+		end repeat
+	end if
+	
+	if (the number of elements in mSegmentMinWidth) < mNumSegments then
+		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentMinWidth))
+			push 30 onto back of mSegmentMinWidth
+		end repeat
+	else if (the number of elements in mSegmentMinWidth) > mNumSegments then
+		repeat with tX from 1 up to (the number of elements in mSegmentMinWidth)-mNumSegments
+			delete element (tX + mNumSegments) of mSegmentMinWidth
+		end repeat
 	end if
 	
 end handler
-----------
 
-----------
--- this handler returns a rectangle 
-private handler getRect(in pSegment as integer) as Rectangle
-	return rectangle [(the trunc of mLeft +(pSegment-1)*mWidth)+0.5, 0.5, (the trunc of mLeft +pSegment*mWidth)+0.5, (the trunc of my height)+0.5]
+private handler fetchPath(in pObject as String, in pInt as Integer) as Path
+	
+	if pObject is "border" then
+		return rounded rectangle path of rectangle [0.5, 0.5, (the trunc of my width)-0.5, (the trunc of my height)-0.5] with radius 2
+	end if
+	
 end handler
-----------
 
-----------
--- this handler sets the theme
-/*
-Summary: Sets the theme of the segmented control.
+private handler fetchPaint(in pObject as String) as Paint
+	
+	if pObject is "lines" then
+		return solid paint with color [51/255, 153/255, 1]
+		
+	else if pObject is "label" then
+		return solid paint with color [51/255, 153/255, 1]
+		
+	else if pObject is "selected label" then
+		return solid paint with color [1,1,1]
+	
+	end if
 
-Parameters:
-pTheme: The name of the theme.
+end handler
 
-Description:
-Sets the theme property of the segmented control (currently, only "ios-8").
-*/
-public handler setTheme(in pTheme as string) as undefined
-	put pTheme into mTheme
+private handler fetchFont() as Font
+	
+	if mSegmentDisplay is "icon" then
+		return font "fontawesome" at size kIconSize
+		
+	else
+		variable tFont as Font
+		put the font of this canvas into tFont
+		set the size of tFont to kTextSize
+		return tFont
+		
+	end if
+end handler
+
+private handler fetchLabelRect(in pWidth as Real) as Rectangle
+	return rectangle [mLeft, 0, mLeft + pWidth, my height]
+	
+end handler
+
+private handler fetchWidth(in pSegment as Integer) as Real
+	
+	variable tWidth as Real
+	
+	if pSegment is 0 then
+		return 0
+	else
+	
+		if mSegmentDisplay is "icon" then
+			put kIconSize into tWidth
+		else
+			put (the number of chars in element pSegment of mSegmentLabels)*(kTextSize/3)*2 into tWidth
+		end if
+		
+		if tWidth < (element pSegment of mSegmentMinWidth) then
+			put (element pSegment of mSegmentMinWidth) into tWidth
+		end if
+	
+		return tWidth
+	end if
+	
+end handler
+
+private handler fetchBounds(in pSegment as Integer) as Rectangle
+	
+	variable tLeft as Real
+	put 0 into tLeft
+	
+	variable tX as Integer
+	repeat with tX from 1 up to pSegment-1
+	 	add fetchWidth(tX) to tLeft
+	end repeat
+		
+	variable tWidth
+	put fetchWidth(pSegment) into tWidth
+	
+	return rectangle [tLeft, 0, tLeft + tWidth, my height]
+end handler
+
+private handler getSegmentNames() as String
+
+	variable tSegmentNames as String
+	combine mSegmentNames with "," into tSegmentNames
+	return tSegmentNames
+	
+end handler
+
+private handler getSegmentLabels() as String
+	
+	variable tSegmentLabels as String
+	combine mSegmentLabels with "," into tSegmentLabels
+	return tSegmentLabels
+
+end handler
+
+private handler getSegmentIcons() as String
+	
+	variable tSegmentIcons as String
+	combine mSegmentIcons with "," into tSegmentIcons
+	return tSegmentIcons
+	
+end handler
+
+private handler getSelectedIcons() as String
+
+	variable tSelectedIcons as String
+	combine mSelectedIcons with "," into tSelectedIcons
+	return tSelectedIcons
+	
+end handler
+
+private handler getSelectedSegment() as String 
+	
+	variable tSelected
+	variable tSelectedString as String
+	variable tStringList as List
+	
+	put the empty list into tStringList
+	
+	repeat for each element tSelected in mSelectedSegments
+		put tSelected formatted as string into tSelectedString
+		push tSelectedString onto back of tStringList
+	end repeat
+	
+	variable tFinalString as String
+	combine tStringList with "," into tFinalString
+	return tFinalString
+	
+end handler
+
+private handler getSegmentMinWidth() as String
+		
+	variable tMinWidth
+	variable tMinWidthString as String
+	variable tStringList as List
+	
+	put the empty list into tStringList
+	
+	repeat for each element tMinWidth in mSegmentMinWidth
+		put tMinWidth formatted as string into tMinWidthString
+		push tMinWidthString onto back of tStringList
+	end repeat
+	
+	variable tFinalString as String
+	combine tStringList with "," into tFinalString
+	return tFinalString
+	
+end handler
+
+private handler setStyle(in pStyle as String) as undefined
+	put pStyle into mStyle
+	put true into mGeometryIsChanged
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the list of segment labels
-/*
-Summary: Sets the titles of the segments.
+private handler setMultiSelect(in pCanMultiSelect as Boolean) as undefined
+	put pCanMultiSelect into mMultiSelect
+end handler
 
-Parameters:
-pLabels: The titles of the of the segments.
-
-Description:
-Sets the labels property.
-Sets the number and titles of the segments from pString, where pString is a list of segment titles.
-*/
-public handler setLabels(in pLabels as string) as undefined
-	split pLabels by "," into mLabels
-	put 1 into mSelected
+private handler setSegmentNames(in pNames as String) as undefined
+	split pNames by "," into mSegmentNames
+	put true into mGeometryIsChanged
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the selected segment
-/*
-Summary: Sets the selected segment.
-
-Parameters:
-pSelected: The number of the selected segment.
-
-Description:
-Sets the selectedSegment property.
-Selects the segment of number pSelected.
-*/
-public handler setSelectedSegment(in pSelected as integer) as undefined
-	put pSelected into mSelected
+private handler setSegmentLabels(in pLabels as String) as undefined
+	split pLabels by "," into mSegmentLabels
+	put true into mGeometryIsChanged
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the selected segment
-/*
-Summary: Sets the font size.
-
-Parameters:
-pFontSize: The font size.
-
-Description:
-Sets the fontSize property.
-Sets the size of the font of the labels.
-*/
-public handler setFontSize(in pFontSize as string) as undefined
-	put pFontSize into mFontSize
+private handler setSegmentIcons(in pIcons as String) as undefined
+	replace " " with "" in pIcons
+	split pIcons by "," into mSegmentIcons
+	put true into mGeometryIsChanged
 	redraw all
 end handler
-----------
 
-----------
--- this handler updates the value of private instance variables
-public handler updateVariables() as undefined
-	put (my width)/the number of elements in mLabels into mWidth
-	put (my width)/2 - the number of elements in mLabels*mWidth/2 into mLeft
-	put (the trunc of my height)/5 into mRadius
+private handler setSelectedIcons(in pSelectedIcons as String) as undefined
+	replace " " with "" in pSelectedIcons
+	split pSelectedIcons by "," into mSelectedIcons
+	put true into mGeometryIsChanged
+	redraw all
 end handler
-----------
+
+
+private handler setSegmentDisplay(in pSegmentDisplay as String) as undefined
+	put pSegmentDisplay into mSegmentDisplay
+	put true into mGeometryIsChanged
+	redraw all
+end handler
+
+private handler setSegmentMinWidth(in pMinWidths as String) as undefined
+	put the empty list into mSegmentMinWidth
+	
+	variable tStringList as List
+	split pMinWidths by "," into tStringList
+	
+	variable tStringMinWidth as String
+	variable tMinWidth as Real
+	repeat for each element tStringMinWidth in tStringList
+		put tStringMinWidth parsed as number into tMinWidth
+		push tMinWidth onto back of mSegmentMinWidth
+	end repeat
+		
+	put true into mGeometryIsChanged
+	redraw all
+end handler
+
+private handler setSelectedSegment(in pSelectedSegment as String) as undefined
+	put the empty list into mSelectedSegments
+	
+	variable tStringList as List
+	split pSelectedSegment by "," into tStringList
+	
+	variable tSelectedString as String
+	variable tSelected as Real
+	repeat for each element tSelectedString in tStringList
+		put tSelectedString parsed as number into tSelected
+		push tSelected onto back of mSelectedSegments
+	end repeat
+	redraw all
+end handler
 
 end widget

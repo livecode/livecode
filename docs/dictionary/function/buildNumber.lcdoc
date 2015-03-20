@@ -1,0 +1,34 @@
+Name: buildNumber
+
+Type: function
+
+Syntax: the buildNumber
+
+Syntax: buildNumber()
+
+Summary: <return|Returns> the build number of the LiveCode <engine>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the buildNumber
+
+Example:
+if the buildNumber &lt; 3 then
+  answer "This version is too early."
+end if
+
+Returns: The <buildNumber> function <return|returns> an integer.
+
+Description:
+Use the <buildNumber> <function> to determine which <engine> version the <application> is using. This is useful to figure out, for example, whether a certain <Revolution|LiveCode> feature is available.
+
+The <buildNumber> of two copies of LiveCode or a <standalone application> may be different, even if the <version> function <return|returns> the same number. This is because new builds of the same version may be released to provide fixes to specific problems.
+
+When reporting a problem with LiveCode, please include the <buildNumber> and <version> of the <application>.
+
+References: function (control_st), revAppVersion (function), version (function), environment (function), platform (function), systemVersion (function), QTVersion (function), application (glossary), Revolution (glossary), standalone application (glossary), return (glossary), engine (glossary)

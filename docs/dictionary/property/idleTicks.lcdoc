@@ -1,0 +1,33 @@
+Name: idleTicks
+
+Type: property
+
+Syntax: set the idleTicks to <number> 
+
+Summary: Specifies the number of <ticks> between <idle>, <mouseStillDown>, and <mouseWithin> <message|messages>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the idleTicks to 60 -- 1 second interval
+
+Value:
+The <idleTicks> is a positive integer.
+By default, the <idleTicks> <property> is set to 12 (one-fifth of a second).
+
+Description:
+Adjust the <idleTicks> <property> to change the interval between periodically-sent <message|messages>. Increasing the <idleTicks> causes these <message|messages> to be sent less frequently, and decreases the amount of CPU time the <application> uses.
+
+The <idleTicks> is the time in <ticks> between one <idle> <message> and the next, one <mouseStillDown> <message> and the next, and one <mouseWithin> <message> and the next.
+
+>*Important:*  Some <Unix|Unix systems> cannot reliably time an interval less than 12 <ticks>. Setting a shorter <idleTicks> on those systems may cause <idle> messages to be sent at erratic times.
+
+This property is very similar to the <idleRate> <property>, and changes when the <idleRate> changes. The only difference is that the two <properties> are given in different time units:  the <idleRate> is in <milliseconds> and the <idleTicks> is in <ticks>.
+
+References: idleRate (property), properties (property), idle (message), mouseStillDown (message), mouseWithin (message), ticks (function), milliseconds (function), property (glossary), application (glossary), message (glossary), Unix (glossary)
+
+Tags: ui

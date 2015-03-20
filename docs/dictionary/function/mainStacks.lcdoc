@@ -1,0 +1,34 @@
+Name: mainStacks
+
+Type: function
+
+Syntax: the mainStacks
+
+Syntax: mainStacks()
+
+Summary: <return|Returns> a list of the <main stack|main stacks> that are <loaded into memory>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the mainStacks
+
+Example:
+repeat while myStack is among the lines of the mainStacks
+
+Returns: The <mainStacks> <function> <return|returns> a list with the short <name> <property> of each <main stack>, one <stack> per <line>.
+
+Description:
+Use the <mainStacks> <function> to find out which <main stack|main stacks> are currently available.
+
+Stacks that have not yet been saved are included in the list.
+
+The list includes stacks that are part of the LiveCode development environment (such as the message box and menu bar).
+
+References: defaultStack (property), substacks (property), mainStack (property), stackFiles (property), name (property), reloadStack (message), line (keyword), property (glossary), main stack (glossary), return (glossary), loaded into memory (glossary), stacks (function), openStacks (function), revLoadedStacks (function), topStack (function), function (control_st), stack (object)
+
+Tags: objects

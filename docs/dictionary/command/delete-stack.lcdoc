@@ -1,0 +1,34 @@
+Name: delete stack
+
+Type: command
+
+Syntax: delete <stack> 
+
+Summary: Removes a <substack> from a <stack file>, or removes a <main stack> from memory.
+
+Synonyms: clear stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+delete stack "Expressions"
+
+Parameters:
+stack: Any valid stack reference.
+
+Description:
+Use the <delete stack> <command> to delete a <substack>, or to purge a <main stack> from memory.
+
+The <delete stack> <command> has different effects, depending on whether the <stack> is a <main stack> or a <substack>.
+
+If the <stack> is a <main stack>, the <delete stack> <command> removes the <stack> from memory. (Any unsaved changes are lost.) However, it does not remove it from the user's system. To delete a <main stack>, use the <delete file> <command> instead.
+
+>*Warning:*  If the <stack> is a <substack>, the <delete stack> <command> deletes the <stack> from memory, which causes it to be deleted permanently the next time its <stack file> is saved.
+
+References: cantDelete (property), deleteStack (message), delete file (command), delete (command), stack (object), substack (glossary), stack file (glossary), main stack (glossary), command (glossary)
+
+Tags: objects

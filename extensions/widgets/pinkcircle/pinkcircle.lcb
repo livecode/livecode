@@ -1,1 +1,49 @@
-/*Copyright (C) 2014-2015 Runtime Revolution Ltd.This file is part of LiveCode.LiveCode is free software; you can redistribute it and/or modify it underthe terms of the GNU General Public License v3 as published by the FreeSoftware Foundation.LiveCode is distributed in the hope that it will be useful, but WITHOUT ANYWARRANTY; without even the implied warranty of MERCHANTABILITY orFITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Licensefor more details.You should have received a copy of the GNU General Public Licensealong with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */widget com.livecode.extensions.beaumont.pinkCirclemetadata title is "My Pink Circle"metadata author is "Benjamin Beaumont"metadata version is "1.0.0"use com.livecode.canvasproperty circleMargin get mMargin set setMarginprivate variable mMargin as realpublic handler onCreate() 	put 0 into mMarginend handlerpublic handler OnPaint()   // Create a path with a radius of half the width of the canvas   // Set the paint to a solid pink color   // Fill the path   variable tCirclePath as Path   put circle path centered at point [my width / 2, my height / 2] with radius ((my width - mMargin)/2) into tCirclePath   set the paint of this canvas to solid paint with color [1, 0, 1]   fill tCirclePath on this canvasend handlerpublic handler setMargin(in pMargin as real) as undefined	put pMargin into mMargin	redraw allend handler	end widget
+/*
+Copyright (C) 2014-2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+widget com.livecode.extensions.beaumont.pinkCircle
+
+use com.livecode.canvas
+
+metadata title is "My Pink Circle"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+
+property circleMargin get mMargin set setMargin
+
+private variable mMargin as Real
+
+public handler onCreate() 
+	put 0 into mMargin
+end handler
+
+public handler OnPaint()
+   // Create a path with a radius of half the width of the canvas
+   // Set the paint to a solid pink color
+   // Fill the path
+   variable tCirclePath as Path
+   put circle path centered at point [my width / 2, my height / 2] with radius ((my width - mMargin)/2) into tCirclePath
+   set the paint of this canvas to solid paint with color [1, 0, 1]
+   fill tCirclePath on this canvas
+end handler
+
+public handler setMargin(in pMargin as Real) as undefined
+	put pMargin into mMargin
+	redraw all
+end handler
+	
+end widget

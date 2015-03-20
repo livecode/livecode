@@ -1,0 +1,41 @@
+Name: group
+
+Type: command
+
+Syntax: group [<objectList>]
+
+Summary: Creates a new <group> and adds the <selected> <object|objects> to it.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+group
+
+Example:
+if the number of lines of the selectedObject &gt; 1 then group
+
+Example:
+group field "Help" and image "Help Icon" and graphic "Outline"
+
+Parameters:
+objectList: A list of object references, separated by the word "and".
+
+Description:
+Use the <group> <command> after <select|selecting> <object|objects> to make a <group> out of them.
+
+If you specify an <objectList>, the specified <object|objects> are placed in the new <group>. Otherwise, the <selected> <object> or <object|objects> are placed in the <group>.
+
+As with any group on a card, you can use the place <command> to make the newly-created <group> appear on other <card|cards>.
+
+>*Tip:*  To refer to the newly-created <group>, use the <last> <keyword> :
+
+  group button "Yes" and button "No"
+  set the name of last group to "Do It"
+
+References: selected (property), relayerGroupedControls (property), layer (property), newGroup (message), last (keyword), card (object), object (object), selectedObject (function), group (command), start editing (command), command (glossary), keyword (glossary), select (glossary)
+
+Tags: objects

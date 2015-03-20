@@ -28,7 +28,7 @@ use com.livecode.foreign
 -- Platform identification
 ----------------------------------------------------------------
 
-public foreign handler MCSystemExecGetOperatingSystem(out Platform as String) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetOperatingSystem(out Platform as String) returns nothing binds to "<builtin>"
 
 /*
 Summary:	The operating system
@@ -60,9 +60,9 @@ end syntax
 -- Exit / Quit
 ----------------------------------------------------------------
 
-foreign handler __exit(in ExitStatus as CInt) as undefined binds to "exit"
+foreign handler __exit(in ExitStatus as CInt) returns nothing binds to "exit"
 
-public handler MCSystemExecQuit() as undefined
+public handler MCSystemExecQuit() returns nothing
 	__exit(0)
 end handler
 
@@ -98,8 +98,8 @@ end syntax
 -- Command-line information
 ----------------------------------------------------------------
 
-public foreign handler MCSystemExecGetCommandName (out CommandName as String) as undefined binds to "<builtin>"
-public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as List) as undefined binds to "<builtin>"
+public foreign handler MCSystemExecGetCommandName (out CommandName as String) returns nothing binds to "<builtin>"
+public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as List) returns nothing binds to "<builtin>"
 
 /*
 Summary:	The command name

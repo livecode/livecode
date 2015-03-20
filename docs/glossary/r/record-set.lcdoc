@@ -1,0 +1,14 @@
+Name: record set (database cursor)
+
+Synonyms: record set (database cursor),record sets (database cursors),record set's (database cursor's),record sets' (database cursors'),cursor (record set),cursors (record sets),cursor's (record set's),cursors' (record sets'),database cursor (record set),database cursors (record sets),database cursor's (record set's),database cursors' (record sets'),record set,database record set,database cursor,cursor result set,cursor results set,result set,results set
+
+Type: glossary
+
+Description:
+In a <database>, the set of <record|records> returned by a <SQL query|query>. 
+ 
+You can use commands in the <Database library> to move among the subset of <record|records> that makes up a record set.
+
+References: database (glossary), SQL query (glossary), record (glossary), Database library (library)
+
+Tags: database

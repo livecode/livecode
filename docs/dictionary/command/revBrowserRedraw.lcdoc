@@ -1,0 +1,34 @@
+Name: revBrowserRedraw
+
+Type: command
+
+Syntax: revBrowserRedraw <instanceId> 
+
+Syntax: XBrowser_Redraw [<instanceId>]
+
+Summary: Redraws the specified browser.
+
+Synonyms: XBrowser_Redraw
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+revBrowserRedraw tBrowserId
+
+Parameters:
+instanceId: The integer identifier of a browser object
+
+The result: The <revBrowserRedraw> command puts empty into the <result>.
+
+Description:
+The <revBrowserRedraw> command redraws the current page in the browser specified by the <instanceId>. Redrawing the page does not require the page to be refreshed.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: revBrowserNavigate (command), result (function), revBrowserOpen function (function)

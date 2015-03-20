@@ -1,0 +1,56 @@
+Name: dragData
+
+Type: property
+
+Syntax: set the dragData to <textToDrag> 
+
+Syntax: set the dragData[<dataType>] to <dataToDrag> 
+
+Summary: Specifies what data is being dragged during a drag and drop.
+
+Introduced: 2.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+set the dragData["html"] to the htmlText of field 1
+
+Example:
+get URL the dragData["text"]
+
+Value: The <dragData> is an <array> with one or more of the following <element|elements>:.
+
+Description:
+Use the <dragData> <property> to find out what is being dragged or to change the data being dragged during the drag.
+
+        - text          The text being dragged (from 7.0, it includes as well the Unicode characters)
+        - html         The styled text being dragged, in the same format as the htmlText
+        - rtf              The styled text being dragged, in the same format as the RTFText
+        - Unicode    The text being dragged, in the same format as the unicodeText
+        - image        The data of an image in PNG, JPEG or GIF format
+        - files           The name and location of the file or files being dragged, one per line
+        - styles         Styled text in LiveCode internal styled text format
+        - private       An arbitrary application-defined string. This format will only be visible within the same LiveCode process
+       (i.e. when the current application is acting as source and target for the current drag-drop operation)
+
+If LiveCode is acting as the target of a drag-drop operation (i.e. during the context of a <dragEnter>, <dragMove>, <dragDrop> or <dragLeave message>), the dataData property can be queried for the data the source application is offering.
+
+Setting a type of data during a <mouseDown> or <dragStart> handler will cause a drop-drop operation to commence when the handler finishes. Only one type of data can be set at once, although LiveCode will automatically convert between all the text formats.
+
+You can query the keys of the dragData to find out what data types are available.
+
+Which elements are present in the <dragData> <array> depends on what type of data is being dragged. It is possible for more than one <element> in the <dragData> <array> to be populated. Different drop destinations can each use the data type they need. (For example, a <list field|list field's> <dragDrop> <handler> might use the dragData["text"] to ignore the styles, while an ordinary field's <dragDrop> <handler> might use the dragData["HTML"] to retain the styles.
+
+LiveCode will automatically synthesize the three text properties text, html and rtf if any text data is present. For example setting the dragData["text"] will result in the dragData["html"] being set appropriately.
+
+If you don't specify a <dataType>, the <dragData> <property> reports or sets the dragData["text"].
+
+>*Note:* It is necessary to use double quotes around the keys of the <dragData> array because some of the key names (such as "files") are LiveCode reserved words. Quoting array indexes (other than integers) is a good practice anyway, but in the case of this property, it's necessary to avoid script errors.
+
+>*Note:*  From 7.0, the string in <dragData> ["text"] can also contain the Unicode characters
+
+References: clipboardData (property), RTFText (property), unicodeText (property), HTMLText (property), element (keyword), dragDrop (message), dragEnter (message), dragMove (message), mouseDown (message), dragLeave message (message), dragStart (message), property (glossary), handler (glossary), array (glossary), list field (glossary), element (glossary)
+
+Tags: ui

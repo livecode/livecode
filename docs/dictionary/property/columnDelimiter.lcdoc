@@ -1,0 +1,34 @@
+Name: columnDelimiter
+
+Type: property
+
+Syntax: set the columnDelimiter to <character> 
+
+Syntax: the columnDelimiter
+
+Summary: Specifies the character used to separate columns in a string
+
+Introduced: 2.8.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the columnDelimiter to comma
+
+Example:
+put the columnDelimiter into tColumnDelimiter
+
+Value:
+The <columnDelimiter> is a character
+By default, the <columnDelimiter> is set to tab.
+
+Description:
+Use the <columnDelimiter> property in conjunction with the <split command> to divide text into an array of columns or with the <combine command> to combine an array of columns into a string.
+
+The <columnDelimiter> is a single character.
+
+Since the <columnDelimiter> is a local property, its value is reset to tab when the current handler finishes executing. It retains its value only for the current handler and setting it in one handler does not affect its value in other handlers called.
+
+References: combine command (command), split (command), split command (command)

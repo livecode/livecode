@@ -1,0 +1,40 @@
+Name: thumbPosition
+
+Type: property
+
+Syntax: set the thumbPosition of <scrollbar> to <number> 
+
+Summary: Specifies the current position of a <scrollbar|scrollbar's> draggable <scrollbar thumb|thumb>.
+
+Synonyms: thumbPos
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the thumbPosition of scrollbar 1 to 400
+
+Example:
+set the thumbPosition of me to (3 * the thumbSize of me)
+
+Value:
+The <thumbPosition> of a <scrollbar(keyword)> is a number between the <scrollbar(object)|scrollbar's> <startValue> and <endValue>.
+By default, the <thumbPosition> <property> of newly created <scrollbar(object)|scrollbars> is set to zero (the <default> <startValue>).
+
+Description:
+Use the <thumbPosition> to move a <scrollbar(object)|scrollbar's> draggable <scrollbar thumb|thumb> when the content it <control|controls> is scrolled, or to check where the <scrollbar thumb|thumb> has been dragged in order to scroll the content.
+
+The <thumbPosition> is the location of the top edge (for vertical <scrollbar(object)|scrollbars>) or left edge (for horizontal <scrollbar(object)|scrollbars>) of the <scrollbar thumb>, using the scale set by the <scrollbar(object)|scrollbar's> startPosition and endPosition <properties>.
+
+If the style of the <scrollbar(keyword)> is scale, the maximim <thumbPosition>, when the <scrollbar thumb> is all the way to the bottom (for a vertical <scrollbar(keyword)>) or right (for a horizontal <scrollbar(keyword)>), is the <endValue>.
+
+If the style of the <scrollbar(keyword)> is scrollbar or progress, the maximum value of the <thumbPosition> is the <scrollbar(object)|scrollbar's> <endValue> minus the <thumbSize>.
+
+References: endValue (property), properties (property), thumbSize (property), startValue (property), scrollbar (keyword), default (keyword), scrollbarLineInc (message), scrollbarBeginning (message), scrollbar (object), control (object), scrollbar thumb (glossary), property (glossary)
+
+Tags: ui

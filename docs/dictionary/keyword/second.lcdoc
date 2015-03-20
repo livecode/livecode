@@ -1,0 +1,28 @@
+Name: second
+
+Type: keyword
+
+Syntax: second
+
+Summary: Designates the second member of a set.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+go to the second card of stack "Games Central"
+
+Example:
+put "b" into second character of theLetters
+
+Description:
+Use the <second> keyword in an object reference or chunk expression.
+
+The <second> keyword can be used to specify any object whose number property is 2. It can also be used to designate the second chunk in a chunk expressionl
+
+The word "the" is optional when using the <second> keyword
+
+References: two (constant), seconds (keyword)

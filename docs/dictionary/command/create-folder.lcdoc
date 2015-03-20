@@ -1,0 +1,39 @@
+Name: create folder
+
+Type: command
+
+Syntax: create folder <pathName> 
+
+Summary: Makes a new <folder>.
+
+Synonyms: create directory,new folder,new directory
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+create folder "Translated Documents"
+
+Example:
+create folder "../My Files/Temp Files"
+
+Parameters:
+pathName: Specifies the name and location of the folder. If you specify a name but not a location, the folder is created in the defaultFolder.
+
+Description:
+Use the <create folder> <command> to make a new <folder> for a stack's use. For example, if the stack generates temporary <text file|text files>, creating a <folder> for the <files> prevents them from cluttering the user's system.
+
+To create a file, use the open file <command>.
+
+>*Note:* iOS imposes strict controls over what you can and cannot access. Each application in iOS is stored in its own 'sandbox' folder (referred to as the home folder). An application is free to read and write files within this folder and its descendants, but it is not allowed to access anything outside of the 'sandbox'.
+
+>*Note:* An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax.
+
+References: umask (property), create alias (command), revDeleteFolder (command), tempName (function), specialFolderPath (function), files (function), command (glossary), text file (glossary), folder (glossary)
+
+Tags: file system

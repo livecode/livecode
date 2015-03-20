@@ -1,0 +1,39 @@
+Name: modeless
+
+Type: command
+
+Syntax: modeless <stack> 
+
+Summary: Opens a <stack> in a <modeless dialog box|modeless dialog> window.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+modeless stack "Hello World"
+
+Example:
+modeless the defaultStack
+
+Parameters:
+stack: Any stack reference.
+
+Description:
+Use the <modeless> <command> to display a <stack> as a custom <modeless dialog box>.
+
+A modeless dialog box behaves like an ordinary window, except that it cannot be edited. Use modeless dialog boxes to ask the user for information.
+
+To edit a modeless dialog box, use the <topLevel> <command> to display it in an <editable window>.
+
+The <modeless> <command> closes the <stack> and reopens it as a <modeless dialog box>, so <closeStack> and <openStack>, <closeCard> and <openCard>, and (if applicable) <closeBackground> and <openBackground> <message|messages> are sent to the <current card> as a result of <execute|executing> this <command>. Use the <lock messages> <command> before <execute|executing> <modeless> if you want to prevent the close <message|messages> from being sent; the open <message|messages> are sent regardless of the setting of the <lockMessages> <property>.
+
+If the stack is already displayed as a modeless dialog box, the <modeless> <command> does not close and reopen it.
+
+The Browse tool is used in modeless dialog boxes, regardless of the current setting of the tool <property>.
+
+References: dialogData (property), cantSelect (property), mode (property), style (property), lockMessages (property), openCard (message), closeStack (message), closeCard (message), closeBackground (message), openStack (message), openBackground (message), sheet (command), topLevel (command), go (command), modal (command), lock messages (command), palette (command), stack (object), property (glossary), current card (glossary), execute (glossary), message (glossary), editable window (glossary), modeless dialog box (glossary), command (glossary)
+
+Tags: windowing

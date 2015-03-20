@@ -1,0 +1,32 @@
+Name: newGraphic
+
+Type: message
+
+Syntax: newGraphic
+
+Summary: Sent to a new <graphic> right after it's created.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on newGraphic
+  if the style of the target is "line" then set the points \
+     of the target to the storedCoordinates of this card
+end newGraphic
+
+Description:
+Handle the <newGraphic> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <graphic> is created.
+
+Normally, the <newGraphic> <message> is handled at a higher level of the <message path>, since the newly created <graphic> does not yet have a <script> unless the <templateGraphic> contains one.
+
+The actual creation is not triggered by the <newGraphic> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <graphic> from being created.
+
+References: templateGraphic (keyword), graphic (keyword), script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), message path (glossary), message (glossary), tool (glossary), graphic (glossary), pass (control_st)
+
+Tags: objects

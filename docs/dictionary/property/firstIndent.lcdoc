@@ -1,0 +1,35 @@
+Name: firstIndent
+
+Type: property
+
+Syntax: set the firstIndent [of <line>] of <field> to <pixels> 
+
+Summary: Determines the indentation of the first line of a paragraph in a <field>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the firstIndent of field 1 to 10
+
+Example:
+set the firstIndent of line 5 of field 1 to 10
+
+Parameters:
+pixels: The number of pixels to indent the first line of a paragraph of text. The the pixels is set to a negative number, the first line will be outdented by that number of pixels.
+
+Value: The <firstIndent> of a line or field returns an the indent size as a number.
+
+Description:
+Use the <firstIndent> property to created indented paragraphs.
+
+By default, the <firstIndent> property of newly created fields is set to zero.
+
+References: borderWidth (property), vgrid (property), textAlign (property), dontWrap (property), formattedText (property), spaceAbove (property), backgroundColor (property), listBehavior (property), listIndent (property), hidden (property), textSize (property), listStyle (property), tabstops (property), spaceBelow (property), rightIndent (property), listDepth (property), hgrid (property), hScrollbar (property), borderColor (property), formattedWidth (property), field (keyword)
+
+Tags: ui

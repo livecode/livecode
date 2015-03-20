@@ -1,0 +1,37 @@
+Name: address
+
+Type: property
+
+Syntax: get the address
+
+Summary: Reports the name of the system the <application> is running on.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the address into myAddress
+
+Example:
+put last item of the address into theAppName
+
+Value:
+The <address> reports the computer's name, a colon, and the <file path|path> to the <application>.
+The <address> <property> is <read-only> and cannot be set.
+
+Description:
+Use the <address> <property> to find out the path to the <application>, or the name of the system.
+
+For example, if LiveCode is running on a Mac OS system named "Heliand", and the LiveCode folder is located on a volume called "Fnord", its <address> <property> is Heliand:/Fnord/LiveCode/LiveCode.
+
+On Unix systems, the computer's name is its <domain name>. On <Mac OS|Mac OS systems>, the name is the one set in the File Sharing control panel.
+
+Changes:
+Support for AppleTalk zone addresses on Mac OS systems was removed in version 1.1. In previous versions, the address property reported the application's AppleTalk address, including its zone.
+
+References: send to program (command), property (glossary), application (glossary), domain name (glossary), Mac OS (glossary), file path (glossary), read-only (glossary)
+
+Tags: networking

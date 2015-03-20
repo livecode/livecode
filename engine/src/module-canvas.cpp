@@ -3040,11 +3040,8 @@ bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, f
 		case kMCSVGPathRelativeHorizontalLineTo:
 		{
 			MCGPoint t_point;
-			t_point = t_origin;
-			if (MCSVGPathCommandIsRelative(p_command))
-				t_point.x += p_params[0];
-			else
-				t_point.x = p_params[0];
+			t_point = t_context->last_point;
+			t_point.x = t_origin.x + p_params[0];
 			MCGPathLineTo(t_context->path, t_point);
 			t_context->last_point = t_point;
 			break;
@@ -3054,11 +3051,8 @@ bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, f
 		case kMCSVGPathRelativeVerticalLineTo:
 		{
 			MCGPoint t_point;
-			t_point = t_origin;
-			if (MCSVGPathCommandIsRelative(p_command))
-				t_point.y += p_params[0];
-			else
-				t_point.y = p_params[0];
+			t_point = t_context->last_point;
+			t_point.y = t_origin.y + p_params[0];
 			MCGPathLineTo(t_context->path, t_point);
 			t_context->last_point = t_point;
 			break;
@@ -3271,7 +3265,7 @@ void MCCanvasPathMakeWithLine(MCCanvasPointRef p_start, MCCanvasPointRef p_end, 
 	MCGPathRelease(t_path);
 }
 
-bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *r_points)
+bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *&r_points)
 {
 	bool t_success;
 	t_success = true;
@@ -3288,7 +3282,7 @@ bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *r_points)
 	for (uint32_t i = 0; t_success && i < t_point_count; i++)
 	{
 		MCValueRef t_value;
-		t_value = MCProperListFetchElementAtIndex(p_points, t_point_count);
+		t_value = MCProperListFetchElementAtIndex(p_points, i);
 		
 		if (MCValueGetTypeInfo(t_value) == kMCCanvasPointTypeInfo)
 		{

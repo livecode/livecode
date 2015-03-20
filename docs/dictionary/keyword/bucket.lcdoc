@@ -1,0 +1,25 @@
+Name: bucket
+
+Type: keyword
+
+Syntax: bucket
+
+Summary: Designates the <paint tool> used to fill an area in an <image>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose bucket tool
+
+Description:
+Use the <bucket> <keyword> to fill a shape, or the entire <image>, with the <brushColor>.
+
+When using the Bucket tool, the cursor is a paintbucket shape (over stack windows) or an arrow (anywhere else). This tool is used to fill shapes with a color. The clicked pixel, and all connected pixels of the same color, are changed to the <brushColor> (or <brushPattern>).
+
+If you try to paint with the bucket on a card that has no images, an image the size of the card is created to hold the painting. If the current card already has one or more images, painting outside the image has no effect.
+
+References: brushPattern (property), brushColor (property), image (keyword), choose (command), keyword (glossary), paint tool (glossary)

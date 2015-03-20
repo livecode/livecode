@@ -26,12 +26,12 @@ typedef struct Name *NameRef;
 void InitializeLiterals(void);
 void FinalizeLiterals(void);
 
-void MakeIntegerLiteral(const char *token, long *r_literal);
+int MakeIntegerLiteral(const char *token, long *r_literal);
 void MakeDoubleLiteral(const char *token, long *r_literal);
 void MakeStringLiteral(const char *token, long *r_literal);
 void MakeNameLiteral(const char *token, NameRef *r_literal);
 void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_literal);
-
+    
 void GetStringOfNameLiteral(NameRef literal, const char** r_string);
 
 void InitializeScopes(void);

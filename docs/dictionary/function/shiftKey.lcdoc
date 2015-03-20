@@ -1,0 +1,30 @@
+Name: shiftKey
+
+Type: function
+
+Syntax: the shiftKey
+
+Syntax: shiftKey()
+
+Summary: <return|Returns> the state of the Shift key.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+if shiftKey() is down then beep
+
+Example:
+set the locked of me to (the shiftKey is up)
+
+Returns: The <shiftKey> <function> <return|returns> down if the key is pressed and up if it's not.
+
+Description:
+Use the <shiftKey> <function> to check whether the user is pressing the Shift key.
+
+References: left (constant), scrollbarBeginning (message), keysDown (function), return (glossary), function (control_st)
+
+Tags: ui

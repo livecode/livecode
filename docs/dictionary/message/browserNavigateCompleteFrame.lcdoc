@@ -1,0 +1,39 @@
+Name: browserNavigateCompleteFrame
+
+Type: message
+
+Syntax: browserNavigateCompleteFrame <instanceId>, <url> 
+
+Syntax: XBrowser_NavigateCompleteFrame <url>, <instanceId> 
+
+Summary: Sent when a browser object has finished navigating to a url in a frame.
+
+Synonyms: XBrowser_NavigateCompleteFrame
+
+Associations: card
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+on browserNavigateCompleteFrame pInstanceId, pUrl
+  set the disabled of button "Stop" to true
+end browserNavigateCompleteFrame
+
+Parameters:
+instanceId: The integer identifier of the browser object >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
+url: The url that the browser has finished navigating to in a frame
+
+Description:
+The browserNavigateCompleteFrame message is sent to the current card of stack containing a browser object when the browser object has finished navigating to a new url in a frame and starting loading the url.
+
+If the target is the main frame of the browser then the <browserNavigateComplete message> is sent instead.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: revBrowserNavigate (command), browserDocumentCompleteFrame (message), browserNavigateComplete message (message), browserBeforeNavigateFrame (message), revBrowserOpen (function), revBrowserOpen function (function)

@@ -1,0 +1,25 @@
+Name: brush
+
+Type: keyword
+
+Syntax: brush
+
+Summary: Designates the <paint tool> used to draw freehand brushstrokes in an <image>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose brush tool
+
+Description:
+Use the <brush> <keyword> to paint brushstrokes with the <brushColor>.
+
+When using the Brush tool, the cursor is the shape specified by the <brush> <property> (over stack windows) or an arrow (anywhere else). This <tool> is used to brush the <brushColor> (or <brushPattern>) onto an <image>.
+
+If you try to paint with the brush on a card that has no images, an image the size of the card is created to hold the painting. If the current card already has one or more images, painting outside the image has no effect.
+
+References: brush (property), brushPattern (property), brushColor (property), image (keyword), choose (command), tool (function), keyword (glossary), property (glossary), paint tool (glossary)

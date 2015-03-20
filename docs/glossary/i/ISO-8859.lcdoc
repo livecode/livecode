@@ -1,0 +1,12 @@
+Name: ISO 8859
+
+Synonyms: ISO character set,ISO-8859,ISO-8859-1,ISO-8859-1',ISO 8859-1,ISO 8859-1',ISO-Latin,ISO-Latin',ISO Latin,ISO Latin',ISO Latin-1,ISO 8859
+
+Type: glossary
+
+Description:
+The <character set> used by <Unix> and <Windows|Windows systems>.
+
+References: Windows (glossary), Unix (glossary), character set (glossary)
+
+Tags: text processing

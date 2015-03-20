@@ -1,0 +1,30 @@
+Name: mobileUnlockOrientation
+
+Type: command
+
+Syntax: mobileUnlockOrientation
+
+Summary: Allows orientation changes and updates the interface to the device's current orientation.
+
+Synonyms: iphoneUnlockOrientation
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileUnlockOrientation
+
+Example:
+if loadingComplete then mobileUnlockOrientation
+
+Description:
+Use the <mobileUnlockOrientation> command to allow orientation changes which had been temporarily prevented.
+
+The <mobileUnlockOrientation> command allows orientation changes to take place again, after first preventing them with the command <mobileLockOrientation>.
+
+The orientation lock can be nested, and when an unlock request causes nesting to return to zero, the interface rotates to match the device's current orientation (assuming it is in the set of allowed orientations). You can query the current orientation lock state with the <mobileOrientationLocked> function.
+
+References: mobileSetAllowedOrientations (command), mobileLockOrientation (command), mobileDeviceOrientation (function), mobileOrientationLocked (function), mobileAllowedOrientations (function), mobileOrientation (function), orientationChanged (message)

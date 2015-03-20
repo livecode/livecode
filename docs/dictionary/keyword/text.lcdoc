@@ -1,0 +1,28 @@
+Name: text
+
+Type: keyword
+
+Syntax: text
+
+Summary: Used with the <sort> and <sort container> <command|commands> to sort normally, <character> by <character>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+sort cards descending text by field "State"
+
+Example:
+sort lines of the target text by word 2 of each
+
+Description:
+Use the <text> <keyword> to improve the clarity of your code. For example, if a <handler> contains several <sort(command)> <command|commands> and some are <numeric>, you can use the <text> <keyword> explicitly to point up the fact that there are both alphabetic and numeric <sort(glossary)|sorts>.
+
+Since text is the default sort order, you never actually need to use the <text> <keyword>; if you leave it out, the <sort(command)> is performed alphabetically anyway.
+
+References: sort (command), sort container (command), dateTime (keyword), character (keyword), numeric (keyword), keyword (glossary), handler (glossary), command (glossary), sort (glossary)
+
+Tags: database
