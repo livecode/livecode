@@ -61,10 +61,15 @@ private variable mFoldedArrowPath as Path
 private variable mUnfoldedArrowPath as Path
 
 private variable mScrollbarHeight as Real
+private variable mScrollbarPath as Path
+private variable mScrollbarY as Real
 
 // Drag related 
 private variable mDragging as Boolean
 private variable mDragStartLoc as Point
+private variable mDragScrollbarOffset as Real
+
+constant kScrollbarWidth is 5
 
 --------------------------------------------------------------------------------
 --
@@ -86,30 +91,14 @@ public handler OnCreate() returns nothing
 end handler
 
 public handler OnPaint() returns nothing
-	variable tCheckTextCache
 	if mRecalculate then
-		put false into tCheckTextCache
 		updateParameters()
-	else
-		put true into tCheckTextCache
 	end if
 
 	variable tTop as Real
 	variable tPath as Path
-	variable tLeft as Real
-	
-	put mDataHeight - mViewHeight into mDataTravel
-	if mDataTravel < 0 then
-		put 0 into mDataTravel
-	end if
-	if mViewTopPosition > mDataTravel then
-		put mDataTravel into mViewTopPosition
-	end if
 	
 	put 0 into tTop
-	
-	put the height of my bounds into mViewHeight
-	put the width of my bounds into mViewWidth
 	
 	variable tDataItem as Array
 	put the empty array into tDataItem
@@ -117,76 +106,12 @@ public handler OnPaint() returns nothing
 	variable tX as Integer
 	put 1 into tX
 	
-	put the floor of mViewTopPosition / mRowHeight into mFirstDataItem
-	if mFirstDataItem < 1 then
-		put 1 into mFirstDataItem
-	end if
-	
 	variable tTopOffset
 	put mViewTopPosition mod mRowHeight into tTopOffset
 	subtract tTopOffset from tTop	
 
 	repeat with tX from mFirstDataItem up to the number of elements in mDataList
-		put element tX of mDataList into tDataItem
-		
-		variable tStyle as String
-		put "" into tStyle
-		if tDataItem["selected"] is true then 
-			put "_selected" after tStyle
-		end if
-		
-		if tX is mHoverRow then
-			put "_hover" after tStyle
-		end if	
-		
-		// Draw Rows
-		if mAlternateRowBackgrounds is true then
-		   put rectangle path of rectangle [0,tTop,mViewWidth,tTop+mRowHeight] into tPath
-
-		   if tX mod 2 is 1 then
-			   set the paint of this canvas to getPaint("row","fill" & tStyle)
-		   else
-			   set the paint of this canvas to getPaint("row","fill_alternate" & tStyle)
-		   end if	
-		   fill tPath on this canvas
-		end if
-		
-		put mMargin + (tDataItem["indent"] * mIndentPixels) into tLeft
-		
-		// Draw arrow
-		if not tDataItem["leaf"] then
-			if tDataItem["folded"] is true then
-				put mFoldedArrowPath into tPath
-			else
-				put mUnfoldedArrowPath into tPath	
-			end if
-			translate tPath by [tLeft,tTop+(mRowHeight/2)-((the height of the bounding box of tPath)/2)]
-			set the paint of this canvas to getPaint("text","fill" & tStyle)
-			fill tPath on this canvas
-		end if
-		add mArrowWidth + mMargin to tLeft
-		
-		// Draw the key
-		set the paint of this canvas to getPaint("text","disabled" & tStyle)
-		fill text "[" & tDataItem["key"] & "]" at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
-		
-		// Check the key rect cache
-		variable tTextBounds as Rectangle
-		if not tCheckTextCache or "keyRect" is not among the keys of tDataItem then
-			measure "[" & tDataItem["key"] & "]" on this canvas
-			put the result into tTextBounds
-			put tTextBounds into tDataItem["keyRect"]
-		else
-			put tDataItem["keyRect"] into tTextBounds
-		end if
-
-		add the width of tTextBounds + mMargin to tLeft
-		
-		if tDataItem["leaf"] then
-			set the paint of this canvas to getPaint("text","fill" & tStyle)
-			fill text tDataItem["string_value"] at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
-		end if
-		
+		paintDataItem(element tX of mDataList, tTop, tX)		
 		if tTop > mViewHeight then
 			exit repeat
 		end if
@@ -195,9 +120,8 @@ public handler OnPaint() returns nothing
 
 	// Draw scrollbar if there is any need
 	if mScrollbarHeight > 0 then
-		put rounded rectangle path of scrollbarRect() with radius 3 into tPath
 		set the paint of this canvas to getPaint("scrollbar", "fill")
-		fill tPath on this canvas	
+		fill mScrollbarPath on this canvas	
 	end if
 	
 	// Draw the frame
@@ -208,11 +132,80 @@ public handler OnPaint() returns nothing
 	end if
 end handler
 
-public handler OnMouseDown() returns nothing
-	put the mouse position into mDragStartLoc
+private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as Integer)
+	variable tStyle as String
+	put "" into tStyle
+	if pDataItem["selected"] is true then 
+		put "_selected" after tStyle
+	end if
+		
+	if pRow is mHoverRow then
+		put "_hover" after tStyle
+	end if	
+		
+	variable tPath as Path	
+	// Draw Rows
+	if mAlternateRowBackgrounds is true then
+		put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
+		if pRow mod 2 is 1 then
+			set the paint of this canvas to getPaint("row","fill" & tStyle)
+		else
+			set the paint of this canvas to getPaint("row","fill_alternate" & tStyle)
+		end if	
+		fill tPath on this canvas
+	end if
+		
+	variable tLeft as Real
+	put mMargin + (pDataItem["indent"] * mIndentPixels) into tLeft
+		
+	// Draw arrow
+	if not pDataItem["leaf"] then
+		if pDataItem["folded"] is true then
+			put mFoldedArrowPath into tPath
+		else
+			put mUnfoldedArrowPath into tPath	
+		end if
+		
+		translate tPath by [tLeft,pTop+(mRowHeight/2)-((the height of the bounding box of tPath)/2)]
+		set the paint of this canvas to getPaint("text","fill" & tStyle)
+		fill tPath on this canvas
+	end if
 	
-	if mDragStartLoc is within scrollbarRect() then
-		put true into mDragging
+	add mArrowWidth + mMargin to tLeft
+		
+	// Draw the key
+	set the paint of this canvas to getPaint("text","disabled" & tStyle)
+	fill text "[" & pDataItem["key"] & "]" at left of rectangle [tLeft,pTop,mViewWidth-mMargin-15,pTop+mRowHeight] on this canvas
+		
+	// Check the key rect cache
+	variable tTextBounds as Rectangle
+	if "keyRect" is not among the keys of pDataItem then
+		measure "[" & pDataItem["key"] & "]" on this canvas
+		put the result into tTextBounds
+		put tTextBounds into pDataItem["keyRect"]
+	else
+		put pDataItem["keyRect"] into tTextBounds
+	end if
+
+	add the width of tTextBounds + mMargin to tLeft
+		
+	if pDataItem["leaf"] then
+		set the paint of this canvas to getPaint("text","fill" & tStyle)
+		fill text pDataItem["string_value"] at left of rectangle [tLeft,pTop,mViewWidth-mMargin-15,pTop+mRowHeight] on this canvas
+	end if
+end handler
+
+public handler OnMouseDown() returns nothing
+	if mScrollbarHeight > 0 then
+		put the mouse position into mDragStartLoc
+		
+		variable tScrollbarRect as Rectangle
+		put the bounding box of mScrollbarPath into tScrollbarRect
+		
+		if mDragStartLoc is within tScrollbarRect then
+			put true into mDragging
+			put the y of mDragStartLoc - the top of tScrollbarRect into mDragScrollbarOffset
+		end if
 	end if
 end handler
 
@@ -231,18 +224,23 @@ public handler onMouseMove() returns nothing
 		variable tMouseY as Real
 		put the y of the mouse position into tMouseY
 		
-		if tMouseY < 0 then
-			put 0 into tMouseY
+		if tMouseY < mDragScrollbarOffset then
+			put mDragScrollbarOffset into tMouseY
+		else if tMouseY > mViewHeight + mDragScrollbarOffset - mScrollbarHeight then
+			put mViewHeight + mDragScrollbarOffset - mScrollbarHeight into tMouseY
 		end if
 		
+		// Set the y of the new middle of the scrollbar
+		variable tScrollbarY as Real
+		put tMouseY - mDragScrollbarOffset into tScrollbarY
+		setScrollbarY(tScrollbarY)
+		
 		// Calculate the new top position of list
-		put tMouseY / tScrollbarSpace into tScrollPositionRatio
-		put mDataTravel * tScrollPositionRatio into mViewTopPosition
+		put tScrollbarY / tScrollbarSpace into tScrollPositionRatio
+		put the trunc of (mDataTravel * tScrollPositionRatio) into mViewTopPosition
 	
-		if mViewTopPosition < 0 then 
-			put 0 into mViewTopPosition
-		end if
-	
+		ensureViewTopPosition()
+		updateFirstDataItem()
 		redraw all
 	else
 		variable tNewHoverRow
@@ -274,20 +272,39 @@ public handler OnMouseCancel() returns nothing
 end handler
 
 public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns nothing
-	if pDeltaY < 0 then
-		subtract mRowHeight from mViewTopPosition
-	else
-		add mRowHeight to mViewTopPosition
+	// Only scroll if there's something to scroll	
+	if mScrollbarHeight > 0 then
+		variable tOldTop as Real
+		put mViewTopPosition into tOldTop
+	
+		if pDeltaY < 0 then
+			subtract mRowHeight from mViewTopPosition
+		else
+			add mRowHeight to mViewTopPosition
+		end if
+	
+		ensureViewTopPosition()
+		
+		// If nothing changed, don't update anything
+		if mViewTopPosition is tOldTop then
+			return
+		end if
+		
+		updateFirstDataItem()
+		setScrollbarY(scrollbarYFromView())
+		
+		redraw all
 	end if
-	if mViewTopPosition < 0 then 
-		put 0 into mViewTopPosition
-	end if
-	redraw all
 end handler
 
 public handler onClick() returns nothing
 	variable tRowNumber
 	put yPosToRowNumber(the y of the click position) into tRowNumber
+	
+	// Just return if the click was below all the data
+	if tRowNumber > the number of elements in mDataList then
+		return
+	end if
 	
 	variable tData as Array
 	put the empty array into tData
@@ -342,6 +359,22 @@ end handler
 --
 --------------------------------------------------------------------------------
 
+private handler ensureViewTopPosition()
+	if mViewTopPosition < 0 then 
+		put 0 into mViewTopPosition
+	// Make sure we can't scroll past the last displayable portion
+	else if mDataHeight > mViewHeight and mViewTopPosition > mDataHeight - mViewHeight then
+		put mDataHeight - mViewHeight into mViewTopPosition
+	end if	
+end handler
+
+private handler updateFirstDataItem()
+	put the floor of (mViewTopPosition / mRowHeight) into mFirstDataItem
+	if mFirstDataItem < 1 then
+		put 1 into mFirstDataItem
+	end if	
+end handler
+
 private handler updateParameters() returns nothing
 	
 	if mArrowWidth is not defined then
@@ -361,9 +394,12 @@ private handler updateParameters() returns nothing
 	if mDataTravel < 0 then
 		put 0 into mDataTravel
 	end if	
+
+	ensureViewTopPosition()
+	updateFirstDataItem()
 	
 	// Calculate scrollbar dimensions
-	put scrollbarHeight() into mScrollbarHeight	
+	updateScrollbarHeight()	
 	
 	put false into mRecalculate
 end handler
@@ -379,37 +415,49 @@ private handler initialiseConstants() returns nothing
 	put true into mAlternateRowBackgrounds
 	put 6 into mMargin
 	put 15 into mIndentPixels
+	put 0 into mScrollbarHeight
 end handler
 
-private handler scrollbarRect() returns Rectangle
+private handler scrollbarYFromView() returns Real
 	variable tScrollPositionRatio as Real
 	put mViewTopPosition / mDataTravel into tScrollPositionRatio
-	
-	variable tScrollbarSpace as Real
-	variable tScrollbarY as Real
-	put mViewHeight - mScrollbarHeight into tScrollbarSpace
-	put tScrollbarSpace * tScrollPositionRatio into tScrollbarY
-
-	return rectangle [mViewWidth-10,tScrollbarY,mViewWidth-5,tScrollbarY+mScrollbarHeight]
+	return (mViewHeight - mScrollbarHeight) * tScrollPositionRatio
 end handler
 
-private handler scrollbarHeight() returns Real
+private handler updateScrollbarHeight()
 	variable tScrollbarHeight as Real
 	variable tScrollbarRatio as Real
 
 	put mViewHeight / mDataHeight into tScrollbarRatio
 	
 	if tScrollbarRatio >= 1 or tScrollbarRatio <= 0 then 
-		return 0
-	end if
-	
-	put mViewHeight * tScrollbarRatio into tScrollbarHeight
-	
-	if tScrollbarHeight < 25 then
-		return 25
+		put 0 into mScrollbarHeight
 	else
-		return tScrollbarHeight
-	end if
+		put mViewHeight * tScrollbarRatio into tScrollbarHeight
+	
+		if tScrollbarHeight < 25 then
+			put 25 into mScrollbarHeight
+		else
+			put tScrollbarHeight into mScrollbarHeight
+		end if	
+		
+		variable tScrollbarY as Real
+		put scrollbarYFromView() into tScrollbarY
+
+		variable tRect as Rectangle
+		put rectangle [mViewWidth - 10, 0, mViewWidth - 10 + kScrollbarWidth, mScrollbarHeight] into tRect
+		put rounded rectangle path of tRect with radius 3 into mScrollbarPath
+	
+		put 0 into mScrollbarY
+		setScrollbarY(tScrollbarY)
+	end if	
+end handler
+
+private handler setScrollbarY(in pScrollbarY)
+	variable tScrollbarMove as Real
+	put pScrollbarY - mScrollbarY into tScrollbarMove
+	translate mScrollbarPath by [0, tScrollbarMove]
+	put pScrollbarY into mScrollbarY
 end handler
 
 --------------------------------------------------------------------------------
@@ -632,6 +680,7 @@ private handler updateFoldState(in pListElt as Integer, in pPath as List, in pLe
 	
 	applyFoldStateKey(element pLevel + 1 of pPath, pLevel, pListElt - 1, tArray, pArray[element pLevel + 1 of pPath], xList)
 end handler
+
 // To 'unfold', splice in the sublist
 private handler unfoldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	updateFoldState(pListElt, pPath, pLevel, xList, xArray, false)
@@ -651,13 +700,17 @@ end handler
 
 // Unfold the key at the target path
 private handler unfoldPath(in pPath as List)
-	applyToNode(unfoldKey, pPath, 0, 0, mDataList, mData)		
+	applyToNode(unfoldKey, pPath, 0, 0, mDataList, mData)	
+	// Changing fold state makes a recalculation necessary
+	put true into mRecalculate	
 	redraw all
 end handler
 
 // Fold the key at the target path
 private handler foldPath(in pPath as List)
 	applyToNode(foldKey, pPath, 0, 0, mDataList, mData)	
+	// Changing fold state makes a recalculation necessary
+	put true into mRecalculate
 	redraw all
 end handler
 
@@ -712,7 +765,8 @@ private handler deleteSubElements(in pStart as Integer, in pTopIndent as Integer
 	variable tLastSubElement as Integer
 	variable tFirstSubElement as Integer
 	put pStart + 1 into tFirstSubElement
-				
+	// Do if there are no more elements in the list, make sure nothing happens
+	put pStart into tLastSubElement			
 	variable tSubCount
 	repeat with tSubCount from tFirstSubElement up to the number of elements in xList
 		if xList[tSubCount]["indent"] <= pTopIndent then
@@ -867,6 +921,7 @@ end handler
 
 private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
 	put pFrameBorder into mFrameBorder
+	redraw all
 end handler
 
 private handler setSelectedElement(in pElement as String)
