@@ -28,6 +28,7 @@ metadata author is "LiveCode"
 metadata title is "Fontawesome SVG Library"
 
 private variable sFontArray as Array
+private variable sNamesList as List
 private variable sInitialised as optional Boolean
 
 private handler ensureInitialised()
@@ -1119,19 +1120,23 @@ private handler initialise()
 	put the empty array into sFontArray["reply"]
 	put "M1792 416q0 -166 -127 -451q-3 -7 -10.5 -24t-13.5 -30t-13 -22q-12 -17 -28 -17q-15 0 -23.5 10t-8.5 25q0 9 2.5 26.5t2.5 23.5q5 68 5 123q0 101 -17.5 181t-48.5 138.5t-80 101t-105.5 69.5t-133 42.5t-154 21.5t-175.5 6h-224v-256q0 -26 -19 -45t-45 -19t-45 19 l-512 512q-19 19 -19 45t19 45l512 512q19 19 45 19t45 -19t19 -45v-256h224q713 0 875 -403q53 -134 53 -333z" into sFontArray["reply"]["svg"]
 	put "f112" into sFontArray["reply"]["codepoint"]
+	
+	put the keys of sFontArray into sNamesList
+	sort sNamesList in ascending order
 end handler
 
 public handler fontawesomeIconNames() returns String
 	ensureInitialised()
-	
-	variable tNamesList as List
-	put the keys of sFontArray into tNamesList
-	sort tNamesList in ascending order
 
 	variable tNames as String
-	combine tNamesList with newline into tNames
+	combine sNamesList with newline into tNames
 
 	return tNames
+end handler
+
+public handler fontawesomeIconList() returns List
+	ensureInitialised()
+	return sNamesList
 end handler
 
 public handler fontawesomeSVGPathFromName(in pName as String) returns String
@@ -1142,6 +1147,26 @@ public handler fontawesomeSVGPathFromName(in pName as String) returns String
 	end if
 	
 	return the empty string
+end handler
+
+public handler fontawesomeIconListMatching(in pSearch as String) returns List
+	ensureInitialised()
+	
+	variable tMatches as List
+	put the empty list into tMatches
+	
+	variable tName as String
+	repeat for each element tName in sNamesList
+		if tName contains pSearch then
+			push tName onto tMatches
+		end if
+	end repeat
+	
+	return tMatches
+end handler
+
+public handler fontawesomeIconData() as Array
+	return sFontArray
 end handler
 
 end library

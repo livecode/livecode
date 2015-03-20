@@ -1,0 +1,516 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+A widget to display fontawesome icons
+*/
+
+widget com.livecode.widget.iconPicker
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.fontawesomeSVGPath
+
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "Fontawesome Icon Picker"
+
+private variable mDataCount as Integer
+private variable mDataList as List
+private variable mPaths as Array
+private variable mNumRows as Integer
+private variable mNumCols as Integer
+
+private variable mDataHeight as Real
+private variable mRowHeight as Real
+private variable mViewHeight as Real
+private variable mViewWidth as Real
+private variable mDataTravel as Real
+private variable mViewTopPosition as Real
+private variable mFirstDataItem as Integer
+private variable mRecalculate as Boolean
+private variable mHoverRow as Integer
+private variable mFrameBorder as Boolean
+
+private variable mSelectedElement as optional String
+
+private variable mScrollbarHeight as Real
+private variable mScrollbarPath as Path
+private variable mScrollbarY as Real
+
+// Drag related 
+private variable mDragging as Boolean
+private variable mDragStartLoc as Point
+private variable mDragScrollbarOffset as Real
+
+constant kIconColor is [0,0,0]
+constant kIconPadding is 20
+constant kScrollbarWidth is 5
+
+public handler OnCreate()
+	put fontawesomeIconList() into mDataList
+	put the empty array into mPaths
+	
+	put 1 into mFirstDataItem
+	
+	put 3 into mNumRows
+	put 3 into mNumCols
+	
+	put true into mRecalculate
+
+	put false into mDragging
+	put 0 into mScrollbarHeight
+	
+	put my height into mViewHeight
+	put my width into mViewWidth
+	
+	put mViewHeight / mNumRows into mRowHeight
+	
+	put 0 into mHoverRow
+	put 0 into mViewTopPosition
+	put true into mFrameBorder
+end handler
+
+public handler OnPaint()
+	if mRecalculate then
+		updateParameters()
+	end if
+
+	// Draw the icons
+	set the paint of this canvas to solid paint with color kIconColor
+	variable tRow as Integer
+	variable tCol as Integer
+	repeat with tCol from 1 up to mNumCols
+		repeat with tRow from 1 up to mNumRows
+			drawIcon(element (mFirstDataItem + (tRow - 1) * mNumCols + tCol - 1) of mDataList, iconRect(tRow, tCol))
+		end repeat
+	end repeat
+	
+	// Draw scrollbar if there is any need
+	if mScrollbarHeight > 0 then
+		set the paint of this canvas to getPaint("scrollbar", "fill")
+		fill mScrollbarPath on this canvas	
+	end if
+	
+	// Draw the frame
+	if mFrameBorder is true then
+		variable tPath as Path
+		put rectangle path of rectangle [0.5,0.5,mViewWidth-0.5,mViewHeight-0.5] into tPath
+		set the paint of this canvas to getPaint("frame","stroke")
+		stroke tPath on this canvas
+	end if
+	
+end handler
+
+private handler iconRect(in pRow as Integer, in pCol as Integer) returns Rectangle
+	variable tLeft as Real
+	variable tRight as Real
+	variable tTop as Real
+	variable tBottom as Real
+	put (pCol - 1) * mViewWidth / mNumCols + kIconPadding into tLeft
+	put pCol * mViewWidth / mNumCols - kIconPadding into tRight
+	
+	put (pRow - 1) * mViewHeight / mNumRows + kIconPadding into tTop
+	put pRow * mViewHeight / mNumRows - kIconPadding into tBottom
+	
+	return rectangle [tLeft, tTop, tRight, tBottom]
+	
+end handler
+
+private handler drawIcon(in pIconName as String, in pTargetRect as Rectangle)
+
+	variable tPath as Path
+	if pIconName is not among the keys of mPaths then
+		put path fontawesomeSVGPathFromName(pIconName) into tPath
+		
+		// Scale the icon
+		variable tBounds
+		put the bounding box of tPath into tBounds
+	
+		// set origin of bounds to 0,0
+		translate tPath by [- the x of tBounds, - the y of tBounds]
+		// flip vertically
+		scale tPath by [1,-1]
+		translate tPath by [0, the height of tBounds]
+	else
+		put mPaths[pIconName] into tPath
+	end if
+		
+	// Scale appropriately
+	variable isLarger as Boolean
+	variable sx as Number
+	variable sy as Number
+		
+	put false into isLarger
+	put the width of pTargetRect / the width of tBounds into sx
+	put the height of pTargetRect / the height of tBounds into sy
+		
+	if sx > sy then
+		put true into isLarger
+		put sy into sx
+	else
+		put sx into sy
+	end if
+		
+	variable tx as Number
+	variable ty as Number
+		
+	put the left of pTargetRect - (the left of tBounds*sx) into tx
+	put the top of pTargetRect - (the top of tBounds*sy) into ty
+		
+	variable diff as Number
+		
+	if isLarger then
+		put the width of pTargetRect - (the width of tBounds*sy) into diff
+	else
+		put the height of pTargetRect - (the height of tBounds*sy) into diff
+	end if	
+			
+	// align center
+	divide diff by 2
+		
+	if isLarger then
+		add diff to tx
+	else
+		add diff to ty
+	end if
+		
+	// create transformation matrix and apply
+	variable tTransform as Transform
+	put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
+	transform tPath by tTransform
+	
+	fill tPath on this canvas
+end handler
+
+public handler OnMouseDown() returns nothing
+	if mScrollbarHeight > 0 then
+		put the mouse position into mDragStartLoc
+		
+		variable tScrollbarRect as Rectangle
+		put the bounding box of mScrollbarPath into tScrollbarRect
+		
+		if mDragStartLoc is within tScrollbarRect then
+			put true into mDragging
+			put the y of mDragStartLoc - the top of tScrollbarRect into mDragScrollbarOffset
+		end if
+	end if
+end handler
+
+public handler onMouseMove() returns nothing
+	if mDragging is true then		
+		// Get the scrollbar position ratio
+		variable tScrollPositionRatio as Real
+		put mViewTopPosition / mDataTravel into tScrollPositionRatio
+	
+		// Get the scrollbar space
+		variable tScrollbarSpace as Real
+		variable tScrollbarSpaceTop as Real
+		put mViewHeight - mScrollbarHeight into tScrollbarSpace
+		
+		// Get the mouse y position
+		variable tMouseY as Real
+		put the y of the mouse position into tMouseY
+		
+		if tMouseY < mDragScrollbarOffset then
+			put mDragScrollbarOffset into tMouseY
+		else if tMouseY > mViewHeight + mDragScrollbarOffset - mScrollbarHeight then
+			put mViewHeight + mDragScrollbarOffset - mScrollbarHeight into tMouseY
+		end if
+		
+		// Set the y of the new middle of the scrollbar
+		variable tScrollbarY as Real
+		put tMouseY - mDragScrollbarOffset into tScrollbarY
+		setScrollbarY(tScrollbarY)
+		
+		// Calculate the new top position of list
+		put tScrollbarY / tScrollbarSpace into tScrollPositionRatio
+		put the trunc of (mDataTravel * tScrollPositionRatio) into mViewTopPosition
+	
+		ensureViewTopPosition()
+		updateFirstDataItem()
+		redraw all
+	else
+		variable tNewHoverRow
+		put yPosToRowNumber(the y of the mouse position) into tNewHoverRow
+		if mHoverRow is not tNewHoverRow then
+			put tNewHoverRow into mHoverRow
+			redraw all
+		end if
+	end if
+end handler
+
+public handler onMouseLeave() returns nothing
+	put 0 into mHoverRow
+	redraw all
+end handler
+
+public handler OnMouseUp() returns nothing
+	if mDragging is true then
+		redraw all
+	end if
+	put false into mDragging
+end handler
+
+public handler OnMouseCancel() returns nothing
+	if mDragging is true then
+		redraw all
+	end if
+	put false into mDragging
+end handler
+
+public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns nothing
+	// Only scroll if there's something to scroll	
+	if mScrollbarHeight > 0 then
+		variable tOldTop as Real
+		put mViewTopPosition into tOldTop
+	
+		if pDeltaY < 0 then
+			subtract mRowHeight from mViewTopPosition
+		else
+			add mRowHeight to mViewTopPosition
+		end if
+	
+		ensureViewTopPosition()
+		
+		// If nothing changed, don't update anything
+		if mViewTopPosition is tOldTop then
+			return
+		end if
+		
+		updateFirstDataItem()
+		setScrollbarY(scrollbarYFromView())
+		
+		redraw all
+	end if
+end handler
+
+public handler OnClick() returns nothing
+	variable tRowNumber
+	put yPosToRowNumber(the y of the click position) into tRowNumber
+	
+	// Just return if the click was below all the data
+	if tRowNumber > the number of elements in mDataList then
+		return
+	end if
+	
+	variable tData as Array
+	put the empty array into tData
+	
+	put element tRowNumber of mDataList into tData
+end handler
+
+private handler yPosToRowNumber(in pYPos as Number) returns Integer
+	return the trunc of (pYPos / mRowHeight) + mFirstDataItem
+end handler
+
+public handler OnGeometryChanged()
+	// Only resizing necessitates a recalculation
+	if my height is not mViewHeight or my width is not mViewWidth then
+		put true into mRecalculate
+	end if
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Display calculations
+--
+--------------------------------------------------------------------------------
+
+private handler ensureViewTopPosition()
+	if mViewTopPosition < 0 then 
+		put 0 into mViewTopPosition
+	// Make sure we can't scroll past the last displayable portion
+	else if mDataHeight > mViewHeight and mViewTopPosition > mDataHeight - mViewHeight then
+		put mDataHeight - mViewHeight into mViewTopPosition
+	end if	
+end handler
+
+private handler updateFirstDataItem()
+	put the floor of (mViewTopPosition / mRowHeight) into mFirstDataItem
+	if mFirstDataItem < 1 then
+		put 1 into mFirstDataItem
+	end if	
+end handler
+
+private handler updateParameters() returns nothing
+	put the number of elements in mDataList into mDataCount
+	put mRowHeight * mDataCount into mDataHeight
+	put my height into mViewHeight
+	put my width into mViewWidth
+	put mDataHeight - mViewHeight into mDataTravel
+	if mDataTravel < 0 then
+		put 0 into mDataTravel
+	end if	
+
+	ensureViewTopPosition()
+	updateFirstDataItem()
+	
+	// Calculate scrollbar dimensions
+	updateScrollbarHeight()	
+	
+	put false into mRecalculate
+end handler
+
+private handler scrollbarYFromView() returns Real
+	variable tScrollPositionRatio as Real
+	put mViewTopPosition / mDataTravel into tScrollPositionRatio
+	return (mViewHeight - mScrollbarHeight) * tScrollPositionRatio
+end handler
+
+private handler updateScrollbarHeight()
+	variable tScrollbarHeight as Real
+	variable tScrollbarRatio as Real
+
+	put mViewHeight / mDataHeight into tScrollbarRatio
+	
+	if tScrollbarRatio >= 1 or tScrollbarRatio <= 0 then 
+		put 0 into mScrollbarHeight
+	else
+		put mViewHeight * tScrollbarRatio into tScrollbarHeight
+	
+		if tScrollbarHeight < 25 then
+			put 25 into mScrollbarHeight
+		else
+			put tScrollbarHeight into mScrollbarHeight
+		end if	
+		
+		variable tScrollbarY as Real
+		put scrollbarYFromView() into tScrollbarY
+
+		variable tRect as Rectangle
+		put rectangle [mViewWidth - 10, 0, mViewWidth - 10 + kScrollbarWidth, mScrollbarHeight] into tRect
+		put rounded rectangle path of tRect with radius 3 into mScrollbarPath
+	
+		put 0 into mScrollbarY
+		setScrollbarY(tScrollbarY)
+	end if	
+end handler
+
+private handler setScrollbarY(in pScrollbarY)
+	variable tScrollbarMove as Real
+	put pScrollbarY - mScrollbarY into tScrollbarMove
+	translate mScrollbarPath by [0, tScrollbarMove]
+	put pScrollbarY into mScrollbarY
+end handler
+
+
+--------------------------------------------------------------------------------
+--
+--		Utilities for widget display
+--
+--------------------------------------------------------------------------------
+
+private handler getPaint(pLocation, pType) returns Paint
+	if pLocation is "background" then
+		if pType is "fill" then
+			return solid paint with stringToColor("178,178,178")
+		end if
+	else if pLocation is "row" then
+		if pType is "fill" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_hover" then
+			return solid paint with stringToColor("235,235,235")
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor("10,105,216")
+		else if pType is "fill_selected_hover" then
+			return solid paint with stringToColor("10,95,193")
+		else if pType is "fill_alternate" then
+			return solid paint with stringToColor("245,245,245")
+		else if pType is "fill_alternate_hover" then
+			return solid paint with stringToColor("230,230,230")
+		else if pType is "fill_alternate_selected" then
+			return solid paint with stringToColor("10,105,216")
+		else if pType is "fill_alternate_selected_hover" then
+			return solid paint with stringToColor("10,98,200")
+		end if
+	else if pLocation is "text" then
+		if pType is "disabled" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "disabled_hover" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "disabled_selected" then
+			return solid paint with stringToColor("255,255,255,150")
+		else if pType is "disabled_selected_hover" then
+			return solid paint with stringToColor("255,255,255,150")
+		else if pType is "fill" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_hover" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_selected_hover" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_alternate" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_alternate_hover" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_alternate_selected" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_alternate_selected_hover" then
+			return solid paint with stringToColor("255,255,255")
+		end if
+	else if pLocation is "scrollbar" then
+		if pType is "fill" then
+			return solid paint with stringToColor("0,0,0,50")
+		end if
+	else if pLocation is "frame" then
+		if pType is "stroke" then
+			return solid paint with stringToColor("188,188,188")
+		end if
+	end if
+	
+	return solid paint with stringToColor("255,100,200")
+end handler
+
+private handler getFontName() returns String
+	return "Helvetica Neue"
+	
+	return the name of the font of this canvas
+end handler
+
+private handler stringToColor(in pString as String) returns Color
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 255 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+
+end widget
