@@ -78,16 +78,28 @@ constant kScrollbarWidth is 5
 --------------------------------------------------------------------------------
 
 public handler OnCreate() returns nothing
-	variable tArray as Array
+	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into mFoldedArrowPath
+
+	put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into mUnfoldedArrowPath
+
+	put true into mRecalculate
+	put 21 into mRowHeight
+	put false into mDragging
+	put true into mAlternateRowBackgrounds
+	put 6 into mMargin
+	put 15 into mIndentPixels
+	put 0 into mScrollbarHeight
+	
 	put the empty array into mData
 	put the empty list into mDataList
 	put the empty array into mFoldState
 	
+	put my height into mViewHeight
+	put my width into mViewWidth
+	
 	put 0 into mHoverRow
 	put 0 into mViewTopPosition
 	put true into mFrameBorder
-	
-	initialiseConstants()
 end handler
 
 public handler OnPaint() returns nothing
@@ -297,7 +309,7 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 	end if
 end handler
 
-public handler onClick() returns nothing
+public handler OnClick() returns nothing
 	variable tRowNumber
 	put yPosToRowNumber(the y of the click position) into tRowNumber
 	
@@ -353,6 +365,13 @@ private handler yPosToRowNumber(in pYPos as Number) returns Integer
 	return the trunc of (pYPos / mRowHeight) + mFirstDataItem
 end handler
 
+public handler OnGeometryChanged()
+	// Only resizing necessitates a recalculation
+	if my height is not mViewHeight or my width is not mViewWidth then
+		put true into mRecalculate
+	end if
+end handler
+
 --------------------------------------------------------------------------------
 --
 --		Display calculations
@@ -388,8 +407,8 @@ private handler updateParameters() returns nothing
 
 	put the number of elements in mDataList into mDataCount
 	put mRowHeight * mDataCount into mDataHeight
-	put the height of my bounds into mViewHeight
-	put the width of my bounds into mViewWidth
+	put my height into mViewHeight
+	put my width into mViewWidth
 	put mDataHeight - mViewHeight into mDataTravel
 	if mDataTravel < 0 then
 		put 0 into mDataTravel
@@ -402,20 +421,6 @@ private handler updateParameters() returns nothing
 	updateScrollbarHeight()	
 	
 	put false into mRecalculate
-end handler
-
-private handler initialiseConstants() returns nothing
-	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into mFoldedArrowPath
-
-	put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into mUnfoldedArrowPath
-
-	put true into mRecalculate
-	put 21 into mRowHeight
-	put false into mDragging
-	put true into mAlternateRowBackgrounds
-	put 6 into mMargin
-	put 15 into mIndentPixels
-	put 0 into mScrollbarHeight
 end handler
 
 private handler scrollbarYFromView() returns Real
