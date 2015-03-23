@@ -61,12 +61,12 @@ metadata title is "Navigation Bar"
 --
 
 -- property declarations
-property navitems 		get getNavItems		set setNavItems
-metadata navitems.editor is "com.livecode.pi.text"
-metadata navitems.default is "contacts,Contacts,f007,f007\nfavourites,Favourites,f005,f006\nmusic,Music,f001,f001\nsearch,Search,f002,f002"
+property navItems 		get getNavItems		set setNavItems
+metadata navItems.editor is "com.livecode.pi.text"
+metadata navItems.default is "contacts,Contacts,f007,f007\nfavourites,Favourites,f005,f006\nmusic,Music,f001,f001\nsearch,Search,f002,f002"
 
-property selecteditem	get mSelectedItem 	set setNavSelectedItem
-metadata selecteditem.default is "1"
+property selectedItem	get mSelectedItem 	set setNavSelectedItem
+metadata selectedItem.default is "1"
 
 property editMode get mEditMode set setEditMode
 
@@ -93,9 +93,14 @@ private variable mHeight as Real
 private variable mRecalculate as Boolean
 
 private variable mEditMode as Boolean
+private variable mAddItem as Array
+
 --
 
 constant kDefaultIconSVG is "M1536 640q0 -209 -103 -385.5t-279.5 -279.5t-385.5 -103t-385.5 103t-279.5 279.5t-103 385.5t103 385.5t279.5 279.5t385.5 103t385.5 -103t279.5 -279.5t103 -385.5z"
+
+constant kAddItemIconSVG is "M1216 576v128q0 26 -19 45t-45 19h-256v256q0 26 -19 45t-45 19h-128q-26 0 -45 -19t-19 -45v-256h-256q-26 0 -45 -19t-19 -45v-128q0 -26 19 -45t45 -19h256v-256q0 -26 19 -45t45 -19h128q26 0 45 19t19 45v256h256q26 0 45 19t19 45zM1536 640q0 -209 -103 -385.5 t-279.5 -279.5t-385.5 -103t-385.5 103t-279.5 279.5t-103 385.5t103 385.5t279.5 279.5t385.5 103t385.5 -103t279.5 -279.5t103 -385.5z"
+
 constant kIconRatio is 0.65
 
 public handler OnSave(out rProperties as Array)
@@ -162,6 +167,11 @@ public handler OnCreate() returns nothing
 	
 	put true into mRecalculate
 	put true into mEditMode
+		
+	put the empty array into mAddItem
+	put kAddItemIconSVG into mAddItem["icon"]
+	put "add item" into mAddItem["name"]
+	put "Add Item" into mAddItem["label"]
 	
 end handler
 
@@ -210,8 +220,27 @@ public handler OnPaint() returns nothing
 	fill getPath("line") on this canvas
 	
 	if mEditMode then
+		drawAddItem()
 		drawEditableRects(this canvas)
 	end if
+end handler
+
+private handler drawAddItem()
+	variable tRect as Rectangle
+	put rectangle [mWidth - mBoxWidth, 0, mWidth, mHeight] into tRect
+	set the paint of this canvas to getPaint("background", "additem")
+	fill rectangle path of tRect on this canvas
+
+	set the paint of this canvas to getPaint("text","fill")
+	
+	-- Draw the text of the nav bar
+	set the font of this canvas to getFont("label")
+	fill text mAddItem["label"] at center of mAddItem["label_rect"] on this canvas
+	
+	-- Draw the icon
+	variable tIconPath as Path
+    put mAddItem["icon_path"] into tIconPath
+	fill tIconPath on this canvas
 end handler
 
 public handler OnMouseUp() returns nothing
@@ -221,11 +250,18 @@ public handler OnMouseUp() returns nothing
 end handler
 
 public handler OnClick() returns nothing
+	variable tClickPos as Point
+	put the click position into tClickPos
+	
 	if mEditMode then
-		widgetClicked(the click position)
+		widgetClicked(tClickPos)
+		log locToNavItem(tClickPos)
+		if locToNavItem(tClickPos) is mNavItemCount + 1 then
+			addItem()
+		end if
 	else
 		variable tSelected as Number
-		put locToNavItem(the click position) into tSelected
+		put locToNavItem(tClickPos) into tSelected
 	
 		if tSelected > 0 then
 			put tSelected into mSelectedItem
@@ -243,16 +279,21 @@ private handler updateParameters()
 	put my width into mWidth
 	put my height into mHeight
 	put the number of elements in mNavItems into mNavItemCount
-	put mWidth / mNavItemCount into mBoxWidth
+	if mEditMode then
+		put mWidth / (mNavItemCount + 1) into mBoxWidth
+	else
+		put mWidth / mNavItemCount into mBoxWidth	
+	end if
 	
 	// calculate the drawing rects
 	variable tX as Integer
+	variable tIconPath as Path
+	variable tIconRect as Rectangle
+	
 	repeat with tX from 1 up to mNavItemCount
 		put rectangle [(tX - 1) * mBoxWidth, mHeight * kIconRatio, tX * mBoxWidth, mHeight] into mNavItems[tX]["label_rect"]
 			
 		if mItemStyle contains "icons" then
-			variable tIconPath as Path
-			variable tIconRect as Rectangle
 			put path mNavItems[tX]["icon"] into tIconPath
 			
 			if mItemStyle is "icons and names" then
@@ -275,6 +316,18 @@ private handler updateParameters()
 			setEditableRect("icon" && tX formatted as string, mNavItems[tX]["icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
 		end if
 	end repeat
+	
+	if mEditMode then
+		put rectangle [mNavItemCount * mBoxWidth, mHeight * kIconRatio, (mNavItemCount + 1) * mBoxWidth, mHeight] into mAddItem["label_rect"]
+		
+		put path mAddItem["icon"] into tIconPath
+		put rectangle [((2 * mNavItemCount + 1) * mBoxWidth - mHeight * kIconRatio) / 2, mHeight * 0.05, ((2 * mNavItemCount + 1) * mBoxWidth + mHeight * kIconRatio) / 2, mHeight * kIconRatio] into tIconRect
+			
+		setIconPath(tIconRect, tIconPath)
+		put tIconPath into mAddItem["icon_path"]
+		put tIconRect into mAddItem["icon_rect"]
+	end if
+	
 	put false into mRecalculate
 end handler
 
@@ -303,7 +356,12 @@ private handler clickPosToComponent(in pClickPos as Point) returns Integer
 			return tX		
 		end if
 	end repeat
+	
 	return 0
+end handler
+
+private handler locToNavItem(in pLoc as Point) returns Integer
+	return the floor of (the x of pLoc / mBoxWidth) + 1
 end handler
 
 private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
@@ -404,6 +462,8 @@ public handler getPaint(pLocation, pType) returns Paint
 			return solid paint with color [246/255, 246/255, 247/255]
 		else if pType is "stroke" then
 			return solid paint with color [178/255, 178/255, 178/255]
+		else if pType is "additem" then
+			return solid paint with color [0, 122/255 ,1]
 		end if
 	else if pLocation is "text" then
 		if pType is "fill" then
@@ -449,6 +509,7 @@ end handler
 
 public handler setEditMode(in pEditMode as Boolean) returns nothing
 	put pEditMode into mEditMode
+	put true into mRecalculate
 	redraw all
 end handler
 
@@ -549,8 +610,17 @@ public handler removeNavItem(in pItem as String) returns nothing
 	redraw all
 end handler
 
-private handler locToNavItem(in pLoc as Point) returns Integer
-	return the floor of (the x of pLoc / mBoxWidth) + 1
+private handler addItem()
+    variable tArray as Array
+    put the empty array into tArray
+
+	put "new item" into tArray["name"]
+	put "New Item" into tArray["label"]
+	put kDefaultIconSvg into tArray["icon"]
+	put "" into tArray["selected_icon"]
+	push tArray onto mNavItems
+	put true into mRecalculate
+	redraw all
 end handler
 
 --------------------------------------------------------------------------------
