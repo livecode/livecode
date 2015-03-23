@@ -152,66 +152,11 @@ private handler drawIcon(in pIcon as Integer)
 	
 	if tIconName is not among the keys of mPaths then
 		put path iconSVGPathFromName(tIconName) into tPath
-		
-		// Scale the icon
-		variable tBounds
-		put the bounding box of tPath into tBounds
-	
-		// set origin of bounds to 0,0
-		translate tPath by [- the x of tBounds, - the y of tBounds]
-		// flip vertically
-		scale tPath by [1,-1]
-		translate tPath by [0, the height of tBounds]
 	else
 		put mPaths[tIconName] into tPath
 	end if
 		
-	variable tRect as Rectangle
-	put mIconRects[pIcon] into tRect
-	
-	// Scale appropriately
-	variable isLarger as Boolean
-	variable sx as Number
-	variable sy as Number
-		
-	put false into isLarger
-	put the width of tRect / the width of tBounds into sx
-	put the height of tRect / the height of tBounds into sy
-		
-	if sx > sy then
-		put true into isLarger
-		put sy into sx
-	else
-		put sx into sy
-	end if
-		
-	variable tx as Number
-	variable ty as Number
-		
-	put the left of tRect - (the left of tBounds*sx) into tx
-	put the top of tRect - (the top of tBounds*sy) into ty
-		
-	variable diff as Number
-		
-	if isLarger then
-		put the width of tRect - (the width of tBounds*sy) into diff
-	else
-		put the height of tRect - (the height of tBounds*sy) into diff
-	end if	
-			
-	// align center
-	divide diff by 2
-		
-	if isLarger then
-		add diff to tx
-	else
-		add diff to ty
-	end if
-		
-	// create transformation matrix and apply
-	variable tTransform as Transform
-	put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
-	transform tPath by tTransform
+	setIconPath(mIconRects[pIcon], tPath)
 	
 	if mSelectedElement is defined and tIconName is mSelectedElement then
 		set the paint of this canvas to getPaint("icon", "selected")
@@ -417,6 +362,58 @@ private handler updateIconRects(in pTopOffset as Real)
 	end repeat
 
 	put tRects into mIconRects	
+end handler
+
+private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
+
+	// Scale the icon
+	variable tBounds
+	put the bounding box of xPath into tBounds
+	
+	// set origin of bounds to 0,0
+	translate xPath by [- the x of tBounds, - the y of tBounds]
+	// flip vertically
+	scale xPath by [1,-1]
+	translate xPath by [0, the height of tBounds]
+	
+	// Scale appropriately
+	variable isLarger as Boolean
+	variable tXScale as Real
+	variable tYScale as Real
+		
+	put false into isLarger
+	put the width of pTargetRect / the width of tBounds into tXScale
+	put the height of pTargetRect / the height of tBounds into tYScale
+		
+	if tXScale > tYScale then
+		put true into isLarger
+		put tYScale into tXScale
+	else
+		put tXScale into tYScale
+	end if
+
+    scale xPath by [tXScale, tYScale]
+
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+
+    put the bounding box of xPath into tBounds
+
+	put the left of pTargetRect - the left of tBounds into tXTranslate
+	put the top of pTargetRect - the top of tBounds into tYTranslate
+
+    variable tXDiff as Real
+    variable tYDiff as Real
+
+    put the width of pTargetRect - the width of tBounds into tXDiff
+    put the height of pTargetRect - the height of tBounds into tYDiff
+
+			
+	// align center
+	divide tXDiff by 2
+	divide tYDiff by 2
+
+	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
 --------------------------------------------------------------------------------

@@ -256,20 +256,20 @@ private handler updateParameters()
 			put path mNavItems[tX]["icon"] into tIconPath
 			
 			if mItemStyle is "icons and names" then
-				put rectangle [(tX - 1) * mBoxWidth, mHeight * 0.05, tX * mBoxWidth, mHeight * kIconRatio] into tIconRect
+				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * kIconRatio) / 2, mHeight * 0.05, ((2 * tX - 1) * mBoxWidth + mHeight * kIconRatio) / 2, mHeight * kIconRatio] into tIconRect
 			else if mItemStyle is "icons" then
-				put rectangle [(tX - 1) * mBoxWidth, 0, tX * mBoxWidth, mHeight] into tIconRect
+				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight) / 2, 0, ((2 * tX - 1) * mBoxWidth + mHeight) / 2, mHeight] into tIconRect
 			end if
 			
 			setIconPath(tIconRect, tIconPath)
 			put tIconPath into mNavItems[tX]["icon_path"]
-			put the bounding box of tIconPath into mNavItems[tX]["icon_rect"]
+			put tIconRect into mNavItems[tX]["icon_rect"]
 			
 			if mNavItems[tX]["selected_icon"] is not "" then
 				put path mNavItems[tX]["selected_icon"] into tIconPath
 				setIconPath(tIconRect, tIconPath)
 				put tIconPath into mNavItems[tX]["selected_icon_path"]
-				put the bounding box of tIconPath into mNavItems[tX]["selected_icon_rect"]
+				put tIconRect into mNavItems[tX]["selected_icon_rect"]
 			end if
 
 			setEditableRect("icon" && tX formatted as string, mNavItems[tX]["icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
@@ -320,47 +320,42 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 	
 	// Scale appropriately
 	variable isLarger as Boolean
-	variable sx as Number
-	variable sy as Number
+	variable tXScale as Real
+	variable tYScale as Real
 		
 	put false into isLarger
-	put the width of pTargetRect / the width of tBounds into sx
-	put the height of pTargetRect / the height of tBounds into sy
+	put the width of pTargetRect / the width of tBounds into tXScale
+	put the height of pTargetRect / the height of tBounds into tYScale
 		
-	if sx > sy then
+	if tXScale > tYScale then
 		put true into isLarger
-		put sy into sx
+		put tYScale into tXScale
 	else
-		put sx into sy
+		put tXScale into tYScale
 	end if
-		
-	variable tx as Number
-	variable ty as Number
-		
-	put the left of pTargetRect - (the left of tBounds*sx) into tx
-	put the top of pTargetRect - (the top of tBounds*sy) into ty
-		
-	variable diff as Number
-		
-	if isLarger then
-		put the width of pTargetRect - (the width of tBounds*sy) into diff
-	else
-		put the height of pTargetRect - (the height of tBounds*sy) into diff
-	end if	
+
+    scale xPath by [tXScale, tYScale]
+
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+
+    put the bounding box of xPath into tBounds
+
+	put the left of pTargetRect - the left of tBounds into tXTranslate
+	put the top of pTargetRect - the top of tBounds into tYTranslate
+
+    variable tXDiff as Real
+    variable tYDiff as Real
+
+    put the width of pTargetRect - the width of tBounds into tXDiff
+    put the height of pTargetRect - the height of tBounds into tYDiff
+
 			
 	// align center
-	divide diff by 2
-		
-	if isLarger then
-		add diff to tx
-	else
-		add diff to ty
-	end if
-		
-	// create transformation matrix and apply
-	variable tTransform as Transform
-	put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
-	transform xPath by tTransform
+	divide tXDiff by 2
+	divide tYDiff by 2
+
+	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
 private handler getNavItems() returns String
