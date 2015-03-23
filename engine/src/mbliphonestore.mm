@@ -244,7 +244,10 @@ void MCStoreGetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, M
 	{
 		MCExecValue t_value;
         MCExecFetchProperty(ctxt, t_info, t_purchase, t_value);
-		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
+        if (ctxt.HasError())
+            r_property_value = MCValueRetain(kMCEmptyString);
+        else
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
         return;
     }
     
@@ -450,9 +453,7 @@ void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purch
             && MCStringCreateWithCFString((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
         return;
     
-    // Return an empty string in case of failure, rather than nil and ctxt . Throw()
-    r_identifier = MCValueRetain(kMCEmptyString);
-
+    ctxt . Throw();
 }
 
 void MCPurchaseGetReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef& r_receipt)
@@ -475,7 +476,7 @@ void MCPurchaseGetReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef
         return;
     }
     
-    r_receipt = MCValueRetain(kMCEmptyData);
+    ctxt . Throw();
 }
 
 void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_identifier)
@@ -492,7 +493,7 @@ void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase 
     if (t_original_transaction != nil && MCStringCreateWithCString([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier))
         return;
     
-    r_identifier = MCValueRetain(kMCEmptyString);
+    ctxt . Throw();
 }
 
 void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, integer_t& r_date)
@@ -533,7 +534,7 @@ void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, M
         return;
     }
     
-    r_receipt = MCValueRetain(kMCEmptyData);
+    ctxt . Throw();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
