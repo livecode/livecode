@@ -19,13 +19,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Fontawesome SVG path library
 */
 
-library com.livecode.library.fontawesomeSVGPath
+library com.livecode.library.iconSVG
 
 use com.livecode.engine
 
 metadata version is "1.0.0"
 metadata author is "LiveCode"
-metadata title is "Fontawesome SVG Library"
+metadata title is "Icon SVG Library"
 
 private variable sFontArray as Array
 private variable sNamesList as List
@@ -1125,7 +1125,7 @@ private handler initialise()
 	sort sNamesList in ascending order
 end handler
 
-public handler fontawesomeIconNames() returns String
+public handler iconNames() returns String
 	ensureInitialised()
 
 	variable tNames as String
@@ -1134,12 +1134,12 @@ public handler fontawesomeIconNames() returns String
 	return tNames
 end handler
 
-public handler fontawesomeIconList() returns List
+public handler iconList() returns List
 	ensureInitialised()
 	return sNamesList
 end handler
 
-public handler fontawesomeSVGPathFromName(in pName as String) returns String
+public handler iconSVGPathFromName(in pName as String) returns String
 	ensureInitialised()
 	
 	if pName is among the keys of sFontArray then
@@ -1149,7 +1149,7 @@ public handler fontawesomeSVGPathFromName(in pName as String) returns String
 	return the empty string
 end handler
 
-public handler fontawesomeIconListMatching(in pSearch as String) returns List
+public handler iconListMatching(in pSearch as String) returns List
 	ensureInitialised()
 	
 	variable tMatches as List
@@ -1165,7 +1165,7 @@ public handler fontawesomeIconListMatching(in pSearch as String) returns List
 	return tMatches
 end handler
 
-public handler fontawesomeIconData() as Array
+public handler iconData() as Array
 	return sFontArray
 end handler
 

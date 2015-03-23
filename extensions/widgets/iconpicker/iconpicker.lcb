@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-A widget to display fontawesome icons
+A widget to display icons for picking
 */
 
 widget com.livecode.widget.iconPicker
@@ -24,11 +24,11 @@ widget com.livecode.widget.iconPicker
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.fontawesomeSVGPath
+use com.livecode.library.iconSVG
 
 metadata author is "LiveCode"
 metadata version is "1.0.0"
-metadata title is "Fontawesome Icon Picker"
+metadata title is "Icon Picker"
 
 private variable mDataCount as Integer
 private variable mDataList as List
@@ -54,13 +54,17 @@ private variable mIconRects as List
 
 private variable mSelectedElement as optional String
 
+property preferredSize		get getPreferredSize
+property showFrameBorder	get mFrameBorder	set setFrameBorder
+
 constant kIconColor is [0,0,0]
 constant kIconPadding is 20
 
 constant kTitleHeight is 50
 
 public handler OnCreate()
-	put fontawesomeIconList() into mDataList
+	put iconList() into mDataList
+	
 	put the empty array into mPaths
 	
 	put 1 into mFirstDataItem
@@ -71,10 +75,18 @@ public handler OnCreate()
 	put true into mRecalculate
 	
 	put my height - kTitleHeight into mViewHeight
+	
+	if mViewHeight < 0 then
+		put 1 into mViewHeight
+	end if
+	
 	put my width into mViewWidth
 	
 	put mViewHeight / mNumRows into mRowHeight
 	put mViewWidth / mNumCols into mColWidth
+	
+	put the number of elements in mDataList into mDataCount
+	put mRowHeight * the ceiling of (mDataCount / mNumCols) into mDataHeight
 	
 	put 0 into mHoverRow
 	put 0 into mViewTopPosition
@@ -88,11 +100,22 @@ public handler OnPaint()
 		updateParameters()
 	end if
 
+	// Draw the background
+	if currently popped up then
+		set the paint of this canvas to getPaint("background","popup")
+		fill rectangle path of my bounds on this canvas
+	end if
+	
 	// Draw the icons
 	variable tIcon as Integer
-	repeat with tIcon from 1 up to mNumCols * mNumRows
-		drawIcon(tIcon)
-	end repeat
+	if mNumRows > 0 and mNumCols > 0 then
+		repeat with tIcon from 1 up to mNumCols * mNumRows
+			if tIcon + mFirstDataItem - 1 > mDataCount then
+				exit repeat
+			end if
+			drawIcon(tIcon)
+		end repeat
+	end if
 	
 	paintScrollbar(this canvas, getPaint("scrollbar", "fill"))
 	
@@ -128,7 +151,7 @@ private handler drawIcon(in pIcon as Integer)
 	variable tPath as Path
 	
 	if tIconName is not among the keys of mPaths then
-		put path fontawesomeSVGPathFromName(tIconName) into tPath
+		put path iconSVGPathFromName(tIconName) into tPath
 		
 		// Scale the icon
 		variable tBounds
@@ -206,7 +229,7 @@ end handler
 public handler OnMouseMove() returns nothing
 	if scrollDragging() then
 		variable tScrollPositionRatio as Real
-		scrollbarDrag(mViewHeight)
+		scrollbarDrag(mViewHeight, kTitleHeight)
 		put scrollRatio(mViewHeight) into tScrollPositionRatio
 	
 		// Calculate the new top position of list
@@ -266,11 +289,18 @@ public handler OnClick() returns nothing
 		return
 	end if
 	
-	if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
-		put undefined into mSelectedElement
+	// If this widget is being used as a popup then we close the popup and return a value to the caller
+	if currently popped up and the click count is 2 then
+			// Dismiss the popup - the result will be the value of mSelected
+		close popup returning iconSVGPathFromName(mDataList[tIconNumber])
 	else
-		put mDataList[tIconNumber] into mSelectedElement
+		if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
+			put undefined into mSelectedElement
+		else
+			put mDataList[tIconNumber] into mSelectedElement
+		end if
 	end if
+	
 	redraw all
 end handler
 
@@ -321,7 +351,7 @@ private handler updateParameters() returns nothing
 	put mViewWidth / mNumCols into mColWidth
 	
 	put the number of elements in mDataList into mDataCount
-	put mRowHeight * mDataCount into mDataHeight
+	put mRowHeight * the ceiling of (mDataCount / mNumCols) into mDataHeight
 	
 	put mDataHeight - mViewHeight into mDataTravel
 	if mDataTravel < 0 then
@@ -373,8 +403,8 @@ end handler
 
 private handler getPaint(pLocation, pType) returns Paint
 	if pLocation is "background" then
-		if pType is "fill" then
-			return solid paint with stringToColor("178,178,178")
+		if pType is "popup" then
+			return solid paint with stringToColor("255,255,255,128")
 		end if
 	else if pLocation is "icon" then
 		if pType is "selected" then
@@ -426,6 +456,21 @@ private handler stringToColor(in pString as String) returns Color
 	end if
 
 	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Properties
+--
+--------------------------------------------------------------------------------
+
+public handler getPreferredSize() returns List
+	return [150 * mNumCols, 150 * mNumRows + kTitleHeight]
+end handler
+
+public handler setFrameBorder(in pValue as Boolean)
+	put pValue into mFrameBorder
+	redraw all
 end handler
 
 --------------------------------------------------------------------------------
@@ -493,6 +538,7 @@ private handler updateScrollbar(in pViewWidth as Real, in pViewHeight as Real, i
 	variable tScrollbarRatio as Real
 	
 	put pDataHeight - pViewHeight into tScrollableHeight
+	
 	if tScrollableHeight < 0 then
 		put 0 into tScrollableHeight
 	end if	
@@ -503,7 +549,7 @@ private handler updateScrollbar(in pViewWidth as Real, in pViewHeight as Real, i
 		put 0 into mScrollbarHeight
 	else
 		put pViewHeight * tScrollbarRatio into tScrollbarHeight
-	
+		
 		if tScrollbarHeight < 25 then
 			put 25 into mScrollbarHeight
 		else
@@ -529,20 +575,20 @@ private handler setScrollbarY(in pScrollbarY as Real)
 	put pScrollbarY into mScrollbarY
 end handler
 
-private handler scrollbarDrag(in pViewHeight as Real)
+private handler scrollbarDrag(in pViewHeight as Real, in pViewOffset as Real)
 	// Get the mouse y position
 	variable tMouseY as Real
 	put the y of the mouse position into tMouseY
 		
-	if tMouseY < mDragScrollbarOffset then
-		put mDragScrollbarOffset into tMouseY
-	else if tMouseY > mViewHeight + mDragScrollbarOffset - mScrollbarHeight then
-		put mViewHeight + mDragScrollbarOffset - mScrollbarHeight into tMouseY
+	if tMouseY < pViewOffset + mDragScrollbarOffset then
+		put pViewOffset + mDragScrollbarOffset into tMouseY
+	else if tMouseY > mViewHeight + pViewOffset + mDragScrollbarOffset - mScrollbarHeight then
+		put mViewHeight + pViewOffset + mDragScrollbarOffset - mScrollbarHeight into tMouseY
 	end if
 		
 	// Set the y of the new middle of the scrollbar
 	variable tScrollbarY as Real
-	put tMouseY - mDragScrollbarOffset into tScrollbarY
+	put tMouseY - mDragScrollbarOffset - pViewOffset into tScrollbarY
 	setScrollbarY(tScrollbarY)
 end handler
 
