@@ -215,7 +215,7 @@ private handler drawIcon(in pIcon as Integer)
 	
 	if mSelectedElement is defined and tIconName is mSelectedElement then
 		set the paint of this canvas to getPaint("icon", "selected")
-		fill rectangle path of the bounding box of tPath on this canvas
+		fill rectangle path of indexToSectorRect(pIcon) on this canvas
 	end if
 	
 	set the paint of this canvas to solid paint with color kIconColor
@@ -304,14 +304,38 @@ public handler OnClick() returns nothing
 	redraw all
 end handler
 
+private handler indexToSectorRect(in pIndex as Integer) as Rectangle
+	log pIndex
+
+	variable tLeft as Real
+	variable tRight as Real
+	variable tTop as Real
+	variable tBottom as Real
+
+	variable tRow as Integer
+	variable tCol as Integer
+	put the floor of ((pIndex - 1) / mNumRows) + 1 into tRow
+	put pIndex wrap mNumCols into tCol
+	
+	log tRow
+	log tCol
+
+	put (tCol - 1) * mViewWidth / mNumCols into tLeft
+	put tCol * mViewWidth / mNumCols into tRight
+	put (tRow - 1) * mViewHeight / mNumRows + kTitleHeight into tTop
+	put tRow * mViewHeight / mNumRows + kTitleHeight into tBottom
+
+	return rectangle [tLeft, tTop, tRight, tBottom]
+end handler
+
 private handler mousePosToIconNumber(in pMouse as Point) returns Integer
 	variable tRow as Integer
-	put the trunc of (the y of pMouse / mRowHeight) into tRow
+	put the floor of ((the y of pMouse - kTitleHeight) / mRowHeight) + 1 into tRow
 	
 	variable tCol as Integer
-	put the trunc of (the x of pMouse / mColWidth) into tCol
+	put the floor of (the x of pMouse / mColWidth) + 1 into tCol
 	
-	return (tRow - 1) * mNumCols + tCol + mFirstDataItem
+	return (tRow - 1) * mNumCols + tCol + mFirstDataItem - 1
 end handler
 
 public handler OnGeometryChanged()
@@ -337,7 +361,7 @@ private handler ensureViewTopPosition()
 end handler
 
 private handler updateFirstDataItem()
-	put the floor of (mViewTopPosition / mRowHeight - 1) * 3 into mFirstDataItem
+	put the floor of (mViewTopPosition / mRowHeight + 1) * 3 into mFirstDataItem
 	if mFirstDataItem < 1 then
 		put 1 into mFirstDataItem
 	end if	
