@@ -312,16 +312,18 @@ typedef HRESULT (WINAPI *SHCreateItemFromParsingNamePtr)(PCWSTR pszPath, IBindCt
 // In the case of an open dialog <p_initial> is a folder
 //
 
-void MCU_w32path2std(char *p_path)
+// SN-2015-03-13: [[ Bug 14611 ]] Update funtion to StringRefs
+bool MCU_w32path2std(MCStringRef p_path, MCStringRef &r_std_path)
 {
-	if (p_path == NULL || !*p_path)
-		return;
+	MCAutoStringRef t_std_path;
 
-	do 
-	{
-		if (*p_path == '\\')
-			*p_path = '/';
-	} while (*++p_path);
+	if (!MCStringMutableCopy(p_path, &t_std_path))
+		return false;
+
+	if (!MCStringFindAndReplaceChar(*t_std_path, '\\', '/', kMCStringOptionCompareExact))
+		return false;
+
+	return MCStringCopy(*t_std_path, r_std_path);
 }
 
 static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
@@ -335,7 +337,14 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 	if (p_initial != nil && !MCStringIsEmpty(p_initial))
 	{
 		MCAutoStringRef t_fixed_path;
-		/* UNCHECKED */ MCU_fix_path(p_initial, &t_fixed_path);
+		MCAutoStringRef t_std_path;
+
+		// SN-2015-03-13: [[ Bug 14611 ]] Reinstate former behaviour, that is to 
+		//  fix backslash-delimited paths
+		if (!MCU_w32path2std(p_initial, &t_std_path))
+			return ERROR_OUTOFMEMORY;
+
+		/* UNCHECKED */ MCU_fix_path(*t_std_path, &t_fixed_path);
 
 		if (MCS_exists(*t_fixed_path, False))
 			t_initial_folder = *t_fixed_path;
