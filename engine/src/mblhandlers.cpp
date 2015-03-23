@@ -1327,9 +1327,10 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
         MCAutoBooleanRef t_bool;
         p_parameters->eval(ctxt, &t_value);
         // PM-2015-03-11: [[ Bug 14855 ]] Evaluate correctly the second param
-        /* UNCHECKED */ ctxt . ConvertToBoolean(*t_value, &t_bool);
-        t_loosely = MCValueIsEqualTo(*t_bool, kMCTrue);
-
+        if (ctxt . ConvertToBoolean(*t_value, &t_bool))
+            t_loosely = MCValueIsEqualTo(*t_bool, kMCTrue);
+        else
+            ctxt.Throw();
     }
     
 	ctxt . SetTheResultToEmpty();
@@ -1579,8 +1580,10 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
         MCAutoBooleanRef t_bool;
         p_parameters->eval(ctxt, &t_value);
         // PM-2015-03-11: [[ Bug 14855 ]] Evaluate correctly the second param
-        /* UNCHECKED */ ctxt . ConvertToBoolean(*t_value, &t_bool);
-        t_detailed = MCValueIsEqualTo(*t_bool, kMCTrue);
+        if(ctxt . ConvertToBoolean(*t_value, &t_bool))
+            t_detailed = MCValueIsEqualTo(*t_bool, kMCTrue);
+        else
+            ctxt.Throw();
     }
     
     ctxt . SetTheResultToEmpty();
