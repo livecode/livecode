@@ -384,7 +384,7 @@ void MCPurchaseGetProductIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase,
     if (t_payment != nil && MCStringCreateWithCFString((CFStringRef)[t_payment productIdentifier], r_productIdentifier))
         return;
     
-    r_productIdentifier = MCValueRetain(kMCEmptyString);
+    ctxt . Throw();
 }
 
 void MCPurchaseGetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t& r_quantity)
