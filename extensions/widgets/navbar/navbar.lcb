@@ -61,9 +61,6 @@ metadata title is "Navigation Bar"
 --
 
 -- property declarations
-property navItems 		get getNavItems		set setNavItems
-metadata navItems.editor is "com.livecode.pi.text"
-metadata navItems.default is "contacts,Contacts,f007,f007\nfavourites,Favourites,f005,f006\nmusic,Music,f001,f001\nsearch,Search,f002,f002"
 
 property selectedItem	get mSelectedItem 	set setNavSelectedItem
 metadata selectedItem.default is "1"
@@ -75,11 +72,14 @@ metadata itemStyle.editor is "com.livecode.pi.enum"
 metadata itemStyle.options is "icons,names,icons and names"
 metadata itemStyle.default is "icons and names"
 
+property navNames		get getNavNames			set setNavNames
+property navIcons		get getNavIcons			set setNavIcons
+property navLabels		get getNavLabels		set setNavLabels
 --
 
 -- private instance variables
 private variable mTheme as String
-private variable mNavItems as List
+private variable mNavData as List
 
 private variable mSelectedItem as Integer
 private variable mItemStyle as String
@@ -103,11 +103,15 @@ constant kAddItemIconSVG is "M1216 576v128q0 26 -19 45t-45 19h-256v256q0 26 -19 
 
 constant kIconRatio is 0.65
 
+constant kDefaultNavName is "New item"
+constant kDefaultNavLabel is "new item"
+constant kDefaultSelectedIconSVG is ""
+
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mTheme into rProperties["theme"]
-	put mNavItems into rProperties["items"]
+	put mNavData into rProperties["items"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
 	
@@ -116,7 +120,7 @@ end handler
 
 public handler OnLoad(in pProperties as Array)
 	put pProperties["theme"] into mTheme
-	put pProperties["items"] into mNavItems
+	put pProperties["items"] into mNavData
 	put pProperties["selected"] into mSelectedItem
 	put pProperties["itemStyle"] into mItemStyle
 end handler
@@ -156,7 +160,7 @@ public handler OnCreate() returns nothing
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
 
-	put tNavItems into mNavItems
+	put tNavItems into mNavData
 
 	put 1 into mSelectedItem
 	put "icons and names" into mItemStyle
@@ -202,15 +206,15 @@ public handler OnPaint() returns nothing
 		-- Draw the text of the nav bar
 		if mItemStyle is "icons and names" then
 			set the font of this canvas to getFont("label")
-			fill text mNavItems[tX]["label"] at center of mNavItems[tX]["label_rect"] on this canvas
+			fill text mNavData[tX]["label"] at center of mNavData[tX]["label_rect"] on this canvas
 		end if
 	
 		-- Draw the icon
 		variable tIconPath as Path
-		if tX is mSelectedItem and mNavItems[tX]["selected_icon"] is not "" then
-            put mNavItems[tX]["selected_icon_path"] into tIconPath
+		if tX is mSelectedItem and mNavData[tX]["selected_icon"] is not "" then
+            put mNavData[tX]["selected_icon_path"] into tIconPath
 		else
-            put mNavItems[tX]["icon_path"] into tIconPath
+            put mNavData[tX]["icon_path"] into tIconPath
 		end if
 		fill tIconPath on this canvas
 	end repeat
@@ -268,7 +272,7 @@ public handler OnClick() returns nothing
 			redraw all
 		
 			variable tItemLabel as String
-			put mNavItems[mSelectedItem]["label"] into tItemLabel
+			put mNavData[mSelectedItem]["label"] into tItemLabel
 			post "navigate" with [tItemLabel]
 		end if
 	end if
@@ -278,7 +282,7 @@ private handler updateParameters()
 	// update variables
 	put my width into mWidth
 	put my height into mHeight
-	put the number of elements in mNavItems into mNavItemCount
+	put the number of elements in mNavData into mNavItemCount
 	if mEditMode then
 		put mWidth / (mNavItemCount + 1) into mBoxWidth
 	else
@@ -291,10 +295,10 @@ private handler updateParameters()
 	variable tIconRect as Rectangle
 	
 	repeat with tX from 1 up to mNavItemCount
-		put rectangle [(tX - 1) * mBoxWidth, mHeight * kIconRatio, tX * mBoxWidth, mHeight] into mNavItems[tX]["label_rect"]
+		put rectangle [(tX - 1) * mBoxWidth, mHeight * kIconRatio, tX * mBoxWidth, mHeight] into mNavData[tX]["label_rect"]
 			
 		if mItemStyle contains "icons" then
-			put path mNavItems[tX]["icon"] into tIconPath
+			put path mNavData[tX]["icon"] into tIconPath
 			
 			if mItemStyle is "icons and names" then
 				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * kIconRatio) / 2, mHeight * 0.05, ((2 * tX - 1) * mBoxWidth + mHeight * kIconRatio) / 2, mHeight * kIconRatio] into tIconRect
@@ -303,17 +307,17 @@ private handler updateParameters()
 			end if
 			
 			setIconPath(tIconRect, tIconPath)
-			put tIconPath into mNavItems[tX]["icon_path"]
-			put tIconRect into mNavItems[tX]["icon_rect"]
+			put tIconPath into mNavData[tX]["icon_path"]
+			put tIconRect into mNavData[tX]["icon_rect"]
 			
-			if mNavItems[tX]["selected_icon"] is not "" then
-				put path mNavItems[tX]["selected_icon"] into tIconPath
+			if mNavData[tX]["selected_icon"] is not "" then
+				put path mNavData[tX]["selected_icon"] into tIconPath
 				setIconPath(tIconRect, tIconPath)
-				put tIconPath into mNavItems[tX]["selected_icon_path"]
-				put tIconRect into mNavItems[tX]["selected_icon_rect"]
+				put tIconPath into mNavData[tX]["selected_icon_path"]
+				put tIconRect into mNavData[tX]["selected_icon_rect"]
 			end if
 
-			setEditableRect("icon" && tX formatted as string, mNavItems[tX]["icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
+			setEditableRect("icon" && tX formatted as string, mNavData[tX]["icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
 		end if
 	end repeat
 	
@@ -340,7 +344,7 @@ public handler iconSelected(in pSelectedIcon as optional any, in pClickPos as Po
 	if pSelectedIcon is defined then
 		put clickPosToComponent(pClickPos) into tElementNumber
 		if tElementNumber > 0 then
-			put pSelectedIcon into mNavItems[tElementNumber]["icon"]
+			put pSelectedIcon into mNavData[tElementNumber]["icon"]
 			put true into mRecalculate
 			redraw all
 		end if
@@ -351,7 +355,7 @@ private handler clickPosToComponent(in pClickPos as Point) returns Integer
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
 		variable tIconRect as Rectangle
-    	put mNavItems[tX]["icon_rect"] into tIconRect
+    	put mNavData[tX]["icon_rect"] into tIconRect
 		if pClickPos is within tIconRect then
 			return tX		
 		end if
@@ -429,13 +433,13 @@ private handler getNavItems() returns String
 	put the empty string into tStringLine
 	put the empty list into tItemList
 	
-	repeat with tCount from 1 up to the number of elements in element 1 of mNavItems
+	repeat with tCount from 1 up to the number of elements in element 1 of mNavData
 		put the empty list into tListLine
 			
-		push element tCount of element 1 of mNavItems onto back of tListLine
-		push element tCount of element 2 of mNavItems onto back of tListLine
-		push element tCount of element 3 of mNavItems onto back of tListLine
-		push element tCount of element 4 of mNavItems onto back of tListLine
+		push element tCount of element 1 of mNavData onto back of tListLine
+		push element tCount of element 2 of mNavData onto back of tListLine
+		push element tCount of element 3 of mNavData onto back of tListLine
+		push element tCount of element 4 of mNavData onto back of tListLine
 		
 		combine tListLine with "," into tStringLine
 		push tStringLine onto back of tItemList
@@ -495,7 +499,7 @@ public handler setTheme(in pThemeName as String) returns nothing
 end handler
 
 public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
-	if pSelectedItem > 0 and pSelectedItem <= the number of elements in mNavItems then
+	if pSelectedItem > 0 and pSelectedItem <= the number of elements in mNavData then
 		put pSelectedItem into mSelectedItem
 		redraw all
 	end if
@@ -513,112 +517,170 @@ public handler setEditMode(in pEditMode as Boolean) returns nothing
 	redraw all
 end handler
 
-private handler setNavItems(in pNavItems as String) returns nothing
+--------------------------------------------------------------------------------
+--
+--		Data utilities
+--
+--------------------------------------------------------------------------------
+
+private handler listToArray(in pList as List) returns Array
+	variable tCount
+	variable tArray
+	put the empty array into tArray
+	repeat with tCount from 1 up to the number of elements in pList
+		put element tCount of pList into tArray[tCount]
+	end repeat
+	return tArray
+end handler
+
+private handler setData(in pArray as Array, in pKeys as List, out rList as List)
+	variable tOrder as List
+	put the keys of pArray into tOrder
+	sort tOrder in ascending order
 	
-	variable tNavItems as List
-	split pNavItems by newline into tNavItems
+	variable tOrderKey
+	variable tKey
+	variable tElement as Array
+	variable tList as List
+	put the empty list into tList
 	
-	variable tNavElement
-	variable tListElement
-	
-	variable tFinalActions as List
-	variable tStringToList as List
-	put the empty list into tFinalActions
-	
-	repeat for each element tNavElement in tNavItems
-		put the empty list into tStringToList
-		split tNavElement by "," into tStringToList
-		
-		repeat for each element tListElement in tStringToList
-			push tListElement onto back of tFinalActions
+	repeat for each element tOrderKey in tOrder
+		put the empty array into tElement	
+		repeat for each element tKey in pKeys
+			put pArray[tOrderKey][tKey] into tElement[tKey]
 		end repeat
-		
+		push tElement onto tList
 	end repeat
 	
-	variable tNavCount as Integer
-	variable tCount as Integer
-	put the trunc of (the number of elements in tFinalActions)/4 into tNavCount
+	put tList into rList
 	
-	variable tNameList as List
-	variable tLabelList as List
-	variable tIconList as List
-	variable tSelectedIconList as List
-	put the empty list into tNameList
-	put the empty list into tLabelList
-	put the empty list into tIconList
-	put the empty list into tSelectedIconList
+	put true into mRecalculate
 	
-	repeat with tCount from 1 up to tNavCount
-		push element (4*tCount)-3 of tFinalActions onto back of tNameList
-		push element (4*tCount)-2 of tFinalActions onto back of tLabelList
-		push element (4*tCount)-1 of tFinalActions onto back of tIconList
-		push element 4*tCount of tFinalActions onto back of tSelectedIconList
+	redraw all	
+end handler
+
+private handler getDataElement(in pElementName as String, in pList as List) returns String
+	variable tList
+	put the empty list into tList
+	
+	variable tElement
+	repeat for each element tElement in pList
+		push tElement[pElementName] onto tList
 	end repeat
 	
-	put [tNameList,tLabelList,tIconList,tSelectedIconList] into mNavItems
-	
-	redraw all
+	variable tElements
+	combine tList with "," into tElements
+	return tElements
 end handler
 
-public handler addNavItem(in pNewItem as String) returns nothing
+private handler setDataElement(in pElementName as String, in pElements as String, in pDefaultArray as Array, inout xList as List)
+	variable tElements
+	split pElements by "," into tElements
 
-	variable tNewItem as List
-	split pNewItem by "," into tNewItem
-
-	variable tNameList as List
-	variable tLabelList as List
-	variable tIconList as List
-	variable tSelectedIconList as List
-	put element 1 of mNavItems into tNameList
-	put element 2 of mNavItems into tLabelList
-	put element 3 of mNavItems into tIconList
-	put element 4 of mNavItems into tSelectedIconList
+	variable tCount
+	put 0 into tCount
 	
-	push element 1 of tNewItem onto back of tNameList
-	push element 2 of tNewItem onto back of tLabelList
-	push element 3 of tNewItem onto back of tIconList
-	push element 4 of tNewItem onto back of tSelectedIconList
-	
-	put [tNameList,tLabelList,tIconList,tSelectedIconList] into mNavItems
-
-	redraw all
-end handler
-
-public handler removeNavItem(in pItem as String) returns nothing
-	
-	variable tItems as String
-	variable tItemList as List
-	put getNavItems() into tItems
-	split tItems by newline into tItemList
-	put the empty string into tItems
-	
-	variable tItemElement
-	variable tCount as Integer
-	put 1 into tCount
-	
-	repeat for each element tItemElement in tItemList
-		if tItemElement contains pItem then
-			delete element tCount of tItemList
+	variable tElement
+	repeat for each element tElement in xList
+		add 1 to tCount
+		if tCount > the number of elements in tElements then
+			put pDefaultArray[pElementName] into xList[tCount][pElementName]
+		else
+			put tElements[tCount] into xList[tCount][pElementName]
 		end if
-	add 1 to tCount
 	end repeat
 	
-	combine tItemList with newline into tItems
+	// If we there are more of the given element than there are items, generate more
+	add 1 to tCount
+	repeat with tCount from tCount up to the number of elements in tElements
+		push pDefaultArray onto xList
+		put tElements[tCount] into xList[tCount][pElementName]
+	end repeat
 	
-	setNavItems(tItems)
+	put true into mRecalculate
 	
-	redraw all
+	redraw all	
+end handler
+
+// Only the primary data element ("name" for both actions and nav) can *reduce* the number of elements in the data list.
+private handler setPrimaryDataElement(in pElementName as String, in pElements as String, in pDefaultArray as Array, inout xList as List)
+	variable tElements
+	split pElements by "," into tElements
+
+	variable tCount
+	put 0 into tCount
+	
+	variable tElement
+	repeat for each element tElement in tElements
+		add 1 to tCount
+		if tCount > the number of elements in xList then
+			push pDefaultArray onto xList
+		end if
+		
+		put tElement into xList[tCount][pElementName]
+	end repeat
+
+	// If we there are more items than there are primary elements, pop them off.
+	add 1 to tCount
+	repeat with tCount from tCount up to the number of elements in xList
+		pop xList
+	end repeat
+	
+	put true into mRecalculate
+	
+	redraw all	
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Nav data handling
+--
+--------------------------------------------------------------------------------
+
+private handler defaultNavArray() returns Array
+	variable tArray as Array
+	put the empty array into tArray
+	put kDefaultNavName into tArray["name"]
+	put kDefaultNavLabel into tArray["label"]
+	put kDefaultIconSVG into tArray["icon"]
+	put kDefaultSelectedIconSVG into tArray["selected_icon"]
+	return tArray
+end handler
+
+private handler getNavData() returns Array
+	return listToArray(mNavData)
+end handler
+
+private handler setNavData(in pNavData as Array)
+	setData(pNavData, the keys of defaultNavArray(), mNavData)
+end handler
+
+private handler getNavNames() returns String
+	return getDataElement("name", mNavData)
+end handler
+
+private handler setNavNames(in pNames as String)
+	setPrimaryDataElement("name", pNames, defaultNavArray(), mNavData)
+end handler
+
+private handler getNavIcons() returns String
+	return getDataElement("icon", mNavData)
+end handler
+
+private handler setNavIcons(in pIcons as String)
+	setDataElement("icon", pIcons, defaultNavArray(), mNavData)
+end handler
+
+private handler getNavLabels() returns String
+	return getDataElement("label", mNavData)
+end handler
+
+private handler setNavLabels(in pLabels as String)
+	setDataElement("label", pLabels, defaultNavArray(), mNavData)
 end handler
 
 private handler addItem()
-    variable tArray as Array
-    put the empty array into tArray
-
-	put "new item" into tArray["name"]
-	put "New Item" into tArray["label"]
-	put kDefaultIconSvg into tArray["icon"]
-	put "" into tArray["selected_icon"]
-	push tArray onto mNavItems
+	push defaultNavArray() onto mNavData
 	put true into mRecalculate
 	redraw all
 end handler
