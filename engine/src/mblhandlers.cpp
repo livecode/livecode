@@ -903,11 +903,7 @@ Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters)
     
     if (!ctxt.HasError())
     {
-        // PM-2015-03-10: [[ Bug 14858 ]] t_prop_value can be nil if the property is not found
-        if (*t_prop_value != NULL)
-            ctxt.SetTheResultToValue(*t_prop_value);
-        else
-            ctxt . SetTheResultToEmpty();
+        ctxt.SetTheResultToValue(*t_prop_value);
         return ES_NORMAL;
     }
     
