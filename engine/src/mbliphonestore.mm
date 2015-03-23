@@ -381,7 +381,7 @@ void MCPurchaseGetProductIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase,
     if (t_payment != nil && MCStringCreateWithCFString((CFStringRef)[t_payment productIdentifier], r_productIdentifier))
         return;
     
-    ctxt . Throw();
+    r_productIdentifier = MCValueRetain(kMCEmptyString);
 }
 
 void MCPurchaseGetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t& r_quantity)
@@ -450,7 +450,9 @@ void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purch
             && MCStringCreateWithCFString((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
         return;
     
-    ctxt . Throw();
+    // Return an empty string in case of failure, rather than nil and ctxt . Throw()
+    r_identifier = MCValueRetain(kMCEmptyString);
+
 }
 
 void MCPurchaseGetReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef& r_receipt)
@@ -473,7 +475,7 @@ void MCPurchaseGetReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef
         return;
     }
     
-    ctxt . Throw();
+    r_receipt = MCValueRetain(kMCEmptyData);
 }
 
 void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_identifier)
@@ -490,13 +492,13 @@ void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase 
     if (t_original_transaction != nil && MCStringCreateWithCString([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier))
         return;
     
-    ctxt . Throw();
+    r_identifier = MCValueRetain(kMCEmptyString);
 }
 
 void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, integer_t& r_date)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-    \
+    
 	SKPaymentTransaction *t_transaction = nil;
 	SKPaymentTransaction *t_original_transaction = nil;
     t_transaction = t_ios_data->transaction;
@@ -531,7 +533,7 @@ void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, M
         return;
     }
     
-    ctxt . Throw();
+    r_receipt = MCValueRetain(kMCEmptyData);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
