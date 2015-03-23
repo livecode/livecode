@@ -1467,7 +1467,8 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCCursorRef t_cursor;
 	MCInterfaceSetCursor(ctxt, p_value, false, t_cursor);
-	if (t_cursor != nil)
+    // PM-2015-03-17: [[ Bug 14965 ]] Error check to prevent a crash if cursor image not found
+	if (t_cursor != nil && !ctxt.HasError())
 	{
 		MCcursor = t_cursor;
 		MCcursorid = p_value;
