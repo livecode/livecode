@@ -1011,14 +1011,14 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 	if (t_nesting > 0)
 	{
 		while(t_nesting > 0 && t_index < p_length - 1)
-		{
+        {
 			uindex_t t_new_index = t_index;
-			if (t_char == '/' && next_valid_char(p_text, t_new_index) == '*')
+            /*if (t_char == '/' && next_valid_char(p_text, t_new_index) == '*')
 			{
 				t_nesting += 1;
 				t_index = t_new_index;
-			}
-			else if (t_char == '*' && next_valid_char(p_text, t_new_index) == '/')
+            }
+            else */if (t_char == '*' && next_valid_char(p_text, t_new_index) == '/')
 			{
 				t_nesting -= 1;
 				t_index = t_new_index;

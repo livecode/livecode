@@ -669,10 +669,11 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
    
    revStandaloneProgress "Copying launch images..."
    
+   -- PM-2015-03-19: [[ Bug 13969 ]] Make sure we use the correct names for the splash images in iphone6/6+
    repeat for each line tType in ("iphone splash" & return & "retina splash,@2x" & return & "ipad portrait splash,-Portrait" & \
          return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
-         return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-iPhone6" & \
-         return & "iphone 6 plus portrait splash,-iPhone6PlusPortrait" & return & "iphone 6 plus landscape splash,-iPhone6PlusLandsacpe")
+         return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
+         return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
          put pBaseFolder & slash before it
@@ -1294,12 +1295,13 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    local tSplashScreens   
    if 1 is among the items of tDeviceFamily then
       put "Default|Default|{320, 480}|Portrait" & return after tSplashScreens
-      put "Default-568h@2x|Default|{320, 568}|Portrait" & return after tSplashScreens      
-      put "Default-iPhone6|Default-iPhone6|{375, 667}|Portrait" & return after tSplashScreens
+      put "Default-568h@2x|Default-568h|{320, 568}|Portrait" & return after tSplashScreens      
+      -- PM-2015-03-19: [[ Bug 13969 ]] Use the correct name for iPhone 6/6+ splash screens
+      put "Default-667h@2x|Default-667h|{375, 667}|Portrait" & return after tSplashScreens
       if tIPhoneOrientation contains "Portrait" then
-         put "Default-iPhone6PlusPortrait|Default-iPhone6PlusPortrait|{414, 736}|Portrait" & return after tSplashScreens
+         put "Default-736h@3x|Default-736h|{414, 736}|Portrait" & return after tSplashScreens
       else
-         put "Default-iPhone6PlusLandscape|Default-iPhone6PlusLandscape|{414, 736}|Landscape" & return after tSplashScreens
+         put "Default-414h@3x|Default-414h|{414, 736}|Landscape" & return after tSplashScreens
       end if      
    end if   
    if 2 is among the items of tDeviceFamily then      
