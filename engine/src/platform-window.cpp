@@ -63,6 +63,8 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_is_focused = false;
 	m_is_iconified = false;
     m_is_realized = false;
+	
+	m_is_opaque = true;
 }
 
 MCPlatformWindow::~MCPlatformWindow(void)
@@ -300,6 +302,11 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 				MCPlatformWindowMaskRetain(m_mask);
 			m_changes . mask_changed = true;
 			break;
+		case kMCPlatformWindowPropertyIsOpaque:
+			assert(p_type == kMCPlatformPropertyTypeBool);
+			m_is_opaque = *(bool *)p_value;
+			m_changes . is_opaque_changed = true;
+			break;
 		case kMCPlatformWindowPropertyContentRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
 			m_content = *(MCRectangle *)p_value;
@@ -403,6 +410,10 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyMask:
 			assert(p_type == kMCPlatformPropertyTypeWindowMask);
+			break;
+		case kMCPlatformWindowPropertyIsOpaque:
+			assert(p_type == kMCPlatformPropertyTypeBool);
+			*(bool *)r_value = m_is_opaque;
 			break;
 		case kMCPlatformWindowPropertyFrameRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
