@@ -1342,7 +1342,9 @@ MCPrinterResult MCWindowsPrinterDevice::Bookmark(const char *title, double x, do
 void MCWindowsPrinter::DoInitialize(void)
 {
 	m_valid = false;
-	m_name = MCValueRetain(kMCEmptyString);
+	// SN-2015-03-18: [[ Win shutdown crash ]] Avoid memory leak at printer
+	//  initialisation
+	MCValueAssign(m_name, kMCEmptyString);
 	m_devmode = NULL;
 	
 	m_dc = NULL;
@@ -1360,6 +1362,8 @@ void MCWindowsPrinter::DoFinalize(void)
 	m_dc_changed = false;
 
 	MCValueRelease(m_name);
+	// SN-2015-03-18: [[ Win shutdown crash ]] Do not over-release m_name
+	m_name = NULL;
 
 	delete m_devmode;
 	m_valid = false;
