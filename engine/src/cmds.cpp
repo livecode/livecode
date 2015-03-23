@@ -2376,7 +2376,16 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 	} 
     
 	if (chunktype == CT_CARD || chunktype == CT_MARKED)
-		MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
+    {
+        if (t_object . object == nil ||
+            t_object . object -> gettype() != CT_STACK)
+		{
+            ctxt . LegacyThrow(EE_SORT_CANTSORT);
+			return;
+		}
+        
+        MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
+    }
 	else if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 	{
         MCStringRef t_sorted_target;
