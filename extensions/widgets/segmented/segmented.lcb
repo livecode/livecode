@@ -165,6 +165,8 @@ property selectedIcons		get getSelectedIcons	set setSelectedIcons
 property segmentDisplay		get mSegmentDisplay		set setSegmentDisplay
 property segmentMinWidth	get getSegmentMinWidth	set setSegmentMinWidth
 property selectedSegment	get getSelectedSegment	set setSelectedSegment	
+
+property showFrameBorder	get mShowFrameBorder	set setShowFrameBorder
 --
 
 -- property metadata
@@ -214,6 +216,8 @@ private variable mLeft				as Real
 private variable mPerimeter			as Path
 private variable mLines				as List			-- list of line paths
 private variable mRadius			as Real
+
+private variable mShowFrameBorder	as Boolean
 --
 
 -- constants
@@ -233,6 +237,7 @@ public handler OnSave(out rProperties as Array)
 	put mSegmentDisplay		into rProperties["segmentDisplay"]
 	put mSegmentMinWidth	into rProperties["segmentMinWidth"]	
 	put mSelectedSegments	into rProperties["selectedSegment"]
+	put mShowFrameBorder	into rProperties["showFrameBorder"]
 	
 	return rProperties
 end handler
@@ -248,6 +253,7 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["segmentDisplay"]	into mSegmentDisplay
 	put pProperties["segmentMinWidth"]	into mSegmentMinWidth
 	put pProperties["selectedSegment"]	into mSelectedSegments
+	put pProperties["showFrameBorder"]	into mShowFrameBorder
 	
 end handler
 
@@ -275,6 +281,7 @@ public handler OnCreate()
 	put the empty list into mLines
 	put 0 into mRadius
 	--
+	put false into mShowFrameBorder
 	
 end handler
 
@@ -295,7 +302,7 @@ public handler OnPaint()
 	-- draw the lines to separate the segments
 	set the antialias of this canvas to false
 	set the stroke width of this canvas to 1
-	set the paint of this canvas to fetchPaint("lines")
+	set the paint of this canvas to fetchPaint("lines", "yosemite")
 	
 	variable tLine
 	repeat for each element tLine in mLines
@@ -306,9 +313,11 @@ public handler OnPaint()
 	--
 	
 	-- draw the perimeter of the control
-	set the paint of this canvas to fetchPaint("lines")
-	set the stroke width of this canvas to 1
-	stroke mPerimeter on this canvas
+	if mShowFrameBorder then
+		set the paint of this canvas to fetchPaint("border", "yosemite")
+		set the stroke width of this canvas to 1
+		stroke mPerimeter on this canvas
+	end if
 	--
 	
 	put false into mGeometryIsChanged
@@ -399,50 +408,47 @@ private handler drawSegments() as undefined
 		put tX is in mSelectedSegments into tIsIn
 		
 		if tIsIn then
-	
-			-- fill in the background of the selected segment(s)
-			set the paint of this canvas to fetchPaint("lines")
-			if tX = 1 then
-				-- rounded rectangle segment
-				fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
-				fill rectangle path of rectangle [mLeft+tWidth, 0, mLeft+tWidth*0.5, my height] on this canvas
-				
-			else if tX = mNumSegments then
-				-- rounded rectangle segment
-				fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
-				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth*0.5, my height] on this canvas
-				
-			else
-				fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] on this canvas
-			end if
-			--
-			
-			-- draw the label(s) in the selected segment(s)
-			if mSegmentDisplay is "icon" then
-				get the char with code ((element tX of mSelectedIcons) converted from base 16) 
-				put the result into tLabel
-			else
-				put (element tX of mSegmentLabels) into tLabel
-			end if
-			
-			set the paint of this canvas to fetchPaint("selected label")
-			fill text tLabel at center of fetchLabelRect(tWidth) on this canvas
-			--
+			-- set the paint of the background of the selected segment(s)
+			set the paint of this canvas to fetchPaint("selected background", "yosemite")
 		else
-			
-			-- draw the label(s) in the non-selected segment(s)
-			if mSegmentDisplay is "icon" then
-				get the char with code ((element tX of mSegmentIcons) converted from base 16) 
-				put the result into tLabel
-			else
-				put (element tX of mSegmentLabels) into tLabel
-			end if
-			
-			set the paint of this canvas to fetchPaint("label")	
-			fill text tLabel at center of fetchLabelRect(tWidth) on this canvas
-			--
-			
+			set the paint of this canvas to fetchPaint("background", "yosemite")
+		end if	
+		
+		if tX = 1 then
+			-- rounded rectangle segment
+			fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
+			fill rectangle path of rectangle [mLeft+tWidth, 0, mLeft+tWidth*0.5, my height] on this canvas
+				
+		else if tX = mNumSegments then
+			-- rounded rectangle segment
+			fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
+			fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth*0.5, my height] on this canvas
+				
+		else
+			fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] on this canvas
 		end if
+
+		if tIsIn then
+			-- set the paint of the label(s) in the selected segment(s)
+			set the paint of this canvas to fetchPaint("selected label", "yosemite")
+		else
+			set the paint of this canvas to fetchPaint("label", "yosemite")
+		end if	
+			
+
+		if mSegmentDisplay is "icon" then
+			if tIsIn then
+				get the char with code ((element tX of mSelectedIcons) converted from base 16) 
+			else
+				get the char with code ((element tX of mSegmentIcons) converted from base 16) 
+			end if
+			put the result into tLabel
+		else
+			put (element tX of mSegmentLabels) into tLabel
+		end if
+
+		fill text tLabel at center of fetchLabelRect(tWidth) on this canvas
+
 		add tWidth to mLeft
 	end repeat
 	
@@ -534,19 +540,52 @@ private handler fetchPath(in pObject as String, in pInt as Integer) as Path
 	
 end handler
 
-private handler fetchPaint(in pObject as String) as Paint
+private handler fetchPaint(in pObject as String, in pPlatform as String) as Paint
 	
 	if pObject is "lines" then
-		return solid paint with color [51/255, 153/255, 1]
+		if pPlatform is "yosemite" then
+			return solid paint with color [240/255, 240/255, 240/255]	
+		else
+			return solid paint with color [51/255, 153/255, 1]
+		end if
+		
+	else if pObject is "border" then
+		if pPlatform is "yosemite" then
+			return solid paint with color [240/255, 240/255, 240/255]	
+		else
+			return solid paint with color [51/255, 153/255, 1]
+		end if
+		
+	else if pObject is "selected background" then
+		if pPlatform is "yosemite" then
+			return solid paint with color [110/255, 110/255, 110/255]
+		else
+			return solid paint with color [51/255, 153/255, 1]
+		end if
+		
+	else if pObject is "background" then
+		if pPlatform is "yosemite" then
+			return solid paint with color [1, 1, 1]
+		else
+			return solid paint with color [0, 0, 0, 0]
+		end if
 		
 	else if pObject is "label" then
-		return solid paint with color [51/255, 153/255, 1]
+		if pPlatform is "yosemite" then
+			return solid paint with color [110/255, 110/255, 110/255]
+		else
+			return solid paint with color [51/255, 153/255, 1]
+		end if
 		
 	else if pObject is "selected label" then
-		return solid paint with color [1,1,1]
+		if pPlatform is "yosemite" then
+			return solid paint with color [1, 1, 1]
+		else
+			return solid paint with color [1, 1 ,1]
+		end if
 	
 	end if
-
+	return solid paint with color [1,0,0]
 end handler
 
 private handler fetchFont() as Font
@@ -569,26 +608,17 @@ private handler fetchLabelRect(in pWidth as Real) as Rectangle
 end handler
 
 private handler fetchWidth(in pSegment as Integer) as Real
-	
-	variable tWidth as Real
-	
 	if pSegment is 0 then
 		return 0
-	else
-	
-		if mSegmentDisplay is "icon" then
-			put kIconSize into tWidth
-		else
-			put (the number of chars in element pSegment of mSegmentLabels)*(kTextSize/3)*2 into tWidth
-		end if
-		
-		if tWidth < (element pSegment of mSegmentMinWidth) then
-			put (element pSegment of mSegmentMinWidth) into tWidth
-		end if
-	
-		return tWidth
 	end if
 	
+	variable tWidth as Real
+	put my width / mNumSegments into tWidth
+	if tWidth < (element pSegment of mSegmentMinWidth) then
+		put (element pSegment of mSegmentMinWidth) into tWidth
+	end if
+	
+	return tWidth
 end handler
 
 private handler fetchBounds(in pSegment as Integer) as Rectangle
@@ -677,36 +707,36 @@ private handler getSegmentMinWidth() as String
 	
 end handler
 
-private handler setStyle(in pStyle as String) as undefined
+private handler setStyle(in pStyle as String)
 	put pStyle into mStyle
 	put true into mGeometryIsChanged
 	redraw all
 end handler
 
-private handler setMultiSelect(in pCanMultiSelect as Boolean) as undefined
+private handler setMultiSelect(in pCanMultiSelect as Boolean)
 	put pCanMultiSelect into mMultiSelect
 end handler
 
-private handler setSegmentNames(in pNames as String) as undefined
+private handler setSegmentNames(in pNames as String)
 	split pNames by "," into mSegmentNames
 	put true into mGeometryIsChanged
 	redraw all
 end handler
 
-private handler setSegmentLabels(in pLabels as String) as undefined
+private handler setSegmentLabels(in pLabels as String)
 	split pLabels by "," into mSegmentLabels
 	put true into mGeometryIsChanged
 	redraw all
 end handler
 
-private handler setSegmentIcons(in pIcons as String) as undefined
+private handler setSegmentIcons(in pIcons as String)
 	replace " " with "" in pIcons
 	split pIcons by "," into mSegmentIcons
 	put true into mGeometryIsChanged
 	redraw all
 end handler
 
-private handler setSelectedIcons(in pSelectedIcons as String) as undefined
+private handler setSelectedIcons(in pSelectedIcons as String)
 	replace " " with "" in pSelectedIcons
 	split pSelectedIcons by "," into mSelectedIcons
 	put true into mGeometryIsChanged
@@ -714,13 +744,13 @@ private handler setSelectedIcons(in pSelectedIcons as String) as undefined
 end handler
 
 
-private handler setSegmentDisplay(in pSegmentDisplay as String) as undefined
+private handler setSegmentDisplay(in pSegmentDisplay as String)
 	put pSegmentDisplay into mSegmentDisplay
 	put true into mGeometryIsChanged
 	redraw all
 end handler
 
-private handler setSegmentMinWidth(in pMinWidths as String) as undefined
+private handler setSegmentMinWidth(in pMinWidths as String)
 	put the empty list into mSegmentMinWidth
 	
 	variable tStringList as List
@@ -737,7 +767,7 @@ private handler setSegmentMinWidth(in pMinWidths as String) as undefined
 	redraw all
 end handler
 
-private handler setSelectedSegment(in pSelectedSegment as String) as undefined
+private handler setSelectedSegment(in pSelectedSegment as String) 
 	put the empty list into mSelectedSegments
 	
 	variable tStringList as List
@@ -749,6 +779,11 @@ private handler setSelectedSegment(in pSelectedSegment as String) as undefined
 		put tSelectedString parsed as number into tSelected
 		push tSelected onto back of mSelectedSegments
 	end repeat
+	redraw all
+end handler
+
+private handler setShowFrameBorder(in pShow as Boolean)
+	put pShow into mShowFrameBorder
 	redraw all
 end handler
 
