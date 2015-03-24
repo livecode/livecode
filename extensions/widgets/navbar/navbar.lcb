@@ -100,8 +100,8 @@ private variable mAddItem as Array
 
 constant kIconRatio is 0.65
 
-constant kDefaultNavName is "New item"
-constant kDefaultNavLabel is "new item"
+constant kDefaultNavName is "new item"
+constant kDefaultNavLabel is "New Item"
 constant kDefaultNavIconName is "circle"
 
 public handler OnSave(out rProperties as Array)
@@ -624,6 +624,8 @@ end handler
 
 private handler setNavData(in pNavData as Array)
 	setData(pNavData, the keys of defaultNavArray(), mNavData)
+	put true into mRecalculate
+	redraw all
 end handler
 
 private handler getNavNames() returns String
@@ -632,6 +634,8 @@ end handler
 
 private handler setNavNames(in pNames as String)
 	setPrimaryDataElement("name", pNames, defaultNavArray(), mNavData)
+	put true into mRecalculate
+	redraw all
 end handler
 
 private handler getNavIcons() returns String
@@ -640,8 +644,8 @@ end handler
 
 private handler setNavIcons(in pIcons as String)
 	setDataElement("icon_name", pIcons, defaultNavArray(), mNavData)
-	setDataElement("icon", the empty list, defaultNavArray(), mNavData)
-	setDataElement("selected_icon", the empty list, defaultNavArray(), mNavData)
+	put true into mRecalculate
+	redraw all
 end handler
 
 private handler getNavLabels() returns String
@@ -650,6 +654,8 @@ end handler
 
 private handler setNavLabels(in pLabels as String)
 	setDataElement("label", pLabels, defaultNavArray(), mNavData)
+	put true into mRecalculate
+	redraw all
 end handler
 
 private handler addItem()
