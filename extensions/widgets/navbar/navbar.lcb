@@ -45,13 +45,14 @@ Description:
 Selects a navigation item.
 */
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.navbar
+widget com.livecode.widget.navbar
 --
 
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.library.iconSVG
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
@@ -97,15 +98,11 @@ private variable mAddItem as Array
 
 --
 
-constant kDefaultIconSVG is "M1536 640q0 -209 -103 -385.5t-279.5 -279.5t-385.5 -103t-385.5 103t-279.5 279.5t-103 385.5t103 385.5t279.5 279.5t385.5 103t385.5 -103t279.5 -279.5t103 -385.5z"
-
-constant kAddItemIconSVG is "M1216 576v128q0 26 -19 45t-45 19h-256v256q0 26 -19 45t-45 19h-128q-26 0 -45 -19t-19 -45v-256h-256q-26 0 -45 -19t-19 -45v-128q0 -26 19 -45t45 -19h256v-256q0 -26 19 -45t45 -19h128q26 0 45 19t19 45v256h256q26 0 45 19t19 45zM1536 640q0 -209 -103 -385.5 t-279.5 -279.5t-385.5 -103t-385.5 103t-279.5 279.5t-103 385.5t103 385.5t279.5 279.5t385.5 103t385.5 -103t279.5 -279.5t103 -385.5z"
-
 constant kIconRatio is 0.65
 
 constant kDefaultNavName is "New item"
 constant kDefaultNavLabel is "new item"
-constant kDefaultSelectedIconSVG is ""
+constant kDefaultNavIconName is "circle"
 
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
@@ -138,25 +135,29 @@ public handler OnCreate() returns nothing
 	
 	put "contacts" into tArray["name"]
 	put "Contacts" into tArray["label"]
-	put kDefaultIconSvg into tArray["icon"]
+	put "user" into tArray["icon_name"]
+	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
 	
 	put "favourites" into tArray["name"]
 	put "Favourites" into tArray["label"]
-	put kDefaultIconSvg into tArray["icon"]
+	put "star empty" into tArray["icon_name"]
+	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
 	
 	put "music" into tArray["name"]
 	put "Music" into tArray["label"]
-	put kDefaultIconSvg into tArray["icon"]
+	put "music" into tArray["icon_name"]
+	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
 	
 	put "search" into tArray["name"]
 	put "Search" into tArray["label"]
-	put kDefaultIconSvg into tArray["icon"]
+	put "search" into tArray["icon_name"]
+	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
 
@@ -173,7 +174,9 @@ public handler OnCreate() returns nothing
 	put true into mEditMode
 		
 	put the empty array into mAddItem
-	put kAddItemIconSVG into mAddItem["icon"]
+	put "plus sign" into mAddItem["icon_name"]
+	put "" into mAddItem["icon"]
+	put "" into mAddItem["selected_icon"]
 	put "add item" into mAddItem["name"]
 	put "Add Item" into mAddItem["label"]
 	
@@ -204,7 +207,7 @@ public handler OnPaint() returns nothing
 		end if
 		
 		-- Draw the text of the nav bar
-		if mItemStyle is "icons and names" then
+		if mItemStyle contains "names" then
 			set the font of this canvas to getFont("label")
 			fill text mNavData[tX]["label"] at center of mNavData[tX]["label_rect"] on this canvas
 		end if
@@ -298,6 +301,9 @@ private handler updateParameters()
 		put rectangle [(tX - 1) * mBoxWidth, mHeight * kIconRatio, tX * mBoxWidth, mHeight] into mNavData[tX]["label_rect"]
 			
 		if mItemStyle contains "icons" then
+			if mNavData[tX]["icon"] is "" then
+				put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
+			end if
 			put path mNavData[tX]["icon"] into tIconPath
 			
 			if mItemStyle is "icons and names" then
@@ -324,7 +330,11 @@ private handler updateParameters()
 	if mEditMode then
 		put rectangle [mNavItemCount * mBoxWidth, mHeight * kIconRatio, (mNavItemCount + 1) * mBoxWidth, mHeight] into mAddItem["label_rect"]
 		
+		if mAddItem["icon"] is "" then
+			put iconSVGPathFromName(mAddItem["icon_name"]) into mAddItem["icon"]
+		end if
 		put path mAddItem["icon"] into tIconPath
+		
 		put rectangle [((2 * mNavItemCount + 1) * mBoxWidth - mHeight * kIconRatio) / 2, mHeight * 0.05, ((2 * mNavItemCount + 1) * mBoxWidth + mHeight * kIconRatio) / 2, mHeight * kIconRatio] into tIconRect
 			
 		setIconPath(tIconRect, tIconPath)
@@ -344,7 +354,9 @@ public handler iconSelected(in pSelectedIcon as optional any, in pClickPos as Po
 	if pSelectedIcon is defined then
 		put clickPosToComponent(pClickPos) into tElementNumber
 		if tElementNumber > 0 then
-			put pSelectedIcon into mNavData[tElementNumber]["icon"]
+			put pSelectedIcon into mNavData[tElementNumber]["icon_name"]
+			put "" into mNavData[tElementNumber]["icon"]
+			put "" into mNavData[tElementNumber]["selected_icon"]
 			put true into mRecalculate
 			redraw all
 		end if
@@ -374,23 +386,14 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 	variable tBounds
 	put the bounding box of xPath into tBounds
 	
-	// set origin of bounds to 0,0
-	translate xPath by [- the x of tBounds, - the y of tBounds]
-	// flip vertically
-	scale xPath by [1,-1]
-	translate xPath by [0, the height of tBounds]
-	
 	// Scale appropriately
-	variable isLarger as Boolean
 	variable tXScale as Real
 	variable tYScale as Real
 		
-	put false into isLarger
 	put the width of pTargetRect / the width of tBounds into tXScale
 	put the height of pTargetRect / the height of tBounds into tYScale
 		
 	if tXScale > tYScale then
-		put true into isLarger
 		put tYScale into tXScale
 	else
 		put tXScale into tYScale
@@ -412,44 +415,11 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
     put the width of pTargetRect - the width of tBounds into tXDiff
     put the height of pTargetRect - the height of tBounds into tYDiff
 
-			
 	// align center
 	divide tXDiff by 2
 	divide tYDiff by 2
 
 	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
-end handler
-
-private handler getNavItems() returns String
-	
-	variable tNavItems as List
-	put the empty list into tNavItems
-	
-	variable tCount as Integer
-	variable tListLine as List
-	variable tStringLine as String
-	variable tItemList as List
-	
-	put the empty string into tStringLine
-	put the empty list into tItemList
-	
-	repeat with tCount from 1 up to the number of elements in element 1 of mNavData
-		put the empty list into tListLine
-			
-		push element tCount of element 1 of mNavData onto back of tListLine
-		push element tCount of element 2 of mNavData onto back of tListLine
-		push element tCount of element 3 of mNavData onto back of tListLine
-		push element tCount of element 4 of mNavData onto back of tListLine
-		
-		combine tListLine with "," into tStringLine
-		push tStringLine onto back of tItemList
-	end repeat
-	
-	variable tNavItemString as String
-	put the empty string into tNavItemString
-	combine tItemList with newline into tNavItemString
-	
-	return tNavItemString
 end handler
 
 public handler getPath(in pObject as String) returns Path
@@ -642,8 +612,9 @@ private handler defaultNavArray() returns Array
 	put the empty array into tArray
 	put kDefaultNavName into tArray["name"]
 	put kDefaultNavLabel into tArray["label"]
-	put kDefaultIconSVG into tArray["icon"]
-	put kDefaultSelectedIconSVG into tArray["selected_icon"]
+	put kDefaultNavIconName into tArray["icon_name"]
+	put "" into tArray["icon"]
+	put "" into tArray["selected_icon"]
 	return tArray
 end handler
 
@@ -664,11 +635,13 @@ private handler setNavNames(in pNames as String)
 end handler
 
 private handler getNavIcons() returns String
-	return getDataElement("icon", mNavData)
+	return getDataElement("icon_name", mNavData)
 end handler
 
 private handler setNavIcons(in pIcons as String)
-	setDataElement("icon", pIcons, defaultNavArray(), mNavData)
+	setDataElement("icon_name", pIcons, defaultNavArray(), mNavData)
+	setDataElement("icon", the empty list, defaultNavArray(), mNavData)
+	setDataElement("selected_icon", the empty list, defaultNavArray(), mNavData)
 end handler
 
 private handler getNavLabels() returns String

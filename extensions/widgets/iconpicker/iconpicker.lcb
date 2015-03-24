@@ -60,7 +60,8 @@ property showFrameBorder	get mFrameBorder	set setFrameBorder
 constant kIconColor is [0,0,0]
 constant kIconPadding is 20
 
-constant kTitleHeight is 50
+constant kNumRows is 5
+constant kNumCols is 5
 
 public handler OnCreate()
 	put iconList() into mDataList
@@ -69,12 +70,12 @@ public handler OnCreate()
 	
 	put 1 into mFirstDataItem
 	
-	put 3 into mNumRows
-	put 3 into mNumCols
+	put kNumRows into mNumRows
+	put kNumCols into mNumCols
 	
 	put true into mRecalculate
 	
-	put my height - kTitleHeight into mViewHeight
+	put my height into mViewHeight
 	
 	if mViewHeight < 0 then
 		put 1 into mViewHeight
@@ -82,7 +83,9 @@ public handler OnCreate()
 	
 	put my width into mViewWidth
 	
-	put mViewHeight / mNumRows into mRowHeight
+	put mViewHeight / (mNumRows + 1) into mRowHeight
+	subtract mRowHeight from mViewHeight
+	
 	put mViewWidth / mNumCols into mColWidth
 	
 	put the number of elements in mDataList into mDataCount
@@ -119,28 +122,54 @@ public handler OnPaint()
 	
 	paintScrollbar(this canvas, getPaint("scrollbar", "fill"))
 	
+	drawTitleBar()
+	drawFrame()
+
+end handler
+
+private handler drawFrame()
 	variable tPath as Path
 	// Draw the frame
 	if mFrameBorder is true then
-		put rectangle path of rectangle [0.5,0.5,mViewWidth-0.5,kTitleHeight + mViewHeight-0.5] into tPath
+		put rectangle path of rectangle [0.5,0.5,mViewWidth-0.5,mRowHeight + mViewHeight-0.5] into tPath
 		set the paint of this canvas to getPaint("frame","stroke")
 		stroke tPath on this canvas
 	end if
-	
+end handler
+
+private handler drawTitleBar()
+    variable tPath as Path
+
 	// Draw the title line
-	put line path from point [0.5,kTitleHeight] to point [mViewWidth-0.5, kTitleHeight] into tPath
+	put line path from point [0.5,mRowHeight] to point [mViewWidth-0.5, mRowHeight] into tPath
 	set the paint of this canvas to getPaint("frame","stroke")
 	stroke tPath on this canvas
 	
-	// Draw the selected text
+	// Draw the selected text and icon
 	variable tTextRect as Rectangle
-	put rectangle [0,0,mViewWidth,kTitleHeight] into tTextRect
 	set the paint of this canvas to solid paint with color kIconColor
-	
+
+    variable tFont as Font
+    put my font into tFont
+    set the bold of tFont to true
+	set the font of this canvas to tFont
+
 	if mSelectedElement is undefined then
+		put rectangle [0,0,mViewWidth,mRowHeight] into tTextRect
 		fill text "No icon selected" at center of tTextRect on this canvas
 	else
+		put rectangle [mViewWidth / mNumCols,0,mViewWidth,mRowHeight] into tTextRect
 		fill text mSelectedElement at center of tTextRect on this canvas
+		variable tIconRect as Rectangle
+		put rectangle [0, 0, mViewWidth / mNumCols, mRowHeight] into tIconRect
+		if mSelectedElement is not among the keys of mPaths then
+			put path iconSVGPathFromName(mSelectedElement) into tPath
+		else
+			put mPaths[mSelectedElement] into tPath
+		end if
+		setIconPath(tIconRect, tPath)
+		set the paint of this canvas to solid paint with color kIconColor
+		fill tPath on this canvas
 	end if
 end handler
 
@@ -174,7 +203,7 @@ end handler
 public handler OnMouseMove() returns nothing
 	if scrollDragging() then
 		variable tScrollPositionRatio as Real
-		scrollbarDrag(mViewHeight, kTitleHeight)
+		scrollbarDrag(mViewHeight, mRowHeight)
 		put scrollRatio(mViewHeight) into tScrollPositionRatio
 	
 		// Calculate the new top position of list
@@ -182,7 +211,7 @@ public handler OnMouseMove() returns nothing
 	
 		ensureViewTopPosition()
 		updateFirstDataItem()
-		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, kTitleHeight)
+		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
 		redraw all
 	end if
 end handler
@@ -219,7 +248,7 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 		end if
 		
 		updateFirstDataItem()
-		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, kTitleHeight)
+		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
 		
 		redraw all
     end if
@@ -236,8 +265,8 @@ public handler OnClick() returns nothing
 	
 	// If this widget is being used as a popup then we close the popup and return a value to the caller
 	if currently popped up and the click count is 2 then
-			// Dismiss the popup - the result will be the value of mSelected
-		close popup returning iconSVGPathFromName(mDataList[tIconNumber])
+			// Dismiss the popup - the result will be the name of the selected icon
+		close popup returning mDataList[tIconNumber]
 	else
 		if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
 			put undefined into mSelectedElement
@@ -267,15 +296,15 @@ private handler indexToSectorRect(in pIndex as Integer) as Rectangle
 
 	put (tCol - 1) * mViewWidth / mNumCols into tLeft
 	put tCol * mViewWidth / mNumCols into tRight
-	put (tRow - 1) * mViewHeight / mNumRows + kTitleHeight into tTop
-	put tRow * mViewHeight / mNumRows + kTitleHeight into tBottom
+	put (tRow - 1) * mViewHeight / mNumRows + mRowHeight into tTop
+	put tRow * mViewHeight / mNumRows + mRowHeight into tBottom
 
 	return rectangle [tLeft, tTop, tRight, tBottom]
 end handler
 
 private handler mousePosToIconNumber(in pMouse as Point) returns Integer
 	variable tRow as Integer
-	put the floor of ((the y of pMouse - kTitleHeight) / mRowHeight) + 1 into tRow
+	put the floor of ((the y of pMouse - mRowHeight) / mRowHeight) + 1 into tRow
 	
 	variable tCol as Integer
 	put the floor of (the x of pMouse / mColWidth) + 1 into tCol
@@ -285,7 +314,7 @@ end handler
 
 public handler OnGeometryChanged()
 	// Only resizing necessitates a recalculation
-	if my height is not mViewHeight + kTitleHeight or my width is not mViewWidth then
+	if my height is not mViewHeight + mRowHeight or my width is not mViewWidth then
 		put true into mRecalculate
 	end if
 end handler
@@ -306,17 +335,19 @@ private handler ensureViewTopPosition()
 end handler
 
 private handler updateFirstDataItem()
-	put the floor of (mViewTopPosition / mRowHeight + 1) * 3 into mFirstDataItem
+	put the floor of (mViewTopPosition / mRowHeight + 1) * mNumCols into mFirstDataItem
 	if mFirstDataItem < 1 then
 		put 1 into mFirstDataItem
 	end if	
 end handler
 
 private handler updateParameters() returns nothing
-	put my height - kTitleHeight into mViewHeight
+	put my height into mViewHeight
+	
 	put my width into mViewWidth
 	
-	put mViewHeight / mNumRows into mRowHeight
+	put mViewHeight / (mNumRows + 1) into mRowHeight
+	subtract mRowHeight from mViewHeight
 	put mViewWidth / mNumCols into mColWidth
 	
 	put the number of elements in mDataList into mDataCount
@@ -327,13 +358,13 @@ private handler updateParameters() returns nothing
 		put 0 into mDataTravel
 	end if	
 	
-	updateIconRects(kTitleHeight)
+	updateIconRects(mRowHeight)
 
 	ensureViewTopPosition()
 	updateFirstDataItem()
 	
 	// Calculate scrollbar dimensions
-	updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, kTitleHeight)
+	updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
 	
 	put false into mRecalculate
 end handler
@@ -370,23 +401,14 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 	variable tBounds
 	put the bounding box of xPath into tBounds
 	
-	// set origin of bounds to 0,0
-	translate xPath by [- the x of tBounds, - the y of tBounds]
-	// flip vertically
-	scale xPath by [1,-1]
-	translate xPath by [0, the height of tBounds]
-	
 	// Scale appropriately
-	variable isLarger as Boolean
 	variable tXScale as Real
 	variable tYScale as Real
 		
-	put false into isLarger
 	put the width of pTargetRect / the width of tBounds into tXScale
 	put the height of pTargetRect / the height of tBounds into tYScale
 		
 	if tXScale > tYScale then
-		put true into isLarger
 		put tYScale into tXScale
 	else
 		put tXScale into tYScale
@@ -408,7 +430,6 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
     put the width of pTargetRect - the width of tBounds into tXDiff
     put the height of pTargetRect - the height of tBounds into tYDiff
 
-			
 	// align center
 	divide tXDiff by 2
 	divide tYDiff by 2
@@ -486,7 +507,7 @@ end handler
 --------------------------------------------------------------------------------
 
 public handler getPreferredSize() returns List
-	return [150 * mNumCols, 150 * mNumRows + kTitleHeight]
+	return [150 * mNumCols, 150 * mNumRows + mRowHeight]
 end handler
 
 public handler setFrameBorder(in pValue as Boolean)
