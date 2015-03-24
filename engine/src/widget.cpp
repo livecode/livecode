@@ -29,6 +29,7 @@
 #include "card.h"
 #include "image.h"
 #include "widget.h"
+#include "button.h"
 #include "param.h"
 #include "osspec.h"
 #include "cmds.h"
@@ -49,6 +50,8 @@
 #include "module-canvas.h"
 
 #include "module-engine.h"
+
+#include "graphics_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1835,3 +1838,97 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointRef p
     MCWidgetEvalIsPointWithinRect(p_point, p_rect, t_within);
     r_not_within = !t_within;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCPoint _MCWidgetToStackLoc(MCWidget *p_widget, const MCPoint &p_point)
+{
+	MCRectangle t_rect;
+	t_rect = p_widget->getrect();
+	return MCPointMake(p_point.x + t_rect.x, p_point.y + t_rect.y);
+}
+
+class MCPopupMenuHandler : public MCButtonMenuHandler
+{
+public:
+	MCPopupMenuHandler()
+	{
+		m_pick = nil;
+	}
+	
+	~MCPopupMenuHandler()
+	{
+		MCValueRelease(m_pick);
+	}
+	
+	virtual bool OnMenuPick(MCButton *p_button, MCValueRef p_pick, MCValueRef p_old_pick)
+	{
+		MCValueAssign(m_pick, p_pick);
+		return true;
+	}
+	
+	MCValueRef GetPick()
+	{
+		return m_pick;
+	}
+	
+private:
+	MCValueRef m_pick;
+};
+
+extern "C" MC_DLLEXPORT MCStringRef MCWidgetExecPopupMenuAtLocation(MCStringRef p_menu, MCCanvasPointRef p_at)
+{
+	if (MCwidgetobject == nil)
+	{
+		MCWidgetThrowNoCurrentWidgetError();
+		return nil;
+	}
+	
+	MCButton *t_button;
+	t_button = nil;
+	
+	t_button = (MCButton*)MCtemplatebutton->clone(True, OP_NONE, true);
+	if (t_button == nil)
+	{
+		MCErrorThrowOutOfMemory();
+		return nil;
+	}
+	
+	MCPopupMenuHandler t_handler;
+	
+	MCExecContext ctxt;
+	
+	t_button->setmenuhandler(&t_handler);
+	
+	t_button->SetStyle(ctxt, F_MENU);
+	t_button->SetMenuMode(ctxt, WM_POPUP);
+	t_button->SetText(ctxt, p_menu);
+	
+	MCPoint t_at;
+	MCPoint *t_at_ptr;
+	t_at_ptr = nil;
+	
+	if (p_at != nil)
+	{
+		MCGPoint t_point;
+		MCCanvasPointGetMCGPoint(p_at, t_point);
+		
+		t_at = _MCWidgetToStackLoc(MCwidgetobject, MCGPointToMCPoint(t_point));
+		t_at_ptr = &t_at;
+	}
+	
+	MCInterfaceExecPopupButton(ctxt, t_button, t_at_ptr);
+
+	t_button->SetVisible(ctxt, 0, false);
+	t_button->del();
+	t_button->scheduledelete();
+	
+	MCAutoStringRef t_string;
+	
+	if (t_handler.GetPick() != nil)
+		ctxt.ConvertToString(t_handler.GetPick(), &t_string);
+	
+	return t_string.Take();
+}
+
+////////////////////////////////////////////////////////////////////////////////

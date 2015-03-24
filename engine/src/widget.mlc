@@ -776,4 +776,42 @@ begin
     MCWidgetEvalIsPointNotWithinRect(Point, Rect, output)
 end syntax
 
+// ---------- popups ---------- //
+public foreign handler MCWidgetExecPopupMenuAtLocation(in pMenu as String, in pAt as Point) returns optional String binds to "<builtin>"
+
+
+/*
+Summary:	Displays a popup menu.
+Menu:		An expression that evaluates to a string, which describes the menu items.
+Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
+
+The result:	The selected menu item. If the menu is dismissed (by clicking outside the bounds of the menu) this value will be undefined.
+
+Example:
+	private variable mFont as Font
+
+	public handler OnMouseDown()
+		popup menu "Helvetica\nTimes New Roman\nArial" at the mouse position
+		if the result is defined then
+			put font (the result) at size 20 into mFont
+			redraw all
+		end if
+	end handler
+
+	public handler OnPaint()
+		...
+		set the font of this canvas to mFont
+		...
+	end handler
+
+Description:
+	Use to popup a menu at the specified location.
+*/
+syntax PopupMenu is statement
+	"popup" "menu" <mMenu: Expression> "at" <mAt: Expression>
+begin
+	MCWidgetExecPopupMenuAtLocation(mMenu, mAt)
+end syntax
+
+
 end module

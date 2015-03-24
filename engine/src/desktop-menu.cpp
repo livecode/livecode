@@ -421,7 +421,7 @@ void MCButton::macopenmenu(void)
                 t_menupick = s_popup_menupick;
                 s_popup_menupick = nil;
                 
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+				Exec_stat es = handlemenupick(t_menupick, nil);
                 
 				MCValueRelease(t_menupick);
 				
@@ -447,7 +447,7 @@ void MCButton::macopenmenu(void)
                 t_menupick = s_popup_menupick;
                 s_popup_menupick = nil;
                 
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+				Exec_stat es = handlemenupick(t_menupick, nil);
                 
 				MCValueRelease(t_menupick);
 				
@@ -973,7 +973,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		if (s_menubar_targets[t_current_menu_index] -> Exists())
 		{
 			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> setmenuhistoryprop(t_last_menu_index + 1);
-			s_menubar_targets[t_current_menu_index] -> Get() -> message_with_valueref_args(MCM_menu_pick, *t_result);
+			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> handlemenupick(*t_result, nil);
 		}
 	}
 	else
