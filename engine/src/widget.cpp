@@ -1399,6 +1399,16 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
 	
+	MCStack *t_old_default_stack, *t_this_stack;
+	t_old_default_stack = MCdefaultstackptr;
+	
+	MCObject *t_old_target;
+	t_old_target = MCtargetptr;
+	
+	MCtargetptr = this;
+	t_this_stack = this->getstack();
+	MCdefaultstackptr = t_this_stack;
+	
     // Invoke event handler.
     bool t_success;
     MCValueRef t_retval;
@@ -1422,6 +1432,10 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
     
 	MCwidgetobject = t_old_widget_object;
     
+	MCtargetptr = t_old_target;
+	if (MCdefaultstackptr == t_this_stack)
+		MCdefaultstackptr = t_old_default_stack;
+	
 	return t_success;
 }
 
