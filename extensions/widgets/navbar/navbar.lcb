@@ -238,7 +238,7 @@ private handler drawAddItem()
 	set the paint of this canvas to getPaint("background", "additem")
 	fill rectangle path of tRect on this canvas
 
-	set the paint of this canvas to getPaint("text","fill")
+	set the paint of this canvas to getPaint("text","additem")
 	
 	-- Draw the text of the nav bar
 	set the font of this canvas to getFont("label")
@@ -282,6 +282,8 @@ public handler OnClick() returns nothing
 end handler
 
 private handler updateParameters()
+	initialiseEditData()
+
 	// update variables
 	put my width into mWidth
 	put my height into mHeight
@@ -444,6 +446,8 @@ public handler getPaint(pLocation, pType) returns Paint
 			return solid paint with color [146/255, 146/255, 146/255]
 		else if pType is "selected-fill" then
 			return solid paint with color [0, 122/255 ,1]
+		else if pType is "additem" then
+			return solid paint with color [1, 1, 1]
 		end if
 	end if
 	
