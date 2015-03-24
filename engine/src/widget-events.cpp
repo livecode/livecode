@@ -557,6 +557,9 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
     // Mouse button is no longer down
     m_mouse_buttons &= ~(1 << p_which);
     
+	if (m_mouse_buttons == 0)
+		m_mouse_grab = nil;
+	
     if (!widgetIsInRunMode(p_widget))
         return false;
     
