@@ -17,6 +17,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
 A widget to display array data in a tree view
+
+Name: arrayData
+Type: property
+Syntax: set the arrayData of <widget> to <pArray>
+Syntax: get the arrayData of <widget>
+Summary: The array being displayed by the widget
+
+Parameters:
+pArray (array): The array data.
+
+Description:
+
+
+Name: selecteditem
+Type: property
+Syntax: set the selecteditem of <widget> to <pSelectedItem>
+Syntax: get the selecteditem of <widget>
+
+Summary: Sets the selected navigation item
+
+Parameters:
+pSelectedItem: The number of a nav item.
+
+Description:
+Selects a navigation item.
 */
 
 widget com.livecode.widget.treeView
@@ -35,16 +60,28 @@ property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgr
 property selectedElement			get getSelectedElement			set setSelectedElement
 property showFrameBorder			get mFrameBorder				set setFrameBorder
 
--- private instance variables
+// The unmodified array data
 private variable mData as Array
+// A flat list representing the array items to be displayed
 private variable mDataList as List
+// The number of lines to be displayed
 private variable mDataCount as Integer
+// The total height of the displayed data
 private variable mDataHeight as Real
+// The height of each row
 private variable mRowHeight as Real
+
+// The height of the view area
 private variable mViewHeight as Real
+// The width of the view area
 private variable mViewWidth as Real
+
+// The first part of the data being displayed
 private variable mViewTopPosition as Real
+// The index in the display list corresponding the the top of the view
 private variable mFirstDataItem as Integer
+
+
 private variable mMargin as Real
 private variable mRecalculate as Boolean
 private variable mAlternateRowBackgrounds as Boolean
@@ -90,7 +127,19 @@ public handler OnCreate() returns nothing
 	initialiseScrollbar()
 end handler
 
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	put mData into rProperties["array"]
+	return rProperties
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["array"] into mData
+end handler
+
 public handler OnPaint() returns nothing
+
+	// If anything has changed requiring a recalculation, update parameters
 	if mRecalculate then
 		updateParameters()
 	end if
@@ -110,6 +159,7 @@ public handler OnPaint() returns nothing
 	put mViewTopPosition mod mRowHeight into tTopOffset
 	subtract tTopOffset from tTop	
 
+	// Iterate from the first data item drawing each row until the can't display any more items
 	repeat with tX from mFirstDataItem up to the number of elements in mDataList
 		paintDataItem(element tX of mDataList, tTop, tX)		
 		if tTop > mViewHeight then
@@ -118,6 +168,7 @@ public handler OnPaint() returns nothing
 		add mRowHeight to tTop
 	end repeat
     
+    // Paint the scrollbar
 	paintScrollbar(this canvas, getPaint("scrollbar", "fill"))
 	
 	// Draw the frame
@@ -128,7 +179,9 @@ public handler OnPaint() returns nothing
 	end if
 end handler
 
+// Utility for painting a row with top pTop
 private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as Integer)
+	// Apply any style to this data item
 	variable tStyle as String
 	put "" into tStyle
 	if pDataItem["selected"] is true then 
@@ -140,7 +193,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 	end if	
 		
 	variable tPath as Path	
-	// Draw Rows
+	// Draw the alternating row backgrounds if applicable
 	if mAlternateRowBackgrounds is true then
 		put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
 		if pRow mod 2 is 1 then
@@ -154,7 +207,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 	variable tLeft as Real
 	put mMargin + (pDataItem["indent"] * mIndentPixels) into tLeft
 		
-	// Draw arrow
+	// Draw the fold/unfold arrow if applicable
 	if not pDataItem["leaf"] then
 		if pDataItem["folded"] is true then
 			put mFoldedArrowPath into tPath
@@ -185,6 +238,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 
 	add the width of tTextBounds + mMargin to tLeft
 		
+	// Draw the value if it is a 'leaf' (i.e. if it does not contain a sub-array
 	if pDataItem["leaf"] then
 		set the paint of this canvas to getPaint("text","fill" & tStyle)
 		fill text pDataItem["string_value"] at left of rectangle [tLeft,pTop,mViewWidth-mMargin-15,pTop+mRowHeight] on this canvas
@@ -192,6 +246,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 end handler
 
 public handler OnMouseDown() returns nothing
+	// Notify the scrollbar of a mouse down
 	checkScrollbarMouseDown()
 end handler
 
@@ -325,15 +380,18 @@ end handler
 --
 --------------------------------------------------------------------------------
 
+// Clamp mViewTopPosition
 private handler ensureViewTopPosition()
+	// Make sure we don't try to scroll above 0
 	if mViewTopPosition < 0 then 
 		put 0 into mViewTopPosition
-	// Make sure we can't scroll past the last displayable portion
+	// Make sure we don't try to scroll past the last displayable item
 	else if mDataHeight > mViewHeight and mViewTopPosition > mDataHeight - mViewHeight then
 		put mDataHeight - mViewHeight into mViewTopPosition
 	end if	
 end handler
 
+// Calculate mFirstDataItem from the view position
 private handler updateFirstDataItem()
 	put the floor of (mViewTopPosition / mRowHeight) into mFirstDataItem
 	if mFirstDataItem < 1 then
@@ -342,12 +400,10 @@ private handler updateFirstDataItem()
 end handler
 
 private handler updateParameters() returns nothing
-	
+	// Work out the width of the arrow if necessary
 	if mArrowWidth is not defined then
 		variable tTextBounds as Rectangle
 		set the font of this canvas to font getFontName() at size 12
-	
-		// Work out the width of the arrow
 		variable tArrowWidth as Number
 		put the width of the bounding box of mFoldedArrowPath into mArrowWidth
 	end if
@@ -549,23 +605,28 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 	return tList
 end handler
 
+// A handler type for passing into 'applyToNode'
 handler type NodeApply(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 
+// A handler of type NodeApply to pass into 'applyToNode' - unselects the key on the given path
 private handler unselectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put false into xList[pListElt]["selected"]
 	put undefined into mSelectedElement
 end handler
 
+// A handler of type NodeApply to pass into 'applyToNode' - selects the key on the given path
 private handler selectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put true into xList[pListElt]["selected"]
 	put pPath into mSelectedElement
 end handler
 
+// A handler of type NodeApply to pass into 'applyToNode' - removes the key on the given path
 private handler removeKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	delete element pListElt of xList
 	delete xArray[element pLevel + 1 of pPath]
 end handler
 
+// Update the fold state on the given node, and below
 private handler updateFoldState(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, in pArray as Array, in pFold as Boolean)
 	// Update the fold state
 	variable tPath as List
@@ -587,18 +648,17 @@ private handler updateFoldState(in pListElt as Integer, in pPath as List, in pLe
 	applyFoldStateKey(element pLevel + 1 of pPath, pLevel, pListElt - 1, tArray, pArray[element pLevel + 1 of pPath], xList)
 end handler
 
-// To 'unfold', splice in the sublist
+// A handler of type NodeApply to pass into 'applyToNode' - unfolds the array value on the given path
 private handler unfoldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	updateFoldState(pListElt, pPath, pLevel, xList, xArray, false)
 end handler
 
-// To 'fold', just delete everything in the list until the indent is the same as 'this'
+// A handler of type NodeApply to pass into 'applyToNode' - folds the array value on the given path
 private handler foldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	updateFoldState(pListElt, pPath, pLevel, xList, xArray, true)
 end handler
 
-
-// Simply delete the array key on the given path
+// Delete the array key on the given path and update the display list
 private handler removePath(in pPath as List)
 	applyToNode(removeKey, pPath, 0, 0, mDataList, mData)
 	redraw all
@@ -667,6 +727,7 @@ private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in
 	end repeat
 end handler
 
+// Remove all elements below pStart in the list that have a greater indent
 private handler deleteSubElements(in pStart as Integer, in pTopIndent as Integer, inout xList as List)
 	variable tLastSubElement as Integer
 	variable tFirstSubElement as Integer

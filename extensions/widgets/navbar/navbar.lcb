@@ -18,10 +18,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /*
 This widget is a navigation bar.
 
-Name: navitems
+Name: navItems
 Type: property
-Syntax: set the navitems of <widget> to <pNavItems>
-Syntax: get the navitems of <widget>
+Syntax: set the navItems of <widget> to <pNavItems>
+Syntax: get the navItems of <widget>
 Summary: Sets the navigation items
 
 Parameters:
@@ -31,10 +31,10 @@ Description:
 Sets the navigation items from pNavItems, where pNavItems is a line delimited list of items, where each line is a comma delimited list of the
 different components of the navigation item: name, label, icon, selected icon.
 
-Name: selecteditem
+Name: selectedItem
 Type: property
-Syntax: set the selecteditem of <widget> to <pSelectedItem>
-Syntax: get the selecteditem of <widget>
+Syntax: set the selectedItem of <widget> to <pSelectedItem>
+Syntax: get the selectedItem of <widget>
 
 Summary: Sets the selected navigation item
 
@@ -79,7 +79,6 @@ property navLabels		get getNavLabels		set setNavLabels
 --
 
 -- private instance variables
-private variable mTheme as String
 private variable mNavData as List
 
 private variable mSelectedItem as Integer
@@ -107,8 +106,7 @@ constant kDefaultNavIconName is "circle"
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
-	put mTheme into rProperties["theme"]
-	put mNavData into rProperties["items"]
+	put getNavData() into rProperties["items"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
 	
@@ -116,15 +114,12 @@ public handler OnSave(out rProperties as Array)
 end handler
 
 public handler OnLoad(in pProperties as Array)
-	put pProperties["theme"] into mTheme
-	put pProperties["items"] into mNavData
+	setNavData(pProperties["items"])
 	put pProperties["selected"] into mSelectedItem
 	put pProperties["itemStyle"] into mItemStyle
 end handler
 
 public handler OnCreate() returns nothing
-	--properties
-	put "ios-8" into mTheme
 	-- creating a list of navigation items
 
 	variable tNavItems as List
@@ -455,21 +450,11 @@ public handler getPaint(pLocation, pType) returns Paint
 end handler
 
 private handler getFont(in pType as String) returns Font
-	if pType is "label" then
-		if mTheme is "ios-8" then
-			return font "Helvetica Neue" at size 10
-		else
-			return the font of this canvas
-		end if
-		
+	if pType is "label" then	
+		return the font of this canvas
 	else if pType is "icon" then
 		return font "fontawesome" at size 20
 	end if
-end handler
-
-public handler setTheme(in pThemeName as String) returns nothing
-	put pThemeName into mTheme
-	redraw all
 end handler
 
 public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
@@ -501,8 +486,16 @@ private handler listToArray(in pList as List) returns Array
 	variable tCount
 	variable tArray
 	put the empty array into tArray
+	
+	variable tKey as String
 	repeat with tCount from 1 up to the number of elements in pList
-		put element tCount of pList into tArray[tCount]
+		put tCount formatted as string into tKey
+		put defaultNavArray() into tArray[tKey]
+		
+		variable tAttribute as String
+		repeat for each key tAttribute in tArray[tKey]
+			put pList[tCount][tAttribute] into tArray[tKey][tAttribute]
+		end repeat
 	end repeat
 	return tArray
 end handler
