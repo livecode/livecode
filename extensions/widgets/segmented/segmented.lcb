@@ -318,7 +318,7 @@ public handler OnGeometryChanged()
 	put true into mGeometryIsChanged
 end handler
 
-public handler OnClick(in pXLoc as Integer, in pYLoc as Integer, in pMouseButton as Integer, in pClicks as Integer)
+public handler OnClick()
 	
 	variable tX as Integer
 	variable tLabel as String
