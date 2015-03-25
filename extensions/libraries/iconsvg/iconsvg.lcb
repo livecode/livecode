@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-Fontawesome SVG path library
+This is an SVG icon path library.
 */
 
 library com.livecode.library.iconSVG
@@ -1126,6 +1126,17 @@ private handler initialise()
 	sort sNamesList in ascending order
 end handler
 
+/*
+Returns the available icons.
+
+Returns: The names of the icons for which SVG paths are available, one per line.
+
+Description: 
+The <iconNames> function returns the names of the icons for which this library is able to access SVG paths.
+Call <iconSVGPathFromName> or <iconCodepointFromName> to retrieve either the svg path or codepoint corresponding to the icon with this name.
+
+Related: iconSVGPathFromName(function),iconCodepointFromName(function)
+*/
 public handler iconNames() returns String
 	ensureInitialised()
 
@@ -1140,6 +1151,17 @@ public handler iconList() returns List
 	return sNamesList
 end handler
 
+/*
+Returns the SVG path for the given icon.
+
+pName: The name of the icon
+Returns: The SVG path to draw the icon with name <pName>
+
+Description: 
+Returns the SVG path for the icon with name <pName>. Use the <iconNames> function to obtain the names of the icons for which this library is able to access SVG paths.
+
+Related: iconNames(function)
+*/
 public handler iconSVGPathFromName(in pName as String) returns String
 	ensureInitialised()
 	
@@ -1150,6 +1172,18 @@ public handler iconSVGPathFromName(in pName as String) returns String
 	return the empty string
 end handler
 
+/*
+Returns the codepoint corresponding to the given icon in the fontawesome font.
+
+pName: The name of the icon
+Returns: The codepoint of the icon with name <pName>
+
+Description: 
+Returns the codepoint corresponding to the icon with name <pName> in the fontawesome font. 
+Use the <iconNames> function to obtain the names of the icons for which this library is able to access SVG paths.
+
+Related: iconNames(function)
+*/
 public handler iconCodepointFromName(in pName as String) returns String
 	ensureInitialised()
 	

@@ -18,18 +18,53 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /*
 This widget is a navigation bar.
 
-Name: navItems
+Name: navNames
 Type: property
-Syntax: set the navItems of <widget> to <pNavItems>
-Syntax: get the navItems of <widget>
-Summary: Sets the navigation items
+Syntax: set the navNames of <widget> to <pNavNames>
+Syntax: get the navNames of <widget>
+Summary: Sets the list of names of navigation items
 
 Parameters:
-pNavItems: The navigation items.
+pNavNames(string): A comma delimited list of the navigation item names.
 
 Description:
-Sets the navigation items from pNavItems, where pNavItems is a line delimited list of items, where each line is a comma delimited list of the
-different components of the navigation item: name, label, icon, selected icon.
+Sets the names of the navigation items of the widget. Adding an item to the navNames of a navbar widget causes a 
+new navigation item to be created with the default icon and label. Removing an item from the navNames causes the 
+corresponding item to be removed from the navigation items.
+
+Name: navLabels
+Type: property
+Syntax: set the navLabels of <widget> to <pNavLabels>
+Syntax: get the navLabels of <widget>
+Summary: Sets the list of labels of navigation items
+
+Parameters:
+pNavLabels(string): A comma delimited list of the navigation item labels.
+
+Description:
+Sets the labels of the navigation items of the widget. Adding an item to the navLabels of a navbar widget causes a 
+new navigation item to be created with the default icon and name. 
+
+>*Note:* Removing an item from the navLabels does not cause the corresponding item to be removed from the navigation items,
+but merely resets it to the default label.
+
+Name: navIcons
+Type: property
+Syntax: set the navIcons of <widget> to <pNavIcons>
+Syntax: get the navIcons of <widget>
+Summary: Sets the list of icons of navigation items
+
+Parameters:
+pNavIcons(string): A comma delimited list of the navigation item icons.
+
+Description:
+Sets the icons of the navigation items of the widget. Adding an item to the navIcons of a navbar widget causes a 
+new navigation item to be created with the default label and name. 
+
+The name of an icon must be one of the names returned by the iconNames() function of the com.livecode.library.iconSVG library.
+
+>*Note:* Removing an item from the navIcons does not cause the corresponding item to be removed from the navigation items,
+but merely resets it to the default icon.
 
 Name: selectedItem
 Type: property
@@ -39,10 +74,38 @@ Syntax: get the selectedItem of <widget>
 Summary: Sets the selected navigation item
 
 Parameters:
-pSelectedItem: The number of a nav item.
+pSelectedItem(integer): The number of a nav item.
 
 Description:
 Selects a navigation item.
+
+Name: itemStyle
+Type: property
+Syntax: set the itemStyle of <widget> to <pItemStyle>
+Syntax: get the itemStyle of <widget>
+
+Summary: The display style of the widget
+
+Parameters:
+pItemStyle(enum): The display style
+-"icons": display icons only
+-"names": display names only
+-"icons and names": display icons and names
+
+Description:
+Use the <itemStyle> property to control which elements of the navigation items are displayed.
+
+Name: editMode
+Type: property
+Syntax: set the editMode of <widget> to (true | false)
+Syntax: get the editMode of <widget>
+
+Summary: Whether the widget is in edit mode or not
+
+Description:
+This is currently an experimental feature of the navigation bar, and allows the icons to 
+be changed by clicking on the outlined regions, and new items to be added with the add button.
+
 */
 -- declaring extension as widget, followed by identifier
 widget com.livecode.widget.navbar

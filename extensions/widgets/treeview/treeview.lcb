@@ -28,20 +28,61 @@ Parameters:
 pArray (array): The array data.
 
 Description:
+The arrayData is the data currently being displayed by the tree view widget.
 
+Name: alternateRowBackgrounds
 
-Name: selecteditem
 Type: property
-Syntax: set the selecteditem of <widget> to <pSelectedItem>
-Syntax: get the selecteditem of <widget>
+Syntax: set the alternateRowBackgrounds of <widget> to (true|false)
+Syntax: get the alternateRowBackgrounds of <widget>
 
-Summary: Sets the selected navigation item
-
-Parameters:
-pSelectedItem: The number of a nav item.
+Summary: Whether the alternate rows of the widget have different backgrounds or not. 
 
 Description:
-Selects a navigation item.
+Use the alternateRowBackgrounds property if you want to more clearly distinguish the rows displayed by the widget.
+
+Name: selectedElement
+Type: property
+Syntax: set the selectedElement of <widget> to <pPath>
+Syntax: get the selectedElement of <widget>
+
+Summary: Select the row corresponding to <pPath>
+
+Parameters:
+pPath: A comma delimited list of array keys.
+
+Description:
+<pPath> is a list of the keys which determine the row to be selected. For example, if tArray is the arrayData 
+of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsubkey5"], simply execute
+
+
+``` set the selectedElement of widget "Array Viewer" to "key1,subkey2,subsubkey5" ```
+
+Name: showFrameBorder
+Type: property
+Syntax: set the showFrameBorder of <widget> to {true|false}
+Syntax: get the showFrameBorder of <widget>
+
+Summary: Whether the widget has a border or not. 
+
+Description:
+Use the showFrameBorder property to show the bounds of the widget object.
+
+Name: selectedElementChanged
+Type: message
+Syntax: selectedElementChanged pPath
+
+Summary: Sent when an element is selected
+
+Parameters:
+pPath: The path to the selected element
+
+Description:
+The selectedElementChanged message is sent to the widget's script object when a row of the widget's display is clicked on,
+causing that row to be selected. The <pPath> parameter contains the path to the new <selectedElement>.
+
+References: selectedElement (property)
+
 */
 
 widget com.livecode.widget.treeView
