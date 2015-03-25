@@ -763,12 +763,14 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 	{
 		while(t_nesting > 0 && t_index < p_length - 1)
 		{
-			if (p_text[t_index] == '/' && p_text[t_index + 1] == '*')
+            // Enabling this code block will cause block comments to be highlighted
+            // as if they nest.
+			/*if (p_text[t_index] == '/' && p_text[t_index + 1] == '*')
 			{
 				t_nesting += 1;
 				t_index += 2;
 			}
-			else if (p_text[t_index] == '*' && p_text[t_index + 1] == '/')
+			else */ if (p_text[t_index] == '*' && p_text[t_index + 1] == '/')
 			{
 				t_nesting -= 1;
 				t_index += 2;
