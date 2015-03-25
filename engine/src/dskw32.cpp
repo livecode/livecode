@@ -1518,20 +1518,11 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				DWORD t_readsize;
 				t_readsize = MCU_min(t_remaining, 0x00400000);
 				
-				// SN-2015-03-03: [[ Bug 14612 ]] Be more careful with the
-				//  error returned by ReadFile - if no error occurred...
-				//  ... the previous error will remain set (possibly not 0)
-				DWORD t_old_error, t_read_error;
-				t_old_error = GetLastError();
-				SetLastError(ERROR_SUCCESS);
 				t_read_success = ReadFile(m_handle, (LPVOID)((char*)sptr + t_offset), t_readsize, &nread, NULL);
-				t_read_error = GetLastError();
-				SetLastError(t_old_error);
-
 				t_offset += nread;
 				if (!t_read_success)
 				{
-					MCS_seterrno(t_read_error);
+					MCS_seterrno(GetLastError());
 					r_read = t_offset;
 					return false;
 				}
@@ -1539,7 +1530,9 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				// SN-2014-08-11: [[ Bug 13145 ]] If ReadFile can't read more, but no error is triggered, we should stop here,
 				//  but return true. The new imageLoader reads buffer by buffer, and doesn't expect and error when reading the
 				//  the last buffer (which might ask for more than remaining in the file).
-				if (nread == 0 && t_read_error == ERROR_SUCCESS)
+				// IM-2015-03-17: [[ Bug 14960 ]] GetLastError is only meaningful if ReadFile fails. A return value of TRUE
+				//  with 0 bytes read is used to indicate EOF for synchronous file handles.
+				if (nread == 0)
 				{
 					r_read = t_offset;
 					m_is_eof = true;
@@ -4060,7 +4053,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		uint32_t t_buf_size;
 		bool t_success;
 
-		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
+		t_success = MCS_closetakingbuffer_uint32(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
         MCprocesses[index].ohandle = nil;
         
         IO_cleanprocesses();
