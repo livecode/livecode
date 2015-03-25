@@ -6290,8 +6290,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 		}
 
 		MCAutoStringRef t_path;
-		MCStringCreateWithCStringAndRelease(buf, &t_path);
-		return ResolvePath(*t_path, r_path);
+        // [[ Bug 15062 ]] The path returned by _NSGetExecutablePath is UTF-8
+        //  encoded. We should decode it this way.
+        return MCStringCreateWithBytesAndRelease((byte_t*)buf, bufsize, kMCStringEncodingUTF8, false, &t_path)
+            && ResolvePath(*t_path, r_path);
 	}
 
 
