@@ -119,7 +119,11 @@ static BusyIndicator *s_busy_indicator = nil;
     
     // PM-2015-03-16: [[ Bug 14946 ]] Allow up to 3 lines for the text
     m_label.numberOfLines = 3;
+#ifdef __IPHONE_6_0
     m_label.lineBreakMode = NSLineBreakByWordWrapping;
+#else
+    m_label.lineBreakMode = UILineBreakModeWordWrap;
+#endif
     
     m_label.backgroundColor = [UIColor clearColor];
     [m_indicator_view addSubview:m_label];
