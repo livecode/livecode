@@ -2441,8 +2441,10 @@ void MCField::GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_in
 
 void MCField::GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
 {
-    bool t_default;
-    bool *t_value_ptr;
+    // SN-2015-03-25: [[ Bug 15030 ]] Initialise t_value_ptr to a value, since
+    //  it will be dereferenced in MCBlock::GetTextStyleElement
+    bool t_default, t_value;
+    bool *t_value_ptr = &t_value;
     GetTextStyleElement(ctxt, p_index, t_default);
     GetArrayCharPropOfCharChunk< OptionalFieldArrayPropType< PodFieldArrayPropType<bool> > >(ctxt, this, p_part_id, si, ei, p_index, &MCBlock::GetTextStyleElement, true, t_default, r_mixed, t_value_ptr);
     
