@@ -134,17 +134,20 @@ private variable mSelectedRowColor as String
 
 private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
+private variable mHoverIcon as String
+
 private variable mFrameBorder as Boolean
 
 private variable mSelectedElement as optional List
 private variable mFoldState as Array
 
-private variable mArrowWidth as optional Real
 private variable mFoldedArrowPath as Path
 private variable mUnfoldedArrowPath as Path
 private variable mDeleteItemPath as Path
 private variable mAddItemPath as Path
 
+private variable mIconRect as Rectangle
+private variable mIconWidth as Real
 
 --------------------------------------------------------------------------------
 --
@@ -158,11 +161,16 @@ public handler OnCreate() returns nothing
 	put path "M512 736L512 1312Q512 1326 503 1335 494 1344 480 1344L416 1344Q402 1344 393 1335 384 1326 384 1312L384 736Q384 722 393 713 402 704 416 704L480 704Q494 704 503 713 512 722 512 736ZM768 736L768 1312Q768 1326 759 1335 750 1344 736 1344L672 1344Q658 1344 649 1335 640 1326 640 1312L640 736Q640 722 649 713 658 704 672 704L736 704Q750 704 759 713 768 722 768 736ZM1024 736L1024 1312Q1024 1326 1015 1335 1006 1344 992 1344L928 1344Q914 1344 905 1335 896 1326 896 1312L896 736Q896 722 905 713 914 704 928 704L992 704Q1006 704 1015 713 1024 722 1024 736ZM1152 1460L1152 512 256 512 256 1460Q256 1482 263 1500.5 270 1519 277.5 1527.5 285 1536 288 1536L1120 1536Q1123 1536 1130.5 1527.5 1138 1519 1145 1500.5 1152 1482 1152 1460ZM480 384L928 384 880 267Q873 258 863 256L546 256Q536 258 529 267ZM1408 416L1408 480Q1408 494 1399 503 1390 512 1376 512L1280 512 1280 1460Q1280 1543 1233 1603.5 1186 1664 1120 1664L288 1664Q222 1664 175 1605.5 128 1547 128 1464L128 512 32 512Q18 512 9 503 0 494 0 480L0 416Q0 402 9 393 18 384 32 384L341 384 411 217Q426 180 465 154 504 128 544 128L864 128Q904 128 943 154 982 180 997 217L1067 384 1376 384Q1390 384 1399 393 1408 402 1408 416Z" into mDeleteItemPath
 	put path "M1408 608L1408 800Q1408 840 1380 868 1352 896 1312 896L896 896 896 1312Q896 1352 868 1380 840 1408 800 1408L608 1408Q568 1408 540 1380 512 1352 512 1312L512 896 96 896Q56 896 28 868 0 840 0 800L0 608Q0 568 28 540 56 512 96 512L512 512 512 96Q512 56 540 28 568 0 608 0L800 0Q840 0 868 28 896 56 896 96L896 512 1312 512Q1352 512 1380 540 1408 568 1408 608Z" into mAddItemPath
 
-	variable tWidth as Real
-	put the width of the bounding box of mFoldedArrowPath into mArrowWidth
+	// Make sure all the icons paths are 10 x 10, with centered at the origin
+	put rectangle [-5,-5,5,5] into mIconRect
+	
+	setIconPath(mIconRect, mFoldedArrowPath)
+	setIconPath(mIconRect, mUnfoldedArrowPath)
+	setIconPath(mIconRect, mDeleteItemPath)
+	setIconPath(mIconRect, mAddItemPath)
 
-	scale mAddItemPath by [0.005, 0.005]
-	scale mDeleteItemPath by [0.005, 0.005]
+	variable tWidth as Real
+	put the width of mIconRect into mIconWidth
 
 	put 21 into mRowHeight
 	put true into mAlternateRowBackgrounds
@@ -175,6 +183,7 @@ public handler OnCreate() returns nothing
 	put my width into mViewWidth	
 	
 	put 0 into mHoverRow
+    put "" into mHoverIcon
 	put 0 into mViewTopPosition
 	put true into mFrameBorder	
 	initialiseScrollbar()	
@@ -261,11 +270,11 @@ private handler paintFirstRow(in pTop as Real)
 	
 	// Draw the plus icon
 	put mAddItemPath into tPath
-	translate tPath by [mMargin,pTop+(mRowHeight/2)-((the height of the bounding box of tPath)/2)]
+	translate tPath by [mMargin + mIconWidth / 2, pTop + mRowHeight / 2]
 	fill tPath on this canvas
 
 	// Draw text
-	fill text "Add new element" at left of rectangle [mArrowWidth + 2 * mMargin,pTop,mViewWidth-mMargin-15,pTop+mRowHeight] on this canvas
+	fill text "Add new element" at left of rectangle [mIconWidth + 2 * mMargin, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
 end handler
 
 // Utility for painting a row with top pTop
@@ -304,33 +313,62 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 			put mUnfoldedArrowPath into tPath	
 		end if
 		
-		translate tPath by [tLeft,pTop+(mRowHeight/2)-((the height of the bounding box of tPath)/2)]
+		translate tPath by [tLeft + mIconWidth / 2, pTop + mRowHeight / 2]
 		set the paint of this canvas to getPaint("text","fill" & tStyle)
 		fill tPath on this canvas
 	end if
 	
-	add mArrowWidth + mMargin to tLeft
+	add mIconWidth + mMargin to tLeft
 		
 	// Draw the key
 	set the paint of this canvas to getPaint("text","disabled" & tStyle)
-	fill text "[" & pDataItem["key"] & "]" at left of rectangle [tLeft,pTop,mViewWidth-mMargin-15,pTop+mRowHeight] on this canvas
+	fill text "[" & pDataItem["key"] & "]" at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
 		
-	// Check the key rect cache
 	variable tTextBounds as Rectangle
-	if "keyRect" is not among the keys of pDataItem then
-		measure "[" & pDataItem["key"] & "]" on this canvas
-		put the result into tTextBounds
-		put tTextBounds into pDataItem["keyRect"]
-	else
-		put pDataItem["keyRect"] into tTextBounds
-	end if
+	measure "[" & pDataItem["key"] & "]" on this canvas
+	put the result into tTextBounds
+	put tTextBounds into pDataItem["keyRect"]
 
 	add the width of tTextBounds + mMargin to tLeft
 		
 	// Draw the value if it is a 'leaf' (i.e. if it does not contain a sub-array
 	if pDataItem["leaf"] then
 		set the paint of this canvas to getPaint("text","fill" & tStyle)
-		fill text pDataItem["string_value"] at left of rectangle [tLeft,pTop,mViewWidth-mMargin-15,pTop+mRowHeight] on this canvas
+		fill text pDataItem["string_value"] at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
+	end if
+	
+	// Draw the action icons 
+	if pDataItem["selected"] is true or pRow is mHoverRow then
+		put "fill" into tStyle
+		if pDataItem["selected"] then
+			put "_selected" after tStyle
+		end if
+		
+		variable tRight as Real
+		put mViewWidth - scrollbarWidth() - mMargin into tRight
+		
+		variable tThisIconStyle as String
+		variable tMouseX as Real
+		put the x of the mouse position into tMouseX		
+		put tStyle into tThisIconStyle
+		put mDeleteItemPath into tPath
+		translate tPath by [tRight - mIconWidth / 2, pTop + mRowHeight / 2]
+		if pRow is mHoverRow and mHoverIcon is "delete" then
+            put "_hover" after tThisIconStyle
+		end if
+		set the paint of this canvas to getPaint("icon", tThisIconStyle)
+		fill tPath on this canvas
+		
+		subtract mMargin + mIconWidth from tRight
+		
+		put tStyle into tThisIconStyle
+		put mAddItemPath into tPath
+		translate tPath by [tRight - mIconWidth / 2, pTop + mRowHeight / 2]
+		if pRow is mHoverRow and mHoverIcon is "add" then
+            put "_hover" after tThisIconStyle
+		end if
+		set the paint of this canvas to getPaint("icon", tThisIconStyle)
+		fill tPath on this canvas
 	end if
 end handler
 
@@ -353,12 +391,26 @@ public handler OnMouseMove() returns nothing
 		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition)
 		redraw all
 	else
-		variable tNewHoverRow
+        variable tRedraw as Boolean
+        put false into tRedraw
+		variable tNewHoverRow as Integer
 		put yPosToRowNumber(the y of the mouse position) into tNewHoverRow
 		if mHoverRow is not tNewHoverRow then
 			put tNewHoverRow into mHoverRow
-			redraw all
+            put true into tRedraw
 		end if
+        if mHoverRow is not 1 then
+            variable tHoverIcon as String
+            put xPosToIconString(the x of the mouse position) into tHoverIcon
+            if mHoverIcon is not tHoverIcon then
+                put tHoverIcon into mHoverIcon
+                put true into tRedraw
+            end if
+        end if
+        
+        if tRedraw then
+            redraw all
+        end if
 	end if
 end handler
 
@@ -401,21 +453,28 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 end handler
 
 public handler OnClick() returns nothing
-	variable tRowNumber
-	put yPosToRowNumber(the y of the click position) into tRowNumber
-	
-	// Just return if the click was below all the data
-	if tRowNumber > the number of elements in mDataList then
+	if the x of the click position > mViewWidth - scrollbarWidth() then
 		return
 	end if
-	
+
 	variable tData as Array
 	put the empty array into tData
 	
-	put element tRowNumber of mDataList into tData
+	put element mHoverRow of mDataList into tData
 	
-
 	if the click count is 1 then
+		// Check if the delete icon was clicked
+		if mHoverIcon is "delete" then
+			removePath(tData["path"])
+			return
+		end if
+
+		// Check if the add icon was clicked
+		if mHoverIcon is "add" then
+			addUnderPath(tData["path"])
+			return
+		end if
+		
 		// Check if the arrow was clicked
 		if not tData["leaf"] then
 			variable tLeft as Real
@@ -424,7 +483,7 @@ public handler OnClick() returns nothing
 			variable tX as Real
 			put the x of the click position into tX
 			
-			if tX > tLeft and tX < tLeft + mArrowWidth + 2 * mMargin then
+			if tX > tLeft and tX < tLeft + mIconWidth + 2 * mMargin then
 				if tData["folded"] is true then
 					unfoldPath(tData["path"])
 		   		else
@@ -453,7 +512,32 @@ public handler OnClick() returns nothing
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
-	return the trunc of (pYPos / mRowHeight) + mFirstDataItem
+	variable tTopPos as Real
+	put mViewTopPosition / mRowHeight into tTopPos
+
+	return the trunc of ((pYPos + tTopPos - the floor of tTopPos) / mRowHeight) + mFirstDataItem
+end handler
+
+private handler xPosToIconString(in pXPos as Number) returns String
+    variable tLeft as Real
+    variable tRight as Real
+    put mViewWidth - scrollbarWidth() into tRight
+    
+    if pXPos > tRight then
+    	return ""
+    end if
+    
+    put tRight - 2 * mMargin - 2 * mIconWidth into tLeft
+    
+    if pXPos <= tLeft then
+    	return ""
+    end if
+
+    if pXPos > tLeft and pXPos <= tLeft + mIconWidth then
+        return "add"
+    end if
+    
+    return "delete"
 end handler
 
 public handler OnGeometryChanged()
@@ -513,6 +597,16 @@ private handler getPaint(pLocation, pType) returns Paint
 	if pLocation is "background" then
 		if pType is "fill" then
 			return solid paint with stringToColor("178,178,178")
+		end if
+	else if pLocation is "icon" then
+		if pType is "fill" then
+			return solid paint with stringToColor("152,152,152")
+		else if pType is "fill_hover" then
+			return solid paint with stringToColor(mSelectedRowColor)
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_selected_hover" then
+			return solid paint with stringToColor("0,0,0,150")	
 		end if
 	else if pLocation is "row" then
 		if pType is "fill" then
@@ -608,6 +702,48 @@ private handler stringToColor(in pString as String) returns Color
 	end if
 
 	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+
+private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
+
+	// Scale the icon
+	variable tBounds
+	put the bounding box of xPath into tBounds
+	
+	// Scale appropriately
+	variable tXScale as Real
+	variable tYScale as Real
+		
+	put the width of pTargetRect / the width of tBounds into tXScale
+	put the height of pTargetRect / the height of tBounds into tYScale
+		
+	if tXScale > tYScale then
+		put tYScale into tXScale
+	else
+		put tXScale into tYScale
+	end if
+
+    scale xPath by [tXScale, tYScale]
+
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+
+    put the bounding box of xPath into tBounds
+
+	put the left of pTargetRect - the left of tBounds into tXTranslate
+	put the top of pTargetRect - the top of tBounds into tYTranslate
+
+    variable tXDiff as Real
+    variable tYDiff as Real
+
+    put the width of pTargetRect - the width of tBounds into tXDiff
+    put the height of pTargetRect - the height of tBounds into tYDiff
+
+	// align center
+	divide tXDiff by 2
+	divide tYDiff by 2
+
+	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
 --------------------------------------------------------------------------------
@@ -707,8 +843,39 @@ end handler
 
 // A handler of type NodeApply to pass into 'applyToNode' - removes the key on the given path
 private handler removeKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	if not xList[pListElt]["leaf"] then
+		foldKey(pListElt, pPath, pLevel, xList, xArray)
+	end if
 	delete element pListElt of xList
 	delete xArray[element pLevel + 1 of pPath]
+end handler
+
+// A handler of type NodeApply to pass into 'applyToNode' - adds a new key below the given path
+private handler addKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	variable tElement
+	put xArray[pPath[pLevel + 1]] into tElement
+
+	if tElement is an array then
+		variable tNewKey as String
+		put "" into tNewKey
+		if "" is among the keys of xArray[pPath[pLevel + 1]] then
+			variable tNew as Integer
+			put 1 into tNew
+			repeat while (tNew formatted as string) is among the keys of xArray[pPath[pLevel + 1]]
+				add 1 to tNew
+			end repeat
+			put tNew formatted as string into tNewKey
+		end if
+		put "" into xArray[pPath[pLevel + 1]][tNewKey]
+	else
+		variable tArray as Array
+		put the empty array into tArray	
+		put "" into tArray[""]
+		put tArray into xArray[pPath[pLevel + 1]]
+		put false into xList[pListElt]["leaf"]
+	end if
+
+	unfoldKey(pListElt, pPath, pLevel, xList, xArray)
 end handler
 
 // Update the fold state on the given node, and below
@@ -746,6 +913,11 @@ end handler
 // Delete the array key on the given path and update the display list
 private handler removePath(in pPath as List)
 	applyToNode(removeKey, pPath, 0, 1, mDataList, mData)
+	redraw all
+end handler
+
+private handler addUnderPath(in pPath as List)
+	applyToNode(addkey, pPath, 0, 1, mDataList, mData)
 	redraw all
 end handler
 
@@ -1116,6 +1288,13 @@ private handler scrollbarDrag(in pViewHeight as Real)
 	variable tScrollbarY as Real
 	put tMouseY - mDragScrollbarOffset into tScrollbarY
 	setScrollbarY(tScrollbarY)
+end handler
+
+public handler scrollbarWidth() returns Real
+	if mScrollbarHeight is 0 then
+		return 0
+	end if
+	return kScrollbarWidth + 10
 end handler
 
 private handler scrollbarY() returns Real
