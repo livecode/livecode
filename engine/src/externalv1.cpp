@@ -1482,7 +1482,8 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		for(uint32_t i = 0; i < t_parameter_count; i++)
 			delete t_parameter_vars[i];
 
-		delete t_parameter_vars;
+        // SN-2015-03-25: [[ CID 15424 ]] Delete an array: use delete []
+		delete[] t_parameter_vars;
 
 		return t_stat;
 	}
@@ -1789,6 +1790,10 @@ MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_
 
 static MCExternalError MCExternalVariableCreate(MCExternalVariableRef* r_var)
 {
+    // SN-2015-03-25: [[ CID 16536 ]] Check that we have a variable.
+    if (r_var == NULL)
+        return kMCExternalErrorNoVariable;
+
 	*r_var = new MCTemporaryExternalVariable(kMCEmptyString);
 	if (r_var == nil)
 		return kMCExternalErrorOutOfMemory;
@@ -2361,7 +2366,8 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
     {
         MCAutoStringRef t_stringref;
         MCString* t_string;
-        t_string = (MCString*)t_string;
+        // SN-2015-03-25: [[ External Fix ]] Actually set t_string to the param
+        t_string = (MCString*)p_value;
         if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), 2 * t_string->getlength(), kMCStringEncodingUTF16, false, &t_stringref))
             return kMCExternalErrorOutOfMemory;
         
