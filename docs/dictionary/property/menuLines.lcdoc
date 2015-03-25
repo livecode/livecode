@@ -1,0 +1,35 @@
+Name: menuLines
+
+Type: property
+
+Syntax: set the menuLines of <button> to <number> 
+
+Summary: Specifies the number of visible lines in a drop-down list menu belonging to a <button>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the menuLines of button "Options" to 10
+
+Value:
+The <menuLines> of a <button(keyword)> is a positive <integer>.
+By default, the <menuLines> <property> of newly created <button(object)|buttons> is set to 5.
+
+Description:
+Use the <menuLines> <property> to control the appearance of <combo box> or option <menus>.
+
+When a menu containing a drop-down list opens, it displays a fixed number of lines (with a scrollbar to access any additional lines). The <menuLines> <property> specifies how many lines are displayed at a time.
+
+This property affects only buttons whose <menuMode> <property> is set to "option" (on <Unix> and <Windows|Windows systems> only) or "comboBox". Other <menu> types are not affected by the setting of the <menuLines>.
+
+If the button's style <property> is not menu, the setting of the <menuLines> <property> has no effect.
+
+References: menuMode (property), integer (keyword), menu (keyword), button (keyword), option (command), menus (function), property (glossary), Unix (glossary), Windows (glossary), combo box (glossary), button (object)
+
+Tags: menus

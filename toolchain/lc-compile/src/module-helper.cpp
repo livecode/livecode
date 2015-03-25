@@ -130,15 +130,22 @@ void *g_builtin_ptrs[] =
 }
 
 extern bool MCForeignModuleInitialize(void);
+extern bool MCMathModuleInitialize(void);
+
 bool MCModulesInitialize(void)
 {
     if (!MCForeignModuleInitialize())
         return false;
+	if (!MCMathModuleInitialize())
+		return false;
     return true;
 }
 
 extern void MCForeignModuleFinalize(void);
+extern void MCMathModuleFinalize(void);
+
 void MCModulesFinalize(void)
 {
+	MCMathModuleFinalize();
     MCForeignModuleFinalize();
 }

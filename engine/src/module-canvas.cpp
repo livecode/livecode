@@ -3265,7 +3265,7 @@ void MCCanvasPathMakeWithLine(MCCanvasPointRef p_start, MCCanvasPointRef p_end, 
 	MCGPathRelease(t_path);
 }
 
-bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *r_points)
+bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *&r_points)
 {
 	bool t_success;
 	t_success = true;
@@ -3282,7 +3282,7 @@ bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *r_points)
 	for (uint32_t i = 0; t_success && i < t_point_count; i++)
 	{
 		MCValueRef t_value;
-		t_value = MCProperListFetchElementAtIndex(p_points, t_point_count);
+		t_value = MCProperListFetchElementAtIndex(p_points, i);
 		
 		if (MCValueGetTypeInfo(t_value) == kMCCanvasPointTypeInfo)
 		{

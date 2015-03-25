@@ -1,0 +1,27 @@
+Name: unboundedVScroll
+
+Type: property
+
+Syntax: set the unboundedVScroll of <group> to {true | false}
+
+Summary: Specifies whether automatic clamping of the vScroll offsets of a group is on or off.
+
+Introduced: 4.6
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web
+
+Example:
+set the unboundedVScroll of group "items" to true
+
+Description:
+Use the <unboundedVScroll> property to turn automatic clamping of the v <Scroll> offset of a group on or off.
+
+When the <unboundedVScroll> property of a <group> is set to true and the <vScrollbar> is not visible, it is possible to set the <vScroll> property of the <group> to values outside that of the size of the content (both positive and negative).
+
+If the <vScrollbar> of the <group> is made visible or the <unboundedVScroll> property is turned off and the <vScroll> value is outside of the content bounds, the <group> is scrolled to bring the <vScroll> value within the appropriate range.
+
+References: vScroll (property), unboundedHScroll (property), vScrollbar (property), Scroll (property), group (object)
+
+Tags: ui

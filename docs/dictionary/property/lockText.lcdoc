@@ -1,0 +1,34 @@
+Name: lockText
+
+Type: property
+
+Syntax: set the lockText of <field> to {true | false}
+
+Summary: Specifies whether the contents of a <field> can be <selected> and changed by the user.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the lockText of the foundField to false
+
+Value (bool):The <lockText> of a <field(keyword)> is true or false.
+By default, the <lockText> <property> of newly created <field(object)|fields> is set to false.
+
+Description:
+Use the <lockText> <property> to prevent users from changing the text in a <field(keyword)>.
+
+When a field's <lockText> <property> is false, the <field(keyword)> can be edited: the user can <select> text, delete text, type, cut, copy, and paste. The <cursor> becomes an I-beam when the <mouse pointer> is over the <field(keyword)>. When the user clicks in the <field(keyword)>, no <mouseDown>, <mouseUp>, <mouseStillDown>, <mouseDoubleDown>, or <mouseDoubleUp> <message|messages> are sent. (However, if the user Control-clicks or right-clicks, these <message|messages> are sent regardless of the <field(object)|field's> <lockText> setting.)
+
+When a field's <lockText> <property> is true, the user cannot edit the contents of the <field(keyword)>. The <cursor> does not change when the <mouse pointer> is over the <field(keyword)>, and clicking the <field(keyword)> sends all normal mouse <message|messages> to it. (A <handler> can change the contents of a <field(keyword)> with the <put> <command> and can <select> text using the <select> <command>, regardless of the <lockText> setting.)
+
+If a field's <lockText> and <traversalOn> <properties> are both set to true, the user can <select> text, but not change it, and can scroll within the <field(keyword)> using the keyboard. If the <lockText> is true and the <traversalOn> is false, the user can neither <select> nor edit the <field(object)|field's> text. If the <lockText> is false and the <traversalOn> is true, the field can be edited.
+
+References: cursor (property), cantModify (property), listBehavior (property), allowInlineInput (property), properties (property), selected (property), traversalOn (property), linkClicked (message), mouseDoubleDown (message), mouseDown (message), mouseStillDown (message), mouseDoubleUp (message), mouseUp (message), field (keyword), field (object), mouseCharChunk (function), select (command), focus (command), disable (command), put (command), property (glossary), handler (glossary), mouse pointer (glossary), command (glossary), message (glossary)
+
+Tags: ui

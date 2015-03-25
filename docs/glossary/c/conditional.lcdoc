@@ -1,0 +1,8 @@
+Name: conditional
+
+Synonyms: conditional statement,if/then,if/then/else,if-then,if-then-else,conditional
+
+Type: glossary
+
+Description:
+A programming structure that checks a condition, and then takes appropriate action depending on whether the condition is true or false.

@@ -1,0 +1,33 @@
+Name: dragSpeed
+
+Type: property
+
+Syntax: set the dragSpeed to <pixelsPerSecond> 
+
+Summary: Specifies the speed of the <drag> <command>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the dragSpeed to 10
+
+Value:
+The <dragSpeed> is an <integer> between zero and 65535.
+By default, the <dragSpeed> <property> is set to zero.  It is <reset> to zero when no <handler|handlers> are <execute|executing>.
+
+Description:
+Use the <dragSpeed> <property> to control the speed of the <drag> <command>.
+
+The <dragSpeed> specifies how many <pixels> per second the <drag> <command> moves.
+
+The setting of the <dragSpeed> affects the smoothness of drags made with some of the <paint tool|paint tools> (such as the Spray Can <tool>) whose action is speed-dependent.
+
+If the <dragSpeed> is zero, the <drag> <command> moves as fast as possible. Dragging with the <dragSpeed> set to zero is equivalent to clicking the start location and immediately releasing the <mouse button> at the end location. This means you cannot <drag> shapes other than a straight line if the <dragSpeed> is zero.
+
+References: pixels (property), moveSpeed (property), dragDelta (property), integer (keyword), drag (command), reset (command), click (command), tool (function), property (glossary), mouse button (glossary), paint tool (glossary), command (glossary), handler (glossary), execute (glossary)
+
+Tags: ui

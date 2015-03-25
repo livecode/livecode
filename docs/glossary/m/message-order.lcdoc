@@ -1,0 +1,12 @@
+Name: message order
+
+Synonyms: message sending order,message-sending order,message order
+
+Type: glossary
+
+Description:
+The order in which <message|messages> are sent in response to a user action (such as a mouse click) that triggers more than one <message>.
+
+References: message (glossary)
+
+Tags: objects

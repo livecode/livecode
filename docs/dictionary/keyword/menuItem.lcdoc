@@ -1,0 +1,28 @@
+Name: menuItem
+
+Type: keyword
+
+Syntax: menuItem
+
+Summary: Used with the <disable menu>, <doMenu>, <enable menu>, and <select> <command|commands>, to designate a <menu item> in a <menu>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+enable menuItem 3 of button "Externals"
+
+Example:
+select menuItem 2 of menu "File"
+
+Description:
+Use the <menuItem> <keyword> to enable or disable a <menu item>, or to perform a menu action.
+
+Unlike menus, menu items must be specified by number. The topmost item in a menu is numbered 1.
+
+References: menu (keyword), commandChar (property), menuMessage (property), checkmark (property), select (command), doMenu (command), disable menu (command), enable menu (command), menu item (glossary), command (glossary), keyword (glossary)
+
+Tags: menus

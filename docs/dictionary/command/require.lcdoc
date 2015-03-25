@@ -1,0 +1,30 @@
+Name: require
+
+Type: command
+
+Syntax: require <script> 
+
+Summary: Executes the given script in the context of the global environment.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+require "myScript"
+
+Parameters:
+script: The name of the script that is to be included.
+
+Description:
+Executes the given script in the context of the global environment, but only if it has not previously been included or required. 
+
+This is the same as the <include> command in operation, except it makes it easy to implement 'include-once' files and is designed primarily for library scripts.
+
+Scripts are parsed in full before being executed, with any handler and variable definitions being added to the home stack environment before any commands placed at global scope are executed. These are ordered by encounter in the file. As <require> is a command, the parse-before-execute effect only extends as far as the end of the current file. 
+
+>*Note:*  <include> and <require> are distinct in the sense that if you <require> a file and then <include>, the second include executes the file.
+
+References: include (command)

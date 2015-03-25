@@ -1,0 +1,14 @@
+Name: inverse
+
+Synonyms: inverse,inverse function,inverse operator
+
+Type: glossary
+
+Description:
+The counterpart of a <function> or <operator> which returns the original <argument>. The inverse undoes the <function> or <operator>. 
+ 
+For example, square root is the inverse of squaring: if you square any number and then take the square root, the result is the original number.
+
+References: operator (glossary), argument (glossary), function (glossary)
+
+Tags: math

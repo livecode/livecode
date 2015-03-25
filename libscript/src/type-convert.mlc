@@ -20,8 +20,8 @@ This library consists of the operations for performing complex type conversion i
 
 module com.livecode.typeconvert
 
-public foreign handler MCTypeConvertExecSplitStringByDelimiter(in Target as String, in Delimiter as String) as List binds to "<builtin>"
-public foreign handler MCTypeConvertExecCombineListWithDelimiter(in Target as List, in Delimiter as String) as String binds to "<builtin>"
+public foreign handler MCTypeConvertExecSplitStringByDelimiter(in Target as String, in Delimiter as String) returns List binds to "<builtin>"
+public foreign handler MCTypeConvertExecCombineListWithDelimiter(in Target as List, in Delimiter as String) returns String binds to "<builtin>"
 
 --
 

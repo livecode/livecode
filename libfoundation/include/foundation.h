@@ -663,6 +663,9 @@ typedef struct __MCLocale* MCLocaleRef;
 //  REQUIRED STANDARD INCLUDES
 //
 
+// Required so that MSVC's <math.h> defines non-standard mathematical constants
+#define _USE_MATH_DEFINES
+
 #include <foundation-stdlib.h>
 #include <math.h>
 

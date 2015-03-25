@@ -1,0 +1,34 @@
+Name: pasteKey
+
+Type: message
+
+Syntax: pasteKey
+
+Summary: Sent when the user presses the <key combination> equivalent to the "Paste" <menu item>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on pasteKey -- replace returns with spaces before pasting
+  if the clipboardData["text"] is not empty then set \
+     the clipboardData["text"] to \
+     replaceText(the clipboardData["text"],return,space)
+  paste
+end pasteKey
+
+Description:
+Handle the <pasteKey> <message> if you want to change the normal pasting process, or prevent use of the Paste <keyboard equivalent> without changing the <menu>.
+
+The LiveCode development environment traps the <pasteKey> <message>, unless "Suspend LiveCode UI" is turned on in the Development menu. This means that the <pasteKey> <message> is not received by a <stack> if it's running in the <development environment>.
+
+The <pasteKey> <message> is sent when the user presses Command-V (on <Mac OS|Mac OS systems>), Control-V (on <Windows|Windows systems>), Shift-Insert (on <Unix|Unix systems>), or the keyboard Paste key.
+
+References: stack (object), cutKey (message), copyKey (message), menu item (glossary), key combination (glossary), Windows (glossary), development environment (glossary), message (glossary), menu (glossary), Mac OS (glossary), Unix (glossary), keyboard equivalent (glossary)
+
+Tags: ui

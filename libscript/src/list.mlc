@@ -22,65 +22,65 @@ module com.livecode.list
 
 use com.livecode.foreign
 
-public foreign handler MCListEvalHeadOf(in Target as List, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCListEvalTailOf(in Target as List, out Value as optional any) as undefined binds to "<builtin>"
+public foreign handler MCListEvalHeadOf(in Target as List, out Value as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCListEvalTailOf(in Target as List, out Value as optional any) returns nothing binds to "<builtin>"
 
-public foreign handler MCListExecPushSingleElementOnto(in Value as optional any, in IsFront as CBool, inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListExecPopElement(in IsFront as CBool, inout Source as List) as optional any binds to "<builtin>"
+public foreign handler MCListExecPushSingleElementOnto(in Value as optional any, in IsFront as CBool, inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListExecPopElement(in IsFront as CBool, inout Source as List) returns optional any binds to "<builtin>"
 
-public foreign handler MCListEvalNumberOfElementsIn(in Target as List, out Count as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalNumberOfElementsIn(in Target as List, out Count as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCListEvalIsAmongTheElementsOf(in Needle as optional any, in Target as List, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCListEvalContainsElements(in Target as List, in Needle as List, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIsAmongTheElementsOf(in Needle as optional any, in Target as List, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCListEvalContainsElements(in Target as List, in Needle as List, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCListEvalBeginsWith(in Source as List, in Prefix as List, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCListEvalEndsWith(in Source as List, in Suffix as List, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalBeginsWith(in Source as List, in Prefix as List, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCListEvalEndsWith(in Source as List, in Suffix as List, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCListEvalIsEqualTo(in Left as List, in Right as List, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCListEvalIsNotEqualTo(in Left as List, in Right as List, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIsEqualTo(in Left as List, in Right as List, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCListEvalIsNotEqualTo(in Left as List, in Right as List, out Value as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCListFetchElementOf(in Index as LCIndex, in Target as List, out Value as any) as undefined binds to "<builtin>"
-public foreign handler MCListStoreElementOf(in Value as any, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListFetchElementRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as List, out Value as List) as undefined binds to "<builtin>"
-public foreign handler MCListStoreElementRangeOf(in Value as optional any, in Start as LCIndex, in Finish as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListFetchElementOf(in Index as LCIndex, in Target as List, out Value as any) returns nothing binds to "<builtin>"
+public foreign handler MCListStoreElementOf(in Value as any, in Index as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListFetchElementRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as List, out Value as List) returns nothing binds to "<builtin>"
+public foreign handler MCListStoreElementRangeOf(in Value as optional any, in Start as LCIndex, in Finish as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListFetchIndexOf(in Target as List, in Index as LCIndex, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCListStoreIndexOf(in Value as optional any, inout Target as List, in Index as LCIndex) as undefined binds to "<builtin>"
+public foreign handler MCListFetchIndexOf(in Target as List, in Index as LCIndex, out Value as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCListStoreIndexOf(in Value as optional any, inout Target as List, in Index as LCIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCListStoreBeforeElementOf(in Value as optional any, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListStoreAfterElementOf(in Value as optional any, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListStoreBeforeElementOf(in Value as optional any, in Index as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListStoreAfterElementOf(in Value as optional any, in Index as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListSpliceIntoElementRangeOf(in Source as List, in Start as LCIndex, in Finish as LCIndex, inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListSpliceIntoElementOf(in Source as List, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListSpliceBeforeElementOf(in Source as List, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListSpliceAfterElementOf(in Source as List, in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceIntoElementRangeOf(in Source as List, in Start as LCIndex, in Finish as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListSpliceIntoElementOf(in Source as List, in Index as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListSpliceBeforeElementOf(in Source as List, in Index as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListSpliceAfterElementOf(in Source as List, in Index as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListSpliceBefore(in Source as List, inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListSpliceAfter(in Source as List, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceBefore(in Source as List, inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListSpliceAfter(in Source as List, inout Target as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListEvalEmpty(out Value as List) as undefined binds to "<builtin>"
+public foreign handler MCListEvalEmpty(out Value as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as List) as CBool binds to "<builtin>"
+public foreign handler MCListRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as List) returns CBool binds to "<builtin>"
 
-public foreign handler MCListFetchFirstElementOf(in Target as List, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCListStoreFirstElementOf(in Value as optional any, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListFetchFirstElementOf(in Target as List, out Value as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCListStoreFirstElementOf(in Value as optional any, inout Target as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListFetchLastElementOf(in Target as List, out Value as optional any) as undefined binds to "<builtin>"
-public foreign handler MCListStoreLastElementOf(in Value as optional any, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListFetchLastElementOf(in Target as List, out Value as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCListStoreLastElementOf(in Value as optional any, inout Target as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListExecDeleteElementOf(in Index as LCIndex, inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListExecDeleteElementRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteElementOf(in Index as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListExecDeleteElementRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListExecDeleteFirstElementOf(inout Target as List) as undefined binds to "<builtin>"
-public foreign handler MCListExecDeleteLastElementOf(inout Target as List) as undefined binds to "<builtin>"
+public foreign handler MCListExecDeleteFirstElementOf(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCListExecDeleteLastElementOf(inout Target as List) returns nothing binds to "<builtin>"
 
-public foreign handler MCListEvalIndexOfElement(in IsLast as CBool, in Needle as any, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCListEvalIndexOfElementAfter(in IsLast as CBool, in Needle as any, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCListEvalIndexOfElementBefore(in IsLast as CBool, in Needle as any, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIndexOfElement(in IsLast as CBool, in Needle as any, in Haystack as List, out Index as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCListEvalIndexOfElementAfter(in IsLast as CBool, in Needle as any, in After as LCIndex, in Haystack as List, out Index as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCListEvalIndexOfElementBefore(in IsFirst as CBool, in Needle as any, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCListEvalOffsetOfList(in IsLast as CBool, in Needle as List, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCListEvalOffsetOfListAfter(in IsLast as CBool, in Needle as List, in After as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCListEvalOffsetOfListBefore(in IsLast as CBool, in Needle as List, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCListEvalOffsetOfList(in IsLast as CBool, in Needle as List, in Haystack as List, out Index as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCListEvalOffsetOfListAfter(in IsLast as CBool, in Needle as List, in After as LCIndex, in Haystack as List, out Index as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCListEvalOffsetOfListBefore(in IsFirst as CBool, in Needle as List, in Before as LCIndex, in Haystack as List, out Index as LCUIndex) returns nothing binds to "<builtin>"
 
 --
 
@@ -913,27 +913,25 @@ Example:
 	variable tOffset as Number
 	put ["a", "b", "c", "d", "b"]
 	put the index of "b" after 1 in tVar into tOffset
-	--tOffset contains 1
+	--tOffset contains 2
 
 	put the last index of "b" after 2 in tVar into tOffset
-	--tOffset contains 3
+	--tOffset contains 5
 
 Description:
 Use `the index of… after` to find where particular elements occur
 within a list.  Starting from but not including the position <After>,
 <Haystack> is scanned for an element that is equal to <Needle>, and
-the position relative to <After> of the element found is returned.  If
-no element of <Haystack> is equal to <Needle>, the return value is 0.
+the position of the element found is returned.  If no element of
+<Haystack> is equal to <Needle>, the return value is 0.
 
 Tags: Lists
 */
-/* bug 14846
 syntax ListIndexAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementAfter(IsLast, Needle, After, Haystack, output)
 end syntax
-*/
 
 /*
 Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
@@ -964,13 +962,12 @@ specified, the last matching element is found.
 
 Tags: Lists
 */
-/* bug 14846
 syntax ListIndexBefore is prefix operator with precedence 1
-	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
+	"the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
-	MCListEvalIndexOfElementBefore(IsLast, Needle, Before, Haystack, output)
+	MCListEvalIndexOfElementBefore(IsFirst, Needle, Before, Haystack, output)
 end syntax
-*/
+
 ----------------------------------------------------------------
 
 /*
@@ -1022,32 +1019,29 @@ Example:
 	variable tOffset as Number
 	put ["a", "b", "c", "d", "b", "c"]
 	put the offset of ["b","c"] after 1 in tVar into tOffset
-	--tOffset contains 1
+	--tOffset contains 2
 
 	put the last offset of ["b","c"] after 1 in tVar into tOffset
-	--tOffset contains 4
+	--tOffset contains 5
 
 Description:
 
 Use `the offset of… after` to find where a particular sub-list occurs
 within a list.  Starting from but not including the position <After>,
 <Haystack> is scanned for an sequence of elements that are equal to
-the elements of <Needle>, and the position relative to <After> of the
-start of the sequence found is returned.  If neither the "first
-offset" nor "last offset" are specified, the position of the first
-matching sub-list found is returned.  If no sub-list of <Haystack>
-starting after the position <After> is equal to <Needle>, the return
-value is 0.
+the elements of <Needle>, and the position of the start of the
+sequence found is returned.  If neither the "first offset" nor "last
+offset" are specified, the position of the first matching sub-list
+found is returned.  If no sub-list of <Haystack> starting after the
+position <After> is equal to <Needle>, the return value is 0.
 
 Tags: Lists
 */
-/* bug 14846
 syntax ListOffsetAfter is prefix operator with precedence 1
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListAfter(IsLast, Needle, After, Haystack, output)
 end syntax
-*/
 
 /*
 Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
@@ -1080,12 +1074,10 @@ is equal to <Needle>, the return value is 0.  If neither "first" nor
 
 Tags: Lists
 */
-/* bug 14846
 syntax ListOffsetBefore is prefix operator with precedence 1
-	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=true> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
+	"the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
-	MCListEvalOffsetOfListBefore(IsLast, Needle, Before, Haystack, output)
+	MCListEvalOffsetOfListBefore(IsFirst, Needle, Before, Haystack, output)
 end syntax
-*/
 
 end module

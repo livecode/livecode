@@ -1,0 +1,57 @@
+Name: -
+
+Type: operator
+
+Syntax: <firstNumber> - <secondNumber> 
+
+Syntax: <numberArray> - {<number> | <array>}
+
+Syntax: <-negativeNumber>
+
+Summary: Subtracts one number from another, or designates a number as <negative>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put -24 into myContainer
+
+Example:
+put theRight - theLeft into theWidth
+
+Example:
+put myArray - 17 into adjustedValues
+
+Parameters:
+firstNumber: The operands firstNumber and secondNumber are numbers, or expressions that evaluate to numbers, or arrays containing numbers.
+secondNumber: 
+numberArray (array): 
+number: 
+array (array): 
+
+Description:
+The <-> (minus) <operator> serves two purposes. When it has a single <operand> (<unary> minus), it negates that number. When it has two <operand|operands> (<binary> minus), it subtracts the second number from the first number.
+
+To subtract a number from the contents of a container, use the <subtract> <command>.
+
+You cannot use the unary minus twice in a row. The expression
+  - - someNumber
+causes an error, and the expression
+  -- someNumber
+is interpreted as a comment because it starts with the comment keyword <-->.
+
+If <firstNumber> or <secondNumber> is an <array>, each of the <array> <element(glossary)|elements> must be a number. If a number is subtracted from an <array>, the number is subtracted from each <element(keyword)>. If an <array> is subtracted from an <array>, both <array|arrays> must have the same number of <element(glossary)|elements> and the same dimension, and each <element(keyword)> in one <array> is subtracted from the corresponding <element(keyword)> of the other <array>.
+
+If an element of an array is empty, the <-> <operator> treats its contents as zero.
+
+The unary minus cannot be used with an array.
+
+Changes:
+The option to subtract arrays was introduced in version 1.1. In previous versions, only single numbers could be used with the - operator.
+
+References: -- (keyword), element (keyword), () (operator), + (operator), subtract (command), operand (glossary), operator (glossary), element (glossary), negative (glossary), binary (glossary), array (glossary), command (glossary), unary (glossary)
+
+Tags: math

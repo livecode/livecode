@@ -1,0 +1,49 @@
+Name: revChangeWindowSize
+
+Type: command
+
+Syntax: revChangeWindowSize <newWidth>, <newHeight> [, <anim> [, <cardNumber> [, <totalTime>]]]
+
+Summary: Changes the height and width of a <stack> window.
+
+Introduced: 2.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+revChangeWindowSize 100,120
+
+Example:
+revChangeWindowSize the width of stack "Template",200,"slide"
+
+Example:
+revChangeWindowSize myWidth,myHeight,"snap",1 -- displays card 1
+
+Example:
+revChangeWindowSize 200,250,"slide",,500 -- slides over 1/2 second
+
+Parameters:
+newWidth: A positive integer.
+newHeight: A positive integer.
+anim: Either "snap" or "slide". If the anim is "slide", the height and width are changed during the length of time specified in totalTime, with the window edges sliding gradually instead of snapping to their new position. If the anim is "snap", or if no anim is specified, the height and width are changed immediately.
+cardNumber: The number of a card in the stack. The stack displays the card with this number during the transition, and returns to the original card at the end. If the anim is not "slide", the cardNumber has no effect.
+totalTime: The number of milliseconds to take for the slide effect. If the anim is not "slide", the totalTime has no effect and the change takes place immediately. By default, the totalTime is 250 (1/4 second).
+
+Description:
+Use the <revChangeWindowSize> <command> to change the size of a stack while leaving its top left corner in place, with optional animation effects.
+
+The <revChangeWindowSize> <command> resizes a <stack window> to the <newWidth> and <newHeight>.
+
+There are two differences between using the <revChangeWindowSize> <command> and simply changing the <stack|stack's> <height> and <width> <properties> :
+
+* The <revChangeWindowSize> <command> shrinks or grows the window from its top left corner: the window's top and left edges stay in place, while the bottom and right edges move. Setting the <height> and <width> <properties> leaves the center of the window in place while all four edges move inward or outward.
+
+* The <revChangeWindowSize> <command> lets you change the window size by optionally sliding the edges over a specified time period, and displaying a <card> during the transition.
+
+>*Note:* In a standalone application the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revChangeWindowSize> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revChangeWindowSize> <command> can be used in any <handler>.
+
+References: rectangle (property), formattedHeight (property), height (property), location (property), formattedWidth (property), lockLocation (property), width (property), properties (property), card (keyword), preOpenCard (message), startup (message), openBackground (message), preOpenStack (message), openStack (message), resizeStack (message), stack (object), Common library (library), library (library), stack window (glossary), main stack (glossary), handler (glossary), message (glossary), group (glossary), command (glossary), application (glossary)
+
+Tags: windowing

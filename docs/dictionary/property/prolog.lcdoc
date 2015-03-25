@@ -1,0 +1,31 @@
+Name: prolog
+
+Type: property
+
+Syntax: set the prolog of <EPSObject> to <PostScriptString> 
+
+Summary: Specifies the <PostScript> prolog code of an <EPS|EPS object>.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the prolog of the templateEPS to field "Rotate"
+
+Value:
+The <prolog> of an <EPS|EPS object> is a <string>.
+By default, the <prolog> <property> of newly created <EPS|EPS objects> is set to empty.
+
+Description:
+Use the <prolog> <property> to <prepend> <PostScript> code to an <EPS|EPS object>.
+
+You can use the <prolog> to transform the <EPS> without having to change its <PostScript> <property> (the actual <PostScript> code used to render the image).
+
+This property is supported only on Unix systems with Display PostScript installed.
+
+References: postScript (property), pageCount (property), boundingBox (property), string (keyword), EPS (object), EPS (glossary), property (glossary), prepend (glossary)
+
+Tags: multimedia

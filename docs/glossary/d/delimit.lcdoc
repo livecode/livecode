@@ -1,0 +1,14 @@
+Name: delimit
+
+Synonyms: delimiting,delimited,delimit
+
+Type: glossary
+
+Description:
+To use a particular <character> to mark the beginning or end of a piece of data, or separate pieces of data from each other. 
+ 
+For example, a <string> is delimited by <double quote|double quotes> ("): a <double quote> is placed at the beginning and end of the <string> to separate it from the surrounding code.
+
+References: string (glossary), character (glossary), double quote (glossary)
+
+Tags: text processing

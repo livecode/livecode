@@ -1,0 +1,33 @@
+Name: allowInlineInput
+
+Type: property
+
+Syntax: set the allowInlineInput to {true | false}
+
+Summary: Specifies whether the user can type non-Roman text directly into a <field>.
+
+Introduced: 2.0
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+set the allowInlineInput to true
+
+Example:
+set the allowInlineInput to the letUsersType of this stack
+
+Value (bool):The allowInput property is true or false.
+By default, the <allowInlineInput> is true.
+
+Description:
+Use the <allowInlineInput> <property> to determine the method by which the user can enter <double-byte character|double-byte> text.
+
+If the <allowInlineInput> <property> is set to true, the user can type <double-byte character|double-byte characters> (used for languages that do not use the Roman alphabet, such as Chinese, Japanese, and Korean) directly into <field(object)|fields>.
+
+If the <allowInlineInput> is false, if the <insertion point> is in a <field(keyword)> and a double-byte language is currently selected, a text-entry <palette> appears where the user can enter the <characters>. (This palette is displayed by the operating system's language software, not by LiveCode.) When the user presses Enter, the <characters> are placed in the <field(keyword)>.
+
+References: traversalOn (property), textFont (property), lockText (property), useUnicode (property), field (keyword), characters (keyword), palette (command), field (object), property (glossary), insertion point (glossary), double-byte character (glossary)
+
+Tags: text processing

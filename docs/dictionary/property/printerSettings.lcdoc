@@ -1,0 +1,38 @@
+Name: printerSettings
+
+Type: property
+
+Syntax: set the printerSettings to <string> 
+
+Syntax: get the printerSettings
+
+Summary: Returns device-specific settings for the current printer.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: printing
+
+Example:
+set the printerSettings to the cSavedPrintSettings of me
+
+Example:
+put the printerSettings into url ("binfile:" & printerSettingsFile())
+
+Value: The <printerSettings> is an opaque binary string containing the settings and printer name.
+
+The result: Setting the <printerSettings> will attempt to choose and configure the current printer with the supplied settings. If the printer is found but the settings are not valid, the printer will be chosen and configured with the default values. If the printer is not found, the result will be set to "unknown printer".
+
+Description:
+Use the <printerSettings> to get or set the device-specific settings for the current printer. 
+
+Setting the <printerSettings> to empty will reset the printer to the system default and all printer settings to the default for the printer.
+
+To have an effect, this property must be set before calling <open printing>.
+
+References: open printing (command), answer printer (command)
+
+Tags: printing

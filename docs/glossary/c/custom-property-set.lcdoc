@@ -1,0 +1,14 @@
+Name: custom property set
+
+Synonyms: custom property set,property set
+
+Type: glossary
+
+Description:
+A set of <custom property|custom properties> you define and name. 
+ 
+Each custom property set is independent of the others, and the same <property> can have different <value|values> in different sets.
+
+References: custom property (glossary), property (glossary), value (glossary)
+
+Tags: properties

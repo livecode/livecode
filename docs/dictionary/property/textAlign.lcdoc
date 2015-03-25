@@ -1,0 +1,30 @@
+Name: textAlign
+
+Type: property
+
+Syntax: set the textAlign [of <line>] of {<button> | <field>} to {left | center | right}
+
+Summary: Specifies how text is aligned or justified in a <field> or <button>.
+
+Associations: field,button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the textAlign of field "myField" to center
+
+Example:
+set the textAlign of line 1 of field "myField" to right
+
+Description:
+Use the <textAlign> <property> to change the alignment of individual lines of text in a field, the whole field or <button|buttons>.
+
+By default, the <textAlign> of newly created fields and buttons is "left".
+
+References: borderWidth (property), vgrid (property), acceleratorText (property), dontWrap (property), formattedText (property), spaceAbove (property), backgroundColor (property), margins (property), listBehavior (property), hidden (property), textSize (property), firstIndent (property), tabstops (property), spaceBelow (property), listStyle (property), rightIndent (property), listDepth (property), hgrid (property), printTextAlign (property), hScrollbar (property), borderColor (property), formattedWidth (property), field (keyword), button (keyword), button (object), property (glossary)
+
+Tags: ui

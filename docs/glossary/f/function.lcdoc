@@ -1,0 +1,10 @@
+Name: function
+
+Synonyms: function
+
+Type: glossary
+
+Description:
+A piece of code that computes a <value> and <return|returns> the <value> to the <handler> that called it.
+
+References: value (glossary), handler (glossary), return (glossary)

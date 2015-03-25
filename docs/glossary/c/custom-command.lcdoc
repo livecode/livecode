@@ -1,0 +1,10 @@
+Name: custom command
+
+Synonyms: user-defined command,custom command
+
+Type: glossary
+
+Description:
+A <command> whose behavior is defined in a <message handler> that you write, as opposed to a built-in <command>.
+
+References: command (glossary), message handler (glossary)

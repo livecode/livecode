@@ -1,0 +1,40 @@
+Name: maxHeight
+
+Type: property
+
+Syntax: set the maxHeight of <stack> to <pixels> 
+
+Summary: Specifies how tall a <stack window> can be made when it's being resized.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the maxHeight of stack "Help" to 500
+
+Example:
+set the maxHeight of the target to (item 2 of the screenRect - 48)
+
+Value:
+The <maxHeight> of a stack is a positive <integer>.
+By default, the <maxHeight> <property> of newly created <stacks> is set to 65535.
+
+Description:
+Use the <maxHeight> <property> if you want the user to be able to resize the <stack window>, but limited to a height you choose.
+
+The <maxHeight> is the maximum height in <pixels>. The height does not include the window's <title bar> or borders.
+
+The <maxHeight> <property> does not prevent a <handler> from changing the <stack|stack's> <height> <property> (or related <properties> such as the <rectangle>). It affects only user actions. If you set the <stack|stack's> height to a value greater than the <maxHeight>, it is <reset> to the <maxHeight> when you close and reopen the <stack>.
+
+If the stack's resizable <property> is false, the setting of this <property> has no effect.
+
+>*Note:* The current architecture uses 16-bit signed integers for all co-ordinates, which means that the value range is -32768 to 32767.
+
+References: minHeight (property), pixels (property), height (property), properties (property), maxWidth (property), rectangle (keyword), integer (keyword), reset (command), stack (object), property (glossary), title bar (glossary), handler (glossary), stack window (glossary), stacks (function)
+
+Tags: windowing

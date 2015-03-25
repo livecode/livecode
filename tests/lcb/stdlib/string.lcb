@@ -20,37 +20,37 @@ module com.livecode.string.tests
 use com.livecode.string
 
 public handler TestPutBefore()
-	variable t
-	put "y" into t
-	put "x" before t
-	test "put before" when t is "xy"
+	variable tString
+	put "y" into tString
+	put "x" before tString
+	test "put before" when tString is "xy"
 end handler
 
 public handler TestPutAfter()
-	variable t
-	put "x" into t
-	put "y" after t
-	test "put after" when t is "xy"
+	variable tString
+	put "x" into tString
+	put "y" after tString
+	test "put after" when tString is "xy"
 end handler
 
 public handler TestReplace()
-	variable t
+	variable tString
 
-	put "x.x" into t
-	replace "." with "x" in t
-	test "replace (single instance)" when t is "xxx"
+	put "x.x" into tString
+	replace "." with "x" in tString
+	test "replace (single instance)" when tString is "xxx"
 
-	put "..." into t
-	replace "." with "x" in t
-	test "replace (multiple instance)" when t is "xxx"
+	put "..." into tString
+	replace "." with "x" in tString
+	test "replace (multiple instance)" when tString is "xxx"
 
-	put ".xx" into t
-	replace ".x" with "x" in t
-	test "replace (multichar)" when t is "xx"
+	put ".xx" into tString
+	replace ".x" with "x" in tString
+	test "replace (multichar)" when tString is "xx"
 
-	put ".xx" into t
-	replace ".x" with "." in t
-	test "replace (multichar non-recursing)" when t is ".x"
+	put ".xx" into tString
+	replace ".x" with "." in tString
+	test "replace (multichar non-recursing)" when tString is ".x"
 end handler
 
 public handler TestConcat()

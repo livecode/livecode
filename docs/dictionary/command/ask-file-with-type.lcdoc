@@ -1,0 +1,56 @@
+Name: ask file with type
+
+Type: command
+
+Syntax: ask file <prompt> [with <defaultFilePath>] [with type <types> [or type <types> ...]] [as sheet]
+
+Summary: Displays a standard Save <dialog box|dialog> for the user to enter a <file> name and specify a location.
+
+Introduced: 2.6
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Security: disk
+
+Example:
+ask file "Please name the file:"
+
+Example:
+ask file "Save data as" with "/HD/Data Stacks/filedata.rev" as sheet
+
+Example:
+ask file empty with "Untitled"
+
+Example:
+ask file "Export picture as:" with type "JPEG File|jpg|JPEG" or type "GIF File|gif|GIFf"
+
+Parameters:
+prompt (string): If you specify empty, no prompt appears.
+defaultFilePath: The defaultFilePath consists of a folder path, or a suggested file name, or both. The filename is the portion of the path after the last slash character (/). If a folder path is provided in the defaultFilePath, the dialog box shows the contents of that folder. Otherwise, it shows the contents of the last folder you used with a file dialog box. If a suggested file name is provided in the defaultFilePath, it appears in the file name box.
+types: Use the types parameter to specify which files should appear and to prompt the user for the desired format to save in. Each set of types is a return-delimited list of values of the form "tag|extensions|filetypes".
+
+The result: If <types> are specified, the result function will return the tag of the corresponding type selected from the supplied drop-down list.
+
+It: The absolute file path of the file the user chose is placed in the it <variable>. If the user cancels the <dialog box|dialog>, the <it> <variable> is set to empty.
+
+Description:
+Use the ask file <command> to let the user provide the <file path|name and location> of a new <file>.
+
+The dialog box is the same one most applications use for the "Save" command in the File menu. (If the systemFileSelector <property> is set to true on <Mac OS> and <Windows|Windows systems>, and always on <Unix|Unix systems>, the <application> displays its own built-in <dialog box>, instead of the one provided by the operating system.)
+
+>*Important:*  The ask file command does not create the file. It only displays the dialog box and retrieves the path to the file the user specifies.
+
+>*Note:* On Windows, it is imperative not to name a file with one of the reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8 and LPT9. Also do not use these names followed by an extension, for example, NUL.tx7.
+If more than one type is specified, a drop-down list containing the tags will be displayed allowing the user to select which types of files to display. (This list is always displayed on Windows systems).
+If the as sheet form is used, the dialog box appears as a sheet on OS X systems. On other systems, the as sheet form has no effect and the dialog box appears normally. Attempting to open a sheet from within another sheet displays the second stack as a <modal dialog box> instead.
+
+If the systemFileSelector <property> is set to false, LiveCode's built-in <dialog box> is used instead of the operating system's <file dialog box|standard file dialog>.
+
+Changes:
+The ask file ... with type ... form was introduced in version 2.6.
+
+References: dontUseNS (property), file (keyword), it (keyword), modal (command), answer file (command), ask (command), property (glossary), modal dialog box (glossary), variable (glossary), application (glossary), Windows (glossary), file dialog box (glossary), Mac OS (glossary), file path (glossary), Unix (glossary), dialog box (glossary), command (glossary)
+
+Tags: file system

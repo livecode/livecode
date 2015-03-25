@@ -1,0 +1,37 @@
+Name: $_GET_RAW
+
+Type: keyword
+
+Syntax: $_GET_RAW
+
+Summary: <$_GET_RAW> is the QUERY_STRING component of a URL.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put $_GET_RAW into tQueryString
+
+Example:
+set the itemdelimiter to "&"
+repeat for each item tVariablePair in $_GET_RAW
+   set the itemdelimiter to "="
+   put urlDecode(item 1 of tVariablePair) into tVariableKey
+   put urlDecode(item 2 of tVariablePair) into tVariableValue
+   -- do something with key and value --
+   set the itemdelimiter to "&"
+end repeat
+
+Description:
+Use the <$_GET_RAW> keyword to get the QUERY_STRING component of a url. 
+
+http://www.website.com?variable1=value1&variable2=value2
+
+$_GET_RAW is only available when running in CGI mode (Server).
+
+>*Note:* The <$_GET_RAW> keyword is useful as it provides a means to get the QUERY_STRING data in order.
+
+References: $_POST (keyword), $_SERVER (keyword), $_GET_BINARY (keyword), $_GET (keyword)

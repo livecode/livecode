@@ -22,39 +22,39 @@ module com.livecode.codeunit
 
 use com.livecode.foreign
 
-public foreign handler MCCodeunitFetchCodeunitOf(in Index as LCIndex, in Target as String, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitFetchCodeunitRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as String, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreCodeunitRangeOf(in Value as String, in Start as LCIndex, in Finish as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitFetchCodeunitOf(in Index as LCIndex, in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitStoreCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitFetchCodeunitRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitStoreCodeunitRangeOf(in Value as String, in Start as LCIndex, in Finish as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalNumberOfCodeunitsIn(in Target as String, out Count as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalNumberOfCodeunitsIn(in Target as String, out Count as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalIsAmongTheCodeunitsOf(in Needle as String, in Target as String, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalIsAmongTheCodeunitsOf(in Needle as String, in Target as String, out Value as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitStoreBeforeCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreAfterCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitStoreBeforeCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitStoreAfterCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalOffsetOfCodeunits(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitEvalOffsetOfCodeunitsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitEvalOffsetOfCodeunitsAfter(in IsFirst as CBool, in Needle as String, in After as LCIndex, in Target as String, out Offset as LCUIndex) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalOffsetOfCodeunits(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitEvalOffsetOfCodeunitsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitEvalOffsetOfCodeunitsAfter(in IsFirst as CBool, in Needle as String, in After as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalContains(in Source as String, in Needle as String, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitEvalContains(in Source as String, in Needle as String, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitRepeatForEachCodeunit(inout Iterator as optional Pointer, out Iterand as String, in Container as String) as CBool binds to "<builtin>"
+public foreign handler MCCodeunitRepeatForEachCodeunit(inout Iterator as optional Pointer, out Iterand as String, in Container as String) returns CBool binds to "<builtin>"
 
-public foreign handler MCCodeunitFetchFirstCodeunitOf(in Target as String, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreFirstCodeunitOf(in Value as String, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitFetchFirstCodeunitOf(in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitStoreFirstCodeunitOf(in Value as String, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitFetchLastCodeunitOf(in Target as String, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitStoreLastCodeunitOf(in Value as String, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitFetchLastCodeunitOf(in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitStoreLastCodeunitOf(in Value as String, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitExecDeleteCodeunitOf(in Index as LCIndex, inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitExecDeleteCodeunitRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitExecDeleteCodeunitOf(in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitExecDeleteCodeunitRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitExecDeleteLastCodeunitOf(inout Target as String) as undefined binds to "<builtin>"
-public foreign handler MCCodeunitExecDeleteFirstCodeunitOf(inout Target as String) as undefined binds to "<builtin>"
+public foreign handler MCCodeunitExecDeleteLastCodeunitOf(inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCodeunitExecDeleteFirstCodeunitOf(inout Target as String) returns nothing binds to "<builtin>"
 
 --
 

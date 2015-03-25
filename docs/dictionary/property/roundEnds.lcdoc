@@ -1,0 +1,43 @@
+Name: roundEnds
+
+Type: property
+
+Syntax: set the roundEnds [of graphic] to {true | false}
+
+Summary: Specifies whether lines have rounded ends or squared-off ends.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the roundEnds to true
+
+Example:
+set the roundEnds of graphic "Connector" to false
+
+Value (bool):The <roundEnds> of a <graphic> is true or false. 
+By default, the <roundEnds> of a newly created <graphic> is set to false.
+
+Description:
+Use the <roundEnds> <property> to control the <appearance> of lines.
+
+If the <roundEnds> of a <graphic> is true, the ends of lines are rounded, and so is the intersection of lines within the <graphic>. If the <roundEnds> is false, the ends of lines are squared off. 
+
+If the graphic's <lineSize> <property> is 1, the setting of the <roundEnds> has no effect. 
+
+If the graphic's <style> <property> is oval, roundRect, or curve, or if the graphic's <lineSize> <property> is less than 2, the setting of this <property> has no effect. 
+
+The global setting of the <roundEnds> <property> <control|controls> the <appearance> of lines drawn with the <line>, <rectangle>, <polygon>, or <regular> <paint tool|paint tools>. Once a paint line or shape is drawn, its appearance cannot be changed by changing the <global> <roundEnds> <property>. 
+
+The <roundEnds> property is derived from the <capStyle> property and returns true if, and only if, the <capStyle> property is round. Setting <roundEnds> to true sets the <capStyle> to round, and setting the <roundEnds> to false sets the <capStyle> to butt.
+
+>*Cross-platform note:* The roundEnds property has no effect on Mac unless the graphic has its antialiased property set to true.
+
+References: capStyle (property), style (property), joinStyle (property), dashes (property), miterLimit (property), roundRadius (property), lineSize (property), polygon (keyword), regular (keyword), line (keyword), rectangle (keyword), graphic (keyword), global (command), control (object), property (glossary), appearance (glossary), paint tool (glossary)
+
+Tags: ui

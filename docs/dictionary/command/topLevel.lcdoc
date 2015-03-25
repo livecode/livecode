@@ -1,0 +1,38 @@
+Name: topLevel
+
+Type: command
+
+Syntax: topLevel <stack> 
+
+Summary: Opens a <stack> in an <editable window>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+toplevel stack "project1"
+
+Example:
+toplevel this stack
+
+Example:
+topLevel the mousestack
+
+Parameters:
+stack: Any stack reference.
+
+Description:
+Use the <topLevel> <command> to display a <stack> in an <editable window>.
+
+An editable window can be resized (if its resizable <property> is true), and its <control|controls> can be <selected>, moved, and changed.  To edit a <stack> of a different style (a <palette>, <modeless>, or <modal dialog box|modal dialog>), use the <topLevel> <command> to display it in an <editable window>.
+
+The <topLevel> <command> closes the <stack> and reopens it as an <editable window>, so <closeStack> and <openStack>, <closeCard> and <openCard>, and (if applicable) <closeBackground> and <openBackground> <message|messages> are sent to the <current card> as a result of <execute|executing> this <command>. Use the <lock messages> <command> before executing <topLevel> if you want to prevent these <message|messages> from being sent.
+
+If the stack is already in an editable window, the <topLevel> <command> does not close and reopen it.
+
+References: cantModify (property), selected (property), openCard (message), closeStack (message), closeCard (message), closeBackground (message), openStack (message), openBackground (message), palette (command), lock messages (command), drawer (command), modeless (command), choose (command), stack (object), control (object), property (glossary), current card (glossary), execute (glossary), message (glossary), editable window (glossary), command (glossary), modal dialog box (glossary)
+
+Tags: windowing

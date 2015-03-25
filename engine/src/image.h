@@ -81,6 +81,8 @@ bool MCImageDecodeNetPBM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha);
 
 bool MCImageParseMetadata(MCExecContext& ctxt, MCArrayRef p_array, MCImageMetadata& r_metadata);
+// MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
+bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -244,6 +246,9 @@ public:
 
 	static void init();
 	static void shutdown();
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
 
 private:
 	MCImage *m_owner;
@@ -668,6 +673,7 @@ public:
     // SN-2014-06-23: [[ IconGravity ]] Getters and setters added
     void SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle);
     void GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle);
+    void GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value);
     
     virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);

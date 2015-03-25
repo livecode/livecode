@@ -1,0 +1,38 @@
+Name: arcAngle
+
+Type: property
+
+Syntax: set the arcAngle [of <graphic>] to <angleInDegrees> 
+
+Summary: Specifies the angle used to draw an arc.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the arcAngle to myAngle -- affects ovals drawn with the paint tools
+
+Example:
+set the arcAngle of graphic "Over" to theAngle
+
+Value:
+The <arcAngle> of a <graphic> is an <integer> between zero and 360.
+By default, the <arcAngle> <property> of a newly created <graphic> is 360.
+
+Description:
+Use the <arcAngle> <property> to create an arc shape from an oval <graphic>, or to cause the Oval <paint tool> to draw arcs.
+
+By default, ovals display their entire arc from zero to 360, forming a complete oval. Use the <startAngle> and <arcAngle> <properties> to specify that only a portion of the oval, forming an arc, should be drawn.
+
+The <arcAngle> determines how much of the oval is used to form the arc, from zero (no arc) to 360 (a full oval). For example, if the <angleInDegrees> is 90, a quarter-oval arc is displayed.
+
+The global setting of the <arcAngle> <property> controls the appearance of arcs drawn with the <paint tool|paint tools>. Once a paint arc is drawn, its appearance cannot be changed by changing the <global> <arcAngle> <property>.
+
+References: angle (property), properties (property), startAngle (property), integer (keyword), graphic (keyword), global (command), property (glossary), paint tool (glossary)
+
+Tags: ui

@@ -1,0 +1,31 @@
+Name: systemPrintSelector
+
+Type: property
+
+Syntax: set the systemPrintSelector to {true | false}
+
+Syntax: get the systemPrintSelector
+
+Summary: Reports whether to use LiveCode stacks or system dialogs for printer settings.
+
+Introduced: 2.9
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+if the platform is "linux" then
+  set the systemPrintSelector to false
+end if
+
+Value:
+The <systemPrintSelector> is either "true" or "false". The default is "false" on platforms that don't support native print dialogs, but "true" otherwise.
+If the <systemPrintSelector> is set to false, then the <answer printer> command will use a stack called "Print Dialog" and the <answer page setup> command will use a stack called "Page Setup Dialog".
+
+Description:
+Use the <systemPrintSelector> property to specify whether LiveCode's print dialogs or the system default dialogs should be used by the <answer printer> and <answer page setup> commands.
+
+References: answer page setup (command), answer printer (command)
+
+Tags: printing
