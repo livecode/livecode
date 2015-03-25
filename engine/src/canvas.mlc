@@ -2761,7 +2761,7 @@ Example:
 	// Continue path with a curve through 25,100 to 50,100
 	curve through [25,100] to [50,100] on tPath
 	// Close the path
-	close tPath
+	close path on tPath
 
 Tags:	Canvas
 */
