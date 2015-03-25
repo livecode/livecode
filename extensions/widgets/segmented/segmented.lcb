@@ -147,6 +147,7 @@ widget com.livecode.extensions.livecode.segmented
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.library.iconSVG
 
 -- metadata
 metadata title is "Segmented"
@@ -223,6 +224,7 @@ private variable mShowFrameBorder	as Boolean
 -- constants
 constant kIconSize is 16
 constant kTextSize is 13
+constant kIconPaddingRatio is 0.2
 --
 
 public handler OnSave(out rProperties as Array)
@@ -265,8 +267,8 @@ public handler OnCreate()
 	
 	put ["segment1","segment2","segment3"] into mSegmentNames
 	put ["Title","Title","Title"] into mSegmentLabels
-	put ["f036","f037","f038"] into mSegmentIcons
-	put ["f036","f037","f038"] into mSelectedIcons
+	put ["align left","align center","align right"] into mSegmentIcons
+	put ["align left","align center","align right"] into mSelectedIcons
 	
 	put "icon" into mSegmentDisplay
 	put [30,30,30] into mSegmentMinWidth
@@ -355,8 +357,6 @@ public handler OnClick()
 		
 	else
 		-- if can multiselect, then select the clicked-on segment if it is unselected or unselect if its selected
-		-- cannot deselect a segment if it is the only selected segment
-		
 		repeat with tX from 1 up to mNumSegments
 			if the click position is within fetchBounds(tX) then
 		
@@ -364,22 +364,18 @@ public handler OnClick()
 				put tX is in mSelectedSegments into tIsIn
 		
 				if tIsIn then
-					if (the number of elements in mSelectedSegments) > 1 then
-				
-						put 1 into tCount
-						variable tElement
-						repeat for each element tElement in mSelectedSegments
-							if tElement = tX then
-								exit repeat
-							end if
-							add 1 to tCount
-						end repeat
+					put 1 into tCount
+					variable tElement
+					repeat for each element tElement in mSelectedSegments
+						if tElement = tX then
+							exit repeat
+						end if
+						add 1 to tCount
+					end repeat
 					
-						delete element tCount of mSelectedSegments
-						put element tX of mSegmentNames into tLabel
-						post "segmentUnselected" with [tLabel]
-						
-					end if
+					delete element tCount of mSelectedSegments
+					put element tX of mSegmentNames into tLabel
+					post "segmentUnselected" with [tLabel]
 				else
 					put element tX of mSegmentNames into tLabel
 					post "segmentSelected" with [tLabel]
@@ -414,18 +410,20 @@ private handler drawSegments() as undefined
 			set the paint of this canvas to fetchPaint("background", "yosemite")
 		end if	
 		
+		variable tSegmentRect as Rectangle
+		put rectangle [mLeft, 0, mLeft+tWidth, my height] into tSegmentRect
 		if tX = 1 then
 			-- rounded rectangle segment
-			fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
+			fill rounded rectangle path of tSegmentRect with radius mRadius on this canvas
 			fill rectangle path of rectangle [mLeft+tWidth, 0, mLeft+tWidth*0.5, my height] on this canvas
 				
 		else if tX = mNumSegments then
 			-- rounded rectangle segment
-			fill rounded rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] with radius mRadius on this canvas
+			fill rounded rectangle path of tSegmentRect with radius mRadius on this canvas
 			fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth*0.5, my height] on this canvas
 				
 		else
-			fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth, my height] on this canvas
+			fill rectangle path of tSegmentRect on this canvas
 		end if
 
 		if tIsIn then
@@ -436,22 +434,67 @@ private handler drawSegments() as undefined
 		end if	
 			
 
+		variable tIconPath as Path
+		variable tIconRect as Rectangle
+		put rectangle [mLeft + tWidth * kIconPaddingRatio, tWidth * kIconPaddingRatio, mLeft + tWidth * (1 - kIconPaddingRatio), my height - (tWidth * kIconPaddingRatio)] into tIconRect
 		if mSegmentDisplay is "icon" then
 			if tIsIn then
-				get the char with code ((element tX of mSelectedIcons) converted from base 16) 
+				put path iconSVGPathFromName(element tX of mSelectedIcons) into tIconPath
 			else
-				get the char with code ((element tX of mSegmentIcons) converted from base 16) 
+				put path iconSVGPathFromName(element tX of mSegmentIcons) into tIconPath
 			end if
-			put the result into tLabel
+			setIconPath(tIconRect, tIconPath)
+			fill tIconPath on this canvas
 		else
 			put (element tX of mSegmentLabels) into tLabel
+			fill text tLabel at center of fetchLabelRect(tWidth) on this canvas
 		end if
-
-		fill text tLabel at center of fetchLabelRect(tWidth) on this canvas
 
 		add tWidth to mLeft
 	end repeat
 	
+end handler
+
+private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
+
+	// Scale the icon
+	variable tBounds
+	put the bounding box of xPath into tBounds
+	
+	// Scale appropriately
+	variable tXScale as Real
+	variable tYScale as Real
+		
+	put the width of pTargetRect / the width of tBounds into tXScale
+	put the height of pTargetRect / the height of tBounds into tYScale
+		
+	if tXScale > tYScale then
+		put tYScale into tXScale
+	else
+		put tXScale into tYScale
+	end if
+
+    scale xPath by [tXScale, tYScale]
+
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+
+    put the bounding box of xPath into tBounds
+
+	put the left of pTargetRect - the left of tBounds into tXTranslate
+	put the top of pTargetRect - the top of tBounds into tYTranslate
+
+    variable tXDiff as Real
+    variable tYDiff as Real
+
+    put the width of pTargetRect - the width of tBounds into tXDiff
+    put the height of pTargetRect - the height of tBounds into tYDiff
+
+	// align center
+	divide tXDiff by 2
+	divide tYDiff by 2
+
+	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
 private handler updateLines() as undefined
@@ -589,17 +632,10 @@ private handler fetchPaint(in pObject as String, in pPlatform as String) as Pain
 end handler
 
 private handler fetchFont() as Font
-	
-	if mSegmentDisplay is "icon" then
-		return font "fontawesome" at size kIconSize
-		
-	else
-		variable tFont as Font
-		put the font of this canvas into tFont
-		set the size of tFont to kTextSize
-		return tFont
-		
-	end if
+	variable tFont as Font
+	put the font of this canvas into tFont
+	set the size of tFont to kTextSize
+	return tFont
 end handler
 
 private handler fetchLabelRect(in pWidth as Real) as Rectangle
@@ -730,14 +766,12 @@ private handler setSegmentLabels(in pLabels as String)
 end handler
 
 private handler setSegmentIcons(in pIcons as String)
-	replace " " with "" in pIcons
 	split pIcons by "," into mSegmentIcons
 	put true into mGeometryIsChanged
 	redraw all
 end handler
 
 private handler setSelectedIcons(in pSelectedIcons as String)
-	replace " " with "" in pSelectedIcons
 	split pSelectedIcons by "," into mSelectedIcons
 	put true into mGeometryIsChanged
 	redraw all
