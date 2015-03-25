@@ -169,6 +169,8 @@
 /* Begin PBXProject section */
 		4D7EFD3A12E72A1C00D67888 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D7EFD3D12E72A1C00D67888 /* Build configuration list for PBXProject "revzip-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -232,7 +234,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export SYMBOLS=_getXtable\nsh \"$SRCROOT/../tools/build-extension-ios.sh\"";
+			shellScript = "export SYMBOLS=\"_getXtable _configureSecurity _setExternalInterfaceVersion\"\nsh \"$SRCROOT/../tools/build-extension-ios.sh\"";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

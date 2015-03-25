@@ -506,6 +506,9 @@ static struct LibExport __libexports[] =
 {
 	{ "getXtable", getXtable },
 	{ "configureSecurity", configureSecurity },
+    // SN-2015-03-25: [[ Bug 14326 ]] Do not forget to add setExternalInterfaceVersion
+    //  in order to be able to use any external function after version 1
+    { "setExternalInterfaceVersion", setExternalInterfaceVersion },
 	{ 0, 0 }
 };
 
