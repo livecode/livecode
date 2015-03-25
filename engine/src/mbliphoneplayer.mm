@@ -469,7 +469,8 @@ Exec_stat MCNativePlayerControl::Do(MCNativeControlAction p_action, MCParameter 
 		case kMCNativeControlActionPlay:
         // PM-2014-09-18: [[ Bug 13048 ]] Make sure movieTouched message is sent
         {
-            [m_delegate beginWithOverlay:[m_controller isFullscreen]];
+            // PM-2015-03-06: [[ Bug 14816 ]] movieTouched msg to be sent only when in fullscreen and showController=false
+            [m_delegate beginWithOverlay:([m_controller isFullscreen] && [m_controller controlStyle] == MPMovieControlStyleNone)];
             [m_controller play];
 			return ES_NORMAL;
         }

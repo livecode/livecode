@@ -360,7 +360,12 @@ void MCScreenDC::beep(void)
 {
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	MCIPhoneRunBlockOnMainFiber(^(void) {
+    
+    // PM-2015-03-12: [[ Bug 14408 ]] On devices that don't support vibration, use AudioServicesPlaySystemSound, which does not lower the background volume, if audio is playing on the background
+    if([[UIDevice currentDevice].model isEqualToString:@"iPhone"])
 		AudioServicesPlayAlertSound(s_system_sound_name != nil ? s_system_sound : kSystemSoundID_Vibrate);
+    else
+        AudioServicesPlaySystemSound(s_system_sound_name != nil ? s_system_sound : kSystemSoundID_Vibrate);
 	});
 }
 
