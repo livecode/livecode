@@ -3815,7 +3815,7 @@ void MCButton::docascade(MCStringRef p_pick)
 	
 	if (pptr != this)
 	{
-		if (m_menu_handler != nil && !m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
+		if (m_menu_handler == nil || !m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
 		{
 			MCParameter *param = new MCParameter;
 			param->setvalueref_argument(*t_pick);
