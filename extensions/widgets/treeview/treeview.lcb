@@ -483,42 +483,43 @@ public handler OnClick() returns nothing
 	
 	put element mHoverRow of mDataList into tData
 	
-	if the click count is 1 then	
-		// Check if the delete icon was clicked
-		if mHoverIcon is "delete" then
-			removePath(tData["path"])
-			return
-		end if
-
-		// Check if the add icon was clicked
-		if mHoverIcon is "add" then
-			addUnderPath(tData["path"])
-			return
-		end if
+	// Check if the delete icon was clicked
+	if mHoverIcon is "delete" then
+		removePath(tData["path"])
+		return
+	end if
+	
+	// Check if the add icon was clicked
+	if mHoverIcon is "add" then
+		addUnderPath(tData["path"])
+		return
+	end if
+	
+	// Check if the arrow was clicked
+	if not tData["leaf"] then
+		variable tLeft as Real
+		put tData["indent"] * mIndentPixels into tLeft
 		
-		// Check if the arrow was clicked
-		if not tData["leaf"] then
-			variable tLeft as Real
-			put tData["indent"] * mIndentPixels into tLeft
-			
-			variable tX as Real
-			put the x of the click position into tX
-			
-			if tX > tLeft and tX < tLeft + mIconWidth + 2 * mMargin then
-				if tData["folded"] is true then
-					unfoldPath(tData["path"])
-		   		else
-					foldPath(tData["path"])
-		   		end if
-		   		return
-		   	end if
-		end if
+		variable tX as Real
+		put the x of the click position into tX
 		
+		if tX > tLeft and tX < tLeft + mIconWidth + 2 * mMargin then
+			if tData["folded"] is true then
+				unfoldPath(tData["path"])
+	   		else
+				foldPath(tData["path"])
+	   		end if
+	   		return
+	   	end if
+	end if
+	
+	if the click count is 1 then
 		if tData["selected"] is true then
 			unselectPath(tData["path"])
 		else
 			selectPath(tData["path"])
 		end if
+		return
 	end if
 
 	if tData["leaf"] is not true then
@@ -1089,6 +1090,11 @@ private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pF
 	repeat for each key tKey in pFoldState
 		// If this key no longer exists, don't do anything
 		if tKey is not among the keys of pArray then
+			next repeat
+		end if
+		
+		// Don't apply fold if the target is now a leaf node
+		if not (pArray[tKey] is an array) then
 			next repeat
 		end if
 	
