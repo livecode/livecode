@@ -188,19 +188,26 @@ public handler OnCreate() returns nothing
 	put true into mFrameBorder	
 	initialiseScrollbar()	
 	
+	put true into mRecalculate
+	
 	put the empty array into mFoldState
-	setArrayData(the empty array)
+	put the empty array into mData	
+	put convertArrayToList(mData, 0, the empty list) into mDataList
+	
+	push the empty array onto front of mDataList
 
 end handler
 
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	put mData into rProperties["array"]
+	put mSelectedRowColor into rProperties["selected row color"]
 	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
 	put pProperties["array"] into mData
+	put pProperties["selected row color"] into mSelectedRowColor
 end handler
 
 public handler OnPaint() returns nothing
@@ -399,7 +406,9 @@ public handler OnMouseMove() returns nothing
 			put tNewHoverRow into mHoverRow
             put true into tRedraw
 		end if
-        if mHoverRow is not 1 then
+        if mHoverRow is 1 then
+        	put "" into mHoverIcon
+        else
             variable tHoverIcon as String
             put xPosToIconString(the x of the mouse position) into tHoverIcon
             if mHoverIcon is not tHoverIcon then
@@ -453,7 +462,19 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 end handler
 
 public handler OnClick() returns nothing
+	// If the first row was clicked then add a new element
+	if mHoverRow is 1 then
+		addBaseLevelElement()
+		return
+	end if
+
+	// Click in the scrollbar region does nothing
 	if the x of the click position > mViewWidth - scrollbarWidth() then
+		return
+	end if
+
+	// Just return if the click was below all the data
+	if mHoverRow > the number of elements in mDataList then
 		return
 	end if
 
@@ -462,7 +483,7 @@ public handler OnClick() returns nothing
 	
 	put element mHoverRow of mDataList into tData
 	
-	if the click count is 1 then
+	if the click count is 1 then	
 		// Check if the delete icon was clicked
 		if mHoverIcon is "delete" then
 			removePath(tData["path"])
@@ -561,6 +582,8 @@ private handler ensureViewTopPosition()
 	// Make sure we don't try to scroll past the last displayable item
 	else if mDataHeight > mViewHeight and mViewTopPosition > mDataHeight - mViewHeight then
 		put mDataHeight - mViewHeight into mViewTopPosition
+	else if mDataHeight < mViewHeight then
+		put 0 into mViewTopPosition
 	end if	
 end handler
 
@@ -616,15 +639,15 @@ private handler getPaint(pLocation, pType) returns Paint
 		else if pType is "fill_selected" then
 			return solid paint with stringToColor(mSelectedRowColor)
 		else if pType is "fill_selected_hover" then
-			return solid paint with stringToColor("10,95,193")
+			return solid paint with stringToColor(mSelectedRowColor & ",150")
 		else if pType is "fill_alternate" then
 			return solid paint with stringToColor("245,245,245")
 		else if pType is "fill_alternate_hover" then
 			return solid paint with stringToColor("230,230,230")
 		else if pType is "fill_alternate_selected" then
-			return solid paint with stringToColor("10,105,216")
+			return solid paint with stringToColor(mSelectedRowColor)
 		else if pType is "fill_alternate_selected_hover" then
-			return solid paint with stringToColor("10,98,200")
+			return solid paint with stringToColor(mSelectedRowColor & ",150")
 		end if
 	else if pLocation is "text" then
 		if pType is "disabled" then
@@ -850,23 +873,37 @@ private handler removeKey(in pListElt as Integer, in pPath as List, in pLevel as
 	delete xArray[element pLevel + 1 of pPath]
 end handler
 
+private handler createNewKey(inout xArray as Array)
+	variable tNewKey as String
+	put "" into tNewKey
+	if "" is among the keys of xArray then
+		variable tNew as Integer
+		put 1 into tNew
+		repeat while (tNew formatted as string) is among the keys of xArray
+			add 1 to tNew
+		end repeat
+		put tNew formatted as string into tNewKey
+	end if
+	put "" into xArray[tNewKey]
+end handler
+
+private handler addBaseLevelElement()
+	createNewKey(mData)
+	setArrayData(mData)	
+	post "dataChanged"
+end handler
+
 // A handler of type NodeApply to pass into 'applyToNode' - adds a new key below the given path
 private handler addKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	if not xList[pListElt]["leaf"] then
+		foldKey(pListElt, pPath, pLevel, xList, xArray)
+	end if
+
 	variable tElement
 	put xArray[pPath[pLevel + 1]] into tElement
 
 	if tElement is an array then
-		variable tNewKey as String
-		put "" into tNewKey
-		if "" is among the keys of xArray[pPath[pLevel + 1]] then
-			variable tNew as Integer
-			put 1 into tNew
-			repeat while (tNew formatted as string) is among the keys of xArray[pPath[pLevel + 1]]
-				add 1 to tNew
-			end repeat
-			put tNew formatted as string into tNewKey
-		end if
-		put "" into xArray[pPath[pLevel + 1]][tNewKey]
+		createNewKey(xArray[pPath[pLevel + 1]])
 	else
 		variable tArray as Array
 		put the empty array into tArray	
@@ -912,29 +949,37 @@ end handler
 
 // Delete the array key on the given path and update the display list
 private handler removePath(in pPath as List)
-	applyToNode(removeKey, pPath, 0, 1, mDataList, mData)
-	redraw all
+	if applyToNode(removeKey, pPath, 0, 1, mDataList, mData) then
+		post "dataChanged"
+		put true into mRecalculate
+		redraw all
+	end if
 end handler
 
 private handler addUnderPath(in pPath as List)
-	applyToNode(addkey, pPath, 0, 1, mDataList, mData)
-	redraw all
+	if applyToNode(addkey, pPath, 0, 1, mDataList, mData) then
+		post "dataChanged"
+		put true into mRecalculate
+		redraw all
+	end if
 end handler
 
 // Unfold the key at the target path
 private handler unfoldPath(in pPath as List)
-	applyToNode(unfoldKey, pPath, 0, 1, mDataList, mData)	
-	// Changing fold state makes a recalculation necessary
-	put true into mRecalculate	
-	redraw all
+	if applyToNode(unfoldKey, pPath, 0, 1, mDataList, mData) then
+		// Changing fold state makes a recalculation necessary
+		put true into mRecalculate	
+		redraw all
+	end if
 end handler
 
 // Fold the key at the target path
 private handler foldPath(in pPath as List)
-	applyToNode(foldKey, pPath, 0, 1, mDataList, mData)	
-	// Changing fold state makes a recalculation necessary
-	put true into mRecalculate
-	redraw all
+	if applyToNode(foldKey, pPath, 0, 1, mDataList, mData) then
+		// Changing fold state makes a recalculation necessary
+		put true into mRecalculate
+		redraw all
+	end if
 end handler
 
 // Select the key at the target path
@@ -945,8 +990,11 @@ private handler selectPath(in pPath as List)
 	end if
 
 	if mSelectedElement is not defined or mSelectedElement is not pPath then
-		applyToNode(selectKey, pPath, 0, 1, mDataList, mData)
-		post "selectedElementChanged" to my script object
+		if applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
+		else
+			put undefined into mSelectedElement
+		end if	
+		post "selectedElementChanged"
 		redraw all
 	end if
 end handler
@@ -955,7 +1003,7 @@ end handler
 private handler unselectPath(in pPath as List)
 	if mSelectedElement is defined and mSelectedElement is pPath then
 		applyToNode(unselectKey, pPath, 0, 1, mDataList, mData)
-		post "selectedElementChanged" to my script object
+		post "selectedElementChanged"
 		redraw all
 	end if
 end handler
@@ -964,8 +1012,8 @@ end handler
 // Acts on a list (in the format used by this widget) and an array simultaneously.
 // We are quite lax with checking here, since this will only be used internally 
 // 	after a delete action happens, and so the element should exist by definition.
-// If the specified path happens not to exist, this does nothing anyway.
-private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array)
+// If the specified path doesn't exist, this returns false
+private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) as Boolean
 	variable tKey as String
 	put element pLevel + 1 of pPathToNode into tKey
 
@@ -979,9 +1027,10 @@ private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in
 			else
 				applyToNode(pHandler, pPathToNode, pLevel + 1, tCount, xList, xArray[tKey])			
 			end if
-			exit repeat
+			return true
 		end if	
 	end repeat
+	return false
 end handler
 
 // Remove all elements below pStart in the list that have a greater indent
@@ -1033,11 +1082,16 @@ private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pS
 	end repeat	
 end handler
 
-private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pFoldState as Array, in pArray as Array, inout xList as List)
+private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pFoldState as Array, in pArray as Array, inout xList as List) returns nothing
 
 	// Find the match for each key at the appropriate level, and set folded accordingly
 	variable tKey as String
 	repeat for each key tKey in pFoldState
+		// If this key no longer exists, don't do anything
+		if tKey is not among the keys of pArray then
+			next repeat
+		end if
+	
 		applyFoldStateKey(tKey, pLevel, pStart, pFoldState[tKey], pArray[tKey], xList)
 	end repeat
 
@@ -1131,16 +1185,19 @@ private handler setArrayData(in pData as Array) returns nothing
 	put convertArrayToList(pData, 0, the empty list) into mDataList
 	
 	push the empty array onto front of mDataList
-	
+
 	// Unfold unfolded before reapplying selection
 	if mFoldState is not empty then
-		applyFoldState(0, 0, mFoldState, mData, mDataList)
+		applyFoldState(0, 1, mFoldState, mData, mDataList)
 	end if	
 		
 	// Force reselection of previously selected path (if possible)
 	if mSelectedElement is defined then
-		applyToNode(selectKey, mSelectedElement, 0, 0, mDataList, mData)
+		if not applyToNode(selectKey, mSelectedElement, 0, 1, mDataList, mData) then
+			put undefined into mSelectedElement
+		end if
 	end if
+	
 	put true into mRecalculate
 	redraw all
 end handler
@@ -1160,6 +1217,8 @@ private handler getSelectedElement() returns String
 	variable tElement as String
 	if mSelectedElement is defined then
 		combine mSelectedElement with "," into tElement
+		// Make sure empty path is recognised as a valid path
+		put "," after tElement
 	else
 		put the empty string into tElement
 	end if
@@ -1232,15 +1291,9 @@ end handler
 
 private handler updateScrollbar(in pViewWidth as Real, in pViewHeight as Real, in pDataHeight as Real, in pTopPosition as Real)
 
-	variable tScrollableHeight as Real
 	variable tScrollbarHeight as Real
 	variable tScrollbarRatio as Real
 	
-	put pDataHeight - pViewHeight into tScrollableHeight
-	if tScrollableHeight < 0 then
-		put 0 into tScrollableHeight
-	end if	
-
 	put pViewHeight / pDataHeight into tScrollbarRatio
 	
 	if tScrollbarRatio >= 1 or tScrollbarRatio <= 0 then 
