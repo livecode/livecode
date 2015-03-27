@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Palette header bar widget.
 */
 
-widget com.livecode.widget.testheader
+widget com.livecode.widget.paletteActions
 
 use com.livecode.canvas
 use com.livecode.widget
@@ -45,13 +45,13 @@ property showActionIcons	get mShowActionIcons	set setShowActionIcons
 
 property actionData		get getActionData		set setActionData
 
+property isHeader		get mIsHeader			set mIsHeader
 
 private variable mNavData 			as List
 private variable mSelectedNavItem 	as Integer
 private variable mShowNavIcons			as Boolean
 
 private variable mActionData		as List
-private variable mActionMenus		as List
 private variable mShowActionIcons	as Boolean
 
 private variable mSize 				as Real
@@ -61,7 +61,10 @@ private variable mActionRects		as List
 
 private variable mRecalculate		as Boolean
 
+private variable mIsHeader 			as Boolean
+
 constant kBlack is [0,0,0]
+constant kIconColor is [0,0,0,0.5]
 constant kWhite is [1,1,1]
 
 constant kDefaultNavName is "Nav"
@@ -69,13 +72,14 @@ constant kDefaultNavIcon is ""
 constant kDefaultNavLabel is "nav"
 
 constant kDefaultActionName is "Action"
-constant kDefaultActionIcon is "lock"
+constant kDefaultActionIcon is "cog"
 constant kDefaultActionLabel is "action"
+constant kDefaultActionMenu is ""
 
 constant kTabPadding is 10
-constant kActionPadding is 10
+constant kActionPadding is 6
 
-constant kHeightRatio is 0.8
+constant kTabHeightRatio is 0.8
 
 public handler OnCreate()
 	
@@ -84,9 +88,8 @@ public handler OnCreate()
 	put kDefaultActionName into tAction["name"]
 	put kDefaultActionLabel into tAction["label"]
 	put kDefaultActionIcon into tAction["icon"]
-	
+	put "Choice 1\nChoice 2\nChoice 3" into tAction["menu"]
 	put [tAction] into mActionData
-	put ["View Columns/|revTools_columns\n\t2\n\t3\n\t!c4\nShow Sections/|revTools_show\n\t!cwidget\n\t!cclassic\n\t!cgraphic\n\t!cgraphictools\n\t!cpaint\nHeader // Footer Size/|revPaletteFrameSize\n\tsmall\n\t!cmedium\n\tlarge"] into mActionMenus
 	
 	variable tNav as Array
 	put the empty array into tNav
@@ -108,6 +111,23 @@ public handler OnCreate()
 	put true into mShowActionIcons
 	
 	put true into mRecalculate
+	
+	put true into mIsHeader
+end handler
+
+public handler OnSave(out rProperties as Array)
+	variable tProperties as Array
+	put the empty array into tProperties
+	put getNavData() into tProperties["nav data"]
+	put getActionData() into tProperties["action data"]
+	put mIsHeader into tProperties["is header"]
+	put tProperties into rProperties
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	setNavData(pProperties["nav data"])
+	setActionData(pProperties["action data"])
+	put pProperties["is header"] into mIsHeader
 end handler
 
 public handler OnPaint()
@@ -116,22 +136,22 @@ public handler OnPaint()
 		recalculate()
 	end if
 	
-	-- draw the background rectangle
-	set the paint of this canvas to getPaint("background")
-	fill getPath("background") on this canvas
-	
-	-- draw the line around the header bar
+	-- draw the line above / below
 	set the paint of this canvas to getPaint("line")
 	stroke getPath("line") on this canvas
 	
 	variable tCount as Integer
-	repeat with tCount from 1 up to the number of elements in mNavData
-		drawTab(tCount)
-	end repeat
+	if the number of elements in mNavData > 0 then
+		repeat with tCount from 1 up to the number of elements in mNavData
+			drawTab(tCount)
+		end repeat
+	end if
 	
-	repeat with tCount from 1 up to the number of elements in mActionData
-		drawAction(tCount)
-	end repeat
+	if the number of elements in mActionData > 0 then
+		repeat with tCount from 1 up to the number of elements in mActionData
+			drawAction(tCount)
+		end repeat
+	end if
 
 end handler
 
@@ -154,11 +174,17 @@ public handler OnClick()
 	repeat for each element tRect in mActionRects
 		add 1 to tCount
 		if tPoint is within tRect then
-			variable tAction as Array
-			put element tCount of mActionData into tAction
-			popup menu mActionMenus[tCount] at the mouse position
-			if the result is defined then
-				log the result
+			if mActionData[tCount]["menu"] is not empty then
+				variable tResult
+				variable tMenuString as String
+				put mActionData[tCount]["menu"] into tMenuString
+				popup menu tMenuString at the mouse position
+				put the result into tResult
+				if tResult is defined then
+					post "menuPick" with [tResult]
+				end if
+			else
+				post "actionSelected" with [mActionData[tCount]["name"]]
 			end if
 			exit repeat
 		end if
@@ -227,80 +253,100 @@ private handler recalculate()
 	put false into mRecalculate
 end handler
 
-private handler calculateTabRects()
+private handler rectsFromLeft(in pPadding as Real, in pIcons as Boolean, in pData as List) as List
 	variable tBoundary as Real
-	put kTabPadding into tBoundary
+	put pPadding into tBoundary
 	
 	variable tRects as List
 	put the empty list into tRects
 
 	variable tLeft as Real
 	variable tRight as Real
-	put kTabPadding into tLeft
+	put pPadding into tLeft
 	
 	variable tTop as Real
-	put (1 - kHeightRatio) * my height into tTop
+	if pIcons then
+		put 0 into tTop
+	else
+		put (1 - kTabHeightRatio) * my height into tTop
+	end if
 	
 	variable tBottom as Real
 	put my height into tBottom
 	
 	variable tRect as Rectangle
 	variable tElement as Array
-	repeat for each element tElement in mNavData
-		if mShowNavIcons is false then
+	repeat for each element tElement in pData
+		if pIcons is false then
 			variable tTextRect as Rectangle
 			set the font of this canvas to getFont("label")
 			measure tElement["label"] on this canvas into tTextRect
-			put the width of tTextRect + 2 * kTabPadding + tLeft into tRight
+			put the width of tTextRect + 2 * pPadding + tLeft into tRight
 			put rectangle [tLeft, tTop, tRight, tBottom] into tRect
 		else
-			put tBottom / 3 + 2 * kTabPadding + tLeft into tRight
-			put rectangle [tLeft, tBottom / 3, tRight, 2 * tBottom / 3] into tRect
+			put tBottom + 2 * pPadding + tLeft into tRight
+			put rectangle [tLeft, tTop, tRight, tBottom] into tRect
 		end if
 		
 		push tRect onto tRects
 		put tRight into tLeft
 	end repeat
 	
-	put tRects into mTabRects
+	return tRects
 end handler
 
-private handler calculateActionRects()
+private handler rectsFromRight(in pPadding as Real, in pIcons as Boolean, in pData as List) as List
 	variable tBoundary as Real
-	put kActionPadding into tBoundary
+	put pPadding into tBoundary
 	
 	variable tRects as List
 	put the empty list into tRects
 
 	variable tLeft as Real
 	variable tRight as Real
-	put my width - kActionPadding into tRight
+	put my width - pPadding into tRight
 	
 	variable tTop as Real
-	put (1 - kHeightRatio) * my height into tTop
+	if pIcons then
+		put pPadding into tTop
+	else
+		put (1 - kTabHeightRatio) * my height into tTop
+	end if
 	
 	variable tBottom as Real
-	put my height into tBottom
+	put my height - pPadding into tBottom
 	
 	variable tRect as Rectangle
 	variable tElement as Array
-	repeat for each element tElement in mActionData
-		if mShowActionIcons is false then
+	repeat for each element tElement in pData
+		if pIcons is false then
 			variable tTextRect as Rectangle
 			set the font of this canvas to getFont("label")
 			measure tElement["label"] on this canvas into tTextRect
-			put tRight - (the width of tTextRect + 2 * kActionPadding) into tLeft	
+			put tRight - (the width of tTextRect + 2 * pPadding) into tLeft	
 			put rectangle [tLeft, tTop, tRight, tBottom] into tRect	
 		else
-			put tRight - (tBottom / 3 + 2 * kActionPadding) into tLeft	
-			put rectangle [tLeft, tBottom / 3, tRight, 2 * tBottom / 3] into tRect	
+			put tRight - (tBottom + 2 * pPadding) into tLeft	
+			put rectangle [tLeft, tTop, tRight, tBottom] into tRect	
 		end if
 
 		push tRect onto tRects
 		put tLeft into tRight
 	end repeat
 	
-	put tRects into mActionRects
+	return tRects
+end handler
+
+private handler calculateTabRects()	
+	put rectsFromLeft(kTabPadding, mShowNavIcons, mNavData) into mTabRects
+end handler
+
+private handler calculateActionRects()
+	if mIsHeader then
+		put rectsFromRight(kActionPadding, mShowActionIcons, mActionData) into mActionRects
+	else
+		put rectsFromLeft(kActionPadding, mShowActionIcons, mActionData) into mActionRects
+	end if
 end handler
 
 private handler getPaint(in pObject as String) returns Paint
@@ -310,7 +356,10 @@ private handler getPaint(in pObject as String) returns Paint
 	
 	else if pObject is "line" then
 		return solid paint with color [178/255, 178/255, 178/255]
-		
+	
+	else if pObject is "icon" then
+		return solid paint with color kIconColor
+	
 	else if pObject is "title" then
 		 return solid paint with color kBlack
 		 
@@ -336,8 +385,14 @@ private handler getFont(in pType as String) returns Font
 end handler
 
 private handler getPath(in pObject as String) returns Path
-	if pObject is "background" or pObject is "line" then
+	if pObject is "background" then
 		return rectangle path of rectangle [0, 0, my width, my height]	
+	else if pObject is "line" then
+		if mIsHeader then
+			return line path from point [0, my height] to point [my width, my height]
+		else
+			return line path from point [0, 0] to point [my width, 0]
+		end if
 	end if
 end handler
 
@@ -363,34 +418,43 @@ private handler listToArray(in pList as List) returns Array
 	variable tArray
 	put the empty array into tArray
 	repeat with tCount from 1 up to the number of elements in pList
-		put element tCount of pList into tArray[tCount]
+		put element tCount of pList into tArray[tCount formatted as string]
 	end repeat
 	return tArray
 end handler
 
-private handler setData(in pArray as Array, in pKeys as List, out rList as List)
-	variable tOrder as List
-	put the keys of pArray into tOrder
-	sort tOrder in ascending order
-	
-	variable tOrderKey
-	variable tKey
-	variable tElement as Array
+private handler setData(in pArray as Array, in pDefaultArray as Array, out rList as List)
 	variable tList as List
 	put the empty list into tList
 	
-	repeat for each element tOrderKey in tOrder
-		put the empty array into tElement	
-		repeat for each element tKey in pKeys
-			put pArray[tOrderKey][tKey] into tElement[tKey]
-		end repeat
-		push tElement onto tList
-	end repeat
+	if pArray is not empty then
+		variable tOrder as List
+		put the keys of pArray into tOrder
+		sort tOrder in ascending order
+		
+		variable tKeys as List
+		put the keys of pDefaultArray into tKeys
+
+		variable tOrderKey as String
+		variable tKey as String
+		variable tElement as Array
 	
+		repeat for each element tOrderKey in tOrder
+			put the empty array into tElement	
+			repeat for each element tKey in tKeys
+				if tKey is among the keys of pArray[tOrderKey] then
+					put pArray[tOrderKey][tKey] into tElement[tKey]
+				else
+					put pDefaultArray[tKey] into tElement[tKey]
+				end if
+			end repeat
+			push tElement onto tList
+		end repeat
+	end if
+		
 	put tList into rList
 	
 	put true into mRecalculate
-	
 	redraw all	
 end handler
 
@@ -439,7 +503,6 @@ end handler
 
 // Only the primary data element ("name" for both actions and nav) can *reduce* the number of elements in the data list.
 private handler setPrimaryDataElement(in pElementName as String, in pElements as String, in pDefaultArray as Array, inout xList as List)
-	log "setting primary"
 	variable tElements
 	split pElements by "," into tElements
 
@@ -456,12 +519,9 @@ private handler setPrimaryDataElement(in pElementName as String, in pElements as
 		put tElement into xList[tCount][pElementName]
 	end repeat
 	
-	log tCount
-	log the number of elements in xList
 	// If we there are more items than there are primary elements, pop them off.
 	add 1 to tCount
 	repeat with tCount from tCount up to the number of elements in xList
-		log "popping"
 		pop xList
 	end repeat
 	
@@ -490,7 +550,7 @@ private handler getNavData() returns Array
 end handler
 
 private handler setNavData(in pNavData as Array)
-	setData(pNavData, the keys of defaultNavArray(), mNavData)
+	setData(pNavData, defaultNavArray(), mNavData)
 end handler
 
 private handler getNavNames() returns String
@@ -524,6 +584,7 @@ end handler
 
 private handler setSelectedNavItem(in pItem as Integer)
 	put pItem into mSelectedNavItem
+	post "navSelected" with [mNavData[pItem]["name"]]
 	redraw all
 end handler
 
@@ -539,6 +600,7 @@ private handler defaultActionArray() returns Array
 	put kDefaultActionName into tArray["name"]
 	put kDefaultActionLabel into tArray["label"]
 	put kDefaultActionIcon into tArray["icon"]
+	put kDefaultActionMenu into tArray["menu"]	
 	return tArray
 end handler
 
@@ -547,7 +609,7 @@ private handler getActionData() returns Array
 end handler
 
 private handler setActionData(in pActions as Array)
-	setData(pActions, the keys of defaultActionArray(), mActionData)
+	setData(pActions, defaultActionArray(), mActionData)
 end handler
 
 public handler setShowActionIcons(in pShowIcons as Boolean)
@@ -595,64 +657,51 @@ end handler
 private handler paintIcon(in pPath as String, in pTargetRect as Rectangle, in pClicked as Boolean)
 	variable tPath as Path
 	put path pPath into tPath
-	
-	variable tBounds
-	put the bounding box of tPath into tBounds
-	
-	// set origin of bounds to 0,0
-	translate tPath by [- the x of tBounds, - the y of tBounds]
-	// flip vertically
-	scale tPath by [1,-1]
-	translate tPath by [0, the height of tBounds]
-		
-	// scale to fit within widget and maintain aspect ratio
-
-	// Prepare values for matrix transformation
-	variable isLarger as Boolean
-	variable sx as Number
-	variable sy as Number
-		
-	put false into isLarger
-	put the width of pTargetRect / the width of tBounds into sx
-	put the height of pTargetRect / the height of tBounds into sy
-		
-	if sx > sy then
-		put true into isLarger
-		put sy into sx
-	else
-		put sx into sy
-	end if
-		
-	variable tx as Number
-	variable ty as Number
-		
-	put the left of pTargetRect - (the left of tBounds*sx) into tx
-	put the top of pTargetRect - (the top of tBounds*sy) into ty
-		
-	variable diff as Number
-		
-	if isLarger then
-		put the width of pTargetRect - (the width of tBounds*sy) into diff
-	else
-		put the height of pTargetRect - (the height of tBounds*sy) into diff
-	end if	
-			
-	// align center
-	divide diff by 2
-		
-	if isLarger then
-		add diff to tx
-	else
-		add diff to ty
-	end if
-		
-	// create transformation matrix and apply
-	variable tTransform as Transform
-	put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
-	transform tPath by tTransform
-
-	set the paint of this canvas to solid paint with color kBlack
+	setIconPath(pTargetRect, tPath)
+	set the paint of this canvas to getPaint("icon")
 	fill tPath on this canvas
+end handler
+
+private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
+
+	// Scale the icon
+	variable tBounds
+	put the bounding box of xPath into tBounds
+	
+	// Scale appropriately
+	variable tXScale as Real
+	variable tYScale as Real
+		
+	put the width of pTargetRect / the width of tBounds into tXScale
+	put the height of pTargetRect / the height of tBounds into tYScale
+		
+	if tXScale > tYScale then
+		put tYScale into tXScale
+	else
+		put tXScale into tYScale
+	end if
+
+    scale xPath by [tXScale, tYScale]
+
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+
+    put the bounding box of xPath into tBounds
+
+	put the left of pTargetRect - the left of tBounds into tXTranslate
+	put the top of pTargetRect - the top of tBounds into tYTranslate
+
+    variable tXDiff as Real
+    variable tYDiff as Real
+
+    put the width of pTargetRect - the width of tBounds into tXDiff
+    put the height of pTargetRect - the height of tBounds into tYDiff
+
+	// align center
+	divide tXDiff by 2
+	divide tYDiff by 2
+
+	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
 end widget
