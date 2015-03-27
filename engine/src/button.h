@@ -95,6 +95,12 @@ struct MCInterfaceButtonIcon;
 #define MENUCONTROL_ITEM 1
 #define MENUCONTROL_SEPARATOR 2
 
+class MCButtonMenuHandler
+{
+public:
+	virtual bool OnMenuPick(MCButton *p_button, MCValueRef p_pick, MCValueRef p_old_pick) = 0;
+};
+
 class ButtonMenuCallback;
 
 class MCButton : public MCControl
@@ -144,6 +150,8 @@ class MCButton : public MCControl
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
     
+	MCButtonMenuHandler *m_menu_handler;
+	
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     bool m_animate_posted : 1;
 
@@ -287,11 +295,17 @@ public:
 	//   a Mac menu as its assumed its not needed.
 	Boolean findmenu(bool p_just_for_accel = false);
 	
+	void setmenuhandler(MCButtonMenuHandler *p_handler);
+	Exec_stat handlemenupick(MCValueRef p_pick, MCValueRef p_old_pick);
+	
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
 	MCRange getmenurange();
 	void docascade(MCStringRef t_pick);
 	void setupmenu();
+	
+	bool menuisopen();
+	
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
 	bool selectedtext(MCStringRef& r_string);
@@ -324,6 +338,8 @@ public:
 	void macopenmenu(void);
 	void macfreemenu(void);
     static void getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
+    
+    bool macmenuisopen();
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}
