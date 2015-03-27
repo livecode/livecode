@@ -137,6 +137,7 @@ extern bool MCForeignModuleInitialize(void);
 extern bool MCMathModuleInitialize(void);
 extern bool MCCanvasModuleInitialize(void);
 extern bool MCEngineModuleInitialize(void);
+extern bool MCWidgetModuleInitialize(void);
 bool MCModulesInitialize(void)
 {
     if (!MCForeignModuleInitialize())
@@ -147,6 +148,8 @@ bool MCModulesInitialize(void)
         return false;
     if (!MCEngineModuleInitialize())
         return false;
+	if (!MCWidgetModuleInitialize())
+		return false;
     return true;
 }
 
@@ -154,8 +157,10 @@ extern void MCForeignModuleFinalize(void);
 extern void MCMathModuleFinalize(void);
 extern void MCCanvasModuleFinalize(void);
 extern void MCEngineModuleFinalize(void);
+extern void MCWidgetModuleFinalize(void);
 void MCModulesFinalize(void)
 {
+	MCWidgetModuleFinalize();
     MCEngineModuleFinalize();
     MCCanvasModuleFinalize();
     MCMathModuleFinalize();
