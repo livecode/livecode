@@ -19,12 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Palette header bar widget.
 */
 
-widget com.livecode.widget.paletteHeader
+widget com.livecode.widget.testheader
 
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.fontawesomeSVGPath
+use com.livecode.library.iconSVG
 
 metadata title is "Palette Header"
 metadata author is "LiveCode"
@@ -51,6 +51,7 @@ private variable mSelectedNavItem 	as Integer
 private variable mShowNavIcons			as Boolean
 
 private variable mActionData		as List
+private variable mActionMenus		as List
 private variable mShowActionIcons	as Boolean
 
 private variable mSize 				as Real
@@ -85,6 +86,7 @@ public handler OnCreate()
 	put kDefaultActionIcon into tAction["icon"]
 	
 	put [tAction] into mActionData
+	put ["View Columns/|revTools_columns\n\t2\n\t3\n\t!c4\nShow Sections/|revTools_show\n\t!cwidget\n\t!cclassic\n\t!cgraphic\n\t!cgraphictools\n\t!cpaint\nHeader // Footer Size/|revPaletteFrameSize\n\tsmall\n\t!cmedium\n\tlarge"] into mActionMenus
 	
 	variable tNav as Array
 	put the empty array into tNav
@@ -133,7 +135,7 @@ public handler OnPaint()
 
 end handler
 
-public handler OnClick(in pX, in pY, in pWhich, in pAmount)
+public handler OnClick()
 	variable tPoint as Point
 	put the click position into tPoint
 	
@@ -154,7 +156,10 @@ public handler OnClick(in pX, in pY, in pWhich, in pAmount)
 		if tPoint is within tRect then
 			variable tAction as Array
 			put element tCount of mActionData into tAction
-			log "action" && tAction["label"] && "clicked"
+			popup menu mActionMenus[tCount] at the mouse position
+			if the result is defined then
+				log the result
+			end if
 			exit repeat
 		end if
 	end repeat
@@ -189,7 +194,7 @@ private handler drawTab(in pIndex as Integer)
 	end if
 	
 	if mShowNavIcons then
-		paintIcon(fontawesomeSVGPathFromName(tTab["icon"]), tRect, false)
+		paintIcon(iconSVGPathFromName(tTab["icon"]), tRect, false)
 	else
 		set the font of this canvas to getFont("label")
 		set the paint of this canvas to getPaint("title")	
@@ -206,7 +211,7 @@ private handler drawAction(in pIndex as Integer)
 	put element pIndex of mActionRects into tRect
 	
 	if mShowActionIcons then
-		paintIcon(fontawesomeSVGPathFromName(tAction["icon"]), tRect, false)
+		paintIcon(iconSVGPathFromName(tAction["icon"]), tRect, false)
 	else
 		set the font of this canvas to getFont("label")
 		set the paint of this canvas to getPaint("title")	
