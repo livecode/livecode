@@ -234,4 +234,11 @@ private:
     MCNativeLayer* createNativeLayer();
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo;
+extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif
