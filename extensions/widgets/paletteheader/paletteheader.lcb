@@ -34,7 +34,8 @@ property navNames		get getNavNames			set setNavNames
 property navIcons		get getNavIcons			set setNavIcons
 property navLabels		get getNavLabels		set setNavLabels
 property showNavIcons	get mShowNavIcons		set setShowNavIcons
-property navSelected	get mSelectedNavItem	set setSelectedNavItem
+property selectedNavItem	get getSelectedNavItem	set setSelectedNavItem
+property selectedNavColor	get mSelectedNavColor	set setSelectedNavColor
 
 property navData		get getNavData			set setNavData
 
@@ -49,7 +50,8 @@ property isHeader		get mIsHeader			set mIsHeader
 
 private variable mNavData 			as List
 private variable mSelectedNavItem 	as Integer
-private variable mShowNavIcons			as Boolean
+private variable mShowNavIcons		as Boolean
+private variable mSelectedNavColor	as String
 
 private variable mActionData		as List
 private variable mShowActionIcons	as Boolean
@@ -64,7 +66,7 @@ private variable mRecalculate		as Boolean
 private variable mIsHeader 			as Boolean
 
 constant kBlack is [0,0,0]
-constant kIconColor is [0,0,0,0.5]
+constant kNavColor is [0,0,0,0.5]
 constant kWhite is [1,1,1]
 
 constant kDefaultNavName is "Nav"
@@ -76,10 +78,10 @@ constant kDefaultActionIcon is "cog"
 constant kDefaultActionLabel is "action"
 constant kDefaultActionMenu is ""
 
-constant kTabPadding is 10
+constant kTabPadding is 6
 constant kActionPadding is 6
 
-constant kTabHeightRatio is 0.8
+constant kTabHeightRatio is 0.9
 
 public handler OnCreate()
 	
@@ -104,8 +106,9 @@ public handler OnCreate()
 		push tNav onto mNavData
 	end repeat
 	
-	put 1 into mSelectedNavItem
 	put 10 into mSize
+	
+	put 1 into mSelectedNavItem
 	
 	put false into mShowNavIcons
 	put true into mShowActionIcons
@@ -113,6 +116,8 @@ public handler OnCreate()
 	put true into mRecalculate
 	
 	put true into mIsHeader
+	
+	put "158,191,44" into mSelectedNavColor
 end handler
 
 public handler OnSave(out rProperties as Array)
@@ -155,7 +160,7 @@ public handler OnPaint()
 
 end handler
 
-public handler OnClick()
+public handler OnClick() returns nothing
 	variable tPoint as Point
 	put the click position into tPoint
 	
@@ -165,8 +170,8 @@ public handler OnClick()
 	repeat for each element tRect in mTabRects
 		add 1 to tCount
 		if tPoint is within tRect then
-			setSelectedNavItem(tCount)
-			exit repeat
+			setSelectedNavIndex(tCount)
+			return
 		end if
 	end repeat
 	
@@ -186,7 +191,7 @@ public handler OnClick()
 			else
 				post "actionSelected" with [mActionData[tCount]["name"]]
 			end if
-			exit repeat
+			return
 		end if
 	end repeat
 end handler
@@ -210,21 +215,22 @@ private handler drawTab(in pIndex as Integer)
 	
 	if pIndex is mSelectedNavItem then
 		variable tPath as Path
-		put rectangle path of tRect into tPath
+        put getPathOfTab(tRect) into tPath
 		set the paint of this canvas to getPaint("line")
 		stroke tPath on this canvas
 		
 		set the paint of this canvas to getPaint("selected tab")
 		close path on tPath
 		fill tPath on this canvas
+		set the paint of this canvas to getPaint("selected nav")
+	else
+		set the paint of this canvas to getPaint("nav")
 	end if
 	
 	if mShowNavIcons then
 		paintIcon(iconSVGPathFromName(tTab["icon"]), tRect, false)
 	else
-		set the font of this canvas to getFont("label")
-		set the paint of this canvas to getPaint("title")	
-	
+		set the font of this canvas to getFont("label")	
 		fill text tTab["label"] at center of tRect on this canvas
 	end if
 end handler
@@ -236,12 +242,11 @@ private handler drawAction(in pIndex as Integer)
 	variable tRect as Rectangle
 	put element pIndex of mActionRects into tRect
 	
+	set the paint of this canvas to getPaint("nav")	
 	if mShowActionIcons then
 		paintIcon(iconSVGPathFromName(tAction["icon"]), tRect, false)
 	else
 		set the font of this canvas to getFont("label")
-		set the paint of this canvas to getPaint("title")	
-	
 		fill text tAction["label"] at center of tRect on this canvas
 	end if
 end handler
@@ -253,7 +258,7 @@ private handler recalculate()
 	put false into mRecalculate
 end handler
 
-private handler rectsFromLeft(in pPadding as Real, in pIcons as Boolean, in pData as List) as List
+private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pPadding as Real, in pIcons as Boolean, in pData as List) as List
 	variable tBoundary as Real
 	put pPadding into tBoundary
 	
@@ -262,90 +267,67 @@ private handler rectsFromLeft(in pPadding as Real, in pIcons as Boolean, in pDat
 
 	variable tLeft as Real
 	variable tRight as Real
-	put pPadding into tLeft
-	
-	variable tTop as Real
-	if pIcons then
-		put 0 into tTop
+	if pFromLeft then
+		put pPadding into tLeft
 	else
-		put (1 - kTabHeightRatio) * my height into tTop
+		put my width - pPadding into tRight
 	end if
 	
+	variable tTop as Real
 	variable tBottom as Real
-	put my height into tBottom
+	if pTabs then
+		put (1 - kTabHeightRatio) * my height + pPadding into tTop
+	else
+		put pPadding into tTop
+	end if
+	put my height - pPadding into tBottom	
 	
 	variable tRect as Rectangle
 	variable tElement as Array
+	variable tWidth as Real
 	repeat for each element tElement in pData
 		if pIcons is false then
 			variable tTextRect as Rectangle
 			set the font of this canvas to getFont("label")
 			measure tElement["label"] on this canvas into tTextRect
-			put the width of tTextRect + 2 * pPadding + tLeft into tRight
-			put rectangle [tLeft, tTop, tRight, tBottom] into tRect
+			put the width of tTextRect into tWidth
 		else
-			put tBottom + 2 * pPadding + tLeft into tRight
-			put rectangle [tLeft, tTop, tRight, tBottom] into tRect
+			put tBottom into tWidth
 		end if
 		
-		push tRect onto tRects
-		put tRight into tLeft
-	end repeat
-	
-	return tRects
-end handler
-
-private handler rectsFromRight(in pPadding as Real, in pIcons as Boolean, in pData as List) as List
-	variable tBoundary as Real
-	put pPadding into tBoundary
-	
-	variable tRects as List
-	put the empty list into tRects
-
-	variable tLeft as Real
-	variable tRight as Real
-	put my width - pPadding into tRight
-	
-	variable tTop as Real
-	if pIcons then
-		put pPadding into tTop
-	else
-		put (1 - kTabHeightRatio) * my height into tTop
-	end if
-	
-	variable tBottom as Real
-	put my height - pPadding into tBottom
-	
-	variable tRect as Rectangle
-	variable tElement as Array
-	repeat for each element tElement in pData
-		if pIcons is false then
-			variable tTextRect as Rectangle
-			set the font of this canvas to getFont("label")
-			measure tElement["label"] on this canvas into tTextRect
-			put tRight - (the width of tTextRect + 2 * pPadding) into tLeft	
-			put rectangle [tLeft, tTop, tRight, tBottom] into tRect	
+		if pFromLeft then
+			put tWidth + 2 * pPadding + tLeft into tRight
 		else
-			put tRight - (tBottom + 2 * pPadding) into tLeft	
-			put rectangle [tLeft, tTop, tRight, tBottom] into tRect	
+			put tRight - (tWidth + 2 * pPadding) into tLeft
 		end if
-
+		
+		put rectangle [tLeft, tTop, tRight, tBottom] into tRect
+		
 		push tRect onto tRects
-		put tLeft into tRight
+		
+		if pFromLeft then
+			put tRight into tLeft
+		else
+			put tLeft into tRight
+		end if
 	end repeat
 	
 	return tRects
 end handler
 
-private handler calculateTabRects()	
-	put rectsFromLeft(kTabPadding, mShowNavIcons, mNavData) into mTabRects
+private handler calculateTabRects()
+	if mShowNavIcons then
+		put calculateRects(true, true, kActionPadding, mShowNavIcons, mNavData) into mTabRects
+	else
+		put calculateRects(true, true, kTabPadding, mShowNavIcons, mNavData) into mTabRects
+	end if	
 end handler
 
 private handler calculateActionRects()
 	if mIsHeader then
-		put rectsFromRight(kActionPadding, mShowActionIcons, mActionData) into mActionRects
+		put calculateRects(false, false, kActionPadding, mShowActionIcons, mActionData) into mActionRects
 	else
-		put rectsFromLeft(kActionPadding, mShowActionIcons, mActionData) into mActionRects
+		put calculateRects(false, true, kActionPadding, mShowActionIcons, mActionData) into mActionRects
 	end if
 end handler
 
@@ -357,14 +339,17 @@ private handler getPaint(in pObject as String) returns Paint
 	else if pObject is "line" then
 		return solid paint with color [178/255, 178/255, 178/255]
 	
-	else if pObject is "icon" then
-		return solid paint with color kIconColor
-	
 	else if pObject is "title" then
 		 return solid paint with color kBlack
 		 
 	else if pObject is "selected tab" then
 		return solid paint with color kWhite
+	
+	else if pObject is "nav" then
+		return solid paint with color kNavColor
+		
+	else if pObject is "selected nav" then
+		return solid paint with stringToColor(mSelectedNavColor)
 	end if
 	
 end handler
@@ -396,15 +381,37 @@ private handler getPath(in pObject as String) returns Path
 	end if
 end handler
 
-private handler getRectOfTab(in pObject as String) returns Rectangle
+private handler getPathOfTab(in pRect as Rectangle) returns Path
+    return rectangle path of rectangle [the left of pRect, my height * (1 - kTabHeightRatio), the right of pRect,  my height]
+end handler
 
-	variable tLabelRect as Rectangle 
-	put my bounds into tLabelRect
-	
-	if pObject is "label" then
-		return tLabelRect
+private handler stringToColor(in pString as String) returns Color
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
 
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
 	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 255 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
 end handler
 
 --------------------------------------------------------------------------------
@@ -582,9 +589,45 @@ private handler setShowNavIcons(in pShowIcons as Boolean)
 	redraw all
 end handler
 
-private handler setSelectedNavItem(in pItem as Integer)
-	put pItem into mSelectedNavItem
-	post "navSelected" with [mNavData[pItem]["name"]]
+private handler getSelectedNavItem() returns String
+	if mSelectedNavItem > 0 then
+		return mNavData[mSelectedNavItem]["name"]
+	end if
+	
+	return ""
+end handler
+
+private handler setSelectedNavItem(in pItem as String)
+	variable tElement as Array
+	variable tCount as Integer
+	put 0 into tCount
+	repeat for each element tElement in mNavData
+		add 1 to tCount
+		if tElement["name"] is pItem then
+			put tCount into mSelectedNavItem
+			redraw all
+			return
+		end if
+	end repeat
+	log "1"
+	put 1 into mSelectedNavItem
+	redraw all
+end handler
+
+private handler setSelectedNavIndex(in pIndex as Integer)
+	if pIndex is not mSelectedNavItem then
+		if 0 < pIndex and pIndex <= the number of elements in mNavData then
+			put pIndex into mSelectedNavItem
+			post "navSelected" with [mNavData[pIndex]["name"]]
+			redraw all
+		else
+			put 0 into mSelectedNavItem
+		end if
+	end if
+end handler
+
+private handler setSelectedNavColor(in pColor as String)
+	put pColor into mSelectedNavColor	
 	redraw all
 end handler
 
@@ -657,8 +700,11 @@ end handler
 private handler paintIcon(in pPath as String, in pTargetRect as Rectangle, in pClicked as Boolean)
 	variable tPath as Path
 	put path pPath into tPath
-	setIconPath(pTargetRect, tPath)
-	set the paint of this canvas to getPaint("icon")
+
+    variable tRect as Rectangle
+    put rectangle [the left of pTargetRect + kActionPadding, the top of pTargetRect, the right of pTargetRect - kActionPadding, the bottom of pTargetRect] into tRect
+
+	setIconPath(tRect, tPath)
 	fill tPath on this canvas
 end handler
 
