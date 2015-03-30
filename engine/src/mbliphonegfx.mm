@@ -608,8 +608,9 @@ protected:
 	t_layer = (CAEAGLLayer *)[self layer];
 	
 	[t_layer setOpaque: YES];
+    // PM-2015-03-30: [[ Bug 15090 ]] Cast the last nil sentinel to prevent crash when setting the acceletaredRendering to true on openCard/openStack handler. The crash occured only in 64 bit iOS devices 
 	[t_layer setDrawableProperties:
-				[NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithBool:FALSE], kEAGLDrawablePropertyRetainedBacking, kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil]];
+				[NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithBool:FALSE], kEAGLDrawablePropertyRetainedBacking, kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, (NSString*)nil]];
 	
 	// Initialize the context
 	
