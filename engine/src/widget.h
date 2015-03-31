@@ -90,6 +90,7 @@ public:
     bool handlesMouseDown() const;
     bool handlesMouseUp() const;
     bool handlesMouseCancel() const;
+    bool handlesMouseScroll() const;
     bool handlesKeyPress() const;
     bool handlesActionKeyPress() const;
     bool handlesTouches() const;
