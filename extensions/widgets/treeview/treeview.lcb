@@ -104,6 +104,7 @@ property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgr
 property selectedElement			get getSelectedElement			set setSelectedElement
 property showFrameBorder			get mFrameBorder				set setFrameBorder
 property selectedRowColor			get mSelectedRowColor			set setSelectedRowColor
+property readOnly					get mReadOnly					set setReadOnly
 
 // The unmodified array data
 private variable mData as Array
@@ -149,6 +150,8 @@ private variable mAddItemPath as Path
 private variable mIconRect as Rectangle
 private variable mIconWidth as Real
 
+private variable mReadOnly as Boolean
+
 --------------------------------------------------------------------------------
 --
 --		Message handlers
@@ -188,6 +191,7 @@ public handler OnCreate() returns nothing
 	put true into mFrameBorder	
 	initialiseScrollbar()	
 	
+	put false into mReadOnly
 	put true into mRecalculate
 	
 	put the empty array into mFoldState
@@ -202,12 +206,14 @@ public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	put mData into rProperties["array"]
 	put mSelectedRowColor into rProperties["selected row color"]
+	put mReadOnly into rProperties["read only"]
 	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
 	put pProperties["array"] into mData
 	put pProperties["selected row color"] into mSelectedRowColor
+	put pProperties["read only"] into mReadOnly
 end handler
 
 public handler OnPaint() returns nothing
@@ -345,7 +351,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 	end if
 	
 	// Draw the action icons 
-	if pDataItem["selected"] is true or pRow is mHoverRow then
+	if mReadOnly is false and (pDataItem["selected"] is true or pRow is mHoverRow) then
 		put "fill" into tStyle
 		if pDataItem["selected"] then
 			put "_selected" after tStyle
@@ -577,20 +583,27 @@ end handler
 
 // Clamp mViewTopPosition
 private handler ensureViewTopPosition()
+	variable tMinTop as Real
+	if mReadOnly then
+		put mRowHeight into tMinTop
+	else
+		put 0 into tMinTop
+	end if
+
 	// Make sure we don't try to scroll above 0
-	if mViewTopPosition < 0 then 
-		put 0 into mViewTopPosition
+	if mViewTopPosition < tMinTop then 
+		put tMinTop into mViewTopPosition
 	// Make sure we don't try to scroll past the last displayable item
 	else if mDataHeight > mViewHeight and mViewTopPosition > mDataHeight - mViewHeight then
 		put mDataHeight - mViewHeight into mViewTopPosition
 	else if mDataHeight < mViewHeight then
-		put 0 into mViewTopPosition
+		put tMinTop into mViewTopPosition
 	end if	
 end handler
 
 // Calculate mFirstDataItem from the view position
 private handler updateFirstDataItem()
-	put the floor of (mViewTopPosition / mRowHeight) into mFirstDataItem
+	put the floor of (mViewTopPosition / mRowHeight) + 1 into mFirstDataItem
 	if mFirstDataItem < 1 then
 		put 1 into mFirstDataItem
 	end if	
@@ -598,7 +611,11 @@ end handler
 
 private handler updateParameters() returns nothing
 	put the number of elements in mDataList into mDataCount
-	put mRowHeight * mDataCount into mDataHeight
+	if mReadOnly then
+		put mRowHeight * mDataCount into mDataHeight
+	else
+		put mRowHeight * (mDataCount - 1) into mDataHeight
+	end if
 	put my height into mViewHeight
 	put my width into mViewWidth
 
@@ -831,18 +848,19 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 		else
 			put true into tElement["leaf"]
 			put pArray[tKey] into tElement["value"]
-			
-			if pArray[tKey] is a string then
-				put pArray[tKey] into tElement["string_value"]
-			else
-				variable tString as optional String
+			variable tString as optional String			
+			if pArray[tKey] is not defined then
+				put "" into tString
+			else if pArray[tKey] is a string then
+				put pArray[tKey] into tString
+			else if pArray[tKey] is a boolean then
 				format pArray[tKey] as string into tString
-				if tString is not defined then
-					put "Can't display value" into tString
-				end if
-				put tString into tElement["string_value"]
+			else if pArray[tKey] is a number then
+				format pArray[tKey] as string into tString
+			else
+				put "Can't display value" into tString
 			end if	
-
+			put tString into tElement["string_value"]
 			push tElement onto tList
 		end if	
 	end repeat
@@ -1234,6 +1252,14 @@ end handler
 private handler setSelectedRowColor(in pColor as String)
 	put pColor into mSelectedRowColor
 	redraw all
+end handler
+
+private handler setReadOnly(in pReadOnly as Boolean)
+    if pReadOnly is not mReadOnly then
+        put pReadOnly into mReadOnly
+        put true into mRecalculate
+        redraw all
+    end if
 end handler
 
 --------------------------------------------------------------------------------
