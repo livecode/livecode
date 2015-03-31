@@ -33,8 +33,10 @@ public foreign handler MCTypeEvalIsAData(in Target as optional any, out Value as
 public foreign handler MCTypeEvalIsAnArray(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCTypeEvalIsAList(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCNothingEvalIsEqualTo(in Left as nothing, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCNothingEvalIsNotEqualTo(in Left as nothing, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsEqualToNothing(in Left as optional any, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNothingEqualTo(in Left as nothing, in Right as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNotEqualToNothing(in Left as optional any, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNothingNotEqualTo(in Left as nothing, in Right as optional any, out Value as CBool) returns nothing binds to "<builtin>"
 
 /*
 Summary:    Determines whether <Target> is empty or not.
@@ -126,13 +128,15 @@ end syntax
 syntax NothingIsNothing is neutral binary operator with precedence 7
     <Left: Expression> "is" <Right: Expression>
 begin
-    MCNothingEvalIsEqualTo(Left, Right, output)
+    MCNothingEvalIsEqualToNothing(Left, Right, output)
+    MCNothingEvalIsNothingEqualTo(Left, Right, output)
 end syntax
 
 syntax NothingIsNotNothing is neutral binary operator with precedence 7
     <Left: Expression> "is not" <Right: Expression>
 begin
-    MCNothingEvalIsNotEqualTo(Left, Right, output)
+    MCNothingEvalIsNotEqualToNothing(Left, Right, output)
+    MCNothingEvalIsNothingNotEqualTo(Left, Right, output)
 end syntax
 
 --

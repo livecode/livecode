@@ -87,16 +87,25 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsAList(MCValueRef p_value, bool& r_outpu
         r_output = false;
 }
 
-extern "C" MC_DLLEXPORT void MCNothingEvalIsEqualTo(MCNullRef p_left, MCNullRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCNothingEvalIsNothingEqualTo(MCNullRef p_left, MCValueRef p_right, bool& r_output)
 {
-    r_output = true;
+    r_output = p_right == nil;
 }
 
-extern "C" MC_DLLEXPORT void MCNothingEvalIsNotEqualTo(MCNullRef p_left, MCNullRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT void MCNothingEvalIsEqualToNothing(MCValueRef p_left, MCNullRef p_right, bool& r_output)
 {
-    r_output = false;
+    r_output = p_left == nil;
 }
 
+extern "C" MC_DLLEXPORT void MCNothingEvalIsNothingNotEqualTo(MCNullRef p_left, MCValueRef p_right, bool& r_output)
+{
+    r_output = p_right != nil;
+}
+
+extern "C" MC_DLLEXPORT void MCNothingEvalIsNotEqualToNothing(MCValueRef p_left, MCNullRef p_right, bool& r_output)
+{
+    r_output = p_left != nil;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
