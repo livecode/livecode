@@ -183,7 +183,7 @@
 			
 			# Group "Core - Objects"
 			'src/aclip.h',
-			'src/block.h',
+			'src/MCBlock.h',
 			'src/button.h',
 			'src/card.h',
 			'src/cardlst.h',

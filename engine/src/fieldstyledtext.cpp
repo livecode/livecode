@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "execpt.h"
 #include "util.h"
-#include "block.h"
+#include "MCBlock.h"
 
 #include "globals.h"
 #include "unicode.h"
