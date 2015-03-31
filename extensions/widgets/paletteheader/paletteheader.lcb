@@ -92,12 +92,29 @@ public handler OnCreate()
 	put kDefaultActionName into tAction["name"]
 	put kDefaultActionLabel into tAction["label"]
 	put kDefaultActionIcon into tAction["icon"]
-	put "Choice 1\nChoice 2\nChoice 3" into tAction["menu"]
+	put the empty array into tAction["menu"]
+	
+	variable tCount as Integer
+	
+	variable tKey as String
+	variable tMenuItem as Array
+	put the empty array into tMenuItem
+	repeat with tCount from 1 up to 3
+		put tCount formatted as string into tKey
+		put the empty array into tMenuItem[tKey]
+		put "Choice" && tKey into tMenuItem[tKey]["label"]
+		put false into tMenuItem[tKey]["checked"]
+		put "" into tMenuItem[tKey]["name"]
+		put "" into tMenuItem[tKey]["menu"]
+		put tMenuItem[tKey] into tAction["menu"][tKey]
+		put tAction["menu"] into tMenuItem[tKey]["menu"]
+		put tMenuItem[tKey] into tAction["menu"][tKey]
+	end repeat
+	
 	put [tAction] into mActionData
 	
 	variable tNav as Array
 	put the empty array into tNav
-	variable tCount
 	variable tCountString as String
 	
 	put the empty list into mNavData
@@ -181,7 +198,9 @@ public handler OnClick()
 			if mActionData[tIndex]["menu"] is not empty then
 				variable tResult
 				variable tMenuString as String
-				put mActionData[tIndex]["menu"] into tMenuString
+				log mActionData[tIndex]["menu"]
+				put menuArrayToString(mActionData[tIndex]["menu"], 0) into tMenuString
+				log tMenuString
 				popup menu tMenuString at the mouse position
 				put the result into tResult
 				if tResult is defined then
@@ -274,8 +293,6 @@ private handler drawTab(in pIndex as Integer)
 		set the paint of this canvas to getPaint("nav")
 	end if
 	
-	log mHoverIndex
-	log mHoverTab
 	if mHoverIndex is pIndex and mHoverTab is true then
 		set the paint of this canvas to getPaint("selected nav")
 	end if
@@ -476,6 +493,54 @@ private handler stringToColor(in pString as String) returns Color
 	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
 end handler
 
+private handler menuItemToString(in pMenuItem as Array, in pLevel as Integer) returns String
+	variable tMenuString as String
+	put "" into tMenuString
+	
+	put pMenuItem["label"] after tMenuString
+	if "name" is among the keys of pMenuItem then
+		put "/|" & pMenuItem["name"] after tMenuString
+	end if
+	
+	if "checked" is among the keys of pMenuItem then
+		if pMenuItem["checked"] parsed as boolean then
+			put "!c" before tMenuString
+		end if
+	else if "menu" is among the keys of pMenuItem then
+		put "\n" & menuArrayToString(pMenuItem["menu"], pLevel + 1) after tMenuString
+	end if
+	
+	return tMenuString		
+end handler
+
+private handler menuArrayToString(in pArray as Array, in pLevel as Integer) returns String
+	variable tKeys as List
+	put the keys of pArray into tKeys
+	sort tKeys in ascending order
+	
+	variable tMenu as String
+	put "" into tMenu
+	
+	variable tPrefix as String
+	put "" into tPrefix
+	repeat pLevel times
+		put "\t" after tPrefix
+	end repeat
+	
+	variable tKey as String
+	variable tData as Array
+	repeat for each element tKey in tKeys
+		if tMenu is empty then
+			put tPrefix into tMenu
+		else
+			put "\n" & tPrefix after tMenu
+		end if
+		put pArray[tKey] into tData
+		put menuItemToString(tData, pLevel) after tMenu
+	end repeat
+	return tMenu
+end handler
+
 --------------------------------------------------------------------------------
 --
 --		Data utilities
@@ -672,7 +737,6 @@ private handler setSelectedNavItem(in pItem as String)
 			return
 		end if
 	end repeat
-	log "1"
 	put 1 into mSelectedNavItem
 	redraw all
 end handler
