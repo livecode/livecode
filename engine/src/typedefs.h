@@ -182,13 +182,46 @@ typedef uint32_t codepoint_t;
 #endif
 
 // Null pointer defines (nil is preferred)
-
+// PM-2015-03-31: [[ Bug 15090 ]] Better definition of nil/NULL fixes crashes in 64 bit iOS
 #ifndef NULL
-#define NULL 0
+
+#if defined(__cplusplus) /* C++ */
+#	if defined(__GCC__)
+#		define NULL __null
+#	else
+#		define NULL uintptr_t(0)
+#	endif
+
+#else /* C */
+#	if defined(__GCC__)
+#		define NULL __null
+#	else
+#		define NULL ((void*)0)
+#	endif
+
+#endif
+
+
 #endif
 
 #ifndef nil
-#define nil 0
+
+#if defined(__cplusplus) /* C++ */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil uintptr_t(0)
+#	endif
+
+#else /* C */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil ((void*)0)
+#	endif
+
+#endif
+
 #endif
 
 // Boolean definitions
