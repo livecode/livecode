@@ -976,6 +976,8 @@
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
 
+        EmitPopRepeatLabels()
+
     'rule' GenerateBody(Result, Context, repeatdownto(Position, Slot, Start, Finish, Step, Body)):
         QuerySymbolId(Slot -> Info)
         Info'Index -> VarIndex
@@ -1021,6 +1023,8 @@
         EmitDestroyRegister(CounterRegister)
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
+
+        EmitPopRepeatLabels()
         
     'rule' GenerateBody(Result, Context, repeatforeach(Position, Invoke:invoke(_, IteratorInvokes, Arguments), Container, Body)):
         EmitDeferLabel(-> RepeatHead)
@@ -1057,6 +1061,8 @@
         EmitDestroyRegister(TargetReg)
 
         EmitResolveLabel(RepeatTail)
+
+        EmitPopRepeatLabels()
 
         
     'rule' GenerateBody(Result, Context, nextrepeat(Position)):
