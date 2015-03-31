@@ -2571,7 +2571,8 @@ MCControl *MCCard::getchildbyid(uinteger_t p_id, Chunk_term p_object_type, Chunk
     MCObjptr *t_objects;
     t_objects = getstack() -> getcurcard() -> objptrs;
     
-    if (t_editing != NULL && t_editing -> getcard() -> obj_id == obj_id)
+    // AL-2015-03-31: [[ Bug 15123 ]] Ensure we don't enter the loop if there are no objects
+    if (t_objects != nil && t_editing != NULL && t_editing -> getcard() -> obj_id == obj_id)
     {
         optr = t_objects;
         do
