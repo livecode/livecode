@@ -18,5 +18,20 @@
 		[
 			'../thirdparty/headers/linux/include',
 		],
+		
+		# Static libraries that are to be included into dynamic libraries
+		# need to be compiled with the correct compilation flags
+		'target_conditions':
+		[
+			[
+				'_type == "loadable_module" or (_type == "static_library" and library_for_module != 0)',
+				{
+					'cflags':
+					[
+						'-fPIC',
+					],
+				},
+			],
+		],
 	},
 }

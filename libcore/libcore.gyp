@@ -11,6 +11,11 @@
 			'target_name': 'libCore',
 			'type': 'static_library',
 
+			'variables':
+			{
+				'library_for_module': 1,
+			},
+
 			'include_dirs':
 			[
 				'include',

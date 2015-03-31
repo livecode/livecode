@@ -10,6 +10,11 @@
 			'target_name': 'libExternalV1',
 			'type': 'static_library',
 			
+			'variables':
+			{
+				'library_for_module': 1,
+			},
+			
 			'include_dirs':
 			[
 				'include',
