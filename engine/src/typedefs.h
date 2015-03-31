@@ -205,23 +205,7 @@ typedef uint32_t codepoint_t;
 #endif
 
 #ifndef nil
-
-#if defined(__cplusplus) /* C++ */
-#	if defined(__GCC__)
-#		define nil __null
-#	else
-#		define nil uintptr_t(0)
-#	endif
-
-#else /* C */
-#	if defined(__GCC__)
-#		define nil __null
-#	else
-#		define nil ((void*)0)
-#	endif
-
-#endif
-
+#   define nil NULL
 #endif
 
 // Boolean definitions
