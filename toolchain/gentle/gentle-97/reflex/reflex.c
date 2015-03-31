@@ -242,7 +242,7 @@ main(argc, argv)
 	 printf("cannot open gen.lit\n");
 	 exit(1);
       }
-      copy(F);
+      copy_lit(F);
    }
    /* ( 9) <token>.t for each <token> in gen.tkn */
    filelist();
@@ -315,6 +315,33 @@ copy_or_text(filename, text)
       copy(INFILE);
       fclose(INFILE);
    }
+}
+
+/*----------------------------------------------------------------------------*/
+
+copy_lit(INFILE)
+FILE *INFILE;
+{    
+    for(;;)
+    {
+        char t_line[4096];
+        if (fgets(t_line, 4096, INFILE) == NULL)
+            break;
+        
+        char *t_space;
+        t_space = strchr(t_line, ' ');
+        if (t_space != NULL &&
+            t_space != t_line &&
+            t_space[-1] != '\"')
+        {
+            char *t_brace;
+            t_brace = strchr(t_space + 1, '{');
+            
+            fprintf(OUTFILE, "%.*s/[^a-zA-Z] %s", (t_brace - 1) - t_line, t_line, t_brace);
+        }
+        else
+            fprintf(OUTFILE, "%s", t_line);
+    }
 }
 
 /*----------------------------------------------------------------------------*/
