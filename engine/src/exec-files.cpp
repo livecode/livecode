@@ -1111,6 +1111,9 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
     if (t_success)
         t_success = MCStringCreateMutable(0, t_buffer);
     
+    bool t_used_buffer;
+    t_used_buffer = true;
+    
 	uindex_t t_num_chars;
 	switch (p_unit_type) 
 	{
@@ -1259,18 +1262,20 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
             t_success = MCDataCreateWithBytes((byte_t*)t_current . Chars(), tsize, (MCDataRef&)r_output);
         else
             t_success = MCStringCreateWithBytes((byte_t*)t_current . Chars(), tsize, kMCStringEncodingNative, false, (MCStringRef&)r_output);
+        
+        // AL_2015-03-27: [[ Bug 15056 ]] Don't overwrite the output value with the buffer in this case.
+        t_used_buffer = false;
         break;
 	}
-    if (t_success)
+    if (t_success && t_used_buffer)
         t_success = MCStringCopyAndRelease(t_buffer, (MCStringRef&)r_output);
+    else
+        MCValueRelease(t_buffer);
     
     if (t_success)
         r_stat = IO_NORMAL;
     else
-    {
-        MCValueRelease(t_buffer);
         r_stat = IO_ERROR;
-    }
 }
 
 // Refactoring of the waiting block used in MCFilesExecPerformRead*
