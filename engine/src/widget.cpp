@@ -820,6 +820,15 @@ bool MCWidget::handlesMouseCancel() const
     return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseCancel"), t_signature);
 }
 
+bool MCWidget::handlesMouseScroll() const
+{
+    if (m_instance == nil)
+        return false;
+    
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseScroll"), t_signature);
+}
+
 bool MCWidget::handlesKeyPress() const
 {
     if (m_instance == nil)

@@ -583,9 +583,15 @@ bool MCWidgetEventManager::mouseScroll(MCWidget* p_widget, real32_t p_delta_x, r
     if (!widgetIsInRunMode(p_widget))
         return false;
     
-    // TODO: this should probably be conditional on handing the event
-    p_widget->OnMouseScroll(p_delta_x, p_delta_y);
-    return true;
+    // Only send a mouseScroll if the widget handles it, otherwise we pass
+    // it on.
+    if (p_widget -> handlesMouseScroll())
+    {
+        p_widget->OnMouseScroll(p_delta_x, p_delta_y);
+        return true;
+    }
+    
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
