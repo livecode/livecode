@@ -16,9 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <cstring>
 
-#ifdef _MACOSX
 #include <stdlib.h>
-#endif
 
 #include <revolution/external.h>
 #include <revolution/support.h>

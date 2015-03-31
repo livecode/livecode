@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __REVBROWSER__
 #define __REVBROWSER__
 
+#include <core.h>
+
 class CWebBrowserBase
 {
 public:
