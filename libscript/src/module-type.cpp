@@ -87,6 +87,17 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsAList(MCValueRef p_value, bool& r_outpu
         r_output = false;
 }
 
+extern "C" MC_DLLEXPORT void MCNothingEvalIsEqualTo(MCNullRef p_left, MCNullRef p_right, bool& r_output)
+{
+    r_output = true;
+}
+
+extern "C" MC_DLLEXPORT void MCNothingEvalIsNotEqualTo(MCNullRef p_left, MCNullRef p_right, bool& r_output)
+{
+    r_output = false;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST

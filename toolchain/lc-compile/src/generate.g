@@ -499,7 +499,7 @@
     'rule' GenerateDefinitionIndexes(event(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
 
-    'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _)):
+    'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _, _)):
         GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(_):
@@ -582,7 +582,7 @@
     'rule' GenerateExportedDefinitions(event(_, _, Id, _)):
         GenerateExportedDefinition(Id)
         
-    'rule' GenerateExportedDefinitions(syntax(_, _, Id, _, _, _)):
+    'rule' GenerateExportedDefinitions(syntax(_, _, Id, _, _, _, _)):
         GenerateExportedDefinition(Id)
         
     'rule' GenerateExportedDefinitions(_):
@@ -698,7 +698,7 @@
         Info'Index -> DefIndex
         EmitEventDefinition(DefIndex, Position, Name, TypeIndex)
         
-    'rule' GenerateDefinitions(syntax(Position, _, Id, Class, _, _)):
+    'rule' GenerateDefinitions(syntax(Position, _, Id, Class, _, _, _)):
         QuerySyntaxId(Id -> Info)
         Id'Name -> Name
         Info'Methods -> Methods

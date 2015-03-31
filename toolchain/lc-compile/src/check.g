@@ -484,7 +484,7 @@
 
 'sweep' CheckSyntaxDefinitions(ANY)
 
-    'rule' CheckSyntaxDefinitions(DEFINITION'syntax(Position, _, _, Class, Syntax, Methods)):
+    'rule' CheckSyntaxDefinitions(DEFINITION'syntax(Position, _, _, Class, _, Syntax, Methods)):
         -- Check that mark variables are only defined once on each path.
         PushEmptySet()
         /* S1 */ CheckSyntaxMarkDefinitions(Syntax)
@@ -1678,7 +1678,7 @@
         CheckIdIsSuitableForDefinition(Id)
         CheckIdentifiers(Signature)
 
-    'rule' CheckIdentifiers(DEFINITION'syntax(_, _, Id, _, _, _)):
+    'rule' CheckIdentifiers(DEFINITION'syntax(_, _, Id, _, _, _, _)):
         CheckIdIsSuitableForDefinition(Id)
 
     --
