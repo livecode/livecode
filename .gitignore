@@ -28,6 +28,7 @@ stacksecurity_encrypted.cpp
 *.exe
 *.o
 *.so
+*.pyc
 
 # Packages #
 ############
