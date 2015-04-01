@@ -387,12 +387,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          end if
          
          local tArchs
-         if tRawArchs contains "ARM64" then
+         -- SN-2015-03-30: [[ Bug 14794 ]] If the user specifies a 32-bit only build,
+         --  then we do not do the 64-bit build.
+         if tRawArchs contains "ARM64" and not tSettings["ios,32-bit only"] then
             put "arm64 " after tArchs
          end if
          if tRawArchs contains "V7" then
             put "armv7 " after tArchs
          end if
+         
          
          -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
          -- to their architecture.
