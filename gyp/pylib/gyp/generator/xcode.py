@@ -1172,6 +1172,11 @@ exit 1
 
     for postbuild in spec.get('postbuilds', []):
       action_string_sh = gyp.common.EncodePOSIXShellList(postbuild['action'])
+
+      # --- GYP BUGFIX ---
+      # Actions in post-builds were using $(...) xcode variables instead of ${...}
+      action_string_sh = gyp.xcodeproj_file.ConvertVariablesToShellSyntax(action_string_sh)
+
       script = 'exec ' + action_string_sh + '\nexit 1\n'
 
       # Make the postbuild step depend on the output of ld or ar from this
