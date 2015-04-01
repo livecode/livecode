@@ -172,10 +172,6 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     bool t_pos_changed;
     t_pos_changed = !(p_x == m_mouse_x && p_y == m_mouse_y);
     
-    // Update the mouse position
-    m_mouse_x = p_x;
-    m_mouse_y = p_y;
-    
     // Do a quick bounds test on the targeted widget. If this fails, the widget
     // wasn't the target of the mouse focus event.
     MCRectangle p_rect;
