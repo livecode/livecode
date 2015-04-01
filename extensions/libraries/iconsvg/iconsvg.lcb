@@ -1164,6 +1164,14 @@ private handler initialise()
 	put "M-11-0L-11 2-12 2-12 3-11 3-11 4-10 4-10 3-9 3-9 2-10 2-10-0M-12 5L-12 6-9 6-9 5M-11 7L-11 8-12 8-12 9-11 9-11 11-10 11-10 9-9 9-9 8-10 8-10 7-11 7M-8 1L-8 10-6 10-6 1-8 1M-5 2L-5 9-3 9-3 2M-2 5L-2 6-0 6-0 5-2 5" into sFontArray["object align horizontal center"]["svg"]
 	put "e005" into sFontArray["object align horizontal center"]["codepoint"]
 	
+	put the empty array into sFontArray["object align justify vertical"]
+	put "M0 0L0 -1 11 -1 11 0 0 0M0 -12L0 -11 11 -11 11 -12 0 -12M2 -2L2 -3 1 -3 1 -4 2 -4 2 -8 1 -8 1 -9 2 -9 2 -10 3 -10 3 -9 4 -9 4 -8 3 -8 3 -4 4 -4 4 -3 3 -3 3 -2 2 -2M5 -2L5 -10 7 -10 7 -2 5 -2M8 -2L8 -10 10 -10 10 -2 8 -2" into sFontArray["object align justify vertical"]["svg"]
+	put "e006" into sFontArray["object align justify vertical"]["codepoint"]
+	
+	put the empty array into sFontArray["object align justify horizontal"]
+	put "m0,0L1,0L1,11L0,11L0,0 M12,0L11,0L11,11L12,11L12,0 M2,2L3,2L3,1L4,1L4,2L8,2L8,1L9,1L9,2L10,2L10,3L9,3L9,4L8,4L8,3L4,3L4,4L3,4L3,3L2,3L2,2 M2,5L10,5L10,7L2,7L2,5 M2,8L10,8L10,10L2,10L2,8" into sFontArray["object align justify horizontal"]["svg"]
+	put "e006" into sFontArray["object align justify horizontal"]["codepoint"]
+	
 	put the keys of sFontArray into sNamesList
 	sort sNamesList in ascending order
 end handler
