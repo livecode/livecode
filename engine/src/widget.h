@@ -126,7 +126,7 @@ private:
     void OnClose();
     void OnAttach();
     void OnDetach();
-    void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
+    void OnPaint(MCGContextRef p_gcontext, const MCRectangle& p_dirty);
     void OnGeometryChanged(const MCRectangle& p_old_rect);
     void OnVisibilityChanged(bool p_visible);
     void OnHitTest(const MCRectangle& p_intersect, bool& r_inside);

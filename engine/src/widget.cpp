@@ -738,19 +738,68 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
     if (m_instance != nil)
     {
-        MCGContextRef t_gcontext;
-        t_gcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
-        
-        MCGContextSave(t_gcontext);
-        MCGContextSetShouldAntialias(t_gcontext, true);
-        MCGContextTranslateCTM(t_gcontext, rect . x, rect . y);
-        
-        uintptr_t t_cookie;
-        MCCanvasPush(t_gcontext, t_cookie);
-        MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
-        MCCanvasPop(t_cookie);
-        
-        MCGContextRestore(t_gcontext);
+        if (dc -> gettype() != CONTEXT_TYPE_PRINTER)
+        {
+            MCGContextRef t_gcontext;
+            t_gcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
+            
+            MCGContextSave(t_gcontext);
+            MCGContextSetShouldAntialias(t_gcontext, true);
+            MCGContextTranslateCTM(t_gcontext, rect . x, rect . y);
+            
+            MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
+            
+            MCGContextRestore(t_gcontext);
+        }
+        else
+        {
+            bool t_success;
+            t_success = true;
+            
+            // Create a raster to draw into.
+            MCGRaster t_raster;
+            t_raster . format = kMCGRasterFormat_ARGB;
+            t_raster . width = dirty . width;
+            t_raster . height = dirty . height;
+            t_raster . stride = t_raster . width * sizeof(uint32_t);
+            if (t_success)
+                t_success = MCMemoryAllocate(t_raster . height * t_raster . stride, t_raster . pixels);
+            
+            MCGContextRef t_gcontext;
+            t_gcontext = nil;
+            if (t_success)
+            {
+                memset(t_raster . pixels, 0, t_raster . height * t_raster . stride);
+                t_success = MCGContextCreateWithRaster(t_raster, t_gcontext);
+            }
+            
+            MCGImageRef t_image;
+            t_image = nil;
+            if (t_success)
+            {
+                MCGContextSetShouldAntialias(t_gcontext, true);
+                MCGContextTranslateCTM(t_gcontext, rect . x - dirty . x, rect . y - dirty . y);
+                
+                OnPaint(t_gcontext, dirty);
+                
+                t_success = MCGImageCreateWithRasterAndRelease(t_raster, t_image);
+                if (t_success)
+                    t_raster . pixels = NULL;
+            }
+            
+            if (t_success)
+            {
+                MCImageDescriptor t_descriptor;
+                memset(&t_descriptor, 0, sizeof(MCImageDescriptor));
+                t_descriptor . image = t_image;
+                t_descriptor . x_scale = t_descriptor . y_scale = 1.0;
+                dc -> drawimage(t_descriptor, 0, 0, dirty . width, dirty . height, dirty . x, dirty . y);
+            }
+            
+            MCGContextRelease(t_gcontext);
+            MCGImageRelease(t_image);
+            MCMemoryDeallocate(t_raster . pixels);
+        }
     }
     else
     {
@@ -938,17 +987,17 @@ void MCWidget::OnDetach()
     MCEngineScriptObjectAllowAccess();
 }
 
-void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
+void MCWidget::OnPaint(MCGContextRef p_gcontext, const MCRectangle& p_rect)
 {
-    if (m_native_layer)
-        m_native_layer->OnPaint(p_dc, p_rect);
+    // if (m_native_layer)
+    //    m_native_layer->OnPaint(p_dc, p_rect);
     
     // Re-entering into the draw chain is distinctly unwise, so no script access
     // for OnPaint() handlers.
     MCEngineScriptObjectPreventAccess();
     
     uintptr_t t_cookie;
-    MCCanvasPush(((MCGraphicsContext*)p_dc)->getgcontextref(), t_cookie);
+    MCCanvasPush(p_gcontext, t_cookie);
     CallHandler(MCNAME("OnPaint"), nil, 0);
     MCCanvasPop(t_cookie);
     
