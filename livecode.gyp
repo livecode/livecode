@@ -36,6 +36,9 @@
 				'revvideograbber/revvideograbber.gyp:revvideograbber',
 				'revxml/revxml.gyp:revxml',
 				'revzip/revzip.gyp:revzip',
+				
+				# Server externals
+				'revdb/revdb.gyp:revdb-server',
 			],
 		},
 	],

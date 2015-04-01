@@ -4,6 +4,19 @@
 		'../common.gypi',
 	],
 	
+	'variables':
+	{
+		'revdb_sources':
+		[
+			'src/revdb.cpp',
+			'src/osxsupport.cpp',
+			'src/unxsupport.cpp',
+			'src/w32support.cpp',
+			'src/database.cpp',
+			'src/dbdrivercommon.cpp',
+		],
+	},
+	
 	'targets':
 	[
 		{
@@ -158,18 +171,38 @@
 			
 			'sources':
 			[
-				'src/revdb.cpp',
-				'src/osxsupport.cpp',
-				'src/unxsupport.cpp',
-				'src/w32support.cpp',
-				'src/database.cpp',
-				'src/dbdrivercommon.cpp',
+				'<@(revdb_sources)',
 			],
 			
 			'xcode_settings':
 			{
 				'INFOPLIST_FILE': 'rsrc/revdb-Info.plist',
 			},
+		},
+		{
+			'target_name': 'revdb-server',
+			'type': 'loadable_module',
+			
+			'variables':
+			{
+				'server_mode': 1,
+			},
+			
+			'dependencies':
+			[
+				'../libcore/libcore.gyp:libCore',
+				'../libexternal/libexternal.gyp:libExternal',
+			],
+			
+			'include_dirs':
+			[
+				'src',
+			],
+			
+			'sources':
+			[
+				'<@(revdb_sources)',
+			],
 		},
 	],
 }
