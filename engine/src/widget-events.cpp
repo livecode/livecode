@@ -284,7 +284,14 @@ void MCWidgetEventManager::event_draw(MCWidget* p_widget, MCDC* p_dc, const MCRe
 {
     // Ignored parameter: p_isolated
     // Ignored parameter: p_sprite
-    p_widget->OnPaint(p_dc, p_dirty);
+    
+    if (p_dc -> gettype() == CONTEXT_TYPE_PRINTER)
+        return;
+    
+    MCGContextRef t_gcontext;
+    t_gcontext = ((MCGraphicsContext *)p_dc) -> getgcontextref();
+    
+    p_widget->OnPaint(t_gcontext, p_dirty);
 }
 
 void MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)
