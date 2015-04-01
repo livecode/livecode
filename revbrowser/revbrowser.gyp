@@ -10,6 +10,7 @@
 			'target_name': 'revbrowser',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
+			'product_prefix': '',
 			
 			'dependencies':
 			[

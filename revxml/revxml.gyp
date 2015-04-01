@@ -10,6 +10,7 @@
 			'target_name': 'revxml',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
+			'product_prefix': '',
 			
 			'dependencies':
 			[

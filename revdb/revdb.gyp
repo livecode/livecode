@@ -23,6 +23,7 @@
 			'target_name': 'dbmysql',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
+			'product_prefix': '',
 			
 			'dependencies':
 			[
@@ -55,6 +56,7 @@
 			'target_name': 'dbodbc',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
+			'product_prefix': '',
 			
 			# Not for Windows
 			'conditions':
@@ -96,6 +98,7 @@
 			'target_name': 'dbpostgresql',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
+			'product_prefix': '',
 			
 			'dependencies':
 			[
@@ -126,6 +129,7 @@
 			'target_name': 'dbsqlite',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
+			'product_prefix': '',
 			
 			'dependencies':
 			[
@@ -157,6 +161,7 @@
 			'target_name': 'revdb',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
+			'product_prefix': '',
 			
 			'dependencies':
 			[
@@ -182,6 +187,7 @@
 		{
 			'target_name': 'revdb-server',
 			'type': 'loadable_module',
+			'product_prefix': '',
 			
 			'variables':
 			{
