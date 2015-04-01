@@ -778,11 +778,11 @@ end syntax
 
 // ---------- popups ---------- //
 public foreign handler MCWidgetExecPopupMenuAtLocation(in pMenu as String, in pAt as Point) returns optional String binds to "<builtin>"
-public foreign handler MCWidgetExecPopupAtLocation(in pKind as string, in pAt as Point) as any binds to "<builtin>"
-public foreign handler MCWidgetExecPopupAtLocationWithProperties(in pKind as string, in pAt as Point, in pProperties as array) as any binds to "<builtin>"
-public foreign handler MCWidgetEvalIsPopup(out rPopup as bool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecClosePopup() as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecClosePopupWithResult(in pResult as any) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecPopupAtLocation(in pKind as String, in pAt as Point) returns any binds to "<builtin>"
+public foreign handler MCWidgetExecPopupAtLocationWithProperties(in pKind as String, in pAt as Point, in pProperties as Array) returns any binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPopup(out rPopup as bool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecClosePopup() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecClosePopupWithResult(in pResult as any) returns nothing binds to "<builtin>"
 
 
 /*
