@@ -266,6 +266,7 @@
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE5E7E6174BBE64001AB76D /* uuid.cpp */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
+		BEF1AFAD1AB73F5F001A6427 /* fontmap in CopyFiles */ = {isa = PBXBuildFile; fileRef = BEF1AFAC1AB73F5F001A6427 /* fontmap */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
@@ -488,6 +489,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
+				BEF1AFAD1AB73F5F001A6427 /* fontmap in CopyFiles */,
 				4CF72F8219DBFEE100B1E89B /* mobile-splashscreen-template.plist in CopyFiles */,
 				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in CopyFiles */,
 				4D82FCF01714877A00C48403 /* mobile-device-template.plist in CopyFiles */,
@@ -892,6 +894,7 @@
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
 		BE4D6179189A54C0002DA467 /* AttachmentProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AttachmentProvider.java; sourceTree = "<group>"; };
+		BEF1AFAC1AB73F5F001A6427 /* fontmap */ = {isa = PBXFileReference; lastKnownFileType = text; name = fontmap; path = rsrc/fontmap; sourceTree = "<group>"; };
 		E8111F8B1541938E00DB16E3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		E8111F8D154193A500DB16E3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
@@ -1297,6 +1300,7 @@
 		4DD3DD7B1040AA4700CAC7EF = {
 			isa = PBXGroup;
 			children = (
+				BEF1AFAC1AB73F5F001A6427 /* fontmap */,
 				E82D43BF1712CF1A00A10289 /* Projects */,
 				E82D43BE1712CEF500A10289 /* Frameworks */,
 				4DD3DF3A1040B03B00CAC7EF /* Configurations */,
@@ -1880,6 +1884,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0420;
+				TargetAttributes = {
+					4DD3DD981040AA9A00CAC7EF = {
+						DevelopmentTeam = SA2BUJR53Y;
+					};
+				};
 			};
 			buildConfigurationList = 4DD3DD801040AA4700CAC7EF /* Build configuration list for PBXProject "engine-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
