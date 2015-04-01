@@ -89,6 +89,7 @@
     BeginRightBinaryOperatorSyntaxRule
     BeginNeutralBinaryOperatorSyntaxRule
     EndSyntaxRule
+    DeprecateSyntaxRule
     BeginSyntaxGrammar
     EndSyntaxGrammar
     ConcatenateSyntaxGrammar
@@ -304,8 +305,8 @@
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_UsingAsForHandlerReturnTypeDeprecated
-    Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated
-    Warning_UndefinedTypeDeprecated
+    Warning_UndefinedConstantDeprecated
+    Warning_DeprecatedSyntax
 
 --------------------------------------------------------------------------------
 
@@ -404,6 +405,8 @@
 'action' BeginRightBinaryOperatorSyntaxRule(NAME, NAME, INT)
 'action' BeginNeutralBinaryOperatorSyntaxRule(NAME, NAME, INT)
 'action' EndSyntaxRule()
+
+'action' DeprecateSyntaxRule(Message: STRING)
 
 'action' BeginSyntaxGrammar()
 'action' EndSyntaxGrammar()
@@ -664,7 +667,7 @@
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
 'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)
-'action' Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated(Position: POS)
-'action' Warning_UndefinedTypeDeprecated(Position: POS)
+'action' Warning_UndefinedConstantDeprecated(Position: POS)
+'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 
 --------------------------------------------------------------------------------

@@ -1,0 +1,349 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.extensions.livecode.segmentedControlPopup
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Segmented Control Popup"
+metadata author is "Georgia Hutchings, Ian Macphail"
+metadata version is "1.0.1"
+--
+
+-- property declarations
+property theme				get mTheme				set setTheme
+property labels				get mLabels				set setLabels
+property selectedSegment	get mSelected			set setSelectedSegment
+property preferredSize		get getPreferredSize
+--
+
+-- private instance variables
+private variable mTheme as string
+private variable mLabels as list
+private variable mSelected as optional integer
+private variable mNumSegments as optional integer
+private variable mHover as optional integer
+
+private variable mPaintWhite as Paint
+private variable mPaintMacBlue as Paint
+private variable mWidth as number
+private variable mLeft as number
+private variable mRadius as number
+--
+
+----------
+-- this handler is called when the widget is saved
+public handler OnSave(out rData as array)
+	put the empty array into rData
+	
+	put mTheme into rData["theme"]
+	put mLabels into rData["labels"]
+	put mSelected into rData["selected"]
+	
+	return rData
+end handler
+----------
+
+----------
+-- this handler is called when the widget is loaded
+public handler OnLoad(in pData as array)
+	put pData["theme"] into mTheme
+	put pData["labels"] into mLabels
+	put pData["selected"] into mSelected
+end handler
+----------
+
+----------
+-- this handler is called when the widget is created
+public handler OnCreate()
+	put "ios-8" into mTheme
+	put ["Title", "Title", "Title"] into mLabels
+	put 1 into mSelected
+	put the number of elements in mLabels into mNumSegments
+	
+	put solid paint with color [1.0, 1.0, 1.0] into mPaintWhite
+	put solid paint with color [0.0, 128/255, 1.0] into mPaintMacBlue
+	put 0 into mWidth
+	put 0 into mLeft
+	put (the trunc of my height)/5 into mRadius
+end handler
+----------
+
+----------
+-- this handler is called whenever LiveCode needs to redraw the widget
+public handler OnPaint()
+	
+	-- setting the width and left variables
+	updateVariables()
+	
+	-- draw the perimeter of the control
+	set the paint of this canvas to getPaint("background")
+	fill getPath("border") on this canvas
+	set the stroke width of this canvas to 1
+	set the paint of this canvas to getPaint("lines")
+	stroke getPath("border") on this canvas
+	--
+	
+	-- draw the lines to separate the segments
+	set the stroke width of this canvas to 1
+	variable tX as optional integer
+	variable tLinePath as Path
+	repeat with tX from 1 up to mNumSegments-1
+		put line path from getTopPoint(tX) to getBottomPoint(tX) into tLinePath
+		stroke tLinePath on this canvas
+	end repeat
+	--
+	
+	-- fill in the background of the selected segment
+	variable tBackgroundPath as Path
+	set the paint of this canvas to getPaint("selected background")
+	
+	if mHover is defined then
+		if mHover is 1 or mHover is mNumSegments then
+			put rounded rectangle path of getRect(mHover) with radius mRadius into tBackgroundPath
+			fill getRectPath(mHover) on this canvas
+		
+		else
+			put rectangle path of getRect(mHover) into tBackgroundPath
+		end if
+		
+		fill tBackgroundPath on this canvas
+	end if
+	--
+	
+	-- fill in the label text
+	set the font of this canvas to getFont()
+	
+	variable tY as optional integer
+	variable tY_string as string
+	variable tLabelRect as Rectangle
+	variable tLabelText as string
+	
+	repeat with tY from 1 up to mNumSegments
+		put tY formatted as string into tY_string
+		
+		if mHover is defined and tY is mHover then
+			set the paint of this canvas to getPaint("selected label")
+		else 
+			set the paint of this canvas to getPaint("lines")
+		end if
+		
+		put getRect(tY) into tLabelRect
+		put element tY of mLabels into tLabelText
+		fill text tLabelText at center of tLabelRect on this canvas
+	end repeat
+	--
+	
+end handler
+----------
+
+public handler getPreferredSize() as list
+	variable tFont
+	put getFont() into tFont
+	
+	variable tWidth
+	put 0 into tWidth
+	
+	variable tMaxWidth
+	put 0 into tMaxWidth
+	
+	variable i
+	repeat with i from 1 up to mNumSegments
+		put the maximum of tMaxWidth and (the width of (the bounds of text element i of mLabels with getFont())) into tMaxWidth
+	end repeat
+	
+	put tMaxWidth * mNumSegments + getFontSize() * (mNumSegments + 1) into tWidth
+	
+	return [tWidth, my height]
+end handler
+
+----------
+private handler getSegmentForPoint(in pPoint as Point) as optional integer
+	variable i as integer
+	repeat with i from 1 up to mNumSegments
+		if pPoint is within getRect(i) then
+			return i
+		end if
+	end repeat
+end handler
+----------
+
+private handler optionalIsEqual(in pLeft as optional any, in pRight as optional any) as boolean
+	if pLeft is not defined and pRight is not defined then
+		return true
+	else if pLeft is defined and pRight is defined then
+		return pLeft is pRight
+	else
+		return false
+	end if
+end handler
+
+----------
+-- the following handlers deal with mouse events
+
+public handler OnMouseMove()
+	variable tHover as optional integer
+	put getSegmentForPoint(the mouse position) into tHover
+	
+	if not optionalIsEqual(tHover, mHover) then
+		put tHover into mHover
+		redraw all
+	end if
+end handler
+
+public handler OnMouseUp()
+	if mHover is defined then
+		put mHover into mSelected
+		redraw all
+	end if
+	
+	if not currently popped up then
+		dispatch command "mouseUp" to my script object
+	else
+		if mSelected is not defined or element mSelected of mLabels is "Cancel" then
+			close popup
+		else
+			close popup returning element mSelected of mLabels
+		end if
+	end if
+end handler
+----------
+
+----------
+-- this handler sets the theme
+public handler setTheme(in pString as string) as undefined
+	put pString into mTheme
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the list of segment labels
+public handler setLabels(in pString as string) as undefined
+	split pString by "," into mLabels
+	put 1 into mSelected
+	redraw all
+end handler
+----------
+
+----------
+-- this handler sets the selected segment
+public handler setSelectedSegment(in pSelected as optional integer) as undefined
+	put pSelected into mSelected
+	redraw all
+end handler
+----------
+
+----------
+-- this handler returns a paint
+private handler getPaint(in pString as string) as Paint
+	if pString is "lines" then 
+		return mPaintMacBlue
+	
+	else if pString is "selected label" then
+		return mPaintWhite
+	
+	else if pString is "background" then
+		return mPaintWhite
+		
+	else if pString is "selected background" then
+		return mPaintMacBlue
+		
+	end if 
+end handler
+----------
+
+----------
+-- this handler returns a path
+private handler getPath(in pString as string) as Path
+	if pString is "border" then
+		return rounded rectangle path of rectangle [0.5, 0.5, (the trunc of my width)-0.5, (the trunc of my height)-0.5] with radius mRadius
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a rectangle path
+private handler getRectPath(in pInt as integer) as Path
+	if pInt is 1 then
+		return rectangle path of rectangle [(the trunc of mLeft+0.5*mWidth)+0.5, 0.5, (the trunc of mLeft+mWidth), (the trunc of my height)-0.5]
+	else
+		variable tInt as integer
+		put pInt-1 into tInt
+		return rectangle path of rectangle [(the trunc of mLeft+tInt*mWidth)+0.5, 0.5, (the trunc of mLeft+(tInt+0.5)*mWidth), (the trunc of my height)-0.5]
+	end if
+end handler
+----------
+
+----------
+-- this handler returns a font name as a string
+private handler getFontName() as string
+	if mTheme is "ios-8" then
+		return "Helvetica Neue"
+	else
+		return the font of this canvas
+	end if
+end handler
+----------
+
+----------
+-- this handler returns the font size
+private handler getFontSize() as number
+	return (my height)/2
+end handler
+----------
+
+private handler getFont() as Font
+	return font getFontName() at size getFontSize()
+end handler
+
+----------
+-- this handler returns a rectangle 
+private handler getRect(in pInt as optional integer) as Rectangle
+	return rectangle [(the trunc of mLeft +(pInt-1)*mWidth)+0.5, 0.5, (the trunc of mLeft +pInt*mWidth)+0.5, (the trunc of my height)+0.5]
+end handler
+----------
+
+----------
+-- the following handlers return the top/bottom point on a line
+private handler getTopPoint(in pInt as optional integer) as Point
+	return point [(the trunc of mLeft+pInt*mWidth)+0.5, 0.5]
+end handler
+
+private handler getBottomPoint(in pInt as optional integer) as Point
+	return point [(the trunc of mLeft+pInt*mWidth)+0.5, (the trunc of my height)-0.5]
+end handler
+----------
+
+----------
+-- this handler updates the value of private instance variables
+public handler updateVariables() as undefined
+	put the number of elements in mLabels into mNumSegments
+	put (my width)/mNumSegments into mWidth
+	put (my width)/2 - mNumSegments*mWidth/2 into mLeft
+	put (the trunc of my height)/5 into mRadius
+end handler
+----------
+
+end widget

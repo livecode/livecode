@@ -158,7 +158,8 @@ struct SyntaxRule
     SyntaxNodeRef expr;
     SyntaxMethodRef methods;
     long *mapping;
-
+    const char *deprecation_message;
+    
     SyntaxMethodRef current_method;
 };
 
@@ -305,6 +306,12 @@ void EndSyntaxRule(void)
     t_group -> rules = s_rule;
     
     s_rule = NULL;
+}
+
+void DeprecateSyntaxRule(const char *p_message)
+{
+	assert(s_rule != NULL);
+    s_rule -> deprecation_message = p_message;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1840,6 +1847,8 @@ void GenerateSyntaxRules(void)
         
         t_group -> index = t_index;
         GenerateSyntaxRule(&t_index, t_rule -> expr, t_rule -> kind, t_rule);
+        if (t_rule -> deprecation_message != NULL)
+            fprintf(s_output, "    Warning_DeprecatedSyntax(Position, \"%s\")\n", t_rule -> deprecation_message);
         
         if (t_rule -> kind == kSyntaxRuleKindPhrase)
         {

@@ -776,4 +776,178 @@ begin
     MCWidgetEvalIsPointNotWithinRect(Point, Rect, output)
 end syntax
 
+// ---------- popups ---------- //
+public foreign handler MCWidgetExecPopupMenuAtLocation(in pMenu as String, in pAt as Point) returns optional String binds to "<builtin>"
+public foreign handler MCWidgetExecPopupAtLocation(in pKind as String, in pAt as Point) returns any binds to "<builtin>"
+public foreign handler MCWidgetExecPopupAtLocationWithProperties(in pKind as String, in pAt as Point, in pProperties as Array) returns any binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPopup(out rPopup as bool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecClosePopup() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecClosePopupWithResult(in pResult as any) returns nothing binds to "<builtin>"
+
+
+/*
+Summary:	Displays a popup menu.
+Menu:		An expression that evaluates to a string, which describes the menu items.
+Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
+
+The result:	The selected menu item. If the menu is dismissed (by clicking outside the bounds of the menu) this value will be undefined.
+
+Example:
+	private variable mFont as Font
+
+	public handler OnMouseDown()
+		popup menu "Helvetica\nTimes New Roman\nArial" at the mouse position
+		if the result is defined then
+			put font (the result) at size 20 into mFont
+			redraw all
+		end if
+	end handler
+
+	public handler OnPaint()
+		...
+		set the font of this canvas to mFont
+		...
+	end handler
+
+Description:
+	Use to popup a menu at the specified location.
+*/
+syntax PopupMenu is statement
+	"popup" "menu" <mMenu: Expression> "at" <mAt: Expression>
+begin
+	MCWidgetExecPopupMenuAtLocation(mMenu, mAt)
+end syntax
+
+
+/*
+Summary:	Opens a widget within a popup window.
+Kind:		The unique identifier of the widget to use for the popup.
+Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
+Properties:	An expression that evaluates to an <array>. For each key of the array, the popup widget will be initialized by setting that property to the value for that key.
+
+The result:	The result returned by the popup. If the popup is dismissed (by clicking outside the bounds of the popup) this value will be undefined.
+
+Example:
+	private variable mColor as Color
+
+	public handler OnClick()
+		variable tProperties as array
+		put the empty array into tProperties
+		put mColor into tProperties["currentColor"]
+
+		popup widget "com.livecode.extensions.livecode.ColorPicker" at the mouse position with properties tProperties
+		if the result is defined then
+			put the result into mColor
+			redraw all
+		end if
+	end handler
+
+	public handler OnPaint()
+		...
+		set the paint of this canvas to solid paint with color mColor
+		...
+	end handler
+
+Description:
+	Use to display a widget within a popup window, for example as a tooltip or picker dialog.
+
+References: IsPoppedUp(expression), ClosePopupWithResult(statement), IsDefined(operator)
+*/
+
+syntax PopupWidget is statement
+	"popup" "widget" <Kind: Expression> "at" <Location: Expression> [ "with" "properties" <Properties: Expression> ]
+begin
+	MCWidgetExecPopupAtLocation(Kind, Location)
+	MCWidgetExecPopupAtLocationWithProperties(Kind, Location, Properties)
+end syntax
+
+
+/*
+Summary:	Tests if the current widget is in a popup window.
+Resturns:	True if the current widget is in a popup window, False otherwise.
+
+Example:
+	variable mSelected
+
+	public handler OnClick()
+		variable tOption
+		put getOptionAtPosition(the click position) into tOption
+		if tOption is not empty then
+			put tOption into mSelected
+
+			// If this widget is being used as a popup then we close the popup and return a value to the caller
+			if currently popped up then
+				if mSelected is "Cancel" then
+					// Dismiss the popup without returning a value - the result will be undefined
+					close popup
+				else
+					// Dismiss the popup - the result will be the value of mSelected
+					close popup returning mSelected
+				end if
+			end if
+		end if
+	end handler
+
+	private handler getOptionAtPosition(in pPosition as Point) as string
+		// Return the name of the option at the given point
+		...
+	end handler
+
+Description:
+	Use to determine if this widget is being displayed within a popup window.
+
+	References: PopupWidget(statement), ClosePopupWithResult(statement)
+*/
+
+syntax IsPoppedUp is expression
+	"currently" "popped" "up"
+begin
+	MCWidgetEvalIsPopup(output)
+end syntax
+
+
+/*
+Summary:	Closes the current widget popup.
+Result:		An expression that evaluates to any type. The result of popping up this widget.
+
+Example:
+	variable mSelected
+
+	public handler OnClick()
+		variable tOption
+		put getOptionAtPosition(the click position) into tOption
+		if tOption is not empty then
+			put tOption into mSelected
+
+			// If this widget is being used as a popup then we close the popup and return a value to the caller
+			if currently popped up then
+				if mSelected is "Cancel" then
+					// Dismiss the popup without returning a value - the result will be undefined
+					close popup
+				else
+					// Dismiss the popup - the result will be the value of mSelected
+					close popup returning mSelected
+				end if
+			end if
+		end if
+	end handler
+
+	private handler getOptionAtPosition(in pPosition as Point) as string
+		// Return the name of the option at the given point
+		...
+	end handler
+
+Description:
+	Use to close the current popup, and optionally set a return value for the <PopupWidget> statement that launched it.
+
+References: PopupWidget(statement), IsPoppedUp(expression)
+*/
+
+syntax ClosePopupWithResult is statement
+	"close" "popup" [ "returning" <Result: Expression> ]
+begin
+	MCWidgetExecClosePopup()
+	MCWidgetExecClosePopupWithResult(Result)
+end syntax
+
 end module

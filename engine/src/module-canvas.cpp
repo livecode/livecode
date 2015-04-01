@@ -1760,7 +1760,7 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
 	
-	if (!MCImageGetFileRepForStackContext(p_path, MCwidgetobject->getstack(), t_image_rep))
+	if (!MCImageGetRepForFileWithStackContext(p_path, MCwidgetobject->getstack(), t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
 		return;
@@ -1775,7 +1775,7 @@ void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef 
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
 	
-	if (!MCImageGetFileRepForResource(p_resource, t_image_rep))
+	if (!MCImageGetRepForResource(p_resource, t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
 		return;
