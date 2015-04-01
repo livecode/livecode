@@ -23,7 +23,7 @@
 		5D2262C31AA1E73600400628 /* selector.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 5D2262A11AA1E48100400628 /* selector.lcb */; };
 		5D2262C51AA1E73600400628 /* canvas.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 5D2262261AA1E47400400628 /* canvas.lcb */; };
 		763670A81AC569BF0055C2D3 /* switchbutton.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 763670A71AC569BA0055C2D3 /* switchbutton.lcb */; };
-		763670AC1AC5B1990055C2D3 /* paletteheader.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 763670A91AC5934D0055C2D3 /* paletteheader.lcb */; };
+		763670D51ACBE8D10055C2D3 /* paletteactions.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 763670D41ACBE8CB0055C2D3 /* paletteactions.lcb */; };
 		76E74C2C1ABC32F1002977E5 /* treeview.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 76E74C071ABC31A9002977E5 /* treeview.lcb */; };
 		76E74C5F1AC07782002977E5 /* iconsvg.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 76E74C5E1AC07069002977E5 /* iconsvg.lcb */; };
 		76E74C611AC07796002977E5 /* iconpicker.lcb in Sources */ = {isa = PBXBuildFile; fileRef = 76E74C601AC0778E002977E5 /* iconpicker.lcb */; };
@@ -189,7 +189,7 @@
 		5D2262B21AA1E72000400628 /* libextensions.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libextensions.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DBAA1561AA1EAF100EC8B8F /* lc-compile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "lc-compile.xcodeproj"; path = "../toolchain/lc-compile/lc-compile.xcodeproj"; sourceTree = "<group>"; };
 		763670A71AC569BA0055C2D3 /* switchbutton.lcb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = switchbutton.lcb; path = switchbutton/switchbutton.lcb; sourceTree = "<group>"; };
-		763670A91AC5934D0055C2D3 /* paletteheader.lcb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = paletteheader.lcb; path = paletteheader/paletteheader.lcb; sourceTree = "<group>"; };
+		763670D41ACBE8CB0055C2D3 /* paletteactions.lcb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = paletteactions.lcb; path = paletteactions/paletteactions.lcb; sourceTree = "<group>"; };
 		76E74C071ABC31A9002977E5 /* treeview.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; name = treeview.lcb; path = treeview/treeview.lcb; sourceTree = "<group>"; };
 		76E74C5E1AC07069002977E5 /* iconsvg.lcb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = iconsvg.lcb; path = iconsvg/iconsvg.lcb; sourceTree = "<group>"; };
 		76E74C601AC0778E002977E5 /* iconpicker.lcb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = iconpicker.lcb; path = iconpicker/iconpicker.lcb; sourceTree = "<group>"; };
@@ -272,7 +272,7 @@
 		5D22622A1AA1E48100400628 /* widgets */ = {
 			isa = PBXGroup;
 			children = (
-				763670A91AC5934D0055C2D3 /* paletteheader.lcb */,
+				763670D41ACBE8CB0055C2D3 /* paletteactions.lcb */,
 				763670A71AC569BA0055C2D3 /* switchbutton.lcb */,
 				76E74C601AC0778E002977E5 /* iconpicker.lcb */,
 				5D22626E1AA1E48100400628 /* multilist.lcb */,
@@ -475,7 +475,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				763670AC1AC5B1990055C2D3 /* paletteheader.lcb in Sources */,
+				763670D51ACBE8D10055C2D3 /* paletteactions.lcb in Sources */,
 				763670A81AC569BF0055C2D3 /* switchbutton.lcb in Sources */,
 				76E74C611AC07796002977E5 /* iconpicker.lcb in Sources */,
 				76E74C5F1AC07782002977E5 /* iconsvg.lcb in Sources */,
