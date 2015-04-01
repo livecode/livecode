@@ -26,7 +26,7 @@ use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
 
-metadata title is "Palette Header"
+metadata title is "Palette Actions"
 metadata author is "LiveCode"
 metadata version is "1.0.0"
 
