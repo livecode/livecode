@@ -99,7 +99,15 @@ bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_
 {
     if (!MCScriptEnsureModuleIsUsable(p_module))
     {
-        MCresult -> sets("module is not usable");
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(&t_error))
+        {
+            MCresult -> setvalueref(MCErrorGetMessage(*t_error));
+        }
+        else
+        {
+            MCresult -> sets("module is not usable");
+        }
         return false;
     }
     
