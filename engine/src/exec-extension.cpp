@@ -412,6 +412,7 @@ Exec_stat MCExtensionCatchError(MCExecContext& ctxt)
     return ES_ERROR;
 }
 
+static bool __script_ensure_names_are_strings(MCValueRef p_input, MCValueRef& r_output);
 static bool __script_try_to_convert_to_boolean(MCExecContext& ctxt, bool p_optional, MCValueRef& x_value, bool& r_converted);
 static bool __script_try_to_convert_to_number(MCExecContext& ctxt, bool p_optional, MCValueRef& x_value, bool& r_converted);
 static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x_value, bool& r_converted);
@@ -596,7 +597,18 @@ bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_
     MCResolvedTypeInfo t_resolved_type;
     MCTypeInfoResolve(p_as_type, t_resolved_type);
     
-    if (t_resolved_type . named_type == kMCBooleanTypeInfo)
+    if (t_resolved_type . named_type == kMCAnyTypeInfo)
+    {
+        MCValueRef t_revised_element;
+        if (!__script_ensure_names_are_strings(x_value, t_revised_element))
+            return false;
+        
+        if (t_revised_element != nil)
+            MCValueAssignAndRelease(x_value, t_revised_element);
+        
+        r_converted = true;
+    }
+    else if (t_resolved_type . named_type == kMCBooleanTypeInfo)
     {
         if (!__script_try_to_convert_to_boolean(ctxt, t_resolved_type . is_optional, x_value, r_converted))
             return false;
@@ -637,7 +649,10 @@ bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_
             return false;
     }
     else
-        MCUnreachable();
+    {
+        // If we don't recognise the type - we cannot convert it!
+        r_converted = false;
+    }
     
     return true;
 }

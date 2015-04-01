@@ -317,7 +317,15 @@
         Info'Kind -> handler
         Info'Type -> handler(_, Signature)
         (|
-            where(Signature -> signature(nil, _))
+            where(Signature -> signature(nil, ReturnType))
+            (|
+                where(ReturnType -> undefined(_))
+                Id'Name -> Name
+                Id'Position -> Position
+                Error_HandlerNotSuitableForPropertyGetter(Position, Name)
+            ||
+                -- all non-void return values are fine
+            |)
         ||
             Id'Name -> Name
             Id'Position -> Position
@@ -428,6 +436,7 @@
     'rule' IsExpressionSimpleConstant(undefined(_)):
     'rule' IsExpressionSimpleConstant(true(_)):
     'rule' IsExpressionSimpleConstant(false(_)):
+    'rule' IsExpressionSimpleConstant(unsignedinteger(_, _)):
     'rule' IsExpressionSimpleConstant(integer(_, _)):
     'rule' IsExpressionSimpleConstant(real(_, _)):
     'rule' IsExpressionSimpleConstant(string(_, _)):
@@ -475,7 +484,7 @@
 
 'sweep' CheckSyntaxDefinitions(ANY)
 
-    'rule' CheckSyntaxDefinitions(DEFINITION'syntax(Position, _, _, Class, Syntax, Methods)):
+    'rule' CheckSyntaxDefinitions(DEFINITION'syntax(Position, _, _, Class, _, Syntax, Methods)):
         -- Check that mark variables are only defined once on each path.
         PushEmptySet()
         /* S1 */ CheckSyntaxMarkDefinitions(Syntax)
@@ -1536,6 +1545,7 @@
     'rule' GetExpressionPosition(undefined(Position) -> Position):
     'rule' GetExpressionPosition(true(Position) -> Position):
     'rule' GetExpressionPosition(false(Position) -> Position):
+    'rule' GetExpressionPosition(unsignedinteger(Position, _) -> Position):
     'rule' GetExpressionPosition(integer(Position, _) -> Position):
     'rule' GetExpressionPosition(real(Position, _) -> Position):
     'rule' GetExpressionPosition(string(Position, _) -> Position):
@@ -1668,7 +1678,7 @@
         CheckIdIsSuitableForDefinition(Id)
         CheckIdentifiers(Signature)
 
-    'rule' CheckIdentifiers(DEFINITION'syntax(_, _, Id, _, _, _)):
+    'rule' CheckIdentifiers(DEFINITION'syntax(_, _, Id, _, _, _, _)):
         CheckIdIsSuitableForDefinition(Id)
 
     --

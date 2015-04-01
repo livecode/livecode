@@ -449,19 +449,12 @@
 'nonterm' OptionalReturnsClause(-> TYPE)
 
     'rule' OptionalReturnsClause(-> Type):
-        "as" @(-> Position) TypeNoUndefined(-> Type)
+        "as" @(-> Position) Type(-> Type)
         Warning_UsingAsForHandlerReturnTypeDeprecated(Position)
-        
-    'rule' OptionalReturnsClause(-> undefined(Position)):
-        "as" "undefined" @(-> Position)
-        Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated(Position)
 
     'rule' OptionalReturnsClause(-> Type)
-        "returns" @(-> Position) TypeNoUndefined(-> Type)
-        
-    'rule' OptionalReturnsClause(-> undefined(Position))
-        "returns" "nothing" @(-> Position)
-    
+        "returns" @(-> Position) Type(-> Type)
+
     'rule' OptionalReturnsClause(-> optional(Position, any(Position)))
         @(-> Position)
 
@@ -526,13 +519,22 @@
 
 'nonterm' SyntaxDefinition(-> DEFINITION)
 
-    'rule' SyntaxDefinition(-> syntax(Position, public, Name, Class, Syntax, Methods)):
+    'rule' SyntaxDefinition(-> syntax(Position, public, Name, Class, Warnings, Syntax, Methods)):
         "syntax" @(-> Position) Identifier(-> Name) SyntaxClass(-> Class) Separator
+            SyntaxWarnings(-> Warnings)
             Syntax(-> Syntax) Separator
         "begin" Separator
             SyntaxMethods(-> Methods)
         "end" "syntax"
+    
+'nonterm' SyntaxWarnings(-> SYNTAXWARNING)
+
+    'rule' SyntaxWarnings(-> deprecated(Message)):
+        "deprecate" "with" "message" StringLiteral(-> Message) Separator
         
+    'rule' SyntaxWarnings(-> nil):
+        -- nothing
+
 'nonterm' SyntaxClass(-> SYNTAXCLASS)
 
     'rule' SyntaxClass(-> statement):
@@ -585,73 +587,71 @@
 -- Type Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' TypeNoUndefined(-> TYPE)
+'nonterm' Type(-> TYPE)
 
-    'rule' TypeNoUndefined(-> named(Position, Name)):
+    'rule' Type(-> named(Position, Name)):
         Identifier(-> Name) @(-> Position)
         
-    'rule' TypeNoUndefined(-> optional(Position, Base)):
+    'rule' Type(-> optional(Position, Base)):
         "optional" @(-> Position) Type(-> Base)
 
-    'rule' TypeNoUndefined(-> any(Position)):
+    'rule' Type(-> any(Position)):
         "any" @(-> Position)
 
-    'rule' TypeNoUndefined(-> boolean(Position)):
+    'rule' Type(-> boolean(Position)):
         "Boolean" @(-> Position)
-    'rule' TypeNoUndefined(-> boolean(Position)):
+    'rule' Type(-> boolean(Position)):
         "boolean" @(-> Position)
         Warning_DeprecatedTypeName(Position, "Boolean")
 
-    'rule' TypeNoUndefined(-> integer(Position)):
+    'rule' Type(-> integer(Position)):
         "Integer" @(-> Position)
-    'rule' TypeNoUndefined(-> integer(Position)):
+    'rule' Type(-> integer(Position)):
         "integer" @(-> Position)
         Warning_DeprecatedTypeName(Position, "Integer")
 
-    'rule' TypeNoUndefined(-> real(Position)):
+    'rule' Type(-> real(Position)):
         "Real" @(-> Position)
-    'rule' TypeNoUndefined(-> real(Position)):
+    'rule' Type(-> real(Position)):
         "real" @(-> Position)
         Warning_DeprecatedTypeName(Position, "Real")
 
-    'rule' TypeNoUndefined(-> number(Position)):
+    'rule' Type(-> number(Position)):
         "Number" @(-> Position)
-    'rule' TypeNoUndefined(-> number(Position)):
+    'rule' Type(-> number(Position)):
         "number" @(-> Position)
         Warning_DeprecatedTypeName(Position, "Number")
 
-    'rule' TypeNoUndefined(-> string(Position)):
+    'rule' Type(-> string(Position)):
         "String" @(-> Position)
-    'rule' TypeNoUndefined(-> string(Position)):
+    'rule' Type(-> string(Position)):
         "string" @(-> Position)
         Warning_DeprecatedTypeName(Position, "String")
 
-    'rule' TypeNoUndefined(-> data(Position)):
+    'rule' Type(-> data(Position)):
         "Data" @(-> Position)
-    'rule' TypeNoUndefined(-> data(Position)):
+    'rule' Type(-> data(Position)):
         "data" @(-> Position)
         Warning_DeprecatedTypeName(Position, "Data")
 
-    'rule' TypeNoUndefined(-> array(Position)):
+    'rule' Type(-> array(Position)):
         "Array" @(-> Position)
-    'rule' TypeNoUndefined(-> array(Position)):
+    'rule' Type(-> array(Position)):
         "array" @(-> Position)
         Warning_DeprecatedTypeName(Position, "Array")
 
-    'rule' TypeNoUndefined(-> list(Position, ElementType)):
+    'rule' Type(-> list(Position, ElementType)):
         "List" @(-> Position) OptionalElementType(-> ElementType)
-    'rule' TypeNoUndefined(-> list(Position, ElementType)):
+    'rule' Type(-> list(Position, ElementType)):
         "list" @(-> Position) OptionalElementType(-> ElementType)
         Warning_DeprecatedTypeName(Position, "List")
 
-'nonterm' Type(-> TYPE)
-
-    'rule' Type(-> Type):
-        TypeNoUndefined(-> Type)
-
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)
-        Warning_UndefinedTypeDeprecated(Position)
+        Warning_DeprecatedTypeName(Position, "nothing")
+
+    'rule' Type(-> undefined(Position)):
+        "nothing" @(-> Position)
 
 'nonterm' OptionalElementType(-> TYPE)
 
@@ -933,6 +933,10 @@
 
     'rule' ConstantTermExpression(-> undefined(Position)):
         "undefined" @(-> Position)
+        Warning_UndefinedConstantDeprecated(Position)
+        
+    'rule' ConstantTermExpression(-> undefined(Position)):
+        "nothing" @(-> Position)
 
     'rule' ConstantTermExpression(-> true(Position)):
         "true" @(-> Position)
@@ -940,7 +944,7 @@
     'rule' ConstantTermExpression(-> false(Position)):
         "false" @(-> Position)
 
-    'rule' ConstantTermExpression(-> integer(Position, Value)):
+    'rule' ConstantTermExpression(-> unsignedinteger(Position, Value)):
         INTEGER_LITERAL(-> Value) @(-> Position)
 
     'rule' ConstantTermExpression(-> real(Position, Value)):

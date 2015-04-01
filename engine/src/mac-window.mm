@@ -1863,7 +1863,7 @@ void MCMacPlatformWindow::DoRealize(void)
         [m_panel_handle setFloatingPanel: [NSApp isActive]];
     else
         [m_window_handle setLevel: t_window_level];
-	[m_window_handle setOpaque: m_mask == nil];
+	[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
 		[[m_window_handle standardWindowButton: NSWindowZoomButton] setEnabled: NO];
@@ -1899,12 +1899,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . has_shadow_changed)
         [m_window_handle setHasShadow: m_has_shadow];
     
-	if (m_changes . mask_changed)
+	if (m_changes . mask_changed || m_changes . is_opaque_changed)
 	{
         // MW-2014-07-29: [ Bug 12997 ]] Make sure we invalidate the whole window when
         //   the mask changes.
         [[m_window_handle contentView] setNeedsDisplay: YES];
-		[m_window_handle setOpaque: m_mask == nil];
+		[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
 		if (m_has_shadow)
 			m_shadow_changed = true;
 	}
@@ -2067,7 +2067,11 @@ void MCMacPlatformWindow::DoUpdate(void)
 {	
 	// If the shadow has changed (due to the mask changing) we must disable
 	// screen updates otherwise we get a flicker.
-	if (m_shadow_changed && m_has_shadow)
+	// IM-2015-02-23: [[ WidgetPopup ]] Assume shadow changes when redrawing a non-opaque widget
+	bool t_shadow_changed;
+	t_shadow_changed = (m_shadow_changed || !m_is_opaque) && m_has_shadow;
+	
+	if (t_shadow_changed)
 		NSDisableScreenUpdates();
 	
 	// Mark the bounding box of the dirty region for needing display.
@@ -2080,7 +2084,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	[m_view displayIfNeeded];
 	
 	// Re-enable screen updates if needed.
-	if (m_shadow_changed && m_has_shadow)
+	if (t_shadow_changed)
     {
         // MW-2014-06-11: [[ Bug 12495 ]] Turn the shadow off and on to force recaching.
         [m_window_handle setHasShadow: NO];

@@ -2081,6 +2081,8 @@ public foreign handler MCCanvasImageMakeWithData(in pData as Data, out rImage as
 public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInt, in pHeight as LCInt, in pPixels as Data, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as List, in pPixels as Data, out rImage as Image) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	Creates a new image.
 
@@ -2102,6 +2104,8 @@ begin
 	MCCanvasImageMakeWithPath(mPath, output)
 end syntax
 
+//////////
+
 /*
 Summary:	Creates a new image.
 
@@ -2116,12 +2120,13 @@ Example:
 
 Tags: Canvas
 */
-
 syntax ImageMakeFromResourceFile is prefix operator with precedence 4
 	"image" "from" "resource" "file" <mResource: Expression>
 begin
 	MCCanvasImageMakeWithResourceFile(mResource, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new image.
@@ -2140,12 +2145,13 @@ Example:
 
 Tags: Canvas
 */
-
 syntax ImageMakeFromData is prefix operator with precedence 4
 	"image" "from" "data" <mData: Expression>
 begin
 	MCCanvasImageMakeWithData(mData, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new image using raw pixel data.
@@ -2156,12 +2162,16 @@ mPixels:	An expression which evaluates to binary data
 Returns:	A new image of the given size, using the provided ARGB pixel data.
 
 Example:
+	// Read pixel data from file
+	variable tPixelData as Data
+	put the contents of file "image_argb_320x480.bin" into tPixelData
+
 	// Create image from pixel data
+	variable tImage as Image
 	put image of size [320, 480] with pixels tPixelData into tImage
 
 Tags: Canvas
 */
-
 syntax ImageMakeWithPixels is prefix operator with precedence 4
 	"image" "of" "size" <mSize: Expression> "with" "pixels" <mPixels: Expression>
 begin
@@ -2180,6 +2190,8 @@ public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as
 public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as Data) returns nothing binds to "<builtin>"
 // TODO - add image frame index property?
 
+//////////
+
 /*
 Summary:	The width of an image.
 
@@ -2188,19 +2200,23 @@ mImage:		An expression which evaluates to an image.
 Description:	The width of the image in pixels.
 
 Example:
-	// Load an image from a file and get its dimensions
-	put image from file tPath into tImage
+	// Load an image from a file
+	variable tImage as Image
+	put image from file "images/logo.png" into tImage
+
+	// Get the image width
+	variable tWidth as Integer
 	put the width of tImage into tWidth
-	put the height of tImage into tHeight
 
 Tags:	Canvas
 */
-
 syntax ImagePropertyWidth is prefix operator with precedence 2
 	"the" "width" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetWidth(mImage, output)
 end syntax
+
+//////////
 
 /*
 Summary:	The height of an image.
@@ -2210,25 +2226,31 @@ mImage:		An expression which evaluates to an image.
 Description:	The height of the image in pixels.
 
 Example:
-	// Load an image from a file and get its dimensions
-	put image from file tPath into tImage
-	put the width of tImage into tWidth
+	// Load an image from a file
+	variable tImage as Image
+	put image from file "images/logo.png" into tImage
+
+	// Get the image height
+	variable tHeight as Integer
 	put the height of tImage into tHeight
 
 Tags:	Canvas
 */
-
 syntax ImagePropertyHeight is prefix operator with precedence 2
 	"the" "height" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetHeight(mImage, output)
 end syntax
 
+//////////
+
 //syntax ImageMetadataProperty is prefix operator with precedence 4
 //	"the" "metadata" "of" <mImage: Expression>
 //begin
 //	MCCanvasImageGetMetadata(mImage, output)
 //end syntax
+
+//////////
 
 /*
 Summary:	The pixel data of an image.
@@ -2238,13 +2260,16 @@ mImage:		An expression which evaluates to an image.
 Description:	The raw ARGB pixel data of the image.
 
 Example:
-	// Load an image from a file and get its pixels
-	put image from file tPath into tImage
+	// Load an image from a file
+	variable tImage as Image
+	put image from file "images/logo.png" into tImage
+
+	// Get the pixels of the image
+	variable tPixelData as Data
 	put the pixels of tImage into tPixelData
 
 Tags:	Canvas
 */
-
 syntax ImagePropertyPixels is prefix operator with precedence 4
 	"the" "pixels" "of" <mImage: Expression>
 begin
@@ -2298,6 +2323,8 @@ public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rec
 public foreign handler MCCanvasPathMakeEmpty(out rPath as Path) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as String, out rPath as Path) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	Creates a new empty path.
 
@@ -2305,40 +2332,44 @@ Returns:	An empty path.
 
 Example:
 	// Initialize the path to empty
-	variable tPath
+	variable tPath as Path
 	put the empty path into tPath
+
 	// add a line to the path
 	move to point [0,50] on tPath
 	line to point [100,50] on tPath
 
 Tags: Canvas
 */
-
 syntax PathMakeEmpty is expression
 	"the" "empty" "path"
 begin
 	MCCanvasPathMakeEmpty(output)
 end syntax
 
+//////////
+
 /*
 Summary:	Creates a new path.
 
 mInstructions:	An expression which evaluates to a string.
 
-Returns:	A new path created from the instructions provided.
+Returns:	A new path created from the instructions provided. The format of the path instructions is the same as that used for SVG path data as defined here - http://www.w3.org/TR/SVG/paths.html#PathData
 
 Example:
 	// Create a closed path with a line and some curves
-	put path "move 10,10 line 50,100 cubic 100,100 100,50 quad 75,50 50,25 50,10 close end" into tPath
+	variable tPath as Path
+	put path "M10,10 L50,100 Q100,100 100,50 C75,50 50,25 50,10z" into tPath
 
 Tags: Canvas
 */
-
 syntax PathMake is prefix operator with precedence 4
 	"path" <mInstructions: Expression>
 begin
 	MCCanvasPathMakeWithInstructionsAsString(mInstructions, output)
 end syntax
+
+//////////
 
 // Primitive Constructors
 
@@ -2358,6 +2389,7 @@ public foreign handler MCCanvasPathMakeWithSectorWithRadiiAsList(in pCenter as P
 public foreign handler MCCanvasPathMakeWithSegmentWithRadius(in pCenter as Point, in pRadius as CanvasFloat, in pStartAngle as CanvasFloat, in pEndAngle as CanvasFloat, out rPath as Path) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathMakeWithSegmentWithRadiiAsList(in pCenter as Point, in pRadii as List, in pStartAngle as CanvasFloat, in pEndAngle as CanvasFloat, out rPath as Path) returns nothing binds to "<builtin>"
 
+//////////
 
 /*
 Summary:	Creates a new path.
@@ -2370,12 +2402,16 @@ Returns:	A new rounded rectangle path.
 
 Example:
 	// Create a rounded rectangle path
-	put rounded rectangle path of rectangle [10,10,210,60] with radii [10,5] into tPath
+	variable tPath as Path
 	put rounded rectangle path of rectangle [10,10,210,60] with radius 15 into tPath
+
+Example:
+	// Create a rounded rectangle path with different horizontal & vertical radii
+	variable tPath as Path
+	put rounded rectangle path of rectangle [10,10,210,60] with radii [10,5] into tPath
 
 Tags: Canvas
 */
-
 syntax PathMakeWithRoundedRectangleWithRadius is prefix operator with precedence 4
 	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radius" <mRadius: Expression>
 begin
@@ -2388,6 +2424,8 @@ begin
 	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(mRect, mRadii, output)
 end syntax
 
+//////////
+
 /*
 Summary:	Creates a new path.
 
@@ -2397,16 +2435,18 @@ Returns:	A new rectangle path.
 
 Example:
 	// Create a rectangle path
+	variable tPath as Path
 	put rectangle path of rectangle [10,10,210,60] into tPath
 
 Tags: Canvas
 */
-
 syntax PathMakeWithRectangle is prefix operator with precedence 4
 	"rectangle" "path" "of" <mRect: Expression>
 begin
 	MCCanvasPathMakeWithRectangle(mRect, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new path.
@@ -2418,16 +2458,18 @@ Returns:	A new circle path.
 
 Example:
 	// Create a circle path
+	variable tPath as Path
 	put circle path centered at point [100,100] with radius 50 into tPath
 
 Tags: Canvas
 */
-
 syntax PathMakeWithCircle is prefix operator with precedence 4
 	"circle" "path" "centered" "at" <mCenter: Expression> "with" "radius" <mRadius: Expression>
 begin
 	MCCanvasPathMakeWithCircle(mCenter, mRadius, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new path.
@@ -2439,16 +2481,18 @@ Returns:	A new ellipse path.
 
 Example:
 	// Create an ellipse path
+	variable tPath as Path
 	put ellipse path centered at point [100,100] with radii [100,75] into tPath
 
 Tags: Canvas
 */
-
 syntax PathMakeWithEllipse is prefix operator with precedence 4
 	"ellipse" "path" "centered" "at" <mPoint: Expression> "with" "radii" <mRadii: Expression>
 begin
 	MCCanvasPathMakeWithEllipseWithRadiiAsList(mPoint, mRadii, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new path.
@@ -2460,16 +2504,18 @@ Returns:	A new line path.
 
 Example:
 	// Create a line path
+	variable tPath as Path
 	put line path from point [50,100] to point [100,50] into tPath
 
 Tags: Canvas
 */
-
 syntax PathMakeWithLine is prefix operator with precedence 4
 	"line" "path" "from" <mFrom: Expression> "to" <mTo: Expression>
 begin
 	MCCanvasPathMakeWithLine(mFrom, mTo, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new path.
@@ -2480,19 +2526,23 @@ Returns:	A new polyline or polygon path. A polygon path will be closed with an a
 
 Example:
 	// Create a polyline path
+	variable tPath as Path
 	put polyline path with points [point [0,0], point [25,50], point [75,50], point [50,0]] into tPath
+
+Example:
 	// Create a closed polygon path (rhombus)
+	variable tPath as Path
 	put polygon path with points [point [0,0], point [25,50], point [75,50], point [50,0]] into tPath
 
 Tags: Canvas
 */
-
 syntax PathMakeWithPoints is prefix operator with precedence 4
 	( "polygon" <mClosed=true> | "polyline" <mClosed=false> ) "path" "with" "points" <mPoints: Expression>
 begin
 	MCCanvasPathMakeWithPoints(mClosed, mPoints, output)
 end syntax
 
+//////////
 
 /*
 Summary:	Creates a new path.
@@ -2506,12 +2556,12 @@ Returns:	A new arc path.
 
 Example:
 	// Create an elliptical arc path
-	variable tPath
+	variable tPath as Path
 	put arc path centered at point [100,100] with radii [100,75] from 0 to 270 into tPath
 
 Example:
 	// Create a circular arc path
-	variable tPath
+	variable tPath as Path
 	put arc path centered at point [100,100] with radius 100 from 0 to 270 into tPath
 
 Tags: Canvas
@@ -2523,6 +2573,7 @@ begin
 	MCCanvasPathMakeWithArcWithRadiiAsList(mCenter, mRadii, mStartAngle, mEndAngle, output)
 end syntax
 
+//////////
 
 /*
 Summary:	Creates a new path.
@@ -2536,12 +2587,12 @@ Returns:	A new sector path.
 
 Example:
 	// Create an elliptical sector path
-	variable tPath
+	variable tPath as Path
 	put sector path centered at point [100,100] with radii [100,75] from 0 to 270 into tPath
 
 Example:
 	// Create a circular sector path
-	variable tPath
+	variable tPath as Path
 	put sector path centered at point [100,100] with radius 100 from 0 to 270 into tPath
 
 Tags: Canvas
@@ -2553,6 +2604,7 @@ begin
 	MCCanvasPathMakeWithSectorWithRadiiAsList(mCenter, mRadii, mStartAngle, mEndAngle, output)
 end syntax
 
+//////////
 
 /*
 Summary:	Creates a new path.
@@ -2566,12 +2618,12 @@ Returns:	A new segment path.
 
 Example:
 	// Create an elliptical segment path
-	variable tPath
+	variable tPath as Path
 	put segment path centered at point [100,100] with radii [100,75] from 0 to 270 into tPath
 
 Example:
 	// Create a circular segment path
-	variable tPath
+	variable tPath as Path
 	put segment path centered at point [100,100] with radius 100 from 0 to 270 into tPath
 
 Tags: Canvas
@@ -2592,6 +2644,8 @@ public foreign handler MCCanvasPathGetSubpath(in pIndex as LCInt, in pPath as Pa
 public foreign handler MCCanvasPathGetBoundingBox(in pPath as Path, out rRect as Rectangle) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as String) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	The subpaths of a path.
 
@@ -2602,20 +2656,27 @@ mEnd:		An expression which evaluates to a number.
 Description:	The subpaths of <mPath> in the range <mStart> to <mEnd>. Each subpath or range of subpaths is itself a path.
 
 Example:
+	// Create a path with multiple subpaths
+	variable tPath as Path
+	put path "M50,50 L100,50 M100,100 L150,100 M150,150 L200,150"
+
 	// Split out the first subpath of a path
+	variable tSubPath as Path
 	put subpath 1 of tPath into tSubPath
+
 	// Store the remaining subpaths in the original path
 	put subpath 2 to -1 of tPath into tPath
 
 Tags:	Canvas
 */
-
 syntax PathPropertySubpath is prefix operator with precedence 4
 	"subpath" <mStart: Expression> [ "to" <mEnd: Expression> ] "of" <mPath: Expression>
 begin
 	MCCanvasPathGetSubpaths(mStart, mEnd, mPath, output)
 	MCCanvasPathGetSubpath(mStart, mPath, output)
 end syntax
+
+//////////
 
 /*
 Summary:	The bounding box of a path.
@@ -2625,17 +2686,23 @@ mPath:		An expression which evaluates to a path.
 Description:	The smallest rectangle that competely encloses <mPath>.
 
 Example:
-	// Get the bounds of a path
-	put the bounding box of tPath
+	// Create a circle path
+	variable tPath as Path
+	put circle path centered at point [100,100] with radius 50 into tPath
+
+	// Get the bounds of the path
+	variable tBounds as Rectangle
+	put the bounding box of tPath into tBounds
 
 Tags:	Canvas
 */
-
 syntax PathPropertyBoundingBox is prefix operator with precedence 4
 	"the" "bounding" "box" "of" <mPath: Expression>
 begin
 	MCCanvasPathGetBoundingBox(mPath, output)
 end syntax
+
+//////////
 
 /*
 Summary:	The instructions of a path.
@@ -2643,19 +2710,25 @@ Summary:	The instructions of a path.
 mPath:		An expression which evaluates to a path.
 
 Description:	A string containing the series of instructions and point arguments used to construct <mPath>.
+>*Note:* The format of the path instructions is the same as that used for SVG path data as defined here - http://www.w3.org/TR/SVG/paths.html#PathData
 
 Example:
-	// Get the instructions of a path
-	put the instructions of tPath into tInstructionString
+	// Create a rounded rectangle path
+	variable tPath as Path
+	put rounded rectangle path of rectangle [10,10,210,60] with radius 15 into tPath
+
+	// Get the instructions of the path
+	variable tPathData as String
+	put the instructions of tPath into tPathData
 
 Tags:	Canvas
 */
-
 syntax PathPropertyInstructions is prefix operator with precedence 4
 	"the" "instructions" "of" <mPath: Expression>
 begin
 	MCCanvasPathGetInstructionsAsString(mPath, output)
 end syntax
+
 
 //////////
 
@@ -2681,6 +2754,8 @@ public foreign handler MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(in pTo 
 
 public foreign handler MCCanvasPathClosePath(inout xPath as Path) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	Move to a new point on a path.
 
@@ -2690,17 +2765,31 @@ mPoint:		An expression which evaluates to a point.
 Description:	Ends the current subpath and sets the starting point for new components of <mPath> to <mPoint>.
 
 Example:
-	// Begin a new subpath of mPath
-	move to point [25, 50] on tPath
+	// Create a new empty path
+	variable tPath as Path
+	put the empty path into tPath
+
+	// Begin a new subpath of tPath
+	move to point [50, 50] on tPath
+
+	// Add a line to tPath
+	line to point [100, 50] on tPath
+
+	// Begin a new subpath of tPath
+	move to point [50, 100] on tPath
+
+	// Add a line to tPath
+	line to point [100, 100] on tPath
 
 Tags:	Canvas
 */
-
 syntax PathOperationMoveTo is statement
 	"move" "to" <mPoint: Expression> "on" <mPath: Expression>
 begin
 	MCCanvasPathMoveTo(mPoint, mPath)
 end syntax
+
+//////////
 
 /*
 Summary:	Adds a line to a path.
@@ -2711,19 +2800,25 @@ mPoint:		An expression which evaluates to a point.
 Description:	Adds a line from the previous point to <mPoint> on <mPath>.
 
 Example:
-	// Begin a new subpath of mPath
+	// Create a new empty path
+	variable tPath as Path
+	put the empty path into tPath
+
+	// Begin a new subpath of tPath
 	move to point [25, 50] on tPath
+
 	// Continue path with a line to 50,100
 	line to [50,100] on tPath
 
 Tags:	Canvas
 */
-
 syntax PathOperationLineTo is statement
 	"line" "to" <mPoint: Expression> "on" <mPath: Expression>
 begin
 	MCCanvasPathLineTo(mPoint, mPath)
 end syntax
+
+//////////
 
 /*
 Summary:	Adds a curve to a path.
@@ -2736,23 +2831,27 @@ mPath:		An expression which evaluates to a path.
 Description:	Adds a curve from the previous point through one or two control points to <mTo> on <mPath>.
 
 Example:
-	// Begin a new subpath of an existing path
+	// Create a new empty path
+	variable tPath as Path
+	put the empty path into tPath
+
+	// Begin a new subpath of tPath
 	move to point [25, 50] on tPath
+
 	// Continue path with a curve through 25,100 to 50,100
 	curve through [25,100] to [50,100] on tPath
+
 	// Continue path with a curve through 50,75 then 50,50 to 50,100
 	curve through [50,75] then [50,50] to [25,50] on tPath
 
 Tags:	Canvas
 */
-
 syntax PathOperationCurveThrough is statement
 	"curve" "through" <mThroughA: Expression> [ "then" <mThroughB: Expression> ] "to" <mTo: Expression> "on" <mPath: Expression>
 begin
 	MCCanvasPathCurveThroughPoint(mThroughA, mTo, mPath)
 	MCCanvasPathCurveThroughPoints(mThroughA, mThroughB, mTo, mPath)
 end syntax
-
 
 /*
 Summary:	Adds an arc to a path.
@@ -2870,6 +2969,7 @@ begin
 	MCCanvasPathEllipticArcToWithRadiiAsList(mEnd, mRadii, mAngle, mPath)
 end syntax
 
+//////////
 
 /*
 Summary:	Closes the current subpath of a path.
@@ -2879,21 +2979,28 @@ mPath:		An expression which evaluates to a path.
 Description:	Adds a line from the previous point to the start of current subpath, signaling the end of the subpath.
 
 Example:
-	// Begin a new subpath of mPath
+	// Create a new empty path
+	variable tPath as Path
+	put the empty path into tPath
+
+	// Begin a new subpath of tPath
 	move to point [25, 50] on tPath
+
 	// Continue path with a curve through 25,100 to 50,100
 	curve through [25,100] to [50,100] on tPath
+
 	// Close the path
-	close tPath
+	close path on tPath
 
 Tags:	Canvas
 */
-
 syntax PathOperationClosePath is statement
 	"close" "path" "on" <mPath: Expression>
 begin
 	MCCanvasPathClosePath(mPath)
 end syntax
+
+//////////
 
 /*
 Summary:	Apply a transform to a path.
@@ -2904,17 +3011,22 @@ mPath:		An expression which evaluates to a path.
 Description:	Transforms the points of <mPath> with <mTransform>.
 
 Example:
+	// Create a rectangle path
+	variable tPath as Path
+	put rectangle path of rectangle [10,10,210,60] into tPath
+
 	// Scale the path with a transform
 	transform tPath by transform with scale [2,2]
 
 Tags:	Canvas
 */
-
 syntax PathOperationTransform is statement
 	"transform" <mPath: Expression> "by" <mTransform: Expression>
 begin
 	MCCanvasPathTransform(mPath, mTransform)
 end syntax
+
+//////////
 
 /*
 Summary:	Apply a scale to a path.
@@ -2925,17 +3037,22 @@ mPath:		An expression which evaluates to a path.
 Description:	Scales <mPath> by <mScale>.
 
 Example:
+	// Create a rectangle path
+	variable tPath as Path
+	put rectangle path of rectangle [10,10,210,60] into tPath
+
 	// Scale the path
 	scale tPath by [2,2]
 
 Tags:	Canvas
 */
-
 syntax PathOperationScale is statement
 	"scale" <mPath: Expression> "by" <mScale: Expression>
 begin
 	MCCanvasPathScaleWithList(mPath, mScale)
 end syntax
+
+//////////
 
 /*
 Summary:	Apply a rotation to a path.
@@ -2946,17 +3063,22 @@ mPath:		An expression which evaluates to a path.
 Description:	Rotates <mPath> by <mRotation> degrees.
 
 Example:
+	// Create a rectangle path
+	variable tPath as Path
+	put rectangle path of rectangle [10,10,210,60] into tPath
+
 	// Rotate the path
 	rotate tPath by 45
 
 Tags:	Canvas
 */
-
 syntax PathOperationRotate is statement
 	"rotate" <mPath: Expression> "by" <mRotation: Expression>
 begin
 	MCCanvasPathRotate(mPath, mRotation)
 end syntax
+
+//////////
 
 /*
 Summary:	Apply a translation to a path.
@@ -2967,18 +3089,23 @@ mPath:		An expression which evaluates to a path.
 Description:	Translates <mPath> by <mTranslation>.
 
 Example:
+	// Create a rectangle path
+	variable tPath as Path
+	put rectangle path of rectangle [10,10,210,60] into tPath
+
 	// Translate the path
 	translate tPath by [50,100]
 
 Tags:	Canvas
 */
-
 syntax PathOperationTranslate is statement
 	"translate" <mPath: Expression> "by" <mTranslation: Expression>
 begin
 //	MCCanvasPathTranslate(mPath, mTranslation[0], mTranslation[1])
 	MCCanvasPathTranslateWithList(mPath, mTranslation)
 end syntax
+
+//////////
 
 /*
 Summary:	Extend a path by adding another path.
@@ -2989,12 +3116,15 @@ mDest:		An expression which evaluates to a path.
 Description:	Adds the path defined by <mSource> to <mDest>.
 
 Example:
-	// Combine two paths
-	add tTempPath to tPath
+	// Create a rectangle path
+	variable tPath as Path
+	put rectangle path of rectangle [10,10,210,60] into tPath
+
+	// Add another rectangle subpath to tPath
+	add rectangle path of rectangle [110,10,310,60] to tPath
 
 Tags:	Canvas
 */
-
 syntax PathOperationAddPath is statement
 	"add" <mSource: Expression> "to" <mDest: Expression>
 begin
@@ -3013,9 +3143,13 @@ begin
 	MCCanvasEffectEvaluateType(mType, output)
 end syntax
 
+//////////
+
 // Constructors
 
 public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as LCInt, in pProperties as Array, out rEffect as Effect) returns nothing binds to "<builtin>"
+
+//////////
 
 /*
 Summary:	Creates a new effect.
@@ -3027,6 +3161,9 @@ Returns:	A new effect of type <mType> with properties read from <mProperties>.
 
 Example:
 	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
 	put color [0,0,0] into tProps["color"]
 	put "normal" into tProps["blend mode"]
 	put 191 into tProps["opacity"]
@@ -3035,11 +3172,11 @@ Example:
 	put 5 into tProps["distance"]
 	put 60 into tProps["angle"]
 
+	variable tEffect as Effect
 	put outer shadow effect with properties tProps into tEffect
 
 Tags: Canvas
 */
-
 syntax EffectMakeWithProperties is prefix operator with precedence 4
 	<mType: EffectType> "effect" "with" "properties" <mProperties: Expression>
 begin
@@ -3070,6 +3207,8 @@ public foreign handler MCCanvasEffectSetDistance(in pDistance as CanvasFloat, in
 public foreign handler MCCanvasEffectGetAngle(in pEffect as Effect, out rAngle as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasEffectSetAngle(in pAngle as CanvasFloat, inout xEffect as Effect) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	The type of an effect.
 
@@ -3078,17 +3217,33 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The type of <mEffect> as a string. Can be one of "color overlay", "inner shadow", "outer shadow", "inner glow", "outer glow".
 
 Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Change effect from inner glow to outer glow
 	set the type of tEffect to "outer glow"
 
 Tags:	Canvas
 */
-
 syntax EffectPropertyType is prefix operator with precedence 4
 	"the" "type" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetTypeAsString(mEffect, output)
 end syntax
+
+//////////
 
 /*
 Summary:	The color of an effect.
@@ -3098,18 +3253,34 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The color of <mEffect> as a color.
 
 Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Change effect color to green.
 	set the color of tEffect to color [0,1,0]
 
 Tags:	Canvas
 */
-
 syntax EffectPropertyColor is prefix operator with precedence 4
 	"the" "color" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetColor(mEffect, output)
 	MCCanvasEffectSetColor(input, mEffect)
 end syntax
+
+//////////
 
 /*
 Summary:	The blend mode of an effect.
@@ -3119,18 +3290,34 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The blend mode of <mEffect> as a string. Can be one of "normal", "multiply", "color dodge".
 
 Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Use color dodge mode for effect
 	set the blend mode of tEffect to "color dodge"
 
 Tags:	Canvas
 */
-
 syntax EffectPropertyBlendMode is prefix operator with precedence 4
 	"the" "blend" "mode" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetBlendModeAsString(mEffect, output)
 	MCCanvasEffectSetBlendModeAsString(input, mEffect)
 end syntax
+
+//////////
 
 /*
 Summary:	The opacity of an effect.
@@ -3140,18 +3327,34 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The opacity of <mEffect> as a number between 0 and 255.
 
 Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Use half-transparency for effect
 	set the opacity of tEffect to 0.5
 
 Tags:	Canvas
 */
-
 syntax EffectPropertyOpacity is prefix operator with precedence 4
 	"the" "opacity" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetOpacity(mEffect, output)
 	MCCanvasEffectSetOpacity(input, mEffect)
 end syntax
+
+//////////
 
 /*
 Summary:	The size of an effect.
@@ -3161,18 +3364,34 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The size of <mEffect> as a number. Size applies to inner shadow, outer shadow, inner glow, and outer glow effect types
 
 Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Set the effect size
 	set the size of tEffect to 5
 
 Tags:	Canvas
 */
-
 syntax EffectPropertySize is prefix operator with precedence 4
 	"the" "size" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetSize(mEffect, output)
 	MCCanvasEffectSetSize(input, mEffect)
 end syntax
+
+//////////
 
 /*
 Summary:	The spread of an effect.
@@ -3182,18 +3401,34 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The spread of <mEffect> as a number. Spread applies to inner shadow, outer shadow, inner glow, and outer glow effect types
 
 Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Set the effect spread
 	set the spread of tEffect to 0
 
 Tags:	Canvas
 */
-
 syntax EffectPropertySpread is prefix operator with precedence 4
 	"the" "spread" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetSpread(mEffect, output)
 	MCCanvasEffectSetSpread(input, mEffect)
 end syntax
+
+//////////
 
 /*
 Summary:	The distance of an effect.
@@ -3203,18 +3438,34 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The distance of <mEffect> as a number. Distance applies to inner shadow, and outer shadow effect types
 
 Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Set the effect distance
 	set the distance of tEffect to 5
 
 Tags:	Canvas
 */
-
 syntax EffectPropertyDistance is prefix operator with precedence 4
 	"the" "distance" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetDistance(mEffect, output)
 	MCCanvasEffectSetDistance(input, mEffect)
 end syntax
+
+//////////
 
 /*
 Summary:	The angle of an effect.
@@ -3224,12 +3475,26 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The angle of <mEffect> as a number of degrees. Angle applies to inner shadow, and outer shadow effect types
 
 Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Set the effect angle
 	set the angle of tEffect to 30
 
 Tags:	Canvas
 */
-
 syntax EffectPropertyAngle is prefix operator with precedence 4
 	"the" "angle" "of" <mEffect: Expression>
 begin
@@ -3247,6 +3512,8 @@ public foreign handler MCCanvasFontMake(in pName as String, out rFont as Font) r
 public foreign handler MCCanvasFontMakeWithStyle(in pName as String, in pBold as CBool, in pItalic as CBool, out rFont as Font) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasFontMakeWithSize(in pName as String, in pBold as CBool, in pItalic as CBool, in pSize as LCInt, out rFont as Font) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	Creates a new instance of the named font.
 
@@ -3256,16 +3523,18 @@ Returns:	A new instance of the named font with the default size of 12pts.
 
 Example:
 	// Create Arial font
+	variable tFont as Font
 	put font "Arial" into tFont
 
 Tags: Canvas
 */
-
 syntax FontMake is prefix operator with precedence 4
 	"font" <mName: Expression>
 begin
 	MCCanvasFontMake(mName, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new instance of the named font.
@@ -3277,16 +3546,18 @@ Returns:	A new instance of the named font at size <mSize> points.
 
 Example:
 	// Create 20pt Arial font
+	variable tFont as Font
 	put font "Arial" at size 20 into tFont
 
 Tags: Canvas
 */
-
 syntax FontMakeWithSize is prefix operator with precedence 4
 	"font" <mName: Expression> <mBold=false> <mItalic=false> "at" "size" <mSize: Expression>
 begin
 	MCCanvasFontMakeWithSize(mName, mBold, mItalic, mSize, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new instance of the named font.
@@ -3297,16 +3568,18 @@ Returns:	A new instance of the named font with style bold, italic, or bold itali
 
 Example:
 	// Create italic Arial font
+	variable tFont as Font
 	put font "Arial" with italic style into tFont
 
 Tags: Canvas
 */
-
 syntax FontMakeWithStyle is expression
 	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style"
 begin
 	MCCanvasFontMakeWithStyle(mName, mBold, mItalic, output)
 end syntax
+
+//////////
 
 /*
 Summary:	Creates a new instance of the named font.
@@ -3318,11 +3591,11 @@ Returns:	A new instance of the named font with style bold, italic, or bold itali
 
 Example:
 	// Create 20pt bold Arial font
+	variable tFont as Font
 	put font "Arial" with bold style at size 20 into tFont
 
 Tags: Canvas
 */
-
 syntax FontMakeWithStyleAndSize is prefix operator with precedence 4
 	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style" "at" "size" <mSize: Expression>
 begin
@@ -3343,6 +3616,8 @@ public foreign handler MCCanvasFontSetItalic(in pItalic as CBool, inout xFont as
 public foreign handler MCCanvasFontGetSize(in pFont as Font, out rSize as LCUInt) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasFontSetSize(in pSize as LCUInt, inout xFont as Font) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	The name of a font.
 
@@ -3351,20 +3626,27 @@ mFont:		An expression which evaluates to a font.
 Description:	The name of <mFont>.
 
 Example:
+	// Create a font
+	variable tFont as Font
+	put font "Arial" at size 20 into tFont
+
 	// Get the old font name
+	variable tFontName as String
 	put the name of tFont into tName
+
 	// Set the font to helvetica
 	set the name of tFont to "Helvetica"
 
 Tags:	Canvas
 */
-
 syntax FontPropertyName is prefix operator with precedence 4
 	"the" "name" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetName(mFont, output)
 	MCCanvasFontSetName(input, mFont)
 end syntax
+
+//////////
 
 /*
 Summary:	The bold setting of a font.
@@ -3374,18 +3656,23 @@ mFont:		An expression which evaluates to a font.
 Description:	The bold flag of <mFont> as a boolean. If true, then <mFont> is bold.
 
 Example:
+	// Create a font
+	variable tFont as Font
+	put font "Arial" at size 20 into tFont
+
 	// Set the font to bold
 	set the bold of tFont to true
 
 Tags:	Canvas
 */
-
 syntax FontPropertyBold is prefix operator with precedence 4
 	"the" "bold" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetBold(mFont, output)
 	MCCanvasFontSetBold(input, mFont)
 end syntax
+
+//////////
 
 /*
 Summary:	The italic setting of a font.
@@ -3395,18 +3682,23 @@ mFont:		An expression which evaluates to a font.
 Description:	The italic flag of <mFont> as a boolean. If true, then <mFont> is italic.
 
 Example:
+	// Create a font
+	variable tFont as Font
+	put font "Arial" at size 20 into tFont
+
 	// Set the font to italic
 	set the italic of tFont to true
 
 Tags:	Canvas
 */
-
 syntax FontPropertyItalic is prefix operator with precedence 4
 	"the" "italic" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetItalic(mFont, output)
 	MCCanvasFontSetItalic(input, mFont)
 end syntax
+
+//////////
 
 /*
 Summary:	The size of a font.
@@ -3416,12 +3708,15 @@ mFont:		An expression which evaluates to a font.
 Description:	The size of <mFont> as a number of points.
 
 Example:
+	// Create a font
+	variable tFont as Font
+	put font "Arial" at size 20 into tFont
+
 	// Set the font size to 30pt
 	set the size of tFont to 30
 
 Tags:	Canvas
 */
-
 syntax FontPropertySize is prefix operator with precedence 4
 	"the" "size" "of" <mFont:Expression>
 begin
@@ -3429,9 +3724,17 @@ begin
 	MCCanvasFontSetSize(input, mFont)
 end syntax
 
+//////////
+
 // Operations
 
-public foreign handler MCCanvasFontMeasureText(in pText as String, in pFont as Font, out pRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureTextTypographicBounds(in pText as String, in pFont as Font, out pRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureTextTypographicBoundsOnCanvas(in pText as String, in pCanvas as Canvas, out pRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureTextImageBounds(in pText as String, in pFont as Font, out pRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureTextImageBoundsOnCanvas(in pText as String, in pCanvas as Canvas, out pRect as Rectangle) returns nothing binds to "<builtin>"
+
+
+//////////
 
 /*
 Summary:	Measure text when drawn with a font.
@@ -3442,18 +3745,114 @@ mFont:	An expression which evaluates to a font.
 Returns:	The bounding box of <mText> when drawn at point 0,0 with font <mFont>. Returns the bounds as a rectangle.
 
 Example:
-	// Measure text with the current font
+	// Set up tFont as size 18 Arial
+	variable tFont as Font
+	put font "Arial" at size 18 into tFont
+
+	// Measure text with tFont
+	variable tBounds as Rectangle
 	put the bounds of text "Sample text" with tFont into tBounds
-	put the width of tBounds into tWidth
-	put the height of tBounds into tHeight
+
+Description:
+	The layout bounds of the text, constructed from the ascent and descent values of the font, and the width of the text string.
+
+>*Note:* The layout bounds is used to position blocks of text relative to each other, so the text may overlap these bounds.
 
 Tags:	Canvas
 */
-
-syntax FontOperationTextBounds is prefix operator with precedence 4
-  "the" "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
+syntax FontOperationTextLayoutBounds is prefix operator with precedence 4
+	"the" [ "layout" ] "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
 begin
-	MCCanvasFontMeasureText(mText, mFont, output)
+	MCCanvasFontMeasureTextTypographicBounds(mText, mFont, output)
+end syntax
+
+
+/*
+Summary:	Measure text when drawn to a canvas.
+
+mText:	An expression which evaluates to a string.
+mCanvas:	An expression which evaluates to a canvas.
+
+Returns:	The bounding box of <mText> when drawn at point 0,0 with the current font of <mCanvas>. Returns the bounds as a rectangle.
+
+Example:
+	// Set the canvas font
+	set the font of this canvas to font "Arial" at size 18
+
+	variable tBounds as Rectangle
+	put the bounds of text "Sample text" on this canvas into tBounds
+
+Description:
+The layout bounds of the text, constructed from the ascent and descent values of the font, and the width of the text string.
+
+>*Note:* The layout bounds is used to position blocks of text relative to each other, so the text may overlap these bounds.
+
+Tags:	Canvas
+*/
+syntax FontOperationTextLayoutBoundsOnCanvas is prefix operator with precedence 4
+	"the" [ "layout" ] "bounds" "of" "text" <mText: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasFontMeasureTextTypographicBoundsOnCanvas(mText, mCanvas, output)
+end syntax
+
+
+/*
+Summary:	Measure text precisely when drawn with a font.
+
+mText:	An expression which evaluates to a string.
+mFont:	An expression which evaluates to a font.
+
+Returns:	The bounding box of <mText> when drawn at point 0,0 with font <mFont>. Returns the bounds as a rectangle.
+
+Example:
+	// Set up tFont as size 18 Arial
+	variable tFont as Font
+	put font "Arail" at size 18 into tFont
+
+	// Measure text with tFont
+	variable tBounds as Rectangle
+	put the image bounds of text "Sample text" with tFont into tBounds
+
+Description:
+	The exact bounds of the text, which will fully enclose each character.
+
+>*Note:* This can be more time-consuming to compute than the layout bounds.
+
+Tags:	Canvas
+*/
+syntax FontOperationTextImageBounds is prefix operator with precedence 4
+	"the" "image" "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
+begin
+	MCCanvasFontMeasureTextImageBounds(mText, mFont, output)
+end syntax
+
+
+/*
+Summary:	Measure text precisely when drawn to a canvas.
+
+mText:	An expression which evaluates to a string.
+mCanvas:	An expression which evaluates to a canvas.
+
+Returns:	The bounding box of <mText> when drawn at point 0,0 with the current font of <mCanvas>. Returns the bounds as a rectangle.
+
+Example:
+	// Set the canvas font
+	set the font of this canvas to font "Arial" at size 18
+
+	variable tBounds as Rectangle
+	put the image bounds of text "Sample text" on this canvas into tBounds
+
+Description:
+The exact bounds of the text, which will fully enclose each character.
+
+>*Note:* This can be more time-consuming to compute than the layout bounds.
+
+Tags:	Canvas
+*/
+syntax FontOperationTextImageBoundsOnCanvas is prefix operator with precedence 4
+	"the" "image" "bounds" "of" "text" <mText: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasFontMeasureTextImageBoundsOnCanvas(mText, mCanvas, output)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3499,6 +3898,8 @@ public foreign handler MCCanvasSetDashes(in pDashes as List, in pCanvas as Canva
 public foreign handler MCCanvasGetDashPhase(in pCanvas as Canvas, out rPhase as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSetDashPhase(in pPhase as CanvasFloat, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	The current paint of a canvas.
 
@@ -3512,13 +3913,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyPaint is prefix operator with precedence 4
 	"the" "paint" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetPaint(mCanvas, output)
 	MCCanvasSetPaint(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current fill rule of a canvas.
@@ -3533,13 +3935,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyFillRule is prefix operator with precedence 4
 	"the" "fill" "rule" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetFillRuleAsString(mCanvas, output)
 	MCCanvasSetFillRuleAsString(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current antialias setting of a canvas.
@@ -3554,13 +3957,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyAntialias is prefix operator with precedence 4
 	"the" "antialias" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetAntialias(mCanvas, output)
 	MCCanvasSetAntialias(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current opacity setting of a canvas.
@@ -3575,13 +3979,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyOpacity is prefix operator with precedence 4
 	"the" "opacity" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetOpacity(mCanvas, output)
 	MCCanvasSetOpacity(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current blend mode of a canvas.
@@ -3596,13 +4001,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyBlendMode is prefix operator with precedence 4
 	"the" "blend" "mode" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetBlendModeAsString(mCanvas, output)
 	MCCanvasSetBlendModeAsString(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current stippled setting of a canvas.
@@ -3618,13 +4024,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyStippled is prefix operator with precedence 4
 	"the" "stippled" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetStippled(mCanvas, output)
 	MCCanvasSetStippled(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current image resize quality of a canvas.
@@ -3639,13 +4046,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyImageResizeQuality is prefix operator with precedence 4
 	"the" "image" "resize" "quality" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetImageResizeQualityAsString(mCanvas, output)
 	MCCanvasSetImageResizeQualityAsString(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current stroke width of a canvas.
@@ -3660,13 +4068,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyStrokeWidth is prefix operator with precedence 4
 	"the" "stroke" "width" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetStrokeWidth(mCanvas, output)
 	MCCanvasSetStrokeWidth(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current font of a canvas.
@@ -3681,13 +4090,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyFont is prefix operator with precedence 4
 	"the" "font" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetFont(mCanvas, output)
 	MCCanvasSetFont(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current join style of a canvas.
@@ -3697,19 +4107,20 @@ mCanvas:		An expression which evaluates to a canvas.
 Description:	Determines how to draw the join between the lines of a path when stroking. Can be one of "bevel", "round", or "miter".
 
 Example:
-// Draw a square with beveled corners.
-set the join style of this canvas to "bevel"
-stroke rectangle path of rectangle [25, 25, 75, 75] on this canvas
+	// Draw a square with beveled corners.
+	set the join style of this canvas to "bevel"
+	stroke rectangle path of rectangle [25, 25, 75, 75] on this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyJoinStyle is prefix operator with precedence 4
 	"the" "join" "style" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetJoinStyleAsString(mCanvas, output)
 	MCCanvasSetJoinStyleAsString(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current cap style of a canvas.
@@ -3719,19 +4130,20 @@ mCanvas:		An expression which evaluates to a canvas.
 Description:	Determines how to draw the end points of a path when stroking. Can be one of "butt", "square", or "round".
 
 Example:
-// Draw a line with rounded ends.
-set the cap style of this canvas to "round"
-stroke line path from point [50,100] to point [100,50] on this canvas
+	// Draw a line with rounded ends.
+	set the cap style of this canvas to "round"
+	stroke line path from point [50,100] to point [100,50] on this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyCapStyle is prefix operator with precedence 4
 	"the" "cap" "style" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetCapStyleAsString(mCanvas, output)
 	MCCanvasSetCapStyleAsString(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current miter limit of a canvas.
@@ -3741,19 +4153,20 @@ mCanvas:		An expression which evaluates to a canvas.
 Description:	The limit of miter joins as a number. Specifies how far miter joins can extend from the meeting point of two lines before a bevel join is used instead.
 
 Example:
-// Draw a right-angled triangle, setting the miter limit so only the right-angle corner is mitered.
-set the miter limit of this canvas to 1.5
-stroke polygon path with points [point [50,50], point [50,100], point [100,50]] on this canvas
+	// Draw a right-angled triangle, setting the miter limit so only the right-angle corner is mitered.
+	set the miter limit of this canvas to 1.5
+	stroke polygon path with points [point [50,50], point [50,100], point [100,50]] on this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyMiterLimit is prefix operator with precedence 4
 	"the" "miter" "limit" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetMiterLimit(mCanvas, output)
 	MCCanvasSetMiterLimit(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current dashes of a canvas.
@@ -3763,19 +4176,20 @@ mCanvas:		An expression which evaluates to a canvas.
 Description:	The dashes as a list of numbers. The dashes specifies a sequence of lengths that alternately represent space and dash lengths when stroking a path.
 
 Example:
-// Draw a rectangle with short, widely spaced dashes
-set the dashes of this canvas to [10, 40]
-stroke rectangle path of rectangle [50, 50, 200, 200] on this canvas
+	// Draw a rectangle with short, widely spaced dashes
+	set the dashes of this canvas to [10, 40]
+	stroke rectangle path of rectangle [50, 50, 200, 200] on this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyDashes is prefix operator with precedence 4
 	"the" "dashes" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetDashes(mCanvas, output)
 	MCCanvasSetDashes(input, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	The current dash phase of a canvas.
@@ -3785,14 +4199,13 @@ mCanvas:		An expression which evaluates to a canvas.
 Description:	The offset into the dashes at which to begin applying the dash pattern.
 
 Example:
-// Draw a rectangle with short, widely spaced dashes, offset to begin from the middle of the dash pattern
-set the dashes of this canvas to [10, 40]
-set the dash phase of this canvas to 25
-stroke rectangle path of rectangle [50, 50, 200, 200] on this canvas
+	// Draw a rectangle with short, widely spaced dashes, offset to begin from the middle of the dash pattern
+	set the dashes of this canvas to [10, 40]
+	set the dash phase of this canvas to 25
+	stroke rectangle path of rectangle [50, 50, 200, 200] on this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasPropertyDashPhase is prefix operator with precedence 4
 	"the" "dash" "phase" "of" <mCanvas:Expression>
 begin
@@ -3834,6 +4247,8 @@ public foreign handler MCCanvasFillText(in pText as String, in pPoint as Point, 
 public foreign handler MCCanvasFillTextAligned(in pText as String, in pAlignment as LCInt, in pRect as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasMeasureText(in pText as String, in pCanvas as Canvas) returns Rectangle binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	Apply a transform to a canvas.
 
@@ -3848,12 +4263,13 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationTransform is statement
 	"transform" <mCanvas: Expression> "by" <mTransform: Expression>
 begin
 	MCCanvasTransform(mCanvas, mTransform)
 end syntax
+
+//////////
 
 /*
 Summary:	Apply a scale to a canvas.
@@ -3869,12 +4285,13 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationScale is statement
 	"scale" <mCanvas: Expression> "by" <mScale: Expression>
 begin
 	MCCanvasScaleWithList(mCanvas, mScale)
 end syntax
+
+//////////
 
 /*
 Summary:	Apply a rotation to a canvas.
@@ -3885,17 +4302,18 @@ mCanvas:		An expression which evaluates to a canvas.
 Description:	Rotates the transform of <mCanvas> by <mRotation> degrees.
 
 Example:
-// Rotate the canvas
-rotate this canvas by 45
+	// Rotate the canvas
+	rotate this canvas by 45
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationRotate is statement
 	"rotate" <mCanvas: Expression> "by" <mRotation: Expression>
 begin
 	MCCanvasRotate(mCanvas, mRotation)
 end syntax
+
+//////////
 
 /*
 Summary:	Apply a translation to a canvas.
@@ -3911,13 +4329,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationTranslate is statement
 	"translate" <mCanvas: Expression> "by" <mTranslation: Expression>
 begin
 //	MCCanvasTranslate(mCanvas, mTranslation[0], mTranslation[1])
 	MCCanvasTranslateWithList(mCanvas, mTranslation)
 end syntax
+
+//////////
 
 /*
 Summary:	Save the current state of a canvas.
@@ -3929,19 +4348,25 @@ Description:	Saves the current properties of <mCanvas> to the top of a stack so 
 Example:
 	// Save the current canvas properties
 	save state of this canvas
-	// Call drawing handler which may change the canvas properties while drawing
-	doDrawButtonOnCanvasAtPoint this canvas, point [50,50]
+
+	// Change various properties of the canvas
+	set the paint of this canvas to solid paint with color [1,1,0,0.5]
+	set the blend mode of this canvas to "color dodge"
+	rotate this canvas by 30
+	set the font of this canvas to font "Helvetica" with size 15
+
 	// Restore the previous canvas properties
 	restore state of this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationSaveState is statement
 	"save" "state" "of" <mCanvas: Expression>
 begin
 	MCCanvasSaveState(mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Restore the previously saved state of a canvas.
@@ -3953,19 +4378,25 @@ Description:	Restores the properties of <mCanvas> from the top of the saved prop
 Example:
 	// Save the current canvas properties
 	save state of this canvas
-	// Call drawing handler which may change the canvas properties while drawing
-	doDrawButtonOnCanvasAtPoint this canvas, point [50,50]
+
+	// Change various properties of the canvas
+	set the paint of this canvas to solid paint with color [1,1,0,0.5]
+	set the blend mode of this canvas to "color dodge"
+	rotate this canvas by 30
+	set the font of this canvas to font "Helvetica" with size 15
+
 	// Restore the previous canvas properties
 	restore state of this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationRestoreState is statement
 	"restore" "state" "of" <mCanvas: Expression>
 begin
 	MCCanvasRestoreState(mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Begin a new drawing layer on a canvas.
@@ -3983,6 +4414,22 @@ Example:
 	fill rectangle path of rectangle path [75,75,125,125] on this canvas
 	end layer on this canvas
 
+Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Draw rectangle with an effect applied
 	begin layer with tEffect on this canvas
 	fill rectangle path of rectangle path [50,50,100,100] on this canvas
@@ -3990,13 +4437,14 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationBeginLayer is statement
 	"begin" "layer" [ "with" <mEffect: Expression> ] "on" <mCanvas: Expression>
 begin
 	MCCanvasBeginLayer(mCanvas)
 	MCCanvasBeginLayerWithEffect(mEffect, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	End the current drawing layer on a canvas.
@@ -4013,6 +4461,22 @@ Example:
 	fill rectangle path of rectangle path [75,75,125,125] on this canvas
 	end layer on this canvas
 
+Example:
+	// Create an effect from an array of properties
+	variable tProps as Array
+	put the empty array into tProps
+
+	put color [0,0,0] into tProps["color"]
+	put "normal" into tProps["blend mode"]
+	put 191 into tProps["opacity"]
+	put 0 into tProps["spread"]
+	put 5 into tProps["size"]
+	put 5 into tProps["distance"]
+	put 60 into tProps["angle"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
 	// Draw rectangle with an effect applied
 	begin layer with tEffect on this canvas
 	fill rectangle path of rectangle path [50,50,100,100] on this canvas
@@ -4020,12 +4484,13 @@ Example:
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationEndLayer is statement
 	"end" "layer" "on" <mCanvas: Expression>
 begin
 	MCCanvasEndLayer(mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Fill a path on a canvas.
@@ -4039,22 +4504,25 @@ Example:
 	// Fill a circle path on the canvas
 	fill circle path centered at point [100,100] with radius 50 on this canvas
 
+Example:
 	// Add a path to the canvas
 	move to point [50,50] on this canvas
 	line to point [50,100] on this canvas
 	line to point [100,100] on this canvas
+
 	// Fill the current canvas path
 	fill this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationFill is statement
 	"fill" [ <mPath: Expression> "on" ] <mCanvas: Expression>
 begin
 	MCCanvasFill(mCanvas)
 	MCCanvasFillPath(mPath, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Stroke a path on a canvas.
@@ -4068,22 +4536,25 @@ Example:
 	// Draw a circle path on the canvas
 	stroke circle path centered at point [100,100] with radius 50 on this canvas
 
+Example:
 	// Add a path to the canvas
 	move to point [50,50] on this canvas
 	line to point [50,100] on this canvas
 	line to point [100,100] on this canvas
+
 	// Stroke the current canvas path
 	stroke this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationStroke is statement
 	"stroke" [ <mPath: Expression> "on" ] <mCanvas: Expression>
 begin
 	MCCanvasStroke(mCanvas)
 	MCCanvasStrokePath(mPath, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Clip to a rectangle on a canvas.
@@ -4096,17 +4567,19 @@ Description:	Modifies the clip of <mCanvas> by intersecting with <mRect>. Drawin
 Example:
 	// Set the canvas clip
 	clip to rectangle [50,50,100,100] on this canvas
+
 	// Fill rectangle path on canvas. only the region of the rectangle that falls within the canvas clip will be rendered.
 	fill rectangle path of rectangle [25, 25, 75, 75] on this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationClip is statement
 	"clip" "to" <mRect: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasClipToRect(mRect, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Add a path to a canvas.
@@ -4120,14 +4593,17 @@ Example:
 	// Add a path to the canvas
 	add rectangle path of rectangle [0,0,50,100] to this canvas
 
+	// Fill the canvas path
+	fill this canvas
 Tags:	Canvas
 */
-
 syntax CanvasOperationAddPath is statement
 	"add" <mPath: Expression> "to" <mCanvas: Expression>
 begin
 	MCCanvasAddPath(mPath, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Draw an image on a canvas.
@@ -4140,20 +4616,31 @@ mDestRect:	An expression which evaluates to a rectangle.
 Description:	Renders from <mSrcRect> (or the bounds, if not specified) of <mImage> into <mDestRect> of <mCanvas>. The canvas image resize quality determines how the image is scaled if necessary.
 
 Example:
-	// Draw an image on the canvas
+	// Load an image from a file
+	variable tImage as Image
+	put image from file "images/logo.png" into tImage
+
+	// Draw the image on the canvas
 	draw tImage into rectangle [0,0,the width of tImage,the height of tImage] of this canvas
-	// Draw a section of an image
+
+Example:
+	// Load an image from a file
+	variable tImage as Image
+	put image from file "images/logo.png" into tImage
+
+	// Draw a section of the image
 	draw from rectangle[0,0,16,16] of tImage into rectangle [0,0,16,16] of this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationDrawImage is statement
 	"draw" [ "from" <mSrcRect: Expression> "of" ] <mImage: Expression> "into" <mDestRect: Expression> "of" <mCanvas: Expression>
 begin
 	MCCanvasDrawImage(mImage, mDestRect, mCanvas)
 	MCCanvasDrawRectOfImage(mSrcRect, mImage, mDestRect, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Move to a point on a canvas.
@@ -4167,14 +4654,20 @@ Example:
 	// move to a point on the canvas
 	move to point [0,50] on this canvas
 
+	// add a line to the canvas path
+	line to point [50,50] on this canvas
+
+	// stroke the canvas path
+	stroke this canvas
 Tags:	Canvas
 */
-
 syntax CanvasOperationMoveTo is statement
 	"move" "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasMoveTo(mPoint, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Add a line to a canvas.
@@ -4185,17 +4678,24 @@ mPoint:	An expression which evaluates to a point.
 Description:	Adds a line to <mPoint> on the current path of <mCanvas>
 
 Example:
-	// add line to the canvas
+	// move to a point on the canvas
+	move to point [0,50] on this canvas
+
+	// add a line to the canvas path
 	line to point [50,50] on this canvas
+
+	// stroke the canvas path
+	stroke this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationLineTo is statement
 	"line" "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasLineTo(mPoint, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Add a curve to a canvas.
@@ -4209,14 +4709,18 @@ Description:	Adds a curve through 1 or 2 points to <mPoint> on the current path 
 Example:
 	// Begin a new subpath on the canvas
 	move to point [25, 50] on this canvas
+
 	// Continue path with a curve through 25,100 to 50,100
 	curve through [25,100] to [50,100] on this canvas
+
 	// Continue path with a curve through 50,75 then 50,50 to 50,100
 	curve through [50,75] then [50,50] to [25,50] on this canvas
 
+	// stroke the canvas path
+	stroke this canvas
+
 Tags:	Canvas
 */
-
 syntax CanvasOperationCurveThrough is statement
 	"curve" "through" <mThroughA: Expression> [ "then" <mThroughB: Expression> ] "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
@@ -4224,11 +4728,35 @@ begin
 	MCCanvasCurveThroughPoints(mThroughA, mThroughB, mPoint, mCanvas)
 end syntax
 
+/*
+Summary:	Closes the current subpath of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	Adds a line from the previous point to the start of current subpath, signaling the end of the subpath.
+
+Example:
+	// Begin a new subpath on the canvas
+	move to point [25, 50] on this canvas
+
+	// Continue path with a curve through 25,100 to 50,100
+	curve through [25,100] to [50,100] on this canvas
+
+	// Close the path
+	close path on this canvas
+
+	// stroke the canvas path
+	stroke this canvas
+
+Tags:	Canvas
+*/
 syntax CanvasOperationClosePath is statement
 	"close" "path" "on" <mCanvas: Expression>
 begin
 	MCCanvasClosePath(mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Render filled text on a canvas.
@@ -4242,17 +4770,19 @@ Description:	Renders <mText> at <mPoint> on <mCanvas> using the current font set
 Example:
 	// Set the canvas font
 	set the font of this canvas to font "Helvetica"
+
 	// Draw the text
 	fill text "Widget Label" at point [50,50] on this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationFillText is statement
 	"fill" "text" <mText: Expression> "at" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasFillText(mText, mPoint, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Render filled text on a canvas.
@@ -4266,17 +4796,19 @@ Description:	Renders <mText> aligned to the specified sides of <mRect> on <mCanv
 Example:
 	// Set the canvas font
 	set the font of this canvas to font "Helvetica"
+
 	// Draw the text in the top-left corner of the target rectangle
 	fill text "Widget Label" at top left of rectangle [50, 100, 250, 200] on this canvas
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationFillTextAligned is statement
 	"fill" "text" <mText: Expression> "at" <mAlignment: CanvasTextAlignment> "of" <mRect: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasFillTextAligned(mText, mAlignment, mRect, mCanvas)
 end syntax
+
+//////////
 
 /*
 Summary:	Measure text when drawn to a canvas.
@@ -4288,14 +4820,12 @@ Returns:	The bounding box of <mText> when drawn at point 0,0 with the current fo
 
 Example:
 	// Measure text drawn on the canvas
+	variable tBounds as Rectangle
 	measure "Sample text" on this canvas
 	put the result into tBounds
-	put the width of tBounds into tWidth
-	put the height of tBounds into tHeight
 
 Tags:	Canvas
 */
-
 syntax CanvasOperationMeasureText is statement
 	"measure" <mText: Expression> "on" <mCanvas: Expression>
 begin
@@ -4311,6 +4841,8 @@ public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rD
 public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as LCUInt) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out rWidth as LCUInt) returns nothing binds to "<builtin>"
 
+//////////
+
 /*
 Summary:	The canvas used when drawing a widget.
 
@@ -4319,17 +4851,18 @@ Returns:	The target canvas for widget drawing operations.
 Example:
 	// Draw the label centered on the rect of the widget
 	set the paint of this canvas to solid paint with color [1,1,1]
-	fill text tLabel at center of my rectangle on this canvas
+	fill text "Start" at center of my rectangle on this canvas
 
 Tags:	Canvas
 */
-
 syntax ThisCanvas is expression
     "this" "canvas"
 begin
     MCCanvasThisCanvas(output)
     MCCanvasPretendToAssignThisCanvas(input)
 end syntax
+
+//////////
 
 syntax NewCanvasWithSize is prefix operator with precedence 1
   "a" "new" "canvas" "with" "size" <Size: Expression>

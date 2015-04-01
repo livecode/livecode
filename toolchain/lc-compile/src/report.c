@@ -174,6 +174,8 @@ DEFINE_ERROR_I(UnableToFindImportedModule, "Unable to find imported module '%s'"
 DEFINE_ERROR_S(MalformedToken, "Illegal token '%s'");
 DEFINE_ERROR_S(MalformedEscapedString, "Illegal escape in string '%s'");
 DEFINE_ERROR(MalformedSyntax, "Syntax error");
+DEFINE_ERROR(IntegerLiteralOutOfRange, "Integer literal too big");
+
 DEFINE_ERROR_I(IdentifierPreviouslyDeclared, "Identifier '%s' already declared");
 DEFINE_ERROR_I(IdentifierNotDeclared, "Identifier '%s' not declared");
 DEFINE_ERROR_I(InvalidNameForSyntaxMarkVariable, "'%s' is not a valid name for a mark variable");
@@ -259,8 +261,8 @@ DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced w
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
 DEFINE_WARNING_I(UnsuitableNameForDefinition, "All-lowercase name '%s' may cause future syntax error")
 DEFINE_WARNING(UsingAsForHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns <Type>'")
-DEFINE_WARNING(UsingAsUndefinedForVoidHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns nothing'")
-DEFINE_WARNING(UndefinedTypeDeprecated, "Deprecated: 'undefined' should not be used as a type")
+DEFINE_WARNING(UndefinedConstantDeprecated, "Deprecated keyword: use 'nothing' rather than 'undefined'");
+DEFINE_WARNING_S(DeprecatedSyntax, "Deprecated syntax: %s")
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -56,6 +56,25 @@ bool MCImageParseMetadata(MCExecContext& ctxt, MCArrayRef p_array, MCImageMetada
     return true;
 }
 
+#ifdef LEGACY_EXEC
+// MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
+bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata)
+{
+    MCVariableValue *v = new MCVariableValue;
+	v -> assign_new_array(1);
+    
+    if (p_metadata.has_density)
+    {
+        ep . setnvalue(p_metadata.density);
+        v -> store_element(ep, "density");
+    }
+    
+	ep.setarray(v, True);
+    
+    return true;
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////
 
 bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBitmap *&r_compressed)
@@ -395,7 +414,7 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep)
+bool MCImageGetRepForReferenceWithStackContext(MCStringRef p_reference, MCStack *p_stack, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
@@ -404,44 +423,55 @@ bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, 
 	
     MCAutoStringRef t_prefixless;
 	// skip over any file: / binfile: url prefix
-	if (MCStringBeginsWith(p_filename, MCSTR("file:"), kMCStringOptionCompareCaseless))
+	if (MCStringBeginsWith(p_reference, MCSTR("file:"), kMCStringOptionCompareCaseless))
     {
-		MCStringCopySubstring(p_filename, MCRangeMake(5, UINDEX_MAX), &t_prefixless);
-        p_filename = *t_prefixless;
+		MCStringCopySubstring(p_reference, MCRangeMake(5, UINDEX_MAX), &t_prefixless);
+        p_reference = *t_prefixless;
     }
-	else if (MCStringBeginsWith(p_filename, MCSTR("binfile:"), kMCStringOptionCompareCaseless))
+	else if (MCStringBeginsWith(p_reference, MCSTR("binfile:"), kMCStringOptionCompareCaseless))
     {
-		MCStringCopySubstring(p_filename, MCRangeMake(8, UINDEX_MAX), &t_prefixless);
-        p_filename = *t_prefixless;
+		MCStringCopySubstring(p_reference, MCRangeMake(8, UINDEX_MAX), &t_prefixless);
+        p_reference = *t_prefixless;
     }
 
-	if (MCPathIsRemoteURL(p_filename))
-		t_success = MCImageRepGetReferenced(p_filename, t_rep);
+	if (MCPathIsRemoteURL(p_reference))
+		t_success = MCImageRepGetReferenced(p_reference, t_rep);
+	else
+		t_success = MCImageGetRepForFileWithStackContext(p_reference, p_stack, t_rep);
+	
+	if (t_success)
+		r_rep = t_rep;
+	
+	return t_success;
+}
+
+bool MCImageGetRepForFileWithStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCImageRep *t_rep;
+	t_rep = nil;
+	
+	// with local filenames, first check if absolute path
+	if (MCPathIsAbsolute(p_filename))
+		t_success = MCImageRepGetDensityMapped(p_filename, t_rep);
 	else
 	{
-		// with local filenames, first check if absolute path
-		if (MCPathIsAbsolute(p_filename))
-			t_success = MCImageRepGetDensityMapped(p_filename, t_rep);
-		else
+		// else try to resolve from stack file location
+		MCAutoStringRef t_path;
+		t_success = p_stack->resolve_relative_path(p_filename, &t_path);
+		if (t_success)
+			t_success = MCImageRepGetDensityMapped(*t_path, t_rep);
+		
+		// else try to resolve from current folder
+		if (t_success && t_rep == nil)
 		{
-			// else try to resolve from stack file location
-			MCAutoStringRef t_path;
-			t_success = p_stack->resolve_relative_path(p_filename, &t_path);
+			MCAutoStringRef t_resolved;
+			t_success = MCS_resolvepath(p_filename, &t_resolved);
 			if (t_success)
-				t_success = MCImageRepGetDensityMapped(*t_path, t_rep);
-			
-			// else try to resolve from current folder
-			if (t_success && t_rep == nil)
-			{
-                MCAutoStringRef t_resolved;
-				t_success = MCS_resolvepath(p_filename, &t_resolved);
-				if (t_success)
-					t_success = MCImageRepGetDensityMapped(*t_resolved, t_rep);
-			}
+				t_success = MCImageRepGetDensityMapped(*t_resolved, t_rep);
 		}
-        // AL-2014-01-17: [[ Bug 11684 ]] If image file isn't found, return false
-        if (t_success)
-            t_success = t_rep != nil;
 	}
 	
 	if (t_success)
@@ -450,7 +480,7 @@ bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, 
 	return t_success;
 }
 
-bool MCImageGetFileRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep)
+bool MCImageGetRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep)
 {
 	MCAutoStringRef t_path;
 	if (!MCResourceResolvePath(p_resource_file, &t_path))

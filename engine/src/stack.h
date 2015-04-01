@@ -204,6 +204,7 @@ protected:
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask for the stack.
 	MCWindowShape *m_window_shape;
+	MCSysBitmapHandle m_window_buffer;
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -329,6 +330,10 @@ public:
 	// MW-2011-09-20: [[ Collision ]] Compute shape of stack.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
+	
+	// IM-2015-02-23: [[ WidgetPopup ]] Return true if the contents of this stack are competely opaque.
+	// By default, stacks are opaque.
+	virtual bool isopaque(void) { return true; }
 	
 	// MW-2011-08-17: [[ Redraw ]] Render the stack into the given context 'dirty' is the
 	//   hull of the clipping region.
@@ -855,6 +860,9 @@ public:
 	//   invoked.
 	void updatewindow(MCRegionRef region);
 	
+	bool configure_window_buffer();
+	void release_window_buffer();
+
 	// MW-2012-08-06: [[ Fibers ]] Ensure the tilecache is updated to reflect the current
 	//   frame.
 	void updatetilecache(void);
@@ -935,6 +943,7 @@ public:
 	
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
+
 #endif // _WINDOWS_DESKTOP specific
 #elif defined(_MAC_DESKTOP)
 #elif defined(_LINUX_DESKTOP)

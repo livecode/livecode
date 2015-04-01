@@ -33,7 +33,7 @@ handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as Strin
 	put MCHandlerTryToInvokeWithList(tHandler, tArgList, tResult) into tMaybeError
 
 	variable tHasError as Boolean
-	put tMaybeError is defined into tHasError
+	put tMaybeError is not nothing into tHasError
 
 	if tHasError then
 		test diagnostic tMaybeError

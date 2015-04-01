@@ -158,7 +158,8 @@ struct SyntaxRule
     SyntaxNodeRef expr;
     SyntaxMethodRef methods;
     long *mapping;
-
+    const char *deprecation_message;
+    
     SyntaxMethodRef current_method;
 };
 
@@ -305,6 +306,12 @@ void EndSyntaxRule(void)
     t_group -> rules = s_rule;
     
     s_rule = NULL;
+}
+
+void DeprecateSyntaxRule(const char *p_message)
+{
+	assert(s_rule != NULL);
+    s_rule -> deprecation_message = p_message;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1389,7 +1396,10 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
                     fprintf(s_output, "EXPRESSION'%s(UndefinedPosition)", p_node -> marks[i] . value -> boolean_mark . value == 0 ? "false" : "true");
                     break;
                 case kSyntaxNodeKindIntegerMark:
-                    fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    if (p_node -> marks[i] . value -> integer_mark . value < 0)
+                        fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    else
+                        fprintf(s_output, "EXPRESSION'unsignedinteger(UndefinedPosition, %lu)", (unsigned long)p_node -> marks[i] . value -> integer_mark . value);
                     break;
                 case kSyntaxNodeKindRealMark:
                     fprintf(s_output, "EXPRESSION'real(UndefinedPosition, Mark%ldValue)", p_node -> marks[i] . index);
@@ -1837,6 +1847,8 @@ void GenerateSyntaxRules(void)
         
         t_group -> index = t_index;
         GenerateSyntaxRule(&t_index, t_rule -> expr, t_rule -> kind, t_rule);
+        if (t_rule -> deprecation_message != NULL)
+            fprintf(s_output, "    Warning_DeprecatedSyntax(Position, \"%s\")\n", t_rule -> deprecation_message);
         
         if (t_rule -> kind == kSyntaxRuleKindPhrase)
         {

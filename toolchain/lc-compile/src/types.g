@@ -28,7 +28,7 @@
     STATEMENT
     EXPRESSION EXPRESSIONLIST
     INVOKELIST INVOKEINFO INVOKESIGNATURE INVOKEMETHODTYPE INVOKEMETHODLIST
-    SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM
+    SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM SYNTAXWARNING
     ID IDLIST OPTIONALID
     INTLIST
     NAMELIST
@@ -75,7 +75,7 @@
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
     property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
     event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)
-    syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
+    syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Warnings: SYNTAXWARNING, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
     nil
 
 'type' SIGNATURE
@@ -160,6 +160,7 @@
     true(Position: POS)
     false(Position: POS)
     integer(Position: POS, Value: INT)
+    unsignedinteger(Position: POS, Value: INT)
     real(Position: POS, Value: DOUBLE)
     string(Position: POS, Value: STRING)
     slot(Position: POS, Name: ID)
@@ -191,6 +192,10 @@
     markedrule(Position: POS, Variable: ID, Name: ID)
     rule(Position: POS, Name: ID)
     mark(Position: POS, Variable: ID, Value: SYNTAXCONSTANT)
+
+'type' SYNTAXWARNING
+    deprecated(Message: STRING)
+    nil
 
 'type' SYNTAXCLASS
     phrase

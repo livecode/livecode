@@ -37,6 +37,15 @@ extern "C" int initialise_weak_link_gobject();
 extern void MCCStringFree(char *p_string);
 extern bool MCCStringFromUnicodeSubstring(const unichar_t *p_chars, uint32_t p_char_count, char*& r_string);
 
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCGRectangle MCGRectangleFromPangoRectangle(const PangoRectangle &p_rect)
+{
+	return MCGRectangleMake(p_rect.x / (MCGFloat)PANGO_SCALE, p_rect.y / (MCGFloat)PANGO_SCALE, p_rect.width / (MCGFloat)PANGO_SCALE, p_rect.height / (MCGFloat)PANGO_SCALE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to make text rendering thread safe, by using pthread TLS to ensure we have seperate panog objects for each thread.
 //  This should probably be moved to a central thread library at some point, which will also help with clean up (we only clean up the main thread at the moment).
 static pthread_key_t /* PangoFontMap * */ s_font_map_key = 0;
@@ -225,10 +234,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		pango_layout_line_get_extents(t_line, NULL, &t_pbounds);
 		
 		MCGRectangle t_float_text_bounds;
-        t_float_text_bounds . origin . x = t_pbounds . x / PANGO_SCALE;
-        t_float_text_bounds . origin . y = t_pbounds . y / PANGO_SCALE;
-        t_float_text_bounds . size . width = t_pbounds . width / PANGO_SCALE;
-        t_float_text_bounds . size . height = t_pbounds . height / PANGO_SCALE;		
+		t_float_text_bounds = MCGRectangleFromPangoRectangle(t_pbounds);
 		
 		MCGRectangle t_device_clip;
 		t_device_clip = MCGContextGetDeviceClipBounds(self);
@@ -319,13 +325,65 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 		pango_layout_set_font_description(t_layout, (PangoFontDescription *) p_font . fid);
 		
 		PangoRectangle t_bounds;
-		pango_layout_get_pixel_extents(t_layout, NULL, &t_bounds);
-		t_width = t_bounds . width;		
+		pango_layout_get_extents(t_layout, NULL, &t_bounds);
+		t_width = t_bounds . width / (MCGFloat)PANGO_SCALE;
 	}
 	
 	MCCStringFree(t_text);
 
 	return t_width;
+}
+
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds)
+{
+	// MW-2013-12-19: [[ Bug 11559 ]] Do nothing if no text support.
+	if (!s_has_text_support)
+		return false;
+	
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = lnx_pango_objects_intialize();
+	
+	PangoLayout *t_layout;
+	if (t_success)
+	{
+		t_layout = (PangoLayout *)pthread_getspecific(s_layout_key);
+		t_success = t_layout != NULL;
+	}
+	
+	char *t_text;
+	t_text = nil;
+	if (t_success)
+		t_success = MCCStringFromUnicodeSubstring(p_text, p_length / 2, t_text);
+	
+	// Get extents of first line in order to get correct offset to baseline
+	PangoLayoutLine *t_line;
+	if (t_success)
+	{
+		pango_layout_set_text(t_layout, t_text, -1);
+		pango_layout_set_font_description(t_layout, (PangoFontDescription *) p_font . fid);
+		
+		extern PangoLayoutLine *(*pango_layout_get_line_readonly_ptr)(PangoLayout *, int);
+		if (pango_layout_get_line_readonly_ptr != nil)
+			t_line = pango_layout_get_line_readonly_ptr(t_layout, 0);
+		else
+			t_line = pango_layout_get_line(t_layout, 0);
+		t_success = t_line != nil;
+	}
+	
+	if (t_success)
+	{
+		PangoRectangle t_layout_bounds, t_image_bounds;
+		pango_layout_line_get_extents(t_line, &t_image_bounds, &t_layout_bounds);
+		
+		r_bounds = MCGRectangleFromPangoRectangle(t_image_bounds);
+	}
+	
+	MCCStringFree(t_text);
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

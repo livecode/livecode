@@ -101,6 +101,7 @@ MCPropertyInfo MCImage::kProperties[] =
 	DEFINE_RO_OBJ_ENUM_PROPERTY(P_PAINT_COMPRESSION, InterfaceImagePaintCompression, MCImage, PaintCompression)
 	DEFINE_RW_OBJ_PROPERTY(P_ANGLE, Int16, MCImage, Angle)
     DEFINE_RW_OBJ_PROPERTY(P_CENTER_RECTANGLE, OptionalRectangle, MCImage, CenterRectangle)
+    DEFINE_RO_OBJ_RECORD_PROPERTY(P_METADATA, MCImage, Metadata)
 
 };
 
@@ -144,6 +145,7 @@ MCImage::MCImage()
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
     m_animate_posted = false;
+    
 }
 
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
@@ -951,6 +953,17 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
             else
                 ep . clear();
         break;
+        // MERG-2014-09-18: [[ ImageMetadata ]] return the image metadata as an array
+    case P_METADATA:
+        if (m_rep != nil)
+        {
+            MCImageMetadata t_metadata;
+            m_rep->GetMetadata(t_metadata);
+            MCImageGetMetadata(ep, t_metadata);
+        }
+        else
+            ep . clear();
+        break;
 #endif /* MCImage::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
@@ -1152,7 +1165,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			MCPoint t_hotspot;
 			char *t_name = nil;
 			IO_handle t_stream = nil;
-
+            
 			if (data.getlength() == 0)
 			{
 				// MERG-2013-06-24: [[ Bug 10977 ]] If we have a filename then setting the
@@ -1177,7 +1190,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 						t_success = setcompressedbitmap(t_compressed);
 					else if (t_bitmap != nil)
 						t_success = setbitmap(t_bitmap, 1.0);
-				}
+                }
 
 				MCImageFreeBitmap(t_bitmap);
 				MCImageFreeCompressedBitmap(t_compressed);
@@ -1235,7 +1248,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 				}
 
 				setbitmap(t_copy, 1.0);
-			}
+            }
 
 			MCImageFreeBitmap(t_copy);
 
@@ -1303,7 +1316,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			dirty = True;
 		}
 		break;
-	case P_RESIZE_QUALITY:
+    case P_RESIZE_QUALITY:
 		if (data == "best")
 			resizequality = INTERPOLATION_BICUBIC;
 		else if (data == "good")
@@ -2439,7 +2452,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 
 	if (t_success)
 	{
-		t_success = MCImageGetFileRepForStackContext(p_filename, getstack(), t_rep);
+		t_success = MCImageGetRepForReferenceWithStackContext(p_filename, getstack(), t_rep);
 
 		// MM-2013-11-27: [[ Bug 11522 ]] If we can't get the image rep, make sure we still store the filename.
 		if (t_success)

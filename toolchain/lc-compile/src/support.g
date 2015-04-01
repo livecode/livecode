@@ -40,6 +40,8 @@
     UnescapeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
+    IsNameEqualToName
+    IsNameNotEqualToName
     IsNameEqualToString
     IsStringEqualToString
 
@@ -87,6 +89,7 @@
     BeginRightBinaryOperatorSyntaxRule
     BeginNeutralBinaryOperatorSyntaxRule
     EndSyntaxRule
+    DeprecateSyntaxRule
     BeginSyntaxGrammar
     EndSyntaxGrammar
     ConcatenateSyntaxGrammar
@@ -210,6 +213,7 @@
     EmitTrueConstant
     EmitFalseConstant
     EmitIntegerConstant
+    EmitUnsignedIntegerConstant
     EmitRealConstant
     EmitStringConstant
     EmitBeginListConstant
@@ -301,8 +305,8 @@
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_UsingAsForHandlerReturnTypeDeprecated
-    Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated
-    Warning_UndefinedTypeDeprecated
+    Warning_UndefinedConstantDeprecated
+    Warning_DeprecatedSyntax
 
 --------------------------------------------------------------------------------
 
@@ -331,7 +335,7 @@
 'action' InitializeLiterals()
 'action' FinalizeLiterals()
 
-'action' MakeIntegerLiteral(Token: STRING -> Literal: INT)
+'condition' MakeIntegerLiteral(Token: STRING -> Literal: INT)
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
@@ -340,6 +344,8 @@
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
 'condition' IsStringEqualToString(STRING, STRING)
+'condition' IsNameEqualToName(NAME, NAME)
+'condition' IsNameNotEqualToName(NAME, NAME)
 
 'condition' IsNameSuitableForDefinition(NAME)
 'condition' IsStringSuitableForKeyword(STRING)
@@ -399,6 +405,8 @@
 'action' BeginRightBinaryOperatorSyntaxRule(NAME, NAME, INT)
 'action' BeginNeutralBinaryOperatorSyntaxRule(NAME, NAME, INT)
 'action' EndSyntaxRule()
+
+'action' DeprecateSyntaxRule(Message: STRING)
 
 'action' BeginSyntaxGrammar()
 'action' EndSyntaxGrammar()
@@ -550,6 +558,7 @@
 'action' EmitTrueConstant(-> ConstIndex: INT)
 'action' EmitFalseConstant(-> ConstIndex: INT)
 'action' EmitIntegerConstant(Value: INT -> ConstIndex: INT)
+'action' EmitUnsignedIntegerConstant(Value: INT -> ConstIndex: INT)
 'action' EmitRealConstant(Value: DOUBLE -> ConstIndex: INT)
 'action' EmitStringConstant(Value: STRING -> ConstIndex: INT)
 'action' EmitBeginListConstant()
@@ -658,7 +667,7 @@
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
 'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)
-'action' Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated(Position: POS)
-'action' Warning_UndefinedTypeDeprecated(Position: POS)
+'action' Warning_UndefinedConstantDeprecated(Position: POS)
+'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 
 --------------------------------------------------------------------------------

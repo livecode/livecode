@@ -684,6 +684,27 @@ MCGRectangle MCGRectangleIntersection(const MCGRectangle &p_rect_1, const MCGRec
 	return t_intersection;
 }
 
+MCGRectangle MCGRectangleUnion(const MCGRectangle &p_rect_1, const MCGRectangle &p_rect_2)
+{
+	if (MCGRectangleIsEmpty(p_rect_1))
+		return p_rect_2;
+	else if (MCGRectangleIsEmpty(p_rect_2))
+		return p_rect_1;
+	
+	MCGRectangle t_union;
+	t_union . origin . x = MCMin(p_rect_1 . origin . x, p_rect_2 . origin . x);
+	t_union . origin . y = MCMin(p_rect_1 . origin . y, p_rect_2 . origin . y);
+	
+	MCGFloat t_right, t_bottom;
+	t_right = MCMax(p_rect_1 . origin . x + p_rect_1 . size . width, p_rect_2 . origin . x + p_rect_2 . size . width);
+	t_bottom = MCMax(p_rect_1 . origin . y + p_rect_1 . size . height, p_rect_2 . origin . y + p_rect_2 . size . height);
+	
+	t_union . size . width = t_right - t_union . origin . x;
+	t_union . size . height = t_bottom - t_union . origin . y;
+	
+	return t_union;
+}
+
 MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &p_rect_1, const MCGIntegerRectangle &p_rect_2)
 {
 	int32_t t_left, t_top;

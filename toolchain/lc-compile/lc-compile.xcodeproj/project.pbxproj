@@ -926,6 +926,7 @@
 				"$(SRCROOT)/../../libscript/src/foreign.mlc",
 				"$(SRCROOT)/../../libscript/libstdscript-modules.list",
 				"$(SRCROOT)/../../libscript/src/unittest.mlc",
+				"$(SRCROOT)/../../libscript/src/type.mlc",
 			);
 			name = Bootstrap;
 			outputPaths = (

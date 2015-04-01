@@ -90,6 +90,7 @@ public:
     bool handlesMouseDown() const;
     bool handlesMouseUp() const;
     bool handlesMouseCancel() const;
+    bool handlesMouseScroll() const;
     bool handlesKeyPress() const;
     bool handlesActionKeyPress() const;
     bool handlesTouches() const;
@@ -233,5 +234,12 @@ private:
     // Implemented by the platform-specific native layers: creates a new layer
     MCNativeLayer* createNativeLayer();
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo;
+extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif

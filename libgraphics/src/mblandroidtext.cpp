@@ -400,3 +400,41 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds)
+{
+	//if (!MCGContextIsValid(self))
+	//	return 0.0;
+	
+	SkRect t_bounds;
+	t_bounds = SkRect::MakeEmpty();
+	
+	SkPaint t_paint;
+	t_paint . setTextSize(p_font . size);
+	t_paint . setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+	
+	MCGlyphRun *t_glyph_runs;
+	uindex_t t_count;
+	
+	MCGPoint t_dummy = MCGPointMake(0,0);
+	shape(p_text, p_length/2, t_dummy, false, p_font, t_glyph_runs, t_count);
+	
+	for (uindex_t i = 0; i < t_count; i++)
+	{
+		SkRect t_glyph_bounds;
+		t_paint . setTypeface(t_glyph_runs[i] . typeface);
+		t_paint . measureText(&(t_glyph_runs[i] . glyphs[0]), t_glyph_runs[i] . count * 2, &t_glyph_bounds);
+		
+		if (!t_bounds.isEmpty())
+			t_glyph_bounds.offsetTo(t_bounds.right(), t_glyph_bounds.y());
+		t_bounds.join(t_glyph_bounds);
+		
+		MCGlyphRunDestroy(t_glyph_runs[i]);
+	}
+	
+	MCMemoryDeleteArray(t_glyph_runs);
+	
+	r_bounds = MCGRectangleFromSkRect(t_bounds);
+	return true;
+}
+

@@ -177,6 +177,7 @@ protected:
 		bool has_zoom_widget_changed : 1;
 		bool has_size_widget_changed : 1;
 		bool has_shadow_changed : 1;
+		bool is_opaque_changed : 1;
 		bool has_modified_mark_changed : 1;
 		bool use_live_resizing_changed : 1;
         
@@ -202,6 +203,7 @@ protected:
 		bool m_has_zoom_widget : 1;
 		bool m_has_size_widget : 1;
 		bool m_has_shadow : 1;
+		bool m_is_opaque : 1;
 		bool m_has_modified_mark : 1;
 		bool m_use_live_resizing : 1;
         bool m_hides_on_suspend : 1;

@@ -1177,6 +1177,8 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 	SkPath::Verb t_verb;
 	SkPoint t_sk_points[4];
 	
+	// IM-2015-03-20: [[ Bug 15035 ]] The first point returned by SkPath::Iter::next() is
+	//  always the last moveTo point; the points for the current verb start at index 1.
 	while (t_success && (t_verb = t_iter.next(t_sk_points)) != SkPath::kDone_Verb)
 	{
 		switch(t_verb)
@@ -1193,22 +1195,22 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 					continue;
 				
 				t_command = kMCGPathCommandLineTo;
-				t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
+				t_points[0] = MCGPointFromSkPoint(t_sk_points[1]);
 				t_point_count = 1;
 				break;
 				
 			case SkPath::kQuad_Verb:
 				t_command = kMCGPathCommandQuadCurveTo;
-				t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
-				t_points[1] = MCGPointFromSkPoint(t_sk_points[1]);
+				t_points[0] = MCGPointFromSkPoint(t_sk_points[1]);
+				t_points[1] = MCGPointFromSkPoint(t_sk_points[2]);
 				t_point_count = 2;
 				break;
 				
 			case SkPath::kCubic_Verb:
 				t_command = kMCGPathCommandCubicCurveTo;
-				t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
-				t_points[1] = MCGPointFromSkPoint(t_sk_points[1]);
-				t_points[2] = MCGPointFromSkPoint(t_sk_points[2]);
+				t_points[0] = MCGPointFromSkPoint(t_sk_points[1]);
+				t_points[1] = MCGPointFromSkPoint(t_sk_points[2]);
+				t_points[2] = MCGPointFromSkPoint(t_sk_points[3]);
 				t_point_count = 3;
 				break;
 				
