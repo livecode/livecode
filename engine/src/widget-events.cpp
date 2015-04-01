@@ -193,10 +193,6 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
         
         if (m_mouse_grab == p_widget)
         {
-            // Update the mouse position
-            m_mouse_x = p_x;
-            m_mouse_y = p_y;
-            
             mouseMove(p_widget, p_x, p_y);
             return true;
         }
@@ -214,10 +210,6 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     }
     else if (t_pos_changed)
     {
-        // Update the mouse position
-        m_mouse_x = p_x;
-        m_mouse_y = p_y;
-        
         // Mouse has moved within this widget
         mouseMove(p_widget, p_x, p_y);
     }
