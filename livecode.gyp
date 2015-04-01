@@ -20,6 +20,9 @@
 				# Server engine
 				'engine/engine.gyp:server',
 				
+				# The revsecurity library is an output and not an intermediate product
+				'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
+				
 				# Externals
 				'revbrowser/revbrowser.gyp:revbrowser',
 				'revbrowser/revbrowser.gyp:revbrowser-cefprocess',
