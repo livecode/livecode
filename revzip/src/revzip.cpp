@@ -1285,7 +1285,7 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 				const char *t_converted_name;
                 int t_success;
 
-				if (t_stat.bitflags && ZIP_UTF8_FLAG)
+				if (t_stat.bitflags & ZIP_UTF8_FLAG)
 				{
                     t_success = EXTERNAL_SUCCESS;
 					t_converted_name = t_stat.name;
