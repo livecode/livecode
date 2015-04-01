@@ -72,6 +72,12 @@
 						],
 					},
 				],
+				[
+					'mobile != 0',
+					{
+						'type': 'none',
+					},
+				],
 			],
 			
 			'link_settings':

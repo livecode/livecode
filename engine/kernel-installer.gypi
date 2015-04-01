@@ -26,6 +26,16 @@
 			[
 				'<@(engine_installer_mode_source_files)',
 			],
+			
+			'conditions':
+			[
+				[
+					'mobile != 0',
+					{
+						'type': 'none',
+					},
+				],
+			],
 		},
 	],
 }

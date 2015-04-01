@@ -40,6 +40,19 @@
 				],
 			},
 			
+			'conditions':
+			[
+				[
+					'OS == "mac" or OS == "win"',
+					{
+						'sources!':
+						[
+							'src/unxsupport.cpp',
+						],
+					},
+				],
+			],
+			
 			'link_settings':
 			{
 				'conditions':
@@ -47,7 +60,6 @@
 					[
 						'OS == "mac"',
 						{
-					
 							'libraries':
 							[
 								'$(SDKROOT)/System/Library/Frameworks/CoreServices.framework',

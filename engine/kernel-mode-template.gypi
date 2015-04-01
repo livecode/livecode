@@ -71,26 +71,4 @@
 			],
 		},
 	],
-
-	'link_settings':
-	{
-		'conditions':
-		[
-			[
-				'OS == "mac" or OS == "ios"',
-				{
-					'libraries':
-					[
-						'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
-						'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
-						'$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
-						'$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
-						'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
-						'$(SDKROOT)/System/Library/Frameworks/Security.framework',
-						'$(SDKROOT)/System/Library/Frameworks/SystemConfiguration.framework',
-					],
-				},
-			],
-		],
-	},
 }

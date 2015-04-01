@@ -64,6 +64,23 @@
 					'include',
 				],
 			},
+			
+			'link_settings':
+			{
+				'conditions':
+				[
+					[
+						'OS == "mac" or OS == "ios"',
+						{
+							'libraries':
+							[
+								'$(SDKROOT)/System/Library/Frameworks/CoreGraphics.framework',
+								'$(SDKROOT)/System/Library/Frameworks/CoreText.framework',
+							],
+						},
+					],
+				],
+			},
 		},
 	],
 }

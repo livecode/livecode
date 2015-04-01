@@ -1,4 +1,9 @@
 {
+	'variables':
+	{
+		'mobile': 0,
+	},
+	
 	'conditions':
 	[
 		[
@@ -25,6 +30,15 @@
 				'includes':
 				[
 					'win32.gypi',
+				],
+			},
+		],
+		[
+			'OS == "ios"',
+			{
+				'includes':
+				[
+					'ios.gypi',
 				],
 			},
 		],

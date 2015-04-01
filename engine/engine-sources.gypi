@@ -129,6 +129,7 @@
 			'src/debug.h',
 			'src/dllst.h',
 			'src/eventqueue.h',
+			'src/fiber.h',
 			'src/filedefs.h',
 			'src/flst.h',
 			'src/globals.h',
@@ -160,6 +161,7 @@
 			'src/debug.cpp',
 			'src/dllst.cpp',
 			'src/eventqueue.cpp',
+			'src/fiber.cpp',
 			'src/globals.cpp',
 			'src/mcerror.cpp',
 			'src/mcio.cpp',
@@ -172,7 +174,8 @@
 			'src/ports.cpp',
 			'src/regex.cpp',
 			'src/securemode.cpp',
-			'src/sha1.cpp',
+			'src/sha1.cpp',			
+			'src/sysspec.cpp',
 			'src/text.cpp',
 			'src/transfer.cpp',
 			'src/uidc.cpp',
@@ -302,14 +305,37 @@
 			'src/vclip.cpp',
 			
 			# Group "Mobile"
+			'src/mblad.h',
+			'src/mblcalendar.h',
+			'src/mblcontact.h',
+			'src/mblcontrol.h',
 			'src/mbldc.h',
 			'src/mblevent.h',
 			'src/mblflst.h',
+			'src/mblnotification.h',
+			'src/mblsensor.h',
+			'src/mblstore.h',
+			'src/mblsyntax.h',
+			'src/mblactivityindicator.cpp',
+			'src/mblad.cpp',
+			'src/mblalert.cpp',
+			'src/mblbusyindicator.cpp',
+			'src/mblcalendar.cpp',
+			'src/mblcamera.cpp',
+			'src/mblcontact.cpp',
+			'src/mblcontrol.cpp',
 			'src/mbldc.cpp',
+			'src/mbldialog.cpp',
 			'src/mblflst.cpp',
 			'src/mblmain.cpp',
+			'src/mblnotification.cpp',
+			'src/mblsensor.cpp',
 			'src/mblspec.cpp',
 			'src/mblstack.cpp',
+			'src/mblstore.cpp',
+			'src/mblsound.cpp',
+			'src/mbltextmessaging.cpp',
+			'src/mbltheme.cpp',
 			
 			# Group "Mobile - Android"
 			'src/mblandroid.h',
@@ -379,27 +405,46 @@
 			
 			# Group "Mobile - iOS"
 			'src/mbliphone.h',
+			'src/mbliphoneapp.h',
 			'src/mbliphonecontrol.h',
 			'src/mbliphoneview.h',
 			'src/mbliphone.mm',
+			'src/mbliphonead.mm',
+			'src/mbliphoneactivityindicator.mm',
+			'src/mbliphonealert.mm',
+			'src/mbliphoneapp.mm',
+			'src/mbliphoneappview.mm',
 			'src/mbliphonebrowser.mm',
+			'src/mbliphonebusyindicator.mm',
+			'src/mbliphonecalendar.mm',
+			'src/mbliphonecamera.mm',
+			'src/mbliphonecontact.mm',
 			'src/mbliphonecontrol.mm',
 			'src/mbliphonedc.mm',
 			'src/mbliphonedialog.mm',
+			'src/mbliphoneembedded.mm',
+			'src/mbliphoneembeddedtest.mm',
 			'src/mbliphoneextra.mm',
+			'src/mbliphonefs.mm',
 			'src/mbliphonegfx.mm',
 			'src/mbliphonehooks.cpp',
 			'src/mbliphoneinput.mm',
 			'src/mbliphonelocation.mm',
 			'src/mbliphonemail.mm',
+			'src/mbliphonemediapick.mm',
 			'src/mbliphonemisc.mm',
+			'src/mbliphonenotification.mm',
 			'src/mbliphonepick.mm',
+			'src/mbliphonepickdate.mm',
 			'src/mbliphoneplayer.mm',
 			'src/mbliphonereachability.mm',
 			'src/mbliphonescroller.mm',
+			'src/mbliphonesensor.mm',
 			'src/mbliphonesound.mm',
 			'src/mbliphonestack.mm',
+			'src/mbliphonestore.mm',
 			'src/mbliphonetextlayout.mm',
+			'src/mbliphonetextmessaging.mm',
 			'src/mbliphoneurl.mm',
 			'src/mbliphonevideo.mm',
 			
@@ -667,8 +712,6 @@
 			'src/srvtheme.cpp',
 			'src/srvspec.cpp',
 			'src/srvstack.cpp',
-			
-			'src/sysspec.cpp',
 		],
 		
 		# Files to be excluded from server builds
@@ -770,6 +813,7 @@
 					
 					'sources!':
 					[
+						'src/fiber.cpp',
 						'src/player-legacy.cpp',
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
@@ -795,8 +839,7 @@
 				{
 					'sources!':
 					[
-						'src/cgimageutil.cpp',
-						'src/coretextfonts.cpp',
+						
 						'src/desktop.cpp',
 						'src/desktop-ans.cpp',
 						'src/desktop-dc.cpp',
@@ -808,6 +851,16 @@
 						'src/platform-recorder.cpp',
 						'src/platform-surface.cpp',
 						'src/platform-window.cpp',
+					],
+				},
+			],
+			[
+				'OS != "mac" and OS != "ios"',
+				{
+					'sources!':
+					[
+						'src/cgimageutil.cpp',
+						'src/coretextfonts.cpp',
 						'src/syscfdate.cpp',
 						'src/tilecachecg.cpp',
 					],
@@ -821,6 +874,42 @@
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
 					]
+				},
+			],
+			[
+				'OS == "ios"',
+				{
+					'sources!':
+					[
+						'src/stacke.cpp',
+						'src/sysunxdate.cpp',
+						
+						'src/mbliphoneembedded.mm',
+						'src/mbliphoneembeddedtest.mm',
+					],
+				},
+			],
+			[
+				'mobile != 0',
+				{
+					'sources/':
+					[
+						# Note that this does *not* exclude player.cpp
+						['exclude', '^src/player.+\\.(cpp|mm)$'],
+					],
+				},
+			],
+		],
+		
+		'target_conditions':
+		[
+			[
+				'server_mode == 0 and (OS == "mac" or OS == "win" or OS == "linux")',
+				{
+					'sources!':
+					[
+						'src/sysspec.cpp',
+					],
 				},
 			],
 		],

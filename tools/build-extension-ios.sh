@@ -1,3 +1,10 @@
+#!/bin/bash
+
+set -e
+
+SYMBOLS=$1
+SYMBOLS_FILE=$2
+
 DEPS=`cat "$SRCROOT/$PRODUCT_NAME.ios"`
 DEPS=${DEPS//library /-l}
 DEPS=${DEPS//framework /-framework }

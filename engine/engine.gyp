@@ -154,6 +154,13 @@
 						'product_name': 'Server-Community',
 					},
 				],
+				[
+					'mobile != 0',
+					{
+						'type': 'none',
+						'mac_bundle': 0,
+					},
+				],
 			],
 			
 			'msvs_settings':
@@ -198,6 +205,13 @@
 						'product_name': 'Standalone-Community',
 					},
 				],
+				[
+					'OS == "ios"',
+					{
+						'product_name': 'standalone-mobile-community',
+						'app_plist': 'rsrc/standalone-mobile-Info.plist',
+					},
+				],
 			],
 		},
 		
@@ -232,6 +246,13 @@
 					'OS == "mac"',
 					{
 						'product_name': 'Installer',
+					},
+				],
+				[
+					'mobile != 0',
+					{
+						'type': 'none',
+						'mac_bundle': 0,
 					},
 				],
 			],
@@ -292,6 +313,13 @@
 						],
 					},
 				],
+				[
+					'mobile != 0',
+					{
+						'type': 'none',
+						'mac_bundle': 0,
+					},
+				],
 			],
 			
 			'msvs_settings':
@@ -301,6 +329,50 @@
 					'AdditionalManifestFiles': '$(SolutionDir)..\\engine\\src\\engine.manifest',
 				},
 			},
+		},
+		
+		{
+			'target_name': 'standalone-mobile-lib-community',
+			'type': 'none',
+			
+			'dependencies':
+			[
+				'kernel-standalone',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "ios"',
+					{
+						'actions':
+						[
+							{
+								'action_name': 'bind-output',
+								'message': 'Bind output',
+								
+								'inputs':
+								[
+									'<(PRODUCT_DIR)/libkernel.a',
+									'<(PRODUCT_DIR)/libkernel-standalone.a',
+								],
+								
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/standalone-mobile-lib-community.lcext',
+								],
+								
+								'action':
+								[
+									'./bind-ios-standalone.sh',
+									'<@(_outputs)',
+									'<@(_inputs)',
+								],
+							},
+						],
+					},
+				],
+			],
 		},
 	],
 }

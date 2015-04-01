@@ -40,6 +40,11 @@
 				'INFOPLIST_FILE': 'rsrc/revxml-Info.plist',
 				'EXPORTED_SYMBOLS_FILE': 'revxml.exports',
 			},
+			
+			'variables':
+			{
+				'ios_external_symbols': [ '_getXtable' ],
+			},
 		},
 	],
 }

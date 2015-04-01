@@ -42,6 +42,11 @@
 					},
 				],
 			],
+			
+			'variables':
+			{
+				'ios_external_symbols': [ '_getXtable' ],
+			},
 		},
 	],
 }

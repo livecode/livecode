@@ -1,12 +1,16 @@
 #! /usr/bin/revolution -ui
 
+local sOutput
+
 on startup
   local tSpec
-  read from stdin until eof
-  put it into tSpec
+  put url("file:" & $2) into tSpec
 
   local tName
   put $1 into tName
+
+  put $3 into sOutput
+  open file sOutput for binary write
 
   local tSymbolExterns, tSymbolEntries
   repeat for each line tLine in tSpec
@@ -45,14 +49,14 @@ on startup
 
   end repeat
 
-  write tSymbolExterns to stdout
+  write tSymbolExterns to file sOutput
   output "extern" && quote & "C" & quote && "{"
   output "struct LibExport { const char *name; void *address; };"
   output "struct LibInfo { const char **name; struct LibExport *exports; };"
   output "static const char *__libexternalname =" && quote & tName & quote & ";"
   output "static struct LibExport __libexports[] ="
   output "{"
-  write tSymbolEntries to stdout
+  write tSymbolEntries to file sOutput
   output "  { 0, 0 }"
   output "};"
   output "static struct LibInfo __libinfo="
@@ -62,8 +66,10 @@ on startup
   output "};"
   output "__attribute((section(" & quote & "__DATA,__libs" & quote & "))) volatile struct LibInfo *__libinfoptr_" & tName & " = &__libinfo;"
   output "};"
+
+  close file sOutput
 end startup
 
 on output pLine
-  write pLine & return to stdout
+  write pLine & return to file sOutput
 end output

@@ -12,36 +12,58 @@
 			
 			'dependencies':
 			[
-				# IDE, installer and standalone engines
-				'engine/engine.gyp:development',
-				'engine/engine.gyp:installer',
+				# Engines
 				'engine/engine.gyp:standalone',
-				
-				# Server engine
-				'engine/engine.gyp:server',
-				
+
 				# The revsecurity library is an output and not an intermediate product
 				'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
 				
 				# Externals
-				'revbrowser/revbrowser.gyp:revbrowser',
-				'revbrowser/revbrowser.gyp:revbrowser-cefprocess',
 				'revdb/revdb.gyp:revdb',
-				'revdb/revdb.gyp:dbodbc',
 				'revdb/revdb.gyp:dbmysql',
-				'revdb/revdb.gyp:dbpostgresql',
 				'revdb/revdb.gyp:dbsqlite',
 				'revpdfprinter/revpdfprinter.gyp:revpdfprinter',
-				'revfont/revfont.gyp:revfont',
-				'revmobile/revmobile.gyp:revandroid',
-				'revmobile/revmobile.gyp:reviphone',
-				'revspeech/revspeech.gyp:revspeech',
-				'revvideograbber/revvideograbber.gyp:revvideograbber',
 				'revxml/revxml.gyp:revxml',
 				'revzip/revzip.gyp:revzip',
-				
-				# Server externals
-				'revdb/revdb.gyp:revdb-server',
+			],
+			
+			'conditions':
+			[
+				[
+					'mobile == 0',
+					{
+						'dependencies':
+						[
+							# Engines
+							'engine/engine.gyp:development',
+							'engine/engine.gyp:installer',
+							'engine/engine.gyp:server',
+							
+							# Externals
+							'revbrowser/revbrowser.gyp:revbrowser',
+							'revbrowser/revbrowser.gyp:revbrowser-cefprocess',
+							'revdb/revdb.gyp:dbodbc',
+							'revdb/revdb.gyp:dbpostgresql',
+							'revfont/revfont.gyp:revfont',
+							'revmobile/revmobile.gyp:revandroid',
+							'revmobile/revmobile.gyp:reviphone',
+							'revspeech/revspeech.gyp:revspeech',
+							'revvideograbber/revvideograbber.gyp:revvideograbber',
+							
+							# Server externals
+							'revdb/revdb.gyp:revdb-server',
+						],
+					},
+				],
+				[
+					'OS == "ios"',
+					{
+						'dependencies':
+						[
+							'engine/engine.gyp:standalone-mobile-lib-community',
+						],
+					},
+				],
 			],
 		},
 	],

@@ -40,6 +40,7 @@
 			'sources!':
 			[
 				'src/revpdfprinter_osx.cpp',
+				'src/revpdfprinter_ios.mm',
 			],
 			
 			'conditions':
@@ -59,6 +60,11 @@
 			{
 				'INFOPLIST_FILE': 'rsrc/revpdfprinter-Info.plist',
 				'EXPORTED_SYMBOLS_FILE': 'revpdfprinter.exports',
+			},
+			
+			'variables':
+			{
+				'ios_external_symbols': [ '_MCCustomPrinterCreate' ],
 			},
 		},
 	],

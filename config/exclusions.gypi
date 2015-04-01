@@ -25,8 +25,9 @@
 				{
 					'sources/':
 					[
-						['exclude', '_osx\\.cpp$'],
-						['exclude', '(^|/)osx.+\\.cpp$'],
+						['exclude', '_osx\\.(cpp|mm)$'],
+						['exclude', '(^|/)osx.+\\.(cpp|mm)$'],
+						['exclude', '(^|/)mac-.+\\.(cpp|mm)$'],
 					],
 				},
 			],
@@ -37,7 +38,6 @@
 					[
 						['exclude', '_lnx\\.cpp$'],
 						['exclude', '(^|/)lnx.+\\.cpp$'],
-						['exclude', '(^|/)unx.+\\.cpp$'],
 					],
 				},
 			],

@@ -17,6 +17,21 @@
 		],
 	},
 	
+	'target_defaults':
+	{
+		'conditions':
+		[	[
+				'OS == "mac" or OS == "win"',
+				{
+					'sources!':
+					[
+						'src/unxsupport.cpp',
+					],
+				},
+			]
+		],
+	},
+	
 	'targets':
 	[
 		{
@@ -50,6 +65,16 @@
 			'xcode_settings':
 			{
 				'INFOPLIST_FILE': 'rsrc/dbmysql-Info.plist',
+			},
+			
+			'variables':
+			{
+				'ios_external_symbols':
+				[
+					'_setidcounterref',
+					'_newdbconnectionref',
+					'_releasedbconnectionref',
+				],
 			},
 		},
 		{
@@ -93,6 +118,16 @@
 			{
 				'INFOPLIST_FILE': 'rsrc/dbodbc-Info.plist',
 			},
+			
+			'variables':
+			{
+				'ios_external_symbols':
+				[
+					'_setidcounterref',
+					'_newdbconnectionref',
+					'_releasedbconnectionref',
+				],
+			},
 		},
 		{
 			'target_name': 'dbpostgresql',
@@ -123,6 +158,16 @@
 			'xcode_settings':
 			{
 				'INFOPLIST_FILE': 'rsrc/dbpostgresql-Info.plist',
+			},
+			
+			'variables':
+			{
+				'ios_external_symbols':
+				[
+					'_setidcounterref',
+					'_newdbconnectionref',
+					'_releasedbconnectionref',
+				],
 			},
 		},
 		{
@@ -156,6 +201,16 @@
 				'INFOPLIST_FILE': 'rsrc/dbsqlite-Info.plist',
 				'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
 			},
+			
+			'variables':
+			{
+				'ios_external_symbols':
+				[
+					'_setidcounterref',
+					'_newdbconnectionref',
+					'_releasedbconnectionref',
+				],
+			},
 		},
 		{
 			'target_name': 'revdb',
@@ -183,6 +238,11 @@
 			{
 				'INFOPLIST_FILE': 'rsrc/revdb-Info.plist',
 			},
+			
+			'variables':
+			{
+				'ios_external_symbols': [ '_getXtable' ],
+			},
 		},
 		{
 			'target_name': 'revdb-server',
@@ -192,6 +252,7 @@
 			'variables':
 			{
 				'server_mode': 1,
+				'ios_external_symbols': [],
 			},
 			
 			'dependencies':
