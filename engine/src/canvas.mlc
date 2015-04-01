@@ -3607,7 +3607,11 @@ end syntax
 
 // Operations
 
-public foreign handler MCCanvasFontMeasureText(in pText as String, in pFont as Font, out pRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureTextTypographicBounds(in pText as String, in pFont as Font, out pRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureTextTypographicBoundsOnCanvas(in pText as String, in pCanvas as Canvas, out pRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureTextImageBounds(in pText as String, in pFont as Font, out pRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasFontMeasureTextImageBoundsOnCanvas(in pText as String, in pCanvas as Canvas, out pRect as Rectangle) returns nothing binds to "<builtin>"
+
 
 //////////
 
@@ -3620,20 +3624,114 @@ mFont:	An expression which evaluates to a font.
 Returns:	The bounding box of <mText> when drawn at point 0,0 with font <mFont>. Returns the bounds as a rectangle.
 
 Example:
-	// Create a font
+	// Set up tFont as size 18 Arial
 	variable tFont as Font
-	put font "Arial" at size 20 into tFont
+	put font "Arial" at size 18 into tFont
 
-	// Measure text with the current font
+	// Measure text with tFont
 	variable tBounds as Rectangle
 	put the bounds of text "Sample text" with tFont into tBounds
 
+Description:
+	The layout bounds of the text, constructed from the ascent and descent values of the font, and the width of the text string.
+
+>*Note:* The layout bounds is used to position blocks of text relative to each other, so the text may overlap these bounds.
+
 Tags:	Canvas
 */
-syntax FontOperationTextBounds is prefix operator with precedence 4
-  "the" "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
+syntax FontOperationTextLayoutBounds is prefix operator with precedence 4
+	"the" [ "layout" ] "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
 begin
-	MCCanvasFontMeasureText(mText, mFont, output)
+	MCCanvasFontMeasureTextTypographicBounds(mText, mFont, output)
+end syntax
+
+
+/*
+Summary:	Measure text when drawn to a canvas.
+
+mText:	An expression which evaluates to a string.
+mCanvas:	An expression which evaluates to a canvas.
+
+Returns:	The bounding box of <mText> when drawn at point 0,0 with the current font of <mCanvas>. Returns the bounds as a rectangle.
+
+Example:
+	// Set the canvas font
+	set the font of this canvas to font "Arial" at size 18
+
+	variable tBounds as Rectangle
+	put the bounds of text "Sample text" on this canvas into tBounds
+
+Description:
+The layout bounds of the text, constructed from the ascent and descent values of the font, and the width of the text string.
+
+>*Note:* The layout bounds is used to position blocks of text relative to each other, so the text may overlap these bounds.
+
+Tags:	Canvas
+*/
+syntax FontOperationTextLayoutBoundsOnCanvas is prefix operator with precedence 4
+	"the" [ "layout" ] "bounds" "of" "text" <mText: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasFontMeasureTextTypographicBoundsOnCanvas(mText, mCanvas, output)
+end syntax
+
+
+/*
+Summary:	Measure text precisely when drawn with a font.
+
+mText:	An expression which evaluates to a string.
+mFont:	An expression which evaluates to a font.
+
+Returns:	The bounding box of <mText> when drawn at point 0,0 with font <mFont>. Returns the bounds as a rectangle.
+
+Example:
+	// Set up tFont as size 18 Arial
+	variable tFont as Font
+	put font "Arail" at size 18 into tFont
+
+	// Measure text with tFont
+	variable tBounds as Rectangle
+	put the image bounds of text "Sample text" with tFont into tBounds
+
+Description:
+	The exact bounds of the text, which will fully enclose each character.
+
+>*Note:* This can be more time-consuming to compute than the layout bounds.
+
+Tags:	Canvas
+*/
+syntax FontOperationTextImageBounds is prefix operator with precedence 4
+	"the" "image" "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
+begin
+	MCCanvasFontMeasureTextImageBounds(mText, mFont, output)
+end syntax
+
+
+/*
+Summary:	Measure text precisely when drawn to a canvas.
+
+mText:	An expression which evaluates to a string.
+mCanvas:	An expression which evaluates to a canvas.
+
+Returns:	The bounding box of <mText> when drawn at point 0,0 with the current font of <mCanvas>. Returns the bounds as a rectangle.
+
+Example:
+	// Set the canvas font
+	set the font of this canvas to font "Arial" at size 18
+
+	variable tBounds as Rectangle
+	put the image bounds of text "Sample text" on this canvas into tBounds
+
+Description:
+The exact bounds of the text, which will fully enclose each character.
+
+>*Note:* This can be more time-consuming to compute than the layout bounds.
+
+Tags:	Canvas
+*/
+syntax FontOperationTextImageBoundsOnCanvas is prefix operator with precedence 4
+	"the" "image" "bounds" "of" "text" <mText: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasFontMeasureTextImageBoundsOnCanvas(mText, mCanvas, output)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////

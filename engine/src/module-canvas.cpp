@@ -4308,7 +4308,7 @@ void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font)
 
 // Operations
 
-MCCanvasRectangleRef MCCanvasFontMeasureTextWithTransform(MCStringRef p_text, MCCanvasFontRef p_font, const MCGAffineTransform &p_transform)
+MCCanvasRectangleRef MCCanvasFontMeasureTextTypographicBoundsWithTransform(MCStringRef p_text, MCCanvasFontRef p_font, const MCGAffineTransform &p_transform)
 {
 	MCFontRef t_font;
 	t_font = MCCanvasFontGetMCFont(p_font);
@@ -4326,9 +4326,49 @@ MCCanvasRectangleRef MCCanvasFontMeasureTextWithTransform(MCStringRef p_text, MC
 	return t_rect;
 }
 
-void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect)
+void MCCanvasFontMeasureTextTypographicBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect)
 {
-	r_rect = MCCanvasFontMeasureTextWithTransform(p_text, p_font, MCGAffineTransformMakeIdentity());
+	r_rect = MCCanvasFontMeasureTextTypographicBoundsWithTransform(p_text, p_font, MCGAffineTransformMakeIdentity());
+}
+
+void MCCanvasFontMeasureTextTypographicBoundsOnCanvas(MCStringRef p_text, MCCanvasRef p_canvas, MCCanvasRectangleRef& r_rect)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	r_rect = MCCanvasFontMeasureTextTypographicBoundsWithTransform(p_text, t_canvas->props().font, MCGContextGetDeviceTransform(t_canvas->context));
+}
+
+MCCanvasRectangleRef MCCanvasFontMeasureTextImageBoundsWithTransform(MCStringRef p_text, MCCanvasFontRef p_font, const MCGAffineTransform &p_transform)
+{
+	MCFontRef t_font;
+	t_font = MCCanvasFontGetMCFont(p_font);
+	
+	MCGRectangle t_bounds;
+	if (!MCFontMeasureTextImageBounds(t_font, p_text, p_transform, t_bounds))
+	{
+		// TODO - throw text measure error
+		return nil;
+	}
+	
+	MCCanvasRectangleRef t_rect;
+	if (!MCCanvasRectangleCreateWithMCGRectangle(t_bounds, t_rect))
+		return nil;
+	
+	return t_rect;
+}
+
+void MCCanvasFontMeasureTextImageBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect)
+{
+	r_rect = MCCanvasFontMeasureTextImageBoundsWithTransform(p_text, p_font, MCGAffineTransformMakeIdentity());
+}
+
+void MCCanvasFontMeasureTextImageBoundsOnCanvas(MCStringRef p_text, MCCanvasRef p_canvas, MCCanvasRectangleRef& r_rect)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	r_rect = MCCanvasFontMeasureTextImageBoundsWithTransform(p_text, t_canvas->props().font, MCGContextGetDeviceTransform(t_canvas->context));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5354,10 +5394,12 @@ void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_align, MCCanvasRect
 
 MCCanvasRectangleRef MCCanvasMeasureText(MCStringRef p_text, MCCanvasRef p_canvas)
 {
-	__MCCanvasImpl *t_canvas;
-	t_canvas = MCCanvasGet(p_canvas);
+	MCCanvasRectangleRef t_rect;
+	t_rect = nil;
 	
-	return MCCanvasFontMeasureTextWithTransform(p_text, t_canvas->props().font, MCGContextGetDeviceTransform(t_canvas->context));
+	MCCanvasFontMeasureTextTypographicBoundsOnCanvas(p_text, p_canvas, t_rect);
+	
+	return t_rect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

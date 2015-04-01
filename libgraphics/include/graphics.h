@@ -612,6 +612,7 @@ inline bool MCGRectangleIsEqual(const MCGRectangle &p_a, const MCGRectangle &p_b
 }
 
 MCGRectangle MCGRectangleIntersection(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
+MCGRectangle MCGRectangleUnion(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
 
 inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)
 {
@@ -936,6 +937,7 @@ MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t
 void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font, bool p_rtl);
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
 
 ////////////////////////////////////////////////////////////////////////////////
 
