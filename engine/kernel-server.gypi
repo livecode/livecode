@@ -2,8 +2,19 @@
 	'targets':
 	[
 		{
-			'target_name': 'kernel',
+			'target_name': 'kernel-server',
 			'type': 'static_library',
+			
+			'includes':
+			[
+				'kernel-mode-template.gypi',
+			],
+			
+			'variables':
+			{
+				'server_mode': 1,
+				'mode_macro': 'MODE_SERVER',
+			},
 			
 			'dependencies':
 			[
@@ -11,9 +22,11 @@
 				'../libexternal/libexternal.gyp:libExternal',
 				'../libgraphics/libgraphics.gyp:libGraphics',
 				
+				'../prebuilt/libcurl.gyp:libcurl',
+				'../prebuilt/libopenssl.gyp:libopenssl',
+				
 				'../thirdparty/libgif/libgif.gyp:libgif',
 				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 				'../thirdparty/libpcre/libpcre.gyp:libpcre',
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',
@@ -31,7 +44,12 @@
 			'sources':
 			[
 				'<@(engine_common_source_files)',
-				'<@(engine_desktop_source_files)',
+				'<@(engine_server_source_files)',
+			],
+			
+			'sources!':
+			[
+				'<@(engine_server_exclude_files)',
 			],
 			
 			'conditions':

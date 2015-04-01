@@ -2,7 +2,6 @@
 	'dependencies':
 	[
 		'encode_version',
-		'kernel',
 	
 		'../libcore/libcore.gyp:libCore',
 		'../libgraphics/libgraphics.gyp:libGraphics',

@@ -17,6 +17,8 @@
 			
 			'dependencies':
 			[
+				'kernel',
+				
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 				'../thirdparty/libz/libz.gyp:libz',
 			],

@@ -7,6 +7,8 @@
 			
 			'dependencies':
 			[
+				'kernel',
+				
 				'../thirdparty/libz/libz.gyp:libz',
 			],
 			

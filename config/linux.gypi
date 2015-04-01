@@ -3,13 +3,7 @@
 	{
 		'defines':
 		[
-			'_LINUX',
-			'LINUX',
-			'X11',
-			'GTKTHEME',
 			'HAVE___THREAD',
-			'TARGET_PLATFORM_LINUX',
-			'TARGET_PLATFORM_POSIX',
 			'_FILE_OFFSET_BITS=64',			
 		],
 		
@@ -29,6 +23,27 @@
 					'cflags':
 					[
 						'-fPIC',
+					],
+				},
+			],
+			[
+				'server_mode == 0',
+				{
+					'defines':
+					[
+						'TARGET_PLATFORM_LINUX',
+						'TARGET_PLATFORM_POSIX',
+						'GTKTHEME',
+						'LINUX',
+						'_LINUX',
+						'X11',
+					],
+				},
+				{
+					'defines':
+					[
+						'_SERVER',
+						'_LINUX_SERVER',
 					],
 				},
 			],

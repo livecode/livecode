@@ -63,9 +63,6 @@
 			'_CRT_NONSTDC_NO_DEPRECATE',
 			'_CRT_SECURE_NO_DEPRECATE',
 			'_CRT_DISABLE_PERFCRIT_LOCKS',
-			'_WINDOWS',
-			'WIN32',
-			'TARGET_PLATFORM_WINDOWS',
 			'__LITTLE_ENDIAN__',
 		],
 		
@@ -86,6 +83,7 @@
 					[
 						'_SERVER',
 						'_WINDOWS_SERVER',
+						'WIN32',
 					],
 				},
 			],

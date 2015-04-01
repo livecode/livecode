@@ -5,6 +5,11 @@
 			'target_name': 'kernel-standalone',
 			'type': 'static_library',
 			
+			'dependencies':
+			[
+				'kernel',
+			],
+			
 			'includes':
 			[
 				'kernel-mode-template.gypi',

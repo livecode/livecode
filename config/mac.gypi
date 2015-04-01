@@ -21,10 +21,25 @@
 	
 	'target_defaults':
 	{
-		'defines':
+		'target_conditions':
 		[
-			'TARGET_PLATFORM_MACOS_X',
-			'_MACOSX',
+			[
+				'server_mode == 0',
+				{
+					'defines':
+					[
+						'TARGET_PLATFORM_MACOS_X',
+						'_MACOSX',
+					],
+				},
+				{
+					'defines':
+					[
+						'_SERVER',
+						'_MAC_SERVER',
+					],
+				},
+			],
 		],
 		
 		'configurations':

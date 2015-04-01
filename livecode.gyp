@@ -17,6 +17,9 @@
 				'engine/engine.gyp:installer',
 				'engine/engine.gyp:standalone',
 				
+				# Server engine
+				'engine/engine.gyp:server',
+				
 				# Externals
 				'revbrowser/revbrowser.gyp:revbrowser',
 				'revbrowser/revbrowser.gyp:revbrowser-cefprocess',

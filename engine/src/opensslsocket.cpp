@@ -96,10 +96,6 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 
 #include "mcssl.h"
 
-#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE))
-#define socklen_t int
-#endif
-
 extern real8 curtime;
 
 static char *sslerror = NULL;

@@ -7,6 +7,7 @@
 		'kernel-development.gypi',
 		'kernel-installer.gypi',
 		'kernel-standalone.gypi',
+		'kernel-server.gypi',
 	],
 	
 	'targets':
@@ -126,6 +127,42 @@
 			[
 				'<@(engine_security_source_files)',
 			],
+		},
+		
+		{
+			'target_name': 'server',
+			'type': 'executable',
+			
+			'dependencies':
+			[
+				'kernel-server',
+				
+				'../libcore/libcore.gyp:libCore',
+				'../libgraphics/libgraphics.gyp:libGraphics',
+			],
+			
+			'sources':
+			[
+				'<@(engine_security_source_files)',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "mac"',
+					{
+						'product_name': 'Server-Community',
+					},
+				],
+			],
+			
+			'msvs_settings':
+			{
+				'VCLinkerTool':
+				{
+					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
+				},
+			},
 		},
 		
 		{
