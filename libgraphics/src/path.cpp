@@ -371,7 +371,7 @@ static void _MCGPathArcTo(MCGPathRef self, MCGPathArcBeginStyle p_begin, const M
 	if (p_sweep > 0)
 		while (p_sweep > 0)
 		{
-			t_delta = MCMin( M_PI_2 - fmodf(p_start_angle, M_PI_2), p_sweep);
+			t_delta = MCMin(p_sweep, M_PI_2);
 			p_sweep -= t_delta;
 			
 			_MCGPathAcuteArcTo(self, p_begin, p_center, p_radii, p_start_angle, t_delta, p_x_angle);
@@ -381,7 +381,7 @@ static void _MCGPathArcTo(MCGPathRef self, MCGPathArcBeginStyle p_begin, const M
 	else
 		while (p_sweep < 0)
 		{
-			t_delta = MCMin( M_PI_2 - fmodf(2 * M_PI - p_start_angle, M_PI_2), -p_sweep);
+			t_delta = MCMin(-p_sweep, M_PI_2);
 			p_sweep += t_delta;
 			
 			_MCGPathAcuteArcTo(self, p_begin, p_center, p_radii, p_start_angle, -t_delta, p_x_angle);
@@ -752,6 +752,31 @@ static inline MCGFloat MCGAngleBetweenVectors(const MCGPoint &u, const MCGPoint 
 	return t_s * acosf(MCClamp(MCGVectorDotProduct(u, v) / (MCGVectorMagnitude(u) * MCGVectorMagnitude(v)), -1, 1));
 }
 
+static inline MCGPoint MCGVectorMake(const MCGPoint p_start, MCGPoint p_end)
+{
+	return MCGPointMake(p_end.x - p_start.x, p_end.y - p_start.y);
+}
+
+static inline MCGPoint MCGVectorNormalize(const MCGPoint p_vector)
+{
+	return MCGPointScale(p_vector, 1 / MCGVectorMagnitude(p_vector));
+}
+
+static inline MCGPoint MCGVectorAdd(const MCGPoint &p_left, const MCGPoint &p_right)
+{
+	return MCGPointMake(p_left.x + p_right.x, p_left.y + p_right.y);
+}
+
+static inline MCGPoint MCGVectorScale(const MCGPoint &p_vector, MCGFloat p_scale)
+{
+	return MCGPointMake(p_vector.x * p_scale, p_vector.y * p_scale);
+}
+
+static inline MCGPoint MCGVectorRotate90(const MCGPoint &p_vector)
+{
+	return MCGPointMake(-p_vector.y, p_vector.x);
+}
+
 //////////
 
 static inline MCGPoint MCGPointGetMidPoint(const MCGPoint &p_a, const MCGPoint &p_b)
@@ -767,23 +792,30 @@ static void _MCGPathEllipticArc(MCGPathRef self, const MCGSize &p_radii, MCGFloa
 		return;
 	}
 	
-	MCGPoint t_last;
-	if (!MCGPathGetLastPoint(self, t_last))
-		t_last = MCGPointMake(0, 0);
+	MCGPoint t_current;
+	if (!MCGPathGetCurrentPoint(self, t_current))
+		t_current = MCGPointMake(0, 0);
 	
-	if (MCGPointIsEqual(t_last, p_end_point))
+	if (MCGPointIsEqual(t_current, p_end_point))
 		return;
 	
-	p_angle = fmodf(p_angle + 2 * M_PI, 2 * M_PI);
+	MCGPoint t_mid;
+	t_mid = MCGPointGetMidPoint(t_current, p_end_point);
 	
 	MCGPoint t_p;
-	t_p = MCGPointRotate(MCGPointMake((t_last.x - p_end_point.x) / 2, (t_last.y - p_end_point.y) / 2), -p_angle);
+	t_p = MCGPointRotate(MCGPointTranslate(t_current, -t_mid.x, -t_mid.y), -p_angle);
 	
 	MCGSize t_radii;
 	t_radii = MCGSizeMake(MCAbs(p_radii.width), MCAbs(p_radii.height));
 	
+	MCGFloat t_rx2, t_ry2, t_x2, t_y2;
+	t_rx2 = _sqr(t_radii.width);
+	t_ry2 = _sqr(t_radii.height);
+	t_x2 = _sqr(t_p.x);
+	t_y2 = _sqr(t_p.y);
+	
 	MCGFloat t_a;
-	t_a = (_sqr(t_p.x) / _sqr(t_radii.width)) + (_sqr(t_p.y) / _sqr(t_radii.height));
+	t_a = (t_x2 / t_rx2) + (t_y2 / t_ry2);
 	
 	MCGPoint t_c;
 	
@@ -797,21 +829,12 @@ static void _MCGPathEllipticArc(MCGPathRef self, const MCGSize &p_radii, MCGFloa
 	else
 	{
 		MCGFloat t_scale;
-		MCGFloat t_rx2, t_ry2, t_x2, t_y2;
-		t_rx2 = _sqr(t_radii.width);
-		t_ry2 = _sqr(t_radii.height);
-		t_x2 = _sqr(t_p.x);
-		t_y2 = _sqr(t_p.y);
-		
 		t_scale = sqrtf((t_rx2 * t_ry2 - t_rx2 * t_y2 - t_ry2 * t_x2) / (t_rx2 * t_y2 + t_ry2 * t_x2));
 		if (p_large_arc == p_sweep)
 			t_scale *= -1;
 		
 		t_c = MCGPointMake(t_scale * t_radii.width * t_p.y / t_radii.height, t_scale * -t_radii.height * t_p.x / t_radii.width);
 	}
-	
-	MCGPoint t_mid;
-	t_mid = MCGPointGetMidPoint(t_last, p_end_point);
 	
 	MCGPoint t_center;
 	t_center = MCGPointTranslate(MCGPointRotate(t_c, p_angle), t_mid.x, t_mid.y);
@@ -834,6 +857,132 @@ static void _MCGPathEllipticArc(MCGPathRef self, const MCGSize &p_radii, MCGFloa
 	_MCGPathArcTo(self, kMCGPathArcContinue, t_center, t_radii, t_start_angle, t_sweep, p_angle);
 }
 
+static MCGPoint _MCGEllipseTangentLineVector(const MCGPoint &p_center, const MCGSize &p_radii, const MCGPoint &p_tangent_point)
+{
+	MCGPoint t_tangent_a;
+	t_tangent_a = MCGPointScale(MCGPointTranslate(p_tangent_point, -p_center.x, -p_center.y), 1 / p_radii.width, 1 / p_radii.height);
+	
+	MCGPoint t_tangent_vector;
+	t_tangent_vector = MCGVectorRotate90(MCGVectorMake(t_tangent_a, MCGPointMake(0,0)));
+	
+	MCGPoint t_tangent_b;
+	t_tangent_b = MCGPointTranslate(t_tangent_a, t_tangent_vector.x, t_tangent_vector.y);
+	t_tangent_b = MCGPointTranslate(MCGPointScale(t_tangent_b, p_radii.width, p_radii.height), p_center.x, p_center.y);
+	
+	return MCGVectorMake(p_tangent_point, t_tangent_b);
+}
+
+static void _MCGPathEllipticArc(MCGPathRef self, const MCGSize &p_radii, MCGFloat p_angle, const MCGPoint &p_end_point)
+{
+	if (p_radii.width == 0 || p_radii.height == 0)
+	{
+		MCGPathLineTo(self, p_end_point);
+		return;
+	}
+	
+	MCGPoint t_current;
+	if (!MCGPathGetCurrentPoint(self, t_current))
+		t_current = MCGPointMake(0, 0);
+	
+	if (MCGPointIsEqual(t_current, p_end_point))
+		return;
+	
+	MCGPoint t_mid;
+	t_mid = MCGPointGetMidPoint(t_current, p_end_point);
+	
+	MCGPoint t_p;
+	t_p = MCGPointRotate(MCGPointTranslate(t_current, -t_mid.x, -t_mid.y), -p_angle);
+	
+	MCGSize t_radii;
+	t_radii = MCGSizeMake(MCAbs(p_radii.width), MCAbs(p_radii.height));
+	
+	MCGFloat t_rx2, t_ry2, t_x2, t_y2;
+	t_rx2 = _sqr(t_radii.width);
+	t_ry2 = _sqr(t_radii.height);
+	t_x2 = _sqr(t_p.x);
+	t_y2 = _sqr(t_p.y);
+	
+	MCGFloat t_a;
+	t_a = (t_x2 / t_rx2) + (t_y2 / t_ry2);
+	
+	MCGPoint t_c;
+	
+	// Adjust if radii are too small
+	if (t_a > 1)
+	{
+		t_radii = MCGSizeScale(t_radii, sqrtf(t_a));
+		
+		t_c = MCGPointMake(0, 0);
+	}
+	else
+	{
+		MCGFloat t_scale;
+		t_scale = sqrtf((t_rx2 * t_ry2 - t_rx2 * t_y2 - t_ry2 * t_x2) / (t_rx2 * t_y2 + t_ry2 * t_x2));
+		
+		t_c = MCGPointMake(t_scale * t_radii.width * t_p.y / t_radii.height, t_scale * -t_radii.height * t_p.x / t_radii.width);
+	}
+	
+	MCGPoint t_previous;
+	if (!MCGPathGetPreviousPoint(self, t_previous))
+		t_previous = MCGPointMake(0, 0);
+	
+	bool t_large, t_sweep;
+	if (MCGPointIsEqual(t_current, t_previous))
+	{
+		t_large = false;
+		t_sweep = true;
+	}
+	else
+	{
+		MCGPoint t_current_vector;
+		t_current_vector = MCGVectorMake(MCGPointRotate(MCGPointTranslate(t_previous, -t_mid.x, -t_mid.y), -p_angle), t_p);
+		
+		MCGPoint t_tangent_vector_a, t_tangent_vector_b;
+		t_tangent_vector_a = _MCGEllipseTangentLineVector(t_c, t_radii, t_p);
+		t_tangent_vector_b = _MCGEllipseTangentLineVector(MCGPointScale(t_c, -1), t_radii, t_p);
+		
+		MCGFloat t_a_positive, t_a_negative, t_b_positive, t_b_negative;
+		t_a_positive = MCAbs(MCGAngleBetweenVectors(t_current_vector, t_tangent_vector_a));
+		t_a_negative = M_PI - t_a_positive;
+		t_b_positive = MCAbs(MCGAngleBetweenVectors(t_current_vector, t_tangent_vector_b));
+		t_b_negative = M_PI - t_b_positive;
+		
+		if (MCMin(t_a_positive, t_a_negative) <= MCMin(t_b_positive, t_b_negative))
+		{
+			t_sweep = t_a_positive > t_a_negative;
+			t_large = !t_sweep;
+		}
+		else
+		{
+			t_sweep = t_b_positive > t_b_negative;
+			t_large = t_sweep;
+		}
+	}
+	
+	if (t_large == t_sweep)
+		t_c = MCGPointScale(t_c, -1);
+	
+	MCGPoint t_center;
+	t_center = MCGPointTranslate(MCGPointRotate(t_c, p_angle), t_mid.x, t_mid.y);
+	
+	MCGPoint t_v0, t_v1, t_v2;
+	t_v0 = MCGPointMake(1, 0);
+	t_v1 = MCGPointMake((t_p.x - t_c.x) / t_radii.width, (t_p.y - t_c.y) / t_radii.height);
+	t_v2 = MCGPointMake((-t_p.x - t_c.x) / t_radii.width, (-t_p.y - t_c.y) / t_radii.height);
+	
+	MCGFloat t_start_angle, t_sweep_angle;
+	t_start_angle = MCGAngleBetweenVectors(t_v0, t_v1);
+	t_sweep_angle = MCGAngleBetweenVectors(t_v1, t_v2);
+	t_sweep_angle = fmodf(t_sweep_angle, 2 * M_PI);
+	
+	if (!t_sweep && t_sweep_angle > 0)
+		t_sweep_angle -= 2 * M_PI;
+	else if (t_sweep && t_sweep_angle < 0)
+		t_sweep_angle += 2 * M_PI;
+	
+	_MCGPathArcTo(self, kMCGPathArcContinue, t_center, t_radii, t_start_angle, t_sweep_angle, p_angle);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCGPathArcTo(MCGPathRef self, MCGSize p_radii, MCGFloat p_rotation, bool p_large_arc, bool p_sweep, MCGPoint p_end_point)
@@ -851,6 +1000,69 @@ void MCGPathArcTo(MCGPathRef self, MCGSize p_radii, MCGFloat p_rotation, bool p_
 		_MCGPathEllipticArc(self, p_radii, p_rotation * M_PI / 180, p_large_arc, p_sweep, p_end_point);
 	
 	self -> is_valid = t_success;	
+}
+
+void MCGPathArcToBestFit(MCGPathRef self, MCGSize p_radii, MCGFloat p_rotation, MCGPoint p_end_point)
+{
+	if (!MCGPathIsValid(self))
+		return;
+	
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = self -> is_mutable;
+	
+	if (t_success)
+		_MCGPathEllipticArc(self, p_radii, p_rotation * M_PI / 180, p_end_point);
+	
+	self -> is_valid = t_success;
+}
+
+void MCGPathArcToTangent(MCGPathRef self, const MCGPoint &p_tangent, const MCGPoint &p_end, MCGFloat p_radius)
+{
+	if (!MCGPathIsValid(self))
+		return;
+	
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = self -> is_mutable;
+	
+	if (t_success)
+	{
+		MCGPoint t_start;
+		if (!MCGPathGetCurrentPoint(self, t_start))
+			t_start = MCGPointMake(0, 0);
+		
+		t_success = !MCGPointIsEqual(t_start, p_tangent) && !MCGPointIsEqual(p_tangent, p_end) && !MCGPointIsEqual(p_end, t_start);
+		
+		MCGPoint t_vec1, t_vec2;
+		t_vec1 = MCGVectorMake(p_tangent, t_start);
+		t_vec2 = MCGVectorMake(p_tangent, p_end);
+		
+		MCGFloat t_angle;
+		t_angle = MCGAngleBetweenVectors(t_vec1, t_vec2);
+		
+		MCGFloat t_dist;
+		t_dist = MCAbs(p_radius / tanf(t_angle / 2));
+		
+		MCGPoint t_start_tangent, t_end_tangent;
+		if (MCGVectorMagnitude(t_vec1) > t_dist)
+			t_start_tangent = MCGVectorAdd(p_tangent, MCGVectorScale(MCGVectorNormalize(t_vec1), t_dist));
+		else
+			t_start_tangent = t_start;
+		
+		if (MCGVectorMagnitude(t_vec2) > t_dist)
+			t_end_tangent = MCGVectorAdd(p_tangent, MCGVectorScale(MCGVectorNormalize(t_vec2), t_dist));
+		else
+			t_end_tangent = p_end;
+		
+		MCGPathLineTo(self, t_start_tangent);
+		MCGPathArcTo(self, MCGSizeMake(p_radius, p_radius), 0, false, t_angle < 0, t_end_tangent);
+		MCGPathLineTo(self, p_end);
+	}
 }
 
 void MCGPathCloseSubpath(MCGPathRef self)
@@ -908,13 +1120,25 @@ bool MCGPathGetBoundingBox(MCGPathRef self, MCGRectangle &r_bounds)
 	return true;
 }
 
-bool MCGPathGetLastPoint(MCGPathRef self, MCGPoint &r_last)
+bool MCGPathGetCurrentPoint(MCGPathRef self, MCGPoint &r_current)
 {
 	SkPoint t_point;
 	if (!self->path->getLastPt(&t_point))
 		return false;
 	
-	r_last = MCGPointFromSkPoint(t_point);
+	r_current = MCGPointFromSkPoint(t_point);
+	return true;
+}
+
+bool MCGPathGetPreviousPoint(MCGPathRef self, MCGPoint &r_last)
+{
+	SkPoint t_point;
+	int t_count;
+	t_count = self->path->countPoints();
+	if (t_count < 2)
+		return false;
+	
+	r_last = MCGPointFromSkPoint(self->path->getPoint(t_count - 2));
 	return true;
 }
 
