@@ -539,7 +539,10 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
                 
                 // Attempt to convert it to a script type.
                 if (!MCExtensionConvertToScriptType(ctxt, InOut(t_new_element)))
+                {
+                    MCValueRelease(t_array);
                     return false;
+                }
                 
                 if (!MCArrayStoreValueAtIndex(t_array, i + 1, *t_new_element))
                 {
