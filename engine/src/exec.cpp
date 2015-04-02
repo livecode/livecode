@@ -1460,9 +1460,6 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 		
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
-		
-        if (t_new_offset <= t_old_offset)
-            break;
         
 		if (t_success)
             t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_string);
