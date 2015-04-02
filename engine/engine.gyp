@@ -212,6 +212,16 @@
 						'app_plist': 'rsrc/standalone-mobile-Info.plist',
 					},
 				],
+				[
+					# Use a linker script to add the project and payload sections to the Linux executable
+					'OS == "linux"',
+					{
+						'ldflags':
+						[
+							'-T', '<(src_top_dir_abs)/engine/linux.link',
+						],
+					},
+				],
 			],
 		},
 		
@@ -253,6 +263,16 @@
 					{
 						'type': 'none',
 						'mac_bundle': 0,
+					},
+				],
+				[
+					# Use a linker script to add the project and payload sections to the Linux executable
+					'OS == "linux"',
+					{
+						'ldflags':
+						[
+							'-T', '<(src_top_dir_abs)/engine/linux.link',
+						],
 					},
 				],
 			],
