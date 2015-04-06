@@ -22,8 +22,6 @@ Value: The <serialControlString> consists of one or more settings, separated by 
 Description:
 Use the <serialControlString> <property> to set a serial <port> before use.
 
-&nbsp;
-
 The possible settings are as follows:
 * BAUD=number: the port's baud rate
 * PARITY=N, O, or E: no parity, odd parity, or even parity
@@ -36,20 +34,14 @@ The possible settings are as follows:
 * dtr=on or off: data terminal ready
 * rts=on or off: ready to sent
 * isdr=on or off: (input) data set ready
- 
-By default, the serialControlString is set to BAUD=9600 PARITY=N DATA=8 STOP=1.
- 
-To set a serial port's settings, first set the <serialControlString> to the desired settings. Then open the serial <port> using the <open file> <command> or the <open driver> <command>.
 
-&nbsp;
+By default, the serialControlString is set to BAUD=9600 PARITY=N DATA=8 STOP=1.
+
+To set a serial port's settings, first set the <serialControlString> to the desired settings. Then open the serial <port> using the <open file> <command> or the <open driver> <command>.
 
 On Mac OS systems, the <serialControlString> <property> can be used to set the printer or modem <port|ports>. On <Windows|Windows systems>, the <serialControlString> can be used to set the COM <port|ports>. On <OS X|OS X systems>, the <serialControlString> can be used to set a serial <peripheral device|device> returned by the <driverNames> function.
 
-&nbsp;
-
 The format of the <serialControlString> is compatible with the extended MS-DOS "mode" command.
-
-&nbsp;
 
 References: modem: (keyword), COMn: (keyword), close file (command), open driver (command), open file (command), driverNames (function), property (glossary), OS X (glossary), sign (glossary), Windows (glossary), port (glossary), command (glossary), peripheral device (glossary)
 

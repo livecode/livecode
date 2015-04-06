@@ -20,7 +20,7 @@ if the activatePalettes then hideAllPalettes
 
 Description:
 By default, the activatePalettes is true if LiveCode is running on a Mac OS system and false otherwise.
- 
+
 If the <activatePalettes> is true, all palettes look the same. If it is false, the active palette window looks different from the other palette windows.
 
 References: raisePalettes (property), lookAndFeel (property), hidePalettes (property), palette (command)
