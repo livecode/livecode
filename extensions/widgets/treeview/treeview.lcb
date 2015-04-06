@@ -894,15 +894,12 @@ end handler
 
 private handler createNewKey(inout xArray as Array)
 	variable tNewKey as String
-	put "" into tNewKey
-	if "" is among the keys of xArray then
-		variable tNew as Integer
-		put 1 into tNew
-		repeat while (tNew formatted as string) is among the keys of xArray
-			add 1 to tNew
-		end repeat
-		put tNew formatted as string into tNewKey
-	end if
+	variable tNew as Integer
+	put 1 into tNew
+	repeat while (tNew formatted as string) is among the keys of xArray
+		add 1 to tNew
+	end repeat
+	put tNew formatted as string into tNewKey
 	put "" into xArray[tNewKey]
 end handler
 
@@ -926,7 +923,7 @@ private handler addKey(in pListElt as Integer, in pPath as List, in pLevel as In
 	else
 		variable tArray as Array
 		put the empty array into tArray	
-		put "" into tArray[""]
+		put "" into tArray[1 formatted as string]
 		put tArray into xArray[pPath[pLevel + 1]]
 		put false into xList[pListElt]["leaf"]
 	end if
