@@ -883,6 +883,7 @@ end revSBResaveScriptOnlyStackAsProperStackFile
 # AL-2015-02-02: [[ Scriptify IDE ]] As we remove buttons from revLIbrary, we'll need to add to
 # this function to return the 'common' name of each of the libraries.
 function revSBScriptLibraryNameFromStackName pStack
+   # AL-2015-03-05: [[ Bug 14813 ]] Internet and Printing are the only script library naming exceptions
    switch pStack
       case "revLibUrl"
          return "Internet"
@@ -903,39 +904,33 @@ function revSBScriptLibraryNameFromStackName pStack
 end revSBScriptLibraryNameFromStackName
 
 function revSBStackNameFromScriptLibraryName pLib
+   # AL-2015-03-05: [[ Bug 14813 ]] Internet and Printing are the only script library naming exceptions
    switch pLib
       case "Internet"
          return "revLibUrl"
       case "Printing"
          return "revPrintLibrary"
-      case "Geometry"
-      case "Animation"
-      case "XMLRPC"
-      case "WidgetTracker"
-      case "Database"
-      case "Table"
-         return "rev" & pLib & "Library"
       default
-         return empty
+         return "rev" & pLib & "Library"
    end switch
    return pLib
 end revSBStackNameFromScriptLibraryName
 
 function revSBLibraryList
-   local tPath,tSave,tLibraries,tBtn,tExternals
+   # AL-2105-03-05: [[ Bug 14813 ]] Use array key method to ignore duplicates
+   local tPath,tSave,tLibrariesA,tBtn,tExternals
    -- rev script libraries
-   local tLoadedLibs
-   put revInternal__ListLoadedLibraries() into tLoadedLibs
-   repeat for each line tLine in tLoadedLibs
-      get revSBScriptLibraryNameFromStackName(tLine) 
-      if it is not empty then put it & CR after tLibraries
+   # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
+   repeat for each item tItem in "Animation,Geometry,Internet,Printing,Table,XMLRPC"
+      put empty into tLibrariesA[tItem]
    end repeat
    
    -- rev externals
    get revExternalsList()
-   if it is not empty then
-      put it & cr after tLibraries
-   end if
+   repeat for each line tLine in it
+      put empty into tLibrariesA[tLine]
+   end repeat
+   
    -- user script libraries
    
    local tEnvironmentScripts
@@ -947,13 +942,12 @@ function revSBLibraryList
    local tFiles
    put revCombineFilePaths(tUserScripts,tEnvironmentScripts) into tFiles
    repeat for each line tLine in tFiles
-      if there is a stack tLine then put the short name of stack tLine & cr after tLibraries
+      if there is a stack tLine then put empty into tLibrariesA[ the short name of stack tLine]
    end repeat
-   put "SSL & Encryption" & cr after tLibraries
-   if "Browser" is among the lines of tLibraries then
-      put "Browser (CEF)" & cr after tLibraries
+   put empty into tLibrariesA["SSL & Encryption"]
+   if "Browser" is among the keys of tLibrariesA then
+      put empty into tLibrariesA["Browser (CEF)"]
    end if
-
-   delete the last char of tLibraries
-   return tLibraries
+   
+   return the keys of tLibrariesA
 end revSBLibraryList

@@ -92,7 +92,7 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 	else
 	{
 		uint32_t t_compression;
-		char *t_buffer = nil;
+		void *t_buffer = nil;
 		uindex_t t_size = 0;
 
 		IO_handle t_stream = nil;
@@ -117,7 +117,7 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 		}
 
 		if (t_stream != nil)
-			t_success = MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_buffer), reinterpret_cast<size_t&>(t_size)) == IO_NORMAL;
+			t_success = MCS_closetakingbuffer_uint32(t_stream, t_buffer, t_size) == IO_NORMAL;
 
 		if (t_success)
 			t_success = MCImageCreateCompressedBitmap(t_compression, r_compressed);

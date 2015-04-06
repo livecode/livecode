@@ -244,7 +244,10 @@ void MCStoreGetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, M
 	{
 		MCExecValue t_value;
         MCExecFetchProperty(ctxt, t_info, t_purchase, t_value);
-		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
+        if (ctxt.HasError())
+            r_property_value = MCValueRetain(kMCEmptyString);
+        else
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
         return;
     }
     
@@ -326,7 +329,8 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 			return ES_NORMAL;
 
 		case kMCPurchasePropertyTransactionIdentifier:
-			if (t_transaction == nil)
+            // PM-2015-03-10: [[ Bug 14858 ]] transactionIdentifier can be nil if the purchase is still in progress (i.e when purchaseStateUpdate msg is sent with state=sendingRequest)
+			if (t_transaction == nil || [t_transaction transactionIdentifier] == nil)
 				break;
 			
 			ep.copysvalue([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
@@ -443,7 +447,10 @@ void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purch
 	else
 		t_payment = t_ios_data->payment;
     
-    if (t_transaction != nil && MCStringCreateWithCFString((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
+    // PM-2015-03-10: [[ Bug 14858 ]] transactionIdentifier can be nil if the purchase is still in progress (i.e when purchaseStateUpdate msg is sent with state=sendingRequest)
+    if (t_transaction != nil
+            && [t_transaction transactionIdentifier] != nil
+            && MCStringCreateWithCFString((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
         return;
     
     ctxt . Throw();
@@ -492,7 +499,7 @@ void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase 
 void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, integer_t& r_date)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-    \
+    
 	SKPaymentTransaction *t_transaction = nil;
 	SKPaymentTransaction *t_original_transaction = nil;
     t_transaction = t_ios_data->transaction;

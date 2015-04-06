@@ -47,7 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "system.h"
 #include "dispatch.h"
 
-#if defined(_MACOSX) || defined(_MAC_SERVER)
+#if defined(_MACOSX)
 #include <mach-o/dyld.h>
 #endif
 
@@ -3213,7 +3213,7 @@ void* MCU_loadmodule(const char *p_module)
 {
     MCSysModuleHandle t_handle;
     t_handle = nil;
-#if defined(_MACOSX) || defined(_MAC_SERVER)
+#if defined(_MACOSX)
     t_handle = (MCSysModuleHandle)NSAddImage(p_module, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
     if (t_handle != nil)
         return t_handle;
@@ -3288,14 +3288,19 @@ void* MCU_loadmodule(const char *p_module)
 //  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
 void MCU_unloadmodule(void *p_module)
 {
+    // SN-2015-03-04: [[ Broken module unloading ]] NSAddImage, used on Mac in
+    //  MCU_loadmodule, does not need any unloading of the module -
+    //  but the other platforms do.
+#if !defined(_MACOSX)
     MCS_unloadmodule((MCSysModuleHandle)p_module);
+#endif
 }
 
 // SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
 //  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
 void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
 {
-#if defined(_MACOSX) || defined(_MAC_SERVER)
+#if defined(_MACOSX)
     NSSymbol t_symbol;
     t_symbol = NSLookupSymbolInImage((mach_header *)p_module, p_symbol, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
     if (t_symbol != NULL)

@@ -904,15 +904,14 @@ Exec_stat MCiOSPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoin
 void MCiOSPlayerControl::Play()
 {
     // PM-2014-09-18: [[ Bug 13048 ]] Make sure movieTouched message is sent
-    [m_delegate beginWithOverlay:[m_controller isFullscreen]];
+    // PM-2015-03-06: [[ Bug 14816 ]] movieTouched msg to be sent only when in fullscreen and showController=false
+    [m_delegate beginWithOverlay:([m_controller isFullscreen] && [m_controller controlStyle] == MPMovieControlStyleNone)];
     [m_controller play];
 }
 
 void MCiOSPlayerControl::ExecPlay(MCExecContext& ctxt)
 {
-    // PM-2014-09-18: [[ Bug 13048 ]] Make sure movieTouched message is sent
-    [m_delegate beginWithOverlay:[m_controller isFullscreen]];
-    [m_controller play];
+    Play();
 }
 void MCiOSPlayerControl::ExecPause(MCExecContext& ctxt)
 {
