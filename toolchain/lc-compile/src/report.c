@@ -255,7 +255,6 @@ DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with ident
 #define DEFINE_WARNING_S(Name, Message) \
 	void Warning_##Name(long p_position, const char *p_string) { _WarningS(p_position, Message, p_string); }
 
-DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses should come after use clauses")
 DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
