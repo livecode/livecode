@@ -85,7 +85,7 @@ Additionally, all types can be annotated with **optional**. An optional annotati
         : 'module' <Name: Identifier> SEPARATOR
             { Metadata SEPARATOR }
             { Import SEPARATOR }
-            { Definition SEPARATOR }
+            { ( Definition | Metadata ) SEPARATOR }
           'end' 'module'
 
 The smallest compilable unit of Modular LiveCode is the module. Each module is uniquely named using reverse DNS notation, and the names of modules are considered to live in a global namespace.
