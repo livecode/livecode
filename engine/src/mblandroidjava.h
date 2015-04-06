@@ -71,6 +71,10 @@ bool MCJavaStringFromStringRef(JNIEnv *env, MCStringRef p_string, jstring &r_jav
 bool MCJavaByteArrayFromDataRef(JNIEnv *env, MCDataRef p_data, jbyteArray &r_byte_array);
 bool MCJavaByteArrayToDataRef(JNIEnv *env, jbyteArray p_byte_array, MCDataRef& r_data);
 
+// PM-2015-02-18: [[ Bug 14489 ]] Create/Delete global refs for statics
+bool MCJavaInitialize(JNIEnv *env);
+void MCJavaFinalize(JNIEnv *env);
+
 bool MCJavaInitList(JNIEnv *env, jobject&);
 bool MCJavaFreeList(JNIEnv *env, jobject);
 bool MCJavaListAppendObject(JNIEnv *env, jobject, jobject);

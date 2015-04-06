@@ -1254,7 +1254,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			t_success = MCImageEncodePNG(t_bitmap, NULL, t_stream, t_byte_count);
 
 		if (t_success)
-			t_success = IO_NORMAL == MCS_closetakingbuffer(t_stream, *(void**)(&t_buffer), t_length);
+			t_success = IO_NORMAL == MCS_closetakingbuffer_uint32(t_stream, *(void**)(&t_buffer), t_length);
 
 		if (t_success)
 			t_success = MCDataCreateWithBytesAndRelease((char_t*)t_buffer, t_length, &t_out_data);
