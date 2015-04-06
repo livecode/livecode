@@ -397,7 +397,7 @@ public handler OnMouseMove() returns nothing
 		put scrollRatio(mViewHeight) into tScrollPositionRatio
 	
 		// Calculate the new top position of list
-		put the trunc of (mDataHeight - mViewHeight) * tScrollPositionRatio into mViewTopPosition
+		put (mDataHeight - mViewHeight) * tScrollPositionRatio into mViewTopPosition
 	
 		ensureViewTopPosition()
 		updateFirstDataItem()
@@ -540,10 +540,7 @@ public handler OnClick() returns nothing
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
-	variable tTopPos as Real
-	put mViewTopPosition / mRowHeight into tTopPos
-
-	return the trunc of ((pYPos + tTopPos - the floor of tTopPos) / mRowHeight) + mFirstDataItem
+	return the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1)
 end handler
 
 private handler xPosToIconString(in pXPos as Number) returns String
