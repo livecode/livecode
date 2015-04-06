@@ -93,5 +93,10 @@ public interface BillingProvider
         {
             if (LOG) android.util.Log.v(tag, string);
         }
+        
+        public static void e(String tag, String string)
+        {
+            if (LOG) android.util.Log.e(tag, string);
+        }
     }
 }

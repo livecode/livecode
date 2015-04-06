@@ -61,7 +61,9 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
                         Sort_type dir, Sort_type form, MCExpression *by)
 {
 	if (flags & F_SHARED_TEXT)
-		parid = 0;
+        parid = 0;
+    else if (parid == 0)
+        parid = getcard()->getid();
     
     // SN-2014-09-17: [[ Bug 13461 ]] We might get CT_FIELD as a chunk type.
     if (type == CT_FIELD)
@@ -162,8 +164,12 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 		return False;
 	if (opened)
 		fdata->setparagraphs(paragraphs);
+    
 	if (flags & F_SHARED_TEXT)
 		cardid = 0;
+	else if (cardid == 0)
+        cardid = getcard()->getid();
+    
 	MCCdata *tptr = fdata;
 	do
 	{
@@ -403,9 +409,9 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
 {
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
-	else
-		if (parid == 0)
-			parid = getcard()->getid();
+	else if (parid == 0)
+        parid = getcard()->getid();
+    
 	MCCdata *fptr = getcarddata(fdata, parid, True);
 	MCParagraph *pgptr = fptr->getparagraphs();
     MCParagraph *t_old_pgptr;
@@ -642,11 +648,12 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 	state &= ~CS_CHANGED;
 	if (!undoing)
 		MCundos->freestate();
+    
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
-	else
-		if (parid == 0)
-			parid = getcard()->getid();
+	else if (parid == 0)
+        parid = getcard()->getid();
+    
 	MCCdata *fptr = getcarddata(fdata, parid, True);
 	if (opened && fptr == fdata && focusedparagraph != NULL)
 	{
@@ -1423,6 +1430,8 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
+	else if (parid == 0)
+        parid = getcard()->getid();
 
 	// MW-2011-12-08: [[ StyledText ]] Handle the styledText case.
 	if (which == P_HTML_TEXT || which == P_RTF_TEXT || which == P_STYLED_TEXT || which == P_UNICODE_TEXT || which == P_TEXT)
