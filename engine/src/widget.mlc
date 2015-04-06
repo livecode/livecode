@@ -260,13 +260,13 @@ Summary: Sent when the mouse pointer hovers over the widget's rect.
 
 Name: OnMouseStillHover
 Type: message
-Syntax: OnMouseHover
+Syntax: OnMouseStillHover
 Summary: Sent when the mouse pointer continues to hover over the widget's rect.
 
 
 Name: OnMouseCancelHover
 Type: message
-Syntax: OnMouseHover
+Syntax: OnMouseCancelHover
 Summary: Sent when the mouse pointer continues to hover outside of the widget's rect.
 
 
@@ -317,7 +317,7 @@ Summary: Sent when an object is dragged onto the widget rect.
 
 Name: OnDragLeave
 Type: message
-Syntax: OnDragEnter
+Syntax: OnDragLeave
 Summary: Sent when an object is dragged outside of the widget rect.
 
 
@@ -341,7 +341,7 @@ Summary: Sent when the widget begins to be dragged
 
 Name: OnDragFinish
 Type: message
-Syntax: OnDragStart
+Syntax: OnDragFinish
 Summary: Sent when the widget finishes being dragged
 
 
