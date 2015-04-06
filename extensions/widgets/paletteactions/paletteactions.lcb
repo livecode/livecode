@@ -88,11 +88,7 @@ constant kPaddingRatio is 0.25
 public handler OnCreate()
 	
 	variable tAction as Array
-	put the empty array into tAction
-	put kDefaultActionName into tAction["name"]
-	put kDefaultActionLabel into tAction["label"]
-	put kDefaultActionIcon into tAction["icon"]
-	put the empty array into tAction["menu"]
+	put defaultActionArray() into tAction
 	
 	variable tCount as Integer
 	
@@ -312,7 +308,11 @@ private handler drawAction(in pIndex as Integer)
 	variable tRect as Rectangle
 	put element pIndex of mActionRects into tRect
 	
-	if mHoverIndex is pIndex and mHoverTab is false then
+	log tAction
+	
+	if tAction["enabled"] parsed as boolean is false then
+		set the paint of this canvas to getPaint("disabled")
+	else if mHoverIndex is pIndex and mHoverTab is false then
 		set the paint of this canvas to getPaint("selected nav")
 	else
 		set the paint of this canvas to getPaint("nav")	
@@ -429,6 +429,9 @@ private handler getPaint(in pObject as String) returns Paint
 		
 	else if pObject is "selected nav" then
 		return solid paint with stringToColor(mSelectedNavColor)
+		
+	else if pObject is "disabled" then
+		return solid paint with color [0/255, 0/255, 0/255, 35/255]
 	end if
 	
 end handler
@@ -778,7 +781,8 @@ private handler defaultActionArray() returns Array
 	put kDefaultActionName into tArray["name"]
 	put kDefaultActionLabel into tArray["label"]
 	put kDefaultActionIcon into tArray["icon"]
-	put kDefaultActionMenu into tArray["menu"]	
+	put the empty array into tArray["menu"]
+	put "true" into tArray["enabled"]	
 	return tArray
 end handler
 
