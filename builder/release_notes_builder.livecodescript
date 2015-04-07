@@ -29,10 +29,10 @@ on Bugzilla. Multiline files will have their own subsection in the release notes
    
    global gExperimental, gPageBreak, gAnchor
    
-function releaseNotesCSS
-   return url ("file:" & builderSystemFolder() & slash & "release_notes_css_prefix.txt")
+   function releaseNotesCSS
+      return url ("file:" & builderSystemFolder() & slash & "release_notes_css_prefix.txt")
 end releaseNotesCSS
-   
+
 command releaseNotesBuilderInitialize
    start using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
    
@@ -49,7 +49,7 @@ end releaseNotesBuilderInitialize
 command releaseNotesBuilderFinalize
    stop using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
 end releaseNotesBuilderFinalize
-   
+
 command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    builderLog "report", "Building release notes for version" && pVersion
    
@@ -95,8 +95,19 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    builderLog "message", "Adding entries for bugfixes and features"
    local tUpdateFeatures
    local tUpdateBugs
-   put tBody & notesFolderToHTML(pVersion, tTags, tContents, tUpdateFeatures, tUpdateBugs) into tBody
+   put tBody & notesFolderToHTML(false, notesPath(), pVersion, tTags, tContents, tUpdateFeatures, tUpdateBugs) into tBody
    
+   put tBody & newSection("IDE changes", 1, tContents) into tBody
+   
+   builderLog "message", "Adding entries for ide bugfixes and features"
+   put tBody & notesFolderToHTML(true, notesPath(), pVersion, tTags, tContents, tUpdateFeatures, tUpdateBugs) into tBody
+   put tBody & gPageBreak into tBody
+   
+   put tBody & newSection("LiveCode Builder changes", 1, tContents) into tBody
+   
+   builderLog "message", "Adding entries for lcb bugfixes and features"
+   put tBody & notesFolderLCBToHTML(pVersion, tTags, tContents) into tBody
+   put tBody & gPageBreak into tBody
    
    builderLog "message", "Adding entries for dictionary and user guide changes"
    local tChangeList
@@ -157,7 +168,7 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    
    releaseNotesBuilderFinalize 
    builderLog "report", "Building release notes for version" && pVersion && "complete"
-      
+   
    return tUpdateText
 end releaseNotesBuilderRun
 
@@ -265,38 +276,50 @@ command getDictionaryChanges pVersion, pTags, @rStatusList, @rOtherList
    put empty into rStatusList
    put empty into rOtherList
    
-   local tDictInit
-   put "81c1b70f3c86c0a85a184c8773001570ba2c7559" into tDictInit #initial commit of dictionary
-   
-   local tFrom
-   if pVersion begins with "6.1" or pVersion is empty then
-      put tDictInit into tFrom
+   local tFrom, tExtension
+   if pVersion begins with "8.0" then
+      put "f9fb4130b570fd7df3b8e1526bbfe6074e798098" into tFrom #initial commit of dictionary
+      put "lcdoc" into tExtension
+      set the wholematches to false
    else
-      local tIndex
-      put the number of lines in pTags into tIndex
-      repeat while tIndex > 1 and line tIndex of pTags begins with char 1 to 3 of pVersion
-         subtract 1 from tIndex
-      end repeat
-      put line tIndex of pTags into tFrom
+      put "xml" into tExtension
+      if pVersion begins with "6.1" or pVersion is empty then
+         put "81c1b70f3c86c0a85a184c8773001570ba2c7559" into tFrom #initial commit of dictionary
+      else
+         local tIndex
+         put the number of lines in pTags into tIndex
+         repeat while tIndex > 1 and line tIndex of pTags begins with char 1 to 3 of pVersion
+            subtract 1 from tIndex
+         end repeat
+         put line tIndex of pTags into tFrom
+      end if
    end if
-   
    local tModifiedEntries
    put shell("git diff --name-only " & tFrom & "...HEAD -- " & dictPath()) into tModifiedEntries
    
    repeat for each line tLine in tModifiedEntries
       local tFile
       if there is not a file (item 1 of tLine) then next repeat
+      if not (tLine ends with tExtension) then next repeat
       put url ("file:" & item 1 of tLine) into tFile
-      local tVersion
-      local tTree
-      put revCreateXMLTree(tFile, false, true, false) into tTree
-      local tName
-      local tType
-      local tEntry
-      put revXMLNodeContents(tTree, "doc/name") into tName
-      put revXMLNodeContents(tTree, "doc/type") into tType
-      put "<strong>" & tName & "</strong> (<em>" & tType & "</em>)" into tEntry
-      put revXMLAttribute(tTree, "doc/history/introduced", "version") into tVersion
+      
+      if tExtension is "xml" then
+         local tVersion
+         local tTree
+         put revCreateXMLTree(tFile, false, true, false) into tTree
+         local tName
+         local tType
+         local tEntry
+         put revXMLNodeContents(tTree, "doc/name") into tName
+         put revXMLNodeContents(tTree, "doc/type") into tType
+         put "<strong>" & tName & "</strong> (<em>" & tType & "</em>)" into tEntry
+         put revXMLAttribute(tTree, "doc/history/introduced", "version") into tVersion
+      else
+         put word 2 to -1 of line lineOffset("Name:", tFile) of tFile into tName
+         put word 2 to -1 of line lineOffset("Type:", tFile) of tFile into tType
+         put word 2 to -1 of line lineOffset("Introduced:", tFile) of tFile into tVersion
+         put "<strong>" & tName & "</strong> (<em>" & tType & "</em>)" into tEntry
+      end if
       if (pVersion begins with tVersion) then
          #it was added in this version
          put rStatusList & "<li>" & tEntry into rStatusList
@@ -307,10 +330,11 @@ command getDictionaryChanges pVersion, pTags, @rStatusList, @rOtherList
    end repeat
 end getDictionaryChanges
 
-function notesFolderToHTML pVersion, pTags, @xContents, @rUpdateFeatures, @rUpdateBugs
-   local tBody
-   local tNumTags
-   
+function fetchNameOnlyDiff pFromTag, pToTag, pPath
+   return shell("git diff --name-only " & pFromTag & "..." & pToTag & " --  " & pPath)
+end fetchNameOnlyDiff
+
+function relevantTags pVersion, pTags
    local tEnd
    local tStart
    repeat for each line tLine in pTags
@@ -334,6 +358,13 @@ function notesFolderToHTML pVersion, pTags, @xContents, @rUpdateFeatures, @rUpda
    if (pVersion is not line -1 of pTags) then
       put pTags & CR & "HEAD" into pTags
    end if
+   return pTags
+end relevantTags
+
+function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdateFeatures, @rUpdateBugs
+   local tBody
+   local tNumTags
+   put relevantTags(pVersion, pTags) into pTags
    put the number of lines in pTags into tNumTags
    
    local tList
@@ -341,7 +372,11 @@ function notesFolderToHTML pVersion, pTags, @xContents, @rUpdateFeatures, @rUpda
    local tCurVersion
    put line 1 of pTags into tFirstVersion
    put line -1 of pTags into tCurVersion
-   put shell("git diff --name-only " & tFirstVersion & "..." & tCurVersion & " --  " & notesPath()) into tList
+   if pIsIDE then
+      put fetchIDENameOnlyDiff(tFirstVersion, tCurVersion) into tList
+   else
+      put fetchNameOnlyDiff(tFirstVersion, tCurVersion, pFolder) into tList
+   end if
    local tDiff
    local tId
    local tFileText
@@ -364,7 +399,12 @@ function notesFolderToHTML pVersion, pTags, @xContents, @rUpdateFeatures, @rUpda
       else
          put false into tBoldBugs
       end if
-      put shell ("git diff --name-only " &  line tIndex-1 of pTags & "..." & line tIndex of pTags & " -- " & notesPath()) into tDiff
+      
+      if pIsIDE then
+         put fetchIDENameOnlyDiff(line tIndex - 1 of pTags, line tIndex of pTags) into tDiff
+      else
+         put fetchNameOnlyDiff(line tIndex - 1 of pTags, line tIndex of pTags, pFolder) into tDiff
+      end if
       
       local tBugList
       local tFeatureList
@@ -379,7 +419,13 @@ function notesFolderToHTML pVersion, pTags, @xContents, @rUpdateFeatures, @rUpda
       
       repeat for each line tLine in tDiff
          if tLine is among the lines of tList then
-            put url ("file:" & tLine) into tFileText
+            local tFile
+            if pIsIDE then
+               put "ide/" & tLine into tFile
+            else
+               put tLine into tFile
+            end if
+            put url ("file:" & tFile) into tFileText
             put the number of lines of tFileText into tNumLines
             
             // AL-2014-11-14: Still a one-liner if the bugfix note contains a second empty line
@@ -432,6 +478,138 @@ command appendBugs pVersion, pBugs, pBold, @xTable,@xContents
    put xTable & makeBugTable(pBugs, pBold) into xTable
 end appendBugs
 
+function notesFolderLCBToHTML pVersion, pTags, @xContents
+   local tBody
+   local tNumTags
+   put relevantTags(pVersion, pTags) into pTags
+   put the number of lines in pTags into tNumTags
+   
+   local tList
+   local tFirstVersion, tCurVersion
+   put line 1 of pTags into tFirstVersion
+   put line -1 of pTags into tCurVersion
+   put fetchNameOnlyDiff(tFirstVersion, tCurVersion, notesPathLCB()) into tList
+   
+   local tDataA
+   repeat for each line tFile in tList
+      addLCBReleaseNoteData tFile, tDataA
+   end repeat
+   
+   local tConglomeratedMarkdown
+   put noteDataLCBToMD(tDataA) into tConglomeratedMarkdown
+   return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
+end notesFolderLCBToHTML
+
+function noteSubsectionDataToMD pLevel, pDataA
+   local tHashes
+   repeat pLevel
+      put "#" after tHashes
+   end repeat
+   
+   local tMD
+   repeat for each key tSubsection in pDataA
+      put tHashes && tSubsection & return after tMD
+      if pDataA[tSubsection]["data"] is not empty then
+         put pDataA[tSubsection]["data"] & return after tMD
+      end if
+      if pDataA[tSubsection]["subsection"] is not empty then
+         put noteSubsectionDataToMD(pLevel + 1, pDataA[tSubsection]["subsection"]) & return after tMD
+      end if
+   end repeat
+   return tMD
+end noteSubsectionDataToMD
+
+function noteDataLCBToMD pDataA
+   local tMD
+   repeat for each key tSection in pDataA
+      put "#" && tSection & return after tMD
+      if pDataA[tSection]["subsection"] is not empty then
+         put noteSubsectionDataToMD(2, pDataA[tSection]["subsection"]) & return after tMD
+      end if
+      if pDataA[tSection]["bugs"] is not empty then
+         put "##" && "Bugs fixed" & return after tMD
+         put pDataA[tSection]["bugs"] & return after tMD
+      end if
+   end repeat
+   return tMD
+end noteDataLCBToMD
+
+function numberOfHashes pWord
+   local tCount
+   put 0 into tCount
+   repeat while char tCount + 1 of pWord is "#"
+      add 1 to tCount
+   end repeat
+   return tCount
+end numberOfHashes
+
+function lineIsBugInfo pLine
+   return matchText(pLine, "^ *# *\[[0-9]*\]")
+end lineIsBugInfo
+
+on addDataToSection pLevel, @xData, @xSectionA
+   repeat while xData is not empty
+      get line 1 of xData
+      if word 1 of it is empty then 
+         delete line 1 of xData
+         next repeat
+      end if
+      local tCount
+      put numberOfHashes(word 1 of it) into tCount
+      if tCount is 0 then
+         if xSectionA["data"] is empty then
+            put it into xSectionA["data"]
+         else
+            put return & it after xSectionA["data"]
+         end if
+         delete line 1 of xData
+      else if pLevel >= tCount then
+         exit addDataToSection
+      else
+         local tSection
+         put word 2 to -1 of it into tSection
+         delete line 1 of xData
+         addDataToSection pLevel + 1, xData, xSectionA["subsection"][tSection]
+      end if
+   end repeat
+end addDataToSection
+
+on addLCBReleaseNoteData pFile, @xDataA
+   local tNoteData
+   put url ("file:" & pFile) into tNoteData
+   
+   local tCount, tSection
+   
+   repeat while tNoteData is not empty
+      get line 1 of tNoteData
+      if word 1 of it is empty then 
+         delete line 1 of tNoteData
+         next repeat
+      end if
+      put numberOfHashes(word 1 of it) into tCount
+      # tCount should always be 1
+      if tCount is 1 then
+         # If this is not a bug number, then it is a section
+         if lineIsBugInfo(it) then
+            if xDataA[tSection]["bugs"] is empty then
+               put word 2 to -1 of it into xDataA[tSection]["bugs"]
+            else
+               put return & word 2 to -1 of it after xDataA[tSection]["bugs"]
+            end if
+            delete line 1 of tNoteData
+         else
+            put word 2 to -1 of it into tSection
+            delete line 1 of tNoteData
+            addDataToSection 1, tNoteData, xDataA[tSection]
+         end if
+      else
+         // throw error?
+         delete line 1 of tNoteData
+      end if
+      
+   end repeat
+end addLCBReleaseNoteData
+
 function dictPath
    # path to the dictionary folder in git
    return "docs" & slash & "dictionary"
@@ -445,6 +623,14 @@ end notesPath
 function targetPath
    return "_build" & slash & "notes"
 end targetPath
+
+function notesPathLCB
+   return "docs" & slash & "lcb" & slash & "notes"
+end notesPathLCB
+
+function notesPathIDE
+   return "ide" & slash & "notes"
+end notesPathIDE
 
 command exportUpdateText pVersion, pFeatures, pBugs, pReleaseType
    local tHtmlText
@@ -506,3 +692,32 @@ command sortTags @rTags
    delete the last char of tSortedTags
    put tSortedTags into rTags
 end sortTags
+
+function fetchIDENameOnlyDiff pFromTag, pToTag
+   local tFirstCommit, tLastCommit
+   fetchIDECommits pFromTag, pToTag, tFirstCommit, tLastCommit
+   
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to tDefaultFolder & slash & "ide"
+   
+   local tDiff
+   put shell("git diff --name-only" && tFirstCommit & "..." & tLastCommit && "--" && "notes") into tDiff
+   set the defaultFolder to tDefaultFolder
+   return tDiff
+end fetchIDENameOnlyDiff
+
+function fetchIDEDiff pFromTag, pToTag
+   return shell("git diff" && pFromTag & "..." & pToTag & " --  ide")
+end fetchIDEDiff
+
+on fetchIDECommits pFirstVersion, pLastVersion, @rFirst, @rLast
+   local tDiff
+   put fetchIDEDiff(pFirstVersion, pLastVersion) into tDiff
+   
+   local tString
+   put "Subproject commit (.*)" into tString
+
+   get matchText(tDiff, "\-" & tString, rFirst)
+   get matchText(tDiff, "\+" & tString, rLast)
+end fetchIDECommits

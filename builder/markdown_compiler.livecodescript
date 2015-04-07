@@ -37,7 +37,7 @@ Links
    global gImgRegex, gLinkRegex, gVidRegex
    global gDocumentPrefix, gDocumentSuffix
    global gHeading, gItalic, gList, gIndent, gImg
-   global gAnchorCount
+   global gAnchorCount, gExtension
    
 on libraryStack
    markdownInit
@@ -46,13 +46,15 @@ end libraryStack
 command markdownInit
    put 1 into gAnchorCount
    
+   put "md" into gExtension
+   
    put "<html>" into gDocumentPrefix
    put "</html>" into gDocumentSuffix
    
    put "#" into gHeading
    put "*" into gItalic -- bold is "**"
    put "*" into gList
-   put tab into gIndent
+   put "  " into gIndent
    put "!" into gImg
    put "!\[(.*)\]\((.*)\)" into gImgRegex
    put "!!\[.*\]\((.*)\)" into gVidRegex
@@ -72,7 +74,7 @@ function processFileToHTML pFile, @xContents
    put "file:" & notesPath() & slash & tFileName into tFileUrl
    put url tFileUrl into tFileText
    if tFileText is not empty then
-      markdownToHTML tLine,tFileText, 1, 0, xContents, tBody, false, true
+      markdownToHTML tFileText, 1, 0, xContents, tBody, false, true
    end if
    return tBody
 end processFileToHTML
@@ -94,7 +96,7 @@ function parseEnclosingMarkup pText
          return tParsed
       end if
       local tWhich
-      put char 0 to tStart - 1 of pText into tParsed
+      put char 1 to tStart - 1 of pText into tParsed
       put char tStart to tEnd of pText into tWhich
       put char tEnd + 1 to -1 of pText into pText
       if tWhich is "/*" then
@@ -104,7 +106,7 @@ function parseEnclosingMarkup pText
          put "[^\\](\*)" into tRegex
          put matchChunk(pText, tRegex, tStart, tEnd) into tFound
          repeat while tFound is true and char tStart + 1 of pText is "*"
-            put tInsides & char 0 to tStart + 1 of pText into tInsides
+            put tInsides & char 1 to tStart + 1 of pText into tInsides
             put char tStart + 2 to -1 of pText into pText
             put matchChunk(pText, tRegex, tStart, tEnd) into tFound
          end repeat
@@ -124,14 +126,14 @@ function parseEnclosingMarkup pText
       if tFound is false then
          return tParsed & parseEnclosingMarkup(pText)
       end if
-      put tInsides & char 0 to tStart - 1 of pText into tInsides
+      put tInsides & char 1 to tStart - 1 of pText into tInsides
       put char tEnd + 1 to -1 of pText into pText
       if tWhich is "**" then
          put tParsed & "<strong>" & parseEnclosingMarkup(tInsides) & "</strong>" into tParsed
       else if tWhich is "*" then
          put tParsed & "<em>" & parseEnclosingMarkup(tInsides) & "</em>" into tParsed
       else if tWhich is "`" then 
-         put tParsed & "<pre class=" & quote & "code" & quote & ">" & parseEnclosingMarkup(tInsides) & "</pre>" into tParsed
+         put tParsed & "<code>" & parseEnclosingMarkup(tInsides) & "</code>" into tParsed
       else if tWhich is "!-" then
          put tParsed & "<p class=" & quote & "warning" & quote & ">" & parseEnclosingMarkup(tInsides) & "</p>" into tParsed
       else if tWhich is "/*" then
@@ -160,10 +162,12 @@ function countOccurrences pOccurrer, pText
 end countOccurrences
 
 function countConsecutive pOccurrer, pText
-   local tCount
+   local tCount, tLength
+   put the number of chars in pOccurrer into tLength
    put 0 into tCount
-   repeat while char tCount + 1 of pText is pOccurrer
+   repeat while pText begins with pOccurrer
       add 1 to tCount
+      delete char 1 to tLength of pText
    end repeat
    return tCount
 end countConsecutive
@@ -318,7 +322,7 @@ function markdownToHTML @pText, pHLevel, pCLevel, @xContents, pTopLevel
          
          #  remove any indents from the beginning of the line and record the number
          put countConsecutive(gIndent, tCurLine) into tNumIndents
-         put char tNumIndents + 1 to -1 of tCurLine into tCurLine
+         put char (the number of chars in gIndent * tNumIndents) + 1 to -1 of tCurLine into tCurLine
          
          # check if the line starts with any list characters. If it starts with *, check if there are an odd number, otherwise the star is for bold / italic markup.
          if (tCurLine begins with gList and countOccurrences (gList, tCurLine) mod 2 is 1) or (matchChunk(tCurLine, "^([0-9]+\.[[0-9]*\.*]*)", tListPrefixStart, tListPrefixEnd)) then
@@ -398,8 +402,9 @@ function markdownToHTML @pText, pHLevel, pCLevel, @xContents, pTopLevel
                repeat until ((line tSectionLine of pText begins with "#") and (line tSectionLine of pText begins with tHashes is false)) or tSectionLine > tNumLines # find out where the section ends
                   add 1 to tSectionLine
                end repeat
+               local tSection
                put line x + 1 to tSectionLine -1 of pText into tSection
-               markdownToHTML "", tSection, pHLevel, pCLevel - 1, tLocalConts, tLocalBody, pRelease, false # and recursively call markdownToHTML on that section, including its 'local' contents in the body
+               put markdownToHTML(tSection, pHLevel, pCLevel - 1, tLocalConts, false) into tLocalBody # and recursively call markdownToHTML on that section, including its 'local' contents in the body
                put tParsedBody & "<h" & pHLevel + tHValue & " " & getAnchor(tCurHeading) & ">" & tCurHeading & "</h" & pHLevel + tHValue & ">" into tParsedBody
                put tParsedBody & CR & tLocalConts & CR & tLocalBody into tParsedBody
                put empty into tCurLine
@@ -420,7 +425,7 @@ function markdownToHTML @pText, pHLevel, pCLevel, @xContents, pTopLevel
                if tNumIndents > 0 then # if there were indents before the block marker, put them inside the block
                   local tTabs
                   repeat with k = 1 to tNumIndents
-                     put tTabs & tab into tTabs
+                     put tTabs & gIndent into tTabs
                   end repeat
                   if tLine begins with "`" then
                      put char 1 of tLine & tTabs & char 2 to -1 of tLine into tLine
@@ -430,6 +435,7 @@ function markdownToHTML @pText, pHLevel, pCLevel, @xContents, pTopLevel
                   put empty into tTabs
                end if
                repeat until tLine ends with "-!" or tLine ends with "*/" or tLine ends with "`" or  tSectionLine is tNumLines # find the end of the section
+                  local tLinkUrl
                   repeat while matchText(tLine,gLinkRegex, tLinkText, tLinkUrl) # linkify any links
                      addLink tLine, tLinkText, tLinkUrl
                   end repeat
