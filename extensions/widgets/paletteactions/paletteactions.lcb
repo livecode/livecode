@@ -282,12 +282,11 @@ private handler drawTab(in pIndex as Integer)
 	if pIndex is mSelectedNavItem then
 		variable tPath as Path
 		put getPathOfTab(tRect) into tPath
-		log tPath
+		
 		set the paint of this canvas to getPaint("selected tab")
 		close path on tPath
 		fill tPath on this canvas
 		
-		put getPathOfTab(tRect) into tPath
 		set the paint of this canvas to getPaint("line")
 		stroke tPath on this canvas
 		
