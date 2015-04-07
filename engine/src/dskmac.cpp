@@ -6283,15 +6283,25 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	{
 		uint32_t bufsize = 0;
 		_NSGetExecutablePath(NULL, &bufsize);
-		char* buf = new char[bufsize];
-		if (_NSGetExecutablePath(buf, &bufsize) != 0) {
-			delete buf;
+        // Use MCMemoryNewArray to allocate the buffer, for consistency with
+        //  free() being used in MCStringCreateWithBytesAndRelease
+        char* buf;
+        if (!MCMemoryNewArray(bufsize, buf))
+            return False;
+        
+		if (_NSGetExecutablePath(buf, &bufsize) != 0)
+        {
+			MCMemoryDeleteArray(buf);
 			return False;
 		}
 
 		MCAutoStringRef t_path;
-		MCStringCreateWithCStringAndRelease(buf, &t_path);
-		return ResolvePath(*t_path, r_path);
+        // [[ Bug 15062 ]] The path returned by _NSGetExecutablePath is UTF-8
+        //  encoded. We should decode it this way.
+        // We use strlen, as in MCStringCreateWithCString, to avoid the surprise
+        //  of a trailing NULL character.
+        return MCStringCreateWithBytesAndRelease((byte_t*)buf, strlen(buf), kMCStringEncodingUTF8, false, &t_path)
+            && ResolvePath(*t_path, r_path);
 	}
 
 

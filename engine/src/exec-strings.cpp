@@ -1199,6 +1199,12 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 				whichValue = INT_VALUE;
 				break;
 			case 's':
+                // If there is a zero width, then remove it.
+                if (prefix_zero != nil)
+                {
+                    dptr -= 1;
+                    dptr[0] = '\0';
+                }
                 // AL-2014-10-30: [[ Bug 13876 ]] Use internal MCStringRef format specifier (%@) when %s is used
                 //  to preserve non-native chars in string.
                 dptr[-1] = '@';
