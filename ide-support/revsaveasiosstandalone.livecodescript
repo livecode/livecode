@@ -100,15 +100,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       else
          
          -- MM-2014-10-21: [[ iOS 8.1 Support ]] Use iOS 8.1 SDK for armv7 builds on 10.9.
-         --
-         get revIDEDeployIOSGetDeviceSDK("8.1")           
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") then
-            throw "performing iOS device builds requires the iOS 8.1 SDK platform to be installed (available with XCode 6.1)"
+         -- SN-2015-03-12: [[ Bug 14866 ]] Use iOS 8.2 for armv7 builds from 10.9
+         get revIDEDeployIOSGetDeviceSDK("8.2")
+         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.2.sdk") then
+            throw "performing iOS device builds requires the iOS 8.2 SDK platform to be installed (available with XCode 6.2)"
          end if                  
          put it into tSDKs["arm"]["root path"]
          put it & "/usr/bin" into tSDKs["arm"]["tools path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") into tSDKs["arm"]["sdk path"]
-         put "8_1" into tSDKs["arm"]["suffix"]
+         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.2.sdk") into tSDKs["arm"]["sdk path"]
+         put "8_2" into tSDKs["arm"]["suffix"]
          put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
          
       end if
@@ -133,6 +133,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put "8_0" into tSDKs["sim"]["suffix"]         
       else if pTarget contains "8.1" then
          put "8_1" into tSDKs["sim"]["suffix"]
+      else if pTarget contains "8.2" then
+         put "8_2" into tSDKs["sim"]["suffix"]
       end if
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
@@ -385,12 +387,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          end if
          
          local tArchs
-         if tRawArchs contains "ARM64" then
+         -- SN-2015-03-30: [[ Bug 14794 ]] If the user specifies a 32-bit only build,
+         --  then we do not do the 64-bit build.
+         if tRawArchs contains "ARM64" and not tSettings["ios,32-bit only"] then
             put "arm64 " after tArchs
          end if
          if tRawArchs contains "V7" then
             put "armv7 " after tArchs
          end if
+         
          
          -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
          -- to their architecture.
@@ -399,10 +404,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             -- Make a temporary file for link options and execute it
             local tLinkOptionsFile
             put tempName() into tLinkOptionsFile
-
+            
             put tempName() into tArchSpecificEngineFile
             put tLinkCommand & "-o" && quote & tArchSpecificEngineFile & quote & return into url ("binfile:" & tLinkOptionsFile)
-
+            
             local tiPhoneMinVersion
             put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tiPhoneMinVersion
             
@@ -410,14 +415,14 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
             -- SN-2015-02-19: [[ Bug 14625 ]] The minimum iOS version is bound to the architecture
             get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion[tArch] && quote & "@" & tLinkOptionsFile & quote)
-
+            
             put tArchSpecificEngineFile & space after tArchSpecificEngineList
             delete file tLinkOptionsFile
             if it is not empty or there is no file tArchSpecificEngineFile then
                throw "linking for" && tInstSet && " (" & tArch & ") failed with " & it
             end if
          end repeat
-
+         
          -- MM-2011-09-28: Create the engine for the instruction set specified in the build type setting.
          --
          put tempName() into tSDKs[tInstSet]["engine file"]
@@ -508,6 +513,45 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put tBaseFolder & slash before tDeploy["splash"]
       end if
    end if
+   
+   -- SN-2015-03-16: [[ iOS Font Mapping ]] Fontmapping deploy command added
+   --  We have our fontmapping list (the default fonts), and the custom ones the user
+   --  may have added
+   local tFontmapFiles,tStandardFontmapRoot
+   
+   -- We want the repo version to be able to build iOS standalones with the fontmap
+   if revEnvironmentIsInstalled() then
+      put mapFilePath(revMobileRuntimeFolder(pTarget)) into tStandardFontmapRoot
+   else
+      local tOldDel
+      put the itemdelimiter into tOldDel
+      set the itemdelimiter to slash
+      put item 1 to -4 of revEnvironmentBinariesPath() into tStandardFontmapRoot
+      put "/engine/rsrc" after tStandardFontmapRoot
+      set the itemdelimiter to tOldDel
+   end if
+   
+   -- We add our fontmapping, and the user one (if empty, that won't get through
+   --  the further loop.
+   put tStandardFontmapRoot & slash & "fontmap",tBaseFolder & slash & tSettings["ios,fontmappings"] after last item of tFontMapFiles
+   
+   repeat for each item tFontmapFile in tFontMapFiles
+      -- Alert the user if their font map has not been found on the disk
+      if there is no file tFontmapFile then
+         revStandaloneAddWarning "Could not find font mapping file" && tFontmapFile
+      else
+         local tFontMappings
+         put URL("file:" & tFontmapFile) into tFontMappings
+         -- Ensure that the list ends with a linefeed
+         if the last char of tFontMappings is not LF then
+            put LF after tFontMappings
+         end if
+         put tFontMappings after tDeploy["fontmappings"]
+      end if
+   end repeat
+   
+   -- delete the last LF
+   delete last char of tDeploy["fontmappings"]
    
    try
       _internal deploy ios tDeploy
@@ -667,10 +711,11 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
    
    revStandaloneProgress "Copying launch images..."
    
+   -- PM-2015-03-19: [[ Bug 13969 ]] Make sure we use the correct names for the splash images in iphone6/6+
    repeat for each line tType in ("iphone splash" & return & "retina splash,@2x" & return & "ipad portrait splash,-Portrait" & \
          return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
-         return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-iPhone6" & \
-         return & "iphone 6 plus portrait splash,-iPhone6PlusPortrait" & return & "iphone 6 plus landscape splash,-iPhone6PlusLandsacpe")
+         return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
+         return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
          put pBaseFolder & slash before it
@@ -1291,12 +1336,13 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    local tSplashScreens   
    if 1 is among the items of tDeviceFamily then
       put "Default|Default|{320, 480}|Portrait" & return after tSplashScreens
-      put "Default-568h@2x|Default|{320, 568}|Portrait" & return after tSplashScreens      
-      put "Default-iPhone6|Default-iPhone6|{375, 667}|Portrait" & return after tSplashScreens
+      put "Default-568h@2x|Default-568h|{320, 568}|Portrait" & return after tSplashScreens      
+      -- PM-2015-03-19: [[ Bug 13969 ]] Use the correct name for iPhone 6/6+ splash screens
+      put "Default-667h@2x|Default-667h|{375, 667}|Portrait" & return after tSplashScreens
       if tIPhoneOrientation contains "Portrait" then
-         put "Default-iPhone6PlusPortrait|Default-iPhone6PlusPortrait|{414, 736}|Portrait" & return after tSplashScreens
+         put "Default-736h@3x|Default-736h|{414, 736}|Portrait" & return after tSplashScreens
       else
-         put "Default-iPhone6PlusLandscape|Default-iPhone6PlusLandscape|{414, 736}|Landscape" & return after tSplashScreens
+         put "Default-414h@3x|Default-414h|{414, 736}|Landscape" & return after tSplashScreens
       end if      
    end if   
    if 2 is among the items of tDeviceFamily then      
@@ -1449,7 +1495,7 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         put "8_1" into pVersion
+         put "8_2" into pVersion
       end if
       put "Device-" & pVersion into tStub
    else if pTarget contains "4.2" then
@@ -1472,6 +1518,8 @@ function revMobileRuntimeFolder pTarget, pVersion
       put "Simulator-8_0" into tStub
    else if pTarget contains "8.1" then
       put "Simulator-8_1" into tStub
+   else if pTarget contains "8.2" then
+      put "Simulator-8_2" into tStub
    end if
    
    local tUserPath, tOverridePath
