@@ -280,13 +280,20 @@ private handler drawTab(in pIndex as Integer)
 	put element pIndex of mTabRects into tRect
 	
 	if pIndex is mSelectedNavItem then
+		// Get 3 sided path of tab (For drawing 3 sided stroke)
 		variable tPath as Path
 		put getPathOfTab(tRect) into tPath
 		
-		set the paint of this canvas to getPaint("selected tab")
-		close path on tPath
-		fill tPath on this canvas
+		// Get 3 sided path of tab (For drawing tab background)
+		variable tPathClosed as Path
+		put tPath into tPathClosed
+		close path on tPathClosed
 		
+		// Draw background
+		set the paint of this canvas to getPaint("selected tab")
+		fill tPathClosed on this canvas
+		
+		// Draw 3 sided tab stroke
 		set the paint of this canvas to getPaint("line")
 		stroke tPath on this canvas
 		
