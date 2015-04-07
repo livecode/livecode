@@ -1523,6 +1523,21 @@ LCError LCPostBlockOnMainThread(unsigned int options, void (^callback)(void));
 //    view of the application.
 //
 LCError LCInterfaceQueryView(UIView **r_view);
+    
+// Function:
+//   LCInterfaceQueryViewController
+// Parameters:
+//   (out) r_controller - UIViewController *
+// Errors:
+//   (none)
+// Context Safety:
+//    May be called in any context on the main thread.
+// Semantics:
+//    Returns the UIViewController for the currently visible stack that makes up the main
+//    view of the application.
+//
+
+LCError LCInterfaceQueryViewController(UIViewController** r_controller);
 
 // Function:
 //   LCInterfaceQueryViewScale
