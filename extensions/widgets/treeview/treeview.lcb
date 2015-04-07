@@ -397,7 +397,7 @@ public handler OnMouseMove() returns nothing
 		put scrollRatio(mViewHeight) into tScrollPositionRatio
 	
 		// Calculate the new top position of list
-		put the trunc of (mDataHeight - mViewHeight) * tScrollPositionRatio into mViewTopPosition
+		put (mDataHeight - mViewHeight) * tScrollPositionRatio into mViewTopPosition
 	
 		ensureViewTopPosition()
 		updateFirstDataItem()
@@ -540,10 +540,7 @@ public handler OnClick() returns nothing
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
-	variable tTopPos as Real
-	put mViewTopPosition / mRowHeight into tTopPos
-
-	return the trunc of ((pYPos + tTopPos - the floor of tTopPos) / mRowHeight) + mFirstDataItem
+	return the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1)
 end handler
 
 private handler xPosToIconString(in pXPos as Number) returns String
@@ -894,15 +891,12 @@ end handler
 
 private handler createNewKey(inout xArray as Array)
 	variable tNewKey as String
-	put "" into tNewKey
-	if "" is among the keys of xArray then
-		variable tNew as Integer
-		put 1 into tNew
-		repeat while (tNew formatted as string) is among the keys of xArray
-			add 1 to tNew
-		end repeat
-		put tNew formatted as string into tNewKey
-	end if
+	variable tNew as Integer
+	put 1 into tNew
+	repeat while (tNew formatted as string) is among the keys of xArray
+		add 1 to tNew
+	end repeat
+	put tNew formatted as string into tNewKey
 	put "" into xArray[tNewKey]
 end handler
 
@@ -926,7 +920,7 @@ private handler addKey(in pListElt as Integer, in pPath as List, in pLevel as In
 	else
 		variable tArray as Array
 		put the empty array into tArray	
-		put "" into tArray[""]
+		put "" into tArray[1 formatted as string]
 		put tArray into xArray[pPath[pLevel + 1]]
 		put false into xList[pListElt]["leaf"]
 	end if
@@ -1009,8 +1003,7 @@ private handler selectPath(in pPath as List)
 	end if
 
 	if mSelectedElement is not defined or mSelectedElement is not pPath then
-		if applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
-		else
+		if not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
 			put undefined into mSelectedElement
 		end if	
 		post "selectedElementChanged"
@@ -1033,6 +1026,11 @@ end handler
 // 	after a delete action happens, and so the element should exist by definition.
 // If the specified path doesn't exist, this returns false
 private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) as Boolean
+	
+	if pStart >= the number of elements in xList then
+		return false
+	end if	
+
 	variable tKey as String
 	put element pLevel + 1 of pPathToNode into tKey
 
@@ -1043,7 +1041,7 @@ private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in
 		if tElement["key"] is tKey and pLevel is tElement["indent"] then
 			if the number of elements in pPathToNode is pLevel + 1 then
 				pHandler(tCount, pPathToNode, pLevel, xList, xArray)
-			else
+			else if not tElement["leaf"] then
 				applyToNode(pHandler, pPathToNode, pLevel + 1, tCount, xList, xArray[tKey])			
 			end if
 			return true
@@ -1072,7 +1070,12 @@ private handler deleteSubElements(in pStart as Integer, in pTopIndent as Integer
 	end if
 end handler
 
-private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pStart as Integer, in pFoldState as Array, in pArray as Array, inout xList as List)
+private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pStart as Integer, in pFoldState as Array, in pArray as Array, inout xList as List) returns Boolean
+
+	if pStart >= the number of elements in xList then
+		return false
+	end if	
+
 	variable tCount as Integer
 	variable tElement as Array
 	variable tPath as List
@@ -1090,13 +1093,12 @@ private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pS
 				if "array" is among the keys of pFoldState then
 					applyFoldState(pLevel + 1, tCount, pFoldState["array"], pArray, xList)
 				end if
-				exit repeat
 			// or delete them
 			else
 				put true into xList[tCount]["folded"] 
 				deleteSubElements(tCount, tElement["indent"], xList)
 			end if	
-			exit repeat
+			return true
 		end if	
 	end repeat	
 end handler
