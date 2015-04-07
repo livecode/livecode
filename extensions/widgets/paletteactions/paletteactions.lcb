@@ -194,9 +194,9 @@ public handler OnClick()
 			if mActionData[tIndex]["menu"] is not empty then
 				variable tResult
 				variable tMenuString as String
-				log mActionData[tIndex]["menu"]
+				//log mActionData[tIndex]["menu"]
 				put menuArrayToString(mActionData[tIndex]["menu"], 0) into tMenuString
-				log tMenuString
+				//log tMenuString
 				popup menu tMenuString at the mouse position
 				put the result into tResult
 				if tResult is defined then
@@ -276,14 +276,23 @@ private handler drawTab(in pIndex as Integer)
 	put element pIndex of mTabRects into tRect
 	
 	if pIndex is mSelectedNavItem then
+		// Get 3 sided path of tab (For drawing 3 sided stroke)
 		variable tPath as Path
-        put getPathOfTab(tRect) into tPath
+		put getPathOfTab(tRect) into tPath
+		
+		// Get 3 sided path of tab (For drawing tab background)
+		variable tPathClosed as Path
+		put tPath into tPathClosed
+		close path on tPathClosed
+		
+		// Draw background
+		set the paint of this canvas to getPaint("selected tab")
+		fill tPathClosed on this canvas
+		
+		// Draw 3 sided tab stroke
 		set the paint of this canvas to getPaint("line")
 		stroke tPath on this canvas
 		
-		set the paint of this canvas to getPaint("selected tab")
-		close path on tPath
-		fill tPath on this canvas
 		set the paint of this canvas to getPaint("selected nav")
 	else
 		set the paint of this canvas to getPaint("nav")
@@ -452,11 +461,13 @@ private handler getFont(in pType as String) returns Font
 end handler
 
 private handler getPath(in pObject as String) returns Path
+	variable tHeight as Number
+	put (the trunc of my height) - 0.5 into tHeight
 	if pObject is "background" then
-		return rectangle path of rectangle [0, 0, my width, my height]	
+		return rectangle path of rectangle [0, 0, the rounded of my width + 0.5, tHeight]	
 	else if pObject is "line" then
 		if mIsHeader then
-			return line path from point [0, my height] to point [my width, my height]
+			return line path from point [0, tHeight] to point [my width, tHeight]
 		else
 			return line path from point [0, 0] to point [my width, 0]
 		end if
@@ -464,7 +475,7 @@ private handler getPath(in pObject as String) returns Path
 end handler
 
 private handler getPathOfTab(in pRect as Rectangle) returns Path
-    return rectangle path of rectangle [the left of pRect, my height * kTabPaddingRatio, the right of pRect,  my height]
+    return rectangle path of rectangle [the rounded of (the left of pRect) - 0.5, the rounded of (my height * kTabPaddingRatio) + 0.5, the rounded of (the right of pRect) + 0.5, my height+0.5]
 end handler
 
 private handler stringToColor(in pString as String) returns Color
