@@ -406,8 +406,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		s_system_sound = t_new_sound;
 		s_system_sound_name = MCValueRetain(*t_sound_path);
 	}
-	else
-		MCValueRelease(*t_sound_path);
+    // PM-2015-04-09: [[ Bug 15168 ]] [Removed code] t_sound_path will be auto-released
 	
 	env -> result = t_status == noErr;
 }
