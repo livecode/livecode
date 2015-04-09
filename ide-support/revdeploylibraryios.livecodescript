@@ -368,9 +368,10 @@ function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
       end if
    else
       -- SN-2015-03-12: [[ Bug 14866 ]] iOS SDK 8.2 is now the valid SDK
-      if "8.2" is not among the lines of it then
+      -- SN-2015-04-09: [[ Bug 15187 ]] iOS SDK 8.3 is now the valid SDK
+      if "8.3" is not among the lines of it then
          put false into tValid
-         put "In order to perfom device builds, you must have the iOS 8.2 SDK configured." & return & "The iOS 8.2 SDK comes with XCode 6.2." into tSDKStatus
+         put "In order to perfom device builds, you must have the iOS 8.3 SDK configured." & return & "The iOS 8.3 SDK comes with XCode 6.3." into tSDKStatus
       end if
    end if
    
@@ -410,8 +411,9 @@ end deployGetSimulatorFamilies
 
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
+-- SN-2015-04-09: [[ Bug 15187 ]] Update iOS SDK to 8.3
 function deployUsableIosSdk
-   return "5.1,6.1,7.1,8.2"
+   return "5.1,6.1,7.1,8.3"
 end deployUsableIosSdk
 
 -- MW-2012-03-21: Returns the version of SDK to use for device builds.
