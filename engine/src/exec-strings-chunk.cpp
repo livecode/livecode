@@ -138,7 +138,13 @@ void MCStringsGetExtentsByOrdinalInRange(MCExecContext& ctxt, Chunk_term p_chunk
             if (p_ordinal_type == CT_ANY)
                 r_first = MCU_any(t_count);
             else if (p_ordinal_type == CT_LAST)
-                r_first = t_count - 1;
+            {
+                // AL-2015-04-09: [[ Bug 15156 ]] Prevent underflow of r_first
+                if (t_count == 0)
+                    r_first = 0;
+                else
+                    r_first = t_count - 1;
+            }
             else
                 r_first = t_count / 2;
             break;
@@ -162,12 +168,8 @@ void MCStringsGetExtentsByOrdinalInRange(MCExecContext& ctxt, Chunk_term p_chunk
             return;
 	}
     
-    if (r_first < 0)
-    {
+    if (r_first == 0)
         r_chunk_count = 0;
-        r_first = 0;
-        return;
-    }
     else
         r_chunk_count = 1;
 }
