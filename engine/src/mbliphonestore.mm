@@ -231,7 +231,8 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 			return ES_NORMAL;
 
 		case kMCPurchasePropertyTransactionIdentifier:
-			if (t_transaction == nil)
+            // PM-2015-03-10: [[ Bug 14858 ]] transactionIdentifier can be nil if the purchase is still in progress (i.e when purchaseStateUpdate msg is sent with state=sendingRequest)
+			if (t_transaction == nil || [t_transaction transactionIdentifier] == nil)
 				break;
 			
 			ep.copysvalue([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);

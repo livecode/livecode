@@ -69,6 +69,10 @@ extern void setup_simulator_hooks(void);
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
+// SN-2015-02-16: [[ iOS Font mapping ]] We want to clean the generated font map
+//   when closing the engine.
+extern void ios_clear_font_mapping(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean tripleclick = False;
@@ -224,6 +228,8 @@ Boolean MCScreenDC::open(void)
 
 Boolean MCScreenDC::close(Boolean p_force)
 {
+    // SN-2015-02-16: [[ iOS Font Name ]] Clear the font mapping array.
+    ios_clear_font_mapping();
 	return True;
 }
 
@@ -354,7 +360,12 @@ void MCScreenDC::beep(void)
 {
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	MCIPhoneRunBlockOnMainFiber(^(void) {
+    
+    // PM-2015-03-12: [[ Bug 14408 ]] On devices that don't support vibration, use AudioServicesPlaySystemSound, which does not lower the background volume, if audio is playing on the background
+    if([[UIDevice currentDevice].model isEqualToString:@"iPhone"])
 		AudioServicesPlayAlertSound(s_system_sound_name != nil ? s_system_sound : kSystemSoundID_Vibrate);
+    else
+        AudioServicesPlaySystemSound(s_system_sound_name != nil ? s_system_sound : kSystemSoundID_Vibrate);
 	});
 }
 

@@ -1516,11 +1516,11 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
         {
             switch(p_new_orientation)
             {
-                default:
                 case UIInterfaceOrientationPortrait:
                 case UIInterfaceOrientationPortraitUpsideDown:
                     t_image_names[0] = @"Default-736h@3x.png";
                     t_image_angles[0] = 0.0f;
+                    break;
                 case UIInterfaceOrientationLandscapeLeft:
                 case UIInterfaceOrientationLandscapeRight:
                     t_image_names[0] = @"Default-414h@3x.png";
@@ -1542,7 +1542,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
                 t_image_names[0] = @"Default-667h@2x.png";
                 t_image_names[1] = nil;
             }
-            if ([[UIScreen mainScreen] bounds] . size . height == 568 || [[UIScreen mainScreen] bounds] . size . width == 568)
+            // PM-2015-03-19: [[ Bug 13969 ]] Make sure the correct splash screen is used for iPhone6
+            else if ([[UIScreen mainScreen] bounds] . size . height == 568 || [[UIScreen mainScreen] bounds] . size . width == 568)
             {
                 t_image_names[0] = @"Default-568h@2x.png";
                 t_image_names[1] = nil;

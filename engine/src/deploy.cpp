@@ -197,6 +197,11 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	if (t_success)
 		for(uint32_t i = 0; i < p_params . redirect_count && t_success; i++)
 			t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeRedirect, p_params . redirects[i], MCCStringLength(p_params . redirects[i]) + 1);
+    
+    // Add any font mappings
+    if (t_success)
+        for(uint32_t i = 0; i < p_params . fontmapping_count && t_success; i++)
+            t_success = MCDeployCapsuleDefine(t_capsule, kMCCapsuleSectionTypeFontmap, p_params . fontmappings[i], MCCStringLength(p_params . fontmappings[i]) + 1);
 
 	// Now we add the main stack
 	if (t_success)
@@ -568,7 +573,10 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 		t_stat = fetch_opt_cstring(ep2, t_array, "startup_script", t_params . startup_script);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_cstring_array(ep2, t_array, "redirects", t_params . redirects, t_params . redirect_count);
+        t_stat = fetch_cstring_array(ep2, t_array, "redirects", t_params . redirects, t_params . redirect_count);
+    // SN-2015-02-16: [[ iOS Font mapping ]] Read the fontmappings options from the deploy parameters.
+    if (t_stat == ES_NORMAL)
+        t_stat = fetch_cstring_array(ep2, t_array, "fontmappings", t_params . fontmappings, t_params . fontmapping_count);
 
 	if (t_stat == ES_NORMAL)
 		t_stat = fetch_opt_filepath(ep2, t_array, "appicon", t_params . app_icon);
