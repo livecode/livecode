@@ -40,7 +40,7 @@
 					},
 				],
 				[
-					'uname_s == "Darwin"',
+					'OS == "mac" or OS == "ios" or uname_s == "Darwin"',
 					{
 						'host_os': 'mac',
 					},
@@ -52,7 +52,7 @@
 					},
 				],
 				[
-					'uname_s != "Darwin" and uname_s != "win"',
+					'OS != "mac" and OS != "ios" and uname_s != "Darwin" and uname_s != "win"',
 					{
 						'host_os': 'linux',
 					},

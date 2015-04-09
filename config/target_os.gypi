@@ -25,6 +25,15 @@
 			},
 		],
 		[
+			'OS == "android"',
+			{
+				'includes':
+				[
+					'android.gypi',
+				],
+			},
+		],
+		[
 			'OS == "win"',
 			{
 				'includes':

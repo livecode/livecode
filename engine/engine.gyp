@@ -222,6 +222,24 @@
 						],
 					},
 				],
+				[
+					# On Android, this needs to be built as a shared library
+					'OS == "android"',
+					{
+						'product_name': 'Standalone-Community',
+						'product_prefix': '',
+						'product_suffix': '',
+						'type': 'loadable_module',
+						
+						'ldflags':
+						[
+							# Helpful for catching build problems
+							'-Wl,-no-undefined',
+							
+							'-Wl,-T,<(src_top_dir_abs)/engine/linux.link',
+						],
+					},
+				],
 			],
 		},
 		

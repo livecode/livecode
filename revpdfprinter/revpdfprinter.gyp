@@ -54,6 +54,12 @@
 						],
 					},
 				],
+				[
+					'OS == "android"',
+					{
+						'type': 'none',
+					},
+				],
 			],
 			
 			'xcode_settings':

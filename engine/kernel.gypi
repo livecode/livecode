@@ -8,7 +8,7 @@
 			'dependencies':
 			[
 				'../libcore/libcore.gyp:libCore',
-				'../libexternal/libexternal.gyp:libExternal',
+				#'../libexternal/libexternal.gyp:libExternal',
 				'../libgraphics/libgraphics.gyp:libGraphics',
 				
 				'../thirdparty/libgif/libgif.gyp:libgif',
@@ -42,6 +42,23 @@
 						'include_dirs':
 						[
 							'../thirdparty/headers/linux/include/cairo',
+						],
+					},
+				],
+				[
+					'OS == "android"',
+					{
+						'dependencies':
+						[
+							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
+							'../thirdparty/libskia/libskia.gyp:libskia',
+						],
+						
+						'sources!':
+						[
+							# Not yet supported on Android
+							'src/mblactivityindicator.cpp',
+							'src/mblcamera.cpp',
 						],
 					},
 				],
@@ -154,6 +171,19 @@
 						},
 					],
 					[
+						'OS == "android"',
+						{
+							'libraries':
+							[
+								'-lGLESv1_CM',
+								'-ljnigraphics',
+								'-llog',
+								'-lm',
+								'-lstdc++',
+							],
+						},
+					],
+					[
 						'OS == "win"',
 						{
 							'library_dirs':
@@ -189,6 +219,92 @@
 					],
 				],
 			},
+		},
+		
+		{
+			'target_name': 'kernel-java',
+			'type': 'none',
+			
+			# A little indirection needed to get INTERMEDIATE_DIR escaped properly
+			'intermediate_dir_escaped': '<!(["sh", "-c", "echo $1 | sed -e $2", "echo", "<(INTERMEDIATE_DIR)", "s/\\\\$/\\\\\\$/g"])',
+			
+			'sources':
+			[
+				'<@(engine_aidl_source_files)',
+				
+				# Outputs from a rule don't get considered as
+				# inputs to another rule in Gyp, unfortunately
+				'<!@((for x in <@(engine_aidl_source_files); do echo "<(_intermediate_dir_escaped)/${x}"; done) | sed -e "s/\\.aidl$/\\.java/g")',
+				
+				# Some of the Java sources depend on the output
+				# from AIDL so they come last
+				'<@(engine_java_source_files)',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "android"',
+					{
+						'rules':
+						[
+								
+							{
+								'rule_name': 'aidl_interface_gen',
+								'extension': 'aidl',
+					
+								'message': '  AIDL <(RULE_INPUT_DIRNAME)/<(RULE_INPUT_ROOT).java',
+								'process_outputs_as_sources': 1,
+					
+								'inputs':
+								[
+									'<(aidl_framework_path)',
+								],
+					
+								'outputs':
+								[
+									'<(INTERMEDIATE_DIR)/<(RULE_INPUT_DIRNAME)/<(RULE_INPUT_ROOT).java',
+								],
+					
+								'action':
+								[
+									'<(aidl_path)',
+									'-Isrc/java',
+									'-p' '<@(_inputs)',
+									'-o' '<(INTERMEDIATE_DIR)/src/java',
+									'<(RULE_INPUT_PATH)',
+								],
+							},
+				
+							{
+								'rule_name': 'javac',
+								'extension': 'java',
+					
+								'message': '  JAVAC <(RULE_INPUT_DIRNAME)/<(RULE_INPUT_ROOT).class',
+					
+								'outputs':
+								[
+									# Java writes the output file based on the class name.
+									# Use some Make nastiness to correct the output name
+									'<(PRODUCT_DIR)/classes_livecode_community/$(subst\t<(INTERMEDIATE_DIR)/,,$(subst\tsrc/java/,,<(RULE_INPUT_DIRNAME)))/<(RULE_INPUT_ROOT).class',
+								],
+					
+								'action':
+								[
+									'<(javac_path)',
+									'-d', '<(PRODUCT_DIR)/classes_livecode_community',
+									#'-source', '1.5',
+									'-target', '1.5',
+									'-implicit:none',
+									'-cp', '<(java_classpath)',
+									'-sourcepath', 'src/java:<(INTERMEDIATE_DIR)/src/java',
+									'<(RULE_INPUT_PATH)',
+								],
+							},
+						],
+					}
+				]
+			],
 		},
 	],
 }

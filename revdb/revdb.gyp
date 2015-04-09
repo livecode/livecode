@@ -196,6 +196,14 @@
 				'src/sqlite_cursor.cpp',
 			],
 			
+			'msvs_settings':
+			{
+				'VCCLCompilerTool':
+				{
+					'ExceptionHandling': 1,
+				},
+			},
+			
 			'xcode_settings':
 			{
 				'INFOPLIST_FILE': 'rsrc/dbsqlite-Info.plist',
@@ -211,6 +219,19 @@
 					'_releasedbconnectionref',
 				],
 			},
+			
+			'conditions':
+			[
+				[
+					'OS == "linux" or OS == "android"',
+					{
+						'cflags_cc':
+						[
+							'-fexceptions',
+						],
+					},
+				],
+			],
 		},
 		{
 			'target_name': 'revdb',

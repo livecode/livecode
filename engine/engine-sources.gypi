@@ -107,7 +107,6 @@
 			'src/funcsm.cpp',
 			'src/handler.cpp',
 			'src/hndlrlst.cpp',
-			'src/internal.cpp',
 			'src/keywords.cpp',
 			'src/literal.cpp',
 			'src/keywords.cpp',
@@ -339,69 +338,40 @@
 			
 			# Group "Mobile - Android"
 			'src/mblandroid.h',
+			'src/mblandroidcontrol.h',
 			'src/mblandroidjava.h',
+			'src/mblandroidtypeface.h',
 			'src/mblandroidutil.h',
 			'src/mblandroid.cpp',
+			'src/mblandroidalert.cpp',
+			'src/mblandroidbrowser.cpp',
+			'src/mblandroidbusyindicator.cpp',
+			'src/mblandroidcalendar.cpp',
+			'src/mblandroidcontact.cpp',
+			'src/mblandroidcontrol.cpp',
 			'src/mblandroiddc.cpp',
 			'src/mblandroiddialog.cpp',
+			'src/mblandroidfont.cpp',
 			'src/mblandroidfs.cpp',
+			'src/mblandroidinput.cpp',
 			'src/mblandroidio.cpp',
 			'src/mblandroidjava.cpp',
+			'src/mblandroidmail.cpp',
 			'src/mblandroidmisc.cpp',
 			'src/mblandroidmm.cpp',
 			'src/mblandroidnetwork.cpp',
-			'src/mblandroidprocess.cpp',
-			'src/mblandroidmail.cpp',
+			'src/mblandroidnotification.cpp',
 			'src/mblandroidorientation.cpp',
+			'src/mblandroidplayer.cpp',
+			'src/mblandroidprocess.cpp',
+			'src/mblandroidscroller.cpp',
+			'src/mblandroidsensor.cpp',
+			'src/mblandroidstore.cpp',
+			'src/mblandroidsound.cpp',
 			'src/mblandroidtextlayout.cpp',
+			'src/mblandroidtextmessaging.cpp',
+			'src/mblandroidtypeface.cpp',
 			'src/mblandroidurl.cpp',
-			'src/mblandroid.java',
-			'src/java/com/android/vending/billing/IInAppBillingService.aidl',
-			'src/java/com/android/vending/billing/IMarketBillingService.aidl',
-			'src/java/com/android/vending/billing/IMarketBillingService.java',
-			'src/java/com/runrev/android/AccelerationChangeListener.java',
-			'src/java/com/runrev/android/AdModule.java',
-			'src/java/com/runrev/android/Alert.java',
-			'src/java/com/runrev/android/AttachmentProvider.java',
-			'src/java/com/runrev/android/BitmapView.java',
-			'src/java/com/runrev/android/BusyIndicator.java',
-			'src/java/com/runrev/android/CalendarEvents.java',
-			'src/java/com/runrev/android/CameraCompat.java',
-			'src/java/com/runrev/android/Contact.java',
-			'src/java/com/runrev/android/DialogModule.java',
-			'src/java/com/runrev/android/Email.java',
-			'src/java/com/runrev/android/Engine.java',
-			'src/java/com/runrev/android/EngineApi.java',
-			'src/java/com/runrev/android/EngineReceiver.java',
-			'src/java/com/runrev/android/LiveCodeActivity.java',
-			'src/java/com/runrev/android/NetworkModule.java',
-			'src/java/com/runrev/android/NotificationModule.java',
-			'src/java/com/runrev/android/OpenGLView.java',
-			'src/java/com/runrev/android/PushReceiver.java',
-			'src/java/com/runrev/android/ScreenOrientationEventListener.java',
-			'src/java/com/runrev/android/SensorModule.java',
-			'src/java/com/runrev/android/ShakeEventListener.java',
-			'src/java/com/runrev/android/SoundModule.java',
-			'src/java/com/runrev/android/TextMessaging.java',
-			'src/java/com/runrev/android/URLLoader.java',
-			'src/java/com/runrev/android/Utils.java',
-			'src/java/com/runrev/android/billing/BillingProvider.java',
-			'src/java/com/runrev/android/billing/BillingModule.java',
-			'src/java/com/runrev/android/billing/PurchaseObserver.java',
-			'src/java/com/runrev/android/billing/ResponseHandler.java',
-			'src/java/com/runrev/android/billing/amazon/AmazonBillingProvider.java',
-			'src/java/com/runrev/android/billing/amazon/MyPurchasingObserver.java',
-			'src/java/com/runrev/android/billing/google/Base64.java',
-			'src/java/com/runrev/android/billing/google/Base64DecoderException.java',
-			'src/java/com/runrev/android/billing/google/IabException.java',
-			'src/java/com/runrev/android/billing/google/IabHelper.java',
-			'src/java/com/runrev/android/billing/google/IabResult.java',
-			'src/java/com/runrev/android/billing/google/Inventory.java',
-			'src/java/com/runrev/android/billing/google/Purchase.java',
-			'src/java/com/runrev/android/billing/google/SkuDetails.java',
-			'src/java/com/runrev/android/billing/google/Security.java',
-			'src/java/com/runrev/android/billing/google/GoogleBillingProvider.java',
-			'src/java/com/runrev/android/billing/samsung/SamsungBillingProvider.java',
 			
 			# Group "Mobile - iOS"
 			'src/mbliphone.h',
@@ -663,6 +633,7 @@
 			'src/deploy_windows.cpp',
 			'src/deploysecurity.cpp',
 			'src/ide.cpp',
+			'src/internal.cpp',
 			'src/internal_development.cpp',
 			'src/mode_development.cpp',
 		],
@@ -672,6 +643,7 @@
 		[
 			'src/minizip.h',
 			'src/bsdiff_apply.cpp',
+			'src/internal.cpp',
 			'src/minizip.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
@@ -713,6 +685,69 @@
 			'src/srvspec.cpp',
 			'src/srvstack.cpp',
 		],
+		
+		# Java sources for Android
+		'engine_java_source_files':
+		[
+			'src/java/com/runrev/android/AccelerationChangeListener.java',
+			'src/java/com/runrev/android/Alert.java',
+			'src/java/com/runrev/android/AttachmentProvider.java',
+			'src/java/com/runrev/android/BitmapView.java',
+			'src/java/com/runrev/android/BusyIndicator.java',
+			'src/java/com/runrev/android/CalendarEvents.java',
+			'src/java/com/runrev/android/CameraCompat.java',
+			'src/java/com/runrev/android/Contact.java',
+			'src/java/com/runrev/android/DialogModule.java',
+			'src/java/com/runrev/android/Email.java',
+			'src/java/com/runrev/android/Engine.java',
+			'src/java/com/runrev/android/EngineApi.java',
+			'src/java/com/runrev/android/EngineReceiver.java',
+			'src/java/com/runrev/android/LiveCodeActivity.java',
+			'src/java/com/runrev/android/NetworkModule.java',
+			'src/java/com/runrev/android/NotificationModule.java',
+			'src/java/com/runrev/android/OpenGLView.java',
+			'src/java/com/runrev/android/PushReceiver.java',
+			'src/java/com/runrev/android/ScreenOrientationEventListener.java',
+			'src/java/com/runrev/android/SensorModule.java',
+			'src/java/com/runrev/android/ShakeEventListener.java',
+			'src/java/com/runrev/android/SoundModule.java',
+			'src/java/com/runrev/android/TextMessaging.java',
+			'src/java/com/runrev/android/URLLoader.java',
+			'src/java/com/runrev/android/Utils.java',
+			'src/java/com/runrev/android/billing/BillingProvider.java',
+			'src/java/com/runrev/android/billing/BillingModule.java',
+			'src/java/com/runrev/android/billing/PurchaseObserver.java',
+			#'src/java/com/runrev/android/billing/ResponseHandler.java',
+			'src/java/com/runrev/android/billing/google/Base64.java',
+			'src/java/com/runrev/android/billing/google/Base64DecoderException.java',
+			'src/java/com/runrev/android/billing/google/IabException.java',
+			'src/java/com/runrev/android/billing/google/IabHelper.java',
+			'src/java/com/runrev/android/billing/google/IabResult.java',
+			'src/java/com/runrev/android/billing/google/Inventory.java',
+			'src/java/com/runrev/android/billing/google/Purchase.java',
+			'src/java/com/runrev/android/billing/google/SkuDetails.java',
+			'src/java/com/runrev/android/billing/google/Security.java',
+			'src/java/com/runrev/android/billing/google/GoogleBillingProvider.java',
+			'src/java/com/runrev/android/billing/samsung/SamsungBillingProvider.java',
+		],
+		
+		# AIDL sources for Android
+		'engine_aidl_source_files':
+		[
+			'src/java/com/android/vending/billing/IInAppBillingService.aidl',
+			'src/java/com/android/vending/billing/IMarketBillingService.aidl',
+			'src/java/com/sec/android/iap/IAPServiceCallback.aidl',
+			'src/java/com/sec/android/iap/IAPConnector.aidl',
+		],
+		
+		# Sources only used in Commercial Android builds
+		'engine_commercial_java_files':
+		[
+			'src/java/com/runrev/android/AdModule.java',
+			'src/java/com/runrev/android/billing/amazon/AmazonBillingProvider.java',
+			'src/java/com/runrev/android/billing/amazon/MyPurchasingObserver.java',
+		],
+		
 		
 		# Files to be excluded from server builds
 		'engine_server_exclude_files':
@@ -877,6 +912,19 @@
 				},
 			],
 			[
+				'OS == "android"',
+				{
+					'sources!':
+					[
+						'src/opensslsocket.cpp',
+						'src/player-platform.cpp',
+						'src/socket_resolve.cpp',
+						'src/stacktile.cpp',
+						'src/sysunxnetwork.cpp',
+					],
+				},
+			],
+			[
 				'OS == "ios"',
 				{
 					'sources!':
@@ -896,6 +944,7 @@
 					[
 						# Note that this does *not* exclude player.cpp
 						['exclude', '^src/player.+\\.(cpp|mm)$'],
+						['exclude', '^src/dsk.*\\.(cpp|mm)$'],
 					],
 				},
 			],
@@ -904,7 +953,7 @@
 		'target_conditions':
 		[
 			[
-				'server_mode == 0 and (OS == "mac" or OS == "win" or OS == "linux")',
+				'server_mode == 0 and (OS != "ios" and OS != "android")',
 				{
 					'sources!':
 					[

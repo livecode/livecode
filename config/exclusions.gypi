@@ -48,7 +48,7 @@
 					[
 						['exclude', '_android.cpp$'],
 						['exclude', '(^|/)mblandroid.*\\.cpp$'],
-						['exclude', '\\.java$'],
+						['exclude', '\\.(java|aidl)$'],
 					],
 				},
 			],

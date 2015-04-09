@@ -24,6 +24,60 @@
 			[
 				'<@(engine_standalone_mode_source_files)',
 			],
+			
+			# Standalones do *not* contain error message strings
+			'sources!':
+			[
+				'<(INTERMEDIATE_DIR)/src/encodederrors.cpp',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "android"',
+					{
+						'dependencies':
+						[
+							'kernel-java',
+						],
+						
+						'sources':
+						[
+							'src/mblandroidad.cpp',
+						],
+						
+						'actions':
+						[
+							{
+								'action_name': 'jar',
+								'message': 'JAR',
+						
+								'inputs':
+								[
+									# Depend on the Java source files directly to ensure correct updates
+									'<@(engine_aidl_source_files)',
+									'<@(engine_java_source_files)',
+								],
+					
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/LiveCode-Community.jar',
+								],
+					
+								'action':
+								[
+									'<(jar_path)',
+									'cf',
+									'<@(_outputs)',
+									'-C', '<(PRODUCT_DIR)/classes_livecode_community',
+									'.',
+								],
+							},
+						],
+			
+					},
+				],
+			],
 		},
 	],
 }
