@@ -108,8 +108,26 @@ typedef const struct __CFString * CFStringRef;
 typedef const struct __CFData * CFDataRef;
 #endif
 
+// PM-2015-03-31: [[ Bug 15090 ]] Better definition of nil fixes crashes in 64 bit iOS
 #ifndef nil
-#define nil 0
+
+#if defined(__cplusplus) /* C++ */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil uintptr_t(0)
+#	endif
+
+#else /* C */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil ((void*)0)
+#	endif
+
+#endif
+
+
 #endif
 
 #if defined(_MACOSX) && defined(__LP64__)
