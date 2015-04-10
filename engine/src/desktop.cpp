@@ -899,7 +899,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     //    this wrong key is replaced by this new 'combined' char
     // if the key pressed fails to generate a char:
     //    this wrong key is replaced by the dead-key char
-    if (t_was_compositing)
+    // SN-2015-04-10: [[ Bug 14205 ]] When using the dictation, there is no
+    //  pending key down, but the composition was still on though.
+    if (t_was_compositing && s_pending_key_down)
     {
         s_pending_key_down -> key_code = (uint1)*p_chars;
         s_pending_key_down -> mapped_codepoint = (uint1)*p_chars;
