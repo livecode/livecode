@@ -104,6 +104,7 @@ engine/src/contextscalewrapper.cpp
 engine/src/contextscalewrapper.h
 engine/src/control.cpp
 engine/src/control.h
+engine/src/coretextfonts.cpp
 engine/src/cpalette.cpp
 engine/src/cpalette.h
 engine/src/customprinter.cpp
