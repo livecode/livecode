@@ -228,9 +228,14 @@ UIViewController *MCIPhoneGetViewController(void);
 		// compute orientation
 		bool t_is_landscape;
 		t_is_landscape = UIInterfaceOrientationIsLandscape(MCIPhoneGetOrientation());
+        
+        // PM-2015-03-25: [[ Bug 15070 ]] Make the y-pos scale to the height of the device rather than a hard coded value
+        CGFloat t_portrait_height, t_landscape_height;
+        t_portrait_height = [[UIScreen mainScreen] bounds] . size . height / 11 ;
+        t_landscape_height = [[UIScreen mainScreen] bounds] . size . height / 15 ;
 		
 		// create the pick wheel
-		datePicker = [[UIDatePicker alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? 32 : 44), 0, 0)];
+		datePicker = [[UIDatePicker alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? t_landscape_height : t_portrait_height), 0, 0)];
 
 		// set the locale
 		NSLocale *t_locale = [NSLocale currentLocale];
@@ -275,7 +280,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		// make a toolbar
         // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
 		UIToolbar *t_toolbar;
-        t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 32) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 44))];
+        t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, t_landscape_height) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_portrait_height))];
 		t_toolbar.barStyle = UIBarStyleBlack;
 		t_toolbar.translucent = YES;
 		[t_toolbar sizeToFit];
@@ -324,7 +329,8 @@ UIViewController *MCIPhoneGetViewController(void);
             
             CGRect t_rect;
             uint2 t_offset;
-            t_offset = 28;
+            // PM-2015-03-25: [[ Bug 15070 ]] Make the offset scale to the height of the device rather than a hard coded value
+            t_offset = [[UIScreen mainScreen] bounds] . size . height / 17;
             
             if (!t_is_landscape)
                 t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);

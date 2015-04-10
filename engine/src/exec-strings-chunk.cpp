@@ -101,7 +101,8 @@ void MCStringsCountChunksInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, M
     
     if (p_chunk_type == CT_CODEUNIT)
     {
-        r_count = MCU_min(MCStringGetLength(p_string), p_range . length) - p_range . offset;
+        // AL-2015-03-23: [[ Bug 15045 ]] Clamp range correctly
+        r_count = MCU_min(MCStringGetLength(p_string) - p_range . offset, p_range . length);
         return;
     }
     

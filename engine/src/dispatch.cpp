@@ -2519,12 +2519,13 @@ void MCDispatch::addlibrarymapping(MCStringRef p_mapping)
     MCArrayStoreValue(m_library_mapping, false, *t_name_as_nameRef, *t_target);
 }
 
-bool MCDispatch::fetchlibrarymapping(const char* p_name, MCStringRef& r_path)
+// SN-2015-04-07: [[ Bug 15164 ]] Change p_name to be a StringRef.
+bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
 {
     MCNewAutoNameRef t_name;
     MCStringRef t_value;
 
-    if (!MCNameCreateWithCString(p_name, &t_name))
+    if (!MCNameCreate(p_name, &t_name))
         return false;
 
     // m_library_mapping only stores strings (function above)
