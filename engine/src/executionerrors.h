@@ -2371,39 +2371,6 @@ enum Exec_errors
 	
 	// {EE-0781} image cache limit: not a number
 	EE_PROPERTY_BADIMAGECACHELIMIT,
-
-	// {EE-0779} Error evaluating expression
-	EE_EXPR_EVALERROR,
-	
-	// {EE-0780} Property: value is not a character
-	EE_PROPERTY_NAC,
-	
-	// {EE-0781} Property: value is not a string
-	EE_PROPERTY_NAS,
-	
-	// {EE-0782} Property: value is not a color
-	EE_PROPERTY_NOTACOLOR,
-	
-	// {EE-0783} Property: value is not a rectangle
-	EE_PROPERTY_NOTARECT,
-	
-	// {EE-0784} Property: value is not a point
-	EE_PROPERTY_NOTAPOINT,
-	
-	// {EE-0785} Property: value is not a pair of integers
-	EE_PROPERTY_NOTAINTPAIR,
-	
-	// {EE-0786} Property: value is not a quadruple of integers
-	EE_PROPERTY_NOTAINTQUAD,
-	
-	// {EE-0787} Property: invalid enumeration value
-	EE_PROPERTY_BADENUMVALUE,
-
-	// {EE-0788} Backdrop: invalid value
-	EE_BACKDROP_INVALIDVALUE,
-
-	// {EE-0789} Property: value is not an array
-    EE_PROPERTY_NOTANARRAY,
     
     // {EE-0782} controls don't have the same owner
 	EE_GROUP_DIFFERENTPARENT,
@@ -2511,12 +2478,6 @@ enum Exec_errors
     // {EE-815} IDE Extract: error in filename expression
     EE_IDE_EXTRACT_BADFILENAME,
     
-    // {EE-816} MCInternalPayloadPatch: error in patch item expression
-    EE_INTERNAL_PATCH_BADITEM,
-    
-    // {EE-817} MCInternalPayloadPatch: error in base item expression
-    EE_INTERNAL_BASE_BADITEM,
-    
     // {EE-816} MCInternalPayloadPatch: error in output filename expression
     EE_OUTPUT_BADFILENAME,
     
@@ -2620,6 +2581,46 @@ enum Exec_errors
     // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
     // {EE-0845} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
+    
+    // {EE-0846} Error evaluating expression
+    EE_EXPR_EVALERROR,
+    
+    // {EE-0847} Property: value is not a character
+    EE_PROPERTY_NAC,
+    
+    // {EE-0848} Property: value is not a string
+    EE_PROPERTY_NAS,
+    
+    // {EE-0849} Property: value is not a color
+    EE_PROPERTY_NOTACOLOR,
+    
+    // {EE-0850} Property: value is not a rectangle
+    EE_PROPERTY_NOTARECT,
+    
+    // {EE-0851} Property: value is not a point
+    EE_PROPERTY_NOTAPOINT,
+    
+    // {EE-0852} Property: value is not a pair of integers
+    EE_PROPERTY_NOTAINTPAIR,
+    
+    // {EE-0853} Property: value is not a quadruple of integers
+    EE_PROPERTY_NOTAINTQUAD,
+    
+    // {EE-0854} Property: invalid enumeration value
+    EE_PROPERTY_BADENUMVALUE,
+    
+    // {EE-0855} Backdrop: invalid value
+    EE_BACKDROP_INVALIDVALUE,
+    
+    // {EE-0856} Property: value is not an array
+    EE_PROPERTY_NOTANARRAY,
+    
+    // {EE-0857} MCInternalPayloadPatch: error in patch item expression
+    EE_INTERNAL_PATCH_BADITEM,
+    
+    // {EE-0858} MCInternalPayloadPatch: error in base item expression
+    EE_INTERNAL_BASE_BADITEM,
+
 };
 
 extern const char *MCexecutionerrors;
