@@ -395,8 +395,6 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
                 t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[i]);
         }
     
-    // TODO: [[ Bug 14603 ]] Update S/B for modules.
-    
     ////////
     
 	// Now we add the main stack
