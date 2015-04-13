@@ -3066,6 +3066,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		bool t_device = false;
 		bool t_serial_device = false;
+        // SN-2015-04-13: [[ Bug 14696 ]] Close the file handler in case our
+        //  MCStdioFileHandler could not be created.
+        bool t_close_file_handler = false;
 
 		// Is this a device path?
 		if (MCStringBeginsWithCString(p_path, (const char_t*)"\\\\.\\", kMCStringOptionCompareExact))
@@ -3168,21 +3171,38 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				{
 					CloseHandle(t_file_mapped_handle);
 					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                    t_close_file_handler = t_handle == NULL;
 				}
 				else
 				{
 					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
-					CloseHandle(t_file_handle);
+                    // SN-2015-04-13: [[ Bug 14696 ]] We don't want to leave a
+                    //  file handler open in case the memory mapped file could
+                    //  not be allocated. We always close the normal file handle
+                    if (t_handle == NULL)
+                        CloseHandle(t_file_mapped_handle);
+                    t_close_file_handler = true;
 				}
 			}
 			// SN-2014-11-27: [[ Bug 14110 ]] A StdioFileHandle should be created if the file mapping failed
 			// (for empty files for instance).
 			else
+            {
 				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                t_close_file_handler = t_handle == NULL;
+            }
 		}
 		else
+        {
 			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+            t_close_file_handler = t_handle == NULL;
+        }
 
+        // SN-2015-04-13: [[ Bug 14696 ]] We close the Windows file handle in
+        //  case we did not successfully create an MCStdioFileHandle.
+        if (t_close_file_handler)
+            CloseHandle(t_file_handle);
+        
 		return t_handle;
     }
     
