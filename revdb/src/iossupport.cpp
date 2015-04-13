@@ -203,6 +203,8 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_result -> idcounterptr = (idcounterrefptr)dlsym(t_driver_handle, "setidcounterref");
 	t_result -> newconnectionptr = (new_connectionrefptr)dlsym(t_driver_handle, "newdbconnectionref");
 	t_result -> releaseconnectionptr = (release_connectionrefptr)dlsym(t_driver_handle, "releasedbconnectionref");
+    // PM-2015-04-09: [[ Bug 14972 ]] Init setcallbacksptr to prevent a crash when LoadDatabaseDriver is called
+    t_result -> setcallbacksptr = (set_callbacksrefptr)nil;
 	free(t_filename);
 	return t_result;
 #else
@@ -223,6 +225,8 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_result -> idcounterptr = (idcounterrefptr)resolve_symbol(t_driver_handle, "setidcounterref");
 	t_result -> newconnectionptr = (new_connectionrefptr)resolve_symbol(t_driver_handle, "newdbconnectionref");
 	t_result -> releaseconnectionptr = (release_connectionrefptr)resolve_symbol(t_driver_handle, "releasedbconnectionref");
+    // PM-2015-04-09: [[ Bug 14972 ]] Init setcallbacksptr to prevent a crash when LoadDatabaseDriver is called
+    t_result -> setcallbacksptr = (set_callbacksrefptr)nil;
 	free(t_filename);
 	return t_result;
 #endif

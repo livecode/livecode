@@ -913,7 +913,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     //    this wrong key is replaced by this new 'combined' char
     // if the key pressed fails to generate a char:
     //    this wrong key is replaced by the dead-key char
-    if (t_was_compositing)
+    // SN-2015-04-10: [[ Bug 14205 ]] When using the dictation, there is no
+    //  pending key down, but the composition was still on though.
+    if (t_was_compositing && s_pending_key_down)
     {
         s_pending_key_down -> key_code = (uint1)*p_chars;
         s_pending_key_down -> mapped_codepoint = (uint1)*p_chars;
@@ -937,7 +939,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     // SN-2015-01-20: [[ Bug 14406 ]] If we have a series of pending keys, we have two possibilities:
     //   - typing IME characters: the characters are native, so we use the finsertnew
     //   - typing dead characters: the character, if we arrive here, is > 127
-    if (*p_chars > 127 && s_pending_key_down -> next && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+    // SN-2015-04-13: [[ Bug 14205 ]] Ensure that s_pending_key_down is not nil
+    if (*p_chars > 127 && s_pending_key_down && s_pending_key_down -> next
+            && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
     {
         MCStringCreateWithNativeChars((const char_t *)t_char, 1, &t_string);
         MCdispatcher -> wkdown(p_window, *t_string, *t_char);
