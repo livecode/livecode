@@ -1464,7 +1464,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 t_resolved_filename = nil;
             
             // Compare with the resolved filename so handle the edge case mentioned below
-            if (filename == NULL || data != filename || resolved_filename != t_resolved_filename)
+            if (filename == NULL || data != filename || (resolved_filename != nil && t_success && !MCCStringEqual(resolved_filename, t_resolved_filename)))
             {
                 delete filename;
                 filename = NULL;
@@ -1476,10 +1476,18 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 if (data != MCnullmcstring)
                     filename = data.clone();
                 
-                if (resolved_filename != t_resolved_filename)
+                if (resolved_filename == nil)
                 {
-                    delete resolved_filename;
-                    resolved_filename = t_resolved_filename;
+                    if (t_success)
+                        resolved_filename = t_resolved_filename;
+                }
+                else
+                {
+                    if (t_success && !MCCStringEqual(resolved_filename, t_resolved_filename))
+                    {
+                        delete resolved_filename;
+                        resolved_filename = t_resolved_filename;
+                    }
                 }
                 
                 prepare(MCnullstring);
@@ -1855,8 +1863,6 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
 			return stat;
-        if ((stat = IO_write_string(resolved_filename, stream)) != IO_NORMAL)
-			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(endtime, stream)) != IO_NORMAL)
@@ -1877,8 +1883,6 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_string(filename, stream)) != IO_NORMAL)
-		return stat;
-    if ((stat = IO_read_string(resolved_filename, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
