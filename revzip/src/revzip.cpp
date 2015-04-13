@@ -1267,15 +1267,47 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 		for( int i = 0; i < t_num_files; ++i )
 		{
 			const char* t_line = NULL;
-			t_line = zip_get_name(t_archive, i, 0);
-			if( t_line )
+			struct zip_stat t_stat;
+
+			// SN-2015-03-11: [[ Bug 14413 ]] We want to get the bitflags
+			//  alongside the name: zip_stat_index provides this.
+			if (zip_stat_index(t_archive, i, 0, &t_stat) != 0)
 			{
-				t_str_names += std::string(t_line);
-				t_str_names += "\n";
+				std::string t_outerr = "ziperr," + std::string((zip_strerror(t_archive)));
+				t_result = strdup(t_outerr.c_str());
+				t_error = False;
+			}
+			else
+			{
+				// SN-2015-03-10: [[ Bug 14413 ]] We convert the string to UTF-8
+				//  in case it was natively encoded, as revZipEnumerateItems is
+				//  meant to return a UTF-8 encoded string.
+				const char *t_converted_name;
+                int t_success;
+
+				if (t_stat.bitflags & ZIP_UTF8_FLAG)
+				{
+                    t_success = EXTERNAL_SUCCESS;
+					t_converted_name = t_stat.name;
+				}
+				else
+					t_converted_name = ConvertCStringFromNativeToUTF8(t_stat.name, &t_success);
+
+                if (t_success == EXTERNAL_SUCCESS)
+				{
+					t_str_names += std::string(t_converted_name);
+					t_str_names += "\n";
+				}
+				else
+				{
+					t_result = strdup("");
+					t_error  = True;
+					break;
+				}
 			}
 		}
 		
-		if( !t_str_names.empty() )
+		if( !t_str_names.empty() && t_error == False)
 		{
 			t_result = strdup(t_str_names.c_str());
 			t_error = False;

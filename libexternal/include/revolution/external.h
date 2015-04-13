@@ -511,6 +511,12 @@ extern Bool SecurityCanAccessLibrary(const char *p_library);
 extern Bool SecurityCanAccessFileUTF8(const char *p_file);
 extern Bool SecurityCanAccessHostUTF8(const char *p_host);
 extern Bool SecurityCanAccessLibraryUTF8(const char *p_library);
+    
+
+// SN-2015-03-12: [[ Bug 14413 ]] Added UTF-8 <-> native string conversion
+// The string returned are owned by the engine, and must not be free'd
+extern const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success);
+extern const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success);
 	
 #ifdef __cplusplus
 };
