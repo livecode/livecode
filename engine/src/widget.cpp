@@ -1736,6 +1736,9 @@ private:
 		if (MCErrorIsPending())
 			return false;
 		
+		if (MCValueIsEmpty(*t_value))
+			return false;
+		
 		if (!WidgetGeometryFromLCBList(*t_value, r_width, r_height))
 			return MCErrorCreateAndThrow(kMCWidgetSizeFormatErrorTypeInfo, nil);
 		
