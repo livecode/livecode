@@ -35,7 +35,7 @@ public:
 	virtual ~MCVideoClip();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Boolean del();
 	virtual void paste(void);

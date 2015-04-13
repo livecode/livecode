@@ -248,7 +248,7 @@ public:
 	virtual void select();
 	virtual uint2 gettransient() const;
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual void undo(Ustruct *us);
 	virtual void recompute();
@@ -549,5 +549,12 @@ public:
 	bool imagechanged(MCImage *p_image, bool p_deleting);
 	
 	MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
+    
+protected:
+    
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
 };
 #endif

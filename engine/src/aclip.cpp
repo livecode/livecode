@@ -182,7 +182,7 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 	}
 }
 
-Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -202,7 +202,7 @@ Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 		break;
 #endif /* MCAudioClip::getprop */ 
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

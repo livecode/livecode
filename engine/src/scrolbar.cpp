@@ -664,7 +664,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 		MCControl::timer(mptr, params);
 }
 
-Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -720,7 +720,7 @@ Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, B
 		break;
 #endif /* MCScrollbar::getprop */
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

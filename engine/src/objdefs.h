@@ -598,7 +598,16 @@ enum Draw_index {
     DI_TOP,
     DI_BOTTOM,
     DI_SHADOW,
-    DI_FOCUS
+    DI_FOCUS,
+    
+    // Pseudo-DIs used for theming
+    DI_PSEUDO_TEXT_COLOR,           // Text colour for non-selected text
+    DI_PSEUDO_TEXT_BACKGROUND,      // Text background colour
+    DI_PSEUDO_TEXT_COLOR_SEL_FORE,  // Text colour for selected text, use DI_FORE
+    DI_PSEUDO_TEXT_COLOR_SEL_BACK,  // Text colour for selected text, use DI_BACK
+    DI_PSEUDO_TEXT_BACKGROUND_SEL,  // Text selection colour
+    DI_PSEUDO_BUTTON_TEXT,          // Text colour for button text
+    DI_PSEUDO_BUTTON_TEXT_SEL      // Text colour for selected menu items
 };
 
 

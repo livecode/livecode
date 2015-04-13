@@ -924,7 +924,7 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 		MCObject::timer(mptr, params);
 }
 
-Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	MCRectangle minrect;
 	uint2 num;
@@ -1065,7 +1065,7 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 		return ES_ERROR;
 #endif /* MCCard::getprop */
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -3195,4 +3195,14 @@ bool MCCard::recomputefonts(MCFontRef p_parent_font)
 	// Return whether anything changed (the card's font has no effect other than
 	// to be provided to children).
 	return t_changed;
+}
+
+MCPlatformControlType MCCard::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCCard::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
 }

@@ -53,6 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "scrolbar.h"
 #include "styledtext.h"
+#include "flst.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -1243,11 +1244,35 @@ Boolean MCObject::resizeparent()
 	return False;
 }
 
-Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
+Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
                                MCColor &c, MCPatternRef &r_pattern,
-                               int2 &x, int2 &y, MCDC *dc, MCObject *o)
+                               int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected)
 {
-	uint2 i;
+    uint2 di;
+    switch (p_di)
+    {
+        case DI_PSEUDO_TEXT_COLOR:
+        case DI_PSEUDO_TEXT_COLOR_SEL_FORE:
+        case DI_PSEUDO_BUTTON_TEXT:
+            di = DI_FORE;
+            break;
+            
+        case DI_PSEUDO_TEXT_BACKGROUND:
+        case DI_PSEUDO_TEXT_COLOR_SEL_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
+            di = DI_BACK;
+            break;
+            
+        case DI_PSEUDO_TEXT_BACKGROUND_SEL:
+            di = DI_HILITE;
+            break;
+        
+        default:
+            di = p_di;
+            break;
+    }
+    
+    uint2 i;
 	if (dc->getdepth() > 1)
 	{
 		Boolean hasindex = getcindex(di, i);
@@ -1281,17 +1306,78 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 				if (MClook != LF_MOTIF && hilite && flags & F_OPAQUE
 				        && !(flags & F_DISABLED))
 				{
-					if (di == DI_BACK)
-						c = dc->getwhite();
-					else
-						parent->getforecolor(di, rev, False, c, r_pattern, x, y, dc, o);
+                    //if (di == DI_BACK)
+                    //	c = dc->getwhite();
+                    //else
+						parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 					return True;
 				}
 				if (parent && parent != MCdispatcher)
-					return parent->getforecolor(di, rev, False, c, r_pattern, x, y, dc, o);
+					return parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 			}
 	}
 
+    // Try to get the colour from the system theme rather than these hard-coded values
+    MCPlatformControlType t_control_type;
+    MCPlatformControlPart t_control_part;
+    MCPlatformControlState t_control_state;
+    MCPlatformThemeProperty t_theme_prop;
+    MCPlatformThemePropertyType t_theme_prop_type;
+    Properties which;
+    switch (p_di)
+    {
+        case DI_TOP:
+            which = P_TOP_COLOR;
+            break;
+            
+        case DI_BOTTOM:
+            which = P_BOTTOM_COLOR;
+            break;
+            
+        case DI_PSEUDO_TEXT_COLOR_SEL_FORE:
+        case DI_PSEUDO_TEXT_COLOR_SEL_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
+            selected = true;
+            /* FALLTHROUGH */
+            
+        case DI_FORE:
+        case DI_PSEUDO_TEXT_COLOR:
+        case DI_PSEUDO_BUTTON_TEXT:
+            which = P_FORE_COLOR;
+            break;
+            
+        case DI_BACK:
+        case DI_PSEUDO_TEXT_BACKGROUND:
+            which = P_BACK_COLOR;
+            break;
+            
+        case DI_HILITE:
+        case DI_PSEUDO_TEXT_BACKGROUND_SEL:
+            which = P_HILITE_COLOR;
+            break;
+            
+        case DI_FOCUS:
+            which = P_FOCUS_COLOR;
+            break;
+            
+        case DI_BORDER:
+            which = P_BORDER_COLOR;
+            break;
+            
+        case DI_SHADOW:
+            which = P_SHADOW_COLOR;
+            break;
+            
+    }
+    if (o->getthemeselectorsforprop(which, t_control_type, t_control_part, t_control_state, t_theme_prop, t_theme_prop_type))
+    {
+        if (selected)
+            t_control_state |= kMCPlatformControlStateSelected;
+        
+        if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_theme_prop, c))
+            return True;
+    }
+    
 	switch (di)
 	{
 
@@ -1337,7 +1423,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 	return True;
 }
 
-void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
+void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite, bool selected)
 {
 	uint2 idi = di;
 	if (rev)
@@ -1351,6 +1437,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 			idi = DI_TOP;
 			break;
 		case DI_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
 			idi = DI_HILITE;
 			break;
 		default:
@@ -1362,7 +1449,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	MCColor color;
 	MCPatternRef t_pattern = nil;
 	int2 x, y;
-	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this))
+	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this, selected))
 	{
 		MCColor fcolor;
 		if (dc->getdepth() == 1 && di != DI_BACK
@@ -1733,9 +1820,21 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		}
 		else
 		{
-			// This should never happen as the dispatcher always has font props
+            MCFontRef t_default_font;
+            MCPlatformGetControlThemePropFont(kMCPlatformControlTypeGlobal, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, t_default_font);
+            
+            MCFontStruct* t_font_struct;
+            t_font_struct = MCFontGetFontStruct(t_default_font);
+            
+            const char* t_name_cstring;
+            Boolean t_printer;
+            
+            MCdispatcher->getfontlist()->getfontstructinfo(t_name_cstring, size, style, t_printer, t_font_struct);
+            MCNameCreateWithCString(t_name_cstring, fname);
+            
+            // This should never happen as the dispatcher always has font props
 			// set.
-			assert(false);
+            //assert(false);
 		}
 	}
 
@@ -4282,14 +4381,28 @@ void MCObject::unlockshape(MCObjectShape& p_shape)
 
 // MW-2012-02-14: [[ FontRefs ]] New method which maps the object's concrete font
 //   on open.
-void MCObject::mapfont(void)
+bool MCObject::mapfont(bool recursive)
 {
-	// MW-2012-02-24: [[ FontRefs ]] Fix a problem with images used as icons.
+    // This may be called even when the font has already been mapped
+    if (m_font != nil)
+    {
+        if (hasfontattrs())
+            return true;
+        if (parent == nil)
+            return false;
+        return parent->mapfont(true);
+    }
+    
+    // MW-2012-02-24: [[ FontRefs ]] Fix a problem with images used as icons.
 	//   Images don't use the fontref, so don't do anything if we are an image.
 
 	if (gettype() == CT_IMAGE)
-		return;
+		return false;
 	
+    // This is only set if an explicitly-set font was found at some point
+    bool t_explicit_font;
+    t_explicit_font = false;
+    
 	// MW-2012-03-02: [[ Bug 10044 ]] If the parent isn't open, then we won't have a
 	//   font. This causes problems for some things (like import snapshot) so in this
 	//   case we ask the parent to map it's font.
@@ -4300,8 +4413,9 @@ void MCObject::mapfont(void)
 	if (parent != nil && parent -> m_font == nil)
 	{
 		t_mapped_parent = true;
-		parent -> mapfont();
 	}
+    if (parent != nil)
+        t_explicit_font = parent -> mapfont(true);
 	
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we check for a stack using ideal layout
 	//   as this requires new font computation.
@@ -4309,7 +4423,9 @@ void MCObject::mapfont(void)
 	// copy the parent's font.
 	if (hasfontattrs() || (gettype() == CT_STACK && static_cast<MCStack *>(this) -> getuseideallayout()))
 	{
-		// MW-2012-02-19: [[ SplitTextAttrs ]] Compute the attrs to write out. If we don't
+        t_explicit_font = true;
+        
+        // MW-2012-02-19: [[ SplitTextAttrs ]] Compute the attrs to write out. If we don't
 		//   have all of the attrs, fetch the inherited ones.
 		MCNameRef t_textfont;
 		uint2 t_textstyle, t_textsize;
@@ -4324,14 +4440,14 @@ void MCObject::mapfont(void)
 		//   set, make sure we create a printer font.
 		// MW-2013-12-04: [[ Bug 11513 ]] Make sure we check for ideal layout, rather than
 		//   just for formatForPrinting.
-		if (parent != nil && MCFontHasPrinterMetrics(parent -> m_font) ||
+        if (parent != nil && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font) ||
 			gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout())
 			t_font_style |= kMCFontStylePrinterMetrics;
 
 		// Create our font.
 		/* UNCHECKED */ MCFontCreate(t_textfont, t_font_style, t_textsize, m_font);
 	}
-	else if (parent != nil)
+	else if (parent != nil && t_explicit_font)
 	{
 		if (parent -> m_font == nil)
 		{
@@ -4340,12 +4456,16 @@ void MCObject::mapfont(void)
 		else
 			m_font = MCFontRetain(parent -> m_font);
 	}
-	else
-	{
-		// This should never happen as the only object with nil parent when
-		// opened should be MCdispatcher, which always has font attrs.
-		assert(false);
-	}
+    else if (recursive)
+    {
+        // No font style font - it will be resolved after unwinding
+        return false;
+    }
+    else
+    {
+        // No font style was found. Use the themed font
+        MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, m_font);
+    }
 	
 	// MW-2012-03-02: [[ Bug 10044 ]] If we had to temporarily map the parent's font
 	//   then unmap it here.
@@ -4353,6 +4473,8 @@ void MCObject::mapfont(void)
 	//   first place.
 	if (t_mapped_parent)
 		parent -> unmapfont();
+    
+    return t_explicit_font;
 }
 
 // MW-2012-02-14: [[ FontRefs ]] New method which unmaps the object's concrete font

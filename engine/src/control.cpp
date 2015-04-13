@@ -387,7 +387,7 @@ uint2 MCControl::gettransient() const
 	return 0;
 }
 
-Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -455,7 +455,7 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 	break;
 #endif /* MCControl::getprop */ 
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

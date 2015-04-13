@@ -446,6 +446,25 @@ bool coretext_font_unload(const char *p_path, bool p_globally)
     return t_success;
 }
 
+void coretext_get_font_name(void *p_font, char*& r_name)
+{
+    CFStringRef t_font_name;
+    t_font_name = CTFontCopyDisplayName((CTFontRef)p_font);
+    
+    CFIndex t_max_length;
+    t_max_length = CFStringGetMaximumSizeForEncoding(CFStringGetLength(t_font_name), kCFStringEncodingMacRoman) + 1;
+    
+    char *t_name = new char[t_max_length];
+    CFStringGetCString(t_font_name, t_name, t_max_length, kCFStringEncodingMacRoman);
+    
+    r_name = t_name;
+}
+
+uint32_t coretext_get_font_size(void *p_font)
+{
+    return CTFontGetSize((CTFontRef)p_font);
+}
+
 #ifdef _MACOSX
 ATSUFontID coretext_font_to_atsufontid(void *p_font)
 {

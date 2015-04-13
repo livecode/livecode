@@ -38,6 +38,8 @@ extern void coretext_font_destroy(void *p_font);
 extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
 extern void coretext_get_font_names(MCExecPoint &ep);
 extern void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint &ep);
+extern void coretext_get_font_name(void *p_font, char*& r_name);
+extern uint32_t coretext_get_font_size(void *p_font);
 
 #define MAX_XFONT2MACFONT    11
 
@@ -91,13 +93,32 @@ MCFontnode::MCFontnode(const MCString& fname, uint2& size, uint2 style)
 			}
 	}
     
-	font -> ascent = size - 1;
-	font -> descent = size * 2 / 14 + 1;
+    calculatemetrics();
+}
+
+MCFontnode::MCFontnode(MCSysFontHandle p_handle)
+{
+    coretext_get_font_name(p_handle, reqname);
+    reqsize = coretext_get_font_size(p_handle);
+    reqstyle = FA_DEFAULT_STYLE;
+    
+    font = new MCFontStruct;
+    font->size = reqsize;
+    
+    font->fid = p_handle;
+    
+    calculatemetrics();
+}
+
+void MCFontnode::calculatemetrics()
+{
+	font -> ascent = reqsize - 1;
+	font -> descent = reqsize * 2 / 14 + 1;
 	
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
 	float ascent, descent;
 	coretext_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > size)
+	if (ceilf(ascent) + ceilf(descent) > reqsize)
 		font -> ascent++;
 }
 
@@ -153,6 +174,25 @@ MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size,
 	return tmp->getfont(fname, size, style);
 }
 
+MCFontStruct *MCFontlist::getfontbyhandle(MCSysFontHandle p_fid)
+{
+    MCFontnode *tmp = fonts;
+    if (tmp != NULL)
+        do
+        {
+            MCFontStruct *font = tmp->getfontstruct();
+            if (font->fid == p_fid)
+                return font;
+            tmp = tmp->next();
+        }
+        while (tmp != fonts);
+    
+    // Font has not yet been added to the list
+    tmp = new MCFontnode(p_fid);
+    tmp->appendto(fonts);
+    return tmp->getfontstruct();
+}
+
 void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
 {
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
@@ -175,7 +215,7 @@ void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
 bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
 {
 	MCFontnode *t_font = fonts;
-	while (t_font != NULL)
+	do
 	{
 		if (t_font->getfontstruct() == p_font)
 		{
@@ -186,5 +226,6 @@ bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_
 		}
 		t_font = t_font->next();
 	}
+    while (t_font != fonts);
 	return false;
 }

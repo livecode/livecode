@@ -1099,8 +1099,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, uint2 si, uint2 ei, 
 	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(*atts->backcolor);
 
-	if (t_foreground_color != NULL)
-		dc -> setforeground(*t_foreground_color);
+    setcolorfornormaltext(dc, t_foreground_color);
 	
 	uint32_t t_style;
 	t_style = 0;
@@ -1188,11 +1187,13 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, uint2 si, uint2 ei, 
 				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, f);
 				if (hc.pixel == fc.pixel)
 					f->setforeground(dc, DI_BACK, False, True);
+                else
+                    setcolorforselectedtext(dc, nil);
 			}
 			else
-				f->setforeground(dc, DI_BACK, False, True);
+                setcolorforselectedtext(dc, t_foreground_color);
 		}
-		
+
 		// Draw the selected text.
 		drawstring(dc, x, cx, y, index, size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		
@@ -2356,3 +2357,35 @@ bool MCBlock::imagechanged(MCImage *p_image, bool p_deleting)
 	return false;
 }
 
+void MCBlock::setcolorfornormaltext(MCDC* dc, MCColor* p_color)
+{
+    MCField* f = parent->getparent();
+    
+    if (p_color != nil)
+        dc->setforeground(*p_color);
+    else if (flags & F_HAS_COLOR)
+        dc->setforeground(*atts -> color);
+    else
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR, False, True);
+}
+
+void MCBlock::setcolorforhilite(MCDC* dc)
+{
+    MCField* f = parent->getparent();
+    
+    f->setforeground(dc, DI_PSEUDO_TEXT_BACKGROUND_SEL, False, True);
+}
+
+void MCBlock::setcolorforselectedtext(MCDC* dc, MCColor* p_color)
+{
+    MCField* f = parent->getparent();
+    
+    if (p_color != nil)
+        dc->setforeground(*p_color);
+    else if (flags & F_HAS_COLOR)
+        dc->setforeground(*atts -> color);
+    else if (!IsMacLF()) // TODO: if platform reverses selected text
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR_SEL_BACK, False, True, true);
+    else
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR_SEL_FORE, False, True, true);
+}

@@ -30,6 +30,7 @@ class MCFontnode : public MCDLlist
 	MCFontStruct *font;
 public:
 	MCFontnode(const MCString &, uint2 &size, uint2 style);
+    MCFontnode(MCSysFontHandle);
 	~MCFontnode();
 	MCFontStruct *getfont(const MCString &fname, uint2 size, uint2 style);
 	MCFontStruct *getfontstruct()
@@ -82,6 +83,10 @@ public:
 		return (MCFontnode *)MCDLlist::remove
 			       ((MCDLlist *&)list);
 	}
+    
+private:
+    
+    void calculatemetrics();
 };
 
 class MCFontlist
@@ -92,6 +97,7 @@ public:
 	~MCFontlist();
 	MCFontStruct *getfont(const MCString &fname, uint2 &size,
 	                      uint2 style, Boolean printer);
+    MCFontStruct *getfontbyhandle(MCSysFontHandle);
 	void getfontnames(MCExecPoint &ep, char *type);
 	void getfontsizes(const char *fname, MCExecPoint &ep);
 	void getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep);

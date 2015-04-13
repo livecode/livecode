@@ -1114,7 +1114,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 		resize(oldrect . width, oldrect . height);
 }
 
-Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 j = 0;
 	uint2 k = 0;
@@ -1625,7 +1625,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		Exec_stat t_stat;
 		t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
 		if (t_stat == ES_NOT_HANDLED)
-			return MCObject::getprop(parid, which, ep, effective);
+			return MCObject::getprop(parid, which, ep, effective, true);
 
 		return t_stat;
 	}
@@ -3167,4 +3167,14 @@ void MCStack::setasscriptonly(MCExecPoint& ep)
         curcard = cards = MCtemplatecard->clone(False, False);
         cards->setparent(this);
     }
+}
+
+MCPlatformControlType MCStack::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCStack::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
 }

@@ -192,7 +192,7 @@ void MCEPS::setrect(const MCRectangle &nrect)
 		rect = nrect;
 }
 
-Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -248,7 +248,7 @@ Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean
 		break;
 #endif /* MCEPS::getprop */ 
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

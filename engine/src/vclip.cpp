@@ -71,7 +71,7 @@ const char *MCVideoClip::gettypestring()
 	return MCvideostring;
 }
 
-Exec_stat MCVideoClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCVideoClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -99,7 +99,7 @@ Exec_stat MCVideoClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 		break;
 #endif /* MCVideoClip::getprop */
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

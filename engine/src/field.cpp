@@ -1203,7 +1203,7 @@ void MCField::setrect(const MCRectangle &nrect)
         m_recompute = true;
 }
 
-Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -1460,7 +1460,7 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
 #endif /* MCField::getprop */ 
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -3236,4 +3236,30 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 	}
 
 	return t_used;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformControlType MCField::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = kMCPlatformControlTypeInputField;
+    
+    if (flags & F_LIST_BEHAVIOR)
+        t_type = kMCPlatformControlTypeList;
+    
+    return t_type;
+}
+
+MCPlatformControlPart MCField::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+
+MCPlatformControlState MCField::getcontrolstate()
+{
+    int t_state;
+    t_state = MCControl::getcontrolstate();
+    
+    return MCPlatformControlState(t_state);
 }

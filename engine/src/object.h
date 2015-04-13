@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "globals.h"
+#include "platform.h"
 
 enum {
     MAC_SHADOW,
@@ -295,11 +296,14 @@ public:
 	virtual void setrect(const MCRectangle &nrect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
 
+    // FG-2014-11-07: [[ Better theming ]] Gets a propery according to the native UI theme
+    virtual Exec_stat getsystemthemeprop(Properties which, MCExecPoint&);
+    
 	virtual void select();
 	virtual void deselect();
 	virtual Boolean del();
@@ -486,8 +490,8 @@ public:
 	Boolean isvisible();
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
-	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
+	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected = false);
+	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False, bool selected = false);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
 	Boolean setpattern(uint2 newpixmap, const MCString &);
@@ -735,6 +739,12 @@ protected:
     // MW-2014-09-30: [[ ScriptStack ]] Used by MCStack::setasscriptonly.
 	Exec_stat setscriptprop(MCExecPoint& ep);
     
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
+    bool getthemeselectorsforprop(Properties, MCPlatformControlType&, MCPlatformControlPart&, MCPlatformControlState&, MCPlatformThemeProperty&, MCPlatformThemePropertyType&);
+    
 private:
 	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
 
@@ -788,7 +798,7 @@ private:
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be
 	//   done via measuretext() in a safe way.
-	void mapfont(void);
+	bool mapfont(bool recursive = false);
 	void unmapfont(void);
 	
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);

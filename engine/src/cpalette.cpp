@@ -174,7 +174,7 @@ Boolean MCColors::mup(uint2 which, bool p_release)
 	return True;
 }
 
-Exec_stat MCColors::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCColors::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -187,7 +187,7 @@ Exec_stat MCColors::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 		break;
 #endif /* MCColors::getprop */ 
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
