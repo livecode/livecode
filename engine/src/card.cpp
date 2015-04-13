@@ -1253,7 +1253,10 @@ Boolean MCCard::del()
 		}
 		while (optr != objptrs);
 	}
-	return True;
+    
+    // MCObject now does things on del(), so we must make sure we finish by
+    // calling its implementation.
+    return MCObject::del();
 }
 
 struct UpdateDataIdsVisitor: public MCObjectVisitor

@@ -402,10 +402,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define CS_MOUSE_UP_MENU        (1UL << 21)
 #define CS_VISITED              (1UL << 22)
 
-// MW-2008-10-28: [[ ParentScripts ]] If this state flag is set it means that
-//   the button is referenced as a parentScript.
-#define CS_IS_PARENTSCRIPT		(1UL << 21)
-
 // MCImage state
 #define CS_BEEN_MOVED           (1UL << 13)
 
