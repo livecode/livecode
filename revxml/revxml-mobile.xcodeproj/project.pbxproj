@@ -21,7 +21,7 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DE75F2A17E0995F00832B1D /* libxslt-mobile.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888 /* xslt */;
+			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888;
 			remoteInfo = xslt;
 		};
 		4D379C911714207A00B9037C /* PBXContainerItemProxy */ = {
@@ -201,6 +201,8 @@
 /* Begin PBXProject section */
 		4D7EFD3A12E72A1C00D67888 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D7EFD3D12E72A1C00D67888 /* Build configuration list for PBXProject "revxml-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -275,7 +277,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export SYMBOLS=_getXtable\nsh \"$SRCROOT/../tools/build-extension-ios.sh\"";
+			shellScript = "export SYMBOLS=\"_getXtable _configureSecurity _setExternalInterfaceVersion\"\nsh \"$SRCROOT/../tools/build-extension-ios.sh\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -249,7 +249,12 @@ void MCB_prepmessage(MCExecPoint &ep, MCNameRef mess, uint2 line, uint2 pos, uin
 void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos)
 {
 	uint2 i;
-
+    
+    // MW-2015-03-03: [[ Bug 13110 ]] If this is an internal handler as a result of do
+    //   then *don't* debug it.
+    if (ep . gethandler() -> getname() == MCM_message)
+        return;
+    
 	if (MCtrace && (MCtraceuntil == MAXUINT2 || MCnexecutioncontexts == MCtraceuntil))
 	{
 		MCtraceuntil = MAXUINT2;
@@ -265,9 +270,9 @@ void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos)
 			{
 				MCParentScriptUse *t_parentscript;
 				t_parentscript = ep . getparentscript();
-				if (t_parentscript == NULL && MCbreakpoints[i].object == ep.getobj() ||
-					t_parentscript != NULL && MCbreakpoints[i].object == t_parentscript -> GetParent() -> GetObject())
-				MCB_prepmessage(ep, MCM_trace_break, line, pos, 0, MCbreakpoints[i].info);
+				if ((t_parentscript == NULL && MCbreakpoints[i].object == ep.getobj()) ||
+					(t_parentscript != NULL && MCbreakpoints[i].object == t_parentscript -> GetParent() -> GetObject()))
+                    MCB_prepmessage(ep, MCM_trace_break, line, pos, 0, MCbreakpoints[i].info);
 			}
 	}
 }

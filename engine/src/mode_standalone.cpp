@@ -120,6 +120,7 @@ extern IO_stat readheader(IO_handle& stream, char *version);
 extern void send_startup_message(bool p_do_relaunch = true);
 
 extern void add_simulator_redirect(const char *);
+extern void add_ios_fontmap(const char *);
 
 // This structure contains the information we collect from reading in the
 // project.
@@ -177,7 +178,26 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		delete t_redirect;
 	}
 	break;
-			
+            
+    case kMCCapsuleSectionTypeFontmap:
+    {
+        char *t_fontmap;
+        t_fontmap = new char[p_length];
+        if (IO_read_bytes(t_fontmap, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read fontmap");
+            return false;
+        }
+        
+#ifdef TARGET_SUBPLATFORM_IPHONE
+        // The font mapping is only viable (and needed) on iOS
+        add_ios_fontmap(t_fontmap);
+#endif
+        
+        delete[] t_fontmap;
+    }
+    break;
+        
 	case kMCCapsuleSectionTypeStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
