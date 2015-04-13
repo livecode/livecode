@@ -412,8 +412,6 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		s_system_sound = t_new_sound;
 		s_system_sound_name = MCValueRetain(*t_sound_path);
 	}
-	else
-		MCValueRelease(*t_sound_path);
 	
 	env -> result = t_status == noErr;
 }

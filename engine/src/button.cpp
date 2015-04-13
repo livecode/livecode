@@ -386,11 +386,6 @@ MCButton::~MCButton()
 	// particuarly if the button had icons.
 	while (opened)
 		close();
-	
-	// MW-2008-10-28: [[ ParentScripts ]] Flush the parent scripts table if
-	//   tsub has the state flag marked.
-	if (getstate(CS_IS_PARENTSCRIPT))
-		MCParentScript::FlushObject(this);
 
 	delete icons;
 	freemenu(True);
@@ -446,15 +441,7 @@ bool MCButton::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_v
 
 void MCButton::open()
 {
-	// MW-2008-10-28: [[ ParentScripts ]] We have to preserve the setting of the
-	//   CS_IS_PARENTSCRIPT state.
-	if (!getstate(CS_IS_PARENTSCRIPT))
-		MCControl::open();
-	else
-	{
-		MCControl::open();
-		setstate(True, CS_IS_PARENTSCRIPT);
-	}
+    MCControl::open();
 
 	// MW-2011-02-08: [[ Bug 9382 ]] Make sure we reset icons when opening and the state
 	//   has changed (i.e. background transition has occured).

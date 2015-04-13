@@ -765,6 +765,15 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 return;
             }
             
+            // AL-2015-04-01: [[ Bug 15139 ]] Make sure the mark text is the correct value type.
+            MCValueRef t_mark_text;
+            if (!ctxt . ConvertToString(p_var . mark . text, (MCStringRef &)t_mark_text))
+            {
+                ctxt . Throw();
+                return;
+            }
+            MCValueAssign(p_var . mark . text, t_mark_text);
+            
             // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
             if (p_var . mark . changed != 0)
             {

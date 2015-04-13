@@ -128,6 +128,7 @@ MCControl::~MCControl()
 {
 	if (focused == this)
 		focused = NULL;
+    
 	MCscreen->stopmove(this, False);
 
 	// MW-2009-06-11: [[ Bitmap Effects ]] Destroy the bitmap effects
@@ -144,6 +145,7 @@ void MCControl::open()
 		if (!getstate(CS_KEEP_LAYER))
 			layer_resetattrs();
 		
+        // Make sure we keep state which should be preserved across open.
 		state = (state & (CS_NO_MESSAGES | CS_NO_FILE | CS_SELECTED)) | (state & CS_KEEP_LAYER);
 	}
 	
@@ -789,15 +791,6 @@ Boolean MCControl::del()
 		}
 	}
 
-	// MW-2008-10-28: [[ ParentScripts ]] If the object is marked as being used
-	//   as a parentScript, flush the parentScript table so we don't get any
-	//   dangling pointers.
-	if (getstate(CS_IS_PARENTSCRIPT) && gettype() == CT_BUTTON)
-	{
-		MCParentScript::FlushObject(this);
-		setstate(False, CS_IS_PARENTSCRIPT);
-	}
-
     // IM-2012-05-16 [[ BZ 10212 ]] deleting the dragtarget control in response
     // to a 'dragdrop' message would leave these globals pointing to the deleted
     // object, leading to an infinite loop if the target was a field
@@ -810,7 +803,9 @@ Boolean MCControl::del()
     if (MCdragsource == this)
         MCdragsource = nil;
     
-	return True;
+    // MCObject now does things on del(), so we must make sure we finish by
+    // calling its implementation.
+    return MCObject::del();
 }
 
 void MCControl::paste(void)
