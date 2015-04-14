@@ -104,7 +104,7 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
         MCValueRef t_entry;
         MCNewAutoNameRef t_mapped_name_as_name;
 
-        if (!MCNameCreate(p_name, &t_mapped_name))
+        if (!MCNameCreate(p_name, &t_mapped_name_as_name))
             t_success = false;
         else if (MCArrayFetchValue(s_font_map, false, *t_mapped_name_as_name, t_entry))
             // We only store strings in s_font_map
