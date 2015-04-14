@@ -90,7 +90,7 @@
 					'inputs':
 					[
 						'compress_data.rev',
-						'src/environment.rev',
+						'src/Environment.rev',
 					],
 					'outputs':
 					[
