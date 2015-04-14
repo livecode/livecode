@@ -289,7 +289,8 @@ void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 
 void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	if (filename == nil || p_name == nil ||
+    // PM-2015-04-14: [[ Bug 15196 ]] Allow setting the player filename to empty more than once
+	if (filename == nil || MCStringIsEmpty(p_name) ||
 		!MCStringIsEqualTo(p_name, filename, kMCCompareExact))
 	{
 		MCValueRelease(filename);
