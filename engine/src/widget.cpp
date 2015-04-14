@@ -2216,6 +2216,9 @@ static MCWidgetPopup *s_widget_popup = nil;
 
 MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at, MCArrayRef p_properties)
 {
+	MCPoint t_at;
+	t_at = MCmousestackptr->stacktogloballoc(p_at);
+	
 	MCWidgetPopup *t_old_popup;
 	t_old_popup = s_widget_popup;
 	
@@ -2230,7 +2233,7 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	s_widget_popup -> setparent(MCdispatcher);
 	MCdispatcher -> add_transient_stack(s_widget_popup);
 	
-	if (!s_widget_popup->openpopup(p_kind, p_at, p_properties))
+	if (!s_widget_popup->openpopup(p_kind, t_at, p_properties))
 	{
 		s_widget_popup->scheduledelete();
 		s_widget_popup = t_old_popup;
@@ -2275,7 +2278,6 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCS
 	/* UNCHECKED */ MCNameCreate(p_kind, &t_kind);
 	
 	t_at = MCPointMake(t_at.x + MCwidgetobject->getrect().x, t_at.y + MCwidgetobject->getrect().y);
-	t_at = MCwidgetobject->getstack()->stacktogloballoc(t_at);
 	
 	return MCWidgetPopupAtLocationWithProperties(*t_kind, t_at, p_properties);
 }

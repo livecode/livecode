@@ -1,0 +1,1 @@
+# LCS-Widget: Add 'popup widget' syntax
