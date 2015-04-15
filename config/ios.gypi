@@ -73,15 +73,14 @@
 				# Convert externals into the correct form for iOS
 				'_type == "loadable_module"',
 				{
+					'type': 'static_library',
 					'mac_bundle': 0,
-					'product_extension': 'a',
-					
-					# Don't actually do any linking yet...
+
 					'xcode_settings':
 					{
 						'MACH_O_TYPE': 'staticlib',
 					},
-					
+
 					'postbuilds':
 					[
 						{
