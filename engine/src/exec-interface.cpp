@@ -3832,6 +3832,8 @@ void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
 	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
     
 	MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, r_data);
+    // PM-2015-04-15: [[ Bug 15193 ]] Fix memory leak and eventual crash
+    MCImageFreeBitmap(t_bitmap);
 }
 void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
@@ -3841,6 +3843,8 @@ void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *
     // AL-2014-03-20: [[ Bug 11948 ]] t_bitmap nil here causes a crash.
     if (t_bitmap != nil)
         MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
+    // PM-2015-04-15: [[ Bug 15193 ]] Fix memory leak and eventual crash
+    MCImageFreeBitmap(t_bitmap);
 }
 
 MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
