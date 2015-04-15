@@ -13,6 +13,13 @@
 			'../thirdparty/headers/linux/include',
 		],
 		
+		# Disable exceptions and RTTI, except where needed
+		'cflags_cc':
+		[
+			'-fno-exceptions',
+			'-fno-rtti',
+		],
+		
 		# Static libraries that are to be included into dynamic libraries
 		# need to be compiled with the correct compilation flags
 		'target_conditions':
