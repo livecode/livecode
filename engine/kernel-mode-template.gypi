@@ -1,9 +1,4 @@
 {		
-	'includes':
-	[
-		'../util/perfect/perfect.gyp',
-	],
-	
 	'dependencies':
 	[
 		'encode_version',
@@ -58,7 +53,7 @@
 			'inputs':
 			[
 				'../util/hash_strings.pl',
-				'<(perfect_name)',
+				'<(PRODUCT_DIR)/perfect<(EXECUTABLE_SUFFIX)',
 				
 				# It really does depend on this but gyp doesn't compile sources listed as action inputs...
 				#'src/lextable.cpp',
@@ -74,7 +69,7 @@
 				'../util/hash_strings.pl',
 				'./src/lextable.cpp',
 				'<@(_outputs)',
-				'<(perfect_name)',
+				'<(PRODUCT_DIR)/perfect<(EXECUTABLE_SUFFIX)',
 			],
 		},
 	],
