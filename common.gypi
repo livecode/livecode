@@ -7,7 +7,7 @@
 		'config/crosscompile.gypi',
 		'config/exclusions.gypi',
 		'config/paths.gypi',
-		'config/revolution.gypi',
+		'config/perl.gypi',
 		'config/target_os.gypi',
 		'config/thirdparty.gypi',
 	],

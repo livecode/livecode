@@ -61,5 +61,7 @@
 		},
 		
 		'target_arch%': '<(host_arch)',
+		'host_arch': '<(host_arch)',
+		'host_os': '<(host_os)',
 	},
 }

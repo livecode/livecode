@@ -1,10 +1,16 @@
 {		
+	'includes':
+	[
+		'../util/perfect/perfect.gyp',
+	],
+	
 	'dependencies':
 	[
 		'encode_version',
-	
+		
 		'../libcore/libcore.gyp:libCore',
 		'../libgraphics/libgraphics.gyp:libGraphics',
+		'../util/perfect/perfect.gyp:perfect',
 	],
 
 	'include_dirs':
@@ -29,7 +35,7 @@
 			
 			'inputs':
 			[
-				'encode_errors.rev',
+				'../util/encode_errors.pl',
 				'src/executionerrors.h',
 				'src/parseerrors.h',
 			],
@@ -40,8 +46,8 @@
 		
 			'action':
 			[
-				'<(revolution_path)',
-				'encode_errors.rev',
+				'<@(perl)',
+				'../util/encode_errors.pl',
 				'./src',
 				'<@(_outputs)',
 			],
@@ -51,7 +57,8 @@
 			
 			'inputs':
 			[
-				'hash_strings.rev',
+				'../util/hash_strings.pl',
+				'<(perfect_name)',
 				
 				# It really does depend on this but gyp doesn't compile sources listed as action inputs...
 				#'src/lextable.cpp',
@@ -63,11 +70,11 @@
 		
 			'action':
 			[
-				'<(revolution_path)',
-				'hash_strings.rev',
+				'<@(perl)',
+				'../util/hash_strings.pl',
 				'./src/lextable.cpp',
 				'<@(_outputs)',
-				'<(perfect_path)',
+				'<(perfect_name)',
 			],
 		},
 	],

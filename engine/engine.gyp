@@ -22,7 +22,7 @@
 					'action_name': 'encode_version',
 					'inputs':
 					[
-						'encode_version.rev',
+						'../util/encode_version.pl',
 						'../version',
 						'include/revbuild.h.in',
 					],
@@ -33,8 +33,8 @@
 					
 					'action':
 					[
-						'<(revolution_path)',
-						'encode_version.rev',
+						'<@(perl)',
+						'../util/encode_version.pl',
 						'.',
 						'<(SHARED_INTERMEDIATE_DIR)',
 					],
@@ -60,7 +60,7 @@
 					'action_name': 'quicktime_stubs',
 					'inputs':
 					[
-						'../tools/weak_stub_maker.lc',
+						'../util/weak_stub_maker.pl',
 						'src/quicktime.stubs',
 					],
 					'outputs':
@@ -70,8 +70,8 @@
 					
 					'action':
 					[
-						'<(revolution_path)',
-						'../tools/weak_stub_maker.lc',
+						'<@(perl)',
+						'../util/weak_stub_maker.pl',
 						'src/quicktime.stubs',
 						'<@(_outputs)',
 					],
@@ -89,7 +89,7 @@
 					'action_name': 'encode_environment_stack',
 					'inputs':
 					[
-						'compress_data.rev',
+						'../util/compress_data.pl',
 						'src/Environment.rev',
 					],
 					'outputs':
@@ -99,8 +99,8 @@
 					
 					'action':
 					[
-						'<(revolution_path)',
-						'compress_data.rev',
+						'<@(perl)',
+						'../util/compress_data.pl',
 						'src/Environment.rev',
 						'<@(_outputs)',
 						# Really nasty hack to prevent this from being treated as a path

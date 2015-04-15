@@ -151,7 +151,7 @@
 									'action_name': 'linux_library_stubs',
 									'inputs':
 									[
-										'../tools/weak_stub_maker.lc',
+										'../util/weak_stub_maker.pl',
 										'src/linux.stubs',
 									],
 									'outputs':
@@ -161,8 +161,8 @@
 									
 									'action':
 									[
-										'<(revolution_path)',
-										'../tools/weak_stub_maker.lc',
+										'<@(perl)',
+										'../util/weak_stub_maker.pl',
 										'src/linux.stubs',
 										'<@(_outputs)',
 									],
