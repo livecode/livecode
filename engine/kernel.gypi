@@ -293,8 +293,8 @@
 								[
 									'<(javac_path)',
 									'-d', '<(PRODUCT_DIR)/classes_livecode_community',
-									#'-source', '1.5',
-									'-target', '1.5',
+									'-source', '1.5',
+									#'-target', '1.5',
 									'-implicit:none',
 									'-cp', '<(java_classpath)',
 									'-sourcepath', 'src/java:<(INTERMEDIATE_DIR)/src/java',
