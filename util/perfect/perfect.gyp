@@ -22,25 +22,14 @@
 					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
 				},
 			},
+			
+			'direct_dependent_settings':
+			{
+				'variables':
+				{
+					'perfect_path': '<(PRODUCT_DIR)/perfect<(EXECUTABLE_SUFFIX)',
+				},
+			},
 		},
 	],
-	
-	'variables':
-	{
-		'conditions':
-		[
-			[
-				'host_os == "win"',
-				{
-					'perfect_name': '<(PRODUCT_DIR)/perfect.exe',
-				},
-			],
-			[
-				'host_os == "linux" or host_os == "mac"',
-				{
-					'perfect_name': '<(PRODUCT_DIR)/perfect',
-				},
-			],
-		],
-	}
 }

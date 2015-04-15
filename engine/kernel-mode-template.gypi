@@ -53,7 +53,6 @@
 			'inputs':
 			[
 				'../util/hash_strings.pl',
-				'<(PRODUCT_DIR)/perfect<(EXECUTABLE_SUFFIX)',
 				
 				# It really does depend on this but gyp doesn't compile sources listed as action inputs...
 				#'src/lextable.cpp',
@@ -69,7 +68,7 @@
 				'../util/hash_strings.pl',
 				'./src/lextable.cpp',
 				'<@(_outputs)',
-				'<(PRODUCT_DIR)/perfect<(EXECUTABLE_SUFFIX)',
+				'>(perfect_path)',
 			],
 		},
 	],
