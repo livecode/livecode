@@ -158,7 +158,7 @@ void MCS_getspecialfolder(MCExecPoint& ep)
 	}
 }
 
-// SN-2015-01-16: [[ Bug 14295 ]] Return an error on Server and Mobile
+// SN-2015-01-16: [[ Bug 14295 ]] Return an error on Server
 void MCS_getresourcesfolder(MCExecPoint &ep, bool p_standalone)
 {
     MCS_getspecialfolder(ep);

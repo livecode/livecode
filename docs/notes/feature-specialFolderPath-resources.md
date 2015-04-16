@@ -2,7 +2,9 @@
 
 As stated in their [Technical Note 2206](https://developer.apple.com/library/mac/technotes/tn2206/_index.html#//apple_ref/doc/uid/DTS40007919-CH1-TNTAG205), Apple does not allow application to have unsigned code in the MacOS folder.
 
-To comply with this new rule, every file or folder formerly copied alongside the executable when building a standalone application is now copied in the folder `<App>.app/Contents/Resources/_MacOS`.
+To comply with this new rule, every non-executable file is now copied in the folder `<App>.app/Contents/Resources/_MacOS`.
+
+As for the executable files, they are still copied alongside the engine, and located in `specialFolderPath("engine")`.
 
 This change does not impact any of the engine functions, which automatically redirect any path targeting the former location of the resource files.
 
