@@ -750,6 +750,12 @@ uint32_t MCModeGetEnvironmentType(void)
 	return kMCModeEnvironmentTypeDesktop;
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Get the standalone, redirected resources folder.
+void MCModeGetResourcesFolder(MCExecPoint &ep)
+{
+    MCS_getresourcesfolder(ep, true);
+}
+
 // In standalone mode, we are never licensed.
 bool MCModeGetLicensed(void)
 {

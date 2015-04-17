@@ -56,6 +56,14 @@ IO_stat MCModeCheckSaveStack(MCStack *stack, const MCString& filename);
 const char *MCModeGetEnvironment(void);
 uint32_t MCModeGetEnvironmentType(void);
 
+
+// SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+// This hook is used to work out what is the resource folder on Mac.
+// On a standalone built, it is <app>.app/Contents/Resources/_MacOS
+// On the other modes, it is 'the filename of this stack'
+//
+void MCModeGetResourcesFolder(MCExecPoint &ep);
+
 // This hook is used to work out whether the engine has been licensed.
 //
 // The hook is called by MCLicensed::eval.
