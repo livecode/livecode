@@ -2221,28 +2221,31 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	MCPoint t_at;
 	t_at = MCmousestackptr->stacktogloballoc(p_at);
 	
-	MCWidgetPopup *t_old_popup;
-	t_old_popup = s_widget_popup;
+	MCWidgetPopup *t_popup;
+	t_popup = nil;
 	
-	s_widget_popup = new MCWidgetPopup();
-	if (s_widget_popup == nil)
+	t_popup = new MCWidgetPopup();
+	if (t_popup == nil)
 	{
 		// TODO - throw memory error
-		s_widget_popup = t_old_popup;
 		return nil;
 	}
 	
-	s_widget_popup -> setparent(MCdispatcher);
-	MCdispatcher -> add_transient_stack(s_widget_popup);
+	MCWidgetPopup *t_old_popup;
+	t_old_popup = s_widget_popup;
+	s_widget_popup = t_popup;
+
+	t_popup -> setparent(MCdispatcher);
+	MCdispatcher -> add_transient_stack(t_popup);
 	
-	if (!s_widget_popup->openpopup(p_kind, t_at, p_properties))
+	if (!t_popup->openpopup(p_kind, t_at, p_properties))
 	{
-		s_widget_popup->scheduledelete();
+		t_popup->scheduledelete();
 		s_widget_popup = t_old_popup;
 		return nil;
 	}
 	
-	while (s_widget_popup->getopened() && !MCquit)
+	while (t_popup->getopened() && !MCquit)
 	{
 		MCU_resetprops(True);
 		// MW-2011-09-08: [[ Redraw ]] Make sure we flush any updates.
@@ -2252,10 +2255,10 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	}
 	
 	MCValueRef t_result;
-	t_result = MCValueRetain(s_widget_popup->getpopupresult());
+	t_result = MCValueRetain(t_popup->getpopupresult());
 	
-	s_widget_popup->del();
-	s_widget_popup->scheduledelete();
+	t_popup->del();
+	t_popup->scheduledelete();
 	
 	s_widget_popup = t_old_popup;
 	
