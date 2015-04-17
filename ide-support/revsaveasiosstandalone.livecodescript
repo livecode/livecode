@@ -97,8 +97,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put "7_1" into tSDKs["arm"]["suffix"]
          put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
          
-      else
-         
+      else if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
          -- MM-2014-10-21: [[ iOS 8.1 Support ]] Use iOS 8.1 SDK for armv7 builds on 10.9.
          -- SN-2015-03-12: [[ Bug 14866 ]] Use iOS 8.2 for armv7 builds from 10.9
          get revIDEDeployIOSGetDeviceSDK("8.2")
@@ -110,7 +109,17 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.2.sdk") into tSDKs["arm"]["sdk path"]
          put "8_2" into tSDKs["arm"]["suffix"]
          put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
-         
+      else
+         -- SN-2015-04-14: [[ Bug 15187 ]] From Mac OS 10.10, the required iOS SDK version is 8.3
+         get revIDEDeployIOSGetDeviceSDK("8.3")
+         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk") then
+            throw "performing iOS device builds requires the iOS 8.3 SDK platform to be installed (available with XCode 6.3)"
+         end if                  
+         put it into tSDKs["arm"]["root path"]
+         put it & "/usr/bin" into tSDKs["arm"]["tools path"]
+         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk") into tSDKs["arm"]["sdk path"]
+         put "8_3" into tSDKs["arm"]["suffix"]
+         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]         
       end if
       
    else
@@ -119,23 +128,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       -- For sim builds we just need the suffix (so we can extract the correct external) and where to look for the engines (runtime folder).
       -- SN-2015-02-05: [[ Bug 14422 ]] We only support 5.1 simulator or later.
       --
-      if pTarget contains "5.1" then
-         put "5_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "6.0" then
-         put "6_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "6.1" then
-         put "6_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "7.0" then
-         put "7_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "7.1" then
-         put "7_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "8.0" then
-         put "8_0" into tSDKs["sim"]["suffix"]         
-      else if pTarget contains "8.1" then
-         put "8_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "8.2" then
-         put "8_2" into tSDKs["sim"]["suffix"]
-      end if
+      local tSuffix
+      put pTarget into tSuffix
+      replace "." with "_" in tSuffix
+      put tSuffix into tSDKS["sim"]["suffix"]
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
    end if
