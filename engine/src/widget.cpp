@@ -2216,7 +2216,7 @@ extern "C" MC_DLLEXPORT MCStringRef MCWidgetExecPopupMenuAtLocation(MCStringRef 
 
 static MCWidgetPopup *s_widget_popup = nil;
 
-MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at, MCArrayRef p_properties)
+bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at, MCArrayRef p_properties, MCValueRef &r_result)
 {
 	MCPoint t_at;
 	t_at = MCmousestackptr->stacktogloballoc(p_at);
@@ -2228,7 +2228,7 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	if (t_popup == nil)
 	{
 		// TODO - throw memory error
-		return nil;
+		return false;
 	}
 	
 	MCWidgetPopup *t_old_popup;
@@ -2242,7 +2242,7 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	{
 		t_popup->scheduledelete();
 		s_widget_popup = t_old_popup;
-		return nil;
+		return false;
 	}
 	
 	while (t_popup->getopened() && !MCquit)
@@ -2262,7 +2262,9 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	
 	s_widget_popup = t_old_popup;
 	
-	return t_result;
+	r_result = t_result;
+	
+	return true;
 }
 
 extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCStringRef p_kind, MCCanvasPointRef p_at, MCArrayRef p_properties)
@@ -2284,7 +2286,11 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCS
 	
 	t_at = MCPointMake(t_at.x + MCwidgetobject->getrect().x, t_at.y + MCwidgetobject->getrect().y);
 	
-	return MCWidgetPopupAtLocationWithProperties(*t_kind, t_at, p_properties);
+	MCValueRef t_result;
+	if (MCWidgetPopupAtLocationWithProperties(*t_kind, t_at, p_properties, t_result))
+		return t_result;
+	else
+		return nil;
 }
 
 extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocation(MCStringRef p_kind, MCCanvasPointRef p_at)

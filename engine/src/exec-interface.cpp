@@ -2744,7 +2744,7 @@ void MCInterfaceExecShowTaskBar(MCExecContext& ctxt)
 
 void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *p_at, MCArrayRef p_properties)
 {
-	extern MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at, MCArrayRef p_properties);
+	extern bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at, MCArrayRef p_properties, MCValueRef &r_result);
 	
 	MCPoint t_at;
 	if (p_at != nil)
@@ -2753,14 +2753,16 @@ void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *
 		t_at = MCPointMake(MCmousex, MCmousey);
 	
 	MCAutoValueRef t_result;
-	t_result = MCWidgetPopupAtLocationWithProperties(p_kind, t_at, p_properties);
-	
-	if (MCValueIsEmpty(*t_result))
+	if (!MCWidgetPopupAtLocationWithProperties(p_kind, t_at, p_properties, &t_result) || MCValueIsEmpty(*t_result))
+	{
 		ctxt.SetTheResultToCString(MCcancelstring);
+		ctxt.SetItToEmpty();
+	}
 	else
+	{
 		ctxt.SetTheResultToEmpty();
-
-	ctxt.SetItToValue(*t_result);
+		ctxt.SetItToValue(*t_result);
+	}
 }
 
 void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint *p_at)
