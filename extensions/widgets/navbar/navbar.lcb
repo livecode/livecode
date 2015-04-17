@@ -18,6 +18,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /*
 This widget is a navigation bar.
 
+Name: navigate
+Type: message
+Syntax: on navigate <pLabel>
+Summary: Sent when a navigation item is selected
+
+Parameters:
+pLabel(string): The label of the selected navigation item
+
+Example:
+on navigate pLabel
+	go card pLabel
+end navigate
+
+Description:
+Handle the navigate message in the widget's object script to respond to a selection made by the user.
+
 Name: navNames
 Type: property
 Syntax: set the navNames of <widget> to <pNavNames>
@@ -130,6 +146,7 @@ property selectedItem	get mSelectedItem 	set setNavSelectedItem
 metadata selectedItem.default is "1"
 
 property editMode get mEditMode set setEditMode
+metadata editMode.default is "false"
 
 property itemStyle	get mItemStyle	set setItemStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
@@ -138,6 +155,7 @@ metadata itemStyle.default is "icons and names"
 
 property navNames		get getNavNames			set setNavNames
 property navIcons		get getNavIcons			set setNavIcons
+property navSelectedIcons		get getNavSelectedIcons			set setNavSelectedIcons
 property navLabels		get getNavLabels		set setNavLabels
 --
 
@@ -194,6 +212,7 @@ public handler OnCreate() returns nothing
 	put "contacts" into tArray["name"]
 	put "Contacts" into tArray["label"]
 	put "user" into tArray["icon_name"]
+	put "user" into tArray["selected_icon_name"]	
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
@@ -201,6 +220,7 @@ public handler OnCreate() returns nothing
 	put "favourites" into tArray["name"]
 	put "Favourites" into tArray["label"]
 	put "star empty" into tArray["icon_name"]
+	put "star" into tArray["selected_icon_name"]	
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
@@ -208,6 +228,7 @@ public handler OnCreate() returns nothing
 	put "music" into tArray["name"]
 	put "Music" into tArray["label"]
 	put "music" into tArray["icon_name"]
+	put "music" into tArray["selected_icon_name"]	
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
@@ -215,6 +236,7 @@ public handler OnCreate() returns nothing
 	put "search" into tArray["name"]
 	put "Search" into tArray["label"]
 	put "search" into tArray["icon_name"]
+	put "search" into tArray["selected_icon_name"]	
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
@@ -229,7 +251,7 @@ public handler OnCreate() returns nothing
 	initialiseEditData()
 	
 	put true into mRecalculate
-	put true into mEditMode
+	put false into mEditMode
 		
 	put the empty array into mAddItem
 	put "plus sign" into mAddItem["icon_name"]
@@ -267,17 +289,19 @@ public handler OnPaint() returns nothing
 		-- Draw the text of the nav bar
 		if mItemStyle contains "names" then
 			set the font of this canvas to getFont("label")
-			fill text mNavData[tX]["label"] at center of mNavData[tX]["label_rect"] on this canvas
+            fill text mNavData[tX]["label"] at center of mNavData[tX]["label_rect"] on this canvas
 		end if
 	
-		-- Draw the icon
-		variable tIconPath as Path
-		if tX is mSelectedItem and mNavData[tX]["selected_icon"] is not "" then
-            put mNavData[tX]["selected_icon_path"] into tIconPath
-		else
-            put mNavData[tX]["icon_path"] into tIconPath
-		end if
-		fill tIconPath on this canvas
+		if mItemStyle contains "icons" then
+			-- Draw the icon
+			variable tIconPath as Path
+			if tX is mSelectedItem and mNavData[tX]["selected_icon"] is not "" then
+    	        put mNavData[tX]["selected_icon_path"] into tIconPath
+			else
+        	    put mNavData[tX]["icon_path"] into tIconPath
+			end if
+			fill tIconPath on this canvas
+		end if	
 	end repeat
 		
 	// top line
@@ -358,10 +382,14 @@ private handler updateParameters()
 	variable tIconRect as Rectangle
 	
 	repeat with tX from 1 up to mNavItemCount
-		put rectangle [(tX - 1) * mBoxWidth, mHeight * kIconRatio, tX * mBoxWidth, mHeight] into mNavData[tX]["label_rect"]
+		if mItemStyle is "names" then
+			put rectangle [((2 * tX - 1) * mBoxWidth - mHeight) / 2, 0, ((2 * tX - 1) * mBoxWidth + mHeight) / 2, mHeight] into mNavData[tX]["label_rect"]
+		else if mItemStyle is "icons and names" then
+			put rectangle [(tX - 1) * mBoxWidth, mHeight * kIconRatio, tX * mBoxWidth, mHeight] into mNavData[tX]["label_rect"]
+		end if
 			
 		if mItemStyle contains "icons" then
-			if mNavData[tX]["icon"] is "" then
+			if mNavData[tX]["icon_name"] is not empty then
 				put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
 			end if
 			put path mNavData[tX]["icon"] into tIconPath
@@ -369,12 +397,16 @@ private handler updateParameters()
 			if mItemStyle is "icons and names" then
 				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * kIconRatio) / 2, mHeight * 0.05, ((2 * tX - 1) * mBoxWidth + mHeight * kIconRatio) / 2, mHeight * kIconRatio] into tIconRect
 			else if mItemStyle is "icons" then
-				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight) / 2, 0, ((2 * tX - 1) * mBoxWidth + mHeight) / 2, mHeight] into tIconRect
+				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight) / 2 + mHeight * 0.05, mHeight * 0.05, ((2 * tX - 1) * mBoxWidth + mHeight) / 2 - mHeight * 0.05, mHeight * 0.95] into tIconRect
 			end if
 			
 			setIconPath(tIconRect, tIconPath)
 			put tIconPath into mNavData[tX]["icon_path"]
 			put tIconRect into mNavData[tX]["icon_rect"]
+			
+			if mNavData[tX]["selected_icon_name"] is not empty then
+				put iconSVGPathFromName(mNavData[tX]["selected_icon_name"]) into mNavData[tX]["selected_icon"]
+			end if	
 			
 			if mNavData[tX]["selected_icon"] is not "" then
 				put path mNavData[tX]["selected_icon"] into tIconPath
@@ -673,6 +705,7 @@ private handler defaultNavArray() returns Array
 	put kDefaultNavName into tArray["name"]
 	put kDefaultNavLabel into tArray["label"]
 	put kDefaultNavIconName into tArray["icon_name"]
+	put kDefaultNavIconName into tArray["selected_icon_name"]	
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	return tArray
@@ -704,6 +737,16 @@ end handler
 
 private handler setNavIcons(in pIcons as String)
 	setDataElement("icon_name", pIcons, defaultNavArray(), mNavData)
+	put true into mRecalculate
+	redraw all
+end handler
+
+private handler getNavSelectedIcons() returns String
+	return getDataElement("selected_icon_name", mNavData)
+end handler
+
+private handler setNavSelectedIcons(in pIcons as String)
+	setDataElement("selected_icon_name", pIcons, defaultNavArray(), mNavData)
 	put true into mRecalculate
 	redraw all
 end handler
