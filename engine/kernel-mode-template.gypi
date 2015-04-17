@@ -5,7 +5,26 @@
 		
 		'../libcore/libcore.gyp:libCore',
 		'../libgraphics/libgraphics.gyp:libGraphics',
-		'../util/perfect/perfect.gyp:perfect',
+	],
+
+	'conditions':
+	[
+		[
+			# Only the Linux and Android builds support proper cross-compilation
+			'OS == "linux" or OS == "android"',
+			{
+				'dependencies':
+				[
+					'../util/perfect/perfect.gyp:perfect#host',
+				],
+			},
+			{
+				'dependencies':
+				[
+					'../util/perfect/perfect.gyp:perfect',
+				],
+			},
+		],
 	],
 
 	'include_dirs':
