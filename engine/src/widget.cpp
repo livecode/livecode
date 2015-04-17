@@ -1589,6 +1589,8 @@ public:
 	
 	~MCWidgetPopup(void)
 	{
+		MCValueRelease(m_result);
+		m_result = nil;
 	}
 	
 	// This will be called when the stack is closed, either directly
