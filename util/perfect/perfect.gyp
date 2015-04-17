@@ -9,7 +9,17 @@
 		{
 			'target_name': 'perfect',
 			'type': 'executable',
-			
+	
+			'conditions':
+			[
+				[
+					'OS == "linux" or OS == "android"',
+					{
+						'toolsets': ['host'],	
+					},
+				],
+			]
+
 			'sources':
 			[
 				'perfect.c',
