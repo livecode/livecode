@@ -18,7 +18,7 @@
 						'toolsets': ['host'],	
 					},
 				],
-			]
+			],
 
 			'sources':
 			[
