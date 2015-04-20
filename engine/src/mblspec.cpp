@@ -653,14 +653,6 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 		t_obj->Release();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-// SN-2015-01-16: [[ Bug 14295 ]] Return an error on Server
-void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resources_folder)
-{
-    MCS_getspecialfolder(MCNAME("resources"), r_resources_folder);
-}
-
 //////////
 
 struct MCSDownloadUrlState

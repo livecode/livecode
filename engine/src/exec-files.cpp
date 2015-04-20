@@ -262,7 +262,7 @@ void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCS
     // We have a special, mode-specific resource folder
     if (MCStringIsEqualToCString(p_folder, "resources", kMCStringOptionCompareCaseless))
         MCModeGetResourcesFolder(r_path);
-    if (!MCS_getspecialfolder(*t_path, r_path))
+    else if (!MCS_getspecialfolder(*t_path, r_path))
         t_error = true;
 
     // MCModeGetResourcesFolder won't fail, but can return an empty path

@@ -59,7 +59,7 @@ void add_ios_fontmap(const char* p_mapping)
     MCNewAutoNameRef t_from_as_name;
     if (!MCStringCopySubstring(*t_mapping, MCRangeMake(0, t_separator), &t_from)
             || !MCNameCreate(*t_from, &t_from_as_name)
-            || !MCStringCopySubstring(*t_mapping, MCRangeMake(t_separator, UINDEX_MAX), &t_to))
+            || !MCStringCopySubstring(*t_mapping, MCRangeMake(t_separator + 1, UINDEX_MAX), &t_to))
         return;
 
     MCArrayStoreValue(s_font_map, false, *t_from_as_name, *t_to);
