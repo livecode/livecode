@@ -987,9 +987,12 @@ public:
     #endif
     #endif
 
-
+#ifndef _SERVER
+		// ST-2015-04-20: [[ Bug 15257 ]] Stdin shouldn't be set to
+		// non-blocking in server.
         if (!IsInteractiveConsole(0))
             MCS_lnx_nodelay(0);
+#endif
 
         // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
         MCctypetable[160] &= ~(1 << 4);
