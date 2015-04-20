@@ -35,6 +35,8 @@
 				{
 					'defines':
 					[
+						'_MACOSX',
+
 						'_SERVER',
 						'_MAC_SERVER',
 					],
