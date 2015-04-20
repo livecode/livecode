@@ -3323,7 +3323,9 @@ void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
 
 #ifndef _DEBUG_MEMORY
 
-#ifdef __VISUALC__
+// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
+//  as they won't let iOS Simulator 6.3 engine compile.
+#if defined __VISUALC__ || TARGET_IPHONE_SIMULATOR
 void *operator new (size_t size)
 {
     return malloc(size);

@@ -133,6 +133,8 @@ extern bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef
 extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
 							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error);
 extern Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path);
+// SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+extern void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resourcesfolder);
 extern bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path);
 extern bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path);
 extern Boolean MCS_createalias(MCStringRef srcpath, MCStringRef dstpath);

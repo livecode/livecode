@@ -328,6 +328,20 @@ Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path)
     return MCS_pathfromnative(*t_path, r_path);
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Will return an error on Server
+void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resources_folder)
+{
+#ifdef _SERVER
+    r_resources_folder = MCValueRetain(kMCEmptyString);
+#else
+    if (p_standalone)
+        MCS_getspecialfolder(MCN_resources, r_resources_folder);
+    else
+        // If we are not in a standalone, we return the folder in which sits 'this stack'
+        r_resources_folder = MCValueRetain(MCdefaultstackptr->getfilename());
+#endif
+}
+
 void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 {
     MCsystem -> DoAlternateLanguage(p_script, p_language);

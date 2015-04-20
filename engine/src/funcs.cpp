@@ -6734,7 +6734,12 @@ void MCSetResource::compile(MCSyntaxFactoryRef ctxt)
 		MCeerror->add(EE_SPECIALFOLDERPATH_BADPARAM, line, pos);
 		return ES_ERROR;
 	}
-	MCS_getspecialfolder(ep);
+    
+    // SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+    if (ep . getsvalue() == "resources")
+        MCModeGetResourcesFolder(ep);
+    else
+        MCS_getspecialfolder(ep);
 	return ES_NORMAL;
 #endif /* MCSpecialFolderPath */
 

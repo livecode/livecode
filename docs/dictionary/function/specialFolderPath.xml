@@ -25,11 +25,12 @@
 		<introduced version="1.1">Added.</introduced>
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
+		<changed version="6.7.5">Added &quot;resources&quot; folder for Desktop platform</changed>
 		<changed version="6.7.0">Added &quot;engine&quot; folder for Desktop platforms</changed>
-<changed version="4.6.1">Added Android Support.</changed>
-<changed version="5.5.3">5.5.3</changed>
-<changed version="4.5.2">Added iOS Support.</changed>
-<changed version="2.9">2.9</changed>
+		<changed version="4.6.1">Added Android Support.</changed>
+		<changed version="5.5.3">5.5.3</changed>
+		<changed version="4.5.2">Added iOS Support.</changed>
+		<changed version="2.9">2.9</changed>
 		<experimental version=""></experimental>
 		<nonexperimental version=""></nonexperimental>
 	</history>
@@ -114,7 +115,11 @@
       </option>
       <option>
         <item>Engine</item>
-        <description>The folder containing the engine.</description>
+        <description>The folder containing the engine and the executable files copied in the standalone application.</description>
+      </option>
+      <option>
+        <item>Resources</item>
+        <description>In development mode, the current stack folder. In a standalone, the resources folder where non-executable files, or folders specified from the Standalone Builder, are copied.</description>
       </option>
     </options>
     <options title="For Mac OS X systems:">
@@ -156,7 +161,11 @@
       </option>
       <option>
         <item>Engine</item>
-        <description>The folder containing the engine.</description>
+        <description>The folder containing the engine and the executable files copied in the standalone application.</description>
+      </option>
+      <option>
+        <item>Resources</item>
+        <description>In development mode, the current stack folder. In a standalone, the resources folder where non-executable files, or folders specified from the Standalone Builder, are copied.</description>
       </option>
     </options>
     <options title="For Windows systems:">
@@ -196,6 +205,10 @@
         <item>Engine</item>
         <description>The folder containing the engine.</description>
       </option>
+      <option>
+        <item>Resources</item>
+        <description>In development mode, the current stack folder. In a standalone, the resources folder where files or folders specified from the Standalone Builder are copied.</description>
+      </option>
     </options>
     <options title="Windows CSIDL numbers:">
       <option>
@@ -226,6 +239,10 @@
         <item>Engine</item>
         <description>The folder containing the engine.</description>
       </option>
+      <option>
+        <item>Resources</item>
+        <description>In development mode, the current stack folder. In a standalone, the resources folder where files or folders specified from the Standalone Builder are copied.</description>
+      </option>
     </options>
     <options title="For Unix systems:">
       <option>
@@ -247,6 +264,10 @@
       <option>
         <item>Engine</item>
         <description>The folder containing the engine.</description>
+      </option>
+      <option>
+        <item>Resources</item>
+        <description>In development mode, the current stack folder. In a standalone, the resources folder where files or folders specified from the Standalone Builder are copied.</description>
       </option>
     </options>
     <options title="For iOS systems:">
@@ -274,6 +295,10 @@
         <item>engine</item>
         <description>The folder containing the built standalone engine (i.e. the bundle). This is useful for constructing paths to resources that have been copied into the bundle at build time.</description>
       </option>
+      <option>
+        <item>resources</item>
+        <description>The path to the folder where the files and folders are copied in the standalone application (same as the engine folder).</description>
+      </option>
     </options>
     <options title="For Android systems:">
       <option>
@@ -287,6 +312,10 @@
       <option>
         <item>cache</item>
         <description>The path to a folder that can be used for transient per-application data files.</description>
+      </option>
+      <option>
+        <item>resources</item>
+        <description>The path to the folder where files and folders are copied in the standalone application (same as the engine folder).</description>
       </option>
     </options>
   </parameter>		</parameters>

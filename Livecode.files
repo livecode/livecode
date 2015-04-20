@@ -3445,8 +3445,11 @@ thirdparty/libzip/src/zipint.h
 thirdparty/libzip/src/zipintw32.h
 thirdparty/libzip/score.txt
 thirdparty/tools/perfect.c
+tools/build-android.osx
+tools/build-ios.osx
 tools/build-extension-ios.sh
 score.txt
+version
 Makefile
 engine/Makefile.standalone
 engine/Makefile.server

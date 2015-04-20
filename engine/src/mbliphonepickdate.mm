@@ -229,13 +229,13 @@ UIViewController *MCIPhoneGetViewController(void);
 		bool t_is_landscape;
 		t_is_landscape = UIInterfaceOrientationIsLandscape(MCIPhoneGetOrientation());
         
-        // PM-2015-03-25: [[ Bug 15070 ]] Make the y-pos scale to the height of the device rather than a hard coded value
-        CGFloat t_portrait_height, t_landscape_height;
-        t_portrait_height = [[UIScreen mainScreen] bounds] . size . height / 11 ;
-        t_landscape_height = [[UIScreen mainScreen] bounds] . size . height / 15 ;
+        // PM-2015-03-25: [[ Bug 15070 ]] The actionSheet that contains the datePickWheel should be of fixed height
+        CGFloat t_toolbar_portrait_height, t_toolbar_landscape_height;
+        t_toolbar_portrait_height = 44;
+        t_toolbar_landscape_height = 32;
 		
 		// create the pick wheel
-		datePicker = [[UIDatePicker alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? t_landscape_height : t_portrait_height), 0, 0)];
+		datePicker = [[UIDatePicker alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? t_toolbar_landscape_height : t_toolbar_portrait_height), 0, 0)];
 
 		// set the locale
 		NSLocale *t_locale = [NSLocale currentLocale];
@@ -280,7 +280,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		// make a toolbar
         // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
 		UIToolbar *t_toolbar;
-        t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, t_landscape_height) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_portrait_height))];
+        t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, t_toolbar_landscape_height) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height))];
 		t_toolbar.barStyle = UIBarStyleBlack;
 		t_toolbar.translucent = YES;
 		[t_toolbar sizeToFit];
@@ -328,14 +328,13 @@ UIViewController *MCIPhoneGetViewController(void);
             // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working correctly
             
             CGRect t_rect;
-            uint2 t_offset;
-            // PM-2015-03-25: [[ Bug 15070 ]] Make the offset scale to the height of the device rather than a hard coded value
-            t_offset = [[UIScreen mainScreen] bounds] . size . height / 17;
+            // PM-2015-04-13: [[ Bug 15070 ]] There are only three valid values (162.0, 180.0 and 216.0) for the height of the picker
+            uint2 t_pick_wheel_height = datePicker.frame.size.height;
             
             if (!t_is_landscape)
-                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_portrait_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height +t_pick_wheel_height);
             else
-                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height + t_pick_wheel_height);
             
             m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
             
@@ -357,9 +356,9 @@ UIViewController *MCIPhoneGetViewController(void);
             CGRect t_blocking_rect;
             
             if (!t_is_landscape)
-                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_portrait_height - t_pick_wheel_height);
             else
-                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height);
             
             m_blocking_view = [[UIControl alloc] initWithFrame:t_blocking_rect];
             

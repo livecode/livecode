@@ -5653,14 +5653,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                // so the resources folder is the redirected engine folder
+                || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
+            MCAutoStringRef t_engine_folder;
             uindex_t t_last_slash;
             
             if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
                 t_last_slash = MCStringGetLength(MCcmd);
-            
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+
+            if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_engine_folder))
+                return False;
+
+            if (MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+            {
+                if (!MCS_apply_redirect(*t_engine_folder, false, r_folder));
+                    return False;
+            }
+            else
+                r_folder = MCValueRetain(*t_engine_folder);
+
+            return True;
         }
         
         if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))

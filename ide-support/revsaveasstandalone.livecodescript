@@ -2040,6 +2040,13 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       -- get the path to the external
       put revExternalPath(tExternalName, tPlatform, tArch) into tExternalPath
       
+      -- SN-2015-04-15: [[ Bug 15231 ]] We don't want to copy from an empty path
+      --  in case we cannot find any Runtime/<platform>/<arch>/Externals/externals.txt file
+      if tExternalPath is empty then
+         revStandaloneAddWarning tPlatform && tArch & ", external" && "No externals.txt config file found for" &&tExternalName
+         next repeat
+      end if
+      
       -- SN-2015-03-06: [[ DBDriverInclusion ]] In case Database drivers were
       -- included, then the revdb external has been copied.
       -- No issue to copy over it on Windows / Linux, but copying a folder (revdb.bundle)

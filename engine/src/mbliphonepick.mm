@@ -470,13 +470,14 @@ return 1;
 		bool t_is_landscape;
 		t_is_landscape = UIInterfaceOrientationIsLandscape(MCIPhoneGetOrientation());
         
-        // PM-2015-03-25: [[ Bug 15070 ]] Make the y-pos scale to the height of the device rather than a hard coded value
-        CGFloat t_portrait_height, t_landscape_height;
-        t_portrait_height = [[UIScreen mainScreen] bounds] . size . height / 11 ;
-        t_landscape_height = [[UIScreen mainScreen] bounds] . size . height / 15 ;
+        // PM-2015-03-25: [[ Bug 15070 ]] The actionSheet that contains the pickWheel should be of fixed height
+        CGFloat t_toolbar_portrait_height, t_toolbar_landscape_height;
+        t_toolbar_portrait_height = 44;
+        t_toolbar_landscape_height = 32;
 		
 		// create the pick wheel
-		pickerView = [[UIPickerView alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? t_landscape_height : t_portrait_height), 0, 0)];
+		pickerView = [[UIPickerView alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? t_toolbar_landscape_height : t_toolbar_portrait_height), 0, 0)];
+
 		pickerView.delegate = self;
 		
 		// HC-2011-10-03 [[ Picker Buttons ]] Showing the bar dynamicaly, to indicate if any initial selections have been made.
@@ -488,7 +489,7 @@ return 1;
 			pickerView.showsSelectionIndicator = YES;
 			m_bar_visible = true;
 		}
-		
+
         // PM-2014-10-22: [[ Bug 13750 ]] Make sure the view under the pickerView is not visible (iphone 4 only)
         NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
         if ([t_device_model_name isEqualToString:@"iPhone 4"] || [t_device_model_name isEqualToString:@"iPhone 4(Rev A)"] || [t_device_model_name isEqualToString:@"iPhone 4(CDMA)"])
@@ -501,11 +502,12 @@ return 1;
 		// make a toolbar
         // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
 		UIToolbar *t_toolbar;
-		t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, t_landscape_height) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_portrait_height))];
+		t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, t_toolbar_landscape_height) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height))];
 		t_toolbar.barStyle = UIBarStyleBlack;
 		t_toolbar.translucent = YES;
+
 		[t_toolbar sizeToFit];
-		
+
 		NSMutableArray *t_toolbar_items;
 		t_toolbar_items = [[NSMutableArray alloc] init];
 		// HC-2011-09-28 [[ Picker Buttons ]] Enable cancel button on request.
@@ -548,22 +550,22 @@ return 1;
             // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
             
             CGRect t_rect;
-            uint2 t_offset;
-            // PM-2015-03-25: [[ Bug 15070 ]] Make the offset scale to the height of the device rather than a hard coded value
-            t_offset = [[UIScreen mainScreen] bounds] . size . height / 17;
+            // PM-2015-04-13: [[ Bug 15070 ]] There are only three valid values (162.0, 180.0 and 216.0) for the height of the picker
+            uint2 t_pick_wheel_height = pickerView.frame.size.height;
             
+            // PM-2015-03-25: [[ Bug 15070 ]] Make the rect of the m_action_sheet_view to be of fixed height
             if (!t_is_landscape)
-                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_portrait_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height + t_pick_wheel_height);
             else
-                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height + t_pick_wheel_height);
             
             m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
-            
+
             [m_action_sheet_view addSubview: t_toolbar];
             [m_action_sheet_view addSubview: pickerView];
             m_action_sheet_view.backgroundColor = [UIColor whiteColor];
             [t_toolbar release];
-            
+
             [MCIPhoneGetView() addSubview:m_action_sheet_view];
             
            // This is offscreen
@@ -580,9 +582,9 @@ return 1;
             CGRect t_blocking_rect;
             
             if (!t_is_landscape)
-                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_portrait_height - t_pick_wheel_height);
             else
-                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height);
             
             m_blocking_view = [[UIControl alloc] initWithFrame:t_blocking_rect];
             

@@ -228,6 +228,7 @@ extern MCNameRef MCN_opaque_pixels;
 extern MCNameRef MCN_desktop;
 extern MCNameRef MCN_documents;
 extern MCNameRef MCN_engine;
+extern MCNameRef MCN_resources;
 extern MCNameRef MCN_fonts;
 extern MCNameRef MCN_home;
 extern MCNameRef MCN_start;
