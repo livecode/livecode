@@ -75,8 +75,11 @@ struct MCDeployParameters
 	// If true, then the standalone will have an implicit timeout
 	uint32_t timeout;
 	
-	// The list of redirection mappings
+    // The list of redirection mappings
 	MCArrayRef redirects;
+
+    // The list of font mappings
+    MCArrayRef fontmappings;
 
     // AL-2015-02-10: [[ Standalone Inclusions ]] The list of resource mappings.
     MCArrayRef library;

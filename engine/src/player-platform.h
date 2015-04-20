@@ -83,10 +83,12 @@ class MCPlayer : public MCControl, public MCPlayerInterface
 
     bool m_is_attached : 1;
     bool m_should_attach : 1;
-    
+
+    bool m_should_recreate : 1;
+
 	static MCPropertyInfo kProperties[];
     static MCObjectPropertyTable kPropertyTable;
-	
+
 public:
 	MCPlayer();
 	MCPlayer(const MCPlayer &sref);

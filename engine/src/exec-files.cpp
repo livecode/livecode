@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
+#include "mode.h"
 
 #include "globals.h"
 #include "osspec.h"
@@ -254,9 +255,18 @@ void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCS
 		return;
 	}
 
+    bool t_error;
     MCNewAutoNameRef t_path;
+    t_error = false;
     MCNameCreate(p_folder, &t_path);
-	if (MCS_getspecialfolder(*t_path, r_path))
+    // We have a special, mode-specific resource folder
+    if (MCStringIsEqualToCString(p_folder, "resources", kMCStringOptionCompareCaseless))
+        MCModeGetResourcesFolder(r_path);
+    else if (!MCS_getspecialfolder(*t_path, r_path))
+        t_error = true;
+
+    // MCModeGetResourcesFolder won't fail, but can return an empty path
+    if (!t_error)
 	{
 		if (MCStringIsEmpty(r_path))
 			ctxt.SetTheResultToCString("folder not found");

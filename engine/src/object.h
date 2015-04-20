@@ -777,14 +777,7 @@ public:
 		return kMCPropertyChangedMessageTypeNone;
 	}	
 
-	void scheduledelete(void);
-	
-	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
-	// returns true if the referenced image is still in use by this object
-	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
-	{
-		return false;
-	}
+    void scheduledelete(void);
 
 	// MW-2012-10-10: [[ IdCache ]]
 	void setinidcache(bool p_value)
@@ -795,7 +788,14 @@ public:
 	bool getinidcache(void)
 	{
 		return m_in_id_cache;
-	}
+    }
+
+	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
+	// returns true if the referenced image is still in use by this object
+	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
+	{
+        return false;
+    }
     
     void setisparentscript(bool p_value)
     {

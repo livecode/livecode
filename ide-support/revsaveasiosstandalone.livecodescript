@@ -97,8 +97,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put "7_1" into tSDKs["arm"]["suffix"]
          put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
          
-      else
-         
+      else if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
          -- MM-2014-10-21: [[ iOS 8.1 Support ]] Use iOS 8.1 SDK for armv7 builds on 10.9.
          -- SN-2015-03-12: [[ Bug 14866 ]] Use iOS 8.2 for armv7 builds from 10.9
          get revIDEDeployIOSGetDeviceSDK("8.2")
@@ -110,7 +109,17 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.2.sdk") into tSDKs["arm"]["sdk path"]
          put "8_2" into tSDKs["arm"]["suffix"]
          put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
-         
+      else
+         -- SN-2015-04-14: [[ Bug 15187 ]] From Mac OS 10.10, the required iOS SDK version is 8.3
+         get revIDEDeployIOSGetDeviceSDK("8.3")
+         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk") then
+            throw "performing iOS device builds requires the iOS 8.3 SDK platform to be installed (available with XCode 6.3)"
+         end if                  
+         put it into tSDKs["arm"]["root path"]
+         put it & "/usr/bin" into tSDKs["arm"]["tools path"]
+         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk") into tSDKs["arm"]["sdk path"]
+         put "8_3" into tSDKs["arm"]["suffix"]
+         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]         
       end if
       
    else
@@ -119,23 +128,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       -- For sim builds we just need the suffix (so we can extract the correct external) and where to look for the engines (runtime folder).
       -- SN-2015-02-05: [[ Bug 14422 ]] We only support 5.1 simulator or later.
       --
-      if pTarget contains "5.1" then
-         put "5_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "6.0" then
-         put "6_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "6.1" then
-         put "6_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "7.0" then
-         put "7_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "7.1" then
-         put "7_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "8.0" then
-         put "8_0" into tSDKs["sim"]["suffix"]         
-      else if pTarget contains "8.1" then
-         put "8_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "8.2" then
-         put "8_2" into tSDKs["sim"]["suffix"]
-      end if
+      local tSuffix
+      put pTarget into tSuffix
+      replace "." with "_" in tSuffix
+      put tSuffix into tSDKS["sim"]["suffix"]
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
    end if
@@ -387,12 +383,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          end if
          
          local tArchs
-         if tRawArchs contains "ARM64" then
+         -- SN-2015-03-30: [[ Bug 14794 ]] If the user specifies a 32-bit only build,
+         --  then we do not do the 64-bit build.
+         if tRawArchs contains "ARM64" and not tSettings["ios,32-bit only"] then
             put "arm64 " after tArchs
          end if
          if tRawArchs contains "V7" then
             put "armv7 " after tArchs
          end if
+         
          
          -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
          -- to their architecture.
@@ -510,6 +509,45 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put tBaseFolder & slash before tDeploy["splash"]
       end if
    end if
+   
+   -- SN-2015-03-16: [[ iOS Font Mapping ]] Fontmapping deploy command added
+   --  We have our fontmapping list (the default fonts), and the custom ones the user
+   --  may have added
+   local tFontmapFiles,tStandardFontmapRoot
+   
+   -- We want the repo version to be able to build iOS standalones with the fontmap
+   if revEnvironmentIsInstalled() then
+      put mapFilePath(revMobileRuntimeFolder(pTarget)) into tStandardFontmapRoot
+   else
+      local tOldDel
+      put the itemdelimiter into tOldDel
+      set the itemdelimiter to slash
+      put item 1 to -4 of revEnvironmentBinariesPath() into tStandardFontmapRoot
+      put "/engine/rsrc" after tStandardFontmapRoot
+      set the itemdelimiter to tOldDel
+   end if
+   
+   -- We add our fontmapping, and the user one (if empty, that won't get through
+   --  the further loop.
+   put tStandardFontmapRoot & slash & "fontmap",tBaseFolder & slash & tSettings["ios,fontmappings"] after last item of tFontMapFiles
+   
+   repeat for each item tFontmapFile in tFontMapFiles
+      -- Alert the user if their font map has not been found on the disk
+      if there is no file tFontmapFile then
+         revStandaloneAddWarning "Could not find font mapping file" && tFontmapFile
+      else
+         local tFontMappings
+         put URL("file:" & tFontmapFile) into tFontMappings
+         -- Ensure that the list ends with a linefeed
+         if the last char of tFontMappings is not LF then
+            put LF after tFontMappings
+         end if
+         put tFontMappings after tDeploy["fontmappings"]
+      end if
+   end repeat
+   
+   -- delete the last LF
+   delete last char of tDeploy["fontmappings"]
    
    try
       _internal deploy ios tDeploy

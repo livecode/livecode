@@ -344,6 +344,12 @@ command deployUpdateSDKs
    revIDEDeployTargetsChanged
 end deployUpdateSDKs
 
+function deployGetInvalidityMessage pIosSdk, pXcodeVersion
+   return "In order to perfom device builds, you must have the iOS" && pIosSdk \
+         && "SDK configured."& return & \
+         "The iOS" && pIosSdk && "SDK comes with XCode" && pXcodeVersion
+end deployGetInvalidityMessage
+
 -- SN-2015-03-12: [[ Bug 14866 ]] Move the command updateSDKs from
 -- card "Mobile" of stack "revpreferencesgui" here, to make any update
 -- after a new Xcode release more convenient
@@ -359,18 +365,25 @@ function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
    if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
       if "6.1" is not among the lines of it then
          put false into tValid
-         put "In order to perfom device builds, you must have the iOS 6.1 SDK configured." & return & "The iOS 6.1 SDK comes with XCode 4.6." into tSDKStatus
+         put deployGetInvalidityMessage("6.1", "4.6") into tSDKStatus
       end if
    else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
       if "7.1" is not among the lines of it then
          put false into tValid
-         put "In order to perfom device builds, you must have the iOS 7.1 SDK configured." & return & "The iOS 7.1 SDK comes with XCode 5.1." into tSDKStatus
+         put deployGetInvalidityMessage("7.1", "5.1") into tSDKStatus
       end if
-   else
-      -- SN-2015-03-12: [[ Bug 14866 ]] iOS SDK 8.2 is now the valid SDK
+   else if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
+      -- SN-2015-03-12: [[ Bug 14866 ]] iOS SDK 8.2 is now the valid SDK up to 
+      --  Mac OS 10.9, since Xcode 6.3 won't install on Mac OS X 10.9
       if "8.2" is not among the lines of it then
          put false into tValid
-         put "In order to perfom device builds, you must have the iOS 8.2 SDK configured." & return & "The iOS 8.2 SDK comes with XCode 6.2." into tSDKStatus
+         put deployGetInvalidityMessage("8.2", "6.2") into tSDKStatus
+      end if
+   else
+      -- SN-2015-04-09: [[ Bug 15187 ]] iOS SDK 8.3 is now the valid SDK
+      if "8.3" is not among the lines of it then
+         put false into tValid
+         put deployGetInvalidityMessage("8.3", "6.3") into tSDKStatus
       end if
    end if
    
@@ -410,8 +423,9 @@ end deployGetSimulatorFamilies
 
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
+-- SN-2015-04-09: [[ Bug 15187 ]] Add iOS SDK 8.3
 function deployUsableIosSdk
-   return "5.1,6.1,7.1,8.2"
+   return "5.1,6.1,7.1,8.2,8.3"
 end deployUsableIosSdk
 
 -- MW-2012-03-21: Returns the version of SDK to use for device builds.

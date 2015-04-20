@@ -877,6 +877,7 @@ MCPlayer::MCPlayer()
     // PM-2104-10-14: [[ Bug 13569 ]] Make sure changes to player in preOpenCard are not visible
     m_is_attached = false;
     m_should_attach = false;
+    m_should_recreate = false;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -914,6 +915,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
+    
 }
 
 MCPlayer::~MCPlayer()
@@ -998,8 +1000,9 @@ void MCPlayer::close()
         m_is_attached = false;
     }
     // PM-2014-11-03: [[ Bug 13917 ]] m_platform_player should be recreated when reopening a recently closed stack, to take into account if the value of dontuseqt has changed in the meanwhile
+    // PM-2015-03-13: [[ Bug 14821 ]] Use a bool to decide whether to recreate a player, since assigning nil to m_platform_player caused player to become unresponsive when switching between cards
     if (m_platform_player != nil)
-        m_platform_player = nil;
+        m_should_recreate = true;
 }
 
 Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
@@ -2107,8 +2110,13 @@ Boolean MCPlayer::prepare(MCStringRef options)
    	if (!opened)
 		return False;
     
-	if (m_platform_player == nil)
-		MCPlatformCreatePlayer(m_platform_player);
+	if (m_platform_player == nil || m_should_recreate)
+    {
+        if (m_platform_player != nil)
+            MCPlatformPlayerRelease(m_platform_player);
+        MCPlatformCreatePlayer(m_platform_player);
+    }
+		
     
 	if (MCStringBeginsWithCString(filename, (const char_t*)"https:", kMCStringOptionCompareCaseless)
             // SN-2014-08-14: [[ Bug 13178 ]] Check if the sentence starts with 'http:' instead of 'https'
@@ -2471,7 +2479,7 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 			for(uindex_t i = 0; i < t_track_count; i++)
 			{
 				uint32_t t_id;
-				uint32_t t_enabled;
+				bool t_enabled;
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 				if (t_enabled)

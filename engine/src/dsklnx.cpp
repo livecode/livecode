@@ -1463,7 +1463,10 @@ public:
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                 // so the resources folder is the engine folder.
+                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             

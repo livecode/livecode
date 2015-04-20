@@ -1178,6 +1178,11 @@ uint32_t MCModeGetEnvironmentType(void)
 	return kMCModeEnvironmentTypeEditor;
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Development-mode is not standalone
+void MCModeGetResourcesFolder(MCStringRef &r_resources_folder)
+{
+    MCS_getresourcesfolder(false, r_resources_folder);
+}
 
 // In development mode, we are always licensed.
 bool MCModeGetLicensed(void)
