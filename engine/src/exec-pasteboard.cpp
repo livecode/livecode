@@ -639,7 +639,7 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 	
 	MCTransferType t_type;
 	if (p_index == nil)
-        t_type = TRANSFER_TYPE_UNICODE_TEXT;
+        t_type = TRANSFER_TYPE_TEXT;
 	else
 		t_type = MCTransferData::StringToType(MCNameGetString(p_index));
 
