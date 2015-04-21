@@ -1,7 +1,7 @@
 {
 	'variables':
 	{
-		'target_sdk%': 'macosx',
+		'target_sdk%': 'macosx10.8',
 		'host_sdk%': 'macosx',
 	},
 

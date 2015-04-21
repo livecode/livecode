@@ -2,7 +2,7 @@
 	'variables':
 	{
 		'mobile': 1,
-		'target_sdk%': 'iphoneos',
+		'target_sdk%': 'iphoneos8.3',
 		'host_sdk%': 'macosx',
 	},
 	
