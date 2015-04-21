@@ -408,8 +408,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			MCserverinitialscript = NULL;
 		
 		// Create the $<n> variables.
-        // PM-2014-04-14: [[Bug 12106]] Make sure $0 is the script name, and $n is the n-th argument
-		for(int i = 1; i < argc; ++i)
+		for(int i = 2; i < argc; ++i)
 			if (argv[i] != nil)
 			create_var(argv[i]);
 		create_var(nvars);
