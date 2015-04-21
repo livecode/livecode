@@ -33,6 +33,12 @@
 				},
 			},
 			
+			'xcode_settings':
+			{
+				'SDKROOT': '<(host_sdk)',
+				'ARCHS': '<(host_arch)',
+			},
+
 			'direct_dependent_settings':
 			{
 				'variables':

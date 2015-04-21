@@ -2,14 +2,16 @@
 	'variables':
 	{
 		'mobile': 1,
+		'target_sdk%': 'iphoneos',
+		'host_sdk%': 'macosx',
 	},
 	
 	'xcode_config_file': '../version',
 	
 	'xcode_settings':
 	{
-		'SDKROOT': 'iphoneos',
-		
+		'SDKROOT': '<(target_sdk)',
+
 		'SOLUTION_DIR': '<(DEPTH)',
 		'SYMROOT': '$(SOLUTION_DIR)/_build/ios/$(SDK_NAME)',
 		'OBJROOT': '$(SOLUTION_DIR)/_cache/ios/$(SDK_NAME)',

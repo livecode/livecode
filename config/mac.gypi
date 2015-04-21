@@ -1,10 +1,16 @@
 {
+	'variables':
+	{
+		'target_sdk%': 'macosx',
+		'host_sdk%': '<(target_sdk)',
+	},
+
 	'xcode_config_file': '../version',
 	
 	'xcode_settings':
 	{
-		'SDKROOT': 'macosx10.8',
-		
+		'SDKROOT': '<(target_sdk)',
+
 		'SOLUTION_DIR': '<(DEPTH)',
 		'SYMROOT': '$(SOLUTION_DIR)/_build/mac',
 		'OBJROOT': '$(SOLUTION_DIR)/_cache/mac',
