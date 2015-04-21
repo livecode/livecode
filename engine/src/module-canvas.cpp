@@ -1103,14 +1103,14 @@ void MCCanvasColorGetRed(MCCanvasColorRef p_color, MCCanvasFloat &r_red)
 
 void MCCanvasColorSetRed(MCCanvasFloat p_red, MCCanvasColorRef &x_color)
 {
-	__MCCanvasColorImpl *t_color;
-	t_color = MCCanvasColorGet(x_color);
+	__MCCanvasColorImpl t_color;
+	t_color = *MCCanvasColorGet(x_color);
 	
-	if (t_color->red == p_red)
+	if (t_color.red == p_red)
 		return;
 	
-	t_color->red = p_red;
-	MCCanvasColorSet(*t_color, x_color);
+	t_color.red = p_red;
+	MCCanvasColorSet(t_color, x_color);
 }
 
 void MCCanvasColorGetGreen(MCCanvasColorRef p_color, MCCanvasFloat &r_green)
@@ -1120,14 +1120,14 @@ void MCCanvasColorGetGreen(MCCanvasColorRef p_color, MCCanvasFloat &r_green)
 
 void MCCanvasColorSetGreen(MCCanvasFloat p_green, MCCanvasColorRef &x_color)
 {
-	__MCCanvasColorImpl *t_color;
-	t_color = MCCanvasColorGet(x_color);
+	__MCCanvasColorImpl t_color;
+	t_color = *MCCanvasColorGet(x_color);
 	
-	if (t_color->green == p_green)
+	if (t_color.green == p_green)
 		return;
 	
-	t_color->green = p_green;
-	MCCanvasColorSet(*t_color, x_color);
+	t_color.green = p_green;
+	MCCanvasColorSet(t_color, x_color);
 }
 
 void MCCanvasColorGetBlue(MCCanvasColorRef p_color, MCCanvasFloat &r_blue)
@@ -1137,14 +1137,14 @@ void MCCanvasColorGetBlue(MCCanvasColorRef p_color, MCCanvasFloat &r_blue)
 
 void MCCanvasColorSetBlue(MCCanvasFloat p_blue, MCCanvasColorRef &x_color)
 {
-	__MCCanvasColorImpl *t_color;
-	t_color = MCCanvasColorGet(x_color);
+	__MCCanvasColorImpl t_color;
+	t_color = *MCCanvasColorGet(x_color);
 	
-	if (t_color->blue == p_blue)
+	if (t_color.blue == p_blue)
 		return;
 	
-	t_color->blue = p_blue;
-	MCCanvasColorSet(*t_color, x_color);
+	t_color.blue = p_blue;
+	MCCanvasColorSet(t_color, x_color);
 }
 
 void MCCanvasColorGetAlpha(MCCanvasColorRef p_color, MCCanvasFloat &r_alpha)
@@ -1154,14 +1154,14 @@ void MCCanvasColorGetAlpha(MCCanvasColorRef p_color, MCCanvasFloat &r_alpha)
 
 void MCCanvasColorSetAlpha(MCCanvasFloat p_alpha, MCCanvasColorRef &x_color)
 {
-	__MCCanvasColorImpl *t_color;
-	t_color = MCCanvasColorGet(x_color);
+	__MCCanvasColorImpl t_color;
+	t_color = *MCCanvasColorGet(x_color);
 	
-	if (t_color->alpha == p_alpha)
+	if (t_color.alpha == p_alpha)
 		return;
 	
-	t_color->alpha = p_alpha;
-	MCCanvasColorSet(*t_color, x_color);
+	t_color.alpha = p_alpha;
+	MCCanvasColorSet(t_color, x_color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
