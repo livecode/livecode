@@ -2243,7 +2243,8 @@ bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at
 	
 	if (!t_popup->openpopup(p_kind, t_at, p_properties))
 	{
-		t_popup->scheduledelete();
+		t_popup->close();
+		delete t_popup;
 		s_widget_popup = t_old_popup;
 		return false;
 	}
