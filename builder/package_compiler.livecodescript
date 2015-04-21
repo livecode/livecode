@@ -1,6 +1,8 @@
 ﻿script "PackageCompiler"
 ################################################################################
 
+local sCurrentTempFolder
+
 -- Create a new compiler object, represented as an array
 command packageCompilerCreate @rCompiler
    put empty into rCompiler
@@ -28,7 +30,27 @@ end packageCompilerConfigure
 -- source, then any files present in the base source that are used from the new source will be
 -- derived via bsdiff.
 command packageCompilerConfigureSource @self, pTag, pFolder, pBasedOn
+   abstractCanonicalize pFolder
+   
    put pFolder into self["sources"][pTag]
+   
+   -- If the folder doesn't exist, but a prefix of the folder path is a file
+   -- then register that prefix as abstract.
+   if there is no folder pFolder then
+      set the itemDelimiter to slash
+      repeat with i = the number of items in pFolder - 1 down to 2
+         if there is a file (item 1 to i of pFolder) then
+            abstractAddPath item 1 to i of pFolder
+            exit repeat
+         end if
+      end repeat
+      set the itemDelimiter to comma
+   end if
+   
+   if pBasedOn is not empty then
+      throw "not implemented"
+   end if
+   
    if pBasedOn is not pTag then
       put pBasedOn into self["base_sources"][pTag]
    end if
@@ -85,6 +107,7 @@ command packageCompilerBuild @self, pInstaller, pOutput
    put self["default context"] into self["context"]
    put pOutput into self["output"]
    try
+      put self["options"]["temporary"] into sCurrentTempFolder
       compilerRun self, pInstaller
    catch tException
    end try
@@ -117,7 +140,7 @@ command packageCompilerBuild @self, pInstaller, pOutput
    set the itemDelimiter to  tab
    repeat for each line tLine in self["manifest"]
       if item 1 of tLine is among the words of "file executable" and \
-             item 4 of tLine is not empty then
+            item 4 of tLine is not empty then
          if not tUsedFiles[item 4 of tLine] then
             delete item 4 of tLine
          end if
@@ -180,7 +203,7 @@ command packageCompilerBuild @self, pInstaller, pOutput
          put compilerMakeTemporaryFile(self, "diff") into tDerivedFile
          put tDerivedFile & return after tTmpFiles
          compilerProgress self, "Diffing '" & tItemFiles[tBaseItem] &"' and '" & tItemFiles[tItem] & "'"
-         _internal bsdiff tItemFiles[tBaseItem] to tItemFiles[tItem] into tDerivedFile
+         _internal bsdiff abstractPinFile(tItemFiles[tBaseItem]) to abstractPinFile(tItemFiles[tItem]) into tDerivedFile
          archiveAddItemWithFile tArchive, self["files"][tItem], tDerivedFile
       end if
    end repeat
@@ -199,9 +222,11 @@ command packageCompilerBuild @self, pInstaller, pOutput
    end if
    
    -- Remove any temporary files generated in the above process
-   repeat for each line tFile in tTmpFiles
-      delete file tFile
-   end repeat
+   if self["options"]["temporary"] is empty then
+      repeat for each line tFile in tTmpFiles
+         delete file tFile
+      end repeat
+   end if
    
    -- Return the error, if any
    return tError
@@ -735,30 +760,27 @@ private command compilerExecuteCopy @self, pCommand
    -- case of a file will be one item long, but in the case of the bundle
    -- will be determined by its manifest file.
    local tItemManifest
-   if there is a folder tSourcePath then
+   if abstractThereIsAFolder(tSourcePath) then
       if pCommand["class"] is not among the items of "folder,executable,rfolder" then
          compilerBuildWarning self, "Item '" & tSourcePath & "' is a folder, but not of executable or folder type", pCommand["line"]
          exit compilerExecuteCopy
-      end if
-      if pCommand["class"] is among the items "executable,rfolder" then
-         compilerProgress self, "Creating manifest for item '" & tSourcePath & "'"
-         put createManifest(tSourcePath) into URL ("file:" & tSourcePath & slash & "Manifest")
-         --compilerBuildWarning self, "Item '" & tSourcePath & "' is referenced as a bundle but has no manifest", pCommand["line"]
-         --exit compilerExecuteCopy
       end if
       
       -- Simply take the manifest file from within the bundle (one assumes
       -- this will be automagically processed so shouldn't be any problems).
       -- The expected syntax is:
       --    <class>,/<relativefile>
-      --
-      if there is a file (tSourcePath & slash & "Manifest") then
+      -- (If rfolder then we generate one)
+      if pCommand["class"] is among the items "executable,rfolder" then
+         compilerProgress self, "Creating manifest for item '" & tSourcePath & "'"
+         put createManifest(tSourcePath) into tItemManifest
+      else if abstractThereIsAFile(tSourcePath & slash & "Manifest") then
          put url ("file:" & tSourcePath & slash & "Manifest") into tItemManifest
       else
          put pCommand["class"], empty into tItemManifest
       end if
    else
-      if there is no file tSourcePath then
+      if not abstractThereIsAFile(tSourcePath) then
          compilerBuildWarning self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
          exit compilerExecuteCopy
       end if
@@ -785,7 +807,7 @@ private command compilerExecuteCopy @self, pCommand
          put tBaseSourcePath & item 2 of tItem into tBaseItemSourcePath
       end if
       
-      if tItemClass is not "folder" and there is no file tItemSourcePath then
+      if tItemClass is not "folder" and not abstractThereIsAFile(tItemSourcePath) then
          compilerBuildWarning self, "Bundle item '" & tItemSourcePath & "' could not be found", pCommand["line"]
       end if
       
@@ -794,7 +816,7 @@ private command compilerExecuteCopy @self, pCommand
       switch tItemClass
          case "executable"
             local tExeType
-            put sniffExecutable(tItemSourcePath) into tExeType
+            put sniffExecutable(abstractPinFile(tItemSourcePath)) into tExeType
             if tExeType is "macosx" and tSourceType is not "ios" then
                get self["context"]["TargetArchitectures"]
                sort items of it ascending
@@ -997,37 +1019,37 @@ private command compilerExecuteRegister @self, pCommand
    -- registry values are escaped:
    --   \q -> "
    --   \\ -> \
-   if pCommand["value"] is not empty then
-      put compilerEvaluate(self, pCommand["value"], pCommand["line"]) into tValue
-      replace "\q" with quote in tValue
-      replace "\\" with "\" in tValue
+         if pCommand["value"] is not empty then
+   put compilerEvaluate(self, pCommand["value"], pCommand["line"]) into tValue
+   replace "\q" with quote in tValue
+   replace "\\" with "\" in tValue
+end if
+
+local tRoot
+put compilerEvaluateOptVar(self, "RegistryRoot") into tRoot
+if pCommand["class"] is "key" then
+   -- If the 'RegistryRoot' var is not empty, then we prefix the target key with that
+   if tRoot is not empty then
+      if tTarget is not empty then
+         put slash before tTarget
+      end if
+      put tRoot before tTarget
    end if
-   
-   local tRoot
-   put compilerEvaluateOptVar(self, "RegistryRoot") into tRoot
-   if pCommand["class"] is "key" then
-      -- If the 'RegistryRoot' var is not empty, then we prefix the target key with that
-      if tRoot is not empty then
-         if tTarget is not empty then
-            put slash before tTarget
-         end if
-         put tRoot before tTarget
-      end if
-      put "registry key" & tab & tTarget & tab & tValue & tab & pCommand["value_type"] & return after self["manifest"]
-   else
-      -- In this case we have a 'parent' key
-      local tParent
-      if pCommand["parent"] is not empty then
-         put compilerEvaluate(self, pCommand["parent"], pCommand["line"]) into tParent
-      end if
-      if tRoot is not empty then
-         if tParent is not empty then
-            put slash before tParent
-         end if
-         put tRoot before tParent
-      end if
-      put "registry value" & tab & tParent & "//" & tTarget & tab & tValue & tab & pCommand["value_type"] & return after self["manifest"]
+   put "registry key" & tab & tTarget & tab & tValue & tab & pCommand["value_type"] & return after self["manifest"]
+else
+   -- In this case we have a 'parent' key
+   local tParent
+   if pCommand["parent"] is not empty then
+      put compilerEvaluate(self, pCommand["parent"], pCommand["line"]) into tParent
    end if
+   if tRoot is not empty then
+      if tParent is not empty then
+         put slash before tParent
+      end if
+      put tRoot before tParent
+   end if
+   put "registry value" & tab & tParent & "//" & tTarget & tab & tValue & tab & pCommand["value_type"] & return after self["manifest"]
+end if
 end compilerExecuteRegister
 
 private command compilerExecuteRename @self, pCommand
@@ -1059,7 +1081,7 @@ private command compilerExecuteDesktop @self, pCommand
    -- Compute the source path, and if it doesn't exist append a warning
    local tSourcePath
    put self["sources"][tSourceType] & slash & tSourceFile into tSourcePath
-   if there is no file tSourcePath then
+   if not abstractThereIsAFile(tSourcePath) then
       compilerBuildWarning self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
       exit compilerExecuteDesktop
    end if
@@ -1073,7 +1095,7 @@ private command compilerExecuteDesktop @self, pCommand
       
       -- And process the data
       local tData
-      repeat for each line tLine in url ("file:" & tSourcePath)
+      repeat for each line tLine in abstractContentsOfTextFile(tSourcePath)
          put compilerEvaluate(self, tLine, pCommand["line"]) & return after tData
       end repeat
       delete the last char of tData
@@ -1117,7 +1139,7 @@ private function compilerEvaluateOptVar @self, pVar, pLineNumber
    end if
    return self["context"][pVar]
 end compilerEvaluateOptVar
-   
+
 ################################################################################
 
 -- Normalization analyses the list of actions ensuring that folder creation actions are added as
@@ -1183,7 +1205,7 @@ private function compilerProcessItem @self, pProcess, pFile
    
    if pProcess is "text" then
       put compilerMakeTemporaryFile(self, pProcess) into tDerivedFile
-      put compilerProcessText(self, url ("binfile:" & pFile)) into url ("binfile:" & tDerivedFile)
+      put compilerProcessText(self, abstractContentsOfBinaryFile(pFile)) into url ("binfile:" & tDerivedFile)
    else if pProcess is "sign" then
       put compilerProcessSign(self, pFile) into tDerivedFile
    else if pProcess begins with "slim-" then
@@ -1222,7 +1244,7 @@ private function compilerProcessSlim @self, pInputFile, pTargetArchs
    
    -- Use the 'diet' internal command to perform the appropriate lipo/strip operation
    local tDietParams
-   put pInputFile into tDietParams["input"]
+   put abstractPinFile(pInputFile) into tDietParams["input"]
    put tDerivedFile into tDietParams["output"]
    
    -- Note that we use 'i386' in the arch's list here, but the diet command uses 'x86'
@@ -1236,7 +1258,7 @@ private function compilerProcessSlim @self, pInputFile, pTargetArchs
    -- Now run the diet command
    compilerProgress self, "Stripping/dieting '" & pInputFile & "' to" && pTargetArchs
    --_internal diet macosx tDietParams
-   dietAndStrip pTargetArchs, pInputFile, tDerivedFile
+   dietAndStrip pTargetArchs, tDietParams["input"], tDietParams["output"]
    
    if the result is "no architectures left" then
       compilerBuildWarning self, "Executable '" & pInputFile & "' does not contain requested architecture(s) " & pTargetArchs
@@ -1253,7 +1275,7 @@ end compilerProcessSlim
 
 private function compilerProcessSign @self, pFile
    local tSignParams
-   put pFile into tSignParams["input"]
+   put abstractPinFile(pFile) into tSignParams["input"]
    put compilerMakeTemporaryFile(self, "sign") into tSignParams["output"]
    put self["options"]["sign.certificate"] into tSignParams["certificate"]
    put self["options"]["sign.privatekey"] into tSignParams["privatekey"]
@@ -1344,12 +1366,259 @@ private command archiveAddItemWithFile @self, pItemName, pFile
    end if
    
    if self["type"] is "zip" then
-      revZipAddItemWithFile self["output"], pItemName, pFile
+      if abstractFileIsPinned(pFile) then
+         revZipAddItemWithFile self["output"], pItemName, abstractPinFile(pFile)
+      else
+         local tData
+         put abstractContentsOfBinaryFile(pFile) into tData
+         revZipAddItemWithData self["output"], pItemName, "tData"
+      end if
       if the result is not empty then
          put "on add item '" & pItemName & "' with file '" & pFile & "':" && item 2 to -1 of the result into self["error"]
       end if
    end if
 end archiveAddItemWithFile
+
+################################################################################
+
+local sAbstractFolders
+local sAbstractPathCache
+
+private command abstractAddPath pAbstractPath
+   put "closed" into sAbstractFolders[pAbstractPath]["state"]
+end abstractAddPath
+
+private command abstractEnsureFolderIsReady pFolder
+   if sAbstractFolders[pFolder]["state"] is "open" then
+      exit abstractEnsureFolderIsReady
+   end if
+   
+   revZipOpenArchive pFolder, "read"
+   if the result is not empty then
+      throw ",Cannot open source zip '" & pFolder & "'"
+   end if
+   
+   put "open" into sAbstractFolders[pFolder]["state"]
+   
+   set the itemDelimiter to slash
+   
+   repeat for each line tItem in revZipEnumerateItems(pFolder)
+      put "file" into sAbstractFolders[pFolder]["items"][tItem]["type"]
+      repeat with i = 1 to the number of items in tItem - 1
+         put "folder" into sAbstractFolders[pFolder]["items"][item 1 to i of tItem]["type"]
+      end repeat
+   end repeat
+end abstractEnsureFolderIsReady
+
+private function abstractPathIsRegular pPath
+   -- If we've computed this before then use the cached result
+   if pPath is among the keys of sAbstractPathCache then
+      return sAbstractPathCache[pPath]["is_regular"]
+   end if
+   
+   -- If the path is prefixed by <folder>/ for an abstract folder
+   -- then it is not regular.
+   -- If the path is one of the abstract folders then it is not
+   -- regular.
+   local tIsRegular, tAbstractFolder
+   put true into tIsRegular
+   repeat for each key tAbstractFolder in sAbstractFolders
+      if pPath begins with (tAbstractFolder & slash) or \
+            pPath is tAbstractFolder then
+         put false into tIsRegular
+         exit repeat
+      end if
+   end repeat
+   
+   -- Cache the result
+   put tIsRegular into sAbstractPathCache[pPath]["is_regular"]
+   if not tIsRegular then
+      put tAbstractFolder into sAbstractPathCache[pPath]["branch"]
+      put char (the length of tAbstractFolder + 2) to -1 of pPath into sAbstractPathCache[pPath]["leaf"]
+      
+      -- Ensure the abstract folder is open
+      abstractEnsureFolderIsReady tAbstractFolder
+   end if
+   
+   return tIsRegular
+end abstractPathIsRegular
+
+private command abstractPathDecompose pFile, @rBranch, @rLeaf
+   put sAbstractPathCache[pFile]["branch"] into rBranch
+   put sAbstractPathCache[pFile]["leaf"] into rLeaf
+end abstractPathDecompose
+
+private function abstractThereIsAFile pFile
+   abstractCanonicalize pFile
+   
+   if abstractPathIsRegular(pFile) then
+      return there is a file pFile
+   end if
+   
+   local tBranch, tLeaf
+   abstractPathDecompose pFile, tBranch, tLeaf
+   
+   return sAbstractFolders[tBranch]["items"][tLeaf]["type"] is "file"
+end abstractThereIsAFile
+
+private function abstractThereIsAFolder pFolder
+   abstractCanonicalize pFolder
+   
+   if abstractPathIsRegular(pFolder) then
+      return there is a folder pFolder
+   end if
+   
+   local tBranch, tLeaf
+   abstractPathDecompose pFolder, tBranch, tLeaf
+   
+   return sAbstractFolders[tBranch]["items"][tLeaf]["type"] is "folder"
+end abstractThereIsAFolder
+
+private function abstractContentsOfTextFile pFile
+   abstractCanonicalize pFile
+   
+   if abstractPathIsRegular(pFile) then
+      return url ("file:" & pFile)
+   end if
+   
+   get abstractContentsOfBinaryFile(pFile)
+   replace numToChar(13) & numToChar(10) with numToChar(10) in it
+   replace numToChar(13) with numToChar(10) in it
+   
+   return it
+end abstractContentsOfTextFile
+
+private function abstractContentsOfBinaryFile pFile
+   abstractCanonicalize pFile
+   
+   if abstractPathIsRegular(pFile) then
+      return url ("binfile:" & pFile)
+   end if
+   
+   local tBranch, tLeaf
+   abstractPathDecompose pFile, tBranch, tLeaf
+   
+   local tData
+   if not sAbstractFolders[tBranch]["items"][tLeaf]["has_data"] then
+      if not sAbstractFolders[tBranch]["items"][tLeaf]["has_pin"] then
+         revZipExtractItemToVariable tBranch, tLeaf, "tData"
+         if the result is not empty then
+            throw "Could not extract item '" & tLeaf & "' from archive '" & tBranch & "'"
+         end if
+      else
+         put url ("binfile:" & sAbstractFolders[tBranch]["items"][tLeaf]["pin"]) into tData
+         if the result is not empty then
+            throw "Could read data for item '" & tLeaf & "' from archive '" & tBranch & "'"
+         end if
+      end if
+      
+      put true into sAbstractFolders[tBranch]["items"][tLeaf]["has_data"]
+      put tData into sAbstractFolders[tBranch]["items"][tLeaf]["data"]
+   else
+      put sAbstractFolders[tBranch]["items"][tLeaf]["data"] into tData
+   end if
+   
+   return tData
+end abstractContentsOfBinaryFile
+
+function abstractPinFile pFile
+   abstractCanonicalize pFile
+   
+   if abstractPathIsRegular(pFile) then
+      return pFile
+   end if
+   
+   local tBranch, tLeaf
+   abstractPathDecompose pFile, tBranch, tLeaf
+   
+   local tPinnedFile
+   if not sAbstractFolders[tBranch]["items"][tLeaf]["has_pin"] then
+      put builderMakeTemporaryFile(sCurrentTempFolder, "pin") into tPinnedFile
+      if not sAbstractFolders[tBranch]["items"][tLeaf]["has_data"] then
+         revZipExtractItemToFile tBranch, tLeaf, tPinnedFile
+         if the result is not empty then
+            throw "Could not extract item '" & tLeaf & "' from archive '" & tBranch & "'"
+         end if
+      else
+         put sAbstractFolders[tBranch]["items"][tLeaf]["data"] into url ("binfile:" & tPinnedFile)
+         if the result is not empty then
+            throw "Could write data for item '" & tLeaf & "' from archive '" & tBranch & "'"
+         end if
+      end if
+      
+      put true into sAbstractFolders[tBranch]["items"][tLeaf]["has_pin"]
+      put tPinnedFile into sAbstractFolders[tBranch]["items"][tLeaf]["pin"]
+   else
+      put sAbstractFolders[tBranch]["items"][tLeaf]["pin"] into tPinnedFile
+   end if
+   
+   return tPinnedFile
+end abstractPinFile
+
+private function abstractFileIsPinned pFile
+   abstractCanonicalize pFile
+   
+   if abstractPathIsRegular(pFile) then
+      return true
+   end if
+   
+   local tBranch, tLeaf
+   abstractPathDecompose pFile, tBranch, tLeaf
+   
+   return sAbstractFolders[tBranch]["items"][tLeaf]["has_pin"]
+end abstractFileIsPinned
+
+private function abstractTheItemsOf pPath, pType
+   abstractCanonicalize pPath
+   
+   if abstractPathIsRegular(pPath) then
+      local tOldFolder
+      put the folder into tOldFolder
+      set the folder to pPath
+      if pType is "folder" then
+         get the folders
+      else
+         get the files
+      end if
+      set the folder to tOldFolder
+      return it
+   end if
+   
+   local tBranch, tLeaf
+   abstractPathDecompose pPath, tBranch, tLeaf
+   
+   local tItem, tItems
+   set the itemDelimiter to slash
+   repeat for each key tItem in sAbstractFolders[tBranch]["items"]
+      if item 1 to -2 of tItem is not tLeaf then
+         next repeat
+      end if
+      if sAbstractFolders[tBranch]["items"][tItem]["type"] is not pType then
+         next repeat
+      end if
+      put item -1 of tItem & return after tItems
+   end repeat
+   delete the last char of tItems
+   
+   return tItems
+end abstractTheItemsOf
+
+private function abstractTheFoldersOf pPath
+   return abstractTheItemsOf(pPath, "folder")
+end abstractTheFoldersOf
+
+private function abstractTheFilesOf pPath
+   return abstractTheItemsOf(pPath, "file")
+end abstractTheFilesOf
+
+command abstractCanonicalize @xPath
+   if char 1 of xPath is not "/" and char 2 of xPath is not ":" then
+      put the folder & slash before xPath
+   end if
+   if the last char of xPath is "/" and xPath is not "/" then
+      delete the last char of xPath
+   end if
+end abstractCanonicalize
 
 ################################################################################
 
@@ -1374,14 +1643,11 @@ private command compilerDump @self
 end compilerDump
 
 private command compilerExecutionError @self, pError, pLine
-   if pLine is not empty then
-      throw "error, line" && pLine && ":" && pError
-   end if
-   throw "error:" && pError
+   throw pLine, pError
 end compilerExecutionError
 
 private command compilerSyntaxError @self, pError, pLine
-   throw "error, line" && pLine && ":" && pError
+   throw pLine, pError
 end compilerSyntaxError
 
 private command compilerBuildWarning @self, pError, pLine
@@ -1393,8 +1659,8 @@ private command compilerBuildWarning @self, pError, pLine
       put "warning:" && pError & return after self["warnings"]
    end if
    
-   if self["report.target"] is  not empty then
-      dispatch self["report.handler"] to self["report.target"] with "error", the last line of self["warnings"]
+   if self["report.target"] is not empty then
+      dispatch self["report.handler"] to self["report.target"] with "warning", pError, pLine
    end if
 end compilerBuildWarning
 
@@ -1450,13 +1716,9 @@ private function readBytesFromFile pPath, pCount
 end readBytesFromFile
 
 private function createManifest pBase, pPath, pPrefix
-   local tOldFolder
-   put the folder into tOldFolder
-   
    local tManifest, tFolders, tFiles   
-   set the folder to pBase & slash & pPath
-   put the folders into tFolders
-   put the files into tFiles
+   put abstractTheFoldersOf(pBase & slash & pPath) into tFolders
+   put abstractTheFilesOf(pBase & slash & pPath) into tFiles
    filter tFolders without ".*"
    filter tFiles without ".*"
    
@@ -1464,7 +1726,11 @@ private function createManifest pBase, pPath, pPrefix
       put "folder," & pPath into tManifest
    else
       repeat for each line tFolder in tFolders
-         get createManifest(pBase, pPath & slash & tFolder)
+         if pPath is empty then
+            get createManifest(pBase, tFolder)
+         else
+            get createManifest(pBase, pPath & slash & tFolder)
+         end if
          if it is not empty then
             if tManifest is not empty then
                put return after tManifest
@@ -1483,10 +1749,9 @@ private function createManifest pBase, pPath, pPrefix
             get "file"
          end if
          set the itemDel to comma
-         put it & comma & pPath & slash & tFile after tManifest
+         put it & comma & slash & pPath & slash & tFile after tManifest
       end repeat
    end if
    
-   set the folder to tOldFolder
    return tManifest
 end createManifest
