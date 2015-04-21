@@ -1647,6 +1647,9 @@ public:
 		uint32_t t_width, t_height;
 		getwidgetgeometry(t_width, t_height);
 		
+		if (MCErrorIsPending())
+			return false;
+		
 		MCdispatcher -> addmenu(this);
 		m_widget->setrect(MCRectangleMake(0, 0, t_width, t_height));
 		

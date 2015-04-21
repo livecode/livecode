@@ -2755,6 +2755,9 @@ void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *
 	MCAutoValueRef t_result;
 	if (!MCWidgetPopupAtLocationWithProperties(p_kind, t_at, p_properties, &t_result) || MCValueIsEmpty(*t_result))
 	{
+		if (MCErrorIsPending())
+			MCExtensionCatchError(ctxt);
+		
 		ctxt.SetTheResultToCString(MCcancelstring);
 		ctxt.SetItToEmpty();
 	}
