@@ -89,6 +89,7 @@ class MCPlayer : public MCControl
     bool m_modify_selection_while_playing : 1;
     bool m_is_attached : 1;
     bool m_should_attach : 1;
+    bool m_should_recreate : 1;
 	
 public:
 	MCPlayer();

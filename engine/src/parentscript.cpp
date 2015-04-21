@@ -366,9 +366,8 @@ void MCParentScript::Resolve(MCObject *p_object)
 	// Unblock this
 	m_blocked = false;
 
-	// Mark the object as being used as a parent script - note that this is a
-	// button state flag since we currently restrict parentScripts to buttons.
-	m_object -> setstate(True, CS_IS_PARENTSCRIPT);
+	// Mark the object as being used as a parent script.
+	m_object -> setisparentscript(true);
 
 	// Mark the object's stack as having an object which is a parent script.
 	MCStack *t_stack;
@@ -621,7 +620,7 @@ void MCParentScript::Detach(MCParentScriptUse *p_use)
 		// Unset the object's IS_PARENTSCRIPT state as it is no longer being used as
 		// one.
 		if (m_object != NULL)
-			m_object -> setstate(False, CS_IS_PARENTSCRIPT);
+			m_object -> setisparentscript(false);
 
 		// Now delete our state
 		delete this;
