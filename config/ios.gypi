@@ -115,6 +115,7 @@
 			{
 				'COPY_PHASE_STRIP': 'NO',
 				'GCC_OPTIMIZATION_LEVEL': '0',
+				'ARCHS': '<(target_arch)'
 			},
 		},
 		
@@ -125,6 +126,7 @@
 				'GCC_OPTIMIZATION_LEVEL': '3',
 				'GCC_THUMB_SUPPORT[arch=armv6]': 'NO',
 				'GCC_THUMB_SUPPORT[arch=armv7]': 'YES',
+				'ARCHS': '<(target_arch)'
 			},
 		},
 	},
