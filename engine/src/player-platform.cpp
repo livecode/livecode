@@ -882,7 +882,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
 	nextplayer = NULL;
 	filename = strclone(sref.filename);
-    resolved_filename = strclone(sref.resolved_filename);
+    resolved_filename = NULL;
 	istmpfile = False;
 	scale = 1.0;
 	rate = sref.rate;
@@ -1456,15 +1456,15 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             // Edge case: Suppose filenameA is a valid relative path to defaultFolderA, but invalid relative path to defaultFolderB
             // 1. Set defaultFolder to defaultFolderB. Set the filename to filenameA. Video will become empty, since the relative path is invalid.
             // 2. Change the defaultFolder to defaultFolderA. Set the filename again to filenameA. Now the relative path is valid
-            char *t_resolved_filename;
+            char *t_resolved_filename = nil;
             bool t_success = false;
             t_success = resolveplayerfilename(data.clone(), t_resolved_filename);
             
-            if (!t_success)
-                t_resolved_filename = nil;
+            if (t_resolved_filename != nil)
+                delete t_resolved_filename;
             
-            // Compare with the resolved filename so handle the edge case mentioned below
-            if (filename == NULL || data != filename || (resolved_filename != nil && t_success && !MCCStringEqual(resolved_filename, t_resolved_filename)))
+            // handle the edge case mentioned below: If t_success then the movie path has to be updated
+            if (filename == NULL || data != filename || t_success)
             {
                 delete filename;
                 filename = NULL;
@@ -1475,20 +1475,6 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 // PM-2015-01-26: [[ Bug 14435 ]] Resolve the filename in MCPlayer::prepare(), to avoid prepending the defaultFolder or the stack folder to the filename property
                 if (data != MCnullmcstring)
                     filename = data.clone();
-                
-                if (resolved_filename == nil)
-                {
-                    if (t_success)
-                        resolved_filename = t_resolved_filename;
-                }
-                else
-                {
-                    if (t_success && !MCCStringEqual(resolved_filename, t_resolved_filename))
-                    {
-                        delete resolved_filename;
-                        resolved_filename = t_resolved_filename;
-                    }
-                }
                 
                 prepare(MCnullstring);
                 
@@ -1504,7 +1490,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 dirty = wholecard = True;
             }
             // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
-            else if (data == filename && hasinvalidfilename())
+            else if (data == filename && (hasinvalidfilename() || !t_success))
                 MCresult->sets("could not create movie reference");
             break;
         }
@@ -2163,7 +2149,31 @@ Boolean MCPlayer::prepare(const char *options)
 		MCPlatformCreatePlayer(m_platform_player);
     
     // PM-2015-01-26: [[ Bug 14435 ]] Avoid prepending the defaultFolder or the stack folder to the filename property. Use resolved_filename to set the "internal" absolute path
+    char *t_resolved_filename;
+    bool t_success = false;
+    t_success = resolveplayerfilename(filename, t_resolved_filename);
     
+    if (!t_success)
+    {
+        if (resolved_filename != nil)
+        {
+            delete resolved_filename;
+            resolved_filename = nil;
+        }
+    }
+    
+    else
+    {
+        if (resolved_filename == nil)
+            resolved_filename = t_resolved_filename;
+        
+        else if (resolved_filename != nil && !MCCStringEqual(resolved_filename, t_resolved_filename))
+        {
+            delete resolved_filename;
+            resolved_filename = t_resolved_filename;
+        }
+    }
+  
 	if (strnequal(resolved_filename, "https:", 6) || strnequal(resolved_filename, "http:", 5) || strnequal(resolved_filename, "ftp:", 4) || strnequal(resolved_filename, "file:", 5) || strnequal(resolved_filename, "rtsp:", 5))
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &resolved_filename);
 	else
@@ -2177,7 +2187,7 @@ Boolean MCPlayer::prepare(const char *options)
     
     // PM-2014-12-17: [[ Bug 14233 ]] If an invalid filename is used then keep the previous dimensions of the player rect instead of displaying only the controller
     // PM-2014-12-17: [[ Bug 14232 ]] Update the result in case a filename is invalid or the file is corrupted
-    if (hasinvalidfilename())
+    if (hasinvalidfilename() || !t_success)
     {
         MCresult->sets("could not create movie reference");
         return False;
