@@ -271,7 +271,11 @@ static bool s_lock_responder_change = false;
                          ![targetWindowForEvent isPopupWindow])
                      {
                          if (targetWindowForEvent != t_window)
+						 {
                              [self popupWindowShouldClose: nil];
+							 // IM-2015-04-21: [[ Bug 15129 ]] Block mouse down event after cancelling popup
+							 result = nil;
+						 }
                      }
                      
                      return result;
