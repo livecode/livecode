@@ -2,7 +2,7 @@
 	'variables':
 	{
 		'target_sdk%': 'macosx',
-		'host_sdk%': '<(target_sdk)',
+		'host_sdk%': 'macosx',
 	},
 
 	'xcode_config_file': '../version',

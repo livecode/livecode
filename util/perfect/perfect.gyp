@@ -35,8 +35,16 @@
 			
 			'xcode_settings':
 			{
-				'SDKROOT': '<(host_sdk)',
-				'ARCHS': '<(host_arch)',
+				'conditions':
+				[
+					[
+						'OS == "mac" or OS == "ios"',
+						{
+							'SDKROOT': '<(host_sdk)',
+							'ARCHS': '<(host_arch)',
+						},
+					],
+				],
 			},
 
 			'direct_dependent_settings':
