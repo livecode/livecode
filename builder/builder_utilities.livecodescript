@@ -43,7 +43,7 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          break
       case "Server"
          repeat for each line tPlatform in pPlatforms
-            dispatch "serverBuilderRun" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
+            dispatch "serverBuilderRun" to stack builderServerBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
       case "Notes"
@@ -199,6 +199,10 @@ end builderResourceStack
 function builderToolsBuilderStack
    return builderSystemFolder() & slash & "tools_builder.livecodescript"
 end builderToolsBuilderStack
+
+function builderServerBuilderStack
+   return builderSystemFolder() & slash & "server_builder.livecodescript"
+end builderServerBuilderStack
 
 function builderEngineBuilderStack
    return builderSystemFolder() & slash & "engine_builder.livecodescript"
