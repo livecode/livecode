@@ -270,7 +270,11 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    
    # AL-2015-03-14: Use deploy parameters to include libURL scriptified stack in installer standalone
    local tAuxStackfiles
-   put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
+   if there is a stack "revLibUrl" then
+   		put the effective filename of stack "revLibUrl" into tAuxStackfiles
+   else
+	   put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
+   end if	
    put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tAuxStackfiles
    
    start using stack "revSBLibrary"
