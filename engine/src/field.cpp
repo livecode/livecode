@@ -596,7 +596,7 @@ void MCField::kfocus()
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object, noting
 			//   possible change in transient.
 			layer_transientchangedandredrawall(t_old_trans);
-			replacecursor(False, False);
+			
 			MCscreen->addtimer(this, MCM_internal, MCblinkrate);
 			if (!(state & CS_MFOCUSED) && flags & F_AUTO_TAB)
 				seltext(0, getpgsize(paragraphs), True);
@@ -604,6 +604,9 @@ void MCField::kfocus()
 				message(MCM_open_field);
 			else
 				message(MCM_focus_in);
+                
+            // PM-2015-03-05: [[ Bug 14664 ]] Avoid flickering and draw cursor in the correct position after focussing the field
+            replacecursor(False, False);
 		}
 		if (!(flags & F_LOCK_TEXT))
 			MCModeActivateIme(getstack(), true);

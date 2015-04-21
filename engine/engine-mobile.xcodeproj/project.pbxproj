@@ -333,6 +333,7 @@
 		BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
 		BEDBBDDB195C505F008A1728 /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEDBBDDA195C505F008A1728 /* region.cpp */; };
 		BEDBBDDC195C52C9008A1728 /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C977244193C986700DB2F4A /* coretextfonts.cpp */; };
+		BEF1AFAD1AB73F5F001A6427 /* fontmap in CopyFiles */ = {isa = PBXBuildFile; fileRef = BEF1AFAC1AB73F5F001A6427 /* fontmap */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
@@ -544,6 +545,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
+				BEF1AFAD1AB73F5F001A6427 /* fontmap in CopyFiles */,
 				4CF72F8219DBFEE100B1E89B /* mobile-splashscreen-template.plist in CopyFiles */,
 				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in CopyFiles */,
 				4D82FCF01714877A00C48403 /* mobile-device-template.plist in CopyFiles */,
@@ -1029,6 +1031,7 @@
 		BE9459481761E219008408DE /* exec-sound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-sound.cpp"; path = "src/exec-sound.cpp"; sourceTree = "<group>"; };
 		BE94594A17621812008408DE /* exec-misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-misc.cpp"; path = "src/exec-misc.cpp"; sourceTree = "<group>"; };
 		BEDBBDDA195C505F008A1728 /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
+		BEF1AFAC1AB73F5F001A6427 /* fontmap */ = {isa = PBXFileReference; lastKnownFileType = text; name = fontmap; path = rsrc/fontmap; sourceTree = "<group>"; };
 		E8111F8B1541938E00DB16E3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		E8111F8D154193A500DB16E3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
@@ -1411,6 +1414,7 @@
 			isa = PBXGroup;
 			children = (
 				76EF32E31822749500FAC195 /* Security.framework */,
+				BEF1AFAC1AB73F5F001A6427 /* fontmap */,
 				E82D43BF1712CF1A00A10289 /* Projects */,
 				E82D43BE1712CEF500A10289 /* Frameworks */,
 				4DD3DF3A1040B03B00CAC7EF /* Configurations */,
@@ -2089,6 +2093,14 @@
 /* Begin PBXProject section */
 		4DD3DD7D1040AA4700CAC7EF /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+				TargetAttributes = {
+					4DD3DD981040AA9A00CAC7EF = {
+						DevelopmentTeam = SA2BUJR53Y;
+					};
+				};
+			};
 			buildConfigurationList = 4DD3DD801040AA4700CAC7EF /* Build configuration list for PBXProject "engine-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;

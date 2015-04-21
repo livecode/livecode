@@ -684,11 +684,28 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
 			ctxt . SetTheResultToEmpty();
 			
 		}
-		
 		else
 		{
 			s->waiting = True;
-			while (True)
+
+			// SN-2015-03-30: [[ Bug 14466 ]] We want a wait to occur
+			//  to avoid any tigh script loop such as
+			//     repeat forever
+			//        read from socket tSocket until empty
+			//        if it is not empty then exit repeat
+			//     end repeat
+			//  to hang: the wait statement, in the following loop, would
+			//  never be reached since s->read_done always returns true
+			//  when reading until empty.
+			bool t_continue;
+			t_continue = true;
+			if (MCscreen->wait(0.0, False, True))
+			{
+				MCresult->sets("interrupted");
+				t_continue = false;
+			}
+
+			while (t_continue)
 			{
 				if (eptr == s->revents && s->read_done())
 				{
@@ -724,8 +741,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
 					break;
 				}
 			}
-			eptr->remove
-			(s->revents);
+			eptr->remove(s->revents);
 			delete eptr;
 			s->waiting = False;
             return t_data;
