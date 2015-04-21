@@ -117,7 +117,7 @@ command packageCompilerBuild @self, pInstaller, pOutput
    set the itemDelimiter to  tab
    repeat for each line tLine in self["manifest"]
       if item 1 of tLine is among the words of "file executable" and \
-             item 4 of tLine is not empty then
+            item 4 of tLine is not empty then
          if not tUsedFiles[item 4 of tLine] then
             delete item 4 of tLine
          end if
@@ -199,9 +199,11 @@ command packageCompilerBuild @self, pInstaller, pOutput
    end if
    
    -- Remove any temporary files generated in the above process
-   repeat for each line tFile in tTmpFiles
-      delete file tFile
-   end repeat
+   if self["options"]["temporary"] is empty then
+      repeat for each line tFile in tTmpFiles
+         delete file tFile
+      end repeat
+   end if
    
    -- Return the error, if any
    return tError
@@ -1374,14 +1376,11 @@ private command compilerDump @self
 end compilerDump
 
 private command compilerExecutionError @self, pError, pLine
-   if pLine is not empty then
-      throw "error, line" && pLine && ":" && pError
-   end if
-   throw "error:" && pError
+   throw pLine, pError
 end compilerExecutionError
 
 private command compilerSyntaxError @self, pError, pLine
-   throw "error, line" && pLine && ":" && pError
+   throw pLine, pError
 end compilerSyntaxError
 
 private command compilerBuildWarning @self, pError, pLine
@@ -1393,8 +1392,8 @@ private command compilerBuildWarning @self, pError, pLine
       put "warning:" && pError & return after self["warnings"]
    end if
    
-   if self["report.target"] is  not empty then
-      dispatch self["report.handler"] to self["report.target"] with "error", the last line of self["warnings"]
+   if self["report.target"] is not empty then
+      dispatch self["report.handler"] to self["report.target"] with "warning", pError, pLine
    end if
 end compilerBuildWarning
 

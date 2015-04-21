@@ -27,13 +27,11 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    
    -- Next make sure our IDE is up to date
    local tIdeFolder
-   toolsBuilderFetchIde pVersion
-   put the result into tIdeFolder
+   put builderIdeRepoFolder() into tIdeFolder
    
    -- Fetch the documentation
    local tDocsFolder
-   toolsBuilderFetchDocs  tIdeFolder
-   put the result into tDocsFolder
+   put builderBuiltDocsFolder() into tDocsFolder
    
    -- Now build the package
    local tPackageFile
@@ -42,23 +40,11 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    
    -- Compute the private folder
    local tPrivateFolder
-   put builderRepoFolder() & slash & ".." & slash & "livecode-commercial" into tPrivateFolder
+   put builderPrivateRepoFolder() into tPrivateFolder
    
    -- Finally build an installer
    toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, tIdeFolder, tPrivateFolder, tPackageFile
 end toolsBuilderRun
-
-////////////////////////////////////////////////////////////////////////////////
-
-private command toolsBuilderFetchIde pVersion
-   return builderIDEFolder()
-end toolsBuilderFetchIde
-
-////////////////////////////////////////////////////////////////////////////////
-
-private command toolsBuilderFetchDocs pIdeFolder
-   return builderBuiltDocsFolder()
-end toolsBuilderFetchDocs
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,23 +54,24 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    local tEditionType
    put pEdition into tEditionType
    
-   -- Remove any edition suffix from mac standalones
-   builderLog "report", "Removing edition suffixes from mac standalone '" & pEngineFolders["macosx"] & "/Standalone-" &  pEdition & ".app" & "'"
-   removeStandaloneEdiitonSuffix pEngineFolders["macosx"] & "/Standalone-" &  pEdition & ".app", pEdition
-   
    -- Compute the package temp folder
    local tTempFolder
-   put builderWorkspaceFolder() & "/temp/tools-" & pPlatform & "-" & pVersion into tTempFolder
+   put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".tmp" into tTempFolder
    builderEnsureFolder tTempFolder
    
    -- Compute the package output file
-   put builderWorkspaceFolder() & slash & "package/tools-" & pPlatform & "-" & pVersion & ".zip" into tPackageFile
+   put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".zip" into tPackageFile
    builderEnsureFolderForFile tPackageFile
+   
+   --return tPackageFile
    
    -- Configure the package compiler appropriately
    local tPackager
    packageCompilerCreate tPackager
    packageCompilerSetReportCallback tPackager, the long id of me, "toolsBuilderPackageReport"
+   
+   -- Setup the temporary dir
+   packageCompilerConfigure tPackager, "temporary", tTempFolder
    
    -- Configure the sources: ide, docs, macosx, windows, linux
    packageCompilerConfigureSource tPackager, "ide", pIdeFolder
@@ -98,7 +85,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "android", pEngineFolders["android"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    if tEditionType is "Commercial" then
-      packageCompilerConfigureSource tPackager, "private", builderRepoFolder() & slash & ".." & slash & "livecode-commercial"
+      packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
    
    -- Now set up variables used by the description: TargetFolder, SupportFolder, ToolsFolder, TargetPlatform, TargetEdition
@@ -118,7 +105,6 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    end if
    packageCompilerConfigureVariable tPackager, "TodaysDate", "[[todaysDate]]"
    packageCompilerConfigureVariable tPackager, "VersionTag", pVersion
-   --packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386,ppc"
    packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386"
    if pPlatform is "linux" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "i386"
@@ -159,9 +145,9 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    builderLog "message", "Parsing description file '" & tDescFile & "'"
    packageCompilerParse tPackager, url ("file:" & tDescFile)
    if the result is empty then
-      builderLog "report", "Parsed description file '" & tDescFile & "'"
+      toolsBuilderPackageReport "report", "Parsed description file '" & tDescFile & "'"
    else
-      builderLog "error", the result
+      toolsBuilderPackageReport "error", item 2 to -1 of the result, item 1 of the result
       put false into tSuccess
    end if
    
@@ -175,7 +161,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
       if the result is empty then
          builderLog "report", "Built package '" & tPackageFile & "'"
       else
-         builderLog "error", the result
+         toolsBuilderPackageReport "error", item 2 to -1 of the result, item 1 of the result
          put false into tSuccess
       end if
    end if
@@ -189,8 +175,11 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    return tPackageFile
 end toolsBuilderMakePackage
 
-on toolsBuilderPackageReport pType, pMessage
-   builderLog "message", pMessage
+on toolsBuilderPackageReport pType, pMessage, pLine
+   if pLine is not empty then
+      put "Line" && pLine && ":" && pMessage into pMessage
+   end if
+   builderLog pType, pMessage
 end toolsBuilderPackageReport
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,13 +190,13 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    
    -- Compute the deploy temp folder
    local tTempFolder
-   put builderWorkspaceFolder() & "/temp/tools-" & pPlatform & "-" & pVersion into tTempFolder
+   put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".tmp" into tTempFolder
    builderEnsureFolder tTempFolder
    
    -- Compute the output file
    local tOutputFileStub, tOutputFileFolder
-   put builderWorkspaceFolder() & "/deploy" into tOutputFileFolder
-   put builderWorkspaceFolder() & "/deploy/" & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
+   put builderOutputFolder() into tOutputFileFolder
+   put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
    builderEnsureFolderForFile tOutputFileStub
    
    local tInstaller
@@ -271,16 +260,16 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    # AL-2015-03-14: Use deploy parameters to include libURL scriptified stack in installer standalone
    local tAuxStackfiles
    if there is a stack "revLibUrl" then
-   		put the effective filename of stack "revLibUrl" into tAuxStackfiles
+      put the effective filename of stack "revLibUrl" into tAuxStackfiles
    else
-	   put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
+      put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
    end if	
    put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tAuxStackfiles
    
-   start using stack "revSBLibrary"
+   start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revsblibrary.livecodescript")
    repeat for each line tStackFile in tAuxStackfiles
       local tTempStackFile
-      put the tempname into tTempStackFile
+      put builderMakeTemporaryFile(tTempFolder, "stack") into tTempStackFile
       revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
       put tTempStackFile & return after tParams["auxiliary_stackfiles"]
    end repeat
@@ -399,20 +388,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             throw "failure"
          end if
          
-         --         put builderInstallerEngine("macosx") & slash & "Contents/MacOS/installer" into tDietParams["input"]
-         --         put tTempFolder & slash & "macosx-installer-ppc" into tDietParams["output"]
-         --         put false into tDietParams["keep_x86"]
-         --         put true into tDietParams["keep_ppc"]
-         --         builderLog "message", "Dieting input installer down to ppc"
-         --         --_internal diet macosx tDietParams
-         --         dietAndStrip "ppc", tDietParams["input"], tDietParams["output"]
-         --         if the result is not empty then
-         --            builderLog "error", "Dieting input installer to ppc failed -" && the result
-         --            throw "failure"
-         --         end if
-         
          put tTempFolder & slash & "macosx-installer-x86" into tParams["engine_x86"]
-         --put tTempFolder & slash & "macosx-installer-ppc" into tParams["engine_ppc"]
          put tInstallerStackFile into tParams["stackfile"]
          put tOutputFileStub & ".app" & slash & "Contents/MacOS/installer" into tParams["output"]
          
@@ -458,15 +434,15 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             end if
          end if
          
-         local tTrashFile
-         put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
-         put empty into URL ("file:" & tTrashFile)
+         --local tTrashFile
+         --put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
+         --put empty into URL ("file:" & tTrashFile)
          
          -- Do the DMG build
          rename (tOutputFileStub & ".app") to tDmgAppFolder
          -- SN-2015-03-09: [[ DMG creation failure ]] Ensure that hdiutil will allocate enough
          --  memory if the installer end up being over a gigabyte large.
-         get shell("hdiutil create -fs HFS+ -size 1G -volname" && quote & tDmgName & quote && "-srcfolder" && quote & tDmgAppFolder & quote && "-srcfolder" && quote & tTrashFile & quote && quote & tDmgFile & quote)
+         get shell("hdiutil create -fs HFS+ -size 1G -volname" && quote & tDmgName & quote && "-srcfolder" && quote & tDmgAppFolder & quote && quote & tDmgFile & quote)
          rename tDmgAppFolder to (tOutputFileStub & ".app")
          if "created:" is not in it then
             builderLog "error", "Dmg creation failed -" && the last line of it
@@ -540,13 +516,3 @@ function loadTextFile pFile
    return it
 end loadTextFile
 
-private command removeStandaloneEdiitonSuffix pStandalone, pEdition
-   local tOldStandalone, tNewStandalone
-   put pStandalone & "/Contents/MacOS/Standalone-" & pEdition into tOldStandalone
-   put pStandalone & "/Contents/MacOS/Standalone" into tNewStandalone   
-   if there is a file tNewStandalone and there is a file tOldStandalone then
-      delete file tNewStandalone
-   end if
-   rename tOldStandalone to tNewStandalone
-   return the result
-end removeStandaloneEdiitonSuffix
