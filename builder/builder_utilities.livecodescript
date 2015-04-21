@@ -28,21 +28,23 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
    switch pWhich
       case "Tools"
          repeat for each line tPlatform in pPlatforms
-            # Only one linux target
-            if tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
+            # Only one linux target for LiveCode 6.7
+            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "toolsBuilderRun" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
       case "Engine"
          dispatch "engineBuilderRun" to stack builderEngineBuilderStack() with "environment", pEdition, tVersion
          repeat for each line tPlatform in pPlatforms
-            # Only one linux target
-            if tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
+            # Only one linux target for LiveCode 6.7
+            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "engineBuilderRun" to stack builderEngineBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
       case "Server"
          repeat for each line tPlatform in pPlatforms
+            # Only one linux target for LiveCode 6.7
+            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "serverBuilderRun" to stack builderServerBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
