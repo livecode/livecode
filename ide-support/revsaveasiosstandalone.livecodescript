@@ -1492,7 +1492,7 @@ function revMobileRuntimeFolder pTarget, pVersion
    if pTarget is "Device" then
       if pVersion is empty then
          // MacOS X 10.9 can't have iOS SDK 8.3
-         if deploySanatizeSystemVersion() < 101000 then
+         if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
             put "8_2" into pVersion
          else
             put "8_3" into pVersion
