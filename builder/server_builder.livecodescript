@@ -26,6 +26,10 @@ command serverBuilderRun pPlatform, pEdition
    put the result into tEngineFolder
    if pPlatform is "linux" then
       put "/i386/release" after tEngineFolder
+   else if pPlatform is "linux-x64" then
+      put "/x86_64/release" after tEngineFolder
+   else if pPlatform is "linux-armv6hf" then
+      put "/armv6-hf/release" after tEngineFolder
    end if
    
    local tOutputFile
