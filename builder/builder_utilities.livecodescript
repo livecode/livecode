@@ -1,9 +1,11 @@
 ﻿script "BuilderUtilities"
+local sEngineDir
+
 ////////////////////////////////////////////////////////////////////////////////
 
 command builderLog  pType, pMessage
    if there is a stack "Builder" then
-      send "__builderLog pType, pMessage" to stack "Builder"
+      dispatch "__builderLog" to stack "Builder" with  pType, pMessage
    end if
 end builderLog
 
@@ -16,6 +18,10 @@ end builderInitialize
 command builderFinalize
    stop using stack (builderSystemFolder() & slash & "package_compiler.livecodescript")
 end builderFinalize
+
+command builderSetEngineDir pDir
+   put pDir into sEngineDir
+end builderSetEngineDir
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +71,27 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
 end builderBuild
 
 command builderFetchEngine pVersion, pPlatform
+   if sEngineDir is not empty then
+      switch pPlatform
+         case "windows"
+            return sEngineDir & slash & "build-win-x86.zip"
+         case "linux"
+            return sEngineDir & slash & "build-linux-x86.zip/out"
+         case "linux-x64"
+            return sEngineDir & slash & "build-linux-x64.zip/out"
+         case "linux-armv6hf"
+            return sEngineDir & slash & "build-linux-armv6hf.zip/out"
+         case "macosx"
+            return sEngineDir & slash & "build-mac-all.zip/_build/mac"
+         case "ios"
+            return sEngineDir & slash & "build-ios-all.zip/_build/ios"
+         case "android"
+            return sEngineDir & slash & "build-android-armv6.zip/out"
+         default
+            builderLog "error", "Unknown platform '" & pPlatform & "'"
+      end switch
+      return empty
+   end if
    local tPlatform
    switch pPlatform
       case "windows"
@@ -137,10 +164,15 @@ function builderRepoFolder
    return item 1 to -3 of the filename of me
 end builderRepoFolder
 
-function builderIDEFolder
-   set the itemDelimiter to slash
-   return (item 1 to -3 of the filename of me & slash & "ide")
-end builderIDEFolder
+-- Returns the folder of the private repository
+function builderPrivateRepoFolder
+   return builderRepoFolder() & slash & ".." & slash & "livecode-commercial"
+end builderPrivateRepoFolder
+
+-- Returns the folder of the IDE repository
+function builderIdeRepoFolder
+   return builderRepoFolder() & slash & "ide"
+end builderIdeRepoFolder
 
 -- Returns the folder of the builder system
 function builderSystemFolder
@@ -148,14 +180,23 @@ function builderSystemFolder
    return item 1 to -2 of the filename of me
 end builderSystemFolder
 
+-- Returns the folder where intermediate products should be placed
+function builderWorkFolder
+   return builderRepoFolder() & slash & "_build/final/work"
+end builderWorkFolder
+
+-- Returns the folder where output products should be placed
+function builderOutputFolder
+   return builderRepoFolder() & slash & "_build/final/output"
+end builderOutputFolder
+
 -- Returns the folder where all the work should be done
 function builderWorkspaceFolder
    return builderRepoFolder() & slash & "_build/final"
-   --return specialFolderPath("Desktop") & slash & "BuilderWorkspace"
 end builderWorkspaceFolder
 
 function builderIDEFolder
-   return builderRepoFolder() & slash & "ide"
+   return builderIdeRepoFolder()
 end builderIDEFolder
 
 function builderIDEDocsFolder
@@ -247,6 +288,16 @@ function builderInstallerEngine pPlatform
          return tEngineFolder & slash & "installer.app"
    end switch
 end builderInstallerEngine
+
+function builderMakeTemporaryFile pTempFolder, pTag
+   local tIndex
+   put 1 into tIndex
+   repeat while there is a file (pTempFolder & slash & pTag & "-" & tIndex)
+      add 1 to tIndex
+   end repeat
+   
+   return pTempFolder & slash & pTag & "-" & tIndex
+end builderMakeTemporaryFile
 
 ////////////////////////////////////////////////////////////////////////////////
 
