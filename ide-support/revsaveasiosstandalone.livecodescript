@@ -527,9 +527,17 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       set the itemdelimiter to tOldDel
    end if
    
-   -- We add our fontmapping, and the user one (if empty, that won't get through
-   --  the further loop.
-   put tStandardFontmapRoot & slash & "fontmap",tBaseFolder & slash & tSettings["ios,fontmappings"] after last item of tFontMapFiles
+   -- We add our fontmapping, and the user one if not empty
+   put tStandardFontmapRoot & slash & "fontmap" into tFontMapFiles
+   local tUserFontMappings
+   put tSettings["ios,fontmappings"] into tUserFontMappings
+   if tUserFontMappings is not empty then
+      // Make sure to use the right absolute filepath
+      if not (tUserFontMappings begins with slash) then
+         put tBaseFolder & slash before tUserFontMappings
+      end if
+      put tUserFontMappings into item 2 of tFontMapFiles
+   end if
    
    repeat for each item tFontmapFile in tFontMapFiles
       -- Alert the user if their font map has not been found on the disk
