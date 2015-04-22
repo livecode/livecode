@@ -2711,6 +2711,9 @@ void MCPlayer::gettracks(MCStringRef &r_tracks)
         }
         /* UNCHECKED */ MCListCopyAsString(*t_tracks_list, r_tracks);
     }
+    // PM-2015-04-22: [[ Bug 15264 ]] In case of invalid/non-existent file, return empty (as in LC 6.7.x)
+    else
+        r_tracks = MCValueRetain(kMCEmptyString);
 }
 
 uinteger_t MCPlayer::gettrackcount()
