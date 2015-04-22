@@ -1492,7 +1492,12 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         put "8_2" into pVersion
+         // MacOS X 10.9 can't have iOS SDK 8.3
+         if deploySanatizeSystemVersion() < 101000 then
+            put "8_2" into pVersion
+         else
+            put "8_3" into pVersion
+         end if
       end if
       put "Device-" & pVersion into tStub
    else if pTarget contains "4.2" then
@@ -1517,6 +1522,8 @@ function revMobileRuntimeFolder pTarget, pVersion
       put "Simulator-8_1" into tStub
    else if pTarget contains "8.2" then
       put "Simulator-8_2" into tStub
+   else if pTarget contains "8.3" then
+      put "Simulator-8_3" into tStub
    end if
    
    local tUserPath, tOverridePath
