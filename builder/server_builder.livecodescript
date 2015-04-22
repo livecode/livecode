@@ -86,7 +86,7 @@ command serverBuilderRun pPlatform, pEdition
          put ".dll" into tLibExtension
       else if pPlatform is "macosx" then
          put ".dylib" into tLibExtension
-      else if pPlatform is "linux" then
+      else if pPlatform contains "linux" then
          put ".so" into tLibExtension
       end if
       
@@ -184,6 +184,10 @@ function getZipFilenameStub pVersion, pPlatform, pEdition
       put "Windows" into pPlatform
    else if pPlatform is "linux" then
       put "Linux" into pPlatform
+   else if pPlatform is "linux-x64" then
+      put "Linux-x86_64" into pPlatform
+   else if pPlatform is "linux-armv6hf" then
+      put "Linux-armv6hf" into pPlatform
    end if
    if pEdition is "Community" then
       return "LiveCodeCommunityServer-" & pVersion & "-" & pPlatform & ".zip"
