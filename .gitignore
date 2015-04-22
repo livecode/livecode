@@ -20,7 +20,7 @@ encryptedstack.cpp
 encryptedstack.h
 stacksecurity_encrypted.cpp
 
-# Compiled source #
+# Compiled source and intermediates #
 ###################
 *.com
 *.class
@@ -28,6 +28,10 @@ stacksecurity_encrypted.cpp
 *.exe
 *.o
 *.so
+*.a
+*.pyc
+*.d
+*.stamp
 
 # Packages #
 ############
@@ -63,7 +67,7 @@ Thumbs.db
 ####################
 .svn/
 
-# Project setting files #
+# Projects and project setting files #
 #########################
 *.pbxuser
 *.perspectivev3
@@ -73,6 +77,16 @@ xcuserdata/
 *.vcproj.*.user
 *.ncb
 *.suo
+Makefile
+*.Makefile
+*.mk
+*.xcodeproj/*
+*.pbxproj
+*.vcproject
+*.vcxproject
+make-*_*/
+vsprojects/
+xcprojects/
 
 # Build folders #
 #################

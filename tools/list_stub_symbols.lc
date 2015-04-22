@@ -2,8 +2,9 @@
 
 on startup
   local tSpec
-  read from stdin until eof
-  put it into tSpec
+  local tOutput
+
+  put url("file:" & $2) into tSpec
   
   local tPrefix
   if $1 is not empty then
@@ -41,6 +42,8 @@ on startup
       delete char -1 of tSymbol
     end if
 
-    write tPrefix & tSymbol & return to stdout
+    put tPrefix & tSymbol & return after tOutput
   end repeat
+  
+  put tOutput into url("file:" & $3)
 end startup

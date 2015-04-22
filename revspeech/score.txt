@@ -1,2 +1,0 @@
-bundle revspeech	import ../libexternal	support-ppc 10.3.9	support-386 10.4.0	define _MACOSX
-	include ../libexternal/include	compile-c++ src/revspeech.cpp	compile-c++ src/osxspeech.cpp	compile-plist rsrc/revspeech-Info.plist	link-framework Carbon	link-library external	output revspeech

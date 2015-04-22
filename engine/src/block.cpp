@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "paragraf.h"
 #include "line.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "util.h"
 #include "context.h"
 #include "unicode.h"

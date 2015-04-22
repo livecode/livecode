@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "aclip.h"
 #include "cpalette.h"
 #include "vclip.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "cdata.h"
 #include "styledtext.h"
 #include "globals.h"

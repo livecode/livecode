@@ -1,5 +1,9 @@
 on startup
-   generate $1, $2, $3
+   try
+      generate $1, $2, $3
+   catch tError
+      write tError to stderr
+   end try
 end startup
 
 on generate pSource, pTarget, pPerfect
@@ -50,7 +54,7 @@ on generate pSource, pTarget, pPerfect
       put the keys of tTokens into url ("file:" & tTokensFile)
    end if
    
-   local tPerfectCmd
+   /*local tPerfectCmd
    set the itemDelimiter to ":"
    get item 2 to -1 of the address
    set the itemDelimiter to slash
@@ -70,9 +74,9 @@ on generate pSource, pTarget, pPerfect
       default
          put quote & pPerfect & quote into tPerfectCmd
       break
-   end switch
+   end switch*/
 
-   get shell(tPerfectCmd && "<" & quote & tTokensFile & quote)
+   get shell(pPerfect && "<" & quote & tTokensFile & quote)
    if char 1 of it is not "#" then
       delete line 1 of it
    end if

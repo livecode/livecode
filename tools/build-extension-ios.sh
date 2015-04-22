@@ -1,3 +1,10 @@
+#!/bin/bash
+
+set -e
+
+SYMBOLS=$1
+SYMBOLS_FILE=$2
+
 DEPS=`cat "$SRCROOT/$PRODUCT_NAME.ios"`
 DEPS=${DEPS//library /-l}
 DEPS=${DEPS//framework /-framework }
@@ -40,7 +47,7 @@ else
 fi
 
 # SN-2015-02-19: [[ Bug 14625 ]] Xcode only create FAT headers from iOS SDK 7.0
-FAT_INFO=$(otool -fv "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" | grep "Fat headers")
+FAT_INFO=$(otool -fv "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" | grep "Fat headers" || true)
 
 if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 	# We set the minimum iOS or simulator version

@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "stack.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "line.h"
 #include "field.h"
 #include "paragraf.h"
