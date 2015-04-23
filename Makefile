@@ -16,9 +16,24 @@
 
 # Usually, you'll just want to type "make all".
 
-.DEFAULT: all
+################################################################
 
+# Tools that Make calls
 XCODEBUILD ?= xcodebuild
+WINE ?= wine
+
+# Some magic to control which versions of iOS we try to build.  N.b. you may
+# also need to modify the buildbot configuration
+IPHONEOS_VERSIONS ?= 8.2 8.3
+IPHONESIMULATOR_VERSIONS ?= 5.1 6.1 7.1 8.2 8.3
+
+IOS_SDKS ?= \
+	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
+	$(addprefix iphonesimulator,$(IPHONESIMULATOR_VERSIONS))
+
+################################################################
+
+.DEFAULT: all
 
 guess_platform_script := \
 	case `uname -s` in \
@@ -53,12 +68,8 @@ LINUX_ARCHS = x86_64 x86
 config-linux-%:
 	./config.sh --platform linux-$*
 
-compile-linux-%: | config-linux-%
+compile-linux-%:
 	$(MAKE) -C build-linux-$*
-
-.PHONY: all-linux
-.PHONY: config-linux $(addprefix config-linux-,$(LINUX_ARCHS))
-.PHONY: compile-linux $(addprefix compile-linux-,$(LINUX_ARCHS))
 
 ################################################################
 # Android rules
@@ -74,46 +85,33 @@ all-android:
 	$(MAKE) config-android
 	$(MAKE) compile-android
 
-.PHONY: all-android config-android compile-android
-
 ################################################################
 # Mac rules
 ################################################################
 
 config-mac:
-	./config.sh --platform mac-all
+	./config.sh --platform mac
 
 compile-mac:
-	$(XCODEBUILD) -project build-mac-all/livecode.xcodeproj
+	$(XCODEBUILD) -project build-mac/livecode.xcodeproj
 
 all-mac:
 	$(MAKE) config-mac
 	$(MAKE) compile-mac
 
-.PHONY: all-mac config-mac compile-mac
-
 ################################################################
 # iOS rules
 ################################################################
-
-IOS_SDKS = \
-	iphoneos8.3 \
-	iphoneos8.2 \
-	iphonesimulator8.3 \
-	iphonesimulator8.2 \
-	iphonesimulator7.1 \
-	iphonesimulator6.1 \
-	iphonesimulator5.1
 
 all-ios-%:
 	$(MAKE) config-ios-$*
 	$(MAKE) compile-ios-$*
 
 config-ios-%:
-	./config.sh --platform ios-all --generator-output build-ios-all-$* -Dtarget_sdk=$*
+	./config.sh --platform ios --generator-output build-ios-$* -Dtarget_sdk=$*
 
 compile-ios-%:
-	$(XCODEBUILD) -project build-ios-all-$*/livecode.xcodeproj
+	$(XCODEBUILD) -project build-ios-$*/livecode.xcodeproj
 
 # Provide some synonyms for "latest iOS SDK"
 $(addsuffix -ios-iphoneos,all config compile): %: %8.3
@@ -121,6 +119,23 @@ $(addsuffix -ios-iphoneos,all config compile): %: %8.3
 $(addsuffix -ios-iphonesimulator,all config compile): %: %8.3
 	@true
 
+all_ios_subplatforms = iphoneos iphonesimulator $(IOS_SDKS)
+
 all-ios: $(addprefix all-ios-,$(IOS_SDKS))
 config-ios: $(addprefix config-ios-,$(IOS_SDKS))
 compile-ios: $(addprefix compile-ios-,$(IOS_SDKS))
+
+################################################################
+# Windows rules
+################################################################
+
+config-win:
+	./config.sh --platform win-x86
+
+compile-win:
+	# windows builds occur under Wine
+	cd build-win-x86 && $(WINE) /K ../make.cmd
+
+all-win:
+	$(MAKE) config-win
+	$(MAKE) compile-win

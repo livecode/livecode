@@ -77,7 +77,6 @@ xcuserdata/
 *.vcproj.*.user
 *.ncb
 *.suo
-Makefile
 *.Makefile
 *.mk
 *.xcodeproj/*

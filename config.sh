@@ -51,8 +51,8 @@ required option, config.sh will try to guess a suitable value.
 
 The currently-supported PLATFORMs are:
 
-  mac-all
-  ios-all
+  mac
+  ios
   linux-x86
   linux-x86_64
   android-armv6
@@ -65,7 +65,7 @@ EOF
 guess_platform () {
   case "$(uname -s)" in
     Darwin)
-      echo "mac-all"
+      echo "mac"
       return 0 ;;
     Linux)
       case "$(uname -p)" in
@@ -173,8 +173,8 @@ case ${PLATFORM} in
   linux-x86) ;;
   linux-x86_64) ;;
   android-armv6) ;;
-  mac-all) ;;
-  ios-all) ;;
+  mac) ;;
+  ios) ;;
   win-x86) ;;
   *)
     echo "ERROR: Unrecognised platform: '${PLATFORM}'" >&2
@@ -193,11 +193,11 @@ fi
 # Guess OS from platform
 if test -z "$OS"; then
   case ${PLATFORM} in
-    linux-*) OS="linux" ;;
-    android-*) OS="android" ;;
-    mac-*) OS="mac" ;;
-    ios-*) OS="ios" ;;
-    win-*) OS="win" ;;
+    linux*) OS="linux" ;;
+    android*) OS="android" ;;
+    mac*) OS="mac" ;;
+    ios*) OS="ios" ;;
+    win*) OS="win" ;;
   esac
 fi
 
