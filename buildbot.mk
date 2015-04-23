@@ -52,12 +52,14 @@ compile:
 .PHONY: compile
 
 ################################################################
-# Zip up built binaries
+# Archive / extract built binaries
 ################################################################
 
-# Buildbot builds this target once per PLATFORM (not per-SUBPLATFORM!)
+bin-archive:
+	tar -Jcvf $(BUILD_PLATFORM)-bin.tar.xz $(BUILD_PLATFORM)-bin
 
-# TBD
+bin-extract:
+	find . -maxdepth 1 -name '*-bin.xz' -print0 | xargs tar -x -n1 -f
 
 ################################################################
 # Installer generation
