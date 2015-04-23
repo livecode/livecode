@@ -23,10 +23,10 @@
 
 # Buildbot must set the variables PLATFORM and SUBPLATFORM
 
-ifeq ($(SUBPLATFORM),)
-CONFIG_TARGET = config-$(PLATFORM)
+ifeq ($(BUILD_SUBPLATFORM),)
+CONFIG_TARGET = config-$(BUILD_PLATFORM)
 else
-CONFIG_TARGET = config-$(PLATFORM)-$(SUBPLATFORM)
+CONFIG_TARGET = config-$(BUILD_PLATFORM)-$(BUILD_SUBPLATFORM)
 endif
 
 config:
@@ -40,10 +40,10 @@ config:
 
 # Buildbot must set the variables PLATFORM and SUBPLATFORM
 
-ifeq ($(SUBPLATFORM),)
-COMPILE_TARGET = compile-$(PLATFORM)
+ifeq ($(BUILD_SUBPLATFORM),)
+COMPILE_TARGET = compile-$(BUILD_PLATFORM)
 else
-COMPILE_TARGET = compile-$(PLATFORM)-$(SUBPLATFORM)
+COMPILE_TARGET = compile-$(BUILD_PLATFORM)-$(BUILD_SUBPLATFORM)
 endif
 
 compile:
