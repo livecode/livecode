@@ -3,6 +3,8 @@
 	{
 		'target_sdk%': 'macosx10.8',
 		'host_sdk%': 'macosx',
+		
+		'output_dir': '../mac-bin',
 	},
 
 	'xcode_config_file': '../version',
@@ -27,6 +29,15 @@
 	
 	'target_defaults':
 	{
+		'variables':
+		{
+			'app_bundle_suffix': '.app',
+			'ext_bundle_suffix': '.bundle',
+			'exe_suffix': '',
+			'lib_suffix': '.dylib',
+			'ext_suffix': '.so',
+		},
+		
 		'target_conditions':
 		[
 			[

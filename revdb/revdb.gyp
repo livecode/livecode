@@ -39,6 +39,7 @@
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'dbmysql',
 			
 			'dependencies':
 			[
@@ -76,12 +77,21 @@
 					'_releasedbconnectionref',
 				],
 			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+				},
+			},
 		},
 		{
 			'target_name': 'dbodbc',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'dbodbc',
 			
 			# Not for Windows
 			'conditions':
@@ -128,12 +138,21 @@
 					'_releasedbconnectionref',
 				],
 			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+				},
+			},
 		},
 		{
 			'target_name': 'dbpostgresql',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'dbpostgresql',
 			
 			'dependencies':
 			[
@@ -169,12 +188,21 @@
 					'_releasedbconnectionref',
 				],
 			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+				},
+			},
 		},
 		{
 			'target_name': 'dbsqlite',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'dbsqlite',
 			
 			'dependencies':
 			[
@@ -232,12 +260,21 @@
 					},
 				],
 			],
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+				},
+			},
 		},
 		{
 			'target_name': 'revdb',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'revdb',
 			
 			'dependencies':
 			[
@@ -264,11 +301,20 @@
 			{
 				'ios_external_symbols': [ '_getXtable' ],
 			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+				},
+			},
 		},
 		{
 			'target_name': 'revdb-server',
 			'type': 'loadable_module',
 			'product_prefix': '',
+			'product_name': 'revdb-server',
 			
 			'variables':
 			{
@@ -291,6 +337,14 @@
 			[
 				'<@(revdb_sources)',
 			],
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_suffix)' ],
+				},
+			},
 		},
 	],
 }

@@ -1,6 +1,20 @@
 {
+	'variables':
+	{
+		'output_dir': '../linux-<(target_arch)-bin',
+	},
+	
 	'target_defaults':
 	{
+		'variables':
+		{
+			'app_bundle_suffix': '',
+			'ext_bundle_suffix': '.so',
+			'lib_suffix': '.so',
+			'ext_suffix': '.so',
+			'exe_suffix': '',
+		},
+		
 		'defines':
 		[
 			'HAVE___THREAD',

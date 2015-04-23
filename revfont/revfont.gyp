@@ -11,6 +11,7 @@
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'revfont',
 			
 			'dependencies':
 			[
@@ -52,6 +53,14 @@
 			{
 				'INFOPLIST_FILE': 'rsrc/revfont-Info.plist',
 				'EXPORTED_SYMBOLS_FILE': 'revfont.exports',
+			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+				},
 			},
 		},
 	],

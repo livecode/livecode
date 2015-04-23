@@ -66,5 +66,21 @@
 				],
 			],
 		},
+		
+		{
+			'target_name': 'binzip-copy',
+			'type': 'none',
+			
+			'dependencies':
+			[
+				'LiveCode-all',
+			],
+			
+			'copies':
+			[{
+				'destination': '<(output_dir)',
+				'files': [ '>@(dist_files)' ],
+			}],
+		},
 	],
 }

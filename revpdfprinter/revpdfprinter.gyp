@@ -11,6 +11,7 @@
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'revpdfprinter',
 			
 			'dependencies':
 			[
@@ -71,6 +72,14 @@
 			'variables':
 			{
 				'ios_external_symbols': [ '_MCCustomPrinterCreate' ],
+			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+				},
 			},
 		},
 	],

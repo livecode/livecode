@@ -132,6 +132,7 @@
 		{
 			'target_name': 'server',
 			'type': 'executable',
+			'product_name': 'server-community',
 			
 			'dependencies':
 			[
@@ -170,10 +171,22 @@
 					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
 				},
 			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files':
+					[
+						'<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)',
+					],
+				},
+			},
 		},
 		
 		{
 			'target_name': 'standalone',
+			'product_name': 'standalone-community',
 			
 			'includes':
 			[
@@ -241,10 +254,19 @@
 					},
 				],
 			],
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
+				},
+			},
 		},
 		
 		{
 			'target_name': 'installer',
+			'product_name': 'installer',
 			
 			'includes':
 			[
@@ -302,10 +324,19 @@
 					'AdditionalManifestFiles': '$(SolutionDir)..\\engine\\src\\installer.manifest',
 				},
 			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
+				},
+			},
 		},
 		
 		{
 			'target_name': 'development',
+			'product_name': 'livecode-community',
 			
 			'includes':
 			[
@@ -365,6 +396,14 @@
 				'VCManifestTool':
 				{
 					'AdditionalManifestFiles': '$(SolutionDir)..\\engine\\src\\engine.manifest',
+				},
+			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
 				},
 			},
 		},

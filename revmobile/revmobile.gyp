@@ -11,6 +11,7 @@
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'revandroid',
 			
 			'dependencies':
 			[
@@ -53,28 +54,50 @@
 			{
 				'INFOPLIST_FILE': 'revandroid-Info.plist',
 			},
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+				},
+			},
 		},
 		
 		{
 			'target_name': 'reviphone',
-			'type': '<(target_type)',
-			'mac_bundle': 1,
+			'type': 'none',
+			'product_name': 'reviphone',
 			
-			'variables':
-			{
-				'conditions':
+			'conditions':
+			[
 				[
-					[
-						'OS == "mac"',
+					'OS == "mac"',
+					{
+						'type': 'loadable_module',
+						'mac_bundle': 1,
+						
+						'copies':
+						[
+							{
+								'destination': '<(PRODUCT_DIR)/reviphone.bundle/Contents/MacOS',
+								'files':
+								[
+									'<(PRODUCT_DIR)/reviphoneproxy',
+								],
+							},
+						],
+						
+						'all_dependent_settings':
 						{
-							'target_type': 'loadable_module',
+							'variables':
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
+							},
 						},
-						{
-							'target_type': 'none',
-						},
-					]
+					},
 				],
-			},
+			],
 			
 			'dependencies':
 			[
@@ -98,27 +121,7 @@
 			[
 				'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
 			],
-			
-			'conditions':
-			[
-				[
-					# reviphone is only usable on OSX
-					'OS == "mac"',
-					{
-						'copies':
-						[
-							{
-								'destination': '<(PRODUCT_DIR)/reviphone.bundle/Contents/MacOS',
-								'files':
-								[
-									'<(PRODUCT_DIR)/reviphoneproxy',
-								],
-							},
-						],
-					},
-				],
-			],
-			
+
 			'xcode_settings':
 			{
 				'INFOPLIST_FILE': 'reviphone-Info.plist',
@@ -127,23 +130,17 @@
 		
 		{
 			'target_name': 'reviphoneproxy',
-			'type': '<(target_type)',
-			
-			'variables':
-			{
-				'conditions':
+			'type': 'none',
+
+			'conditions':
+			[
 				[
-					[
-						'OS == "mac"',
-						{
-							'target_type': 'executable',
-						},
-						{
-							'target_type': 'none',
-						},
-					],
+					'OS == "mac"',
+					{
+						'type': 'executable',
+					},
 				],
-			},
+			],
 			
 			'sources':
 			[
