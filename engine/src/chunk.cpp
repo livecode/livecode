@@ -3050,7 +3050,6 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             MCMarkedText t_new_mark;
             t_new_mark . text = nil;
             t_new_mark . start = 0;
-            t_new_mark . finish = MAXUINT4;
             
             bool t_success = true;
             
@@ -3073,6 +3072,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     return;
                 }
                 t_new_mark . text = MCValueRetain(*t_text_str);
+                // AL-2015-04-23: [[ Bug 15267 ]] Set the correct finish for the mark.
+                t_new_mark . finish = MCStringGetLength(*t_text_str);
             }
             else
             {
@@ -3092,6 +3093,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     return;
                 }
                 t_new_mark . text = MCValueRetain(*t_data);
+                // AL-2015-04-23: [[ Bug 15267 ]] Set the correct finish for the mark. 
+                t_new_mark . finish = MCDataGetLength(*t_data);
             }
             
             mark(ctxt, false, false, t_new_mark);
