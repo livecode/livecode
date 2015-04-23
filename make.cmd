@@ -9,9 +9,6 @@
 @REM
 @start /min /b mspdbsrv -start -spawn -shutdowntime -1
 
-@REM A short time-out to make sure mspdbsrv is running
-@ping -n 2 localhost >NUL
-
 @REM Select the correct build mode.
 @REM 
 @IF NOT DEFINED BUILDTYPE SET BUILDTYPE=Debug
