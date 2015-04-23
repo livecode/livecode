@@ -123,6 +123,9 @@ struct MCDeployParameters
 		output			= MCValueRetain(kMCEmptyString);
         library         = MCValueRetain(kMCEmptyArray);
         
+        // SN-2015-04-23: [[ Merge-6.7.5-rc-1 ]] Initialise fontmappings array
+        fontmappings    = MCValueRetain(kMCEmptyArray);
+        
         // SN-2015-02-04: [[ Merge-6.7.2 ]] Init the versions pointer / count
         min_os_versions = nil;
         min_os_version_count = 0;
