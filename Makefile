@@ -58,6 +58,8 @@ all: all-$(guess_platform)
 # Linux rules
 ################################################################
 
+LINUX_ARCHS = x86_64 x86
+
 guess_linux_arch_script := \
 	case `uname -p` in \
 		x86_64) echo x86_64 ;; \
@@ -66,34 +68,35 @@ guess_linux_arch_script := \
 
 guess_linux_arch := $(shell $(guess_linux_arch_script))
 
-all-linux:
-	$(MAKE) config-linux-$(guess_linux_arch)
-	$(MAKE) compile-linux-$(guess_linux_arch)
-
-config-linux: config-linux-$(guess_linux_arch)
-compile-linux: compile-linux-$(guess_linux_arch)
-
-LINUX_ARCHS = x86_64 x86
-
 config-linux-%:
 	./config.sh --platform linux-$*
 
 compile-linux-%:
 	$(MAKE) -C build-linux-$*
 
+all-linux-%:
+	$(MAKE) config-linux-$*
+	$(MAKE) compile-linux-$*
+
+$(addsuffix -linux,all config compile): %: %-$(guess_linux_arch)
+
 ################################################################
 # Android rules
 ################################################################
 
-config-android:
-	./config.sh --platform android-armv6
+ANDROID_ARCHS = armv6
 
-compile-android:
-	$(MAKE) -C build-android-armv6
+config-android-%:
+	./config.sh --platform android-$*
 
-all-android:
-	$(MAKE) config-android
-	$(MAKE) compile-android
+compile-android-%:
+	$(MAKE) -C build-android-$*
+
+all-android-%:
+	$(MAKE) config-android-$*
+	$(MAKE) compile-android-$*
+
+$(addsuffix -android,all config compile): %: %-armv6
 
 ################################################################
 # Mac rules
@@ -139,13 +142,15 @@ compile-ios: $(addprefix compile-ios-,$(IOS_SDKS))
 # Windows rules
 ################################################################
 
-config-win:
-	./config.sh --platform win-x86
+config-win-%:
+	./config.sh --platform win-$*
 
-compile-win:
+compile-win-%:
 	# windows builds occur under Wine
-	cd build-win-x86 && $(WINE) /K ../make.cmd
+	cd build-win-$* && $(WINE) /K ../make.cmd
 
-all-win:
-	$(MAKE) config-win
-	$(MAKE) compile-win
+all-win-%:
+	$(MAKE) config-win-$*
+	$(MAKE) compile-win-$*
+
+$(addsuffix -win,all config compile): %: %-x86
