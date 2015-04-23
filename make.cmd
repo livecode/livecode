@@ -8,7 +8,12 @@
 @REM Needs to run in the background as never terminates
 @REM
 @start /min /b mspdbsrv -start -spawn -shutdowntime -1
+
+@REM Select the correct build mode.
+@REM 
+@IF NOT DEFINED BUILDTYPE SET BUILDTYPE=Debug
  
-@msbuild livecode.sln /fl /nologo /p:Configuration=Release /m:1
+@msbuild livecode.sln /fl /nologo /p:Configuration=%BUILDTYPE% /m:1
  
 @exit
+

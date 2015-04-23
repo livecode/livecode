@@ -31,6 +31,16 @@ IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
 	$(addprefix iphonesimulator,$(IPHONESIMULATOR_VERSIONS))
 
+# Choose the correct build type
+MODE ?= debug
+ifeq ($(MODE),debug)
+  export BUILDTYPE ?= Debug
+else ifeq ($(MODE),release)
+  export BUILDTYPE ?= Release
+else
+  $(error "Mode must be 'debug' or 'release'")
+endif
+
 ################################################################
 
 .DEFAULT: all
@@ -93,7 +103,7 @@ config-mac:
 	./config.sh --platform mac
 
 compile-mac:
-	$(XCODEBUILD) -project build-mac/livecode.xcodeproj
+	$(XCODEBUILD) -project build-mac/livecode.xcodeproj -configuration $(BUILDTYPE)
 
 all-mac:
 	$(MAKE) config-mac
@@ -111,7 +121,7 @@ config-ios-%:
 	./config.sh --platform ios --generator-output build-ios-$* -Dtarget_sdk=$*
 
 compile-ios-%:
-	$(XCODEBUILD) -project build-ios-$*/livecode.xcodeproj
+	$(XCODEBUILD) -project build-ios-$*/livecode.xcodeproj -configuration $(BUILDTYPE)
 
 # Provide some synonyms for "latest iOS SDK"
 $(addsuffix -ios-iphoneos,all config compile): %: %8.3
