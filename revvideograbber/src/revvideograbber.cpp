@@ -623,35 +623,36 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
 
 
 
+                // SN-2015-04-23: [[ Bug 15255 ]] Windows now defaults to directX
 #ifdef WIN32
 				if (_strnicmp(args[1], "vfw",strlen("vfw")) == 0)
-					gvideograbber = new CWinVideoGrabber(windowid);
-				else if (_strnicmp(args[1], "directx",strlen("directx")) == 0)
-					gvideograbber = new CDirectXVideoGrabber(windowid);
+                    gvideograbber = new CWinVideoGrabber(windowid);
+                else if (_strnicmp(args[1], "qt",strlen("qt")) == 0)
+                {
+#else
+                if (stricmp(args[1], "qtx") == 0)
+                    gvideograbber = CreateQTXVideoGrabber(windowid);
 				else
 				{
 #endif
-#ifndef WIN32
-					if (stricmp(args[1], "qtx") == 0)
-						gvideograbber = CreateQTXVideoGrabber(windowid);
-					else
-#endif
-					{
-						if (InitQT())
-							gvideograbber = new CQTVideoGrabber(windowid);
-						else
-						{
-							// SN-2015-04-17: [[ Bug 13452 ]] Break if qvideograbber
-							//  has not been created successfully
-							result = istrdup("ERROR: cannot load quicktime");
-							break;
-						}
-					}
+                    if (InitQT())
+                        gvideograbber = new CQTVideoGrabber(windowid);
+                    else
+                    {
+                        // SN-2015-04-17: [[ Bug 13452 ]] Break if qvideograbber
+                        //  has not been created successfully
+                        result = istrdup("ERROR: cannot load quicktime");
+                        break;
+                    }
+                }
 #ifdef WIN32
-				}
+                else
+                    gvideograbber = new CDirectXVideoGrabber(windowid);
 #endif
 				int left,top,right,bottom;
-				if (gvideograbber->IsInited()){
+                // SN-2015-04-23: [[ Bug 15255 ]] Checking that qtvideograbber
+                //  is not NULL can't hurt
+                if (qvideograbber && gvideograbber->IsInited()){
 					if (sscanf(args[2], "%d,%d,%d,%d", &left,&top,&right,&bottom) == 4)
 						gvideograbber->SetRect(left,top,right,bottom);
 				}
