@@ -1,5 +1,7 @@
 ﻿script "BuilderUtilities"
 local sEngineDir
+local sWorkDir
+local sOutputDir
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +24,14 @@ end builderFinalize
 command builderSetEngineDir pDir
    put pDir into sEngineDir
 end builderSetEngineDir
+
+command builderSetWorkDir pDir
+   put pDir into sWorkDir
+end builderSetWorkDir
+
+command builderSetOutputDir pDir
+   put pDir into sOutputDir
+end builderSetOutputDir
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +70,8 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
       case "Docs"
          dispatch "docsBuilderRun" to stack builderDocsBuilderStack() with pEdition, tVersion
          break
+      case "Disk"
+         dispatch "toolsBuilderRunDisk" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
       case "Archive"
          local tBuildNumber
          put builderGetBuildNumber() into tBuildNumber
@@ -183,11 +195,17 @@ end builderSystemFolder
 
 -- Returns the folder where intermediate products should be placed
 function builderWorkFolder
+   if sWorkDir is not empty then
+      return sWorkDir
+   end if
    return builderRepoFolder() & slash & "_build/final/work"
 end builderWorkFolder
 
 -- Returns the folder where output products should be placed
 function builderOutputFolder
+   if sOutputDir is not empty then
+      return sOutputDir
+   end if
    return builderRepoFolder() & slash & "_build/final/output"
 end builderOutputFolder
 
