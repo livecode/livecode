@@ -563,24 +563,11 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_TOOL_TIP:
 		case P_UNICODE_TOOL_TIP:
 		case P_LAYER_MODE:
+        case P_ENABLED:
+        case P_DISABLED:
             
         case P_KIND:
 			return MCControl::setprop(ctxt, p_part_id, p_which, p_index, p_effective, p_value);
-            
-        case P_ENABLED:
-        case P_DISABLED:
-        {
-            bool t_is_disabled;
-            t_is_disabled = getflag(F_DISABLED);
-            if (MCControl::setprop(ctxt, p_part_id, p_which, p_index, p_effective, p_value))
-            {
-                if (t_is_disabled != getflag(F_DISABLED))
-                    recompute();
-                return true;
-            }
-            
-            return false;
-        }
             
         default:
             break;
@@ -845,6 +832,17 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 	MCRectangle drect = MCU_intersect_rect(p_rect, rect);
 
 	return drect.width != 0 && drect.height != 0;
+}
+
+void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
+{
+    bool t_is_disabled;
+    t_is_disabled = getflag(F_DISABLED);
+    
+    MCControl::SetDisabled(ctxt, p_part_id, p_flag);
+    
+    if (t_is_disabled != getflag(F_DISABLED))
+        recompute();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

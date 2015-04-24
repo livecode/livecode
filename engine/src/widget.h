@@ -81,6 +81,8 @@ public:
     
     virtual void layerchanged();
     
+    virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
+    
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
     
     // Returns true if the widget is in edit mode
