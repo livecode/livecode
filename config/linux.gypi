@@ -25,6 +25,7 @@
 		'include_dirs':
 		[
 			'../thirdparty/headers/linux/include',
+			'../thirdparty/libfreetype/include',	# Required by the Pango headers
 		],
 		
 		# Disable exceptions and RTTI, except where needed
