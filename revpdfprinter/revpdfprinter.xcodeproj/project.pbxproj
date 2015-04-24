@@ -12,7 +12,6 @@
 		4D9D1D5217142A7800BE4F14 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D1D3E17142A1000BE4F14 /* libz.a */; };
 		4D9D1D5317142A7B00BE4F14 /* libcairo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D1D4817142A1C00BE4F14 /* libcairo.a */; };
 		4DA9C01B10E20D0500055232 /* revpdfprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA9C01A10E20D0500055232 /* revpdfprinter.cpp */; };
-		4DA9C05E10E20E2E00055232 /* revpdfprinter_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA9C05D10E20E2E00055232 /* revpdfprinter_osx.cpp */; };
 		72CC350318A946E900BEC655 /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72CC350218A946E900BEC655 /* libcore.a */; };
 /* End PBXBuildFile section */
 
