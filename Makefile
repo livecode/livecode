@@ -37,6 +37,8 @@ ifeq ($(MODE),debug)
   export BUILDTYPE ?= Debug
 else ifeq ($(MODE),release)
   export BUILDTYPE ?= Release
+else ifeq ($(MODE),fast)
+  export BUILDTYPE ?= Fast
 else
   $(error "Mode must be 'debug' or 'release'")
 endif

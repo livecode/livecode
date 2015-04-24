@@ -79,6 +79,15 @@
 					'NDEBUG',
 				],
 			},
+			
+			'Fast':
+			{
+				'defines':
+				[
+					'_RELEASE',
+					'NDEBUG',
+				],
+			},
 		},
 	},
 	
@@ -100,6 +109,16 @@
 			{
 				'ARCHS': 'i386',
 				'GCC_OPTIMIZATION_LEVEL': '3',
+				'GCC_ENABLE_FIX_AND_CONTINUE': 'NO',
+			},
+		},
+		
+		'Fast':
+		{
+			'xcode_settings':
+			{
+				'ARCHS': 'i386',
+				'GCC_OPTIMIZATION_LEVEL': '0',
 				'GCC_ENABLE_FIX_AND_CONTINUE': 'NO',
 			},
 		},

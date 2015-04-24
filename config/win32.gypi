@@ -67,6 +67,26 @@
 					},
 				},
 			},
+			
+			'Fast':
+			{
+				'msvs_settings':
+				{
+					'VCCLCompilerTool':
+					{
+						'Optimization': '0',
+						'WholeProgramOptimization': 'false',
+						'PreprocessorDefinitions': ['_RELEASE', 'NDEBUG'],
+						'RuntimeLibrary': '0',
+						'DebugInformationFormat': '0',
+					},
+					
+					'VCLinkerTool':
+					{
+						'LinkIncremental': '0',
+					},
+				},
+			},
 		},
 		
 		'defines':

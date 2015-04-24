@@ -19,6 +19,12 @@
 			{
 
 			},
+			
+			# Used by the CI system. Intended to be the fastest to build
+			'Fast':
+			{
+			
+			},
 		},
 	},
 }

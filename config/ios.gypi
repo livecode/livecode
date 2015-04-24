@@ -67,6 +67,15 @@
 					'NDEBUG',
 				],
 			},
+			
+			'Fast':
+			{
+				'defines':
+				[
+					'_RELEASE',
+					'NDEBUG',
+				],
+			},
 		},
 		
 		'target_conditions':
@@ -127,6 +136,15 @@
 				'GCC_THUMB_SUPPORT[arch=armv6]': 'NO',
 				'GCC_THUMB_SUPPORT[arch=armv7]': 'YES',
 				'ARCHS': '<(target_arch)'
+			},
+		},
+		
+		'Fast':
+		{
+			'xcode_settings':
+			{
+				'GCC_OPTIMIZATION_LEVEL': '0',
+				'ARCHS': '<(target_arch)',
 			},
 		},
 	},
