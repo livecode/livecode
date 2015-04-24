@@ -7,10 +7,21 @@
 		# Path to versions 4 and 5 of the Microsoft Speech SDK
 		'ms_speech_sdk4': '$(foo)C:/Program Files/Microsoft Speech SDK',
 		'ms_speech_sdk5': '$(foo)C:/Program Files/Microsoft Speech SDK 5.1',
+		
+		'output_dir': '../win-<(target_arch)-bin',
 	},
 	
 	'target_defaults':
 	{
+		'variables':
+		{
+			'app_bundle_suffix': '.exe',
+			'ext_bundle_suffix': '.dll',
+			'lib_suffix': '.dll',
+			'ext_suffix': '.dll',
+			'exe_suffix': '.exe',
+		},
+		
 		# Don't assume a Cygwin environment when invoking actions
 		'msvs_cygwin_shell': 0,
 		
