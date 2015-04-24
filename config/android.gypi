@@ -20,10 +20,21 @@
 		'aidl_framework_path': '<(android_sdk_path)/platforms/<(android_platform)/framework.aidl',
 		
 		'java_classpath': '<(android_sdk_path)/platforms/<(android_platform)/android.jar',
+		
+		'output_dir': '../android-<(target_arch)-bin',
 	},
 	
 	'target_defaults':
 	{
+		'variables':
+		{
+			'app_bundle_suffix': '',
+			'ext_bundle_suffix': '.so',
+			'lib_suffix': '.so',
+			'ext_suffix': '.so',
+			'exe_suffix': '',
+		},
+		
 		'cflags_cc':
 		[
 			'-fno-exceptions',
