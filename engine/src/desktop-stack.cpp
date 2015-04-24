@@ -230,9 +230,6 @@ MCRectangle MCStack::view_platform_getwindowrect() const
 // IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
 MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
-    if (window == NULL)
-        return p_rect;
-    
 	MCPlatformSetWindowContentRect(window, p_rect);
 	return p_rect;
 }
