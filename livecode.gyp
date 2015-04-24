@@ -22,7 +22,6 @@
 				'revdb/revdb.gyp:revdb',
 				'revdb/revdb.gyp:dbmysql',
 				'revdb/revdb.gyp:dbsqlite',
-				'revpdfprinter/revpdfprinter.gyp:revpdfprinter',
 				'revxml/revxml.gyp:revxml',
 				'revzip/revzip.gyp:revzip',
 			],
@@ -61,6 +60,15 @@
 						'dependencies':
 						[
 							'engine/engine.gyp:standalone-mobile-lib-community',
+						],
+					},
+				],
+				[
+					'OS != "android"',
+					{
+						'dependencies':
+						[
+							'revpdfprinter/revpdfprinter.gyp:revpdfprinter',
 						],
 					},
 				],
