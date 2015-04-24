@@ -44,6 +44,8 @@
 					{
 						'AdditionalOptions': '/NODEFAULTLIB:LIBCMT',
 						'LinkIncremental': '2',
+						'OptimizeReferences': '2',
+						'GenerateDebugInformation': 'true',
 					},
 				},
 			},
@@ -64,6 +66,8 @@
 					'VCLinkerTool':
 					{
 						'LinkIncremental': '1',
+						'OptimizeReferences': '2',
+						'GenerateDebugInformation': 'true',
 					},
 				},
 			},
@@ -84,6 +88,7 @@
 					'VCLinkerTool':
 					{
 						'LinkIncremental': '0',
+						'GenerateDebugInformation': 'false',
 					},
 				},
 			},
@@ -134,8 +139,6 @@
 			'VCLinkerTool':
 			{
 				'SubSystem': '2',
-				'OptimizeReferences': '2',
-				'GenerateDebugInformation': 'true',
 				'EnableCOMDATFolding': '2',
 			},
 		},
