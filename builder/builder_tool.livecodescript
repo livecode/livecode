@@ -109,7 +109,12 @@ end startup
 command __loadExternal pExternal
    set the itemdelimiter to slash
    
-   set the externals of the templateStack to item 1 to -4 of specialFolderPath("engine") & slash & pExternal & ".bundle"
+   if the platform is "mac" then
+      set the externals of the templateStack to item 1 to -4 of specialFolderPath("engine") & slash & pExternal & ".bundle"
+   else if the platform is "linux" then
+      set the externals of the templateStack to specialFolderPath("engine") & slash & pExternal & ".so"
+   end if
+   
    create stack pExternal && "External"
    start using it
    if the externalCommands of it is empty then
