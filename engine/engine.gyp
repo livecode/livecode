@@ -259,7 +259,18 @@
 			{
 				'variables':
 				{
-					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
+					'conditions':
+					[
+						[
+							'OS == "android"',
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(lib_suffix)' ],
+							},
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
+							},
+						]
+					],
 				},
 			},
 		},
