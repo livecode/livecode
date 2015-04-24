@@ -70,6 +70,7 @@ void ios_clear_font_mapping(void)
     if (s_font_map != nil)
     {
         MCValueRelease(s_font_map);
+        s_font_map = nil;
     }
 }
 #endif
