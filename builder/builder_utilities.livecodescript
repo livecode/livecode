@@ -89,19 +89,19 @@ command builderFetchEngine pVersion, pPlatform
    if sEngineDir is not empty then
       switch pPlatform
          case "windows"
-            return sEngineDir & slash & "build-win-x86.zip/build-win-x86/Release"
+            return sEngineDir & slash & "win-x86-bin"
          case "linux"
-            return sEngineDir & slash & "build-linux-x86.zip/build-linux-x86/out/Release"
+            return sEngineDir & slash & "linux-x86-bin"
          case "linux-x64"
-            return sEngineDir & slash & "build-linux-x64.zip/build-linux-x64/out/Release"
+            return sEngineDir & slash & "linux-x86_64-bin"
          case "linux-armv6hf"
-            return sEngineDir & slash & "build-linux-armv6hf.zip/build-linux-armv6hf/out/Release"
+            return sEngineDir & slash & "linux-armv6hf-bin"
          case "macosx"
-            return sEngineDir & slash & "build-mac-all.zip/build-mac-all/_build/mac/Release"
+            return sEngineDir & slash & "mac-bin"
          case "ios"
-            return sEngineDir & slash & "build-ios-all.zip/build-ios-all/_build/ios"
+            return sEngineDir & slash & "ios-bin"
          case "android"
-            return sEngineDir & slash & "build-android-armv6.zip/build-android-armv6/out/Release"
+            return sEngineDir & slash & "android-armv6-bin"
          default
             write the executionContexts to stderr
             builderLog "error", "Unknown platform '" & pPlatform & "'"
