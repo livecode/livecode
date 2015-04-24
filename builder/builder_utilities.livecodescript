@@ -248,6 +248,10 @@ function builderBuiltDocsFolder
    return builderRepoFolder() & slash & "_build/docs"
 end builderBuiltDocsFolder
 
+function builderBuiltNotesFolder
+   return builderRepoFolder() & slash & "_build/notes"
+end builderBuiltNotesFolder
+
 function builderCommercialFolder
    set the itemDel to slash
    return item 1 to -4 of the filename of me & "/livecode-commercial"
