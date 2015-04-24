@@ -493,6 +493,8 @@ public foreign handler MCWidgetSetWidth(in pWidth as Real) returns nothing binds
 public foreign handler MCWidgetGetHeight(out rHeight as Real) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetHeight(in pHeight as Real) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetFont(out rFont as Font) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetEnabled(out rEnabled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetDisabled(out rDisabled as CBool) returns nothing binds to "<builtin>"
 
 /* 
 Summary:	Returns the widget script object.
@@ -582,6 +584,29 @@ syntax MyFont is expression
 begin
     MCWidgetGetFont(output)
 end syntax
+
+/*
+Summary:    Returns the enabled state of the widget.
+
+Returns:    The enabled state of the widget.
+*/
+syntax MyEnabled is expression
+    "my" "enabled"
+begin
+    MCWidgetGetEnabled(output)
+end syntax
+
+/*
+Summary:    Returns the disabled state of the widget.
+
+Returns:    The disabled state of the widget.
+*/
+syntax MyDisabled is expression
+    "my" "disabled"
+begin
+    MCWidgetGetDisabled(output)
+end syntax
+
 
 // ---------- Synchronous and asynchronous ("current") event information ---------- //
 

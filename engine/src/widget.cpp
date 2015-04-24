@@ -431,6 +431,8 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_LOCK_LOCATION:
 		case P_VISIBLE:
 		case P_INVISIBLE:
+        case P_ENABLED:
+        case P_DISABLED:
 		case P_SELECTED:
 		case P_TRAVERSAL_ON:
 		case P_OWNER:
@@ -561,6 +563,8 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_TOOL_TIP:
 		case P_UNICODE_TOOL_TIP:
 		case P_LAYER_MODE:
+        case P_ENABLED:
+        case P_DISABLED:
             
         case P_KIND:
 			return MCControl::setprop(ctxt, p_part_id, p_which, p_index, p_effective, p_value);
@@ -828,6 +832,17 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 	MCRectangle drect = MCU_intersect_rect(p_rect, rect);
 
 	return drect.width != 0 && drect.height != 0;
+}
+
+void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
+{
+    bool t_is_disabled;
+    t_is_disabled = getflag(F_DISABLED);
+    
+    MCControl::SetDisabled(ctxt, p_part_id, p_flag);
+    
+    if (t_is_disabled != getflag(F_DISABLED))
+        recompute();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1988,6 +2003,28 @@ extern "C" MC_DLLEXPORT void MCWidgetGetFont(MCCanvasFontRef& r_canvas_font)
     
     if (!MCCanvasFontCreateWithMCFont(*t_font, r_canvas_font))
         return;
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetEnabled(bool& r_enabled)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    r_enabled = !MCwidgetobject -> getflag(F_DISABLED);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetDisabled(bool& r_disabled)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    r_disabled = MCwidgetobject -> getflag(F_DISABLED);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
