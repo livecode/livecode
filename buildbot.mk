@@ -59,7 +59,7 @@ bin-archive:
 	tar -Jcvf $(BUILD_PLATFORM)-bin.tar.xz $(BUILD_PLATFORM)-bin
 
 bin-extract:
-	find . -maxdepth 1 -name '*-bin.xz' -print0 | xargs -n1 tar -x -f
+	find . -maxdepth 1 -name '*-bin.tar.xz' -print0 | xargs -0 -n1 tar -xvf
 
 ################################################################
 # Installer generation
