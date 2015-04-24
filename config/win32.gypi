@@ -46,6 +46,7 @@
 						'LinkIncremental': '2',
 						'OptimizeReferences': '2',
 						'GenerateDebugInformation': 'true',
+						'EnableCOMDATFolding': '2',
 					},
 				},
 			},
@@ -68,6 +69,7 @@
 						'LinkIncremental': '1',
 						'OptimizeReferences': '2',
 						'GenerateDebugInformation': 'true',
+						'EnableCOMDATFolding': '2',
 					},
 				},
 			},
@@ -89,6 +91,8 @@
 					{
 						'LinkIncremental': '0',
 						'GenerateDebugInformation': 'false',
+						'OptimizeReferences': '0',
+						'EnableCOMDATFolding': '0',
 					},
 				},
 			},
@@ -139,7 +143,6 @@
 			'VCLinkerTool':
 			{
 				'SubSystem': '2',
-				'EnableCOMDATFolding': '2',
 			},
 		},
 	},
