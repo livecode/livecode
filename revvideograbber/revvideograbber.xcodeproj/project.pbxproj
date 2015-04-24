@@ -86,6 +86,20 @@
 			remoteGlobalIDString = 4DB846B4192B53E800771914;
 			remoteInfo = "Server-Community";
 		};
+		B22F25081ACCF42C002C862A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7699BD601A1CD51A00636397;
+			remoteInfo = "Test-Community";
+		};
+		B22F250A1ACCF42C002C862A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7699BE791A1CD51E00636397;
+			remoteInfo = "kernel-test";
+		};
 		B55AFA1D0BCE905300E1F7F0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B55AFA190BCE905300E1F7F0 /* libexternal.xcodeproj */;
@@ -163,6 +177,8 @@
 				4D5151A00BCF96B700F73C6E /* Standalone-Community.app */,
 				4D41477E120431AE0088006F /* Installer.app */,
 				729039DA197985C6007E0FF3 /* Server-Community */,
+				B22F25091ACCF42C002C862A /* Test-Community.app */,
+				B22F250B1ACCF42C002C862A /* libkernel-test.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -275,6 +291,8 @@
 /* Begin PBXProject section */
 		4D6758CF0A79F96300FA96D2 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D6758D00A79F96300FA96D2 /* Build configuration list for PBXProject "revvideograbber" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -367,6 +385,20 @@
 			fileType = "compiled.mach-o.executable";
 			path = "Server-Community";
 			remoteRef = 729039D9197985C6007E0FF3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		B22F25091ACCF42C002C862A /* Test-Community.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "Test-Community.app";
+			remoteRef = B22F25081ACCF42C002C862A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		B22F250B1ACCF42C002C862A /* libkernel-test.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-test.a";
+			remoteRef = B22F250A1ACCF42C002C862A /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		B55AFA1E0BCE905300E1F7F0 /* libexternal.a */ = {
