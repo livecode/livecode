@@ -13,6 +13,8 @@
 			'lib_suffix': '.so',
 			'ext_suffix': '.so',
 			'exe_suffix': '',
+			
+			'c++_std': '<!(echo ${CXX_STD:-c++03})',
 		},
 		
 		'defines':
@@ -86,7 +88,7 @@
 		
 		'cflags_cc':
 		[
-			'-std=c++03',
+			'-std=<(c++_std)',
 			'-fno-exceptions',
 			'-fno-rtti',
 		],
