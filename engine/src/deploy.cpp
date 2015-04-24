@@ -663,7 +663,9 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	// Now, if we are not licensed for a target, then its an error.
 	bool t_is_licensed;
 	t_is_licensed = false;
-	if (m_platform == PLATFORM_WINDOWS)
+    if (MCnoui && MClicenseparameters . license_class == kMCLicenseClassCommunity)
+        t_is_licensed = true;
+	else if (m_platform == PLATFORM_WINDOWS)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToWindows) != 0;
 	else if (m_platform == PLATFORM_MACOSX)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToMacOSX) != 0;

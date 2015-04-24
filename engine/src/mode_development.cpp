@@ -100,7 +100,7 @@ void MCInternalObjectListenerListListeners(MCExecPoint &ep);
 MCLicenseParameters MClicenseparameters =
 {
 	NULL, NULL, NULL, kMCLicenseClassNone, 0,
-	10, 10, 50, 10,
+	0, 0, 0, 0,
 	0,
 	NULL,
 };
@@ -237,74 +237,94 @@ IO_stat MCDispatch::startup(void)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-
-	MCExecPoint ep;
-	ep . setstaticbytes(MCstartupstack, MCstartupstack_length);
-	MCDecompress::do_decompress(ep, 0, 0);
-
-	IO_handle stream = MCS_fakeopen(ep . getsvalue());
-	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
+    
+    if (MCnoui && MCnstacks > 0 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
 	{
-		MCS_close(stream);
-		return stat;
-	}
-
-	MCS_close(stream);
-
-	memset((void *)ep . getsvalue() . getstring(), 0, ep . getsvalue() . getlength());
-	ep . clear();
-	
-	// Temporary fix to make sure environment stack doesn't get lost behind everything.
-#if defined(_MACOSX)
-	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
-	SetFrontProcess(&t_psn);
-#elif defined(_WINDOWS)
-	SetForegroundWindow(((MCScreenDC *)MCscreen) -> getinvisiblewindow());
-#endif
-	
-	MCenvironmentactive = True;
-	sptr -> setfilename(strclone(MCcmd));
-	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
-
-	{
-		MCdefaultstackptr -> setextendedstate(true, ECS_DURING_STARTUP);
-		MCdefaultstackptr -> message(MCM_start_up, nil, False, True);
-		MCdefaultstackptr -> setextendedstate(false, ECS_DURING_STARTUP);
-	}
-	
-	if (!MCquit)
-	{
-		MCresult -> fetch(ep);
-		ep . appendchar('\0');
-		if (ep . getsvalue() . getlength() == 1)
+		if (MCdispatcher -> loadfile(MCstacknames[0], sptr) != IO_NORMAL)
 		{
-			sptr -> open();
-			MCImage::init();
-			
-			X_main_loop();
-
-			MCresult -> fetch(ep);
-			ep . appendchar('\0');
-			if (ep . getsvalue() . getlength() == 1)
-				return IO_NORMAL;
+			MCresult -> sets("failed to read stackfile");
+			return IO_ERROR;
 		}
-
-		if (sptr -> getscript() != NULL)
-			memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
-
-		destroystack(sptr, True);
-		MCtopstackptr = NULL;
-		MCquit = False;
-		MCenvironmentactive = False;
-
-		send_relaunch();
-
-		sptr = findstackname(ep . getsvalue() . getstring());
-
-		if (sptr == NULL && (stat = loadfile(ep . getsvalue() . getstring(), sptr)) != IO_NORMAL)
-			return stat;
+		
+		MCMemoryMove(MCstacknames, MCstacknames + 1, sizeof(MCStack *) * (MCnstacks - 1));
+		MCnstacks -= 1;
 	}
+    else if (MCnoui)
+    {
+        MCresult -> sets("cannot run in command line mode");
+        return IO_ERROR;
+    }
+    else
+    {
 
+        MCExecPoint ep;
+        ep . setstaticbytes(MCstartupstack, MCstartupstack_length);
+        MCDecompress::do_decompress(ep, 0, 0);
+
+        IO_handle stream = MCS_fakeopen(ep . getsvalue());
+        if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
+        {
+            MCS_close(stream);
+            return stat;
+        }
+
+        MCS_close(stream);
+
+        memset((void *)ep . getsvalue() . getstring(), 0, ep . getsvalue() . getlength());
+        ep . clear();
+        
+        // Temporary fix to make sure environment stack doesn't get lost behind everything.
+#if defined(_MACOSX)
+        ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+        SetFrontProcess(&t_psn);
+#elif defined(_WINDOWS)
+        SetForegroundWindow(((MCScreenDC *)MCscreen) -> getinvisiblewindow());
+#endif
+        
+        MCenvironmentactive = True;
+        sptr -> setfilename(strclone(MCcmd));
+        MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
+
+        {
+            MCdefaultstackptr -> setextendedstate(true, ECS_DURING_STARTUP);
+            MCdefaultstackptr -> message(MCM_start_up, nil, False, True);
+            MCdefaultstackptr -> setextendedstate(false, ECS_DURING_STARTUP);
+        }
+        
+        if (!MCquit)
+        {
+            MCresult -> fetch(ep);
+            ep . appendchar('\0');
+            if (ep . getsvalue() . getlength() == 1)
+            {
+                sptr -> open();
+                MCImage::init();
+                
+                X_main_loop();
+
+                MCresult -> fetch(ep);
+                ep . appendchar('\0');
+                if (ep . getsvalue() . getlength() == 1)
+                    return IO_NORMAL;
+            }
+
+            if (sptr -> getscript() != NULL)
+                memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
+
+            destroystack(sptr, True);
+            MCtopstackptr = NULL;
+            MCquit = False;
+            MCenvironmentactive = False;
+
+            send_relaunch();
+
+            sptr = findstackname(ep . getsvalue() . getstring());
+
+            if (sptr == NULL && (stat = loadfile(ep . getsvalue() . getstring(), sptr)) != IO_NORMAL)
+                return stat;
+        }
+    }
+    
 	if (!MCquit)
 	{
 		// OK-2007-11-13 : Bug 5525, after opening the IDE engine, the allowInterrupts should always default to false,
@@ -1146,6 +1166,9 @@ IO_stat MCModeCheckSaveStack(MCStack *stack, const MCString& filename)
 // For development mode, the environment depends on the license edition
 const char *MCModeGetEnvironment(void)
 {
+    if (MCnoui)
+        return "development command line";
+    
 	return "development";
 }
 
