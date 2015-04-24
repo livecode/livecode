@@ -71,7 +71,10 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          dispatch "docsBuilderRun" to stack builderDocsBuilderStack() with pEdition, tVersion
          break
       case "Disk"
-         dispatch "toolsBuilderRunDisk" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
+         repeat for each line tPlatform in pPlatforms
+            dispatch "toolsBuilderRunDisk" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
+         end repeat
+         break
       case "Archive"
          local tBuildNumber
          put builderGetBuildNumber() into tBuildNumber
@@ -200,6 +203,11 @@ function builderWorkFolder
    end if
    return builderRepoFolder() & slash & "_build/final/work"
 end builderWorkFolder
+
+-- Returns the folder where input products are placed
+function builderInputFolder
+   return sEngineDir
+end builderInputFolder
 
 -- Returns the folder where output products should be placed
 function builderOutputFolder

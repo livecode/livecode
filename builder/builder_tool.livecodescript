@@ -53,7 +53,7 @@ on startup
          end if
          put tArgs[tArgIndex + 1] into tBuild
          add 1 to tArgIndex
-      else if tArgs[tArgIndex] is "--engine-dir" then
+      else if tArgs[tArgIndex] is "--engine-dir" or tArgs[tArgIndex] is "--input-dir" then
          if tArgs[tArgIndex + 1] is empty then
             __builderLog "error", "No path specified for --engine-dir argument"
          end if

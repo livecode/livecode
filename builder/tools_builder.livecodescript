@@ -42,9 +42,28 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    local tPrivateFolder
    put builderPrivateRepoFolder() into tPrivateFolder
    
-   -- Finally build an installer
+   -- Now build the installer
    toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, tIdeFolder, tPrivateFolder, tPackageFile
 end toolsBuilderRun
+
+command toolsBuilderRunDisk pPlatform, pEdition, pVersion
+   if pPlatform is not "macosx" then
+      exit toolsBuilderRunDisk
+   end if
+   
+   if the platform is not "macos" then
+      builderLog "error", "Cannot sign and build disk image for Mac on this platform"
+      exit toolsBuilderRunDisk
+   end if
+   
+   local tInputFolder
+   put builderInputFolder() into tInputFolder
+   
+   local tInputFile
+   put tInputFolder & slash & "installer-mac.zip" into tInputFile
+   
+   toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputFile
+end toolsBuilderRunDisk
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -404,57 +423,73 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          end if
          
          builderLog "report", "Deployed macosx installer to '" && tOutputFileStub & ".app" & "'"
-         
-         get shell("/usr/bin/security -q find-identity -v")
-         filter it with "*Developer ID Application: Runtime Revolution Ltd*"
-         if it is not empty then
-            builderLog "message", "Signing macosx installer'" && tOutputFileStub & ".app" & "'"
-            wait 1 second
-            get shell("/usr/bin/codesign -s" && word 2 of it && "'" & tOutputFileStub & ".app'")
-            if it is not empty then
-               builderLog "error", "Could not macosx sign installer:" && it
-               throw "failure"
-            end if
-            builderLog "report", "Successfully signed macosx installer'" && tOutputFileStub & ".app" & "'"
-         end if
-         
-         local tDmgFile, tDmgName, tDmgAppFolder
-         put tOutputFileStub & ".dmg" into tDmgFile
-         if pEdition is "Community" then
-            put "LiveCode Community" && getReadableVersion(pVersion) && "Installer" into tDmgName
-            put (tOutputFileFolder & slash & "Install LiveCode Community" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-         else
-            put "LiveCode" && getReadableVersion(pVersion) && "Installer" into tDmgName
-            put (tOutputFileFolder & slash & "Install LiveCode" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-         end if
-         builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
-         if there is a file tDmgFile then
-            delete file tDmgFile
-            if there is a file tDmgFile then
-               builderLog "error", "Could not remove existing dmg - make sure it is not mounted"
-               throw "failure"
-            end if
-         end if
-         
-         --local tTrashFile
-         --put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
-         --put empty into URL ("file:" & tTrashFile)
-         
-         -- Do the DMG build
-         rename (tOutputFileStub & ".app") to tDmgAppFolder
-         -- SN-2015-03-09: [[ DMG creation failure ]] Ensure that hdiutil will allocate enough
-         --  memory if the installer end up being over a gigabyte large.
-         get shell("hdiutil create -fs HFS+ -size 1G -volname" && quote & tDmgName & quote && "-srcfolder" && quote & tDmgAppFolder & quote && quote & tDmgFile & quote)
-         rename tDmgAppFolder to (tOutputFileStub & ".app")
-         if "created:" is not in it then
-            builderLog "error", "Dmg creation failed -" && the last line of it
-            throw "failure"
-         end if
-         
-         builderLog "report", "Deployed macosx dmg to '" & tDmgFile & "'"
          break
    end switch
 end toolsBuilderMakeInstaller
+
+command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
+   -- Compute the output file
+   local tOutputFileStub, tOutputFileFolder
+   put builderOutputFolder() into tOutputFileFolder
+   put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
+   builderEnsureFolderForFile tOutputFileStub
+   
+   -- Unzip the input zip
+   builderLog "message", "Unzipping macosx instaler to " && tOutputFileStub & ".app" & "'"
+   get shell("unzip -qq -o -d" && quote & tOutputFileFolder & quote && quote & tInputZip & quote)
+   if it is not empty then
+      builderLog "error", "Could not extract macosx app from zip:" && it
+      throw "failure"
+   end if
+   
+   get shell("/usr/bin/security -q find-identity -v")
+   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
+   if it is not empty then
+      builderLog "message", "Signing macosx installer'" && tOutputFileStub & ".app" & "'"
+      wait 1 second
+      get shell("/usr/bin/codesign -s" && word 2 of it && "'" & tOutputFileStub & ".app'")
+      if it is not empty then
+         builderLog "error", "Could not macosx sign installer:" && it
+         throw "failure"
+      end if
+      builderLog "report", "Successfully signed macosx installer'" && tOutputFileStub & ".app" & "'"
+   end if
+   
+   local tDmgFile, tDmgName, tDmgAppFolder
+   put tOutputFileStub & ".dmg" into tDmgFile
+   if pEdition is "Community" then
+      put "LiveCode Community" && getReadableVersion(pVersion) && "Installer" into tDmgName
+      put (tOutputFileFolder & slash & "Install LiveCode Community" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
+   else
+      put "LiveCode" && getReadableVersion(pVersion) && "Installer" into tDmgName
+      put (tOutputFileFolder & slash & "Install LiveCode" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
+   end if
+   builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
+   if there is a file tDmgFile then
+      delete file tDmgFile
+      if there is a file tDmgFile then
+         builderLog "error", "Could not remove existing dmg - make sure it is not mounted"
+         throw "failure"
+      end if
+   end if
+   
+   --local tTrashFile
+   --put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
+   --put empty into URL ("file:" & tTrashFile)
+   
+   -- Do the DMG build
+   rename (tOutputFileStub & ".app") to tDmgAppFolder
+   -- SN-2015-03-09: [[ DMG creation failure ]] Ensure that hdiutil will allocate enough
+   --  memory if the installer end up being over a gigabyte large.
+   get shell("hdiutil create -fs HFS+ -size 1G -volname" && quote & tDmgName & quote && "-srcfolder" && quote & tDmgAppFolder & quote && quote & tDmgFile & quote)
+   rename tDmgAppFolder to (tOutputFileStub & ".app")
+   if "created:" is not in it then
+      builderLog "error", "Dmg creation failed -" && the last line of it
+      throw "failure"
+   end if
+   
+   builderLog "report", "Deployed macosx dmg to '" & tDmgFile & "'"
+end toolsBuilderMakeDisk
 
 ////////////////////////////////////////////////////////////////////////////////
 
