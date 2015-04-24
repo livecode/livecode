@@ -5669,7 +5669,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
             if (MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
             {
-                if (!MCS_apply_redirect(*t_engine_folder, false, r_folder));
+                if (!MCS_apply_redirect(*t_engine_folder, false, r_folder))
                     return False;
             }
             else
