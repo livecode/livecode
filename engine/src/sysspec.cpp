@@ -334,8 +334,12 @@ void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resources_folder)
 #ifdef _SERVER
     r_resources_folder = MCValueRetain(kMCEmptyString);
 #else
+    // Add a check, in case MCS_getspecialfolder failed.
     if (p_standalone)
-        MCS_getspecialfolder(MCN_resources, r_resources_folder);
+    {
+        if (!MCS_getspecialfolder(MCN_resources, r_resources_folder))
+            r_resources_folder = MCValueRetain(kMCEmptyString);
+    }
     else
     {
         // If we are not in a standalone, we return the folder in which sits 'this stack'
