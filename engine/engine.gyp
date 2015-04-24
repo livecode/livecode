@@ -266,10 +266,13 @@
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(lib_suffix)' ],
 							},
+						],
+						[
+							'OS != "android"',
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
-							},
-						]
+							}
+						],
 					],
 				},
 			},

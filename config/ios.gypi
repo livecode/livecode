@@ -4,6 +4,8 @@
 		'mobile': 1,
 		'target_sdk%': 'iphoneos8.3',
 		'host_sdk%': 'macosx',
+		
+		'output_dir': '../ios-bin/<(target_sdk)',
 	},
 	
 	'xcode_config_file': '../version',
@@ -40,6 +42,12 @@
 		'variables':
 		{
 			'ios_external_symbol_list': '',
+			
+			'app_bundle_suffix': '.ios-engine',
+			'ext_bundle_suffix': '.ios-extension',
+			'exe_suffix': '',
+			'lib_suffix': '.dylib',
+			'ext_suffix': '.so',
 		},
 		
 		'defines':
