@@ -517,7 +517,7 @@ extern void GetXDisplayHandle(void **r_display, int *r_success);
 extern void GetXScreenHandle(void **r_screen, int *r_success);
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
