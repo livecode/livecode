@@ -14,7 +14,7 @@
 			'ext_suffix': '.so',
 			'exe_suffix': '',
 			
-			'c++_std': '<!(echo ${CXX_STD:-c++03})',
+			'c++_std': '<!(echo ${CXX_STD:-gnu++03})',
 		},
 		
 		'defines':
