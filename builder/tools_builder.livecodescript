@@ -397,19 +397,23 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          end if
          
          -- Get us an installer by dieting the source installer
-         put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/installer") into tDietParams["input"]
-         put tTempFolder & slash & "macosx-installer-x86" into tDietParams["output"]
-         put true into tDietParams["keep_x86"]
-         put false into tDietParams["keep_ppc"]
-         builderLog "message", "Dieting input installer down to x86"
-         --_internal diet macosx tDietParams
-         dietAndStrip "x86", tDietParams["input"], tDietParams["output"]
-         if the result is not empty then
-            builderLog "error", "Dieting input installer to x86 failed -" && the result
-            throw "failure"
+         if false then
+            put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/installer") into tDietParams["input"]
+            put tTempFolder & slash & "macosx-installer-x86" into tDietParams["output"]
+            put true into tDietParams["keep_x86"]
+            put false into tDietParams["keep_ppc"]
+            builderLog "message", "Dieting input installer down to x86"
+            --_internal diet macosx tDietParams
+            dietAndStrip "x86", tDietParams["input"], tDietParams["output"]
+            if the result is not empty then
+               builderLog "error", "Dieting input installer to x86 failed -" && the result
+               throw "failure"
+            end if
+            
+            put tTempFolder & slash & "macosx-installer-x86" into tParams["engine_x86"]
          end if
          
-         put tTempFolder & slash & "macosx-installer-x86" into tParams["engine_x86"]
+         put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/installer") into tParams["engine_x86"]
          put tInstallerStackFile into tParams["stackfile"]
          put tOutputFileStub & ".app" & slash & "Contents/MacOS/installer" into tParams["output"]
          
