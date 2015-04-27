@@ -662,6 +662,9 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
         bind(*t_kind, t_actual_rep);
     }
     
+	if ((t_stat = loadpropsets(p_stream, p_version)) != IO_NORMAL)
+		return t_stat;
+    
     return t_stat;
 }
 
@@ -694,6 +697,9 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
     
     // Now the widget's rep.
     if ((t_stat = IO_write_valueref_new(t_rep, p_stream)) != IO_NORMAL)
+        return t_stat;
+    
+    if ((t_stat = savepropsets(p_stream)) != IO_NORMAL)
         return t_stat;
     
     // We are done.
