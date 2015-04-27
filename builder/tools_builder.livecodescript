@@ -98,6 +98,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "docs", pDocsFolder
    packageCompilerConfigureSource tPackager, "engine", pEngineFolders[pPlatform]
    packageCompilerConfigureSource tPackager, "macosx", pEngineFolders["macosx"]
+   packageCompilerConfigureSource tPackager, "linux", pEngineFolders["linux"]
    packageCompilerConfigureSource tPackager, "linux-i386", pEngineFolders["linux"]
    packageCompilerConfigureSource tPackager, "linux-x86_64", pEngineFolders["linux-x64"]
    packageCompilerConfigureSource tPackager, "linux-armv6-hf", pEngineFolders["linux-armv6hf"]
