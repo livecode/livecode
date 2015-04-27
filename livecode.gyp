@@ -55,6 +55,19 @@
 					},
 				],
 				[
+					# Server builds use special externals on OSX and Linux
+					'OS == "mac" or OS == "linux"',
+					{
+						'dependencies':
+						[
+							'revdb/revdb.gyp:dbmysql-server',
+							'revdb/revdb.gyp:dbodbc-server',
+							'revdb/revdb.gyp:dbpostgresql-server',
+							'revdb/revdb.gyp:dbsqlite-server',
+						],
+					},
+				],
+				[
 					'OS == "ios"',
 					{
 						'dependencies':
