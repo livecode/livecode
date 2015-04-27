@@ -14,11 +14,8 @@
 command toolsBuilderRun pPlatform, pEdition, pVersion
    -- If on windows or linux, we can't do anything macosxy due to lack of lipo/strip :o(
    local tEngineFolders
-   if the platform is not "macos" then
-      get "windows linux linux-x64 linux-armv6hf"
-   else
-      get "windows linux linux-x64 linux-armv6hf macosx ios android"
-   end if
+
+   get "windows linux linux-x64 linux-armv6hf macosx ios android"
       
    repeat for each word tPlatform in it
       builderFetchEngine pVersion, tPlatform
