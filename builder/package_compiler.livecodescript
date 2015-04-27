@@ -33,6 +33,8 @@ command packageCompilerConfigureSource @self, pTag, pFolder, pBasedOn
    abstractCanonicalize pFolder
    
    put pFolder into self["sources"][pTag]
+
+   compilerProgress self, "Added source for '" & pTag & "': '" & pFolder & "'"
    
    -- If the folder doesn't exist, but a prefix of the folder path is a file
    -- then register that prefix as abstract.
