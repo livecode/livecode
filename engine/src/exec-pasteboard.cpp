@@ -655,10 +655,10 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 			case TRANSFER_TYPE_FILES:
 			{
 				// convert to MCStringRef
-				MCStringRef t_string;
-				t_success = ctxt.ConvertToString(p_data, t_string);
+				MCAutoStringRef t_string;
+				t_success = ctxt.ConvertToString(p_data, &t_string);
 				if (t_success)
-					t_value = t_string;
+					t_value = *t_string;
 				
 				break;
 			}
@@ -671,10 +671,10 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 			case TRANSFER_TYPE_OBJECTS:
 			{
 				// convert to MCDataRef
-				MCDataRef t_data;
-				t_success = ctxt.ConvertToData(p_data, t_data);
+				MCAutoDataRef t_data;
+				t_success = ctxt.ConvertToData(p_data, &t_data);
 				if (t_success)
-					t_value = t_data;
+					t_value = *t_data;
 				
 				break;
 			}
@@ -686,10 +686,10 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 					t_value = p_data;
 				else
 				{
-					MCStringRef t_string;
-					t_success = ctxt.ConvertToString(p_data, t_string);
+					MCAutoStringRef t_string;
+					t_success = ctxt.ConvertToString(p_data, &t_string);
 					if (t_success)
-						t_value = t_string;
+						t_value = *t_string;
 				}
 				
 				break;
