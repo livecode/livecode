@@ -29,6 +29,8 @@
 	
 	'target_defaults':
 	{
+		'mac_bundle': 0,
+		
 		'variables':
 		{
 			'app_bundle_suffix': '.app',
@@ -57,6 +59,13 @@
 						'_SERVER',
 						'_MAC_SERVER',
 					],
+				},
+			],
+			[
+				# Non-bundle loadable module should have a .dylib suffix
+				'_type == "loadable_module" and _mac_bundle == 0',
+				{
+					'product_extension': 'dylib',
 				},
 			],
 		],

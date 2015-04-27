@@ -120,7 +120,7 @@
 		},
 		{
 			'target_name': 'dbmysql-server',
-			'type': 'shared_library',
+			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-dbmysql',
 			
@@ -233,7 +233,7 @@
 		},
 		{
 			'target_name': 'dbodbc-server',
-			'type': 'shared_library',
+			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-dbodbc',
 			
@@ -344,7 +344,7 @@
 		},
 		{
 			'target_name': 'dbpostgresql-server',
-			'type': 'shared_library',
+			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-dbpostgresql',
 			
@@ -458,7 +458,7 @@
 		},
 		{
 			'target_name': 'dbsqlite-server',
-			'type': 'shared_library',
+			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-dbsqlite',
 			
@@ -567,7 +567,7 @@
 		},
 		{
 			'target_name': 'revdb-server',
-			'type': 'shared_library',
+			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-revdb',
 			

@@ -65,7 +65,7 @@
 		},
 		{
 			'target_name': 'revzip-server',
-			'type': 'shared_library',
+			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-revzip',
 			

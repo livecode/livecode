@@ -64,6 +64,8 @@
 							'revdb/revdb.gyp:dbodbc-server',
 							'revdb/revdb.gyp:dbpostgresql-server',
 							'revdb/revdb.gyp:dbsqlite-server',
+							'revxml/revxml.gyp:revxml-server',
+							'revzip/revzip.gyp:revzip-server',
 						],
 					},
 				],
