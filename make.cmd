@@ -13,7 +13,7 @@
 @REM 
 @IF NOT DEFINED BUILDTYPE SET BUILDTYPE=Debug
  
-@msbuild livecode.sln /fl /nologo /p:Configuration=%BUILDTYPE% /m:1
+@msbuild livecode.sln /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1
  
 @exit
 
