@@ -7,7 +7,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'revandroid',
+			'target_name': 'external-revandroid',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
@@ -65,7 +65,7 @@
 		},
 		
 		{
-			'target_name': 'reviphone',
+			'target_name': 'external-reviphone',
 			'type': 'none',
 			'product_name': 'reviphone',
 			

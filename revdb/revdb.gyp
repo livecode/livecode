@@ -543,7 +543,7 @@
 			},
 		},
 		{
-			'target_name': 'revdb',
+			'target_name': 'external-revdb',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
@@ -595,7 +595,7 @@
 			],
 		},
 		{
-			'target_name': 'revdb-server',
+			'target_name': 'external-revdb-server',
 			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-revdb',

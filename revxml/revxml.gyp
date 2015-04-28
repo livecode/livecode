@@ -20,7 +20,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'revxml',
+			'target_name': 'external-revxml',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
@@ -75,7 +75,7 @@
 			],
 		},
 		{
-			'target_name': 'revxml-server',
+			'target_name': 'external-revxml-server',
 			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-revxml',

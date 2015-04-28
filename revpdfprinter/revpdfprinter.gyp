@@ -7,7 +7,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'revpdfprinter',
+			'target_name': 'external-revpdfprinter',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',

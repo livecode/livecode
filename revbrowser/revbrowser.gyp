@@ -7,7 +7,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'revbrowser',
+			'target_name': 'external-revbrowser',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',

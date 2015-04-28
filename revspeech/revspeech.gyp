@@ -7,7 +7,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'revspeech',
+			'target_name': 'external-revspeech',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',

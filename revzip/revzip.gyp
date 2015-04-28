@@ -15,7 +15,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'revzip',
+			'target_name': 'external-revzip',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
@@ -71,7 +71,7 @@
 			},
 		},
 		{
-			'target_name': 'revzip-server',
+			'target_name': 'external-revzip-server',
 			'type': 'loadable_module',
 			'product_prefix': '',
 			'product_name': 'server-revzip',

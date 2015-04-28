@@ -7,7 +7,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'revfont',
+			'target_name': 'external-revfont',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',

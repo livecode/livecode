@@ -7,7 +7,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'revvideograbber',
+			'target_name': 'external-revvideograbber',
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',

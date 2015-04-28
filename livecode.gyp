@@ -19,11 +19,11 @@
 				'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
 				
 				# Externals
-				'revdb/revdb.gyp:revdb',
+				'revdb/revdb.gyp:external-revdb',
 				'revdb/revdb.gyp:dbmysql',
 				'revdb/revdb.gyp:dbsqlite',
-				'revxml/revxml.gyp:revxml',
-				'revzip/revzip.gyp:revzip',
+				'revxml/revxml.gyp:external-revxml',
+				'revzip/revzip.gyp:external-revzip',
 			],
 			
 			'conditions':
@@ -39,18 +39,18 @@
 							'engine/engine.gyp:server',
 							
 							# Externals
-							'revbrowser/revbrowser.gyp:revbrowser',
+							'revbrowser/revbrowser.gyp:external-revbrowser',
 							'revbrowser/revbrowser.gyp:revbrowser-cefprocess',
 							'revdb/revdb.gyp:dbodbc',
 							'revdb/revdb.gyp:dbpostgresql',
-							'revfont/revfont.gyp:revfont',
-							'revmobile/revmobile.gyp:revandroid',
-							'revmobile/revmobile.gyp:reviphone',
-							'revspeech/revspeech.gyp:revspeech',
-							'revvideograbber/revvideograbber.gyp:revvideograbber',
+							'revfont/revfont.gyp:external-revfont',
+							'revmobile/revmobile.gyp:external-revandroid',
+							'revmobile/revmobile.gyp:external-reviphone',
+							'revspeech/revspeech.gyp:external-revspeech',
+							'revvideograbber/revvideograbber.gyp:external-revvideograbber',
 							
 							# Server externals
-							'revdb/revdb.gyp:revdb-server',
+							'revdb/revdb.gyp:external-revdb-server',
 						],
 					},
 				],
@@ -64,8 +64,8 @@
 							'revdb/revdb.gyp:dbodbc-server',
 							'revdb/revdb.gyp:dbpostgresql-server',
 							'revdb/revdb.gyp:dbsqlite-server',
-							'revxml/revxml.gyp:revxml-server',
-							'revzip/revzip.gyp:revzip-server',
+							'revxml/revxml.gyp:external-revxml-server',
+							'revzip/revzip.gyp:external-revzip-server',
 						],
 					},
 				],
@@ -83,7 +83,7 @@
 					{
 						'dependencies':
 						[
-							'revpdfprinter/revpdfprinter.gyp:revpdfprinter',
+							'revpdfprinter/revpdfprinter.gyp:external-revpdfprinter',
 						],
 					},
 				],
