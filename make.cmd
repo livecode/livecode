@@ -15,5 +15,5 @@
  
 @msbuild livecode.sln /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1
  
-@exit
+@exit %ERRORLEVEL%
 
