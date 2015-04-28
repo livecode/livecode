@@ -461,6 +461,10 @@ MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
+MCTypeInfoRef kMCCanvasEffectInvalidPropertyErrorTypeInfo;
+MCTypeInfoRef kMCCanvasEffectPropertyNotAvailableErrorTypeInfo;
+MCTypeInfoRef kMCCanvasEffectPropertyInvalidValueErrorTypeInfo;
+
 MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
 MCTypeInfoRef kMCCanvasSVGPathParseErrorTypeInfo;
 
@@ -481,6 +485,8 @@ void MCCanvasConstantsFinalize();
 bool MCCanvasBlendModeFromString(MCStringRef p_string, MCGBlendMode &r_blend_mode);
 bool MCCanvasBlendModeToString(MCGBlendMode p_blend_mode, MCStringRef &r_string);
 bool MCCanvasEffectTypeToString(MCCanvasEffectType p_type, MCStringRef &r_string);
+bool MCCanvasEffectPropertyToString(MCCanvasEffectProperty p_property, MCStringRef &r_string);
+bool MCCanvasEffectPropertyFromString(MCStringRef p_string, MCCanvasEffectProperty &r_property);
 bool MCCanvasGradientTypeFromString(MCStringRef p_string, MCGGradientFunction &r_type);
 bool MCCanvasGradientTypeToString(MCGGradientFunction p_type, MCStringRef &r_string);
 bool MCCanvasFillRuleFromString(MCStringRef p_string, MCGFillRule &r_fill_rule);
@@ -3906,86 +3912,193 @@ void MCCanvasEffectEvaluateType(integer_t p_type, integer_t& r_type)
 
 // Constructors
 
+bool MCCanvasEffectHasSizeAndSpread(MCCanvasEffectType p_type)
+{
+	return p_type == kMCCanvasEffectTypeInnerShadow || p_type == kMCCanvasEffectTypeOuterShadow || p_type == kMCCanvasEffectTypeInnerGlow || p_type == kMCCanvasEffectTypeOuterGlow;
+}
+
+bool MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectType p_type)
+{
+	return p_type == kMCCanvasEffectTypeInnerShadow || p_type == kMCCanvasEffectTypeOuterShadow;
+}
+
+void MCCanvasEffectDefault(MCCanvasEffectType p_type, __MCCanvasEffectImpl &x_effect)
+{
+	x_effect.color = kMCCanvasColorBlack;
+	x_effect.opacity = 0.75;
+	x_effect.blend_mode = kMCGBlendModeSourceOver;
+	
+	if (MCCanvasEffectHasSizeAndSpread(p_type))
+	{
+		x_effect.size = 5;
+		x_effect.spread = 0;
+	}
+	
+	if (MCCanvasEffectHasDistanceAndAngle(p_type))
+	{
+		x_effect.distance = 5;
+		x_effect.angle = 60;
+	}
+}
+
+bool MCCanvasEffectThrowPropertyInvalidValueError(MCCanvasEffectProperty p_property, MCValueRef p_value)
+{
+	MCStringRef t_prop_name;
+	MCCanvasEffectPropertyToString(p_property, t_prop_name);
+	
+	return MCErrorCreateAndThrow(kMCCanvasEffectPropertyInvalidValueErrorTypeInfo,
+								 "property", t_prop_name,
+								 "value", p_value,
+								 nil);
+}
+
+bool MCCanvasEffectThrowPropertyNotAvailableError(MCCanvasEffectProperty p_property, MCCanvasEffectType p_type)
+{
+	MCStringRef t_prop_name;
+	MCStringRef t_type_name;
+	MCCanvasEffectPropertyToString(p_property, t_prop_name);
+	MCCanvasEffectTypeToString(p_type, t_type_name);
+	
+	return MCErrorCreateAndThrow(kMCCanvasEffectPropertyNotAvailableErrorTypeInfo,
+								 "property", t_prop_name,
+								 "type", t_type_name,
+								 nil);
+}
+
+bool MCCanvasEffectSetBlendModeProperty(__MCCanvasEffectImpl &x_effect, MCStringRef p_blend_mode)
+{
+	MCGBlendMode t_mode;
+	if (!MCCanvasBlendModeFromString(p_blend_mode, t_mode))
+		return MCCanvasEffectThrowPropertyInvalidValueError(kMCCanvasEffectPropertyBlendMode, p_blend_mode);
+	
+	x_effect.blend_mode = t_mode;
+	
+	return true;
+}
+
+bool MCCanvasEffectSetSizeProperty(__MCCanvasEffectImpl &x_effect, MCCanvasFloat p_size)
+{
+	if (!MCCanvasEffectHasSizeAndSpread(x_effect.type))
+		return MCCanvasEffectThrowPropertyNotAvailableError(kMCCanvasEffectPropertySize, x_effect.type);
+	
+	x_effect.size = p_size;
+	
+	return true;
+}
+
+bool MCCanvasEffectSetSpreadProperty(__MCCanvasEffectImpl &x_effect, MCCanvasFloat p_spread)
+{
+	if (!MCCanvasEffectHasSizeAndSpread(x_effect.type))
+		return MCCanvasEffectThrowPropertyNotAvailableError(kMCCanvasEffectPropertySpread, x_effect.type);
+	
+	x_effect.spread = p_spread;
+	
+	return true;
+}
+
+bool MCCanvasEffectSetDistanceProperty(__MCCanvasEffectImpl &x_effect, MCCanvasFloat p_distance)
+{
+	if (!MCCanvasEffectHasDistanceAndAngle(x_effect.type))
+		return MCCanvasEffectThrowPropertyNotAvailableError(kMCCanvasEffectPropertyDistance, x_effect.type);
+	
+	x_effect.distance = p_distance;
+	
+	return true;
+}
+
+bool MCCanvasEffectSetAngleProperty(__MCCanvasEffectImpl &x_effect, MCCanvasFloat p_angle)
+{
+	if (!MCCanvasEffectHasDistanceAndAngle(x_effect.type))
+		return MCCanvasEffectThrowPropertyNotAvailableError(kMCCanvasEffectPropertyAngle, x_effect.type);
+	
+	x_effect.angle = p_angle;
+	
+	return true;
+}
+
 void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect)
 {
-	// TODO - defaults for missing properties?
 	bool t_success;
 	t_success = true;
 	
 	__MCCanvasEffectImpl t_effect;
 	t_effect.type = (MCCanvasEffectType)p_type;
 	
-	real64_t t_opacity;
+	// Set default values for the effect type
+	MCCanvasEffectDefault(t_effect.type, t_effect);
 	
-	if (t_success)
-		t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertyOpacity], t_opacity);
+	uintptr_t t_iter;
+	t_iter = 0;
 	
-	MCStringRef t_blend_mode;
-	t_blend_mode = nil;
+	MCNameRef t_key;
+	MCValueRef t_value;
 	
-	// Blend Mode
-	if (t_success)
-		t_success = MCArrayFetchString(p_properties, s_effect_property_map[kMCCanvasEffectPropertyBlendMode], t_blend_mode) &&
-		MCCanvasBlendModeFromString(t_blend_mode, t_effect.blend_mode);
-	
-	if (t_success)
-		t_success = MCArrayFetchCanvasColor(p_properties, s_effect_property_map[kMCCanvasEffectPropertyColor], t_effect.color);
-	
-	// read properties for each effect type
-	switch (t_effect.type)
+	// Set effect properties from the array
+	while (t_success && MCArrayIterate(p_properties, t_iter, t_key, t_value))
 	{
-		case kMCCanvasEffectTypeColorOverlay:
-			// no other properties
-			break;
-			
-		case kMCCanvasEffectTypeInnerShadow:
-		case kMCCanvasEffectTypeOuterShadow:
+		//t_success = MCCanvasEffectSetProperty(t_effect, MCNameGetString(t_key), t_value);
+		MCCanvasEffectProperty t_property;
+		if (!MCCanvasEffectPropertyFromString(MCNameGetString(t_key), t_property))
 		{
-			real64_t t_distance, t_angle;
-			real64_t t_size, t_spread;
-			// distance
-			if (t_success)
-				t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertyDistance], t_distance);
-			// angle
-			if (t_success)
-				t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertyAngle], t_angle);
-			// size
-			if (t_success)
-				t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertySize], t_size);
-			// spread
-			if (t_success)
-				t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertySpread], t_spread);
-			
-			t_effect.distance = t_distance;
-			t_effect.angle = t_angle;
-			t_effect.size = t_size;
-			t_effect.spread = t_spread;
-			
+			t_success = MCErrorCreateAndThrow(kMCCanvasEffectInvalidPropertyErrorTypeInfo,
+											  "property", t_key,
+											  nil);
 			break;
 		}
-			
-		case kMCCanvasEffectTypeInnerGlow:
-		case kMCCanvasEffectTypeOuterGlow:
+		
+		switch (t_property)
 		{
-			real64_t t_size, t_spread;
-			// size
-			if (t_success)
-				t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertySize], t_size);
-			// spread
-			if (t_success)
-				t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertySpread], t_spread);
-			
-			t_effect.size = t_size;
-			t_effect.spread = t_spread;
-			
-			break;
+			case kMCCanvasEffectPropertyColor:
+				if (MCValueGetTypeInfo(t_value) != kMCCanvasColorTypeInfo)
+					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
+				else
+					t_effect.color = (MCCanvasColorRef)t_value;
+				break;
+				
+			case kMCCanvasEffectPropertyOpacity:
+				if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeNumber)
+					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
+				else
+					t_effect.opacity = MCNumberFetchAsReal((MCNumberRef)t_value);
+				break;
+				
+			case kMCCanvasEffectPropertyBlendMode:
+				if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeString)
+					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
+				else
+					t_success = MCCanvasEffectSetBlendModeProperty(t_effect, (MCStringRef)t_value);
+				break;
+				
+			case kMCCanvasEffectPropertySize:
+				if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeNumber)
+					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
+				else
+					t_success = MCCanvasEffectSetSizeProperty(t_effect, MCNumberFetchAsReal((MCNumberRef)t_value));
+				break;
+				
+			case kMCCanvasEffectPropertySpread:
+				if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeNumber)
+					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
+				else
+					t_success = MCCanvasEffectSetSpreadProperty(t_effect, MCNumberFetchAsReal((MCNumberRef)t_value));
+				break;
+				
+			case kMCCanvasEffectPropertyDistance:
+				if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeNumber)
+					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
+				else
+					t_success = MCCanvasEffectSetDistanceProperty(t_effect, MCNumberFetchAsReal((MCNumberRef)t_value));
+				break;
+				
+			case kMCCanvasEffectPropertyAngle:
+				if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeNumber)
+					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
+				else
+					t_success = MCCanvasEffectSetAngleProperty(t_effect, MCNumberFetchAsReal((MCNumberRef)t_value));
+				break;
 		}
-			
-		default:
-			t_success = false;
 	}
-
-	// TODO - throw exception on error
+	
 	if (t_success)
 		t_success = MCCanvasEffectCreate(t_effect, r_effect);
 }
@@ -4004,16 +4117,6 @@ void MCCanvasEffectSet(const __MCCanvasEffectImpl &p_effect, MCCanvasEffectRef &
 	
 	MCValueAssign(x_effect, t_effect);
 	MCValueRelease(t_effect);
-}
-
-bool MCCanvasEffectHasSizeAndSpread(MCCanvasEffectType p_type)
-{
-	return p_type == kMCCanvasEffectTypeInnerShadow || p_type == kMCCanvasEffectTypeOuterShadow || p_type == kMCCanvasEffectTypeInnerGlow || p_type == kMCCanvasEffectTypeOuterGlow;
-}
-
-bool MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectType p_type)
-{
-	return p_type == kMCCanvasEffectTypeInnerShadow || p_type == kMCCanvasEffectTypeOuterShadow;
 }
 
 void MCCanvasEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_type)
@@ -4043,11 +4146,10 @@ void MCCanvasEffectSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasEffect
 {
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
-	if (!MCCanvasBlendModeFromString(p_blend_mode, t_effect.blend_mode))
-	{
-		// TODO - throw blend mode error
+	
+	if (!MCCanvasEffectSetBlendModeProperty(t_effect, p_blend_mode))
 		return;
-	}
+
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
@@ -4068,7 +4170,7 @@ void MCCanvasEffectGetSize(MCCanvasEffectRef p_effect, MCCanvasFloat &r_size)
 {
 	if (!MCCanvasEffectHasSizeAndSpread(MCCanvasEffectGet(p_effect)->type))
 	{
-		// TODO - throw error
+		MCCanvasEffectThrowPropertyNotAvailableError(kMCCanvasEffectPropertySize, MCCanvasEffectGet(p_effect)->type);
 		return;
 	}
 	
@@ -4077,15 +4179,12 @@ void MCCanvasEffectGetSize(MCCanvasEffectRef p_effect, MCCanvasFloat &r_size)
 
 void MCCanvasEffectSetSize(MCCanvasFloat p_size, MCCanvasEffectRef &x_effect)
 {
-	if (!MCCanvasEffectHasSizeAndSpread(MCCanvasEffectGet(x_effect)->type))
-	{
-		// TODO - throw error
-		return;
-	}
-
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
-	t_effect.size = p_size;
+	
+	if (!MCCanvasEffectSetSizeProperty(t_effect, p_size))
+		return;
+
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
@@ -4093,7 +4192,7 @@ void MCCanvasEffectGetSpread(MCCanvasEffectRef p_effect, MCCanvasFloat &r_spread
 {
 	if (!MCCanvasEffectHasSizeAndSpread(MCCanvasEffectGet(p_effect)->type))
 	{
-		// TODO - throw error
+		MCCanvasEffectThrowPropertyNotAvailableError(kMCCanvasEffectPropertySpread, MCCanvasEffectGet(p_effect)->type);
 		return;
 	}
 	
@@ -4102,15 +4201,12 @@ void MCCanvasEffectGetSpread(MCCanvasEffectRef p_effect, MCCanvasFloat &r_spread
 
 void MCCanvasEffectSetSpread(MCCanvasFloat p_spread, MCCanvasEffectRef &x_effect)
 {
-	if (!MCCanvasEffectHasSizeAndSpread(MCCanvasEffectGet(x_effect)->type))
-	{
-		// TODO - throw error
-		return;
-	}
-	
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
-	t_effect.spread = p_spread;
+
+	if (!MCCanvasEffectSetSpreadProperty(t_effect, p_spread))
+		return;
+
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
@@ -4118,7 +4214,7 @@ void MCCanvasEffectGetDistance(MCCanvasEffectRef p_effect, MCCanvasFloat &r_dist
 {
 	if (!MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectGet(p_effect)->type))
 	{
-		// TODO - throw error
+		MCCanvasEffectThrowPropertyNotAvailableError(kMCCanvasEffectPropertyDistance, MCCanvasEffectGet(p_effect)->type);
 		return;
 	}
 	
@@ -4127,15 +4223,12 @@ void MCCanvasEffectGetDistance(MCCanvasEffectRef p_effect, MCCanvasFloat &r_dist
 
 void MCCanvasEffectSetDistance(MCCanvasFloat p_distance, MCCanvasEffectRef &x_effect)
 {
-	if (!MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectGet(x_effect)->type))
-	{
-		// TODO - throw error
-		return;
-	}
-	
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
-	t_effect.distance = p_distance;
+	
+	if (!MCCanvasEffectSetDistanceProperty(t_effect, p_distance))
+		return;
+
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
@@ -4143,7 +4236,7 @@ void MCCanvasEffectGetAngle(MCCanvasEffectRef p_effect, MCCanvasFloat &r_angle)
 {
 	if (!MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectGet(p_effect)->type))
 	{
-		// TODO - throw error
+		MCCanvasEffectThrowPropertyNotAvailableError(kMCCanvasEffectPropertyAngle, MCCanvasEffectGet(p_effect)->type);
 		return;
 	}
 	
@@ -4152,15 +4245,12 @@ void MCCanvasEffectGetAngle(MCCanvasEffectRef p_effect, MCCanvasFloat &r_angle)
 
 void MCCanvasEffectSetAngle(MCCanvasFloat p_angle, MCCanvasEffectRef &x_effect)
 {
-	if (!MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectGet(x_effect)->type))
-	{
-		// TODO - throw error
-		return;
-	}
-	
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
-	t_effect.angle = p_angle;
+	
+	if (!MCCanvasEffectSetAngleProperty(t_effect, p_angle))
+		return;
+	
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
@@ -5875,6 +5965,18 @@ bool MCCanvasErrorsInitialize()
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.GradientTypeError"), MCNAME("canvas"), MCSTR("Unrecognised gradient type."), kMCCanvasGradientTypeErrorTypeInfo))
 		return false;
 	
+	kMCCanvasEffectInvalidPropertyErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.EffectInvalidPropertyError"), MCNAME("canvas"), MCSTR("Unrecognised effect property \"%{property}\"."), kMCCanvasEffectInvalidPropertyErrorTypeInfo))
+		return false;
+	
+	kMCCanvasEffectPropertyNotAvailableErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.EffectPropertyNotAvailableError"), MCNAME("canvas"), MCSTR("Property \"%{property}\" not valid for effect type %{type}"), kMCCanvasEffectPropertyNotAvailableErrorTypeInfo))
+		return false;
+	
+	kMCCanvasEffectPropertyInvalidValueErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.EffectPropertyInvalidValueError"), MCNAME("canvas"), MCSTR("Invalid value for effect property \"%{property}\" - %{value}"), kMCCanvasEffectPropertyInvalidValueErrorTypeInfo))
+		return false;
+	
 	kMCCanvasPathPointListFormatErrorTypeInfo = nil;
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.PathPointListFormatError"), MCNAME("canvas"), MCSTR("Invalid value in list of points."), kMCCanvasPathPointListFormatErrorTypeInfo))
 		return false;
@@ -5896,16 +5998,23 @@ void MCCanvasErrorsFinalize()
 	MCValueRelease(kMCCanvasSkewListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasRadiiListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageSizeListFormatErrorTypeInfo);
+	
 	MCValueRelease(kMCCanvasTransformMatrixListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasTransformDecomposeErrorTypeInfo);
+	
 	MCValueRelease(kMCCanvasImageRepReferencedErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepDataErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepPixelsErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepGetGeometryErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepLockErrorTypeInfo);
+	
 	MCValueRelease(kMCCanvasGradientStopRangeErrorTypeInfo);
 	MCValueRelease(kMCCanvasGradientStopOrderErrorTypeInfo);
 	MCValueRelease(kMCCanvasGradientTypeErrorTypeInfo);
+	
+	MCValueRelease(kMCCanvasEffectInvalidPropertyErrorTypeInfo);
+	MCValueRelease(kMCCanvasEffectPropertyNotAvailableErrorTypeInfo);
+	MCValueRelease(kMCCanvasEffectPropertyInvalidValueErrorTypeInfo);
 
 	MCValueRelease(kMCCanvasSVGPathParseErrorTypeInfo);
 }
@@ -6117,6 +6226,16 @@ bool MCCanvasEffectTypeToString(MCCanvasEffectType p_type, MCStringRef &r_string
 bool MCCanvasEffectTypeFromString(MCStringRef p_string, MCCanvasEffectType &r_type)
 {
 	return _mcenumfromstring<MCCanvasEffectType, _MCCanvasEffectTypeCount>(s_effect_type_map, p_string, r_type);
+}
+
+bool MCCanvasEffectPropertyToString(MCCanvasEffectProperty p_property, MCStringRef &r_string)
+{
+	return _mcenumtostring<MCCanvasEffectProperty, _MCCanvasEffectPropertyCount>(s_effect_property_map, p_property, r_string);
+}
+
+bool MCCanvasEffectPropertyFromString(MCStringRef p_string, MCCanvasEffectProperty &r_property)
+{
+	return _mcenumfromstring<MCCanvasEffectProperty, _MCCanvasEffectPropertyCount>(s_effect_property_map, p_string, r_property);
 }
 
 bool MCCanvasFillRuleToString(MCGFillRule p_fill_rule, MCStringRef &r_string)
