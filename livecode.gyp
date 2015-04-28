@@ -91,7 +91,7 @@
 		},
 		
 		{
-			'target_name': 'binzip-copy',
+			'target_name': 'debug-symbols',
 			'type': 'none',
 			
 			'dependencies':
@@ -99,10 +99,77 @@
 				'LiveCode-all',
 			],
 			
+			'conditions':
+			[
+				[
+					'OS == "linux" or OS == "android"',
+					{
+						'variables':
+						{
+							'debug_symbol_files':
+							[
+								'>!@(["sh", "-c", "echo $@ | xargs -n1 | sed -e \\\"s/$/>(debug_info_suffix)/g\\\"", "echo", \'>@(dist_files)\'])',
+							],
+						},
+			
+						'actions':
+						[
+							{
+								'action_name': 'extract-debug-symbols',
+								'message': 'Extracting debug symbols',
+					
+								'inputs':
+								[
+									'>@(dist_files)',
+									'./tools/extract-debug-symbols.sh',
+								],
+					
+								'outputs':
+								[
+									'<@(debug_symbol_files)',
+								],
+					
+								'action':
+								[
+									'./tools/extract-debug-symbols.sh',
+									'>(debug_info_suffix)',
+									'<@(_inputs)',
+								],
+							},
+						],
+			
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ '<@(debug_symbol_files)' ],
+							},
+						},
+					}
+				],
+			],
+		},
+		
+		{
+			'target_name': 'binzip-copy',
+			'type': 'none',
+			
+			'variables':
+			{
+				'dist_files': [],
+				'dist_aux_files': [],
+			},
+			
+			'dependencies':
+			[
+				'LiveCode-all',
+				'debug-symbols',
+			],
+			
 			'copies':
 			[{
 				'destination': '<(output_dir)',
-				'files': [ '>@(dist_files)' ],
+				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
 			}],
 		},
 	],

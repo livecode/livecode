@@ -20,6 +20,7 @@
 			'lib_suffix': '.dll',
 			'ext_suffix': '.dll',
 			'exe_suffix': '.exe',
+			'debug_info_suffix': '',
 		},
 		
 		# Don't assume a Cygwin environment when invoking actions

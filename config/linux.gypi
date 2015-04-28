@@ -13,6 +13,7 @@
 			'lib_suffix': '.so',
 			'ext_suffix': '.so',
 			'exe_suffix': '',
+			'debug_info_suffix': '.dbg',
 			
 			'c++_std': '<!(echo ${CXX_STD:-gnu++03})',
 		},

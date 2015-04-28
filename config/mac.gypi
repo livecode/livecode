@@ -38,6 +38,7 @@
 			'exe_suffix': '',
 			'lib_suffix': '.dylib',
 			'ext_suffix': '.so',
+			'debug_info_suffix': '.dsym',
 		},
 		
 		'target_conditions':
