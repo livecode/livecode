@@ -61,7 +61,7 @@
 					
 								'outputs':
 								[
-									'<(PRODUCT_DIR)/LiveCode-Community.jar',
+									'<(PRODUCT_DIR)/Classes-Community',
 								],
 					
 								'action':
@@ -74,7 +74,14 @@
 								],
 							},
 						],
-			
+						
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ '<(PRODUCT_DIR)/Classes-Community' ],
+							},
+						},
 					},
 				],
 			],
