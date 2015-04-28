@@ -76,6 +76,7 @@ void ios_clear_font_mapping(void)
     {
         s_font_map -> freehash();
         delete s_font_map;
+        s_font_map = nil;
     }
 }
 #endif

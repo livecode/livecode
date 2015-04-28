@@ -59,10 +59,53 @@ bin-archive:
 	tar -Jcvf $(BUILD_PLATFORM)-bin.tar.xz $(BUILD_PLATFORM)-bin
 
 bin-extract:
-	find . -maxdepth 1 -name '*-bin.xz' -print0 | xargs -n1 tar -x -f
+	find . -maxdepth 1 -name '*-bin.tar.xz' -print0 | xargs -0 -n1 tar -xvf
 
 ################################################################
 # Installer generation
 ################################################################
 
-# TBD
+# BUILD_PLATFORM will be set to the platform on which the installer's being
+# built.  Its build artefacts will have been extracted into the
+# ./$(BUILD_PLATFORM)-bin/ directory
+
+# FIXME at the moment we only generate community edition installers
+
+BUILD_STABILITY ?= beta
+BUILD_EDITION ?= community
+
+BUILDTOOL_STACK = builder/builder_tool.livecodescript
+
+WKHTMLTOPDF ?= $(shell which wkhtmltopdf 2>/dev/null)
+
+bin_dir = $(BUILD_PLATFORM)-bin
+
+ifeq ($(BUILD_PLATFORM),mac)
+  LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
+  buildtool_platform = mac
+else ifeq ($(BUILD_PLATFORM),linux-x86)
+  LIVECODE = $(bin_dir)/livecode-community
+  buildtool_platform = linux
+endif
+
+# FIXME add --warn-as-error
+buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
+	--edition $(BUILD_EDITION) --build $(BUILD_STABILITY) \
+	--engine-dir . --output-dir . --work-dir ./_cache/builder_tool \
+	--private-dir ..
+
+dist-docs:
+	$(buildtool_command) --platform $(buildtool_platform) --stage docs
+
+dist-notes:
+	WKHTMLTOPDF=$(WKHTMLTOPDF) \
+	$(buildtool_command) --platform $(buildtool_platform) --stage notes
+
+dist-server:
+	$(buildtool_command) --platform mac --platform win --platform linux \
+	    --stage server
+
+# FIXME temporarily building installers only for Linux!
+dist-tools:
+	$(buildtool_command) --platform linux \
+	    --stage tools
