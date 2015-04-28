@@ -3148,8 +3148,30 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as LCInt, in pProperties as Array, out rEffect as Effect) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasEffectMake(in pType as LCInt, out rEffect as Effect) returns nothing binds to "<builtin>"
 
 //////////
+
+/*
+Summary:	Creates a new effect.
+
+mType:		One of color overlay, inner shadow, outer shadow, inner glow, outer glow.
+
+Returns:	A new effect of type <mType> with default property values.
+
+Example:
+	// Create an effect with default properties
+	variable tEffect as Effect
+	put outer shadow effect into tEffect
+
+Tags: Canvas
+*/
+syntax EffectMake is expression
+	<mType: EffectType> "effect"
+begin
+	MCCanvasEffectMake(mType, output)
+end syntax
+
 
 /*
 Summary:	Creates a new effect.

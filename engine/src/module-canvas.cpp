@@ -3941,6 +3941,19 @@ void MCCanvasEffectDefault(MCCanvasEffectType p_type, __MCCanvasEffectImpl &x_ef
 	}
 }
 
+void MCCanvasEffectMake(integer_t p_type, MCCanvasEffectRef &r_effect)
+{
+	__MCCanvasEffectImpl t_effect;
+	t_effect.type = (MCCanvasEffectType)p_type;
+	
+	// Set default values for the effect type
+	MCCanvasEffectDefault(t_effect.type, t_effect);
+	
+	MCCanvasEffectCreate(t_effect, r_effect);
+}
+
+//////////
+
 bool MCCanvasEffectThrowPropertyInvalidValueError(MCCanvasEffectProperty p_property, MCValueRef p_value)
 {
 	MCStringRef t_prop_name;
