@@ -220,11 +220,6 @@ if test -z "$WIN_MSVS_VERSION"; then
   WIN_MSVS_VERSION=2010
 fi
 
-# Default Android NDK version
-if test -z "$ANDROID_NDK_VERSION"; then
-  ANDROID_NDK_VERSION=r10d
-fi
-
 # Default Xcode target SDK
 if test -z "$XCODE_TARGET_SDK"; then
  case ${OS} in
@@ -263,6 +258,23 @@ if test -z "$TARGET_ARCH"; then
   esac
 fi
 
+# Android default settings and tools
+ANDROID_BUILD_TOOLS=${ANDROID_BUILD_TOOLS:-22.0.1}
+ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
+ANDROID_NDK=${ANDROID_NDK:-${HOME}/Workspace/android-ndk-${ANDROID_NDK_VERSION}}
+ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-8}
+ANDROID_SDK=${ANDROID_SDK:-${HOME}/Workspace/android-sdk-linux}
+
+ANDROID_TOOLCHAIN=${ANDROID_TOOLCHAIN:-${HOME}/android-armv6-standalone/bin/arm-linux-androideabi-}
+
+ANDROID_AR=${AR:-${ANDROID_TOOLCHAIN}ar}
+ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
+ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
+ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
+ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
+ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
+
+
 ################################################################
 # Invoke gyp
 ################################################################
@@ -275,6 +287,12 @@ case ${OS} in
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   android)
+    export AR="${ANDROID_AR}"
+    export CC="${ANDROID_CC}"
+    export CXX="${ANDROID_CXX}"
+    export LINK="${ANDROID_LINK}"
+    export OBJCOPY="${ANDROID_OBJCOPY}"
+    export STRIP="${ANDROID_STRIP}"
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" \
                            -Dcross_compile=1 \
                            "-Gandroid_ndk_version=${ANDROID_NDK_VERSION}" "$@"
