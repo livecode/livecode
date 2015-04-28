@@ -105,6 +105,7 @@ dist-server:
 	$(buildtool_command) --platform mac --platform win --platform linux \
 	    --stage server
 
+# FIXME temporarily building installers only for Linux!
 dist-tools:
-	$(buildtool_command) --platform mac  --platform win --platform linux \
+	$(buildtool_command) --platform linux \
 	    --stage tools
