@@ -855,11 +855,8 @@ private command revCopyScriptLibraries pStack, pPlatform
       set the mainStack of stack "revDataGridLibrary" to pStack
    end if
    
-   if sStandaloneSettingsA["databaseDrivers"] = "" then 
-      revAddLibrary "Database"
-   end if
-   
-   if sStandaloneSettingsA["includeProfiles"] = "" then 
+   // AL-2015-04-28: [[ Bug 15244 ]] Include profiles library if needed
+   if sStandaloneSettingsA["includeProfiles"] is not empty then 
       revAddLibrary "Profiles"
    end if
    
@@ -1759,7 +1756,7 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    end if
    
    # AL-2015-02-06: [[ SB Inclusions ]] Ensure revDatabaseLibrary stack is included
-   put return & "Database" after sStandaloneSettingsA["scriptLibraries"]
+   revAddLibrary "Database"
    
    local tDBLibPath
    put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
@@ -2498,6 +2495,10 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
 end revSmartChecking
 
 private command revAddLibrary pLibrary
+   if pLibrary is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
+      exit revAddLibrary
+   end if
+   
    if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
    put pLibrary after sStandaloneSettingsA["scriptLibraries"]
 end revAddLibrary
