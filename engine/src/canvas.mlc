@@ -3187,7 +3187,7 @@ Example:
 	put the empty array into tProps
 
 	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
+	put "source over" into tProps["blend mode"]
 	put 191 into tProps["opacity"]
 	put 0 into tProps["spread"]
 	put 5 into tProps["size"]
@@ -3239,23 +3239,13 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The type of <mEffect> as a string. Can be one of "color overlay", "inner shadow", "outer shadow", "inner glow", "outer glow".
 
 Example:
-	// Create an effect from an array of properties
-	variable tProps as Array
-	put the empty array into tProps
-
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
-
+	// Create an outer shadow effect
 	variable tEffect as Effect
-	put outer shadow effect with properties tProps into tEffect
+	put outer shadow effect into tEffect
 
-	// Change effect from inner glow to outer glow
-	set the type of tEffect to "outer glow"
+	// Get the type of the effect, in this case it will be "outer shadow"
+	variable tType as String
+	put the type of tEffect into tType
 
 Tags:	Canvas
 */
@@ -3275,17 +3265,11 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The color of <mEffect> as a color.
 
 Example:
-	// Create an effect from an array of properties
+	// Create an effect with color "black"
 	variable tProps as Array
 	put the empty array into tProps
 
 	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
 
 	variable tEffect as Effect
 	put outer shadow effect with properties tProps into tEffect
@@ -3309,20 +3293,14 @@ Summary:	The blend mode of an effect.
 
 mEffect:		An expression which evaluates to an effect.
 
-Description:	The blend mode of <mEffect> as a string. Can be one of "normal", "multiply", "color dodge".
+Description:	The blend mode of <mEffect> as a string. Can be any one of the standard canvas blend modes.
 
 Example:
-	// Create an effect from an array of properties
+	// Create an effect with blend mode "source over"
 	variable tProps as Array
 	put the empty array into tProps
 
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
+	put "source over" into tProps["blend mode"]
 
 	variable tEffect as Effect
 	put outer shadow effect with properties tProps into tEffect
@@ -3331,6 +3309,7 @@ Example:
 	set the blend mode of tEffect to "color dodge"
 
 Tags:	Canvas
+References: CanvasPropertyBlendMode(operator):
 */
 syntax EffectPropertyBlendMode is prefix operator with precedence 4
 	"the" "blend" "mode" "of" <mEffect: Expression>
@@ -3349,23 +3328,17 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The opacity of <mEffect> as a number between 0 and 255.
 
 Example:
-	// Create an effect from an array of properties
+	// Create an effect with opacity = 191 (75%)
 	variable tProps as Array
 	put the empty array into tProps
 
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
 	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
 
 	variable tEffect as Effect
 	put outer shadow effect with properties tProps into tEffect
 
 	// Use half-transparency for effect
-	set the opacity of tEffect to 0.5
+	set the opacity of tEffect to 127
 
 Tags:	Canvas
 */
@@ -3386,23 +3359,17 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The size of <mEffect> as a number. Size applies to inner shadow, outer shadow, inner glow, and outer glow effect types
 
 Example:
-	// Create an effect from an array of properties
+	// Create an effect with size 5
 	variable tProps as Array
 	put the empty array into tProps
 
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
 	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
 
 	variable tEffect as Effect
 	put outer shadow effect with properties tProps into tEffect
 
 	// Set the effect size
-	set the size of tEffect to 5
+	set the size of tEffect to 15
 
 Tags:	Canvas
 */
@@ -3423,23 +3390,17 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The spread of <mEffect> as a number. Spread applies to inner shadow, outer shadow, inner glow, and outer glow effect types
 
 Example:
-	// Create an effect from an array of properties
+	// Create an effect with spread 0
 	variable tProps as Array
 	put the empty array into tProps
 
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
 	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
 
 	variable tEffect as Effect
 	put outer shadow effect with properties tProps into tEffect
 
 	// Set the effect spread
-	set the spread of tEffect to 0
+	set the spread of tEffect to 10
 
 Tags:	Canvas
 */
@@ -3460,23 +3421,17 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The distance of <mEffect> as a number. Distance applies to inner shadow, and outer shadow effect types
 
 Example:
-	// Create an effect from an array of properties
+	// Create an effect with distance 5
 	variable tProps as Array
 	put the empty array into tProps
 
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
 	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
 
 	variable tEffect as Effect
 	put outer shadow effect with properties tProps into tEffect
 
 	// Set the effect distance
-	set the distance of tEffect to 5
+	set the distance of tEffect to 50
 
 Tags:	Canvas
 */
@@ -3497,16 +3452,10 @@ mEffect:		An expression which evaluates to an effect.
 Description:	The angle of <mEffect> as a number of degrees. Angle applies to inner shadow, and outer shadow effect types
 
 Example:
-	// Create an effect from an array of properties
+	// Create an effect with angle 60
 	variable tProps as Array
 	put the empty array into tProps
 
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
 	put 60 into tProps["angle"]
 
 	variable tEffect as Effect
@@ -4437,24 +4386,13 @@ Example:
 	end layer on this canvas
 
 Example:
-	// Create an effect from an array of properties
-	variable tProps as Array
-	put the empty array into tProps
-
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
-
+	// Create an effect for the new layer
 	variable tEffect as Effect
-	put outer shadow effect with properties tProps into tEffect
+	put outer shadow effect into tEffect
 
 	// Draw rectangle with an effect applied
 	begin layer with tEffect on this canvas
-	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	fill rectangle path of rectangle [50,50,100,100] on this canvas
 	end layer on this canvas
 
 Tags:	Canvas
@@ -4484,24 +4422,13 @@ Example:
 	end layer on this canvas
 
 Example:
-	// Create an effect from an array of properties
-	variable tProps as Array
-	put the empty array into tProps
-
-	put color [0,0,0] into tProps["color"]
-	put "normal" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
-	put 0 into tProps["spread"]
-	put 5 into tProps["size"]
-	put 5 into tProps["distance"]
-	put 60 into tProps["angle"]
-
+	// Create an effect for the new layer
 	variable tEffect as Effect
-	put outer shadow effect with properties tProps into tEffect
+	put outer shadow effect into tEffect
 
 	// Draw rectangle with an effect applied
 	begin layer with tEffect on this canvas
-	fill rectangle path of rectangle path [50,50,100,100] on this canvas
+	fill rectangle path of rectangle [50,50,100,100] on this canvas
 	end layer on this canvas
 
 Tags:	Canvas
