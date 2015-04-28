@@ -305,7 +305,7 @@
 					},
 				],
 				[
-					'OS == "windows"',
+					'OS == "win"',
 					{
 						'all_dependent_settings':
 						{

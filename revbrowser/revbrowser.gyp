@@ -153,7 +153,7 @@
 					},
 				],
 				[
-					'OS == "windows"',
+					'OS == "win"',
 					{
 						# Distributing the OSX version is done separately
 						'all_dependent_settings':
