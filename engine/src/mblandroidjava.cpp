@@ -439,12 +439,17 @@ bool MCJavaStringFromStringRef(JNIEnv *env, MCStringRef p_string, jstring &r_jav
     
     bool t_success = true;
     jstring t_java_string = nil;
-    
-    t_success = nil != (t_java_string = env -> NewString((const jchar*)MCStringGetCharPtr(p_string), MCStringGetLength(p_string)));
+
+    // SN-2015-04-28: [[ Bug 15151 ]] If the string is native, we don't want to
+    //  unnativise it - that's how we end up with a CantBeNative empty string!
+    if (MCStringIsNative(p_string))
+        t_success = nil != (t_java_string = env -> NewStringUTF((const char*)MCStringGetNativeCharPtr(p_string)));
+    else
+        t_success = nil != (t_java_string = env -> NewString((const jchar*)MCStringGetCharPtr(p_string), MCStringGetLength(p_string)));
     
     if (t_success)
         r_java_string = t_java_string;
-    
+
     return t_success;
 
 }
