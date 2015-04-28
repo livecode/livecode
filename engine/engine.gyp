@@ -289,6 +289,25 @@
 									'cp', '<@(_inputs)', '<@(_outputs)',
 								],
 							},
+							{
+								'action_name': 'copy_notify_icon',
+								'message': 'Copying notification icon',
+								
+								'inputs':
+								[
+									'rsrc/android-notify-icon.png'
+								],
+								
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/notify_icon.png',
+								],
+								
+								'action':
+								[
+									'cp', '<@(_inputs)', '<@(_outputs)',
+								],
+							},
 						],
 						
 						'all_dependent_settings':
@@ -299,6 +318,7 @@
 								[
 									'<(PRODUCT_DIR)/Manifest.xml',
 									'<(PRODUCT_DIR)/livecode_inputcontrol.xml',
+									'<(PRODUCT_DIR)/notify_icon.png',
 								],
 							},
 						},
