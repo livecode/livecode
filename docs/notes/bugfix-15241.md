@@ -1,0 +1,1 @@
+# Crash when setting clipboardData to wrong type of value
