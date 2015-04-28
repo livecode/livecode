@@ -72,7 +72,7 @@ bin-extract:
 # FIXME at the moment we only generate community edition installers
 
 BUILD_STABILITY ?= beta
-BUILD_EDITION ?= community
+BUILD_EDITION := community
 
 BUILDTOOL_STACK = builder/builder_tool.livecodescript
 

@@ -124,6 +124,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    end if
    packageCompilerConfigureVariable tPackager, "TodaysDate", "[[todaysDate]]"
    packageCompilerConfigureVariable tPackager, "VersionTag", pVersion
+   packageCompilerConfigureVariable tPackager, "ProductBranch", char 1 to 3 of pVersion
    packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386"
    if pPlatform is "linux" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "i386"
