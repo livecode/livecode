@@ -22,7 +22,7 @@ on startup
    put "community" into tEdition
    put "stable" into tBuild
    
-   local tEngineDir, tOutputDir, tWorkDir
+   local tEngineDir, tPrivateDir, tOutputDir, tWorkDir
    
    put 1 into tArgIndex
    repeat while tArgIndex is among the keys of tArgs
@@ -59,6 +59,12 @@ on startup
          end if
          put tArgs[tArgIndex + 1] into tEngineDir
          add 1 to tArgIndex
+      else if tArgs[tArgIndex] is "--private-dir" then
+         if tArgs[tArgIndex + 1] is empty then
+            __builderLog "error", "No path specified for --private-dir argument"
+         end if
+         put tArgs[tArgIndex + 1] into tPrivateDir
+         add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--output-dir" then
          if tArgs[tArgIndex + 1] is empty then
             __builderLog "error", "No path specified for --output-dir argument"
@@ -91,6 +97,10 @@ on startup
    
    if tEngineDir is not empty then
       builderSetEngineDir tEngineDir
+   end if
+
+   if tPrivateDir is not empty then
+      builderSetPrivateDir tPrivateDir
    end if
    
    if tOutputDir is not empty then

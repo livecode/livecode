@@ -2,6 +2,7 @@
 local sEngineDir
 local sWorkDir
 local sOutputDir
+local sPrivateDir
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +25,10 @@ end builderFinalize
 command builderSetEngineDir pDir
    put pDir into sEngineDir
 end builderSetEngineDir
+
+command builderSetPrivateDir pDir
+   put pDir into sPrivateDir
+end builderSetPrivateDir
 
 command builderSetWorkDir pDir
    put pDir into sWorkDir
@@ -182,6 +187,9 @@ end builderRepoFolder
 
 -- Returns the folder of the private repository
 function builderPrivateRepoFolder
+   if sPrivateDir is not empty then
+      return sPrivateDir
+   end if
    return builderRepoFolder() & slash & ".." & slash & "livecode-commercial"
 end builderPrivateRepoFolder
 

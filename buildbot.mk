@@ -92,6 +92,7 @@ endif
 buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
 	--edition $(BUILD_EDITION) --build $(BUILD_STABILITY) \
 	--engine-dir . --output-dir . --work-dir ./_cache/builder_tool \
+	--private-dir ..
 
 dist-docs:
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs
