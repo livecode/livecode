@@ -62,6 +62,16 @@
 					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
 				},
 			},
+			
+			'conditions':
+			[
+				[
+					'OS == "android"',
+					{
+						'product_name': 'RevXml',
+					},
+				],
+			],
 		},
 		{
 			'target_name': 'revxml-server',

@@ -117,6 +117,17 @@
 					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
 				},
 			},
+			
+			'conditions':
+			[
+				[
+					'OS == "android"',
+					{
+						'product_name': 'DbMysql',
+						'product_extension': '',
+					},
+				],
+			],
 		},
 		{
 			'target_name': 'dbmysql-server',
@@ -446,6 +457,13 @@
 						],
 					},
 				],
+				[
+					'OS == "android"',
+					{
+						'product_name': 'DbSqlite',
+						'product_extension': '',
+					},
+				],
 			],
 			
 			'all_dependent_settings':
@@ -564,6 +582,17 @@
 					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
 				},
 			},
+			
+			'conditions':
+			[
+				[
+					'OS == "android"',
+					{
+						'product_name': 'RevDb',
+						'product_extension': '',
+					},
+				],
+			],
 		},
 		{
 			'target_name': 'revdb-server',

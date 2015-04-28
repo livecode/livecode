@@ -48,6 +48,12 @@
 						],
 					},
 				],
+				[
+					'OS == "android"',
+					{
+						'product_name': 'RevZip',
+					},
+				],
 			],
 			
 			'variables':
