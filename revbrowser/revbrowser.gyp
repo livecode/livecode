@@ -11,6 +11,7 @@
 			'type': 'loadable_module',
 			'mac_bundle': 1,
 			'product_prefix': '',
+			'product_name': 'revbrowser',
 			
 			'dependencies':
 			[
@@ -87,6 +88,14 @@
 								],
 							},
 						],
+						
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ '<(PRODUCT_DIR)/Frameworks' ],
+							},
+						},
 					},
 				],
 				[
@@ -96,6 +105,14 @@
 						[
 							'__EXCEPTIONS',
 						],
+						
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).dll' ],
+							},
+						},
 					},
 				],
 			],
@@ -124,6 +141,7 @@
 			'target_name': 'revbrowser-cefprocess',
 			'type': 'executable',
 			'mac_bundle': 1,
+			'product_name': 'revbrowser-cefprocess',
 			
 			# Windows and OSX only
 			'conditions':
@@ -132,6 +150,19 @@
 					'OS != "mac" and OS != "win"',
 					{
 						'type': 'none',
+					},
+				],
+				[
+					'OS == "windows"',
+					{
+						# Distributing the OSX version is done separately
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).exe' ],
+							},
+						},
 					},
 				],
 			],
