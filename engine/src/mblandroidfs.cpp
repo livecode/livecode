@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroid.h"
 #include "mblandroidutil.h"
 
+#include "mcstring.h"
+
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
