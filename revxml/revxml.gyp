@@ -69,6 +69,7 @@
 					'OS == "android"',
 					{
 						'product_name': 'RevXml',
+						'product_extension': '',
 					},
 				],
 			],

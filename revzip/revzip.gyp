@@ -52,6 +52,7 @@
 					'OS == "android"',
 					{
 						'product_name': 'RevZip',
+						'product_extension': '',
 					},
 				],
 			],
