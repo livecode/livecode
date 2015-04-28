@@ -29,9 +29,9 @@
 		'variables':
 		{
 			'app_bundle_suffix': '',
-			'ext_bundle_suffix': '.so',
-			'lib_suffix': '.so',
-			'ext_suffix': '.so',
+			'ext_bundle_suffix': '',
+			'lib_suffix': '',
+			'ext_suffix': '',
 			'exe_suffix': '',
 		},
 		
