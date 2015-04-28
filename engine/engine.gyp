@@ -248,6 +248,77 @@
 							
 							'-Wl,-T,<(src_top_dir_abs)/engine/linux.link',
 						],
+						
+						'actions':
+						[
+							{
+								'action_name': 'copy_manifest',
+								'message': 'Copying manifest file',
+								
+								'inputs':
+								[
+									'rsrc/android-manifest.xml',
+								],
+								
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/Manifest.xml',
+								],
+								
+								'action':
+								[
+									'cp', '<@(_inputs)', '<@(_outputs)',
+								],
+							},
+							{
+								'action_name': 'copy_inputcontrol',
+								'message': 'Copying input control file',
+								
+								'inputs':
+								[
+									'rsrc/android-inputcontrol.xml',
+								],
+								
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/livecode_inputcontrol.xml',
+								],
+								
+								'action':
+								[
+									'cp', '<@(_inputs)', '<@(_outputs)',
+								],
+							},
+						],
+						
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									'<(PRODUCT_DIR)/Manifest.xml',
+									'<(PRODUCT_DIR)/livecode_inputcontrol.xml',
+								],
+							},
+						},
+					},
+				],
+				[
+					'OS == "windows"',
+					{
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									'rsrc/w32-manifest-template.xml',
+									'rsrc/w32-manifest-template-dpiaware.xml',
+									'rsrc/w32-manifest-template-trustinfo.xml',
+								],
+							},
+						},
 					},
 				],
 			],
