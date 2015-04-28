@@ -260,6 +260,7 @@ fi
 
 # Android default settings and tools
 ANDROID_BUILD_TOOLS=${ANDROID_BUILD_TOOLS:-22.0.1}
+ANDROID_JAVA_SDK=${ANDROID_JAVA_SDK:-${JAVA_SDK:-/usr/lib/jvm/java-7-openjdk-amd64}}
 ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
 ANDROID_NDK=${ANDROID_NDK:-${HOME}/Workspace/android-ndk-${ANDROID_NDK_VERSION}}
 ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-8}
@@ -287,6 +288,13 @@ case ${OS} in
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   android)
+    export ANDROID_BUILD_TOOLS
+    export ANDROID_NDK
+    export ANDROID_PLATFORM
+    export ANDROID_SDK
+    
+    export JAVA_SDK="${ANDROID_JAVA_SDK}"
+
     export AR="${ANDROID_AR}"
     export CC="${ANDROID_CC}"
     export CXX="${ANDROID_CXX}"
