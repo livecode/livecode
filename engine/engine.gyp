@@ -238,7 +238,7 @@
 					{
 						'product_name': 'Standalone-Community',
 						'product_prefix': '',
-						'product_suffix': '',
+						'product_extension': '',
 						'type': 'loadable_module',
 						
 						'ldflags':
