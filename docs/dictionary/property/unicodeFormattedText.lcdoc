@@ -1,0 +1,41 @@
+Name: unicodeFormattedText
+
+Type: property
+
+Syntax: set the unicodeFormattedText of [chunk of] field to string
+
+Syntax: get the unicodeFormattedText of [chunk of] field
+
+Summary: Unwraps hard-wrapped lines, or provides the hard-wrapped contents of a field.
+
+Associations: field
+
+Introduced: 4.6
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+write the unicodeFormattedText of field 1 to file myTextFile
+
+Example:
+get the unicodeFormattedText of line 1 of field "exampleText"
+
+Value: The <unicodeFormattedText> of a field is a string encoded in UTF-16 host byte-order.
+
+Description:
+Use the <unicodeFormattedText> property to convert between unwrapped text (suitable for use in most programs) and wrapped text (suitable for use in programs that require fixed line lengths, such as some email systems).
+
+When you get a field's <unicodeFormattedText>, the field's text is converted to hard-wrapped text:  An end-of-line character is inserted at the end of each screen line, and wherever a return character occurs in the field, two end-of-line characters are substituted. (If the field's dontWrap is true, each screen line ends in an end-of-line character, so two end-of-line characters are substituted for each return character in the field.)
+
+When you set a field's <unicodeFormattedText> property, the string is unwrapped before being put in the field. Double end-of-line characters are converted to a single end-of-line character, and single end-of-line characters are converted to spaces.
+
+Deprecated: In LiveCode 7.0 the language was changed to handle unicode transparently. This means that language functionality which previously aided unicode text manipulation is no longer required. This property should not be used in new code; simply get the formattedText as normal. The following are now equivalent:
+
+get the unicodeFormattedText of field 1
+get textEncode(the formattedText of field 1, "UTF16")
+
+References: formattedText (property), dontWrap (property)
+
+Tags: text processing

@@ -24,8 +24,8 @@ module com.livecode.date
 
 use com.livecode.foreign
 
-public foreign handler MCDateExecGetLocalDate(out rDateTime as List) as undefined binds to "<builtin>"
-public foreign handler MCDateExecGetUniversalTime(out rSeconds as CDouble) as undefined binds to "<builtin>"
+public foreign handler MCDateExecGetLocalDate(out rDateTime as List) returns nothing binds to "<builtin>"
+public foreign handler MCDateExecGetUniversalTime(out rSeconds as CDouble) returns nothing binds to "<builtin>"
 
 /*
 Summary:	The local gregorian date

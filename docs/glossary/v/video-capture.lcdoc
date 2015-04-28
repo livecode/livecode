@@ -1,0 +1,14 @@
+Name: video capture
+
+Synonyms: video capture,capture video,captures video,capturing video,captured video,video-capture
+
+Type: glossary
+
+Description:
+The process of getting information from a video camera or other video source, and displaying it on the screen or saving it as a movie file for later playback. 
+ 
+LiveCode supports video capture using the <Video library>.
+
+References: Video library (library)
+
+Tags: multimedia

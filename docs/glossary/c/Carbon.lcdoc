@@ -1,0 +1,10 @@
+Name: Carbon
+
+Synonyms: Carbon
+
+Type: glossary
+
+Description:
+One of two available frameworks and sets of programming interface for creating native <OS X> applications. (The other is called Cocoa.) LiveCode creates Carbon applications for <OS X>, and the LiveCode <development environment> for <OS X> is a Carbon application.
+
+References: development environment (glossary), OS X (glossary)

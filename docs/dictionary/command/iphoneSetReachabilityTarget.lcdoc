@@ -1,0 +1,35 @@
+Name: iphoneSetReachabilityTarget
+
+Type: command
+
+Syntax: iphoneSetReachabilityTarget <hostNameOrAddress> 
+
+Summary: Starts monitoring a server of reachability via the network.
+
+Associations: stack
+
+Introduced: 6.0
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneSetReachabilityTarget tServer
+
+Example:
+iphoneSetReachabilityTarget
+
+Parameters:
+hostNameOrAddress: The host name or IP address of the server to start monitoring, or empty to stop monitoring
+
+Description:
+Use the iphoneSetReachabilityTarget command to start monitoring a specific server for reachability via the network.
+
+The network connection on iOS devices is generally more transient than normal network connections and can change between wireless and wide-area wireless (GPRS, 3G, EDGE etc.) transport as it moves, and indeed be lost entirely.
+
+As the behavior of an application may vary depending on what kind of network connection is present it is useful to be able to monitor a given server for the type of connection the device currently has to it.
+
+To start monitoring a specific server for reachability via the network use the <iphoneSetReachabilityTarget> command.
+
+References: iphoneReachabilityTarget (function), reachabilityChanged (message)

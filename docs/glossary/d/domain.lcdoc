@@ -1,0 +1,12 @@
+Name: domain
+
+Synonyms: domain
+
+Type: glossary
+
+Description:
+The ownership status of an object. A <card> <object> is in the card domain; an <object> that is part of a <shared group> is in the <background> domain.
+
+References: card (object), object (object), background (glossary), shared group (glossary)
+
+Tags: objects

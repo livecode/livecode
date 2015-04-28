@@ -26,8 +26,8 @@ public foreign type Stream binds to "kMCStreamTypeInfo"
 
 --
 
-public foreign handler MCStreamExecGetStandardOutput(out Stdout as Stream) as undefined binds to "<builtin>"
-public foreign handler MCStreamExecGetStandardError(out Stderr as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecGetStandardOutput(out Stdout as Stream) returns nothing binds to "<builtin>"
+public foreign handler MCStreamExecGetStandardError(out Stderr as Stream) returns nothing binds to "<builtin>"
 
 /*
 Summary:	Default output stream.
@@ -69,7 +69,7 @@ end syntax
 
 --
 
-public foreign handler MCStreamExecWriteToStream(in Buffer as Data, in Destination as Stream) as undefined binds to "<builtin>"
+public foreign handler MCStreamExecWriteToStream(in Buffer as Data, in Destination as Stream) returns nothing binds to "<builtin>"
 
 /*
 Summary:	Write data to a stream.

@@ -771,3 +771,60 @@ void MCImage::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 {
     SetVisibility(ctxt, part, setting, false);
 }
+
+// MERG-2015-02-11: [[ ImageMetadata ]] Refactored image metadata property
+void MCImage::GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value)
+{
+    MCImageMetadata t_metadata;
+    m_rep->GetMetadata(t_metadata);
+    
+    bool t_stat;
+    t_stat = t_metadata.has_density;
+    
+    MCExecValue t_density;
+    
+    if (t_stat)
+    {
+        t_density . double_value = t_metadata . density;
+        t_density . type = kMCExecValueTypeDouble;
+    }
+    
+    if (t_stat)
+    {
+        if (p_prop == nil || MCNameIsEmpty(p_prop))
+        {
+            MCAutoArrayRef v;
+            t_stat = MCArrayCreateMutable(&v);
+            
+            MCNewAutoNameRef t_key;
+            if (t_stat)
+                t_stat = MCNameCreateWithCString("density", &t_key);
+            
+            MCValueRef t_prop_value;
+            
+            if (t_stat)
+            {
+                MCExecTypeConvertAndReleaseAlways(ctxt, t_density . type, &t_density , kMCExecValueTypeValueRef, &t_prop_value);
+                t_stat = !ctxt . HasError();
+            }
+            
+            if (t_stat)
+                t_stat = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
+            
+            if (t_stat)
+            {
+                r_value . arrayref_value = MCValueRetain(*v);
+                r_value . type = kMCExecValueTypeArrayRef;
+            }
+        }
+        else
+            r_value = t_density;
+    }
+    
+    if (!t_stat)
+    {
+        r_value . arrayref_value = MCValueRetain(kMCEmptyArray);
+        r_value . type = kMCExecValueTypeArrayRef;
+    }
+    
+}

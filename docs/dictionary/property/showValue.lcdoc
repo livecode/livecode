@@ -1,0 +1,34 @@
+Name: showValue
+
+Type: property
+
+Syntax: set the showValue of <scrollbar> to {true | false}
+
+Summary: Specifies whether the current <value> of a scale-bar <scrollbar> is displayed in below the scrollbar.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the showValue of scrollbar "Pages" to true
+
+Value (bool):The <showValue> of a <scrollbar(keyword)> is true or false.
+By default, the <showValue> <property> of newly created <scrollbar(object)|scrollbars> is set to false.
+
+Description:
+Use the <showValue> <property> to give the user an exact indication of the <scrollbar(object)|scrollbar's> position.
+
+If the scrollbar's style <property> is set to "scrollbar" or "progress", the setting of its <showValue> <property> has no effect.
+
+The <showValue> <property> displays the scale bar's current setting. If the scale bar is oriented vertically, the value is displayed to its right. If the scale bar is oriented horizontally, the value is displayed above (if the <lookAndFeel> is set to "Motif") or below it.
+
+Whenever the scrollbar is scrolled and the thumb's position changes, the value is updated. (Use the startValue and <endValue> <properties> to set the scale of the <scrollbar(keyword)> <value>.)
+
+References: showValue (property), lookAndFeel (property), endValue (property), properties (property), scrollbar (keyword), value (function), scrollbar (object), property (glossary)
+
+Tags: ui

@@ -34,7 +34,7 @@
 'sweep' GenerateSyntax(ANY)
 
     -- Handle the top-level definition
-    'rule' GenerateSyntax(DEFINITION'syntax(_, _, Id, Class, Syntax, Methods)):
+    'rule' GenerateSyntax(DEFINITION'syntax(_, _, Id, Class, Warnings, Syntax, Methods)):
         Id'Name -> Name
         Id'Meaning -> syntax(Info)
         Info'Parent -> ParentId
@@ -67,6 +67,11 @@
             where(Class -> binary(neutral, Precedence))
             BeginNeutralBinaryOperatorSyntaxRule(ModuleName, Name, Precedence)
         |)
+        
+        [|
+            where(Warnings -> deprecated(Message))
+            DeprecateSyntaxRule(Message)
+        |]
 
         BeginSyntaxGrammar()
         GenerateSyntax(Syntax)

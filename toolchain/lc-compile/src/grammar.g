@@ -63,7 +63,11 @@
             ErrorsDidOccur()
         ||
             GenerateSyntaxForModules(Modules)
-            GenerateSyntaxRules()
+            (|
+                ErrorsDidOccur()
+            ||
+                GenerateSyntaxRules()
+            |)
         |)
 
 'action' BindModules(MODULELIST, MODULELIST)
@@ -207,8 +211,6 @@
     'rule' PreImportMetadata(-> sequence(Left, Right)):
         Metadata(-> Left) Separator
         PreImportMetadata(-> Right)
-        where(Left -> metadata(Position, _, _))
-        Warning_MetadataClausesShouldComeAfterUseClauses(Position)
 
     'rule' PreImportMetadata(-> nil):
         -- do nothing
@@ -440,7 +442,19 @@
 'nonterm' Signature(-> SIGNATURE)
 
     'rule' Signature(-> signature(Parameters, Result)):
-        "(" OptionalParameterList(-> Parameters) ")" OptionalTypeClause(-> Result)
+        "(" OptionalParameterList(-> Parameters) ")" OptionalReturnsClause(-> Result)
+
+'nonterm' OptionalReturnsClause(-> TYPE)
+
+    'rule' OptionalReturnsClause(-> Type):
+        "as" @(-> Position) Type(-> Type)
+        Warning_UsingAsForHandlerReturnTypeDeprecated(Position)
+
+    'rule' OptionalReturnsClause(-> Type)
+        "returns" @(-> Position) Type(-> Type)
+
+    'rule' OptionalReturnsClause(-> optional(Position, any(Position)))
+        @(-> Position)
 
 'nonterm' OptionalParameterList(-> PARAMETERLIST)
 
@@ -503,13 +517,22 @@
 
 'nonterm' SyntaxDefinition(-> DEFINITION)
 
-    'rule' SyntaxDefinition(-> syntax(Position, public, Name, Class, Syntax, Methods)):
+    'rule' SyntaxDefinition(-> syntax(Position, public, Name, Class, Warnings, Syntax, Methods)):
         "syntax" @(-> Position) Identifier(-> Name) SyntaxClass(-> Class) Separator
+            SyntaxWarnings(-> Warnings)
             Syntax(-> Syntax) Separator
         "begin" Separator
             SyntaxMethods(-> Methods)
         "end" "syntax"
+    
+'nonterm' SyntaxWarnings(-> SYNTAXWARNING)
+
+    'rule' SyntaxWarnings(-> deprecated(Message)):
+        "deprecate" "with" "message" StringLiteral(-> Message) Separator
         
+    'rule' SyntaxWarnings(-> nil):
+        -- nothing
+
 'nonterm' SyntaxClass(-> SYNTAXCLASS)
 
     'rule' SyntaxClass(-> statement):
@@ -599,7 +622,11 @@
 
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)
-        
+        Warning_DeprecatedTypeName(Position, "nothing")
+
+    'rule' Type(-> undefined(Position)):
+        "nothing" @(-> Position)
+
 'nonterm' OptionalElementType(-> TYPE)
 
     'rule' OptionalElementType(-> Type)
@@ -880,6 +907,10 @@
 
     'rule' ConstantTermExpression(-> undefined(Position)):
         "undefined" @(-> Position)
+        Warning_UndefinedConstantDeprecated(Position)
+        
+    'rule' ConstantTermExpression(-> undefined(Position)):
+        "nothing" @(-> Position)
 
     'rule' ConstantTermExpression(-> true(Position)):
         "true" @(-> Position)
@@ -887,7 +918,7 @@
     'rule' ConstantTermExpression(-> false(Position)):
         "false" @(-> Position)
 
-    'rule' ConstantTermExpression(-> integer(Position, Value)):
+    'rule' ConstantTermExpression(-> unsignedinteger(Position, Value)):
         INTEGER_LITERAL(-> Value) @(-> Position)
 
     'rule' ConstantTermExpression(-> real(Position, Value)):

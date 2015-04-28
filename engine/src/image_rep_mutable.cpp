@@ -2006,3 +2006,11 @@ void MCMutableImageRep::shutdown()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+bool MCMutableImageRep::GetMetadata(MCImageMetadata& r_metadata)
+{
+    r_metadata = m_metadata;
+    
+    return true;
+}

@@ -18,12 +18,38 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.type.tests
 
 public handler TestDefined()
-	variable t as optional Boolean
+	variable tBool as optional Boolean
 
-	test "is undefined" when t is undefined
-	test "is not defined" when t is not defined
-	test "is defined" when not (t is defined)
-	test "is not undefined" when not (t is not undefined)
+	test "is undefined" when tBool is undefined
+	test "is not defined" when tBool is not defined
+	test "is defined" when not (tBool is defined)
+	test "is not undefined" when not (tBool is not undefined)
+end handler
+
+public handler TestDefaultNothing()
+    variable tNothing as optional Boolean
+    test "optional default is nothing" when tNothing is nothing
+    
+    variable tNotNothing as Boolean
+    put false into tNotNothing
+    test "non-optional is not nothing" when tNotNothing is not nothing
+end handler
+
+public handler TestNothingComparisons()
+    variable tLeftNothing as optional Boolean
+    variable tRightNothing as optional Boolean
+    
+    test "nothing is nothing" when tLeftNothing is tRightNothing
+    test "not (nothing is nothing)" when not (tLeftNothing is not tRightNothing)
+
+    variable tLeftNotNothing as optional Boolean
+    variable tRightNotNothing as optional Boolean
+    put false into tLeftNotNothing
+    put false into tRightNotNothing
+    test "nothing is not something" when tLeftNothing is not tRightNotNothing
+    test "not (nothing is something)" when not (tLeftNothing is tRightNotNothing)
+    test "something is not nothing" when tLeftNotNothing is not tRightNothing
+    test "not (something is nothing)" when not (tLeftNotNothing is tRightNothing)
 end handler
 
 end module

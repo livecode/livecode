@@ -1,0 +1,30 @@
+Name: showHilite
+
+Type: property
+
+Syntax: set the showHilite of <button> to {true | false}
+
+Summary: Specifies whether the box or circle belonging to <checkbox|checkboxes> and <radio button|radio buttons> is shown.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the showHilite of button 7 to true
+
+Value (bool):The <showHilite> of a button is true or false.
+By default, the <showHilite> <property> of newly created <button|buttons> is set to false.
+
+Description:
+Use the <showHilite> <property> for <radio button|radio buttons> and checkboxes in menus.
+
+If the <showHilite> of a <radio button> or <checkbox> <button(keyword)> is true, the circle or square is displayed only if the <button(object)|button's> <hilite> is true. If the <showHilite> of a <button(keyword)> which is a <menu item> in a <stack menu> is true, the box or circle is never shown.
+
+References: hilite (property), autoArm (property), autoHilite (property), showBorder (property), button (keyword), hilite (command), button (object), property (glossary), stack menu (glossary), radio button (glossary), menu item (glossary), checkbox (glossary)
+
+Tags: ui

@@ -1,0 +1,35 @@
+Name: sessionCookieName
+
+Type: property
+
+Syntax: set the sessionCookieName to <cookieName> 
+
+Summary: Specifies the name of the cookie used to store the session id.
+
+Introduced: 5.0
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+set the sessionCookieName to tCookieName
+
+Example:
+set the sessionCookieName to "MYSESSION"
+
+Parameters:
+cookieName: a string specifying the name of the cookie
+
+Description:
+Use the <sessionCookieName> property to set the name of the cookie used to store the session id.
+
+Use the <sessionCookieName> property to set the name of the cookie used to store the session id. When a session is created on the server, a cookie is created in the browser to identify the ongoing session. Setting the <sessionCookieName> is useful if you want to have multiple session running a the same time for a given website.
+
+If the <sessionCookieName> is not specified then the default, LCSESSION, is used.
+
+>*Note:* You do not need to alter any of the session properties in order to start and use sessions. They provide a way for advanced users to configure the way session work.
+
+>*Note:* The sessionCookieName property is only available when running in CGI mode (Server).
+
+References: sessionSavePath (property), sessionLifetime (property), sessionID (property)

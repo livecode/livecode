@@ -92,7 +92,7 @@
     'rule' ImportContainsCanvas(import(_, Id)):
         Id'Name -> Name
         MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
-        eq(Name, CanvasModuleName)
+        IsNameEqualToName(Name, CanvasModuleName)
 
 ----------
 
@@ -354,13 +354,13 @@
 
 'condition' IsNameInList(NAME, NAMELIST)
     'rule' IsNameInList(Id, namelist(Head, Tail)):
-        eq(Id, Head)
+        IsNameEqualToName(Id, Head)
     'rule' IsNameInList(Id, namelist(Head, Tail)):
         IsNameInList(Id, Tail)
 
 'condition' IsNameNotInList(NAME, NAMELIST)
     'rule' IsNameNotInList(Id, namelist(Head, Tail)):
-        ne(Id, Head)
+        IsNameNotEqualToName(Id, Head)
         IsNameNotInList(Id, Tail)
     'rule' IsNameNotInList(Id, nil):
         -- success
@@ -499,7 +499,7 @@
     'rule' GenerateDefinitionIndexes(event(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
 
-    'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _)):
+    'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _, _)):
         GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(_):
@@ -582,7 +582,7 @@
     'rule' GenerateExportedDefinitions(event(_, _, Id, _)):
         GenerateExportedDefinition(Id)
         
-    'rule' GenerateExportedDefinitions(syntax(_, _, Id, _, _, _)):
+    'rule' GenerateExportedDefinitions(syntax(_, _, Id, _, _, _, _)):
         GenerateExportedDefinition(Id)
         
     'rule' GenerateExportedDefinitions(_):
@@ -698,7 +698,7 @@
         Info'Index -> DefIndex
         EmitEventDefinition(DefIndex, Position, Name, TypeIndex)
         
-    'rule' GenerateDefinitions(syntax(Position, _, Id, Class, _, _)):
+    'rule' GenerateDefinitions(syntax(Position, _, Id, Class, _, _, _)):
         QuerySyntaxId(Id -> Info)
         Id'Name -> Name
         Info'Methods -> Methods
@@ -976,6 +976,8 @@
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
 
+        EmitPopRepeatLabels()
+
     'rule' GenerateBody(Result, Context, repeatdownto(Position, Slot, Start, Finish, Step, Body)):
         QuerySymbolId(Slot -> Info)
         Info'Index -> VarIndex
@@ -1021,6 +1023,8 @@
         EmitDestroyRegister(CounterRegister)
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
+
+        EmitPopRepeatLabels()
         
     'rule' GenerateBody(Result, Context, repeatforeach(Position, Invoke:invoke(_, IteratorInvokes, Arguments), Container, Body)):
         EmitDeferLabel(-> RepeatHead)
@@ -1057,6 +1061,8 @@
         EmitDestroyRegister(TargetReg)
 
         EmitResolveLabel(RepeatTail)
+
+        EmitPopRepeatLabels()
 
         
     'rule' GenerateBody(Result, Context, nextrepeat(Position)):
@@ -1576,6 +1582,9 @@
     'rule' GenerateExpressionInRegister(Result, Context, false(_), Output):
         EmitAssignFalse(Output)
         
+    'rule' GenerateExpressionInRegister(Result, Context, unsignedinteger(_, Value), Output):
+        EmitAssignUnsignedInteger(Output, Value)
+
     'rule' GenerateExpressionInRegister(Result, Context, integer(_, Value), Output):
         EmitAssignInteger(Output, Value)
         
@@ -1678,6 +1687,12 @@
         EmitIntegerConstant(Value -> Index)
         EmitAssignConstant(Reg, Index)
 
+'action' EmitAssignUnsignedInteger(INT, INT)
+
+    'rule' EmitAssignUnsignedInteger(Reg, Value):
+        EmitUnsignedIntegerConstant(Value -> Index)
+        EmitAssignConstant(Reg, Index)
+        
 'action' EmitAssignReal(INT, DOUBLE)
 
     'rule' EmitAssignReal(Reg, Value):
@@ -1700,6 +1715,9 @@
 
     'rule' EmitConstant(false(_) -> Index):
         EmitFalseConstant(-> Index)
+
+    'rule' EmitConstant(unsignedinteger(_, IntValue) -> Index):
+        EmitUnsignedIntegerConstant(IntValue -> Index)
 
     'rule' EmitConstant(integer(_, IntValue) -> Index):
         EmitIntegerConstant(IntValue -> Index)

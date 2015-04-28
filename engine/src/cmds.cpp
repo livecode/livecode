@@ -2375,10 +2375,23 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
         }
 		if (t_object . object != nil && t_object . object->gettype() > CT_GROUP && chunktype <= CT_GROUP)
 			chunktype = CT_LINE;
-	} 
+    }
+    // SN-2015-04-01: [[ Bug 14885 ]] Make sure that the default stack is used
+    //  if none is specified.
+    else
+        t_object . object = MCdefaultstackptr;
     
 	if (chunktype == CT_CARD || chunktype == CT_MARKED)
-		MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
+    {
+        if (t_object . object == nil ||
+            t_object . object -> gettype() != CT_STACK)
+		{
+            ctxt . LegacyThrow(EE_SORT_CANTSORT);
+			return;
+		}
+        
+        MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
+    }
 	else if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 	{
         MCStringRef t_sorted_target;

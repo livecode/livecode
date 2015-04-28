@@ -1,0 +1,10 @@
+Name: run time
+
+Synonyms: run time,runtime,run-time
+
+Type: glossary
+
+Description:
+The time of program execution. 
+ 
+When your application does something "at run time", that something is done when the application is being used by the user, as opposed to ahead of time before you build the application.

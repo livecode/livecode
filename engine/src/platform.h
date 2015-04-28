@@ -771,6 +771,7 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertyMask,
 	kMCPlatformWindowPropertyFrameRect,
 	kMCPlatformWindowPropertyContentRect,
+	kMCPlatformWindowPropertyIsOpaque,
 	
 	kMCPlatformWindowPropertyHasTitleWidget,
 	kMCPlatformWindowPropertyHasCloseWidget,

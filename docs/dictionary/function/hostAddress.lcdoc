@@ -1,0 +1,42 @@
+Name: hostAddress
+
+Type: function
+
+Syntax: the hostAddress of <host> : <port> [| <connectionID>]
+
+Syntax: hostAddress(<host> : <port> [| <connectionID>])
+
+Summary: <return|Returns> the <IP address> of the local system a <socket> is connected to.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the hostAddress of "www.example.com:80"
+
+Example:
+hostAddress("example.net:25|10")
+
+Example:
+the hostAddress of "127.0.0.1:8080|dataConnection"
+
+Parameters:
+host: An IP address or domain name.
+port: The number of the port the socket is connected to.
+connectionID (string): A string identifying the socket.
+
+Returns: The <hostAddress> <function> <return|returns> the <IP address> of the computer. This address is in the form X.X.X.X, where each X is a number with between 1 and 3 digits.
+
+Description:
+Use the <hostAddress> <function> to find the <IP address> of the computer that LiveCode is running on.
+
+The socket must be open. If the specified socket has not been opened, the <hostAddress> <function> <return|returns> "not an open socket". If you have issued an <open socket> <command> to create the <socket>, you cannot use the <hostAddress> <function> until after the <socket> has been created and the <command> has completed.
+
+The <connectionID> is needed only if more than one <socket> is connected to the same <port> of the same <host>. The <connectionID> is assigned by the <accept> or <open socket> <command> that created the <socket>.
+
+References: accept (command), open socket (command), peerAddress (function), hostAddressToName (function), DNSServers (function), socket (glossary), host (glossary), IP address (glossary), command (glossary), return (glossary), port (glossary), function (control_st)
+
+Tags: networking

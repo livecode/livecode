@@ -1,0 +1,29 @@
+Name: HCImportStat
+
+Type: property
+
+Syntax: get the HCImportStat
+
+Summary: Reports information about <stacks> that are being <import|imported> from <HyperCard>.
+
+Introduced: 1.0
+
+OS: mac,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the HCImportStat into field "Progress"
+
+Value: The <HCImportStat> <property> reports an <expression> of the form "Loading stack stackName" while a HyperCard stack is being <import|imported>.
+
+Description:
+Use the <HCImportStat> <property> to check the status of a <HyperCard> stack that's being <import|imported>.
+
+To import a HyperCard stack, use the <go> <command> to open the <stack>. LiveCode automatically converts it to a LiveCode <stack>.
+
+If no stack has been imported during the current session, the <HCImportStat> <property> reports empty.
+
+You can set this property back to empty after a stack has been successfully imported.
+
+References: HCStack (property), go (command), stacks (function), property (glossary), import (glossary), command (glossary), HyperCard (glossary), expression (glossary), stack (object)

@@ -1,0 +1,41 @@
+Name: crop
+
+Type: command
+
+Syntax: crop <image> to <left>, <top>, <right>, <bottom> 
+
+Summary: Trims an <image>.
+
+Introduced: 2.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web,mobile
+
+Example:
+crop image 1 to 100,100,200,200
+
+Example:
+crop image "photo" to the rect of graphic "Overlay"
+
+Parameters:
+image: Any image reference.
+left: The left, top, right, and bottom describe the new rectangle of the image.
+top: 
+right: 
+bottom: 
+
+Description:
+Use the <crop> <command> to remove parts of an image, or to extend the image's edges.
+
+The <crop> <command> changes the <image(object)|image's> <rectangle> <property> to the new rectangle. Unlike changing the <rectangle> directly, the <crop> <command> removes image data outside the new <rectangle>, instead of scaling the <image(keyword)> to fit.
+
+If the <crop> rectangle is smaller than the <image(object)|image's> original <rectangle>, the parts of the <image(keyword)> outside the <crop> rectangle are removed. This is a permanent operation; the cropped portions do not reappear if you use the <crop> <command> to change the <image(object)|image's> <rectangle> back to the original size.
+
+If the <crop> rectangle is larger than the <image(object)|image's> original <rectangle>, blank <pixels> are added to one or more edges of the <image(keyword)>.
+
+>*Important:* The <crop> <command> cannot be used on a <referenced control|referenced image>. Doing so will cause an <execution error>.
+
+References: pixels (property), imageData (property), rectangle (property), image (keyword), rectangle (keyword), flip (command), rotate (command), image (object), property (glossary), referenced control (glossary), command (glossary), execution error (glossary)
+
+Tags: ui

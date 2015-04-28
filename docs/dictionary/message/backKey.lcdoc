@@ -1,0 +1,29 @@
+Name: backKey
+
+Type: message
+
+Syntax: backKey
+
+Summary: Sent to the current card of the defaultStack when the hardware back button is pressed.
+
+Introduced: 5.0.1
+
+OS: android
+
+Platforms: mobile
+
+Example:
+on backKey
+  answer "You pressed the back key" with "Okay"
+end backKey
+
+Description:
+Handle the <backKey> message to perform an action when the back button is pressed.
+
+The <backKey> message is sent to the current card of the <default stack> when the hardware back button is pressed.
+
+>*Note:* If this message is passed or not handled, then the engine automatically quits.
+
+References: default stack (property), searchKey (message), menuKey (message)
+
+Tags: ui

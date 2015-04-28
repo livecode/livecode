@@ -108,34 +108,41 @@ extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfCharsInRange(bool p_is_last, MCSt
 {
     uindex_t t_offset;
     t_offset = 0;
-    if (!MCStringIsEmpty(p_needle))
-    {
-        MCRange t_range;
-        if (p_range . length == UINDEX_MAX)
-        {
-            MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, MCRangeMake(p_range . offset, 1), t_range);
-            t_range . length = UINDEX_MAX;
-        }
-        else
-            MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, p_range, t_range);
+	if (MCStringIsEmpty(p_needle))
+	{
+		r_output = 0;
+		return;
+	}
+
+	MCRange t_range;
+	if (p_range . length == UINDEX_MAX)
+	{
+		MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, MCRangeMake(p_range . offset, 1), t_range);
+		t_range . length = UINDEX_MAX;
+	}
+	else
+		MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, p_range, t_range);
         
-        bool t_found;
-        if (p_is_last)
-            t_found = MCStringLastIndexOfStringInRange(p_target, p_needle, t_range, kMCStringOptionCompareExact, t_offset);
-        else
-            t_found = MCStringFirstIndexOfStringInRange(p_target, p_needle, t_range, kMCStringOptionCompareExact, t_offset);
+	bool t_found;
+	if (p_is_last)
+		t_found = MCStringLastIndexOfStringInRange(p_target, p_needle, t_range, kMCStringOptionCompareExact, t_offset);
+	else
+		t_found = MCStringFirstIndexOfStringInRange(p_target, p_needle, t_range, kMCStringOptionCompareExact, t_offset);
         
-        // correct output index
-        if (t_found)
-        {
-            t_offset -= p_range . offset;
-            t_offset++;
-        }
-    }
-    
+	if (!t_found)
+	{
+		r_output = 0;
+		return;
+	}
+
+	// correct output index
+	t_offset -= t_range . offset;
+	t_offset++;
+
     MCRange t_output_range;
     MCStringUnmapGraphemeIndices(p_target, kMCLocaleBasic, MCRangeMake(t_offset, 1), t_output_range);
-    r_output = t_output_range . offset;
+
+	r_output = t_output_range . offset + p_range . offset;
 }
 
 extern "C" MC_DLLEXPORT void MCCharEvalOffsetOfChars(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, uindex_t& r_output)

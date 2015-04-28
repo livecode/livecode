@@ -1,0 +1,56 @@
+Name: revBrowserOpenCef
+
+Type: function
+
+Syntax: revBrowserOpenCef( <windowId> [, <url> ] )
+
+Summary: Opens and initialises a new Chrome-based browser.
+
+Introduced: 6.7
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+local tBrowserId
+put revBrowserOpenCef(the windowId of
+this stack, "http://www.runrev.com") into tBrowserId
+if tBrowserId is
+not an integer then
+  answer "Failed to open browser"
+end
+if
+
+Example:
+local tBrowserId, tFile   
+answer file "Please choose a
+file to display"
+if the result is not "cancel" then
+  put it
+into tFile
+  put revBrowserOpenCef(the windowId of this stack,
+"file://" & tFile) into tBrowserId      
+end if
+
+Parameters:
+windowID: the operating system ID for a stack window as given by the stack windowID property.
+url: the initial url to navigate to when opening the browser. The URL can be a page from a web server, beginning "http://", or a local file, beginning "file://"
+
+The result: If successful this will be an integer browser instance id, if unsuccessful, the result will be empty.
+
+Returns: The <revBrowserOpenCef> function returns a value. If successful this will be an integer browser instance id, if unsuccessful, the result will be empty.
+
+Description:
+The <revBrowserOpenCef> function creates a new Chrome-baseed browser in the window with the given windowId. If a url is given, the browser immediately navigates to this url.
+
+The <revBrowserOpenCef> function creates a new Chrome-baseed browser in the window with the given windowId. If a url is given, the browser immediately navigates to this url.
+
+Example:
+Create a new browser window in the current stack, set to open on the runrev homepage:
+
+put revOpenBrowserCef(the windowId of this stack, "http://www.runrev.com") into tMyBrowserId
+
+References: revBrowserStop (command), revBrowserPrint (command), revBrowserSet (command), revBrowserMakeTextBigger (command), revBrowserNavigate (command), revBrowserAddJavaScriptHandler (command), revBrowserRemoveJavaScriptHandler (command), revBrowserClose (command), browserOver (message), browserNewInstance (message), browserNewUrlWindow (message), browserDownloadRequest (message), browserNavigateCompleteFrame (message)

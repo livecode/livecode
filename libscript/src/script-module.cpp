@@ -1136,15 +1136,22 @@ static void def_to_name(MCScriptModuleRef self, uindex_t p_index, MCStringRef& r
 {
     MCScriptDefinition *t_def;
     t_def = self -> definitions[p_index];
+    
+    MCNameRef t_name;
     if (t_def -> kind == kMCScriptDefinitionKindExternal)
     {
         MCScriptExternalDefinition *t_ext_def;
         t_ext_def = static_cast<MCScriptExternalDefinition *>(t_def);
         
-        MCStringFormat(r_string, "%@", /*self -> dependencies[self -> imported_definitions[t_ext_def -> index] . module] . name, */self -> imported_definitions[t_ext_def -> index] . name);
+        t_name = self -> imported_definitions[t_ext_def -> index] . name;
     }
     else
-        MCStringFormat(r_string, "%@", self -> definition_names[p_index]);
+        t_name = self -> definition_names[p_index];
+    
+    if (!MCNameIsEqualTo(t_name, MCNAME("undefined")))
+        MCStringFormat(r_string, "%@", t_name);
+    else
+        MCStringFormat(r_string, "nothing");
 }
 
 static void type_to_string(MCScriptModuleRef self, uindex_t p_type, MCStringRef& r_string)
@@ -1181,7 +1188,10 @@ static void type_to_string(MCScriptModuleRef self, uindex_t p_type, MCStringRef&
             }
             MCAutoStringRef t_rtype;
             type_to_string(self, t_htype -> return_type, &t_rtype);
-            MCStringAppendFormat(*t_sig, ") as %@", *t_rtype);
+            if (MCStringIsEqualToCString(*t_rtype, "undefined", kMCStringOptionCompareCaseless))
+                MCStringAppendFormat(*t_sig, ") returns nothing");
+            else
+                MCStringAppendFormat(*t_sig, ") returns %@", *t_rtype);
             MCStringCopy(*t_sig, r_string);
         }
         break;

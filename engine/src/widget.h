@@ -81,6 +81,8 @@ public:
     
     virtual void layerchanged();
     
+    virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
+    
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
     
     // Returns true if the widget is in edit mode
@@ -90,6 +92,7 @@ public:
     bool handlesMouseDown() const;
     bool handlesMouseUp() const;
     bool handlesMouseCancel() const;
+    bool handlesMouseScroll() const;
     bool handlesKeyPress() const;
     bool handlesActionKeyPress() const;
     bool handlesTouches() const;
@@ -125,7 +128,7 @@ private:
     void OnClose();
     void OnAttach();
     void OnDetach();
-    void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
+    void OnPaint(MCGContextRef p_gcontext, const MCRectangle& p_dirty);
     void OnGeometryChanged(const MCRectangle& p_old_rect);
     void OnVisibilityChanged(bool p_visible);
     void OnHitTest(const MCRectangle& p_intersect, bool& r_inside);
@@ -233,5 +236,12 @@ private:
     // Implemented by the platform-specific native layers: creates a new layer
     MCNativeLayer* createNativeLayer();
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo;
+extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif

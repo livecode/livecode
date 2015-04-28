@@ -1,0 +1,12 @@
+Name: non-printable character
+
+Synonyms: non-printable character,unprintable character
+
+Type: glossary
+
+Description:
+A <character> such as backspace that has an <ASCII> code, but has no visual representation.
+
+References: character (glossary), ASCII (glossary)
+
+Tags: text processing

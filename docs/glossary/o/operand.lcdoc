@@ -1,0 +1,12 @@
+Name: operand
+
+Synonyms: operand
+
+Type: glossary
+
+Description:
+An <expression> on which an <operator> performs an action; one of the <argument|arguments> of an <operator>.
+
+References: expression (glossary), operator (glossary), argument (glossary)
+
+Tags: math

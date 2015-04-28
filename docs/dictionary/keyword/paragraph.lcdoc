@@ -1,0 +1,29 @@
+Name: paragraph
+
+Type: keyword
+
+Syntax: paragraph
+
+Summary: Designates a string as part of a chunk expression, delimited by either a return character or the Unicode paragraph separator (0x2029).
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put paragraph 1 of tText
+
+Example:
+get the last paragraph of tText
+
+Description:
+Use the <paragraph> keyword to refer to one or more paragraphs in a container.
+
+A <paragraph> is a chunk delimited by either a return character or the Unicode paragraph separator (0x2029).
+>*Note:*  The paragraph chunk is identical to the line chunk, except that it is also delimited by the paragraph separator character. This reflects the paragraph breaking exhibited by LiveCode fields.
+
+References: item (keyword), character (keyword), segment (keyword), sentence (keyword), line (keyword), word (keyword), trueWord (keyword), token (keyword)
+
+Tags: text processing

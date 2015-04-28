@@ -1,0 +1,50 @@
+Name: fontNames
+
+Type: function
+
+Syntax: the fontNames
+
+Syntax: fontNames ([printer])
+
+Summary: <return|Returns> a list of the currently installed <font|fonts>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the fontNames
+
+Example:
+fontNames ()
+
+Example:
+fontNames (printer)
+
+Example:
+if "Monaco" is among the lines of the fontNames \
+  then set the textFont of me to "Monaco"
+
+Returns: The <fontNames> <function> <return|returns> a list of <font> names, one per <line>.
+
+Description:
+Use the <fontNames> <function> to find out whether a particular <font> is available before using it, or to display a list of <font|fonts>.
+
+The fontNames (printer) form returns the names of fonts available on the currently selected printer. Use this form when printing on a printer with its own resident fonts (such as a Postscript printer) to ensure that the fonts you're using are available on the printer.
+
+If you do not specify 'printer', the fonts installed on the system and available to the application for screen display are listed.
+
+In Android, iOS 3.2 and later it is possible to bundle custom fonts with an application, that only that application can use. To take advantage of this feature, you need to reference the files of any fonts you wish to include in the 'Copy Files' pane. These files can either be a direct file references, or contained in one of the folder references. The 'Standalone Builder' treats any files that end with the extension '.ttf' or '.ttc' as font files to use in this way. Any fonts included in this way appear in the <fontNames> and can be used in the same way as any other font on the system.
+
+>*Important:* Make sure you have an appropriate license for the fonts you choose to bundle with your iOS app like you would any other media such as sounds, images and videos.
+
+The fontNames (printer) form was introduced in version 2.0.
+
+Changes:
+The fontNames () form was introduced to iOS in version 4.5.3.
+
+References: line (keyword), revFontLoad (command), fontStyles (function), font (glossary), return (glossary), function (control_st)
+
+Tags: ui

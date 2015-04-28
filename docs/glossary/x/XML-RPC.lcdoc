@@ -1,0 +1,11 @@
+Name: XML-RPC
+
+Synonyms: XML-RPC,Extensible Markup Language - Remote Procedure Call
+
+Type: glossary
+
+Description:
+eXtensible Markup Language - Remote Procedure Call. A protocol used for connecting to Web Services. 
+XML-RPC provides an XML- and HTTP-based mechanism for making method or functions calls across a network.
+
+Tags: networking

@@ -1,0 +1,46 @@
+Name: relaunch
+
+Type: message
+
+Syntax: relaunch <commandlinearguments> 
+
+Summary: After having launched an application, upon launching a successive instance the LiveCode engine will send a relaunch message to the first stack of the application.
+
+Associations: stack
+
+Introduced: 2.7.3
+
+OS: windows
+
+Platforms: desktop,server,web
+
+Example:
+on relaunch pDocument
+  openDocument pDocument
+end relaunch
+
+Parameters:
+commandlinearguments: 
+
+Description:
+The relaunch message implements support for "single instance applications" on Windows. This means that if you launch an instance of your application, a successive launch will send a message to the existing instance.
+
+It can be used in the following three ways:
+    1. If the message is passed, then the new instance continues running.
+    2. If "background" is returned, then the new instance is terminated.
+    3. If nothing is returned but the message is not passed, then the new instance is terminated and the existing instance's "defaultStack" is made the foreground window.
+
+If there are no existing instances, the new instance will run.
+
+The relaunch message is passed a variable number of arguments depending on the command-line the new instance is started up with. The processing is the same that is performed for the $n global variables before application startup. i.e. the command-line string is split into words, each word has any leading and trailing quotes stripped and '\' is replaced by '/'.
+
+A basic example stack demonstrating the relaunch command can be found in the Resources/Examples folder within this LiveCode distribution folder.
+
+>*Note:* The new instance will wait for an existing instance to respond to the message before continuing.
+
+>*Note:* You must not initiate any modal loops (e.g. caused by answer file, popup, modal commands) within the body of the relaunch handler as this will cause an automatic 'pass'. Instead, send a message to be executed
+ immediately after the relaunch handler has returned (i.e. use 'send processRelaunch to me in 0 millisecs').
+
+>*Note:* This feature is only available in the standalone engine, as the IDE engine uses the relaunch facitily to suport loading of stack files into an existing instance of the IDE by double clicking on a file in the Windows shell.
+
+References: $ (keyword), startup (message)

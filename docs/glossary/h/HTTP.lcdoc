@@ -1,0 +1,12 @@
+Name: HTTP
+
+Synonyms: HTTP
+
+Type: glossary
+
+Description:
+HyperText Tranfer Protocol. The <protocol> used for transferring web pages from a <web server> to a system accessing the web page.
+
+References: protocol (glossary), web server (glossary)
+
+Tags: networking

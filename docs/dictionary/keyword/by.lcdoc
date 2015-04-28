@@ -1,0 +1,29 @@
+Name: by
+
+Type: keyword
+
+Syntax: by
+
+Summary: Used with the <divide> and <multiply> <command|commands> to specify a number; used with the <rotate> <command> to specify how far to rotate; used with the <sort> and <sort container> <command|commands> to specify the <sort key>; used with the <combine> and <split> <command|commands> to specify the <delimiter|delimiters> for transforming a <variable> between an <array> and a <string>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+divide myVariable by 2
+
+Example:
+rotate image "Calliope" by -45
+
+Example:
+sort lines of field "Data" by item 2 of each
+
+Description:
+Use the <by> <keyword> to divide or multiply a <container> by a number or to specify how to <sort>.
+
+When used with the <combine> or <split> <command>, the <by> <keyword> is a synonym for <using>.
+
+References: string (keyword), using (keyword), sort (command), combine (command), split (command), rotate (command), sort container (command), multiply (command), divide (command), delimiter (glossary), variable (glossary), container (glossary), keyword (glossary), array (glossary), command (glossary), sort key (glossary)

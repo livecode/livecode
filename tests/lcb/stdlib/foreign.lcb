@@ -21,8 +21,8 @@ use com.livecode.foreign
 use com.livecode.__INTERNAL._testlib
 
 handler TestZStringNative_Null()
-	variable t as ZStringNative
-	put "\u{0}" into t
+	variable tList as ZStringNative
+	put "\u{0}" into tList
 end handler
 public handler TestZStringNative()
 	-- bug 14826
@@ -32,8 +32,8 @@ public handler TestZStringNative()
 end handler
 
 handler TestZStringUTF16_Null()
-	variable t as ZStringUTF16
-	put "\u{0}" into t
+	variable tList as ZStringUTF16
+	put "\u{0}" into tList
 end handler
 public handler TestZStringUTF16()
 	variable tUTF16 as ZStringUTF16

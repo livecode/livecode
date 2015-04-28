@@ -97,7 +97,8 @@ bool MCAndroidTypefaceGetMetrics(MCAndroidTypefaceRef p_typeface, uint32_t p_siz
     
 	t_paint.getFontMetrics(&t_metrics);
     
-	r_ascent = t_metrics.fAscent;
+	// SkPaint::FontMetrics gives the ascent value as a negative offset from the baseline, where we expect the (positive) distance.
+	r_ascent = - t_metrics.fAscent;
 	r_descent = t_metrics.fDescent;
     r_leading = t_metrics.fLeading;
     r_xheight = t_metrics.fXHeight;

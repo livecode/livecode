@@ -1,0 +1,33 @@
+Name: mobileGetDeviceToken
+
+Type: function
+
+Syntax: mobileGetDeviceToken()
+
+Summary: Returns the Device Token used for Push Notification.
+
+Synonyms: iphoneGetDeviceToken
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on pushNotificationRegistered
+   get mobileGetDeviceToken()
+end pushNotificationRegistered
+
+Returns: The <mobileGetDeviceToken> function returns a base 64 encoded representation of 32 byte of binary data that makes up the Device Token.
+
+Description:
+Use the <mobileGetDeviceToken> function to return the Device Token that is used by the Push Notification Server to identify to which device to send a notification.
+
+LiveCode registers for push notifications with the operating system when your application starts. The operating system sends a callback message <pushNotificationRegistered> to your application once registration is complete. 
+
+>*Important:* The <mobileGetDeviceToken> function returns empty until registration for push notifications with the operating system is complete. 
+
+As a result, the <mobileGetDeviceToken> function should be called when you handle the <pushNotificationRegistered message>.
+
+References: pushNotificationRegistrationError (message), pushNotificationRegistered (message), pushNotificationRegistered message (message), pushNotificationReceived (message)

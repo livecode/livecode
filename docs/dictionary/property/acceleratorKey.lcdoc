@@ -1,0 +1,47 @@
+Name: acceleratorKey
+
+Type: property
+
+Syntax: set the accel[erator]Key of <button> to {empty | <letterChar>}
+
+Summary: Specifies a shortcut <key combination> for a <button|button's> <mouseUp> <handler>.
+
+Synonyms: accelKey
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Example:
+set the acceleratorKey of button 1 to "a"
+
+Example:
+set the acceleratorKey of button "Switch Order" to "F8"
+
+Example:
+set the accelKey of button "Calc" to field "Key"
+
+Value:
+The <acceleratorKey> of a <button> is a single lowercase letter from a to z, or a key name. Setting the <acceleratorKey> to empty removes the shortcut.
+By default, the <acceleratorKey> of a newly created <button> is empty.
+
+Description:
+Use the <acceleratorKey> <property> to give users a shortcut <key combination> for often-used <button(object)|buttons>, or to provide a <keyboard equivalent|keyboard shortcut> to a <button(keyword)> that's used as a <menu item> in a <stack menu>.
+
+Press the key combination defined in a button's <acceleratorKey> <property> to send a <mouseUp> message to the <button(keyword)>, instead of clicking.
+
+The key(s) specified in the acceleratorModifiers <property> must be pressed along with the <acceleratorKey>.
+
+>*Important:*  The <acceleratorKey> <property> is <case-sensitive>. You must specify a lowercase letter as the <letterChar>; the uppercase letter is not equivalent.
+
+If the insertion point is in a field, the keypress is sent to the field, and the button does not receive it.
+
+On Unix systems, the key names are listed in the file "/usr/include/X11/keysymdef.h". Don't include the "XK_" prefix in these key names; for example, use "F8" for the key designated as "XK_F8" in the file.
+
+References: default (property), commandChar (property), acceleratorText (property), button (keyword), mouseUp (message), button (object), property (glossary), menu item (glossary), key combination (glossary), handler (glossary), stack menu (glossary), case-sensitive (glossary), keyboard equivalent (glossary)
+
+Tags: ui

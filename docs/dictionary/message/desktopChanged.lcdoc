@@ -1,0 +1,29 @@
+Name: desktopChanged
+
+Type: message
+
+Syntax: desktopChanged
+
+Summary: Sent to the current card of the defaultStack whenever the <screenRect Function> changes.
+
+Associations: card
+
+Introduced: 2.7
+
+OS: mac,windows
+
+Platforms: desktop
+
+Example:
+on desktopChanged
+   -- Check stack is still on screen or resize your stack appropriately
+end desktopChanged
+
+Description:
+Handle the <desktopChanged> message to rearrange or reconfigure your layout when the user changes their screen size or layout.
+
+As the <desktopChanged> message can be sent by the OS at any time, it is recommended that you handle the message in the main-stack of your application. 
+
+>*Note:*  The LiveCode IDE broadcasts the <desktopChanged> message to all main stacks that are currently open at the time the engine receives the notification from the OS - this is to improve consistency with behaviour in standalone applications.
+
+References: screenMouseLoc (property), windowBoundingRect (property), screenRect Function (function), screenRect (function), resizeStack (message)

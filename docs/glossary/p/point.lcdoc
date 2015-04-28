@@ -1,0 +1,16 @@
+Name: point
+
+Synonyms: point,pointing,pointed
+
+Type: glossary
+
+Description:
+A way of specifying a location, consisting of the horizontal distance from the left edge of the screen or window, a comma, and the vertical distance from the top edge of the screen or window. 
+ 
+Also, the act of moving the <mouse pointer> over a section of the screen in order to act on it. 
+ 
+Also, a measurement of distance used in printing. A point is 1/72 of an inch.
+
+References: mouse pointer (glossary)
+
+Tags: ui

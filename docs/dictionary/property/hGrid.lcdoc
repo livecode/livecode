@@ -1,0 +1,40 @@
+Name: hGrid
+
+Type: property
+
+Syntax: set the hGrid [of line <lineNumber>] of <field> to {true | false}
+
+Summary: Specifies whether lines are shown below each text line in a <field>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the hGrid of field 3 to true
+
+Example:
+set the hGrid of line 5 to 10 of field 1 to false
+
+Value (bool):The <hGrid> of a <field(keyword)> is true or false.
+By default, the <hGrid> <property> of newly created <field(object)|fields> is set to false.
+
+Description:
+Use the <hGrid> <property> to control the appearance of a <field>.
+
+If a field's <hGrid> <property> is true, a horizontal line is drawn across the <field>, every <textHeight> pixels. The line falls below the lowest part of each <character>, rather than being drawn at the text baseline, as the lines drawn by the <showLines> <property> are.
+
+The lines shown by the <hGrid> and <vGrid> are drawn in the <borderColor> (or <borderPattern>).
+
+If the field's <fixedLineHeight> <property> is set to false, the <hGrid> <property> has no effect.
+
+Changes:
+The use of the <borderColor> to draw grid lines was introduced in version 2.0. In previous versions, the grid lines were drawn in the <hiliteColor>.
+
+References: leftIndent (property), borderWidth (property), vgrid (property), textAlign (property), dontWrap (property), formattedText (property), spaceAbove (property), backgroundColor (property), hiliteColor (property), borderPattern (property), listBehavior (property), listIndent (property), fixedLineHeight (property), hidden (property), textSize (property), firstIndent (property), listStyle (property), spaceBelow (property), tabStops (property), showLines (property), rightIndent (property), listDepth (property), hScrollbar (property), textHeight (property), borderColor (property), formattedWidth (property), field (keyword), character (keyword), field (object), property (glossary)
+
+Tags: ui

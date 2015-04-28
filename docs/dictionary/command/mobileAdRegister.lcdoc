@@ -1,0 +1,28 @@
+Name: mobileAdRegister
+
+Type: command
+
+Syntax: mobileAdRegister <appKey> 
+
+Summary: Registers the application Inneractive identifier with LiveCode.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileAdRegister myApplicationKey
+
+Parameters:
+appKey: The unique Inneractive app identifier (Labelled 'App ID' in the Inneractive dashboard)
+
+Description:
+Use the <mobileAdRegister> command to register the application's Inneractive identifier with LiveCode.
+
+The <mobileAdRegister> command registers the application's Inneractive identifier with LiveCode. All ad activity, including any revenue generated, is logged against this id.
+
+This command must be called before any other ad handlers are invoked.
+
+References: mobileAdCreate (command), mobileAdDelete (command), mobileAds (function)

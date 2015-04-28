@@ -1,0 +1,12 @@
+Name: Database library
+
+Synonyms: Database libraries,Database library
+
+Type: library
+
+Description:
+The <Revolution custom library|LiveCode custom library> that supports connections to MySQL, PostgreSQL, <Open Database Connectivity (ODBC)|ODBC>, Valentina, and Oracle (LiveCode Enterprise only) databases.
+
+References: Open Database Connectivity (ODBC) (glossary), Revolution custom library (library)
+
+Tags: database

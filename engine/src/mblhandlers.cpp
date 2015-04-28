@@ -1326,8 +1326,14 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     if (p_parameters)
     {
         MCAutoValueRef t_value;
+        MCAutoBooleanRef t_bool;
         p_parameters->eval(ctxt, &t_value);
-        t_loosely = MCValueIsEqualTo(*t_value, kMCTrue);
+        // PM-2015-03-11: [[ Bug 14855 ]] Evaluate correctly the second param
+        if (ctxt . ConvertToBoolean(*t_value, &t_bool))
+            t_loosely = MCValueIsEqualTo(*t_bool, kMCTrue);
+        // if conversion fails, keep the same behaviour as in LC 6.7
+        else
+            t_loosely = false;
     }
     
 	ctxt . SetTheResultToEmpty();
@@ -1574,8 +1580,14 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     if (p_parameters)
     {
         MCAutoValueRef t_value;
+        MCAutoBooleanRef t_bool;
         p_parameters->eval(ctxt, &t_value);
-        t_detailed = MCValueIsEqualTo(*t_value, kMCTrue);
+        // PM-2015-03-11: [[ Bug 14855 ]] Evaluate correctly the second param
+        if(ctxt . ConvertToBoolean(*t_value, &t_bool))
+            t_detailed = MCValueIsEqualTo(*t_bool, kMCTrue);
+        // if conversion fails, keep the same behaviour as in LC 6.7
+        else
+            t_detailed = false;
     }
     
     ctxt . SetTheResultToEmpty();

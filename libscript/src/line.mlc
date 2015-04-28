@@ -18,16 +18,16 @@ module com.livecode.line
 
 use com.livecode.foreign
 
-public foreign handler FetchLineOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler StoreLineOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
-public foreign handler FetchLineRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
-public foreign handler StoreLineRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler FetchLineOf(in Index as index, in Target as string, out Value as string) returns nothing binds to "<builtin>"
+public foreign handler StoreLineOf(in Value as string, in Index as index, inout Target as string) returns nothing binds to "<builtin>"
+public foreign handler FetchLineRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) returns nothing binds to "<builtin>"
+public foreign handler StoreLineRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) returns nothing binds to "<builtin>"
 
-public foreign handler EvalNumberOfLinesIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
+public foreign handler EvalNumberOfLinesIn(in Target as string, out Count as index) returns nothing binds to "<builtin>"
 
-public foreign handler EvalIsAmongTheLinesOf(in Needle as string, in IsNot as bool, in Target as string, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsAmongTheLinesOf(in Needle as string, in IsNot as bool, in Target as string, out Result as bool) returns nothing binds to "<builtin>"
 
-public foreign handler EvalOffsetOfLineIn(in Needle as string, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler EvalOffsetOfLineIn(in Needle as string, in Target as string, out Offset as index) returns nothing binds to "<builtin>"
 
 --
 
