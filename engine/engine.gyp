@@ -416,6 +416,16 @@
 				},
 			},
 			
+			# Visual Studio debugging settings
+			'run_as':
+			{
+				'action': [ '<(PRODUCT_DIR)/<(_product_name).exe' ],
+				'environment':
+				{
+					'REV_TOOLS_PATH' : '$(SolutionDir)..\\ide',
+				},
+			},
+			
 			'all_dependent_settings':
 			{
 				'variables':
