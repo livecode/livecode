@@ -1241,6 +1241,11 @@ private function compilerProcessText @self, pText
 end compilerProcessText
 
 private function compilerProcessSlim @self, pInputFile, pTargetArchs
+   -- No need to slim or strip inputs any more.
+   if true then
+      return pInputFile
+   end if
+   
    local tDerivedFile
    put compilerMakeTemporaryFile(self, "slim")  into tDerivedFile
    
