@@ -114,7 +114,8 @@ static bool label_to_name(CFStringRef p_label, MCNameRef &r_name)
 	{
 		if (CFStringCompare(s_label_map[i].label, p_label, 0) == kCFCompareEqualTo)
 		{
-			r_name = *s_label_map[i].name;
+            // SN-201-04-28: [[ Bug 15124 ]] The value must be retained.
+			r_name = MCValueRetain(*s_label_map[i].name);
 			return true;
 		}
 	}
