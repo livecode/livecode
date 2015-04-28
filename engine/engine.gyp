@@ -394,6 +394,12 @@
 					},
 				],
 				[
+					'OS == "win"',
+					{
+						'product_name': 'engine-community',
+					},
+				],
+				[
 					'mobile != 0',
 					{
 						'type': 'none',
