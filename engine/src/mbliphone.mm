@@ -666,7 +666,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 {
 	MCAutoStringRef t_path;
 	
-	if (MCNameIsEqualToCString(p_type, "temporary", kMCCompareCaseless))
+	if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
 	{
         MCAutoStringRef t_temp;
         MCStringCreateWithCFString((CFStringRef)NSTemporaryDirectory() , &t_temp);
@@ -678,13 +678,13 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
         else
             /* UNCHECKED */ MCStringCopy(*t_temp, &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "documents", kMCCompareCaseless))
+	else if (MCNameIsEqualTo(p_type, MCN_documents, kMCCompareCaseless))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "home", kMCCompareCaseless))
+	else if (MCNameIsEqualTo(p_type, MCN_home, kMCCompareCaseless))
 	{
         MCStringCreateWithCFString((CFStringRef)NSHomeDirectory() , &t_path);
 	}
@@ -696,8 +696,8 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 	}
     // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
     //   as the engine folder.
-    else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareCaseless)
-             || MCNameIsEqualToCString(p_type, "resources", kMCCompareCaseless))
+    else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+             || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
 	{
 		extern MCStringRef MCcmd;
         uindex_t t_index;
