@@ -6016,6 +6016,7 @@ void MCCanvasErrorsFinalize()
 	MCValueRelease(kMCCanvasEffectPropertyNotAvailableErrorTypeInfo);
 	MCValueRelease(kMCCanvasEffectPropertyInvalidValueErrorTypeInfo);
 
+	MCValueRelease(kMCCanvasPathPointListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasSVGPathParseErrorTypeInfo);
 }
 
