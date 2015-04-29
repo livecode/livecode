@@ -944,6 +944,8 @@ void MCEngineExecInsertScriptOfObjectInto(MCExecContext& ctxt, MCObject *p_scrip
 		ctxt . LegacyThrow(EE_INSERT_NOTLICENSED);
 		return;
 	}
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Add insertFrontscript and insertBackscript messages
+    p_script -> message(p_in_front ? MCM_insert_frontscript : MCM_insert_backscript);
 	MCObjectList *olptr = new MCObjectList(p_script);
 	olptr->insertto(listptr);
 }
@@ -954,8 +956,10 @@ void MCEngineExecRemoveAllScriptsFrom(MCExecContext& ctxt, bool p_in_front)
 {
 	MCObjectList *listptr = p_in_front ? MCfrontscripts : MCbackscripts;
 	MCObjectList *lptr = listptr;
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Add removeFrontscript and removeBackscript messages
 	do
 	{
+        lptr->getobject()->message(p_in_front ? MCM_remove_frontscript : MCM_remove_backscript);
 		lptr->setremoved(True);
 		lptr = lptr->next();
 	}
@@ -964,6 +968,8 @@ void MCEngineExecRemoveAllScriptsFrom(MCExecContext& ctxt, bool p_in_front)
 
 void MCEngineExecRemoveScriptOfObjectFrom(MCExecContext& ctxt, MCObject *p_script, bool p_in_front)
 {
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Add removeFrontscript and removeBackscript messages
+    p_script->message(p_in_front ? MCM_remove_frontscript : MCM_remove_backscript);
 	p_script->removefrom(p_in_front ? MCfrontscripts : MCbackscripts);
 }
 

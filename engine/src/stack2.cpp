@@ -789,7 +789,9 @@ void MCStack::ungroup(MCGroup *source)
 	cptr->remove(controls);
 	source->insertto(MCsavegroupptr);
 	source->setparent(this);
-
+    
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send ungroupGroup message
+    source -> message(MCM_ungroup_group);
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
 }
