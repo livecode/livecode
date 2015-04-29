@@ -104,12 +104,15 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
     {
         MCValueRef t_entry;
         MCNewAutoNameRef t_mapped_name_as_name;
-
-        if (!MCNameCreate(p_name, &t_mapped_name_as_name))
-            t_success = false;
-        else if (MCArrayFetchValue(s_font_map, false, *t_mapped_name_as_name, t_entry))
+        
+        // SN-2015-04-29: [[ iOS Fontmap ]] Use the given name, if we can't
+        //  fetch it from the font mappings.
+        if (MCNameCreate(p_name, &t_mapped_name_as_name)
+                && MCArrayFetchValue(s_font_map, false, *t_mapped_name_as_name, t_entry))
             // We only store strings in s_font_map
             t_mapped_name = (MCStringRef)t_entry;
+        else
+            t_mapped_name = p_name;
     }
     else
 #endif
