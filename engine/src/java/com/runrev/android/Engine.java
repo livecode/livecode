@@ -2777,7 +2777,9 @@ public class Engine extends View implements EngineApi
             t_folder.mkdirs();
             
             // The user did not supply a file name, so create one now
-            if (t_file_name == null)
+            // SN-2015-04-29: [[ Bug 15296 ]] From 7.0 onwards, t_file_name will
+            //   not be nil, but empty
+            if (t_file_name . isEmpty())
             {
                 t_uuid = UUID.randomUUID();
                 Log.i("revandroid", "Generated File Name: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/I" + t_uuid.toString().substring(0,7) + t_file_type);
