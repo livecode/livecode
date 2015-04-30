@@ -132,6 +132,11 @@
 					[
 						'OS == "linux"',
 						{
+							'dependencies':
+							[
+								#'engine.gyp:create_linux_stubs',
+							],
+							
 							'sources':
 							[
 								'<(SHARED_INTERMEDIATE_DIR)/src/linux.stubs.cpp',
@@ -143,30 +148,6 @@
 								'-lpthread',
 								'-lX11',
 								'-lXext',
-							],
-							
-							'actions':
-							[
-								{
-									'action_name': 'linux_library_stubs',
-									'inputs':
-									[
-										'../util/weak_stub_maker.pl',
-										'src/linux.stubs',
-									],
-									'outputs':
-									[
-										'<(SHARED_INTERMEDIATE_DIR)/src/linux.stubs.cpp',
-									],
-									
-									'action':
-									[
-										'<@(perl)',
-										'../util/weak_stub_maker.pl',
-										'src/linux.stubs',
-										'<@(_outputs)',
-									],
-								},
 							],
 						},
 					],
