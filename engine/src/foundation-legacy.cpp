@@ -1635,13 +1635,18 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 
 	if (t_stat == IO_NORMAL)
 	{
-		char *t_key_string;
-		t_key_string = (char *)MCStringGetCString(MCNameGetString(p_key));
+		MCAutoPointer<char> t_key_string;
+        
+        // SN-2015-04-23: [[ Bug 15258 ]] We don't want to nativise the string,
+        //  but rather to get a C-String copy of it.
+        if (!MCStringConvertToCString(MCNameGetString(p_key), &t_key_string))
+            return false;
+        
 		// IM-2013-04-04: [[ BZ 10811 ]] pre 6.0 versions of loadkeys() expect
 		// a null-terminated string of non-zero length (including null),
 		// but IO_write_string() writes a single zero byte for an empty string
 		// so we need a special case here.
-		if (t_key_string == nil || t_key_string[0] == '\0')
+		if (*t_key_string == nil || (*t_key_string)[0] == '\0')
 		{
 			// write length + null
 			t_stat = IO_write_uint1(1, t_stream);
@@ -1650,7 +1655,7 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 				t_stat = IO_write_uint1(0, t_stream);
 		}
 		else
-			t_stat = IO_write_cstring_legacy(t_key_string, t_stream, 1);
+			t_stat = IO_write_cstring_legacy(*t_key_string, t_stream, 1);
 	}
 
 	MCAutoStringRef t_string;
@@ -1666,7 +1671,13 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 		else
 			t_size = 2;
 		
-		t_stat = IO_write_string_legacy_full(MCStringGetOldString(*t_string), t_stream, t_size, false);
+        // SN-2015-04-23: [[ Bug 15258 ]] We don't want to nativise the string,
+        //  but rather to get a C-String copy of it.
+        MCAutoPointer<char> t_c_string;
+        if (!MCStringConvertToCString(*t_string, &t_c_string))
+            return false;
+        
+		t_stat = IO_write_string_legacy_full(MCString(*t_c_string), t_stream, t_size, false);
 	}
 	
 	return t_stat == IO_NORMAL;
