@@ -24,7 +24,7 @@ for input in $inputs ; do
 	fi
 	
 	# Add a hint for the debugger so it can find the debug info
-	$OBJCOPY --remove-section=.gnu_debuglink "$input"
+	$OBJCOPY --preserve-dates --remove-section=.gnu_debuglink "$input"
 	$OBJCOPY --preserve-dates --add-gnu-debuglink="$output" "$input"
 done
 
