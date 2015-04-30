@@ -82,6 +82,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "license.h"
 
+#include "debug.h"
+
 #include "capsule.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -755,8 +757,15 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 
 	if (t_can_sign && !ctxt . HasError())
 	{
+        MCExecContext *t_old_ec;
+        t_old_ec = MCECptr;
+        
+        MCECptr = &ctxt;
+        
 		if (m_platform == PLATFORM_WINDOWS)
 			MCDeploySignWindows(t_params);
+        
+        MCECptr = t_old_ec;
 
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
