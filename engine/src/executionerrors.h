@@ -2644,6 +2644,9 @@ enum Exec_errors
     
     // {EE-0866} MCInternalPayloadPatch: error in base item expression
     EE_INTERNAL_BASE_BADITEM,
+
+    // {EE-0867} System error
+    EE_SYSTEM,
 };
 
 extern const char *MCexecutionerrors;

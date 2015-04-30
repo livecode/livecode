@@ -1021,6 +1021,20 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 				execl(MCshellcmd, MCshellcmd, "-s", NULL);
 				_exit(-1);
 			}
+			if (MCprocesses[index].pid == -1)
+			{
+				MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
+				close(tochild[0]);
+				close(tochild[1]);
+				close(toparent[0]);
+				close(toparent[1]);
+
+				if (MCprocesses[index].pid > 0)
+					MCS_kill(MCprocesses[index].pid, SIGKILL);
+
+				MCprocesses[index].pid = 0;
+				return IO_ERROR;
+			}
 			MCS_checkprocesses();
 			close(tochild[0]);
 			write(tochild[1], ep.getsvalue().getstring(),
@@ -1029,30 +1043,18 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 			close(tochild[1]);
 			close(toparent[1]);
 			MCS_nodelay(toparent[0]);
-			if (MCprocesses[index].pid == -1)
-			{
-				if (MCprocesses[index].pid > 0)
-					MCS_kill(MCprocesses[index].pid, SIGKILL);
-
-				MCprocesses[index].pid = 0;
-				MCeerror->add
-				(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
-				return IO_ERROR;
-			}
 		}
 		else
 		{
+			MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
 			close(tochild[0]);
 			close(tochild[1]);
-			MCeerror->add
-			(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
 			return IO_ERROR;
 		}
 	}
 	else
 	{
-		MCeerror->add
-		(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+		MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
 		return IO_ERROR;
 	}
 	char *buffer = ep.getbuffer(0);
