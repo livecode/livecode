@@ -2550,6 +2550,7 @@
 		E8CFD7281A824DE20073D392 /* filepath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filepath.h; path = src/filepath.h; sourceTree = "<group>"; };
 		E8CFD7291A824E540073D392 /* filepath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = filepath.cpp; path = src/filepath.cpp; sourceTree = "<group>"; };
 		E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep.cpp; path = src/image_rep.cpp; sourceTree = "<group>"; };
+		E8E8DE191AF1263800BAA78C /* libbrowser.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libbrowser.xcodeproj; path = ../libbrowser/libbrowser.xcodeproj; sourceTree = "<group>"; };
 		E8EBC31D13E04C29003F6AA3 /* srvmultipart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvmultipart.h; path = src/srvmultipart.h; sourceTree = "<group>"; };
 		E8EBC31E13E04C29003F6AA3 /* srvmultipart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmultipart.cpp; path = src/srvmultipart.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -2914,6 +2915,7 @@
 				4D587FBC0B809C2600200116 /* libjpeg.xcodeproj */,
 				4D88B73815F4C66F002CFBD6 /* libgif.xcodeproj */,
 				4D587FB30B809C1A00200116 /* libpcre.xcodeproj */,
+				E8E8DE191AF1263800BAA78C /* libbrowser.xcodeproj */,
 			);
 			name = Projects;
 			sourceTree = "<group>";
@@ -4533,6 +4535,10 @@
 				{
 					ProductGroup = C7C148D11A8B5B440048A5AE /* Products */;
 					ProjectRef = C7C148D01A8B5B440048A5AE /* lc-compile.xcodeproj */;
+				},
+				{
+					ProductGroup = E8E8DE1A1AF1263800BAA78C /* Products */;
+					ProjectRef = E8E8DE191AF1263800BAA78C /* libbrowser.xcodeproj */;
 				},
 				{
 					ProductGroup = 4DB9036A0DAB898B0014A170 /* Products */;
