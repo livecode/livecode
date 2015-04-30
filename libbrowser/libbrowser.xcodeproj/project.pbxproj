@@ -1,0 +1,222 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E82CC8691AF2412800E9B8B8 /* libbrowser_cef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */; };
+		E82CC86B1AF2413E00E9B8B8 /* libbrowser_cef.h in Headers */ = {isa = PBXBuildFile; fileRef = E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */; };
+		E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8E8DE241AF1274300BAA78C /* libbrowser.cpp */; };
+		E8E8DE481AF12C4F00BAA78C /* libbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = E8E8DE271AF127B400BAA78C /* libbrowser.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_cef.cpp; sourceTree = "<group>"; };
+		E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libbrowser_cef.h; sourceTree = "<group>"; };
+		E8E8DE201AF126B000BAA78C /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = "<group>"; };
+		E8E8DE211AF126B000BAA78C /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = "<group>"; };
+		E8E8DE221AF126B000BAA78C /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
+		E8E8DE241AF1274300BAA78C /* libbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser.cpp; sourceTree = "<group>"; };
+		E8E8DE271AF127B400BAA78C /* libbrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libbrowser.h; sourceTree = "<group>"; };
+		E8E8DE431AF12B6F00BAA78C /* libbrowser.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libbrowser.a; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E8E8DE401AF12B6F00BAA78C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E8E8DE121AF1263800BAA78C = {
+			isa = PBXGroup;
+			children = (
+				E8E8DE261AF1277D00BAA78C /* Headers */,
+				E8E8DE251AF1274A00BAA78C /* Source */,
+				E8E8DE231AF126BE00BAA78C /* Configurations */,
+				E8E8DE281AF12AA300BAA78C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E8E8DE231AF126BE00BAA78C /* Configurations */ = {
+			isa = PBXGroup;
+			children = (
+				E8E8DE201AF126B000BAA78C /* Global.xcconfig */,
+				E8E8DE211AF126B000BAA78C /* Release.xcconfig */,
+				E8E8DE221AF126B000BAA78C /* Debug.xcconfig */,
+			);
+			name = Configurations;
+			sourceTree = "<group>";
+		};
+		E8E8DE251AF1274A00BAA78C /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				E8E8DE241AF1274300BAA78C /* libbrowser.cpp */,
+				E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */,
+				E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */,
+			);
+			name = Source;
+			path = src;
+			sourceTree = "<group>";
+		};
+		E8E8DE261AF1277D00BAA78C /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				E8E8DE271AF127B400BAA78C /* libbrowser.h */,
+			);
+			name = Headers;
+			path = include;
+			sourceTree = "<group>";
+		};
+		E8E8DE281AF12AA300BAA78C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E8E8DE431AF12B6F00BAA78C /* libbrowser.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		E8E8DE411AF12B6F00BAA78C /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E82CC86B1AF2413E00E9B8B8 /* libbrowser_cef.h in Headers */,
+				E8E8DE481AF12C4F00BAA78C /* libbrowser.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		E8E8DE421AF12B6F00BAA78C /* browser */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E8E8DE441AF12B6F00BAA78C /* Build configuration list for PBXNativeTarget "browser" */;
+			buildPhases = (
+				E8E8DE3F1AF12B6F00BAA78C /* Sources */,
+				E8E8DE401AF12B6F00BAA78C /* Frameworks */,
+				E8E8DE411AF12B6F00BAA78C /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = browser;
+			productName = libbrowser;
+			productReference = E8E8DE431AF12B6F00BAA78C /* libbrowser.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E8E8DE131AF1263800BAA78C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0620;
+				TargetAttributes = {
+					E8E8DE421AF12B6F00BAA78C = {
+						CreatedOnToolsVersion = 6.2;
+					};
+				};
+			};
+			buildConfigurationList = E8E8DE161AF1263800BAA78C /* Build configuration list for PBXProject "libbrowser" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = E8E8DE121AF1263800BAA78C;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E8E8DE421AF12B6F00BAA78C /* browser */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E8E8DE3F1AF12B6F00BAA78C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */,
+				E82CC8691AF2412800E9B8B8 /* libbrowser_cef.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E8E8DE171AF1263800BAA78C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E8E8DE221AF126B000BAA78C /* Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		E8E8DE181AF1263800BAA78C /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E8E8DE211AF126B000BAA78C /* Release.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		E8E8DE451AF12B6F00BAA78C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
+				PRODUCT_NAME = browser;
+			};
+			name = Debug;
+		};
+		E8E8DE461AF12B6F00BAA78C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
+				PRODUCT_NAME = browser;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E8E8DE161AF1263800BAA78C /* Build configuration list for PBXProject "libbrowser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E8E8DE171AF1263800BAA78C /* Debug */,
+				E8E8DE181AF1263800BAA78C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E8E8DE441AF12B6F00BAA78C /* Build configuration list for PBXNativeTarget "browser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E8E8DE451AF12B6F00BAA78C /* Debug */,
+				E8E8DE461AF12B6F00BAA78C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E8E8DE131AF1263800BAA78C /* Project object */;
+}
