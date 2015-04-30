@@ -43,6 +43,15 @@ else
   $(error "Mode must be 'debug' or 'release'")
 endif
 
+# Where to run the build command depends on community vs commercial
+ifeq ($(BUILD_EDITION),commercial)
+  BUILD_SUBDIR :=
+  BUILD_PROJECT := livecode-commercial
+else
+  BUILD_SUBDIR := "/livecode"
+  BUILD_PROJECT := livecode
+endif
+
 ################################################################
 
 .DEFAULT: all
@@ -74,7 +83,7 @@ config-linux-%:
 	./config.sh --platform linux-$*
 
 compile-linux-%:
-	$(MAKE) -C build-linux-$*
+	$(MAKE) -C build-linux-$*/livecode
 
 all-linux-%:
 	$(MAKE) config-linux-$*
@@ -92,7 +101,7 @@ config-android-%:
 	./config.sh --platform android-$*
 
 compile-android-%:
-	$(MAKE) -C build-android-$*
+	$(MAKE) -C build-android-$*/livecode
 
 all-android-%:
 	$(MAKE) config-android-$*
@@ -108,7 +117,7 @@ config-mac:
 	./config.sh --platform mac
 
 compile-mac:
-	$(XCODEBUILD) -project build-mac/livecode.xcodeproj -configuration $(BUILDTYPE)
+	$(XCODEBUILD) -project build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj -configuration $(BUILDTYPE)
 
 all-mac:
 	$(MAKE) config-mac
@@ -126,7 +135,7 @@ config-ios-%:
 	./config.sh --platform ios --generator-output build-ios-$* -Dtarget_sdk=$*
 
 compile-ios-%:
-	$(XCODEBUILD) -project build-ios-$*/livecode.xcodeproj -configuration $(BUILDTYPE)
+	$(XCODEBUILD) -project build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj -configuration $(BUILDTYPE)
 
 # Provide some synonyms for "latest iOS SDK"
 $(addsuffix -ios-iphoneos,all config compile): %: %8.3
@@ -156,3 +165,4 @@ all-win-%:
 	$(MAKE) compile-win-$*
 
 $(addsuffix -win,all config compile): %: %-x86
+

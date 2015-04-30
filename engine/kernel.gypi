@@ -134,7 +134,7 @@
 						{
 							'sources':
 							[
-								'<(INTERMEDIATE_DIR)/src/linux.stubs.cpp',
+								'<(SHARED_INTERMEDIATE_DIR)/src/linux.stubs.cpp',
 							],
 							
 							'libraries':
@@ -156,7 +156,7 @@
 									],
 									'outputs':
 									[
-										'<(INTERMEDIATE_DIR)/src/linux.stubs.cpp',
+										'<(SHARED_INTERMEDIATE_DIR)/src/linux.stubs.cpp',
 									],
 									
 									'action':

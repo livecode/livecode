@@ -187,7 +187,7 @@ esac
 
 # Guess generator output directory from platform
 if test -z "$GENERATOR_OUTPUT"; then
-  GENERATOR_OUTPUT="build-${PLATFORM}"
+  GENERATOR_OUTPUT="build-${PLATFORM}/livecode"
 fi
 
 # Guess OS from platform
@@ -282,6 +282,10 @@ ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
 
 format_args="$(for f in ${FORMATS}; do echo --format ${f} ; done)"
 basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
+
+if [ "${BUILD_EDITION}" == "commercial" ] ; then
+  basic_args="${basic_args} ../livecode-commercial.gyp"
+fi
 
 case ${OS} in
   linux)

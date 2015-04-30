@@ -12,8 +12,17 @@
 @REM Select the correct build mode.
 @REM 
 @IF NOT DEFINED BUILDTYPE SET BUILDTYPE=Debug
+
+@REM Select the correct build project file
+@REM
+IF NOT DEFINED BUILD_EDITION SET BUILD_EDITION=community
+IF %BUILD_EDITION%==commercial (
+  SET BUILD_PROJECT=livecode-commercial.sln
+) ELSE (
+  SET BUILD_PROJECT=livecode\livecode.sln
+)
  
-@msbuild livecode.sln /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1
+@msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1
  
 @exit %ERRORLEVEL%
 
