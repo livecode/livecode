@@ -19,12 +19,16 @@
 #include <foundation-system.h>
 
 #include <float.h>
-#include <fenv.h>
 #include <errno.h>
+
+#ifndef _WIN32
+#  include <fenv.h>
+#endif
 
 // Older versions of MSVC don't supply "trunc"
 #ifdef _WIN32
 double trunc(double f) { return f < 0 ? ceil(f) : floor(f); }
+#  define isnan(x) _isnan(x)
 #endif
 
 ////////////////////////////////////////////////////////////////

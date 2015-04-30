@@ -325,10 +325,11 @@ FILE *INFILE;
     for(;;)
     {
         char t_line[4096];
+		char *t_space;
+
         if (fgets(t_line, 4096, INFILE) == NULL)
             break;
         
-        char *t_space;
         t_space = strchr(t_line, ' ');
         if (t_space != NULL &&
             t_space != t_line &&

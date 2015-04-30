@@ -23,6 +23,10 @@
 #include <ctype.h>
 #include <errno.h>
 
+#ifdef _WIN32
+#  define strcasecmp _stricmp
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // typedef struct Name *NameRef;
@@ -70,9 +74,9 @@ void FinalizeLiterals(void)
 // by the token's regex.
 int MakeIntegerLiteral(const char *p_token, long *r_literal)
 {
-    errno = 0;
-    
     unsigned long t_value;
+	errno = 0;
+
     t_value = strtoul(p_token, NULL, 10);
     
     if (errno == ERANGE || t_value > 0xFFFFFFFFU)
