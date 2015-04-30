@@ -1034,72 +1034,22 @@ bool MCCefBrowserBase::EvalJavaScript(const CefString &p_script, int &r_value)
 ////////////////////////////////////////////////////////////////////////////////
 // Browser Properties
 
-/* TODO - implement advanced event messages */
-bool MCCefBrowserBase::GetMessages(void)
-{
-	return m_send_advanced_messages;
-}
-
-void MCCefBrowserBase::SetMessages(bool p_value)
-{
-	m_send_advanced_messages = p_value;
-}
-
-//////////
-
-char *MCCefBrowserBase::GetSelectedText(void)
-{
-	bool t_success;
-	t_success = true;
-	
-	// Need to call out to the browser subprocess
-	CefRefPtr<CefProcessMessage> t_message;
-	t_message = CefProcessMessage::Create(MC_CEFMSG_GET_SELECTED_TEXT);
-	
-	CefString t_return_value;
-	t_success = GetMessageResultString(PID_RENDERER, t_message, t_return_value);
-	
-	char *t_return_value_str;
-	t_return_value_str = nil;
-	
-	if (t_success)
-		t_success = MCCefStringToUtf8String(t_return_value, t_return_value_str);
-	
-	return t_return_value_str;
-}
-
-void MCCefBrowserBase::SetSelectedText(const char *p_text)
-{
-	/* TODO - IMPLEMENT */
-}
-
-bool MCCefBrowserBase::GetOffline(void)
-{
-	/* TODO - IMPLEMENT */
-	return false;
-}
-
-void MCCefBrowserBase::SetOffline(bool p_value)
-{
-	/* TODO - IMPLEMENT */
-}
-
-bool MCCefBrowserBase::GetContextMenu(void)
+bool MCCefBrowserBase::GetEnableContextMenu(void)
 {
 	return m_show_context_menu;
 }
 
-void MCCefBrowserBase::SetContextMenu(bool p_menu)
+void MCCefBrowserBase::SetEnableContextMenu(bool p_menu)
 {
 	m_show_context_menu = p_menu;
 }
 
-bool MCCefBrowserBase::GetNewWindow(void)
+bool MCCefBrowserBase::GetAllowNewWindow(void)
 {
 	return m_allow_new_window;
 }
 
-void MCCefBrowserBase::SetNewWindow(bool p_new_window)
+void MCCefBrowserBase::SetAllowNewWindow(bool p_new_window)
 {
 	m_allow_new_window = p_new_window;
 }
@@ -1166,28 +1116,6 @@ void MCCefBrowserBase::SetSource(const char *p_source)
 	m_browser->GetMainFrame()->LoadString(t_source, t_url);
 }
 
-bool MCCefBrowserBase::GetScale(void)
-{
-	/* TODO - IMPLEMENT */
-	return false;
-}
-
-void MCCefBrowserBase::SetScale(bool p_scale)
-{
-	/* TODO - IMPLEMENT */
-}
-
-bool MCCefBrowserBase::GetBorder(void)
-{
-	/* TODO - IMPLEMENT */
-	return false;
-}
-
-void MCCefBrowserBase::SetBorder(bool p_border)
-{
-	/* TODO - IMPLEMENT */
-}
-
 // IM-2014-08-25: [[ Bug 13272 ]] Implement CEF browser scrollbar property.
 bool MCCefBrowserBase::GetOverflowHidden()
 {
@@ -1239,109 +1167,14 @@ void MCCefBrowserBase::SetScrollbars(bool p_scrollbars)
 	/* UNCHECKED */ SetOverflowHidden(!p_scrollbars);
 }
 
-void MCCefBrowserBase::GetRect(int& r_left, int& r_top, int& r_right, int& r_bottom)
+bool MCCefBrowserBase::GetRect(MCBrowserRect &r_rect)
 {
-	/* UNCHECKED */ PlatformGetRect(r_left, r_top, r_right, r_bottom);
+	return PlatformGetRect(r_rect);
 }
 
-void MCCefBrowserBase::SetRect(int p_left, int p_top, int p_right, int p_bottom)
+bool MCCefBrowserBase::SetRect(const MCBrowserRect &p_rect)
 {
-	/* UNCHECKED */ PlatformSetRect(p_left, p_top, p_right, p_bottom);
-}
-
-int MCCefBrowserBase::GetInst(void)
-{
-	return m_instance_id;
-}
-
-void MCCefBrowserBase::SetInst(int p_id)
-{
-	m_instance_id = p_id;
-}
-
-int MCCefBrowserBase::GetVScroll(void)
-{
-	// property available through JavaScript
-	
-	bool t_success;
-	t_success = true;
-	
-	int t_int_value;
-	t_int_value = 0;
-	
-	t_success = EvalJavaScript("document.body.scrollTop", t_int_value);
-	
-	return t_int_value;
-}
-
-void MCCefBrowserBase::SetVScroll(int p_vscroll_pixels)
-{
-	// property available through JavaScript
-	
-	bool t_success;
-	t_success = true;
-	
-	char *t_scroll_script;
-	t_scroll_script = nil;
-	
-	t_success = MCCStringFormat(t_scroll_script, "window.scroll(%d,%d)", GetHScroll(), p_vscroll_pixels);
-	
-	CefString t_return_value;
-	
-	if (t_success)
-		t_success = EvalJavaScript(t_scroll_script, t_return_value);
-	
-	MCCStringFree(t_scroll_script);
-}
-
-int MCCefBrowserBase::GetHScroll(void)
-{
-	// property available through JavaScript
-	
-	bool t_success;
-	t_success = true;
-	
-	int t_int_value;
-	t_int_value = 0;
-	
-	t_success = EvalJavaScript("document.body.scrollLeft", t_int_value);
-	
-	return t_int_value;
-}
-
-void MCCefBrowserBase::SetHScroll(int p_hscroll_pixels)
-{
-	// property available through JavaScript
-	
-	bool t_success;
-	t_success = true;
-	
-	char *t_scroll_script;
-	t_scroll_script = nil;
-	
-	t_success = MCCStringFormat(t_scroll_script, "window.scroll(%d,%d)", p_hscroll_pixels, GetVScroll());
-	
-	CefString t_return_value;
-	
-	if (t_success)
-		t_success = EvalJavaScript(t_scroll_script, t_return_value);
-	
-	MCCStringFree(t_scroll_script);
-}
-
-int MCCefBrowserBase::GetWindowId(void)
-{
-	int t_id;
-	t_id = 0;
-	
-	/* UNCHECKED */ PlatformGetWindowID(t_id);
-	
-	return t_id;
-}
-
-void MCCefBrowserBase::SetWindowId(int p_new_id)
-{
-	/* TODO - IMPLEMENT */
+	return PlatformSetRect(p_rect);
 }
 
 char *MCCefBrowserBase::GetUserAgent(void)
@@ -1358,11 +1191,6 @@ void MCCefBrowserBase::SetUserAgent(const char *p_user_agent)
 	/* UNCHECKED */ MCCefStringFromUtf8String(p_user_agent, m_user_agent);
 }
 
-bool MCCefBrowserBase::GetBusy(void)
-{
-	return m_browser->IsLoading();
-}
-
 char *MCCefBrowserBase::GetURL(void)
 {
 	CefString t_url;
@@ -1376,80 +1204,17 @@ char *MCCefBrowserBase::GetURL(void)
 	return t_url_str;
 }
 
-char *MCCefBrowserBase::GetTitle(void)
-{
-	// Need to call out to the browser subprocess
-	
-	bool t_success;
-	t_success = true;
-	
-	CefRefPtr<CefProcessMessage> t_message;
-	t_message = CefProcessMessage::Create(MC_CEFMSG_GET_TITLE);
-	
-	CefString t_return_value;
-	t_success = GetMessageResultString(PID_RENDERER, t_message, t_return_value);
-	
-	char *t_return_value_str;
-	t_return_value_str = nil;
-	
-	if (t_success)
-		t_success = MCCefStringToUtf8String(t_return_value, t_return_value_str);
-	
-	return t_return_value_str;
-}
-
 bool MCCefBrowserBase::GetImage(void*& r_data, int& r_length)
 {
 	/* TODO - IMPLEMENT */
 	return false;
 }
 
-int MCCefBrowserBase::GetFormattedHeight(void)
-{
-	// property available through JavaScript
-	
-	bool t_success;
-	t_success = true;
-	
-	int t_int_value;
-	t_int_value = 0;
-	
-	t_success = EvalJavaScript("document.body.scrollHeight", t_int_value);
-	
-	return t_int_value;
-}
-
-int MCCefBrowserBase::GetFormattedWidth(void)
-{
-	// property available through JavaScript
-	
-	bool t_success;
-	t_success = true;
-	
-	int t_int_value;
-	t_int_value = 0;
-	
-	t_success = EvalJavaScript("document.body.scrollWidth", t_int_value);
-	
-	return t_int_value;
-}
-
-void MCCefBrowserBase::GetFormattedRect(int& r_left, int& r_top, int& r_right, int& r_bottom)
-{
-	int t_browser_left, t_browser_top, t_browser_right, t_browser_bottom;
-	GetRect(t_browser_left, t_browser_top, t_browser_right, t_browser_bottom);
-	
-	r_left = t_browser_left - GetHScroll();
-	r_top = t_browser_top - GetVScroll();
-	r_right = r_left + GetFormattedWidth();
-	r_bottom = r_top + GetFormattedHeight();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // Browser Actions
 
-char *MCCefBrowserBase::ExecuteScript(const char *p_javascript_string)
+bool MCCefBrowserBase::EvaluateJavaScript(const char *p_script, char *&r_result)
 {
 	bool t_success;
 	t_success = true;
@@ -1458,7 +1223,7 @@ char *MCCefBrowserBase::ExecuteScript(const char *p_javascript_string)
 	t_result = nil;
 	
 	CefString t_script;
-	t_success = MCCefStringFromUtf8String(p_javascript_string, t_script);
+	t_success = MCCefStringFromUtf8String(p_script, t_script);
 	
 	CefString t_return_value;
 	if (t_success)
@@ -1470,158 +1235,44 @@ char *MCCefBrowserBase::ExecuteScript(const char *p_javascript_string)
 	if (t_success)
 		t_success = MCCefStringToUtf8String(t_return_value, t_return_value_str);
 	
-	return t_return_value_str;
+	if (t_success)
+		r_result = t_return_value_str;
+	else
+		MCCStringFree(t_return_value_str);
+	
+	return t_success;
 }
 
-char *MCCefBrowserBase::CallScript(const char *p_function_name, char **p_arguments, unsigned int p_argument_count)
-{
-	bool t_success;
-	t_success = true;
-	
-	CefString t_function_name;
-	t_success = MCCefStringFromUtf8String(p_function_name, t_function_name);
-	
-	CefRefPtr<CefListValue> t_args_list;
-	if (t_success)
-	{
-		t_args_list = CefListValue::Create();
-		t_success = t_args_list != nil;
-	}
-	
-	for (uint32_t i = 0; t_success && i < p_argument_count; i++)
-	{
-		CefString t_arg_string;
-		t_success = MCCefStringFromUtf8String(p_arguments[i], t_arg_string);
-		if (t_success)
-			t_success = t_args_list->SetString(i, t_arg_string);
-	}
-	
-	CefRefPtr<CefProcessMessage> t_message;
-	if (t_success)
-	{
-		t_message = CefProcessMessage::Create(MC_CEFMSG_CALL_SCRIPT);
-		t_success = t_message != nil;
-	}
-	
-	CefRefPtr<CefListValue> t_args;
-	if (t_success)
-	{
-		t_args = t_message->GetArgumentList();
-		t_success = t_args->SetString(0, t_function_name) &&
-		t_args->SetList(1, t_args_list);
-	}
-	
-	CefString t_return_value;
-	if (t_success)
-		t_success = GetMessageResultString(PID_RENDERER, t_message, t_return_value);
-	
-	char *t_return_value_str;
-	t_return_value_str = nil;
-	
-	if (t_success)
-		t_success = MCCefStringToUtf8String(t_return_value, t_return_value_str);
-	
-	return t_return_value_str;
-}
-
-bool MCCefBrowserBase::FindString(const char *p_string, bool p_search_up)
-{
-	CefString t_searchstring;
-	/* UNCHECKED */ MCCefStringFromUtf8String(p_string, t_searchstring);
-	
-	int t_identifier;
-	t_identifier = 0;
-	
-	bool t_forward;
-	t_forward = !p_search_up;
-	
-	bool t_match_case;
-	t_match_case = false;
-	
-	bool t_find_next;
-	t_find_next = false;
-	
-	bool t_found;
-	/* TODO - get result of search */
-	t_found = true;
-	
-	m_browser->GetHost()->Find(t_identifier, t_searchstring, t_forward, t_match_case, t_find_next);
-	
-	return t_found;
-}
-
-void MCCefBrowserBase::GoURL(const char *p_url, const char *p_target_frame)
+bool MCCefBrowserBase::GoToURL(const char *p_url)
 {
 	CefRefPtr<CefBrowser> t_browser = GetCefBrowser();
 	if (t_browser == nil)
-		return;
+		return false;
 	
 	CefRefPtr<CefFrame> t_frame;
-	if (p_target_frame == nil)
-		t_frame = t_browser->GetMainFrame();
-	else
-	{
-		CefString t_frame_name;
-		if (MCCefStringFromUtf8String(p_target_frame, t_frame_name))
-			t_frame = t_browser->GetFrame(t_frame_name);
-	}
+	t_frame = t_browser->GetMainFrame();
 	
 	if (t_frame == nil)
-		return;
+		return false;
 	
 	CefString t_url;
-	if (MCCefStringFromUtf8String(p_url, t_url))
-		t_frame->LoadURL(t_url);
+	if (!MCCefStringFromUtf8String(p_url, t_url))
+		return false;
+	
+	t_frame->LoadURL(t_url);
+	return true;
 }
 
-void MCCefBrowserBase::GoBack(void)
+bool MCCefBrowserBase::GoBack(void)
 {
 	m_browser->GoBack();
+	return true;
 }
 
-void MCCefBrowserBase::GoForward(void)
+bool MCCefBrowserBase::GoForward(void)
 {
 	m_browser->GoForward();
-}
-
-void MCCefBrowserBase::Focus(void)
-{
-	/* TODO - IMPLEMENT */
-}
-
-void MCCefBrowserBase::Unfocus(void)
-{
-	/* TODO - IMPLEMENT */
-}
-
-void MCCefBrowserBase::Refresh(void)
-{
-	m_browser->Reload();
-}
-
-void MCCefBrowserBase::Stop(void)
-{
-	m_browser->StopLoad();
-}
-
-void MCCefBrowserBase::Print(void)
-{
-	m_browser->GetHost()->Print();
-}
-
-void MCCefBrowserBase::Redraw(void)
-{
-	/* TODO - IMPLEMENT */
-}
-
-void MCCefBrowserBase::MakeTextBigger(void)
-{
-	/* TODO - IMPLEMENT */
-}
-
-void MCCefBrowserBase::MakeTextSmaller(void)
-{
-	/* TODO - IMPLEMENT */
+	return true;
 }
 
 bool MCCefBrowserBase::SetJavaScriptHandlerEnabled(const CefString &p_handler, bool p_enabled)

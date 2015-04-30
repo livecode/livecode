@@ -77,7 +77,8 @@ private:
 	bool WaitOnResultString(CefString &r_result);
 	bool GetMessageResultString(CefProcessId p_target, CefRefPtr<CefProcessMessage> p_message, CefString &r_result);
 	
-	
+	bool GetOverflowHidden();
+	void SetOverflowHidden(bool p_hidden);
 	
 public:
 	bool GetUserAgent(CefString &r_user_agent);
@@ -90,9 +91,6 @@ public:
 	bool Initialize();
 	
 	// Browser Properties
-	
-	bool GetMessages(void);
-	void SetMessages(bool p_value);
 	
 	virtual char *GetSource(void);
 	virtual void SetSource(const char *p_source);
@@ -121,8 +119,8 @@ public:
 	
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info) = 0;
 	
-	virtual bool PlatformGetRect(int32_t &t_left, int32_t &t_top, int32_t &t_right, int32_t &t_bottom) = 0;
-	virtual bool PlatformSetRect(int32_t t_left, int32_t t_top, int32_t t_right, int32_t t_bottom) = 0;
+	virtual bool PlatformGetRect(MCBrowserRect &r_rect) = 0;
+	virtual bool PlatformSetRect(const MCBrowserRect &p_rect) = 0;
 	
 	virtual bool PlatformGetWindowID(int32_t &r_id) = 0;
 	
