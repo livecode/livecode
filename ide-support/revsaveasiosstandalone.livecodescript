@@ -47,6 +47,22 @@ command revSaveAsMobileStandalone pStack, pAppBundle, pTarget
    end if
 end revSaveAsMobileStandalone
 
+private function getIosSdkInfo pSDKVersion, @rInfo
+   local tSDKPath, tSettings
+   put merge("/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS[[pSDKVersion]].sdk") into tSDKPath
+   get revIDEDeployIOSGetDeviceSDK(pSDKVersion)
+   if there is no folder (it & tSDKPath) then
+      return false
+   end if
+   put it into tSettings["root path"]
+   put (it & tSDKPath) into tSettings["sdk path"]
+   replace "." with "_" in pSDKVersion
+   put pSDKVersion into tSettings["suffix"]
+   put revMobileRuntimeFolder("Device", tSettings["suffix"]) into tSettings["runtime path"]
+   put tSettings into rInfo
+   return true
+end getIosSdkInfo
+
 private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if the platform is not "macos" then
       throw "not supported on this platform"
@@ -69,59 +85,36 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    --   root path - root locaiton of the Developer tools (the XCode bundle)
    --
    
-   local tSDKs
+   local tSDKs, tSDKInfo
    if pTarget is "Device" then      
       -- PM-2015-02-06: [[ Bug 14422 ]] Drop support for OSX 10.6 and iOS 5.0 
       if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
          
          -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
          --  
-         get revIDEDeployIOSGetDeviceSDK("6.1")           
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk") then
-            throw "performing iOS device builds requires the iOS 6.1 SDK platform to be installed (available with XCode 4.6)"
-         end if                  
-         put it into tSDKs["arm"]["root path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk") into tSDKs["arm"]["sdk path"]
-         put "6_1" into tSDKs["arm"]["suffix"]
-         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
-         
+         if not getIosSdkInfo("6.1", tSDKInfo) then
+            throw revIDEDeployIOSGetInvalidityMessage("6.1", "4.6")
+         end if
       else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
          
-         get revIDEDeployIOSGetDeviceSDK("7.1")           
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") then
-            throw "performing iOS device builds requires the iOS 7.1 SDK platform to be installed (available with XCode 5.1)"
-         end if                  
-         put it into tSDKs["arm"]["root path"]
-         put it & "/usr/bin" into tSDKs["arm"]["tools path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") into tSDKs["arm"]["sdk path"]
-         put "7_1" into tSDKs["arm"]["suffix"]
-         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
-         
+         if not getIosSdkInfo("7.1", tSDKInfo) then
+            throw revIDEDeployIOSGetInvalidityMessage("7.1", "5.1")
+         end if
       else if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
-         -- MM-2014-10-21: [[ iOS 8.1 Support ]] Use iOS 8.1 SDK for armv7 builds on 10.9.
-         -- SN-2015-03-12: [[ Bug 14866 ]] Use iOS 8.2 for armv7 builds from 10.9
-         get revIDEDeployIOSGetDeviceSDK("8.2")
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.2.sdk") then
-            throw "performing iOS device builds requires the iOS 8.2 SDK platform to be installed (available with XCode 6.2)"
-         end if                  
-         put it into tSDKs["arm"]["root path"]
-         put it & "/usr/bin" into tSDKs["arm"]["tools path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.2.sdk") into tSDKs["arm"]["sdk path"]
-         put "8_2" into tSDKs["arm"]["suffix"]
-         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]
+         
+         if not getIosSdkInfo("8.2", tSDKInfo) then
+            throw revIDEDeployIOSGetInvalidityMessage("8.2", "6.2")
+         end if
       else
-         -- SN-2015-04-14: [[ Bug 15187 ]] From Mac OS 10.10, the required iOS SDK version is 8.3
-         get revIDEDeployIOSGetDeviceSDK("8.3")
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk") then
-            throw "performing iOS device builds requires the iOS 8.3 SDK platform to be installed (available with XCode 6.3)"
-         end if                  
-         put it into tSDKs["arm"]["root path"]
-         put it & "/usr/bin" into tSDKs["arm"]["tools path"]
-         put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk") into tSDKs["arm"]["sdk path"]
-         put "8_3" into tSDKs["arm"]["suffix"]
-         put revMobileRuntimeFolder(pTarget, tSDKs["arm"]["suffix"]) into tSDKs["arm"]["runtime path"]         
+         -- SN-2015-04-14: [[ Bug 15187 ]] From Mac OS 10.10, the default iOS SDK version is 8.3
+         --  and 8.2 will be fetched 
+         // We want to catch the exception for Xcode 6.3
+         if not getIosSdkInfo("8.3", tSDKInfo) and not \
+              getIosSdkInfo("8.2", tSDKInfo) then
+            throw revIDEDeployIOSGetInvalidityMessage("8.2 / 8.3", "6.2 / 6.3")
+         end if
       end if
-      
+      put tSDKInfo into tSDKs["arm"]
    else
       
       -- MM-2012-09-18: We now only support the 4.3 simulators or later.
@@ -1499,11 +1492,12 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         // MacOS X 10.9 can't have iOS SDK 8.3
-         if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
-            put "8_2" into pVersion
-         else
-            put "8_3" into pVersion
+         // SN-2015-04-30: [[ Bug 15175 ]] Take the lastest SDK installed
+         // (can be 8.2 or 8.3 onwards on Yosemite).
+         local tVersion
+         if revIDEDeployIOSGetLatestSDKInstalled(tVersion) then
+            replace "." with "_" in tVersion
+            put tVersion into pVersion
          end if
       end if
       put "Device-" & pVersion into tStub
@@ -1661,4 +1655,3 @@ private command symlinkRedirect pSource, pTarget
 end symlinkRedirect
 
 ################################################################################
-
