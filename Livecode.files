@@ -790,6 +790,14 @@ ide/Engine License.txt
 ide/IDE License.txt
 ide/License Agreement.txt
 ide/Open Source Licenses.txt
+ide-support/revdeploylibraryandroid.livecodescript
+ide-support/revdocsparser.livecodescript
+ide-support/revsaveasandroidstandalone.livecodescript
+ide-support/revsaveasstandalone.livecodescript
+ide-support/revdeploylibraryios.livecodescript
+ide-support/revliburl.livecodescript
+ide-support/revsaveasiosstandalone.livecodescript
+ide-support/revsblibrary.livecodescript
 lcidlc/src/Error.cpp
 lcidlc/src/Error.h
 lcidlc/src/Interface.cpp
