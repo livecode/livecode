@@ -3190,7 +3190,9 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 //  SAVING AND LOADING
 //
 
-#define FIELD_EXTRA_TEXTDIRECTION (1 << 0)
+#define FIELD_EXTRA_TEXTDIRECTION   (1 << 0)
+// SN-2015-04-30: [[ Bug 15175 ]] TabAlignment flag added
+#define FIELD_EXTRA_TABALIGN        (1 << 1)
 
 IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
@@ -3205,11 +3207,28 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         t_size += sizeof(uint8_t);
     }
     
+    // SN-2015-04-30: [[ Bug 15175 ]] Save the tabalign property of the field
+    if (ntabs != 0)
+    {
+        t_flags |= FIELD_EXTRA_TABALIGN;
+        // Save number of tab alignments, and then each of them.
+        t_size += sizeof(uint16_t);
+        t_size += sizeof(intenum_t) * nalignments;
+    }
+
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 
     if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION))
         t_stat = p_stream . WriteU8(text_direction);
+
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TABALIGN))
+    {
+        t_stat = p_stream . WriteU16(nalignments);
+
+        for (uint2 i = 0; i < nalignments && t_stat == IO_NORMAL; ++i)
+            t_stat = p_stream . WriteS32(alignments[i]);
+    }
     
 	if (t_stat == IO_NORMAL)
 		t_stat = MCObject::extendedsave(p_stream, p_part);
@@ -3238,6 +3257,37 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             if (t_stat == IO_NORMAL)
                 text_direction = (MCTextDirection)t_value;
         }
+
+        // SN-2015-04-30: [[ Bug 15175 ]] Read the tablAlign property, if saved
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TABALIGN) != 0)
+        {
+            uint16_t t_nalign;
+            intenum_t *t_alignments;
+            t_alignments = NULL;
+
+            t_stat = p_stream . ReadU16(t_nalign);
+
+            if (t_stat == IO_NORMAL)
+            {
+                if (!MCMemoryAllocate(sizeof(intenum_t) * t_nalign, t_alignments))
+                    t_stat = IO_ERROR;
+
+                for (uint2 i = 0; i < t_nalign && t_stat == IO_NORMAL; ++i)
+                {
+                    int32_t t_align;
+                    if ((t_stat = p_stream . ReadS32(t_align)) == IO_NORMAL)
+                        t_alignments[i] = t_align;
+                }
+
+                if (t_stat == IO_NORMAL)
+                {
+                    nalignments = t_nalign;
+                    alignments = t_alignments;
+                }
+                else
+                    MCMemoryDelete(t_alignments);
+            }
+        }
         
         if (t_stat == IO_NORMAL)
             t_stat = p_stream . Skip(t_length);
@@ -3262,8 +3312,9 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 
     // AL-2014-09-12: [[ Bug 13315 ]] Force an extension if field has explicit textDirection.
+    // SN-2015-04-30: [[ Bug 15175 ]] Force an extension if field has tabalign.
     bool t_has_extension;
-	t_has_extension = text_direction != kMCTextDirectionAuto;
+    t_has_extension = text_direction != kMCTextDirectionAuto || ntabs != 0;
     
 	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
 		return stat;

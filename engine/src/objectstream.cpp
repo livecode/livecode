@@ -193,6 +193,17 @@ IO_stat MCObjectInputStream::ReadS16(int16_t& r_value)
 	return t_stat;
 }
 
+// SN-2015-04-30: [[ Bug 15175 ]] Added ReadS32, needed to store the intenum_t
+//  MCField::alignments
+IO_stat MCObjectInputStream::ReadS32(int32_t& r_value)
+{
+    IO_stat t_stat;
+    t_stat = Read(&r_value, 4);
+    if (t_stat == IO_NORMAL)
+        r_value = (int32_t)MCSwapInt32NetworkToHost((uint32_t)r_value);
+    return t_stat;
+}
+
 //
 
 IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_supports_unicode)
