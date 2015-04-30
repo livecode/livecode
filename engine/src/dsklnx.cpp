@@ -2353,9 +2353,6 @@ public:
 					close(toparent[0]);
 					close(toparent[1]);
 
-                    if (MCprocesses[index].pid > 0)
-                        Kill(MCprocesses[index].pid, SIGKILL);
-
                     MCprocesses[index].pid = 0;
                     // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
                     return false;

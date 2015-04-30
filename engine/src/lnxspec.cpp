@@ -1029,9 +1029,6 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 				close(toparent[0]);
 				close(toparent[1]);
 
-				if (MCprocesses[index].pid > 0)
-					MCS_kill(MCprocesses[index].pid, SIGKILL);
-
 				MCprocesses[index].pid = 0;
 				return IO_ERROR;
 			}
