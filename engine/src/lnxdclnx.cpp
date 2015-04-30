@@ -1085,7 +1085,9 @@ void MCScreenDC::activateIME(Boolean activate)
     if (!m_has_gtk)
         return;
     
-    if (activate)
+    // SN-2015-04-22: [[ Bug 14994 ]] Ensure that there is an activeField
+    //  before starting the IME in it.
+    if (activate && MCactivefield)
     {
         gtk_im_context_set_client_window(m_im_context, MCactivefield->getstack()->getwindow());
         gtk_im_context_focus_in(m_im_context);
