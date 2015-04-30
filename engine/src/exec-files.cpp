@@ -733,12 +733,14 @@ void MCFilesEvalShell(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r
 	if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
 		MCeerror->add(EE_SHELL_NOPERM, 0, 0, p_command);
+		ctxt . Throw();
 		return;
 	}
 
 	if (MCS_runcmd(p_command, r_output) != IO_NORMAL)
 	{
 		MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
+		ctxt . Throw();
 		return;
 	}
 }
