@@ -100,12 +100,12 @@ dist-notes:
 
 dist-server:
 	$(buildtool_command) --platform mac --platform win --platform linux \
-	    --stage server
+	    --stage server --edition community
 
 # FIXME temporarily building installers only for Linux!
-ifeq ($(BUILD_EDITION),commercial)
-dist-tools: dist-tools-commercial
-endif
+#ifeq ($(BUILD_EDITION),commercial)
+#dist-tools: dist-tools-commercial
+#endif
 
 dist-tools: dist-tools-community
 
