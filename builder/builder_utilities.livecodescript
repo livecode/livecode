@@ -190,7 +190,7 @@ function builderPrivateRepoFolder
    if sPrivateDir is not empty then
       return sPrivateDir
    end if
-   return builderRepoFolder() & slash & ".." & slash & "livecode-commercial"
+   return builderRepoFolder() & slash & ".."
 end builderPrivateRepoFolder
 
 -- Returns the folder of the IDE repository
@@ -266,7 +266,7 @@ function builderCommercialFolder
 end builderCommercialFolder
 
 function builderCommercialResourceFolder
-   return builderCommercialFolder() & "engine/rsrc"
+   return builderCommercialFolder() & "/engine/rsrc"
 end builderCommercialResourceFolder
 
 function builderBuildsFolder
