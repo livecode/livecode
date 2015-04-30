@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include <revolution/external.h>
 
@@ -92,7 +93,7 @@ enum
 	/* V2 */ SECURITY_CHECK_LIBRARY_UTF8
 };
 
-typedef char *(*ExternalOperationCallback)(const char *p_arg_1, const char *p_arg_2, const char *p_arg_3, int *r_success);
+typedef char *(*ExternalOperationCallback)(const void *p_arg_1, const void *p_arg_2, const void *p_arg_3, int *r_success);
 typedef void (*ExternalDeleteCallback)(void *p_block);
 
 typedef Bool (*ExternalSecurityHandler)(const char *p_op);
@@ -406,7 +407,7 @@ void RunloopWait(int *r_success)
 		return;
 	}
 
-	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, &r_success);
+	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -422,7 +423,7 @@ void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 		return;
 	}
     
-	t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])(p_win_id, x_rect, NULL, &r_success);
+    t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])((const void*)(uintptr_t)p_win_id, x_rect, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -437,7 +438,7 @@ void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 		return;
 	}
     
-	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
+	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])((const void*)(uintptr_t)p_win_id, x_rect, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
