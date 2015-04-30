@@ -86,7 +86,7 @@ on initialiseLibrary
    
    # Internet
    put "libUrl" into sPatternsA["Internet"]["Root"]
-   put "cachedURL,cachedURLs,ftp,http,https,SSL & Encryption,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
+   put "cachedURL,cachedURLs,ftp,http,https,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
    
    # XML
    put "revXML" into sPatternsA["XMLRPC"]["Root"]
@@ -99,7 +99,8 @@ on initialiseLibrary
    put "revCloseVideoGrabber,revInitializeVideoGrabber,revPreviewVideo,revRecordVideo,revSetVideoGrabberRect,revSetVideoGrabSettings,revStopPreviewingVideo,revStopRecordingVideo,revVideoFrameImage,revVideoGrabDialog,revVideoGrabIdle,revVideoGrabSettings" into sPatternsA["Video Grabber"]["Script"]
    
    # SSL & Encryption 
-   put "secure,encrypt,decrypt,cipherNames,randomBytes" into sPatternsA["SSL & Encryption"]["Script"]
+   // AL-2015-04-28: [[ Bug 15288 ]] 'https' requires revsecurity.
+   put "secure,encrypt,decrypt,cipherNames,randomBytes,https" into sPatternsA["SSL & Encryption"]["Script"]
    
    # Printing
    put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["Printing"]["Script"]
@@ -855,11 +856,8 @@ private command revCopyScriptLibraries pStack, pPlatform
       set the mainStack of stack "revDataGridLibrary" to pStack
    end if
    
-   if sStandaloneSettingsA["databaseDrivers"] = "" then 
-      revAddLibrary "Database"
-   end if
-   
-   if sStandaloneSettingsA["includeProfiles"] = "" then 
+   // AL-2015-04-28: [[ Bug 15244 ]] Include profiles library if needed
+   if sStandaloneSettingsA["includeProfiles"] is not empty then 
       revAddLibrary "Profiles"
    end if
    
@@ -1759,7 +1757,7 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    end if
    
    # AL-2015-02-06: [[ SB Inclusions ]] Ensure revDatabaseLibrary stack is included
-   put return & "Database" after sStandaloneSettingsA["scriptLibraries"]
+   revAddLibrary "Database"
    
    local tDBLibPath
    put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
@@ -2179,7 +2177,8 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       if there is a stack tLibraryStack then
          if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then put return after sStandaloneSettingsA["auxiliary_stackfiles"]
          put the effective filename of stack tLibraryStack after sStandaloneSettingsA["auxiliary_stackfiles"]
-         put return & "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
+         if sStandaloneSettingsA["startup_script"] is not empty then put return after sStandaloneSettingsA["startup_script"]
+         put "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
       end if
    end repeat
    if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then
@@ -2498,6 +2497,10 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
 end revSmartChecking
 
 private command revAddLibrary pLibrary
+   if pLibrary is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
+      exit revAddLibrary
+   end if
+   
    if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
    put pLibrary after sStandaloneSettingsA["scriptLibraries"]
 end revAddLibrary

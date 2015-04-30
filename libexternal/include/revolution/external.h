@@ -519,7 +519,7 @@ extern const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_s
 extern const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success);
 	
 #ifdef __cplusplus
-};
+}
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

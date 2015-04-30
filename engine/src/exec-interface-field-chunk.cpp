@@ -2105,17 +2105,27 @@ void MCField::GetTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, in
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabStops, r_mixed, t_vector);
 
-    r_count = t_vector . count;
-    r_values = t_vector . elements;
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector . count;
+        r_values = t_vector . elements;
+    }
 }
 
 void MCField::GetEffectiveTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabStops, r_mixed, t_vector);
-
-    r_count = t_vector.count;
-    r_values = t_vector.elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector.count;
+        r_values = t_vector.elements;
+    }
 }
 
 void MCField::SetTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values)
@@ -2131,18 +2141,28 @@ void MCField::GetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, i
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabWidths, r_mixed, t_vector);
-
-    r_count = t_vector . count;
-    r_values = t_vector . elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector . count;
+        r_values = t_vector . elements;
+    }
 }
 
 void MCField::GetEffectiveTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabWidths, r_mixed, t_vector);
-
-    r_count = t_vector.count;
-    r_values = t_vector.elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector.count;
+        r_values = t_vector.elements;
+    }
 }
 
 void MCField::SetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values)

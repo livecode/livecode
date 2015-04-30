@@ -171,8 +171,8 @@ struct SpcString
 
 DECLARE_ASN1_FUNCTIONS(SpcString)
 ASN1_CHOICE(SpcString) = {
-	ASN1_IMP(SpcString, d.unicode, ASN1_BMPSTRING, 0),
-	ASN1_IMP(SpcString, d.ascii, ASN1_IA5STRING, 1)
+	ASN1_IMP_OPT(SpcString, d.unicode, ASN1_BMPSTRING, 0),
+	ASN1_IMP_OPT(SpcString, d.ascii, ASN1_IA5STRING, 1)
 } ASN1_CHOICE_END(SpcString)
 IMPLEMENT_ASN1_FUNCTIONS(SpcString)
 
@@ -219,9 +219,9 @@ struct SpcLink
 
 DECLARE_ASN1_FUNCTIONS(SpcLink)
 ASN1_CHOICE(SpcLink) = {
-	ASN1_IMP(SpcLink, d.url, ASN1_IA5STRING, 0),
-	ASN1_IMP(SpcLink, d.moniker, SpcSerializedObject, 1),
-	ASN1_EXP(SpcLink, d.file, SpcString, 2)
+	ASN1_IMP_OPT(SpcLink, d.url, ASN1_IA5STRING, 0),
+	ASN1_IMP_OPT(SpcLink, d.moniker, SpcSerializedObject, 1),
+	ASN1_EXP_OPT(SpcLink, d.file, SpcString, 2)
 } ASN1_CHOICE_END(SpcLink)
 IMPLEMENT_ASN1_FUNCTIONS(SpcLink)
 

@@ -381,9 +381,9 @@ function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
       end if
    else
       -- SN-2015-04-09: [[ Bug 15187 ]] iOS SDK 8.3 is now the valid SDK
-      if "8.3" is not among the lines of it then
+      if "8.2" is not among the lines of it and "8.3" is not among the lines of it then
          put false into tValid
-         put deployGetInvalidityMessage("8.3", "6.3") into tSDKStatus
+         put deployGetInvalidityMessage("8.2 or 8.3", "6.2 or 6.3") into tSDKStatus
       end if
    end if
    
@@ -544,4 +544,3 @@ function deploySanatizeSystemVersion
 end deploySanatizeSystemVersion
 
 ////////////////////////////////////////////////////////////////////////////////
-
