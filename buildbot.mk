@@ -69,10 +69,7 @@ bin-extract:
 # built.  Its build artefacts will have been extracted into the
 # ./$(BUILD_PLATFORM)-bin/ directory
 
-# FIXME at the moment we only generate community edition installers
-
 BUILD_STABILITY ?= beta
-BUILD_EDITION := community
 
 BUILDTOOL_STACK = builder/builder_tool.livecodescript
 
@@ -90,7 +87,7 @@ endif
 
 # FIXME add --warn-as-error
 buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
-	--edition $(BUILD_EDITION) --build $(BUILD_STABILITY) \
+	--build $(BUILD_STABILITY) \
 	--engine-dir . --output-dir . --work-dir ./_cache/builder_tool \
 	--private-dir ..
 
@@ -106,6 +103,15 @@ dist-server:
 	    --stage server
 
 # FIXME temporarily building installers only for Linux!
-dist-tools:
-	$(buildtool_command) --platform linux \
-	    --stage tools
+ifeq ($(BUILD_EDITION),commercial)
+dist-tools: dist-tools-commercial
+endif
+
+dist-tools: dist-tools-community
+
+dist-tools-community:
+	$(buildtool_command) --platform linux --stage tools --edition community
+
+dist-tools-commercial:
+	$(buildtool_command) --platform linux --stage tools --edition commercial
+
