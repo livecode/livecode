@@ -953,6 +953,11 @@ static bool s_map_to_array_callback(JNIEnv *p_env, MCNameRef p_key, jobject p_va
 			t_new_context.array = *t_array;
             if (t_success)
                 t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
+            
+            // SN-2015-04-22: [[ Bug 14438 ]] We want to store the array in the
+            //  output array.
+            if (t_success)
+                t_success = MCArrayStoreValue(t_context->array, false, p_key, *t_array);
 		}
 		else
 			t_success = false;
