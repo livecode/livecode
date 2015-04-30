@@ -606,7 +606,7 @@ hashform *form;
     if ((key1->len_k == key2->len_k) &&
 	!memcmp(key1->name_k, key2->name_k, (size_t)key1->len_k))
     {
-      fprintf(stderr, "perfect.c: Duplicates keys!  %.*s\n",
+      fprintf(stderr, "perfect.c: Duplicate keys!  %.*s\n",
 	      key1->len_k, key1->name_k);
       exit(SUCCESS);
     }
