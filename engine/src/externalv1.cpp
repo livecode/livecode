@@ -1106,7 +1106,7 @@ MCExternalError MCExternalVariable::GetReal(MCExternalValueOptions p_options, re
 	MCValueRef t_value;
 	t_value = GetValueRef();
 	if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
-		return number_to_real(p_options, MCNumberFetchAsReal((MCNumberRef)t_value), &r_value);
+		return number_to_real(MCNumberFetchAsReal((MCNumberRef)t_value), p_options, &r_value);
 	
 	MCExternalError t_error;
 	MCAutoStringRef t_string_value;
