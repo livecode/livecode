@@ -9,16 +9,11 @@ Affected getters:
 - revCaptureGetAudioInput
 - revCaptureGetVideoInput
 - revCaptureGetPreviewImage
-- revCapturePreviewState
 - revCaptureListAudioCodecs
 - revCaptureListVideoCodecs
 - revCaptureGetAudioCodec
 - revCaptureGetVideoCodec
 - revCaptureGetRecordOutput
-- revCaptureStartRecording
-- revCaptureStopRecording
-- revCaptureGetRecordFrameSize
-- revCaptureRecordState
 
 Affected setters:
 - revCaptureSetAudioInput
