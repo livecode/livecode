@@ -423,7 +423,7 @@
 			{
 				'VCManifestTool':
 				{
-					'AdditionalManifestFiles': '$(SolutionDir)..\\engine\\src\\installer.manifest',
+					'AdditionalManifestFiles': '$(ProjectDir)..\\..\\..\\engine\\src\\installer.manifest',
 				},
 			},
 			
@@ -503,7 +503,7 @@
 			{
 				'VCManifestTool':
 				{
-					'AdditionalManifestFiles': '$(SolutionDir)..\\engine\\src\\engine.manifest',
+					'AdditionalManifestFiles': '$(ProjectDir)..\\..\\..\\engine\\src\\engine.manifest',
 				},
 			},
 			
@@ -513,7 +513,7 @@
 				'action': [ '<(PRODUCT_DIR)/<(_product_name).exe' ],
 				'environment':
 				{
-					'REV_TOOLS_PATH' : '$(SolutionDir)..\\ide',
+					'REV_TOOLS_PATH' : '$(ProjectDir)..\\..\\..\\ide',
 				},
 			},
 			
