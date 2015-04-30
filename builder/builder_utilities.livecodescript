@@ -262,11 +262,11 @@ end builderBuiltNotesFolder
 
 function builderCommercialFolder
    set the itemDel to slash
-   return item 1 to -4 of the filename of me & "/livecode-commercial"
+   return item 1 to -4 of the filename of me
 end builderCommercialFolder
 
 function builderCommercialResourceFolder
-   return builderCommercialFolder() & "/rsrc"
+   return builderCommercialFolder() & "engine/rsrc"
 end builderCommercialResourceFolder
 
 function builderBuildsFolder

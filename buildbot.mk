@@ -98,14 +98,24 @@ dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) --stage notes
 
-dist-server:
+ifeq ($(BUILD_EDITION),commercial)
+dist-server: dist-server-commercial
+endif
+
+dist-server: dist-server-community
+
+dist-server-community:
 	$(buildtool_command) --platform mac --platform win --platform linux \
 	    --stage server --edition community
 
+dist-server-commercial:
+	$(buildtool_command) --platform mac --platform win --platform linux \
+	    --stage server --edition commercial
+
 # FIXME temporarily building installers only for Linux!
-#ifeq ($(BUILD_EDITION),commercial)
-#dist-tools: dist-tools-commercial
-#endif
+ifeq ($(BUILD_EDITION),commercial)
+dist-tools: dist-tools-commercial
+endif
 
 dist-tools: dist-tools-community
 
