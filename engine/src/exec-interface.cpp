@@ -2781,7 +2781,14 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 	MCtrace = False;
 	if (p_mode >= WM_MODELESS)
 		MCRedrawForceUnlockScreen();
-
+    
+	Boolean added = False;
+	if (MCnexecutioncontexts < MAX_CONTEXTS)
+	{
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+		added = True;
+	}
+    
 	p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned);
 
 	if (MCwatchcursor)
@@ -2791,7 +2798,12 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		if (MCmousestackptr != NULL && MCmousestackptr != p_target)
 			MCmousestackptr->resetcursor(True);
 	}
+    
+	if (added)
+		MCnexecutioncontexts--;
+    
 	MCtrace = oldtrace;
+    
 	if (p_mode > WM_TOP_LEVEL)
 		MCdefaultstackptr = olddefault;
 }
