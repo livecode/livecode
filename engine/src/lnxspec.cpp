@@ -1023,7 +1023,9 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 			}
 			if (MCprocesses[index].pid == -1)
 			{
-				MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
+				MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "fork");
+				MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+				MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
 				close(tochild[0]);
 				close(tochild[1]);
 				close(toparent[0]);
@@ -1043,7 +1045,9 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 		}
 		else
 		{
-			MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
+			MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+			MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+			MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
 			close(tochild[0]);
 			close(tochild[1]);
 			return IO_ERROR;
@@ -1051,7 +1055,9 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 	}
 	else
 	{
-		MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
+		MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+		MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+		MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
 		return IO_ERROR;
 	}
 	char *buffer = ep.getbuffer(0);

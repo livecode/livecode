@@ -2347,7 +2347,9 @@ public:
                 }
                 if (MCprocesses[index].pid == -1)
                 {
-					MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
+					MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "fork");
+					MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+					MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
 					close(tochild[0]);
 					close(tochild[1]);
 					close(toparent[0]);
@@ -2371,7 +2373,9 @@ public:
             }
             else
             {
-				MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
+                MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+                MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+                MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
                 close(tochild[0]);
                 close(tochild[1]);
                 // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
@@ -2380,7 +2384,9 @@ public:
         }
         else
         {
-			MCeerror->add(EE_SYSTEM, 0, 0, strerror(errno));
+            MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+            MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+            MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
             // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
             return false;
         }
