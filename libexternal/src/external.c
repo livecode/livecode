@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#ifndef _WINDOWS
 #include <stdint.h>
+#endif
 
 #include <revolution/external.h>
 
@@ -919,7 +922,7 @@ const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success)
     if (s_external_interface_version < 4)
     {
         *r_success = EXTERNAL_FAILURE;
-        return;
+        return NULL;
     }
     
     t_result = (s_operations[OPERATION_CONVERT_FROM_NATIVE_TO_UTF8])(p_native, NULL, NULL, r_success);
@@ -934,7 +937,7 @@ const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success)
     if (s_external_interface_version < 4)
     {
         *r_success = EXTERNAL_FAILURE;
-        return;
+        return NULL;
     }
     
     t_result = (s_operations[OPERATION_CONVERT_TO_NATIVE_FROM_UTF8])(p_utf8, NULL, NULL, r_success);
