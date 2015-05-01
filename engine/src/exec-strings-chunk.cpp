@@ -498,11 +498,13 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             while (p_first-- && ps != PS_ERROR && ps != PS_EOF)
                 ps = sp.nexttoken();
 
-            r_start = sp . getindex();
+            // AL-2015-05-01: [[ Bug 15309 ]] r_start and r_end are absolute indices, so they
+            //  need to be corrected by the initial string offset.
+            r_start = sp . getindex() + t_offset;
             while (--p_count && ps != PS_ERROR && ps != PS_EOF)
                 ps = sp.nexttoken();
             
-            r_end = sp . getindex() + MCStringGetLength(sp.gettoken_stringref());
+            r_end = sp . getindex() + MCStringGetLength(sp.gettoken_stringref()) + t_offset;
             MCerrorlock--;
         }
             break;
