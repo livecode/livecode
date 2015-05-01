@@ -65,7 +65,7 @@ private:
 	bool m_send_advanced_messages;
 	int m_instance_id;
 	
-	bool SetJavaScriptHandlerEnabled(const CefString &p_handler, bool p_enabled);
+	bool SetJavaScriptHandlers(CefRefPtr<CefListValue> p_handlers);
 	
 	void WaitOnResult(void);
 	bool GetMessageResult(CefProcessId p_target, CefRefPtr<CefProcessMessage> p_message, const MCCefMessageResult *&r_result);
@@ -112,8 +112,8 @@ public:
 	
 	// Browser Actions
 	
-	virtual void AddJavaScriptHandler(const char *p_handler);
-	virtual void RemoveJavaScriptHandler(const char *p_handler);
+	virtual bool SetJavaScriptHandlers(const char *p_handlers);
+	virtual bool GetJavaScriptHandlers(char *&r_handlers);
 	
 	// Platform-specific methods
 	
@@ -160,7 +160,7 @@ bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_
 #define MC_CEFMSG_CALL_SCRIPT "cefbrowser_request_call_script"
 #define MC_CEFMSG_GET_SELECTED_TEXT "cefbrowser_request_get_seleted_text"
 #define MC_CEFMSG_GET_TITLE "cefbrowser_request_get_title"
-#define MC_CEFMSG_ENABLE_JS_HANDLER "cebrowser_request_enable_js_handler"
+#define MC_CEFMSG_SET_JS_HANDLER_LIST "cebrowser_request_set_js_handler_list"
 
 #define MC_CEFMSG_JS_HANDLER "cefbrowser_js_handler"
 

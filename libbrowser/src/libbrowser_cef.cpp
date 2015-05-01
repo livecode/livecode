@@ -1275,34 +1275,54 @@ bool MCCefBrowserBase::GoForward(void)
 	return true;
 }
 
-bool MCCefBrowserBase::SetJavaScriptHandlerEnabled(const CefString &p_handler, bool p_enabled)
+bool MCCefBrowserBase::SetJavaScriptHandlers(CefRefPtr<CefListValue> p_handlers)
 {
 	CefRefPtr<CefProcessMessage> t_message;
-	t_message = CefProcessMessage::Create(MC_CEFMSG_ENABLE_JS_HANDLER);
+	t_message = CefProcessMessage::Create(MC_CEFMSG_SET_JS_HANDLER_LIST);
 	
 	CefRefPtr<CefListValue> t_args;
 	t_args = t_message->GetArgumentList();
 	
-	t_args->SetString(0, p_handler);
-	t_args->SetBool(1, p_enabled);
+	t_args->SetList(0, p_handlers);
 	
 	m_browser->SendProcessMessage(PID_RENDERER, t_message);
 	
 	/* UNCHECKED */ return true;
 }
 
-void MCCefBrowserBase::AddJavaScriptHandler(const char *p_handler)
+bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 {
-	CefString t_handler;
-	/* UNCHECKED */ MCCefStringFromUtf8String(p_handler, t_handler);
+	bool t_success;
+	t_success = true;
 	
-	/* UNCHECKED */ SetJavaScriptHandlerEnabled(t_handler, true);
-}
+	char **t_handlers;
+	t_handlers = nil;
+	
+	uint32_t t_handler_count;
+	t_handler_count = 0;
+	
+	t_success = MCCStringSplit(p_handlers, ',', t_handlers, t_handler_count);
+	
+	CefRefPtr<CefListValue> t_handler_list;
+	
+	if (t_success)
+	{
+		t_handler_list = CefListValue::Create();
+		t_success = t_handler_list != nil && t_handler_list->SetSize(t_handler_count);
+	}
+	
+	for (uint32_t i = 0; t_success && i < t_handler_count; i++)
+	{
+		CefString t_string;
+		t_success = MCCefStringFromUtf8String(t_handlers[i], t_string);
+		if (t_success)
+			t_success = t_handler_list->SetString(i, t_string);
+	}
+	
+	if (t_success)
+		t_success = SetJavaScriptHandlers(t_handler_list);
+	
+	if (t_handlers != nil)
+		MCCStringArrayFree(t_handlers, t_handler_count);
 
-void MCCefBrowserBase::RemoveJavaScriptHandler(const char *p_handler)
-{
-	CefString t_handler;
-	/* UNCHECKED */ MCCefStringFromUtf8String(p_handler, t_handler);
-	
-	/* UNCHECKED */ SetJavaScriptHandlerEnabled(t_handler, false);
 }

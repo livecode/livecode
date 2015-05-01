@@ -11,6 +11,8 @@
 		E82CC86B1AF2413E00E9B8B8 /* libbrowser_cef.h in Headers */ = {isa = PBXBuildFile; fileRef = E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */; };
 		E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8E8DE241AF1274300BAA78C /* libbrowser.cpp */; };
 		E8E8DE481AF12C4F00BAA78C /* libbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = E8E8DE271AF127B400BAA78C /* libbrowser.h */; };
+		E8EA2FEA1AF385EA004D27CA /* libbrowser_cefprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */; };
+		E8EA2FEC1AF3C8E8004D27CA /* libbrowser_cefprocess.plist in Resources */ = {isa = PBXBuildFile; fileRef = E8EA2FEB1AF3C8E8004D27CA /* libbrowser_cefprocess.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,10 +24,20 @@
 		E8E8DE241AF1274300BAA78C /* libbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser.cpp; sourceTree = "<group>"; };
 		E8E8DE271AF127B400BAA78C /* libbrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libbrowser.h; sourceTree = "<group>"; };
 		E8E8DE431AF12B6F00BAA78C /* libbrowser.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libbrowser.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_cefprocess.cpp; sourceTree = "<group>"; };
+		E8EA2FCA1AF3848B004D27CA /* libbrowser_cefprocess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = libbrowser_cefprocess.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E8EA2FEB1AF3C8E8004D27CA /* libbrowser_cefprocess.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = libbrowser_cefprocess.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		E8E8DE401AF12B6F00BAA78C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E8EA2FC71AF3848B004D27CA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -38,6 +50,7 @@
 		E8E8DE121AF1263800BAA78C = {
 			isa = PBXGroup;
 			children = (
+				E8EA2FEB1AF3C8E8004D27CA /* libbrowser_cefprocess.plist */,
 				E8E8DE261AF1277D00BAA78C /* Headers */,
 				E8E8DE251AF1274A00BAA78C /* Source */,
 				E8E8DE231AF126BE00BAA78C /* Configurations */,
@@ -61,6 +74,7 @@
 				E8E8DE241AF1274300BAA78C /* libbrowser.cpp */,
 				E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */,
 				E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */,
+				E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */,
 			);
 			name = Source;
 			path = src;
@@ -79,6 +93,7 @@
 			isa = PBXGroup;
 			children = (
 				E8E8DE431AF12B6F00BAA78C /* libbrowser.a */,
+				E8EA2FCA1AF3848B004D27CA /* libbrowser_cefprocess.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,6 +130,23 @@
 			productReference = E8E8DE431AF12B6F00BAA78C /* libbrowser.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		E8EA2FC91AF3848B004D27CA /* libbrowser_cefprocess */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E8EA2FE41AF3848B004D27CA /* Build configuration list for PBXNativeTarget "libbrowser_cefprocess" */;
+			buildPhases = (
+				E8EA2FC61AF3848B004D27CA /* Sources */,
+				E8EA2FC71AF3848B004D27CA /* Frameworks */,
+				E8EA2FC81AF3848B004D27CA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libbrowser_cefprocess;
+			productName = libbrowser_cefprocess;
+			productReference = E8EA2FCA1AF3848B004D27CA /* libbrowser_cefprocess.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -126,6 +158,9 @@
 					E8E8DE421AF12B6F00BAA78C = {
 						CreatedOnToolsVersion = 6.2;
 					};
+					E8EA2FC91AF3848B004D27CA = {
+						CreatedOnToolsVersion = 6.2;
+					};
 				};
 			};
 			buildConfigurationList = E8E8DE161AF1263800BAA78C /* Build configuration list for PBXProject "libbrowser" */;
@@ -134,15 +169,28 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = E8E8DE121AF1263800BAA78C;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				E8E8DE421AF12B6F00BAA78C /* browser */,
+				E8EA2FC91AF3848B004D27CA /* libbrowser_cefprocess */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E8EA2FC81AF3848B004D27CA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8EA2FEC1AF3C8E8004D27CA /* libbrowser_cefprocess.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		E8E8DE3F1AF12B6F00BAA78C /* Sources */ = {
@@ -154,6 +202,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E8EA2FC61AF3848B004D27CA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8EA2FEA1AF385EA004D27CA /* libbrowser_cefprocess.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -161,6 +217,11 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E8E8DE221AF126B000BAA78C /* Debug.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
 			};
 			name = Debug;
 		};
@@ -168,17 +229,17 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E8E8DE211AF126B000BAA78C /* Release.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
 			};
 			name = Release;
 		};
 		E8E8DE451AF12B6F00BAA78C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"$(HEADER_SEARCH_PATHS)",
-					"$(SOLUTION_DIR)/thirdparty/libcef",
-					"$(SOLUTION_DIR)/libcore/include",
-				);
 				PRODUCT_NAME = browser;
 			};
 			name = Debug;
@@ -186,12 +247,23 @@
 		E8E8DE461AF12B6F00BAA78C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"$(HEADER_SEARCH_PATHS)",
-					"$(SOLUTION_DIR)/thirdparty/libcef",
-					"$(SOLUTION_DIR)/libcore/include",
-				);
 				PRODUCT_NAME = browser;
+			};
+			name = Release;
+		};
+		E8EA2FE51AF3848B004D27CA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = "$(SRCROOT)/libbrowser_cefprocess.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E8EA2FE61AF3848B004D27CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = "$(SRCROOT)/libbrowser_cefprocess.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -215,6 +287,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		E8EA2FE41AF3848B004D27CA /* Build configuration list for PBXNativeTarget "libbrowser_cefprocess" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E8EA2FE51AF3848B004D27CA /* Debug */,
+				E8EA2FE61AF3848B004D27CA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
