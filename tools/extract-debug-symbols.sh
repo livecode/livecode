@@ -18,9 +18,9 @@ for input in $inputs ; do
 	# If this file is a dynamic library, don't do a full strip or we'll
 	# destroy it (no symbols => can't link to it)
 	if [[ "$(objdump -f $input)" =~ "DYNAMIC" ]] ; then
-		$STRIP --preserve-dates --strip-debug "$input"
+		$STRIP -x --preserve-dates --strip-debug "$input"
 	else
-		$STRIP --preserve-dates --strip-debug --strip-unneeded "$input"
+		$STRIP -x --preserve-dates --strip-debug --strip-unneeded "$input"
 	fi
 	
 	# Add a hint for the debugger so it can find the debug info
