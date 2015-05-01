@@ -110,6 +110,7 @@ static int verify_callback(int ok, X509_STORE_CTX *store);
 extern Boolean wsainit(void);
 extern HWND sockethwnd;
 extern "C" char *strdup(const char *);
+extern HANDLE g_socket_wakeup;
 #endif
 
 #define READ_SOCKET_SIZE  4096
@@ -642,7 +643,10 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 		{
 #ifdef _WINDOWS
 			if (MCnoui)
+			{
 				s->doread = True;
+				SetEvent(g_socket_wakeup);
+			}
 			else
 				PostMessageA(sockethwnd, WM_USER, s->fd, FD_OOB);
 #else
@@ -840,8 +844,8 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))
 	        || (!datagram && listen(sock, SOMAXCONN))
-	        || !MCnoui && WSAAsyncSelect(sock, sockethwnd, WM_USER,
-	                                     datagram ? FD_READ : FD_ACCEPT))
+	        || (!MCnoui && WSAAsyncSelect(sock, sockethwnd, WM_USER, datagram ? FD_READ : FD_ACCEPT))
+			|| (MCnoui && WSAEventSelect(sock, g_socket_wakeup, datagram ? FD_READ : FD_ACCEPT)))
 	{
 		MCS_seterrno(WSAGetLastError());
 		char buffer[17 + I4L];
@@ -1538,16 +1542,20 @@ void MCSocket::setselect()
 void MCSocket::setselect(uint2 sflags)
 {
 #ifdef _WINDOWS
+	long event = FD_CLOSE;
+	if (!connected)
+		event |= FD_CONNECT;
+	if (sflags & BIONB_TESTWRITE)
+		event |= FD_WRITE;
+	if (sflags & BIONB_TESTREAD)
+		event |= FD_READ;
 	if (!MCnoui)
 	{
-		long event = FD_CLOSE;
-		if (!connected)
-			event |= FD_CONNECT;
-		if (sflags & BIONB_TESTWRITE)
-			event |= FD_WRITE;
-		if (sflags & BIONB_TESTREAD)
-			event |= FD_READ;
 		WSAAsyncSelect(fd, sockethwnd, WM_USER, event);
+	}
+	else
+	{
+		WSAEventSelect(fd, g_socket_wakeup, event);
 	}
 #endif
 #ifdef _MACOSX
