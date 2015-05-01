@@ -184,6 +184,15 @@ IO_stat MCObjectInputStream::ReadU64(uint64_t& r_value)
 	return t_stat;
 }
 
+// SN-2015-04-30: [[ Bug 15175 ]] Added ReadS32, needed to store the int8-cast
+//  intenum_t MCField::alignments
+IO_stat MCObjectInputStream::ReadS8(int8_t &r_value)
+{
+    IO_stat t_stat;
+    t_stat = Read(&r_value, 1);
+    return t_stat;
+}
+
 IO_stat MCObjectInputStream::ReadS16(int16_t& r_value)
 {
 	IO_stat t_stat;

@@ -3213,7 +3213,7 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         t_flags |= FIELD_EXTRA_TABALIGN;
         // Save number of tab alignments, and then each of them.
         t_size += sizeof(uint16_t);
-        t_size += sizeof(intenum_t) * nalignments;
+        t_size += sizeof(int8_t) * nalignments;
     }
 
 	IO_stat t_stat;
@@ -3227,7 +3227,7 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         t_stat = p_stream . WriteU16(nalignments);
 
         for (uint2 i = 0; i < nalignments && t_stat == IO_NORMAL; ++i)
-            t_stat = p_stream . WriteS32(alignments[i]);
+            t_stat = p_stream . WriteS8((int8_t)alignments[i]);
     }
     
 	if (t_stat == IO_NORMAL)
@@ -3267,15 +3267,15 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
             t_stat = p_stream . ReadU16(t_nalign);
 
-            if (t_stat == IO_NORMAL)
+            if (t_stat == IO_NORMAL && t_nalign != 0)
             {
                 if (!MCMemoryAllocate(sizeof(intenum_t) * t_nalign, t_alignments))
                     t_stat = IO_ERROR;
 
                 for (uint2 i = 0; i < t_nalign && t_stat == IO_NORMAL; ++i)
                 {
-                    int32_t t_align;
-                    if ((t_stat = p_stream . ReadS32(t_align)) == IO_NORMAL)
+                    int8_t t_align;
+                    if ((t_stat = p_stream . ReadS8(t_align)) == IO_NORMAL)
                         t_alignments[i] = t_align;
                 }
 
@@ -3314,7 +3314,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     // AL-2014-09-12: [[ Bug 13315 ]] Force an extension if field has explicit textDirection.
     // SN-2015-04-30: [[ Bug 15175 ]] Force an extension if field has tabalign.
     bool t_has_extension;
-    t_has_extension = text_direction != kMCTextDirectionAuto || ntabs != 0;
+    t_has_extension = text_direction != kMCTextDirectionAuto || nalignments != 0;
     
 	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
 		return stat;
