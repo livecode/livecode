@@ -15,6 +15,37 @@ local sDeviceSDKs
 
 ////////////////////////////////////////////////////////////////////////////////
 
+-- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
+--  SDKs and device relying on the engines we provide in the shipped version
+-- SN-2015-05-01: [[ Xcode 6.4 ]] Add iOS 8.4 amongst the uable iOS SDK
+function deployUsableIosSdk
+   return "5.1,6.1,7.1,8.2,8.4"
+end deployUsableIosSdk
+
+// SN-2015-05-01: [[ Xcode 6.4 ]] Return the pair iOS SDK / Xcode for the current MacOS version
+function deployGetIphoneOSes
+   local tList, tMacVersion
+   put deploySanatizeSystemVersion() into tMacVersion
+   if tMacVersion < 100800 then
+      put "6.1,4.6" into tList[1]
+   else if tMacVersion < 100900 then
+      put "7.1,5.1" into tList[1]
+   else if tMacVersion < 101000 then
+      put "8.2,6.2" into tList[1]
+   else
+      put "8.4,6.4" into tList[1]
+      put "8.2,6.2" into tList[2]
+   end if
+   
+   return tList
+end deployGetIphoneOSes
+
+function deployGetIosMinimumVersions
+   return "5.1.1,6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4"
+end deployGetIosMinimumVersions
+
+////////////////////////////////////////////////////////////////////////////////
+
 -- Called on startup to initialize the deployment platform if possible.
 command deployInitialize
    if the platform is not "macos" then
@@ -344,10 +375,20 @@ command deployUpdateSDKs
    revIDEDeployTargetsChanged
 end deployUpdateSDKs
 
-function deployGetInvalidityMessage pIosSdk, pXcodeVersion
-   return "In order to perfom device builds, you must have the iOS" && pIosSdk \
-         && "SDK configured."& return & \
-         "The iOS" && pIosSdk && "SDK comes with XCode" && pXcodeVersion
+function deployGetInvalidityMessage pIosXcodePairs
+   local tIosToInstall, tIosList
+   
+   // SN-2015-05-01: [[ Refactor iOS SDK version ]] We might have several iOS / Xcode
+   //  pairs to list (as for now, 2 for Yosemite)
+   repeat for each element tIosXcodePair in pIosXcodePairs
+      if tIosToInstall is not empty then put " or " before tIosToInstall
+      if tIosList is not empy then put LF before tIosList
+      
+      put item 1 of tIosXcodePair before tIosToInstall
+      put "  - iOS" && item 1 of tIosXcodePair && "comes with Xcode" && item 2 of tIosXcodePair before tIosList
+   end repeat
+   
+   return "In order to perfom device builds, you must have the iOS SDK" && tIosToInstall && "configured." & LF & tIosList
 end deployGetInvalidityMessage
 
 -- SN-2015-03-12: [[ Bug 14866 ]] Move the command updateSDKs from
@@ -355,36 +396,24 @@ end deployGetInvalidityMessage
 -- after a new Xcode release more convenient
 -- MM-2013-10-08: We now only build for Arm v7, reducing the SDKs users now require.
 function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
-   local tSDKStatus, tValid
+   local tSDKStatus, tValid, tIosXcodePairs
    put empty into tSDKStatus   
-   put true into tValid
+   put false into tValid
    
-   get revIDEDeployIOSGetSDKVersions()
+   put deployGetIphoneOSes() into tIosXcodePairs
+   get deployGetSDKVersions()
    
-   -- PM-2015-02-06: [[ Bug 14422 ]] Removed OSX 10.6 and iOS 5.0 support
-   if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
-      if "6.1" is not among the lines of it then
-         put false into tValid
-         put deployGetInvalidityMessage("6.1", "4.6") into tSDKStatus
+   // We loop on all the possible iOS usable for this MacOS version
+   local tIostoInstall, tXcodeToInstall
+   repeat for each element tIosXcodePair in tIosXcodePairs
+      if item 1 of tIosXcodePair is in it then
+         put true into tValid
+         exit repeat
       end if
-   else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
-      if "7.1" is not among the lines of it then
-         put false into tValid
-         put deployGetInvalidityMessage("7.1", "5.1") into tSDKStatus
-      end if
-   else if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
-      -- SN-2015-03-12: [[ Bug 14866 ]] iOS SDK 8.2 is now the valid SDK up to 
-      --  Mac OS 10.9, since Xcode 6.3 won't install on Mac OS X 10.9
-      if "8.2" is not among the lines of it then
-         put false into tValid
-         put deployGetInvalidityMessage("8.2", "6.2") into tSDKStatus
-      end if
-   else
-      -- SN-2015-04-09: [[ Bug 15187 ]] iOS SDK 8.3 is now the valid SDK
-      if "8.2" is not among the lines of it and "8.3" is not among the lines of it then
-         put false into tValid
-         put deployGetInvalidityMessage("8.2 or 8.3", "6.2 or 6.3") into tSDKStatus
-      end if
+   end repeat
+   
+   if not tValid then
+      put deployGetInvalidityMessage(tIosXcodePairs) into tSDKStatus
    end if
    
    if it is empty then
@@ -420,13 +449,6 @@ function deployGetSimulatorFamilies pSimulator
    end if
    return "iPhone"
 end deployGetSimulatorFamilies
-
--- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
---  SDKs and device relying on the engines we provide in the shipped version
--- SN-2015-04-09: [[ Bug 15187 ]] Add iOS SDK 8.3
-function deployUsableIosSdk
-   return "5.1,6.1,7.1,8.2,8.3"
-end deployUsableIosSdk
 
 -- MW-2012-03-21: Returns the version of SDK to use for device builds.
 -- MM-2012-09-13: We now no longer have a single device SDK. Return the appropriate

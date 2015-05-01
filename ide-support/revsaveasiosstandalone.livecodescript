@@ -86,33 +86,21 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    --
    
    local tSDKs, tSDKInfo
-   if pTarget is "Device" then      
-      -- PM-2015-02-06: [[ Bug 14422 ]] Drop support for OSX 10.6 and iOS 5.0 
-      if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
-         
-         -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
-         --  
-         if not getIosSdkInfo("6.1", tSDKInfo) then
-            throw revIDEDeployIOSGetInvalidityMessage("6.1", "4.6")
+   if pTarget is "Device" then
+      local tIosXcodePairs, tValid
+      
+      put revIDEDeployIOSGetIphoneOSes() into tIosXcodePairs
+      put false into tValid
+      
+      repeat for each element tIosXcodePair in tIosXcodePairs
+         if getIosSDKInfo(item 1 of tIosXcodePair, tSDKInfo) then
+            put true into tValid
+            exit repeat
          end if
-      else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
-         
-         if not getIosSdkInfo("7.1", tSDKInfo) then
-            throw revIDEDeployIOSGetInvalidityMessage("7.1", "5.1")
-         end if
-      else if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
-         
-         if not getIosSdkInfo("8.2", tSDKInfo) then
-            throw revIDEDeployIOSGetInvalidityMessage("8.2", "6.2")
-         end if
-      else
-         -- SN-2015-04-14: [[ Bug 15187 ]] From Mac OS 10.10, the default iOS SDK version is 8.3
-         --  and 8.2 will be fetched 
-         // We want to catch the exception for Xcode 6.3
-         if not getIosSdkInfo("8.3", tSDKInfo) and not \
-              getIosSdkInfo("8.2", tSDKInfo) then
-            throw revIDEDeployIOSGetInvalidityMessage("8.2 / 8.3", "6.2 / 6.3")
-         end if
+      end repeat
+      
+      if not tValid then
+         throw revIDEDeployIOSGetInvalidityMessage(tIosXcodePairs)
       end if
       put tSDKInfo into tSDKs["arm"]
    else
@@ -1492,7 +1480,7 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         // SN-2015-04-30: [[ Bug 15175 ]] Take the lastest SDK installed
+         // SN-2015-04-30: [[ Bug 15175 ]] Take the latest valid SDK installed
          // (can be 8.2 or 8.3 onwards on Yosemite).
          local tVersion
          if revIDEDeployIOSGetLatestSDKInstalled(tVersion) then
@@ -1501,30 +1489,11 @@ function revMobileRuntimeFolder pTarget, pVersion
          end if
       end if
       put "Device-" & pVersion into tStub
-   else if pTarget contains "4.2" then
-      put "Simulator-4_2" into tStub
-   else if pTarget contains "4.3" then
-      put "Simulator-4_3" into tStub
-   else if pTarget contains "5.0" then
-      put "Simulator-5_0" into tStub
-   else if pTarget contains "5.1" then
-      put "Simulator-5_1" into tStub
-   else if pTarget contains "6.0" then
-      put "Simulator-6_0" into tStub
-   else if pTarget contains "6.1" then
-      put "Simulator-6_1" into tStub
-   else if pTarget contains "7.0" then
-      put "Simulator-7_0" into tStub
-   else if pTarget contains "7.1" then
-      put "Simulator-7_1" into tStub
-   else if pTarget contains "8.0" then
-      put "Simulator-8_0" into tStub
-   else if pTarget contains "8.1" then
-      put "Simulator-8_1" into tStub
-   else if pTarget contains "8.2" then
-      put "Simulator-8_2" into tStub
-   else if pTarget contains "8.3" then
-      put "Simulator-8_3" into tStub
+   else
+      // SN-2015-05-01: [[ Refactor iOS SDK version ]] Build the simulator location
+      //  stub on the fly.
+      replace "." with "_" in pTarget
+      put "Simulator-" & pTarget into tStub
    end if
    
    local tUserPath, tOverridePath
