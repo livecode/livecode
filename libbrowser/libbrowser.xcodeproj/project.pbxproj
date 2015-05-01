@@ -13,7 +13,24 @@
 		E8E8DE481AF12C4F00BAA78C /* libbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = E8E8DE271AF127B400BAA78C /* libbrowser.h */; };
 		E8EA2FEA1AF385EA004D27CA /* libbrowser_cefprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */; };
 		E8EA2FEC1AF3C8E8004D27CA /* libbrowser_cefprocess.plist in Resources */ = {isa = PBXBuildFile; fileRef = E8EA2FEB1AF3C8E8004D27CA /* libbrowser_cefprocess.plist */; };
+		E8EA2FF01AF3D4BB004D27CA /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8EA2FEF1AF3D4BB004D27CA /* libcef_dll_wrapper.a */; };
+		E8EA2FF21AF3D518004D27CA /* libcef_stubs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8EA2FF11AF3D518004D27CA /* libcef_stubs.a */; };
+		E8EA2FF41AF3D51D004D27CA /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8EA2FF31AF3D51D004D27CA /* libcore.a */; };
+		E8EA2FF61AF3D865004D27CA /* libbrowser_cefshared_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8EA2FF51AF3D865004D27CA /* libbrowser_cefshared_osx.cpp */; };
+		E8EA2FF71AF3D865004D27CA /* libbrowser_cefshared_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8EA2FF51AF3D865004D27CA /* libbrowser_cefshared_osx.cpp */; };
+		E8EA2FF91AF3D8D9004D27CA /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8EA2FF81AF3D8D9004D27CA /* Foundation.framework */; };
+		E8EA2FFB1AF3D91C004D27CA /* libbrowser_cefprocess_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8EA2FFA1AF3D91C004D27CA /* libbrowser_cefprocess_osx.mm */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E8EA2FED1AF3D46B004D27CA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8E8DE131AF1263800BAA78C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E8EA2FC91AF3848B004D27CA;
+			remoteInfo = libbrowser_cefprocess;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_cef.cpp; sourceTree = "<group>"; };
@@ -27,6 +44,12 @@
 		E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_cefprocess.cpp; sourceTree = "<group>"; };
 		E8EA2FCA1AF3848B004D27CA /* libbrowser_cefprocess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = libbrowser_cefprocess.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E8EA2FEB1AF3C8E8004D27CA /* libbrowser_cefprocess.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = libbrowser_cefprocess.plist; sourceTree = "<group>"; };
+		E8EA2FEF1AF3D4BB004D27CA /* libcef_dll_wrapper.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcef_dll_wrapper.a; path = ../_build/mac/Debug/libcef_dll_wrapper.a; sourceTree = "<group>"; };
+		E8EA2FF11AF3D518004D27CA /* libcef_stubs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcef_stubs.a; path = ../_build/mac/Debug/libcef_stubs.a; sourceTree = "<group>"; };
+		E8EA2FF31AF3D51D004D27CA /* libcore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcore.a; path = ../_build/mac/Debug/libcore.a; sourceTree = "<group>"; };
+		E8EA2FF51AF3D865004D27CA /* libbrowser_cefshared_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_cefshared_osx.cpp; sourceTree = "<group>"; };
+		E8EA2FF81AF3D8D9004D27CA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		E8EA2FFA1AF3D91C004D27CA /* libbrowser_cefprocess_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = libbrowser_cefprocess_osx.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +64,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8EA2FF91AF3D8D9004D27CA /* Foundation.framework in Frameworks */,
+				E8EA2FF41AF3D51D004D27CA /* libcore.a in Frameworks */,
+				E8EA2FF21AF3D518004D27CA /* libcef_stubs.a in Frameworks */,
+				E8EA2FF01AF3D4BB004D27CA /* libcef_dll_wrapper.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,6 +77,10 @@
 		E8E8DE121AF1263800BAA78C = {
 			isa = PBXGroup;
 			children = (
+				E8EA2FF81AF3D8D9004D27CA /* Foundation.framework */,
+				E8EA2FF31AF3D51D004D27CA /* libcore.a */,
+				E8EA2FF11AF3D518004D27CA /* libcef_stubs.a */,
+				E8EA2FEF1AF3D4BB004D27CA /* libcef_dll_wrapper.a */,
 				E8EA2FEB1AF3C8E8004D27CA /* libbrowser_cefprocess.plist */,
 				E8E8DE261AF1277D00BAA78C /* Headers */,
 				E8E8DE251AF1274A00BAA78C /* Source */,
@@ -75,6 +106,8 @@
 				E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */,
 				E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */,
 				E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */,
+				E8EA2FF51AF3D865004D27CA /* libbrowser_cefshared_osx.cpp */,
+				E8EA2FFA1AF3D91C004D27CA /* libbrowser_cefprocess_osx.mm */,
 			);
 			name = Source;
 			path = src;
@@ -124,6 +157,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				E8EA2FEE1AF3D46B004D27CA /* PBXTargetDependency */,
 			);
 			name = browser;
 			productName = libbrowser;
@@ -199,6 +233,7 @@
 			files = (
 				E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */,
 				E82CC8691AF2412800E9B8B8 /* libbrowser_cef.cpp in Sources */,
+				E8EA2FF61AF3D865004D27CA /* libbrowser_cefshared_osx.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,11 +241,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8EA2FFB1AF3D91C004D27CA /* libbrowser_cefprocess_osx.mm in Sources */,
 				E8EA2FEA1AF385EA004D27CA /* libbrowser_cefprocess.cpp in Sources */,
+				E8EA2FF71AF3D865004D27CA /* libbrowser_cefshared_osx.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E8EA2FEE1AF3D46B004D27CA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E8EA2FC91AF3848B004D27CA /* libbrowser_cefprocess */;
+			targetProxy = E8EA2FED1AF3D46B004D27CA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		E8E8DE171AF1263800BAA78C /* Debug */ = {
@@ -255,6 +300,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "$(SRCROOT)/libbrowser_cefprocess.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/ianmacphail/workspace/livecode/btsync/widget/livecode/_build/mac/Debug,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -263,6 +312,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "$(SRCROOT)/libbrowser_cefprocess.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/ianmacphail/workspace/livecode/btsync/widget/livecode/_build/mac/Debug,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
