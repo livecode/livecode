@@ -132,7 +132,7 @@ all-ios-%:
 	$(MAKE) compile-ios-$*
 
 config-ios-%:
-	./config.sh --platform ios --generator-output build-ios-$*$(BUILD_SUBDIR) -Dtarget_sdk=$*
+	./config.sh --platform ios --generator-output build-ios-$*/livecode -Dtarget_sdk=$*
 
 compile-ios-%:
 	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE)
