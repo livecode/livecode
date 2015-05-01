@@ -48,7 +48,7 @@ ifeq ($(BUILD_EDITION),commercial)
   BUILD_SUBDIR :=
   BUILD_PROJECT := livecode-commercial
 else
-  BUILD_SUBDIR := "/livecode"
+  BUILD_SUBDIR := /livecode
   BUILD_PROJECT := livecode
 endif
 
@@ -117,7 +117,7 @@ config-mac:
 	./config.sh --platform mac
 
 compile-mac:
-	$(XCODEBUILD) -project build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj -configuration $(BUILDTYPE)
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE)
 
 all-mac:
 	$(MAKE) config-mac
@@ -135,7 +135,7 @@ config-ios-%:
 	./config.sh --platform ios --generator-output build-ios-$* -Dtarget_sdk=$*
 
 compile-ios-%:
-	$(XCODEBUILD) -project build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj -configuration $(BUILDTYPE)
+	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE)
 
 # Provide some synonyms for "latest iOS SDK"
 $(addsuffix -ios-iphoneos,all config compile): %: %8.3
