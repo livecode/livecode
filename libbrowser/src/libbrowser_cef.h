@@ -175,4 +175,12 @@ extern "C" void *MCU_loadmodule(const char *p_source);
 extern "C" void MCU_unloadmodule(void *p_module);
 extern "C" void *MCU_resolvemodulesymbol(void *p_module, const char *p_symbol);
 
+// Engine wait loop hooks
+
+typedef struct __MCRunloopAction *MCRunloopActionRef;
+typedef void (MCRunloopActionCallback)(void *p_context);
+extern "C" bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
+extern "C" void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action);
+extern "C" bool MCEngineRunloopWait();
+
 #endif /* __LIBBROWSER_CEF_H__ */

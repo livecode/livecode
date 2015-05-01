@@ -212,10 +212,7 @@ bool MCCefBrowserInitialise(void)
 		t_success = MCCefInitialise();
 	
 	if (t_success)
-	{
-		int t_result;
-		AddRunloopAction(MCCefBrowserRunloopAction, nil, &s_runloop_action, &t_result);
-	}
+		t_success = MCEngineAddRunloopAction(MCCefBrowserRunloopAction, nil, s_runloop_action);
 	
 	s_cefbrowser_initialised = t_success;
 	
@@ -242,8 +239,7 @@ void MCCefBrowserFinalise(void)
 	// IM-2014-03-13: [[ revBrowserCEF ]] CEF library can't be cleanly shutdown and restarted - don't call finalise
 	// MCCefFinalise();
 	
-	int t_result;
-	/* UNCHECKED */ RemoveRunloopAction(s_runloop_action, &t_result);
+	MCEngineRemoveRunloopAction(s_runloop_action);
 	s_runloop_action = nil;
 	
 	s_cefbrowser_initialised = false;
@@ -923,10 +919,11 @@ void MCCefBrowserBase::WaitOnResult()
 {
 	MCCefMessageResult &t_result = m_client->GetMessageResult();
 	
-	int t_success;
-	t_success = EXTERNAL_SUCCESS;
-	while ((t_success == EXTERNAL_SUCCESS )&& !t_result.HaveResult())
-		RunloopWait(&t_success);
+	bool t_success;
+	t_success = true;
+	
+	while (t_success && !t_result.HaveResult())
+		t_success = MCEngineRunloopWait();
 }
 
 bool MCCefBrowserBase::WaitOnResultString(CefString &r_result)
