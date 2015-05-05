@@ -965,8 +965,8 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         //  of the whole word are individual Kanji as well, and Unicode valid alphanum.
         //  (they would be appended to the in-process IME string).
         // SN-2015-05-05: [[ Bug 15305 ]] Check that s_pending_key_down is not
-        //  nil before trying to use it.
-        if (s_pending_key_down && *p_chars > 127 && p_char_count == 1 && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+        //  nil before trying to use it, and use IME only if p_mark says so.
+        if (s_pending_key_down && !p_mark)
         {
             MCAutoStringRef t_mapped_char;
             MCPlatformKeyCode t_mapped_key_code;
