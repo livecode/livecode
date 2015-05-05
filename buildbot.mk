@@ -112,16 +112,33 @@ dist-server-commercial:
 	$(buildtool_command) --platform mac --platform win --platform linux \
 	    --stage server --edition commercial
 
-# FIXME temporarily building installers only for Linux & Mac!
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
+distmac-disk: distmac-disk-commercial
 endif
 
 dist-tools: dist-tools-community
+distmac-disk: distmac-disk-community
 
+# FIXME temporarily building installers only for Linux & Mac!
 dist-tools-community:
 	$(buildtool_command) --platform linux --platform mac --stage tools --edition community
-
 dist-tools-commercial:
 	$(buildtool_command) --platform linux --platform mac --stage tools --edition commercial
 
+# FIXME upload installers to distribution server
+dist-upload:
+
+# This rule is used for packing the Mac installer contents; the
+# resulting archive gets transferred to a Mac for signing and
+# conversion to a DMG.
+distmac-archive:
+	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.app' -print0 \
+	    | xargs -0 tar -Jcvf mac-installer.tar.xz
+
+distmac-extract:
+	tar -xvf mac-installer.tar.xz
+
+# Final installer creation for Mac
+distmac-disk-%:
+	$(buildtool_command) --platform mac --stage disk --edition $*
