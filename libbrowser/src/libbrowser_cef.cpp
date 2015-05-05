@@ -1347,7 +1347,10 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 
 bool MCCefBrowserBase::GetJavaScriptHandlers(char *&r_handlers)
 {
-	
+	if (m_javascript_handlers == nil)
+		return MCCStringClone("", r_handlers);
+	else
+		return MCCStringClone(m_javascript_handlers, r_handlers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1461,6 +1464,10 @@ bool MCCefBrowserBase::GetStringProperty(MCBrowserProperty p_property, char *&r_
 MCCefBrowserFactory::MCCefBrowserFactory()
 {
 	MCCefBrowserExternalInit();
+}
+
+MCCefBrowserFactory::~MCCefBrowserFactory()
+{
 }
 
 bool MCCefBrowserFactory::Initialize()

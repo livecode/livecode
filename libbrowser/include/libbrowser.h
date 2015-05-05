@@ -25,6 +25,7 @@ class MCBrowserRefCounted
 {
 public:
 	MCBrowserRefCounted();
+	virtual ~MCBrowserRefCounted() {}
 	
 	void Retain();
 	void Release();
@@ -82,8 +83,8 @@ struct MCBrowserRect
 class MCBrowser : public MCBrowserRefCounted
 {
 public:
-	MCBrowser();
-	virtual ~MCBrowser() = 0;
+	MCBrowser() {}
+	virtual ~MCBrowser() {}
 	
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
@@ -123,7 +124,9 @@ private:
 class MCBrowserFactory : public MCBrowserRefCounted
 {
 public:
-	virtual ~MCBrowserFactory() = 0;
+	MCBrowserFactory() {}
+	virtual ~MCBrowserFactory() {}
+	
 	virtual bool CreateBrowser(MCBrowser *&r_browser) = 0;
 };
 
