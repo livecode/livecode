@@ -40,13 +40,13 @@ success="yes"
 
 # sdk_path XCODE PLATFORM VERSION
 sdk_path() {
-  echo "$1/Contents/Developer/Platforms/$2.platform/Developer/SDKs/$2$3.sdk"
+  echo "$PWD/$1/Contents/Developer/Platforms/$2.platform/Developer/SDKs/$2$3.sdk"
 }
 
 # have_sdk XCODE PLATFORM VERSION
 have_sdk () {
   p=$(sdk_path $1 $2 $3)
-  test -e "$p" -a -d "$p/"
+  test -a "$p" -a -d "$p/"
 }
 
 # find_sdk PLATFORM VERSION
@@ -54,6 +54,7 @@ find_sdk () {
   for xcode in Xcode_*.app; do
     if have_sdk $xcode $1 $2; then
       sdk_path $xcode $1 $2
+      return
     fi
   done
 }
@@ -63,17 +64,17 @@ install_sdks () {
   for v in $2; do
     if have_sdk Xcode.app $1 $v; then
       # SDK is already set up
-      echo "ok - $1 $v"
+      echo "ok - $1 $v" >&2
 
     else
       # Try to link the required SDK into place
       target_sdk=$(find_sdk $1 $v)
 
       if [ -n "$target_sdk" ] &&
-        ln -s $(pwd)/"$target_sdk" $(sdk_path Xcode.app $1 $v); then
-        echo "ok - $1 $v"
+        ln -s "$target_sdk" $(sdk_path Xcode.app $1 $v); then
+        echo "ok - $1 $v" >&2
       else
-        echo "not ok - $1$v"
+        echo "not ok - $1$v" >&2
         success="no"
       fi
     fi
@@ -85,7 +86,7 @@ install_sdks "iPhoneSimulator" "$iphonesimulator_versions" &&
 install_sdks "MacOSX" "$macosx_versions"
 
 if [ $success != "yes" ]; then
-  echo
-  echo "ERROR: Some SDKs couldn't be found"
+  echo >&2
+  echo "ERROR: Some SDKs couldn't be found" >&2
   exit 1
 fi
