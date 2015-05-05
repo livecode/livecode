@@ -37,16 +37,16 @@ enum MCCefAuthScheme
 class MCCefBrowserBase : public MCBrowser
 {
 public:
-	virtual void *GetNativeLayer() = 0;
+	virtual void *GetNativeLayer();
 	
-	virtual bool GetRect(MCBrowserRect &r_rect) = 0;
-	virtual bool SetRect(const MCBrowserRect &p_rect) = 0;
+	virtual bool GetRect(MCBrowserRect &r_rect);
+	virtual bool SetRect(const MCBrowserRect &p_rect);
 	
-	virtual bool GetBoolProperty(MCBrowserProperty p_property, bool &r_value) = 0;
-	virtual bool SetBoolProperty(MCBrowserProperty p_property, bool p_value) = 0;
+	virtual bool GetBoolProperty(MCBrowserProperty p_property, bool &r_value);
+	virtual bool SetBoolProperty(MCBrowserProperty p_property, bool p_value);
 	
-	virtual bool GetStringProperty(MCBrowserProperty p_property, char *&r_utf8_string) = 0;
-	virtual bool SetStringProperty(MCBrowserProperty p_property, const char *p_utf8_string) = 0;
+	virtual bool GetStringProperty(MCBrowserProperty p_property, char *&r_utf8_string);
+	virtual bool SetStringProperty(MCBrowserProperty p_property, const char *p_utf8_string);
 	
 	virtual bool GoBack();
 	virtual bool GoForward();
@@ -55,10 +55,10 @@ public:
 	
 private:
 	CefRefPtr<CefBrowser> m_browser;
-	
 	CefRefPtr<MCCefBrowserClient> m_client;
 	
 	CefString m_user_agent;
+	char *m_javascript_handlers;
 	
 	bool m_show_context_menu;
 	bool m_allow_new_window;
@@ -122,7 +122,7 @@ public:
 	virtual bool PlatformGetRect(MCBrowserRect &r_rect) = 0;
 	virtual bool PlatformSetRect(const MCBrowserRect &p_rect) = 0;
 	
-	virtual bool PlatformGetWindowID(int32_t &r_id) = 0;
+	virtual bool PlatformGetNativeLayer(void *&r_layer) = 0;
 	
 	virtual bool PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password) = 0;
 	
@@ -140,8 +140,17 @@ public:
 class MCCefBrowserFactory : public MCBrowserFactory
 {
 public:
+	MCCefBrowserFactory();
+	virtual ~MCCefBrowserFactory();
+	
 	bool CreateBrowser(MCBrowser *&r_browser) override;
+	
+	//////////
+	
+	bool Initialize();
 };
+
+bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser);
 void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
@@ -171,6 +180,7 @@ const char *MCCefPlatformGetResourcesDirPath(void);
 const char *MCCefPlatformGetLocalePath(void);
 
 // AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
+
 extern "C" void *MCU_loadmodule(const char *p_source);
 extern "C" void MCU_unloadmodule(void *p_module);
 extern "C" void *MCU_resolvemodulesymbol(void *p_module, const char *p_symbol);
@@ -182,5 +192,6 @@ typedef void (MCRunloopActionCallback)(void *p_context);
 extern "C" bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
 extern "C" void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action);
 extern "C" bool MCEngineRunloopWait();
+extern "C" bool MCEngineGetNativeLayerParentID(int &r_window_id);
 
 #endif /* __LIBBROWSER_CEF_H__ */

@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		E82CC8691AF2412800E9B8B8 /* libbrowser_cef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */; };
 		E82CC86B1AF2413E00E9B8B8 /* libbrowser_cef.h in Headers */ = {isa = PBXBuildFile; fileRef = E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */; };
+		E865FADF1AF8E0DE0015B20F /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8EA2FEF1AF3D4BB004D27CA /* libcef_dll_wrapper.a */; };
+		E865FAE01AF8E0DE0015B20F /* libcef_stubs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8EA2FF11AF3D518004D27CA /* libcef_stubs.a */; };
+		E865FAE21AF8E5D70015B20F /* libbrowser_cef_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E865FAE11AF8E5D70015B20F /* libbrowser_cef_osx.mm */; };
+		E865FAE41AF8E6FA0015B20F /* WebAuthenticationPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = E865FAE31AF8E6FA0015B20F /* WebAuthenticationPanel.h */; };
 		E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8E8DE241AF1274300BAA78C /* libbrowser.cpp */; };
 		E8E8DE481AF12C4F00BAA78C /* libbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = E8E8DE271AF127B400BAA78C /* libbrowser.h */; };
 		E8EA2FEA1AF385EA004D27CA /* libbrowser_cefprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */; };
@@ -35,6 +39,8 @@
 /* Begin PBXFileReference section */
 		E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_cef.cpp; sourceTree = "<group>"; };
 		E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libbrowser_cef.h; sourceTree = "<group>"; };
+		E865FAE11AF8E5D70015B20F /* libbrowser_cef_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = libbrowser_cef_osx.mm; sourceTree = "<group>"; };
+		E865FAE31AF8E6FA0015B20F /* WebAuthenticationPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebAuthenticationPanel.h; sourceTree = "<group>"; };
 		E8E8DE201AF126B000BAA78C /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = "<group>"; };
 		E8E8DE211AF126B000BAA78C /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = "<group>"; };
 		E8E8DE221AF126B000BAA78C /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
@@ -57,6 +63,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E865FADF1AF8E0DE0015B20F /* libcef_dll_wrapper.a in Frameworks */,
+				E865FAE01AF8E0DE0015B20F /* libcef_stubs.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,9 +113,11 @@
 				E8E8DE241AF1274300BAA78C /* libbrowser.cpp */,
 				E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */,
 				E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */,
+				E865FAE11AF8E5D70015B20F /* libbrowser_cef_osx.mm */,
 				E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */,
-				E8EA2FF51AF3D865004D27CA /* libbrowser_cefshared_osx.cpp */,
 				E8EA2FFA1AF3D91C004D27CA /* libbrowser_cefprocess_osx.mm */,
+				E8EA2FF51AF3D865004D27CA /* libbrowser_cefshared_osx.cpp */,
+				E865FAE31AF8E6FA0015B20F /* WebAuthenticationPanel.h */,
 			);
 			name = Source;
 			path = src;
@@ -139,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E82CC86B1AF2413E00E9B8B8 /* libbrowser_cef.h in Headers */,
+				E865FAE41AF8E6FA0015B20F /* WebAuthenticationPanel.h in Headers */,
 				E8E8DE481AF12C4F00BAA78C /* libbrowser.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -231,6 +242,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E865FAE21AF8E5D70015B20F /* libbrowser_cef_osx.mm in Sources */,
 				E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */,
 				E82CC8691AF2412800E9B8B8 /* libbrowser_cef.cpp in Sources */,
 				E8EA2FF61AF3D865004D27CA /* libbrowser_cefshared_osx.cpp in Sources */,
@@ -285,6 +297,10 @@
 		E8E8DE451AF12B6F00BAA78C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/ianmacphail/workspace/livecode/btsync/widget/livecode/_build/mac/Debug,
+				);
 				PRODUCT_NAME = browser;
 			};
 			name = Debug;
@@ -292,6 +308,10 @@
 		E8E8DE461AF12B6F00BAA78C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/ianmacphail/workspace/livecode/btsync/widget/livecode/_build/mac/Debug,
+				);
 				PRODUCT_NAME = browser;
 			};
 			name = Release;

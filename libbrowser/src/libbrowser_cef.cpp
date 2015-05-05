@@ -845,6 +845,8 @@ MCCefBrowserBase::MCCefBrowserBase()
 	m_send_advanced_messages = false;
 	m_show_context_menu = false;
 	m_allow_new_window = false;
+	
+	m_javascript_handlers = nil;
 }
 
 MCCefBrowserBase::~MCCefBrowserBase(void)
@@ -1292,13 +1294,20 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 	bool t_success;
 	t_success = true;
 	
+	char *t_new_handlers;
+	t_new_handlers = nil;
+	
+	if (t_success)
+		t_success = MCCStringClone(p_handlers, t_new_handlers);
+	
 	char **t_handlers;
 	t_handlers = nil;
 	
 	uint32_t t_handler_count;
 	t_handler_count = 0;
 	
-	t_success = MCCStringSplit(p_handlers, ',', t_handlers, t_handler_count);
+	if (t_success)
+		t_success = MCCStringSplit(t_new_handlers, ',', t_handlers, t_handler_count);
 	
 	CefRefPtr<CefListValue> t_handler_list;
 	
@@ -1319,7 +1328,177 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 	if (t_success)
 		t_success = SetJavaScriptHandlers(t_handler_list);
 	
+	if (t_success)
+	{
+		if (m_javascript_handlers != nil)
+			MCCStringFree(m_javascript_handlers);
+		m_javascript_handlers = t_new_handlers;
+		t_new_handlers = nil;
+	}
+	
 	if (t_handlers != nil)
 		MCCStringArrayFree(t_handlers, t_handler_count);
+	
+	if (t_new_handlers != nil)
+		MCCStringFree(t_new_handlers);
 
+	return t_success;
+}
+
+bool MCCefBrowserBase::GetJavaScriptHandlers(char *&r_handlers)
+{
+	
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void *MCCefBrowserBase::GetNativeLayer()
+{
+	void *t_layer;
+	if (!PlatformGetNativeLayer(t_layer))
+		return nil;
+	
+	return t_layer;
+}
+
+bool MCCefBrowserBase::GetBoolProperty(MCBrowserProperty p_property, bool &r_value)
+{
+	switch (p_property)
+	{
+		case kMCBrowserAllowNewWindows:
+			r_value = GetAllowNewWindow();
+			return true;
+			
+		case kMCBrowserEnableContextMenu:
+			r_value = GetEnableContextMenu();
+			return true;
+			
+		case kMCBrowserScrollbars:
+			r_value = GetScrollbars();
+			return true;
+			
+		default:
+			break;
+	}
+	
+	return false;
+}
+
+bool MCCefBrowserBase::SetBoolProperty(MCBrowserProperty p_property, bool p_value)
+{
+	switch (p_property)
+	{
+		case kMCBrowserAllowNewWindows:
+			SetAllowNewWindow(p_value);
+			return true;
+			
+		case kMCBrowserEnableContextMenu:
+			SetEnableContextMenu(p_value);
+			return true;
+			
+		case kMCBrowserScrollbars:
+			SetScrollbars(p_value);
+			return true;
+			
+		default:
+			break;
+	}
+	
+	return false;
+}
+
+bool MCCefBrowserBase::SetStringProperty(MCBrowserProperty p_property, const char *p_value)
+{
+	switch (p_property)
+	{
+		case kMCBrowserHTMLText:
+			SetSource(p_value);
+			return true;
+			
+		case kMCBrowserJavaScriptHandlers:
+			return SetJavaScriptHandlers(p_value);
+			
+		case kMCBrowserUserAgent:
+			SetUserAgent(p_value);
+			return true;
+			
+		default:
+			break;
+	}
+	
+	return false;
+}
+
+bool MCCefBrowserBase::GetStringProperty(MCBrowserProperty p_property, char *&r_value)
+{
+	switch (p_property)
+	{
+		case kMCBrowserHTMLText:
+			r_value = GetSource();
+			return true;
+			
+		case kMCBrowserJavaScriptHandlers:
+			return GetJavaScriptHandlers(r_value);
+			
+		case kMCBrowserUserAgent:
+			r_value = GetUserAgent();
+			return true;
+			
+		case kMCBrowserURL:
+			r_value = GetURL();
+			return true;
+			
+		default:
+			break;
+	}
+	
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Cef browser factory
+
+MCCefBrowserFactory::MCCefBrowserFactory()
+{
+	MCCefBrowserExternalInit();
+}
+
+bool MCCefBrowserFactory::Initialize()
+{
+	return MCCefBrowserInitialise();
+}
+
+bool MCCefBrowserFactory::CreateBrowser(MCBrowser *&r_browser)
+{
+	int t_parent_id;
+	if (!MCEngineGetNativeLayerParentID(t_parent_id))
+		return false;
+	
+	MCBrowser *t_browser;
+	t_browser = MCCefBrowserInstantiate(t_parent_id);
+	
+	if (t_browser == nil)
+		return false;
+	
+	r_browser = t_browser;
+	
+	return true;
+}
+
+bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory)
+{
+	MCCefBrowserFactory *t_factory;
+	t_factory = new MCCefBrowserFactory();
+	
+	if (t_factory == nil)
+		return false;
+	
+	if (!t_factory->Initialize())
+	{
+		delete t_factory;
+		return false;
+	}
+	
+	r_factory = (MCBrowserFactoryRef)t_factory;
+	return true;
 }

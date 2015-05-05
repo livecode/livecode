@@ -105,11 +105,33 @@ void MCBrowser::OnJavaScriptCall(const char *p_handler, uint32_t p_arg_count, co
 		m_javascript_handler->OnJavaScriptCall(this, p_handler, p_arg_count, p_args);
 }
 
+// Init functions
+
+static MCBrowserFactoryRef s_browser_factory = nil;
+
+extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
+bool MCBrowserLibraryInitialize()
+{
+	s_browser_factory = nil;
+	return MCCefBrowserFactoryCreate(s_browser_factory);
+}
+
+void MCBrowserLibraryFinalize()
+{
+	if (s_browser_factory)
+		delete (MCBrowserFactory*)s_browser_factory;
+}
+
 // Factory
 
 bool MCBrowserFactoryGet(const char *p_factory, MCBrowserFactoryRef &r_factory)
 {
 	// TODO - platform specific implementation
+	if (s_browser_factory == nil)
+		return false;
+	
+	r_factory = s_browser_factory;
+	return true;
 }
 
 bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, MCBrowserRef &r_browser)

@@ -1007,6 +1007,7 @@
 		E82206E1184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E864B42115BDAB5200F5361C /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */; };
+		E865FADB1AF8C5390015B20F /* libbrowser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E865FAD81AF8C5390015B20F /* libbrowser.a */; };
 		E8AF7D2319F7E3BF000F68E9 /* graphics_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */; };
 		E8CFD7261A8236B70073D392 /* module-resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7231A8231D10073D392 /* module-resources.cpp */; };
 		E8CFD7271A8236BB0073D392 /* module-resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8CFD7231A8231D10073D392 /* module-resources.cpp */; };
@@ -1622,6 +1623,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = C72BED771A838B0D009B3CEB;
 			remoteInfo = "lc-run";
+		};
+		E865FAD71AF8C5390015B20F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8E8DE191AF1263800BAA78C /* libbrowser.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E8E8DE431AF12B6F00BAA78C;
+			remoteInfo = browser;
+		};
+		E865FAD91AF8C5390015B20F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8E8DE191AF1263800BAA78C /* libbrowser.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E8EA2FCA1AF3848B004D27CA;
+			remoteInfo = libbrowser_cefprocess;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -2629,6 +2644,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E865FADB1AF8C5390015B20F /* libbrowser.a in Frameworks */,
 				4D79B9091A3762EA00DD750C /* libkernel.a in Frameworks */,
 				4D79B7D41A308FFD00DD750C /* libstdscript.a in Frameworks */,
 				726191781A260B7F00851787 /* libscript.a in Frameworks */,
@@ -4214,6 +4230,15 @@
 			name = "Core - Security";
 			sourceTree = "<group>";
 		};
+		E8E8DE1A1AF1263800BAA78C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E865FAD81AF8C5390015B20F /* libbrowser.a */,
+				E865FADA1AF8C5390015B20F /* libbrowser_cefprocess.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -4747,6 +4772,20 @@
 			fileType = "compiled.mach-o.executable";
 			path = "lc-run";
 			remoteRef = C7C148DD1A8B5B440048A5AE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E865FAD81AF8C5390015B20F /* libbrowser.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libbrowser.a;
+			remoteRef = E865FAD71AF8C5390015B20F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E865FADA1AF8C5390015B20F /* libbrowser_cefprocess.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = libbrowser_cefprocess.app;
+			remoteRef = E865FAD91AF8C5390015B20F /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */

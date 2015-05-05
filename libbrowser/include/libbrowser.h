@@ -123,10 +123,14 @@ private:
 class MCBrowserFactory : public MCBrowserRefCounted
 {
 public:
+	virtual ~MCBrowserFactory() = 0;
 	virtual bool CreateBrowser(MCBrowser *&r_browser) = 0;
 };
 
 // C API
+
+extern "C" bool MCBrowserLibraryInitialize();
+void MCBrowserLibraryFinalize();
 
 typedef struct __MCBrowser *MCBrowserRef;
 typedef struct __MCBrowserFactory *MCBrowserFactoryRef;
