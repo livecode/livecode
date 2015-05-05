@@ -112,7 +112,7 @@ dist-server-commercial:
 	$(buildtool_command) --platform mac --platform win --platform linux \
 	    --stage server --edition commercial
 
-# FIXME temporarily building installers only for Linux!
+# FIXME temporarily building installers only for Linux & Mac!
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
 endif
@@ -120,8 +120,8 @@ endif
 dist-tools: dist-tools-community
 
 dist-tools-community:
-	$(buildtool_command) --platform linux --stage tools --edition community
+	$(buildtool_command) --platform linux --platform mac --stage tools --edition community
 
 dist-tools-commercial:
-	$(buildtool_command) --platform linux --stage tools --edition commercial
+	$(buildtool_command) --platform linux --platform mac --stage tools --edition commercial
 
