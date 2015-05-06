@@ -3236,14 +3236,13 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
         MCAutoStringRef t_string;
         // SN-2015-05-05: [[ Bug 15315 ]] Changing the whole text of a field
         //  will delete all the settings of the field, so we only append the
-        //  chars which were added (similar to MCExecResolveCharsOfField)
-        uindex_t t_start_index;
-        t_start_index = MCStringGetLength((MCStringRef)p_chunk.mark.text);
-        t_start_index -= p_chunk.mark.changed;
-        if (!MCStringCopySubstring((MCStringRef)p_chunk . mark . text, MCRangeMake(t_start_index, p_chunk.mark.changed), &t_string))
+        //  chars which were added (similar to MCExecResolveCharsOfField).
+        if (!MCStringCopySubstring((MCStringRef)p_chunk . mark . text, MCRangeMake(p_chunk.mark.start - p_chunk.mark.changed, p_chunk.mark.changed), &t_string))
             return;
         
-        t_field -> settextindex(p_chunk .part_id, t_start_index, t_start_index, *t_string, False);
+        //  The insertion position of the added chunk delimiters is right before
+        //  the insertion position for the string.
+        t_field -> settextindex(p_chunk .part_id, p_chunk.mark.start - 1, p_chunk.mark.start - 1, *t_string, False);
     }
      
     integer_t t_start, t_finish;
