@@ -1641,7 +1641,12 @@ Boolean MCS_poll(real8 delay, int fd)
 	HANDLE t_handles[2];
 	t_handles[0] = g_notify_wakeup;
 	t_handles[1] = g_socket_wakeup;
-	MsgWaitForMultipleObjects(2, t_handles, FALSE, delay * 1000.0, 0);
+
+	int t_num_handles = 2;
+	if (t_handles[1] == NULL)
+		t_num_handles = 1;
+
+	MsgWaitForMultipleObjects(t_num_handles, t_handles, FALSE, delay * 1000.0, 0);
 
 	Boolean handled = False;
 	int4 n;
