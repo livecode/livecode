@@ -207,18 +207,17 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       if tExternals is not empty then
          put return after tExternals
       end if
+      set the itemDelimiter to "."
       repeat for each line tFile in tFiles
          local tFilePath, tFileName
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          
          -- Look for manifest template
-         set the itemDelimiter to slash
-         if the last item of tFilePath is "AndroidManifest.xml" then
-            put tFilePath into tManifestFile
+         if tFilePath ends with "AndroidManifest.xml" then
+            put url ("binfile:" & tFilePath) into tManifest
          end if
          
          -- Only look for lcext files.
-         set the itemDelimiter to "."
          if the last item of tFilePath is not "lcext" then
             next repeat
          end if
@@ -246,8 +245,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put tBuildFolder & slash & "AndroidManifest.xml" into tManifestFile
       end if
       
-      local tManifest
-      put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      if tManifest is empty then
+         put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      end if
       // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
       if the result is not empty then
          throw "Cannot find the template Manifest"
@@ -850,6 +850,8 @@ private command addAssetsToArchive pFiles, pBaseFolder, pArchive
             put tFile & return after tFonts
          else if tFile ends with ".lcext" or tFile ends with ".dylib" then
             -- MW-2012-07-05: [[ Externals ]] If an 'lcext' file or dylib file is found then we ignore it.
+         else if tFile ends with "AndroidManifest.xml" then
+            -- MW-2015-04-24: [[ TemplateAppMetadata ]] If an template manifest is found then we ignore it.
          else
             revZipAddUncompressedItemWithFile pArchive, "assets/" & tName, tFile
          end if
