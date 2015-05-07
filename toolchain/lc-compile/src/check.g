@@ -434,15 +434,42 @@
 'condition' IsExpressionSimpleConstant(EXPRESSION)
 
     'rule' IsExpressionSimpleConstant(undefined(_)):
+
     'rule' IsExpressionSimpleConstant(true(_)):
+
     'rule' IsExpressionSimpleConstant(false(_)):
+
     'rule' IsExpressionSimpleConstant(unsignedinteger(_, _)):
+
     'rule' IsExpressionSimpleConstant(integer(_, _)):
+
     'rule' IsExpressionSimpleConstant(real(_, _)):
+
     'rule' IsExpressionSimpleConstant(string(_, _)):
+
     'rule' IsExpressionSimpleConstant(list(_, List)):
         IsExpressionListSimpleConstant(List)
-        
+
+    'rule' IsExpressionSimpleConstant(invoke(Position, invokelist(Info, nil), expressionlist(Operand, nil))):
+        Info'Name -> SyntaxName
+        (|
+            eq(SyntaxName, "PlusUnaryOperator")
+        ||
+            eq(SyntaxName, "MinusUnaryOperator")
+        |)
+        (|
+            where(Operand -> integer(_, _))
+        ||
+            where(Operand -> unsignedinteger(_, UIntValue))
+            (|
+                ge(UIntValue, 0)
+            ||
+                Error_IntegerLiteralOutOfRange(Position)
+            |)
+        ||
+            where(Operand -> real(_, _))
+        |)
+
 'condition' IsExpressionListSimpleConstant(EXPRESSIONLIST)
 
     'rule' IsExpressionListSimpleConstant(expressionlist(Head, Tail)):

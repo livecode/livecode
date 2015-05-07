@@ -301,6 +301,7 @@
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
     Error_UnsuitableStringForKeyword
+    Error_IntegerLiteralOutOfRange
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_UsingAsForHandlerReturnTypeDeprecated
@@ -661,6 +662,8 @@
 'action' Error_HandlerNotSuitableForPropertySetter(Position: POS, Identifier: NAME)
 
 'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
+
+'action' Error_IntegerLiteralOutOfRange(Position: POS)
 
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)

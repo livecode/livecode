@@ -1734,6 +1734,27 @@
         EmitListConstant(Indicies)
         EmitEndListConstant(-> Index)
 
+    'rule' EmitConstant(invoke(_, invokelist(Info, nil), expressionlist(Operand, nil)) -> Index)
+        Info'Name -> SyntaxName
+        (|
+            eq(SyntaxName, "PlusUnaryOperator")
+            EmitConstant(Operand -> Index)
+        ||
+            eq(SyntaxName, "MinusUnaryOperator")
+            (|
+                where(Operand -> integer(_, IntValue))
+                EmitIntegerConstant(-IntValue -> Index)
+            ||
+                where(Operand -> unsignedinteger(_, UIntValue))
+                EmitIntegerConstant(-UIntValue -> Index)
+            ||
+                where(Operand -> real(_, RealValue))
+                NegateReal(RealValue -> MinusRealValue)
+                EmitRealConstant(MinusRealValue -> Index)
+            |)
+        |)
+
+
 'action' EmitListConstantElements(EXPRESSIONLIST -> INTLIST)
 
     'rule' EmitListConstantElements(expressionlist(Head, Tail) -> intlist(Index, Rest)):
