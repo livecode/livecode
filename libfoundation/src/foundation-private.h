@@ -385,15 +385,20 @@ struct __MCRecord: public __MCValue
 
 ////////
 
+struct MCErrorFrame
+{
+    MCErrorFrame *caller;
+    MCValueRef target;
+    uindex_t row;
+    uindex_t column;
+};
+
 struct __MCError: public __MCValue
 {
     MCTypeInfoRef typeinfo;
     MCStringRef message;
     MCArrayRef info;
-    
-    MCValueRef target;
-    uindex_t row;
-    uindex_t column;
+    MCErrorFrame *backtrace;
 };
 
 ////////

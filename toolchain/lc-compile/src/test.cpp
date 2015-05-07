@@ -129,9 +129,9 @@ int main(int argc, char *argv[])
     if (t_success)
         t_success = MCScriptCreateInstanceOfModule(t_module, t_instance);
     
-    MCValueRef t_result;
+    MCAutoValueRef t_result;
     if (t_success)
-        t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("Test"), nil, 0, t_result);
+        t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("Test"), nil, 0, &t_result);
     
 	MCAutoStringRef t_message;
 	MCErrorRef t_error;
@@ -139,13 +139,22 @@ int main(int argc, char *argv[])
 	{
 		/* UNCHECKED */ MCStringFormat (&t_message,
 		                                "Executed test with result %@\n",
-		                                t_result);
+		                                *t_result);
 	}
 	else if (MCErrorCatch (t_error))
 	{
-		/* UNCHECKED */ MCStringFormat (&t_message,
+        /* UNCHECKED */ MCStringCreateMutable(0, &t_message);
+		/* UNCHECKED */ MCStringAppendFormat (*t_message,
 		                                "Failed to execute test: %@\n",
 		                                MCErrorGetMessage (t_error));
+        
+        uindex_t t_depth;
+        t_depth = MCErrorGetDepth(t_error);
+        for(uindex_t i = 0; i < t_depth; i++)
+            MCStringAppendFormat(*t_message, "  in %@, row %u, column %u\n",
+                                        MCErrorGetTargetAtLevel(t_error, i),
+                                        MCErrorGetRowAtLevel(t_error, i),
+                                        MCErrorGetColumnAtLevel(t_error, i));
 	}
 	else
 	{
