@@ -301,6 +301,7 @@
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
     Error_UnsuitableStringForKeyword
+    Error_IntegerLiteralOutOfRange
     Error_NextRepeatOutOfContext
     Error_ExitRepeatOutOfContext
     Warning_DeprecatedTypeName
@@ -664,6 +665,7 @@
 
 'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
 
+'action' Error_IntegerLiteralOutOfRange(Position: POS)
 'action' Error_NextRepeatOutOfContext(Position: POS)
 'action' Error_ExitRepeatOutOfContext(Position: POS)
 
