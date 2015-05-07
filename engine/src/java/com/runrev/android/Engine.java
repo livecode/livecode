@@ -1571,6 +1571,17 @@ public class Engine extends View implements EngineApi
     {
         return m_sound_module.getSoundChannels();
     }
+    
+    // SN-2015-05-07: [[ Bug 15134 ]] Add getter/setter for audio workaround
+    public void setUseAndroidAudioWorkaround(boolean p_use_patched_player)
+    {
+        m_sound_module.setUseAndroidAudioWorkaround(p_use_patched_player);
+    }
+    
+    public boolean getUseAndroidAudioWorkaround()
+    {
+        return m_sound_module.getUseAndroidAudioWorkaround();
+    }
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -48,6 +48,9 @@ bool MCSystemSoundChannelStatus(const char *p_channel, MCSoundChannelStatus& r_s
 bool MCSystemSoundOnChannel(const char *p_channel, char*& r_sound);
 bool MCSystemNextSoundOnChannel(const char *p_channel, char*& r_sound);
 bool MCSystemListSoundChannels(char*& r_channels);
+// SN-2015-05-07: [[ Bug 15134 ]] Added getter/setter for audio workaround
+bool MCSystemSetUseAndroidAudioWorkaround(bool p_use_patched_player);
+bool MCSystemGetUseAndroidAudioWorkaround(bool &r_use_patched_player);
 bool MCSystemSetAudioCategory(MCSoundAudioCategory p_category);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,6 +263,33 @@ bool MCSoundGetSoundChannels(MCExecContext& ctxt, char*& r_channels)
 		ctxt.SetTheResultToStaticCString("could not find channel");
     return t_success;
 #endif /* MCSoundGetSoundChannels */
+}
+
+// SN-2015-05-07: [[ Bug 15134 ]] Added getter/setter for Android audio workaround
+bool MCSoundSetUseAndroidAudioWorkaround(MCExecContext& ctxt, bool p_use_patched_player)
+{
+#ifdef /* MCSoundSetUseAndroidAudioWorkaround */ LEGACY_EXEC
+    bool t_success;
+    t_success = true;
+    
+    if (t_success)
+        t_success = MCSystemSetUseAndroidAudioWorkaround(p_use_patched_player);
+    
+    return t_success;
+#endif /* MCSoundSetUseAndroidAudioWorkaround */
+}
+
+bool MCSoundGetUseAndroidAudioWorkaround(MCExecContext& ctxt, bool &r_use_patched_player)
+{
+#ifdef /* MCSoundGetUseAndroidAudioWorkaround */ LEGACY_EXEC
+    bool t_success;
+    t_success = true;
+    
+    if (t_success)
+        t_success = MCSystemGetUseAndroidAudioWorkaround(r_use_patched_player);
+    
+    return t_success;
+#endif /* MCSoundGetUseAndroidAudioWorkaround */
 }
 
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
@@ -582,6 +612,52 @@ Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
 
     return t_ctxt.GetStat();
 #endif /* MCHandleSoundChannels */
+}
+
+// SN-2015-05-06: [[ Bug 15134 ]] Added command to use the PatchedMediaPlayer
+Exec_stat MCHandleSetUseAndroidAudioWorkaround(void *context, MCParameter* p_parameters)
+{
+#ifdef /* MCHandleSetUseAndroidAudioWorkaround */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt . SetTheResultToEmpty();
+    
+    bool t_success;
+    t_success = true;
+    
+    bool t_use_patched_player;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "b", &t_use_patched_player);
+    
+    if (t_success)
+        MCSoundSetUseAndroidAudioWorkaround(t_ctxt, t_use_patched_player);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleSetUseAndroidAudioWorkaround */
+}
+
+Exec_stat MCHandleGetUseAndroidAudioWorkaround(void *context, MCParameter* p_parameters)
+{
+#ifdef /* MCHandleGetUseAndroidAudioWorkaround */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt . SetTheResultToEmpty();
+    
+    bool t_success;
+    t_success = true;
+    
+    bool t_use_patched_player;
+    if (t_success)
+        t_success = MCSoundGetUseAndroidAudioWorkaround(t_ctxt, t_use_patched_player);
+    
+    if (t_success)
+    {
+        ep . setboolean(t_use_patched_player);
+        MCresult -> store(ep, False);
+    }
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleGetUseAndroidAudioWorkaround */
 }
 
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.

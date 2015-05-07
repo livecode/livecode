@@ -708,6 +708,20 @@ bool MCSystemListSoundChannels(char*& r_channels)
 	return true;
 }
 
+// SN-2015-05-07: [[ Bug 15134 ]] Added getter/setter for Android audio workaround
+bool MCSystemSetUseAndroidAudioWorkaround(bool p_use_patched_player)
+{
+    // Does nothing on iPhone
+    return true;
+}
+
+bool MCSystemGetUseAndroidAudioWorkaround(bool &r_use_patched_player)
+{
+    // Never set on iOS devices
+    r_use_patched_player = false;
+    return true;
+}
+
 extern void MCSoundPostSoundFinishedOnChannelMessage(const char *p_channel, const char *p_sound, MCObjectHandle *p_object);
 
 @implementation MCSystemSoundChannelDelegate
