@@ -120,11 +120,10 @@ endif
 dist-tools: dist-tools-community
 distmac-disk: distmac-disk-community
 
-# FIXME temporarily building installers only for Linux & Mac!
 dist-tools-community:
-	$(buildtool_command) --platform linux --platform mac --stage tools --edition community
+	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition community
 dist-tools-commercial:
-	$(buildtool_command) --platform linux --platform mac --stage tools --edition commercial
+	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition commercial
 
 # FIXME upload installers to distribution server
 dist-upload:
