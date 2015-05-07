@@ -29,7 +29,7 @@ end handler
 
 public handler TestDefaultValueOfOptional()
 	variable tOptional as optional any
-	test "default value (optional)" when tOptional is undefined
+	test "default value (optional)" when tOptional is nothing
 end handler
 
 end module
