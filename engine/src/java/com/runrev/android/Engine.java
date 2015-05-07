@@ -1988,7 +1988,7 @@ public class Engine extends View implements EngineApi
 		if (m_opengl_view == null)
 		{
 			m_opengl_view = new OpenGLView(getContext());
-
+            
 			// Add the view to the hierarchy - we add at the bottom and bring to
 			// the front as soon as we've shown the first frame.
 			((ViewGroup)getParent()).addView(m_opengl_view, 0,
@@ -2025,12 +2025,19 @@ public class Engine extends View implements EngineApi
 		}
 		});
 	}
-
-	public void hideBitmapView()
-	{
-		m_bitmap_view.setVisibility(View.INVISIBLE);
-	}
-
+    
+    // MW-2015-05-06: [[ Bug 15232 ]] Post a runnable to prevent black flash when enabling openGLView
+    public void hideBitmapViewInTime()
+    {
+        post(new Runnable() {
+            public void run() {
+                if (m_opengl_view == null)
+                    return;
+                m_bitmap_view.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+    
 	public void showBitmapView()
 	{
 		m_bitmap_view.setVisibility(View.VISIBLE);
