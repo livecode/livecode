@@ -1645,11 +1645,11 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	{
 		t_section_count = t_nt_header . FileHeader . NumberOfSections;
 		if (p_params . payload != nil)
-			t_payload_section = &t_section_headers[t_section_count - 4];
+			t_payload_section = &t_section_headers[t_section_count - 3];
 		else
 			t_payload_section = nil;
-		t_project_section = &t_section_headers[t_section_count - 3];
-		t_resource_section = &t_section_headers[t_section_count - 2];
+		t_project_section = &t_section_headers[t_section_count - 2];
+		t_resource_section = &t_section_headers[t_section_count - 1];
 	}
 
 	// Next we check that there are at least two sections, and they are the

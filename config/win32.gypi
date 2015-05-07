@@ -144,6 +144,7 @@
 			'VCLinkerTool':
 			{
 				'SubSystem': '2',
+				'RandomizedBaseAddress': '1',	# /DYNAMICBASE:NO - disable ASLR
 			},
 		},
 	},
