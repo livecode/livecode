@@ -393,7 +393,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          if pEdition is "Community" then
             put url ("binfile:" & builderInstallerEngine("macosx") & slash & "Contents/Resources/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          else
-            put url ("binfile:" & pPrivateFolder & slash & "rsrc/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
+            put url ("binfile:" & builderCommercialResourceFolder() & "/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          end if
          
          -- Get us an installer by dieting the source installer

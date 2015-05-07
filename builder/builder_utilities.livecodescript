@@ -323,7 +323,7 @@ function builderInstallerEngine pPlatform
       case "linux-armv6hf"
          return tEngineFolder & slash & "installer"
       case "macosx"
-         return tEngineFolder & slash & "installer.app"
+         return tEngineFolder & slash & "Installer.app"
    end switch
 end builderInstallerEngine
 
