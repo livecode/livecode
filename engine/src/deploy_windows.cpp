@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 #ifndef FIELD_OFFSET
-#define FIELD_OFFSET(type, field)    ((LONG)(LONG_PTR)&(((type *)0)->field))
+#define FIELD_OFFSET(type, field)    ((LONG)(intptr_t)&(((type *)0)->field))
 #endif
 
 typedef char CHAR;
@@ -46,10 +46,10 @@ typedef unsigned short WCHAR;
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
-typedef unsigned long DWORD;
+typedef unsigned int DWORD;
 
-typedef long *LONG_PTR;
-typedef long LONG;
+typedef unsigned int LONG_PTR;
+typedef int LONG;
 
 #define IMAGE_DOS_SIGNATURE                 0x5A4D      // MZ
 #define IMAGE_OS2_SIGNATURE                 0x454E      // NE
@@ -540,7 +540,7 @@ static inline void swap_dword(DWORD& x)
 #endif
 }
 
-static inline void swap_long(long& x)
+static inline void swap_long(LONG& x)
 {
 #ifdef __BIG_ENDIAN__
 	uint32_t y;
