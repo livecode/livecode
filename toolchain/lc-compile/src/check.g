@@ -1724,6 +1724,9 @@
     'rule' CheckRepeats(repeatupto(_, _, _, _, _, Body), Depth):
         CheckRepeats(Body, Depth + 1)
 
+    'rule' CheckRepeats(repeatdownto(_, _, _, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
     'rule' CheckRepeats(repeatforeach(_, _, _, Body), Depth):
         CheckRepeats(Body, Depth + 1)
         
