@@ -248,6 +248,9 @@ DEFINE_ERROR_I(HandlerNotSuitableForPropertySetter, "'%s' has inappropriate sign
 
 DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with identifiers")
 
+DEFINE_ERROR(NextRepeatOutOfContext, "'next repeat' must appear within a repeat")
+DEFINE_ERROR(ExitRepeatOutOfContext, "'exit repeat' must appear within a repeat")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_I(Name, Message) \
